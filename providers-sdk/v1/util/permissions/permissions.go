@@ -1798,6 +1798,19 @@ var azureMethodPermissionOverrides = map[string]string{
 	// to the correct resource.
 	"SQLResources.NewListSQLRoleAssignmentsPager": "Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments/read",
 	"SQLResources.NewListSQLRoleDefinitionsPager": "Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions/read",
+
+	// The Cassandra, Gremlin, Table and MongoMI resource clients each serve
+	// role-assignment and role-definition reads that the client name derives to a
+	// coarse <api>Resources/read; redirect them to the correct databaseAccounts
+	// sub-resource, matching the SQLResources entries above.
+	"CassandraResources.NewListCassandraRoleAssignmentsPager": "Microsoft.DocumentDB/databaseAccounts/cassandraRoleAssignments/read",
+	"CassandraResources.NewListCassandraRoleDefinitionsPager": "Microsoft.DocumentDB/databaseAccounts/cassandraRoleDefinitions/read",
+	"GremlinResources.NewListGremlinRoleAssignmentsPager":     "Microsoft.DocumentDB/databaseAccounts/gremlinRoleAssignments/read",
+	"GremlinResources.NewListGremlinRoleDefinitionsPager":     "Microsoft.DocumentDB/databaseAccounts/gremlinRoleDefinitions/read",
+	"TableResources.NewListTableRoleAssignmentsPager":         "Microsoft.DocumentDB/databaseAccounts/tableRoleAssignments/read",
+	"TableResources.NewListTableRoleDefinitionsPager":         "Microsoft.DocumentDB/databaseAccounts/tableRoleDefinitions/read",
+	"MongoMIResources.NewListMongoMIRoleAssignmentsPager":     "Microsoft.DocumentDB/databaseAccounts/mongoMIRoleAssignments/read",
+	"MongoMIResources.NewListMongoMIRoleDefinitionsPager":     "Microsoft.DocumentDB/databaseAccounts/mongoMIRoleDefinitions/read",
 }
 
 // azurePermissionOverrides maps generated permission strings to the correct

@@ -14,7 +14,7 @@ import (
 	"go.mondoo.com/mql/v13/types"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	cosmosdb "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos/v3"
+	cosmosdb "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos/v4"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmosforpostgresql/armcosmosforpostgresql"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mongocluster/armmongocluster"
 )
@@ -765,6 +765,11 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccount) sqlRoleDefinitions() ([]any
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(def.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlDef.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition).cacheSystemData = sysData
 			res = append(res, mqlDef)
 		}
 	}
@@ -824,10 +829,31 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccount) sqlRoleAssignments() ([]any
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(ra.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlRA.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment).cacheSystemData = sysData
 			res = append(res, mqlRA)
 		}
 	}
 	return res, nil
+}
+
+type mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinitionInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+type mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignmentInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionCosmosDbServiceAccount) diagnosticSettings() ([]any, error) {

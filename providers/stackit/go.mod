@@ -12,7 +12,7 @@ require (
 	github.com/stackitcloud/stackit-sdk-go/services/certificates v1.9.0
 	github.com/stackitcloud/stackit-sdk-go/services/dns v0.21.0
 	github.com/stackitcloud/stackit-sdk-go/services/iaas v1.13.0
-	github.com/stackitcloud/stackit-sdk-go/services/kms v1.11.0
+	github.com/stackitcloud/stackit-sdk-go/services/kms v1.12.0
 	github.com/stackitcloud/stackit-sdk-go/services/loadbalancer v1.14.0
 	github.com/stackitcloud/stackit-sdk-go/services/logme v1.0.1
 	github.com/stackitcloud/stackit-sdk-go/services/mariadb v1.0.1
@@ -29,7 +29,7 @@ require (
 	github.com/stackitcloud/stackit-sdk-go/services/serviceaccount v0.20.0
 	github.com/stackitcloud/stackit-sdk-go/services/sfs v0.11.0
 	github.com/stackitcloud/stackit-sdk-go/services/ske v1.19.0
-	github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex v1.16.0
+	github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex v1.16.1
 	github.com/stackitcloud/stackit-sdk-go/services/telemetrylink v0.4.0
 	github.com/stackitcloud/stackit-sdk-go/services/telemetryrouter v0.4.0
 	github.com/stretchr/testify v1.11.1

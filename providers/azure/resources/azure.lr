@@ -7337,6 +7337,22 @@ azure.subscription.cosmosDbService.account @defaults("name kind location") {
   sqlRoleDefinitions() []azure.subscription.cosmosDbService.account.sqlRoleDefinition
   // Cosmos DB SQL data-plane role assignments
   sqlRoleAssignments() []azure.subscription.cosmosDbService.account.sqlRoleAssignment
+  // Cosmos DB Cassandra data-plane role definitions (built-in and custom)
+  cassandraRoleDefinitions() []azure.subscription.cosmosDbService.account.cassandraRoleDefinition
+  // Cosmos DB Cassandra data-plane role assignments
+  cassandraRoleAssignments() []azure.subscription.cosmosDbService.account.cassandraRoleAssignment
+  // Cosmos DB Gremlin data-plane role definitions (built-in and custom)
+  gremlinRoleDefinitions() []azure.subscription.cosmosDbService.account.gremlinRoleDefinition
+  // Cosmos DB Gremlin data-plane role assignments
+  gremlinRoleAssignments() []azure.subscription.cosmosDbService.account.gremlinRoleAssignment
+  // Cosmos DB Table data-plane role definitions (built-in and custom)
+  tableRoleDefinitions() []azure.subscription.cosmosDbService.account.tableRoleDefinition
+  // Cosmos DB Table data-plane role assignments
+  tableRoleAssignments() []azure.subscription.cosmosDbService.account.tableRoleAssignment
+  // Cosmos DB MongoDB managed-instance data-plane role definitions (built-in and custom)
+  mongoMIRoleDefinitions() []azure.subscription.cosmosDbService.account.mongoMIRoleDefinition
+  // Cosmos DB MongoDB managed-instance data-plane role assignments
+  mongoMIRoleAssignments() []azure.subscription.cosmosDbService.account.mongoMIRoleAssignment
   // Diagnostic settings configured on the Cosmos DB account
   diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
   // Diagnostic settings categories the Cosmos DB account can emit (available log and metric categories)
@@ -7517,6 +7533,8 @@ private azure.subscription.cosmosDbService.account.sqlRoleDefinition @defaults("
   assignableScopes []string
   // Permission set granted by this role (Cosmos permission JSON: dataActions, notDataActions)
   permissions []dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Cosmos DB SQL data-plane role assignment
@@ -7533,6 +7551,168 @@ private azure.subscription.cosmosDbService.account.sqlRoleAssignment @defaults("
   roleDefinitionId string
   // Data-plane scope this assignment applies to (account, database, or container)
   scope string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Azure Cosmos DB Cassandra data-plane role definition
+private azure.subscription.cosmosDbService.account.cassandraRoleDefinition @defaults("name roleName roleType") {
+  // Cosmos role definition resource ID
+  id string
+  // Cosmos role definition resource name (a GUID)
+  name string
+  // Cosmos role definition resource type
+  type string
+  // User-friendly role name
+  roleName string
+  // "BuiltInRole" or "CustomRole"
+  roleType string
+  // Scopes at or below which assignments using this definition may be created
+  assignableScopes []string
+  // Permission set granted by this role (Cosmos permission JSON: dataActions, notDataActions)
+  permissions []dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Azure Cosmos DB Cassandra data-plane role assignment
+private azure.subscription.cosmosDbService.account.cassandraRoleAssignment @defaults("name principalId scope") {
+  // Cosmos role assignment resource ID
+  id string
+  // Cosmos role assignment resource name (a GUID)
+  name string
+  // Cosmos role assignment resource type
+  type string
+  // AAD principal granted access by this assignment
+  principalId string
+  // Cosmos role definition ID this assignment binds
+  roleDefinitionId string
+  // Data-plane scope this assignment applies to (account, database, or table)
+  scope string
+  // Provisioning state of the role assignment
+  provisioningState string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Azure Cosmos DB Gremlin data-plane role definition
+private azure.subscription.cosmosDbService.account.gremlinRoleDefinition @defaults("name roleName roleType") {
+  // Cosmos role definition resource ID
+  id string
+  // Cosmos role definition resource name (a GUID)
+  name string
+  // Cosmos role definition resource type
+  type string
+  // User-friendly role name
+  roleName string
+  // "BuiltInRole" or "CustomRole"
+  roleType string
+  // Scopes at or below which assignments using this definition may be created
+  assignableScopes []string
+  // Permission set granted by this role (Cosmos permission JSON: dataActions, notDataActions)
+  permissions []dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Azure Cosmos DB Gremlin data-plane role assignment
+private azure.subscription.cosmosDbService.account.gremlinRoleAssignment @defaults("name principalId scope") {
+  // Cosmos role assignment resource ID
+  id string
+  // Cosmos role assignment resource name (a GUID)
+  name string
+  // Cosmos role assignment resource type
+  type string
+  // AAD principal granted access by this assignment
+  principalId string
+  // Cosmos role definition ID this assignment binds
+  roleDefinitionId string
+  // Data-plane scope this assignment applies to (account, database, or graph)
+  scope string
+  // Provisioning state of the role assignment
+  provisioningState string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Azure Cosmos DB Table data-plane role definition
+private azure.subscription.cosmosDbService.account.tableRoleDefinition @defaults("name roleName roleType") {
+  // Cosmos role definition resource ID
+  id string
+  // Cosmos role definition resource name (a GUID)
+  name string
+  // Cosmos role definition resource type
+  type string
+  // User-friendly role name
+  roleName string
+  // "BuiltInRole" or "CustomRole"
+  roleType string
+  // Scopes at or below which assignments using this definition may be created
+  assignableScopes []string
+  // Permission set granted by this role (Cosmos permission JSON: dataActions, notDataActions)
+  permissions []dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Azure Cosmos DB Table data-plane role assignment
+private azure.subscription.cosmosDbService.account.tableRoleAssignment @defaults("name principalId scope") {
+  // Cosmos role assignment resource ID
+  id string
+  // Cosmos role assignment resource name (a GUID)
+  name string
+  // Cosmos role assignment resource type
+  type string
+  // AAD principal granted access by this assignment
+  principalId string
+  // Cosmos role definition ID this assignment binds
+  roleDefinitionId string
+  // Data-plane scope this assignment applies to (account or table)
+  scope string
+  // Provisioning state of the role assignment
+  provisioningState string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Azure Cosmos DB MongoDB managed-instance data-plane role definition
+private azure.subscription.cosmosDbService.account.mongoMIRoleDefinition @defaults("name roleName roleType") {
+  // Cosmos role definition resource ID
+  id string
+  // Cosmos role definition resource name (a GUID)
+  name string
+  // Cosmos role definition resource type
+  type string
+  // User-friendly role name
+  roleName string
+  // "BuiltInRole" or "CustomRole"
+  roleType string
+  // Scopes at or below which assignments using this definition may be created
+  assignableScopes []string
+  // Permission set granted by this role (Cosmos permission JSON: dataActions, notDataActions)
+  permissions []dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Azure Cosmos DB MongoDB managed-instance data-plane role assignment
+private azure.subscription.cosmosDbService.account.mongoMIRoleAssignment @defaults("name principalId scope") {
+  // Cosmos role assignment resource ID
+  id string
+  // Cosmos role assignment resource name (a GUID)
+  name string
+  // Cosmos role assignment resource type
+  type string
+  // AAD principal granted access by this assignment
+  principalId string
+  // Cosmos role definition ID this assignment binds
+  roleDefinitionId string
+  // Data-plane scope this assignment applies to (account, database, or collection)
+  scope string
+  // Provisioning state of the role assignment
+  provisioningState string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Cosmos DB SQL API database
@@ -7569,6 +7749,8 @@ private azure.subscription.cosmosDbService.account.sqlDatabase @defaults("name t
   autoscaleEnabled() bool
   // Containers within the database
   containers() []azure.subscription.cosmosDbService.account.sqlDatabase.container
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Cosmos DB SQL API container
@@ -7624,6 +7806,8 @@ private azure.subscription.cosmosDbService.account.sqlDatabase.container @defaul
   autoscaleMaxThroughput() int
   // Whether autoscale is enabled at the container level
   autoscaleEnabled() bool
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Key Vault

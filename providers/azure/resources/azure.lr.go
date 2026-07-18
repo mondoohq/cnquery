@@ -236,6 +236,14 @@ const (
 	ResourceAzureSubscriptionCosmosDbServicePostgresqlCluster                                         string = "azure.subscription.cosmosDbService.postgresqlCluster"
 	ResourceAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition                                  string = "azure.subscription.cosmosDbService.account.sqlRoleDefinition"
 	ResourceAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment                                  string = "azure.subscription.cosmosDbService.account.sqlRoleAssignment"
+	ResourceAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition                            string = "azure.subscription.cosmosDbService.account.cassandraRoleDefinition"
+	ResourceAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment                            string = "azure.subscription.cosmosDbService.account.cassandraRoleAssignment"
+	ResourceAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition                              string = "azure.subscription.cosmosDbService.account.gremlinRoleDefinition"
+	ResourceAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment                              string = "azure.subscription.cosmosDbService.account.gremlinRoleAssignment"
+	ResourceAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition                                string = "azure.subscription.cosmosDbService.account.tableRoleDefinition"
+	ResourceAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment                                string = "azure.subscription.cosmosDbService.account.tableRoleAssignment"
+	ResourceAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition                              string = "azure.subscription.cosmosDbService.account.mongoMIRoleDefinition"
+	ResourceAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment                              string = "azure.subscription.cosmosDbService.account.mongoMIRoleAssignment"
 	ResourceAzureSubscriptionCosmosDbServiceAccountSqlDatabase                                        string = "azure.subscription.cosmosDbService.account.sqlDatabase"
 	ResourceAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer                               string = "azure.subscription.cosmosDbService.account.sqlDatabase.container"
 	ResourceAzureSubscriptionKeyVaultService                                                          string = "azure.subscription.keyVaultService"
@@ -1352,6 +1360,38 @@ func init() {
 		"azure.subscription.cosmosDbService.account.sqlRoleAssignment": {
 			// to override args, implement: initAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment,
+		},
+		"azure.subscription.cosmosDbService.account.cassandraRoleDefinition": {
+			// to override args, implement: initAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition,
+		},
+		"azure.subscription.cosmosDbService.account.cassandraRoleAssignment": {
+			// to override args, implement: initAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment,
+		},
+		"azure.subscription.cosmosDbService.account.gremlinRoleDefinition": {
+			// to override args, implement: initAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition,
+		},
+		"azure.subscription.cosmosDbService.account.gremlinRoleAssignment": {
+			// to override args, implement: initAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment,
+		},
+		"azure.subscription.cosmosDbService.account.tableRoleDefinition": {
+			// to override args, implement: initAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition,
+		},
+		"azure.subscription.cosmosDbService.account.tableRoleAssignment": {
+			// to override args, implement: initAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment,
+		},
+		"azure.subscription.cosmosDbService.account.mongoMIRoleDefinition": {
+			// to override args, implement: initAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition,
+		},
+		"azure.subscription.cosmosDbService.account.mongoMIRoleAssignment": {
+			// to override args, implement: initAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment,
 		},
 		"azure.subscription.cosmosDbService.account.sqlDatabase": {
 			// to override args, implement: initAzureSubscriptionCosmosDbServiceAccountSqlDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -10451,6 +10491,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cosmosDbService.account.sqlRoleAssignments": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetSqlRoleAssignments()).ToDataRes(types.Array(types.Resource("azure.subscription.cosmosDbService.account.sqlRoleAssignment")))
 	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleDefinitions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetCassandraRoleDefinitions()).ToDataRes(types.Array(types.Resource("azure.subscription.cosmosDbService.account.cassandraRoleDefinition")))
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleAssignments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetCassandraRoleAssignments()).ToDataRes(types.Array(types.Resource("azure.subscription.cosmosDbService.account.cassandraRoleAssignment")))
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleDefinitions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetGremlinRoleDefinitions()).ToDataRes(types.Array(types.Resource("azure.subscription.cosmosDbService.account.gremlinRoleDefinition")))
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleAssignments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetGremlinRoleAssignments()).ToDataRes(types.Array(types.Resource("azure.subscription.cosmosDbService.account.gremlinRoleAssignment")))
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleDefinitions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetTableRoleDefinitions()).ToDataRes(types.Array(types.Resource("azure.subscription.cosmosDbService.account.tableRoleDefinition")))
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleAssignments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetTableRoleAssignments()).ToDataRes(types.Array(types.Resource("azure.subscription.cosmosDbService.account.tableRoleAssignment")))
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleDefinitions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetMongoMIRoleDefinitions()).ToDataRes(types.Array(types.Resource("azure.subscription.cosmosDbService.account.mongoMIRoleDefinition")))
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleAssignments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetMongoMIRoleAssignments()).ToDataRes(types.Array(types.Resource("azure.subscription.cosmosDbService.account.mongoMIRoleAssignment")))
+	},
 	"azure.subscription.cosmosDbService.account.diagnosticSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetDiagnosticSettings()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.diagnosticsetting")))
 	},
@@ -10661,6 +10725,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cosmosDbService.account.sqlRoleDefinition.permissions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition).GetPermissions()).ToDataRes(types.Array(types.Dict))
 	},
+	"azure.subscription.cosmosDbService.account.sqlRoleDefinition.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
 	"azure.subscription.cosmosDbService.account.sqlRoleAssignment.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment).GetId()).ToDataRes(types.String)
 	},
@@ -10678,6 +10745,201 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cosmosDbService.account.sqlRoleAssignment.scope": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment).GetScope()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleAssignment.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleDefinition.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleDefinition.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleDefinition.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleDefinition.roleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition).GetRoleName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleDefinition.roleType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition).GetRoleType()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleDefinition.assignableScopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition).GetAssignableScopes()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleDefinition.permissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition).GetPermissions()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleDefinition.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleAssignment.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleAssignment.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleAssignment.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleAssignment.principalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment).GetPrincipalId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleAssignment.roleDefinitionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment).GetRoleDefinitionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleAssignment.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment).GetScope()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleAssignment.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleAssignment.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleDefinition.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleDefinition.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleDefinition.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleDefinition.roleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition).GetRoleName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleDefinition.roleType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition).GetRoleType()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleDefinition.assignableScopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition).GetAssignableScopes()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleDefinition.permissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition).GetPermissions()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleDefinition.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleAssignment.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleAssignment.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleAssignment.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleAssignment.principalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment).GetPrincipalId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleAssignment.roleDefinitionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment).GetRoleDefinitionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleAssignment.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment).GetScope()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleAssignment.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleAssignment.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleDefinition.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleDefinition.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleDefinition.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleDefinition.roleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition).GetRoleName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleDefinition.roleType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition).GetRoleType()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleDefinition.assignableScopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition).GetAssignableScopes()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleDefinition.permissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition).GetPermissions()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleDefinition.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleAssignment.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleAssignment.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleAssignment.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleAssignment.principalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment).GetPrincipalId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleAssignment.roleDefinitionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment).GetRoleDefinitionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleAssignment.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment).GetScope()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleAssignment.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleAssignment.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleDefinition.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleDefinition.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleDefinition.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleDefinition.roleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition).GetRoleName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleDefinition.roleType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition).GetRoleType()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleDefinition.assignableScopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition).GetAssignableScopes()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleDefinition.permissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition).GetPermissions()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleDefinition.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleAssignment.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleAssignment.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleAssignment.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleAssignment.principalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment).GetPrincipalId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleAssignment.roleDefinitionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment).GetRoleDefinitionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleAssignment.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment).GetScope()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleAssignment.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleAssignment.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
 	"azure.subscription.cosmosDbService.account.sqlDatabase.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).GetId()).ToDataRes(types.String)
@@ -10705,6 +10967,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cosmosDbService.account.sqlDatabase.containers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).GetContainers()).ToDataRes(types.Array(types.Resource("azure.subscription.cosmosDbService.account.sqlDatabase.container")))
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
 	"azure.subscription.cosmosDbService.account.sqlDatabase.container.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).GetId()).ToDataRes(types.String)
@@ -10756,6 +11021,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cosmosDbService.account.sqlDatabase.container.autoscaleEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).GetAutoscaleEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
 	"azure.subscription.keyVaultService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultService).GetSubscriptionId()).ToDataRes(types.String)
@@ -29768,6 +30036,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).SqlRoleAssignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleDefinitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).CassandraRoleDefinitions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleAssignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).CassandraRoleAssignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleDefinitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GremlinRoleDefinitions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleAssignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GremlinRoleAssignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleDefinitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).TableRoleDefinitions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleAssignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).TableRoleAssignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleDefinitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).MongoMIRoleDefinitions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleAssignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).MongoMIRoleAssignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.cosmosDbService.account.diagnosticSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).DiagnosticSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -30064,6 +30364,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.cosmosDbService.account.sqlRoleDefinition.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.cosmosDbService.account.sqlRoleAssignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment).__id, ok = v.Value.(string)
 		return
@@ -30090,6 +30394,298 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cosmosDbService.account.sqlRoleAssignment.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleAssignment.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleDefinition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleDefinition.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleDefinition.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleDefinition.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleDefinition.roleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition).RoleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleDefinition.roleType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition).RoleType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleDefinition.assignableScopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition).AssignableScopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleDefinition.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleDefinition.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleAssignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleAssignment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleAssignment.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleAssignment.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleAssignment.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleAssignment.roleDefinitionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment).RoleDefinitionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleAssignment.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleAssignment.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleAssignment.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleDefinition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleDefinition.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleDefinition.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleDefinition.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleDefinition.roleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition).RoleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleDefinition.roleType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition).RoleType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleDefinition.assignableScopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition).AssignableScopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleDefinition.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleDefinition.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleAssignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleAssignment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleAssignment.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleAssignment.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleAssignment.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleAssignment.roleDefinitionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment).RoleDefinitionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleAssignment.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleAssignment.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleAssignment.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleDefinition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleDefinition.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleDefinition.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleDefinition.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleDefinition.roleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition).RoleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleDefinition.roleType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition).RoleType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleDefinition.assignableScopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition).AssignableScopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleDefinition.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleDefinition.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleAssignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleAssignment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleAssignment.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleAssignment.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleAssignment.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleAssignment.roleDefinitionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment).RoleDefinitionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleAssignment.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleAssignment.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.tableRoleAssignment.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleDefinition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleDefinition.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleDefinition.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleDefinition.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleDefinition.roleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition).RoleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleDefinition.roleType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition).RoleType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleDefinition.assignableScopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition).AssignableScopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleDefinition.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleDefinition.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleAssignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleAssignment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleAssignment.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleAssignment.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleAssignment.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleAssignment.roleDefinitionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment).RoleDefinitionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleAssignment.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleAssignment.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleAssignment.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cosmosDbService.account.sqlDatabase.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -30130,6 +30726,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cosmosDbService.account.sqlDatabase.containers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).Containers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cosmosDbService.account.sqlDatabase.container.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -30202,6 +30802,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cosmosDbService.account.sqlDatabase.container.autoscaleEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).AutoscaleEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.keyVaultService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -68821,6 +69425,14 @@ type mqlAzureSubscriptionCosmosDbServiceAccount struct {
 	PrivateEndpointConnections         plugin.TValue[[]any]
 	SqlRoleDefinitions                 plugin.TValue[[]any]
 	SqlRoleAssignments                 plugin.TValue[[]any]
+	CassandraRoleDefinitions           plugin.TValue[[]any]
+	CassandraRoleAssignments           plugin.TValue[[]any]
+	GremlinRoleDefinitions             plugin.TValue[[]any]
+	GremlinRoleAssignments             plugin.TValue[[]any]
+	TableRoleDefinitions               plugin.TValue[[]any]
+	TableRoleAssignments               plugin.TValue[[]any]
+	MongoMIRoleDefinitions             plugin.TValue[[]any]
+	MongoMIRoleAssignments             plugin.TValue[[]any]
 	DiagnosticSettings                 plugin.TValue[[]any]
 	DiagnosticSettingsCategories       plugin.TValue[[]any]
 	SqlDatabases                       plugin.TValue[[]any]
@@ -69024,6 +69636,134 @@ func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetSqlRoleAssignments() *pl
 		}
 
 		return c.sqlRoleAssignments()
+	})
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetCassandraRoleDefinitions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CassandraRoleDefinitions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService.account", c.__id, "cassandraRoleDefinitions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.cassandraRoleDefinitions()
+	})
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetCassandraRoleAssignments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CassandraRoleAssignments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService.account", c.__id, "cassandraRoleAssignments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.cassandraRoleAssignments()
+	})
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetGremlinRoleDefinitions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.GremlinRoleDefinitions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService.account", c.__id, "gremlinRoleDefinitions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.gremlinRoleDefinitions()
+	})
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetGremlinRoleAssignments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.GremlinRoleAssignments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService.account", c.__id, "gremlinRoleAssignments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.gremlinRoleAssignments()
+	})
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetTableRoleDefinitions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TableRoleDefinitions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService.account", c.__id, "tableRoleDefinitions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tableRoleDefinitions()
+	})
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetTableRoleAssignments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TableRoleAssignments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService.account", c.__id, "tableRoleAssignments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tableRoleAssignments()
+	})
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetMongoMIRoleDefinitions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MongoMIRoleDefinitions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService.account", c.__id, "mongoMIRoleDefinitions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mongoMIRoleDefinitions()
+	})
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetMongoMIRoleAssignments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MongoMIRoleAssignments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService.account", c.__id, "mongoMIRoleAssignments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mongoMIRoleAssignments()
 	})
 }
 
@@ -69551,7 +70291,7 @@ func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetSystemMetadata
 type mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinitionInternal it will be used here
+	mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinitionInternal
 	Id               plugin.TValue[string]
 	Name             plugin.TValue[string]
 	Type             plugin.TValue[string]
@@ -69559,6 +70299,7 @@ type mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition struct {
 	RoleType         plugin.TValue[string]
 	AssignableScopes plugin.TValue[[]any]
 	Permissions      plugin.TValue[[]any]
+	SystemMetadata   plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
 // createAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition creates a new instance of this resource
@@ -69621,17 +70362,34 @@ func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition) GetPermiss
 	return &c.Permissions
 }
 
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService.account.sqlRoleDefinition", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
 // mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment for the azure.subscription.cosmosDbService.account.sqlRoleAssignment resource
 type mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignmentInternal it will be used here
+	mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignmentInternal
 	Id               plugin.TValue[string]
 	Name             plugin.TValue[string]
 	Type             plugin.TValue[string]
 	PrincipalId      plugin.TValue[string]
 	RoleDefinitionId plugin.TValue[string]
 	Scope            plugin.TValue[string]
+	SystemMetadata   plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
 // createAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment creates a new instance of this resource
@@ -69690,6 +70448,750 @@ func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment) GetScope()
 	return &c.Scope
 }
 
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService.account.sqlRoleAssignment", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition for the azure.subscription.cosmosDbService.account.cassandraRoleDefinition resource
+type mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinitionInternal
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Type             plugin.TValue[string]
+	RoleName         plugin.TValue[string]
+	RoleType         plugin.TValue[string]
+	AssignableScopes plugin.TValue[[]any]
+	Permissions      plugin.TValue[[]any]
+	SystemMetadata   plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition creates a new instance of this resource
+func createAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cosmosDbService.account.cassandraRoleDefinition", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition) MqlName() string {
+	return "azure.subscription.cosmosDbService.account.cassandraRoleDefinition"
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition) GetRoleName() *plugin.TValue[string] {
+	return &c.RoleName
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition) GetRoleType() *plugin.TValue[string] {
+	return &c.RoleType
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition) GetAssignableScopes() *plugin.TValue[[]any] {
+	return &c.AssignableScopes
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition) GetPermissions() *plugin.TValue[[]any] {
+	return &c.Permissions
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService.account.cassandraRoleDefinition", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment for the azure.subscription.cosmosDbService.account.cassandraRoleAssignment resource
+type mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignmentInternal
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Type              plugin.TValue[string]
+	PrincipalId       plugin.TValue[string]
+	RoleDefinitionId  plugin.TValue[string]
+	Scope             plugin.TValue[string]
+	ProvisioningState plugin.TValue[string]
+	SystemMetadata    plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment creates a new instance of this resource
+func createAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cosmosDbService.account.cassandraRoleAssignment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment) MqlName() string {
+	return "azure.subscription.cosmosDbService.account.cassandraRoleAssignment"
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment) GetPrincipalId() *plugin.TValue[string] {
+	return &c.PrincipalId
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment) GetRoleDefinitionId() *plugin.TValue[string] {
+	return &c.RoleDefinitionId
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService.account.cassandraRoleAssignment", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition for the azure.subscription.cosmosDbService.account.gremlinRoleDefinition resource
+type mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinitionInternal
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Type             plugin.TValue[string]
+	RoleName         plugin.TValue[string]
+	RoleType         plugin.TValue[string]
+	AssignableScopes plugin.TValue[[]any]
+	Permissions      plugin.TValue[[]any]
+	SystemMetadata   plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition creates a new instance of this resource
+func createAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cosmosDbService.account.gremlinRoleDefinition", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition) MqlName() string {
+	return "azure.subscription.cosmosDbService.account.gremlinRoleDefinition"
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition) GetRoleName() *plugin.TValue[string] {
+	return &c.RoleName
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition) GetRoleType() *plugin.TValue[string] {
+	return &c.RoleType
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition) GetAssignableScopes() *plugin.TValue[[]any] {
+	return &c.AssignableScopes
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition) GetPermissions() *plugin.TValue[[]any] {
+	return &c.Permissions
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService.account.gremlinRoleDefinition", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment for the azure.subscription.cosmosDbService.account.gremlinRoleAssignment resource
+type mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignmentInternal
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Type              plugin.TValue[string]
+	PrincipalId       plugin.TValue[string]
+	RoleDefinitionId  plugin.TValue[string]
+	Scope             plugin.TValue[string]
+	ProvisioningState plugin.TValue[string]
+	SystemMetadata    plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment creates a new instance of this resource
+func createAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cosmosDbService.account.gremlinRoleAssignment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment) MqlName() string {
+	return "azure.subscription.cosmosDbService.account.gremlinRoleAssignment"
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment) GetPrincipalId() *plugin.TValue[string] {
+	return &c.PrincipalId
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment) GetRoleDefinitionId() *plugin.TValue[string] {
+	return &c.RoleDefinitionId
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService.account.gremlinRoleAssignment", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition for the azure.subscription.cosmosDbService.account.tableRoleDefinition resource
+type mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinitionInternal
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Type             plugin.TValue[string]
+	RoleName         plugin.TValue[string]
+	RoleType         plugin.TValue[string]
+	AssignableScopes plugin.TValue[[]any]
+	Permissions      plugin.TValue[[]any]
+	SystemMetadata   plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition creates a new instance of this resource
+func createAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cosmosDbService.account.tableRoleDefinition", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition) MqlName() string {
+	return "azure.subscription.cosmosDbService.account.tableRoleDefinition"
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition) GetRoleName() *plugin.TValue[string] {
+	return &c.RoleName
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition) GetRoleType() *plugin.TValue[string] {
+	return &c.RoleType
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition) GetAssignableScopes() *plugin.TValue[[]any] {
+	return &c.AssignableScopes
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition) GetPermissions() *plugin.TValue[[]any] {
+	return &c.Permissions
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService.account.tableRoleDefinition", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment for the azure.subscription.cosmosDbService.account.tableRoleAssignment resource
+type mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignmentInternal
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Type              plugin.TValue[string]
+	PrincipalId       plugin.TValue[string]
+	RoleDefinitionId  plugin.TValue[string]
+	Scope             plugin.TValue[string]
+	ProvisioningState plugin.TValue[string]
+	SystemMetadata    plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment creates a new instance of this resource
+func createAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cosmosDbService.account.tableRoleAssignment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment) MqlName() string {
+	return "azure.subscription.cosmosDbService.account.tableRoleAssignment"
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment) GetPrincipalId() *plugin.TValue[string] {
+	return &c.PrincipalId
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment) GetRoleDefinitionId() *plugin.TValue[string] {
+	return &c.RoleDefinitionId
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService.account.tableRoleAssignment", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition for the azure.subscription.cosmosDbService.account.mongoMIRoleDefinition resource
+type mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinitionInternal
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Type             plugin.TValue[string]
+	RoleName         plugin.TValue[string]
+	RoleType         plugin.TValue[string]
+	AssignableScopes plugin.TValue[[]any]
+	Permissions      plugin.TValue[[]any]
+	SystemMetadata   plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition creates a new instance of this resource
+func createAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cosmosDbService.account.mongoMIRoleDefinition", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition) MqlName() string {
+	return "azure.subscription.cosmosDbService.account.mongoMIRoleDefinition"
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition) GetRoleName() *plugin.TValue[string] {
+	return &c.RoleName
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition) GetRoleType() *plugin.TValue[string] {
+	return &c.RoleType
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition) GetAssignableScopes() *plugin.TValue[[]any] {
+	return &c.AssignableScopes
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition) GetPermissions() *plugin.TValue[[]any] {
+	return &c.Permissions
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService.account.mongoMIRoleDefinition", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment for the azure.subscription.cosmosDbService.account.mongoMIRoleAssignment resource
+type mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignmentInternal
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Type              plugin.TValue[string]
+	PrincipalId       plugin.TValue[string]
+	RoleDefinitionId  plugin.TValue[string]
+	Scope             plugin.TValue[string]
+	ProvisioningState plugin.TValue[string]
+	SystemMetadata    plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment creates a new instance of this resource
+func createAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cosmosDbService.account.mongoMIRoleAssignment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment) MqlName() string {
+	return "azure.subscription.cosmosDbService.account.mongoMIRoleAssignment"
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment) GetPrincipalId() *plugin.TValue[string] {
+	return &c.PrincipalId
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment) GetRoleDefinitionId() *plugin.TValue[string] {
+	return &c.RoleDefinitionId
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService.account.mongoMIRoleAssignment", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
 // mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase for the azure.subscription.cosmosDbService.account.sqlDatabase resource
 type mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase struct {
 	MqlRuntime *plugin.Runtime
@@ -69704,6 +71206,7 @@ type mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase struct {
 	AutoscaleMaxThroughput plugin.TValue[int64]
 	AutoscaleEnabled       plugin.TValue[bool]
 	Containers             plugin.TValue[[]any]
+	SystemMetadata         plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
 // createAzureSubscriptionCosmosDbServiceAccountSqlDatabase creates a new instance of this resource
@@ -69799,6 +71302,22 @@ func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) GetContainers() 
 	})
 }
 
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService.account.sqlDatabase", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
 // mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer for the azure.subscription.cosmosDbService.account.sqlDatabase.container resource
 type mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer struct {
 	MqlRuntime *plugin.Runtime
@@ -69821,6 +71340,7 @@ type mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer struct {
 	ManualThroughput       plugin.TValue[int64]
 	AutoscaleMaxThroughput plugin.TValue[int64]
 	AutoscaleEnabled       plugin.TValue[bool]
+	SystemMetadata         plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
 // createAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer creates a new instance of this resource
@@ -69933,6 +71453,22 @@ func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) GetAuto
 func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) GetAutoscaleEnabled() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.AutoscaleEnabled, func() (bool, error) {
 		return c.autoscaleEnabled()
+	})
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService.account.sqlDatabase.container", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
 	})
 }
 

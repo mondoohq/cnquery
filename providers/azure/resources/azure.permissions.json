@@ -1,7 +1,7 @@
 {
   "provider": "azure",
-  "version": "13.30.0",
-  "generated_at": "2026-07-16T09:00:08+02:00",
+  "version": "13.31.0",
+  "generated_at": "2026-07-18T06:07:30-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -94,11 +94,19 @@
     "Microsoft.Databricks/workspaces/read",
     "Microsoft.DesktopVirtualization/hostPools/read",
     "Microsoft.Devices/resource/read",
+    "Microsoft.DocumentDB/databaseAccounts/cassandraRoleAssignments/read",
+    "Microsoft.DocumentDB/databaseAccounts/cassandraRoleDefinitions/read",
+    "Microsoft.DocumentDB/databaseAccounts/gremlinRoleAssignments/read",
+    "Microsoft.DocumentDB/databaseAccounts/gremlinRoleDefinitions/read",
+    "Microsoft.DocumentDB/databaseAccounts/mongoMIRoleAssignments/read",
+    "Microsoft.DocumentDB/databaseAccounts/mongoMIRoleDefinitions/read",
     "Microsoft.DocumentDB/databaseAccounts/privateEndpointConnections/read",
     "Microsoft.DocumentDB/databaseAccounts/read",
     "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/read",
     "Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments/read",
     "Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions/read",
+    "Microsoft.DocumentDB/databaseAccounts/tableRoleAssignments/read",
+    "Microsoft.DocumentDB/databaseAccounts/tableRoleDefinitions/read",
     "Microsoft.DocumentDB/mongoClusters/read",
     "Microsoft.EventHub/namespaces/eventhubs/consumergroups/read",
     "Microsoft.EventHub/namespaces/eventhubs/read",
@@ -837,6 +845,42 @@
       "source_file": "iot.go"
     },
     {
+      "permission": "Microsoft.DocumentDB/databaseAccounts/cassandraRoleAssignments/read",
+      "service": "Microsoft.DocumentDB",
+      "action": "NewListCassandraRoleAssignmentsPager",
+      "source_file": "cosmosdb_rbac.go"
+    },
+    {
+      "permission": "Microsoft.DocumentDB/databaseAccounts/cassandraRoleDefinitions/read",
+      "service": "Microsoft.DocumentDB",
+      "action": "NewListCassandraRoleDefinitionsPager",
+      "source_file": "cosmosdb_rbac.go"
+    },
+    {
+      "permission": "Microsoft.DocumentDB/databaseAccounts/gremlinRoleAssignments/read",
+      "service": "Microsoft.DocumentDB",
+      "action": "NewListGremlinRoleAssignmentsPager",
+      "source_file": "cosmosdb_rbac.go"
+    },
+    {
+      "permission": "Microsoft.DocumentDB/databaseAccounts/gremlinRoleDefinitions/read",
+      "service": "Microsoft.DocumentDB",
+      "action": "NewListGremlinRoleDefinitionsPager",
+      "source_file": "cosmosdb_rbac.go"
+    },
+    {
+      "permission": "Microsoft.DocumentDB/databaseAccounts/mongoMIRoleAssignments/read",
+      "service": "Microsoft.DocumentDB",
+      "action": "NewListMongoMIRoleAssignmentsPager",
+      "source_file": "cosmosdb_rbac.go"
+    },
+    {
+      "permission": "Microsoft.DocumentDB/databaseAccounts/mongoMIRoleDefinitions/read",
+      "service": "Microsoft.DocumentDB",
+      "action": "NewListMongoMIRoleDefinitionsPager",
+      "source_file": "cosmosdb_rbac.go"
+    },
+    {
       "permission": "Microsoft.DocumentDB/databaseAccounts/privateEndpointConnections/read",
       "service": "Microsoft.DocumentDB",
       "action": "NewListByDatabaseAccountPager",
@@ -865,6 +909,18 @@
       "service": "Microsoft.DocumentDB",
       "action": "NewListSQLRoleDefinitionsPager",
       "source_file": "cosmosdb.go"
+    },
+    {
+      "permission": "Microsoft.DocumentDB/databaseAccounts/tableRoleAssignments/read",
+      "service": "Microsoft.DocumentDB",
+      "action": "NewListTableRoleAssignmentsPager",
+      "source_file": "cosmosdb_rbac.go"
+    },
+    {
+      "permission": "Microsoft.DocumentDB/databaseAccounts/tableRoleDefinitions/read",
+      "service": "Microsoft.DocumentDB",
+      "action": "NewListTableRoleDefinitionsPager",
+      "source_file": "cosmosdb_rbac.go"
     },
     {
       "permission": "Microsoft.DocumentDB/mongoClusters/read",

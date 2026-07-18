@@ -12,10 +12,11 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	cosmos "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos/v3"
+	cosmos "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos/v4"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/azure/connection"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -109,13 +110,22 @@ func sqlDatabaseToMQL(runtime *plugin.Runtime, db *cosmos.SQLDatabaseGetResults)
 		dbName = *db.Name
 	}
 
-	return CreateResource(runtime, "azure.subscription.cosmosDbService.account.sqlDatabase",
+	res, err := CreateResource(runtime, "azure.subscription.cosmosDbService.account.sqlDatabase",
 		map[string]*llx.RawData{
 			"id":   llx.StringDataPtr(db.ID),
 			"name": llx.StringData(dbName),
 			"type": llx.StringDataPtr(db.Type),
 			"etag": llx.StringData(etag),
 		})
+	if err != nil {
+		return nil, err
+	}
+	sysData, err := convert.JsonToDict(db.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).cacheSystemData = sysData
+	return res, nil
 }
 
 // throughputCache is a one-shot fetch result used by both the database and
@@ -132,11 +142,21 @@ type throughputCache struct {
 }
 
 type mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseInternal struct {
-	throughput throughputCache
+	throughput      throughputCache
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 type mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainerInternal struct {
-	throughput throughputCache
+	throughput      throughputCache
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) loadThroughput() error {
@@ -362,7 +382,7 @@ func sqlContainerToMQL(runtime *plugin.Runtime, c *cosmos.SQLContainerGetResults
 		name = *c.Name
 	}
 
-	return CreateResource(runtime, "azure.subscription.cosmosDbService.account.sqlDatabase.container",
+	res, err := CreateResource(runtime, "azure.subscription.cosmosDbService.account.sqlDatabase.container",
 		map[string]*llx.RawData{
 			"id":                     llx.StringDataPtr(c.ID),
 			"name":                   llx.StringData(name),
@@ -378,6 +398,15 @@ func sqlContainerToMQL(runtime *plugin.Runtime, c *cosmos.SQLContainerGetResults
 			"conflictResolutionMode": llx.StringData(conflictMode),
 			"conflictResolutionPath": llx.StringData(conflictPath),
 		})
+	if err != nil {
+		return nil, err
+	}
+	sysData, err := convert.JsonToDict(c.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).cacheSystemData = sysData
+	return res, nil
 }
 
 func (a *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) loadThroughput() error {

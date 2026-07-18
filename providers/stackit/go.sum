@@ -408,8 +408,8 @@ github.com/stackitcloud/stackit-sdk-go/services/dns v0.21.0 h1:ZVkptfVCAqpaPWkE+
 github.com/stackitcloud/stackit-sdk-go/services/dns v0.21.0/go.mod h1:FiYSv3D9rzgEVzi8Mpq5oYZBosrasa5uUYqVdEIbM1U=
 github.com/stackitcloud/stackit-sdk-go/services/iaas v1.13.0 h1:PQZ6n71CMadLU3DjJxJXiPHdK9Bz4hMttBREQD6no34=
 github.com/stackitcloud/stackit-sdk-go/services/iaas v1.13.0/go.mod h1:AbPN9BGkdjc+tVsXEX9Vr8BPDjdlDmG26K1FwCKZQVU=
-github.com/stackitcloud/stackit-sdk-go/services/kms v1.11.0 h1:OrUaDypQNr1nOXZfVQXCwUpN4YhR5y0vtvYi9/Ogoi4=
-github.com/stackitcloud/stackit-sdk-go/services/kms v1.11.0/go.mod h1:pVaCmb1ZHAPGVRlSlBlVOjThp9Tb2sX9+nRX0M+d1KU=
+github.com/stackitcloud/stackit-sdk-go/services/kms v1.12.0 h1:rydjdSL+j6Yd+3T7ks+JFkjKMh3a1RfBzTFZBTcdgds=
+github.com/stackitcloud/stackit-sdk-go/services/kms v1.12.0/go.mod h1:pVaCmb1ZHAPGVRlSlBlVOjThp9Tb2sX9+nRX0M+d1KU=
 github.com/stackitcloud/stackit-sdk-go/services/loadbalancer v1.14.0 h1:1dvL7tX91ziklayQmOupniE3jM4D5Nbtc0auNcx2p18=
 github.com/stackitcloud/stackit-sdk-go/services/loadbalancer v1.14.0/go.mod h1:+Ld3dn648I+YKcBV3fEkYpDSr3fel421+LurJGywSBs=
 github.com/stackitcloud/stackit-sdk-go/services/logme v1.0.1 h1:iteL61eMMPWT6872nF4Ko/tBU1IXemvS++XR09pj6NA=
@@ -442,8 +442,8 @@ github.com/stackitcloud/stackit-sdk-go/services/sfs v0.11.0 h1:YhQ2GF+AyHVUps1iE
 github.com/stackitcloud/stackit-sdk-go/services/sfs v0.11.0/go.mod h1:jMlBoXqrPNX5nXbo6oT7exalqilw1jiLPoIp4Cn0CdI=
 github.com/stackitcloud/stackit-sdk-go/services/ske v1.19.0 h1:/SNc1zedje1HNhMCWf+IRx2eKpFXeGdmCRCIZ4PCrhs=
 github.com/stackitcloud/stackit-sdk-go/services/ske v1.19.0/go.mod h1:TbqmZhLMofmfl+HhVl6oHYcI3zvXTm1vRjN3A/fOkM4=
-github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex v1.16.0 h1:A6zN5JUz5DOTigTxAyAC+4p5VpJzaYDftx2yIH0mgn8=
-github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex v1.16.0/go.mod h1:AiUoMAqQcOlMgDtkVJlqI7P/VGD5xjN3dYjERGnwN/M=
+github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex v1.16.1 h1:pjFVw2Tc0cSfAzmyZRiLknuKSADs7nPXNUyrM216CwQ=
+github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex v1.16.1/go.mod h1:AiUoMAqQcOlMgDtkVJlqI7P/VGD5xjN3dYjERGnwN/M=
 github.com/stackitcloud/stackit-sdk-go/services/telemetrylink v0.4.0 h1:RG+cZzvIb+NoVNYemvwG5UHR9qEqea6IuHVYtojeBbQ=
 github.com/stackitcloud/stackit-sdk-go/services/telemetrylink v0.4.0/go.mod h1:hgw8janWmDfP2bnuZensxqcAePr49BX5ug8Rq85o+h8=
 github.com/stackitcloud/stackit-sdk-go/services/telemetryrouter v0.4.0 h1:tEKBl3g7SIjZ8aa43nNjS1Rqr/IwxQ3Pr1MArYF0fno=
