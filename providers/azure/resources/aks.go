@@ -140,6 +140,11 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			// Normalize a nil Properties to an empty struct so the many early
+			// accesses below are nil-safe; the later blocks already guard it.
+			if entry.Properties == nil {
+				entry.Properties = &clusters.ManagedClusterProperties{}
+			}
 			storageProfile, err := convert.JsonToDict(entry.Properties.StorageProfile)
 			if err != nil {
 				return nil, err

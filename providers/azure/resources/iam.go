@@ -351,9 +351,15 @@ func (a *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) role() (*mqlAzu
 	if err != nil {
 		return nil, err
 	}
-	mqlResource := r.(*mqlAzureSubscription)
-	iamResource := mqlResource.GetIam().Data
-	roles := iamResource.GetRoles().Data
+	iam := r.(*mqlAzureSubscription).GetIam()
+	if iam.Error != nil {
+		return nil, iam.Error
+	}
+	rolesVal := iam.Data.GetRoles()
+	if rolesVal.Error != nil {
+		return nil, rolesVal.Error
+	}
+	roles := rolesVal.Data
 	for i := range roles {
 		role := roles[i].(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition)
 		if role.__id == a.roleDefinitionId {

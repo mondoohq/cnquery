@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -21,6 +22,22 @@ import (
 
 	sql "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql"
 )
+
+// elasticPoolNameFromID extracts the elastic pool name (the last path segment)
+// from a full ARM elastic pool resource ID, e.g.
+// "/subscriptions/.../elasticPools/mypool" -> "mypool". It is nil-safe: a nil
+// input yields a nil result so the field stays null rather than carrying the
+// raw ARM ID, which would break equality filters on the pool name.
+func elasticPoolNameFromID(id *string) *string {
+	if id == nil {
+		return nil
+	}
+	name := *id
+	if idx := strings.LastIndex(name, "/"); idx >= 0 {
+		name = name[idx+1:]
+	}
+	return &name
+}
 
 type mqlAzureSubscriptionSqlServiceServerInternal struct {
 	encryptionProtectorOnce sync.Once
@@ -298,7 +315,7 @@ func (a *mqlAzureSubscriptionSqlServiceServer) databases() ([]any, error) {
 				"requestedServiceObjectiveName": llx.StringDataPtr(entry.Properties.RequestedServiceObjectiveName),
 				"serviceLevelObjective":         llx.StringDataPtr(entry.Properties.CurrentServiceObjectiveName),
 				"status":                        llx.StringDataPtr((*string)(entry.Properties.Status)),
-				"elasticPoolName":               llx.StringDataPtr(entry.Properties.ElasticPoolID),
+				"elasticPoolName":               llx.StringDataPtr(elasticPoolNameFromID(entry.Properties.ElasticPoolID)),
 				"defaultSecondaryLocation":      llx.StringDataPtr(entry.Properties.DefaultSecondaryLocation),
 				"failoverGroupId":               llx.StringDataPtr(entry.Properties.FailoverGroupID),
 				"readScale":                     llx.StringDataPtr((*string)(entry.Properties.ReadScale)),

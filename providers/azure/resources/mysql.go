@@ -6,8 +6,10 @@ package resources
 import (
 	"context"
 	"errors"
+	"net/http"
 	"strings"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -302,8 +304,15 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) sslEnforcement() (bool,
 
 	resp, err := dbConfClient.Get(ctx, resourceID.ResourceGroup, server, "require_secure_transport", nil)
 	if err != nil {
-		// Default to true as MySQL flexible servers enforce SSL by default
-		return true, nil
+		// Only tolerate access-denied / not-found: swallowing every error would
+		// report a transient/permission failure as SSL enforced, masking the real
+		// state of a security-relevant setting. MySQL flexible servers enforce SSL
+		// by default, so on those two cases we fall back to that default.
+		var rerr *azcore.ResponseError
+		if errors.As(err, &rerr) && (rerr.StatusCode == http.StatusForbidden || rerr.StatusCode == http.StatusNotFound) {
+			return true, nil
+		}
+		return false, err
 	}
 
 	if resp.Properties != nil && resp.Properties.Value != nil {

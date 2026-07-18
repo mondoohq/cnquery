@@ -48,34 +48,57 @@ func getPolicyAssignments(ctx context.Context, conn armSecurityConn) (PolicyAssi
 	urlPath := "/subscriptions/{subscriptionId}/providers/Microsoft.Authorization/policyAssignments"
 	urlPath = strings.ReplaceAll(urlPath, "{subscriptionId}", url.PathEscape(conn.subscriptionId))
 	urlPath = runtime.JoinPaths(conn.host, urlPath)
-	client := http.Client{}
-	req, err := http.NewRequest("GET", urlPath, nil)
+
+	// Build the first request URL with the api-version query parameter. The
+	// service returns a fully-formed absolute nextLink for subsequent pages, so
+	// we only need to assemble the query on the initial request.
+	firstURL, err := url.Parse(urlPath)
 	if err != nil {
 		return PolicyAssignments{}, err
 	}
-	q := req.URL.Query()
+	q := firstURL.Query()
 	q.Set("api-version", "2022-06-01")
-	req.URL.RawQuery = q.Encode()
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token.Token))
+	firstURL.RawQuery = q.Encode()
 
-	resp, err := client.Do(req)
-	if err != nil {
-		return PolicyAssignments{}, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return PolicyAssignments{}, errors.New("failed to fetch policy assignments from " + urlPath + ": " + resp.Status)
-	}
-
-	raw, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return PolicyAssignments{}, err
-	}
+	client := http.Client{}
 	result := PolicyAssignments{}
-	err = json.Unmarshal(raw, &result)
-	return result, err
+	nextURL := firstURL.String()
+	for nextURL != "" {
+		req, err := http.NewRequestWithContext(ctx, "GET", nextURL, nil)
+		if err != nil {
+			return PolicyAssignments{}, err
+		}
+		req.Header.Set("Accept", "application/json")
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token.Token))
+
+		resp, err := client.Do(req)
+		if err != nil {
+			return PolicyAssignments{}, err
+		}
+
+		if resp.StatusCode != 200 {
+			resp.Body.Close()
+			return PolicyAssignments{}, errors.New("failed to fetch policy assignments from " + nextURL + ": " + resp.Status)
+		}
+
+		raw, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			return PolicyAssignments{}, err
+		}
+
+		page := PolicyAssignments{}
+		if err := json.Unmarshal(raw, &page); err != nil {
+			return PolicyAssignments{}, err
+		}
+		result.PolicyAssignments = append(result.PolicyAssignments, page.PolicyAssignments...)
+
+		if page.NextLink == nil {
+			break
+		}
+		nextURL = *page.NextLink
+	}
+	return result, nil
 }
 
 func getServerVulnAssessmentSettings(ctx context.Context, conn armSecurityConn) (ServerVulnerabilityAssessmentsSettingsList, error) {
@@ -155,6 +178,7 @@ type PolicyAssignment struct {
 
 type PolicyAssignments struct {
 	PolicyAssignments []PolicyAssignment `json:"value"`
+	NextLink          *string            `json:"nextLink"`
 }
 
 type ServerVulnerabilityAssessmentsSettings struct {

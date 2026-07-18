@@ -1297,6 +1297,9 @@ func (a *mqlAzureSubscriptionWebServiceAppslot) configuration() (*mqlAzureSubscr
 		args["httpLoggingEnabled"] = llx.BoolDataPtr(configuration.Properties.HTTPLoggingEnabled)
 		args["detailedErrorLoggingEnabled"] = llx.BoolDataPtr(configuration.Properties.DetailedErrorLoggingEnabled)
 		args["autoHealEnabled"] = llx.BoolDataPtr(configuration.Properties.AutoHealEnabled)
+		if configuration.Properties.MinTLSCipherSuite != nil {
+			args["minTlsCipherSuite"] = llx.StringData(string(*configuration.Properties.MinTLSCipherSuite))
+		}
 		if configuration.Properties.ScmMinTLSVersion != nil {
 			args["scmMinTlsVersion"] = llx.StringData(string(*configuration.Properties.ScmMinTLSVersion))
 		}
