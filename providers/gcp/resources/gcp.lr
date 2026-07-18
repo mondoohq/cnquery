@@ -11725,6 +11725,16 @@ private gcp.project.vertexaiService.model @defaults("name displayName") {
   labels map[string]string
   // ETag used for concurrency control on resource updates
   etag string
+  // Base model this model was tuned or copied from (Model Garden publisher model name or Genie base-model URI)
+  baseModelSource dict
+  // Source Vertex AI model this model was copied from
+  originalModel() gcp.project.vertexaiService.model
+  // Pipeline job that produced this model
+  pipelineJob() gcp.project.vertexaiService.pipelineJob
+  // Whether the model satisfies Physical Zone Separation
+  satisfiesPzs bool
+  // Whether the model satisfies Physical Zone Isolation
+  satisfiesPzi bool
   // Creation time
   createdAt time
   // Last update time
@@ -11765,6 +11775,26 @@ private gcp.project.vertexaiService.endpoint @defaults("name displayName") {
   networkRef() gcp.project.computeService.network
   // Whether private service connect is enabled
   enablePrivateServiceConnect bool
+  // Projects allowed to reach the endpoint over Private Service Connect
+  pscProjectAllowlist []string
+  // Service attachment for the endpoint's Private Service Connect
+  pscServiceAttachment string
+  // Whether prediction request/response logging to BigQuery is enabled
+  predictionLoggingEnabled bool
+  // Fraction of prediction requests logged (0.0 to 1.0)
+  predictionLoggingSamplingRate float
+  // BigQuery destination URI where prediction requests and responses are logged
+  predictionLoggingBigqueryDestination string
+  // Whether the endpoint is a dedicated endpoint with its own public DNS
+  dedicatedEndpointEnabled bool
+  // Public DNS of the dedicated endpoint
+  dedicatedEndpointDns string
+  // Whether private model serving is enabled
+  privateModelServerEnabled bool
+  // Whether the endpoint satisfies Physical Zone Separation
+  satisfiesPzs bool
+  // Whether the endpoint satisfies Physical Zone Isolation
+  satisfiesPzi bool
   // Traffic split (model ID to traffic percentage)
   trafficSplit map[string]int
   // User-defined key/value labels for organizing the resource
@@ -11803,6 +11833,14 @@ private gcp.project.vertexaiService.endpoint.deployment @defaults("id displayNam
   disableContainerLogging bool
   // Whether access logging is enabled
   enableAccessLogging bool
+  // Service attachment for the deployment's private endpoint
+  privateServiceAttachment string
+  // Private HTTPS URI for prediction requests
+  predictHttpUri string
+  // Private HTTPS URI for explanation requests
+  explainHttpUri string
+  // Private HTTPS URI for health checks
+  healthHttpUri string
   // Time the model was deployed
   createdAt time
 }
@@ -11849,6 +11887,12 @@ private gcp.project.vertexaiService.pipelineJob @defaults("name displayName stat
   templateUri string
   // Template metadata
   templateMetadata dict
+  // Schedule that created this pipeline job
+  scheduleRef() gcp.project.vertexaiService.schedule
+  // Error status if the pipeline job failed
+  error dict
+  // Reserved IP ranges the pipeline job's network draws from
+  reservedIpRanges []string
   // User-defined key/value labels for organizing the resource
   labels map[string]string
   // Creation time
@@ -12132,12 +12176,24 @@ private gcp.project.vertexaiService.notebookRuntime @defaults("displayName runti
   machineSpec dict
   // Network spec (VPC network, subnetwork, internet access)
   networkSpec dict
+  // Whether the runtime has internet access
+  enableInternetAccess bool
+  // VPC network the runtime attaches to
+  network() gcp.project.computeService.network
+  // Subnetwork the runtime attaches to
+  subnetwork() gcp.project.computeService.subnetwork
   // Idle shutdown configuration
   idleShutdownConfig dict
   // End-user credential configuration
   eucConfig dict
+  // Whether end-user credential access is disabled
+  eucDisabled bool
+  // Whether the act-as permission check is bypassed
+  bypassActasCheck bool
   // Shielded VM configuration
   shieldedVmConfig dict
+  // Whether Secure Boot is enabled on the runtime VM
+  enableSecureBoot bool
   // Software configuration (post-startup scripts, environment)
   softwareConfig dict
   // User-defined key/value labels for organizing the resource
@@ -12175,18 +12231,32 @@ private gcp.project.vertexaiService.notebookRuntimeTemplate @defaults("displayNa
   isDefault bool
   // Runtime type (USER_DEFINED, ONE_CLICK)
   notebookRuntimeType string
+  // Service account runtimes created from this template run as
+  serviceAccount() gcp.project.iamService.serviceAccount
   // Network tags applied to runtime VMs
   networkTags []string
   // Machine spec (machine type, accelerators)
   machineSpec dict
   // Network spec (VPC network, subnetwork, internet access)
   networkSpec dict
+  // Whether runtimes created from this template have internet access
+  enableInternetAccess bool
+  // VPC network runtimes created from this template attach to
+  network() gcp.project.computeService.network
+  // Subnetwork runtimes created from this template attach to
+  subnetwork() gcp.project.computeService.subnetwork
   // Idle shutdown configuration
   idleShutdownConfig dict
   // End-user credential configuration
   eucConfig dict
+  // Whether end-user credential access is disabled
+  eucDisabled bool
+  // Whether the act-as permission check is bypassed
+  bypassActasCheck bool
   // Shielded VM configuration
   shieldedVmConfig dict
+  // Whether Secure Boot is enabled on runtime VMs
+  enableSecureBoot bool
   // Software configuration (post-startup scripts, environment)
   softwareConfig dict
   // ETag used for concurrency control on resource updates

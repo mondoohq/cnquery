@@ -14022,6 +14022,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.vertexaiService.model.etag": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceModel).GetEtag()).ToDataRes(types.String)
 	},
+	"gcp.project.vertexaiService.model.baseModelSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceModel).GetBaseModelSource()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.model.originalModel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceModel).GetOriginalModel()).ToDataRes(types.Resource("gcp.project.vertexaiService.model"))
+	},
+	"gcp.project.vertexaiService.model.pipelineJob": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceModel).GetPipelineJob()).ToDataRes(types.Resource("gcp.project.vertexaiService.pipelineJob"))
+	},
+	"gcp.project.vertexaiService.model.satisfiesPzs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceModel).GetSatisfiesPzs()).ToDataRes(types.Bool)
+	},
+	"gcp.project.vertexaiService.model.satisfiesPzi": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceModel).GetSatisfiesPzi()).ToDataRes(types.Bool)
+	},
 	"gcp.project.vertexaiService.model.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceModel).GetCreatedAt()).ToDataRes(types.Time)
 	},
@@ -14057,6 +14072,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.vertexaiService.endpoint.enablePrivateServiceConnect": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceEndpoint).GetEnablePrivateServiceConnect()).ToDataRes(types.Bool)
+	},
+	"gcp.project.vertexaiService.endpoint.pscProjectAllowlist": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceEndpoint).GetPscProjectAllowlist()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.vertexaiService.endpoint.pscServiceAttachment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceEndpoint).GetPscServiceAttachment()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.endpoint.predictionLoggingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceEndpoint).GetPredictionLoggingEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.vertexaiService.endpoint.predictionLoggingSamplingRate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceEndpoint).GetPredictionLoggingSamplingRate()).ToDataRes(types.Float)
+	},
+	"gcp.project.vertexaiService.endpoint.predictionLoggingBigqueryDestination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceEndpoint).GetPredictionLoggingBigqueryDestination()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.endpoint.dedicatedEndpointEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceEndpoint).GetDedicatedEndpointEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.vertexaiService.endpoint.dedicatedEndpointDns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceEndpoint).GetDedicatedEndpointDns()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.endpoint.privateModelServerEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceEndpoint).GetPrivateModelServerEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.vertexaiService.endpoint.satisfiesPzs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceEndpoint).GetSatisfiesPzs()).ToDataRes(types.Bool)
+	},
+	"gcp.project.vertexaiService.endpoint.satisfiesPzi": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceEndpoint).GetSatisfiesPzi()).ToDataRes(types.Bool)
 	},
 	"gcp.project.vertexaiService.endpoint.trafficSplit": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceEndpoint).GetTrafficSplit()).ToDataRes(types.Map(types.String, types.Int))
@@ -14096,6 +14141,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.vertexaiService.endpoint.deployment.enableAccessLogging": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceEndpointDeployment).GetEnableAccessLogging()).ToDataRes(types.Bool)
+	},
+	"gcp.project.vertexaiService.endpoint.deployment.privateServiceAttachment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceEndpointDeployment).GetPrivateServiceAttachment()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.endpoint.deployment.predictHttpUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceEndpointDeployment).GetPredictHttpUri()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.endpoint.deployment.explainHttpUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceEndpointDeployment).GetExplainHttpUri()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.endpoint.deployment.healthHttpUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceEndpointDeployment).GetHealthHttpUri()).ToDataRes(types.String)
 	},
 	"gcp.project.vertexaiService.endpoint.deployment.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceEndpointDeployment).GetCreatedAt()).ToDataRes(types.Time)
@@ -14138,6 +14195,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.vertexaiService.pipelineJob.templateMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServicePipelineJob).GetTemplateMetadata()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.pipelineJob.scheduleRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServicePipelineJob).GetScheduleRef()).ToDataRes(types.Resource("gcp.project.vertexaiService.schedule"))
+	},
+	"gcp.project.vertexaiService.pipelineJob.error": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServicePipelineJob).GetError()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.pipelineJob.reservedIpRanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServicePipelineJob).GetReservedIpRanges()).ToDataRes(types.Array(types.String))
 	},
 	"gcp.project.vertexaiService.pipelineJob.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServicePipelineJob).GetLabels()).ToDataRes(types.Map(types.String, types.String))
@@ -14430,14 +14496,32 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.vertexaiService.notebookRuntime.networkSpec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetNetworkSpec()).ToDataRes(types.Dict)
 	},
+	"gcp.project.vertexaiService.notebookRuntime.enableInternetAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetEnableInternetAccess()).ToDataRes(types.Bool)
+	},
+	"gcp.project.vertexaiService.notebookRuntime.network": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetNetwork()).ToDataRes(types.Resource("gcp.project.computeService.network"))
+	},
+	"gcp.project.vertexaiService.notebookRuntime.subnetwork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetSubnetwork()).ToDataRes(types.Resource("gcp.project.computeService.subnetwork"))
+	},
 	"gcp.project.vertexaiService.notebookRuntime.idleShutdownConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetIdleShutdownConfig()).ToDataRes(types.Dict)
 	},
 	"gcp.project.vertexaiService.notebookRuntime.eucConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetEucConfig()).ToDataRes(types.Dict)
 	},
+	"gcp.project.vertexaiService.notebookRuntime.eucDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetEucDisabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.vertexaiService.notebookRuntime.bypassActasCheck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetBypassActasCheck()).ToDataRes(types.Bool)
+	},
 	"gcp.project.vertexaiService.notebookRuntime.shieldedVmConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetShieldedVmConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.notebookRuntime.enableSecureBoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetEnableSecureBoot()).ToDataRes(types.Bool)
 	},
 	"gcp.project.vertexaiService.notebookRuntime.softwareConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetSoftwareConfig()).ToDataRes(types.Dict)
@@ -14475,6 +14559,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.vertexaiService.notebookRuntimeTemplate.notebookRuntimeType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetNotebookRuntimeType()).ToDataRes(types.String)
 	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetServiceAccount()).ToDataRes(types.Resource("gcp.project.iamService.serviceAccount"))
+	},
 	"gcp.project.vertexaiService.notebookRuntimeTemplate.networkTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetNetworkTags()).ToDataRes(types.Array(types.String))
 	},
@@ -14484,14 +14571,32 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.vertexaiService.notebookRuntimeTemplate.networkSpec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetNetworkSpec()).ToDataRes(types.Dict)
 	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.enableInternetAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetEnableInternetAccess()).ToDataRes(types.Bool)
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.network": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetNetwork()).ToDataRes(types.Resource("gcp.project.computeService.network"))
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.subnetwork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetSubnetwork()).ToDataRes(types.Resource("gcp.project.computeService.subnetwork"))
+	},
 	"gcp.project.vertexaiService.notebookRuntimeTemplate.idleShutdownConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetIdleShutdownConfig()).ToDataRes(types.Dict)
 	},
 	"gcp.project.vertexaiService.notebookRuntimeTemplate.eucConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetEucConfig()).ToDataRes(types.Dict)
 	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.eucDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetEucDisabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.bypassActasCheck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetBypassActasCheck()).ToDataRes(types.Bool)
+	},
 	"gcp.project.vertexaiService.notebookRuntimeTemplate.shieldedVmConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetShieldedVmConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.enableSecureBoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetEnableSecureBoot()).ToDataRes(types.Bool)
 	},
 	"gcp.project.vertexaiService.notebookRuntimeTemplate.softwareConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetSoftwareConfig()).ToDataRes(types.Dict)
@@ -34500,6 +34605,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectVertexaiServiceModel).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.vertexaiService.model.baseModelSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceModel).BaseModelSource, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.model.originalModel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceModel).OriginalModel, ok = plugin.RawToTValue[*mqlGcpProjectVertexaiServiceModel](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.model.pipelineJob": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceModel).PipelineJob, ok = plugin.RawToTValue[*mqlGcpProjectVertexaiServicePipelineJob](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.model.satisfiesPzs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceModel).SatisfiesPzs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.model.satisfiesPzi": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceModel).SatisfiesPzi, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gcp.project.vertexaiService.model.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceModel).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -34550,6 +34675,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.vertexaiService.endpoint.enablePrivateServiceConnect": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceEndpoint).EnablePrivateServiceConnect, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.endpoint.pscProjectAllowlist": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceEndpoint).PscProjectAllowlist, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.endpoint.pscServiceAttachment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceEndpoint).PscServiceAttachment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.endpoint.predictionLoggingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceEndpoint).PredictionLoggingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.endpoint.predictionLoggingSamplingRate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceEndpoint).PredictionLoggingSamplingRate, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.endpoint.predictionLoggingBigqueryDestination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceEndpoint).PredictionLoggingBigqueryDestination, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.endpoint.dedicatedEndpointEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceEndpoint).DedicatedEndpointEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.endpoint.dedicatedEndpointDns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceEndpoint).DedicatedEndpointDns, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.endpoint.privateModelServerEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceEndpoint).PrivateModelServerEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.endpoint.satisfiesPzs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceEndpoint).SatisfiesPzs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.endpoint.satisfiesPzi": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceEndpoint).SatisfiesPzi, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.vertexaiService.endpoint.trafficSplit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -34606,6 +34771,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.vertexaiService.endpoint.deployment.enableAccessLogging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceEndpointDeployment).EnableAccessLogging, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.endpoint.deployment.privateServiceAttachment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceEndpointDeployment).PrivateServiceAttachment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.endpoint.deployment.predictHttpUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceEndpointDeployment).PredictHttpUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.endpoint.deployment.explainHttpUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceEndpointDeployment).ExplainHttpUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.endpoint.deployment.healthHttpUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceEndpointDeployment).HealthHttpUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.vertexaiService.endpoint.deployment.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -34666,6 +34847,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.vertexaiService.pipelineJob.templateMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServicePipelineJob).TemplateMetadata, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.pipelineJob.scheduleRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServicePipelineJob).ScheduleRef, ok = plugin.RawToTValue[*mqlGcpProjectVertexaiServiceSchedule](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.pipelineJob.error": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServicePipelineJob).Error, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.pipelineJob.reservedIpRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServicePipelineJob).ReservedIpRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.vertexaiService.pipelineJob.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35084,6 +35277,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).NetworkSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.vertexaiService.notebookRuntime.enableInternetAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).EnableInternetAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntime.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).Network, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceNetwork](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntime.subnetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).Subnetwork, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceSubnetwork](v.Value, v.Error)
+		return
+	},
 	"gcp.project.vertexaiService.notebookRuntime.idleShutdownConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).IdleShutdownConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -35092,8 +35297,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).EucConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.vertexaiService.notebookRuntime.eucDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).EucDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntime.bypassActasCheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).BypassActasCheck, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gcp.project.vertexaiService.notebookRuntime.shieldedVmConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).ShieldedVmConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntime.enableSecureBoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).EnableSecureBoot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.vertexaiService.notebookRuntime.softwareConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35148,6 +35365,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).NotebookRuntimeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).ServiceAccount, ok = plugin.RawToTValue[*mqlGcpProjectIamServiceServiceAccount](v.Value, v.Error)
+		return
+	},
 	"gcp.project.vertexaiService.notebookRuntimeTemplate.networkTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).NetworkTags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -35160,6 +35381,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).NetworkSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.enableInternetAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).EnableInternetAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).Network, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceNetwork](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.subnetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).Subnetwork, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceSubnetwork](v.Value, v.Error)
+		return
+	},
 	"gcp.project.vertexaiService.notebookRuntimeTemplate.idleShutdownConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).IdleShutdownConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -35168,8 +35401,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).EucConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.eucDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).EucDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.bypassActasCheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).BypassActasCheck, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gcp.project.vertexaiService.notebookRuntimeTemplate.shieldedVmConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).ShieldedVmConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.enableSecureBoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).EnableSecureBoot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.vertexaiService.notebookRuntimeTemplate.softwareConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -80311,6 +80556,11 @@ type mqlGcpProjectVertexaiServiceModel struct {
 	KmsKey                            plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	Labels                            plugin.TValue[map[string]any]
 	Etag                              plugin.TValue[string]
+	BaseModelSource                   plugin.TValue[any]
+	OriginalModel                     plugin.TValue[*mqlGcpProjectVertexaiServiceModel]
+	PipelineJob                       plugin.TValue[*mqlGcpProjectVertexaiServicePipelineJob]
+	SatisfiesPzs                      plugin.TValue[bool]
+	SatisfiesPzi                      plugin.TValue[bool]
 	CreatedAt                         plugin.TValue[*time.Time]
 	UpdatedAt                         plugin.TValue[*time.Time]
 }
@@ -80432,6 +80682,50 @@ func (c *mqlGcpProjectVertexaiServiceModel) GetEtag() *plugin.TValue[string] {
 	return &c.Etag
 }
 
+func (c *mqlGcpProjectVertexaiServiceModel) GetBaseModelSource() *plugin.TValue[any] {
+	return &c.BaseModelSource
+}
+
+func (c *mqlGcpProjectVertexaiServiceModel) GetOriginalModel() *plugin.TValue[*mqlGcpProjectVertexaiServiceModel] {
+	return plugin.GetOrCompute[*mqlGcpProjectVertexaiServiceModel](&c.OriginalModel, func() (*mqlGcpProjectVertexaiServiceModel, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.model", c.__id, "originalModel")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectVertexaiServiceModel), nil
+			}
+		}
+
+		return c.originalModel()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServiceModel) GetPipelineJob() *plugin.TValue[*mqlGcpProjectVertexaiServicePipelineJob] {
+	return plugin.GetOrCompute[*mqlGcpProjectVertexaiServicePipelineJob](&c.PipelineJob, func() (*mqlGcpProjectVertexaiServicePipelineJob, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.model", c.__id, "pipelineJob")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectVertexaiServicePipelineJob), nil
+			}
+		}
+
+		return c.pipelineJob()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServiceModel) GetSatisfiesPzs() *plugin.TValue[bool] {
+	return &c.SatisfiesPzs
+}
+
+func (c *mqlGcpProjectVertexaiServiceModel) GetSatisfiesPzi() *plugin.TValue[bool] {
+	return &c.SatisfiesPzi
+}
+
 func (c *mqlGcpProjectVertexaiServiceModel) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
@@ -80445,21 +80739,31 @@ type mqlGcpProjectVertexaiServiceEndpoint struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlGcpProjectVertexaiServiceEndpointInternal
-	Name                        plugin.TValue[string]
-	DisplayName                 plugin.TValue[string]
-	Description                 plugin.TValue[string]
-	DeployedModels              plugin.TValue[[]any]
-	Deployments                 plugin.TValue[[]any]
-	EncryptionSpec              plugin.TValue[any]
-	KmsKey                      plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
-	Network                     plugin.TValue[string]
-	NetworkRef                  plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
-	EnablePrivateServiceConnect plugin.TValue[bool]
-	TrafficSplit                plugin.TValue[map[string]any]
-	Labels                      plugin.TValue[map[string]any]
-	Etag                        plugin.TValue[string]
-	CreatedAt                   plugin.TValue[*time.Time]
-	UpdatedAt                   plugin.TValue[*time.Time]
+	Name                                 plugin.TValue[string]
+	DisplayName                          plugin.TValue[string]
+	Description                          plugin.TValue[string]
+	DeployedModels                       plugin.TValue[[]any]
+	Deployments                          plugin.TValue[[]any]
+	EncryptionSpec                       plugin.TValue[any]
+	KmsKey                               plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	Network                              plugin.TValue[string]
+	NetworkRef                           plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
+	EnablePrivateServiceConnect          plugin.TValue[bool]
+	PscProjectAllowlist                  plugin.TValue[[]any]
+	PscServiceAttachment                 plugin.TValue[string]
+	PredictionLoggingEnabled             plugin.TValue[bool]
+	PredictionLoggingSamplingRate        plugin.TValue[float64]
+	PredictionLoggingBigqueryDestination plugin.TValue[string]
+	DedicatedEndpointEnabled             plugin.TValue[bool]
+	DedicatedEndpointDns                 plugin.TValue[string]
+	PrivateModelServerEnabled            plugin.TValue[bool]
+	SatisfiesPzs                         plugin.TValue[bool]
+	SatisfiesPzi                         plugin.TValue[bool]
+	TrafficSplit                         plugin.TValue[map[string]any]
+	Labels                               plugin.TValue[map[string]any]
+	Etag                                 plugin.TValue[string]
+	CreatedAt                            plugin.TValue[*time.Time]
+	UpdatedAt                            plugin.TValue[*time.Time]
 }
 
 // createGcpProjectVertexaiServiceEndpoint creates a new instance of this resource
@@ -80563,6 +80867,46 @@ func (c *mqlGcpProjectVertexaiServiceEndpoint) GetEnablePrivateServiceConnect() 
 	return &c.EnablePrivateServiceConnect
 }
 
+func (c *mqlGcpProjectVertexaiServiceEndpoint) GetPscProjectAllowlist() *plugin.TValue[[]any] {
+	return &c.PscProjectAllowlist
+}
+
+func (c *mqlGcpProjectVertexaiServiceEndpoint) GetPscServiceAttachment() *plugin.TValue[string] {
+	return &c.PscServiceAttachment
+}
+
+func (c *mqlGcpProjectVertexaiServiceEndpoint) GetPredictionLoggingEnabled() *plugin.TValue[bool] {
+	return &c.PredictionLoggingEnabled
+}
+
+func (c *mqlGcpProjectVertexaiServiceEndpoint) GetPredictionLoggingSamplingRate() *plugin.TValue[float64] {
+	return &c.PredictionLoggingSamplingRate
+}
+
+func (c *mqlGcpProjectVertexaiServiceEndpoint) GetPredictionLoggingBigqueryDestination() *plugin.TValue[string] {
+	return &c.PredictionLoggingBigqueryDestination
+}
+
+func (c *mqlGcpProjectVertexaiServiceEndpoint) GetDedicatedEndpointEnabled() *plugin.TValue[bool] {
+	return &c.DedicatedEndpointEnabled
+}
+
+func (c *mqlGcpProjectVertexaiServiceEndpoint) GetDedicatedEndpointDns() *plugin.TValue[string] {
+	return &c.DedicatedEndpointDns
+}
+
+func (c *mqlGcpProjectVertexaiServiceEndpoint) GetPrivateModelServerEnabled() *plugin.TValue[bool] {
+	return &c.PrivateModelServerEnabled
+}
+
+func (c *mqlGcpProjectVertexaiServiceEndpoint) GetSatisfiesPzs() *plugin.TValue[bool] {
+	return &c.SatisfiesPzs
+}
+
+func (c *mqlGcpProjectVertexaiServiceEndpoint) GetSatisfiesPzi() *plugin.TValue[bool] {
+	return &c.SatisfiesPzi
+}
+
 func (c *mqlGcpProjectVertexaiServiceEndpoint) GetTrafficSplit() *plugin.TValue[map[string]any] {
 	return &c.TrafficSplit
 }
@@ -80588,15 +80932,19 @@ type mqlGcpProjectVertexaiServiceEndpointDeployment struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlGcpProjectVertexaiServiceEndpointDeploymentInternal
-	Id                      plugin.TValue[string]
-	DisplayName             plugin.TValue[string]
-	ModelVersionId          plugin.TValue[string]
-	Model                   plugin.TValue[*mqlGcpProjectVertexaiServiceModel]
-	ServiceAccountEmail     plugin.TValue[string]
-	ServiceAccount          plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
-	DisableContainerLogging plugin.TValue[bool]
-	EnableAccessLogging     plugin.TValue[bool]
-	CreatedAt               plugin.TValue[*time.Time]
+	Id                       plugin.TValue[string]
+	DisplayName              plugin.TValue[string]
+	ModelVersionId           plugin.TValue[string]
+	Model                    plugin.TValue[*mqlGcpProjectVertexaiServiceModel]
+	ServiceAccountEmail      plugin.TValue[string]
+	ServiceAccount           plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
+	DisableContainerLogging  plugin.TValue[bool]
+	EnableAccessLogging      plugin.TValue[bool]
+	PrivateServiceAttachment plugin.TValue[string]
+	PredictHttpUri           plugin.TValue[string]
+	ExplainHttpUri           plugin.TValue[string]
+	HealthHttpUri            plugin.TValue[string]
+	CreatedAt                plugin.TValue[*time.Time]
 }
 
 // createGcpProjectVertexaiServiceEndpointDeployment creates a new instance of this resource
@@ -80687,6 +81035,22 @@ func (c *mqlGcpProjectVertexaiServiceEndpointDeployment) GetEnableAccessLogging(
 	return &c.EnableAccessLogging
 }
 
+func (c *mqlGcpProjectVertexaiServiceEndpointDeployment) GetPrivateServiceAttachment() *plugin.TValue[string] {
+	return &c.PrivateServiceAttachment
+}
+
+func (c *mqlGcpProjectVertexaiServiceEndpointDeployment) GetPredictHttpUri() *plugin.TValue[string] {
+	return &c.PredictHttpUri
+}
+
+func (c *mqlGcpProjectVertexaiServiceEndpointDeployment) GetExplainHttpUri() *plugin.TValue[string] {
+	return &c.ExplainHttpUri
+}
+
+func (c *mqlGcpProjectVertexaiServiceEndpointDeployment) GetHealthHttpUri() *plugin.TValue[string] {
+	return &c.HealthHttpUri
+}
+
 func (c *mqlGcpProjectVertexaiServiceEndpointDeployment) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
@@ -80709,6 +81073,9 @@ type mqlGcpProjectVertexaiServicePipelineJob struct {
 	KmsKey            plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	TemplateUri       plugin.TValue[string]
 	TemplateMetadata  plugin.TValue[any]
+	ScheduleRef       plugin.TValue[*mqlGcpProjectVertexaiServiceSchedule]
+	Error             plugin.TValue[any]
+	ReservedIpRanges  plugin.TValue[[]any]
 	Labels            plugin.TValue[map[string]any]
 	CreatedAt         plugin.TValue[*time.Time]
 	UpdatedAt         plugin.TValue[*time.Time]
@@ -80840,6 +81207,30 @@ func (c *mqlGcpProjectVertexaiServicePipelineJob) GetTemplateUri() *plugin.TValu
 
 func (c *mqlGcpProjectVertexaiServicePipelineJob) GetTemplateMetadata() *plugin.TValue[any] {
 	return &c.TemplateMetadata
+}
+
+func (c *mqlGcpProjectVertexaiServicePipelineJob) GetScheduleRef() *plugin.TValue[*mqlGcpProjectVertexaiServiceSchedule] {
+	return plugin.GetOrCompute[*mqlGcpProjectVertexaiServiceSchedule](&c.ScheduleRef, func() (*mqlGcpProjectVertexaiServiceSchedule, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.pipelineJob", c.__id, "scheduleRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectVertexaiServiceSchedule), nil
+			}
+		}
+
+		return c.scheduleRef()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServicePipelineJob) GetError() *plugin.TValue[any] {
+	return &c.Error
+}
+
+func (c *mqlGcpProjectVertexaiServicePipelineJob) GetReservedIpRanges() *plugin.TValue[[]any] {
+	return &c.ReservedIpRanges
 }
 
 func (c *mqlGcpProjectVertexaiServicePipelineJob) GetLabels() *plugin.TValue[map[string]any] {
@@ -81632,30 +82023,36 @@ type mqlGcpProjectVertexaiServiceNotebookRuntime struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlGcpProjectVertexaiServiceNotebookRuntimeInternal
-	Name                plugin.TValue[string]
-	DisplayName         plugin.TValue[string]
-	Description         plugin.TValue[string]
-	RuntimeUser         plugin.TValue[string]
-	ServiceAccount      plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
-	ProxyUri            plugin.TValue[string]
-	HealthState         plugin.TValue[string]
-	RuntimeState        plugin.TValue[string]
-	NotebookRuntimeType plugin.TValue[string]
-	IsUpgradable        plugin.TValue[bool]
-	Version             plugin.TValue[string]
-	NetworkTags         plugin.TValue[[]any]
-	MachineSpec         plugin.TValue[any]
-	NetworkSpec         plugin.TValue[any]
-	IdleShutdownConfig  plugin.TValue[any]
-	EucConfig           plugin.TValue[any]
-	ShieldedVmConfig    plugin.TValue[any]
-	SoftwareConfig      plugin.TValue[any]
-	Labels              plugin.TValue[map[string]any]
-	EncryptionSpec      plugin.TValue[any]
-	KmsKey              plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
-	CreatedAt           plugin.TValue[*time.Time]
-	UpdatedAt           plugin.TValue[*time.Time]
-	ExpirationTime      plugin.TValue[*time.Time]
+	Name                 plugin.TValue[string]
+	DisplayName          plugin.TValue[string]
+	Description          plugin.TValue[string]
+	RuntimeUser          plugin.TValue[string]
+	ServiceAccount       plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
+	ProxyUri             plugin.TValue[string]
+	HealthState          plugin.TValue[string]
+	RuntimeState         plugin.TValue[string]
+	NotebookRuntimeType  plugin.TValue[string]
+	IsUpgradable         plugin.TValue[bool]
+	Version              plugin.TValue[string]
+	NetworkTags          plugin.TValue[[]any]
+	MachineSpec          plugin.TValue[any]
+	NetworkSpec          plugin.TValue[any]
+	EnableInternetAccess plugin.TValue[bool]
+	Network              plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
+	Subnetwork           plugin.TValue[*mqlGcpProjectComputeServiceSubnetwork]
+	IdleShutdownConfig   plugin.TValue[any]
+	EucConfig            plugin.TValue[any]
+	EucDisabled          plugin.TValue[bool]
+	BypassActasCheck     plugin.TValue[bool]
+	ShieldedVmConfig     plugin.TValue[any]
+	EnableSecureBoot     plugin.TValue[bool]
+	SoftwareConfig       plugin.TValue[any]
+	Labels               plugin.TValue[map[string]any]
+	EncryptionSpec       plugin.TValue[any]
+	KmsKey               plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	CreatedAt            plugin.TValue[*time.Time]
+	UpdatedAt            plugin.TValue[*time.Time]
+	ExpirationTime       plugin.TValue[*time.Time]
 }
 
 // createGcpProjectVertexaiServiceNotebookRuntime creates a new instance of this resource
@@ -81763,6 +82160,42 @@ func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetNetworkSpec() *plugin.T
 	return &c.NetworkSpec
 }
 
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetEnableInternetAccess() *plugin.TValue[bool] {
+	return &c.EnableInternetAccess
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetNetwork() *plugin.TValue[*mqlGcpProjectComputeServiceNetwork] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceNetwork](&c.Network, func() (*mqlGcpProjectComputeServiceNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.notebookRuntime", c.__id, "network")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceNetwork), nil
+			}
+		}
+
+		return c.network()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetSubnetwork() *plugin.TValue[*mqlGcpProjectComputeServiceSubnetwork] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceSubnetwork](&c.Subnetwork, func() (*mqlGcpProjectComputeServiceSubnetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.notebookRuntime", c.__id, "subnetwork")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceSubnetwork), nil
+			}
+		}
+
+		return c.subnetwork()
+	})
+}
+
 func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetIdleShutdownConfig() *plugin.TValue[any] {
 	return &c.IdleShutdownConfig
 }
@@ -81771,8 +82204,20 @@ func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetEucConfig() *plugin.TVa
 	return &c.EucConfig
 }
 
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetEucDisabled() *plugin.TValue[bool] {
+	return &c.EucDisabled
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetBypassActasCheck() *plugin.TValue[bool] {
+	return &c.BypassActasCheck
+}
+
 func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetShieldedVmConfig() *plugin.TValue[any] {
 	return &c.ShieldedVmConfig
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetEnableSecureBoot() *plugin.TValue[bool] {
+	return &c.EnableSecureBoot
 }
 
 func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetSoftwareConfig() *plugin.TValue[any] {
@@ -81820,24 +82265,31 @@ type mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlGcpProjectVertexaiServiceNotebookRuntimeTemplateInternal
-	Name                plugin.TValue[string]
-	DisplayName         plugin.TValue[string]
-	Description         plugin.TValue[string]
-	IsDefault           plugin.TValue[bool]
-	NotebookRuntimeType plugin.TValue[string]
-	NetworkTags         plugin.TValue[[]any]
-	MachineSpec         plugin.TValue[any]
-	NetworkSpec         plugin.TValue[any]
-	IdleShutdownConfig  plugin.TValue[any]
-	EucConfig           plugin.TValue[any]
-	ShieldedVmConfig    plugin.TValue[any]
-	SoftwareConfig      plugin.TValue[any]
-	Etag                plugin.TValue[string]
-	Labels              plugin.TValue[map[string]any]
-	EncryptionSpec      plugin.TValue[any]
-	KmsKey              plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
-	CreatedAt           plugin.TValue[*time.Time]
-	UpdatedAt           plugin.TValue[*time.Time]
+	Name                 plugin.TValue[string]
+	DisplayName          plugin.TValue[string]
+	Description          plugin.TValue[string]
+	IsDefault            plugin.TValue[bool]
+	NotebookRuntimeType  plugin.TValue[string]
+	ServiceAccount       plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
+	NetworkTags          plugin.TValue[[]any]
+	MachineSpec          plugin.TValue[any]
+	NetworkSpec          plugin.TValue[any]
+	EnableInternetAccess plugin.TValue[bool]
+	Network              plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
+	Subnetwork           plugin.TValue[*mqlGcpProjectComputeServiceSubnetwork]
+	IdleShutdownConfig   plugin.TValue[any]
+	EucConfig            plugin.TValue[any]
+	EucDisabled          plugin.TValue[bool]
+	BypassActasCheck     plugin.TValue[bool]
+	ShieldedVmConfig     plugin.TValue[any]
+	EnableSecureBoot     plugin.TValue[bool]
+	SoftwareConfig       plugin.TValue[any]
+	Etag                 plugin.TValue[string]
+	Labels               plugin.TValue[map[string]any]
+	EncryptionSpec       plugin.TValue[any]
+	KmsKey               plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	CreatedAt            plugin.TValue[*time.Time]
+	UpdatedAt            plugin.TValue[*time.Time]
 }
 
 // createGcpProjectVertexaiServiceNotebookRuntimeTemplate creates a new instance of this resource
@@ -81897,6 +82349,22 @@ func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetNotebookRuntime
 	return &c.NotebookRuntimeType
 }
 
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetServiceAccount() *plugin.TValue[*mqlGcpProjectIamServiceServiceAccount] {
+	return plugin.GetOrCompute[*mqlGcpProjectIamServiceServiceAccount](&c.ServiceAccount, func() (*mqlGcpProjectIamServiceServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.notebookRuntimeTemplate", c.__id, "serviceAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectIamServiceServiceAccount), nil
+			}
+		}
+
+		return c.serviceAccount()
+	})
+}
+
 func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetNetworkTags() *plugin.TValue[[]any] {
 	return &c.NetworkTags
 }
@@ -81909,6 +82377,42 @@ func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetNetworkSpec() *
 	return &c.NetworkSpec
 }
 
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetEnableInternetAccess() *plugin.TValue[bool] {
+	return &c.EnableInternetAccess
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetNetwork() *plugin.TValue[*mqlGcpProjectComputeServiceNetwork] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceNetwork](&c.Network, func() (*mqlGcpProjectComputeServiceNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.notebookRuntimeTemplate", c.__id, "network")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceNetwork), nil
+			}
+		}
+
+		return c.network()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetSubnetwork() *plugin.TValue[*mqlGcpProjectComputeServiceSubnetwork] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceSubnetwork](&c.Subnetwork, func() (*mqlGcpProjectComputeServiceSubnetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.notebookRuntimeTemplate", c.__id, "subnetwork")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceSubnetwork), nil
+			}
+		}
+
+		return c.subnetwork()
+	})
+}
+
 func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetIdleShutdownConfig() *plugin.TValue[any] {
 	return &c.IdleShutdownConfig
 }
@@ -81917,8 +82421,20 @@ func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetEucConfig() *pl
 	return &c.EucConfig
 }
 
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetEucDisabled() *plugin.TValue[bool] {
+	return &c.EucDisabled
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetBypassActasCheck() *plugin.TValue[bool] {
+	return &c.BypassActasCheck
+}
+
 func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetShieldedVmConfig() *plugin.TValue[any] {
 	return &c.ShieldedVmConfig
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetEnableSecureBoot() *plugin.TValue[bool] {
+	return &c.EnableSecureBoot
 }
 
 func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetSoftwareConfig() *plugin.TValue[any] {

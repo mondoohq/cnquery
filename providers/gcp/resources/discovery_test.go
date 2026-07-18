@@ -57,6 +57,9 @@ func TestAllResolvedResources(t *testing.T) {
 		DiscoverArtifactRegistryRepos,
 		DiscoverMemcacheInstances,
 		DiscoverVertexAIJobs,
+		DiscoverVertexAIEndpoints,
+		DiscoverVertexAIPipelineJobs,
+		DiscoverVertexAINotebookRuntimeTemplates,
 		DiscoverModelArmorTemplates,
 		DiscoverDatastreamProfiles,
 	}
@@ -102,6 +105,9 @@ func TestAutoResolvedResources(t *testing.T) {
 		DiscoverArtifactRegistryRepos,
 		DiscoverMemcacheInstances,
 		DiscoverVertexAIJobs,
+		DiscoverVertexAIEndpoints,
+		DiscoverVertexAIPipelineJobs,
+		DiscoverVertexAINotebookRuntimeTemplates,
 		DiscoverModelArmorTemplates,
 		DiscoverDatastreamProfiles,
 	}
