@@ -10819,12 +10819,20 @@ aws.s3 @defaults("buckets") {
 }
 
 // Amazon S3 bucket
+//
+// Object storage bucket keyed by `name`, for example
+// `aws.s3.bucket(name: "my-bucket")`. This is the primary handle for auditing
+// S3 exposure and data protection: whether the bucket is reachable by the
+// public, how its contents are encrypted, and whether versioning, Object Lock,
+// and cross-region replication guard against loss or tampering. Misconfigured
+// buckets are a leading cause of accidental data exposure in AWS, so the access,
+// encryption, and logging posture reported here backs most S3 security checks.
 private aws.s3.bucket @defaults("name location public") {
   // ARN of the bucket
   arn string
   // Name of the bucket
   name string
-  // Policy associated with the bucket
+  // Access policy attached to the bucket
   policy() aws.s3.bucket.policy
   // Parsed statements from the bucket policy
   policyStatements() []aws.iam.policyStatement
@@ -10838,17 +10846,33 @@ private aws.s3.bucket @defaults("name location public") {
   tags() map[string]string
   // List of access control grants associated with the bucket
   acl() []aws.s3.bucket.grant
-  // Owner for the bucket
+  // Canonical owner of the bucket
+  //
+  // Keys `id` (the owner's canonical user ID) and `name` (the owner's display
+  // name).
   owner() map[string]string
-  // Whether the bucket is public
+  // Whether the bucket allows public access
+  //
+  // True when the bucket policy or an access control grant exposes the bucket
+  // to everyone (the AllUsers or AuthenticatedUsers groups). Returns false
+  // whenever any Block Public Access setting is on, since that access is then
+  // blocked regardless of the policy or ACLs. Read the four `blockPublic*`
+  // fields to see the underlying settings.
   public() bool
   // List of CORS information for the bucket
   cors() []aws.s3.bucket.corsrule
   // Location of the bucket
   location() string
-  // Versioning state and MFA delete status of bucket
+  // Versioning state and MFA-delete status of the bucket
+  //
+  // Keys `Status` (Enabled, Suspended, or empty when versioning was never
+  // configured) and `MFADelete` (Enabled or Disabled).
   versioning() map[string]string
-  // Logging status and user permissions for bucket logging status
+  // Server access logging configuration of the bucket
+  //
+  // Keys `TargetBucket` (the bucket that receives the access logs) and
+  // `TargetPrefix` (the key prefix applied to log objects). Empty when server
+  // access logging is disabled.
   logging() map[string]string
   // Static website hosting configuration for the bucket
   //
@@ -10856,9 +10880,16 @@ private aws.s3.bucket @defaults("name location public") {
   staticWebsiteHosting() @maturity("deprecated") map[string]string
   // Website configuration for the bucket
   website() aws.s3.bucket.websiteConfiguration
-  // Whether the bucket is locked by default
+  // Object Lock enablement state of the bucket
+  //
+  // The string `Enabled` when Object Lock is turned on for the bucket, or empty
+  // when it is not. See `objectLockEnabled` for the same state as a boolean.
   defaultLock() string
-  // Bucket cross-region replication configuration
+  // Cross-region replication configuration of the bucket
+  //
+  // Keys `Role` (the IAM role S3 assumes to replicate objects) and `Rules` (the
+  // raw replication rules). See `replicationRules` for the same rules resolved
+  // to typed records.
   replication() dict
   // Bucket default encryption configuration
   //
@@ -10872,7 +10903,12 @@ private aws.s3.bucket @defaults("name location public") {
   kmsKey() aws.kms.key
   // Typed replication rules for the bucket
   replicationRules() []aws.s3.bucket.replicationRule
-  // Public access block configuration for the bucket
+  // Block Public Access configuration of the bucket
+  //
+  // Keys `BlockPublicAcls`, `BlockPublicPolicy`, `IgnorePublicAcls`, and
+  // `RestrictPublicBuckets`, each a boolean. The same four settings are also
+  // exposed as the top-level `blockPublicAcls`, `blockPublicPolicy`,
+  // `ignorePublicAcls`, and `restrictPublicBuckets` fields.
   publicAccessBlock() dict
   // Whether new public ACLs on the bucket and its objects are blocked
   blockPublicAcls() bool
@@ -10892,7 +10928,12 @@ private aws.s3.bucket @defaults("name location public") {
   createdAt time
   // Lifecycle rules for the bucket
   lifecycleRules() []aws.s3.bucket.lifecycleRule
-  // Notification configuration for the bucket (Lambda, SQS, SNS, EventBridge)
+  // Event notification configuration of the bucket
+  //
+  // Keys `LambdaFunctionConfigurations`, `QueueConfigurations` (SQS),
+  // `TopicConfigurations` (SNS), and `EventBridgeConfiguration`. See
+  // `eventNotifications` for the Lambda, SQS, and SNS targets resolved to typed
+  // records.
   notificationConfiguration() dict
   // Event notification targets configured on the bucket (Lambda, SQS, and SNS)
   eventNotifications() []aws.s3.bucket.eventNotification
@@ -11016,6 +11057,11 @@ private aws.s3.bucket.corsrule @defaults("name") {
 }
 
 // Amazon S3 bucket server-side encryption rule
+//
+// A single default-encryption rule applied to new objects written to the
+// bucket. Distinguishes SSE-S3 from customer-managed SSE-KMS encryption and,
+// for SSE-KMS, identifies the key and whether an S3 Bucket Key is in use to cut
+// KMS request cost.
 private aws.s3.bucket.encryptionRule @defaults("sseAlgorithm bucketKeyEnabled") {
   // Unique ID for this rule (bucket ARN + index)
   id string
@@ -11028,6 +11074,12 @@ private aws.s3.bucket.encryptionRule @defaults("sseAlgorithm bucketKeyEnabled") 
 }
 
 // Amazon S3 bucket replication rule
+//
+// A single rule from the bucket's cross-region replication configuration,
+// describing which objects are copied and to which destination bucket and
+// account. Useful for confirming that a bucket's contents are replicated for
+// durability or compliance, and for spotting replication to an unexpected
+// account.
 private aws.s3.bucket.replicationRule @defaults("id status") {
   // Unique internal identifier for this resource
   resourceId string
@@ -11060,6 +11112,11 @@ private aws.s3.bucket.metricsConfiguration @defaults("id") {
 }
 
 // Amazon S3 bucket lifecycle rule
+//
+// A single rule from the bucket's lifecycle configuration governing how objects
+// age out: transitioning to cheaper storage classes, expiring current and prior
+// versions, and cleaning up incomplete multipart uploads. Useful for verifying
+// cost-control and data-retention policies on a bucket.
 private aws.s3.bucket.lifecycleRule @defaults("resourceId id status") {
   // Unique resource identifier (bucket ARN + rule ID)
   resourceId string
@@ -11086,14 +11143,19 @@ private aws.s3.bucket.lifecycleRule @defaults("resourceId id status") {
 }
 
 // Amazon S3 bucket policy
+//
+// Resource-based access policy attached to the bucket. `document` holds the raw
+// JSON policy and `version` its policy-language version. To audit the effect of
+// the policy, read the parent bucket's `policyStatements`, which resolves each
+// statement to a typed record.
 private aws.s3.bucket.policy @defaults("bucketName version") {
   // Unique ID for the policy
   name string
-  // Bucket name that this policy belongs
+  // Name of the bucket this policy is attached to
   bucketName string
-  // Document for the policy
+  // Raw JSON policy document
   document string
-  // Version of the policy
+  // Policy-language version of the document
   version() string
   // List of statements for the policy
   //
