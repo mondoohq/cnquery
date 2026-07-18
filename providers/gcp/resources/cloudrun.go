@@ -567,6 +567,7 @@ func (g *mqlGcpProjectCloudRunService) services() ([]any, error) {
 				})
 				if err != nil {
 					log.Error().Err(err).Send()
+					continue
 				}
 				mqlS.(*mqlGcpProjectCloudRunServiceService).cacheEncryptionKey = s.GetTemplate().GetEncryptionKey()
 				mux.Lock()

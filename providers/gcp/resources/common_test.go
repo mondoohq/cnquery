@@ -35,3 +35,32 @@ func TestRegionNameFromRegionUrl(t *testing.T) {
 	assert.Equal(t, "europe-west1", RegionNameFromRegionUrl("europe-west1"))
 	assert.Equal(t, "", RegionNameFromRegionUrl(""))
 }
+
+func TestParseSubnetworkURL(t *testing.T) {
+	t.Run("www.googleapis.com host", func(t *testing.T) {
+		project, region, name, ok := parseSubnetworkURL("https://www.googleapis.com/compute/v1/projects/my-project/regions/us-central1/subnetworks/subnet-1")
+		require.True(t, ok)
+		assert.Equal(t, "my-project", project)
+		assert.Equal(t, "us-central1", region)
+		assert.Equal(t, "subnet-1", name)
+	})
+	t.Run("compute.googleapis.com host", func(t *testing.T) {
+		project, region, name, ok := parseSubnetworkURL("https://compute.googleapis.com/compute/v1/projects/my-project/regions/europe-west1/subnetworks/subnet-2")
+		require.True(t, ok)
+		assert.Equal(t, "my-project", project)
+		assert.Equal(t, "europe-west1", region)
+		assert.Equal(t, "subnet-2", name)
+	})
+	t.Run("empty url", func(t *testing.T) {
+		_, _, _, ok := parseSubnetworkURL("")
+		assert.False(t, ok)
+	})
+	t.Run("malformed / too short does not panic", func(t *testing.T) {
+		_, _, _, ok := parseSubnetworkURL("https://www.googleapis.com/compute/v1/projects/my-project")
+		assert.False(t, ok)
+	})
+	t.Run("wrong resource kind", func(t *testing.T) {
+		_, _, _, ok := parseSubnetworkURL("https://www.googleapis.com/compute/v1/projects/my-project/regions/us-central1/disks/disk-1")
+		assert.False(t, ok)
+	})
+}

@@ -441,29 +441,43 @@ func getNetworkByUrl(networkUrl string, runtime *plugin.Runtime) (*mqlGcpProject
 	return res.(*mqlGcpProjectComputeServiceNetwork), nil
 }
 
-func getSubnetworkByUrl(subnetUrl string, runtime *plugin.Runtime) (*mqlGcpProjectComputeServiceSubnetwork, error) {
-	// A reference to a subnetwork is not mandatory for this resource
+// parseSubnetworkURL extracts the project, region, and name from a compute
+// subnetwork self-link. It accepts both the www.googleapis.com and
+// compute.googleapis.com hosts. ok is false when the URL is empty or is not a
+// recognized subnetwork reference.
+func parseSubnetworkURL(subnetUrl string) (project, region, name string, ok bool) {
 	if subnetUrl == "" {
-		return nil, nil
+		return "", "", "", false
 	}
-
 	// Format is https://www.googleapis.com/compute/v1/projects/project1/regions/us-central1/subnetworks/subnet-1
 	// or https://compute.googleapis.com/compute/v1/projects/project1/regions/us-central1/subnetworks/subnet-1
 	params := strings.TrimPrefix(subnetUrl, "https://www.googleapis.com/compute/v1/")
 	params = strings.TrimPrefix(params, "https://compute.googleapis.com/compute/v1/")
 	parts := strings.Split(params, "/")
 	if len(parts) < 6 || parts[0] != "projects" || parts[2] != "regions" || parts[4] != "subnetworks" {
+		return "", "", "", false
+	}
+	return parts[1], parts[3], parts[5], true
+}
+
+func getSubnetworkByUrl(subnetUrl string, runtime *plugin.Runtime) (*mqlGcpProjectComputeServiceSubnetwork, error) {
+	// A reference to a subnetwork is not mandatory for this resource
+	if subnetUrl == "" {
+		return nil, nil
+	}
+
+	project, region, name, ok := parseSubnetworkURL(subnetUrl)
+	if !ok {
 		return nil, fmt.Errorf("unrecognized subnetwork reference: %q", subnetUrl)
 	}
-	resId := resourceId{Project: parts[1], Region: parts[3], Name: parts[5]}
 	// regionUrl is the full URL up to and including the region segment
-	regionUrl := "https://www.googleapis.com/compute/v1/projects/" + resId.Project + "/regions/" + resId.Region
+	regionUrl := "https://www.googleapis.com/compute/v1/projects/" + project + "/regions/" + region
 
 	// Use NewResource so initGcpProjectComputeServiceSubnetwork runs and
 	// populates every field instead of leaving the resource partially set.
 	res, err := NewResource(runtime, "gcp.project.computeService.subnetwork", map[string]*llx.RawData{
-		"name":      llx.StringData(resId.Name),
-		"projectId": llx.StringData(resId.Project),
+		"name":      llx.StringData(name),
+		"projectId": llx.StringData(project),
 		"regionUrl": llx.StringData(regionUrl),
 	})
 	if err != nil {

@@ -50,19 +50,21 @@ func initGcpProjectDnsServiceManagedzone(runtime *plugin.Runtime, args map[strin
 		return nil, nil, managedzones.Error
 	}
 
-	// Find the matching managed zone
+	// Find the matching managed zone. The asset identifier / lookup key is the
+	// zone name (getAssetIdentifier stores it in args["name"]), not the numeric
+	// zone id — so match on the name field.
 	for _, mz := range managedzones.Data {
 		managedzone := mz.(*mqlGcpProjectDnsServiceManagedzone)
-		id := managedzone.GetId()
-		if id.Error != nil {
-			return nil, nil, id.Error
+		name := managedzone.GetName()
+		if name.Error != nil {
+			return nil, nil, name.Error
 		}
 		projectId := managedzone.GetProjectId()
 		if projectId.Error != nil {
 			return nil, nil, projectId.Error
 		}
 
-		if id.Data == args["name"].Value && projectId.Data == args["projectId"].Value {
+		if name.Data == args["name"].Value && projectId.Data == args["projectId"].Value {
 			return args, managedzone, nil
 		}
 	}

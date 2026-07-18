@@ -1936,26 +1936,17 @@ func (g *mqlGcpProjectComputeServiceNetwork) subnetworks() ([]any, error) {
 		return nil, g.SubnetworkUrls.Error
 	}
 	subnetUrls := g.SubnetworkUrls.Data
-	type resourceId struct {
-		Project string
-		Region  string
-		Name    string
-	}
 	subnets := make([]any, 0, len(subnetUrls))
 	for _, subnetUrl := range subnetUrls {
-		// Format is https://www.googleapis.com/compute/v1/projects/project1regions/us-central1/subnetworks/subnet-1
-		params := strings.TrimPrefix(subnetUrl.(string), "https://www.googleapis.com/compute/v1/")
-		parts := strings.Split(params, "/")
-		resId := resourceId{Project: parts[1], Region: parts[3], Name: parts[5]}
-		regionUrl := strings.SplitN(subnetUrl.(string), "/subnetworks", 2)
-
-		subnet, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.subnetwork", map[string]*llx.RawData{
-			"name":      llx.StringData(resId.Name),
-			"projectId": llx.StringData(resId.Project),
-			"regionUrl": llx.StringData(regionUrl[0]),
-		})
+		// Resolve through the shared helper so it uses NewResource and the
+		// subnetwork init populates every field (and a stable __id) instead of
+		// leaving a partially-set husk that collides in the resource cache.
+		subnet, err := getSubnetworkByUrl(subnetUrl.(string), g.MqlRuntime)
 		if err != nil {
 			return nil, err
+		}
+		if subnet == nil {
+			continue
 		}
 		subnets = append(subnets, subnet)
 	}
