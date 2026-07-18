@@ -41,6 +41,7 @@ func TestAllResolvedResources(t *testing.T) {
 		DiscoveryApplicationGateways,
 		DiscoveryFirewalls,
 		DiscoveryContainerApps,
+		DiscoveryCognitiveServices,
 		DiscoveryStorageContainers,
 	}
 	require.ElementsMatch(t, expected, All)
@@ -74,6 +75,7 @@ func TestAutoResolvedResources(t *testing.T) {
 		DiscoveryApplicationGateways,
 		DiscoveryFirewalls,
 		DiscoveryContainerApps,
+		DiscoveryCognitiveServices,
 	}
 	require.ElementsMatch(t, expected, Auto)
 }

@@ -372,7 +372,7 @@ func cognitiveServicesAccountToMql(runtime *plugin.Runtime, account *armcognitiv
 		"abusePenaltyRateLimitPercentage": llx.FloatData(abusePenaltyRateLimit),
 		"cmkKeyVersion":                   llx.StringData(cmkKeyVersion),
 		"cmkIdentityClientId":             llx.StringData(cmkIdentityClientId),
-		"userOwnedStorage":                llx.ArrayData(userOwnedStorage, types.Resource("azure.subscription.cognitiveServicesService.account.userOwnedStorage")),
+		"userOwnedStorageAccounts":        llx.ArrayData(userOwnedStorage, types.Resource("azure.subscription.cognitiveServicesService.account.userOwnedStorage")),
 		"raiMonitorAdxStorageResourceId":  llx.StringData(raiMonitorAdxStorage),
 		"raiMonitorIdentityClientId":      llx.StringData(raiMonitorIdentityClientId),
 		"commitmentPlanAssociations":      llx.ArrayData(commitmentPlanAssociations, types.Dict),

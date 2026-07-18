@@ -13610,7 +13610,7 @@ azure.subscription.cognitiveServicesService.account @defaults("id name location 
   // Client ID of the managed identity used to access the customer-managed key
   cmkIdentityClientId string
   // Customer-owned storage accounts where the service persists data
-  userOwnedStorage []azure.subscription.cognitiveServicesService.account.userOwnedStorage
+  userOwnedStorageAccounts []azure.subscription.cognitiveServicesService.account.userOwnedStorage
   // Azure Data Explorer resource ID where responsible-AI monitoring logs are shipped
   raiMonitorAdxStorageResourceId string
   // Client ID of the managed identity used to write responsible-AI monitoring logs

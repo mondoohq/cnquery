@@ -17445,8 +17445,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cognitiveServicesService.account.cmkIdentityClientId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetCmkIdentityClientId()).ToDataRes(types.String)
 	},
-	"azure.subscription.cognitiveServicesService.account.userOwnedStorage": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetUserOwnedStorage()).ToDataRes(types.Array(types.Resource("azure.subscription.cognitiveServicesService.account.userOwnedStorage")))
+	"azure.subscription.cognitiveServicesService.account.userOwnedStorageAccounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetUserOwnedStorageAccounts()).ToDataRes(types.Array(types.Resource("azure.subscription.cognitiveServicesService.account.userOwnedStorage")))
 	},
 	"azure.subscription.cognitiveServicesService.account.raiMonitorAdxStorageResourceId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetRaiMonitorAdxStorageResourceId()).ToDataRes(types.String)
@@ -40233,8 +40233,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).CmkIdentityClientId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cognitiveServicesService.account.userOwnedStorage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).UserOwnedStorage, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"azure.subscription.cognitiveServicesService.account.userOwnedStorageAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).UserOwnedStorageAccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cognitiveServicesService.account.raiMonitorAdxStorageResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -94774,7 +94774,7 @@ type mqlAzureSubscriptionCognitiveServicesServiceAccount struct {
 	AbusePenaltyRateLimitPercentage plugin.TValue[float64]
 	CmkKeyVersion                   plugin.TValue[string]
 	CmkIdentityClientId             plugin.TValue[string]
-	UserOwnedStorage                plugin.TValue[[]any]
+	UserOwnedStorageAccounts        plugin.TValue[[]any]
 	RaiMonitorAdxStorageResourceId  plugin.TValue[string]
 	RaiMonitorIdentityClientId      plugin.TValue[string]
 	CommitmentPlanAssociations      plugin.TValue[[]any]
@@ -94944,8 +94944,8 @@ func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetCmkIdentityClie
 	return &c.CmkIdentityClientId
 }
 
-func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetUserOwnedStorage() *plugin.TValue[[]any] {
-	return &c.UserOwnedStorage
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetUserOwnedStorageAccounts() *plugin.TValue[[]any] {
+	return &c.UserOwnedStorageAccounts
 }
 
 func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetRaiMonitorAdxStorageResourceId() *plugin.TValue[string] {

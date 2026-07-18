@@ -983,6 +983,7 @@ azure.subscription.cognitiveServicesService.account.userOwnedStorage 13.31.1
 azure.subscription.cognitiveServicesService.account.userOwnedStorage.id 13.31.1
 azure.subscription.cognitiveServicesService.account.userOwnedStorage.identityClientId 13.31.1
 azure.subscription.cognitiveServicesService.account.userOwnedStorage.storageAccount 13.31.1
+azure.subscription.cognitiveServicesService.account.userOwnedStorageAccounts 13.31.1
 azure.subscription.cognitiveServicesService.account.virtualNetworkRule 13.31.1
 azure.subscription.cognitiveServicesService.account.virtualNetworkRule.id 13.31.1
 azure.subscription.cognitiveServicesService.account.virtualNetworkRule.ignoreMissingVnetServiceEndpoint 13.31.1
