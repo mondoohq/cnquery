@@ -122,6 +122,62 @@ message Source {
   string url = 2;
 }
 
+// VexSourceName enumerates the known producers of finding/vulnerability
+// documents. The string form (e.g. "VEX_SOURCE_NMAP") is the wire identifier
+// carried in Source.name, so consumers match on the name rather than the
+// integer value. Values 0-20 mirror the server-internal etl schema byte-for-byte
+// for compatibility; new sources are appended with fresh values.
+enum VexSourceName {
+  VEX_SOURCE_UNSPECIFIED = 0;
+  // Microsoft Defender source
+  VEX_SOURCE_MSDEFENDER = 1;
+  // Mondoo source (all sources that are not cnspec)
+  VEX_SOURCE_MONDOO = 2;
+  // Deprecated: Use VEX_SOURCE_FALCON_SPOTLIGHT instead
+  VEX_SOURCE_CROWDSTRIKE = 3;
+  // SentinelOne source
+  VEX_SOURCE_SENTINEL_ONE = 4;
+  // Mondoo cnspec source
+  VEX_SOURCE_CNSPEC = 5;
+  // CrowdStrike Falcon Spotlight source
+  VEX_SOURCE_FALCON_SPOTLIGHT = 6;
+  // CISA KEV source
+  VEX_SOURCE_CISA_KEV = 7;
+  // First EPSS source
+  VEX_SOURCE_EPSS = 8;
+  // Metasploit VEX source
+  VEX_SOURCE_METASPLOIT = 9;
+  // NMAP VEX source
+  VEX_SOURCE_NMAP = 10;
+  // Nuclei VEX source
+  VEX_SOURCE_NUCLEI = 11;
+  // Tenable VEX source
+  VEX_SOURCE_TENABLE = 12;
+  // Qualys VEX source
+  VEX_SOURCE_QUALYS = 13;
+  // Generic external VEX source (e.g. imported from third-party)
+  VEX_SOURCE_EXTERNAL = 14;
+  // Tenable SC VEX source
+  VEX_SOURCE_TENABLE_SC = 15;
+  // Mondoo enrichment of 3rd party data (scanned against MVD)
+  VEX_SOURCE_MONDOO_ENRICHMENT = 16;
+  // Google Security Command Center source
+  VEX_SOURCE_GOOGLE_SCC = 17;
+  // SecurityScorecard source
+  VEX_SOURCE_SECURITY_SCORECARD = 18;
+  // xgrep SAST code scanner source (findings on git-repository assets)
+  VEX_SOURCE_XGREP = 19;
+  // inthewild.io known-exploited source
+  VEX_SOURCE_INTHEWILD = 20;
+  // OWASP ZAP DAST web scanner source
+  VEX_SOURCE_ZAP = 21;
+  // Mondoo attack-surface discovery (mhunt). A single stable source for every
+  // mhunt module — the underlying scanner (nmap, nuclei, zap, shodan, ...) is an
+  // implementation detail mhunt may swap, so findings report as MHUNT and the
+  // specific tool is preserved in the finding ref instead.
+  VEX_SOURCE_MHUNT = 22;
+}
+
 // Status is used to identify the status of the vulnerability.
 enum Status {
   // Unspecified status
