@@ -608,48 +608,60 @@ func (g *mqlGcpProjectVertexaiService) pipelineJobs() ([]any, error) {
 				return nil, false, err
 			}
 
-			pipelineSpec, err := protoToDict(job.PipelineSpec)
+			mqlJob, err := newMqlVertexaiPipelineJob(g.MqlRuntime, job)
 			if err != nil {
 				return nil, false, err
 			}
-			runtimeConfig, err := protoToDict(job.RuntimeConfig)
-			if err != nil {
-				return nil, false, err
-			}
-			encryptionSpec, err := protoToDict(job.EncryptionSpec)
-			if err != nil {
-				return nil, false, err
-			}
-			templateMetadata, err := protoToDict(job.TemplateMetadata)
-			if err != nil {
-				return nil, false, err
-			}
-
-			mqlJob, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.pipelineJob", map[string]*llx.RawData{
-				"name":             llx.StringData(job.Name),
-				"displayName":      llx.StringData(job.DisplayName),
-				"state":            llx.StringData(job.State.String()),
-				"pipelineSpec":     llx.DictData(pipelineSpec),
-				"runtimeConfig":    llx.DictData(runtimeConfig),
-				"serviceAccount":   llx.StringData(job.ServiceAccount),
-				"network":          llx.StringData(job.Network),
-				"encryptionSpec":   llx.DictData(encryptionSpec),
-				"templateUri":      llx.StringData(job.TemplateUri),
-				"templateMetadata": llx.DictData(templateMetadata),
-				"labels":           llx.MapData(convert.MapToInterfaceMap(job.Labels), types.String),
-				"createdAt":        llx.TimeDataPtr(timestampAsTimePtr(job.CreateTime)),
-				"updatedAt":        llx.TimeDataPtr(timestampAsTimePtr(job.UpdateTime)),
-				"startTime":        llx.TimeDataPtr(timestampAsTimePtr(job.StartTime)),
-				"endTime":          llx.TimeDataPtr(timestampAsTimePtr(job.EndTime)),
-			})
-			if err != nil {
-				return nil, false, err
-			}
-			mqlJob.(*mqlGcpProjectVertexaiServicePipelineJob).cacheKmsKeyName = job.GetEncryptionSpec().GetKmsKeyName()
 			items = append(items, mqlJob)
 		}
 		return items, false, nil
 	})
+}
+
+// newMqlVertexaiPipelineJob maps a Vertex AI PipelineJob proto into an MQL
+// resource. It is shared by the pipelineJobs() lister and the
+// initGcpProjectVertexaiServicePipelineJob single-instance resolver.
+func newMqlVertexaiPipelineJob(runtime *plugin.Runtime, job *aiplatformpb.PipelineJob) (*mqlGcpProjectVertexaiServicePipelineJob, error) {
+	pipelineSpec, err := protoToDict(job.PipelineSpec)
+	if err != nil {
+		return nil, err
+	}
+	runtimeConfig, err := protoToDict(job.RuntimeConfig)
+	if err != nil {
+		return nil, err
+	}
+	encryptionSpec, err := protoToDict(job.EncryptionSpec)
+	if err != nil {
+		return nil, err
+	}
+	templateMetadata, err := protoToDict(job.TemplateMetadata)
+	if err != nil {
+		return nil, err
+	}
+
+	mqlJob, err := CreateResource(runtime, "gcp.project.vertexaiService.pipelineJob", map[string]*llx.RawData{
+		"name":             llx.StringData(job.Name),
+		"displayName":      llx.StringData(job.DisplayName),
+		"state":            llx.StringData(job.State.String()),
+		"pipelineSpec":     llx.DictData(pipelineSpec),
+		"runtimeConfig":    llx.DictData(runtimeConfig),
+		"serviceAccount":   llx.StringData(job.ServiceAccount),
+		"network":          llx.StringData(job.Network),
+		"encryptionSpec":   llx.DictData(encryptionSpec),
+		"templateUri":      llx.StringData(job.TemplateUri),
+		"templateMetadata": llx.DictData(templateMetadata),
+		"labels":           llx.MapData(convert.MapToInterfaceMap(job.Labels), types.String),
+		"createdAt":        llx.TimeDataPtr(timestampAsTimePtr(job.CreateTime)),
+		"updatedAt":        llx.TimeDataPtr(timestampAsTimePtr(job.UpdateTime)),
+		"startTime":        llx.TimeDataPtr(timestampAsTimePtr(job.StartTime)),
+		"endTime":          llx.TimeDataPtr(timestampAsTimePtr(job.EndTime)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	res := mqlJob.(*mqlGcpProjectVertexaiServicePipelineJob)
+	res.cacheKmsKeyName = job.GetEncryptionSpec().GetKmsKeyName()
+	return res, nil
 }
 
 func (g *mqlGcpProjectVertexaiServicePipelineJob) id() (string, error) {
@@ -1056,6 +1068,186 @@ func initGcpProjectVertexaiServiceCustomJob(runtime *plugin.Runtime, args map[st
 		return nil, nil, err
 	}
 	delete(args, "location")
+	return args, res, nil
+}
+
+// initGcpProjectVertexaiServiceEndpoint resolves a single Vertex AI endpoint.
+// When accessed as a discovered asset (no args) it reconstructs the full
+// resource name from the asset identifier, then fetches it directly with
+// GetEndpoint so the resource is fully populated instead of an empty husk.
+func initGcpProjectVertexaiServiceEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	if args == nil {
+		args = make(map[string]*llx.RawData)
+	}
+	if len(args) == 0 {
+		ids := getAssetIdentifier(runtime)
+		if ids == nil {
+			return nil, nil, errors.New("no asset identifier found")
+		}
+		args["name"] = llx.StringData(fmt.Sprintf("projects/%s/locations/%s/endpoints/%s", ids.project, ids.region, ids.name))
+	}
+
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return args, nil, nil
+	}
+	name := nameRaw.Value.(string)
+
+	region := vertexaiRegionFromName(name)
+	if region == "" {
+		return nil, nil, errors.New("vertexai endpoint init: could not determine region from name " + name)
+	}
+
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
+	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, nil, err
+	}
+	ctx := context.Background()
+	client, err := aiplatform.NewEndpointClient(ctx,
+		option.WithCredentials(creds), connection.GRPCClientTraceOption(),
+		option.WithEndpoint(vertexaiEndpoint(region)),
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer client.Close()
+
+	ep, err := client.GetEndpoint(ctx, &aiplatformpb.GetEndpointRequest{Name: name})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	res, err := newMqlVertexaiEndpoint(runtime, vertexaiProjectFromName(name), ep)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, res, nil
+}
+
+// initGcpProjectVertexaiServicePipelineJob resolves a single Vertex AI pipeline
+// job. Like the endpoint init, it reconstructs the full resource name from the
+// asset identifier when accessed as a discovered asset and fetches it with
+// GetPipelineJob.
+func initGcpProjectVertexaiServicePipelineJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	if args == nil {
+		args = make(map[string]*llx.RawData)
+	}
+	if len(args) == 0 {
+		ids := getAssetIdentifier(runtime)
+		if ids == nil {
+			return nil, nil, errors.New("no asset identifier found")
+		}
+		args["name"] = llx.StringData(fmt.Sprintf("projects/%s/locations/%s/pipelineJobs/%s", ids.project, ids.region, ids.name))
+	}
+
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return args, nil, nil
+	}
+	name := nameRaw.Value.(string)
+
+	region := vertexaiRegionFromName(name)
+	if region == "" {
+		return nil, nil, errors.New("vertexai pipeline job init: could not determine region from name " + name)
+	}
+
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
+	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, nil, err
+	}
+	ctx := context.Background()
+	client, err := aiplatform.NewPipelineClient(ctx,
+		option.WithCredentials(creds), connection.GRPCClientTraceOption(),
+		option.WithEndpoint(vertexaiEndpoint(region)),
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer client.Close()
+
+	job, err := client.GetPipelineJob(ctx, &aiplatformpb.GetPipelineJobRequest{Name: name})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	res, err := newMqlVertexaiPipelineJob(runtime, job)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, res, nil
+}
+
+// initGcpProjectVertexaiServiceNotebookRuntimeTemplate resolves a single Vertex
+// AI notebook runtime template. Like the endpoint init, it reconstructs the
+// full resource name from the asset identifier when accessed as a discovered
+// asset and fetches it with GetNotebookRuntimeTemplate.
+func initGcpProjectVertexaiServiceNotebookRuntimeTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	if args == nil {
+		args = make(map[string]*llx.RawData)
+	}
+	if len(args) == 0 {
+		ids := getAssetIdentifier(runtime)
+		if ids == nil {
+			return nil, nil, errors.New("no asset identifier found")
+		}
+		args["name"] = llx.StringData(fmt.Sprintf("projects/%s/locations/%s/notebookRuntimeTemplates/%s", ids.project, ids.region, ids.name))
+	}
+
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return args, nil, nil
+	}
+	name := nameRaw.Value.(string)
+
+	region := vertexaiRegionFromName(name)
+	if region == "" {
+		return nil, nil, errors.New("vertexai notebook runtime template init: could not determine region from name " + name)
+	}
+
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
+	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, nil, err
+	}
+	ctx := context.Background()
+	client, err := aiplatform.NewNotebookClient(ctx,
+		option.WithCredentials(creds), connection.GRPCClientTraceOption(),
+		option.WithEndpoint(vertexaiEndpoint(region)),
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer client.Close()
+
+	tmpl, err := client.GetNotebookRuntimeTemplate(ctx, &aiplatformpb.GetNotebookRuntimeTemplateRequest{Name: name})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	res, err := newMqlVertexaiNotebookRuntimeTemplate(runtime, tmpl)
+	if err != nil {
+		return nil, nil, err
+	}
 	return args, res, nil
 }
 
@@ -1558,62 +1750,75 @@ func (g *mqlGcpProjectVertexaiService) notebookRuntimeTemplates() ([]any, error)
 				return nil, false, err
 			}
 
-			machineSpec, err := protoToDict(tmpl.MachineSpec)
+			mqlTmpl, err := newMqlVertexaiNotebookRuntimeTemplate(g.MqlRuntime, tmpl)
 			if err != nil {
 				return nil, false, err
 			}
-			networkSpec, err := protoToDict(tmpl.NetworkSpec)
-			if err != nil {
-				return nil, false, err
-			}
-			idleShutdownConfig, err := protoToDict(tmpl.IdleShutdownConfig)
-			if err != nil {
-				return nil, false, err
-			}
-			eucConfig, err := protoToDict(tmpl.EucConfig)
-			if err != nil {
-				return nil, false, err
-			}
-			shieldedVmConfig, err := protoToDict(tmpl.ShieldedVmConfig)
-			if err != nil {
-				return nil, false, err
-			}
-			softwareConfig, err := protoToDict(tmpl.SoftwareConfig)
-			if err != nil {
-				return nil, false, err
-			}
-			encryptionSpec, err := protoToDict(tmpl.EncryptionSpec)
-			if err != nil {
-				return nil, false, err
-			}
-
-			mqlTmpl, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.notebookRuntimeTemplate", map[string]*llx.RawData{
-				"name":                llx.StringData(tmpl.Name),
-				"displayName":         llx.StringData(tmpl.DisplayName),
-				"description":         llx.StringData(tmpl.Description),
-				"isDefault":           llx.BoolData(tmpl.IsDefault),
-				"notebookRuntimeType": llx.StringData(tmpl.NotebookRuntimeType.String()),
-				"networkTags":         llx.ArrayData(convert.SliceAnyToInterface(tmpl.NetworkTags), types.String),
-				"machineSpec":         llx.DictData(machineSpec),
-				"networkSpec":         llx.DictData(networkSpec),
-				"idleShutdownConfig":  llx.DictData(idleShutdownConfig),
-				"eucConfig":           llx.DictData(eucConfig),
-				"shieldedVmConfig":    llx.DictData(shieldedVmConfig),
-				"softwareConfig":      llx.DictData(softwareConfig),
-				"etag":                llx.StringData(tmpl.Etag),
-				"labels":              llx.MapData(convert.MapToInterfaceMap(tmpl.Labels), types.String),
-				"encryptionSpec":      llx.DictData(encryptionSpec),
-				"createdAt":           llx.TimeDataPtr(timestampAsTimePtr(tmpl.CreateTime)),
-				"updatedAt":           llx.TimeDataPtr(timestampAsTimePtr(tmpl.UpdateTime)),
-			})
-			if err != nil {
-				return nil, false, err
-			}
-			mqlTmpl.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).cacheKmsKeyName = tmpl.GetEncryptionSpec().GetKmsKeyName()
 			items = append(items, mqlTmpl)
 		}
 		return items, false, nil
 	})
+}
+
+// newMqlVertexaiNotebookRuntimeTemplate maps a Vertex AI
+// NotebookRuntimeTemplate proto into an MQL resource. It is shared by the
+// notebookRuntimeTemplates() lister and the
+// initGcpProjectVertexaiServiceNotebookRuntimeTemplate single-instance resolver.
+func newMqlVertexaiNotebookRuntimeTemplate(runtime *plugin.Runtime, tmpl *aiplatformpb.NotebookRuntimeTemplate) (*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate, error) {
+	machineSpec, err := protoToDict(tmpl.MachineSpec)
+	if err != nil {
+		return nil, err
+	}
+	networkSpec, err := protoToDict(tmpl.NetworkSpec)
+	if err != nil {
+		return nil, err
+	}
+	idleShutdownConfig, err := protoToDict(tmpl.IdleShutdownConfig)
+	if err != nil {
+		return nil, err
+	}
+	eucConfig, err := protoToDict(tmpl.EucConfig)
+	if err != nil {
+		return nil, err
+	}
+	shieldedVmConfig, err := protoToDict(tmpl.ShieldedVmConfig)
+	if err != nil {
+		return nil, err
+	}
+	softwareConfig, err := protoToDict(tmpl.SoftwareConfig)
+	if err != nil {
+		return nil, err
+	}
+	encryptionSpec, err := protoToDict(tmpl.EncryptionSpec)
+	if err != nil {
+		return nil, err
+	}
+
+	mqlTmpl, err := CreateResource(runtime, "gcp.project.vertexaiService.notebookRuntimeTemplate", map[string]*llx.RawData{
+		"name":                llx.StringData(tmpl.Name),
+		"displayName":         llx.StringData(tmpl.DisplayName),
+		"description":         llx.StringData(tmpl.Description),
+		"isDefault":           llx.BoolData(tmpl.IsDefault),
+		"notebookRuntimeType": llx.StringData(tmpl.NotebookRuntimeType.String()),
+		"networkTags":         llx.ArrayData(convert.SliceAnyToInterface(tmpl.NetworkTags), types.String),
+		"machineSpec":         llx.DictData(machineSpec),
+		"networkSpec":         llx.DictData(networkSpec),
+		"idleShutdownConfig":  llx.DictData(idleShutdownConfig),
+		"eucConfig":           llx.DictData(eucConfig),
+		"shieldedVmConfig":    llx.DictData(shieldedVmConfig),
+		"softwareConfig":      llx.DictData(softwareConfig),
+		"etag":                llx.StringData(tmpl.Etag),
+		"labels":              llx.MapData(convert.MapToInterfaceMap(tmpl.Labels), types.String),
+		"encryptionSpec":      llx.DictData(encryptionSpec),
+		"createdAt":           llx.TimeDataPtr(timestampAsTimePtr(tmpl.CreateTime)),
+		"updatedAt":           llx.TimeDataPtr(timestampAsTimePtr(tmpl.UpdateTime)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	res := mqlTmpl.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate)
+	res.cacheKmsKeyName = tmpl.GetEncryptionSpec().GetKmsKeyName()
+	return res, nil
 }
 
 func (g *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) id() (string, error) {

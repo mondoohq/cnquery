@@ -18,6 +18,7 @@ var gcpPlatformNames = []string{
 	"gcp-dns-zone", "gcp-kms-keyring",
 	"gcp-memorystore-redis", "gcp-memorystore-rediscluster", "gcp-memorystore-instance",
 	"gcp-artifactregistry-repository", "gcp-memcache-instance", "gcp-vertexai-job",
+	"gcp-vertexai-endpoint", "gcp-vertexai-pipelinejob", "gcp-vertexai-notebookruntimetemplate",
 	"gcp-secretmanager-secret",
 	"gcp-pubsub-topic", "gcp-pubsub-subscription", "gcp-pubsub-snapshot",
 	"gcp-cloudrun-service", "gcp-cloudrun-job", "gcp-cloud-function",

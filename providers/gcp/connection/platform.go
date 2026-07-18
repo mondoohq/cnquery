@@ -127,6 +127,12 @@ func GetTitleForPlatformName(name string) string {
 		return "GCP Memorystore for Memcached Instance"
 	case "gcp-vertexai-job":
 		return "GCP Vertex AI Custom Job"
+	case "gcp-vertexai-endpoint":
+		return "GCP Vertex AI Endpoint"
+	case "gcp-vertexai-pipelinejob":
+		return "GCP Vertex AI Pipeline Job"
+	case "gcp-vertexai-notebookruntimetemplate":
+		return "GCP Vertex AI Notebook Runtime Template"
 	case "gcp-secretmanager-secret":
 		return "GCP Secret Manager Secret"
 	case "gcp-compute-instance":
@@ -249,8 +255,8 @@ func ResourceTechnologyUrl(service, project, region, objectType, name string) []
 		}
 	case "vertexai":
 		switch objectType {
-		case "job":
-			return []string{"gcp", project, "vertexai", region, "job"}
+		case "job", "endpoint", "pipelinejob", "notebookruntimetemplate":
+			return []string{"gcp", project, "vertexai", region, objectType}
 		default:
 			return []string{"gcp", project, "vertexai", region, "other"}
 		}

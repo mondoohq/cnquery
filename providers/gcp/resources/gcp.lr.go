@@ -1807,7 +1807,7 @@ func init() {
 			Create: createGcpProjectVertexaiServiceModel,
 		},
 		"gcp.project.vertexaiService.endpoint": {
-			// to override args, implement: initGcpProjectVertexaiServiceEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectVertexaiServiceEndpoint,
 			Create: createGcpProjectVertexaiServiceEndpoint,
 		},
 		"gcp.project.vertexaiService.endpoint.deployment": {
@@ -1815,7 +1815,7 @@ func init() {
 			Create: createGcpProjectVertexaiServiceEndpointDeployment,
 		},
 		"gcp.project.vertexaiService.pipelineJob": {
-			// to override args, implement: initGcpProjectVertexaiServicePipelineJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectVertexaiServicePipelineJob,
 			Create: createGcpProjectVertexaiServicePipelineJob,
 		},
 		"gcp.project.vertexaiService.dataset": {
@@ -1847,7 +1847,7 @@ func init() {
 			Create: createGcpProjectVertexaiServiceNotebookRuntime,
 		},
 		"gcp.project.vertexaiService.notebookRuntimeTemplate": {
-			// to override args, implement: initGcpProjectVertexaiServiceNotebookRuntimeTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectVertexaiServiceNotebookRuntimeTemplate,
 			Create: createGcpProjectVertexaiServiceNotebookRuntimeTemplate,
 		},
 		"gcp.project.vertexaiService.notebookExecutionJob": {

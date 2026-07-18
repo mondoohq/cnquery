@@ -1276,6 +1276,14 @@ var gcpPermissionOverrides = map[string]map[string]string{
 		// EndpointClient.GetEndpoint → singular "endpoint" by default; the real
 		// IAM permission is the plural form (matching aiplatform.endpoints.list).
 		"GetEndpoint": "aiplatform.endpoints.get",
+		// PipelineClient.GetPipelineJob → singular "pipelineJob" by default; the
+		// real IAM permission is the plural form (matching
+		// aiplatform.pipelineJobs.list).
+		"GetPipelineJob": "aiplatform.pipelineJobs.get",
+		// NotebookClient.GetNotebookRuntimeTemplate → singular
+		// "notebookRuntimeTemplate" by default; the real IAM permission is the
+		// plural form (matching aiplatform.notebookRuntimeTemplates.list).
+		"GetNotebookRuntimeTemplate": "aiplatform.notebookRuntimeTemplates.get",
 	},
 	"documentai": {
 		// DocumentProcessorClient.GetProcessorVersion → singular "processorVersion"

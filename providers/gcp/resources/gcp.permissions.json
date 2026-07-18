@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.31.2",
-  "generated_at": "2026-07-18T07:31:10-07:00",
+  "generated_at": "2026-07-18T07:43:11-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.batchPredictionJobs.list",
@@ -22,9 +22,11 @@
     "aiplatform.models.get",
     "aiplatform.models.list",
     "aiplatform.notebookExecutionJobs.list",
+    "aiplatform.notebookRuntimeTemplates.get",
     "aiplatform.notebookRuntimeTemplates.list",
     "aiplatform.notebookRuntimes.list",
     "aiplatform.persistentResources.list",
+    "aiplatform.pipelineJobs.get",
     "aiplatform.pipelineJobs.list",
     "aiplatform.ragCorpora.list",
     "aiplatform.reasoningEngines.list",
@@ -384,6 +386,12 @@
       "source_file": "vertexai.go"
     },
     {
+      "permission": "aiplatform.notebookRuntimeTemplates.get",
+      "service": "aiplatform",
+      "action": "GetNotebookRuntimeTemplate",
+      "source_file": "vertexai.go"
+    },
+    {
       "permission": "aiplatform.notebookRuntimeTemplates.list",
       "service": "aiplatform",
       "action": "ListNotebookRuntimeTemplates",
@@ -399,6 +407,12 @@
       "permission": "aiplatform.persistentResources.list",
       "service": "aiplatform",
       "action": "ListPersistentResources",
+      "source_file": "vertexai.go"
+    },
+    {
+      "permission": "aiplatform.pipelineJobs.get",
+      "service": "aiplatform",
+      "action": "GetPipelineJob",
       "source_file": "vertexai.go"
     },
     {
