@@ -123,7 +123,11 @@ redfish.ethernetInterface @defaults("macAddress linkStatus") {
   speedMbps int
   // Whether the link runs in full duplex
   fullDuplex bool
-  // Link state, such as LinkUp or LinkDown
+  // Link state
+  //
+  // One of LinkUp (available for communication on the interface),
+  // NoLink (no link or connection detected), or LinkDown (connected
+  // but no link detected).
   linkStatus string
   // Whether the interface is administratively enabled
   interfaceEnabled bool
@@ -150,7 +154,13 @@ redfish.manager @defaults("model firmwareVersion") {
   powerState string
   // Controller date and time in ISO 8601 format
   dateTime string
-  // Network management services with their enabled state and ports, keyed by protocol name
+  // Management network services and their enabled state and listening ports
+  //
+  // The `hostName` and `fqdn` keys carry the controller's network identity.
+  // Each of `http`, `https`, `ssh`, `ipmi`, `snmp`, `kvmip`, and `virtualMedia`
+  // maps to an object with `enabled` (bool) and `port` (int), letting you audit
+  // which out-of-band management protocols are exposed and on which ports (for
+  // example flagging cleartext `http`, `snmp`, or `ipmi` that should be disabled).
   networkProtocol() dict
 }
 
