@@ -25,13 +25,13 @@ Every top-level resource (anything users will query directly — including singu
 
 1. **Title.** A simple, technically correct one-line name — a noun phrase, no leading article ("A" / "An"), no trailing verbs like "static analysis" / "configuration analysis". The title is *what the resource is*, not what you do with it. **Must not start with "deprecated"** (enforced) — use `@maturity("deprecated")` instead. **Max 150 characters (enforced).**
 2. **Single empty `//` line.**
-3. **Description.** Multi-line prose describing what's queryable through the resource — fields, sub-resources, derived predicates, the audits it enables. Lead with `Examine ...` (or `Iterate ...` for collection wrappers, `Use ...` for namespaces that exist mainly to host other resources). When the resource is keyed by a specific field, mention that field as the selection key with a concrete example. The description gets machine-parsed into the website-rendered resource docs, so favor depth and self-containment over single-line brevity. **Descriptions must not start with "Deprecated." or "Deprecated:" (enforced).** The only accepted leading phrases that contain the word "deprecated" are `Deprecated in favor of ...` and `Deprecated, please use ...`; any other variant must be rewritten so the deprecation notice comes after the resource/field summary.
+3. **Description.** Multi-line prose describing what's queryable through the resource — fields, sub-resources, derived predicates, the audits it enables. **Lead with the noun being exposed, not a verb** (do not open with `Examine`/`Iterate`/`Use`). When the resource is keyed by a specific field, mention that field as the selection key with a concrete example. The description gets machine-parsed into the website-rendered resource docs, so favor depth and self-containment over single-line brevity. **Descriptions must not start with "Deprecated." or "Deprecated:" (enforced).** The only accepted leading phrases that contain the word "deprecated" are `Deprecated in favor of ...` and `Deprecated, please use ...`; any other variant must be rewritten so the deprecation notice comes after the resource/field summary.
 
 ```
 // Apache2 HTTP Server
 //
-// Examine server configuration and daemon version. The configuration
-// includes loaded modules, virtual hosts, and directory directives.
+// Server configuration and daemon version, including loaded
+// modules, virtual hosts, and directory directives.
 apache2 { ... }
 ```
 
@@ -40,12 +40,12 @@ Selection-keyed example:
 ```
 // Section of the Arista EOS running-config
 //
-// Examine a single named section of the running-config when you need the
+// A single named section of the running-config, for when you need the
 // raw text of one configuration block rather than the whole device. The
-// `name` field selects the section as it appears in the running-config —
-// for example `arista.eos.runningConfig.section(name: "interface Ethernet1")`
-// or `... section(name: "router bgp 65001")` — and `content` returns the
-// raw text of that block.
+// `name` field selects the section as it appears in the running-config.
+// For example `arista.eos.runningConfig.section(name: "interface Ethernet1")`
+// or `... section(name: "router bgp 65001")`. The `content` field returns
+// the raw text of that block.
 arista.eos.runningConfig.section { ... }
 ```
 
@@ -54,6 +54,9 @@ arista.eos.runningConfig.section { ... }
 - Don't use developer jargon ("Singleton", "Top-level entry point" is OK if it adds meaning, otherwise drop it). Write user-facing prose.
 - Cross-reference sibling resources only when it genuinely helps the reader — e.g., pointing from a raw view (`apache2.conf`) at a richer typed view (`apache2.conf.module`).
 - Private resources and pure sub-row types (rows of a parent collection like `*.entry`) typically don't need the two-part form — a single-line comment is fine.
+- **No em dashes** anywhere in `.lr` files. Use a period, comma, parentheses, or colon.
+- **Reference a field by its bare name** (`serviceAccount`), never the call form (`serviceAccount()`) — the `()` leaks the accessor mechanism.
+- **Don't leak implementation mechanism or cross-cloud analogies.** No "typed"/"typed reference", "lazy-loaded"/"fetched on-demand", or "phase 1/phase 2" (describe by function, e.g. key-exchange/data-channel); no "the Azure equivalent of AWS Macie" style analogies. Describe the value on its own terms. (Per-discriminator dict shape lists — the key/value structure that varies by enum sibling — are schema, not mechanism; keep them.)
 
 **Doc-comment shape — applies to both resources AND fields (enforced by the parser):**
 
@@ -141,6 +144,8 @@ Implement the generated interfaces in the provider's Go code. Use one of these p
 *Best for:* Resolving references (e.g., `aws.ec2.instance("i-123")`) or expensive calls.
 1.  Return a reference: `NewResource(runtime, "aws.ec2.instance", map[string]*llx.RawData{"__id": ...})`.
 2.  Implement an `init` function (e.g., `initAwsEc2Instance`) that checks for the `__id`, fetches data on-demand, and populates the resource.
+
+> **Only `NewResource` runs a resource's `init`; `CreateResource` skips it.** So an `__id` your `init` would have computed stays empty under `CreateResource`, and parameterized resources (e.g. an access-review / who-can lookup keyed on args) collide in the cache — every query returns the first one's result. Use `NewResource` for anything whose identity is built in `init`.
 
 **Pattern C: Cross-References**
 *Best for:* Linking resources (e.g., GCP Address -> Network).
@@ -381,15 +386,7 @@ Providers run as separate gRPC subprocesses, so debuggers can't step into them. 
 The middle step (3) is where the actual ticket work happens; 1–2 and 5 just toggle the mode.
 
 ### Remote Debugging
-For providers that need to run on specific VMs (e.g., GCP snapshot scanning):
-1. Install Go and Delve on the remote VM
-2. Configure provider as builtin locally (see "Local Provider Debugging" above)
-3. Copy source to remote VM (use `rsync` for easier iteration)
-4. Allow ingress traffic to debugger port in firewall
-5. Start debugger on remote VM:
-   ```bash
-   dlv debug apps/mql/mql.go --headless --listen=:12345 -- run gcp snapshot --project-id xyz-123 --verbose
-   ```
+For a provider that must run on a specific VM (e.g. GCP snapshot scanning): configure it as builtin locally (above), `rsync` the source to the VM, install Go + Delve there, open the debugger port in the firewall, then `dlv debug apps/mql/mql.go --headless --listen=:12345 -- run <provider> ...`.
 
 ## 5. Architecture Deep Dive
 
@@ -407,33 +404,10 @@ mql/
 └── apps/mql/               # Main mql CLI application
 ```
 
-### Detailed Query Execution Flow
-1. **User Query (MQL string)** → `mqlc.Compile()` (MQL Compiler)
-2. **Compiled to `llx.CodeBundle`** (Protobuf-serialized bytecode + metadata)
-3. **Wrapped in `explorer.ExecutionQuery`** (execution context)
-4. **Executed by `executor.Executor`** (runs bytecode against runtime)
-5. **Returns `llx.RawResult`** (typed data + code IDs)
-6. **Formatted output** (JSON, YAML, table, etc.)
-
-### Provider System Architecture
-
-**Core Concepts:**
-- **Providers** are plugins that connect mql to different infrastructure backends (AWS, K8s, Docker, etc.)
-- Each provider is a separate Go module with its own dependencies
-- Providers communicate with mql via gRPC using hashicorp/go-plugin
-- The **Core Provider** is always built-in and provides universal resources like `asset`, `time`, `regex`
-
-**Provider Lifecycle:**
-1. `providers.Coordinator` spawns provider as subprocess via `exec.Command`
-2. gRPC connection established via `hashicorp/go-plugin`
-3. Provider implements: `ParseCLI()`, `Connect()`, `GetData()`, `StoreData()`, `Disconnect()`
-4. `providers.Runtime` manages active providers for each asset
-5. Providers can discover child assets (e.g., K8s discovers pods)
-
-**Resource Data Flow:** the compiler requests a resource field → executor calls `provider.GetData(connection, resource, field, args)` → provider fetches from the backend (cloud API, SSH, etc.) → data converted to `llx.Primitive` → `llx.RawData` → result cached in the executor for subsequent access.
-
-### MQL, MQLC, and LLX Relationship
-Think of it as: MQL (`mql/`, high-level executor API; like SQL or better GraphQL) → MQLC (`mqlc/`, compiles MQL text to bytecode) → LLX (`llx/`, the VM that runs the bytecode).
+### Query Execution & Provider System
+- **Flow:** MQL string → `mqlc.Compile()` → `llx.CodeBundle` (protobuf bytecode + metadata) → wrapped in `explorer.ExecutionQuery` → run by `executor.Executor` against the runtime → `llx.RawResult`. Layering: **MQL** (`mql/`, high-level executor, SQL/GraphQL-like) → **MQLC** (`mqlc/`, compiles text to bytecode) → **LLX** (`llx/`, the bytecode VM).
+- **Providers** are gRPC plugins (hashicorp/go-plugin), each its own Go module; the **core provider** is always built-in (`asset`, `time`, `regex`). `providers.Coordinator` spawns each as a subprocess; each implements `ParseCLI()`/`Connect()`/`GetData()`/`StoreData()`/`Disconnect()`; `providers.Runtime` manages them per asset, and they can discover child assets (e.g. K8s → pods).
+- **Field resolution:** compiler requests a field → `provider.GetData(connection, resource, field, args)` → backend fetch (cloud API, SSH, …) → `llx.Primitive` → `llx.RawData` → cached in the executor.
 
 ### Resources and Code Generation
 Resources are defined in `.lr` files (e.g., `aws.lr`, `k8s.lr`); the `lr` tool generates Go resource structs, schema definitions, and data accessors from them. Generated files: `*.lr.go`, `*.lr.versions`, `*.resources.json`, `*.permissions.json`.
@@ -471,17 +445,6 @@ Reserve a public `id string` field for resources whose id carries user-meaningfu
 ### Code Generation Dependencies
 Three codegen steps feed the build: protobuf (`.proto` → `.pb.go`), resources (`.lr` → `.lr.go`), and provider config (`providers.yaml` → `builtin_dev.go`). Run `make mql/generate` after modifying any of these.
 
-### Key Data Structures
-When navigating the codebase, these are the critical types you'll encounter:
-- **`llx.CodeBundle`** - Compiled MQL bytecode ready for execution
-- **`llx.RawData`** - Typed data wrapper for resource fields
-- **`llx.RawResult`** - Execution results with type information
-- **`plugin.Runtime`** - Execution context linking assets to providers
-- **`explorer.Explorer`** - High-level query orchestration
-- **`explorer.ExecutionQuery`** - Query wrapped with execution context
-- **`providers.Coordinator`** - Manages provider lifecycle and spawning
-- **`providers.Runtime`** - Active provider management per asset
-
 ### LLX Builtin Function Invariants
 When implementing or modifying builtin functions in `llx/` (e.g., array/dict operations):
 - **Never mutate slices or maps obtained from `arg.Value` or `bind.Value`.** These reference shared runtime data — the runtime caches resolved values and may return the same `RawData` pointer to multiple callers. Mutating them corrupts the original value for any subsequent use. Always copy before modifying:
@@ -496,6 +459,8 @@ When implementing or modifying builtin functions in `llx/` (e.g., array/dict ope
   copy(filters, argFilters)
   filters = append(filters[0:j], filters[j+1:]...)  // safe — original untouched
   ```
+- **A `panic` in a builtin or comparator crashes the entire scan.** The executor runs blocks in goroutines, so the panic is unrecoverable — it kills the scan, not just one query. Guard every type assertion on `arg.Value`/`bind.Value` with comma-ok (`x, ok := v.([]any)`) or a `== nil` check; never use the bare `v.(T)` form on runtime data.
+- **`null && null` evaluates to `true` in MQL** (three-valued logic). An init-miss stub that leaves its booleans as `StateIsNull` will pass a `{ a && b }` assertion even though nothing was actually verified — set explicit `false` values on such stubs so misses and typos fail.
 
 ## 6. Important Implementation Details
 
@@ -517,6 +482,7 @@ The format is `2024, <current year>` (comma-separated, not a dash). The first ye
 - Return actual errors for temporary failures (rate limits, network issues)
 - Log warnings for region/permission issues but continue with accessible resources
 - Avoid failing entire queries due to single resource access issues
+- `convert.SliceStrPtrToStr` and `convert.SliceStrPtrToInterface` deref each pointer with no nil guard — they **panic** on a slice containing nil elements. Write a nil-safe loop when the SDK slice may hold nil pointers (they are not drop-in "safe" replacements)
 
 ### Pagination Handling
 When fetching resources from cloud APIs, **always handle pagination** if the API supports it:
@@ -541,19 +507,9 @@ for {
 ```
 
 ### Resource Field Naming & Constraints
-- Properties named "id" or "url" (case insensitive) must be prefixed with "userDefined:" (e.g., "userDefined:URL")
-- Date fields use expanded format: "date:{property}:start", "date:{property}:end", "date:{property}:is_datetime"
-- Place fields split into multiple properties: name, address, latitude, longitude, google_place_id
-- Use JavaScript number types for numeric fields, not strings
-- **Always use typed resource references over raw ID/ARN strings.** This is critical for good MQL UX, and it is the [Step 1.5 typed-reference gate](#step-15-typed-reference-gate-do-this-before-you-generate-code) you should already have run before codegen — getting it wrong here is a breaking change to undo later:
-  - `vpcId string` → `vpc() aws.vpc`
-  - `vpcSubnetIds []string` → `subnets() []aws.vpc.subnet`
-  - `vpcSecurityGroupIds []string` → `securityGroups() []aws.ec2.securitygroup`
-  - `roleArn string` → `iamRole() aws.iam.role` (use `iamRole` not `role` to avoid ambiguity)
-  - `kmsMasterKeyId string` → `kmsMasterKey() aws.kms.key`
-  - `topicArn string` → `topic() aws.sns.topic`
-  - `streamArn string` → `stream() aws.kinesis.stream`
-  These enable MQL traversal (e.g., `aws.rds.proxy.vpc.cidrBlock`). Store the raw ID/ARN in a `cache*` field on the Internal struct, then implement the typed method using `NewResource`.
+- **Always use typed resource references over raw ID/ARN strings.** This is the [Step 1.5 typed-reference gate](#step-15-typed-reference-gate-do-this-before-you-generate-code) you already ran — see its table for the mappings (`vpcId`→`vpc()`, `roleArn`→`iamRole()`, `topicArn`→`topic()`, etc.). They enable MQL traversal (e.g. `aws.rds.proxy.vpc.cidrBlock`); use `iamRole` not `role` to avoid ambiguity. Store the raw ID/ARN in a `cache*` field on the Internal struct, then implement the accessor with `NewResource`. Getting this wrong after ship is a breaking change.
+  - **Name accessors `<thing>Ref` / `<things>Refs`** (or a domain word), never `<thing>Typed`.
+  - **Deprecate the raw `*Id`/`*Arn` field when a typed ref carries the same value** — it's a useless duplicate. Mark it `@maturity("deprecated")` and give the ref the clean name. Keep the raw field only when it's a list of tokens the ref can't round-trip (then name the accessor `*Refs`).
 - **GCP: Use typed resource references over raw URL strings.** GCP Compute resources often store references as self-link URLs (e.g., `https://www.googleapis.com/compute/v1/projects/.../networks/my-net`). Always add a typed computed method alongside the raw URL field — e.g. `networkUrl` → `network()`, and likewise `subnetworkUrl` → `subnetwork()`, `routerUrl`, `sslPolicyUrl`, `securityPolicyUrl`, `interconnectUrl`, `vpnGatewayUrl` (all resolving to `gcp.project.computeService.*`).
 - **When to create a sub-resource.** A sub-resource (`aws.foo.bar`) is appropriate only when it meets **one of two bars**:
   1. **Clear ID.** It has a stable unique identifier — an ARN, a name-with-region, or another natural key returned by the API. Synthetic composite IDs like `<parentArn>/leaf` do **not** count.
@@ -575,7 +531,9 @@ for {
   - ✗ `{hostPath, containerPath, permissions}` device / `{containerPath, size, mountOptions}` tmpfs — use `[]dict`
 - Every resource and field has an explicit entry in `.lr.versions`. New entries must use the **next patch version** after the provider's current version (e.g., if the provider is at `13.1.1`, new fields should be `13.1.2`). The provider's current version is in `providers/<name>/config/config.go` (look for the `Version` field). Do **not** rely on the highest version in `.lr.versions` — it may be stale from before a major version bump. The `versions` command does this automatically, but verify the result. Existing entries are never overwritten.
   - **Exception — brand-new, unreleased provider:** if the provider is being introduced in this PR (its `config.go` `Version` hasn't shipped yet), every `.lr.versions` entry is part of the initial release and equals that version — not `version + 1`. The "next patch" rule applies only to fields added *after* a version has shipped (a new provider at `13.0.0` has all entries at `13.0.0`; a later PR adding a field bumps that one to `13.0.1`).
+  - **Don't bump the provider's `Version` in `config.go` in a feature PR** — the release flow handles that separately. You only add the `.lr.versions` entries.
 - **Match SDK types faithfully:** If an SDK field is `*bool`, use `bool` in `.lr` and `llx.BoolDataPtr()` in Go — don't cast it to `string`. If an SDK enum has only two states (Enabled/Disabled), prefer `bool`. Use `*type` intermediate variables with `llx.*DataPtr` helpers to preserve nil semantics.
+- **Never change a shipped field's type** (e.g. `string`→`bool`) — it's customer-breaking. Deprecate the old field and add a new one instead; decline review-bot suggestions to mutate an existing field's type in place.
 - **Consistency with existing fields:** Before adding new fields to a resource, check how its existing fields handle pointers, nil checks, and type conversions. Follow the same pattern.
 - **Verify enum values in `.lr` comments:** When listing possible values in field comments, check the SDK/API docs for completeness — don't assume the set is closed.
 - **Skip deprecated SDK fields and methods.** Check the SDK's `// Deprecated:` comment before exposing a field or calling a method. Deprecated fields often return empty/zero on modern instances because the data moved elsewhere (e.g. GCP Memorystore moved `DiscoveryEndpoints`/`PscAutoConnections` into `Endpoints`) — modeling them adds dead schema. Same for deprecated `Get*`/`List*` methods; pick the replacement. If you genuinely need one for backward-compat, leave a comment explaining why.
@@ -589,7 +547,7 @@ for {
 
   // Cloudflare zone plan
   //
-  // Examine the Cloudflare service plan attached to a zone. Will be
+  // The Cloudflare service plan attached to a zone. Will be
   // removed in the next major release.
   private cloudflare.zone.plan @defaults("name") @maturity("deprecated") { ... }
   ```
@@ -606,7 +564,10 @@ for {
 ### Code Generation Gotchas
 - Never manually edit generated `.lr.go` files - they get overwritten
 - Use `make providers/mqlr` for faster provider-specific regeneration (see [Step 3 Pattern D](#step-3-implementation-strategies) for the Internal-struct second-pass gotcha)
+- **A resource named `<parent>.<field>` queried by its dotted path becomes an empty husk.** Fingerprint: `cannot convert primitive with NO type information`. Don't give a resource the same name as the dotted path used to reach it.
+- **A list field whose path equals its element resource type compiles as a single resource, not a list.** Fingerprint: `is not a list type`. Use a plural field name over a singular element resource (field `policies` → resource `...policy`).
 - **Always commit `*.permissions.json`** when it changes. This file is regenerated by `make providers/build/<provider>` and tracks the IAM permissions each provider requires. Changes to it (e.g., new API calls added, deprecated calls removed) are part of the PR — they're not throwaway build artifacts.
+  - A new SDK client's `Get*` permissions only reach `aws.permissions.json` if the client is mapped in `awsConnectionMethodToService` (add an `awsServiceNameOverrides` entry too when the IAM prefix ≠ SDK package name). For GCP, a `Get<Resource>` gRPC method singularizes to a non-existent IAM permission — add a `gcpPermissionOverrides` entry for the correct plural form. Miss either and the perms silently drop from the manifest (GCP surfaces only as a CI-side `TestGCPPermissionsMatchValidatedList` failure).
 
 ### Testing & Verification
 (Build/install vs. builtin `go run` is covered in [Step 4: Verification](#step-4-verification-interactive).)
@@ -694,18 +655,7 @@ make test/integration
 **Note:** CI runs comprehensive checks. Run them locally only if you want to verify before pushing or if changing core/performance-critical code.
 
 ### Spell Check CI
-CI runs [check-spelling/check-spelling](https://github.com/check-spelling/check-spelling) on every PR. It **only checks `.md`, `.lr`, and `.mql.yaml` files** (configured in `.github/actions/spelling/only.txt`).
-
-**How it works:**
-- Uses external dictionaries for AWS, Kubernetes, Go, and software terms
-- `.github/actions/spelling/expect.txt` — sorted list of allowed custom words (add new terms here)
-- `.github/actions/spelling/line_forbidden.patterns` — enforces correct capitalization of product names (e.g., "GitHub" not "Github", "Kubernetes" not "kubernetes")
-
-**Fixing spell check failures:**
-- If the word is a legitimate technical term: add it to `expect.txt` (keep sorted)
-- If the word appears in a pattern (ARN, hash, URL): add a regex to `patterns.txt`
-- If it's a genuine typo: fix the spelling
-- Removing words from `expect.txt` is fine as long as the spell check CI job passes
+CI runs [`crate-ci/typos`](https://github.com/crate-ci/typos) on every PR (config: `_typos.toml` at the repo root). Fix genuine typos; add false positives (identifiers, product names) to `_typos.toml`.
 
 ## 8. Commit Conventions
 
