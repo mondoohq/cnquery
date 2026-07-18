@@ -12674,7 +12674,7 @@ func (c *mqlStackitAlbWaf) GetLabels() *plugin.TValue[map[string]any] {
 type mqlStackitAlbManagedRuleSet struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlStackitAlbManagedRuleSetInternal it will be used here
+	mqlStackitAlbManagedRuleSetInternal
 	Name    plugin.TValue[string]
 	Type    plugin.TValue[string]
 	Version plugin.TValue[string]
@@ -12814,7 +12814,7 @@ func (c *mqlStackitAlbManagedRule) GetDescription() *plugin.TValue[string] {
 type mqlStackitAlbCustomRuleGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlStackitAlbCustomRuleGroupInternal it will be used here
+	mqlStackitAlbCustomRuleGroupInternal
 	Name  plugin.TValue[string]
 	Rules plugin.TValue[[]any]
 }

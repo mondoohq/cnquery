@@ -5,7 +5,7 @@ package resources
 
 import (
 	"fmt"
-	"sort"
+	"slices"
 
 	albwaf "github.com/stackitcloud/stackit-sdk-go/services/albwaf/v1betaapi"
 	"go.mondoo.com/mql/v13/llx"
@@ -19,6 +19,18 @@ type mqlStackitAlbCustomRuleInternal struct {
 	// cache key, used to key the condition sub-resources.
 	cacheConditions []albwaf.Condition
 	cacheIdBase     string
+}
+
+type mqlStackitAlbManagedRuleSetInternal struct {
+	// cacheGroups holds the rule set's groups, captured during init so rules()
+	// need not re-fetch the set. A nil pointer means "not yet fetched".
+	cacheGroups *map[string]albwaf.MRSRuleGroup
+}
+
+type mqlStackitAlbCustomRuleGroupInternal struct {
+	// cacheRules holds the group's rules, captured during init so rules() need
+	// not re-fetch the group. A nil pointer means "not yet fetched".
+	cacheRules *[]albwaf.GetCustomRule
 }
 
 // ------------------------- WAF configurations -------------------------
@@ -119,6 +131,9 @@ func (r *mqlStackitAlbLoadBalancer) wafs() ([]any, error) {
 		if !ok {
 			continue
 		}
+		// "wafConfigName" is the SDK's json key for the WAF a listener
+		// references (alb.Listener.WafConfigName); listeners without a WAF omit
+		// it, so a missing key just means "no WAF on this listener".
 		name, ok := listener["wafConfigName"].(string)
 		if !ok || name == "" {
 			continue
@@ -170,12 +185,18 @@ func initStackitAlbManagedRuleSet(runtime *plugin.Runtime, args map[string]*llx.
 	if err != nil {
 		return nil, nil, err
 	}
+	// Keep the groups from this call so rules() doesn't re-fetch the set.
+	groups := resp.GetGroups()
+	res.(*mqlStackitAlbManagedRuleSet).cacheGroups = &groups
 	return nil, res, nil
 }
 
-// rules flattens the managed rule set's groups into individual rules,
-// each carrying its group name and mode.
-func (r *mqlStackitAlbManagedRuleSet) rules() ([]any, error) {
+// groups returns the rule set's groups, using the copy captured during init
+// when available and fetching the set otherwise.
+func (r *mqlStackitAlbManagedRuleSet) groups() (map[string]albwaf.MRSRuleGroup, error) {
+	if r.cacheGroups != nil {
+		return *r.cacheGroups, nil
+	}
 	c := conn(r.MqlRuntime)
 	client, err := c.AlbWaf()
 	if err != nil {
@@ -184,11 +205,23 @@ func (r *mqlStackitAlbManagedRuleSet) rules() ([]any, error) {
 	resp, err := client.DefaultAPI.GetManagedRuleSet(bgctx(), c.ProjectID(), c.Region(), r.Name.Data).Execute()
 	if err != nil {
 		if isAccessDenied(err) || isNotFound(err) {
-			return []any{}, nil
+			return nil, nil
 		}
 		return nil, err
 	}
 	groups := resp.GetGroups()
+	r.cacheGroups = &groups
+	return groups, nil
+}
+
+// rules flattens the managed rule set's groups into individual rules,
+// each carrying its group name and mode.
+func (r *mqlStackitAlbManagedRuleSet) rules() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	groups, err := r.groups()
+	if err != nil {
+		return nil, err
+	}
 	out := []any{}
 	// Iterate groups and rules in sorted order for deterministic output.
 	for _, groupName := range sortedKeys(groups) {
@@ -239,10 +272,18 @@ func initStackitAlbCustomRuleGroup(runtime *plugin.Runtime, args map[string]*llx
 	if err != nil {
 		return nil, nil, err
 	}
+	// Keep the rules from this call so rules() doesn't re-fetch the group.
+	rules := resp.GetRules()
+	res.(*mqlStackitAlbCustomRuleGroup).cacheRules = &rules
 	return nil, res, nil
 }
 
-func (r *mqlStackitAlbCustomRuleGroup) rules() ([]any, error) {
+// customRules returns the group's rules, using the copy captured during init
+// when available and fetching the group otherwise.
+func (r *mqlStackitAlbCustomRuleGroup) customRules() ([]albwaf.GetCustomRule, error) {
+	if r.cacheRules != nil {
+		return *r.cacheRules, nil
+	}
 	c := conn(r.MqlRuntime)
 	client, err := c.AlbWaf()
 	if err != nil {
@@ -251,11 +292,21 @@ func (r *mqlStackitAlbCustomRuleGroup) rules() ([]any, error) {
 	resp, err := client.DefaultAPI.GetCustomRuleGroup(bgctx(), c.ProjectID(), c.Region(), r.Name.Data).Execute()
 	if err != nil {
 		if isAccessDenied(err) || isNotFound(err) {
-			return []any{}, nil
+			return nil, nil
 		}
 		return nil, err
 	}
 	rules := resp.GetRules()
+	r.cacheRules = &rules
+	return rules, nil
+}
+
+func (r *mqlStackitAlbCustomRuleGroup) rules() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	rules, err := r.customRules()
+	if err != nil {
+		return nil, err
+	}
 	out := make([]any, 0, len(rules))
 	for i := range rules {
 		rule := rules[i]
@@ -334,6 +385,6 @@ func sortedKeys[V any](m map[string]V) []string {
 	for k := range m {
 		keys = append(keys, k)
 	}
-	sort.Strings(keys)
+	slices.Sort(keys)
 	return keys
 }
