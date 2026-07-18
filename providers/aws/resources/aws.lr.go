@@ -8699,6 +8699,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sagemaker.modelPackageGroup.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerModelPackageGroup).GetDescription()).ToDataRes(types.String)
 	},
+	"aws.sagemaker.modelPackageGroup.resourcePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackageGroup).GetResourcePolicy()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelPackageGroup.policyStatements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackageGroup).GetPolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
+	},
+	"aws.sagemaker.modelPackageGroup.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackageGroup).GetIsPublic()).ToDataRes(types.Bool)
+	},
 	"aws.sagemaker.modelCard.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerModelCard).GetArn()).ToDataRes(types.String)
 	},
@@ -33653,6 +33662,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.bedrock.customModel.outputDataConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockCustomModel).GetOutputDataConfig()).ToDataRes(types.Dict)
 	},
+	"aws.bedrock.customModel.resourcePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockCustomModel).GetResourcePolicy()).ToDataRes(types.String)
+	},
+	"aws.bedrock.customModel.policyStatements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockCustomModel).GetPolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
+	},
+	"aws.bedrock.customModel.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockCustomModel).GetIsPublic()).ToDataRes(types.Bool)
+	},
 	"aws.bedrock.guardrail.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockGuardrail).GetArn()).ToDataRes(types.String)
 	},
@@ -33925,6 +33943,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.bedrock.evaluationJob.jobDescription": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockEvaluationJob).GetJobDescription()).ToDataRes(types.String)
+	},
+	"aws.bedrock.evaluationJob.resourcePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockEvaluationJob).GetResourcePolicy()).ToDataRes(types.String)
+	},
+	"aws.bedrock.evaluationJob.policyStatements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockEvaluationJob).GetPolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
+	},
+	"aws.bedrock.evaluationJob.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockEvaluationJob).GetIsPublic()).ToDataRes(types.Bool)
 	},
 	"aws.bedrock.modelImportJob.jobArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockModelImportJob).GetJobArn()).ToDataRes(types.String)
@@ -34223,6 +34250,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.bedrock.inferenceProfile.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockInferenceProfile).GetUpdatedAt()).ToDataRes(types.Time)
 	},
+	"aws.bedrock.inferenceProfile.resourcePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockInferenceProfile).GetResourcePolicy()).ToDataRes(types.String)
+	},
+	"aws.bedrock.inferenceProfile.policyStatements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockInferenceProfile).GetPolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
+	},
+	"aws.bedrock.inferenceProfile.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockInferenceProfile).GetIsPublic()).ToDataRes(types.Bool)
+	},
 	"aws.bedrock.importedModel.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockImportedModel).GetArn()).ToDataRes(types.String)
 	},
@@ -34243,6 +34279,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.bedrock.importedModel.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockImportedModel).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.bedrock.importedModel.resourcePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockImportedModel).GetResourcePolicy()).ToDataRes(types.String)
+	},
+	"aws.bedrock.importedModel.policyStatements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockImportedModel).GetPolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
+	},
+	"aws.bedrock.importedModel.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockImportedModel).GetIsPublic()).ToDataRes(types.Bool)
 	},
 	"aws.bedrock.prompt.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockPrompt).GetArn()).ToDataRes(types.String)
@@ -40431,6 +40476,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sagemaker.modelPackageGroup.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerModelPackageGroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackageGroup.resourcePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackageGroup).ResourcePolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackageGroup.policyStatements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackageGroup).PolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackageGroup.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackageGroup).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.modelCard.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -76749,6 +76806,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsBedrockCustomModel).OutputDataConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.bedrock.customModel.resourcePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockCustomModel).ResourcePolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.customModel.policyStatements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockCustomModel).PolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.customModel.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockCustomModel).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.bedrock.guardrail.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBedrockGuardrail).__id, ok = v.Value.(string)
 		return
@@ -77143,6 +77212,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.bedrock.evaluationJob.jobDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBedrockEvaluationJob).JobDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.evaluationJob.resourcePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockEvaluationJob).ResourcePolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.evaluationJob.policyStatements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockEvaluationJob).PolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.evaluationJob.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockEvaluationJob).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.bedrock.modelImportJob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -77581,6 +77662,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsBedrockInferenceProfile).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"aws.bedrock.inferenceProfile.resourcePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockInferenceProfile).ResourcePolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.inferenceProfile.policyStatements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockInferenceProfile).PolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.inferenceProfile.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockInferenceProfile).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.bedrock.importedModel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBedrockImportedModel).__id, ok = v.Value.(string)
 		return
@@ -77611,6 +77704,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.bedrock.importedModel.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBedrockImportedModel).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.importedModel.resourcePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockImportedModel).ResourcePolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.importedModel.policyStatements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockImportedModel).PolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.importedModel.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockImportedModel).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.bedrock.prompt.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -94048,6 +94153,9 @@ type mqlAwsSagemakerModelPackageGroup struct {
 	ManagedStorageType plugin.TValue[string]
 	Tags               plugin.TValue[map[string]any]
 	Description        plugin.TValue[string]
+	ResourcePolicy     plugin.TValue[string]
+	PolicyStatements   plugin.TValue[[]any]
+	IsPublic           plugin.TValue[bool]
 }
 
 // createAwsSagemakerModelPackageGroup creates a new instance of this resource
@@ -94120,6 +94228,34 @@ func (c *mqlAwsSagemakerModelPackageGroup) GetTags() *plugin.TValue[map[string]a
 func (c *mqlAwsSagemakerModelPackageGroup) GetDescription() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
 		return c.description()
+	})
+}
+
+func (c *mqlAwsSagemakerModelPackageGroup) GetResourcePolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ResourcePolicy, func() (string, error) {
+		return c.resourcePolicy()
+	})
+}
+
+func (c *mqlAwsSagemakerModelPackageGroup) GetPolicyStatements() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PolicyStatements, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.modelPackageGroup", c.__id, "policyStatements")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policyStatements()
+	})
+}
+
+func (c *mqlAwsSagemakerModelPackageGroup) GetIsPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
+		return c.isPublic()
 	})
 }
 
@@ -186688,6 +186824,9 @@ type mqlAwsBedrockCustomModel struct {
 	KmsKey             plugin.TValue[*mqlAwsKmsKey]
 	TrainingDataConfig plugin.TValue[any]
 	OutputDataConfig   plugin.TValue[any]
+	ResourcePolicy     plugin.TValue[string]
+	PolicyStatements   plugin.TValue[[]any]
+	IsPublic           plugin.TValue[bool]
 }
 
 // createAwsBedrockCustomModel creates a new instance of this resource
@@ -186788,6 +186927,34 @@ func (c *mqlAwsBedrockCustomModel) GetTrainingDataConfig() *plugin.TValue[any] {
 func (c *mqlAwsBedrockCustomModel) GetOutputDataConfig() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.OutputDataConfig, func() (any, error) {
 		return c.outputDataConfig()
+	})
+}
+
+func (c *mqlAwsBedrockCustomModel) GetResourcePolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ResourcePolicy, func() (string, error) {
+		return c.resourcePolicy()
+	})
+}
+
+func (c *mqlAwsBedrockCustomModel) GetPolicyStatements() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PolicyStatements, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.customModel", c.__id, "policyStatements")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policyStatements()
+	})
+}
+
+func (c *mqlAwsBedrockCustomModel) GetIsPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
+		return c.isPublic()
 	})
 }
 
@@ -187657,6 +187824,9 @@ type mqlAwsBedrockEvaluationJob struct {
 	CustomerEncryptionKey plugin.TValue[*mqlAwsKmsKey]
 	CreatedAt             plugin.TValue[*time.Time]
 	JobDescription        plugin.TValue[string]
+	ResourcePolicy        plugin.TValue[string]
+	PolicyStatements      plugin.TValue[[]any]
+	IsPublic              plugin.TValue[bool]
 }
 
 // createAwsBedrockEvaluationJob creates a new instance of this resource
@@ -187769,6 +187939,34 @@ func (c *mqlAwsBedrockEvaluationJob) GetCreatedAt() *plugin.TValue[*time.Time] {
 func (c *mqlAwsBedrockEvaluationJob) GetJobDescription() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.JobDescription, func() (string, error) {
 		return c.jobDescription()
+	})
+}
+
+func (c *mqlAwsBedrockEvaluationJob) GetResourcePolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ResourcePolicy, func() (string, error) {
+		return c.resourcePolicy()
+	})
+}
+
+func (c *mqlAwsBedrockEvaluationJob) GetPolicyStatements() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PolicyStatements, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.evaluationJob", c.__id, "policyStatements")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policyStatements()
+	})
+}
+
+func (c *mqlAwsBedrockEvaluationJob) GetIsPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
+		return c.isPublic()
 	})
 }
 
@@ -188785,17 +188983,20 @@ type mqlAwsBedrockInferenceProfile struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsBedrockInferenceProfileInternal it will be used here
-	Arn         plugin.TValue[string]
-	Id          plugin.TValue[string]
-	Name        plugin.TValue[string]
-	Region      plugin.TValue[string]
-	Status      plugin.TValue[string]
-	Type        plugin.TValue[string]
-	Description plugin.TValue[string]
-	ModelArns   plugin.TValue[[]any]
-	Models      plugin.TValue[[]any]
-	CreatedAt   plugin.TValue[*time.Time]
-	UpdatedAt   plugin.TValue[*time.Time]
+	Arn              plugin.TValue[string]
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Region           plugin.TValue[string]
+	Status           plugin.TValue[string]
+	Type             plugin.TValue[string]
+	Description      plugin.TValue[string]
+	ModelArns        plugin.TValue[[]any]
+	Models           plugin.TValue[[]any]
+	CreatedAt        plugin.TValue[*time.Time]
+	UpdatedAt        plugin.TValue[*time.Time]
+	ResourcePolicy   plugin.TValue[string]
+	PolicyStatements plugin.TValue[[]any]
+	IsPublic         plugin.TValue[bool]
 }
 
 // createAwsBedrockInferenceProfile creates a new instance of this resource
@@ -188891,6 +189092,34 @@ func (c *mqlAwsBedrockInferenceProfile) GetUpdatedAt() *plugin.TValue[*time.Time
 	return &c.UpdatedAt
 }
 
+func (c *mqlAwsBedrockInferenceProfile) GetResourcePolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ResourcePolicy, func() (string, error) {
+		return c.resourcePolicy()
+	})
+}
+
+func (c *mqlAwsBedrockInferenceProfile) GetPolicyStatements() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PolicyStatements, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.inferenceProfile", c.__id, "policyStatements")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policyStatements()
+	})
+}
+
+func (c *mqlAwsBedrockInferenceProfile) GetIsPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
+		return c.isPublic()
+	})
+}
+
 // mqlAwsBedrockImportedModel for the aws.bedrock.importedModel resource
 type mqlAwsBedrockImportedModel struct {
 	MqlRuntime *plugin.Runtime
@@ -188903,6 +189132,9 @@ type mqlAwsBedrockImportedModel struct {
 	InstructSupported plugin.TValue[bool]
 	CreatedAt         plugin.TValue[*time.Time]
 	KmsKey            plugin.TValue[*mqlAwsKmsKey]
+	ResourcePolicy    plugin.TValue[string]
+	PolicyStatements  plugin.TValue[[]any]
+	IsPublic          plugin.TValue[bool]
 }
 
 // createAwsBedrockImportedModel creates a new instance of this resource
@@ -188979,6 +189211,34 @@ func (c *mqlAwsBedrockImportedModel) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
 		}
 
 		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsBedrockImportedModel) GetResourcePolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ResourcePolicy, func() (string, error) {
+		return c.resourcePolicy()
+	})
+}
+
+func (c *mqlAwsBedrockImportedModel) GetPolicyStatements() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PolicyStatements, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.importedModel", c.__id, "policyStatements")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policyStatements()
+	})
+}
+
+func (c *mqlAwsBedrockImportedModel) GetIsPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
+		return c.isPublic()
 	})
 }
 

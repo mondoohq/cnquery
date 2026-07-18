@@ -3819,6 +3819,47 @@ func (a *mqlAwsSagemakerModelPackageGroup) description() (string, error) {
 	return convert.ToValue(a.cacheDescription), nil
 }
 
+func (a *mqlAwsSagemakerModelPackageGroup) resourcePolicy() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Sagemaker(a.Region.Data)
+	name := a.Name.Data
+	resp, err := svc.GetModelPackageGroupPolicy(context.Background(), &sagemaker.GetModelPackageGroupPolicyInput{ModelPackageGroupName: &name})
+	if err != nil {
+		// A group with no resource policy attached returns a validation error;
+		// treat that (and access-denied) as "no policy" rather than failing.
+		if Is400AccessDeniedError(err) || isSagemakerNoPolicyError(err) {
+			return "", nil
+		}
+		return "", err
+	}
+	return convert.ToValue(resp.ResourcePolicy), nil
+}
+
+func (a *mqlAwsSagemakerModelPackageGroup) policyStatements() ([]any, error) {
+	policy := a.GetResourcePolicy()
+	if policy.Error != nil {
+		return nil, policy.Error
+	}
+	return newPolicyStatementResources(a.MqlRuntime, a.Arn.Data, policy.Data)
+}
+
+func (a *mqlAwsSagemakerModelPackageGroup) isPublic() (bool, error) {
+	return resourceIsPublic(a.GetPolicyStatements())
+}
+
+// isSagemakerNoPolicyError reports whether a GetModelPackageGroupPolicy error
+// indicates the group simply has no resource policy attached (SageMaker returns
+// a ValidationException in that case) rather than a real failure.
+func isSagemakerNoPolicyError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "cannot find resource policy") ||
+		strings.Contains(msg, "no policy") ||
+		strings.Contains(msg, "does not have a policy")
+}
+
 // ---- Model Cards ----
 
 func (a *mqlAwsSagemaker) modelCards() ([]any, error) {

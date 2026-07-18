@@ -3844,6 +3844,12 @@ private aws.sagemaker.modelPackageGroup @defaults("arn name status") {
   tags() map[string]string
   // Description of the model package group
   description() string
+  // Resource-based policy JSON controlling cross-account access to the group
+  resourcePolicy() string
+  // Parsed statements of the resource-based policy
+  policyStatements() []aws.iam.policyStatement
+  // Whether the resource policy grants access to any principal
+  isPublic() bool
 }
 
 // AWS SageMaker model card
@@ -28007,6 +28013,12 @@ private aws.bedrock.customModel @defaults("modelArn modelName") {
   trainingDataConfig() dict
   // Output data configuration
   outputDataConfig() dict
+  // Resource-based policy JSON controlling cross-account access to the model
+  resourcePolicy() string
+  // Parsed statements of the resource-based policy
+  policyStatements() []aws.iam.policyStatement
+  // Whether the resource policy grants access to any principal
+  isPublic() bool
 }
 
 // Amazon Bedrock guardrail
@@ -28296,6 +28308,12 @@ private aws.bedrock.evaluationJob @defaults("jobName status jobType") {
   createdAt time
   // Description of the evaluation job
   jobDescription() string
+  // Resource-based policy JSON controlling cross-account access to the job
+  resourcePolicy() string
+  // Parsed statements of the resource-based policy
+  policyStatements() []aws.iam.policyStatement
+  // Whether the resource policy grants access to any principal
+  isPublic() bool
 }
 
 // Amazon Bedrock model-import job
@@ -28607,6 +28625,12 @@ private aws.bedrock.inferenceProfile @defaults("name status type") {
   createdAt time
   // Time the inference profile was last updated
   updatedAt time
+  // Resource-based policy JSON controlling cross-account access to the profile
+  resourcePolicy() string
+  // Parsed statements of the resource-based policy
+  policyStatements() []aws.iam.policyStatement
+  // Whether the resource policy grants access to any principal
+  isPublic() bool
 }
 
 // Amazon Bedrock imported model
@@ -28630,6 +28654,12 @@ private aws.bedrock.importedModel @defaults("name modelArchitecture") {
   createdAt time
   // Customer-managed KMS key used to encrypt the model
   kmsKey() aws.kms.key
+  // Resource-based policy JSON controlling cross-account access to the model
+  resourcePolicy() string
+  // Parsed statements of the resource-based policy
+  policyStatements() []aws.iam.policyStatement
+  // Whether the resource policy grants access to any principal
+  isPublic() bool
 }
 
 // Amazon Bedrock prompt

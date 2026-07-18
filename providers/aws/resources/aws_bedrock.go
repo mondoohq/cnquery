@@ -1834,3 +1834,85 @@ func (a *mqlAwsBedrockBatchInferenceJob) iamRole() (*mqlAwsIamRole, error) {
 	}
 	return res.(*mqlAwsIamRole), nil
 }
+
+// bedrockResourcePolicyJSON fetches the resource-based policy document for a
+// Bedrock resource identified by its ARN. Bedrock returns an empty policy for
+// resources with no policy attached; access-denied is treated as "no policy"
+// so a scan without bedrock:GetResourcePolicy degrades gracefully. Shared by
+// the resourcePolicy() accessors on the cross-account-shareable resources.
+func bedrockResourcePolicyJSON(runtime *plugin.Runtime, region, arn string) (string, error) {
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Bedrock(region)
+	resp, err := svc.GetResourcePolicy(context.Background(), &bedrock.GetResourcePolicyInput{ResourceArn: &arn})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return "", nil
+		}
+		return "", err
+	}
+	return convert.ToValue(resp.ResourcePolicy), nil
+}
+
+func (a *mqlAwsBedrockCustomModel) resourcePolicy() (string, error) {
+	return bedrockResourcePolicyJSON(a.MqlRuntime, a.Region.Data, a.ModelArn.Data)
+}
+
+func (a *mqlAwsBedrockCustomModel) policyStatements() ([]any, error) {
+	policy := a.GetResourcePolicy()
+	if policy.Error != nil {
+		return nil, policy.Error
+	}
+	return newPolicyStatementResources(a.MqlRuntime, a.ModelArn.Data, policy.Data)
+}
+
+func (a *mqlAwsBedrockCustomModel) isPublic() (bool, error) {
+	return resourceIsPublic(a.GetPolicyStatements())
+}
+
+func (a *mqlAwsBedrockImportedModel) resourcePolicy() (string, error) {
+	return bedrockResourcePolicyJSON(a.MqlRuntime, a.Region.Data, a.Arn.Data)
+}
+
+func (a *mqlAwsBedrockImportedModel) policyStatements() ([]any, error) {
+	policy := a.GetResourcePolicy()
+	if policy.Error != nil {
+		return nil, policy.Error
+	}
+	return newPolicyStatementResources(a.MqlRuntime, a.Arn.Data, policy.Data)
+}
+
+func (a *mqlAwsBedrockImportedModel) isPublic() (bool, error) {
+	return resourceIsPublic(a.GetPolicyStatements())
+}
+
+func (a *mqlAwsBedrockEvaluationJob) resourcePolicy() (string, error) {
+	return bedrockResourcePolicyJSON(a.MqlRuntime, a.Region.Data, a.JobArn.Data)
+}
+
+func (a *mqlAwsBedrockEvaluationJob) policyStatements() ([]any, error) {
+	policy := a.GetResourcePolicy()
+	if policy.Error != nil {
+		return nil, policy.Error
+	}
+	return newPolicyStatementResources(a.MqlRuntime, a.JobArn.Data, policy.Data)
+}
+
+func (a *mqlAwsBedrockEvaluationJob) isPublic() (bool, error) {
+	return resourceIsPublic(a.GetPolicyStatements())
+}
+
+func (a *mqlAwsBedrockInferenceProfile) resourcePolicy() (string, error) {
+	return bedrockResourcePolicyJSON(a.MqlRuntime, a.Region.Data, a.Arn.Data)
+}
+
+func (a *mqlAwsBedrockInferenceProfile) policyStatements() ([]any, error) {
+	policy := a.GetResourcePolicy()
+	if policy.Error != nil {
+		return nil, policy.Error
+	}
+	return newPolicyStatementResources(a.MqlRuntime, a.Arn.Data, policy.Data)
+}
+
+func (a *mqlAwsBedrockInferenceProfile) isPublic() (bool, error) {
+	return resourceIsPublic(a.GetPolicyStatements())
+}

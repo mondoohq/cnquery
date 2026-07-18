@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.48.1",
-  "generated_at": "2026-07-18T06:52:58-07:00",
+  "generated_at": "2026-07-18T10:34:00-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindings",
@@ -102,6 +102,7 @@
     "bedrock:GetKnowledgeBase",
     "bedrock:GetModelImportJob",
     "bedrock:GetModelInvocationLoggingConfiguration",
+    "bedrock:GetResourcePolicy",
     "bedrock:ListAgentActionGroups",
     "bedrock:ListAgentAliases",
     "bedrock:ListAgentKnowledgeBases",
@@ -784,6 +785,7 @@
     "sagemaker:DescribeTrial",
     "sagemaker:DescribeTrialComponent",
     "sagemaker:DescribeUserProfile",
+    "sagemaker:GetModelPackageGroupPolicy",
     "sagemaker:ListActions",
     "sagemaker:ListAlgorithms",
     "sagemaker:ListAppImageConfigs",
@@ -1563,6 +1565,12 @@
       "permission": "bedrock:GetModelInvocationLoggingConfiguration",
       "service": "bedrock",
       "action": "GetModelInvocationLoggingConfiguration",
+      "source_file": "aws_bedrock.go"
+    },
+    {
+      "permission": "bedrock:GetResourcePolicy",
+      "service": "bedrock",
+      "action": "GetResourcePolicy",
       "source_file": "aws_bedrock.go"
     },
     {
@@ -5811,6 +5819,12 @@
       "permission": "sagemaker:DescribeUserProfile",
       "service": "sagemaker",
       "action": "DescribeUserProfile",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:GetModelPackageGroupPolicy",
+      "service": "sagemaker",
+      "action": "GetModelPackageGroupPolicy",
       "source_file": "aws_sagemaker.go"
     },
     {
