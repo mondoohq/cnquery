@@ -40,6 +40,7 @@ import (
 	sqlserverflex "github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex/v2api"
 	telemetrylink "github.com/stackitcloud/stackit-sdk-go/services/telemetrylink/v1betaapi"
 	telemetryrouter "github.com/stackitcloud/stackit-sdk-go/services/telemetryrouter/v1betaapi"
+	vpn "github.com/stackitcloud/stackit-sdk-go/services/vpn/v1api"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
@@ -153,6 +154,9 @@ type StackitConnection struct {
 	serverUpdateOnce     sync.Once
 	serverUpdateClient   *serverupdate.APIClient
 	serverUpdateErr      error
+	vpnOnce              sync.Once
+	vpnClient            *vpn.APIClient
+	vpnErr               error
 }
 
 func NewStackitConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*StackitConnection, error) {
@@ -481,6 +485,15 @@ func (c *StackitConnection) ServerUpdate() (*serverupdate.APIClient, error) {
 		c.serverUpdateClient, c.serverUpdateErr = serverupdate.NewAPIClient(c.configOptsGlobal...)
 	})
 	return c.serverUpdateClient, c.serverUpdateErr
+}
+
+func (c *StackitConnection) Vpn() (*vpn.APIClient, error) {
+	c.vpnOnce.Do(func() {
+		// VPN rejects WithRegion in the client config; every method passes the
+		// region as a per-call function parameter.
+		c.vpnClient, c.vpnErr = vpn.NewAPIClient(c.configOptsGlobal...)
+	})
+	return c.vpnClient, c.vpnErr
 }
 
 func (c *StackitConnection) Asset() *inventory.Asset { return c.asset }

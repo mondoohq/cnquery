@@ -452,6 +452,8 @@ github.com/stackitcloud/stackit-sdk-go/services/telemetrylink v0.4.0 h1:RG+cZzvI
 github.com/stackitcloud/stackit-sdk-go/services/telemetrylink v0.4.0/go.mod h1:hgw8janWmDfP2bnuZensxqcAePr49BX5ug8Rq85o+h8=
 github.com/stackitcloud/stackit-sdk-go/services/telemetryrouter v0.4.0 h1:tEKBl3g7SIjZ8aa43nNjS1Rqr/IwxQ3Pr1MArYF0fno=
 github.com/stackitcloud/stackit-sdk-go/services/telemetryrouter v0.4.0/go.mod h1:WUmgKtwpe90Yq3YbgNxc2clTTULVxCu0ha6lMTjUnII=
+github.com/stackitcloud/stackit-sdk-go/services/vpn v0.14.0 h1:LMgbzhPunuelsIsfyEj/5O/aYfNcg/eGHsnZ7AZOhYg=
+github.com/stackitcloud/stackit-sdk-go/services/vpn v0.14.0/go.mod h1:toIjQk1dhxdUFVyCWJJja0w/0nFpDid8MWX0ukQfvfo=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=

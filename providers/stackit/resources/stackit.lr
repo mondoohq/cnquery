@@ -75,6 +75,8 @@ stackit {
   telemetry() stackit.telemetry
   // Managed AI Model Serving namespace
   modelServing() stackit.modelServing
+  // Site-to-site VPN namespace (gateways, connections, tunnels)
+  vpn() stackit.vpn
   // Project service accounts
   serviceAccounts() []stackit.serviceAccount
   // TLS server certificates managed by STACKIT Certificates
@@ -2010,4 +2012,113 @@ private stackit.iam.role @defaults("name") {
   description string
   // Permissions granted by the role (`<resource>.<action>` strings)
   permissions []string
+}
+
+// STACKIT VPN namespace
+//
+// Site-to-site VPN gateways in the project and, through each gateway, the
+// connections and the encrypted tunnels that carry traffic. Enumerate the
+// gateways with gateways.
+stackit.vpn {
+  // VPN gateways
+  gateways() []stackit.vpn.gateway
+}
+
+// STACKIT VPN gateway
+//
+// Site-to-site VPN gateway that terminates encrypted tunnels for a
+// project. The gateway is keyed by its UUID id and exposes the display
+// name, state, routing type, plan, the availability zones its two tunnel
+// endpoints run in, the border gateway protocol settings, and its
+// connections.
+private stackit.vpn.gateway @defaults("id name status routingType") {
+  init(id? string)
+  // Gateway UUID
+  id string
+  // Display name
+  name string
+  // Gateway state (READY, PENDING, DELETING, ERROR)
+  status string
+  // Routing type (ROUTE_BASED, POLICY_BASED, BGP_ROUTE_BASED)
+  routingType string
+  // Plan ID (sizing tier)
+  planId string
+  // Availability zone the first tunnel endpoint runs in
+  tunnel1AvailabilityZone string
+  // Availability zone the second tunnel endpoint runs in
+  tunnel2AvailabilityZone string
+  // Local autonomous system number advertised over the border gateway protocol
+  bgpLocalAsn int
+  // Routes advertised over the border gateway protocol in place of the automatically derived set
+  bgpOverrideAdvertisedRoutes []string
+  // User-defined labels
+  labels map[string]string
+  // Connections configured on the gateway
+  connections() []stackit.vpn.gateway.connection
+}
+
+// STACKIT VPN connection
+//
+// Single site-to-site connection on a VPN gateway, keyed by its UUID id.
+// The connection exposes whether it is enabled, the local and remote
+// subnets it routes between, any static routes, and its two redundant
+// encrypted tunnels.
+private stackit.vpn.gateway.connection @defaults("id name enabled") {
+  // Connection UUID
+  id string
+  // Display name
+  name string
+  // Whether the connection is enabled
+  enabled bool
+  // Local subnets routed into the tunnel (CIDR)
+  localSubnets []string
+  // Remote subnets reachable across the tunnel (CIDR)
+  remoteSubnets []string
+  // Static routes configured on the connection (CIDR)
+  staticRoutes []string
+  // User-defined labels
+  labels map[string]string
+  // First (primary) encrypted tunnel
+  tunnel1() stackit.vpn.tunnel
+  // Second (redundant) encrypted tunnel
+  tunnel2() stackit.vpn.tunnel
+}
+
+// STACKIT VPN tunnel
+//
+// Single encrypted tunnel of a VPN connection, terminating at a remote
+// peer. Exposes the peer address, the border gateway protocol and peering
+// addressing, and the negotiated cryptographic parameters for both the key
+// exchange (IKE) and the data channel (IPsec/ESP): the Diffie-Hellman
+// groups, encryption and integrity algorithms, and rekey intervals. Use
+// these to flag tunnels that permit weak ciphers or groups.
+private stackit.vpn.tunnel @defaults("remoteAddress") {
+  // Remote peer IP address
+  remoteAddress string
+  // Remote autonomous system number for the border gateway protocol (0 if unset)
+  bgpRemoteAsn int
+  // Local peering address (empty if unset)
+  peeringLocalAddress string
+  // Remote peering address (empty if unset)
+  peeringRemoteAddress string
+  // Key-exchange Diffie-Hellman groups offered
+  phase1DhGroups []string
+  // Key-exchange encryption algorithms offered
+  phase1EncryptionAlgorithms []string
+  // Key-exchange integrity algorithms offered
+  phase1IntegrityAlgorithms []string
+  // Key-exchange rekey interval in seconds (0 if unset)
+  phase1RekeyTime int
+  // Data-channel Diffie-Hellman groups offered
+  phase2DhGroups []string
+  // Data-channel encryption algorithms offered
+  phase2EncryptionAlgorithms []string
+  // Data-channel integrity algorithms offered
+  phase2IntegrityAlgorithms []string
+  // Data-channel rekey interval in seconds (0 if unset)
+  phase2RekeyTime int
+  // Action taken on dead-peer detection (clear, restart)
+  dpdAction string
+  // Action taken when establishing the data channel (none, start)
+  startAction string
 }

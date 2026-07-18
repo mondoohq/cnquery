@@ -89,6 +89,10 @@ const (
 	ResourceStackitIam                           string = "stackit.iam"
 	ResourceStackitIamMember                     string = "stackit.iam.member"
 	ResourceStackitIamRole                       string = "stackit.iam.role"
+	ResourceStackitVpn                           string = "stackit.vpn"
+	ResourceStackitVpnGateway                    string = "stackit.vpn.gateway"
+	ResourceStackitVpnGatewayConnection          string = "stackit.vpn.gateway.connection"
+	ResourceStackitVpnTunnel                     string = "stackit.vpn.tunnel"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -387,6 +391,22 @@ func init() {
 			// to override args, implement: initStackitIamRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createStackitIamRole,
 		},
+		"stackit.vpn": {
+			// to override args, implement: initStackitVpn(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitVpn,
+		},
+		"stackit.vpn.gateway": {
+			Init:   initStackitVpnGateway,
+			Create: createStackitVpnGateway,
+		},
+		"stackit.vpn.gateway.connection": {
+			// to override args, implement: initStackitVpnGatewayConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitVpnGatewayConnection,
+		},
+		"stackit.vpn.tunnel": {
+			// to override args, implement: initStackitVpnTunnel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitVpnTunnel,
+		},
 	}
 }
 
@@ -538,6 +558,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.modelServing": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackit).GetModelServing()).ToDataRes(types.Resource("stackit.modelServing"))
+	},
+	"stackit.vpn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackit).GetVpn()).ToDataRes(types.Resource("stackit.vpn"))
 	},
 	"stackit.serviceAccounts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackit).GetServiceAccounts()).ToDataRes(types.Array(types.Resource("stackit.serviceAccount")))
@@ -2342,6 +2365,111 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.iam.role.permissions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitIamRole).GetPermissions()).ToDataRes(types.Array(types.String))
 	},
+	"stackit.vpn.gateways": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpn).GetGateways()).ToDataRes(types.Array(types.Resource("stackit.vpn.gateway")))
+	},
+	"stackit.vpn.gateway.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnGateway).GetId()).ToDataRes(types.String)
+	},
+	"stackit.vpn.gateway.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnGateway).GetName()).ToDataRes(types.String)
+	},
+	"stackit.vpn.gateway.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnGateway).GetStatus()).ToDataRes(types.String)
+	},
+	"stackit.vpn.gateway.routingType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnGateway).GetRoutingType()).ToDataRes(types.String)
+	},
+	"stackit.vpn.gateway.planId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnGateway).GetPlanId()).ToDataRes(types.String)
+	},
+	"stackit.vpn.gateway.tunnel1AvailabilityZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnGateway).GetTunnel1AvailabilityZone()).ToDataRes(types.String)
+	},
+	"stackit.vpn.gateway.tunnel2AvailabilityZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnGateway).GetTunnel2AvailabilityZone()).ToDataRes(types.String)
+	},
+	"stackit.vpn.gateway.bgpLocalAsn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnGateway).GetBgpLocalAsn()).ToDataRes(types.Int)
+	},
+	"stackit.vpn.gateway.bgpOverrideAdvertisedRoutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnGateway).GetBgpOverrideAdvertisedRoutes()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.vpn.gateway.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnGateway).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"stackit.vpn.gateway.connections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnGateway).GetConnections()).ToDataRes(types.Array(types.Resource("stackit.vpn.gateway.connection")))
+	},
+	"stackit.vpn.gateway.connection.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnGatewayConnection).GetId()).ToDataRes(types.String)
+	},
+	"stackit.vpn.gateway.connection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnGatewayConnection).GetName()).ToDataRes(types.String)
+	},
+	"stackit.vpn.gateway.connection.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnGatewayConnection).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"stackit.vpn.gateway.connection.localSubnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnGatewayConnection).GetLocalSubnets()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.vpn.gateway.connection.remoteSubnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnGatewayConnection).GetRemoteSubnets()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.vpn.gateway.connection.staticRoutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnGatewayConnection).GetStaticRoutes()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.vpn.gateway.connection.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnGatewayConnection).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"stackit.vpn.gateway.connection.tunnel1": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnGatewayConnection).GetTunnel1()).ToDataRes(types.Resource("stackit.vpn.tunnel"))
+	},
+	"stackit.vpn.gateway.connection.tunnel2": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnGatewayConnection).GetTunnel2()).ToDataRes(types.Resource("stackit.vpn.tunnel"))
+	},
+	"stackit.vpn.tunnel.remoteAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnTunnel).GetRemoteAddress()).ToDataRes(types.String)
+	},
+	"stackit.vpn.tunnel.bgpRemoteAsn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnTunnel).GetBgpRemoteAsn()).ToDataRes(types.Int)
+	},
+	"stackit.vpn.tunnel.peeringLocalAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnTunnel).GetPeeringLocalAddress()).ToDataRes(types.String)
+	},
+	"stackit.vpn.tunnel.peeringRemoteAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnTunnel).GetPeeringRemoteAddress()).ToDataRes(types.String)
+	},
+	"stackit.vpn.tunnel.phase1DhGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnTunnel).GetPhase1DhGroups()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.vpn.tunnel.phase1EncryptionAlgorithms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnTunnel).GetPhase1EncryptionAlgorithms()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.vpn.tunnel.phase1IntegrityAlgorithms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnTunnel).GetPhase1IntegrityAlgorithms()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.vpn.tunnel.phase1RekeyTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnTunnel).GetPhase1RekeyTime()).ToDataRes(types.Int)
+	},
+	"stackit.vpn.tunnel.phase2DhGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnTunnel).GetPhase2DhGroups()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.vpn.tunnel.phase2EncryptionAlgorithms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnTunnel).GetPhase2EncryptionAlgorithms()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.vpn.tunnel.phase2IntegrityAlgorithms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnTunnel).GetPhase2IntegrityAlgorithms()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.vpn.tunnel.phase2RekeyTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnTunnel).GetPhase2RekeyTime()).ToDataRes(types.Int)
+	},
+	"stackit.vpn.tunnel.dpdAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnTunnel).GetDpdAction()).ToDataRes(types.String)
+	},
+	"stackit.vpn.tunnel.startAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVpnTunnel).GetStartAction()).ToDataRes(types.String)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -2464,6 +2592,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.modelServing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackit).ModelServing, ok = plugin.RawToTValue[*mqlStackitModelServing](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackit).Vpn, ok = plugin.RawToTValue[*mqlStackitVpn](v.Value, v.Error)
 		return
 	},
 	"stackit.serviceAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5158,6 +5290,162 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitIamRole).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"stackit.vpn.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpn).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.vpn.gateways": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpn).Gateways, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.gateway.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnGateway).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.vpn.gateway.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnGateway).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.gateway.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnGateway).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.gateway.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnGateway).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.gateway.routingType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnGateway).RoutingType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.gateway.planId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnGateway).PlanId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.gateway.tunnel1AvailabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnGateway).Tunnel1AvailabilityZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.gateway.tunnel2AvailabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnGateway).Tunnel2AvailabilityZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.gateway.bgpLocalAsn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnGateway).BgpLocalAsn, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.gateway.bgpOverrideAdvertisedRoutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnGateway).BgpOverrideAdvertisedRoutes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.gateway.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnGateway).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.gateway.connections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnGateway).Connections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.gateway.connection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnGatewayConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.vpn.gateway.connection.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnGatewayConnection).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.gateway.connection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnGatewayConnection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.gateway.connection.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnGatewayConnection).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.gateway.connection.localSubnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnGatewayConnection).LocalSubnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.gateway.connection.remoteSubnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnGatewayConnection).RemoteSubnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.gateway.connection.staticRoutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnGatewayConnection).StaticRoutes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.gateway.connection.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnGatewayConnection).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.gateway.connection.tunnel1": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnGatewayConnection).Tunnel1, ok = plugin.RawToTValue[*mqlStackitVpnTunnel](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.gateway.connection.tunnel2": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnGatewayConnection).Tunnel2, ok = plugin.RawToTValue[*mqlStackitVpnTunnel](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.tunnel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnTunnel).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.vpn.tunnel.remoteAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnTunnel).RemoteAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.tunnel.bgpRemoteAsn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnTunnel).BgpRemoteAsn, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.tunnel.peeringLocalAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnTunnel).PeeringLocalAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.tunnel.peeringRemoteAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnTunnel).PeeringRemoteAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.tunnel.phase1DhGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnTunnel).Phase1DhGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.tunnel.phase1EncryptionAlgorithms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnTunnel).Phase1EncryptionAlgorithms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.tunnel.phase1IntegrityAlgorithms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnTunnel).Phase1IntegrityAlgorithms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.tunnel.phase1RekeyTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnTunnel).Phase1RekeyTime, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.tunnel.phase2DhGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnTunnel).Phase2DhGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.tunnel.phase2EncryptionAlgorithms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnTunnel).Phase2EncryptionAlgorithms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.tunnel.phase2IntegrityAlgorithms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnTunnel).Phase2IntegrityAlgorithms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.tunnel.phase2RekeyTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnTunnel).Phase2RekeyTime, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.tunnel.dpdAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnTunnel).DpdAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.vpn.tunnel.startAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVpnTunnel).StartAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -5214,6 +5502,7 @@ type mqlStackit struct {
 	Observability    plugin.TValue[*mqlStackitObservability]
 	Telemetry        plugin.TValue[*mqlStackitTelemetry]
 	ModelServing     plugin.TValue[*mqlStackitModelServing]
+	Vpn              plugin.TValue[*mqlStackitVpn]
 	ServiceAccounts  plugin.TValue[[]any]
 	Certificates     plugin.TValue[[]any]
 	AlbLoadBalancers plugin.TValue[[]any]
@@ -5677,6 +5966,22 @@ func (c *mqlStackit) GetModelServing() *plugin.TValue[*mqlStackitModelServing] {
 		}
 
 		return c.modelServing()
+	})
+}
+
+func (c *mqlStackit) GetVpn() *plugin.TValue[*mqlStackitVpn] {
+	return plugin.GetOrCompute[*mqlStackitVpn](&c.Vpn, func() (*mqlStackitVpn, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit", c.__id, "vpn")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitVpn), nil
+			}
+		}
+
+		return c.vpn()
 	})
 }
 
@@ -12724,4 +13029,388 @@ func (c *mqlStackitIamRole) GetDescription() *plugin.TValue[string] {
 
 func (c *mqlStackitIamRole) GetPermissions() *plugin.TValue[[]any] {
 	return &c.Permissions
+}
+
+// mqlStackitVpn for the stackit.vpn resource
+type mqlStackitVpn struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitVpnInternal it will be used here
+	Gateways plugin.TValue[[]any]
+}
+
+// createStackitVpn creates a new instance of this resource
+func createStackitVpn(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitVpn{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.vpn", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitVpn) MqlName() string {
+	return "stackit.vpn"
+}
+
+func (c *mqlStackitVpn) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitVpn) GetGateways() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Gateways, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.vpn", c.__id, "gateways")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.gateways()
+	})
+}
+
+// mqlStackitVpnGateway for the stackit.vpn.gateway resource
+type mqlStackitVpnGateway struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitVpnGatewayInternal it will be used here
+	Id                          plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	Status                      plugin.TValue[string]
+	RoutingType                 plugin.TValue[string]
+	PlanId                      plugin.TValue[string]
+	Tunnel1AvailabilityZone     plugin.TValue[string]
+	Tunnel2AvailabilityZone     plugin.TValue[string]
+	BgpLocalAsn                 plugin.TValue[int64]
+	BgpOverrideAdvertisedRoutes plugin.TValue[[]any]
+	Labels                      plugin.TValue[map[string]any]
+	Connections                 plugin.TValue[[]any]
+}
+
+// createStackitVpnGateway creates a new instance of this resource
+func createStackitVpnGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitVpnGateway{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.vpn.gateway", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitVpnGateway) MqlName() string {
+	return "stackit.vpn.gateway"
+}
+
+func (c *mqlStackitVpnGateway) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitVpnGateway) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitVpnGateway) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlStackitVpnGateway) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlStackitVpnGateway) GetRoutingType() *plugin.TValue[string] {
+	return &c.RoutingType
+}
+
+func (c *mqlStackitVpnGateway) GetPlanId() *plugin.TValue[string] {
+	return &c.PlanId
+}
+
+func (c *mqlStackitVpnGateway) GetTunnel1AvailabilityZone() *plugin.TValue[string] {
+	return &c.Tunnel1AvailabilityZone
+}
+
+func (c *mqlStackitVpnGateway) GetTunnel2AvailabilityZone() *plugin.TValue[string] {
+	return &c.Tunnel2AvailabilityZone
+}
+
+func (c *mqlStackitVpnGateway) GetBgpLocalAsn() *plugin.TValue[int64] {
+	return &c.BgpLocalAsn
+}
+
+func (c *mqlStackitVpnGateway) GetBgpOverrideAdvertisedRoutes() *plugin.TValue[[]any] {
+	return &c.BgpOverrideAdvertisedRoutes
+}
+
+func (c *mqlStackitVpnGateway) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlStackitVpnGateway) GetConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Connections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.vpn.gateway", c.__id, "connections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.connections()
+	})
+}
+
+// mqlStackitVpnGatewayConnection for the stackit.vpn.gateway.connection resource
+type mqlStackitVpnGatewayConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlStackitVpnGatewayConnectionInternal
+	Id            plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Enabled       plugin.TValue[bool]
+	LocalSubnets  plugin.TValue[[]any]
+	RemoteSubnets plugin.TValue[[]any]
+	StaticRoutes  plugin.TValue[[]any]
+	Labels        plugin.TValue[map[string]any]
+	Tunnel1       plugin.TValue[*mqlStackitVpnTunnel]
+	Tunnel2       plugin.TValue[*mqlStackitVpnTunnel]
+}
+
+// createStackitVpnGatewayConnection creates a new instance of this resource
+func createStackitVpnGatewayConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitVpnGatewayConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.vpn.gateway.connection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitVpnGatewayConnection) MqlName() string {
+	return "stackit.vpn.gateway.connection"
+}
+
+func (c *mqlStackitVpnGatewayConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitVpnGatewayConnection) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitVpnGatewayConnection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlStackitVpnGatewayConnection) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlStackitVpnGatewayConnection) GetLocalSubnets() *plugin.TValue[[]any] {
+	return &c.LocalSubnets
+}
+
+func (c *mqlStackitVpnGatewayConnection) GetRemoteSubnets() *plugin.TValue[[]any] {
+	return &c.RemoteSubnets
+}
+
+func (c *mqlStackitVpnGatewayConnection) GetStaticRoutes() *plugin.TValue[[]any] {
+	return &c.StaticRoutes
+}
+
+func (c *mqlStackitVpnGatewayConnection) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlStackitVpnGatewayConnection) GetTunnel1() *plugin.TValue[*mqlStackitVpnTunnel] {
+	return plugin.GetOrCompute[*mqlStackitVpnTunnel](&c.Tunnel1, func() (*mqlStackitVpnTunnel, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.vpn.gateway.connection", c.__id, "tunnel1")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitVpnTunnel), nil
+			}
+		}
+
+		return c.tunnel1()
+	})
+}
+
+func (c *mqlStackitVpnGatewayConnection) GetTunnel2() *plugin.TValue[*mqlStackitVpnTunnel] {
+	return plugin.GetOrCompute[*mqlStackitVpnTunnel](&c.Tunnel2, func() (*mqlStackitVpnTunnel, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.vpn.gateway.connection", c.__id, "tunnel2")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitVpnTunnel), nil
+			}
+		}
+
+		return c.tunnel2()
+	})
+}
+
+// mqlStackitVpnTunnel for the stackit.vpn.tunnel resource
+type mqlStackitVpnTunnel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitVpnTunnelInternal it will be used here
+	RemoteAddress              plugin.TValue[string]
+	BgpRemoteAsn               plugin.TValue[int64]
+	PeeringLocalAddress        plugin.TValue[string]
+	PeeringRemoteAddress       plugin.TValue[string]
+	Phase1DhGroups             plugin.TValue[[]any]
+	Phase1EncryptionAlgorithms plugin.TValue[[]any]
+	Phase1IntegrityAlgorithms  plugin.TValue[[]any]
+	Phase1RekeyTime            plugin.TValue[int64]
+	Phase2DhGroups             plugin.TValue[[]any]
+	Phase2EncryptionAlgorithms plugin.TValue[[]any]
+	Phase2IntegrityAlgorithms  plugin.TValue[[]any]
+	Phase2RekeyTime            plugin.TValue[int64]
+	DpdAction                  plugin.TValue[string]
+	StartAction                plugin.TValue[string]
+}
+
+// createStackitVpnTunnel creates a new instance of this resource
+func createStackitVpnTunnel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitVpnTunnel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.vpn.tunnel", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitVpnTunnel) MqlName() string {
+	return "stackit.vpn.tunnel"
+}
+
+func (c *mqlStackitVpnTunnel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitVpnTunnel) GetRemoteAddress() *plugin.TValue[string] {
+	return &c.RemoteAddress
+}
+
+func (c *mqlStackitVpnTunnel) GetBgpRemoteAsn() *plugin.TValue[int64] {
+	return &c.BgpRemoteAsn
+}
+
+func (c *mqlStackitVpnTunnel) GetPeeringLocalAddress() *plugin.TValue[string] {
+	return &c.PeeringLocalAddress
+}
+
+func (c *mqlStackitVpnTunnel) GetPeeringRemoteAddress() *plugin.TValue[string] {
+	return &c.PeeringRemoteAddress
+}
+
+func (c *mqlStackitVpnTunnel) GetPhase1DhGroups() *plugin.TValue[[]any] {
+	return &c.Phase1DhGroups
+}
+
+func (c *mqlStackitVpnTunnel) GetPhase1EncryptionAlgorithms() *plugin.TValue[[]any] {
+	return &c.Phase1EncryptionAlgorithms
+}
+
+func (c *mqlStackitVpnTunnel) GetPhase1IntegrityAlgorithms() *plugin.TValue[[]any] {
+	return &c.Phase1IntegrityAlgorithms
+}
+
+func (c *mqlStackitVpnTunnel) GetPhase1RekeyTime() *plugin.TValue[int64] {
+	return &c.Phase1RekeyTime
+}
+
+func (c *mqlStackitVpnTunnel) GetPhase2DhGroups() *plugin.TValue[[]any] {
+	return &c.Phase2DhGroups
+}
+
+func (c *mqlStackitVpnTunnel) GetPhase2EncryptionAlgorithms() *plugin.TValue[[]any] {
+	return &c.Phase2EncryptionAlgorithms
+}
+
+func (c *mqlStackitVpnTunnel) GetPhase2IntegrityAlgorithms() *plugin.TValue[[]any] {
+	return &c.Phase2IntegrityAlgorithms
+}
+
+func (c *mqlStackitVpnTunnel) GetPhase2RekeyTime() *plugin.TValue[int64] {
+	return &c.Phase2RekeyTime
+}
+
+func (c *mqlStackitVpnTunnel) GetDpdAction() *plugin.TValue[string] {
+	return &c.DpdAction
+}
+
+func (c *mqlStackitVpnTunnel) GetStartAction() *plugin.TValue[string] {
+	return &c.StartAction
 }
