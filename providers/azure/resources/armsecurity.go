@@ -41,10 +41,6 @@ func getArmSecurityConnection(ctx context.Context, conn *connection.AzureConnect
 }
 
 func getPolicyAssignments(ctx context.Context, conn armSecurityConn) (PolicyAssignments, error) {
-	token, err := conn.GetToken()
-	if err != nil {
-		return PolicyAssignments{}, err
-	}
 	urlPath := "/subscriptions/{subscriptionId}/providers/Microsoft.Authorization/policyAssignments"
 	urlPath = strings.ReplaceAll(urlPath, "{subscriptionId}", url.PathEscape(conn.subscriptionId))
 	urlPath = runtime.JoinPaths(conn.host, urlPath)
@@ -64,6 +60,13 @@ func getPolicyAssignments(ctx context.Context, conn armSecurityConn) (PolicyAssi
 	result := PolicyAssignments{}
 	nextURL := firstURL.String()
 	for nextURL != "" {
+		// Fetch the token per page so a long pagination run over many policy
+		// assignments doesn't fail on an expired bearer token; the credential
+		// caches and only refreshes when the token is near expiry.
+		token, err := conn.GetToken()
+		if err != nil {
+			return PolicyAssignments{}, err
+		}
 		req, err := http.NewRequestWithContext(ctx, "GET", nextURL, nil)
 		if err != nil {
 			return PolicyAssignments{}, err
@@ -93,7 +96,7 @@ func getPolicyAssignments(ctx context.Context, conn armSecurityConn) (PolicyAssi
 		}
 		result.PolicyAssignments = append(result.PolicyAssignments, page.PolicyAssignments...)
 
-		if page.NextLink == nil {
+		if page.NextLink == nil || *page.NextLink == "" {
 			break
 		}
 		nextURL = *page.NextLink
