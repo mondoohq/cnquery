@@ -179,3 +179,16 @@ func (r *mqlStackitDnsZone) recordSets() ([]any, error) {
 func (r *mqlStackitDnsRecordSet) id() (string, error) {
 	return "stackit.dns.recordSet/" + r.ZoneId.Data + "/" + r.Id.Data, nil
 }
+
+func (r *mqlStackitDnsRecordSet) zone() (*mqlStackitDnsZone, error) {
+	if r.ZoneId.Data == "" {
+		return markNull[mqlStackitDnsZone](&r.Zone)
+	}
+	res, err := NewResource(r.MqlRuntime, "stackit.dns.zone", map[string]*llx.RawData{
+		"id": llx.StringData(r.ZoneId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlStackitDnsZone), nil
+}

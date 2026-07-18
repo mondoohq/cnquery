@@ -72,6 +72,27 @@ func (r *mqlStackitKmsKeyRing) id() (string, error) {
 	return "stackit.kms.keyRing/" + r.Id.Data, nil
 }
 
+func initStackitKmsKeyRing(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := idArg(args, "id")
+	if !ok {
+		return args, nil, nil
+	}
+	c := conn(runtime)
+	client, err := c.KMS()
+	if err != nil {
+		return nil, nil, err
+	}
+	kr, err := client.GetKeyRingExecute(bgctx(), c.ProjectID(), c.Region(), id)
+	if err != nil {
+		return nil, nil, err
+	}
+	res, err := buildKmsKeyRing(runtime, kr)
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, res, nil
+}
+
 func (r *mqlStackitKmsKeyRing) keys() ([]any, error) {
 	c := conn(r.MqlRuntime)
 	client, err := c.KMS()
@@ -119,4 +140,17 @@ func buildKmsKey(runtime *plugin.Runtime, k *kms.Key) (plugin.Resource, error) {
 
 func (r *mqlStackitKmsKey) id() (string, error) {
 	return "stackit.kms.key/" + r.KeyRingId.Data + "/" + r.Id.Data, nil
+}
+
+func (r *mqlStackitKmsKey) keyRing() (*mqlStackitKmsKeyRing, error) {
+	if r.KeyRingId.Data == "" {
+		return markNull[mqlStackitKmsKeyRing](&r.KeyRing)
+	}
+	res, err := NewResource(r.MqlRuntime, "stackit.kms.keyRing", map[string]*llx.RawData{
+		"id": llx.StringData(r.KeyRingId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlStackitKmsKeyRing), nil
 }

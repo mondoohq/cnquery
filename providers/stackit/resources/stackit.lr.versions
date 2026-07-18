@@ -91,6 +91,7 @@ stackit.dns.recordSet.state 13.0.0
 stackit.dns.recordSet.ttl 13.0.0
 stackit.dns.recordSet.type 13.0.0
 stackit.dns.recordSet.updateFinishedAt 13.0.0
+stackit.dns.recordSet.zone 13.4.2
 stackit.dns.recordSet.zoneId 13.0.0
 stackit.dns.zone 13.0.0
 stackit.dns.zone.acl 13.0.0
@@ -160,6 +161,7 @@ stackit.kms.key.description 13.0.1
 stackit.kms.key.displayName 13.0.1
 stackit.kms.key.id 13.0.1
 stackit.kms.key.importOnly 13.0.1
+stackit.kms.key.keyRing 13.4.2
 stackit.kms.key.keyRingId 13.0.1
 stackit.kms.key.protection 13.0.1
 stackit.kms.key.purpose 13.0.1
@@ -463,6 +465,15 @@ stackit.server.backup.server 13.4.2
 stackit.server.backup.serverId 13.4.2
 stackit.server.backup.size 13.4.2
 stackit.server.backup.status 13.4.2
+stackit.server.backup.volumeBackup 13.4.2
+stackit.server.backup.volumeBackup.id 13.4.2
+stackit.server.backup.volumeBackup.lastRestoredAt 13.4.2
+stackit.server.backup.volumeBackup.lastRestoredVolume 13.4.2
+stackit.server.backup.volumeBackup.lastRestoredVolumeId 13.4.2
+stackit.server.backup.volumeBackup.size 13.4.2
+stackit.server.backup.volumeBackup.status 13.4.2
+stackit.server.backup.volumeBackup.volume 13.4.2
+stackit.server.backup.volumeBackup.volumeId 13.4.2
 stackit.server.backup.volumeBackups 13.4.2
 stackit.server.backup.volumes 13.4.2
 stackit.server.backupSchedule 13.4.2
@@ -715,6 +726,7 @@ stackit.volume.performanceClass 13.0.0
 stackit.volume.server 13.0.0
 stackit.volume.serverId 13.0.0
 stackit.volume.size 13.0.0
+stackit.volume.sourceSnapshot 13.4.2
 stackit.volume.sourceSnapshotId 13.0.0
 stackit.volume.status 13.0.0
 stackit.volume.updatedAt 13.0.0

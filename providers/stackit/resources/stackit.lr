@@ -218,6 +218,8 @@ private stackit.volume @defaults("id name size status") {
   image() stackit.image
   // Source snapshot UUID (empty if not snapshot-based)
   sourceSnapshotId string
+  // Snapshot the volume was created from (nullable)
+  sourceSnapshot() stackit.snapshot
   // Server the volume is attached to (nullable)
   server() stackit.server
   // Attached server UUID (empty if detached)
@@ -500,10 +502,35 @@ private stackit.server.backup @defaults("id name status size") {
   expireAt time
   // Timestamp of the most recent restore from this backup (unset if never restored)
   lastRestoredAt time
-  // Per-volume backup entries [{id, volumeId, size, status, lastRestoredAt, lastRestoredVolumeId}]
-  volumeBackups []dict
+  // Per-volume backup entries that make up the backup
+  volumeBackups() []stackit.server.backup.volumeBackup
   // Volumes protected by this backup
   volumes() []stackit.volume
+}
+
+// STACKIT server volume backup entry
+//
+// Backup of a single volume that is part of a server backup, keyed by its
+// UUID id. Exposes the size and status of the volume's backup, the volume
+// it protects, and, once a restore has run, the timestamp and the volume
+// the data was restored into.
+private stackit.server.backup.volumeBackup @defaults("id status size") {
+  // Volume backup UUID
+  id string
+  // UUID of the volume this entry backs up
+  volumeId string
+  // Volume this entry backs up
+  volume() stackit.volume
+  // Size of the volume backup in GiB
+  size int
+  // Status of the volume backup
+  status string
+  // Timestamp of the most recent restore from this entry (unset if never restored)
+  lastRestoredAt time
+  // UUID of the volume the data was most recently restored into (empty if never restored)
+  lastRestoredVolumeId string
+  // Volume the data was most recently restored into (nullable)
+  lastRestoredVolume() stackit.volume
 }
 
 // STACKIT server backup schedule
@@ -1121,6 +1148,8 @@ private stackit.dns.recordSet @defaults("name type state") {
   id string
   // Owning zone UUID
   zoneId string
+  // Zone the record set belongs to
+  zone() stackit.dns.zone
   // Record name (FQDN, e.g., `www.example.com.`)
   name string
   // Record type (A, AAAA, CNAME, MX, TXT, NS, SRV, …)
@@ -2049,6 +2078,7 @@ stackit.kms {
 // Examine a single key ring — a logical container that groups keys
 // for IAM and lifecycle purposes. Keyed by its UUID `id`.
 private stackit.kms.keyRing @defaults("id displayName state") {
+  init(id? string)
   // Key ring UUID
   id string
   // User-supplied display name
@@ -2076,6 +2106,8 @@ private stackit.kms.key @defaults("id displayName state purpose") {
   id string
   // Parent key ring UUID
   keyRingId string
+  // Key ring the key belongs to
+  keyRing() stackit.kms.keyRing
   // Display name
   displayName string
   // Description

@@ -351,6 +351,19 @@ func (r *mqlStackitVolume) server() (*mqlStackitServer, error) {
 	return res.(*mqlStackitServer), nil
 }
 
+func (r *mqlStackitVolume) sourceSnapshot() (*mqlStackitSnapshot, error) {
+	if r.SourceSnapshotId.Data == "" {
+		return markNull[mqlStackitSnapshot](&r.SourceSnapshot)
+	}
+	res, err := NewResource(r.MqlRuntime, "stackit.snapshot", map[string]*llx.RawData{
+		"id": llx.StringData(r.SourceSnapshotId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlStackitSnapshot), nil
+}
+
 // ------------------------- snapshots -------------------------
 
 func (r *mqlStackit) snapshots() ([]any, error) {

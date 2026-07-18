@@ -233,6 +233,21 @@ func serverRef(runtime *plugin.Runtime, id string, field *plugin.TValue[*mqlStac
 	return res.(*mqlStackitServer), nil
 }
 
+// volumeRef resolves a single stackit.volume by its UUID, marking the given
+// field null when the ID is empty.
+func volumeRef(runtime *plugin.Runtime, id string, field *plugin.TValue[*mqlStackitVolume]) (*mqlStackitVolume, error) {
+	if id == "" {
+		return markNull[mqlStackitVolume](field)
+	}
+	res, err := NewResource(runtime, "stackit.volume", map[string]*llx.RawData{
+		"id": llx.StringData(id),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlStackitVolume), nil
+}
+
 // volumeRefs resolves a list of stackit.volume resources from their UUIDs,
 // skipping empty IDs.
 func volumeRefs(runtime *plugin.Runtime, ids []string) ([]any, error) {

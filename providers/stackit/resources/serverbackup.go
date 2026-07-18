@@ -9,8 +9,16 @@ import (
 	"github.com/stackitcloud/stackit-sdk-go/services/serverbackup"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/types"
 )
+
+type mqlStackitServerBackupInternal struct {
+	// cacheVolumeBackups holds the backup's per-volume entries, captured when
+	// the backup is built so volumeBackups() and volumes() can expose them
+	// without another API call. cacheIdBase is the backup's own cache key,
+	// used to key the volume-backup sub-resources.
+	cacheVolumeBackups []serverbackup.BackupVolumeBackupsInner
+	cacheIdBase        string
+}
 
 // ------------------------- server backups -------------------------
 
@@ -43,17 +51,6 @@ func (r *mqlStackitServer) backups() ([]any, error) {
 }
 
 func buildServerBackup(runtime *plugin.Runtime, serverID string, b *serverbackup.Backup) (plugin.Resource, error) {
-	volumeBackups := []any{}
-	for _, vb := range b.GetVolumeBackups() {
-		volumeBackups = append(volumeBackups, map[string]any{
-			"id":                   vb.GetId(),
-			"volumeId":             vb.GetVolumeId(),
-			"size":                 vb.GetSize(),
-			"status":               string(vb.GetStatus()),
-			"lastRestoredAt":       vb.GetLastRestoredAt(),
-			"lastRestoredVolumeId": vb.GetLastRestoredVolumeId(),
-		})
-	}
 	args := map[string]*llx.RawData{
 		"id":             llx.StringData(b.GetId()),
 		"serverId":       llx.StringData(serverID),
@@ -63,9 +60,15 @@ func buildServerBackup(runtime *plugin.Runtime, serverID string, b *serverbackup
 		"createdAt":      llx.TimeDataPtr(parseRFC3339(b.GetCreatedAt())),
 		"expireAt":       llx.TimeDataPtr(parseRFC3339(b.GetExpireAt())),
 		"lastRestoredAt": llx.TimeDataPtr(parseRFC3339(b.GetLastRestoredAt())),
-		"volumeBackups":  llx.ArrayData(volumeBackups, types.Dict),
 	}
-	return CreateResource(runtime, "stackit.server.backup", args)
+	res, err := CreateResource(runtime, "stackit.server.backup", args)
+	if err != nil {
+		return nil, err
+	}
+	mqlBackup := res.(*mqlStackitServerBackup)
+	mqlBackup.cacheVolumeBackups = b.GetVolumeBackups()
+	mqlBackup.cacheIdBase = "stackit.server.backup/" + serverID + "/" + b.GetId()
+	return res, nil
 }
 
 func (r *mqlStackitServerBackup) id() (string, error) {
@@ -76,20 +79,47 @@ func (r *mqlStackitServerBackup) server() (*mqlStackitServer, error) {
 	return serverRef(r.MqlRuntime, r.ServerId.Data, &r.Server)
 }
 
+// volumeBackups exposes the backup's per-volume entries as typed
+// sub-resources, captured when the backup was built.
+func (r *mqlStackitServerBackup) volumeBackups() ([]any, error) {
+	out := make([]any, 0, len(r.cacheVolumeBackups))
+	for i := range r.cacheVolumeBackups {
+		vb := r.cacheVolumeBackups[i]
+		res, err := CreateResource(r.MqlRuntime, "stackit.server.backup.volumeBackup", map[string]*llx.RawData{
+			"__id":                 llx.StringData(r.cacheIdBase + "/volumeBackup/" + vb.GetId()),
+			"id":                   llx.StringData(vb.GetId()),
+			"volumeId":             llx.StringData(vb.GetVolumeId()),
+			"size":                 llx.IntData(vb.GetSize()),
+			"status":               llx.StringData(string(vb.GetStatus())),
+			"lastRestoredAt":       llx.TimeDataPtr(parseRFC3339(vb.GetLastRestoredAt())),
+			"lastRestoredVolumeId": llx.StringData(vb.GetLastRestoredVolumeId()),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
 // volumes resolves the volumes protected by the backup from the volume IDs
 // carried in its per-volume backup entries.
 func (r *mqlStackitServerBackup) volumes() ([]any, error) {
-	ids := []string{}
-	for _, raw := range r.VolumeBackups.Data {
-		vb, ok := raw.(map[string]any)
-		if !ok {
-			continue
-		}
-		if id, ok := vb["volumeId"].(string); ok {
+	ids := make([]string, 0, len(r.cacheVolumeBackups))
+	for i := range r.cacheVolumeBackups {
+		if id := r.cacheVolumeBackups[i].GetVolumeId(); id != "" {
 			ids = append(ids, id)
 		}
 	}
 	return volumeRefs(r.MqlRuntime, ids)
+}
+
+func (r *mqlStackitServerBackupVolumeBackup) volume() (*mqlStackitVolume, error) {
+	return volumeRef(r.MqlRuntime, r.VolumeId.Data, &r.Volume)
+}
+
+func (r *mqlStackitServerBackupVolumeBackup) lastRestoredVolume() (*mqlStackitVolume, error) {
+	return volumeRef(r.MqlRuntime, r.LastRestoredVolumeId.Data, &r.LastRestoredVolume)
 }
 
 // ------------------------- server backup schedules -------------------------

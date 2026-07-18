@@ -29,6 +29,7 @@ const (
 	ResourceStackitSecurityGroupRule             string = "stackit.securityGroup.rule"
 	ResourceStackitNetworkExposure               string = "stackit.network.exposure"
 	ResourceStackitServerBackup                  string = "stackit.server.backup"
+	ResourceStackitServerBackupVolumeBackup      string = "stackit.server.backup.volumeBackup"
 	ResourceStackitServerBackupSchedule          string = "stackit.server.backupSchedule"
 	ResourceStackitServerUpdate                  string = "stackit.server.update"
 	ResourceStackitServerUpdateSchedule          string = "stackit.server.updateSchedule"
@@ -156,6 +157,10 @@ func init() {
 		"stackit.server.backup": {
 			// to override args, implement: initStackitServerBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createStackitServerBackup,
+		},
+		"stackit.server.backup.volumeBackup": {
+			// to override args, implement: initStackitServerBackupVolumeBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitServerBackupVolumeBackup,
 		},
 		"stackit.server.backupSchedule": {
 			// to override args, implement: initStackitServerBackupSchedule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -402,7 +407,7 @@ func init() {
 			Create: createStackitKms,
 		},
 		"stackit.kms.keyRing": {
-			// to override args, implement: initStackitKmsKeyRing(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initStackitKmsKeyRing,
 			Create: createStackitKmsKeyRing,
 		},
 		"stackit.kms.key": {
@@ -754,6 +759,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.volume.sourceSnapshotId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitVolume).GetSourceSnapshotId()).ToDataRes(types.String)
 	},
+	"stackit.volume.sourceSnapshot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVolume).GetSourceSnapshot()).ToDataRes(types.Resource("stackit.snapshot"))
+	},
 	"stackit.volume.server": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitVolume).GetServer()).ToDataRes(types.Resource("stackit.server"))
 	},
@@ -1055,10 +1063,34 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlStackitServerBackup).GetLastRestoredAt()).ToDataRes(types.Time)
 	},
 	"stackit.server.backup.volumeBackups": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlStackitServerBackup).GetVolumeBackups()).ToDataRes(types.Array(types.Dict))
+		return (r.(*mqlStackitServerBackup).GetVolumeBackups()).ToDataRes(types.Array(types.Resource("stackit.server.backup.volumeBackup")))
 	},
 	"stackit.server.backup.volumes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitServerBackup).GetVolumes()).ToDataRes(types.Array(types.Resource("stackit.volume")))
+	},
+	"stackit.server.backup.volumeBackup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitServerBackupVolumeBackup).GetId()).ToDataRes(types.String)
+	},
+	"stackit.server.backup.volumeBackup.volumeId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitServerBackupVolumeBackup).GetVolumeId()).ToDataRes(types.String)
+	},
+	"stackit.server.backup.volumeBackup.volume": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitServerBackupVolumeBackup).GetVolume()).ToDataRes(types.Resource("stackit.volume"))
+	},
+	"stackit.server.backup.volumeBackup.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitServerBackupVolumeBackup).GetSize()).ToDataRes(types.Int)
+	},
+	"stackit.server.backup.volumeBackup.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitServerBackupVolumeBackup).GetStatus()).ToDataRes(types.String)
+	},
+	"stackit.server.backup.volumeBackup.lastRestoredAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitServerBackupVolumeBackup).GetLastRestoredAt()).ToDataRes(types.Time)
+	},
+	"stackit.server.backup.volumeBackup.lastRestoredVolumeId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitServerBackupVolumeBackup).GetLastRestoredVolumeId()).ToDataRes(types.String)
+	},
+	"stackit.server.backup.volumeBackup.lastRestoredVolume": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitServerBackupVolumeBackup).GetLastRestoredVolume()).ToDataRes(types.Resource("stackit.volume"))
 	},
 	"stackit.server.backupSchedule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitServerBackupSchedule).GetId()).ToDataRes(types.Int)
@@ -1641,6 +1673,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.dns.recordSet.zoneId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitDnsRecordSet).GetZoneId()).ToDataRes(types.String)
+	},
+	"stackit.dns.recordSet.zone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitDnsRecordSet).GetZone()).ToDataRes(types.Resource("stackit.dns.zone"))
 	},
 	"stackit.dns.recordSet.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitDnsRecordSet).GetName()).ToDataRes(types.String)
@@ -2437,6 +2472,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.kms.key.keyRingId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitKmsKey).GetKeyRingId()).ToDataRes(types.String)
 	},
+	"stackit.kms.key.keyRing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitKmsKey).GetKeyRing()).ToDataRes(types.Resource("stackit.kms.keyRing"))
+	},
 	"stackit.kms.key.displayName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitKmsKey).GetDisplayName()).ToDataRes(types.String)
 	},
@@ -2949,6 +2987,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitVolume).SourceSnapshotId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"stackit.volume.sourceSnapshot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVolume).SourceSnapshot, ok = plugin.RawToTValue[*mqlStackitSnapshot](v.Value, v.Error)
+		return
+	},
 	"stackit.volume.server": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitVolume).Server, ok = plugin.RawToTValue[*mqlStackitServer](v.Value, v.Error)
 		return
@@ -3391,6 +3433,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.server.backup.volumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitServerBackup).Volumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.server.backup.volumeBackup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitServerBackupVolumeBackup).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.server.backup.volumeBackup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitServerBackupVolumeBackup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.server.backup.volumeBackup.volumeId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitServerBackupVolumeBackup).VolumeId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.server.backup.volumeBackup.volume": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitServerBackupVolumeBackup).Volume, ok = plugin.RawToTValue[*mqlStackitVolume](v.Value, v.Error)
+		return
+	},
+	"stackit.server.backup.volumeBackup.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitServerBackupVolumeBackup).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.server.backup.volumeBackup.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitServerBackupVolumeBackup).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.server.backup.volumeBackup.lastRestoredAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitServerBackupVolumeBackup).LastRestoredAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.server.backup.volumeBackup.lastRestoredVolumeId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitServerBackupVolumeBackup).LastRestoredVolumeId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.server.backup.volumeBackup.lastRestoredVolume": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitServerBackupVolumeBackup).LastRestoredVolume, ok = plugin.RawToTValue[*mqlStackitVolume](v.Value, v.Error)
 		return
 	},
 	"stackit.server.backupSchedule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4259,6 +4337,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.dns.recordSet.zoneId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitDnsRecordSet).ZoneId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.dns.recordSet.zone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitDnsRecordSet).Zone, ok = plugin.RawToTValue[*mqlStackitDnsZone](v.Value, v.Error)
 		return
 	},
 	"stackit.dns.recordSet.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5479,6 +5561,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.kms.key.keyRingId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitKmsKey).KeyRingId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.kms.key.keyRing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitKmsKey).KeyRing, ok = plugin.RawToTValue[*mqlStackitKmsKeyRing](v.Value, v.Error)
 		return
 	},
 	"stackit.kms.key.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6762,6 +6848,7 @@ type mqlStackitVolume struct {
 	ImageId              plugin.TValue[string]
 	Image                plugin.TValue[*mqlStackitImage]
 	SourceSnapshotId     plugin.TValue[string]
+	SourceSnapshot       plugin.TValue[*mqlStackitSnapshot]
 	Server               plugin.TValue[*mqlStackitServer]
 	ServerId             plugin.TValue[string]
 	Encrypted            plugin.TValue[bool]
@@ -6863,6 +6950,22 @@ func (c *mqlStackitVolume) GetImage() *plugin.TValue[*mqlStackitImage] {
 
 func (c *mqlStackitVolume) GetSourceSnapshotId() *plugin.TValue[string] {
 	return &c.SourceSnapshotId
+}
+
+func (c *mqlStackitVolume) GetSourceSnapshot() *plugin.TValue[*mqlStackitSnapshot] {
+	return plugin.GetOrCompute[*mqlStackitSnapshot](&c.SourceSnapshot, func() (*mqlStackitSnapshot, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.volume", c.__id, "sourceSnapshot")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitSnapshot), nil
+			}
+		}
+
+		return c.sourceSnapshot()
+	})
 }
 
 func (c *mqlStackitVolume) GetServer() *plugin.TValue[*mqlStackitServer] {
@@ -7735,7 +7838,7 @@ func (c *mqlStackitNetworkExposure) GetOpenIngressRules() *plugin.TValue[[]any] 
 type mqlStackitServerBackup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlStackitServerBackupInternal it will be used here
+	mqlStackitServerBackupInternal
 	Id             plugin.TValue[string]
 	ServerId       plugin.TValue[string]
 	Server         plugin.TValue[*mqlStackitServer]
@@ -7835,7 +7938,19 @@ func (c *mqlStackitServerBackup) GetLastRestoredAt() *plugin.TValue[*time.Time] 
 }
 
 func (c *mqlStackitServerBackup) GetVolumeBackups() *plugin.TValue[[]any] {
-	return &c.VolumeBackups
+	return plugin.GetOrCompute[[]any](&c.VolumeBackups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.server.backup", c.__id, "volumeBackups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.volumeBackups()
+	})
 }
 
 func (c *mqlStackitServerBackup) GetVolumes() *plugin.TValue[[]any] {
@@ -7851,6 +7966,109 @@ func (c *mqlStackitServerBackup) GetVolumes() *plugin.TValue[[]any] {
 		}
 
 		return c.volumes()
+	})
+}
+
+// mqlStackitServerBackupVolumeBackup for the stackit.server.backup.volumeBackup resource
+type mqlStackitServerBackupVolumeBackup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitServerBackupVolumeBackupInternal it will be used here
+	Id                   plugin.TValue[string]
+	VolumeId             plugin.TValue[string]
+	Volume               plugin.TValue[*mqlStackitVolume]
+	Size                 plugin.TValue[int64]
+	Status               plugin.TValue[string]
+	LastRestoredAt       plugin.TValue[*time.Time]
+	LastRestoredVolumeId plugin.TValue[string]
+	LastRestoredVolume   plugin.TValue[*mqlStackitVolume]
+}
+
+// createStackitServerBackupVolumeBackup creates a new instance of this resource
+func createStackitServerBackupVolumeBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitServerBackupVolumeBackup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.server.backup.volumeBackup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitServerBackupVolumeBackup) MqlName() string {
+	return "stackit.server.backup.volumeBackup"
+}
+
+func (c *mqlStackitServerBackupVolumeBackup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitServerBackupVolumeBackup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitServerBackupVolumeBackup) GetVolumeId() *plugin.TValue[string] {
+	return &c.VolumeId
+}
+
+func (c *mqlStackitServerBackupVolumeBackup) GetVolume() *plugin.TValue[*mqlStackitVolume] {
+	return plugin.GetOrCompute[*mqlStackitVolume](&c.Volume, func() (*mqlStackitVolume, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.server.backup.volumeBackup", c.__id, "volume")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitVolume), nil
+			}
+		}
+
+		return c.volume()
+	})
+}
+
+func (c *mqlStackitServerBackupVolumeBackup) GetSize() *plugin.TValue[int64] {
+	return &c.Size
+}
+
+func (c *mqlStackitServerBackupVolumeBackup) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlStackitServerBackupVolumeBackup) GetLastRestoredAt() *plugin.TValue[*time.Time] {
+	return &c.LastRestoredAt
+}
+
+func (c *mqlStackitServerBackupVolumeBackup) GetLastRestoredVolumeId() *plugin.TValue[string] {
+	return &c.LastRestoredVolumeId
+}
+
+func (c *mqlStackitServerBackupVolumeBackup) GetLastRestoredVolume() *plugin.TValue[*mqlStackitVolume] {
+	return plugin.GetOrCompute[*mqlStackitVolume](&c.LastRestoredVolume, func() (*mqlStackitVolume, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.server.backup.volumeBackup", c.__id, "lastRestoredVolume")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitVolume), nil
+			}
+		}
+
+		return c.lastRestoredVolume()
 	})
 }
 
@@ -10056,6 +10274,7 @@ type mqlStackitDnsRecordSet struct {
 	// optional: if you define mqlStackitDnsRecordSetInternal it will be used here
 	Id                 plugin.TValue[string]
 	ZoneId             plugin.TValue[string]
+	Zone               plugin.TValue[*mqlStackitDnsZone]
 	Name               plugin.TValue[string]
 	Type               plugin.TValue[string]
 	Ttl                plugin.TValue[int64]
@@ -10111,6 +10330,22 @@ func (c *mqlStackitDnsRecordSet) GetId() *plugin.TValue[string] {
 
 func (c *mqlStackitDnsRecordSet) GetZoneId() *plugin.TValue[string] {
 	return &c.ZoneId
+}
+
+func (c *mqlStackitDnsRecordSet) GetZone() *plugin.TValue[*mqlStackitDnsZone] {
+	return plugin.GetOrCompute[*mqlStackitDnsZone](&c.Zone, func() (*mqlStackitDnsZone, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.dns.recordSet", c.__id, "zone")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitDnsZone), nil
+			}
+		}
+
+		return c.zone()
+	})
 }
 
 func (c *mqlStackitDnsRecordSet) GetName() *plugin.TValue[string] {
@@ -13502,6 +13737,7 @@ type mqlStackitKmsKey struct {
 	// optional: if you define mqlStackitKmsKeyInternal it will be used here
 	Id           plugin.TValue[string]
 	KeyRingId    plugin.TValue[string]
+	KeyRing      plugin.TValue[*mqlStackitKmsKeyRing]
 	DisplayName  plugin.TValue[string]
 	Description  plugin.TValue[string]
 	Purpose      plugin.TValue[string]
@@ -13557,6 +13793,22 @@ func (c *mqlStackitKmsKey) GetId() *plugin.TValue[string] {
 
 func (c *mqlStackitKmsKey) GetKeyRingId() *plugin.TValue[string] {
 	return &c.KeyRingId
+}
+
+func (c *mqlStackitKmsKey) GetKeyRing() *plugin.TValue[*mqlStackitKmsKeyRing] {
+	return plugin.GetOrCompute[*mqlStackitKmsKeyRing](&c.KeyRing, func() (*mqlStackitKmsKeyRing, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.kms.key", c.__id, "keyRing")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitKmsKeyRing), nil
+			}
+		}
+
+		return c.keyRing()
+	})
 }
 
 func (c *mqlStackitKmsKey) GetDisplayName() *plugin.TValue[string] {
