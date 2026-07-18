@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/personalize"
 	personalizetypes "github.com/aws/aws-sdk-go-v2/service/personalize/types"
 
@@ -15,6 +16,18 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 )
+
+// logPersonalizeDescribeWarn logs a warning when a best-effort Personalize
+// Describe call fails for a reason other than access-denied. The list summaries
+// omit some detail fields, so a swallowed Describe error would otherwise leave
+// those fields at their defaults and look like real values; logging keeps the
+// gap observable. Access-denied is expected under least-privilege and stays quiet.
+func logPersonalizeDescribeWarn(err error, resource, arn string) {
+	if err == nil || Is400AccessDeniedError(err) {
+		return
+	}
+	log.Warn().Err(err).Str("arn", arn).Msgf("could not describe personalize %s", resource)
+}
 
 func (a *mqlAwsPersonalizeDatasetGroup) id() (string, error) { return a.Arn.Data, nil }
 func (a *mqlAwsPersonalizeDataset) id() (string, error)      { return a.Arn.Data, nil }
@@ -108,7 +121,7 @@ func (a *mqlAwsPersonalize) buildDatasetGroup(svc *personalize.Client, region st
 	detail, err := svc.DescribeDatasetGroup(context.Background(), &personalize.DescribeDatasetGroupInput{DatasetGroupArn: dg.DatasetGroupArn})
 	if err != nil {
 		if !Is400AccessDeniedError(err) {
-			log.Warn().Err(err).Str("arn", convertToStr(dg.DatasetGroupArn)).Msg("could not describe personalize dataset group")
+			log.Warn().Err(err).Str("arn", aws.ToString(dg.DatasetGroupArn)).Msg("could not describe personalize dataset group")
 		}
 		return mqlDg, nil
 	}
@@ -117,13 +130,6 @@ func (a *mqlAwsPersonalize) buildDatasetGroup(svc *personalize.Client, region st
 		mqlDg.cacheRoleArn = detail.DatasetGroup.RoleArn
 	}
 	return mqlDg, nil
-}
-
-func convertToStr(s *string) string {
-	if s == nil {
-		return ""
-	}
-	return *s
 }
 
 func (a *mqlAwsPersonalizeDatasetGroup) kmsKey() (*mqlAwsKmsKey, error) {
@@ -190,8 +196,11 @@ func (a *mqlAwsPersonalizeDatasetGroup) datasets() ([]any, error) {
 			mqlDs := resource.(*mqlAwsPersonalizeDataset)
 			mqlDs.region = a.region
 			// The schema ARN is only returned by DescribeDataset; cache it for the
-			// schema accessor. Best-effort on access-denied.
-			if detail, err := svc.DescribeDataset(ctx, &personalize.DescribeDatasetInput{DatasetArn: ds.DatasetArn}); err == nil && detail.Dataset != nil {
+			// schema accessor.
+			detail, err := svc.DescribeDataset(ctx, &personalize.DescribeDatasetInput{DatasetArn: ds.DatasetArn})
+			if err != nil {
+				logPersonalizeDescribeWarn(err, "dataset", aws.ToString(ds.DatasetArn))
+			} else if detail.Dataset != nil {
 				mqlDs.cacheSchemaArn = detail.Dataset.SchemaArn
 			}
 			res = append(res, mqlDs)
@@ -214,6 +223,10 @@ func (a *mqlAwsPersonalizeDataset) schema() (*mqlAwsPersonalizeSchema, error) {
 			return nil, nil
 		}
 		return nil, err
+	}
+	if detail.Schema == nil {
+		a.Schema.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
 	return buildSchemaResource(a.MqlRuntime, detail.Schema)
 }
@@ -246,7 +259,10 @@ func (a *mqlAwsPersonalizeDatasetGroup) solutions() ([]any, error) {
 				"updatedAt":     llx.TimeDataPtr(s.LastUpdatedDateTime),
 			}
 			// eventType, performAutoML and performHPO come only from DescribeSolution.
-			if detail, err := svc.DescribeSolution(ctx, &personalize.DescribeSolutionInput{SolutionArn: s.SolutionArn}); err == nil && detail.Solution != nil {
+			detail, err := svc.DescribeSolution(ctx, &personalize.DescribeSolutionInput{SolutionArn: s.SolutionArn})
+			if err != nil {
+				logPersonalizeDescribeWarn(err, "solution", aws.ToString(s.SolutionArn))
+			} else if detail.Solution != nil {
 				args["eventType"] = llx.StringDataPtr(detail.Solution.EventType)
 				args["performAutoML"] = llx.BoolData(detail.Solution.PerformAutoML)
 				args["performHPO"] = llx.BoolData(detail.Solution.PerformHPO)
@@ -294,7 +310,10 @@ func (a *mqlAwsPersonalizeSolution) campaigns() ([]any, error) {
 				"updatedAt":         llx.TimeDataPtr(c.LastUpdatedDateTime),
 			}
 			// The serving capacity and solution version come only from DescribeCampaign.
-			if detail, err := svc.DescribeCampaign(ctx, &personalize.DescribeCampaignInput{CampaignArn: c.CampaignArn}); err == nil && detail.Campaign != nil {
+			detail, err := svc.DescribeCampaign(ctx, &personalize.DescribeCampaignInput{CampaignArn: c.CampaignArn})
+			if err != nil {
+				logPersonalizeDescribeWarn(err, "campaign", aws.ToString(c.CampaignArn))
+			} else if detail.Campaign != nil {
 				args["solutionVersion"] = llx.StringDataPtr(detail.Campaign.SolutionVersionArn)
 				args["minProvisionedTPS"] = llx.IntDataPtr(detail.Campaign.MinProvisionedTPS)
 			}
@@ -326,8 +345,11 @@ func (a *mqlAwsPersonalizeDatasetGroup) recommenders() ([]any, error) {
 		for _, r := range page.Recommenders {
 			failureReason := ""
 			// RecommenderSummary omits failureReason; DescribeRecommender supplies it.
-			if detail, err := svc.DescribeRecommender(ctx, &personalize.DescribeRecommenderInput{RecommenderArn: r.RecommenderArn}); err == nil && detail.Recommender != nil {
-				failureReason = convertToStr(detail.Recommender.FailureReason)
+			detail, err := svc.DescribeRecommender(ctx, &personalize.DescribeRecommenderInput{RecommenderArn: r.RecommenderArn})
+			if err != nil {
+				logPersonalizeDescribeWarn(err, "recommender", aws.ToString(r.RecommenderArn))
+			} else if detail.Recommender != nil {
+				failureReason = aws.ToString(detail.Recommender.FailureReason)
 			}
 			args := map[string]*llx.RawData{
 				"arn":           llx.StringDataPtr(r.RecommenderArn),
@@ -367,9 +389,12 @@ func (a *mqlAwsPersonalizeDatasetGroup) eventTrackers() ([]any, error) {
 			trackingId := ""
 			accountId := ""
 			// The tracking ID and account come only from DescribeEventTracker.
-			if detail, err := svc.DescribeEventTracker(ctx, &personalize.DescribeEventTrackerInput{EventTrackerArn: et.EventTrackerArn}); err == nil && detail.EventTracker != nil {
-				trackingId = convertToStr(detail.EventTracker.TrackingId)
-				accountId = convertToStr(detail.EventTracker.AccountId)
+			detail, err := svc.DescribeEventTracker(ctx, &personalize.DescribeEventTrackerInput{EventTrackerArn: et.EventTrackerArn})
+			if err != nil {
+				logPersonalizeDescribeWarn(err, "event tracker", aws.ToString(et.EventTrackerArn))
+			} else if detail.EventTracker != nil {
+				trackingId = aws.ToString(detail.EventTracker.TrackingId)
+				accountId = aws.ToString(detail.EventTracker.AccountId)
 			}
 			args := map[string]*llx.RawData{
 				"arn":        llx.StringDataPtr(et.EventTrackerArn),
@@ -408,8 +433,11 @@ func (a *mqlAwsPersonalizeDatasetGroup) filters() ([]any, error) {
 		for _, f := range page.Filters {
 			filterExpression := ""
 			// The filter expression comes only from DescribeFilter.
-			if detail, err := svc.DescribeFilter(ctx, &personalize.DescribeFilterInput{FilterArn: f.FilterArn}); err == nil && detail.Filter != nil {
-				filterExpression = convertToStr(detail.Filter.FilterExpression)
+			detail, err := svc.DescribeFilter(ctx, &personalize.DescribeFilterInput{FilterArn: f.FilterArn})
+			if err != nil {
+				logPersonalizeDescribeWarn(err, "filter", aws.ToString(f.FilterArn))
+			} else if detail.Filter != nil {
+				filterExpression = aws.ToString(detail.Filter.FilterExpression)
 			}
 			args := map[string]*llx.RawData{
 				"arn":              llx.StringDataPtr(f.FilterArn),
@@ -476,6 +504,9 @@ func (a *mqlAwsPersonalize) getSchemas(conn *connection.AwsConnection) []*jobpoo
 						}
 						return nil, err
 					}
+					if detail.Schema == nil {
+						continue
+					}
 					mqlSchema, err := buildSchemaResource(a.MqlRuntime, detail.Schema)
 					if err != nil {
 						return nil, err
@@ -490,10 +521,10 @@ func (a *mqlAwsPersonalize) getSchemas(conn *connection.AwsConnection) []*jobpoo
 	return tasks
 }
 
+// buildSchemaResource maps a Personalize DatasetSchema into an MQL resource.
+// Callers must pass a non-nil schema; the two call sites guard for nil and set
+// the field state or skip the entry accordingly.
 func buildSchemaResource(runtime *plugin.Runtime, schema *personalizetypes.DatasetSchema) (*mqlAwsPersonalizeSchema, error) {
-	if schema == nil {
-		return nil, nil
-	}
 	args := map[string]*llx.RawData{
 		"arn":       llx.StringDataPtr(schema.SchemaArn),
 		"name":      llx.StringDataPtr(schema.Name),
