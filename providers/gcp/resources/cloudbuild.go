@@ -285,18 +285,14 @@ type mqlGcpProjectCloudBuildServiceTriggerPubsubConfigInternal struct {
 }
 
 func (g *mqlGcpProjectCloudBuildServiceTriggerPubsubConfig) pubsubTopic() (*mqlGcpProjectPubsubServiceTopic, error) {
-	topic := g.cacheTopic
-	if topic == "" {
-		g.PubsubTopic.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
-	}
-	res, err := NewResource(g.MqlRuntime, "gcp.project.pubsubService.topic", map[string]*llx.RawData{
-		"name": llx.StringData(topic),
-	})
+	ref, err := resolvePubsubTopicRef(g.MqlRuntime, g.cacheTopic, "")
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGcpProjectPubsubServiceTopic), nil
+	if ref == nil {
+		g.PubsubTopic.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return ref, nil
 }
 
 func (g *mqlGcpProjectCloudBuildServiceTriggerPubsubConfig) serviceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {

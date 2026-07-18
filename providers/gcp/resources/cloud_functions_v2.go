@@ -52,6 +52,12 @@ func (g *mqlGcpProject) cloudFunctionsV2() ([]any, error) {
 			break
 		}
 		if err != nil {
+			// Gracefully skip when the Cloud Functions API is disabled or access
+			// is denied (matches the gRPC-based sibling resources), instead of
+			// failing the whole query with a hard error.
+			if isGRPCSkippable(err) {
+				break
+			}
 			return nil, err
 		}
 
@@ -463,16 +469,12 @@ func (g *mqlGcpProjectCloudFunctionV2EventTrigger) serviceAccount() (*mqlGcpProj
 }
 
 func (g *mqlGcpProjectCloudFunctionV2EventTrigger) topic() (*mqlGcpProjectPubsubServiceTopic, error) {
-	topicName := g.cachePubsubTopic
-	if topicName == "" {
-		g.Topic.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
-	}
-	res, err := NewResource(g.MqlRuntime, "gcp.project.pubsubService.topic", map[string]*llx.RawData{
-		"name": llx.StringData(topicName),
-	})
+	ref, err := resolvePubsubTopicRef(g.MqlRuntime, g.cachePubsubTopic, "")
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGcpProjectPubsubServiceTopic), nil
+	if ref == nil {
+		g.Topic.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return ref, nil
 }

@@ -321,6 +321,32 @@ func parseProjectFromPath(fullPath string) string {
 	return ""
 }
 
+// resolvePubsubTopicRef resolves a Pub/Sub topic reference to the typed
+// gcp.project.pubsubService.topic resource. The reference is typically a full
+// "projects/{project}/topics/{topic}" path; both the project and the short
+// topic name are pulled from it (fallbackProjectId is used only when the path
+// carries no project segment). Both are required: the topic init matches on the
+// short name and needs the project to build its parent service, so passing the
+// full path as the name (or omitting the project) leaves the ref unresolved.
+// Returns nil when the reference is empty.
+func resolvePubsubTopicRef(runtime *plugin.Runtime, topicRef, fallbackProjectId string) (*mqlGcpProjectPubsubServiceTopic, error) {
+	if topicRef == "" {
+		return nil, nil
+	}
+	projectId := fallbackProjectId
+	if p := parseProjectFromPath(topicRef); p != "" {
+		projectId = p
+	}
+	res, err := NewResource(runtime, "gcp.project.pubsubService.topic", map[string]*llx.RawData{
+		"name":      llx.StringData(parseResourceName(topicRef)),
+		"projectId": llx.StringData(projectId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectPubsubServiceTopic), nil
+}
+
 // parseLocationFromPath extracts the location/region from a GCP resource path.
 // The path format is: projects/{project}/locations/{location}/...
 // Returns "global" if no location segment is found.

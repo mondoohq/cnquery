@@ -1432,18 +1432,14 @@ type mqlGcpProjectGkeServiceClusterNotificationConfigInternal struct {
 }
 
 func (g *mqlGcpProjectGkeServiceClusterNotificationConfig) topic() (*mqlGcpProjectPubsubServiceTopic, error) {
-	topicName := g.cacheTopic
-	if topicName == "" {
-		g.Topic.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
-	}
-	res, err := NewResource(g.MqlRuntime, "gcp.project.pubsubService.topic", map[string]*llx.RawData{
-		"name": llx.StringData(topicName),
-	})
+	ref, err := resolvePubsubTopicRef(g.MqlRuntime, g.cacheTopic, "")
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGcpProjectPubsubServiceTopic), nil
+	if ref == nil {
+		g.Topic.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return ref, nil
 }
 
 func (g *mqlGcpProjectGkeServiceCluster) loggingEnabled() (bool, error) {

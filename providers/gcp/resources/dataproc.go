@@ -452,10 +452,14 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]any, error) {
 									TruststorePasswordUri:            c.Config.SecurityConfig.KerberosConfig.TruststorePasswordUri,
 									TruststoreUri:                    c.Config.SecurityConfig.KerberosConfig.TruststoreUri,
 								}
-								mqlSecurityCfg, err = convert.JsonToDict(cfg)
-								if err != nil {
-									log.Error().Err(err).Send()
-								}
+							}
+							// Serialize the whole security config, not just the Kerberos
+							// branch: a cluster with only IdentityConfig set (workforce
+							// identity federation without Kerberos) must still surface its
+							// security config instead of a null.
+							mqlSecurityCfg, err = convert.JsonToDict(cfg)
+							if err != nil {
+								log.Error().Err(err).Send()
 							}
 						}
 
