@@ -6,9 +6,9 @@ option go_package = "go.mondoo.com/mql/v13/providers/nextdns/resources"
 
 // NextDNS
 //
-// Use this resource to access the NextDNS account behind the configured API
-// key and the DNS profiles it owns. Query `profiles` to enumerate every
-// profile, or `account` for the account that owns them.
+// NextDNS account behind the configured API key and the DNS profiles it
+// owns. Query `profiles` to enumerate every profile in the account, or
+// `account` for the account that owns them.
 nextdns {
   // Account that owns the configured API key
   account() nextdns.account
@@ -18,10 +18,10 @@ nextdns {
 
 // NextDNS account
 //
-// Examine the NextDNS account associated with the configured API key. The
-// account groups the DNS `profiles` it owns. NextDNS exposes no account
-// object of its own, so the `id` is a stable fingerprint derived from the
-// API key.
+// NextDNS account associated with the configured API key, which groups the
+// DNS `profiles` it owns. NextDNS exposes no account object of its own, so
+// the `id` is a stable fingerprint derived from the API key rather than a
+// value returned by the service.
 private nextdns.account @defaults("id") {
   // Stable account fingerprint derived from the API key
   id string
@@ -31,7 +31,7 @@ private nextdns.account @defaults("id") {
 
 // NextDNS profile
 //
-// Examine a single NextDNS configuration profile: its security feeds,
+// Single NextDNS configuration profile, covering its security feeds,
 // privacy blocklists, parental-control rules, allow and deny lists, custom
 // DNS rewrites, logging settings, and setup endpoints. Select a profile by
 // `id`, for example `nextdns.profiles.where(id == "abc123")`. When a scan is
@@ -66,7 +66,7 @@ nextdns.profile @defaults("id name") {
 
 // NextDNS profile security settings
 //
-// Examine the threat-protection features enabled on a profile: threat
+// Threat-protection features enabled on a profile: threat
 // intelligence feeds, AI-driven threat detection, Google Safe Browsing,
 // cryptojacking and DNS-rebinding protection, typosquatting and homograph
 // defenses, newly-registered-domain blocking, and the list of blocked
@@ -102,7 +102,7 @@ private nextdns.profileSecurity @defaults("aiThreatDetection googleSafeBrowsing 
 
 // NextDNS profile privacy settings
 //
-// Examine the tracker- and ad-blocking configuration of a profile: the
+// Tracker- and ad-blocking configuration of a profile: the
 // enabled `blocklists`, the native-tracking endpoints blocked per device
 // ecosystem, disguised-tracker (CNAME-cloaking) protection, and whether
 // affiliate and tracking links are allowed.
@@ -119,7 +119,7 @@ private nextdns.profilePrivacy @defaults("disguisedTrackers allowAffiliate") {
 
 // NextDNS privacy blocklist
 //
-// Examine a single blocklist enabled on a profile. Select a blocklist by
+// Single blocklist enabled on a profile. Select a blocklist by
 // `id` (for example "nextdns-recommended"); `entries` reports the number of
 // domains and `updatedOn` the last time the source was refreshed.
 private nextdns.profileBlocklist @defaults("id name entries") {
@@ -137,7 +137,7 @@ private nextdns.profileBlocklist @defaults("id name entries") {
 
 // NextDNS profile parental-control settings
 //
-// Examine the parental-control posture of a profile: blocked `services` and
+// Parental-control posture of a profile: blocked `services` and
 // `categories`, the SafeSearch and YouTube Restricted Mode toggles, whether
 // bypass methods are blocked, and the recreation-time schedule during which
 // recreation-flagged services and categories are allowed.
@@ -160,8 +160,8 @@ private nextdns.profileParentalControl @defaults("safeSearch youtubeRestrictedMo
 
 // NextDNS parental-control service rule
 //
-// Examine a single service rule (for example "tiktok" or "youtube"). Select
-// it by `id`; `active` reports whether the service is blocked and
+// Single parental-control service rule (for example "tiktok" or "youtube").
+// Select it by `id`; `active` reports whether the service is blocked and
 // `recreation` whether it is allowed only during the recreation schedule.
 private nextdns.profileParentalControlService @defaults("id active recreation") {
   // Service identifier (for example "tiktok")
@@ -174,7 +174,7 @@ private nextdns.profileParentalControlService @defaults("id active recreation") 
 
 // NextDNS parental-control category rule
 //
-// Examine a single content-category rule (for example "porn" or
+// Single content-category rule (for example "porn" or
 // "gambling"). Select it by `id`; `active` reports whether the category is
 // blocked and `recreation` whether it is allowed only during the recreation
 // schedule.
@@ -189,7 +189,7 @@ private nextdns.profileParentalControlCategory @defaults("id active recreation")
 
 // NextDNS profile settings
 //
-// Examine the operational settings of a profile: query logging (whether it
+// Operational settings of a profile: query logging (whether it
 // is enabled, what is retained or dropped, retention period, and storage
 // region), the block page toggle, resolver performance optimizations, and
 // Web3 resolution.
@@ -218,7 +218,7 @@ private nextdns.profileSettings @defaults("logsEnabled logsLocation web3") {
 
 // NextDNS profile setup
 //
-// Examine the resolver endpoints and linking configuration of a profile:
+// Resolver endpoints and linking configuration of a profile:
 // the assigned IPv4 and IPv6 anycast addresses, the DNSCrypt stamp, and the
 // linked-IP configuration used to associate a dynamic public IP with the
 // profile.
@@ -239,7 +239,7 @@ private nextdns.profileSetup @defaults("dnscrypt") {
 
 // NextDNS denylist entry
 //
-// Examine a single manually blocked domain. The `id` field is the domain
+// Single manually blocked domain. The `id` field is the domain
 // itself (for example "ads.example.com") and `active` reports whether the
 // block is currently enforced.
 private nextdns.profileDenylistEntry @defaults("id active") {
@@ -251,7 +251,7 @@ private nextdns.profileDenylistEntry @defaults("id active") {
 
 // NextDNS allowlist entry
 //
-// Examine a single manually allowed domain. The `id` field is the domain
+// Single manually allowed domain. The `id` field is the domain
 // itself (for example "cdn.example.com") and `active` reports whether the
 // allow rule is currently enforced.
 private nextdns.profileAllowlistEntry @defaults("id active") {
@@ -263,7 +263,7 @@ private nextdns.profileAllowlistEntry @defaults("id active") {
 
 // NextDNS custom DNS rewrite
 //
-// Examine a single custom DNS rewrite. The `name` field is the rewritten
+// Single custom DNS rewrite. The `name` field is the rewritten
 // domain, `type` the record type (for example A, AAAA, or CNAME), and
 // `content` the answer the resolver returns.
 private nextdns.profileRewrite @defaults("name type content") {
