@@ -222,6 +222,7 @@ digitalocean.droplet.backupsEnabled 13.0.1
 digitalocean.droplet.baseImage 13.1.7
 digitalocean.droplet.createdAt 13.0.1
 digitalocean.droplet.disk 13.0.1
+digitalocean.droplet.dropletSize 13.13.2
 digitalocean.droplet.exposure 13.7.1
 digitalocean.droplet.features 13.0.1
 digitalocean.droplet.firewalls 13.0.2
@@ -655,6 +656,7 @@ digitalocean.kubernetes.nodePool.autoScale 13.0.1
 digitalocean.kubernetes.nodePool.cluster 13.4.2
 digitalocean.kubernetes.nodePool.clusterId 13.0.1
 digitalocean.kubernetes.nodePool.count 13.0.1
+digitalocean.kubernetes.nodePool.dropletSize 13.13.2
 digitalocean.kubernetes.nodePool.id 13.0.1
 digitalocean.kubernetes.nodePool.labels 13.0.1
 digitalocean.kubernetes.nodePool.maxNodes 13.0.1
@@ -852,6 +854,19 @@ digitalocean.securityScan.findings 13.4.2
 digitalocean.securityScan.id 13.4.2
 digitalocean.securityScan.status 13.4.2
 digitalocean.securityScans 13.4.2
+digitalocean.size 13.13.2
+digitalocean.size.available 13.13.2
+digitalocean.size.description 13.13.2
+digitalocean.size.disk 13.13.2
+digitalocean.size.gpuInfo 13.13.2
+digitalocean.size.memory 13.13.2
+digitalocean.size.priceHourly 13.13.2
+digitalocean.size.priceMonthly 13.13.2
+digitalocean.size.regions 13.13.2
+digitalocean.size.slug 13.13.2
+digitalocean.size.transfer 13.13.2
+digitalocean.size.vcpus 13.13.2
+digitalocean.sizes 13.13.2
 digitalocean.snapshot 13.1.7
 digitalocean.snapshot.createdAt 13.1.7
 digitalocean.snapshot.droplet 13.10.2

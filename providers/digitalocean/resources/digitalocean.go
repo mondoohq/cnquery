@@ -103,6 +103,9 @@ type mqlDigitaloceanDropletInternal struct {
 	// image caches the godo image embedded in the droplet list response so the
 	// typed baseImage() accessor can build a digitalocean.image without a refetch.
 	image *godo.Image
+	// size caches the godo size embedded in the droplet list response so the
+	// typed dropletSize() accessor can build a digitalocean.size without a refetch.
+	size *godo.Size
 	// cacheVolumeIDs holds the block-storage volume IDs attached to the droplet so
 	// the typed volumes() accessor can resolve them without a refetch.
 	cacheVolumeIDs []string
@@ -233,6 +236,7 @@ func (r *mqlDigitalocean) droplets() ([]interface{}, error) {
 			// snapshots(), and backups() accessors — all without a refetch.
 			mqlDroplet := res.(*mqlDigitaloceanDroplet)
 			mqlDroplet.image = d.Image
+			mqlDroplet.size = d.Size
 			mqlDroplet.cacheVolumeIDs = d.VolumeIDs
 			mqlDroplet.cacheSnapshotIDs = d.SnapshotIDs
 			mqlDroplet.cacheBackupIDs = d.BackupIDs

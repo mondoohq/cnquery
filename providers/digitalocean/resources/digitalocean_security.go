@@ -70,6 +70,10 @@ type mqlDigitaloceanInternal struct {
 	partnerAttachmentIndexOnce sync.Once
 	partnerAttachmentIndex     map[string]*mqlDigitaloceanPartnerAttachment
 	partnerAttachmentIndexErr  error
+
+	sizeIndexOnce sync.Once
+	sizeIndex     map[string]*mqlDigitaloceanSize
+	sizeIndexErr  error
 }
 
 // partnerAttachmentByID resolves a partner attachment by its ID from the

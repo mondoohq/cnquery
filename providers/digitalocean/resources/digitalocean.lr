@@ -42,6 +42,8 @@ digitalocean {
   images() []digitalocean.image
   // Droplet and volume snapshots
   snapshots() []digitalocean.snapshot
+  // Droplet size catalog (hardware tiers)
+  sizes() []digitalocean.size
   // Functions namespaces
   functionNamespaces() []digitalocean.function.namespace
   // Load balancers
@@ -151,6 +153,8 @@ digitalocean.droplet @defaults("id name status") {
   region string
   // Size slug (DigitalOcean droplet size identifier, e.g., s-1vcpu-1gb)
   size string
+  // Hardware tier the droplet runs on, resolved from the size slug
+  dropletSize() digitalocean.size
   // Status (new, active, off, archive)
   status string
   // Whether the droplet is locked while an action is in progress
@@ -908,6 +912,8 @@ private digitalocean.kubernetes.nodePool @defaults("id name size") {
   name string
   // Droplet size slug
   size string
+  // Hardware tier the pool's worker nodes run on, resolved from the size slug
+  dropletSize() digitalocean.size
   // Number of nodes
   count int
   // Auto-scale enabled
@@ -1573,6 +1579,41 @@ digitalocean.snapshot @defaults("id name resourceType") {
   tags []string
   // Time the resource was created
   createdAt time
+}
+
+// DigitalOcean Droplet size
+//
+// Hardware tier a Droplet or Kubernetes worker node runs on, selected
+// by its `slug` (for example `s-1vcpu-1gb` or `g-2vcpu-8gb`). Surfaces
+// the allocated `memory`, `vcpus` and `disk`, the `priceMonthly` and
+// `priceHourly` in US dollars, the included outbound `transfer`
+// allowance, `gpuInfo` for GPU tiers, the `regions` where the size can
+// currently be provisioned, and the `available` flag reporting whether
+// it can be provisioned at all. Select a single size by slug, for
+// example `digitalocean.size(slug: "s-1vcpu-1gb")`.
+digitalocean.size @defaults("slug vcpus memory priceMonthly") {
+  // Size slug, for example s-1vcpu-1gb
+  slug string
+  // Memory allocated to the size, in megabytes
+  memory int
+  // Number of virtual CPUs allocated to the size
+  vcpus int
+  // Disk capacity allocated to the size, in gigabytes
+  disk int
+  // Monthly price in US dollars
+  priceMonthly float
+  // Hourly price in US dollars
+  priceHourly float
+  // Included outbound transfer allowance, in terabytes
+  transfer float
+  // Whether the size can currently be provisioned
+  available bool
+  // Region slugs where the size is offered
+  regions []string
+  // Human-readable description of the size
+  description string
+  // GPU details for GPU sizes (count, model, vram); null on non-GPU sizes
+  gpuInfo dict
 }
 
 // DigitalOcean Functions namespace
