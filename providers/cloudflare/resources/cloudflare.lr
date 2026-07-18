@@ -6,10 +6,10 @@ option go_package = "go.mondoo.com/mql/v13/providers/cloudflare/resources"
 
 // Cloudflare
 //
-// Use this resource to access Cloudflare zones, accounts, API tokens, and
-// account-level services. Query `zones` to enumerate DNS zones, `accounts`
-// for account-level configuration, and `apiTokens` for token inventory and
-// policy audits.
+// Top-level entry point for Cloudflare zones, accounts, API tokens, and
+// account-level services. The `zones` field enumerates DNS zones, `accounts`
+// exposes account-level configuration, and `apiTokens` lists the tokens
+// visible to the calling user for token inventory and policy audits.
 cloudflare {
 	// List all zones
 	zones() []cloudflare.zone
@@ -23,7 +23,7 @@ cloudflare {
 
 // Cloudflare DNS Zone
 //
-// Examine the configuration and security posture of a single Cloudflare DNS
+// Configuration and security posture of a single Cloudflare DNS
 // zone. A zone corresponds to a registered domain managed through Cloudflare.
 // Query `settings` for TLS, WAF, and HSTS enforcement; `dns` for DNS records;
 // `rulesets` and `wafRules` for firewall policy; `certificatePacks` and
@@ -148,8 +148,9 @@ private cloudflare.zone.owner @defaults("name") {
 
 // Cloudflare zone plan
 //
-// Examine the Cloudflare service plan attached to a zone. Will be
-// removed in the next major release.
+// Cloudflare service plan attached to a zone (plan name, price, billing
+// frequency, and subscription state). Will be removed in the next major
+// release.
 private cloudflare.zone.plan @defaults("name") @maturity("deprecated") {
 	// Plan identifier
 	id string
@@ -197,11 +198,11 @@ private cloudflare.zone.settings {
 	zeroRtt string
 	// WebSocket connections support (on, off)
 	websockets string
-	// IP geolocation header — adds CF-IPCountry to origin requests (on, off)
+	// IP geolocation header that adds CF-IPCountry to origin requests (on, off)
 	ipGeolocation string
 	// True-Client-IP header sent to the origin (on, off; Enterprise only)
 	trueClientIpHeader string
-	// Challenge page TTL — how long a visitor's challenge clearance lasts, in seconds
+	// Challenge page TTL, how long a visitor's challenge clearance lasts, in seconds
 	challengeTtl int
 
 	// Whether HSTS (Strict-Transport-Security) is enabled for the zone
@@ -260,15 +261,23 @@ private cloudflare.zone.certificatePack @defaults("id status") {
 
 // Cloudflare DNS namespace
 //
-// Use this resource to iterate over DNS records for a zone. Access it via
-// `cloudflare.zone.dns` and query `records` to enumerate all DNS record types
-// (A, AAAA, CNAME, MX, TXT, and others) with their content, TTL, and proxy status.
+// DNS records configured for a zone. The `records` field enumerates every
+// record type (A, AAAA, CNAME, MX, TXT, and others) with its content, TTL,
+// and proxy status, which is the starting point for auditing exposed
+// hostnames, mail routing (MX and TXT-carried SPF/DMARC records), and
+// whether traffic is proxied through Cloudflare or served DNS-only.
 private cloudflare.dns {
 	// List all DNS records
 	records() []cloudflare.dns.record
 }
 
 // DNS record
+//
+// Single DNS record in a Cloudflare zone, covering its type, content, TTL,
+// and whether it is proxied through Cloudflare or served DNS-only. Auditing
+// these records surfaces exposed hostnames, mail-authentication records
+// (SPF, DKIM, and DMARC carried as TXT), and records that point directly at
+// origin IP addresses and so bypass Cloudflare's proxy.
 private cloudflare.dns.record @defaults("type content name") {
 	// Cloudflare internal ID
 	id string
@@ -279,7 +288,7 @@ private cloudflare.dns.record @defaults("type content name") {
 	comment string
 	// Tags for organizing and filtering DNS records
 	tags []string
-	// Whether the record is proxied (false indicated DNS only)
+	// Whether the record is proxied (false indicates DNS only)
 	proxied bool
 	// Whether the record can be proxied
 	proxiable bool
@@ -302,10 +311,10 @@ private cloudflare.dns.record @defaults("type content name") {
 
 // Cloudflare Account
 //
-// Examine a Cloudflare account and its sub-resources. Query `settings` for
-// account-level preferences such as two-factor enforcement; `roles` for the
-// set of named roles defined in the account; `liveInputs` and `videos` for
-// Stream assets scoped to the account.
+// Cloudflare account and its sub-resources. Query `settings` for
+// account-level preferences such as two-factor enforcement, `roles` for the
+// set of named roles defined in the account, and `liveInputs` and `videos`
+// for Stream assets scoped to the account.
 private cloudflare.account @defaults("name") {
 	// Cloudflare account identifier
 	id string
@@ -345,10 +354,12 @@ private cloudflare.account @defaults("name") {
 
 // Cloudflare API Token
 //
-// Examine a user-scoped Cloudflare API token. Query `status` to verify the
-// token is active (not disabled or expired), `expiresOn` and `notBefore` for
-// validity windows, `ipIn` and `ipNotIn` for IP-allowlist/blocklist enforcement,
-// and `policies` for the effect, resources, and permission groups the token grants.
+// User-scoped Cloudflare API token, used to audit programmatic access to the
+// account. The `status` field reports whether the token is active, disabled,
+// or expired, while `expiresOn` and `notBefore` bound its validity window.
+// `ipIn` and `ipNotIn` capture the IP allowlist and blocklist that restrict
+// where the token may be used, and `policies` records the grants that define
+// what the token can do.
 private cloudflare.apiToken @defaults("name status expiresOn") {
 	// Token identifier
 	id string
@@ -368,11 +379,21 @@ private cloudflare.apiToken @defaults("name status expiresOn") {
 	ipIn []string
 	// IP addresses blocked from using the token (CIDR list)
 	ipNotIn []string
-	// Token policies (each dict has effect, resources, and permission groups defining what the token can do)
+	// Token policies
+	//
+	// Grant rules that define what the token can do. Each entry has `id`
+	// (policy identifier), `effect` (either allow or deny), `resources`
+	// (the scopes the policy applies to, decoded from the raw API shape),
+	// and `permissionGroups` (a list of objects with `id` and `name`
+	// naming the permission groups granted).
 	policies []dict
 }
 
 // Account settings
+//
+// Account-level security preferences. The `enforceTwoFactor` field reports
+// whether every member of the account is required to have two-factor
+// authentication enabled, a common baseline in access-hardening audits.
 private cloudflare.account.settings {
 	// Whether membership in this account requires that two-factor authentication is enabled
 	enforceTwoFactor bool
@@ -380,9 +401,10 @@ private cloudflare.account.settings {
 
 // Cloudflare Stream namespace
 //
-// Use this resource to access Cloudflare Stream assets. Query `liveInputs`
-// to enumerate live-streaming inputs and `videos` to enumerate uploaded or
-// recorded video assets.
+// Grouping for Cloudflare Stream assets, the managed video platform that
+// serves live-streaming inputs alongside uploaded or recorded video-on-demand
+// files. Live inputs are modeled as cloudflare.streams.liveInput and video
+// assets as cloudflare.streams.video, both enumerated from the account.
 private cloudflare.streams {}
 
 // Cloudflare live input (stream)
@@ -432,7 +454,7 @@ private cloudflare.streams.video @defaults("name uid") {
 	// Whether the video is ready to stream
 	ready bool
 
-	// Whether the video can be a accessed using the UID
+	// Whether playback requires a signed URL token rather than the plain UID
 	requireSignedUrls bool
 
 	// Date and time at which the video will be deleted (No value or a null value means that the video won't be deleted.)
@@ -455,19 +477,29 @@ private cloudflare.streams.video @defaults("name uid") {
 
 // Cloudflare R2 namespace
 //
-// Use this resource to access Cloudflare R2 object-storage resources for an
-// account. Query `buckets` to enumerate R2 buckets and inspect each bucket's
-// `name`, `location`, `createdOn`, `publicAccessEnabled`, and `publicAccessDomain`.
+// Object-storage resources for a Cloudflare account. The buckets field
+// enumerates every R2 bucket, which is the starting point for auditing
+// where account data is stored and which buckets serve objects publicly
+// through the managed r2.dev subdomain.
 private cloudflare.r2 @defaults("name location") {
 	// R2 buckets in the account
 	buckets() []cloudflare.r2.bucket
 }
 
 // Cloudflare R2 bucket
+//
+// Single R2 storage bucket, identified by name (for example
+// cloudflare.r2.buckets.where(name == "my-bucket")). The publicAccessEnabled
+// and publicAccessDomain fields report whether the bucket serves its objects
+// publicly over the managed r2.dev subdomain, the primary exposure to audit
+// for an R2 bucket, alongside its storage location and creation time.
 private cloudflare.r2.bucket {
  	// Bucket name
   name string
   // Bucket location
+  //
+  // Cloudflare region hint for where the bucket's data is stored. One of
+  // apac, eeur, enam, weur, wnam, or oc.
   location string
   // Time the bucket was created
   createdOn time
@@ -479,10 +511,10 @@ private cloudflare.r2.bucket {
 
 // Cloudflare Workers namespace
 //
-// Use this resource to access Cloudflare Workers deployments and Pages projects.
-// Query `workers` for script metadata (size, placement mode, LogPush status),
+// Serverless Workers scripts and Pages projects for an account. Query
+// `workers` for script metadata (size, placement mode, LogPush status),
 // `pages` for Pages deployment details (environment, URL, aliases), `secrets`
-// for the inventory of secrets bound to worker scripts (metadata only — values
+// for the inventory of secrets bound to worker scripts (metadata only, values
 // are never exposed), and `pageEnvVars` for the inventory of environment variables
 // across Pages project environments.
 private cloudflare.workers {
@@ -492,14 +524,19 @@ private cloudflare.workers {
 	// List all pages
 	pages() []cloudflare.workers.page
 
-	// Inventory of secrets bound to all worker scripts (metadata only — values are not exposed)
+	// Inventory of secrets bound to all worker scripts (metadata only, values are not exposed)
 	secrets() []cloudflare.workers.secret
 
-	// Inventory of environment variables bound to Pages projects across preview and production environments (metadata only — values are not exposed)
+	// Inventory of environment variables bound to Pages projects across preview and production environments (metadata only, values are not exposed)
 	pageEnvVars() []cloudflare.pages.envVar
 }
 
 // Cloudflare worker
+//
+// Deployed Workers script and its deployment metadata: code size, placement
+// mode, active deployment and pipeline identifiers, LogPush setting, and
+// created and modified timestamps. Shows which scripts run in an account and
+// how each one is deployed.
 private cloudflare.workers.worker @defaults("id") {
 	// Worker ID
   id string
@@ -525,10 +562,15 @@ private cloudflare.workers.worker @defaults("id") {
 }
 
 // Cloudflare Pages page
+//
+// Cloudflare Pages deployment, selected by `shortId`. Exposes the deployment
+// environment (preview or production), its public URL, custom domain aliases,
+// the production branch, and created and modified timestamps. Useful for
+// auditing what a Pages project publishes and where it is reachable.
 private cloudflare.workers.page @defaults("shortId") {
-	// Worker ID
+	// Deployment ID
 	id string
-	// Worker short ID
+	// Short deployment ID
 	shortId string
 	// Pages project identifier
 	projectId string
@@ -545,23 +587,23 @@ private cloudflare.workers.page @defaults("shortId") {
 	// Branch from which production deployments are built
 	productionBranch string
 
-  // Time the worker was created
+  // Time the deployment was created
 	createdOn time
-  // Time the worker was last modified
+  // Time the deployment was last modified
 	modifiedOn time
 }
 
 // Cloudflare One (Zero Trust) namespace
 //
-// Use this resource to audit Cloudflare Zero Trust configuration for an account.
-// Query `apps` for Access application settings (allowed IdPs, session duration,
-// cookie security); `identityProviders` for configured IdPs and SAML/SCIM settings;
-// `accessPolicies` and `accessGroups` for reusable policy components; `serviceTokens`
-// for machine-to-machine token inventory; `organization` for org-wide settings such
-// as auth domain and WARP session duration; `gatewayRules` for DNS/HTTP/L4 traffic
-// policies; `lists`, `locations`, and `dlpProfiles` for Gateway data sources;
-// `devices` for enrolled device inventory; and `devicePostureRules` and
-// `devicePostureIntegrations` for posture-check configuration.
+// Zero Trust configuration for a Cloudflare account, spanning Access, Gateway,
+// and device enrollment. `apps` covers Access application settings (allowed IdPs,
+// session duration, cookie security); `identityProviders` the configured IdPs and
+// their SAML/SCIM settings; `accessPolicies` and `accessGroups` the reusable policy
+// components; `serviceTokens` the machine-to-machine token inventory; `organization`
+// org-wide settings such as auth domain and WARP session duration; `gatewayRules`
+// the DNS/HTTP/L4 traffic policies; `lists`, `locations`, and `dlpProfiles` the
+// Gateway data sources; `devices` the enrolled device inventory; and
+// `devicePostureRules` and `devicePostureIntegrations` the posture-check configuration.
 private cloudflare.one {
 	// Cloudflare Zero Trust applications
 	apps() []cloudflare.one.app
@@ -593,9 +635,10 @@ private cloudflare.one {
 
 // Cloudflare One application
 //
-// Examine a single Cloudflare One (Access) application — the identity
-// providers it accepts, its CORS and cookie hardening, its session and
-// authentication policies, and the deny / launcher UX it presents to users.
+// Single Cloudflare One (Access) application: the identity providers it
+// accepts, its CORS and cookie hardening, its session and authentication
+// policies, and the deny and launcher experience it presents to users. The
+// Access policies governing the application are available through `policies`.
 private cloudflare.one.app @defaults("name id") {
 	// UUID
 	id string
@@ -665,14 +708,29 @@ private cloudflare.one.app @defaults("name id") {
 }
 
 // CORS headers
+//
+// Cross-Origin Resource Sharing settings applied by a Cloudflare Access
+// application. Reports which origins, HTTP methods, and request headers are
+// permitted on cross-origin requests, whether the browser may send
+// credentials, and how long a browser may cache a preflight response.
+// Auditing these settings surfaces permissive combinations (for example
+// allowAllOrigins together with allowCredentials) that weaken the
+// cross-origin protections around a protected application.
 private cloudflare.corsHeaders {
+	// Whether any request header is permitted, ignoring allowedHeaders
 	allowAllHeaders bool
+	// Whether any HTTP method is permitted, ignoring allowedMethods
 	allowAllMethods bool
+	// Whether any origin is permitted (the request Origin is reflected), ignoring allowedOrigins
 	allowAllOrigins bool
+	// Whether the browser may send credentials (cookies, TLS client certificates, HTTP auth) with cross-origin requests
 	allowCredentials bool
 
+	// Request headers permitted on cross-origin requests when allowAllHeaders is false
 	allowedHeaders []string
+	// HTTP methods permitted on cross-origin requests when allowAllMethods is false
 	allowedMethods []string
+	// Origins permitted to make cross-origin requests when allowAllOrigins is false
 	allowedOrigins []string
 
 	maxAge int // The maximum number of seconds the results of a preflight request can be cached.
@@ -939,6 +997,14 @@ private cloudflare.one.devicePostureIntegration @defaults("name type") {
 }
 
 // Cloudflare tunnel
+//
+// Cloudflare Tunnel connecting origin services to Cloudflare's edge over an
+// outbound-only connector, so private applications can be reached without
+// opening inbound firewall ports. Auditing tunnels surfaces their operational
+// health, whether their configuration is managed remotely from the Zero Trust
+// dashboard, and the active connector connections carrying traffic. The
+// `tunnelType` field distinguishes a cloudflared tunnel (cfd_tunnel) from a
+// WARP connector (warp_connector).
 private cloudflare.tunnel @defaults("name status") {
 	// Tunnel identifier
 	id string
@@ -946,9 +1012,18 @@ private cloudflare.tunnel @defaults("name status") {
 	name string
 	// Tunnel type (cfd_tunnel, warp_connector)
 	tunnelType string
-	// Tunnel status
+	// Tunnel health status
+	//
+	// One of inactive (no connections ever registered), degraded (fewer
+	// connections than expected for high availability), healthy (all
+	// connections established), or down (all connections lost).
 	status string
-	// Whether the tunnel uses remote configuration
+	// Whether the tunnel is configured remotely
+	//
+	// True when the tunnel's configuration is managed remotely from the Zero
+	// Trust dashboard rather than by a local cloudflared config file. Remotely
+	// managed tunnels have their ingress rules controlled through the Cloudflare
+	// API instead of on the connector host.
 	remoteConfig bool
 	// Time the tunnel was created
 	createdAt time
@@ -959,6 +1034,12 @@ private cloudflare.tunnel @defaults("name status") {
 }
 
 // Cloudflare tunnel connection
+//
+// Active connection between a tunnel's connector and a Cloudflare data center.
+// Each connection records which data center it terminates in (`coloName`),
+// the connector that established it (`clientId`), the connector software
+// version (`clientVersion`), and the origin IP the connector runs on, which
+// helps audit connector fleet health and detect outdated connector versions.
 private cloudflare.tunnel.connection @defaults("id coloName") {
 	// Connection identifier
 	id string
@@ -977,6 +1058,12 @@ private cloudflare.tunnel.connection @defaults("id coloName") {
 }
 
 // Cloudflare tunnel route
+//
+// Private network route that maps a CIDR range to a tunnel, defining which
+// internal IP ranges are reachable through the tunnel by Cloudflare WARP
+// clients. Reviewing routes shows how much of a private network each tunnel
+// exposes and which virtual network it belongs to, which matters for network
+// segmentation. The `network` field carries the routed CIDR block.
 private cloudflare.tunnel.route @defaults("network tunnelName") {
 	// CIDR network range
 	network string
@@ -995,6 +1082,12 @@ private cloudflare.tunnel.route @defaults("network tunnelName") {
 }
 
 // Cloudflare tunnel virtual network
+//
+// Virtual network used to segment tunnel routes, allowing overlapping private
+// CIDR ranges to coexist by isolating them into separate routing scopes. The
+// `isDefaultNetwork` field marks the virtual network that routes fall into
+// when no explicit virtual network is assigned. Select a virtual network by
+// name, for example `cloudflare.tunnel.virtualNetwork(name: "default")`.
 private cloudflare.tunnel.virtualNetwork @defaults("name") {
 	// Virtual network identifier
 	id string
@@ -1068,13 +1161,12 @@ private cloudflare.zone.pageRule @defaults("id status") {
 
 // Cloudflare load balancer
 //
-// Examine a Cloudflare load balancer — the traffic director that steers
-// requests for a hostname across one or more origin pools. Surfaces the
-// `steeringPolicy` that selects pools, the `proxied` and `enabled`
-// state, session affinity configuration, the typed `fallbackPool()`,
-// `defaultPools()`, and `pools()` pool references, and the
-// `regionPools`, `popPools`, and `countryPools` geo-steering maps of
-// pool IDs.
+// Traffic director that steers requests for a hostname across one or more
+// origin pools. The `steeringPolicy` selects which pool serves a request,
+// `proxied` and `enabled` give its serving state, and session affinity
+// configuration controls stickiness. The `fallbackPool`, `defaultPools`,
+// and `pools` references resolve the backing pools, while `regionPools`,
+// `popPools`, and `countryPools` hold the geo-steering maps of pool IDs.
 private cloudflare.zone.loadBalancer @defaults("name steeringPolicy enabled") {
 	// Load balancer identifier
 	id string
@@ -1116,14 +1208,14 @@ private cloudflare.zone.loadBalancer @defaults("name steeringPolicy enabled") {
 
 // Cloudflare load balancer pool
 //
-// Examine a load balancer pool — a named group of origin servers that
-// a load balancer steers traffic to. Surfaces the pool's `origins`
-// (each with its backend `address`, weight, and enabled state), the
-// health-check `monitorId` and `checkRegions`, the `minimumOrigins`
-// healthy-origin floor below which the pool is considered down, the
-// `notificationEmail` for health alerts, and the pool's geographic
-// coordinates. Pools are account-scoped and may be shared by several
-// load balancers.
+// Named group of origin servers that a load balancer steers traffic
+// to. The `origins` list gives each backend `address`, weight, and
+// enabled state; `monitorId` and `checkRegions` describe the health
+// checks; `minimumOrigins` is the healthy-origin floor below which the
+// pool is considered down; `notificationEmail` receives health alerts;
+// and `latitude`/`longitude` position the pool for proximity steering.
+// Pools are account-scoped and may be shared by several load
+// balancers.
 private cloudflare.loadBalancerPool @defaults("name enabled") {
 	// Pool identifier
 	id string
@@ -1170,6 +1262,14 @@ private cloudflare.zone.originCACertificate @defaults("id requestType") {
 }
 
 // Cloudflare mTLS certificate
+//
+// CA certificate uploaded to a Cloudflare account for mutual TLS
+// authentication, where Cloudflare validates the client certificate a
+// connecting device presents against the CA on file. Reviewing these
+// certificates surfaces which certificate authorities are trusted for
+// client authentication, whether any are self-signed (the ca flag),
+// and when each expires so an mTLS enforcement gap can be caught before
+// the certificate lapses.
 private cloudflare.mtlsCertificate @defaults("name id") {
 	// Certificate identifier
 	id string
@@ -1186,6 +1286,9 @@ private cloudflare.mtlsCertificate @defaults("name id") {
 	// Time the certificate was uploaded
 	uploadedOn time
 	// Time the certificate was last updated
+	//
+	// Always null. The Cloudflare API response for an mTLS certificate
+	// no longer carries a separate last-updated timestamp.
 	updatedAt time
 	// Time the certificate expires
 	expiresAt time
@@ -1262,6 +1365,10 @@ private cloudflare.zone.botManagement {
 }
 
 // Cloudflare account role
+//
+// Named permission role defined in a Cloudflare account. Roles group the
+// privileges that can be granted to account members. Query `name` and
+// `description` to review what each role confers during an access review.
 private cloudflare.account.role @defaults("name") {
 	// Role identifier
 	id string
@@ -1273,7 +1380,7 @@ private cloudflare.account.role @defaults("name") {
 
 // Cloudflare account member
 //
-// Examine a user (member) of a Cloudflare account: their identity (`email`,
+// User (member) of a Cloudflare account, exposing their identity (`email`,
 // `firstName`, `lastName`), enrollment `status` (`accepted`, `pending`,
 // `rejected`), whether `twoFactorAuthenticationEnabled` is on, and the
 // `roles` they hold. Use for access reviews ("who can administer this
@@ -1299,10 +1406,10 @@ private cloudflare.account.member @defaults("email status twoFactorAuthenticatio
 
 // Cloudflare audit log entry
 //
-// Examine a single change recorded in the Cloudflare account audit log:
+// Single change recorded in the Cloudflare account audit log:
 // when it happened, who performed it (`actorEmail`, `actorId`, `actorIp`,
-// `actorType` — `user` / `cloudflare_admin` / `account` etc.), what
-// resource it affected (`resourceType`, `resourceId`), and the action's
+// and `actorType`, one of `user`, `cloudflare_admin`, `account`, and others),
+// what resource it affected (`resourceType`, `resourceId`), and the action's
 // outcome (`actionType`, `actionResult`). `oldValue` and `newValue`
 // hold structured before/after data when the API returns it. Use for
 // change-detection assertions and to confirm sensitive actions are
@@ -1338,15 +1445,15 @@ private cloudflare.account.auditLog @defaults("when actorEmail actionType resour
 
 // Cloudflare notification policy
 //
-// Examine a single notification (alert) policy configured on a Cloudflare
+// Single notification (alert) policy configured on a Cloudflare
 // account: which `alertType` it subscribes to (for example
 // `dedicated_ssl_certificate_expiration_type`,
 // `universal_ssl_event_type`, `web_analytics_metrics_update`, `dos_attack_l7`),
 // whether it is `enabled`, how alerts are delivered via `mechanisms`
-// (email, PagerDuty, webhook integrations), and any `conditions` /
-// `filters` that narrow the firing criteria. Use to assert that critical
-// alerts (TLS expiry, DDoS, mTLS revocation, configuration changes) are
-// wired up to an active destination.
+// (email, PagerDuty, webhook integrations), and any `conditions` or
+// `filters` that narrow the firing criteria. Query it to assert that
+// critical alerts (TLS expiry, DDoS, mTLS revocation, configuration
+// changes) are wired up to an active destination.
 private cloudflare.notificationPolicy @defaults("name alertType enabled") {
 	// Policy identifier
 	id string
@@ -1358,7 +1465,11 @@ private cloudflare.notificationPolicy @defaults("name alertType enabled") {
 	enabled bool
 	// Alert type the policy subscribes to (see the Cloudflare Notifications API for the full enum)
 	alertType string
-	// Delivery destinations grouped by mechanism (`email`, `pagerduty`, `webhooks`) — each value is the list of configured integrations for that mechanism
+	// Delivery destinations grouped by mechanism
+	//
+	// Keyed by mechanism name (`email`, `pagerduty`, `webhooks`); each
+	// value is the list of configured integrations for that mechanism,
+	// where each integration is an object with `id` and `name`.
 	mechanisms dict
 	// Conditions further narrowing when the alert fires (shape depends on `alertType`)
 	conditions dict
@@ -1472,7 +1583,12 @@ private cloudflare.zone.emailRouting @defaults("enabled status") {
 	dmarcConfigured() bool
 }
 
-// Cloudflare workers script secret (metadata only — Cloudflare's API never returns secret values)
+// Cloudflare Workers script secret
+//
+// Secret binding attached to a Workers script, selected by script name and
+// secret name. Metadata only: the name and secret type are exposed, never the
+// value, since Cloudflare's API never returns secret values. Useful for
+// inventorying which secrets each script depends on.
 private cloudflare.workers.secret @defaults("scriptName name") {
 	// Worker script name
 	scriptName string
