@@ -2,6 +2,12 @@
 # SPDX-License-Identifier: BUSL-1.1
 
 stackit 13.0.0
+stackit.affinityGroup 13.4.2
+stackit.affinityGroup.id 13.4.2
+stackit.affinityGroup.name 13.4.2
+stackit.affinityGroup.policy 13.4.2
+stackit.affinityGroup.servers 13.4.2
+stackit.affinityGroups 13.4.2
 stackit.alb.customRule 13.4.2
 stackit.alb.customRule.action 13.4.2
 stackit.alb.customRule.conditions 13.4.2
@@ -57,6 +63,22 @@ stackit.alb.waf.managedRuleSetName 13.4.2
 stackit.alb.waf.name 13.4.2
 stackit.albLoadBalancers 13.0.1
 stackit.albWafs 13.4.2
+stackit.backup 13.4.2
+stackit.backup.availabilityZone 13.4.2
+stackit.backup.createdAt 13.4.2
+stackit.backup.description 13.4.2
+stackit.backup.encrypted 13.4.2
+stackit.backup.id 13.4.2
+stackit.backup.labels 13.4.2
+stackit.backup.name 13.4.2
+stackit.backup.size 13.4.2
+stackit.backup.snapshot 13.4.2
+stackit.backup.snapshotId 13.4.2
+stackit.backup.status 13.4.2
+stackit.backup.updatedAt 13.4.2
+stackit.backup.volume 13.4.2
+stackit.backup.volumeId 13.4.2
+stackit.backups 13.4.2
 stackit.certificate 13.0.1
 stackit.certificate.dnsNames 13.4.2
 stackit.certificate.extendedKeyUsage 13.4.2
@@ -508,6 +530,7 @@ stackit.server.powerStatus 13.0.0
 stackit.server.securityGroupIds 13.0.0
 stackit.server.securityGroups 13.0.0
 stackit.server.serviceAccountMails 13.0.0
+stackit.server.serviceAccounts 13.4.2
 stackit.server.status 13.0.0
 stackit.server.update 13.4.2
 stackit.server.update.endDate 13.4.2

@@ -224,6 +224,26 @@ func (r *mqlStackitServer) securityGroups() ([]any, error) {
 	return out, nil
 }
 
+// serviceAccounts resolves the service accounts attached to the server from
+// the mail addresses carried on the server object.
+func (r *mqlStackitServer) serviceAccounts() ([]any, error) {
+	out := make([]any, 0, len(r.ServiceAccountMails.Data))
+	for _, raw := range r.ServiceAccountMails.Data {
+		mail, ok := raw.(string)
+		if !ok || mail == "" {
+			continue
+		}
+		sa, err := NewResource(r.MqlRuntime, "stackit.serviceAccount", map[string]*llx.RawData{
+			"email": llx.StringData(mail),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, sa)
+	}
+	return out, nil
+}
+
 // ------------------------- volumes -------------------------
 
 func (r *mqlStackit) volumes() ([]any, error) {

@@ -31,6 +31,10 @@ stackit {
   volumes() []stackit.volume
   // Volume snapshots
   snapshots() []stackit.snapshot
+  // Volume backups
+  backups() []stackit.backup
+  // Server affinity and anti-affinity placement groups
+  affinityGroups() []stackit.affinityGroup
   // VM images
   images() []stackit.image
   // Project networks
@@ -168,8 +172,14 @@ private stackit.server @defaults("id name status machineType") {
   exposure() stackit.network.exposure
   // Service account mail addresses attached to the server
   serviceAccountMails []string
-  // Network interfaces: [{nicId, ipv4, ipv6, mac, networkId, securityGroups, allowedAddresses}]
-  nics []dict
+  // Service accounts attached to the server
+  serviceAccounts() []stackit.serviceAccount
+  // Network interface summaries
+  //
+  // Deprecated in favor of networkInterfaces, which exposes each interface
+  // as a resource with network and security-group references. Each entry
+  // has {nicId, ipv4, ipv6, mac, networkId, securityGroups, allowedAddresses}.
+  nics @maturity("deprecated") []dict
   // Network interfaces attached to the server
   networkInterfaces() []stackit.nic
   // Point-in-time backups taken from the server by the Server Backup service
@@ -265,6 +275,63 @@ private stackit.snapshot @defaults("id name status") {
   updatedAt time
   // User-defined labels
   labels map[string]string
+}
+
+// STACKIT volume backup
+//
+// Backup of a volume in the project, keyed by its UUID id. Exposes the
+// status, size, availability zone, encryption flag, the source volume and
+// snapshot, and timestamps. This is the compute-service backup resource;
+// backups managed by the Server Backup service are reached through a
+// server's backups instead.
+private stackit.backup @defaults("id name status size") {
+  init(id? string)
+  // Backup UUID
+  id string
+  // Backup name
+  name string
+  // Description
+  description string
+  // Backup status
+  status string
+  // Size in GiB
+  size int
+  // Availability zone
+  availabilityZone string
+  // Whether the backup is encrypted at rest
+  encrypted bool
+  // Source volume UUID (empty if not volume-based)
+  volumeId string
+  // Source volume (nullable)
+  volume() stackit.volume
+  // Source snapshot UUID (empty if not snapshot-based)
+  snapshotId string
+  // Source snapshot (nullable)
+  snapshot() stackit.snapshot
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // User-defined labels
+  labels map[string]string
+}
+
+// STACKIT affinity group
+//
+// Server placement group that keeps its member servers on the same
+// underlying host (affinity) or spreads them across different hosts
+// (anti-affinity). The group is keyed by its UUID id and exposes the
+// placement policy and the member servers.
+private stackit.affinityGroup @defaults("id name policy") {
+  init(id? string)
+  // Affinity group UUID
+  id string
+  // Group name
+  name string
+  // Placement policy (for example hard-affinity, soft-affinity, hard-anti-affinity, soft-anti-affinity)
+  policy string
+  // Member servers
+  servers() []stackit.server
 }
 
 // STACKIT compute image
