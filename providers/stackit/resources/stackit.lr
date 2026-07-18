@@ -6,20 +6,19 @@ option go_package = "go.mondoo.com/mql/v13/providers/stackit/resources"
 
 // STACKIT project
 //
-// Use the STACKIT namespace as the project-scoped entry point for the
-// stackit provider. Read `project` for the project's metadata
-// (parent organization, lifecycle state, labels) and `region` for the
-// region the connection targets. Iterate `servers()`, `volumes()`,
-// `snapshots()`, `images()`, `networks()`, `publicIps()`,
-// `securityGroups()`, and `keyPairs()` for the IaaS layer;
-// `ske.clusters()` for managed Kubernetes; `objectStorage.buckets()`
-// for S3-compatible storage; `dns.zones()` for managed DNS;
-// `loadBalancers()` for the L4/L7 load balancers; the `postgresFlex`,
-// `mongoDbFlex`, `openSearch`, `mariaDb`, `redis`, and `rabbitMq`
-// namespaces for managed databases; `secretsManager.instances()` for
-// the secrets-vault service; `observability.instances()` for the
-// managed Prometheus/Alertmanager stack; and `serviceAccounts()` for
-// project service accounts.
+// Project-scoped entry point for the stackit provider, covering the
+// full estate of a single STACKIT project. The `project` field carries
+// the project's metadata (parent organization, lifecycle state, labels)
+// and `region` reports the region the connection targets. From here you
+// can reach the IaaS layer (compute servers, block storage volumes,
+// snapshots, backups, images, networks, public IPs, security groups,
+// SSH key pairs), managed Kubernetes through `ske`, S3-compatible object
+// storage, managed NFS file storage, managed DNS, load balancers, the
+// managed database namespaces (Postgres Flex, MongoDB Flex, SQLServer
+// Flex, OpenSearch, MariaDB, Redis, RabbitMQ, LogMe), the secrets vault,
+// the managed Prometheus/Alertmanager stack, key management, project
+// IAM bindings, and service accounts. Use it to audit what a project
+// exposes and how its resources are configured.
 stackit {
   // STACKIT project the connection is scoped to
   project() stackit.project
@@ -97,11 +96,13 @@ stackit {
 
 // STACKIT project metadata
 //
-// Examine the project the connection is scoped to. Includes the
-// container ID and the human-readable name (`name`), the parent
-// container ID, the lifecycle state (`ACTIVE`, `CREATING`, `DELETING`),
-// the creation timestamp, and the user-defined labels attached to the
-// project.
+// Metadata for the project the connection is scoped to. Projects are
+// the container that owns STACKIT resources, so this record identifies
+// which project a scan ran against and its administrative state. The
+// `id` is the project container ID, `parent` is the owning organization
+// or folder container, and `lifecycleState` (one of CREATING, ACTIVE,
+// DELETING, INACTIVE) tells you whether the project is usable or being
+// torn down. The `labels` map holds user-defined key/value tags.
 private stackit.project @defaults("id name lifecycleState") {
   // Project container ID (UUID)
   id string
@@ -119,13 +120,15 @@ private stackit.project @defaults("id name lifecycleState") {
 
 // STACKIT compute server
 //
-// Examine a single virtual machine. The server is keyed by its UUID
-// `id` — for example `stackit.server(id: "fa1d2…")` — and exposes the
-// `name`, `status` and `powerStatus`, machine type, availability zone,
-// whether a virtual TPM is attached, labels and metadata, attached
-// `volumes()` and `securityGroups()`, network interfaces (`nics`),
-// referenced `image()` and `keyPair()`, associated service account
-// mails, and timestamps for creation, launch, and last update.
+// Single virtual machine in a STACKIT project, keyed by its UUID `id`
+// (for example `stackit.server(id: "fa1d2...")`). Central to auditing a
+// project's compute posture: the attached volumes and their encryption
+// state, the security groups and network interfaces that govern who can
+// reach the instance, whether a virtual TPM backs measured boot, the
+// image and SSH key pair it booted from, and the service accounts,
+// backups, and operating-system update runs bound to it. The exposure
+// breakdown pairs a public IP with security group ingress to flag
+// servers reachable from the internet.
 private stackit.server @defaults("id name status machineType") {
   init(id? string)
   // Server UUID
@@ -181,7 +184,8 @@ private stackit.server @defaults("id name status machineType") {
   //
   // Deprecated in favor of networkInterfaces, which exposes each interface
   // as a resource with network and security-group references. Each entry
-  // has {nicId, ipv4, ipv6, mac, networkId, securityGroups, allowedAddresses}.
+  // has {nicId, networkId, networkName, ipv4, ipv6, mac, securityGroups,
+  // allowedAddresses, publicIp, nicSecurity}.
   nics @maturity("deprecated") []dict
   // Network interfaces attached to the server
   networkInterfaces() []stackit.nic
@@ -203,10 +207,12 @@ private stackit.server @defaults("id name status machineType") {
 
 // STACKIT block storage volume
 //
-// Examine a single block volume. The volume is keyed by its UUID `id`
-// and exposes the `name`, `size` (GiB), `status`, availability zone,
-// performance class, source image and snapshot IDs, server attachment
-// info, encryption status, and the user-defined labels.
+// Block storage volume that backs compute instances, keyed by its UUID
+// `id` (for example `stackit.volume(id: "...")`). Reports the volume's
+// size in GiB, lifecycle status, and availability zone, whether it is
+// encrypted at rest and which key-encryption key wraps its data key, the
+// image or snapshot it was created from, and the server it is attached
+// to. Use it to audit unattached, unencrypted, or oversized volumes.
 private stackit.volume @defaults("id name size status") {
   init(id? string)
   // Volume UUID
@@ -253,9 +259,11 @@ private stackit.volume @defaults("id name size status") {
 
 // STACKIT volume snapshot
 //
-// Examine a single volume snapshot. The snapshot is keyed by its UUID
-// `id` and exposes the `name`, `size`, `status`, availability zone,
-// source volume, and creation timestamp.
+// Point-in-time copy of a block-storage volume in the project, keyed by
+// its UUID `id` (for example `stackit.snapshot(id: "...")`). Snapshots
+// capture volume contents for backup, restore, and cloning, so the
+// `status` and the source `volume` are the fields to check when auditing
+// data-protection coverage.
 private stackit.snapshot @defaults("id name status") {
   init(id? string)
   // Snapshot UUID
@@ -296,6 +304,8 @@ private stackit.backup @defaults("id name status size") {
   // Description
   description string
   // Backup status
+  //
+  // One of AVAILABLE, CREATING, DELETED, DELETING, ERROR, or RESTORING.
   status string
   // Size in GiB
   size int
@@ -335,10 +345,13 @@ private stackit.affinityGroup @defaults("id name policy") {
 
 // STACKIT compute image
 //
-// Examine a single VM image. The image is keyed by its UUID `id` and
-// exposes the `name`, `disk_format`, `min_disk_size`, `min_ram`, the
-// underlying `scope` (public, private), checksum, owner, status, and
-// configuration block (boot mode, OS family, OS version, …).
+// Bootable VM image available in a project, either a public image
+// provided by STACKIT or a private image owned by the project. The
+// image is keyed by its UUID, for example
+// stackit.image(id: "a1b2c3d4-..."). Query the disk format, minimum
+// disk and RAM requirements, protection flag, scope, and the
+// operating-system configuration to audit which base images the
+// project's servers and volumes are built from.
 private stackit.image @defaults("id name status diskFormat") {
   init(id? string)
   // Image UUID
@@ -359,9 +372,17 @@ private stackit.image @defaults("id name status diskFormat") {
   owner string
   // Image scope (public, private)
   scope string
-  // Image checksum [{algorithm, digest}]
+  // Image checksum
+  //
+  // Content checksum with keys `algorithm` (the hash algorithm, for
+  // example md5 or sha512) and `digest` (the hex checksum value).
   checksum dict
-  // Image config (OS family, OS version, boot mode, secure boot, …)
+  // Image configuration
+  //
+  // Boot and hardware settings with keys `bootMenu`, `cdromBus`,
+  // `diskBus`, `nicModel`, `operatingSystem`, `operatingSystemDistro`,
+  // `operatingSystemVersion`, `rescueBus`, `rescueDevice`,
+  // `secureBoot`, `uefi`, `videoModel`, and `virtioScsi`.
   config dict
   // Creation timestamp
   createdAt time
@@ -373,9 +394,12 @@ private stackit.image @defaults("id name status diskFormat") {
 
 // STACKIT project network
 //
-// Examine a single network. The network is keyed by its UUID `id` and
-// exposes the `name`, IPv4/IPv6 CIDR ranges and gateways, name servers,
-// routing flags (`routed`), and the user-defined labels.
+// Network within a STACKIT project, keyed by its UUID `id`, for example
+// `stackit.network(id: "...")`. The `routed` flag distinguishes a routed
+// network reachable beyond the project from an isolated one, which is the
+// first thing to check when reasoning about whether workloads on the network
+// can be reached from outside the project. IPv4 and IPv6 prefixes, gateways,
+// and name servers describe its addressing.
 private stackit.network @defaults("id name routed") {
   init(id? string)
   // Network UUID
@@ -435,6 +459,8 @@ private stackit.nic @defaults("id ipv4 mac status") {
   // Device identifier presented to the guest operating system
   device string
   // Interface type
+  //
+  // One of `server`, `metadata`, `gateway`, or `none`.
   nicType string
   // Whether NIC-level security filtering with security groups is active
   nicSecurity bool
@@ -445,6 +471,8 @@ private stackit.nic @defaults("id ipv4 mac status") {
   // Additional address pairs the interface may send from and receive on
   allowedAddresses []string
   // Interface status
+  //
+  // One of `ACTIVE` or `DOWN`.
   status string
   // User-defined labels
   labels map[string]string
@@ -452,9 +480,12 @@ private stackit.nic @defaults("id ipv4 mac status") {
 
 // STACKIT public IP address
 //
-// Examine a single floating/public IP. The IP is keyed by its UUID
-// `id` and exposes the `ip` address, network interface it is bound to
-// (if any), assigned resource ID, and user-defined labels.
+// Floating public IP that can be attached to a network interface to
+// expose a resource to the internet, useful for auditing which
+// addresses are externally routable and whether they are currently
+// bound to anything. The IP is keyed by its UUID, for example
+// `stackit.publicIp(id: "...")`. The `networkInterfaceId` field is
+// empty when the address is allocated but unassigned.
 private stackit.publicIp @defaults("id ip") {
   init(id? string)
   // Public IP UUID
@@ -469,9 +500,13 @@ private stackit.publicIp @defaults("id ip") {
 
 // STACKIT security group
 //
-// Examine a single security group. The group is keyed by its UUID
-// `id` and exposes the `name`, `description`, whether it is stateful,
-// the user-defined labels, and the ingress/egress rule list.
+// Firewall rule set that governs which inbound and outbound traffic
+// reaches the servers and network interfaces it is attached to.
+// Auditing a security group reveals its exposure surface: overly
+// permissive rules, whether it is stateful (return traffic for an
+// allowed connection is admitted automatically), and its ingress and
+// egress rules through `rules`. Selected by its UUID `id`, for example
+// `stackit.securityGroup(id: "9f8e7d6c-...")`.
 private stackit.securityGroup @defaults("id name stateful") {
   init(id? string)
   // Security group UUID
@@ -494,10 +529,13 @@ private stackit.securityGroup @defaults("id name stateful") {
 
 // STACKIT security group rule
 //
-// Examine a single rule attached to a security group. Each rule is
-// keyed by its UUID `id` (unique within the security group) and
-// exposes the direction, ethertype, protocol, port range, ICMP code
-// and type, remote CIDR, and remote security-group reference.
+// Single ingress or egress rule within a security group, defining
+// which traffic the group permits. Auditing rules surfaces overly
+// permissive access, for example an ingress rule whose `ipRange` is
+// `0.0.0.0/0` or `::/0`. The remote endpoint is either an IP CIDR
+// (`ipRange`) or another security group (`remoteSecurityGroupId`); one
+// is set and the other empty. Keyed by its UUID `id`, unique within
+// the owning security group.
 private stackit.securityGroup.rule @defaults("id direction protocol") {
   // Rule UUID
   id string
@@ -529,9 +567,10 @@ private stackit.securityGroup.rule @defaults("id direction protocol") {
 
 // Server internet-exposure breakdown
 //
-// Explains whether a server is reachable from the internet: whether one of its
-// network interfaces has a public IP and whether an attached security group
-// admits inbound traffic from any address.
+// Internet-reachability assessment for a server: whether one of its network
+// interfaces carries a public IP and whether an attached security group admits
+// inbound traffic from any address. A server counts as internet-reachable only
+// when both hold, so this surfaces the servers most exposed to external attack.
 private stackit.network.exposure @defaults("internetReachable hasPublicIp") {
   // Whether the server is reachable from the internet (a public IP and a security group ingress rule that admits any address)
   internetReachable bool
@@ -678,9 +717,12 @@ private stackit.server.updateSchedule @defaults("id name enabled") {
 
 // STACKIT SSH key pair
 //
-// Examine a single SSH key pair available in the project. The pair is
-// keyed by `name` and exposes the public key, fingerprint, and the
-// user-defined labels.
+// SSH key pair registered in the project and used to grant login
+// access when provisioning servers. The pair is keyed by `name`, for
+// example `stackit.keyPair(name: "admin-key")`, and exposes the public
+// key material, its SHA256 fingerprint, and user-defined labels.
+// Auditing key pairs helps confirm which public keys can be injected
+// into new instances.
 private stackit.keyPair @defaults("name fingerprint") {
   init(name? string)
   // Key pair name (primary identifier)
@@ -699,11 +741,15 @@ private stackit.keyPair @defaults("name fingerprint") {
 
 // STACKIT load balancer
 //
-// Examine a single load balancer. The balancer is keyed by its `name`
-// (unique within the project+region) and exposes the external public
-// IP, target pools, listeners, ACL CIDRs, networks, options
-// (including TLS settings and access logs), status, and creation
-// errors.
+// Layer 4 (TCP/UDP) load balancer that distributes traffic across a
+// backend target pool. The balancer is keyed by its `name` (unique
+// within the project and region), for example
+// `stackit.loadBalancer(name: "my-lb")`. Query it to audit the public
+// reachability of a service: the external address, the listener port
+// and protocol bindings, the access-control allow-list carried in
+// `options`, and whether the balancer is confined to the private
+// network. The `exposure` field gives the combined public-address and
+// allow-list verdict.
 private stackit.loadBalancer @defaults("name status externalAddress") {
   init(name? string)
   // Load balancer name
@@ -724,7 +770,14 @@ private stackit.loadBalancer @defaults("name status externalAddress") {
   networks []dict
   // Target pools — backend groups with their health checks and members
   targetPools() []stackit.loadBalancer.targetPool
-  // Options (ACL, access log, observability, private network only, error logs)
+  // Load balancer options
+  //
+  // Keys: `accessControl` ({allowedSourceRanges []string}, the CIDR
+  // allow-list for inbound traffic), `ephemeralAddress` (bool, whether
+  // a managed public IP is attached), `observability` ({logs, metrics},
+  // each {credentialsRef, pushUrl} for external log and metric push),
+  // and `privateNetworkOnly` (bool, mirrored by the privateNetworkOnly
+  // field).
   options dict
   // Errors reported during creation/operation [{type, description}]
   errors []dict
@@ -734,9 +787,12 @@ private stackit.loadBalancer @defaults("name status externalAddress") {
 
 // STACKIT load balancer listener
 //
-// Examine a single listener — a frontend port/protocol binding that
-// routes traffic into one target pool. Listeners are keyed by the
-// parent load-balancer name and listener `name`/displayName.
+// Frontend port and protocol binding that accepts client connections
+// and forwards them into a single target pool. Each listener records
+// the bound `port`, the wire `protocol`, and the SNI hostnames it
+// matches for TLS, making it the place to audit which ports a load
+// balancer exposes. Listeners are keyed by the parent load-balancer
+// name together with the listener `name`.
 private stackit.loadBalancer.listener @defaults("name port protocol targetPool") {
   // Listener machine name (parent-unique key)
   name string
@@ -746,23 +802,35 @@ private stackit.loadBalancer.listener @defaults("name port protocol targetPool")
   loadBalancerName string
   // Frontend port the listener binds
   port int
-  // Wire protocol (PROTOCOL_TCP, PROTOCOL_UDP, PROTOCOL_TCP_PROXY, …)
+  // Wire protocol
+  //
+  // One of PROTOCOL_TCP, PROTOCOL_UDP, PROTOCOL_TCP_PROXY,
+  // PROTOCOL_TLS_PASSTHROUGH, or PROTOCOL_UNSPECIFIED.
   protocol string
   // Name of the targetPool this listener forwards to
   targetPool string
   // SNI hostnames matched by this listener (TLS only)
   serverNameIndicators []string
-  // TCP-specific options ({idleTimeout, …})
+  // TCP listener options
+  //
+  // Single key `idleTimeout` (duration) after which an idle TCP
+  // connection is closed. Empty for non-TCP listeners.
   tcp dict
-  // UDP-specific options
+  // UDP listener options
+  //
+  // Single key `idleTimeout` (duration) after which an idle UDP flow
+  // is dropped. Empty for non-UDP listeners.
   udp dict
 }
 
 // STACKIT load balancer target pool
 //
-// Examine a single backend group. Each target pool holds one or more
-// targets (member IPs and ports) plus the active health check and
-// session-persistence policy used to route requests across them.
+// Backend group that a listener forwards traffic to. Each target pool
+// holds one or more targets (member IP addresses reachable on
+// `targetPort`) plus the active health check and session-persistence
+// policy used to distribute requests across them. Target pools are
+// keyed by the parent load-balancer name together with the pool
+// `name`.
 private stackit.loadBalancer.targetPool @defaults("name targetPort") {
   // Target pool name (parent-unique key)
   name string
@@ -770,19 +838,32 @@ private stackit.loadBalancer.targetPool @defaults("name targetPort") {
   loadBalancerName string
   // Backend port the pool forwards to
   targetPort int
-  // Targets [{displayName, ip}] — member backends
+  // Member backends
+  //
+  // Each entry is {displayName, ip}: the backend's label and the IP
+  // address the pool forwards requests to.
   targets []dict
-  // Active health-check config {interval, intervalJitter, timeout, healthyThreshold, unhealthyThreshold}
+  // Active health check
+  //
+  // Keys: `interval` and `intervalJitter` (probe timing), `timeout`
+  // (per-probe deadline), `healthyThreshold` and `unhealthyThreshold`
+  // (consecutive results before a target flips state), `altPort` (an
+  // alternate probe port), and `httpHealthChecks` (HTTP-level probe
+  // settings).
   activeHealthCheck dict
-  // Session-persistence settings (cookie, source-IP, none)
+  // Session persistence
+  //
+  // Single key `useSourceIpAddress` (bool): when true, requests from
+  // the same client source IP are pinned to the same target.
   sessionPersistence dict
 }
 
 // STACKIT Kubernetes Engine namespace
 //
-// Use the SKE namespace to enumerate managed Kubernetes clusters in
-// the project via `clusters()`. Individual clusters are exposed as
-// stackit.ske.cluster records.
+// Managed Kubernetes clusters running in the project. The `clusters`
+// field enumerates every SKE cluster as a stackit.ske.cluster record,
+// each carrying its Kubernetes version, node pools, network binding,
+// and security configuration.
 stackit.ske {
   // Managed Kubernetes clusters
   clusters() []stackit.ske.cluster
@@ -790,13 +871,12 @@ stackit.ske {
 
 // STACKIT managed Kubernetes (SKE) cluster
 //
-// Examine a single managed Kubernetes cluster. The cluster is keyed
-// by its `name` (unique within the project+region) and exposes the
-// `status` (aggregated lifecycle), the Kubernetes version, the node
-// pools (with their flavor, OS, taints, autoscaling, labels), the
-// hibernation and maintenance windows, network and DNS overrides,
-// extensions (ACL, argus observability), and the creation/update
-// timestamps.
+// Single managed Kubernetes cluster, keyed by its `name` (unique within
+// the project and region). Exposes the `status` (aggregated lifecycle),
+// the Kubernetes version, the node pools (with their flavor, OS, taints,
+// autoscaling, labels), the hibernation and maintenance windows, network
+// and DNS overrides, extensions (ACL, observability), and the creation
+// and update timestamps.
 private stackit.ske.cluster @defaults("name kubernetesVersion status") {
   init(name? string)
   // Cluster name
@@ -809,13 +889,18 @@ private stackit.ske.cluster @defaults("name kubernetesVersion status") {
   statusDetails dict
   // Kubernetes minor version (e.g., 1.30)
   kubernetesVersion string
-  // Node pools — one stackit.ske.cluster.nodePool per pool
+  // Node pools, one stackit.ske.cluster.nodePool per pool
   nodePools() []stackit.ske.cluster.nodePool
   // Hibernation schedules [{start, end, timezone}]
   hibernations []dict
   // Maintenance window {timeWindow, autoUpdate: {kubernetesVersion, machineImageVersion}}
   maintenance dict
-  // Extensions (acl, argus, dns) — observability/network add-ons
+  // Extension add-ons keyed by acl, observability, and dns
+  //
+  // Dict of the cluster's enabled add-ons. The `acl` key holds the
+  // kube-apiserver access ACL (enabled, allowedCidrs); `observability`
+  // holds the metrics and logs integration (enabled, instanceId); `dns`
+  // holds the managed-DNS extension (enabled, gatewayApi, zones).
   extensions dict
   // Network association: the STACKIT network id and control-plane access scope
   network dict
@@ -859,9 +944,9 @@ private stackit.ske.cluster @defaults("name kubernetesVersion status") {
 
 // SKE node pool
 //
-// Examine a single node pool within a managed-Kubernetes cluster. The
-// pool is keyed by `clusterName/name` and exposes the machine type and
-// image, volume size/type, node-count bounds and rolling-update budget
+// Single node pool within a managed-Kubernetes cluster, keyed by
+// `clusterName/name`. Exposes the machine type and image, volume
+// size and type, node-count bounds and rolling-update budget
 // (maxSurge/maxUnavailable), the worker availability zones, container
 // runtime, taints, labels, and whether the cluster's system components
 // are allowed to schedule onto the pool.
@@ -904,9 +989,11 @@ private stackit.ske.cluster.nodePool @defaults("name machineType minimum maximum
 
 // STACKIT Object Storage namespace
 //
-// Use the object-storage namespace to enumerate S3-compatible buckets
-// in the project via `buckets()`. Individual buckets are exposed as
-// stackit.objectStorage.bucket records.
+// S3-compatible object storage in a STACKIT project. The namespace
+// enumerates the project's buckets and the credentials groups that
+// hold S3 access keys, so you can audit bucket exposure, retention
+// settings, and which credentials can reach them. Individual buckets
+// are exposed as stackit.objectStorage.bucket records.
 stackit.objectStorage {
   // Object Storage buckets
   buckets() []stackit.objectStorage.bucket
@@ -950,9 +1037,12 @@ private stackit.objectStorage.accessKey @defaults("keyId displayName expires") {
 
 // STACKIT Object Storage bucket
 //
-// Examine a single bucket. The bucket is keyed by its `name` (unique
-// within the project+region) and exposes the S3 region, the public
-// and S3-style URLs, and the bucket status.
+// Single S3-compatible bucket in a STACKIT project. The bucket is keyed
+// by its `name`, which is unique within the project and region (for
+// example `stackit.objectStorage.bucket(name: "my-bucket")`), and
+// exposes the S3 region, the virtual-hosted and path-style access URLs,
+// and the Object Lock (WORM) retention settings that govern how long
+// objects cannot be deleted or overwritten.
 private stackit.objectStorage.bucket @defaults("name region urlPathStyle") {
   init(name? string)
   // Bucket name (primary identifier)
@@ -973,11 +1063,11 @@ private stackit.objectStorage.bucket @defaults("name region urlPathStyle") {
 
 // STACKIT File Storage namespace
 //
-// Use the SFS (STACKIT File Storage) namespace to enumerate managed NFS
-// storage in the project: the `resourcePools()` that provide capacity,
-// the `exportPolicies()` that govern NFS client access, and the
-// SnapLock project lock (`lockId`). Individual file shares and pool
-// snapshots hang off each resource pool.
+// SFS (STACKIT File Storage) namespace for managed NFS storage in the
+// project: the `resourcePools` that provide capacity, the
+// `exportPolicies` that govern NFS client access, and the SnapLock
+// project lock (`lockId`). Individual file shares and pool snapshots
+// hang off each resource pool.
 stackit.sfs {
   // File-storage resource pools (capacity pools) in the project
   resourcePools() []stackit.sfs.resourcePool
@@ -989,15 +1079,15 @@ stackit.sfs {
 
 // STACKIT File Storage resource pool
 //
-// Examine a single SFS capacity pool. The pool is keyed by its UUID
-// `id` — for example `stackit.sfs.resourcePool(id: "fa1d2…")` — and
-// exposes the `name`, lifecycle `state`, `performanceClass` (with peak
-// IOPS and throughput), availability zone, NFS `mountPath`, the
-// `ipAcl` of CIDRs allowed to mount, capacity accounting in gigabytes
+// Single SFS capacity pool. The pool is keyed by its UUID `id`, for
+// example `stackit.sfs.resourcePool(id: "fa1d2…")`, and exposes the
+// `name`, lifecycle `state`, `performanceClass` (with peak IOPS and
+// throughput), availability zone, NFS `mountPath`, the `ipAcl` of
+// CIDRs allowed to mount, capacity accounting in gigabytes
 // (`sizeGigabytes`, `usedGigabytes`, `availableGigabytes`,
 // `usedBySnapshotsGigabytes`), the attached snapshot policy, labels,
 // and creation time. The shares hosted in the pool are available
-// through `shares()` and point-in-time copies through `snapshots()`.
+// through `shares` and point-in-time copies through `snapshots`.
 private stackit.sfs.resourcePool @defaults("id name state performanceClass") {
   init(id? string)
   // Resource pool UUID
@@ -1048,12 +1138,12 @@ private stackit.sfs.resourcePool @defaults("id name state performanceClass") {
 
 // STACKIT File Storage share
 //
-// Examine a single NFS file share within a resource pool. The share is
-// keyed by its UUID `id` and exposes the `name`, lifecycle `state`, the
-// NFS `mountPath` clients use, the per-share hard quota
+// Single NFS file share within a resource pool. The share is keyed by
+// its UUID `id` and exposes the `name`, lifecycle `state`, the NFS
+// `mountPath` clients use, the per-share hard quota
 // (`spaceHardLimitGigabytes`), labels, and creation time. The NFS
-// export rules governing client access are available through the typed
-// `exportPolicy()` accessor.
+// export rules governing client access are available through the
+// `exportPolicy` accessor.
 private stackit.sfs.share @defaults("id name state") {
   // Share UUID
   id string
@@ -1075,12 +1165,12 @@ private stackit.sfs.share @defaults("id name state") {
 
 // STACKIT File Storage share export policy
 //
-// Examine a single NFS export policy — the rule set that controls which
-// clients may mount shares and with what access. The policy is keyed by
-// its UUID `id` — for example `stackit.sfs.exportPolicy(id: "fa1d2…")` —
-// and exposes the `name`, the count of shares referencing it
+// Single NFS export policy, the rule set that controls which clients
+// may mount shares and with what access. The policy is keyed by its
+// UUID `id`, for example `stackit.sfs.exportPolicy(id: "fa1d2…")`, and
+// exposes the `name`, the count of shares referencing it
 // (`sharesUsingExportPolicy`), labels, creation time, and the ordered
-// list of `rules()`.
+// list of `rules`.
 private stackit.sfs.exportPolicy @defaults("id name sharesUsingExportPolicy") {
   init(id? string)
   // Export policy UUID
@@ -1099,10 +1189,9 @@ private stackit.sfs.exportPolicy @defaults("id name sharesUsingExportPolicy") {
 
 // STACKIT File Storage export policy rule
 //
-// Examine a single NFS export rule within an export policy. Each rule
-// grants the CIDRs in `ipAcl` access at the given evaluation `order`,
-// keyed by its UUID `id`, with an optional `description` and creation
-// time.
+// Single NFS export rule within an export policy. Each rule grants the
+// CIDRs in `ipAcl` access at the given evaluation `order`, keyed by its
+// UUID `id`, with an optional `description` and creation time.
 private stackit.sfs.exportPolicy.rule @defaults("order ipAcl") {
   // Rule UUID
   id string
@@ -1118,11 +1207,11 @@ private stackit.sfs.exportPolicy.rule @defaults("order ipAcl") {
 
 // STACKIT File Storage resource pool snapshot
 //
-// Examine a single point-in-time snapshot of a resource pool. The
-// snapshot is selected by its `name` within the pool and exposes the
-// logical and physical sizes in gigabytes (`logicalSizeGigabytes`,
-// `sizeGigabytes`), an optional `comment`, the SnapLock expiry time
-// (`snaplockExpiryTime`, when WORM-protected), and the creation time.
+// Point-in-time snapshot of a resource pool. The snapshot is selected
+// by its `name` within the pool and exposes the logical and physical
+// sizes in gigabytes (`logicalSizeGigabytes`, `sizeGigabytes`), an
+// optional `comment`, the SnapLock expiry time (`snaplockExpiryTime`,
+// when WORM-protected), and the creation time.
 private stackit.sfs.snapshot @defaults("name sizeGigabytes createdAt") {
   // Snapshot name (unique within the pool)
   name string
@@ -1140,9 +1229,10 @@ private stackit.sfs.snapshot @defaults("name sizeGigabytes createdAt") {
 
 // STACKIT DNS namespace
 //
-// Use the DNS namespace to enumerate managed DNS zones in the project
-// via `zones()`. Zones expose their record sets through the
-// `recordSets()` field on each stackit.dns.zone.
+// Managed DNS zones in the project and the record sets within them.
+// Query zones to audit which domains the project is authoritative for,
+// their public or private visibility, and TTL hygiene; each zone in
+// turn exposes its record sets for inspecting individual DNS answers.
 stackit.dns {
   // DNS zones managed by the project
   zones() []stackit.dns.zone
@@ -1150,11 +1240,12 @@ stackit.dns {
 
 // STACKIT DNS zone
 //
-// Examine a single managed DNS zone. The zone is keyed by its UUID
-// `id` and exposes the `dnsName`, type (primary / secondary), default
-// TTL, refresh / retry / expire / negative-cache, the authoritative
-// SOA contact email, record counts, state, ACL, primary servers (for
-// secondary zones), and the user-defined labels.
+// Managed DNS zone within the project, keyed by its UUID `id`. Covers
+// the domain name, primary or secondary type, public or private
+// visibility, SOA timing (refresh, retry, expire, negative cache), the
+// query ACL, and lifecycle state. Query zones to audit which domains
+// the project is authoritative for and whether their records are
+// reachable publicly.
 private stackit.dns.zone @defaults("id dnsName type state") {
   init(id? string)
   // Zone UUID
@@ -1205,10 +1296,12 @@ private stackit.dns.zone @defaults("id dnsName type state") {
 
 // STACKIT DNS record set
 //
-// Examine a single RRSet within a DNS zone. The record set is keyed
-// by its UUID `id` and exposes the owning zone, the `name`, `type`
-// (A, AAAA, CNAME, MX, TXT, NS, SRV, …), TTL, lifecycle state, and
-// the list of record values.
+// Resource record set (RRSet) within a DNS zone, keyed by its UUID
+// `id`. Groups every record of one `type` (A, AAAA, CNAME, MX, TXT,
+// NS, SRV, and so on) under a single `name`, along with the record
+// values, TTL, and lifecycle state. Query record sets to inspect the
+// actual DNS answers a zone serves, for example CNAME targets, MX
+// hosts, or TXT verification and SPF values.
 private stackit.dns.recordSet @defaults("name type state") {
   // Record set UUID
   id string
@@ -1240,8 +1333,10 @@ private stackit.dns.recordSet @defaults("name type state") {
 
 // STACKIT Postgres Flex namespace
 //
-// Use the Postgres-Flex namespace to enumerate managed PostgreSQL
-// instances in the project via `instances()`.
+// Managed PostgreSQL service for a STACKIT project. The `instances`
+// field lists every Postgres Flex database provisioned in the project,
+// each inspectable for engine version, connection ACL, backup schedule,
+// storage sizing, and replica count.
 stackit.postgresFlex {
   // Postgres Flex instances
   instances() []stackit.postgresFlex.instance
@@ -1249,10 +1344,12 @@ stackit.postgresFlex {
 
 // STACKIT Postgres Flex managed database instance
 //
-// Examine a single managed PostgreSQL instance. The instance is keyed
-// by its UUID `id` and exposes the `name`, `version`, status, flavor
-// (`acl`, replicas, backup schedule, storage), region, and the
-// configured options.
+// Single managed PostgreSQL instance, selected by its UUID `id` (for
+// example `stackit.postgresFlex.instance(id: "...")`). Surfaces the
+// engine version, connection ACL, backup schedule, storage sizing,
+// replica count, and operator options, so audits can check whether a
+// database is reachable from the internet, adequately backed up, or
+// running a supported PostgreSQL release.
 private stackit.postgresFlex.instance @defaults("id name version status") {
   init(id? string)
   // Instance UUID
@@ -1263,19 +1360,25 @@ private stackit.postgresFlex.instance @defaults("id name version status") {
   status string
   // Region the instance runs in
   region string
-  // Postgres major version (lazy-loaded from the detail API)
+  // Postgres major version
   version() string
-  // Flavor info {id, cpu, memory, description} (lazy-loaded from the detail API)
+  // Compute flavor
+  //
+  // Machine sizing for the instance. Keys: `id` (flavor identifier),
+  // `cpu` (vCPU count), `memory` (RAM in GB), and `description`.
   flavor() dict
-  // ACL CIDRs allowed to connect (lazy-loaded from the detail API)
+  // CIDR ranges allowed to connect to the instance
   acl() []string
-  // Number of replicas (lazy-loaded from the detail API)
+  // Number of replicas
   replicas() int
-  // Storage configuration {size, class} (lazy-loaded from the detail API)
+  // Storage configuration
+  //
+  // Disk allocation for the instance. Keys: `size` (provisioned
+  // capacity in GB) and `class` (storage performance class).
   storage() dict
-  // Backup schedule (cron expression, lazy-loaded from the detail API)
+  // Backup schedule as a cron expression
   backupSchedule() string
-  // Free-form operator-tunable options (lazy-loaded from the detail API)
+  // Operator-tunable engine options as name/value pairs
   options() map[string]string
   // Whether the instance accepts connections from any address
   //
@@ -1288,8 +1391,9 @@ private stackit.postgresFlex.instance @defaults("id name version status") {
 
 // STACKIT MongoDB Flex namespace
 //
-// Use the MongoDB-Flex namespace to enumerate managed MongoDB
-// instances in the project via `instances()`.
+// Entry point for the managed MongoDB Flex service in a STACKIT
+// project. The instances field lists every managed MongoDB instance
+// provisioned in the project.
 stackit.mongoDbFlex {
   // MongoDB Flex instances
   instances() []stackit.mongoDbFlex.instance
@@ -1297,10 +1401,11 @@ stackit.mongoDbFlex {
 
 // STACKIT MongoDB Flex managed database instance
 //
-// Examine a single managed MongoDB instance. The instance is keyed by
-// its UUID `id` and exposes the `name`, `version`, status, flavor,
-// replicas, backup schedule, storage, region, ACL, and configured
-// options.
+// Managed MongoDB instance in a STACKIT project, selected by its UUID
+// id. Covers the engine version, compute flavor, replica count,
+// storage, backup schedule, region, and the connection ACL. The
+// internetReachable predicate flags instances whose ACL admits a
+// default route (0.0.0.0/0 or ::/0).
 private stackit.mongoDbFlex.instance @defaults("id name version status") {
   init(id? string)
   // Instance UUID
@@ -1311,19 +1416,24 @@ private stackit.mongoDbFlex.instance @defaults("id name version status") {
   status string
   // Region the instance runs in
   region string
-  // MongoDB major version (lazy-loaded from the detail API)
+  // MongoDB major version
   version() string
-  // Flavor info {id, cpu, memory, description} (lazy-loaded from the detail API)
+  // Compute flavor
+  //
+  // Dict describing the compute flavor backing the instance, with keys
+  // id, cpu, memory, description, and categories.
   flavor() dict
-  // Number of replicas (lazy-loaded from the detail API)
+  // Number of replicas backing the instance
   replicas() int
-  // Storage configuration {size, class} (lazy-loaded from the detail API)
+  // Storage configuration
+  //
+  // Dict describing the instance storage, with keys size and class.
   storage() dict
-  // Backup schedule (cron expression, lazy-loaded from the detail API)
+  // Backup schedule as a cron expression
   backupSchedule() string
-  // ACL CIDRs allowed to connect (lazy-loaded from the detail API)
+  // CIDR blocks allowed to connect to the instance
   acl() []string
-  // Free-form operator-tunable options (lazy-loaded from the detail API)
+  // Free-form operator-tunable engine options keyed by option name
   options() map[string]string
   // Whether the instance accepts connections from any address
   //
@@ -1336,8 +1446,10 @@ private stackit.mongoDbFlex.instance @defaults("id name version status") {
 
 // STACKIT SQLServer Flex namespace
 //
-// Use the SQLServer-Flex namespace to enumerate managed Microsoft SQL
-// Server instances in the project via `instances()`.
+// Managed Microsoft SQL Server instances running on STACKIT's SQLServer
+// Flex service. The `instances` field lists every SQL Server Flex
+// instance provisioned in the project, the entry point for auditing
+// their sizing, backup schedule, and network exposure.
 stackit.sqlServerFlex {
   // SQLServer Flex instances
   instances() []stackit.sqlServerFlex.instance
@@ -1345,10 +1457,14 @@ stackit.sqlServerFlex {
 
 // STACKIT SQLServer Flex managed database instance
 //
-// Examine a single managed Microsoft SQL Server instance. The instance
-// is keyed by its UUID `id` and exposes the `name`, `version`, status,
-// flavor, replicas, backup schedule, storage, region, ACL, and the
-// configured options.
+// Single managed Microsoft SQL Server instance provisioned through
+// SQLServer Flex, selected by its UUID `id` (for example
+// `stackit.sqlServerFlex.instance(id: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx")`).
+// Covers the deployment shape (flavor, replicas, storage, version),
+// operational status, backup schedule, and the connection ACL that
+// governs which networks may reach the database. The `internetReachable`
+// predicate reports whether that ACL leaves the instance open to the
+// public internet.
 private stackit.sqlServerFlex.instance @defaults("id name version status") {
   init(id? string)
   // Instance UUID
@@ -1359,19 +1475,25 @@ private stackit.sqlServerFlex.instance @defaults("id name version status") {
   status string
   // Region the instance runs in
   region string
-  // SQLServer version (lazy-loaded from the detail API)
+  // SQLServer version
   version() string
-  // Flavor info {id, cpu, memory, description} (lazy-loaded from the detail API)
+  // Machine flavor
+  //
+  // Compute shape of the instance, with keys `id`, `cpu` (vCPU count),
+  // `memory` (RAM), and `description`.
   flavor() dict
-  // ACL CIDRs allowed to connect (lazy-loaded from the detail API)
+  // CIDR blocks allowed to connect to the instance
   acl() []string
-  // Number of replicas (lazy-loaded from the detail API)
+  // Number of replicas
   replicas() int
-  // Storage configuration {size, class} (lazy-loaded from the detail API)
+  // Storage configuration
+  //
+  // Disk allocation of the instance, with keys `size` (in GB) and
+  // `class` (storage class).
   storage() dict
-  // Backup schedule (cron expression, lazy-loaded from the detail API)
+  // Backup schedule as a cron expression
   backupSchedule() string
-  // Free-form operator-tunable options (lazy-loaded from the detail API)
+  // Operator-tunable engine options as key/value pairs
   options() map[string]string
   // Whether the instance accepts connections from any address
   //
@@ -1384,8 +1506,10 @@ private stackit.sqlServerFlex.instance @defaults("id name version status") {
 
 // STACKIT OpenSearch namespace
 //
-// Use the OpenSearch namespace to enumerate managed OpenSearch
-// instances in the project via `instances()`.
+// Entry point for the managed OpenSearch service in a STACKIT
+// project. The `instances` field lists every provisioned OpenSearch
+// database instance, so you can audit their plans, provisioning
+// status, and network exposure across the project.
 stackit.openSearch {
   // OpenSearch instances
   instances() []stackit.openSearch.instance
@@ -1393,11 +1517,13 @@ stackit.openSearch {
 
 // STACKIT OpenSearch managed database instance
 //
-// Examine a single managed OpenSearch instance. The instance is keyed
-// by its UUID `id` and exposes the `name`, plan, status, the offering
-// being run, the cluster parameters object, the DBaaS dashboard URL,
-// the bound CF-style organization/space, and the connection
-// parameters (excluding the password).
+// Single managed OpenSearch database provisioned through the STACKIT
+// DBaaS platform. The instance is keyed by its UUID `id`, for example
+// `stackit.openSearch.instance(id: "...")`. Query it to audit the
+// service plan and offering, provisioning status, and network
+// exposure: `parameters` carries the public-access flag and source-IP
+// allow-list, and `internetReachable` reports whether the instance
+// accepts connections from any address.
 private stackit.openSearch.instance @defaults("id name status planName") {
   init(id? string)
   // Instance UUID
@@ -1420,7 +1546,13 @@ private stackit.openSearch.instance @defaults("id name status planName") {
   dashboardUrl string
   // Image / engine version
   imageUrl string
-  // Connection parameters returned by the API (free-form)
+  // Instance connection and networking parameters
+  //
+  // Free-form map returned by the DBaaS API, holding the connection
+  // endpoint details along with the networking controls that drive
+  // `internetReachable`: `enable_public_access` (bool) toggles a
+  // public endpoint, and `sgw_acl` is the source-IP allow-list of CIDR
+  // ranges. The password is not included.
   parameters dict
   // Whether the instance accepts connections from any address
   //
@@ -1432,8 +1564,10 @@ private stackit.openSearch.instance @defaults("id name status planName") {
 
 // STACKIT MariaDB namespace
 //
-// Use the MariaDB namespace to enumerate managed MariaDB instances in
-// the project via `instances()`.
+// Entry point for the managed MariaDB database service in the project.
+// The `instances` field lists every MariaDB instance, each a managed
+// database whose plan, service offering, connection parameters, and
+// internet reachability you can audit.
 stackit.mariaDb {
   // MariaDB instances
   instances() []stackit.mariaDb.instance
@@ -1441,9 +1575,11 @@ stackit.mariaDb {
 
 // STACKIT MariaDB managed database instance
 //
-// Examine a single managed MariaDB instance. The instance is keyed by
-// its UUID `id` and exposes the same plan / offering / parameter
-// surface as the other DBaaS services in the project.
+// Single managed MariaDB instance, keyed by its UUID `id` (for example
+// `stackit.mariaDb.instance(id: "...")`). Carries the plan and service
+// offering that size the database, the connection `parameters` the API
+// returns, and `internetReachable`, which reports whether the instance
+// is reachable from the public internet.
 private stackit.mariaDb.instance @defaults("id name status planName") {
   init(id? string)
   // Instance UUID
@@ -1466,7 +1602,13 @@ private stackit.mariaDb.instance @defaults("id name status planName") {
   dashboardUrl string
   // Image / engine version
   imageUrl string
-  // Connection parameters returned by the API
+  // Connection and networking parameters returned by the API
+  //
+  // Free-form map of instance settings. Security-relevant keys include
+  // `enable_public_access` (whether a public endpoint is exposed) and
+  // `sgw_acl` (the source-IP allow-list applied to that endpoint). The
+  // derived `internetReachable` field folds these into a single
+  // public-reachability verdict.
   parameters dict
   // Whether the instance accepts connections from any address
   //
@@ -1478,8 +1620,10 @@ private stackit.mariaDb.instance @defaults("id name status planName") {
 
 // STACKIT Redis namespace
 //
-// Use the Redis namespace to enumerate managed Redis instances in the
-// project via `instances()`.
+// Managed Redis instances in the project. The `instances` field
+// enumerates every provisioned Redis instance, each with its plan,
+// service offering, connection parameters, and derived
+// internet-reachability assessment.
 stackit.redis {
   // Redis instances
   instances() []stackit.redis.instance
@@ -1487,9 +1631,11 @@ stackit.redis {
 
 // STACKIT Redis managed instance
 //
-// Examine a single managed Redis instance. The instance is keyed by
-// its UUID `id` and exposes the same plan / offering / parameter
-// surface as the other DBaaS services in the project.
+// Single managed Redis instance in the project, keyed by its UUID
+// `id` (for example `stackit.redis.instance(id: "...")`). Exposes the
+// plan and service offering that determine sizing and quota, the Cloud
+// Foundry organization and space it belongs to, the connection
+// parameters, and whether the instance is reachable from the internet.
 private stackit.redis.instance @defaults("id name status planName") {
   init(id? string)
   // Instance UUID
@@ -1512,7 +1658,13 @@ private stackit.redis.instance @defaults("id name status planName") {
   dashboardUrl string
   // Image / engine version
   imageUrl string
-  // Connection parameters returned by the API
+  // Connection and configuration parameters returned by the DBaaS API
+  //
+  // Provider-specific settings for the instance. Includes
+  // `enable_public_access` (bool, whether the instance accepts public
+  // connections) and `sgw_acl` (list of CIDR strings allowed to reach the
+  // instance); the `internetReachable` field is derived from these two
+  // keys. Additional engine-specific keys may also be present.
   parameters dict
   // Whether the instance accepts connections from any address
   //
@@ -1524,8 +1676,10 @@ private stackit.redis.instance @defaults("id name status planName") {
 
 // STACKIT RabbitMQ namespace
 //
-// Use the RabbitMQ namespace to enumerate managed RabbitMQ instances
-// in the project via `instances()`.
+// Managed RabbitMQ message-broker instances in the project. The
+// `instances` field enumerates every provisioned RabbitMQ instance,
+// each carrying its plan, offering, connection parameters, and an
+// internet-reachability assessment.
 stackit.rabbitMq {
   // RabbitMQ instances
   instances() []stackit.rabbitMq.instance
@@ -1533,9 +1687,11 @@ stackit.rabbitMq {
 
 // STACKIT RabbitMQ managed instance
 //
-// Examine a single managed RabbitMQ instance. The instance is keyed
-// by its UUID `id` and exposes the same plan / offering / parameter
-// surface as the other DBaaS services in the project.
+// Single managed RabbitMQ message-broker instance, keyed by its UUID
+// `id`, for example `stackit.rabbitMq.instance(id: "...")`. Carries
+// the instance's plan, offering, and connection parameters, and an
+// `internetReachable` predicate reporting whether the broker accepts
+// connections from any address.
 private stackit.rabbitMq.instance @defaults("id name status planName") {
   init(id? string)
   // Instance UUID
@@ -1558,7 +1714,14 @@ private stackit.rabbitMq.instance @defaults("id name status planName") {
   dashboardUrl string
   // Image / engine version
   imageUrl string
-  // Connection parameters returned by the API
+  // Connection and networking parameters returned by the API
+  //
+  // Free-form key/value blob describing the instance's connection and
+  // networking settings. Security-relevant keys include
+  // `enable_public_access` (bool, whether a public endpoint is
+  // exposed) and `sgw_acl` (the source-IP allow-list of CIDR ranges
+  // permitted to connect). The `internetReachable` predicate is
+  // derived from these two keys.
   parameters dict
   // Whether the instance accepts connections from any address
   //
@@ -1570,8 +1733,10 @@ private stackit.rabbitMq.instance @defaults("id name status planName") {
 
 // STACKIT LogMe namespace
 //
-// Use the LogMe namespace to enumerate managed LogMe (log aggregation)
-// instances in the project via `instances()`.
+// Managed LogMe log-aggregation instances in the project. LogMe is a
+// hosted OpenSearch-based logging service; the `instances` field lists
+// every provisioned instance so you can audit their plans, connection
+// parameters, and internet exposure.
 stackit.logMe {
   // LogMe instances
   instances() []stackit.logMe.instance
@@ -1579,9 +1744,11 @@ stackit.logMe {
 
 // STACKIT LogMe managed instance
 //
-// Examine a single managed LogMe instance. The instance is keyed by
-// its UUID `id` and exposes the same plan / offering / parameter
-// surface as the other DBaaS services in the project.
+// A single managed LogMe log-aggregation instance, keyed by its UUID
+// `id` (for example `stackit.logMe.instance(id: "...")`). Reports the
+// plan and service offering it runs on, the connection `parameters` the
+// service returns, and `internetReachable` to flag instances open to the
+// public internet.
 private stackit.logMe.instance @defaults("id name status planName") {
   init(id? string)
   // Instance UUID
@@ -1604,7 +1771,12 @@ private stackit.logMe.instance @defaults("id name status planName") {
   dashboardUrl string
   // Image / engine version
   imageUrl string
-  // Connection parameters returned by the API
+  // Connection and networking parameters
+  //
+  // Free-form settings the service reports for the instance. Keys
+  // include `enable_public_access` (bool) toggling a public endpoint
+  // and `sgw_acl` (list of CIDR strings) as the source-IP allow-list;
+  // both feed the `internetReachable` exposure check.
   parameters dict
   // Whether the instance accepts connections from any address
   //
@@ -1616,8 +1788,10 @@ private stackit.logMe.instance @defaults("id name status planName") {
 
 // STACKIT Secrets Manager namespace
 //
-// Use the Secrets-Manager namespace to enumerate managed
-// secrets-vault instances in the project via `instances()`.
+// Secrets Manager instances in the project, each a managed vault that
+// stores key/value secrets behind an access-controlled API. Query
+// `instances` to audit which vaults exist, their lifecycle state, the
+// network ACLs that gate access, and how many secrets each one holds.
 stackit.secretsManager {
   // Secrets Manager instances
   instances() []stackit.secretsManager.instance
@@ -1625,9 +1799,11 @@ stackit.secretsManager {
 
 // STACKIT Secrets Manager instance
 //
-// Examine a single Secrets Manager instance. The instance is keyed
-// by its UUID `id` and exposes the `name`, status, API URL, secrets
-// engine, configured ACL list, and the number of secrets stored.
+// Single managed Secrets Manager instance, a vault that stores
+// key/value secrets behind an access-controlled API. Keyed by its
+// UUID `id`, for example `stackit.secretsManager.instance(id: "...")`.
+// The `acls` field reports the CIDR ranges permitted to reach the
+// vault, and `secretCount` tracks how many secrets it currently holds.
 private stackit.secretsManager.instance @defaults("id name state") {
   init(id? string)
   // Instance UUID
@@ -1652,8 +1828,10 @@ private stackit.secretsManager.instance @defaults("id name state") {
 
 // STACKIT Observability namespace
 //
-// Use the Observability namespace to enumerate managed
-// Prometheus/Alertmanager instances in the project via `instances()`.
+// Managed observability instances in the project, each a hosted
+// Prometheus and Alertmanager stack. Query `instances` to enumerate
+// them and audit their plan, lifecycle status, and connection
+// endpoints.
 stackit.observability {
   // Observability instances
   instances() []stackit.observability.instance
@@ -1661,10 +1839,11 @@ stackit.observability {
 
 // STACKIT Observability managed instance
 //
-// Examine a single managed Prometheus/Alertmanager instance. The
-// instance is keyed by its UUID `id` and exposes the `name`, status,
-// plan, the dashboard URL, and the connection parameters returned by
-// the API.
+// Single hosted Prometheus and Alertmanager instance, keyed by its
+// UUID `id` (for example `stackit.observability.instance(id:
+// "fa1d2...")`). Covers the instance name, lifecycle status, plan
+// tier, dashboard URL, and the connection parameters clients use to
+// push and query metrics and alerts.
 private stackit.observability.instance @defaults("id name status planName") {
   init(id? string)
   // Instance UUID
@@ -1681,7 +1860,13 @@ private stackit.observability.instance @defaults("id name status planName") {
   planId() string
   // Dashboard URL for the observability UI (empty if not provisioned)
   dashboardUrl() string
-  // Connection parameters including Alertmanager, Prometheus endpoints, and credentials hints
+  // Connection parameters
+  //
+  // Map of parameter name to string value returned by the instance
+  // API, holding the endpoint URLs clients use to reach the instance
+  // (Alertmanager, Prometheus push and query, Grafana, and log or
+  // trace ingestion) along with credential hints. The available keys
+  // depend on the plan and provisioning state.
   parameters() dict
   // Whether the instance can be updated
   isUpdatable() bool
@@ -1689,10 +1874,12 @@ private stackit.observability.instance @defaults("id name status planName") {
 
 // STACKIT Telemetry namespace
 //
-// Use the Telemetry namespace to enumerate the project's telemetry
-// routers (`routers()`) — which receive, filter, and forward
-// observability data to external destinations — and the project
-// telemetry `link()` that federates the project to a router.
+// Entry point for the project's telemetry pipeline. Telemetry
+// `routers` receive, filter, and forward observability data (logs,
+// metrics, traces) to external destinations, and the project telemetry
+// `link` federates the project's own data to one of those routers.
+// Audit this namespace to see where a project's telemetry can flow and
+// which external systems receive it.
 stackit.telemetry {
   // Telemetry routers defined in the project
   routers() []stackit.telemetry.router
@@ -1702,14 +1889,13 @@ stackit.telemetry {
 
 // STACKIT telemetry router
 //
-// Examine a single telemetry router — the pipeline that ingests
-// observability data, applies a `filter`, and forwards it to
-// configured destinations. The router is keyed by its UUID `id` — for
-// example `stackit.telemetry.router(id: "fa1d2…")` — and exposes the
-// `displayName`, `description`, lifecycle `status`, ingest `uri`, the
-// routing `filter`, and creation time. Forwarding targets are exposed
-// through `destinations()` and the issued credentials through
-// `accessTokens()`.
+// Single telemetry router, the pipeline that ingests observability
+// data, applies a routing `filter`, and forwards it to configured
+// destinations. The router is keyed by its UUID `id`, for example
+// `stackit.telemetry.router(id: "fa1d2…")`. Audit where telemetry
+// leaves the project by reviewing the forwarding targets under
+// `destinations` and the ingest credentials issued under
+// `accessTokens`.
 private stackit.telemetry.router @defaults("id displayName status") {
   init(id? string)
   // Router UUID
@@ -1725,6 +1911,12 @@ private stackit.telemetry.router @defaults("id displayName status") {
   // Region the router runs in
   region string
   // Routing filter applied to ingested telemetry
+  //
+  // Holds an `attributes` list, where each entry has `key` (the
+  // attribute name to match), `level` (one of resource, scope, or
+  // logRecord), `matcher` (`=` or `!=`), and `values` (the strings
+  // compared against). Telemetry is forwarded only when it matches
+  // these attribute conditions.
   filter dict
   // Creation timestamp
   createdAt time
@@ -1736,11 +1928,11 @@ private stackit.telemetry.router @defaults("id displayName status") {
 
 // STACKIT telemetry router destination
 //
-// Examine a single forwarding destination on a telemetry router. The
-// destination is keyed by its UUID `id` and exposes the `displayName`,
-// `description`, lifecycle `status`, the `credentialType` used to
-// authenticate to the target, the destination `config` (target type,
-// filter, and protocol settings), and creation time.
+// Single forwarding target on a telemetry router, the external system
+// a router ships observability data to. The destination is keyed by its
+// UUID `id`. Audit `credentialType` and `config` to see which external
+// endpoint (an OpenTelemetry collector or an S3 bucket) receives the
+// project's telemetry and how the router authenticates to it.
 private stackit.telemetry.router.destination @defaults("id displayName status credentialType") {
   // Destination UUID
   id string
@@ -1749,10 +1941,21 @@ private stackit.telemetry.router.destination @defaults("id displayName status cr
   // Description
   description string
   // Lifecycle status
+  //
+  // One of reconciling, active, or deleting.
   status string
   // Credential type used to authenticate to the destination
+  //
+  // One of bearerToken, basicAuth, or accessKey.
   credentialType string
-  // Destination configuration (target type, filter, protocol settings)
+  // Destination configuration
+  //
+  // Shape depends on `configType`: `OpenTelemetry` populates an
+  // `openTelemetry` object with `uri` and an optional `basicAuth`
+  // (`username`, `password`) or `bearerToken`; `S3` populates an `s3`
+  // object with `bucket`, `endpoint`, and an optional `accessKey`
+  // (`id`, `secret`). An optional `filter` (same `attributes` shape as
+  // the router filter) narrows what this destination forwards.
   config dict
   // Creation timestamp
   createdAt time
@@ -1760,11 +1963,12 @@ private stackit.telemetry.router.destination @defaults("id displayName status cr
 
 // STACKIT telemetry router access token
 //
-// Examine the metadata of a single access token issued for a telemetry
-// router. The token is keyed by its UUID `id` and exposes the
-// `displayName`, `description`, lifecycle `status`, the `creatorId`,
-// and the `expiresAt` expiry time. The secret token value is never
-// returned by the API after creation and is not exposed here.
+// Metadata for a single access token issued for a telemetry router.
+// These tokens authorize clients to push telemetry into the router's
+// ingest endpoint, so `status` and `expiresAt` reveal which ingest
+// credentials are still live. The token is keyed by its UUID `id`. The
+// secret token value is returned only once at creation and is never
+// exposed here.
 private stackit.telemetry.router.accessToken @defaults("id displayName status expiresAt") {
   // Access token UUID
   id string
@@ -1773,6 +1977,8 @@ private stackit.telemetry.router.accessToken @defaults("id displayName status ex
   // Description
   description string
   // Lifecycle status
+  //
+  // One of active, expired, or deleting.
   status string
   // ID of the principal that created the token
   creatorId string
@@ -1782,12 +1988,12 @@ private stackit.telemetry.router.accessToken @defaults("id displayName status ex
 
 // STACKIT project telemetry link
 //
-// Examine the project's telemetry link — the federation binding that
-// forwards the project's observability data to a telemetry router. The
-// link exposes its `id`, `displayName`, `description`, whether it is
-// `enabled`, the lifecycle `status`, the region, and creation time, and
-// resolves the target router through the typed `router()` accessor. The
-// link's access token is a secret and is not exposed.
+// Project's telemetry link, the federation binding that forwards the
+// project's own observability data to a telemetry router. Check
+// `enabled` and `status` to confirm whether the project is actively
+// shipping telemetry, and follow `router` to the destination pipeline
+// that receives it. The link's access token is a secret and is not
+// exposed.
 private stackit.telemetry.link @defaults("id displayName enabled status") {
   // Link UUID
   id string
@@ -1798,6 +2004,8 @@ private stackit.telemetry.link @defaults("id displayName enabled status") {
   // Whether the telemetry link is enabled
   enabled bool
   // Lifecycle status
+  //
+  // One of active, inactive, failed, reconciling, or deleting.
   status string
   // Region the link applies to
   region string
@@ -1809,9 +2017,11 @@ private stackit.telemetry.link @defaults("id displayName enabled status") {
 
 // STACKIT Model Serving namespace
 //
-// Use the Model Serving namespace to enumerate the project's
-// authentication `tokens()` for the managed AI inference API, and the
-// catalog of `models()` (chat and embedding) available in the region.
+// Entry point for STACKIT's managed AI inference API in a project. The
+// `tokens` list enumerates the authentication tokens issued for calling
+// the inference endpoints, and `models` lists the catalog of chat,
+// embedding, audio, and image models available in the region together
+// with their pricing.
 stackit.modelServing {
   // Authentication tokens for the Model Serving API in the project
   tokens() []stackit.modelServing.token
@@ -1821,12 +2031,12 @@ stackit.modelServing {
 
 // STACKIT Model Serving authentication token
 //
-// Examine the metadata of a single Model Serving auth token. The token
-// is keyed by its UUID `id` — for example
-// `stackit.modelServing.token(id: "fa1d2…")` — and exposes the `name`,
-// `description`, lifecycle `state`, region, and the `validUntil` expiry
-// time. The secret token value is only returned once at creation and is
-// not exposed here.
+// Metadata of a single authentication token used to call the Model
+// Serving inference API. The token is keyed by its UUID `id`, for
+// example `stackit.modelServing.token(id: "fa1d2...")`, and lets audits
+// check the lifecycle `state` and the `validUntil` expiry time. The
+// secret token value is only returned once at creation and is not
+// exposed here.
 private stackit.modelServing.token @defaults("id name state validUntil") {
   init(id? string)
   // Token UUID
@@ -1835,7 +2045,9 @@ private stackit.modelServing.token @defaults("id name state validUntil") {
   name string
   // Description
   description string
-  // Lifecycle state (active, …)
+  // Lifecycle state
+  //
+  // One of creating, active, deleting, or inactive.
   state string
   // Region the token is valid in
   region string
@@ -1845,11 +2057,11 @@ private stackit.modelServing.token @defaults("id name state validUntil") {
 
 // STACKIT Model Serving model
 //
-// Examine a single model offered by the Model Serving catalog. The
-// model is keyed by its UUID `id` and exposes the API `name`, the
-// `displayedName`, a `description`, the `type` (for example chat or
-// embedding), the `category`, the region, the inference `url`, free-form
-// `tags`, and the available pricing `skus`.
+// Single model offered by the Model Serving catalog, keyed by its UUID
+// `id`. The `type` field distinguishes chat, embedding, audio, and image
+// models, `category` reflects the service tier, and `skus` carries the
+// per-model pricing. Use it to inventory which models a project can
+// invoke and at what cost.
 private stackit.modelServing.model @defaults("name type category") {
   // Model UUID
   id string
@@ -1859,9 +2071,13 @@ private stackit.modelServing.model @defaults("name type category") {
   displayedName string
   // Description
   description string
-  // Model type (for example chat, embedding)
+  // Model type
+  //
+  // One of chat, embedding, audio, or image.
   type string
   // Model category
+  //
+  // Service tier of the model: one of standard, plus, or premium.
   category string
   // Region the model is served in
   region string
@@ -1869,16 +2085,22 @@ private stackit.modelServing.model @defaults("name type category") {
   url string
   // Free-form tags attached to the model
   tags []string
-  // Available pricing SKUs ({id, type, description} entries)
+  // Available pricing SKUs
+  //
+  // Each entry is a dict with `id` (SKU UUID), `type` (the billing
+  // dimension), and `description`.
   skus []dict
 }
 
 // STACKIT project service account
 //
-// Examine a single service account in the project. Service accounts
-// are keyed by their email address (`email`) and expose the
-// associated project ID and the human-readable ID. They are the
-// project-scoped principals used by automation and SDK callers.
+// Service account within a STACKIT project, the project-scoped
+// principal used by automation and SDK callers to authenticate
+// against STACKIT APIs. Service accounts are keyed by their email
+// address, for example `stackit.serviceAccount(email: "...")`, and
+// expose the project they belong to along with the access tokens and
+// long-lived keys issued for authentication (useful for auditing
+// credential age and active status).
 private stackit.serviceAccount @defaults("email projectId") {
   init(email? string)
   // Service account email (primary identifier)
@@ -1887,25 +2109,28 @@ private stackit.serviceAccount @defaults("email projectId") {
   projectId string
   // Internal service-account ID (UUID), if returned by the API
   id string
-  // Access tokens issued for this service account (id, createdAt, validUntil, active)
+  // Access tokens issued for this service account
+  //
+  // Each entry has `id`, `active` (whether the token is currently
+  // valid), `createdAt`, and `validUntil`.
   accessTokens() []dict
-  // Long-lived keys associated with this service account (id, keyType, createdAt, validUntil, active)
+  // Long-lived keys associated with this service account
+  //
+  // Each entry has `id`, `keyType`, `keyAlgorithm`, `keyOrigin`,
+  // `active`, `createdAt`, and `validUntil`.
   keys() []dict
 }
 
 
 // STACKIT-managed TLS server certificate
 //
-// Examine a single managed TLS certificate. The certificate is keyed
-// by its UUID `id` and exposes the user-supplied `name`, the region
-// it was uploaded to, and the PEM-encoded `publicKey` chain. The
-// `dnsNames`, `extendedKeyUsage`, and `fingerprintSha1`/`fingerprintSha256`
-// fields describe the certificate contents. The parsed X.509 attributes
-// `subject`, `issuer`, `serialNumber`, `keyAlgorithm`, `keyStrength`,
-// `keyBitSize`, `signingAlgorithm`, and the `notBefore`/`notAfter` window
-// let audits check identity, key strength, and expiry without decoding
-// the chain. `labels` carries user metadata, and `usage` lists the load
-// balancer listeners consuming the certificate.
+// TLS server certificate uploaded to STACKIT for use by Application
+// Load Balancer listeners. Selected by its UUID `id`, for example
+// stackit.certificate(id: "d290f1ee-6c54-4b01-90e6-d701748f0851").
+// The parsed X.509 attributes let audits verify the certificate's
+// identity, key strength, signing algorithm, and validity window
+// without decoding the PEM chain, and the `usage` field reveals which
+// load balancer listeners depend on the certificate.
 private stackit.certificate @defaults("id name region") {
   init(id? string)
   // Certificate UUID
@@ -1967,11 +2192,16 @@ private stackit.certificate @defaults("id name region") {
 
 // STACKIT Application Load Balancer
 //
-// Examine a single Application Load Balancer (ALB) — the newer L7
-// LB product separate from the legacy `stackit.loadBalancer`. The
-// ALB is keyed by `name` and exposes the public/private addresses,
-// plan, status, listeners and target pools, the optional security-
-// group ID attached to the LB, and configuration options.
+// STACKIT Application Load Balancer (ALB)
+//
+// Layer 7 (HTTP) load balancer, the newer product distinct from the
+// legacy stackit.loadBalancer. Keyed by name (for example
+// stackit.alb.loadBalancers.where(name == "my-alb")), it carries the
+// public and private addresses, plan, status, and the listeners and
+// target pools that route traffic. The exposure field combines the
+// public address with the access-control allow-list to judge internet
+// reachability, and wafs surfaces the Web Application Firewall
+// configurations the listeners reference.
 private stackit.alb.loadBalancer @defaults("name status externalAddress") {
   // ALB name (unique within the project+region)
   name string
@@ -1985,19 +2215,38 @@ private stackit.alb.loadBalancer @defaults("name status externalAddress") {
   status string
   // Region the ALB lives in
   region string
-  // Listeners — frontend port/protocol bindings ({name, port, protocol, targetPool, …})
+  // Frontend listeners
+  //
+  // Port and protocol bindings that accept inbound traffic. Each entry is
+  // a dict with keys name, port, protocol, http, https, and wafConfigName
+  // (the name of the WAF configuration applied to the listener).
   listeners []dict
   // Networks attached to the LB ([{networkId, role}])
   networks []dict
-  // Target pools — backend groups ([{name, targetPort, activeHealthCheck, …}])
+  // Backend target pools
+  //
+  // Backend server groups that receive forwarded traffic. Each entry is a
+  // dict with keys name, targetPort, targets, activeHealthCheck, and
+  // tlsConfig.
   targetPools []dict
-  // Options (ACL, access log, observability, etc.)
+  // Load balancer options
+  //
+  // Behavioral settings for the balancer, a dict with keys accessControl
+  // (holding allowedSourceRanges, the CIDR allow-list restricting who may
+  // reach the balancer), ephemeralAddress, observability, and
+  // privateNetworkOnly.
   options dict
   // Errors reported by the ALB ([{type, description}])
   errors []dict
-  // STACKIT-managed security group attached to the LB itself (nullable)
+  // STACKIT-managed security group
+  //
+  // Security group STACKIT provisions and attaches to the balancer itself,
+  // a dict with keys id and name. Null when none is assigned.
   loadBalancerSecurityGroup dict
-  // STACKIT-managed security group used on backend targets (nullable)
+  // STACKIT-managed target security group
+  //
+  // Security group STACKIT provisions for the backend targets, a dict with
+  // keys id and name. Null when none is assigned.
   targetSecurityGroup dict
   // Whether the operator opted out of auto-assigning the target SG to backends
   disableTargetSecurityGroupAssignment bool
@@ -2128,10 +2377,11 @@ private stackit.alb.customRuleCondition @defaults("variableType operatorType ope
 
 // STACKIT KMS namespace
 //
-// Use the KMS namespace to enumerate cryptographic key rings and the
-// keys within them. STACKIT KMS is the source of the KEKs that wrap
-// volume- and bucket-level data-encryption keys, so this is the entry
-// point for customer-managed-key audits.
+// Key Management Service (KMS) scope for a project, exposing the
+// cryptographic key rings and the keys within them. STACKIT KMS is the
+// source of the KEKs that wrap volume- and bucket-level
+// data-encryption keys, so this is the entry point for
+// customer-managed-key audits.
 stackit.kms {
   // Key rings in the project's KMS scope
   keyRings() []stackit.kms.keyRing
@@ -2141,8 +2391,9 @@ stackit.kms {
 
 // STACKIT KMS key ring
 //
-// Examine a single key ring — a logical container that groups keys
-// for IAM and lifecycle purposes. Keyed by its UUID `id`.
+// Logical container that groups KMS keys for IAM and lifecycle
+// purposes. Keyed by its UUID `id`, for example
+// `stackit.kms.keyRing(id: "...")`.
 private stackit.kms.keyRing @defaults("id displayName state") {
   init(id? string)
   // Key ring UUID
@@ -2161,12 +2412,13 @@ private stackit.kms.keyRing @defaults("id displayName state") {
 
 // STACKIT KMS key
 //
-// Examine a single key. Each key is keyed by its UUID `id` and is
-// scoped to a `keyRingId`. The `purpose` describes what the key is
-// allowed to do (SYMMETRIC_ENCRYPT_DECRYPT, …), `algorithm` is the
-// underlying primitive, `protection` is the storage backend
-// (SOFTWARE, HSM), and `state` is the lifecycle phase. `deletionDate`
-// is non-null only when the key has been scheduled for deletion.
+// Cryptographic key managed by STACKIT KMS. Each key is keyed by its
+// UUID `id` and is scoped to a `keyRingId`. The `purpose` describes
+// what the key is allowed to do (SYMMETRIC_ENCRYPT_DECRYPT and
+// siblings), `algorithm` is the underlying primitive, `protection` is
+// the storage backend (SOFTWARE, HSM), and `state` is the lifecycle
+// state. `deletionDate` is non-null only when the key has been
+// scheduled for deletion.
 private stackit.kms.key @defaults("id displayName state purpose") {
   // Key UUID
   id string
@@ -2198,9 +2450,11 @@ private stackit.kms.key @defaults("id displayName state purpose") {
 
 // STACKIT IAM namespace
 //
-// Use the IAM namespace to enumerate project-level member bindings
-// and the roles defined on the project. STACKIT IAM is the source
-// for least-privilege and stale-access audits.
+// Project-level identity and access management for a STACKIT project:
+// the member bindings that grant principals access and the roles
+// defined on the project. This namespace is the source for
+// least-privilege and stale-access audits. Enumerate the bindings
+// with members and the roles with roles.
 stackit.iam {
   // Members bound to the project (one entry per (subject, role) pair)
   members() []stackit.iam.member
@@ -2210,9 +2464,11 @@ stackit.iam {
 
 // STACKIT IAM project member
 //
-// Examine a single project member binding. Each binding is keyed by
-// `subject/role` and ties one principal (user email, service-account
-// email, or group identifier) to one role on the project.
+// Single project member binding that ties one principal (a user email,
+// service-account email, or group identifier) to one role on the
+// project. Each binding is keyed by `subject/role`, so the same
+// principal appears once per role it holds. Audit these bindings to
+// find over-privileged or stale access.
 private stackit.iam.member @defaults("subject role") {
   // Principal identifier (user/service-account email, group id)
   subject string
@@ -2222,8 +2478,9 @@ private stackit.iam.member @defaults("subject role") {
 
 // STACKIT IAM role
 //
-// Examine a single role defined on the project. Each role groups a
-// set of `permissions` that members assigned to it are granted.
+// Single role defined on the project, grouping the set of `permissions`
+// that members assigned to it are granted. Inspect a role to see the
+// exact actions it confers when reviewing what a member binding allows.
 private stackit.iam.role @defaults("name") {
   // Role name (unique within the project)
   name string
