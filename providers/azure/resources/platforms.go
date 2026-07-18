@@ -40,6 +40,7 @@ var Platforms = []*plugin.PlatformInfo{
 	{Name: "azure-recovery-services-vault", Title: "Azure Recovery Services Vault", Kind: []string{"azure-object"}, Runtime: []string{"azure"}},
 	{Name: "azure-synapse-workspace", Title: "Azure Synapse Analytics Workspace", Kind: []string{"azure-object"}, Runtime: []string{"azure"}},
 	{Name: "azure-datafactory", Title: "Azure Data Factory", Kind: []string{"azure-object"}, Runtime: []string{"azure"}},
+	{Name: "azure-cognitiveservices-account", Title: "Azure AI Services Account", Kind: []string{"azure-object"}, Runtime: []string{"azure"}},
 }
 
 var platformsByName = plugin.PlatformsByName(Platforms)

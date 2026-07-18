@@ -61,6 +61,7 @@ const (
 	DiscoveryApplicationGateways     = "application-gateways"
 	DiscoveryFirewalls               = "firewalls"
 	DiscoveryContainerApps           = "container-apps"
+	DiscoveryCognitiveServices       = "cognitiveservices-accounts"
 )
 
 // Auto includes all API resources except storage containers (which require
@@ -108,6 +109,7 @@ var AllAPIResources = []string{
 	DiscoveryApplicationGateways,
 	DiscoveryFirewalls,
 	DiscoveryContainerApps,
+	DiscoveryCognitiveServices,
 }
 
 // genericDiscoverySpec maps an ARM resource type to the discovery metadata
@@ -168,6 +170,7 @@ var genericDiscoverySpecs = []genericDiscoverySpec{
 	{armType: "Microsoft.Synapse/workspaces", discoveryTarget: DiscoverySynapseWorkspaces, service: "synapse", objectType: "workspace"},
 	{armType: "Microsoft.DataFactory/factories", discoveryTarget: DiscoveryDataFactories, service: "datafactory", objectType: "factory"},
 	{armType: "Microsoft.App/containerApps", discoveryTarget: DiscoveryContainerApps, service: "containerapps", objectType: "app"},
+	{armType: "Microsoft.CognitiveServices/accounts", discoveryTarget: DiscoveryCognitiveServices, service: "cognitiveservices", objectType: "account"},
 }
 
 type azureObject struct {
@@ -751,6 +754,10 @@ func getTitleFamily(azureObject azureObject) (azureObjectPlatformInfo, error) {
 	case "datafactory":
 		if azureObject.objectType == "factory" {
 			return azureObjectPlatformInfo{title: "Azure Data Factory", platform: "azure-datafactory"}, nil
+		}
+	case "cognitiveservices":
+		if azureObject.objectType == "account" {
+			return azureObjectPlatformInfo{title: "Azure AI Services Account", platform: "azure-cognitiveservices-account"}, nil
 		}
 	}
 	return azureObjectPlatformInfo{}, fmt.Errorf("missing runtime info for azure object service %s type %s", azureObject.service, azureObject.objectType)

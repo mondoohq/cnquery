@@ -40,6 +40,59 @@ func (a *mqlAzureSubscriptionCognitiveServicesService) id() (string, error) {
 	return "azure.subscription.cognitiveServicesService/" + a.SubscriptionId.Data, nil
 }
 
+// initAzureSubscriptionCognitiveServicesServiceAccount resolves a single AI
+// Services (Cognitive Services) account. When called without arguments it falls
+// back to the discovered asset's platform id (see getAssetIdentifier), so an
+// azure-cognitiveservices-account asset resolves to its backing account instead
+// of an empty husk.
+func initAzureSubscriptionCognitiveServicesServiceAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["id"] = llx.StringData(ids.id)
+		}
+	}
+
+	if args["id"] == nil {
+		return nil, nil, errors.New("id required to fetch azure cognitive services account")
+	}
+
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+
+	id := args["id"].Value.(string)
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, nil, err
+	}
+	accountName, err := resourceID.Component("accounts")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	client, err := armcognitiveservices.NewAccountsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	account, err := client.Get(context.Background(), resourceID.ResourceGroup, accountName, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	res, err := cognitiveServicesAccountToMql(runtime, &account.Account)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, res, nil
+}
+
 func (a *mqlAzureSubscriptionCognitiveServicesServiceAccount) id() (string, error) {
 	return a.Id.Data, nil
 }

@@ -2190,7 +2190,7 @@ func init() {
 			Create: createAzureSubscriptionCognitiveServicesService,
 		},
 		"azure.subscription.cognitiveServicesService.account": {
-			// to override args, implement: initAzureSubscriptionCognitiveServicesServiceAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionCognitiveServicesServiceAccount,
 			Create: createAzureSubscriptionCognitiveServicesServiceAccount,
 		},
 		"azure.subscription.cognitiveServicesService.account.deployment": {

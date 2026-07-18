@@ -59,6 +59,7 @@ Examples run in the Azure CLI:
 				resources.DiscoverySecurityGroups,
 				resources.DiscoveryCosmosDb,
 				resources.DiscoveryVirtualNetworks,
+				resources.DiscoveryCognitiveServices,
 			},
 			Flags: []plugin.Flag{
 				{
@@ -163,8 +164,9 @@ Examples run in the Azure CLI:
 										"other":           nil,
 									},
 								},
-								"keyvault": nil,
-								"cosmosdb": nil,
+								"keyvault":          nil,
+								"cosmosdb":          nil,
+								"cognitiveservices": nil,
 							},
 						},
 					},
