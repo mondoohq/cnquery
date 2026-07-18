@@ -6,9 +6,12 @@ option go_package = "go.mondoo.com/mql/v13/providers/nutanix/resources"
 
 // Nutanix Prism Central
 //
-// Use this namespace to reach the infrastructure managed by a Nutanix Prism
-// Central instance. It hosts the registered clusters, the hypervisor hosts
-// that make up those clusters, and the virtual machines running on them.
+// Namespace root for the infrastructure managed by a Nutanix Prism Central
+// instance. It reaches the registered clusters, the hypervisor hosts that make
+// up those clusters, and the virtual machines running on them, along with disk
+// images, IAM (users, groups, roles, authorization policies, directory
+// services, SAML identity providers), networking (VPCs, subnets, floating
+// IPs), and storage (containers, volume groups).
 nutanix {
   // Clusters registered with this Prism Central instance
   clusters() []nutanix.cluster
@@ -44,7 +47,7 @@ nutanix {
 
 // Nutanix cluster
 //
-// Examine a single Nutanix cluster: its software version and build, hardware
+// Single Nutanix cluster, covering its software version and build, hardware
 // architecture, the hypervisor types it runs, node and VM counts, redundancy
 // and fault-tolerance configuration, encryption posture, network settings,
 // and support status. The `id` field is the cluster's external UUID. Drill
@@ -139,10 +142,10 @@ private nutanix.cluster @defaults("name version nodeCount") {
 
 // Nutanix cluster network configuration
 //
-// Examine the network settings of a cluster: external and internal subnets,
-// virtual and data-service IP addresses, the cluster FQDN, masquerading (NAT)
-// address, name and NTP servers, NFS allowlist, key-management server type,
-// SMTP configuration, and HTTP proxy configuration.
+// Network settings of a cluster: external and internal subnets, virtual and
+// data-service IP addresses, the cluster FQDN, masquerading (NAT) address,
+// name and NTP servers, NFS allowlist, key-management server type, SMTP
+// configuration, and HTTP proxy configuration.
 private nutanix.cluster.networkConfig @defaults("externalAddress fqdn") {
   // Cluster external (virtual) IP address
   externalAddress string
@@ -182,9 +185,9 @@ private nutanix.cluster.networkConfig @defaults("externalAddress fqdn") {
 
 // Nutanix cluster fault-tolerance state
 //
-// Examine the configured and current fault-tolerance level of a cluster,
-// including the failure-domain awareness level and whether the Cassandra and
-// Zookeeper ensembles are prepared to meet the desired fault tolerance.
+// Configured and current fault-tolerance level of a cluster, including the
+// failure-domain awareness level and whether the Cassandra and Zookeeper
+// ensembles are prepared to meet the desired fault tolerance.
 private nutanix.cluster.faultToleranceState @defaults("currentClusterFaultTolerance domainAwarenessLevel") {
   // Current cluster fault tolerance
   //
@@ -210,7 +213,7 @@ private nutanix.cluster.faultToleranceState @defaults("currentClusterFaultTolera
 
 // Node in a Nutanix cluster
 //
-// Examine a node listed in a cluster's membership by its host and
+// Node listed in a cluster's membership, identified by its host and
 // controller-VM IP addresses. The `id` field is the node UUID; `host`
 // resolves to the full hypervisor host record.
 private nutanix.cluster.node @defaults("id hostIp") {
@@ -226,12 +229,14 @@ private nutanix.cluster.node @defaults("id hostIp") {
 
 // Nutanix host
 //
-// Examine a single hypervisor host (a physical node): its hardware model and
+// Single hypervisor host (a physical node), covering its hardware model and
 // serials, CPU and memory capacity, GPU inventory, the hypervisor it runs,
-// boot and maintenance state, secure-boot and virtualization posture, and the
-// cluster it belongs to. The `id` field is the host's external UUID. Drill
-// into `controllerVm` for the CVM addresses, `ipmi` for out-of-band access,
-// and `disks` for attached storage.
+// boot and maintenance state, and secure-boot and virtualization posture. The
+// `id` field is the host's external UUID. Use `controllerVm` for the CVM
+// addresses, `ipmi` for out-of-band access, `disks` for attached storage, and
+// `cluster` for the owning cluster. Boolean posture fields such as
+// `isSecureBooted`, `isHardwareVirtualized`, and `maintenanceState` support
+// hardening and node-health audits.
 private nutanix.host @defaults("name cpuModel hypervisorType") {
   // External UUID of the host
   id string
@@ -328,8 +333,8 @@ private nutanix.host @defaults("name cpuModel hypervisorType") {
 
 // Controller VM running on a Nutanix host
 //
-// Examine the Controller VM (CVM) that runs the Nutanix storage stack on a
-// host: its external and backplane IP addresses, NAT configuration, and
+// Controller VM (CVM) that runs the Nutanix storage stack on a host, covering
+// its external and backplane IP addresses, NAT configuration, and
 // maintenance-mode status.
 private nutanix.host.controllerVmInfo @defaults("externalAddress") {
   // External (management) IP address of the CVM
@@ -348,8 +353,9 @@ private nutanix.host.controllerVmInfo @defaults("externalAddress") {
 
 // IPMI configuration of a Nutanix host
 //
-// Examine the out-of-band IPMI/BMC management configuration of a host: its IP
-// address and administrative username.
+// Out-of-band IPMI/BMC management configuration of a host, including its IP
+// address and administrative username. Useful for auditing which nodes expose
+// baseboard management interfaces.
 private nutanix.host.ipmiInfo @defaults("ip username") {
   // IPMI/BMC IP address
   ip string
@@ -359,7 +365,7 @@ private nutanix.host.ipmiInfo @defaults("ip username") {
 
 // Physical disk attached to a Nutanix host
 //
-// Examine a single physical disk on a host: its mount path, serial, capacity,
+// Single physical disk on a host, covering its mount path, serial, capacity,
 // and storage tier. The `id` field is the disk UUID.
 private nutanix.host.disk @defaults("id storageTier sizeInBytes") {
   // Disk UUID
@@ -391,7 +397,9 @@ private nutanix.image @defaults("id name type") {
   name string
   // Image description
   description string
-  // Image type (for example "DISK_IMAGE" or "ISO_IMAGE")
+  // Image type
+  //
+  // One of DISK_IMAGE or ISO_IMAGE.
   type string
   // Image size in bytes
   sizeBytes int
@@ -401,12 +409,12 @@ private nutanix.image @defaults("id name type") {
 
 // Nutanix virtual machine
 //
-// Examine a single virtual machine: its power state, vCPU topology, memory
-// size, identifiers, feature flags (CPU passthrough, memory overcommit, live
-// migration, secure devices), protection posture, lifecycle timestamps, and
-// the cluster and host it runs on. The `id` field is the VM's external UUID.
-// Drill into `disks`, `nics`, `gpus`, and `cdRoms` for attached devices and
-// `guestTools` for Nutanix Guest Tools status.
+// Virtual machine on a Nutanix AHV cluster, covering its power state, vCPU
+// topology, memory size, identifiers, feature flags (CPU passthrough, memory
+// overcommit, live migration, secure devices), protection posture, lifecycle
+// timestamps, and the cluster and host it runs on. The `id` field is the VM's
+// external UUID. The `disks`, `nics`, `gpus`, and `cdRoms` sub-resources hold
+// attached devices, and `guestTools` reports Nutanix Guest Tools status.
 private nutanix.vm @defaults("name powerState memorySizeBytes") {
   // External UUID of the virtual machine
   id string
@@ -505,8 +513,9 @@ private nutanix.vm @defaults("name powerState memorySizeBytes") {
 
 // Disk attached to a Nutanix virtual machine
 //
-// Examine a single virtual disk: its bus placement, size, and backing storage
-// container. The `id` field is the disk's external UUID.
+// Virtual disk attached to a Nutanix virtual machine, covering its bus
+// placement, size, and backing storage container. The `id` field is the
+// disk's external UUID.
 private nutanix.vm.disk @defaults("id busType sizeBytes") {
   // External UUID of the disk
   id string
@@ -536,9 +545,10 @@ private nutanix.vm.disk @defaults("id busType sizeBytes") {
 
 // NIC attached to a Nutanix virtual machine
 //
-// Examine a single virtual network interface: its MAC address, emulation
-// model, connection state, network type, VLAN mode, subnet, and assigned and
-// learned IP addresses. The `id` field is the NIC's external UUID.
+// Virtual network interface on a Nutanix virtual machine, covering its MAC
+// address, emulation model, connection state, network type, VLAN mode,
+// subnet, and assigned and learned IP addresses. The `id` field is the NIC's
+// external UUID.
 private nutanix.vm.nic @defaults("id macAddress nicType") {
   // External UUID of the NIC
   id string
@@ -568,8 +578,9 @@ private nutanix.vm.nic @defaults("id macAddress nicType") {
 
 // GPU attached to a Nutanix virtual machine
 //
-// Examine a single GPU assignment: its mode, vendor, device, frame-buffer
-// size, and guest driver version. The `id` field is the GPU's external UUID.
+// GPU assigned to a Nutanix virtual machine, covering its mode, vendor,
+// device, frame-buffer size, and guest driver version. The `id` field is the
+// GPU assignment's external UUID.
 private nutanix.vm.gpu @defaults("name mode vendor") {
   // External UUID of the GPU assignment
   id string
@@ -597,8 +608,9 @@ private nutanix.vm.gpu @defaults("name mode vendor") {
 
 // CD-ROM attached to a Nutanix virtual machine
 //
-// Examine a single CD-ROM device: its ISO type, bus placement, and backing
-// storage. The `id` field is the CD-ROM's external UUID.
+// CD-ROM device attached to a Nutanix virtual machine, covering its ISO type,
+// bus placement, and backing storage. The `id` field is the CD-ROM's external
+// UUID.
 private nutanix.vm.cdrom @defaults("id isoType busType") {
   // External UUID of the CD-ROM
   id string
@@ -620,8 +632,8 @@ private nutanix.vm.cdrom @defaults("id isoType busType") {
 
 // Nutanix Guest Tools status of a virtual machine
 //
-// Examine the Nutanix Guest Tools (NGT) state on a VM: whether it is enabled,
-// installed, reachable, and ISO-inserted, the installed and available
+// Nutanix Guest Tools (NGT) state on a virtual machine, covering whether it is
+// enabled, installed, reachable, and ISO-inserted, the installed and available
 // versions, VSS snapshot capability, and the enabled capabilities.
 private nutanix.vm.guestToolsInfo @defaults("version isEnabled isInstalled") {
   // Whether Nutanix Guest Tools is enabled
@@ -648,7 +660,7 @@ private nutanix.vm.guestToolsInfo @defaults("version isEnabled isInstalled") {
 
 // Nutanix IAM user
 //
-// Examine a single identity that can authenticate to Prism Central: its type
+// Single identity that can authenticate to Prism Central, covering its type
 // (local, LDAP, SAML, or service account), status, directory linkage, contact
 // details, and login history. The `id` field is the user's external UUID.
 private nutanix.iam.user @defaults("username userType status") {
@@ -700,8 +712,8 @@ private nutanix.iam.user @defaults("username userType status") {
 
 // Nutanix IAM user group
 //
-// Examine a group of users that can be granted access through authorization
-// policies: its type, directory linkage, and distinguished name. The `id`
+// Group of users that can be granted access through authorization policies,
+// covering its type, directory linkage, and distinguished name. The `id`
 // field is the group's external UUID.
 private nutanix.iam.group @defaults("name groupType") {
   // External UUID of the group
@@ -726,8 +738,8 @@ private nutanix.iam.group @defaults("name groupType") {
 
 // Nutanix IAM role
 //
-// Examine a named set of operations (permissions) that can be assigned to
-// users and groups: whether it is system-defined, the operations it grants,
+// Named set of operations (permissions) that can be assigned to users and
+// groups, covering whether it is system-defined, the operations it grants,
 // the entity types it covers, and how many identities are assigned to it. The
 // `id` field is the role's external UUID.
 private nutanix.iam.role @defaults("displayName isSystemDefined") {
@@ -759,10 +771,10 @@ private nutanix.iam.role @defaults("displayName isSystemDefined") {
 
 // Nutanix IAM authorization policy
 //
-// Examine an access control policy that binds identities to a role over a set
-// of entities: its type, the role it grants, whether it is system-defined,
-// and how many identities are assigned. The `id` field is the policy's
-// external UUID; `role` resolves to the granted role.
+// Access control policy that binds identities to a role over a set of
+// entities, covering its type, the role it grants, whether it is
+// system-defined, and how many identities are assigned. The `id` field is the
+// policy's external UUID; `role` resolves to the granted role.
 private nutanix.iam.authorizationPolicy @defaults("displayName authorizationPolicyType") {
   // External UUID of the authorization policy
   id string
@@ -784,8 +796,14 @@ private nutanix.iam.authorizationPolicy @defaults("displayName authorizationPoli
   // Number of user groups assigned to the policy
   assignedUserGroupsCount int
   // Entity filters the policy qualifies
+  //
+  // Each entry carries `$objectType` and an `entityFilter` map describing
+  // which entities (the "what") the policy grants access to.
   entities []dict
   // Identity filters the policy applies to
+  //
+  // Each entry carries `$objectType` and an `identityFilter` map describing
+  // which users or groups (the "who") the policy applies to.
   identities []dict
   // Identity that created the policy
   createdBy string
@@ -799,8 +817,8 @@ private nutanix.iam.authorizationPolicy @defaults("displayName authorizationPoli
 
 // Nutanix directory service
 //
-// Examine a directory service (Active Directory or LDAP) configured for
-// authentication: its type, domain, server URLs, group-search behavior, the
+// Directory service (Active Directory or LDAP) configured for authentication,
+// covering its type, domain, server URLs, group-search behavior, the
 // allowlisted groups, and the bind service account. The `id` field is the
 // directory service's external UUID.
 private nutanix.iam.directoryService @defaults("name directoryType domainName") {
@@ -838,7 +856,7 @@ private nutanix.iam.directoryService @defaults("name directoryType domainName") 
 
 // Nutanix SAML identity provider
 //
-// Examine a SAML identity provider configured for single sign-on: its issuer,
+// SAML identity provider configured for single sign-on, covering its issuer,
 // assertion attribute mappings, metadata source, and whether signed authn
 // requests are enforced. The `id` field is the provider's external UUID.
 private nutanix.iam.samlIdentityProvider @defaults("name entityIssuer") {
@@ -866,8 +884,9 @@ private nutanix.iam.samlIdentityProvider @defaults("name entityIssuer") {
 
 // Nutanix virtual private cloud
 //
-// Examine a VPC: its type, externally routable prefixes, SNAT addresses, and
-// external routing domain. The `id` field is the VPC's external UUID.
+// Isolated virtual network in Prism Central, covering its type, externally
+// routable prefixes, source-NAT addresses, and external routing domain. The
+// `id` field is the VPC's external UUID.
 private nutanix.network.vpc @defaults("name vpcType") {
   // External UUID of the VPC
   id string
@@ -897,9 +916,10 @@ private nutanix.network.vpc @defaults("name vpcType") {
 
 // Nutanix subnet
 //
-// Examine a subnet: its type, VLAN ID or overlay VNI, CIDR, gateway behavior,
-// external/NAT flags, and IP usage. The `id` field is the subnet's external
-// UUID; `cluster` and `vpc` resolve to the owning cluster and VPC.
+// Layer-2 network segment, covering its type, VLAN ID or overlay VNI, CIDR,
+// gateway behavior, external/NAT flags, and IP usage. The `id` field is the
+// subnet's external UUID; `cluster` and `vpc` resolve to the owning cluster
+// and VPC.
 private nutanix.network.subnet @defaults("name subnetType ipPrefix") {
   // External UUID of the subnet
   id string
@@ -947,10 +967,10 @@ private nutanix.network.subnet @defaults("name subnetType ipPrefix") {
 
 // Nutanix floating IP address
 //
-// Examine a floating (external) IP address: its value, association status,
-// and the private IP, VM NIC, or load-balancer session it maps to. The `id`
-// field is the floating IP's external UUID; `vpc` and `externalSubnet`
-// resolve to the owning VPC and external subnet.
+// External IP address and the private IP, VM NIC, or load-balancer session it
+// maps to, along with its association status. The `id` field is the floating
+// IP's external UUID; `vpc` and `externalSubnet` resolve to the owning VPC and
+// external subnet.
 private nutanix.network.floatingIp @defaults("name floatingIpValue associationStatus") {
   // External UUID of the floating IP
   id string
@@ -986,10 +1006,11 @@ private nutanix.network.floatingIp @defaults("name floatingIpValue associationSt
 
 // Nutanix storage container
 //
-// Examine a storage container: its capacity and reservations, data-reduction
-// settings (compression, deduplication, erasure coding), resiliency
-// (replication factor), encryption posture, and NFS exposure. The `id` field
-// is the container's external UUID; `cluster` resolves to the owning cluster.
+// Storage container backing VM disks and files, covering its capacity and
+// reservations, data-reduction settings (compression, deduplication, erasure
+// coding), resiliency (replication factor), encryption posture, and NFS
+// exposure. The `id` field is the container's external UUID; `cluster`
+// resolves to the owning cluster.
 private nutanix.storage.container @defaults("name replicationFactor isEncrypted") {
   // External UUID of the storage container
   id string
@@ -1052,10 +1073,10 @@ private nutanix.storage.container @defaults("name replicationFactor isEncrypted"
 
 // Nutanix volume group
 //
-// Examine a volume group exposed over iSCSI or NVMe-oF: its sharing status,
+// Volume group exposed over iSCSI or NVMe-oF, covering its sharing status,
 // usage type, target naming, client authentication, protocol, and attached
 // disks. The `id` field is the volume group's external UUID; `cluster`
-// resolves to the hosting cluster. Inspect `enabledAuthentications` to find
+// resolves to the hosting cluster. Read `enabledAuthentications` to find
 // targets exposed without CHAP.
 private nutanix.storage.volumeGroup @defaults("name sharingStatus enabledAuthentications") {
   // External UUID of the volume group
@@ -1104,7 +1125,7 @@ private nutanix.storage.volumeGroup @defaults("name sharingStatus enabledAuthent
 
 // Disk in a Nutanix volume group
 //
-// Examine a single disk attached to a volume group: its index, size, and
+// Single disk attached to a volume group, covering its index, size, and
 // backing storage container. The `id` field is the disk's external UUID.
 private nutanix.storage.volumeGroupDisk @defaults("id sizeBytes") {
   // External UUID of the disk
