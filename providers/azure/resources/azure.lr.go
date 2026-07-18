@@ -444,6 +444,9 @@ const (
 	ResourceAzureSubscriptionAppConfigurationServiceConfigurationStore                                string = "azure.subscription.appConfigurationService.configurationStore"
 	ResourceAzureSubscriptionCognitiveServicesService                                                 string = "azure.subscription.cognitiveServicesService"
 	ResourceAzureSubscriptionCognitiveServicesServiceAccount                                          string = "azure.subscription.cognitiveServicesService.account"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRule                        string = "azure.subscription.cognitiveServicesService.account.virtualNetworkRule"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountUserOwnedStorage                          string = "azure.subscription.cognitiveServicesService.account.userOwnedStorage"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountNetworkInjection                          string = "azure.subscription.cognitiveServicesService.account.networkInjection"
 	ResourceAzureSubscriptionCognitiveServicesServiceAccountDeployment                                string = "azure.subscription.cognitiveServicesService.account.deployment"
 	ResourceAzureSubscriptionCognitiveServicesServiceAccountProject                                   string = "azure.subscription.cognitiveServicesService.account.project"
 	ResourceAzureSubscriptionCognitiveServicesServiceAccountProjectConnection                         string = "azure.subscription.cognitiveServicesService.account.project.connection"
@@ -2192,6 +2195,18 @@ func init() {
 		"azure.subscription.cognitiveServicesService.account": {
 			Init:   initAzureSubscriptionCognitiveServicesServiceAccount,
 			Create: createAzureSubscriptionCognitiveServicesServiceAccount,
+		},
+		"azure.subscription.cognitiveServicesService.account.virtualNetworkRule": {
+			// to override args, implement: initAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRule,
+		},
+		"azure.subscription.cognitiveServicesService.account.userOwnedStorage": {
+			// to override args, implement: initAzureSubscriptionCognitiveServicesServiceAccountUserOwnedStorage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCognitiveServicesServiceAccountUserOwnedStorage,
+		},
+		"azure.subscription.cognitiveServicesService.account.networkInjection": {
+			// to override args, implement: initAzureSubscriptionCognitiveServicesServiceAccountNetworkInjection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCognitiveServicesServiceAccountNetworkInjection,
 		},
 		"azure.subscription.cognitiveServicesService.account.deployment": {
 			// to override args, implement: initAzureSubscriptionCognitiveServicesServiceAccountDeployment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -17406,6 +17421,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cognitiveServicesService.account.creationTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetCreationTime()).ToDataRes(types.Time)
 	},
+	"azure.subscription.cognitiveServicesService.account.allowedFqdnList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetAllowedFqdnList()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cognitiveServicesService.account.ipRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetIpRules()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cognitiveServicesService.account.virtualNetworkRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetVirtualNetworkRules()).ToDataRes(types.Array(types.Resource("azure.subscription.cognitiveServicesService.account.virtualNetworkRule")))
+	},
+	"azure.subscription.cognitiveServicesService.account.abusePenaltyAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetAbusePenaltyAction()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.abusePenaltyExpiration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetAbusePenaltyExpiration()).ToDataRes(types.Time)
+	},
+	"azure.subscription.cognitiveServicesService.account.abusePenaltyRateLimitPercentage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetAbusePenaltyRateLimitPercentage()).ToDataRes(types.Float)
+	},
+	"azure.subscription.cognitiveServicesService.account.cmkKeyVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetCmkKeyVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.cmkIdentityClientId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetCmkIdentityClientId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.userOwnedStorage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetUserOwnedStorage()).ToDataRes(types.Array(types.Resource("azure.subscription.cognitiveServicesService.account.userOwnedStorage")))
+	},
+	"azure.subscription.cognitiveServicesService.account.raiMonitorAdxStorageResourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetRaiMonitorAdxStorageResourceId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiMonitorIdentityClientId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetRaiMonitorIdentityClientId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.commitmentPlanAssociations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetCommitmentPlanAssociations()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.cognitiveServicesService.account.multiRegionSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetMultiRegionSettings()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.cognitiveServicesService.account.multiRegionRoutingMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetMultiRegionRoutingMethod()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.networkInjections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetNetworkInjections()).ToDataRes(types.Array(types.Resource("azure.subscription.cognitiveServicesService.account.networkInjection")))
+	},
 	"azure.subscription.cognitiveServicesService.account.defenderForAIEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetDefenderForAIEnabled()).ToDataRes(types.Bool)
 	},
@@ -17429,6 +17489,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cognitiveServicesService.account.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.cognitiveServicesService.account.virtualNetworkRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRule).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.virtualNetworkRule.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRule).GetState()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.virtualNetworkRule.ignoreMissingVnetServiceEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRule).GetIgnoreMissingVnetServiceEndpoint()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cognitiveServicesService.account.virtualNetworkRule.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRule).GetSubnet()).ToDataRes(types.Resource("azure.subscription.networkService.subnet"))
+	},
+	"azure.subscription.cognitiveServicesService.account.userOwnedStorage.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountUserOwnedStorage).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.userOwnedStorage.identityClientId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountUserOwnedStorage).GetIdentityClientId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.userOwnedStorage.storageAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountUserOwnedStorage).GetStorageAccount()).ToDataRes(types.Resource("azure.subscription.storageService.account"))
+	},
+	"azure.subscription.cognitiveServicesService.account.networkInjection.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountNetworkInjection).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.networkInjection.scenario": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountNetworkInjection).GetScenario()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.networkInjection.useMicrosoftManagedNetwork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountNetworkInjection).GetUseMicrosoftManagedNetwork()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cognitiveServicesService.account.networkInjection.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountNetworkInjection).GetSubnet()).ToDataRes(types.Resource("azure.subscription.networkService.subnet"))
 	},
 	"azure.subscription.cognitiveServicesService.account.deployment.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).GetId()).ToDataRes(types.String)
@@ -40108,6 +40201,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.cognitiveServicesService.account.allowedFqdnList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).AllowedFqdnList, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.ipRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).IpRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.virtualNetworkRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).VirtualNetworkRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.abusePenaltyAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).AbusePenaltyAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.abusePenaltyExpiration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).AbusePenaltyExpiration, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.abusePenaltyRateLimitPercentage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).AbusePenaltyRateLimitPercentage, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.cmkKeyVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).CmkKeyVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.cmkIdentityClientId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).CmkIdentityClientId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.userOwnedStorage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).UserOwnedStorage, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiMonitorAdxStorageResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).RaiMonitorAdxStorageResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiMonitorIdentityClientId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).RaiMonitorIdentityClientId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.commitmentPlanAssociations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).CommitmentPlanAssociations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.multiRegionSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).MultiRegionSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.multiRegionRoutingMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).MultiRegionRoutingMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.networkInjections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).NetworkInjections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.cognitiveServicesService.account.defenderForAIEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).DefenderForAIEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -40138,6 +40291,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cognitiveServicesService.account.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.virtualNetworkRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.virtualNetworkRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.virtualNetworkRule.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRule).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.virtualNetworkRule.ignoreMissingVnetServiceEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRule).IgnoreMissingVnetServiceEndpoint, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.virtualNetworkRule.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRule).Subnet, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceSubnet](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.userOwnedStorage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountUserOwnedStorage).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.userOwnedStorage.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountUserOwnedStorage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.userOwnedStorage.identityClientId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountUserOwnedStorage).IdentityClientId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.userOwnedStorage.storageAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountUserOwnedStorage).StorageAccount, ok = plugin.RawToTValue[*mqlAzureSubscriptionStorageServiceAccount](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.networkInjection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountNetworkInjection).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.networkInjection.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountNetworkInjection).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.networkInjection.scenario": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountNetworkInjection).Scenario, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.networkInjection.useMicrosoftManagedNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountNetworkInjection).UseMicrosoftManagedNetwork, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.networkInjection.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountNetworkInjection).Subnet, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceSubnet](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cognitiveServicesService.account.deployment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -94536,35 +94745,50 @@ type mqlAzureSubscriptionCognitiveServicesServiceAccount struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAzureSubscriptionCognitiveServicesServiceAccountInternal
-	Id                            plugin.TValue[string]
-	Name                          plugin.TValue[string]
-	Location                      plugin.TValue[string]
-	Kind                          plugin.TValue[string]
-	Tags                          plugin.TValue[map[string]any]
-	Sku                           plugin.TValue[any]
-	Identity                      plugin.TValue[any]
-	PublicNetworkAccess           plugin.TValue[string]
-	DisableLocalAuth              plugin.TValue[bool]
-	RestrictOutboundNetworkAccess plugin.TValue[bool]
-	CustomSubDomainName           plugin.TValue[string]
-	NetworkAcls                   plugin.TValue[any]
-	NetworkAclsDefaultAction      plugin.TValue[string]
-	NetworkAclsBypass             plugin.TValue[string]
-	CmkKeySource                  plugin.TValue[string]
-	CmkKeyName                    plugin.TValue[string]
-	CmkKeyVaultUri                plugin.TValue[string]
-	Endpoint                      plugin.TValue[string]
-	ProvisioningState             plugin.TValue[string]
-	StoredCompletionsDisabled     plugin.TValue[bool]
-	CreationTime                  plugin.TValue[*time.Time]
-	DefenderForAIEnabled          plugin.TValue[bool]
-	RaiPolicies                   plugin.TValue[[]any]
-	RaiTopics                     plugin.TValue[[]any]
-	Deployments                   plugin.TValue[[]any]
-	Projects                      plugin.TValue[[]any]
-	Connections                   plugin.TValue[[]any]
-	PrivateEndpointConnections    plugin.TValue[[]any]
-	SystemMetadata                plugin.TValue[*mqlAzureSubscriptionSystemData]
+	Id                              plugin.TValue[string]
+	Name                            plugin.TValue[string]
+	Location                        plugin.TValue[string]
+	Kind                            plugin.TValue[string]
+	Tags                            plugin.TValue[map[string]any]
+	Sku                             plugin.TValue[any]
+	Identity                        plugin.TValue[any]
+	PublicNetworkAccess             plugin.TValue[string]
+	DisableLocalAuth                plugin.TValue[bool]
+	RestrictOutboundNetworkAccess   plugin.TValue[bool]
+	CustomSubDomainName             plugin.TValue[string]
+	NetworkAcls                     plugin.TValue[any]
+	NetworkAclsDefaultAction        plugin.TValue[string]
+	NetworkAclsBypass               plugin.TValue[string]
+	CmkKeySource                    plugin.TValue[string]
+	CmkKeyName                      plugin.TValue[string]
+	CmkKeyVaultUri                  plugin.TValue[string]
+	Endpoint                        plugin.TValue[string]
+	ProvisioningState               plugin.TValue[string]
+	StoredCompletionsDisabled       plugin.TValue[bool]
+	CreationTime                    plugin.TValue[*time.Time]
+	AllowedFqdnList                 plugin.TValue[[]any]
+	IpRules                         plugin.TValue[[]any]
+	VirtualNetworkRules             plugin.TValue[[]any]
+	AbusePenaltyAction              plugin.TValue[string]
+	AbusePenaltyExpiration          plugin.TValue[*time.Time]
+	AbusePenaltyRateLimitPercentage plugin.TValue[float64]
+	CmkKeyVersion                   plugin.TValue[string]
+	CmkIdentityClientId             plugin.TValue[string]
+	UserOwnedStorage                plugin.TValue[[]any]
+	RaiMonitorAdxStorageResourceId  plugin.TValue[string]
+	RaiMonitorIdentityClientId      plugin.TValue[string]
+	CommitmentPlanAssociations      plugin.TValue[[]any]
+	MultiRegionSettings             plugin.TValue[[]any]
+	MultiRegionRoutingMethod        plugin.TValue[string]
+	NetworkInjections               plugin.TValue[[]any]
+	DefenderForAIEnabled            plugin.TValue[bool]
+	RaiPolicies                     plugin.TValue[[]any]
+	RaiTopics                       plugin.TValue[[]any]
+	Deployments                     plugin.TValue[[]any]
+	Projects                        plugin.TValue[[]any]
+	Connections                     plugin.TValue[[]any]
+	PrivateEndpointConnections      plugin.TValue[[]any]
+	SystemMetadata                  plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
 // createAzureSubscriptionCognitiveServicesServiceAccount creates a new instance of this resource
@@ -94688,6 +94912,66 @@ func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetCreationTime() 
 	return &c.CreationTime
 }
 
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetAllowedFqdnList() *plugin.TValue[[]any] {
+	return &c.AllowedFqdnList
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetIpRules() *plugin.TValue[[]any] {
+	return &c.IpRules
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetVirtualNetworkRules() *plugin.TValue[[]any] {
+	return &c.VirtualNetworkRules
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetAbusePenaltyAction() *plugin.TValue[string] {
+	return &c.AbusePenaltyAction
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetAbusePenaltyExpiration() *plugin.TValue[*time.Time] {
+	return &c.AbusePenaltyExpiration
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetAbusePenaltyRateLimitPercentage() *plugin.TValue[float64] {
+	return &c.AbusePenaltyRateLimitPercentage
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetCmkKeyVersion() *plugin.TValue[string] {
+	return &c.CmkKeyVersion
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetCmkIdentityClientId() *plugin.TValue[string] {
+	return &c.CmkIdentityClientId
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetUserOwnedStorage() *plugin.TValue[[]any] {
+	return &c.UserOwnedStorage
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetRaiMonitorAdxStorageResourceId() *plugin.TValue[string] {
+	return &c.RaiMonitorAdxStorageResourceId
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetRaiMonitorIdentityClientId() *plugin.TValue[string] {
+	return &c.RaiMonitorIdentityClientId
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetCommitmentPlanAssociations() *plugin.TValue[[]any] {
+	return &c.CommitmentPlanAssociations
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetMultiRegionSettings() *plugin.TValue[[]any] {
+	return &c.MultiRegionSettings
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetMultiRegionRoutingMethod() *plugin.TValue[string] {
+	return &c.MultiRegionRoutingMethod
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetNetworkInjections() *plugin.TValue[[]any] {
+	return &c.NetworkInjections
+}
+
 func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetDefenderForAIEnabled() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.DefenderForAIEnabled, func() (bool, error) {
 		return c.defenderForAIEnabled()
@@ -94803,6 +95087,229 @@ func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetSystemMetadata(
 		}
 
 		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRule for the azure.subscription.cognitiveServicesService.account.virtualNetworkRule resource
+type mqlAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRuleInternal it will be used here
+	Id                               plugin.TValue[string]
+	State                            plugin.TValue[string]
+	IgnoreMissingVnetServiceEndpoint plugin.TValue[bool]
+	Subnet                           plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet]
+}
+
+// createAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRule creates a new instance of this resource
+func createAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cognitiveServicesService.account.virtualNetworkRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRule) MqlName() string {
+	return "azure.subscription.cognitiveServicesService.account.virtualNetworkRule"
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRule) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRule) GetIgnoreMissingVnetServiceEndpoint() *plugin.TValue[bool] {
+	return &c.IgnoreMissingVnetServiceEndpoint
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRule) GetSubnet() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceSubnet](&c.Subnet, func() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cognitiveServicesService.account.virtualNetworkRule", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
+			}
+		}
+
+		return c.subnet()
+	})
+}
+
+// mqlAzureSubscriptionCognitiveServicesServiceAccountUserOwnedStorage for the azure.subscription.cognitiveServicesService.account.userOwnedStorage resource
+type mqlAzureSubscriptionCognitiveServicesServiceAccountUserOwnedStorage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCognitiveServicesServiceAccountUserOwnedStorageInternal it will be used here
+	Id               plugin.TValue[string]
+	IdentityClientId plugin.TValue[string]
+	StorageAccount   plugin.TValue[*mqlAzureSubscriptionStorageServiceAccount]
+}
+
+// createAzureSubscriptionCognitiveServicesServiceAccountUserOwnedStorage creates a new instance of this resource
+func createAzureSubscriptionCognitiveServicesServiceAccountUserOwnedStorage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCognitiveServicesServiceAccountUserOwnedStorage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cognitiveServicesService.account.userOwnedStorage", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountUserOwnedStorage) MqlName() string {
+	return "azure.subscription.cognitiveServicesService.account.userOwnedStorage"
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountUserOwnedStorage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountUserOwnedStorage) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountUserOwnedStorage) GetIdentityClientId() *plugin.TValue[string] {
+	return &c.IdentityClientId
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountUserOwnedStorage) GetStorageAccount() *plugin.TValue[*mqlAzureSubscriptionStorageServiceAccount] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionStorageServiceAccount](&c.StorageAccount, func() (*mqlAzureSubscriptionStorageServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cognitiveServicesService.account.userOwnedStorage", c.__id, "storageAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionStorageServiceAccount), nil
+			}
+		}
+
+		return c.storageAccount()
+	})
+}
+
+// mqlAzureSubscriptionCognitiveServicesServiceAccountNetworkInjection for the azure.subscription.cognitiveServicesService.account.networkInjection resource
+type mqlAzureSubscriptionCognitiveServicesServiceAccountNetworkInjection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCognitiveServicesServiceAccountNetworkInjectionInternal it will be used here
+	Id                         plugin.TValue[string]
+	Scenario                   plugin.TValue[string]
+	UseMicrosoftManagedNetwork plugin.TValue[bool]
+	Subnet                     plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet]
+}
+
+// createAzureSubscriptionCognitiveServicesServiceAccountNetworkInjection creates a new instance of this resource
+func createAzureSubscriptionCognitiveServicesServiceAccountNetworkInjection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCognitiveServicesServiceAccountNetworkInjection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cognitiveServicesService.account.networkInjection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountNetworkInjection) MqlName() string {
+	return "azure.subscription.cognitiveServicesService.account.networkInjection"
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountNetworkInjection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountNetworkInjection) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountNetworkInjection) GetScenario() *plugin.TValue[string] {
+	return &c.Scenario
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountNetworkInjection) GetUseMicrosoftManagedNetwork() *plugin.TValue[bool] {
+	return &c.UseMicrosoftManagedNetwork
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountNetworkInjection) GetSubnet() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceSubnet](&c.Subnet, func() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cognitiveServicesService.account.networkInjection", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
+			}
+		}
+
+		return c.subnet()
 	})
 }
 

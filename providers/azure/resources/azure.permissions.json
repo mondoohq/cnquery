@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.31.0",
-  "generated_at": "2026-07-18T06:07:30-07:00",
+  "generated_at": "2026-07-18T09:08:41-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -547,7 +547,7 @@
     {
       "permission": "Microsoft.Cognitiveservices/accounts/read",
       "service": "Microsoft.Cognitiveservices",
-      "action": "NewListPager",
+      "action": "Get",
       "source_file": "cognitiveservices.go"
     },
     {

@@ -13593,6 +13593,36 @@ azure.subscription.cognitiveServicesService.account @defaults("id name location 
   storedCompletionsDisabled bool
   // When the account was created
   creationTime time
+  // Fully qualified domain names the account may reach when outbound access is restricted
+  allowedFqdnList []string
+  // IP address or CIDR rules in the network rule set allowed to reach the account
+  ipRules []string
+  // Virtual-network rules in the network rule set, each allowing a subnet to reach the account
+  virtualNetworkRules []azure.subscription.cognitiveServicesService.account.virtualNetworkRule
+  // Content-abuse enforcement action Azure applies when responsible-AI monitoring flags the account
+  abusePenaltyAction string
+  // When the content-abuse penalty expires
+  abusePenaltyExpiration time
+  // Percentage the request rate is throttled to while the content-abuse penalty is in effect
+  abusePenaltyRateLimitPercentage float
+  // Version of the customer-managed Key Vault key; empty when the account tracks the latest version automatically
+  cmkKeyVersion string
+  // Client ID of the managed identity used to access the customer-managed key
+  cmkIdentityClientId string
+  // Customer-owned storage accounts where the service persists data
+  userOwnedStorage []azure.subscription.cognitiveServicesService.account.userOwnedStorage
+  // Azure Data Explorer resource ID where responsible-AI monitoring logs are shipped
+  raiMonitorAdxStorageResourceId string
+  // Client ID of the managed identity used to write responsible-AI monitoring logs
+  raiMonitorIdentityClientId string
+  // Provisioned-throughput commitment plans associated with the account, each with its commitmentPlanId and location
+  commitmentPlanAssociations []dict
+  // Per-region settings for multi-region deployments, each with a name, routing value, and optional customSubDomain
+  multiRegionSettings []dict
+  // Routing method used across the configured regions (e.g., "Priority", "Weighted", "Performance")
+  multiRegionRoutingMethod string
+  // Virtual-network injection settings for the account's agents and compute
+  networkInjections []azure.subscription.cognitiveServicesService.account.networkInjection
   // Whether Microsoft Defender for AI threat detection is enabled on the account
   defenderForAIEnabled() bool
   // Responsible AI content-filter policies configured on the account
@@ -13609,6 +13639,53 @@ azure.subscription.cognitiveServicesService.account @defaults("id name location 
   privateEndpointConnections() []azure.subscription.privateEndpointConnection
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
+}
+
+// Virtual-network rule of an Azure AI Services account
+//
+// A single virtual-network rule from the account's network rule set,
+// allowing traffic from one subnet. The `id` field is the subnet resource
+// ID; `subnet` resolves it to the typed subnet so its address space and
+// service endpoints can be audited.
+private azure.subscription.cognitiveServicesService.account.virtualNetworkRule @defaults("id state") {
+  // Resource ID of the subnet allowed to reach the account
+  id string
+  // State of the virtual-network rule
+  state string
+  // Whether a missing virtual-network service endpoint is ignored
+  ignoreMissingVnetServiceEndpoint bool
+  // Subnet allowed to reach the account
+  subnet() azure.subscription.networkService.subnet
+}
+
+// Customer-owned storage attached to an Azure AI Services account
+//
+// A storage account the AI service persists data into (uploads, batch
+// inputs, fine-tuning data). The `id` field is the storage account resource
+// ID; `storageAccount` resolves it to the typed storage account.
+private azure.subscription.cognitiveServicesService.account.userOwnedStorage @defaults("id") {
+  // Resource ID of the customer-owned storage account
+  id string
+  // Client ID of the managed identity used to access the storage account
+  identityClientId string
+  // Storage account where the service persists data
+  storageAccount() azure.subscription.storageService.account
+}
+
+// Virtual-network injection of an Azure AI Services account
+//
+// A single virtual-network injection setting, which places the account's
+// agents or compute into a customer subnet. The `id` field is the injected
+// subnet resource ID; `subnet` resolves it to the typed subnet.
+private azure.subscription.cognitiveServicesService.account.networkInjection @defaults("id scenario") {
+  // Resource ID of the subnet injected into the account
+  id string
+  // Injection scenario (for example "agent")
+  scenario string
+  // Whether the Microsoft-managed network is used instead of the injected subnet
+  useMicrosoftManagedNetwork bool
+  // Subnet injected into the account
+  subnet() azure.subscription.networkService.subnet
 }
 
 // Model deployment on an Azure AI Services account
