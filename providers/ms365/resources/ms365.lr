@@ -8,10 +8,10 @@ alias microsoft.organization = microsoft.tenant
 
 // Microsoft 365
 //
-// Use this namespace to access Microsoft 365 services and resources including
-// users, groups, domains, applications, service principals, roles, and identity
-// and access policies. Serves as the top-level entry point for querying
-// tenant-wide Microsoft Entra ID and Microsoft 365 configuration.
+// Namespace for Microsoft 365 services and resources including users, groups,
+// domains, applications, service principals, roles, and identity and access
+// policies. Serves as the top-level entry point for querying tenant-wide
+// Microsoft Entra ID and Microsoft 365 configuration.
 microsoft {
   // Microsoft 365 tenant organizations
   //
@@ -51,11 +51,12 @@ microsoft {
 
 // Microsoft Entra ID Access Review Definitions
 //
-// Iterate over recurring access review schedules defined in the tenant. Supports
-// an optional `filter` parameter using OData syntax to narrow results — for
-// example, filtering by scope to find reviews targeting group membership. Each
-// entry exposes the review's `displayName`, `status`, `scope`, `reviewers`,
-// and `settings` describing the recurrence and decision-handling configuration.
+// Recurring access review schedules defined in the tenant, used to audit how
+// access to groups, roles, and applications is periodically re-certified. An
+// optional `filter` parameter accepts OData syntax to narrow results, for
+// example filtering by scope to find reviews targeting group membership. Each
+// entry describes the review's schedule, reviewers, and decision-handling
+// settings.
 microsoft.identityAndAccess.accessReviews {
   []microsoft.identityAndAccess.accessReviewDefinition
   init(filter? string)
@@ -75,7 +76,11 @@ private microsoft.identityAndAccess.accessReviewDefinition @defaults("id display
   status string
   // Defines the entities whose access is reviewed
   scope microsoft.identityAndAccess.accessReviewDefinition.scope
-  // This collection of access review scopes is used to define who are the reviewers
+  // Reviewer scopes
+  //
+  // List of reviewer scope entries defining who performs the review. Each entry
+  // is a dict with `reviewer` (a query selecting the reviewing principals),
+  // `queryType`, and `queryRoot`.
   reviewers dict
   // The settings for an access review series, see type definition below
   settings microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings
@@ -111,16 +116,23 @@ private microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleS
   mailNotificationsEnabled bool
   // True if decision recommendations are enabled or disabled
   recommendationsEnabled bool
-  // Detailed settings for recurrence using the standard Outlook recurrence object
+  // Recurrence settings
+  //
+  // Recurrence configuration for the review series, as a dict with `pattern`
+  // (the recurrence pattern, such as its type and interval) and `range` (the
+  // start, end, and range type of the recurrence).
   recurrence dict
 }
 
 // Microsoft Entra ID Groups
 //
-// Iterate over all Microsoft Entra ID (formerly Azure AD) groups in the tenant.
-// Each entry is a `microsoft.group` exposing `displayName`, `securityEnabled`,
-// `mailEnabled`, `groupTypes`, membership rules, expiration settings, and
-// on-premises sync status. Use `count` to get the total number of groups.
+// Collection of every Microsoft Entra ID (formerly Azure AD) group in the
+// tenant, including security groups, mail-enabled groups, Microsoft 365
+// groups, and dynamic membership groups. Auditing groups matters because
+// they are the primary mechanism for granting access to resources and
+// applications, so overly broad membership, stale groups, or misconfigured
+// dynamic rules can expand a tenant's attack surface. Each entry is a
+// `microsoft.group`, and `count` reports the total number of groups.
 microsoft.groups {
   []microsoft.group
   // Total number of Microsoft groups
@@ -129,10 +141,11 @@ microsoft.groups {
 
 // Microsoft 365 Group Setting
 //
-// Examine a single Microsoft 365 group setting applied to the tenant. Each
-// setting is identified by a `templateId` and a `displayName`, and contains
-// a list of `values` (as `microsoft.settingValue` entries) that control
-// group behavior such as guest access or naming policies.
+// Directory-level group setting applied across the tenant, identified by its
+// `templateId` and `displayName`. Each setting carries a list of `values`
+// that control group behavior such as guest access, self-service group
+// creation, and naming policies. Audit these to confirm that group
+// governance matches your organization's requirements.
 microsoft.setting  @defaults("displayName values") {
   // Display name of the setting
   displayName string
@@ -144,9 +157,10 @@ microsoft.setting  @defaults("displayName values") {
 
 // Microsoft 365 Group Setting Value
 //
-// Examine a single name/value pair within a `microsoft.setting`. The `name`
+// A single name/value pair within a `microsoft.setting`. The `name`
 // identifies the specific setting key (for example, `AllowGuestsToBeGroupOwner`)
-// and `value` holds its current string representation.
+// and `value` holds its current string representation, which governs group
+// behavior such as guest access, group creation limits, or naming policies.
 microsoft.settingValue  @defaults("name value") {
   // Name of the setting value
   name string
@@ -156,10 +170,12 @@ microsoft.settingValue  @defaults("name value") {
 
 // Microsoft Entra ID Application Registrations
 //
-// Iterate over all application registrations in the tenant. Each entry is a
-// `microsoft.application` exposing identity details (`id`, `appId`, `name`),
-// credential health (`hasExpiredCredentials`, `secrets`, `certificates`),
-// sign-in audience, and linked service principal. Use `count` to get
+// Collection of every application registration in the connected Microsoft Entra
+// ID (Azure AD) tenant. Each registration defines an app's identity, its OAuth
+// client credentials, and which accounts are allowed to sign in, making this
+// collection the entry point for auditing credential hygiene (expired or
+// long-lived secrets and certificates), overly broad sign-in audiences, and
+// stale or unused registrations across the tenant. The `count` field returns
 // the total number of registered applications.
 microsoft.applications {
   []microsoft.application
@@ -169,7 +185,7 @@ microsoft.applications {
 
 // Microsoft Entra Tenant
 //
-// Examine configuration of the connected Microsoft Entra ID (Azure AD) tenant.
+// Configuration of the connected Microsoft Entra ID (Azure AD) tenant.
 // Exposes the tenant's `name`, `id`, `type`, verified domains, provisioned
 // plans, on-premises sync status, privacy profile, technical notification
 // contacts, and security compliance notification addresses. Related resources
@@ -178,16 +194,26 @@ microsoft.tenant @defaults("name") {
   // Organization ID
   id string
   // Service plans associated with the tenant
+  //
+  // Each entry has keys `service` (the service family, such as
+  // `AADPremiumService` or `exchange`), `capabilityStatus` (one of
+  // `Enabled`, `Warning`, `Suspended`, `Deleted`, or `LockedOut`),
+  // `servicePlanId` (the plan GUID), and `assignedDateTime`. See
+  // `enabledServicePlans` for the distinct list of enabled service families.
   assignedPlans []dict
   // Enabled service families on the tenant
   //
   // Distinct list of `service` names from `assignedPlans` whose
   // `capabilityStatus` is `Enabled`, sorted alphabetically. Use this to gate
-  // license-dependent checks without digging through the `assignedPlans` dicts
-  // — for example `microsoft.tenant.enabledServicePlans.contains("AADPremiumService")`
+  // license-dependent checks without digging through the `assignedPlans` dicts,
+  // for example `microsoft.tenant.enabledServicePlans.contains("AADPremiumService")`
   // to confirm Microsoft Entra ID P1/P2 is active.
   enabledServicePlans() []string
-  // Provisioned plan
+  // Provisioned plans
+  //
+  // Each entry has keys `service` (the service family, such as
+  // `SharePoint` or `exchange`) and `capabilityStatus` (one of `Enabled`,
+  // `Warning`, `Suspended`, `Deleted`, or `LockedOut`).
   provisionedPlans []dict
   // Tenant creation date and time
   //
@@ -196,6 +222,12 @@ microsoft.tenant @defaults("name") {
   // Tenant display name
   name string
   // Organization verified domains
+  //
+  // Each entry has keys `name` (the domain name), `type` (`Managed` or
+  // `Federated`), `capabilities` (comma-separated services associated with
+  // the domain, such as `Email` or `OfficeCommunicationsOnline`), `isDefault`
+  // (the primary domain new users are assigned to), and `isInitial` (the
+  // tenant's original `*.onmicrosoft.com` domain).
   verifiedDomains []dict
   // Whether password hash sync is enabled for hybrid deployments
   onPremisesSyncEnabled bool
@@ -203,7 +235,13 @@ microsoft.tenant @defaults("name") {
   createdAt time
   // Tenant type
   type string
-  // Commercial subscription
+  // Commercial subscriptions
+  //
+  // Each entry has keys `id`, `skuPartNumber` (the license SKU, such as
+  // `ENTERPRISEPREMIUM`), `status` (one of `Enabled`, `Warning`, `Suspended`,
+  // `Deleted`, or `LockedOut`), `isTrial`, `totalLicenses`, `createdAt`, and
+  // `servicePlans` (each with `servicePlanId`, `servicePlanName`,
+  // `provisioningStatus`, and `appliesTo`).
   subscriptions() []dict
   // Company-wide settings for apps and services.
   settings() microsoft.tenantSettings
@@ -262,6 +300,15 @@ private microsoft.tenantSettings @defaults("isAppAndServicesTrialEnabled isOffic
 }
 
 // Company-wide settings for Microsoft Forms
+//
+// Organization-level controls that govern how Microsoft Forms can be
+// shared, collected, and protected across the tenant. The boolean fields
+// determine whether forms, results, and templates can leave the
+// organization (external sending, sharing, and collaboration), whether
+// respondent identities are recorded, whether Bing image search is
+// available inside forms, and whether phishing scanning runs on
+// user-created forms. Audit these to confirm data-sharing and
+// anti-phishing controls match your data-governance policy.
 private microsoft.tenantFormsSettings @defaults("isExternalSendFormEnabled isBingImageSearchEnabled") {
   // Controls whether users can send a link to a form to an external user
   isExternalSendFormEnabled bool
@@ -281,11 +328,11 @@ private microsoft.tenantFormsSettings @defaults("isExternalSendFormEnabled isBin
 
 // Microsoft Entra ID Users
 //
-// Iterate over Microsoft Entra ID (formerly Azure AD) users in the tenant.
-// Supports optional `filter` (OData property filter) and `search` (keyword
-// search) parameters to narrow results. Each entry is a `microsoft.user`
-// exposing account status, contact details, job information, MFA state,
-// assigned licenses, sign-in history, and authentication method registration.
+// Microsoft Entra ID (formerly Azure AD) users in the tenant. Supports
+// optional `filter` (OData property filter) and `search` (keyword search)
+// parameters to narrow results. Each entry is a `microsoft.user` exposing
+// account status, contact details, job information, MFA state, assigned
+// licenses, sign-in history, and authentication method registration.
 microsoft.users {
   []microsoft.user
 
@@ -320,8 +367,9 @@ microsoft.identityAndAccess {
 
 // Microsoft Entra Privileged Identity Management
 //
-// Use this namespace to access PIM role management policies for Microsoft Entra
-// ID roles.
+// Privileged Identity Management (PIM) role management policies for Microsoft
+// Entra ID roles, governing how eligible and active role assignments are
+// activated, approved, and time-bound.
 microsoft.identityAndAccess.privilegedIdentityManagement {
   // PIM role management policies
   policies() microsoft.identityAndAccess.privilegedIdentityManagement.policies
@@ -329,9 +377,9 @@ microsoft.identityAndAccess.privilegedIdentityManagement {
 
 // PIM role management policies
 //
-// Iterate over PIM role management policies defined in the tenant. Supports
-// an optional `filter` parameter (for example, scoped to `scopeId eq '/' and
-// scopeType eq 'Directory'`) to narrow results.
+// PIM role management policies defined in the tenant, each governing activation
+// requirements for a directory scope. An optional `filter` parameter narrows
+// results, for example scoped to `scopeId eq '/' and scopeType eq 'Directory'`.
 microsoft.identityAndAccess.privilegedIdentityManagement.policies {
   []microsoft.identityAndAccess.privilegedIdentityManagement.policy
   init(filter? string)
@@ -433,7 +481,10 @@ private microsoft.identityAndAccess.privilegedIdentityManagement.policy @default
   scopeType string
   // The time when this policy was last modified
   lastModifiedDateTime time
-  // The identity of the user who last modified the policy
+  // Identity that last modified the policy
+  //
+  // Dict identifying the principal that last changed the policy, with `id` and
+  // `displayName`.
   lastModifiedBy dict
   // The collection of rules that are part of the policy
   rules() []microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule
@@ -463,9 +514,9 @@ private microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.tar
 
 // Microsoft Entra Identity and Sign-In Policies
 //
-// Use this namespace to access identity and sign-in policy configuration.
-// Currently exposes `policies`, which provides access to specific policy
-// objects such as the identity security defaults enforcement policy.
+// Identity and sign-in policy configuration for the tenant. The `policies`
+// collection provides access to specific policy objects such as the identity
+// security defaults enforcement policy.
 microsoft.identityAndAccess.identityAndSignIn {
   // Identity and sign-in policies
   policies() microsoft.identityAndAccess.identityAndSignIn.policies
@@ -473,9 +524,9 @@ microsoft.identityAndAccess.identityAndSignIn {
 
 // Microsoft Entra Identity and Sign-In Policy Collection
 //
-// Use this namespace to access individual sign-in policy objects. Currently
-// exposes `identitySecurityDefaultsEnforcementPolicy`, which controls whether
-// Microsoft Entra ID security defaults are enabled for the tenant.
+// Collection of individual sign-in policy objects. The
+// `identitySecurityDefaultsEnforcementPolicy` controls whether Microsoft Entra
+// ID security defaults are enabled for the tenant.
 microsoft.identityAndAccess.identityAndSignIn.policies {
   // Identity security defaults enforcement policy
   identitySecurityDefaultsEnforcementPolicy() microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy
@@ -529,10 +580,13 @@ private microsoft.user.licenseDetail.servicePlanInfo @defaults("appliesTo provis
 
 // Microsoft Entra Conditional Access
 //
-// Use this namespace to access conditional access configuration for the tenant.
-// Exposes `policies` (the list of conditional access policies), `namedLocations`
-// (IP-based and country-based location conditions), and
-// `authenticationMethodsPolicy` (tenant-wide allowed authentication methods).
+// Tenant-wide Conditional Access configuration, the identity control plane that
+// gates sign-ins by evaluating signals (user, device, location, application,
+// risk) and enforcing requirements such as multifactor authentication or a
+// compliant device. Auditing this surface confirms that policies enforce the
+// intended controls, that no gaps leave privileged users or sensitive apps
+// unprotected, and that named locations and allowed authentication methods
+// match tenant policy.
 microsoft.conditionalAccess {
   // Named locations container
   namedLocations() microsoft.conditionalAccess.namedLocations
@@ -560,19 +614,21 @@ private microsoft.conditionalAccess.authenticationMethodsPolicy @defaults("id di
 
 // Configuration for a specific authentication method
 private microsoft.conditionalAccess.authenticationMethodConfiguration @defaults("id state") {
-  // The policy name
+  // Identifier of the authentication method (for example fido2, microsoftAuthenticator, sms, email)
   id string
-  // The policy name
+  // Whether the authentication method is enabled or disabled for the tenant
+  //
+  // The possible values are: enabled, disabled.
   state string
 }
 
 // Microsoft Entra Conditional Access Named Locations
 //
-// Use this namespace to access named location definitions used in conditional
-// access policy conditions. Exposes `ipLocations` (IP range-based named
-// locations as `microsoft.conditionalAccess.ipNamedLocation`) and
-// `countryLocations` (country-based named locations as
-// `microsoft.conditionalAccess.countryNamedLocation`).
+// Named location definitions referenced by Conditional Access policy conditions
+// to include or exclude sign-ins from specific networks. Split into ipLocations
+// (IP address ranges, often flagged trusted) and countryLocations (countries or
+// regions). Auditing named locations verifies that trusted-network and
+// geographic controls point at the right ranges before policies rely on them.
 microsoft.conditionalAccess.namedLocations {
   // IP-based named locations
   ipLocations() []microsoft.conditionalAccess.ipNamedLocation
@@ -582,14 +638,15 @@ microsoft.conditionalAccess.namedLocations {
 
 // Microsoft Entra Conditional Access Policy
 //
-// Examine a single conditional access policy defined in the tenant. Each
-// policy has a `displayName`, `state` (enabled, disabled, or
-// enabledForReportingButNotEnforced), and timestamps for creation and
-// modification. The policy's `conditions` specify which users, applications,
-// platforms, and locations are in scope; `grantControls` define what the
-// user must satisfy (MFA, compliant device, etc.); and `sessionControls`
-// enforce post-authentication restrictions such as sign-in frequency and
-// persistent browser behavior.
+// Single Conditional Access policy in the tenant. The state field
+// (enabled, disabled, or enabledForReportingButNotEnforced) determines whether
+// the policy is enforced, reporting-only, or off. conditions scope the policy to
+// specific users, applications, platforms, locations, and risk levels;
+// grantControls define what a matching sign-in must satisfy (block, MFA,
+// compliant device, and so on); and sessionControls constrain the resulting
+// session (sign-in frequency, persistent browser). Auditing policies confirms
+// that enforced controls cover privileged users and sensitive apps with no
+// exclusion gaps.
 microsoft.conditionalAccess.policy @defaults("id displayName state") {
   // Specifies the identifier of a conditionalAccessPolicy object
   id string
@@ -777,7 +834,7 @@ private microsoft.conditionalAccess.policy.conditions.users @defaults("includeUs
 
 // Locations included in and excluded from a Conditional Access policy
 //
-// Examine which named locations a Microsoft Entra Conditional Access policy applies to (or excludes). Locations can be countries and regions or IP addresses.
+// Named locations a Microsoft Entra Conditional Access policy applies to or excludes, expressed as country/region or IP address definitions. The includeLocations and excludeLocations lists hold named-location IDs plus the reserved values All and AllTrusted.
 private microsoft.conditionalAccess.policy.conditions.locations @defaults("includeLocations excludeLocations") {
   // Location IDs in scope of policy unless explicitly excluded, All, or AllTrusted
   includeLocations []string
@@ -821,10 +878,11 @@ private microsoft.conditionalAccess.policy.sessionControls @defaults("id") {
 
 // Microsoft Entra Conditional Access IP Named Location
 //
-// Examine an IP address range-based named location used in conditional access
-// policy conditions. Exposes the `name`, whether the location is marked as
-// `trusted`, its creation and modification timestamps, and the `id` used to
-// reference it in policy include/exclude location lists.
+// IP address range-based named location referenced by Conditional Access
+// policy conditions. The trusted flag marks the range as a trusted network,
+// which policies can treat as lower risk or exempt from controls, so verifying
+// which ranges carry that flag is a common audit. The id is the value policies
+// use in their include and exclude location lists.
 microsoft.conditionalAccess.ipNamedLocation @defaults("id name trusted") {
   // Named location ID
   id string
@@ -840,20 +898,32 @@ microsoft.conditionalAccess.ipNamedLocation @defaults("id name trusted") {
 
 // Microsoft Entra Conditional Access Country Named Location
 //
-// Examine a country or region-based named location used in conditional access
-// policy conditions. Exposes the `id` used to reference the location in policy
-// include/exclude location lists, the `name`, and the `lookupMethod` that
-// determines how the country is resolved (by IP address or GPS coordinates).
+// Country or region-based named location referenced by Conditional Access
+// policy conditions. The lookupMethod field records how a sign-in's country is
+// resolved, either from the client IP address or from authenticator app GPS
+// signal. The id is the value policies use in their include and exclude
+// location lists.
 microsoft.conditionalAccess.countryNamedLocation @defaults("id name lookupMethod") {
   // Named location ID
   id string
   // Named location name
   name string
   // Method to determine the country location
+  //
+  // The possible values are: clientIpAddress, authenticatorAppGps, unknownFutureValue.
   lookupMethod string
 }
 
 // Microsoft Entra ID user
+//
+// User account in the tenant directory, covering identity attributes
+// (userPrincipalName, displayName, userType), account state
+// (accountEnabled, externalUserState), sign-in and password history
+// (signInActivity, lastPasswordChangeDateTime, passwordPolicies),
+// on-premises directory-sync status, assigned licenses, and registered
+// authentication methods. Audit accountEnabled, isAdministrator, and
+// mfaEnabled to find privileged or unprotected accounts, and authMethods
+// for the multifactor and passwordless methods a user has registered.
 private microsoft.user @defaults("id displayName userPrincipalName") {
   // User Object ID
   id string
@@ -927,11 +997,23 @@ private microsoft.user @defaults("id displayName userPrincipalName") {
   userPrincipalName string
   // User type
   userType string
-  // User's mailbox and contribution settings
+  // User's Office Delve content-discovery settings
+  //
+  // Dict with keys `id`, `contributionToContentDiscoveryDisabled` (true when
+  // the user has turned off documents in their own Office Delve), and
+  // `contributionToContentDiscoveryAsOrganizationDisabled` (true when the
+  // organization has disabled Office Delve tenant-wide).
   settings() dict
-  // User's job title, department, company name, and office location
+  // User's job and organization attributes
+  //
+  // Dict with keys `jobTitle`, `companyName`, `department`, `employeeId`, and
+  // `officeLocation`.
   job() dict
-  // User's business phones, mobile phone, and other contact details
+  // User's postal address and contact details
+  //
+  // Dict with keys `streetAddress`, `city`, `state`, `postalCode`, `country`,
+  // `BusinessPhones`, `mobilePhone`, `email`, `otherMails`, `faxNumber`, and
+  // `mailNickname`.
   contact() dict
   // User's configured authentication methods (passwords, MFA, security keys, etc.)
   authMethods() microsoft.user.authenticationMethods
@@ -971,13 +1053,24 @@ private microsoft.user @defaults("id displayName userPrincipalName") {
   externalUserState string
   // Password policies applied to the user (e.g., DisablePasswordExpiration, DisableStrongPassword)
   passwordPolicies string
-  // The user's last interactive and non-interactive sign-in timestamps and request IDs
+  // User's most recent sign-in timestamps and request IDs
+  //
+  // Dict with keys `lastSignInDateTime` and `lastSignInRequestId` (last
+  // interactive sign-in), `lastNonInteractiveSignInDateTime` and
+  // `lastNonInteractiveSignInRequestId` (last non-interactive sign-in), and
+  // `lastSuccessfulSignInDateTime` and `lastSuccessfulSignInRequestId` (last
+  // successful sign-in). Useful for finding stale or dormant accounts.
+  // Requires the AuditLog.Read.All permission.
   signInActivity() dict
 }
 
 // Microsoft user authentication method states
 private microsoft.user.authenticationRequirements {
-  // user's MFA state
+  // Legacy per-user MFA state
+  //
+  // One of `disabled`, `enabled`, or `enforced`. Reflects the older per-user
+  // multifactor authentication setting, not a Conditional Access or Security
+  // Defaults policy.
   perUserMfaState string
 }
 
@@ -1059,21 +1152,43 @@ private microsoft.user.signin {
 private microsoft.user.authenticationMethods @defaults("count") {
     // Count of authentication methods
     count int
-    // Phone number and type registered to a user
+    // Phone numbers registered to the user
+    //
+    // Each entry is a dict with keys `id`, `type` (mobile, alternateMobile, or
+    // office), `phoneNumber`, and `ssmSignInState` (whether SMS sign-in is
+    // enabled for the number).
     phoneMethods []dict
-    // Email authentication method for self-service password reset (SSPR)
+    // Email addresses registered for self-service password reset (SSPR)
+    //
+    // Each entry is a dict with keys `id` and `emailAddress`.
     emailMethods []dict
-    // FIDO2 security key registered to a user
+    // FIDO2 security keys registered to the user
+    //
+    // Each entry is a dict with keys `id`, `name`, `attestationLevel`, `model`,
+    // and `attestationCertificates`.
     fido2Methods []dict
-    // Software OATH token registered to a user
+    // Software OATH tokens registered to the user
+    //
+    // Each entry is a dict with key `id`.
     softwareMethods []dict
-    // Microsoft Authenticator app registered to a user
+    // Microsoft Authenticator app registrations for the user
+    //
+    // Each entry is a dict with keys `id`, `name`, `phoneAppVersion`, and
+    // `deviceTag`.
     microsoftAuthenticator []dict
-    // User password authentication method
+    // Password authentication methods for the user
+    //
+    // Each entry is a dict with key `id`.
     passwordMethods []dict
-    // Temporary Access Pass registered to a user
+    // Temporary Access Pass methods registered to the user
+    //
+    // Each entry is a dict with keys `id`, `isUsable`, `isUsableOnce`, and
+    // `lifetimeInMinutes`.
     temporaryAccessPassMethods []dict
-    // Windows Hello for Business authentication method registered to a user
+    // Windows Hello for Business methods registered to the user
+    //
+    // Each entry is a dict with keys `id`, `name`, `deviceId`, and
+    // `keyStrength`.
     windowsHelloMethods []dict
     // Retrieves the registration and capability status for a user's authentication methods
     registrationDetails() microsoft.user.authenticationMethods.userRegistrationDetails
@@ -1120,6 +1235,15 @@ private microsoft.user.authenticationMethods.userRegistrationDetails @defaults("
 }
 
 // Microsoft group
+//
+// Entra ID group, covering security groups, Microsoft 365 groups, and
+// mail-enabled distribution groups. Group membership governs access to
+// applications, SharePoint sites, Teams, and other resources, which makes
+// groups a core object for access reviews and least-privilege audits. The
+// members and owners fields resolve the principals that belong to and
+// administer the group, isAssignableToRole flags groups that can be granted
+// Entra directory roles, and membershipRule exposes the rule that drives
+// dynamic membership.
 private microsoft.group @defaults("id displayName") {
   // Group ID
   id string
@@ -1127,23 +1251,34 @@ private microsoft.group @defaults("id displayName") {
   displayName string
   // Whether group security is enabled
   securityEnabled bool
-  // Whether group email is enabled status
+  // Whether the group is mail-enabled
   mailEnabled bool
   // Group email nickname
   mailNickname string
   // Group email
   mail string
-  // Group visibility state
+  // Group visibility
+  //
+  // One of Public, Private, or HiddenMembership. HiddenMembership hides the
+  // membership list from users who are not members and is supported only on
+  // Microsoft 365 groups.
   visibility string
   // List of group members
   members() []microsoft.user
   // List of group owners
   owners() []microsoft.group.owner
-  // Group types indicating the membership and classification of the group
+  // Group types indicating membership and classification
+  //
+  // Values include Unified for Microsoft 365 groups and DynamicMembership for
+  // groups whose members are set by membershipRule. Plain security groups
+  // return an empty list.
   groupTypes []string
   // Membership rule used for dynamic group membership
   membershipRule string
-  // State of the processing for the dynamic membership rule
+  // Processing state for the dynamic membership rule
+  //
+  // One of On or Paused. Paused stops the rule from being evaluated so
+  // membership no longer updates automatically.
   membershipRuleProcessingState string
   // Group creation time
   createdDateTime time
@@ -1187,25 +1322,39 @@ private microsoft.group.owner @defaults("id displayName ownerType") {
   servicePrincipal() microsoft.serviceprincipal
 }
 
-// Microsoft group lifecycle policy
+// Microsoft 365 group lifecycle policy
+//
+// Expiration policy that governs how long Microsoft 365 groups live before
+// they must be renewed, and what happens when they are not. Auditing this
+// tells you whether stale, unowned, or abandoned groups (and their SharePoint
+// sites, mailboxes, and Teams) are cleaned up automatically or allowed to
+// accumulate. The policy sets the renewal lifetime in days, which group types
+// it applies to, and the fallback notification recipients used when a group
+// has no owner to receive renewal notices.
 private microsoft.groupLifecyclePolicy @defaults("groupLifetimeInDays managedGroupTypes alternateNotificationEmails") {
   // Policy ID
   id string
   // Number of days before a group expires and is automatically deleted
   groupLifetimeInDays int
-  // The group type for which the policies will apply
+  // Group types the policy applies to
+  //
+  // One of `All` (every Microsoft 365 group), `Selected` (only groups
+  // explicitly added to the policy), or `None` (no groups, expiration
+  // effectively disabled).
   managedGroupTypes string
-  // List of email addresses to send notifications for groups without owners
+  // Fallback notification recipients for ownerless groups
+  //
+  // Semicolon-separated list of email addresses that receive expiration and
+  // renewal notifications when a group has no owner to notify.
   alternateNotificationEmails string
 }
 
 // Microsoft Entra ID Devices
 //
-// Iterate over devices registered in Microsoft Entra ID. Supports optional
-// `filter` (OData property filter) and `search` (keyword search) parameters.
-// Each entry is a `microsoft.device` exposing compliance state, management
-// status, operating system details, enrollment type, trust type, and
-// on-premises sync information.
+// Devices registered in Microsoft Entra ID, each exposing compliance state,
+// management status, operating system details, enrollment type, trust type,
+// and on-premises sync information. Supports optional `filter` (OData property
+// filter) and `search` (keyword search) parameters to narrow the results.
 microsoft.devices {
   []microsoft.device
 
@@ -1222,13 +1371,24 @@ private microsoft.device @defaults("id displayName") {
   id string
   // Device display name
   displayName string
-  // Unique identifier set
+  // Immutable identifier assigned at device registration
+  //
+  // Set by the Microsoft Entra Device Registration Service when the device
+  // registers. Usable as an alternate key to reference the device, and
+  // distinct from `id`, the directory object identifier.
   deviceId string
   // User-defined property set by Intune
   deviceCategory string
   // Enrollment profile applied to the device
   enrollmentProfileName string
   // Enrollment type of the device
+  //
+  // Set by Intune. Possible values: unknown, userEnrollment,
+  // deviceEnrollmentManager, appleBulkWithUser, appleBulkWithoutUser,
+  // windowsAzureADJoin, windowsBulkUserless, windowsAutoEnrollment,
+  // windowsBulkAzureDomainJoin, windowsCoManagement,
+  // windowsAzureADJoinUsingDeviceAuth, appleUserEnrollment, or
+  // appleUserEnrollmentWithServiceAccount. Other values may also be returned.
   enrollmentType string
   // Whether the device complies with Mobile Device Management (MDM) policies
   isCompliant bool
@@ -1253,6 +1413,10 @@ private microsoft.device @defaults("id displayName") {
   // List of labels applied to the device by the system
   systemLabels []string
   // Type of trust for the joined device
+  //
+  // One of Workplace (registered bring-your-own personal devices), AzureAd
+  // (cloud-only joined devices), or ServerAd (on-premises domain devices also
+  // joined to Microsoft Entra ID).
   trustType string
   // Whether the device account is enabled
   accountEnabled bool
@@ -1262,23 +1426,44 @@ private microsoft.device @defaults("id displayName") {
   onPremisesSyncEnabled bool
   // The last time the device was synced from on-premises
   onPremisesLastSyncDateTime time
-  // The profile type of the device (e.g., RegisteredDevice)
+  // Profile type of the device
+  //
+  // One of RegisteredDevice (default), SecureVM, Printer, Shared, or IoT.
   profileType string
   // Date and time the device most recently signed in
   approximateLastSignInDateTime time
-  // Ownership of the device (company or personal)
+  // Ownership of the device
+  //
+  // Set by Intune. One of unknown, company, or personal.
   deviceOwnership string
   // Date and time when the device's compliance status expires
   complianceExpirationDateTime time
 }
 
-// Microsoft domain
+// Microsoft Entra domain
+//
+// DNS namespace registered to a Microsoft Entra tenant, such as
+// `contoso.com` or the tenant's built-in `contoso.onmicrosoft.com`. Domains
+// govern how user principal names are formed and how sign-in is handled:
+// `authenticationType` distinguishes a cloud-managed domain from one that
+// federates authentication to an external identity provider, and `isVerified`
+// shows whether tenant ownership has been proven by publishing the required
+// DNS records. Also exposes the password expiration policy applied to the
+// domain and the service configuration records a tenant must publish to
+// enable Microsoft 365 services.
 private microsoft.domain @defaults("id") {
-  // Domain ID
+  // Fully qualified name of the domain, such as contoso.com
   id string
-  // Domain authentication type
+  // Authentication type of the domain
+  //
+  // Either `Managed` (Microsoft Entra performs user authentication) or
+  // `Federated` (authentication is federated to an external identity
+  // provider, such as on-premises Active Directory via AD FS).
   authenticationType string
-  // Domain availability status
+  // Availability status of the domain
+  //
+  // Always null except immediately after a verify action, when it is either
+  // `AvailableImmediately` or `EmailVerifiedDomainTakeoverScheduled`.
   availabilityStatus string
   // Whether the domain is admin managed
   isAdminManaged bool
@@ -1294,7 +1479,12 @@ private microsoft.domain @defaults("id") {
   passwordNotificationWindowInDays int
   // Domain password validity period (days)
   passwordValidityPeriodInDays int
-  // List of supported services
+  // Services the domain is configured to support
+  //
+  // Zero or more of `Email`, `Sharepoint`, `EmailInternalRelayOnly`,
+  // `OfficeCommunicationsOnline`, `SharePointDefaultDomain`,
+  // `FullRedelegation`, `SharePointPublic`, `OrgIdAuthentication`, `Yammer`,
+  // or `Intune`.
   supportedServices []string
   // List of service configuration records
   serviceConfigurationRecords() []microsoft.domaindnsrecord
@@ -1316,7 +1506,7 @@ private microsoft.domaindnsrecord @defaults("id label") {
   ttl int
   // Text value of a TXT record
   //
-  // The record content for a TXT record — for example an SPF policy string
+  // The record content for a TXT record, for example an SPF policy string
   // like `v=spf1 include:spf.protection.outlook.com -all`. Empty for record
   // types other than TXT.
   text string
@@ -1342,12 +1532,12 @@ private microsoft.domaindnsrecord @defaults("id label") {
   nameTarget string
   // Service of an SRV record
   //
-  // The symbolic name of the service for an SRV record — for example
+  // The symbolic name of the service for an SRV record, for example
   // `_sip`. Empty for record types other than SRV.
   service string
   // Protocol of an SRV record
   //
-  // The transport protocol for an SRV record — for example `_tcp` or
+  // The transport protocol for an SRV record, for example `_tcp` or
   // `_udp`. Empty for record types other than SRV.
   protocol string
   // Port of an SRV record
@@ -1373,13 +1563,13 @@ private microsoft.domaindnsrecord @defaults("id label") {
 
 // Microsoft Entra ID Application Registration
 //
-// Examine a single application registration in Microsoft Entra ID. Exposes
-// identity fields (`id`, `appId`, `name`, `signInAudience`), credential health
-// via `hasExpiredCredentials`, `secrets` (password credentials), and
-// `certificates` (key credentials). Also provides access to `appRoles`,
-// `permissions` granted to the linked service principal, and configuration
-// for web, SPA, and public client scenarios. Can be selected by `name` or
-// `id` — for example `microsoft.application(name: "MyApp")`.
+// Application registration in Microsoft Entra ID, the object that defines an
+// application's identity, credentials, and the API permissions it requests.
+// Audit credential hygiene through `hasExpiredCredentials`, `secrets`, and
+// `certificates`, review the permissions the app requests via
+// `requiredResourceAccess`, and inspect the web, single-page, and public
+// client sign-in configuration. Select an application by `name` or `id`, for
+// example `microsoft.application(name: "MyApp")`.
 microsoft.application @defaults("id name hasExpiredCredentials") {
   init(name string, id string)
   // Object ID
@@ -1407,14 +1597,34 @@ microsoft.application @defaults("id name hasExpiredCredentials") {
   // Application publisher domain
   publisherDomain string
   // Application sign-in audience
+  //
+  // Account types that can sign in to the application. One of `AzureADMyOrg`
+  // (single tenant), `AzureADMultipleOrgs` (any Entra tenant),
+  // `AzureADandPersonalMicrosoftAccount`, or `PersonalMicrosoftAccount`.
   signInAudience string
   // Basic profile information
+  //
+  // Informational URLs shown to users on the consent screen, with the keys
+  // `logoUrl`, `marketingUrl`, `privacyStatementUrl`, `supportUrl`, and
+  // `termsOfServiceUrl`.
   info dict
   // Settings for an application that implements a web API
+  //
+  // Keys: `acceptMappedClaims`, `knownClientApplications`,
+  // `oauth2PermissionScopes` (delegated permission scopes the API exposes),
+  // `preAuthorizedApplications` (clients pre-consented to those scopes), and
+  // `requestedAccessTokenVersion`.
   api dict
   // Settings for a web application
+  //
+  // Keys: `homePageUrl`, `logoutUrl`, `redirectUris`, `redirectUriSettings`,
+  // and `implicitGrantSettings` (with `enableAccessTokenIssuance` and
+  // `enableIdTokenIssuance`, the implicit grant flows the app allows).
   web dict
   // Settings for a single-page application
+  //
+  // Contains the key `redirectUris`, the redirect URIs registered for the
+  // single-page application.
   spa dict
   // Client secrets
   secrets []microsoft.passwordCredential
@@ -1430,7 +1640,10 @@ microsoft.application @defaults("id name hasExpiredCredentials") {
   isDeviceOnlyAuthSupported bool
   // Specifies the fallback application type as public client
   isFallbackPublicClient bool
-  // Whether the application supports native authentication
+  // Native authentication APIs enablement state
+  //
+  // Whether native authentication APIs are enabled for the application. One of
+  // `none` or `all`.
   nativeAuthenticationApisEnabled string
   // Service management reference
   serviceManagementReference string
@@ -1441,22 +1654,49 @@ microsoft.application @defaults("id name hasExpiredCredentials") {
   // Default redirect URI
   defaultRedirectUri string
   // App certification details including compliance status and certifier
+  //
+  // Keys: `certificationDetailsUrl`, `certificationExpirationDateTime`,
+  // `isCertifiedByMicrosoft`, `isPublisherAttested`, and
+  // `lastCertificationDateTime`.
   certification dict
   // Optional claims
+  //
+  // Claims returned in tokens issued for the application, grouped by token
+  // type under the keys `accessToken`, `idToken`, and `saml2Token`. Each entry
+  // has `name`, `source`, and `essential`.
   optionalClaims dict
-  // Service principal configuration
+  // Locked properties on the associated service principal
+  //
+  // Which sensitive properties are protected from edits by non-privileged
+  // actors. Keys: `isEnabled`, `allProperties`,
+  // `credentialsWithUsageSignIns`, `credentialsWithUsageVerify`, and
+  // `tokenEncryptionKeyId`.
   servicePrincipalLockConfiguration dict
-  // Signature verification
+  // SAML request signature verification settings
+  //
+  // Keys: `isSignedRequestRequired`, whether the application requires signed
+  // authentication requests, and `allowedWeakAlgorithms`.
   requestSignatureVerification dict
   // Parental control settings
+  //
+  // Keys: `legalAgeGroupRule`, the age-group rule applied to the application,
+  // and `countriesBlockedForMinors`, the two-letter country codes where the
+  // app is blocked for minors.
   parentalControlSettings dict
   // Public client configuration
+  //
+  // Contains the key `redirectUris`, the redirect URIs registered for
+  // installed clients such as mobile and desktop applications.
   publicClient dict
   // Application roles
   appRoles []microsoft.application.role
   // API permissions the application requests, grouped by resource API
   //
-  // The configured permissions, distinct from what has actually been consented on the service principal.
+  // The configured permissions, distinct from what has actually been consented
+  // on the service principal. Each entry has `resourceAppId` (the API's
+  // application ID) and `resourceAccess`, a list of `{id, type}` where `type`
+  // is `Scope` for a delegated permission or `Role` for an application
+  // permission.
   requiredResourceAccess []dict
 }
 
@@ -1472,11 +1712,19 @@ private microsoft.application.role @defaults("name value isEnabled"){
   value string
   // Allowed member types
   allowedMemberTypes []string
-  // App state
+  // Whether the app role is enabled
   isEnabled bool
 }
 
-// Microsoft Entra AD Application certificate
+// Microsoft Entra application certificate credential
+//
+// A public-key certificate registered on an Entra application or service
+// principal and used to authenticate the app when it requests tokens. Audit
+// these to find certificates that are expired or close to expiry, to review
+// what key material an application trusts, and to flag long-lived or unused
+// credentials that widen the blast radius if the app is compromised. The
+// `expired` predicate reports whether the certificate is past its end date,
+// and `expires` gives the exact expiration time.
 private microsoft.keyCredential @defaults("thumbprint description expires keyId") {
   // Certificate ID
   keyId string
@@ -1485,24 +1733,42 @@ private microsoft.keyCredential @defaults("thumbprint description expires keyId"
   // Certificate thumbprint
   thumbprint string
   // Certificate type
+  //
+  // One of AsymmetricX509Cert (a standalone X.509 certificate) or
+  // X509CertAndPassword (a certificate paired with a password).
   type string
   // Certificate usage
+  //
+  // Purpose the key can be used for: Verify (the app presents this
+  // certificate to prove its identity) or Sign (the app signs with it).
   usage string
   // Certificate expiration date
   expires time
-  // Whether the secret has expired
+  // Whether the certificate has passed its expiration date
   expired bool
   // Certificate validity start date
   startDateTime time
 }
 
 // Microsoft Entra AD Application secrets
+//
+// Client secret (password credential) registered on an Entra ID application
+// or service principal. Client secrets authenticate an application to the
+// Microsoft identity platform, so their expiration and rotation are common
+// audit targets: `expires` and `expired` surface stale or soon-to-lapse
+// credentials, and `startDateTime` shows when the secret became valid. The
+// `hint` field carries only the leading characters of the secret value,
+// never the secret itself.
 private microsoft.passwordCredential @defaults("description expires keyId") {
   // Secret ID
   keyId string
   // Free-form description of the client secret's purpose
   description string
   // Secret hint
+  //
+  // Leading characters of the client secret value, recorded by Microsoft
+  // Entra ID to help identify which secret an entry refers to. The full
+  // secret value is never returned by the API.
   hint string
   // Secret expiration date
   expires time
@@ -1514,13 +1780,15 @@ private microsoft.passwordCredential @defaults("description expires keyId") {
 
 // Microsoft Entra Service Principal
 //
-// Examine a service principal (enterprise application) registered in the
-// tenant. Exposes the `name`, `type`, `appId`, sign-in audience, homepage
-// and reply URLs, assignment requirement, visibility to users, and whether
-// the account is enabled. Also provides `assignments` (users and groups
-// granted access), `appRoles`, and `permissions` (API delegated and
-// application grants). Use `isFirstParty` to identify Microsoft-owned
-// service principals.
+// Service principal (enterprise application) registered in the tenant,
+// representing an application's identity and the access it has been
+// granted. Service principals govern which applications can sign in, what
+// API permissions and app roles they hold, and which users and groups are
+// assigned to them, making them a central surface for auditing both
+// third-party and internally registered application access. Use
+// `isFirstParty` to distinguish Microsoft-owned service principals from
+// those added by the tenant, and `enabled` to check whether sign-in is
+// permitted.
 microsoft.serviceprincipal @defaults("name") {
   // Service principal Object ID
   id string
@@ -1554,7 +1822,12 @@ microsoft.serviceprincipal @defaults("name") {
   assignments []microsoft.serviceprincipal.assignment
   // Application template ID
   applicationTemplateId string
-  // Application publisher
+  // Verified publisher of the associated application
+  //
+  // Publisher verification details as a dict with keys `name` (the
+  // verified publisher's display name), `verifiedPublisherId`, and
+  // `createdAt` (when the verification was added). Empty when the
+  // application's publisher has not been verified.
   verifiedPublisher dict
   // Login URL
   loginUrl string
@@ -1563,6 +1836,10 @@ microsoft.serviceprincipal @defaults("name") {
   // Service principal names
   servicePrincipalNames []string
   // Sign in audience
+  //
+  // Account types that can sign in to the associated application. One of
+  // `AzureADMyOrg` (single tenant), `AzureADMultipleOrgs` (multi-tenant),
+  // `AzureADandPersonalMicrosoftAccount`, or `PersonalMicrosoftAccount`.
   signInAudience string
   // Preferred single sign-on mode
   preferredSingleSignOnMode string
@@ -1575,6 +1852,11 @@ microsoft.serviceprincipal @defaults("name") {
   // Deprecated in favor of `enabled`.
   accountEnabled @maturity("deprecated") bool
   // Whether it is a first-party Microsoft application
+  //
+  // True when the service principal is owned by Microsoft, derived from
+  // `appOwnerOrganizationId` matching a Microsoft tenant (or being empty,
+  // as with some built-in connectors). Useful for filtering out built-in
+  // Microsoft applications when auditing third-party access.
   isFirstParty() bool
   // Application roles
   appRoles []microsoft.application.role
@@ -1584,13 +1866,22 @@ microsoft.serviceprincipal @defaults("name") {
   alternativeNames []string
   // Description provided by the associated application
   appDescription string
-  // Whether Microsoft has disabled the service principal
+  // Status set when Microsoft has disabled the service principal
+  //
+  // Empty (null) for active service principals, otherwise a status string
+  // such as `DisabledDueToViolationOfServicesAgreement`.
   disabledByMicrosoftStatus string
   // X.509 key credentials registered on the service principal for authentication
   keyCredentials []microsoft.keyCredential
   // Client secrets registered on the service principal for authentication
   passwordCredentials []microsoft.passwordCredential
-  // Delegated permission scopes that this service principal exposes to client applications
+  // Delegated permission scopes this service principal exposes to client applications
+  //
+  // Each entry is a dict with keys `id`, `value` (the scope string clients
+  // request, such as `User.Read`), `type` (`User` or `Admin`, indicating
+  // whether user or admin consent is required), `origin`, `isEnabled`,
+  // `adminConsentDisplayName`, `adminConsentDescription`,
+  // `userConsentDisplayName`, and `userConsentDescription`.
   oauth2PermissionScopes []dict
 }
 
@@ -1624,16 +1915,15 @@ private microsoft.application.permission @defaults("appName name type status") {
 
 // Microsoft Entra ID OAuth2 Permission Grant
 //
-// Examine a delegated permission grant — a record that a client application
-// has been authorized to call an API on behalf of signed-in users. The
-// `consentType` is `AllPrincipals` when an administrator consented for the
-// entire tenant, or `Principal` when an individual user consented, in which
-// case `principal` resolves to that user. `scopes` lists the delegated
-// permissions granted. `client` is the service principal of the application
-// receiving access and `resource` is the service principal of the API being
-// accessed. Use this collection to audit tenant-wide application consent —
-// for example, finding broad admin grants or user-consented access to
-// sensitive APIs.
+// Delegated permission grant authorizing a client application to call an API
+// on behalf of signed-in users. The `consentType` is `AllPrincipals` when an
+// administrator consented for the entire tenant, or `Principal` when an
+// individual user consented, in which case `principal` resolves to that user.
+// `scopes` lists the delegated permissions granted. `client` is the service
+// principal of the application receiving access and `resource` is the service
+// principal of the API being accessed. Audit this collection to review
+// tenant-wide application consent, for example finding broad admin grants or
+// user-consented access to sensitive APIs.
 microsoft.oauth2PermissionGrant @defaults("clientName resourceName consentType scopes") {
   // OAuth2 permission grant ID
   id string
@@ -1661,12 +1951,12 @@ microsoft.oauth2PermissionGrant @defaults("clientName resourceName consentType s
 
 // Microsoft Security
 //
-// Use this namespace to access Microsoft 365 security resources. Exposes
-// `secureScores` and `latestSecureScores` for tenant security posture,
-// `riskyUsers` for Microsoft Entra ID Protection risk signals, `alerts` and
-// `incidents` for Microsoft Defender XDR detections, `exchange` for Exchange
-// Online security settings, and `informationProtection` for sensitivity label
-// configuration.
+// Microsoft 365 security posture and detections across the tenant.
+// `secureScores` and `latestSecureScores` report Secure Score posture,
+// `riskyUsers` and `riskDetections` surface Microsoft Entra ID Protection
+// risk signals, `alerts` and `incidents` cover Microsoft Defender XDR
+// detections, `exchange` exposes Exchange Online security settings, and
+// `informationProtection` covers sensitivity label configuration.
 microsoft.security {
   // List of security scores
   secureScores() []microsoft.security.securityscore
@@ -1692,7 +1982,10 @@ private microsoft.security.securityscore @defaults("id azureTenantId") {
   id string
   // Secure Score active user count
   activeUserCount int
-  // Secure Score average comparative score
+  // Average comparative scores
+  //
+  // Each entry has `averageScore` (average score within the basis) and
+  // `basis` (comparison scope: AllTenants, TotalSeats, or IndustryTypes).
   averageComparativeScores []dict
   // Secure Score tenant ID
   azureTenantId string
@@ -1715,7 +2008,10 @@ private microsoft.security.securityscore @defaults("id azureTenantId") {
   licensedUserCount int
   // Secure Score max score
   maxScore float
-  // Secure Score vendor information
+  // Vendor information
+  //
+  // Identifies the security product behind the score, with `provider`,
+  // `providerVersion`, `subProvider`, and `vendor`.
   vendorInformation dict
 }
 
@@ -1740,11 +2036,13 @@ private microsoft.security.securityscore.controlScore @defaults("controlName sco
 
 // Microsoft Entra ID Risky User
 //
-// Examine a Microsoft Entra ID Protection risky user entry. Exposes the
-// `principalName`, `riskLevel` (low, medium, high, hidden, none), `riskState`
-// (none, confirmedSafe, remediated, dismissed, atRisk, confirmedCompromised),
-// `riskDetail`, `lastUpdatedAt`, and whether the account `isDeleted` or
-// `isProcessing`. Use `user` to navigate to the full `microsoft.user` record.
+// A Microsoft Entra ID Protection risky user entry, flagging an account that
+// identity risk signals mark as potentially compromised. The `riskLevel`
+// (low, medium, high, hidden, none) and `riskState` (none, confirmedSafe,
+// remediated, dismissed, atRisk, confirmedCompromised) report the current
+// assessment, `riskDetail` explains the reason, and `isDeleted` and
+// `isProcessing` report the account state. The `user` field links to the
+// full `microsoft.user` record.
 microsoft.security.riskyUser @defaults("principalName riskLevel riskState lastUpdatedAt"){
   // Risky user ID
   id string
@@ -1770,16 +2068,16 @@ microsoft.security.riskyUser @defaults("principalName riskLevel riskState lastUp
 
 // Microsoft Entra ID Protection risk detection
 //
-// Examine a single risk detection raised by Microsoft Entra ID Protection.
-// A detection records one risky event tied to a user or a sign-in — select
-// by its `id`. Exposes the `riskEventType` (for example `unfamiliarFeatures`,
+// A single risk detection raised by Microsoft Entra ID Protection. A
+// detection records one risky event tied to a user or a sign-in, selected
+// by its `id`. The `riskEventType` (for example `unfamiliarFeatures`,
 // `anonymizedIPAddress`, `maliciousIPAddress`, or `leakedCredentials`), the
 // `riskLevel` and `riskState`, `riskDetail`, the reporting `source`, and the
-// `detectionTimingType` (realtime versus offline). The `activity` reports
-// whether the detection relates to a sign-in or a user. Location is broken
-// out into `ipAddress`, `city`, `state`, and `countryOrRegion`, and the
+// `detectionTimingType` (realtime versus offline) describe the detection. The
+// `activity` reports whether it relates to a sign-in or a user. Location is
+// broken out into `ipAddress`, `city`, `state`, and `countryOrRegion`, and the
 // `activityDateTime`, `detectedDateTime`, and `lastUpdatedDateTime` timestamps
-// frame when it happened. Use `user` to navigate to the affected
+// frame when it happened. The `user` field links to the affected
 // `microsoft.user` record.
 microsoft.security.riskDetection @defaults("riskEventType riskLevel riskState detectedDateTime") {
   // Risk detection ID
@@ -1826,14 +2124,15 @@ microsoft.security.riskDetection @defaults("riskEventType riskLevel riskState de
 
 // Microsoft Defender XDR Alert
 //
-// Examine a security alert raised by Microsoft Defender XDR. An alert
-// represents a single detection — a suspicious or malicious activity — and
-// exposes its `severity`, `status`, `category`, `serviceSource` and
-// `detectionSource` (which Defender workload reported it), the analyst
-// `classification` and `determination` assigned during review, the `mitreTechniques`
-// it maps to, `recommendedActions`, and the activity timeline (`createdDateTime`,
-// `firstActivityDateTime`, `lastActivityDateTime`, `resolvedDateTime`). Related
-// alerts are correlated into an incident — use `incident` to navigate to it.
+// A security alert raised by Microsoft Defender XDR. An alert represents a
+// single detection of a suspicious or malicious activity. Its `severity`,
+// `status`, `category`, `serviceSource`, and `detectionSource` (which
+// Defender workload reported it), the analyst `classification` and
+// `determination` assigned during review, the `mitreTechniques` it maps to,
+// `recommendedActions`, and the activity timeline (`createdDateTime`,
+// `firstActivityDateTime`, `lastActivityDateTime`, `resolvedDateTime`)
+// describe the detection. Related alerts are correlated into an incident that
+// the `incident` field links to.
 microsoft.security.alert @defaults("title severity status category") {
   // Alert ID
   id string
@@ -1888,6 +2187,8 @@ microsoft.security.alert @defaults("title severity status category") {
   // When the alert was resolved
   resolvedDateTime time
   // Analyst comments recorded on the alert
+  //
+  // Each entry has `comment`, `createdByDisplayName`, and `createdDateTime`.
   comments []dict
   // Incident this alert is correlated into
   incident() microsoft.security.incident
@@ -1895,13 +2196,13 @@ microsoft.security.alert @defaults("title severity status category") {
 
 // Microsoft Defender XDR Incident
 //
-// Examine a security incident in Microsoft Defender XDR. An incident is a
-// collection of correlated alerts that together describe an attack story.
-// It exposes the aggregate `severity` and `status`, the analyst
-// `classification` and `determination`, the owner it is `assignedTo`, the
-// `summary`, applied `customTags`, and the full set of correlated `alerts`.
-// When `redirectIncidentId` is set the incident has been merged into another
-// incident. Use `alerts` to drill into the individual detections.
+// A security incident in Microsoft Defender XDR. An incident is a collection
+// of correlated alerts that together describe an attack story. The aggregate
+// `severity` and `status`, the analyst `classification` and `determination`,
+// the owner it is `assignedTo`, the `summary`, applied `customTags`, and the
+// full set of correlated `alerts` describe the incident. When
+// `redirectIncidentId` is set the incident has been merged into another
+// incident. The `alerts` field drills into the individual detections.
 microsoft.security.incident @defaults("displayName severity status") {
   // Incident ID
   id string
@@ -1940,6 +2241,8 @@ microsoft.security.incident @defaults("displayName severity status") {
   // When the incident was last updated
   lastUpdateDateTime time
   // Analyst comments recorded on the incident
+  //
+  // Each entry has `comment`, `createdByDisplayName`, and `createdDateTime`.
   comments []dict
   // Alerts correlated into this incident
   alerts() []microsoft.security.alert
@@ -1947,9 +2250,8 @@ microsoft.security.incident @defaults("displayName severity status") {
 
 // Microsoft Security Exchange Settings
 //
-// Use this namespace to access Exchange Online security configuration.
-// Currently exposes `antispam`, which provides access to hosted connection
-// filter policy settings.
+// Exchange Online security configuration. `antispam` provides access to
+// hosted connection filter policy settings.
 microsoft.security.exchange {
   // Exchange antispam settings
   antispam() microsoft.security.exchange.antispam
@@ -1957,9 +2259,9 @@ microsoft.security.exchange {
 
 // Microsoft Security Exchange Antispam Settings
 //
-// Use this namespace to access Exchange Online antispam configuration.
-// Exposes `hostedConnectionFilterPolicy`, which controls IP allow and block
-// lists and safe-list behavior for inbound connections.
+// Exchange Online antispam configuration. `hostedConnectionFilterPolicy`
+// controls IP allow and block lists and safe-list behavior for inbound
+// connections.
 microsoft.security.exchange.antispam {
   // Hosted connection filter policy
   hostedConnectionFilterPolicy() microsoft.security.exchange.antispam.hostedConnectionFilterPolicy
@@ -1967,10 +2269,11 @@ microsoft.security.exchange.antispam {
 
 // Microsoft Exchange Antispam Hosted Connection Filter Policy
 //
-// Examine the hosted connection filter policy that controls which external IP
-// addresses are always allowed or always blocked for inbound email. Exposes
-// `ipAllowList`, `ipBlockList`, `enableSafeList` (whether Microsoft's
-// curated safe sender list is consulted), and the policy `identity`.
+// Hosted connection filter policy that controls which external IP addresses
+// are always allowed or always blocked for inbound email. `ipAllowList` and
+// `ipBlockList` hold those addresses, `enableSafeList` reports whether
+// Microsoft's curated safe sender list is consulted, and `identity` names the
+// policy.
 microsoft.security.exchange.antispam.hostedConnectionFilterPolicy @defaults("identity enableSafeList") {
   // Policy identity
   identity string
@@ -1986,9 +2289,9 @@ microsoft.security.exchange.antispam.hostedConnectionFilterPolicy @defaults("ide
 
 // Microsoft Purview Information Protection
 //
-// Use this namespace to access Microsoft Purview Information Protection
-// configuration. Exposes `sensitivityLabels`, the list of sensitivity labels
-// defined in the tenant for classifying and protecting content.
+// Microsoft Purview Information Protection configuration. `sensitivityLabels`
+// lists the sensitivity labels defined in the tenant for classifying and
+// protecting content.
 microsoft.security.informationProtection {
   // List of sensitivity labels
   sensitivityLabels() []microsoft.security.informationProtection.sensitivityLabel
@@ -1996,12 +2299,13 @@ microsoft.security.informationProtection {
 
 // Microsoft Purview Sensitivity Label
 //
-// Examine a sensitivity label defined in Microsoft Purview Information
-// Protection. Exposes the `name`, `description`, `color`, supported
-// `contentFormats` (file, email, teamwork, etc.), protection state
-// (`hasProtection`), applicability (`isAppliable`, `isActive`), and
-// `sensitivity` level (lower number means less sensitive). Hierarchical
-// labels reference a `parent` label.
+// A sensitivity label defined in Microsoft Purview Information Protection,
+// used to classify and protect content by sensitivity. `contentFormats`
+// lists where the label applies (file, email, teamwork), `hasProtection`
+// reports whether encryption or rights protection is attached, `isAppliable`
+// and `isActive` report availability, and `sensitivity` orders labels (lower
+// number means less sensitive). Hierarchical labels reference a `parent`
+// label.
 microsoft.security.informationProtection.sensitivityLabel @defaults("id name") {
   // Unique identifier for the sensitivity label
   id string
@@ -2029,21 +2333,44 @@ microsoft.security.informationProtection.sensitivityLabel @defaults("id name") {
 
 // Microsoft Entra ID Policies
 //
-// Use this namespace to access tenant-wide Microsoft Entra ID policy
-// configuration. Exposes `authorizationPolicy`, `identitySecurityDefaultsEnforcementPolicy`,
-// `adminConsentRequestPolicy`, `permissionGrantPolicies`, `consentPolicySettings`,
-// `authenticationMethodsPolicy`, `activityBasedTimeoutPolicies`,
-// `externalIdentitiesPolicy`, and `crossTenantAccessPolicy`.
+// Tenant-wide Microsoft Entra ID policy configuration that governs how
+// identities, external users, application consent, and authentication
+// methods are controlled across the organization. These policies define
+// the baseline security posture for guest invitations, admin consent
+// workflows, permission grants, session timeouts, and cross-tenant
+// access, making them central to auditing an Entra tenant's hardening.
 microsoft.policies {
   // Authorization policy
+  //
+  // Tenant authorization policy controlling default user permissions and
+  // external collaboration. Keys: `allowedToSignUpEmailBasedSubscriptions`,
+  // `allowedToUseSSPR` (self-service password reset),
+  // `allowEmailVerifiedUsersToJoinOrganization`, `allowInvitesFrom` (one of
+  // NONE, ADMINSANDGUESTINVITERS, ADMINSGUESTINVITERSANDALLMEMBERS, EVERYONE,
+  // UNKNOWNFUTUREVALUE), `blockMsolPowerShell`, `defaultUserRolePermissions`,
+  // `guestUserRoleId`, `displayName`, `description`, and `id`.
   authorizationPolicy() dict
   // Identity security default enforcement policy
+  //
+  // Security defaults enforcement state for the tenant. Keys: `isEnabled`
+  // (whether Entra ID security defaults are turned on), `displayName`, and
+  // `description`.
   identitySecurityDefaultsEnforcementPolicy() dict
   // Admin consent request policy
   adminConsentRequestPolicy() microsoft.adminConsentRequestPolicy
   // Permission grant policies
+  //
+  // Policies defining the conditions under which users may consent to
+  // applications that request access to organization data. Each entry has
+  // keys: `includes` and `excludes` (condition sets scoping client
+  // applications and the permissions they may be granted), `displayName`,
+  // `description`, and `id`.
   permissionGrantPolicies() []dict
   // Consent policy settings
+  //
+  // User-consent related directory group settings, keyed by the setting
+  // group display name. Each value is a map of that group's individual
+  // setting names to their configured values.
   consentPolicySettings() dict
   // Authentication methods policy
   authenticationMethodsPolicy() microsoft.authenticationMethodsPolicy
@@ -2059,14 +2386,14 @@ microsoft.policies {
 
 // Tenant Default App Management Policy
 //
-// Examine the tenant-wide default policy that restricts the secrets and
-// certificates configurable on application registrations and service
-// principals. The `isEnabled` field reports whether the restrictions are
-// enforced, while `applicationRestrictions` and `servicePrincipalRestrictions`
-// expose the password- and key-credential rules — maximum allowed lifetime,
-// the restriction type, and the date after which newly created apps become
-// subject to them. Use these to audit that long-lived or unrestricted app
-// credentials are disallowed across the tenant.
+// Tenant-wide default policy that restricts the secrets and certificates
+// configurable on application registrations and service principals. The
+// isEnabled field reports whether the restrictions are enforced, while
+// applicationRestrictions and servicePrincipalRestrictions expose the
+// password- and key-credential rules (maximum allowed lifetime, the
+// restriction type, and the date after which newly created apps become
+// subject to them). Audit this policy to confirm long-lived or
+// unrestricted app credentials are disallowed across the tenant.
 private microsoft.defaultAppManagementPolicy @defaults("displayName isEnabled") {
   // Policy display name
   displayName string
@@ -2082,15 +2409,29 @@ private microsoft.defaultAppManagementPolicy @defaults("displayName isEnabled") 
 
 // App Management Credential Restrictions
 //
-// Examine the password- and key-credential restrictions enforced on
-// applications or service principals. Each entry in `passwordCredentials`
-// and `keyCredentials` carries the restriction type, the maximum allowed
-// credential lifetime, the state (`enabled` or `disabled`), and the date
-// after which apps created later are subject to the restriction.
+// Password- and key-credential restrictions enforced on applications or
+// service principals. Each entry in passwordCredentials and keyCredentials
+// carries the restriction type, the maximum allowed credential lifetime,
+// the state (enabled or disabled), and the date after which apps created
+// later are subject to the restriction.
 private microsoft.defaultAppManagementPolicy.appManagementConfiguration @defaults("passwordCredentials keyCredentials") {
   // Restrictions on the password (secret) credentials that can be added
+  //
+  // Each entry has keys: `restrictionType` (one of passwordAddition,
+  // passwordLifetime, symmetricKeyAddition, symmetricKeyLifetime,
+  // customPasswordAddition, or unknownFutureValue), `maxLifetime` (the
+  // maximum allowed credential lifetime as an ISO 8601 duration), `state`
+  // (enabled or disabled), and `restrictForAppsCreatedAfterDateTime` (the
+  // timestamp after which apps created later are subject to the restriction).
   passwordCredentials []dict
   // Restrictions on the key (certificate) credentials that can be added
+  //
+  // Each entry has keys: `restrictionType` (one of passwordAddition,
+  // passwordLifetime, symmetricKeyAddition, symmetricKeyLifetime,
+  // customPasswordAddition, or unknownFutureValue), `maxLifetime` (the
+  // maximum allowed credential lifetime as an ISO 8601 duration), `state`
+  // (enabled or disabled), and `restrictForAppsCreatedAfterDateTime` (the
+  // timestamp after which apps created later are subject to the restriction).
   keyCredentials []dict
 }
 
@@ -2110,16 +2451,20 @@ private microsoft.externalIdentitiesPolicy @defaults("displayName allowExternalI
 
 // Microsoft Entra Activity-Based Timeout Policy
 //
-// Examine an activity-based timeout policy that automatically signs out
-// users after a period of inactivity in web sessions. Exposes the `displayName`,
-// `definition` (JSON-encoded policy rules), and `isOrganizationDefault` to
-// identify which policy is active as the tenant-wide default.
+// Activity-based timeout policy that automatically signs users out of web
+// sessions after a period of inactivity. The `definition` field holds the
+// JSON-encoded policy rules, and `isOrganizationDefault` marks whether this
+// policy is the one enforced tenant-wide, which matters because only one
+// policy of a given type can be active as the default.
 microsoft.policies.activityBasedTimeoutPolicy @defaults("displayName isOrganizationDefault") {
   // Policy ID
   id string
   // Policy display name
   displayName string
   // Policy definition
+  //
+  // Each string is a JSON-encoded rule set describing the timeout behavior,
+  // such as the web session idle timeout duration and keep-alive settings.
   definition []string
   // If set to true, activates this policy
   //
@@ -2127,7 +2472,16 @@ microsoft.policies.activityBasedTimeoutPolicy @defaults("displayName isOrganizat
   isOrganizationDefault bool
 }
 
-// Policy for enabling or disabling the Microsoft Entra admin consent workflow
+// Microsoft Entra admin consent request policy
+//
+// Tenant-wide configuration for the admin consent workflow, which lets
+// users request administrator approval to grant applications access to
+// data they cannot consent to themselves. Audit whether the workflow is
+// active (isEnabled), how requests are routed to reviewers, whether
+// reviewers are notified and reminded, and how long a request stays open
+// before it expires. A disabled workflow means users have no sanctioned
+// path to request access, which often pushes them toward risky
+// self-service consent or shadow IT.
 private microsoft.adminConsentRequestPolicy @defaults("isEnabled notifyReviewers") {
   // Specifies whether the admin consent request feature is enabled or disabled
   isEnabled bool
@@ -2143,7 +2497,7 @@ private microsoft.adminConsentRequestPolicy @defaults("isEnabled notifyReviewers
   version int
 }
 
-// List of reviewers for the admin consent
+// Reviewer scope for admin consent requests
 private microsoft.graph.accessReviewReviewerScope @defaults("query queryType") {
   // The query specifying who will be the reviewer
   query string
@@ -2153,7 +2507,15 @@ private microsoft.graph.accessReviewReviewerScope @defaults("query queryType") {
   queryType string
 }
 
-// The tenant-wide policy that controls which authentication methods are allowed
+// Tenant-wide authentication methods policy
+//
+// Tenant policy that controls which authentication methods (FIDO2, Microsoft
+// Authenticator, Temporary Access Pass, email OTP, voice call, and others)
+// users may register and use for sign-in and self-service password reset.
+// The `authenticationMethodConfigurations` list holds the raw per-method
+// configurations, while `fido2`, `microsoftAuthenticator`,
+// `temporaryAccessPass`, `email`, and `voice` expose the individual method
+// policies with their settings and user targeting.
 private microsoft.authenticationMethodsPolicy @defaults("displayName") {
   // Policy ID
   id string
@@ -2189,25 +2551,35 @@ private microsoft.authenticationMethodConfiguration @defaults("state") {
   id string
   // The state of the policy. Possible values are: enabled, disabled.
   state string
-  // Groups of users that are excluded from a policy.
+  // Groups of users excluded from the method
+  //
+  // Each entry has an `id` (the object ID of the excluded group) and a
+  // `targetType` naming what the ID refers to (`group`, `user`, or
+  // `unknownFutureValue`).
   excludeTargets []dict
 }
 
 // FIDO2 security key authentication method configuration
 //
-// Examine the tenant's FIDO2 (passkey) authentication method policy. Reports
-// whether the method is `state` enabled, whether attestation is enforced
+// Tenant policy for FIDO2 (passkey) authentication. Reports whether the
+// method is `state` enabled, whether attestation is enforced
 // (`isAttestationEnforced`) and self-service registration is allowed
 // (`isSelfServiceRegistrationAllowed`), and the AAGUID key restrictions
 // (`keyRestrictionsEnforced`, `keyRestrictionsEnforcementType` of allow or
-// block, and the `keyRestrictionsAaGuids` list). Use `includeTargets` and
-// `excludeTargets` to see which users the method applies to.
+// block, and the `keyRestrictionsAaGuids` list). The `includeTargets` and
+// `excludeTargets` fields show which users the method applies to.
 private microsoft.authenticationMethodsPolicy.fido2 @defaults("state isAttestationEnforced") {
   // Whether FIDO2 is enabled (enabled, disabled)
   state string
-  // Groups of users that the method applies to
+  // Users and groups the method applies to
+  //
+  // Each entry has an `id` (the user or group object ID) and a `targetType`
+  // of `user` or `group`.
   includeTargets []dict
-  // Groups of users that are excluded from the method
+  // Users and groups excluded from the method
+  //
+  // Each entry has an `id` (the user or group object ID) and a `targetType`
+  // of `user` or `group`.
   excludeTargets []dict
   // Whether attestation is enforced for FIDO2 security keys
   isAttestationEnforced bool
@@ -2223,19 +2595,25 @@ private microsoft.authenticationMethodsPolicy.fido2 @defaults("state isAttestati
 
 // Microsoft Authenticator authentication method configuration
 //
-// Examine the tenant's Microsoft Authenticator authentication method policy.
-// Reports whether the method is `state` enabled, whether software OATH tokens
-// are enabled (`isSoftwareOathEnabled`), and the push-notification feature
-// states for showing application context (`displayAppInformationRequiredState`)
-// and geographic context (`displayLocationInformationRequiredState`), each one
-// of default, enabled, or disabled. Use `includeTargets` and `excludeTargets`
-// to see which users the method applies to.
+// Tenant policy for Microsoft Authenticator authentication. Reports whether
+// the method is `state` enabled, whether software OATH tokens are enabled
+// (`isSoftwareOathEnabled`), and the push-notification feature states for
+// showing application context (`displayAppInformationRequiredState`) and
+// geographic context (`displayLocationInformationRequiredState`), each one
+// of default, enabled, or disabled. The `includeTargets` and `excludeTargets`
+// fields show which users the method applies to.
 private microsoft.authenticationMethodsPolicy.microsoftAuthenticator @defaults("state") {
   // Whether Microsoft Authenticator is enabled (enabled, disabled)
   state string
-  // Groups of users that the method applies to
+  // Users and groups the method applies to
+  //
+  // Each entry has an `id` (the user or group object ID) and a `targetType`
+  // of `user` or `group`.
   includeTargets []dict
-  // Groups of users that are excluded from the method
+  // Users and groups excluded from the method
+  //
+  // Each entry has an `id` (the user or group object ID) and a `targetType`
+  // of `user` or `group`.
   excludeTargets []dict
   // Whether software OATH tokens are enabled
   isSoftwareOathEnabled bool
@@ -2247,18 +2625,24 @@ private microsoft.authenticationMethodsPolicy.microsoftAuthenticator @defaults("
 
 // Temporary Access Pass authentication method configuration
 //
-// Examine the tenant's Temporary Access Pass (TAP) authentication method
-// policy. Reports whether the method is `state` enabled, the lifetime bounds
+// Tenant policy for Temporary Access Pass (TAP) authentication. Reports
+// whether the method is `state` enabled, the lifetime bounds
 // (`defaultLifetimeInMinutes`, `minimumLifetimeInMinutes`,
 // `maximumLifetimeInMinutes`), the generated pass `defaultLength`, and whether
-// a pass is single-use (`isUsableOnce`). Use `includeTargets` and
-// `excludeTargets` to see which users the method applies to.
+// a pass is single-use (`isUsableOnce`). The `includeTargets` and
+// `excludeTargets` fields show which users the method applies to.
 private microsoft.authenticationMethodsPolicy.temporaryAccessPass @defaults("state isUsableOnce") {
   // Whether Temporary Access Pass is enabled (enabled, disabled)
   state string
-  // Groups of users that the method applies to
+  // Users and groups the method applies to
+  //
+  // Each entry has an `id` (the user or group object ID) and a `targetType`
+  // of `user` or `group`.
   includeTargets []dict
-  // Groups of users that are excluded from the method
+  // Users and groups excluded from the method
+  //
+  // Each entry has an `id` (the user or group object ID) and a `targetType`
+  // of `user` or `group`.
   excludeTargets []dict
   // Default lifetime of a Temporary Access Pass, in minutes
   defaultLifetimeInMinutes int
@@ -2274,17 +2658,23 @@ private microsoft.authenticationMethodsPolicy.temporaryAccessPass @defaults("sta
 
 // Email one-time passcode authentication method configuration
 //
-// Examine the tenant's email OTP authentication method policy. Reports whether
-// the method is `state` enabled and whether external Microsoft Entra identities
-// may use email OTP (`allowExternalIdToUseEmailOtp`, one of default, enabled,
-// or disabled). Use `includeTargets` and `excludeTargets` to see which users
-// the method applies to.
+// Tenant policy for email one-time passcode (OTP) authentication. Reports
+// whether the method is `state` enabled and whether external Microsoft Entra
+// identities may use email OTP (`allowExternalIdToUseEmailOtp`, one of
+// default, enabled, or disabled). The `includeTargets` and `excludeTargets`
+// fields show which users the method applies to.
 private microsoft.authenticationMethodsPolicy.email @defaults("state") {
   // Whether email OTP is enabled (enabled, disabled)
   state string
-  // Groups of users that the method applies to
+  // Users and groups the method applies to
+  //
+  // Each entry has an `id` (the user or group object ID) and a `targetType`
+  // of `user` or `group`.
   includeTargets []dict
-  // Groups of users that are excluded from the method
+  // Users and groups excluded from the method
+  //
+  // Each entry has an `id` (the user or group object ID) and a `targetType`
+  // of `user` or `group`.
   excludeTargets []dict
   // Whether external Entra identities may use email OTP (default, enabled, disabled)
   allowExternalIdToUseEmailOtp string
@@ -2292,16 +2682,22 @@ private microsoft.authenticationMethodsPolicy.email @defaults("state") {
 
 // Voice call authentication method configuration
 //
-// Examine the tenant's voice call authentication method policy. Reports whether
-// the method is `state` enabled and whether office phones may be used
-// (`isOfficePhoneAllowed`). Use `includeTargets` and `excludeTargets` to see
-// which users the method applies to.
+// Tenant policy for voice call authentication. Reports whether the method is
+// `state` enabled and whether office phones may be used
+// (`isOfficePhoneAllowed`). The `includeTargets` and `excludeTargets` fields
+// show which users the method applies to.
 private microsoft.authenticationMethodsPolicy.voice @defaults("state") {
   // Whether voice call is enabled (enabled, disabled)
   state string
-  // Groups of users that the method applies to
+  // Users and groups the method applies to
+  //
+  // Each entry has an `id` (the user or group object ID) and a `targetType`
+  // of `user` or `group`.
   includeTargets []dict
-  // Groups of users that are excluded from the method
+  // Users and groups excluded from the method
+  //
+  // Each entry has an `id` (the user or group object ID) and a `targetType`
+  // of `user` or `group`.
   excludeTargets []dict
   // Whether office phones may be used for voice call authentication
   isOfficePhoneAllowed bool
@@ -2309,33 +2705,61 @@ private microsoft.authenticationMethodsPolicy.voice @defaults("state") {
 
 // Authentication methods registration campaign
 //
-// Examine the registration campaign that nudges users to set up Microsoft
-// Authenticator during sign-in. Reports whether the campaign is `state`
-// enabled, how many times a user may snooze the prompt
-// (`snoozeDurationInDays`), and which users it `includeTargets` or
-// `excludeTargets`.
+// Registration campaign that nudges users to set up Microsoft Authenticator
+// during sign-in. Reports whether the campaign is `state` enabled, how many
+// days a user may defer the prompt (`snoozeDurationInDays`), and which users
+// it applies to via `includeTargets` and `excludeTargets`.
 private microsoft.authenticationMethodsPolicy.registrationCampaign @defaults("state") {
   // Whether the registration campaign is enabled (default, enabled, disabled)
   state string
   // Number of days a user may defer the registration prompt
   snoozeDurationInDays int
-  // Groups of users that the campaign applies to
+  // Users and groups the campaign applies to
+  //
+  // Each entry has an `id` (the user or group object ID) and a `targetType`
+  // of `user` or `group`.
   includeTargets []dict
-  // Groups of users that are excluded from the campaign
+  // Users and groups excluded from the campaign
+  //
+  // Each entry has an `id` (the user or group object ID) and a `targetType`
+  // of `user` or `group`.
   excludeTargets []dict
 }
 
-// System credential preferences for authentication methods policy
+// System credential preferences for the authentication methods policy
+//
+// Tenant-wide setting that controls whether users are nudged toward system-preferred
+// credentials (the strongest authentication method registered for their account, such
+// as passwordless or push-based sign-in over SMS or voice call) during sign-in. The
+// `state` field reports whether the nudge is on, off, or following the Microsoft-managed
+// default, and `includeTargets`/`excludeTargets` scope it to specific groups. Audit this
+// to confirm that users are steered to phishing-resistant methods rather than weaker ones.
 private microsoft.systemCredentialPreferences @defaults("state") {
   // The state of the system credential preferences. Possible values are: enabled, disabled, default.
   state string
-  // Groups of users that are included in the policy
+  // Groups the policy applies to
+  //
+  // Each entry is a dict with `id` (the group object ID) and `targetType`
+  // (the kind of target, for example `group`).
   includeTargets []dict
-  // Groups of users that are excluded from the policy
+  // Groups excluded from the policy
+  //
+  // Each entry is a dict with `id` (the group object ID) and `targetType`
+  // (the kind of target, for example `group`).
   excludeTargets []dict
 }
 
-// Default configuration of cross-tenant access policy
+// Cross-tenant access policy default configuration
+//
+// Tenant-wide defaults that govern how users from other Microsoft Entra
+// tenants collaborate with your organization when no partner-specific
+// configuration applies. Audit this to confirm inbound and outbound B2B
+// collaboration and B2B direct connect are scoped as intended, which
+// external trust signals (MFA, compliant devices, hybrid Entra joined
+// devices) are honored, whether automatic user consent is granted, and how
+// invitation redemption resolves identity providers. The isServiceDefault
+// field indicates whether these values are still the Microsoft-provided
+// defaults or have been customized.
 private microsoft.crossTenantAccessPolicyDefault @defaults("isServiceDefault automaticUserConsentSettings inboundTrust") {
   // True if the default configuration is inherited from the service default. False if the default configuration has been customized.
   isServiceDefault bool
@@ -2411,11 +2835,12 @@ private microsoft.crossTenantAccessPolicyDefault.invitationRedemptionIdentityPro
 
 // Microsoft Entra ID Role Definitions
 //
-// Iterate over role definitions available in the tenant. Supports optional
-// `filter` and `search` parameters to narrow results. Each entry is a
-// `microsoft.rolemanagement.roledefinition` exposing the role's `displayName`,
-// `description`, `isBuiltIn`, `isEnabled`, `rolePermissions`, and current
-// `assignments`.
+// Role definitions available in the tenant, both built-in and custom. Each
+// entry is a microsoft.rolemanagement.roledefinition describing a directory
+// role: the permissions it grants and the principals currently assigned to
+// it. Query this to audit privileged access, for example who holds Global
+// Administrator, and to review the permissions of custom roles. The optional
+// filter and search arguments narrow the returned set.
 microsoft.roles {
   []microsoft.rolemanagement.roledefinition
 
@@ -2451,6 +2876,12 @@ private microsoft.rolemanagement.roledefinition @defaults("id displayName") {
   // Whether the role is enabled
   isEnabled bool
   // Role definition permissions
+  //
+  // One entry per permission set granted by the role. Each dict carries
+  // `allowedResourceActions` (list of resource-action strings the role
+  // grants), `excludedResourceActions` (list of actions explicitly
+  // withheld), and `condition` (a scoping condition string, empty when
+  // none applies).
   rolePermissions []dict
   // Role definition template ID
   templateId string
@@ -2475,7 +2906,7 @@ private microsoft.rolemanagement.roleassignment @defaults("id principalId") {
   // Principal type
   //
   // Short directory type of the assigned principal, derived from its
-  // `@odata.type` — typically `user`, `group`, or `servicePrincipal`. Empty
+  // `@odata.type`, typically `user`, `group`, or `servicePrincipal`. Empty
   // when the API does not return the principal type. Use it to scope
   // privileged-role audits, e.g. flag direct `user` assignments to
   // Global Administrator.
@@ -2485,17 +2916,24 @@ private microsoft.rolemanagement.roleassignment @defaults("id principalId") {
   // Display name of the assigned principal as returned by the directory.
   // Empty when the API does not return a display name.
   principalName string
-  // Service principal
+  // Assigned directory principal
+  //
+  // The directory object the role is assigned to, which may be a user,
+  // group, or service principal. The dict carries `id` (the principal's
+  // directory object ID) and `deletedDateTime` (when the object was
+  // soft-deleted, null for active principals). See principalType and
+  // principalName for the resolved type and display name.
   principal dict
 }
 
 // Microsoft Intune Device Management
 //
-// Use this namespace to access Microsoft Intune device management
-// configuration and inventory. Exposes `managedDevices` (enrolled devices
-// with compliance state, OS details, and encryption status),
-// `deviceConfigurations`, `deviceCompliancePolicies`, and
-// `deviceEnrollmentConfigurations`.
+// Microsoft Intune device management configuration and inventory. Exposes
+// `managedDevices` (enrolled devices with compliance state, OS details, and
+// encryption status), `deviceConfigurations`, `deviceCompliancePolicies`,
+// `deviceEnrollmentConfigurations`, endpoint security intents, app protection
+// policies, settings catalog policies, Windows Update rings, and Intune RBAC
+// roles.
 microsoft.devicemanagement {
   managedDevices() []microsoft.devicemanagement.manageddevice
   // List of device configurations
@@ -2546,7 +2984,7 @@ microsoft.devicemanagement {
 
 // Intune tenant-wide device management settings
 //
-// Examine the tenant-level Intune settings: whether devices are marked
+// Tenant-level Intune settings covering whether devices are marked
 // noncompliant when no compliance policy targets them (`secureByDefault`),
 // how many days a device may go without checking in before it is treated as
 // noncompliant, and whether scheduled actions for noncompliant devices are
@@ -2563,10 +3001,10 @@ private microsoft.devicemanagement.settings @defaults("secureByDefault deviceCom
 
 // Microsoft Intune group policy configuration
 //
-// Examine an administrative-templates (ADMX) policy configuration, selected by
-// its `id`. `policyConfigurationIngestionType` reports whether it uses the
-// built-in or custom (ingested) ADMX templates. Use `definitionValues` to read
-// the individual administrative-template settings the configuration sets.
+// Administrative-templates (ADMX) policy configuration, selected by its `id`.
+// `policyConfigurationIngestionType` reports whether it uses the built-in or
+// custom (ingested) ADMX templates. `definitionValues` reads the individual
+// administrative-template settings the configuration sets.
 private microsoft.devicemanagement.groupPolicyConfiguration @defaults("displayName policyConfigurationIngestionType") {
   // Configuration ID
   id string
@@ -2588,10 +3026,10 @@ private microsoft.devicemanagement.groupPolicyConfiguration @defaults("displayNa
 
 // Microsoft Intune group policy definition value
 //
-// Examine a single administrative-template setting configured by a group
-// policy configuration. `definitionName` names the policy, `enabled` reports
-// whether it is enabled or disabled, `definitionClassType` whether it applies
-// to the machine or the user, and `definitionCategoryPath` its location in the
+// Single administrative-template setting configured by a group policy
+// configuration. `definitionName` names the policy, `enabled` reports whether
+// it is enabled or disabled, `definitionClassType` whether it applies to the
+// machine or the user, and `definitionCategoryPath` its location in the
 // administrative-templates tree.
 private microsoft.devicemanagement.groupPolicyDefinitionValue @defaults("definitionName enabled") {
   // Definition value ID
@@ -2614,8 +3052,8 @@ private microsoft.devicemanagement.groupPolicyDefinitionValue @defaults("definit
 
 // Microsoft Intune Windows Update for Business ring
 //
-// Examine a Windows Update for Business update ring, selected by its `id`. The
-// ring governs how quickly devices receive updates: `automaticUpdateMode` and
+// Windows Update for Business update ring, selected by its `id`. The ring
+// governs how quickly devices receive updates: `automaticUpdateMode` and
 // `businessReadyUpdatesOnly` set the servicing branch, the
 // `featureUpdatesDeferralPeriodInDays` and `qualityUpdatesDeferralPeriodInDays`
 // defer updates, `featureUpdatesPaused` / `qualityUpdatesPaused` halt them, and
@@ -2672,7 +3110,7 @@ private microsoft.devicemanagement.windowsUpdateRing @defaults("displayName auto
 
 // Microsoft Intune Windows feature update profile
 //
-// Examine a Windows feature update deployment profile, selected by its `id`.
+// Windows feature update deployment profile, selected by its `id`.
 // `featureUpdateVersion` is the Windows version the profile pins devices to,
 // `deployableContentDisplayName` names the deployable build, and
 // `endOfSupportDate` reports when that version stops receiving servicing.
@@ -2701,8 +3139,8 @@ private microsoft.devicemanagement.windowsFeatureUpdateProfile @defaults("displa
 
 // Microsoft Intune Windows quality update profile
 //
-// Examine a Windows quality update deployment profile, selected by its `id`.
-// These profiles drive expedited quality (security) update rollout;
+// Windows quality update deployment profile, selected by its `id`. These
+// profiles drive expedited quality (security) update rollout;
 // `expeditedQualityUpdateRelease` identifies the release to expedite and
 // `expeditedDaysUntilForcedReboot` how long users may defer the reboot.
 private microsoft.devicemanagement.windowsQualityUpdateProfile @defaults("displayName") {
@@ -2730,10 +3168,10 @@ private microsoft.devicemanagement.windowsQualityUpdateProfile @defaults("displa
 
 // Microsoft Intune managed app configuration policy
 //
-// Examine an app configuration policy that delivers settings to managed apps
-// (MAM), selected by its `id`. `customSettings` holds the configured key/value
-// pairs delivered to the apps, `deployedAppCount` reports how many apps it
-// targets, and `isAssigned` whether it is assigned to any group.
+// App configuration policy that delivers settings to managed apps (MAM),
+// selected by its `id`. `customSettings` holds the configured key/value pairs
+// delivered to the apps, `deployedAppCount` reports how many apps it targets,
+// and `isAssigned` whether it is assigned to any group.
 private microsoft.devicemanagement.managedAppConfiguration @defaults("displayName deployedAppCount isAssigned") {
   // Policy ID
   id string
@@ -2757,9 +3195,9 @@ private microsoft.devicemanagement.managedAppConfiguration @defaults("displayNam
 
 // Microsoft Intune managed device app configuration policy
 //
-// Examine an app configuration policy that delivers settings to managed
-// devices (MDM), selected by its `id`. `targetedMobileApps` lists the IDs of
-// the apps the policy configures.
+// App configuration policy that delivers settings to managed devices (MDM),
+// selected by its `id`. `targetedMobileApps` lists the IDs of the apps the
+// policy configures.
 private microsoft.devicemanagement.mobileAppConfiguration @defaults("displayName") {
   // Policy ID
   id string
@@ -2779,8 +3217,8 @@ private microsoft.devicemanagement.mobileAppConfiguration @defaults("displayName
 
 // Microsoft Intune settings catalog policy
 //
-// Examine a settings catalog (unified configuration) policy, selected by its
-// `id`. Metadata covers the `name`, `description`, the `platforms` and
+// Settings catalog (unified configuration) policy, selected by its `id`.
+// Metadata covers the `name`, `description`, the `platforms` and
 // `technologies` the policy targets, the number of configured settings
 // (`settingCount`), `roleScopeTagIds`, and whether it `isAssigned`. When the
 // policy was created from a template, `templateId`, `templateDisplayName`, and
@@ -2820,8 +3258,8 @@ private microsoft.devicemanagement.configurationPolicy @defaults("name platforms
 
 // Microsoft Intune Mobile Threat Defense connector
 //
-// Examine the integration between Intune and a Mobile Threat Defense (MTD)
-// partner, selected by its `id`. `partnerState` and `lastHeartbeatDateTime`
+// Integration between Intune and a Mobile Threat Defense (MTD) partner,
+// selected by its `id`. `partnerState` and `lastHeartbeatDateTime`
 // report whether the partner is connected and responsive, and the per-platform
 // flags show where the connection is active: `androidEnabled`, `iosEnabled`,
 // and `windowsEnabled` gate device-compliance evaluation, the
@@ -2866,10 +3304,10 @@ private microsoft.devicemanagement.mobileThreatDefenseConnector @defaults("id pa
 
 // Microsoft Intune compliance management partner
 //
-// Examine a device compliance management partner connected to Intune, selected
-// by its `id`. `partnerState` and `lastHeartbeatDateTime` report connection
-// health, and `androidOnboarded`, `iosOnboarded`, and `macOsOnboarded` show
-// which platforms the partner has been onboarded for.
+// Device compliance management partner connected to Intune, selected by its
+// `id`. `partnerState` and `lastHeartbeatDateTime` report connection health,
+// and `androidOnboarded`, `iosOnboarded`, and `macOsOnboarded` show which
+// platforms the partner has been onboarded for.
 private microsoft.devicemanagement.complianceManagementPartner @defaults("displayName partnerState") {
   // Partner ID
   id string
@@ -2889,8 +3327,8 @@ private microsoft.devicemanagement.complianceManagementPartner @defaults("displa
 
 // Microsoft Intune assignment filter
 //
-// Examine an assignment filter used to narrow which devices a policy or app
-// assignment targets, selected by its `id`. The `rule` holds the filter
+// Assignment filter used to narrow which devices a policy or app assignment
+// targets, selected by its `id`. The `rule` holds the filter
 // expression evaluated against device properties, `platform` reports the
 // device platform it applies to, and `assignmentFilterManagementType`
 // distinguishes device filters from managed-app filters. A policy assignment
@@ -2921,9 +3359,9 @@ private microsoft.devicemanagement.assignmentFilter @defaults("displayName platf
 
 // Microsoft Intune app protection (MAM) policy
 //
-// Examine an Intune mobile application management policy that protects
-// corporate data inside managed apps on iOS and Android, selected by its
-// `id`; `platformType` reports which platform it targets. The policy governs
+// Intune mobile application management policy that protects corporate data
+// inside managed apps on iOS and Android, selected by its `id`;
+// `platformType` reports which platform it targets. The policy governs
 // access protection (`pinRequired`, `minimumPinLength`, `maximumPinRetries`,
 // `simplePinBlocked`, `fingerprintBlocked`, `periodOfflineBeforeAccessCheck`),
 // data containment (`dataBackupBlocked`, `saveAsBlocked`, `printBlocked`,
@@ -3090,7 +3528,18 @@ private microsoft.devicemanagement.manageddevice {
   ethernetMacAddress string
   // Name of the enrollment profile assigned to the device
   enrollmentProfileName string
-  // Protection state of the device
+  // Windows Defender protection state of the device
+  //
+  // Keys include `antiMalwareVersion`, `engineVersion`, `signatureVersion`,
+  // `deviceState` (WindowsDeviceHealthState), `productStatus`
+  // (WindowsDefenderProductStatus), `malwareProtectionEnabled`,
+  // `realTimeProtectionEnabled`, `networkInspectionSystemEnabled`,
+  // `tamperProtectionEnabled`, `fullScanRequired`, `fullScanOverdue`,
+  // `quickScanOverdue`, `signatureUpdateOverdue`, `rebootRequired`,
+  // `isVirtualMachine`, `lastFullScanDateTime`, `lastQuickScanDateTime`,
+  // `lastReportedDateTime`, and `detectedMalwareState`, a list of detected
+  // threats each with `category`, `severity`, `executionState`, `state`, and
+  // `threatState`.
   windowsProtectionState dict
   // Compliance state of the device (compliant, noncompliant, conflict, error, unknown, notApplicable)
   complianceState string
@@ -3176,7 +3625,10 @@ private microsoft.devicemanagement.devicecompliancepolicy @defaults("id displayN
   lastModifiedDateTime time
   // Device compliance policy version
   version int
-  // Device compliance policy assignments
+  // Raw assignment entries, each carrying only its assignment `id`
+  //
+  // For the resolved target of each assignment (kind, group, and any filter),
+  // use `policyAssignments`.
   assignments []dict
   // Raw device compliance policy properties
   //
@@ -3200,10 +3652,11 @@ private microsoft.devicemanagement.devicecompliancepolicy @defaults("id displayN
 
 // Assignment of an Intune device management policy
 //
-// Examine which groups, devices, or licensed users an Intune policy targets,
-// and whether each assignment is an include or an exclude. `policyAssignment`
-// is used by compliance policies, configuration profiles, endpoint security
-// intents, and mobile apps. `targetType` identifies the kind of target
+// Binding of an Intune policy to the groups, devices, or licensed users it
+// targets, recording whether each assignment is an include or an exclude.
+// `policyAssignment` is used by compliance policies, configuration profiles,
+// endpoint security intents, and mobile apps. `targetType` identifies the
+// kind of target
 // (`groupAssignmentTarget`, `exclusionGroupAssignmentTarget`,
 // `allDevicesAssignmentTarget`, `allLicensedUsersAssignmentTarget`); `groupId`
 // is populated only when the target is a group.
@@ -3232,8 +3685,8 @@ private microsoft.devicemanagement.policyAssignment @defaults("id targetType") {
 
 // Evaluation state of a single Intune policy on a managed device
 //
-// Examine compliance and configuration evaluation results for a managed
-// device, one entry per policy. The `state` field gives the aggregate result
+// Compliance and configuration evaluation results for a managed device, one
+// entry per policy. The `state` field gives the aggregate result
 // (`compliant`, `nonCompliant`, `conflict`, `error`, `notApplicable`,
 // `inGracePeriod`), and `settingStates` lists per-setting outcomes that
 // rolled up into it. `sourceType` distinguishes compliance from configuration
@@ -3259,12 +3712,12 @@ private microsoft.devicemanagement.manageddevice.policyState @defaults("displayN
 
 // Endpoint security intent
 //
-// Examine endpoint security policies created from Intune templates: antivirus,
-// disk encryption, firewall, endpoint detection and response, account
-// protection, and attack surface reduction. `templateId` and
-// `templateDisplayName` identify which template the intent was created from;
-// `settings()` returns the configured settings; `assignments()` returns the
-// groups and devices it targets.
+// Endpoint security policies created from Intune templates: antivirus, disk
+// encryption, firewall, endpoint detection and response, account protection,
+// and attack surface reduction. `templateId` and `templateDisplayName`
+// identify which template the intent was created from; `settings` returns the
+// configured settings; `assignments` returns the groups and devices it
+// targets.
 private microsoft.devicemanagement.intent @defaults("id displayName templateDisplayName") {
   // Intent ID
   id string
@@ -3300,12 +3753,12 @@ private microsoft.devicemanagement.intent.setting @defaults("definitionId valueJ
 
 // Mobile app published to the Intune tenant
 //
-// Examine apps published to Intune for deployment to managed devices. Apps
-// include store apps, line-of-business apps, web apps, and managed Google Play
-// apps. `properties` holds subtype-specific fields keyed by `@odata.type`
-// (for example `bundleId`, `productCode`, `appStoreUrl`, `installCommandLine`),
+// Apps published to Intune for deployment to managed devices. Apps include
+// store apps, line-of-business apps, web apps, and managed Google Play apps.
+// `properties` holds subtype-specific fields keyed by `@odata.type` (for
+// example `bundleId`, `productCode`, `appStoreUrl`, `installCommandLine`),
 // `publishingState` indicates whether the app is ready for deployment, and
-// `assignments()` returns the groups it targets.
+// `assignments` returns the groups it targets.
 private microsoft.devicemanagement.mobileapp @defaults("id displayName publisher") {
   // Mobile app ID
   id string
@@ -3335,9 +3788,9 @@ private microsoft.devicemanagement.mobileapp @defaults("id displayName publisher
 
 // App detected as installed on managed devices
 //
-// Examine the application inventory that Intune builds from managed-device
-// reporting. `deviceCount` is the number of devices in the tenant on which
-// Intune has detected this app at the given `version`.
+// Application inventory that Intune builds from managed-device reporting.
+// `deviceCount` is the number of devices in the tenant on which Intune has
+// detected this app at the given `version`.
 private microsoft.devicemanagement.detectedapp @defaults("displayName version deviceCount") {
   // Detected app ID
   id string
@@ -3357,8 +3810,8 @@ private microsoft.devicemanagement.detectedapp @defaults("displayName version de
 
 // Windows Autopilot deployment profile
 //
-// Examine Windows Autopilot deployment profiles that drive zero-touch
-// provisioning. The profile sets language, locale, device-name template, and
+// Windows Autopilot deployment profiles that drive zero-touch provisioning.
+// The profile sets language, locale, device-name template, and
 // the out-of-box experience that end users see during first sign-in;
 // `deploymentProfileType` distinguishes Azure AD joined, Hybrid Azure AD
 // joined, and self-deploying flows.
@@ -3393,10 +3846,10 @@ private microsoft.devicemanagement.windowsAutopilotDeploymentProfile @defaults("
 
 // Intune RBAC role definition
 //
-// Examine the Intune role-based access control catalog: built-in Microsoft
-// roles plus any custom roles defined in the tenant. `rolePermissions` lists
-// the Intune resource actions the role grants; `roleScopeTagIds` lists the
-// scope tags the role is allowed to operate against.
+// Intune role-based access control catalog: built-in Microsoft roles plus any
+// custom roles defined in the tenant. `rolePermissions` lists the Intune
+// resource actions the role grants; `roleScopeTagIds` lists the scope tags the
+// role is allowed to operate against.
 private microsoft.devicemanagement.roleDefinition @defaults("id displayName isBuiltIn") {
   // Role definition ID
   id string
@@ -3414,10 +3867,11 @@ private microsoft.devicemanagement.roleDefinition @defaults("id displayName isBu
 
 // Assignment of an Intune RBAC role to members
 //
-// Examine which security groups receive which Intune roles, and which scope
-// tags constrain where they can act. `members` are the groups that receive
-// the role; `scopeMembers` are the groups whose objects the role applies to;
-// `resourceScopes` is the set of scope-tag IDs the assignment is limited to.
+// Binding of an Intune role to the security groups that receive it and the
+// scope tags that constrain where they can act. `members` are the groups that
+// receive the role; `scopeMembers` are the groups whose objects the role
+// applies to; `resourceScopes` is the set of scope-tag IDs the assignment is
+// limited to.
 private microsoft.devicemanagement.roleAssignment @defaults("id displayName roleDefinitionId") {
   // Role assignment ID
   id string
@@ -3437,9 +3891,9 @@ private microsoft.devicemanagement.roleAssignment @defaults("id displayName role
 
 // Intune RBAC role scope tag
 //
-// Examine the scope tags used to partition Intune resources by team or
-// region. Tags are attached to managed devices, policies, and apps, and
-// constrain which administrators can see and modify which objects.
+// Scope tags used to partition Intune resources by team or region. Tags are
+// attached to managed devices, policies, and apps, and constrain which
+// administrators can see and modify which objects.
 private microsoft.devicemanagement.roleScopeTag @defaults("id displayName isBuiltIn") {
   // Scope tag ID
   id string
@@ -3453,13 +3907,14 @@ private microsoft.devicemanagement.roleScopeTag @defaults("id displayName isBuil
 
 // Microsoft 365 Exchange Online
 //
-// Use this namespace to access Exchange Online configuration and security
-// settings. Exposes mail filtering policies (`malwareFilterPolicy`,
-// `hostedContentFilterPolicy`, `antiPhishPolicy`, `hostedOutboundSpamFilterPolicy`),
-// transport rules, safe links and attachment policies, DKIM signing configuration,
-// authentication policies, OWA mailbox policies, mailbox audit settings,
-// quarantine policies, retention policies, journal rules, report submission
-// policies, Teams protection policies, and organization-wide configuration.
+// Exchange Online configuration and security settings for the tenant,
+// covering mail filtering policies (`malwareFilterPolicies`,
+// `hostedContentFilterPolicies`, `antiPhishPolicies`, `hostedOutboundSpamFilterPolicies`),
+// transport rules, Safe Links and Safe Attachments policies, DKIM signing
+// configuration, authentication policies, Outlook on the web mailbox policies,
+// mailbox audit settings, quarantine policies, retention policies, journal
+// rules, report submission policies, Teams protection policies, and
+// organization-wide configuration.
 ms365.exchangeonline {
   // Malware filter policies as raw dictionaries
   //
@@ -3632,7 +4087,15 @@ ms365.exchangeonline {
   mailboxAuditBypassAssociation() []ms365.exchangeonlineMailboxAuditBypassAssociation
 }
 
-// Mailbox Audit Bypass Association configuration
+// Mailbox audit bypass association
+//
+// User or computer account that is exempted from mailbox audit logging in
+// Exchange Online. When auditBypassEnabled is true, the account's mailbox
+// access and actions are excluded from the mailbox audit log, so its
+// activity leaves no audit trail. Review these associations to confirm
+// that no account has been silently exempted from auditing, since bypass
+// entries can conceal privileged or malicious mailbox access. The account
+// is identified by name.
 private ms365.exchangeonlineMailboxAuditBypassAssociation @defaults("name auditBypassEnabled") {
   // The name of the user or computer account
   name string
@@ -3655,7 +4118,7 @@ private ms365.exchangeonline.securityAndCompliance {
 
 // Microsoft 365 Data Loss Prevention compliance rule
 //
-// Examine a Data Loss Prevention (DLP) rule, the conditions and actions that
+// Data Loss Prevention (DLP) rule holding the conditions and actions that
 // make up a DLP policy, selected by its `name`. `parentPolicyName` links the
 // rule to its policy. The rule detects the sensitive information types listed
 // in `sensitiveInformationTypes`, and when matched it can block access
@@ -3700,7 +4163,7 @@ private ms365.exchangeonline.dlpComplianceRule @defaults("name parentPolicyName 
 
 // Microsoft 365 Data Loss Prevention compliance policy
 //
-// Examine a Data Loss Prevention (DLP) compliance policy, selected by its
+// Data Loss Prevention (DLP) compliance policy, selected by its
 // `name`. `mode` reports the enforcement level (Enable, TestWithNotifications,
 // TestWithoutNotifications, or Disable) and `enabled` whether it is on. The
 // `workload` lists which services it covers — Exchange, SharePoint,
@@ -3854,12 +4317,12 @@ private ms365.exchangeonline.mailbox @defaults("identity displayName auditEnable
 
 // Microsoft 365 SharePoint Online
 //
-// Use this namespace to access SharePoint Online tenant configuration and
-// site inventory. Exposes `tenantConfiguration` (tenant-wide sharing and
-// security settings), `spoTenantSyncClientRestriction` (sync client access
-// controls), `spoSites` (list of site collections with their URL and custom
-// script permissions), and `defaultLinkPermission` (the default sharing link
-// permission level for the tenant).
+// SharePoint Online and OneDrive governance for the tenant, spanning the
+// tenant-wide sharing and security configuration, OneDrive sync client
+// access controls, and the inventory of site collections with their
+// external-sharing and custom-script settings. Query it to audit how broadly
+// content can be shared outside the organization and whether device and
+// script protections are enforced.
 ms365.sharepointonline {
   // SharePoint Online tenant settings as a raw dictionary
   //
@@ -3868,7 +4331,15 @@ ms365.sharepointonline {
   spoTenant() @maturity("deprecated") dict
   // SharePoint Online tenant configuration
   tenantConfiguration() ms365.sharepointonline.tenantConfig
-  // SharePoint Online tenant sync client restriction
+  // OneDrive sync client access restrictions for the tenant
+  //
+  // Raw configuration governing which machines may sync SharePoint and
+  // OneDrive content. Keys include `TenantRestrictionEnabled` (whether
+  // syncing is limited to domain-joined machines on the safe recipient
+  // list), `AllowedDomainList` (the safe recipient domain GUIDs),
+  // `BlockMacSync` (whether Mac clients are blocked from syncing), and
+  // `GrooveBlockOption` (whether the legacy OneDrive for Business sync
+  // client is allowed).
   spoTenantSyncClientRestriction() dict
   // SharePoint Online tenant sites
   spoSites() []ms365.sharepointonline.site
@@ -3878,10 +4349,10 @@ ms365.sharepointonline {
 
 // Microsoft 365 SharePoint Online tenant configuration
 //
-// Examine tenant-wide SharePoint Online and OneDrive sharing and security
-// settings, including external sharing capability, domain restrictions,
-// anonymous link controls, guest expiration, and access protections that
-// apply across all sites in the tenant.
+// Tenant-wide SharePoint Online and OneDrive sharing and security settings,
+// including external sharing capability, domain restrictions, anonymous link
+// controls, guest expiration, and access protections that apply across all
+// sites in the tenant.
 private ms365.sharepointonline.tenantConfig {
   // External sharing capability for the tenant
   //
@@ -3942,10 +4413,19 @@ private ms365.sharepointonline.tenantConfig {
 }
 
 // Microsoft 365 SharePoint Site
+//
+// SharePoint Online site collection with its external-sharing capability,
+// custom-script permission, conditional access restrictions, and lock state.
+// Query the collection to find sites that permit external sharing or allow
+// custom script execution, both of which widen the tenant's exposure.
 private ms365.sharepointonline.site {
   // The site URL
   url string
-  // Whether custom script execution on a particular site allowed
+  // Whether adding and customizing pages is denied on the site
+  //
+  // When true, users cannot run custom script on the site, which is the
+  // secure setting. A false value permits custom script, which can be used
+  // to inject malicious code into pages.
   denyAddAndCustomizePages bool
   // The site title
   title string
@@ -3977,11 +4457,12 @@ private ms365.sharepointonline.site {
 
 // Microsoft 365 Teams
 //
-// Use this namespace to access Microsoft Teams configuration for the tenant.
-// Exposes `clientConfiguration` (client feature controls),
-// `csTenantFederationConfiguration` (external access and federation settings),
-// `csTeamsMeetingPolicy` (meeting lobby, recording, and participant controls),
-// and `csTeamsMessagingPolicy` (messaging and security reporting controls).
+// Tenant-wide Microsoft Teams configuration and inventory. Covers the client
+// feature controls, external access and federation settings, meeting policy
+// (lobby admission, recording, and participant controls), and messaging
+// policy (chat and security reporting), plus the teams provisioned in the
+// tenant and their channels. Audit these to verify guest access, external
+// federation, meeting recording, and lobby screening are governed to policy.
 ms365.teams {
   // Teams client configuration as a raw dictionary
   //
@@ -4006,9 +4487,11 @@ ms365.teams {
 
 // Microsoft 365 Teams client configuration
 //
-// Examine tenant-wide Teams client feature controls, including third-party
-// cloud storage providers, guest access, and interoperability settings that
-// govern what users can do from the Teams client.
+// Tenant-wide Teams client feature controls, including which third-party
+// cloud storage providers (Dropbox, Box, Google Drive, ShareFile, Egnyte)
+// users can attach, whether guest access and Skype for Business
+// interoperability are permitted, and email-into-channel behavior. Audit
+// these to confirm data-egress paths and guest access match policy.
 private ms365.teams.clientConfig {
   // Whether users can send email to a channel email address
   allowEmailIntoChannel bool
@@ -4039,6 +4522,12 @@ private ms365.teams.clientConfig {
 }
 
 // Microsoft 365 Teams tenant federation configuration
+//
+// External access and federation settings that determine which outside
+// organizations and consumer (personal) Teams accounts users can
+// communicate with. The allowedDomains and blockedDomains lists,
+// allowFederatedUsers, and allowTeamsConsumer settings define the tenant's
+// external-communication boundary, a key control against data exfiltration.
 private ms365.teams.tenantFederationConfig {
   // ID of the collection of tenant federation configuration settings
   identity string
@@ -4065,6 +4554,11 @@ private ms365.teams.tenantFederationConfig {
 }
 
 // Microsoft 365 Teams meeting policy configuration
+//
+// Meeting controls that govern who can join and start meetings, lobby
+// admission for anonymous and external participants, presenter roles, chat,
+// cloud recording and its storage region, transcription, and toll-bypass.
+// Audit these to enforce lobby screening and to control meeting recording.
 private ms365.teams.teamsMeetingPolicyConfig {
   // Whether anonymous users are allowed to join
   allowAnonymousUsersToJoinMeeting bool
@@ -4099,6 +4593,11 @@ private ms365.teams.teamsMeetingPolicyConfig {
 }
 
 // Microsoft 365 Teams messaging policy configuration
+//
+// Chat and messaging controls covering whether users can chat, edit or
+// delete their own messages, whether owners can delete others' messages,
+// read-receipt behavior, and end-user security reporting of malicious
+// messages.
 private ms365.teams.teamsMessagingPolicyConfig {
   // Whether users can report security concerns
   allowSecurityEndUserReporting bool
@@ -4119,19 +4618,14 @@ private ms365.teams.teamsMessagingPolicyConfig {
 
 // Microsoft Teams team
 //
-// Examine a single team provisioned in the tenant, selected by its group
-// `id`. Beyond identity (`displayName`, `description`, `visibility`,
-// `classification`, `createdDateTime`, `webUrl`) it exposes the team's
-// governance settings: whether members can create, update, or delete
-// channels and create private channels (`allowCreateUpdateChannels`,
-// `allowCreatePrivateChannels`, `allowDeleteChannels`), add or remove apps,
-// tabs, and connectors, what guests are allowed to do
-// (`guestAllowCreateUpdateChannels`, `guestAllowDeleteChannels`), the
-// messaging controls (`allowUserDeleteMessages`, `allowOwnerDeleteMessages`,
-// and mention settings), and the fun settings (`allowGiphy`,
-// `giphyContentRating`, `allowStickersAndMemes`, `allowCustomMemes`). Use
-// `channels` to enumerate the team's channels and `isArchived` to spot
-// archived teams.
+// A single team provisioned in the tenant, selected by its group id (for
+// example ms365.teams.teams.where(id == "...")). Beyond identity and
+// lifecycle (display name, visibility, classification, archived state) it
+// exposes the team's governance settings: whether members and guests can
+// create, update, or delete channels, create private channels, and add apps,
+// tabs, and connectors, along with the message-deletion and mention controls
+// and the Giphy, stickers, and custom-meme content settings. Use channels to
+// enumerate the team's channels.
 private ms365.teams.team @defaults("displayName description visibility") {
   // Team (group) ID
   id string
@@ -4195,11 +4689,11 @@ private ms365.teams.team @defaults("displayName description visibility") {
 
 // Microsoft Teams channel
 //
-// Examine a single channel within a team. Exposes the channel
-// `displayName`, `description`, `membershipType` (standard, private, or
-// shared), `email`, `webUrl`, `createdDateTime`, and whether the channel
-// `isArchived`. Private and shared channels narrow who can participate, so
-// `membershipType` is a key governance signal.
+// A single channel within a team, covering the channel display name,
+// description, email address, web URL, creation time, and archived state.
+// The membershipType field (standard, private, or shared) is a key
+// governance signal because private and shared channels narrow who can
+// participate.
 private ms365.teams.channel @defaults("displayName membershipType") {
   // Channel ID
   id string
@@ -4245,7 +4739,7 @@ private ms365.exchangeonline.retentionPolicy @defaults("name retentionPolicyTagL
 
 // Exchange Online mail flow transport rule
 //
-// Examine a single mail flow rule returned by Get-TransportRule, selected by
+// Single mail flow rule returned by Get-TransportRule, selected by
 // `name`. Each rule reports its evaluation `priority` (lower numbers run
 // first), enablement `state`, operating `mode`, administrator `comments`, and
 // whether it forces outbound TLS via `routeMessageOutboundRequireTls`. The full
@@ -4272,7 +4766,7 @@ private ms365.exchangeonline.transportRuleEntry @defaults("name state priority")
 
 // Exchange Online anti-phishing policy
 //
-// Examine a single anti-phishing policy returned by Get-AntiPhishPolicy,
+// Single anti-phishing policy returned by Get-AntiPhishPolicy,
 // selected by `name`. Each policy reports whether it is `enabled`, the
 // `phishThresholdLevel` (1-4, where higher is more aggressive), the
 // mailbox-intelligence, spoof-intelligence, and impersonation-protection
@@ -4333,7 +4827,7 @@ private ms365.exchangeonline.antiPhishPolicyEntry @defaults("name enabled phishT
 
 // Exchange Online Safe Links policy
 //
-// Examine a single Defender for Office 365 Safe Links policy returned by
+// Single Defender for Office 365 Safe Links policy returned by
 // Get-SafeLinksPolicy, selected by `name`. Each policy reports which
 // workloads URL scanning covers (email, Teams, and Office apps), whether
 // clicks are tracked, whether users may click through to the original URL,
@@ -4365,7 +4859,7 @@ private ms365.exchangeonline.safeLinksPolicyEntry @defaults("name enableSafeLink
 
 // Exchange Online Safe Attachments policy
 //
-// Examine a single Defender for Office 365 Safe Attachments policy returned
+// Single Defender for Office 365 Safe Attachments policy returned
 // by Get-SafeAttachmentPolicy, selected by `name`. Each policy reports
 // whether it is enabled, the `action` taken on detected malware (Allow,
 // Block, Replace, or DynamicDelivery), and whether and where detected
@@ -4389,7 +4883,7 @@ private ms365.exchangeonline.safeAttachmentPolicyEntry @defaults("name enable ac
 
 // Exchange Online malware filter policy
 //
-// Examine a single malware filter policy returned by Get-MalwareFilterPolicy,
+// Single malware filter policy returned by Get-MalwareFilterPolicy,
 // selected by `name`. Each policy reports whether the common-attachment file
 // filter is enabled and the `fileTypes` it blocks, whether zero-hour auto
 // purge is on, and whether internal- and external-sender admin notifications
@@ -4423,7 +4917,7 @@ private ms365.exchangeonline.malwareFilterPolicyEntry @defaults("name enableFile
 
 // Exchange Online hosted content (anti-spam) filter policy
 //
-// Examine a single inbound anti-spam policy returned by
+// Single inbound anti-spam policy returned by
 // Get-HostedContentFilterPolicy, selected by `name`. Each policy reports the
 // actions taken on spam, high-confidence spam, phishing, high-confidence
 // phishing, and bulk mail, the `bulkThreshold` (1-9), whether end-user spam
@@ -4456,7 +4950,7 @@ private ms365.exchangeonline.hostedContentFilterPolicyEntry @defaults("name spam
 
 // Exchange Online hosted outbound spam filter policy
 //
-// Examine a single outbound spam policy returned by
+// Single outbound spam policy returned by
 // Get-HostedOutboundSpamFilterPolicy, selected by `name`. Each policy reports
 // the external, internal, and daily recipient limits, the action taken when a
 // limit is reached, the automatic email-forwarding mode (Automatic, On, or
@@ -4490,7 +4984,7 @@ private ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry @defaults("name
 
 // Exchange Online DKIM signing configuration
 //
-// Examine the DKIM signing configuration for one accepted domain, returned by
+// DKIM signing configuration for one accepted domain, returned by
 // Get-DkimSigningConfig and selected by `domain`. The `enabled` field reports
 // whether outbound DKIM signing is on for the domain, and `status` reports its
 // current state.
@@ -4507,7 +5001,7 @@ private ms365.exchangeonline.dkimSigningConfigEntry @defaults("domain enabled st
 
 // Exchange Online authentication policy
 //
-// Examine a single authentication policy returned by Get-AuthenticationPolicy,
+// Single authentication policy returned by Get-AuthenticationPolicy,
 // selected by `name`. Each policy exposes one boolean per connection protocol
 // (ActiveSync, Autodiscover, IMAP, MAPI, offline address book, the Outlook
 // service, POP, remote PowerShell, reporting web services, Outlook RPC,
@@ -4546,7 +5040,7 @@ private ms365.exchangeonline.authenticationPolicyEntry @defaults("name allowBasi
 
 // Exchange Online Outlook on the web mailbox policy
 //
-// Examine a single Outlook on the web mailbox policy returned by
+// Single Outlook on the web mailbox policy returned by
 // Get-OwaMailboxPolicy, selected by `name`. Each policy reports whether
 // third-party storage providers are available, whether direct file access is
 // enabled on public and private computers, whether forced save applies to
@@ -4632,7 +5126,7 @@ private ms365.exchangeonline.owaMailboxPolicyEntry @defaults("name additionalSto
 
 // Exchange Online remote domain configuration
 //
-// Examine the mail-handling configuration for one remote domain returned by
+// Mail-handling configuration for one remote domain returned by
 // Get-RemoteDomain, selected by `name`. The `domainName` field reports the
 // domain it applies to, and further fields report the out-of-office reply type
 // allowed and whether automatic replies, automatic forwarding, delivery
@@ -4664,7 +5158,7 @@ private ms365.exchangeonline.remoteDomainEntry @defaults("name domainName autoFo
 
 // Exchange Online quarantine policy
 //
-// Examine a single quarantine policy returned by Get-QuarantinePolicy,
+// Single quarantine policy returned by Get-QuarantinePolicy,
 // selected by `name`. Each policy reports the
 // `endUserQuarantinePermissionsValue` bitmask that controls what recipients
 // may do with their quarantined messages, and whether end-user spam
@@ -4682,7 +5176,7 @@ private ms365.exchangeonline.quarantinePolicyEntry @defaults("name esnEnabled") 
 
 // Exchange Online Defender for Office 365 ATP policy
 //
-// Examine the Defender for Office 365 advanced threat protection policy
+// Defender for Office 365 advanced threat protection policy
 // returned by Get-AtpPolicyForO365, selected by `name`. It reports whether
 // Safe Documents is enabled, whether users may bypass it to open a file, and
 // whether ATP protection is enabled for SharePoint, OneDrive, and Teams.
@@ -4701,7 +5195,7 @@ private ms365.exchangeonline.atpPolicyForO365Entry @defaults("name enableSafeDoc
 
 // Exchange Online sharing policy
 //
-// Examine a single calendar and contact sharing policy returned by
+// Single calendar and contact sharing policy returned by
 // Get-SharingPolicy, selected by `name`. The `enabled` field reports whether
 // the policy is active, `isDefault` reports whether it is the tenant default,
 // and the `domains` field lists which external domains may be shared with and
@@ -4721,7 +5215,7 @@ private ms365.exchangeonline.sharingPolicyEntry @defaults("name enabled isDefaul
 
 // Exchange Online role assignment policy
 //
-// Examine a single role assignment policy returned by
+// Single role assignment policy returned by
 // Get-RoleAssignmentPolicy, selected by `name`. Each policy reports whether
 // it is the tenant default, its `description`, and the management roles it
 // assigns to mailboxes (for example MyProfileInformation or MyBaseOptions),
