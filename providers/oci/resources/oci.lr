@@ -6,14 +6,13 @@ option go_package = "go.mondoo.com/mql/v13/providers/oci/resources"
 
 // Oracle Cloud Infrastructure (OCI)
 //
-// Use the Oracle Cloud Infrastructure namespace as the tenancy-scoped
-// entry point for the OCI provider. Iterate `regions()` for the
-// regions the tenancy is subscribed to (with the home-region flag and
-// subscription state) and `compartments()` for the OCI compartment
-// hierarchy. The active tenancy itself is exposed as `oci.tenancy`,
-// and service-specific entry points (`oci.identity`, `oci.compute`,
-// `oci.network`, `oci.objectStorage`, `oci.kms`, and so on) are
-// reached as siblings.
+// Tenancy-scoped entry point for the OCI provider. The `regions` field
+// lists the regions the tenancy is subscribed to, with the home-region
+// flag and subscription state, and `compartments` lists the OCI
+// compartment hierarchy. The active tenancy itself is exposed as
+// `oci.tenancy`, and service-specific entry points (`oci.identity`,
+// `oci.compute`, `oci.network`, `oci.objectStorage`, `oci.kms`, and so
+// on) are reached as siblings.
 oci {
   // Available regions
   regions() []oci.region
@@ -23,10 +22,11 @@ oci {
 
 // Oracle Cloud Infrastructure (OCI) tenancy
 //
-// Examine the active OCI tenancy — the top-level identity and
-// resource container the provider is authenticated against. Surfaces
-// the tenancy OCID, display name and description, and the
-// `retentionPeriod` configured for audit-event retention.
+// Active OCI tenancy, the top-level identity and resource container
+// the provider is authenticated against. The `id` is the tenancy
+// OCID, `name` and `description` carry the display metadata, and
+// `retentionPeriod` reports how long audit events are kept, derived
+// from the audit configuration in the tenancy's home region.
 oci.tenancy @defaults("name") {
   // Tenancy OCID
   id string
@@ -39,6 +39,13 @@ oci.tenancy @defaults("name") {
 }
 
 // Oracle Cloud Infrastructure (OCI) region
+//
+// Region the tenancy is subscribed to, selected by its region key such as
+// `us-phoenix-1`. Reports whether a region is the tenancy's home region,
+// where identity and IAM changes originate, and its subscription status,
+// which governs where resources may be provisioned. Useful for auditing
+// the tenancy's geographic footprint and confirming that only approved
+// regions are enabled.
 private oci.region @defaults("id name") {
   // Region key (e.g., us-phoenix-1)
   id string
@@ -51,6 +58,13 @@ private oci.region @defaults("id name") {
 }
 
 // Oracle Cloud Infrastructure (OCI) compartment
+//
+// Logical container that isolates and organizes tenancy resources for
+// access control, quota, and billing purposes. Compartments form the
+// boundary that IAM policies grant access against, so enumerating them
+// reveals the tenancy's resource-isolation structure. The `id` field is
+// the compartment OCID, `state` reports the lifecycle status, and
+// `created` records when the compartment was provisioned.
 private oci.compartment @defaults("id name") {
   // Compartment OCID
   id string
@@ -66,18 +80,17 @@ private oci.compartment @defaults("id name") {
 
 // Oracle Cloud Infrastructure (OCI) Identity and Access Management
 //
-// Use the OCI Identity namespace to enumerate the tenancy's IAM
-// principals and access policies. Iterate `users()` for IAM users
-// (with their MFA state, login history, capabilities, API keys,
-// customer secret keys, auth tokens, MFA devices, and group
-// memberships), `groups()` for IAM groups and their members, and
-// `policies()` for the policy statements that grant groups access to
-// compartments and resources. `dynamicGroups()` lists the rule-matched
-// groups that grant access to compute and service principals,
-// `identityProviders()` lists the federated SAML2 providers,
-// `networkSources()` lists the IP and VCN allowlists that constrain
-// where requests may originate, and `authenticationPolicy()` exposes
-// the tenancy's password-strength and network-restriction rules.
+// IAM principals and access controls for the tenancy. users are the
+// human and service identities, with their MFA state, login history,
+// capabilities, API keys, customer secret keys, auth tokens, MFA
+// devices, and group memberships. groups collect users, and policies
+// carry the statements that grant groups access to compartments and
+// resources. dynamicGroups are the rule-matched groups that grant
+// access to compute and service principals, identityProviders are the
+// federated SAML2 providers, networkSources are the IP and VCN
+// allowlists that constrain where console and API requests may
+// originate, and authenticationPolicy holds the tenancy's
+// password-strength and network-restriction rules.
 oci.identity {
   // IAM users
   users() []oci.identity.user
@@ -123,7 +136,12 @@ private oci.identity.user @defaults("name") {
   externalIdentifier string
   // Federated identity provider this user originates from, when the user is federated
   identityProvider() oci.identity.identityProvider
-  // Authentication capabilities (e.g., can_use_api_keys, can_use_auth_tokens)
+  // Authentication capabilities the user is permitted to hold
+  //
+  // Keyed by capability name, each mapping to whether the user may use
+  // it: canUseConsolePassword, canUseApiKeys, canUseAuthTokens,
+  // canUseSmtpCredentials, canUseCustomerSecretKeys, and
+  // canUseOAuth2ClientCredentials.
   capabilities map[string]bool
   // Most recent successful login time
   lastLogin time
@@ -427,13 +445,14 @@ private oci.identity.authenticationPolicy @defaults("minimumPasswordLength") {
 
 // Oracle Cloud Infrastructure (OCI) Compute
 //
-// Use the OCI Compute namespace to enumerate compute and block-storage
-// primitives in the tenancy. Iterate `instances()` for compute VMs
-// and bare-metal instances (with their shape, image, networking,
-// metadata, and instance configuration), `images()` for OS and
-// custom images available for launch, `blockVolumes()` for managed
-// block storage volumes, and `bootVolumes()` for the boot-volume
-// counterparts attached to instances.
+// Compute and block-storage inventory for the tenancy. The `instances`
+// collection covers virtual machine and bare-metal instances with their
+// shape, source image, networking, metadata, agent configuration, and
+// internet exposure. The `images` collection lists Oracle-provided and
+// custom images available for launch, `blockVolumes` lists managed block
+// storage volumes, and `bootVolumes` lists the boot volumes attached to
+// instances. Use these to audit instance security posture, encryption, and
+// storage across compartments.
 oci.compute {
   // Compute instances
   instances() []oci.compute.instance
@@ -482,12 +501,22 @@ private oci.network.exposure @defaults("internetReachable hasPublicIp") {
   hasRouteToInternet bool
   // Ingress rules that admit traffic from any address (0.0.0.0/0 or ::/0)
   //
-  // Combines the matching network security group rules and subnet security list
-  // rules. For a load balancer, the listeners reachable from the internet.
+  // The matching rules from every attached network security group and from the
+  // subnet's security list, combined. Each entry: {source, sourceType, protocol
+  // (IANA number, e.g. "6"=TCP, "17"=UDP, "1"=ICMP), description, tcpOptions,
+  // udpOptions, icmpOptions}; network security group rules carry `isStateless`
+  // while security list rules carry `stateless`.
   openIngressRules []dict
 }
 
 // Oracle Cloud Infrastructure (OCI) Compute instance
+//
+// Virtual machine or bare-metal Compute instance in the tenancy, keyed by
+// its OCID. Surfaces the instance's shape and sizing, source image and boot
+// volume, attached network interfaces, platform security settings, Oracle
+// Cloud Agent plugin states, and a derived internet-exposure breakdown.
+// Central to auditing instance hardening, metadata-service (IMDS)
+// configuration, encryption, and internet reachability.
 private oci.compute.instance @defaults("name") {
   // Instance OCID
   id string
@@ -515,11 +544,29 @@ private oci.compute.instance @defaults("name") {
   image() oci.compute.image
   // Dedicated VM host OCID if running on dedicated infrastructure
   dedicatedVmHostId string
-  // Platform security configuration (Secure Boot, TPM, Measured Boot, memory encryption)
+  // Platform security configuration
+  //
+  // Shielded-instance and confidential-computing settings. Keys: `type`
+  // (the platform variant, for example AMD_VM, INTEL_VM, or AMD_MILAN_BM),
+  // `isSecureBootEnabled`, `isTrustedPlatformModuleEnabled`,
+  // `isMeasuredBootEnabled`, and `isMemoryEncryptionEnabled`. Absent when
+  // the shape does not support these features.
   platformConfig dict
-  // Launch configuration options (boot volume type, firmware, network type, encryption)
+  // Launch configuration options
+  //
+  // Emulation and I/O settings chosen at launch. Keys: `bootVolumeType` and
+  // `remoteDataVolumeType` (ISCSI, SCSI, IDE, VFIO, or PARAVIRTUALIZED),
+  // `firmware` (BIOS or UEFI_64), `networkType` (E1000, VFIO,
+  // PARAVIRTUALIZED, or ACCELERATEDPV), `isPvEncryptionInTransitEnabled`
+  // for in-transit encryption of paravirtualized volume traffic, and
+  // `isConsistentVolumeNamingEnabled`.
   launchOptions dict
-  // Instance runtime options (legacy IMDS endpoint configuration)
+  // Instance runtime options
+  //
+  // Runtime configuration of the instance. The single key
+  // `areLegacyImdsEndpointsDisabled` reports whether the legacy instance
+  // metadata service (IMDSv1) endpoints are turned off, also surfaced as
+  // the `legacyImdsEndpointsDisabled` field.
   instanceOptions dict
   // Whether legacy instance metadata service (IMDSv1) endpoints are disabled
   //
@@ -545,9 +592,20 @@ private oci.compute.instance @defaults("name") {
   // example "Vulnerability Scanning", "Bastion", or "OS Management Service
   // Agent". Use it to confirm required security agents are enabled.
   agentPlugins map[string]string
-  // Shape configuration details (OCPUs, memory, GPUs)
+  // Shape configuration details
+  //
+  // Resolved sizing for the instance's shape. Keys: `ocpus`, `memoryInGBs`,
+  // `baselineOcpuUtilization` (BASELINE_1_8, BASELINE_1_2, or BASELINE_1_1
+  // for burstable shapes), `networkingBandwidthInGbps`, `maxVnicAttachments`,
+  // `gpus` with `gpuDescription`, `localDisks` with `localDisksTotalSizeInGBs`,
+  // and `processorDescription`.
   shapeConfig dict
   // Boot volume or image source details
+  //
+  // What the instance was launched from. The `sourceType` key discriminates
+  // the shape: when "image", the keys are `imageId`, `bootVolumeSizeInGBs`,
+  // `bootVolumeVpusPerGB`, and `kmsKeyId`; when "bootVolume", the single key
+  // is `bootVolumeId`.
   sourceDetails dict
   // Boot volume the instance was launched from, when launched from an existing boot volume
   bootVolume() oci.compute.bootVolume
@@ -587,6 +645,11 @@ private oci.compute.instance @defaults("name") {
 }
 
 // Oracle Cloud Infrastructure (OCI) virtual network interface card (VNIC)
+//
+// Virtual network interface attached to a Compute instance, carrying its
+// private and public IP addressing, MAC and hostname label, the subnet it
+// lives in, and the network security groups applied to it. Use it to audit
+// which interfaces hold public IPs and how instance traffic is filtered.
 private oci.compute.vnic @defaults("name") {
   // VNIC OCID
   id string
@@ -629,6 +692,11 @@ private oci.compute.vnic @defaults("name") {
 }
 
 // Oracle Cloud Infrastructure (OCI) Compute image
+//
+// Operating-system or custom Compute image available for launching
+// instances, keyed by its OCID. Reports the operating system and version,
+// lifecycle state, size, and the base image it was derived from. Use it to
+// track which OS images and versions are approved and in use.
 private oci.compute.image @defaults("name") {
   // Image OCID
   id string
@@ -657,6 +725,11 @@ private oci.compute.image @defaults("name") {
 }
 
 // Oracle Cloud Infrastructure (OCI) block volume
+//
+// Managed block storage volume that can be attached to Compute instances,
+// keyed by its OCID. Reports size and performance tier, lifecycle state, the
+// KMS key protecting it, and the source volume or backup it was cloned or
+// restored from. Use it to verify volume encryption and clone lineage.
 private oci.compute.blockVolume @defaults("name") {
   // Block volume OCID
   id string
@@ -697,6 +770,11 @@ private oci.compute.blockVolume @defaults("name") {
 }
 
 // Oracle Cloud Infrastructure (OCI) boot volume
+//
+// Boot volume that holds an instance's operating-system disk, keyed by its
+// OCID. Reports size and lifecycle state, the source image or boot volume,
+// and the KMS key protecting it. Use it to verify boot-volume encryption
+// and image provenance.
 private oci.compute.bootVolume @defaults("name") {
   // Boot volume OCID
   id string
@@ -738,13 +816,13 @@ private oci.compute.bootVolume @defaults("name") {
 
 // Oracle Cloud Infrastructure (OCI) Networking
 //
-// Use the OCI Networking namespace to enumerate the tenancy's network
-// topology. Iterate `vcns()` for Virtual Cloud Networks, `subnets()`
-// for the partitioned address ranges inside those VCNs,
-// `securityLists()` and `networkSecurityGroups()` for the L4 access
-// rules, `internetGateways()` for inbound/outbound IGW connectivity,
-// `natGateways()` for outbound-only NAT, and `routeTables()` for the
-// per-subnet routing decisions.
+// Network topology for the tenancy: the Virtual Cloud Networks in `vcns`,
+// the address ranges partitioned inside them in `subnets`, the layer-4
+// access rules in `securityLists` and `networkSecurityGroups`, inbound and
+// outbound internet connectivity through `internetGateways`, outbound-only
+// address translation through `natGateways`, and the per-subnet forwarding
+// decisions in `routeTables`. These expose the tenancy's ingress and egress
+// paths for auditing internet exposure and lateral connectivity.
 oci.network {
   // Virtual Cloud Networks (VCNs)
   vcns() []oci.network.vcn
@@ -780,19 +858,18 @@ oci.network {
 
 // Oracle Cloud Infrastructure (OCI) public IP address
 //
-// Examine a region-scoped public IP address in the tenancy — every
-// `RESERVED` address (whether attached or not) plus the `EPHEMERAL`
-// addresses held by regional entities such as NAT gateways. `lifetime` is
-// `RESERVED` (you control its life; persists unassigned) or `EPHEMERAL`
-// (tied to the entity it is attached to). `assignedEntityType` and
-// `assignedEntityId` identify what the address is routed to — a `PRIVATE_IP`
-// (a compute VNIC) or a `NAT_GATEWAY`; an empty `assignedEntityId` on a
-// `RESERVED` address is an unattached, billable, and reusable public address.
-// Use this to inventory the tenancy's internet-facing address surface and
-// find orphaned reservations.
+// Region-scoped public IP address in the tenancy: every `RESERVED` address
+// (whether attached or not) plus the `EPHEMERAL` addresses held by regional
+// entities such as NAT gateways. `lifetime` is `RESERVED` (you control its
+// life; persists unassigned) or `EPHEMERAL` (tied to the entity it is attached
+// to). `assignedEntityType` and `assignedEntityId` identify what the address
+// is routed to, a `PRIVATE_IP` (a compute VNIC) or a `NAT_GATEWAY`; an empty
+// `assignedEntityId` on a `RESERVED` address is an unattached, billable, and
+// reusable public address. Inventory these to find the tenancy's
+// internet-facing address surface and orphaned reservations.
 //
-// Availability-domain-scoped ephemeral public IPs — the addresses
-// auto-assigned to compute instance VNICs — are not listed here; read
+// Availability-domain-scoped ephemeral public IPs (the addresses
+// auto-assigned to compute instance VNICs) are not listed here; read
 // `oci.compute.vnic.publicIp` for the per-instance view of those.
 private oci.network.publicIp @defaults("ipAddress lifetime assignedEntityType") {
   // Public IP OCID
@@ -824,6 +901,12 @@ private oci.network.publicIp @defaults("ipAddress lifetime assignedEntityType") 
 }
 
 // Oracle Cloud Infrastructure (OCI) Virtual Cloud Network (VCN)
+//
+// Regional private network in the tenancy that compute, load balancer, and
+// gateway resources attach to. `cidrBlocks` defines its address space and
+// `flowLogs` surfaces VCN flow logging when enabled. The VCN sits at the top
+// of the network hierarchy that audits traverse to reach subnets, security
+// lists, route tables, and gateways.
 private oci.network.vcn @defaults("name") {
   // VCN OCID
   id string
@@ -864,6 +947,12 @@ private oci.network.vcn @defaults("name") {
 }
 
 // Oracle Cloud Infrastructure (OCI) network subnet
+//
+// Address range partitioned from a VCN that VNICs attach to, carrying the
+// controls that decide whether workloads on it are internet-reachable:
+// `prohibitPublicIpOnVnic` and `prohibitInternetIngress` gate public
+// addressing and ingress, `routeTable` forwards its traffic, and
+// `securityLists` supplies the subnet-level firewall rules.
 private oci.network.subnet @defaults("name") {
   // Subnet OCID
   id string
@@ -906,6 +995,12 @@ private oci.network.subnet @defaults("name") {
 }
 
 // Oracle Cloud Infrastructure (OCI) VCN security list (virtual firewall rules)
+//
+// Subnet-level firewall applied to every VNIC in the subnets that reference
+// it. `ingressSecurityRules` and `egressSecurityRules` hold the allowed
+// traffic; audits check these for rules that admit `0.0.0.0/0` or expose
+// sensitive ports, and `hasStatelessRules` flags stateless rules that bypass
+// connection tracking.
 private oci.network.securityList @defaults("name") {
   // Security list OCID
   id string
@@ -942,6 +1037,12 @@ private oci.network.securityList @defaults("name") {
 }
 
 // Oracle Cloud Infrastructure (OCI) Network Security Group (virtual firewall rules for VNICs)
+//
+// VNIC-level firewall whose rules apply only to the VNICs added to the group,
+// giving finer-grained control than a subnet security list.
+// `ingressSecurityRules` and `egressSecurityRules` hold the allowed traffic
+// and `attachedVnics` lists what the group protects; audits check for rules
+// admitting `0.0.0.0/0` or exposing sensitive ports.
 private oci.network.networkSecurityGroup @defaults("name") {
   // NSG OCID
   id string
@@ -976,6 +1077,11 @@ private oci.network.networkSecurityGroup @defaults("name") {
 }
 
 // Oracle Cloud Infrastructure (OCI) internet gateway (connects VCN to the internet)
+//
+// Gateway that provides bidirectional internet connectivity for a VCN. A
+// subnet is internet-reachable only when its route table forwards a default
+// route to an internet gateway whose `isEnabled` is true, making this a key
+// hop when auditing internet exposure.
 private oci.network.internetGateway @defaults("name") {
   // Internet gateway OCID
   id string
@@ -1002,6 +1108,12 @@ private oci.network.internetGateway @defaults("name") {
 }
 
 // Oracle Cloud Infrastructure (OCI) NAT gateway (enables outbound internet access without inbound exposure)
+//
+// Gateway that lets a private subnet reach the internet for outbound traffic
+// while blocking unsolicited inbound connections. `natIp` is the public
+// address traffic egresses from and `blockTraffic` disables egress entirely.
+// Unlike an internet gateway, a default route to a NAT gateway does not make a
+// resource internet-reachable.
 private oci.network.natGateway @defaults("name") {
   // NAT gateway OCID
   id string
@@ -1030,6 +1142,12 @@ private oci.network.natGateway @defaults("name") {
 }
 
 // Oracle Cloud Infrastructure (OCI) route table (routing rules for VCN traffic)
+//
+// Set of forwarding rules that decide where a subnet's traffic goes. `routes`
+// resolves each rule to its destination and target network entity (internet
+// gateway, NAT gateway, service gateway, DRG, or local peering gateway),
+// determining whether a subnet routes to the internet, stays private, or
+// reaches peered and on-premises networks.
 private oci.network.routeTable @defaults("name") {
   // Route table OCID
   id string
@@ -1043,7 +1161,11 @@ private oci.network.routeTable @defaults("name") {
   compartment() oci.compartment
   // VCN the route table belongs to
   vcn() oci.network.vcn
-  // Route rules defining traffic destinations and targets
+  // Raw route rules defining traffic destinations and targets
+  //
+  // Each entry: {networkEntityId, destination, destinationType (CIDR_BLOCK,
+  // SERVICE_CIDR_BLOCK), description, routeType (STATIC, LOCAL)}. See `routes`
+  // for the same rules resolved to their destination and typed target entity.
   routeRules []dict
   // Route rules resolved to their destination and target network entity
   routes() []oci.network.routeTable.route
@@ -1088,6 +1210,12 @@ private oci.network.routeTable.route @defaults("destination targetType") {
 }
 
 // Oracle Cloud Infrastructure (OCI) dynamic routing gateway (DRG)
+//
+// Virtual router connecting a VCN to networks outside it: other VCNs,
+// on-premises sites over IPSec VPN or FastConnect, and remotely peered
+// regions. `attachments` lists what is connected and `remotePeeringConnections`
+// the cross-region peerings, making the DRG the hub audits follow to map
+// hybrid and cross-network reachability.
 private oci.network.drg @defaults("name state") {
   // DRG OCID
   id string
@@ -1114,6 +1242,12 @@ private oci.network.drg @defaults("name state") {
 }
 
 // Oracle Cloud Infrastructure (OCI) DRG attachment
+//
+// Link connecting one network to a dynamic routing gateway. `networkType`
+// selects which reference resolves (VCN, IPSEC_TUNNEL, VIRTUAL_CIRCUIT,
+// REMOTE_PEERING_CONNECTION, or LOOPBACK), and `isCrossTenancy` flags an
+// attachment that reaches into another tenancy, an important boundary when
+// auditing what a DRG bridges together.
 private oci.network.drgAttachment @defaults("name networkType state") {
   // DRG attachment OCID
   id string
@@ -1146,6 +1280,11 @@ private oci.network.drgAttachment @defaults("name networkType state") {
 }
 
 // Oracle Cloud Infrastructure (OCI) local peering gateway (LPG)
+//
+// Endpoint that privately connects two VCNs in the same region without routing
+// over the internet. `peeringStatus` reports whether the peering is live,
+// `peerAdvertisedCidr` the address range the far VCN advertises, and
+// `isCrossTenancyPeering` whether the peer belongs to another tenancy.
 private oci.network.localPeeringGateway @defaults("name peeringStatus") {
   // LPG OCID
   id string
@@ -1180,6 +1319,11 @@ private oci.network.localPeeringGateway @defaults("name peeringStatus") {
 }
 
 // Oracle Cloud Infrastructure (OCI) remote peering connection (RPC)
+//
+// Endpoint on a DRG that privately connects a VCN to a VCN in another region.
+// `peeringStatus` reports whether the peering is live, `peerRegionName` the
+// region at the far end, and `isCrossTenancyPeering` whether the peer belongs
+// to another tenancy, all relevant when auditing cross-region reachability.
 private oci.network.remotePeeringConnection @defaults("name peeringStatus") {
   // RPC OCID
   id string
@@ -1212,6 +1356,11 @@ private oci.network.remotePeeringConnection @defaults("name peeringStatus") {
 }
 
 // Oracle Cloud Infrastructure (OCI) service gateway
+//
+// Gateway that gives a private subnet access to Oracle Services Network
+// endpoints (such as Object Storage) without traversing the internet.
+// `services` lists the service CIDR labels it opens egress to and
+// `blockTraffic` disables the gateway regardless of route rules.
 private oci.network.serviceGateway @defaults("name state") {
   // Service gateway OCID
   id string
@@ -1261,6 +1410,11 @@ private oci.network.service @defaults("name cidrBlock") {
 }
 
 // Oracle Cloud Infrastructure (OCI) customer-premises equipment (CPE)
+//
+// On-premises router that terminates a site-to-site IPSec VPN. `ipAddress` is
+// the router's public address at the customer end and `isPrivate` marks a
+// device reachable only over a private network rather than the public
+// internet.
 private oci.network.cpe @defaults("name ipAddress") {
   // CPE OCID
   id string
@@ -1287,6 +1441,12 @@ private oci.network.cpe @defaults("name ipAddress") {
 }
 
 // Oracle Cloud Infrastructure (OCI) site-to-site VPN IPSec connection
+//
+// Encrypted VPN linking an on-premises network to a VCN, terminating on a CPE
+// at the customer end and a DRG at the OCI end. `transportType` records
+// whether it runs over the public internet or FastConnect, and `tunnels`
+// exposes the individual encrypted tunnels whose negotiated cryptography
+// audits inspect.
 private oci.network.ipsecConnection @defaults("name state") {
   // IPSec connection OCID
   id string
@@ -1323,6 +1483,12 @@ private oci.network.ipsecConnection @defaults("name state") {
 }
 
 // Oracle Cloud Infrastructure (OCI) IPSec tunnel
+//
+// One encrypted tunnel within a site-to-site VPN, carrying the negotiated
+// cryptographic parameters that security audits check: the IKE version, the
+// key-exchange encryption, authentication, and Diffie-Hellman group, and the
+// data-channel encryption, authentication, and perfect-forward-secrecy
+// setting. `status` and `bgpState` report whether the tunnel is up.
 private oci.network.ipsecConnectionTunnel @defaults("name status ikeVersion") {
   // Tunnel OCID
   id string
@@ -1388,6 +1554,12 @@ private oci.network.ipsecConnectionTunnel @defaults("name status ikeVersion") {
 }
 
 // Oracle Cloud Infrastructure (OCI) FastConnect virtual circuit
+//
+// Dedicated FastConnect connection between the tenancy and an on-premises
+// network or Oracle public services. `type` distinguishes a PUBLIC circuit
+// reaching Oracle public services from a PRIVATE circuit reaching a VCN
+// through a DRG, and the BGP session and administrative state report whether
+// the routing session is up.
 private oci.network.virtualCircuit @defaults("name type state") {
   // Virtual circuit OCID
   id string
@@ -1435,6 +1607,11 @@ private oci.network.virtualCircuit @defaults("name type state") {
 }
 
 // Oracle Cloud Infrastructure (OCI) FastConnect cross-connect
+//
+// Physical port at a FastConnect location that carries the tenancy's dedicated
+// connectivity. `locationName` and `portName` identify the port,
+// `portSpeedShapeName` its bandwidth, and `crossConnectGroupId` the link
+// aggregation group when multiple cross-connects are bonded together.
 private oci.network.crossConnect @defaults("name state") {
   // Cross-connect OCID
   id string
@@ -1466,11 +1643,12 @@ private oci.network.crossConnect @defaults("name state") {
 
 // Oracle Cloud Infrastructure (OCI) Logging
 //
-// Use the OCI Logging namespace to enumerate the tenancy's
-// service-emitted and custom logs. Iterate `logGroups()` for the log
-// groups across compartments — each group exposes its enabled
-// `logs()`, retention duration, source service and resource, and the
-// log category (read, write, or all) describing the events captured.
+// Logging service for the tenancy, covering both service-emitted and
+// custom logs across every compartment. The `logGroups` field returns
+// the log groups, each holding its enabled `logs`, retention duration,
+// source service and resource, and the log category (read, write, or
+// all) that describes which events are captured. Query it to confirm
+// audit and diagnostic logging is enabled where required.
 oci.logging {
   // Log groups in the tenancy
   logGroups() []oci.logging.logGroup
@@ -1520,7 +1698,13 @@ private oci.logging.log @defaults("name") {
   state string
   // Retention duration in days
   retentionDuration int
-  // Log configuration (source type, category, resource)
+  // Log configuration
+  //
+  // Keyed by `compartmentId` (OCID of the compartment owning the log)
+  // and `source`, a nested map describing the emitting service. For a
+  // service log the `source` map carries `sourceType`, `service`,
+  // `resource`, and `category`. The `category`, `sourceService`, and
+  // `sourceResource` fields surface those source values directly.
   configuration dict
   // Log category (e.g., all, write, read — depends on service)
   category string
@@ -1542,12 +1726,13 @@ private oci.logging.log @defaults("name") {
 
 // Oracle Cloud Infrastructure (OCI) Key Management Service
 //
-// Use the OCI KMS namespace to enumerate the tenancy's encryption
-// vaults and customer-managed keys. Iterate `vaults()` for KMS vaults
-// (DEFAULT, VIRTUAL_PRIVATE, or EXTERNAL types) — each vault surfaces
-// its management endpoint and the `keys()` it holds, where each key
-// reports its algorithm, length, lifecycle state, rotation history,
-// and whether the key is software-protected or HSM-protected.
+// Encryption vaults and customer-managed keys across the tenancy. Each
+// vault (DEFAULT, VIRTUAL_PRIVATE, or EXTERNAL type) exposes its
+// management endpoint and the keys it holds, and each key reports its
+// algorithm, length, lifecycle state, rotation history, and whether it
+// is software-protected or HSM-protected. Audit key rotation policy,
+// protection mode, and vault type to confirm keys meet cryptographic
+// and isolation requirements.
 oci.kms {
   // Key vaults in the tenancy
   vaults() []oci.kms.vault
@@ -1561,7 +1746,7 @@ private oci.kms.vault @defaults("name") {
   name string
   // Compartment OCID
   //
-  // Deprecated in favor of `compartment()`.
+  // Deprecated in favor of `compartment`.
   compartmentID @maturity("deprecated") string
   // Compartment containing the vault
   compartment() oci.compartment
@@ -1587,13 +1772,13 @@ private oci.kms.key @defaults("name") {
   name string
   // Compartment OCID
   //
-  // Deprecated in favor of `compartment()`.
+  // Deprecated in favor of `compartment`.
   compartmentID @maturity("deprecated") string
   // Compartment containing the key
   compartment() oci.compartment
   // Parent vault OCID
   //
-  // Deprecated in favor of `vault()`.
+  // Deprecated in favor of `vault`.
   vaultId @maturity("deprecated") string
   // Parent vault containing the key
   vault() oci.kms.vault
@@ -1632,13 +1817,13 @@ private oci.kms.keyVersion @defaults("id") {
   keyId string
   // Parent vault OCID
   //
-  // Deprecated in favor of `vault()`.
+  // Deprecated in favor of `vault`.
   vaultId @maturity("deprecated") string
   // Parent vault containing the key version
   vault() oci.kms.vault
   // Compartment OCID
   //
-  // Deprecated in favor of `compartment()`.
+  // Deprecated in favor of `compartment`.
   compartmentID @maturity("deprecated") string
   // Compartment containing the key version
   compartment() oci.compartment
@@ -1658,13 +1843,12 @@ private oci.kms.keyVersion @defaults("id") {
 
 // Oracle Cloud Infrastructure (OCI) Object Storage
 //
-// Use the OCI Object Storage namespace to enumerate the tenancy's
-// S3-compatible object stores. Read `namespace()` for the unique
-// per-tenancy Object Storage namespace, and iterate `buckets()` for
-// every bucket — each bucket surfaces its public access type, storage
-// tier, auto-tiering and versioning configuration, KMS encryption key,
-// retention rules for WORM/immutability, replication enablement, and
-// the approximate object count and total size.
+// S3-compatible object storage for the tenancy. The `namespace` field
+// holds the unique per-tenancy Object Storage namespace, and `buckets`
+// enumerates every bucket. Each bucket surfaces its public access type,
+// storage tier, auto-tiering and versioning configuration, KMS
+// encryption key, retention rules for WORM/immutability, replication
+// enablement, and the approximate object count and total size.
 oci.objectStorage {
   // Object Storage namespace (unique per tenancy)
   namespace() string
@@ -1730,15 +1914,15 @@ private oci.objectStorage.bucket {
 
 // Oracle Cloud Infrastructure (OCI) Object Storage pre-authenticated request
 //
-// Examine a pre-authenticated request (PAR) — a URL that grants access to
-// the bucket or a specific object without any IAM credential or audit
+// Pre-authenticated request (PAR), a URL that grants access to the
+// bucket or a specific object without any IAM credential or audit
 // trail for the duration of its validity. `accessType` is one of
 // `ObjectRead`, `ObjectWrite`, `ObjectReadWrite`, `AnyObjectRead`,
 // `AnyObjectWrite`, or `AnyObjectReadWrite`; the `AnyObject*` forms apply to
 // the whole bucket. `objectName` names the single object a PAR is scoped to,
 // and is null for bucket-level PARs. `bucketListingAction` (`Deny` or
 // `ListObjects`) decides whether the holder can enumerate bucket contents.
-// `timeExpires` is when the URL stops working — a far-future value is an
+// `timeExpires` is when the URL stops working. A far-future value is an
 // effectively permanent anonymous grant.
 private oci.objectStorage.preauthenticatedRequest @defaults("name accessType timeExpires") {
   // Pre-authenticated request identifier
@@ -1777,17 +1961,23 @@ private oci.objectStorage.retentionRule @defaults("name") {
 
 // Oracle Cloud Infrastructure (OCI) File Storage
 //
-// Use the OCI File Storage namespace to enumerate the tenancy's
-// managed NFS file systems. Iterate `fileSystems()` for every file
-// system across availability domains — each entry surfaces the
-// metered byte usage, lifecycle state, KMS encryption key, and the
-// availability domain the file system is anchored to.
+// Managed NFS file systems across the tenancy's availability domains,
+// exposed through fileSystems. Each entry reports its metered byte
+// usage, lifecycle state, the KMS key protecting its data at rest,
+// and the availability domain it is anchored to, so you can audit
+// encryption coverage and storage consumption fleet-wide.
 oci.fileStorage {
   // File systems
   fileSystems() []oci.fileStorage.fileSystem
 }
 
 // Oracle Cloud Infrastructure (OCI) file system
+//
+// A single managed NFS file system. Reports the availability domain
+// it is anchored to, the KMS key encrypting its data at rest, metered
+// byte consumption including snapshots, and clone lineage through
+// parentFileSystem and isCloneParent, supporting encryption-coverage
+// and storage-capacity audits.
 private oci.fileStorage.fileSystem @defaults("name") {
   // File system OCID
   id string
@@ -1795,7 +1985,7 @@ private oci.fileStorage.fileSystem @defaults("name") {
   name string
   // Compartment OCID containing the file system
   //
-  // Deprecated in favor of `compartment()`.
+  // Deprecated in favor of `compartment`.
   compartmentID @maturity("deprecated") string
   // Compartment containing the file system
   compartment() oci.compartment
@@ -1823,17 +2013,25 @@ private oci.fileStorage.fileSystem @defaults("name") {
 
 // Oracle Cloud Infrastructure (OCI) Events
 //
-// Use the OCI Events namespace to enumerate the tenancy's
-// event-rule-based automation. Iterate `rules()` for every rule —
-// each rule surfaces the matching `condition` (JSON event filter), the
-// `actions` to perform (function, ONS topic, or stream targets), the
-// rule's enabled state, and the lifecycle state.
+// Event-rule-based automation configured in the tenancy. Each rule in
+// `rules` surfaces the matching `condition` (a JSON event filter), the
+// `actions` to perform (function, notification topic, or stream
+// targets), the rule's enabled state, and its lifecycle state. Audit
+// these to see which events trigger automated responses and where
+// those responses are routed.
 oci.events {
   // Event rules
   rules() []oci.events.rule
 }
 
 // Oracle Cloud Infrastructure (OCI) event rule
+//
+// A single Events service rule, evaluated against emitted events. The
+// `condition` holds the JSON filter that selects matching events,
+// `actions` lists the automated responses to invoke, and `isEnabled`
+// with `state` report whether the rule is active. Audit these to
+// confirm which events trigger automation and that no rule routes
+// events to unexpected functions, topics, or streams.
 private oci.events.rule @defaults("name") {
   // Rule OCID
   id string
@@ -1854,6 +2052,11 @@ private oci.events.rule @defaults("name") {
   // Rule lifecycle state (e.g., CREATING, ACTIVE, INACTIVE, UPDATING, DELETING, DELETED, FAILED)
   state string
   // Actions to perform when the rule matches an event
+  //
+  // Each entry has `id`, `isEnabled`, `state` (the action's lifecycle
+  // state), a `description`, and `actionType` set to ONS (notification
+  // topic), OSS (stream), or FAAS (function). Depending on that type,
+  // the target OCID is in `topicId`, `streamId`, or `functionId`.
   actions() []dict
   // Rule creation time
   created time
@@ -1861,16 +2064,15 @@ private oci.events.rule @defaults("name") {
 
 // Oracle Cloud Infrastructure (OCI) Cloud Guard
 //
-// Use the OCI Cloud Guard namespace to enumerate the tenancy's
-// threat-detection and security-monitoring posture. Read `status()`
-// and `reportingRegion()` for whether Cloud Guard is enabled and
-// which region collects findings, and `selfManageResources()` for
-// whether Cloud Guard's resources are managed by the customer.
-// Iterate `targets()` for the compartments and resources Cloud Guard
-// monitors, `detectorRecipes()` for the curated detector rule sets,
-// `securityZones()` and `securityZoneRecipes()` for the
-// security-zone enforcement scopes, and `securityPolicies()` for the
-// individual policies that compose those recipes.
+// Tenancy-wide threat-detection and security-monitoring posture. The
+// `status` and `reportingRegion` fields report whether Cloud Guard is
+// enabled and which region collects findings, and `selfManageResources`
+// reports whether Cloud Guard's resources are customer-managed. The
+// `targets` field lists the compartments and resources Cloud Guard
+// monitors, `detectorRecipes` the curated detector rule sets,
+// `securityZones` and `securityZoneRecipes` the security-zone
+// enforcement scopes, and `securityPolicies` the individual policies
+// that compose those recipes.
 oci.cloudGuard {
   // Whether Cloud Guard is enabled
   status() bool
@@ -2048,11 +2250,13 @@ private oci.cloudGuard.securityPolicy @defaults("name category") {
 
 // Oracle Cloud Infrastructure (OCI) Notifications
 //
-// Use the OCI Notifications (ONS) namespace to enumerate the
-// pub/sub messaging service used for alerts and event delivery.
-// Iterate `topics()` for every notification topic — each topic
-// surfaces its lifecycle state and the `subscriptions()` bound to
-// it (Email, HTTPS, Slack, PagerDuty, function, and so on).
+// OCI Notifications (ONS) pub/sub messaging service used for
+// broadcasting alerts and delivering events to subscribers. The
+// `topics` collection enumerates every notification topic, and
+// each topic exposes its lifecycle state and the `subscriptions`
+// bound to it (Email, HTTPS, Slack, PagerDuty, function, and other
+// delivery protocols). Auditing topics and their subscriptions
+// reveals where operational and security alerts are routed.
 oci.ons {
   // Notification topics
   topics() []oci.ons.topic
@@ -2098,9 +2302,10 @@ private oci.ons.subscription @defaults("id") {
 
 // Oracle Cloud Infrastructure (OCI) Audit
 //
-// Use the OCI Audit namespace to inspect tenancy-wide audit log
-// configuration. Read `retentionPeriodDays()` for the number of days
-// audit events are retained before being purged.
+// Tenancy-wide audit log configuration. The `retentionPeriodDays`
+// field reports how many days audit events are retained before being
+// purged, letting you verify that the retention window meets your
+// compliance requirements.
 oci.audit {
   // Audit log retention period in days
   retentionPeriodDays() int
@@ -2108,12 +2313,11 @@ oci.audit {
 
 // Oracle Cloud Infrastructure (OCI) Bastion
 //
-// Use the OCI Bastion namespace to enumerate the tenancy's bastion
-// instances — managed jump hosts that broker SSH access into private
-// subnets. Iterate `bastions()` for every bastion deployment — each
-// bastion surfaces the target VCN and subnet, allowed client CIDR
-// blocks, DNS proxy state, the maximum session TTL, and per-session
-// configuration.
+// Bastion instances in the tenancy, managed jump hosts that broker SSH
+// access into private subnets without exposing them to the public
+// internet. Iterate `bastions` for every bastion deployment, each
+// exposing its target VCN and subnet, DNS proxy status, bastion type,
+// and lifecycle state.
 oci.bastion {
   // Bastion instances
   bastions() []oci.bastion.instance
@@ -2155,17 +2359,27 @@ private oci.bastion.instance @defaults("name") {
 
 // Oracle Cloud Infrastructure (OCI) Monitoring
 //
-// Use the OCI Monitoring namespace to enumerate the alarm definitions
-// emitting notifications to the tenancy. Iterate `alarms()` for every
-// alarm — each alarm surfaces the metric namespace, the Monitoring
-// Query Language (MQL) `query`, severity, the destination ONS topic
-// OCIDs, the enabled flag, and the alarm lifecycle state.
+// Alarm definitions configured in the tenancy's Monitoring service.
+// Each alarm evaluates a Monitoring Query Language expression against a
+// metric namespace and publishes notifications to Oracle Notifications
+// Service (ONS) topics when its condition and severity threshold are
+// met. Auditing the alarms confirms that critical infrastructure and
+// security signals are actually monitored and routed to a live
+// notification destination.
 oci.monitoring {
   // Monitoring alarm definitions
   alarms() []oci.monitoring.alarm
 }
 
 // Oracle Cloud Infrastructure (OCI) monitoring alarm
+//
+// Single alarm definition in the Monitoring service. It evaluates a
+// Monitoring Query Language expression over a metric namespace and
+// raises a notification when the condition is met. Each alarm records
+// its severity, whether it is enabled, its lifecycle state, and the
+// Oracle Notifications Service topics that receive its messages, so an
+// audit can confirm that important metrics are watched and that the
+// resulting alerts reach a valid destination.
 private oci.monitoring.alarm @defaults("name") {
   // Alarm OCID
   id string
@@ -2199,17 +2413,23 @@ private oci.monitoring.alarm @defaults("name") {
 
 // Oracle Cloud Infrastructure (OCI) Vault
 //
-// Use the OCI Vault namespace to enumerate the tenancy's stored
-// secrets. Iterate `secrets()` for every secret — each entry surfaces
-// the parent KMS vault and key, lifecycle and rotation status,
-// scheduled and last rotation timestamps, the auto-generation flag,
-// the configured rotation interval, and the secret versions.
+// Secrets stored across the tenancy's vaults, exposed through the
+// secrets collection. Auditing these surfaces rotation posture,
+// upcoming or overdue rotations, and secrets approaching expiry, so
+// you can flag credentials that are stale, unrotated, or
+// auto-generated outside of policy.
 oci.vault {
   // Secrets stored in vaults
   secrets() []oci.vault.secret
 }
 
 // Oracle Cloud Infrastructure (OCI) vault secret
+//
+// A single secret managed in a KMS vault, holding a protected value
+// such as a password, API key, or certificate. Auditing a secret
+// reveals its rotation status and schedule, whether rotation is
+// automated, and when the current version expires, so you can catch
+// credentials that are stale, unrotated, or nearing expiry.
 private oci.vault.secret @defaults("name") {
   // Secret OCID
   id string
@@ -2217,7 +2437,7 @@ private oci.vault.secret @defaults("name") {
   name string
   // Compartment OCID
   //
-  // Deprecated in favor of `compartment()`.
+  // Deprecated in favor of `compartment`.
   compartmentID @maturity("deprecated") string
   // Compartment containing the secret
   compartment() oci.compartment
@@ -2283,12 +2503,13 @@ private oci.vault.secretVersion @defaults("versionNumber") {
 
 // Oracle Cloud Infrastructure (OCI) Load Balancer
 //
-// Use the OCI Load Balancer namespace to enumerate the L7 (and L4)
-// load balancers in the tenancy. Iterate `loadBalancers()` for every
-// load balancer — each entry surfaces the shape (e.g., flexible,
-// 100Mbps, 400Mbps), private vs public flag, delete protection,
-// listeners (with their TLS protocols, cipher suites, and peer-cert
-// verification), backend sets and policies, and the lifecycle state.
+// OCI Load Balancer service for the tenancy, exposing the layer 7 and
+// layer 4 load balancers through `loadBalancers`. Each load balancer
+// surfaces its shape (e.g., flexible, 100Mbps, 400Mbps), private vs.
+// public placement, delete protection, listeners (with their TLS
+// protocols, cipher suites, and peer-certificate verification), backend
+// sets and policies, and lifecycle state, plus an internet-exposure
+// assessment gated on the attached network security groups.
 oci.loadBalancer {
   // Load balancers
   loadBalancers() []oci.loadBalancer.loadBalancer
@@ -2401,6 +2622,11 @@ private oci.loadBalancer.backendSet @defaults("name") {
   // Load balancing policy (ROUND_ROBIN, LEAST_CONNECTIONS, IP_HASH)
   policy string
   // Health checker configuration
+  //
+  // A dict describing the backend health probe. Keys: `protocol` (the
+  // probe protocol, e.g., HTTP, HTTPS, or TCP), `port`, `urlPath`,
+  // `returnCode` (expected status code), `responseBodyRegex`, `retries`,
+  // `timeoutInMillis`, `intervalInMillis`, and `isForcePlainText`.
   healthChecker dict
   // Number of backends
   backendCount int
@@ -2408,11 +2634,10 @@ private oci.loadBalancer.backendSet @defaults("name") {
 
 // Oracle Cloud Infrastructure (OCI) Network Firewall
 //
-// Use the OCI Network Firewall namespace to enumerate the
-// next-generation firewall deployments in the tenancy. Iterate
-// `firewalls()` for the deployed firewall instances (with their
-// subnet placement, IPv4/IPv6 addresses, shape, and attached
-// `policy()`), and `policies()` for the reusable firewall policies
+// Next-generation firewall deployments in the tenancy. The
+// `firewalls` field lists the deployed firewall instances, each with
+// its subnet placement, IPv4/IPv6 addresses, shape, and attached
+// `policy`. The `policies` field lists the reusable firewall policies
 // that drive the rule sets each firewall enforces.
 oci.networkFirewall {
   // Network firewalls
@@ -2450,6 +2675,9 @@ private oci.networkFirewall.firewall @defaults("name") {
   // Last update time
   timeUpdated time
   // Zero Trust Packet Routing security attributes enforced on the firewall
+  //
+  // Keyed by security-attribute namespace. Each value is a dict mapping
+  // the attribute names within that namespace to their assigned values.
   securityAttributes map[string]dict
   // Overall firewall health status
   //
@@ -2501,14 +2729,14 @@ private oci.networkFirewall.policy @defaults("name") {
 
 // Oracle Cloud Infrastructure (OCI) network firewall decryption profile
 //
-// Examine a single SSL/TLS decryption profile bound to a network
-// firewall policy. The `name` field selects the profile within its
-// policy. `type` distinguishes SSL_FORWARD_PROXY (outbound inspection,
-// which validates the server certificate) from SSL_INBOUND_INSPECTION.
-// The boolean fields report which sessions the firewall blocks:
-// unsupported TLS versions, unsupported cipher suites, and out-of-capacity
-// conditions apply to both types, while the certificate-validation
-// controls apply only to forward-proxy profiles.
+// SSL/TLS decryption profile bound to a network firewall policy. The
+// `name` field selects the profile within its policy. `type`
+// distinguishes SSL_FORWARD_PROXY (outbound inspection, which validates
+// the server certificate) from SSL_INBOUND_INSPECTION. The boolean
+// fields report which sessions the firewall blocks: unsupported TLS
+// versions, unsupported cipher suites, and out-of-capacity conditions
+// apply to both types, while the certificate-validation controls apply
+// only to forward-proxy profiles.
 private oci.networkFirewall.policy.decryptionProfile @defaults("name type isUnsupportedVersionBlocked isUnsupportedCipherBlocked") {
   // Unique name of the decryption profile within its policy
   name string
@@ -2561,20 +2789,28 @@ private oci.networkFirewall.policy.decryptionProfile @defaults("name type isUnsu
 
 // Oracle Cloud Infrastructure (OCI) Container Engine for Kubernetes
 //
-// Use the OCI OKE namespace to enumerate the tenancy's managed
-// Kubernetes deployments. Iterate `clusters()` for every OKE cluster
-// — each cluster surfaces the Kubernetes version, cluster type
-// (BASIC_CLUSTER or ENHANCED_CLUSTER), the VCN it is deployed in, the
-// KMS key used for secret encryption, the public/private API endpoint
-// configuration, image-policy verification, the available upgrade
-// versions, the legacy Pod Security Policy admission setting, and the
-// `nodePools()` running workloads inside the cluster.
+// Managed Kubernetes deployments in the tenancy. The `clusters` field
+// enumerates every OKE cluster, each surfacing the Kubernetes version,
+// cluster type (BASIC_CLUSTER or ENHANCED_CLUSTER), the VCN it is
+// deployed in, the KMS key used for secret encryption, the
+// public/private API endpoint configuration, image-policy
+// verification, the available upgrade versions, the legacy Pod
+// Security Policy admission setting, and the node pools running
+// workloads inside the cluster.
 oci.oke {
   // OKE clusters
   clusters() []oci.oke.cluster
 }
 
 // Oracle Cloud Infrastructure (OCI) OKE cluster
+//
+// Managed Kubernetes cluster and its control-plane security posture:
+// the Kubernetes version and cluster type, the VCN it runs in, the KMS
+// key protecting Kubernetes secrets, whether the API server endpoint
+// is publicly reachable, whether image signature verification is
+// enforced, and whether the deprecated Pod Security Policy admission
+// controller is still enabled. Worker nodes running inside the cluster
+// are reached through nodePools.
 private oci.oke.cluster @defaults("name") {
   // Cluster OCID
   id string
@@ -2627,6 +2863,12 @@ private oci.oke.cluster @defaults("name") {
 }
 
 // Oracle Cloud Infrastructure (OCI) OKE node pool
+//
+// Group of worker nodes within an OKE cluster, sharing a compute
+// shape, node image, and Kubernetes version. Covers the network
+// placement of the nodes (subnets and attached network security
+// groups) and the SSH public key provisioned onto them, which should
+// be empty so nodes are not directly reachable by operators.
 private oci.oke.nodePool @defaults("name") {
   // Node pool OCID
   id string
@@ -2644,7 +2886,11 @@ private oci.oke.nodePool @defaults("name") {
   nodeShape string
   // Cluster this node pool belongs to
   cluster() oci.oke.cluster
-  // Node shape configuration (OCPUs, memory)
+  // Node shape configuration
+  //
+  // Compute sizing applied to each node when the shape is flexible.
+  // The `ocpus` key holds the number of OCPUs and `memoryInGBs` the
+  // memory in gigabytes.
   nodeShapeConfig dict
   // Node image name
   nodeImageName string
@@ -2666,12 +2912,11 @@ private oci.oke.nodePool @defaults("name") {
 
 // Oracle Cloud Infrastructure (OCI) Web Application Firewall
 //
-// Use the OCI WAF namespace to enumerate the L7 web-application
-// firewall deployments in the tenancy. Iterate `firewalls()` for
-// every WAF instance (with the load balancer it fronts and the
-// attached `policy()`), and `policies()` for the reusable rule sets
-// that drive request-rate limiting, signature inspection, IP
-// allow/deny lists, and bot management.
+// L7 web-application firewall deployments in the tenancy. The
+// `firewalls` field lists every WAF instance with the load balancer
+// it fronts and the attached `policy`, and `policies` lists the
+// reusable rule sets that drive request-rate limiting, signature
+// inspection, IP allow/deny lists, and bot management.
 oci.waf {
   // Web Application Firewalls
   firewalls() []oci.waf.firewall
@@ -2745,19 +2990,28 @@ private oci.waf.policy @defaults("name") {
 
 // Oracle Cloud Infrastructure (OCI) Functions
 //
-// Use the OCI Functions namespace to enumerate the tenancy's
-// serverless functions. Iterate `applications()` for the function
-// applications (each scoping shape, subnet placement, NSGs,
-// environment configuration, syslog destination, and image-signature
-// verification), then traverse each application's `functions()` for
-// the per-function image, memory, timeout, invoke endpoint, and
-// tracing settings.
+// Serverless functions across the tenancy, organized into function
+// applications. Each application in `applications` sets the shape,
+// subnet placement, network security groups, environment
+// configuration, syslog destination, and image-signature
+// verification, and holds the `functions` that run under it with
+// their image, memory, timeout, invoke endpoint, and tracing
+// settings.
 oci.functions {
   // Function applications
   applications() []oci.functions.application
 }
 
-// Oracle Cloud Infrastructure (OCI) Functions application (groups related serverless functions)
+// Oracle Cloud Infrastructure (OCI) Functions application
+//
+// Function application grouping related serverless functions under a
+// shared shape, subnet placement, network security groups, and
+// environment configuration. The application is the security and
+// networking boundary for OCI Functions: `imagePolicyConfig` controls
+// whether function images must pass signature verification, `subnets`
+// and `networkSecurityGroups` place function invocations on the
+// network, and `syslogUrl` routes function logs to an external
+// collector.
 private oci.functions.application @defaults("name") {
   // Application OCID
   id string
@@ -2773,9 +3027,18 @@ private oci.functions.application @defaults("name") {
   state string
   // Application shape (GENERIC_X86, GENERIC_ARM, GENERIC_X86_ARM)
   shape string
-  // Application tracing configuration
+  // Distributed tracing configuration
+  //
+  // Application Performance Monitoring (APM) trace settings, with keys
+  // `isEnabled` (bool, whether tracing is enabled) and `domainId`
+  // (OCID of the APM domain that traces are sent to).
   traceConfig dict
-  // Image signature verification policy configuration
+  // Image signature verification policy
+  //
+  // Signed-image enforcement for the application, with keys
+  // `isPolicyEnabled` (bool, whether functions must use signed images)
+  // and `keyDetails` (array of objects, each carrying `kmsKeyId`, the
+  // OCID of a KMS key trusted to verify image signatures).
   imagePolicyConfig dict
   // Application creation time
   created time
@@ -2798,6 +3061,13 @@ private oci.functions.application @defaults("name") {
 }
 
 // Oracle Cloud Infrastructure (OCI) serverless function
+//
+// Single serverless function within an application, addressable by
+// its `invokeEndpoint`. Each function pins the Docker `image` and
+// `imageDigest` it runs, its `shape`, memory and timeout limits, and
+// its tracing configuration, so you can audit which image a function
+// executes and whether its resource limits and observability settings
+// meet policy.
 private oci.functions.function @defaults("name") {
   // Function OCID
   id string
@@ -2825,7 +3095,11 @@ private oci.functions.function @defaults("name") {
   timeoutInSeconds int
   // Base URL for function invocation
   invokeEndpoint string
-  // Function tracing configuration
+  // Distributed tracing configuration
+  //
+  // Application Performance Monitoring (APM) trace settings, with a
+  // single key `isEnabled` (bool, whether tracing is enabled for this
+  // function).
   traceConfig dict
   // Function creation time
   created time
@@ -2841,18 +3115,23 @@ private oci.functions.function @defaults("name") {
 
 // Oracle Cloud Infrastructure (OCI) Container Instances
 //
-// Use the OCI Container Instances namespace to enumerate the
-// tenancy's serverless container deployments. Iterate `instances()`
-// for every container instance — each instance surfaces its shape,
-// CPU and memory allocation, fault domain, the containers running
-// inside the instance, restart policy, network placement (subnets
-// and NSGs), DNS configuration, and lifecycle state.
+// Serverless container deployments across the tenancy. Each container
+// instance in `instances` surfaces its compute shape, CPU and memory
+// allocation, fault domain, container restart policy, graceful shutdown
+// timeout, lifecycle state, and the containers running inside it.
 oci.containerInstances {
   // Container instances
   instances() []oci.containerInstances.instance
 }
 
 // Oracle Cloud Infrastructure (OCI) container instance (serverless container group)
+//
+// Serverless group of one or more containers that share a compute shape
+// and lifecycle. The instance records its shape and OCPU/memory
+// allocation, fault domain, container restart policy, graceful shutdown
+// timeout, attached volume count, and lifecycle state, and lists the
+// `containers` running inside it. Useful for auditing which serverless
+// workloads run in a compartment and how they are sized and restarted.
 private oci.containerInstances.instance @defaults("name") {
   // Container instance OCID
   id string
@@ -2870,7 +3149,11 @@ private oci.containerInstances.instance @defaults("name") {
   state string
   // Compute shape
   shape string
-  // Shape configuration (OCPUs, memory)
+  // Shape allocation
+  //
+  // OCPU and memory sizing for the instance, with keys `ocpus`,
+  // `memoryInGBs`, `processorDescription`, and
+  // `networkingBandwidthInGbps`.
   shapeConfig dict
   // Number of containers
   containerCount int
@@ -2901,6 +3184,13 @@ private oci.containerInstances.instance @defaults("name") {
 }
 
 // Oracle Cloud Infrastructure (OCI) container within a container instance
+//
+// Single container running inside a container instance, identified by
+// the image it runs (`imageUrl`), its CPU and memory limits, and whether
+// it can reach OCI services through resource principal authentication
+// (`isResourcePrincipalDisabled`). Useful for auditing the images
+// deployed to serverless container workloads and the privileges granted
+// to them.
 private oci.containerInstances.container @defaults("name") {
   // Container OCID
   id string
@@ -2922,7 +3212,11 @@ private oci.containerInstances.container @defaults("name") {
   imageUrl string
   // Whether resource principal access is disabled
   isResourcePrincipalDisabled bool
-  // Resource configuration (CPU/memory limits)
+  // Resource limits
+  //
+  // Per-container CPU and memory caps, with keys `vcpusLimit`
+  // (fractional vCPUs) and `memoryLimitInGBs`. Absent when the container
+  // inherits the instance defaults.
   resourceConfig dict
   // Creation time
   created time
@@ -2942,15 +3236,16 @@ private oci.containerInstances.container @defaults("name") {
 
 // Oracle Cloud Infrastructure (OCI) Database
 //
-// Use the OCI Database namespace to enumerate the tenancy's database
-// deployments and their backups. Iterate `dbSystems()` for the
-// VM/BM-based DB systems (Oracle Database on virtual machines or
-// bare metal), `autonomousDatabases()` for serverless / dedicated
-// Autonomous Database instances, `backups()` for the manual and
-// automatic backups taken from VM/BM databases, and
-// `autonomousDatabaseBackups()` for backups belonging to autonomous
-// databases — each backup surfaces TDE/KMS encryption, retention,
-// destination type, and lifecycle state.
+// Database deployments and their backups across the tenancy. The
+// dbSystems field lists VM and bare-metal Oracle Database systems
+// (Oracle Database on virtual machines or bare metal),
+// autonomousDatabases lists serverless and dedicated Autonomous
+// Database instances, backups lists the manual and automatic backups
+// taken from VM/BM databases, and autonomousDatabaseBackups lists
+// backups belonging to Autonomous Databases. Each backup surfaces
+// TDE/KMS encryption, retention, destination type, and lifecycle
+// state, making this the entry point for auditing database
+// encryption and recovery posture.
 oci.database {
   // Database systems (VM/BM)
   dbSystems() []oci.database.dbSystem
@@ -3254,14 +3549,15 @@ private oci.database.autonomousDatabase @defaults("name") {
 
 // Oracle Cloud Infrastructure (OCI) API Gateway
 //
-// Use the OCI API Gateway namespace to enumerate the tenancy's API
-// gateway deployments. Iterate `gateways()` for the regional gateway
-// appliances (with their endpoint type, IP-mode, hostname, response-
-// cache, attached subnet, and certificate bindings),
-// `deployments()` for the route configurations bound to those
-// gateways, and `certificates()` for the API-gateway-managed TLS
-// certs (distinct from the tenancy-wide
-// `oci.certificates.certificate` service).
+// API Gateway resources across the tenancy: the regional gateway
+// appliances, the deployments (route configurations) bound to them,
+// and the TLS certificates the service manages. The `gateways` field
+// lists each gateway with its endpoint type, IP mode, hostname,
+// response-cache setting, attached subnet, and certificate bindings;
+// `deployments` lists the route configurations across all gateways;
+// and `certificates` lists the API-gateway-managed TLS certs, which
+// are separate from the tenancy-wide `oci.certificates.certificate`
+// service.
 oci.apigateway {
   // API gateways in the tenancy
   gateways() []oci.apigateway.gateway
@@ -3272,6 +3568,14 @@ oci.apigateway {
 }
 
 // Oracle Cloud Infrastructure (OCI) API gateway (regional network appliance)
+//
+// A regional API gateway appliance that fronts backend services and
+// terminates TLS. Fields expose its network placement (the `subnet` it
+// runs in, attached `networkSecurityGroups`, and assigned
+// `ipAddresses`), its exposure (`endpointType` of PUBLIC or PRIVATE and
+// `hostname`), and its TLS material (`certificate` and `caBundleIds`),
+// so you can audit whether a gateway is publicly reachable and how it
+// is secured.
 private oci.apigateway.gateway @defaults("name") {
   // Gateway OCID
   id string
@@ -3320,6 +3624,15 @@ private oci.apigateway.gateway @defaults("name") {
 }
 
 // Oracle Cloud Infrastructure (OCI) API gateway deployment
+//
+// A route configuration bound to a gateway at a `pathPrefix` and
+// reachable at `endpoint`. The deployment carries the request-policy
+// controls that gate access to backend routes: `authenticationType`
+// and `isAnonymousAccessAllowed` for auth, `jwtIssuers` and
+// `jwtAudiences` for token validation, `mtlsIsVerifiedCertificateRequired`
+// and `mtlsAllowedSans` for client-certificate checks, the CORS
+// settings, and the rate-limit configuration, so you can audit whether
+// a route is authenticated and how it is protected.
 private oci.apigateway.deployment @defaults("name pathPrefix") {
   // Deployment OCID
   id string
@@ -3378,6 +3691,13 @@ private oci.apigateway.deployment @defaults("name pathPrefix") {
 }
 
 // Oracle Cloud Infrastructure (OCI) API gateway TLS certificate (distinct from oci.certificates.certificate; managed by the apigateway service)
+//
+// A TLS certificate managed by the API Gateway service and bound to
+// gateways for client-facing TLS. The `subjectNames` field lists the
+// CN and SANs the certificate secures and `timeNotValidAfter` its
+// expiration, so you can audit which hostnames are covered and flag
+// certificates nearing expiry. This is separate from the tenancy-wide
+// `oci.certificates.certificate` PKI service.
 private oci.apigateway.certificate @defaults("name") {
   // Certificate OCID
   id string
@@ -3413,14 +3733,15 @@ private oci.apigateway.certificate @defaults("name") {
 
 // Oracle Cloud Infrastructure (OCI) Certificates Management
 //
-// Use the OCI Certificates namespace to enumerate the tenancy's
-// managed PKI material. Iterate `certificates()` for the managed
-// TLS certificates (each surfacing the issuer authority, subject and
-// SAN list, validity window, KMS-backed key spec, and configuration
-// origin — issued by an internal CA, externally managed, or
-// imported), `certificateAuthorities()` for the root and subordinate
-// CAs, and `caBundles()` for the trust bundles applications import
-// to validate peer certificates.
+// PKI material managed by the tenancy's Certificates service. The
+// `certificates` collection holds the managed TLS certificates, each
+// surfacing the issuer authority, subject and SAN list, validity
+// window, KMS-backed key spec, and configuration origin (issued by an
+// internal CA, managed externally, or imported). The
+// `certificateAuthorities` collection holds the root and subordinate
+// CAs, and `caBundles` holds the trust bundles applications import to
+// validate peer certificates. Query these to audit certificate
+// expiry, key strength, auto-renewal coverage, and CA trust chains.
 oci.certificates {
   // Managed TLS certificates
   certificates() []oci.certificates.certificate
@@ -3546,18 +3867,28 @@ private oci.certificates.caBundle @defaults("name") {
 
 // Oracle Cloud Infrastructure (OCI) Cache
 //
-// Use the OCI Cache namespace to enumerate the tenancy's managed
-// in-memory cache deployments. Iterate `clusters()` for every cache
-// cluster — each cluster surfaces the engine (Redis or Valkey) and
-// version, node count and shape, the primary and replicas FQDNs and
-// endpoints, attached subnet, NSG bindings, lifecycle state, and
-// cluster mode.
+// OCI Cache deployments in the tenancy, the managed in-memory cache
+// service. `clusters` returns every cache cluster, each exposing the
+// engine (Redis or Valkey) and version, node count and node memory,
+// the primary, replica, and discovery endpoints, the attached subnet
+// and network security group bindings, lifecycle state, and cluster
+// mode. Query it to inventory cache deployments and audit their
+// engine versions and network placement.
 oci.redis {
   // OCI Cache clusters
   clusters() []oci.redis.cluster
 }
 
 // Oracle Cloud Infrastructure (OCI) Cache cluster (Redis or Valkey)
+//
+// A single managed in-memory cache cluster, selected by its OCID with
+// `oci.redis.cluster(id: "ocid1.rediscluster.oc1...")`. Surfaces the
+// cache engine and version, the sharding mode and shard/node counts,
+// per-node memory, the primary, replica, and discovery endpoints, the
+// subnet and network security groups governing reachability, and the
+// lifecycle state. Use it to audit which engine versions are running,
+// how clusters are placed on the network, and which security groups
+// control access.
 private oci.redis.cluster @defaults("name softwareVersion state") {
   init(id? string)
   // Cluster OCID
@@ -3566,7 +3897,7 @@ private oci.redis.cluster @defaults("name softwareVersion state") {
   name string
   // Compartment OCID containing the cluster
   //
-  // Deprecated in favor of `compartment()`.
+  // Deprecated in favor of `compartment`.
   compartmentID @maturity("deprecated") string
   // Compartment containing the cluster
   compartment() oci.compartment
@@ -3616,14 +3947,15 @@ private oci.redis.cluster @defaults("name softwareVersion state") {
 
 // Oracle Data Safe
 //
-// Use the Data Safe namespace to enumerate Data Safe coverage in the
-// tenancy. Iterate `targetDatabases()` for the databases registered
-// under Data Safe; `securityAssessments()` and `userAssessments()` for
-// the latest configuration-posture and user-risk findings;
-// `sensitiveDataModels()` and `sensitiveTypes()` for the
-// data-discovery catalog; and `maskingPolicies()` for the masking
-// definitions applied during refresh, clone, or export. `configurations`
-// reports per-region service enablement.
+// Data Safe coverage across the tenancy: the databases registered for
+// monitoring, the assessments that score their configuration and user
+// risk, the data-discovery catalog, and the masking definitions applied
+// during refresh, clone, or export. `targetDatabases` lists the
+// registered databases; `securityAssessments` and `userAssessments`
+// hold the latest configuration-posture and user-risk findings;
+// `sensitiveDataModels` and `sensitiveTypes` make up the data-discovery
+// catalog; `maskingPolicies` defines how sensitive columns are masked;
+// and `configurations` reports per-region service enablement.
 oci.dataSafe {
   // Per-region Data Safe service enablement records, with the URL, lifecycle state, and global settings of each region where Data Safe has been turned on
   configurations() []oci.dataSafe.configuration
@@ -3633,7 +3965,7 @@ oci.dataSafe {
   securityAssessments() []oci.dataSafe.securityAssessment
   // User assessments (user-risk findings) produced by Data Safe
   userAssessments() []oci.dataSafe.userAssessment
-  // Sensitive data models — the per-target catalogs of sensitive columns produced by data discovery
+  // Sensitive data models: the per-target catalogs of sensitive columns produced by data discovery
   sensitiveDataModels() []oci.dataSafe.sensitiveDataModel
   // Sensitive type definitions (predefined Oracle types and tenant-defined types) used during data discovery
   sensitiveTypes() []oci.dataSafe.sensitiveType
@@ -3643,8 +3975,8 @@ oci.dataSafe {
 
 // Oracle Data Safe service enablement configuration for a single region
 //
-// Examine the per-region Data Safe configuration — whether Data Safe is
-// turned on in this region, the service URL and lifecycle state, and the
+// Per-region Data Safe configuration: whether Data Safe is turned on in
+// this region, the service URL and lifecycle state, and the
 // `globalSettings` block that controls offline retention, online
 // retention, and paid-usage flags.
 private oci.dataSafe.configuration @defaults("region isEnabled lifecycleState") {
@@ -3664,7 +3996,12 @@ private oci.dataSafe.configuration @defaults("region isEnabled lifecycleState") 
   lifecycleState string
   // NAT Gateway IP address used by Data Safe to reach customer databases in this region
   natGatewayIpAddress string
-  // Global settings controlling offline / online retention and paid-usage flags
+  // Global settings
+  //
+  // Tenancy-wide Data Safe settings for this region, with keys
+  // `isPaidUsage` (whether the deployment uses paid Data Safe features),
+  // `onlineRetentionPeriod` (online retention in months), and
+  // `offlineRetentionPeriod` (offline retention in months).
   globalSettings dict
   // Time Data Safe was enabled in this region
   enabledAt time
@@ -3676,11 +4013,12 @@ private oci.dataSafe.configuration @defaults("region isEnabled lifecycleState") 
 
 // Oracle Data Safe target database
 //
-// Examine a single registered target database. `infrastructureType`
-// distinguishes Oracle DB systems on Exadata, Autonomous DB, base DB,
-// or external/on-premises. `databaseType` reflects the deployment model
-// (Autonomous Database, DB system, installed DB). `associatedResourceIds`
-// lists the connected resources (database, private endpoint).
+// Single database registered with Data Safe for monitoring and
+// assessment. `infrastructureType` distinguishes Oracle DB systems on
+// Exadata, Autonomous DB, base DB, or external/on-premises;
+// `databaseType` reflects the deployment model (Autonomous Database, DB
+// system, installed DB); `associatedResourceIds` lists the connected
+// resources such as the database and private endpoint.
 private oci.dataSafe.targetDatabase @defaults("displayName databaseType lifecycleState region") {
   // OCID of the target database
   id string
@@ -3722,13 +4060,12 @@ private oci.dataSafe.targetDatabase @defaults("displayName databaseType lifecycl
 
 // Oracle Data Safe security assessment
 //
-// Examine a single security assessment — the configuration-posture
-// finding produced by Data Safe against one or more target databases.
-// `type` distinguishes LATEST (auto-generated per target), SAVED
-// (snapshot), SAVE_SCHEDULE (periodic save config), TEMPLATE (user-defined
-// check set), TEMPLATE_BASELINE (template with severity caps), and
-// COMPARTMENT (aggregate of every target in a compartment). `targetIds`
-// names the targets the assessment covers.
+// Configuration-posture finding produced by Data Safe against one or
+// more target databases. `type` distinguishes LATEST (auto-generated
+// per target), SAVED (snapshot), SAVE_SCHEDULE (periodic save config),
+// TEMPLATE (user-defined check set), TEMPLATE_BASELINE (template with
+// severity caps), and COMPARTMENT (aggregate of every target in a
+// compartment); `targetIds` names the targets the assessment covers.
 private oci.dataSafe.securityAssessment @defaults("displayName type lifecycleState region") {
   // OCID of the security assessment
   id string
@@ -3764,10 +4101,10 @@ private oci.dataSafe.securityAssessment @defaults("displayName type lifecycleSta
 
 // Oracle Data Safe user assessment
 //
-// Examine a single user assessment — the user-risk finding produced
-// against one or more target databases. Inspect `type` to distinguish
-// LATEST, SAVED, SAVE_SCHEDULE, TEMPLATE, TEMPLATE_BASELINE, and
-// COMPARTMENT (aggregate), and `targetIds` for the targets covered.
+// User-risk finding produced against one or more target databases.
+// `type` distinguishes LATEST, SAVED, SAVE_SCHEDULE, TEMPLATE,
+// TEMPLATE_BASELINE, and COMPARTMENT (aggregate); `targetIds` names the
+// targets covered.
 private oci.dataSafe.userAssessment @defaults("displayName type lifecycleState region") {
   // OCID of the user assessment
   id string
@@ -3803,10 +4140,10 @@ private oci.dataSafe.userAssessment @defaults("displayName type lifecycleState r
 
 // Oracle Data Safe sensitive data model
 //
-// Examine a single sensitive data model — the per-target catalog of
-// sensitive columns produced by data discovery. `targetId` is the
-// reference database the model was discovered against; `appSuiteName`
-// groups models that belong to the same application suite.
+// Per-target catalog of sensitive columns produced by data discovery.
+// `targetId` is the reference database the model was discovered
+// against; `appSuiteName` groups models that belong to the same
+// application suite.
 private oci.dataSafe.sensitiveDataModel @defaults("displayName lifecycleState appSuiteName region") {
   // OCID of the sensitive data model
   id string
@@ -3840,12 +4177,12 @@ private oci.dataSafe.sensitiveDataModel @defaults("displayName lifecycleState ap
 
 // Oracle Data Safe sensitive type
 //
-// Examine a single sensitive type definition — either an Oracle
-// predefined type or a tenant-defined custom type used during data
-// discovery. `entityType` distinguishes a single regex-backed
-// sensitive type (SENSITIVE_TYPE) from a sensitive category grouping
-// multiple types (SENSITIVE_CATEGORY). `source` reflects whether the
-// type ships with Oracle (ORACLE) or was defined by the tenant (USER).
+// Sensitive type definition, either an Oracle predefined type or a
+// tenant-defined custom type used during data discovery. `entityType`
+// distinguishes a single regex-backed sensitive type (SENSITIVE_TYPE)
+// from a sensitive category grouping multiple types (SENSITIVE_CATEGORY);
+// `source` reflects whether the type ships with Oracle (ORACLE) or was
+// defined by the tenant (USER).
 private oci.dataSafe.sensitiveType @defaults("displayName entityType source region") {
   // OCID of the sensitive type
   id string
@@ -3879,9 +4216,8 @@ private oci.dataSafe.sensitiveType @defaults("displayName entityType source regi
 
 // Oracle Data Safe masking policy
 //
-// Examine a single masking policy — the definition of how columns
-// are masked during a sensitive-data masking job (refresh, clone,
-// export). `columnSource` is the dict that names the sensitive data
+// Definition of how columns are masked during a sensitive-data masking
+// job (refresh, clone, export). `columnSource` names the sensitive data
 // model or target the policy's columns are sourced from; its shape
 // varies by the configured source type.
 private oci.dataSafe.maskingPolicy @defaults("displayName lifecycleState region") {
@@ -3915,12 +4251,12 @@ private oci.dataSafe.maskingPolicy @defaults("displayName lifecycleState region"
 
 // Oracle Cloud Vulnerability Scanning Service
 //
-// Examine VSS configuration and findings — scan recipes that describe
-// what to scan, targets that pin recipes to compute instances or
-// container image repositories, and scan results recording per-host
-// vulnerabilities, open ports, CIS benchmark scores, endpoint
-// protection state, and per-image container vulnerabilities. Also
-// surfaces the CVE-deduplicated `vulnerabilities` rollup that
+// Vulnerability Scanning Service (VSS) configuration and findings:
+// scan recipes that describe what to scan, targets that pin recipes to
+// compute instances or container image repositories, and scan results
+// recording per-host vulnerabilities, open ports, CIS benchmark scores,
+// endpoint protection state, and per-image container vulnerabilities.
+// Also surfaces the CVE-deduplicated `vulnerabilities` rollup that
 // aggregates a single CVE's impact across every scanned host and
 // container in the tenancy.
 oci.vulnerabilityScanning {
@@ -3948,11 +4284,11 @@ oci.vulnerabilityScanning {
 
 // Host scan recipe
 //
-// Examine a host scan recipe — the policy object that defines what
-// the agent scans on each host. Surfaces the four sub-scanner
-// levels (port, agent CVE, CIS benchmark, endpoint protection), the
-// application scan settings (recurrence and the per-OS folder list),
-// and the scan schedule (daily or weekly with optional day-of-week).
+// Policy object that defines what the agent scans on each host. Covers
+// the four sub-scanner levels (port, agent CVE, CIS benchmark, endpoint
+// protection), the application scan settings (recurrence and the per-OS
+// folder list), and the scan schedule (daily or weekly with optional
+// day-of-week).
 private oci.vulnerabilityScanning.hostScanRecipe @defaults("name compartmentId portScanLevel agentScanLevel cisBenchmarkScanLevel endpointProtectionScanLevel") {
   // Recipe OCID
   id string
@@ -3993,9 +4329,9 @@ private oci.vulnerabilityScanning.hostScanRecipe @defaults("name compartmentId p
 
 // Host scan target
 //
-// Examine a host scan target — pins a host scan recipe to a list of
-// compute instances within a compartment subtree. The target's
-// recipe determines what gets scanned; the target determines where.
+// Binding that pins a host scan recipe to a list of compute instances
+// within a compartment subtree. The recipe determines what gets
+// scanned; the target determines where.
 private oci.vulnerabilityScanning.hostScanTarget @defaults("name compartmentId state") {
   // Target OCID
   id string
@@ -4029,9 +4365,9 @@ private oci.vulnerabilityScanning.hostScanTarget @defaults("name compartmentId s
 
 // Container scan recipe
 //
-// Examine a container scan recipe — the policy object that defines
-// what each container image scan covers. Surfaces the scan level
-// (currently STANDARD only) and the number of images covered.
+// Policy object that defines what each container image scan covers,
+// including the scan level (currently STANDARD only) and the number of
+// images covered.
 private oci.vulnerabilityScanning.containerScanRecipe @defaults("name compartmentId scanLevel imageCount") {
   // Recipe OCID
   id string
@@ -4055,10 +4391,9 @@ private oci.vulnerabilityScanning.containerScanRecipe @defaults("name compartmen
 
 // Container scan target
 //
-// Examine a container scan target — pins a container scan recipe to
-// a registry. Today only OCIR is supported; `registryUrl` and
-// `registryRepositories` describe the registry endpoint and the
-// repositories scanned.
+// Binding that pins a container scan recipe to a registry. Today only
+// OCIR is supported; `registryUrl` and `registryRepositories` describe
+// the registry endpoint and the repositories scanned.
 private oci.vulnerabilityScanning.containerScanTarget @defaults("name compartmentId registryUrl") {
   // Target OCID
   id string
@@ -4090,11 +4425,11 @@ private oci.vulnerabilityScanning.containerScanTarget @defaults("name compartmen
 
 // Host agent vulnerability scan result
 //
-// Examine the most recent agent vulnerability scan for a compute
-// instance. Surfaces the operating system and kernel version of the
-// scanned host, the highest finding severity, the total problem
-// count, and the per-CVE findings under `problems` (each with the
-// vulnerable package list and a navigable `vulnerability()` rollup).
+// Most recent agent vulnerability scan for a compute instance. Reports
+// the operating system and kernel version of the scanned host, the
+// highest finding severity, the total problem count, and the per-CVE
+// findings under `problems` (each with the vulnerable package list and
+// a `vulnerability` rollup).
 private oci.vulnerabilityScanning.hostAgentScanResult @defaults("name instanceId highestProblemSeverity problemCount") {
   // Scan result OCID
   id string
@@ -4126,10 +4461,10 @@ private oci.vulnerabilityScanning.hostAgentScanResult @defaults("name instanceId
 
 // Host agent scan problem
 //
-// Examine a single CVE finding from a host agent scan — the CVE
-// reference, severity, remediation state, and the vulnerable
-// packages installed on the host. `vulnerability()` navigates to the
-// tenancy-wide rollup for the same CVE.
+// Single CVE finding from a host agent scan: the CVE reference,
+// severity, remediation state, and the vulnerable packages installed on
+// the host. `vulnerability` resolves the tenancy-wide rollup for the
+// same CVE.
 private oci.vulnerabilityScanning.hostAgentScanResult.problem @defaults("name severity state cveReference") {
   // Vulnerability name (typically the CVE id)
   name string
@@ -4155,10 +4490,9 @@ private oci.vulnerabilityScanning.hostAgentScanResult.problem @defaults("name se
 
 // Host port scan result
 //
-// Examine the most recent open-port scan for a compute instance.
-// Surfaces the highest severity across open ports and the per-port
-// findings under `openPorts` (each pinned to the VNIC that exposes
-// the port).
+// Most recent open-port scan for a compute instance. Reports the
+// highest severity across open ports and the per-port findings under
+// `openPorts` (each pinned to the VNIC that exposes the port).
 private oci.vulnerabilityScanning.hostPortScanResult @defaults("name instanceId openPortCount highestProblemSeverity") {
   // Scan result OCID
   id string
@@ -4184,10 +4518,9 @@ private oci.vulnerabilityScanning.hostPortScanResult @defaults("name instanceId 
 
 // Host port scan open port
 //
-// Examine a single open port detected on a compute instance —
-// the port number, protocol, IP address, and the VNIC that exposes
-// the port. `vnic()` navigates to the network interface and its
-// security groups.
+// Single open port detected on a compute instance: the port number,
+// protocol, IP address, and the VNIC that exposes the port. `vnic`
+// resolves the network interface and its security groups.
 private oci.vulnerabilityScanning.hostPortScanResult.openPort @defaults("port protocol service severity") {
   // Port number
   port int
@@ -4195,7 +4528,7 @@ private oci.vulnerabilityScanning.hostPortScanResult.openPort @defaults("port pr
   protocol string
   // IP address the port is listening on
   ipAddress string
-  // Detected service name (e.g., ssh, http) — empty when unknown
+  // Detected service name (e.g., ssh, http), empty when unknown
   service string
   // Finding severity for this open port
   severity string
@@ -4207,9 +4540,9 @@ private oci.vulnerabilityScanning.hostPortScanResult.openPort @defaults("port pr
 
 // Host CIS benchmark scan result
 //
-// Examine the most recent CIS benchmark scan for a compute
-// instance. Surfaces the total issue count and the per-control
-// pass/fail scores under `scores`.
+// Most recent CIS benchmark scan for a compute instance. Reports the
+// total issue count and the per-control pass/fail scores under
+// `scores`.
 private oci.vulnerabilityScanning.hostCisBenchmarkScanResult @defaults("name instanceId cisBenchmarkScanIssuesCount") {
   // Scan result OCID
   id string
@@ -4237,10 +4570,9 @@ private oci.vulnerabilityScanning.hostCisBenchmarkScanResult @defaults("name ins
 
 // Host endpoint protection scan result
 //
-// Examine the most recent endpoint protection posture scan for a
-// compute instance. Surfaces the overall problem severity, the
-// number of endpoint protection services evaluated, and the
-// per-service findings.
+// Most recent endpoint protection posture scan for a compute instance.
+// Reports the overall problem severity, the number of endpoint
+// protection services evaluated, and the per-service findings.
 private oci.vulnerabilityScanning.hostEndpointProtectionScanResult @defaults("name instanceId problemSeverity endpointProtectionsCount") {
   // Scan result OCID
   id string
@@ -4270,10 +4602,9 @@ private oci.vulnerabilityScanning.hostEndpointProtectionScanResult @defaults("na
 
 // Container vulnerability scan result
 //
-// Examine the most recent container image scan. Surfaces the
-// repository, image tag, registry URL, and the per-CVE findings
-// under `problems`. `target()` navigates back to the container
-// scan target that produced the result.
+// Most recent container image scan. Reports the repository, image tag,
+// registry URL, and the per-CVE findings under `problems`. `target`
+// resolves the container scan target that produced the result.
 private oci.vulnerabilityScanning.containerScanResult @defaults("repository image highestProblemSeverity problemCount") {
   // Scan result OCID
   id string
@@ -4303,10 +4634,10 @@ private oci.vulnerabilityScanning.containerScanResult @defaults("repository imag
 
 // Container scan problem
 //
-// Examine a single CVE finding from a container image scan — the
-// CVE reference, severity, remediation state, and the vulnerable
-// packages baked into the image. `vulnerability()` navigates to the
-// tenancy-wide rollup for the same CVE.
+// Single CVE finding from a container image scan: the CVE reference,
+// severity, remediation state, and the vulnerable packages baked into
+// the image. `vulnerability` resolves the tenancy-wide rollup for the
+// same CVE.
 private oci.vulnerabilityScanning.containerScanResult.problem @defaults("name severity state cveReference") {
   // Vulnerability name (typically the CVE id)
   name string
@@ -4330,12 +4661,12 @@ private oci.vulnerabilityScanning.containerScanResult.problem @defaults("name se
 
 // Vulnerability rollup
 //
-// Examine a single vulnerability aggregated across every scanned
-// host and container in the tenancy. Each row collapses a single
-// CVE (or proprietary issue) into the highest observed severity,
-// the impacted-resource counts, and the CVE metadata (title,
-// impact, threat, solution, exploitability). `impactedHosts()`
-// returns the compute instances affected.
+// Single vulnerability aggregated across every scanned host and
+// container in the tenancy. Each row collapses a single CVE (or
+// proprietary issue) into the highest observed severity, the
+// impacted-resource counts, and the CVE metadata (title, impact,
+// threat, solution, exploitability). `impactedHosts` returns the
+// compute instances affected.
 private oci.vulnerabilityScanning.vulnerability @defaults("name severity vulnerabilityType state") {
   // Vulnerability identifier (CVE id or proprietary issue id)
   id string
@@ -4383,30 +4714,30 @@ private oci.vulnerabilityScanning.vulnerability @defaults("name severity vulnera
   impactedHosts() []oci.compute.instance
   // Container images affected by this vulnerability
   //
-  // Each entry has `image`, `repository`, `registryUrl`, and
-  // `compartmentId`.
+  // Each entry has `image`, `repository`, `registry`,
+  // `containerScanTargetId`, and `lastContainerScanId`.
   impactedContainerImages() []dict
 }
 
 // Oracle Cloud Infrastructure (OCI) AI services
 //
-// Use the OCI AI namespace as the entry point for Oracle's managed AI
-// and machine-learning services. Reach `oci.ai.agents` for the
-// Generative AI Agents service — the agents, agent endpoints, knowledge
-// bases, data sources, and tools that make up retrieval-augmented
-// generation (RAG) and agentic applications in the tenancy.
+// Namespace and entry point for Oracle's managed AI and machine-learning
+// services, spanning Generative AI Agents (`oci.ai.agents`), Data Science
+// (`oci.ai.dataScience`), Generative AI (`oci.ai.generativeAi`), and the
+// Language, Vision, Speech, and Document Understanding services. Each
+// covers the resources that make up that service in the tenancy, from
+// agents and knowledge bases to models, endpoints, and training projects.
 oci.ai {
 }
 
 // Oracle Cloud Infrastructure (OCI) Generative AI Agents
 //
-// Use the Generative AI Agents namespace to enumerate the tenancy's
-// agentic AI estate across every subscribed region. Iterate `agents()`
-// for the configured agents, `agentEndpoints()` for the endpoints that
-// clients connect to (with their content-moderation and guardrail
-// settings), `knowledgeBases()` and `dataSources()` for the enterprise
-// data wired into retrieval-augmented generation, and `tools()` for the
-// tools attached to agents — including the HTTP-endpoint and
+// Generative AI Agents estate for the tenancy across every subscribed
+// region. The `agents` are the configured agents, `agentEndpoints` are
+// the endpoints clients connect to (with their content-moderation and
+// guardrail settings), `knowledgeBases` and `dataSources` are the
+// enterprise data wired into retrieval-augmented generation, and `tools`
+// are the tools attached to agents, including the HTTP-endpoint and
 // function-calling tools that let an agent reach external APIs.
 oci.ai.agents {
   // Generative AI agents
@@ -4423,13 +4754,12 @@ oci.ai.agents {
 
 // Oracle Cloud Infrastructure (OCI) Generative AI agent
 //
-// Examine a single Generative AI agent — the large-language-model
-// application that answers questions over enterprise data. Select an
-// agent by its OCID, for example
-// `oci.ai.agents.agent(id: "ocid1.genaiagent.oc1...")`. The agent
-// exposes its welcome message, the language-model routing configuration,
-// and the compartment it lives in. Connect to an agent through one of
-// its `oci.ai.agents.endpoint` resources.
+// Single Generative AI agent, the large-language-model application that
+// answers questions over enterprise data. Select an agent by its OCID,
+// for example `oci.ai.agents.agent(id: "ocid1.genaiagent.oc1...")`. The
+// agent exposes its welcome message, the language-model routing
+// configuration, and the compartment it lives in. Clients connect to an
+// agent through one of its `oci.ai.agents.endpoint` resources.
 private oci.ai.agents.agent @defaults("name state") {
   init(id? string)
   // Agent OCID
@@ -4462,14 +4792,13 @@ private oci.ai.agents.agent @defaults("name state") {
 
 // Oracle Cloud Infrastructure (OCI) Generative AI agent endpoint
 //
-// Examine a single Generative AI agent endpoint — the network-reachable
-// entry point clients use to chat with an agent. Select an endpoint by
-// its OCID, for example
+// Network-reachable entry point clients use to chat with a Generative AI
+// agent. Select an endpoint by its OCID, for example
 // `oci.ai.agents.endpoint(id: "ocid1.genaiagentendpoint.oc1...")`. The
 // endpoint reports whether content moderation runs on input and output,
 // the guardrail configuration that screens for content, prompt
 // injection, and personally identifiable information, session behavior,
-// and whether tracing and citations are returned in chat results — the
+// and whether tracing and citations are returned in chat results, the
 // controls that govern how safely the agent can be used.
 private oci.ai.agents.endpoint @defaults("name state") {
   init(id? string)
@@ -4525,12 +4854,11 @@ private oci.ai.agents.endpoint @defaults("name state") {
 
 // Oracle Cloud Infrastructure (OCI) Generative AI agent knowledge base
 //
-// Examine a single knowledge base — the indexed corpus an agent
-// retrieves from to answer questions. Select a knowledge base by its
-// OCID, for example
+// Indexed corpus a Generative AI agent retrieves from to answer
+// questions. Select a knowledge base by its OCID, for example
 // `oci.ai.agents.knowledgeBase(id: "ocid1.genaiagentknowledgebase.oc1...")`.
-// Iterate the tenancy's `dataSources` to see which content feeds each
-// knowledge base.
+// The tenancy's `dataSources` show which content feeds each knowledge
+// base.
 private oci.ai.agents.knowledgeBase @defaults("name state") {
   init(id? string)
   // Knowledge base OCID
@@ -4559,10 +4887,11 @@ private oci.ai.agents.knowledgeBase @defaults("name state") {
 
 // Oracle Cloud Infrastructure (OCI) Generative AI agent data source
 //
-// Examine a single data source — the content ingested into a knowledge
-// base for retrieval. Select a data source by its OCID, for example
+// Content ingested into a knowledge base for a Generative AI agent to
+// retrieve. Select a data source by its OCID, for example
 // `oci.ai.agents.dataSource(id: "ocid1.genaiagentdatasource.oc1...")`.
-// The data source links back to its parent `knowledgeBase`.
+// The `knowledgeBase` field resolves the knowledge base this content
+// feeds.
 private oci.ai.agents.dataSource @defaults("name state") {
   init(id? string)
   // Data source OCID
@@ -4595,13 +4924,12 @@ private oci.ai.agents.dataSource @defaults("name state") {
 
 // Oracle Cloud Infrastructure (OCI) Generative AI agent tool
 //
-// Examine a single tool attached to an agent — the capability an agent
-// can invoke while answering, such as retrieving from a knowledge base,
-// querying a database, calling a function, or reaching an external HTTP
-// endpoint. Select a tool by its OCID, for example
-// `oci.ai.agents.tool(id: "ocid1.genaiagenttool.oc1...")`. The
-// `toolType` field identifies the kind of tool — use it to find tools
-// that can reach outside the tenancy, for example
+// Capability an agent can invoke while answering, such as retrieving from
+// a knowledge base, querying a database, calling a function, or reaching
+// an external HTTP endpoint. Select a tool by its OCID, for example
+// `oci.ai.agents.tool(id: "ocid1.genaiagenttool.oc1...")`. The `toolType`
+// field identifies the kind of tool. Use it to find tools that can reach
+// outside the tenancy, for example
 // `oci.ai.agents.tools.where(toolType == "HTTP_ENDPOINT_TOOL_CONFIG")`.
 private oci.ai.agents.tool @defaults("name toolType state") {
   init(id? string)
@@ -4642,15 +4970,14 @@ private oci.ai.agents.tool @defaults("name toolType state") {
 
 // Oracle Cloud Infrastructure (OCI) Data Science
 //
-// Use the Data Science namespace to enumerate the tenancy's machine
-// learning estate across every subscribed region. Iterate `projects()`
-// for the workspaces that organize ML work, `notebookSessions()` for
-// the managed JupyterLab environments (with their compute shape, network
-// placement, and private-endpoint configuration), `models()` and
-// `modelVersionSets()` for the model catalog, `modelDeployments()` for
-// the models served as HTTP endpoints (with their endpoint URL and
-// logging configuration), and `jobs()` and `pipelines()` for the
-// batch and orchestration workloads.
+// Data Science machine learning estate for the tenancy across every
+// subscribed region. The `projects` are the workspaces that organize ML
+// work, `notebookSessions` are the managed JupyterLab environments (with
+// their compute shape, network placement, and private-endpoint
+// configuration), `models` and `modelVersionSets` are the model catalog,
+// `modelDeployments` are the models served as HTTP endpoints (with their
+// endpoint URL and logging configuration), and `jobs` and `pipelines`
+// are the batch and orchestration workloads.
 oci.ai.dataScience {
   // Data Science projects
   projects() []oci.ai.dataScience.project
@@ -4670,9 +4997,9 @@ oci.ai.dataScience {
 
 // Oracle Cloud Infrastructure (OCI) Data Science project
 //
-// Examine a single Data Science project — the workspace that groups
-// notebook sessions, models, jobs, and pipelines for a team or
-// initiative. Select a project by its OCID, for example
+// Workspace that groups Data Science notebook sessions, models, jobs, and
+// pipelines for a team or initiative. Select a project by its OCID, for
+// example
 // `oci.ai.dataScience.project(id: "ocid1.datascienceproject.oc1...")`.
 private oci.ai.dataScience.project @defaults("name state") {
   init(id? string)
@@ -4700,13 +5027,12 @@ private oci.ai.dataScience.project @defaults("name state") {
 
 // Oracle Cloud Infrastructure (OCI) Data Science notebook session
 //
-// Examine a single notebook session — the managed JupyterLab environment
-// where data scientists develop and train models. Select a session by
-// its OCID, for example
+// Managed JupyterLab environment where data scientists develop and train
+// models. Select a session by its OCID, for example
 // `oci.ai.dataScience.notebookSession(id: "ocid1.datasciencenotebooksession.oc1...")`.
 // The session reports its compute shape, the subnet it runs in, the
 // optional private endpoint that isolates it from the public internet,
-// and its access URL — the controls that determine the session's network
+// and its access URL, the controls that determine the session's network
 // exposure.
 private oci.ai.dataScience.notebookSession @defaults("name state") {
   init(id? string)
@@ -4748,8 +5074,8 @@ private oci.ai.dataScience.notebookSession @defaults("name state") {
 
 // Oracle Cloud Infrastructure (OCI) Data Science model
 //
-// Examine a single model in the model catalog — a saved, versioned
-// machine learning artifact. Select a model by its OCID, for example
+// Saved, versioned machine learning artifact in the model catalog. Select
+// a model by its OCID, for example
 // `oci.ai.dataScience.model(id: "ocid1.datasciencemodel.oc1...")`. The
 // model reports its version within its model version set, its category,
 // and whether its artifact is stored by reference in Object Storage
@@ -4798,9 +5124,8 @@ private oci.ai.dataScience.model @defaults("name state") {
 
 // Oracle Cloud Infrastructure (OCI) Data Science model version set
 //
-// Examine a single model version set — the container that groups
-// successive versions of a model. Select a version set by its OCID, for
-// example
+// Container that groups successive versions of a Data Science model.
+// Select a version set by its OCID, for example
 // `oci.ai.dataScience.modelVersionSet(id: "ocid1.datasciencemodelversionset.oc1...")`.
 private oci.ai.dataScience.modelVersionSet @defaults("name state") {
   init(id? string)
@@ -4834,9 +5159,8 @@ private oci.ai.dataScience.modelVersionSet @defaults("name state") {
 
 // Oracle Cloud Infrastructure (OCI) Data Science model deployment
 //
-// Examine a single model deployment — a model from the catalog served
-// as an HTTP inference endpoint. Select a deployment by its OCID, for
-// example
+// Catalog model served as an HTTP inference endpoint. Select a deployment
+// by its OCID, for example
 // `oci.ai.dataScience.modelDeployment(id: "ocid1.datasciencemodeldeployment.oc1...")`.
 // The deployment reports its endpoint URL, its instance and model
 // configuration, and the access and predict logging attached to it.
@@ -4882,9 +5206,9 @@ private oci.ai.dataScience.modelDeployment @defaults("name state") {
 
 // Oracle Cloud Infrastructure (OCI) Data Science job
 //
-// Examine a single job — a repeatable, self-contained machine learning
-// task such as training or batch processing. Select a job by its OCID,
-// for example `oci.ai.dataScience.job(id: "ocid1.datasciencejob.oc1...")`.
+// Repeatable, self-contained machine learning task such as training or
+// batch processing. Select a job by its OCID, for example
+// `oci.ai.dataScience.job(id: "ocid1.datasciencejob.oc1...")`.
 private oci.ai.dataScience.job @defaults("name state") {
   init(id? string)
   // Job OCID
@@ -4913,9 +5237,9 @@ private oci.ai.dataScience.job @defaults("name state") {
 
 // Oracle Cloud Infrastructure (OCI) Data Science pipeline
 //
-// Examine a single pipeline — an end-to-end machine learning workflow
-// that orchestrates multiple steps. Select a pipeline by its OCID, for
-// example `oci.ai.dataScience.pipeline(id: "ocid1.datasciencepipeline.oc1...")`.
+// End-to-end machine learning workflow that orchestrates multiple steps.
+// Select a pipeline by its OCID, for example
+// `oci.ai.dataScience.pipeline(id: "ocid1.datasciencepipeline.oc1...")`.
 private oci.ai.dataScience.pipeline @defaults("name state") {
   init(id? string)
   // Pipeline OCID
@@ -4946,12 +5270,11 @@ private oci.ai.dataScience.pipeline @defaults("name state") {
 
 // Oracle Cloud Infrastructure (OCI) Generative AI
 //
-// Use the Generative AI namespace to enumerate the tenancy's foundation
-// model estate across every subscribed region. Iterate
-// `dedicatedAiClusters()` for the dedicated GPU capacity that hosts or
-// fine-tunes models, `models()` for the pretrained and custom
-// (fine-tuned) models available in the compartment, and `endpoints()`
-// for the model-serving endpoints — each reporting its content
+// Generative AI foundation model estate for the tenancy across every
+// subscribed region. The `dedicatedAiClusters` are the dedicated GPU
+// capacity that hosts or fine-tunes models, `models` are the pretrained
+// and custom (fine-tuned) models available in the compartment, and
+// `endpoints` are the model-serving endpoints, each reporting its content
 // moderation, prompt-injection, and PII-detection guardrails.
 oci.ai.generativeAi {
   // Dedicated AI clusters
@@ -4964,9 +5287,8 @@ oci.ai.generativeAi {
 
 // Oracle Cloud Infrastructure (OCI) Generative AI dedicated AI cluster
 //
-// Examine a single dedicated AI cluster — the reserved GPU capacity used
-// to host or fine-tune Generative AI models. Select a cluster by its
-// OCID, for example
+// Reserved GPU capacity used to host or fine-tune Generative AI models.
+// Select a cluster by its OCID, for example
 // `oci.ai.generativeAi.dedicatedAiCluster(id: "ocid1.generativeaidedicatedaicluster.oc1...")`.
 // The cluster reports its purpose (hosting or fine-tuning), the number
 // and shape of its GPU units, and its committed capacity.
@@ -5009,12 +5331,12 @@ private oci.ai.generativeAi.dedicatedAiCluster @defaults("name type state") {
 
 // Oracle Cloud Infrastructure (OCI) Generative AI model
 //
-// Examine a single Generative AI model — a pretrained foundation model
-// or a custom model fine-tuned from one. Select a model by its OCID, for
-// example `oci.ai.generativeAi.model(id: "ocid1.generativeaimodel.oc1...")`.
-// The model reports its vendor and version, its capabilities (such as
-// chat, text generation, or embeddings), and — for a custom model — the
-// base model it was fine-tuned from and the fine-tuning details.
+// Pretrained foundation model or a custom model fine-tuned from one.
+// Select a model by its OCID, for example
+// `oci.ai.generativeAi.model(id: "ocid1.generativeaimodel.oc1...")`. The
+// model reports its vendor and version, its capabilities (such as chat,
+// text generation, or embeddings), and, for a custom model, the base
+// model it was fine-tuned from and the fine-tuning details.
 private oci.ai.generativeAi.model @defaults("name type state") {
   init(id? string)
   // Model OCID
@@ -5063,15 +5385,14 @@ private oci.ai.generativeAi.model @defaults("name type state") {
 
 // Oracle Cloud Infrastructure (OCI) Generative AI endpoint
 //
-// Examine a single Generative AI endpoint — a custom model served for
-// inference on a dedicated AI cluster. Select an endpoint by its OCID,
-// for example
+// Custom model served for inference on a dedicated AI cluster. Select an
+// endpoint by its OCID, for example
 // `oci.ai.generativeAi.endpoint(id: "ocid1.generativeaiendpoint.oc1...")`.
 // The endpoint reports the model it serves, the cluster it runs on, the
 // optional private endpoint that isolates it, and whether content
 // moderation, prompt-injection detection, and PII detection guardrails
-// are enabled — use these to find endpoints serving models without
-// safety controls.
+// are enabled. Use these to find endpoints serving models without safety
+// controls.
 private oci.ai.generativeAi.endpoint @defaults("name state") {
   init(id? string)
   // Endpoint OCID
@@ -5122,11 +5443,11 @@ private oci.ai.generativeAi.endpoint @defaults("name state") {
 
 // Oracle Cloud Infrastructure (OCI) Language AI
 //
-// Use the Language namespace to enumerate the tenancy's custom Language
-// AI estate across every subscribed region. Iterate `projects()` for the
-// workspaces that group Language models, `models()` for the custom
-// models trained for tasks such as text classification and named-entity
-// recognition, and `endpoints()` for the models served for inference.
+// Custom Language AI estate for the tenancy across every subscribed
+// region. The `projects` are the workspaces that group Language models,
+// `models` are the custom models trained for tasks such as text
+// classification and named-entity recognition, and `endpoints` are the
+// models served for inference.
 oci.ai.language {
   // Language projects
   projects() []oci.ai.language.project
@@ -5138,9 +5459,8 @@ oci.ai.language {
 
 // Oracle Cloud Infrastructure (OCI) Language AI project
 //
-// Examine a single Language AI project — the workspace that groups
-// custom models and their serving endpoints. Select a project by its
-// OCID, for example
+// Workspace that groups custom Language models and their serving
+// endpoints. Select a project by its OCID, for example
 // `oci.ai.language.project(id: "ocid1.ailanguageproject.oc1...")`.
 private oci.ai.language.project @defaults("name state") {
   init(id? string)
@@ -5168,8 +5488,8 @@ private oci.ai.language.project @defaults("name state") {
 
 // Oracle Cloud Infrastructure (OCI) Language AI model
 //
-// Examine a single custom Language model. Select a model by its OCID,
-// for example `oci.ai.language.model(id: "ocid1.ailanguagemodel.oc1...")`.
+// Single custom Language model. Select a model by its OCID, for example
+// `oci.ai.language.model(id: "ocid1.ailanguagemodel.oc1...")`.
 private oci.ai.language.model @defaults("name state") {
   init(id? string)
   // Model OCID
@@ -5207,8 +5527,8 @@ private oci.ai.language.model @defaults("name state") {
 
 // Oracle Cloud Infrastructure (OCI) Language AI endpoint
 //
-// Examine a single Language AI endpoint — a custom model served for
-// inference. Select an endpoint by its OCID, for example
+// Custom Language model served for inference. Select an endpoint by its
+// OCID, for example
 // `oci.ai.language.endpoint(id: "ocid1.ailanguageendpoint.oc1...")`.
 private oci.ai.language.endpoint @defaults("name state") {
   init(id? string)
@@ -5248,10 +5568,10 @@ private oci.ai.language.endpoint @defaults("name state") {
 
 // Oracle Cloud Infrastructure (OCI) Vision AI
 //
-// Use the Vision namespace to enumerate the tenancy's custom Vision AI
-// estate across every subscribed region. Iterate `projects()` for the
-// workspaces that group Vision models and `models()` for the custom
-// models trained for image classification and object detection.
+// Custom Vision AI estate for the tenancy across every subscribed region.
+// The `projects` are the workspaces that group Vision models and
+// `models` are the custom models trained for image classification and
+// object detection.
 oci.ai.vision {
   // Vision projects
   projects() []oci.ai.vision.project
@@ -5261,8 +5581,8 @@ oci.ai.vision {
 
 // Oracle Cloud Infrastructure (OCI) Vision AI project
 //
-// Examine a single Vision AI project — the workspace that groups custom
-// Vision models. Select a project by its OCID, for example
+// Workspace that groups custom Vision models. Select a project by its
+// OCID, for example
 // `oci.ai.vision.project(id: "ocid1.aivisionproject.oc1...")`.
 private oci.ai.vision.project @defaults("name state") {
   init(id? string)
@@ -5288,8 +5608,8 @@ private oci.ai.vision.project @defaults("name state") {
 
 // Oracle Cloud Infrastructure (OCI) Vision AI model
 //
-// Examine a single custom Vision model. Select a model by its OCID, for
-// example `oci.ai.vision.model(id: "ocid1.aivisionmodel.oc1...")`.
+// Single custom Vision model. Select a model by its OCID, for example
+// `oci.ai.vision.model(id: "ocid1.aivisionmodel.oc1...")`.
 private oci.ai.vision.model @defaults("name modelType state") {
   init(id? string)
   // Model OCID
@@ -5326,9 +5646,8 @@ private oci.ai.vision.model @defaults("name modelType state") {
 
 // Oracle Cloud Infrastructure (OCI) Speech AI
 //
-// Use the Speech namespace to enumerate the tenancy's Speech AI
-// customizations across every subscribed region. Iterate
-// `customizations()` for the custom speech models that adapt
+// Speech AI customizations for the tenancy across every subscribed
+// region. The `customizations` are the custom speech models that adapt
 // transcription to domain-specific vocabulary.
 oci.ai.speech {
   // Speech customizations (custom models)
@@ -5337,9 +5656,8 @@ oci.ai.speech {
 
 // Oracle Cloud Infrastructure (OCI) Speech AI customization
 //
-// Examine a single Speech AI customization — a custom model that adapts
-// transcription to domain-specific terms. Select a customization by its
-// OCID, for example
+// Custom Speech model that adapts transcription to domain-specific terms.
+// Select a customization by its OCID, for example
 // `oci.ai.speech.customization(id: "ocid1.aispeechcustomization.oc1...")`.
 private oci.ai.speech.customization @defaults("name state") {
   init(id? string)
@@ -5369,11 +5687,10 @@ private oci.ai.speech.customization @defaults("name state") {
 
 // Oracle Cloud Infrastructure (OCI) Document Understanding AI
 //
-// Use the Document Understanding namespace to enumerate the tenancy's
-// custom document AI estate across every subscribed region. Iterate
-// `projects()` for the workspaces that group document models and
-// `models()` for the custom models trained for tasks such as key-value
-// extraction and document classification.
+// Custom Document Understanding AI estate for the tenancy across every
+// subscribed region. The `projects` are the workspaces that group
+// document models and `models` are the custom models trained for tasks
+// such as key-value extraction and document classification.
 oci.ai.document {
   // Document Understanding projects
   projects() []oci.ai.document.project
@@ -5383,9 +5700,9 @@ oci.ai.document {
 
 // Oracle Cloud Infrastructure (OCI) Document Understanding AI project
 //
-// Examine a single Document Understanding project — the workspace that
-// groups custom document models. Select a project by its OCID, for
-// example `oci.ai.document.project(id: "ocid1.aidocumentproject.oc1...")`.
+// Workspace that groups custom Document Understanding models. Select a
+// project by its OCID, for example
+// `oci.ai.document.project(id: "ocid1.aidocumentproject.oc1...")`.
 private oci.ai.document.project @defaults("name state") {
   init(id? string)
   // Project OCID
@@ -5412,8 +5729,8 @@ private oci.ai.document.project @defaults("name state") {
 
 // Oracle Cloud Infrastructure (OCI) Document Understanding AI model
 //
-// Examine a single custom Document Understanding model. Select a model
-// by its OCID, for example
+// Single custom Document Understanding model. Select a model by its OCID,
+// for example
 // `oci.ai.document.model(id: "ocid1.aidocumentmodel.oc1...")`.
 private oci.ai.document.model @defaults("name modelType state") {
   init(id? string)
