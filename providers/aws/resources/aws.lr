@@ -3135,11 +3135,13 @@ private aws.sagemaker.endpoint @defaults("arn name") {
   name string
   // Raw endpoint configuration
   //
-  // Complete configuration attached to this endpoint, including production
-  // variants, data-capture settings, the KMS key, and any async-inference
-  // configuration. The endpointConfigName, productionVariants, and
-  // dataCaptureConfig fields expose the same data in structured form.
-  config() dict
+  // Deprecated in favor of the endpointConfig field, which resolves the same
+  // configuration as a typed aws.sagemaker.endpointConfig resource with
+  // structured production variants, data capture, KMS key, network isolation,
+  // and VPC configuration.
+  config() @maturity("deprecated") dict
+  // Endpoint configuration attached to this endpoint
+  endpointConfig() aws.sagemaker.endpointConfig
   // Region where the endpoint exists
   region string
   // Tags for the endpoint
@@ -3231,13 +3233,21 @@ private aws.sagemaker.model @defaults("arn name") {
   // IAM execution role for the model
   iamRole() aws.iam.role
   // Primary container definition
-  primaryContainer() dict
+  //
+  // Deprecated in favor of the primaryContainerRef field, which resolves the
+  // primary container as a typed aws.sagemaker.model.container resource with
+  // the image, model data URL, and environment queryable directly.
+  primaryContainer() @maturity("deprecated") dict
+  // Primary container the model serves inference from
+  primaryContainerRef() aws.sagemaker.model.container
   // Raw VPC configuration dict
   //
   // Deprecated in favor of the vpc field.
   vpcConfig() @maturity("deprecated") dict
   // VPC associated with this model
   vpc() aws.vpc
+  // Security groups attached to the model's VPC configuration
+  securityGroups() []aws.ec2.securitygroup
   // Additional containers in the inference pipeline
   containers() []aws.sagemaker.model.container
   // Inference execution configuration
@@ -3519,6 +3529,34 @@ private aws.sagemaker.domain @defaults("arn name status") {
   defaultExecutionRole() aws.iam.role
   // Execution role session name mode from the default Studio settings (USER_IDENTITY, STATIC, or empty when unset)
   executionRoleSessionNameMode() string
+  // Whether Studio users can access the Docker daemon to build and run containers
+  dockerAccessEnabled() bool
+  // Whether Docker containers run in rootless mode
+  rootlessDocker() bool
+  // Accounts trusted to share images when the domain is in VpcOnly mode
+  dockerVpcOnlyTrustedAccounts() []string
+  // Whether the user profile name is attached to the execution-role session as an sts:SourceIdentity key
+  //
+  // One of USER_PROFILE_NAME or DISABLED. When enabled, actions taken through
+  // an assumed execution role are attributable to the originating Studio user
+  // profile.
+  executionRoleIdentityConfig() string
+  // Security groups for communication between domain-level apps and user apps
+  domainSecurityGroups() []aws.ec2.securitygroup
+  // Execution role for the RStudioServerPro domain-level app
+  rstudioDomainExecutionRole() aws.iam.role
+  // Status of the Amazon Q integration for the domain: ENABLED or DISABLED
+  amazonQStatus() string
+  // ARN of the Amazon Q profile associated with the domain
+  amazonQProfileArn() string
+  // Security groups from the default user settings
+  defaultUserSecurityGroups() []aws.ec2.securitygroup
+  // KMS key that encrypts shared notebook output from the default user settings
+  defaultUserSharedNotebookKmsKey() aws.kms.key
+  // Execution role for shared spaces from the default space settings
+  defaultSpaceExecutionRole() aws.iam.role
+  // Security groups for shared spaces from the default space settings
+  defaultSpaceSecurityGroups() []aws.ec2.securitygroup
 }
 
 // AWS SageMaker inference component
@@ -3912,6 +3950,16 @@ private aws.sagemaker.endpointConfig @defaults("arn name") {
   kmsKey() aws.kms.key
   // Asynchronous inference configuration
   asyncInferenceConfig() dict
+  // Whether network isolation is enabled for the inference containers
+  enableNetworkIsolation() bool
+  // IAM execution role for the inference containers
+  iamRole() aws.iam.role
+  // VPC the inference containers run in
+  vpc() aws.vpc
+  // Security groups attached to the VPC configuration
+  securityGroups() []aws.ec2.securitygroup
+  // KMS key that encrypts asynchronous inference output
+  asyncOutputKmsKey() aws.kms.key
 }
 
 // AWS SageMaker endpoint configuration production variant

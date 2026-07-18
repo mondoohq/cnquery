@@ -211,6 +211,60 @@ func (a *mqlAwsSagemakerEndpointConfig) asyncInferenceConfig() (any, error) {
 	return convert.JsonToDict(resp.AsyncInferenceConfig)
 }
 
+func (a *mqlAwsSagemakerEndpointConfig) enableNetworkIsolation() (bool, error) {
+	resp, err := a.fetchDetails()
+	if err != nil {
+		return false, err
+	}
+	if resp.EnableNetworkIsolation == nil {
+		return false, nil
+	}
+	return *resp.EnableNetworkIsolation, nil
+}
+
+func (a *mqlAwsSagemakerEndpointConfig) iamRole() (*mqlAwsIamRole, error) {
+	resp, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	return sagemakerIamRole(a.MqlRuntime, &a.IamRole, resp.ExecutionRoleArn)
+}
+
+func (a *mqlAwsSagemakerEndpointConfig) vpc() (*mqlAwsVpc, error) {
+	resp, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	var subnetIds []string
+	if resp.VpcConfig != nil {
+		subnetIds = resp.VpcConfig.Subnets
+	}
+	return sagemakerResolveVpc(a.MqlRuntime, a.Region.Data, subnetIds, &a.Vpc)
+}
+
+func (a *mqlAwsSagemakerEndpointConfig) securityGroups() ([]any, error) {
+	resp, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	if resp.VpcConfig == nil {
+		return nil, nil
+	}
+	return sagemakerSecurityGroups(a.MqlRuntime, a.Region.Data, resp.VpcConfig.SecurityGroupIds)
+}
+
+func (a *mqlAwsSagemakerEndpointConfig) asyncOutputKmsKey() (*mqlAwsKmsKey, error) {
+	resp, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	var keyId *string
+	if resp.AsyncInferenceConfig != nil && resp.AsyncInferenceConfig.OutputConfig != nil {
+		keyId = resp.AsyncInferenceConfig.OutputConfig.KmsKeyId
+	}
+	return sagemakerKmsKey(a.MqlRuntime, &a.AsyncOutputKmsKey, keyId)
+}
+
 // ---- Endpoint Config Production Variant ----
 
 type mqlAwsSagemakerEndpointConfigProductionVariantInternal struct {

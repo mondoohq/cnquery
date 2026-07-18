@@ -7820,6 +7820,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sagemaker.endpoint.config": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerEndpoint).GetConfig()).ToDataRes(types.Dict)
 	},
+	"aws.sagemaker.endpoint.endpointConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpoint).GetEndpointConfig()).ToDataRes(types.Resource("aws.sagemaker.endpointConfig"))
+	},
 	"aws.sagemaker.endpoint.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerEndpoint).GetRegion()).ToDataRes(types.String)
 	},
@@ -7934,11 +7937,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sagemaker.model.primaryContainer": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerModel).GetPrimaryContainer()).ToDataRes(types.Dict)
 	},
+	"aws.sagemaker.model.primaryContainerRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModel).GetPrimaryContainerRef()).ToDataRes(types.Resource("aws.sagemaker.model.container"))
+	},
 	"aws.sagemaker.model.vpcConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerModel).GetVpcConfig()).ToDataRes(types.Dict)
 	},
 	"aws.sagemaker.model.vpc": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerModel).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.sagemaker.model.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModel).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
 	},
 	"aws.sagemaker.model.containers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerModel).GetContainers()).ToDataRes(types.Array(types.Resource("aws.sagemaker.model.container")))
@@ -8293,6 +8302,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sagemaker.domain.executionRoleSessionNameMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerDomain).GetExecutionRoleSessionNameMode()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.domain.dockerAccessEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetDockerAccessEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.sagemaker.domain.rootlessDocker": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetRootlessDocker()).ToDataRes(types.Bool)
+	},
+	"aws.sagemaker.domain.dockerVpcOnlyTrustedAccounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetDockerVpcOnlyTrustedAccounts()).ToDataRes(types.Array(types.String))
+	},
+	"aws.sagemaker.domain.executionRoleIdentityConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetExecutionRoleIdentityConfig()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.domain.domainSecurityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetDomainSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.sagemaker.domain.rstudioDomainExecutionRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetRstudioDomainExecutionRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.sagemaker.domain.amazonQStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetAmazonQStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.domain.amazonQProfileArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetAmazonQProfileArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.domain.defaultUserSecurityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetDefaultUserSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.sagemaker.domain.defaultUserSharedNotebookKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetDefaultUserSharedNotebookKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.sagemaker.domain.defaultSpaceExecutionRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetDefaultSpaceExecutionRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.sagemaker.domain.defaultSpaceSecurityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetDefaultSpaceSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
 	},
 	"aws.sagemaker.inferenceComponent.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerInferenceComponent).GetArn()).ToDataRes(types.String)
@@ -8788,6 +8833,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sagemaker.endpointConfig.asyncInferenceConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerEndpointConfig).GetAsyncInferenceConfig()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.endpointConfig.enableNetworkIsolation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfig).GetEnableNetworkIsolation()).ToDataRes(types.Bool)
+	},
+	"aws.sagemaker.endpointConfig.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfig).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.sagemaker.endpointConfig.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfig).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.sagemaker.endpointConfig.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfig).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.sagemaker.endpointConfig.asyncOutputKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfig).GetAsyncOutputKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.sagemaker.endpointConfig.productionVariant.variantName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerEndpointConfigProductionVariant).GetVariantName()).ToDataRes(types.String)
@@ -39113,6 +39173,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSagemakerEndpoint).Config, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.sagemaker.endpoint.endpointConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpoint).EndpointConfig, ok = plugin.RawToTValue[*mqlAwsSagemakerEndpointConfig](v.Value, v.Error)
+		return
+	},
 	"aws.sagemaker.endpoint.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerEndpoint).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -39281,12 +39345,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSagemakerModel).PrimaryContainer, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.sagemaker.model.primaryContainerRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModel).PrimaryContainerRef, ok = plugin.RawToTValue[*mqlAwsSagemakerModelContainer](v.Value, v.Error)
+		return
+	},
 	"aws.sagemaker.model.vpcConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerModel).VpcConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.model.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerModel).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.model.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModel).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.model.containers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -39791,6 +39863,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sagemaker.domain.executionRoleSessionNameMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerDomain).ExecutionRoleSessionNameMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.dockerAccessEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).DockerAccessEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.rootlessDocker": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).RootlessDocker, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.dockerVpcOnlyTrustedAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).DockerVpcOnlyTrustedAccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.executionRoleIdentityConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).ExecutionRoleIdentityConfig, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.domainSecurityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).DomainSecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.rstudioDomainExecutionRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).RstudioDomainExecutionRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.amazonQStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).AmazonQStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.amazonQProfileArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).AmazonQProfileArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.defaultUserSecurityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).DefaultUserSecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.defaultUserSharedNotebookKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).DefaultUserSharedNotebookKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.defaultSpaceExecutionRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).DefaultSpaceExecutionRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.defaultSpaceSecurityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).DefaultSpaceSecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.inferenceComponent.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -40507,6 +40627,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sagemaker.endpointConfig.asyncInferenceConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerEndpointConfig).AsyncInferenceConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.enableNetworkIsolation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfig).EnableNetworkIsolation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfig).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfig).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfig).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.asyncOutputKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfig).AsyncOutputKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.endpointConfig.productionVariant.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -90748,6 +90888,7 @@ type mqlAwsSagemakerEndpoint struct {
 	Arn                      plugin.TValue[string]
 	Name                     plugin.TValue[string]
 	Config                   plugin.TValue[any]
+	EndpointConfig           plugin.TValue[*mqlAwsSagemakerEndpointConfig]
 	Region                   plugin.TValue[string]
 	Tags                     plugin.TValue[map[string]any]
 	CreatedAt                plugin.TValue[*time.Time]
@@ -90807,6 +90948,22 @@ func (c *mqlAwsSagemakerEndpoint) GetName() *plugin.TValue[string] {
 func (c *mqlAwsSagemakerEndpoint) GetConfig() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.Config, func() (any, error) {
 		return c.config()
+	})
+}
+
+func (c *mqlAwsSagemakerEndpoint) GetEndpointConfig() *plugin.TValue[*mqlAwsSagemakerEndpointConfig] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerEndpointConfig](&c.EndpointConfig, func() (*mqlAwsSagemakerEndpointConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.endpoint", c.__id, "endpointConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerEndpointConfig), nil
+			}
+		}
+
+		return c.endpointConfig()
 	})
 }
 
@@ -91172,8 +91329,10 @@ type mqlAwsSagemakerModel struct {
 	EnableNetworkIsolation   plugin.TValue[bool]
 	IamRole                  plugin.TValue[*mqlAwsIamRole]
 	PrimaryContainer         plugin.TValue[any]
+	PrimaryContainerRef      plugin.TValue[*mqlAwsSagemakerModelContainer]
 	VpcConfig                plugin.TValue[any]
 	Vpc                      plugin.TValue[*mqlAwsVpc]
+	SecurityGroups           plugin.TValue[[]any]
 	Containers               plugin.TValue[[]any]
 	InferenceExecutionConfig plugin.TValue[any]
 }
@@ -91265,6 +91424,22 @@ func (c *mqlAwsSagemakerModel) GetPrimaryContainer() *plugin.TValue[any] {
 	})
 }
 
+func (c *mqlAwsSagemakerModel) GetPrimaryContainerRef() *plugin.TValue[*mqlAwsSagemakerModelContainer] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerModelContainer](&c.PrimaryContainerRef, func() (*mqlAwsSagemakerModelContainer, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.model", c.__id, "primaryContainerRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerModelContainer), nil
+			}
+		}
+
+		return c.primaryContainerRef()
+	})
+}
+
 func (c *mqlAwsSagemakerModel) GetVpcConfig() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.VpcConfig, func() (any, error) {
 		return c.vpcConfig()
@@ -91284,6 +91459,22 @@ func (c *mqlAwsSagemakerModel) GetVpc() *plugin.TValue[*mqlAwsVpc] {
 		}
 
 		return c.vpc()
+	})
+}
+
+func (c *mqlAwsSagemakerModel) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.model", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
 	})
 }
 
@@ -92288,29 +92479,41 @@ type mqlAwsSagemakerDomain struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsSagemakerDomainInternal
-	Arn                            plugin.TValue[string]
-	DomainId                       plugin.TValue[string]
-	Name                           plugin.TValue[string]
-	Region                         plugin.TValue[string]
-	Status                         plugin.TValue[string]
-	Url                            plugin.TValue[string]
-	CreatedAt                      plugin.TValue[*time.Time]
-	LastModifiedAt                 plugin.TValue[*time.Time]
-	Tags                           plugin.TValue[map[string]any]
-	AuthMode                       plugin.TValue[string]
-	AppNetworkAccessType           plugin.TValue[string]
-	Vpc                            plugin.TValue[*mqlAwsVpc]
-	KmsKey                         plugin.TValue[*mqlAwsKmsKey]
-	HomeEfsFileSystemId            plugin.TValue[string]
-	DefaultUserSettings            plugin.TValue[any]
-	SecurityGroupForDomainBoundary plugin.TValue[*mqlAwsEc2Securitygroup]
-	AppSecurityGroupManagement     plugin.TValue[string]
-	TagPropagation                 plugin.TValue[string]
-	SingleSignOnApplicationArn     plugin.TValue[string]
-	FailureReason                  plugin.TValue[string]
-	Subnets                        plugin.TValue[[]any]
-	DefaultExecutionRole           plugin.TValue[*mqlAwsIamRole]
-	ExecutionRoleSessionNameMode   plugin.TValue[string]
+	Arn                             plugin.TValue[string]
+	DomainId                        plugin.TValue[string]
+	Name                            plugin.TValue[string]
+	Region                          plugin.TValue[string]
+	Status                          plugin.TValue[string]
+	Url                             plugin.TValue[string]
+	CreatedAt                       plugin.TValue[*time.Time]
+	LastModifiedAt                  plugin.TValue[*time.Time]
+	Tags                            plugin.TValue[map[string]any]
+	AuthMode                        plugin.TValue[string]
+	AppNetworkAccessType            plugin.TValue[string]
+	Vpc                             plugin.TValue[*mqlAwsVpc]
+	KmsKey                          plugin.TValue[*mqlAwsKmsKey]
+	HomeEfsFileSystemId             plugin.TValue[string]
+	DefaultUserSettings             plugin.TValue[any]
+	SecurityGroupForDomainBoundary  plugin.TValue[*mqlAwsEc2Securitygroup]
+	AppSecurityGroupManagement      plugin.TValue[string]
+	TagPropagation                  plugin.TValue[string]
+	SingleSignOnApplicationArn      plugin.TValue[string]
+	FailureReason                   plugin.TValue[string]
+	Subnets                         plugin.TValue[[]any]
+	DefaultExecutionRole            plugin.TValue[*mqlAwsIamRole]
+	ExecutionRoleSessionNameMode    plugin.TValue[string]
+	DockerAccessEnabled             plugin.TValue[bool]
+	RootlessDocker                  plugin.TValue[bool]
+	DockerVpcOnlyTrustedAccounts    plugin.TValue[[]any]
+	ExecutionRoleIdentityConfig     plugin.TValue[string]
+	DomainSecurityGroups            plugin.TValue[[]any]
+	RstudioDomainExecutionRole      plugin.TValue[*mqlAwsIamRole]
+	AmazonQStatus                   plugin.TValue[string]
+	AmazonQProfileArn               plugin.TValue[string]
+	DefaultUserSecurityGroups       plugin.TValue[[]any]
+	DefaultUserSharedNotebookKmsKey plugin.TValue[*mqlAwsKmsKey]
+	DefaultSpaceExecutionRole       plugin.TValue[*mqlAwsIamRole]
+	DefaultSpaceSecurityGroups      plugin.TValue[[]any]
 }
 
 // createAwsSagemakerDomain creates a new instance of this resource
@@ -92519,6 +92722,138 @@ func (c *mqlAwsSagemakerDomain) GetDefaultExecutionRole() *plugin.TValue[*mqlAws
 func (c *mqlAwsSagemakerDomain) GetExecutionRoleSessionNameMode() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.ExecutionRoleSessionNameMode, func() (string, error) {
 		return c.executionRoleSessionNameMode()
+	})
+}
+
+func (c *mqlAwsSagemakerDomain) GetDockerAccessEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DockerAccessEnabled, func() (bool, error) {
+		return c.dockerAccessEnabled()
+	})
+}
+
+func (c *mqlAwsSagemakerDomain) GetRootlessDocker() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RootlessDocker, func() (bool, error) {
+		return c.rootlessDocker()
+	})
+}
+
+func (c *mqlAwsSagemakerDomain) GetDockerVpcOnlyTrustedAccounts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DockerVpcOnlyTrustedAccounts, func() ([]any, error) {
+		return c.dockerVpcOnlyTrustedAccounts()
+	})
+}
+
+func (c *mqlAwsSagemakerDomain) GetExecutionRoleIdentityConfig() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ExecutionRoleIdentityConfig, func() (string, error) {
+		return c.executionRoleIdentityConfig()
+	})
+}
+
+func (c *mqlAwsSagemakerDomain) GetDomainSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DomainSecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.domain", c.__id, "domainSecurityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.domainSecurityGroups()
+	})
+}
+
+func (c *mqlAwsSagemakerDomain) GetRstudioDomainExecutionRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.RstudioDomainExecutionRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.domain", c.__id, "rstudioDomainExecutionRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.rstudioDomainExecutionRole()
+	})
+}
+
+func (c *mqlAwsSagemakerDomain) GetAmazonQStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AmazonQStatus, func() (string, error) {
+		return c.amazonQStatus()
+	})
+}
+
+func (c *mqlAwsSagemakerDomain) GetAmazonQProfileArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AmazonQProfileArn, func() (string, error) {
+		return c.amazonQProfileArn()
+	})
+}
+
+func (c *mqlAwsSagemakerDomain) GetDefaultUserSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DefaultUserSecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.domain", c.__id, "defaultUserSecurityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.defaultUserSecurityGroups()
+	})
+}
+
+func (c *mqlAwsSagemakerDomain) GetDefaultUserSharedNotebookKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.DefaultUserSharedNotebookKmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.domain", c.__id, "defaultUserSharedNotebookKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.defaultUserSharedNotebookKmsKey()
+	})
+}
+
+func (c *mqlAwsSagemakerDomain) GetDefaultSpaceExecutionRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.DefaultSpaceExecutionRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.domain", c.__id, "defaultSpaceExecutionRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.defaultSpaceExecutionRole()
+	})
+}
+
+func (c *mqlAwsSagemakerDomain) GetDefaultSpaceSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DefaultSpaceSecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.domain", c.__id, "defaultSpaceSecurityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.defaultSpaceSecurityGroups()
 	})
 }
 
@@ -94169,15 +94504,20 @@ type mqlAwsSagemakerEndpointConfig struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsSagemakerEndpointConfigInternal
-	Arn                  plugin.TValue[string]
-	Name                 plugin.TValue[string]
-	Region               plugin.TValue[string]
-	CreatedAt            plugin.TValue[*time.Time]
-	Tags                 plugin.TValue[map[string]any]
-	ProductionVariants   plugin.TValue[[]any]
-	DataCaptureConfig    plugin.TValue[*mqlAwsSagemakerEndpointConfigDataCaptureConfig]
-	KmsKey               plugin.TValue[*mqlAwsKmsKey]
-	AsyncInferenceConfig plugin.TValue[any]
+	Arn                    plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Region                 plugin.TValue[string]
+	CreatedAt              plugin.TValue[*time.Time]
+	Tags                   plugin.TValue[map[string]any]
+	ProductionVariants     plugin.TValue[[]any]
+	DataCaptureConfig      plugin.TValue[*mqlAwsSagemakerEndpointConfigDataCaptureConfig]
+	KmsKey                 plugin.TValue[*mqlAwsKmsKey]
+	AsyncInferenceConfig   plugin.TValue[any]
+	EnableNetworkIsolation plugin.TValue[bool]
+	IamRole                plugin.TValue[*mqlAwsIamRole]
+	Vpc                    plugin.TValue[*mqlAwsVpc]
+	SecurityGroups         plugin.TValue[[]any]
+	AsyncOutputKmsKey      plugin.TValue[*mqlAwsKmsKey]
 }
 
 // createAwsSagemakerEndpointConfig creates a new instance of this resource
@@ -94290,6 +94630,76 @@ func (c *mqlAwsSagemakerEndpointConfig) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey
 func (c *mqlAwsSagemakerEndpointConfig) GetAsyncInferenceConfig() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.AsyncInferenceConfig, func() (any, error) {
 		return c.asyncInferenceConfig()
+	})
+}
+
+func (c *mqlAwsSagemakerEndpointConfig) GetEnableNetworkIsolation() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EnableNetworkIsolation, func() (bool, error) {
+		return c.enableNetworkIsolation()
+	})
+}
+
+func (c *mqlAwsSagemakerEndpointConfig) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.endpointConfig", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsSagemakerEndpointConfig) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.endpointConfig", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAwsSagemakerEndpointConfig) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.endpointConfig", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsSagemakerEndpointConfig) GetAsyncOutputKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.AsyncOutputKmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.endpointConfig", c.__id, "asyncOutputKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.asyncOutputKmsKey()
 	})
 }
 
