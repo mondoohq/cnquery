@@ -326,6 +326,11 @@ func cognitiveServicesAccountToMql(runtime *plugin.Runtime, account *armcognitiv
 				useMSFT = *ni.UseMicrosoftManagedNetwork
 			}
 			mqlNi, err := CreateResource(runtime, "azure.subscription.cognitiveServicesService.account.networkInjection", map[string]*llx.RawData{
+				// The subnet ARM ID alone is not unique: the same subnet can back
+				// more than one injection scenario. Key the cache on subnet+scenario
+				// while keeping the user-facing id the bare subnet ID so subnet()
+				// still resolves.
+				"__id":                       llx.StringData(*ni.SubnetArmID + "/" + scenario),
 				"id":                         llx.StringDataPtr(ni.SubnetArmID),
 				"scenario":                   llx.StringData(scenario),
 				"useMicrosoftManagedNetwork": llx.BoolData(useMSFT),
@@ -405,10 +410,6 @@ func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRule) 
 
 func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRule) subnet() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
 	return cognitiveServicesResolveSubnet(a.MqlRuntime, &a.Subnet, a.Id.Data)
-}
-
-func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountNetworkInjection) id() (string, error) {
-	return a.Id.Data, nil
 }
 
 func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountNetworkInjection) subnet() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
