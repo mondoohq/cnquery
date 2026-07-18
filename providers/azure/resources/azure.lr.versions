@@ -975,6 +975,7 @@ azure.subscription.cognitiveServicesService.account.raiTopic.topicId 13.12.2
 azure.subscription.cognitiveServicesService.account.raiTopic.topicName 13.12.2
 azure.subscription.cognitiveServicesService.account.raiTopics 13.12.2
 azure.subscription.cognitiveServicesService.account.restrictOutboundNetworkAccess 13.11.3
+azure.subscription.cognitiveServicesService.account.roleAssignments 13.31.1
 azure.subscription.cognitiveServicesService.account.sku 13.11.3
 azure.subscription.cognitiveServicesService.account.storedCompletionsDisabled 13.12.2
 azure.subscription.cognitiveServicesService.account.systemMetadata 13.19.2

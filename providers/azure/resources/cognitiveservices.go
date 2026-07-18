@@ -12,6 +12,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	authorization "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cognitiveservices/armcognitiveservices/v3"
 	"github.com/rs/zerolog/log"
 
@@ -402,6 +403,56 @@ type mqlAzureSubscriptionCognitiveServicesServiceAccountInternal struct {
 
 func (a *mqlAzureSubscriptionCognitiveServicesServiceAccount) privateEndpointConnections() ([]any, error) {
 	return azurePrivateEndpointConnectionsToMql(a.MqlRuntime, a.cachePrivateEndpointConnections)
+}
+
+// roleAssignments returns the effective Microsoft Entra role assignments at the
+// account scope. NewListForScopePager with no filter returns assignments at the
+// scope and inherited from the resource group, subscription, and management-
+// group ancestors, so the result reflects effective RBAC access to the account
+// (not just assignments made directly on it).
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccount) roleAssignments() ([]any, error) {
+	conn, ok := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+
+	resourceID, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := authorization.NewRoleAssignmentsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	pager := client.NewListForScopePager(a.Id.Data, &authorization.RoleAssignmentsClientListForScopeOptions{})
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list cognitive services account role assignments due to access denied")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, roleAssignment := range page.Value {
+			if roleAssignment == nil {
+				continue
+			}
+			mqlRoleAssignment, err := newMqlRoleAssignment(a.MqlRuntime, roleAssignment)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlRoleAssignment)
+		}
+	}
+	return res, nil
 }
 
 func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRule) id() (string, error) {

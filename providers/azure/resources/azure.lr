@@ -13637,6 +13637,15 @@ azure.subscription.cognitiveServicesService.account @defaults("id name location 
   connections() []azure.subscription.cognitiveServicesService.account.connection
   // Private endpoint connections to the account
   privateEndpointConnections() []azure.subscription.privateEndpointConnection
+  // Microsoft Entra role assignments granting access to the account
+  //
+  // The effective role assignments at the account scope, including those
+  // inherited from the resource group, subscription, and management-group
+  // ancestors. Combined with disableLocalAuth (API-key authentication), this
+  // answers who can call and administer the account through Entra RBAC (for
+  // example who holds Cognitive Services User or Cognitive Services
+  // Contributor).
+  roleAssignments() []azure.subscription.authorizationService.roleAssignment
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }

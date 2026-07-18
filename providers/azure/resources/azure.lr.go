@@ -17487,6 +17487,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cognitiveServicesService.account.privateEndpointConnections": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetPrivateEndpointConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.privateEndpointConnection")))
 	},
+	"azure.subscription.cognitiveServicesService.account.roleAssignments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetRoleAssignments()).ToDataRes(types.Array(types.Resource("azure.subscription.authorizationService.roleAssignment")))
+	},
 	"azure.subscription.cognitiveServicesService.account.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
@@ -40287,6 +40290,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cognitiveServicesService.account.privateEndpointConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).PrivateEndpointConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.roleAssignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).RoleAssignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cognitiveServicesService.account.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -94788,6 +94795,7 @@ type mqlAzureSubscriptionCognitiveServicesServiceAccount struct {
 	Projects                        plugin.TValue[[]any]
 	Connections                     plugin.TValue[[]any]
 	PrivateEndpointConnections      plugin.TValue[[]any]
+	RoleAssignments                 plugin.TValue[[]any]
 	SystemMetadata                  plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -95071,6 +95079,22 @@ func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetPrivateEndpoint
 		}
 
 		return c.privateEndpointConnections()
+	})
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetRoleAssignments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RoleAssignments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cognitiveServicesService.account", c.__id, "roleAssignments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.roleAssignments()
 	})
 }
 
