@@ -101,6 +101,8 @@ Notes:
 				resources.DiscoverySagemakerNotebookInstances,
 				resources.DiscoverySagemakerProcessingJobs,
 				resources.DiscoverySagemakerTrainingJobs,
+				resources.DiscoverySagemakerDomains,
+				resources.DiscoverySagemakerModels,
 				resources.DiscoverySecretsManagerSecrets,
 				resources.DiscoverySecurityGroups,
 				resources.DiscoverySSMInstances,

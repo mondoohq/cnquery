@@ -37,6 +37,8 @@ var Platforms = []*plugin.PlatformInfo{
 	{Name: "aws-sagemaker-notebookinstance", Title: "AWS SageMaker Notebook Instance", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
 	{Name: "aws-sagemaker-processingjob", Title: "AWS SageMaker Processing Job", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
 	{Name: "aws-sagemaker-trainingjob", Title: "AWS SageMaker Training Job", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
+	{Name: "aws-sagemaker-domain", Title: "AWS SageMaker Domain", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
+	{Name: "aws-sagemaker-model", Title: "AWS SageMaker Model", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
 	{Name: "aws-ec2-instance", Title: "AWS EC2 Instance", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
 	{Name: "aws-ssm-instance", Title: "AWS SSM Instance", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
 	{Name: "aws-ecr-image", Title: "AWS ECR Image", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},

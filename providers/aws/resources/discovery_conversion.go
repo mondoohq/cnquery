@@ -202,6 +202,10 @@ func getPlatformName(awsObject awsObject) string {
 			return "aws-sagemaker-processingjob"
 		case "trainingjob":
 			return "aws-sagemaker-trainingjob"
+		case "domain":
+			return "aws-sagemaker-domain"
+		case "model":
+			return "aws-sagemaker-model"
 		}
 	case "secretsmanager":
 		if awsObject.objectType == "secret" {

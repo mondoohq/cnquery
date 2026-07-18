@@ -59,6 +59,8 @@ const (
 	DiscoverySagemakerNotebookInstances  = "sagemaker-notebookinstances"
 	DiscoverySagemakerProcessingJobs     = "sagemaker-processingjobs"
 	DiscoverySagemakerTrainingJobs       = "sagemaker-trainingjobs"
+	DiscoverySagemakerDomains            = "sagemaker-domains"
+	DiscoverySagemakerModels             = "sagemaker-models"
 	DiscoverySecretsManagerSecrets       = "secretsmanager-secrets"
 	DiscoveryElasticacheClusters         = "elasticache-clusters"
 	DiscoveryCloudfrontDistributions     = "cloudfront-distributions"
@@ -112,6 +114,8 @@ var AllAPIResources = []string{
 	DiscoverySagemakerNotebookInstances,
 	DiscoverySagemakerProcessingJobs,
 	DiscoverySagemakerTrainingJobs,
+	DiscoverySagemakerDomains,
+	DiscoverySagemakerModels,
 	DiscoverySecretsManagerSecrets,
 	DiscoveryElasticacheClusters,
 	DiscoveryCloudfrontDistributions,
@@ -1281,6 +1285,58 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 				awsObject: awsObject{
 					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
 					id: f.Name.Data, service: "sagemaker", objectType: "trainingjob",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+	case DiscoverySagemakerDomains:
+		res, err := NewResource(runtime, "aws.sagemaker", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		sm := res.(*mqlAwsSagemaker)
+
+		domains := sm.GetDomains()
+		if domains == nil {
+			return assetList, nil
+		}
+
+		for i := range domains.Data {
+			f := domains.Data[i].(*mqlAwsSagemakerDomain)
+
+			tags := mapStringInterfaceToStringString(f.GetTags().Data)
+			m := mqlObject{
+				name: f.Name.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Name.Data, service: "sagemaker", objectType: "domain",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+	case DiscoverySagemakerModels:
+		res, err := NewResource(runtime, "aws.sagemaker", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		sm := res.(*mqlAwsSagemaker)
+
+		models := sm.GetModels()
+		if models == nil {
+			return assetList, nil
+		}
+
+		for i := range models.Data {
+			f := models.Data[i].(*mqlAwsSagemakerModel)
+
+			tags := mapStringInterfaceToStringString(f.GetTags().Data)
+			m := mqlObject{
+				name: f.Name.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Name.Data, service: "sagemaker", objectType: "model",
 				},
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))

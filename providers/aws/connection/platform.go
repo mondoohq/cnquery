@@ -91,6 +91,10 @@ func getServiceName(platformName string) string {
 		return "sagemaker"
 	case "aws-sagemaker-trainingjob":
 		return "sagemaker"
+	case "aws-sagemaker-domain":
+		return "sagemaker"
+	case "aws-sagemaker-model":
+		return "sagemaker"
 	case "aws-ec2-instance":
 		return "ec2"
 	case "aws-ssm-instance":
