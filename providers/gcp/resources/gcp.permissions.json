@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
-  "version": "13.31.1",
-  "generated_at": "2026-07-16T14:01:00+03:00",
+  "version": "13.31.2",
+  "generated_at": "2026-07-18T07:10:09-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.batchPredictionJobs.list",
@@ -171,6 +171,8 @@
     "dns.policies.list",
     "dns.resourceRecordSets.list",
     "dns.responsePolicies.list",
+    "documentai.processorVersions.list",
+    "documentai.processors.list",
     "domains.registrations.list",
     "essentialcontacts.contacts.list",
     "eventarc.channels.list",
@@ -1327,6 +1329,18 @@
       "service": "dns",
       "action": "ResponsePolicies.List",
       "source_file": "dns.go"
+    },
+    {
+      "permission": "documentai.processorVersions.list",
+      "service": "documentai",
+      "action": "ListProcessorVersions",
+      "source_file": "documentai.go"
+    },
+    {
+      "permission": "documentai.processors.list",
+      "service": "documentai",
+      "action": "ListProcessors",
+      "source_file": "documentai.go"
     },
     {
       "permission": "domains.registrations.list",

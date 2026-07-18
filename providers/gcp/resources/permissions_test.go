@@ -206,6 +206,8 @@ var validatedGCPPermissions = []string{
 	"dns.policies.list",
 	"dns.resourceRecordSets.list",
 	"dns.responsePolicies.list",
+	"documentai.processorVersions.list",
+	"documentai.processors.list",
 	// Real and required (Cloud Domains), but customRolesSupportLevel is
 	// NOT_SUPPORTED: GCP grants it only via a predefined role (roles/domains.viewer),
 	// never a custom role. It is therefore absent from list-testable-permissions and

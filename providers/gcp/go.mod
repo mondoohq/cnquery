@@ -25,6 +25,7 @@ require (
 	cloud.google.com/go/deploy v1.33.0
 	cloud.google.com/go/discoveryengine v1.31.0
 	cloud.google.com/go/dlp v1.36.0
+	cloud.google.com/go/documentai v1.49.0
 	cloud.google.com/go/eventarc v1.25.0
 	cloud.google.com/go/filestore v1.16.0
 	cloud.google.com/go/firestore v1.24.0

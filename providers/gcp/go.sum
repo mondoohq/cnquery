@@ -89,6 +89,8 @@ cloud.google.com/go/discoveryengine v1.31.0 h1:u5KDz6B/6Wu7WMVw95oBegV/3pA6JEE7T
 cloud.google.com/go/discoveryengine v1.31.0/go.mod h1:H5dyX1t0Y89kJF/JuwHcE4tiE9/lHFChLwxvZJc6aJw=
 cloud.google.com/go/dlp v1.36.0 h1:2KOeg+++hpyln8WvbVZGTdgtXxWzpiKQ3re+3dPj5ts=
 cloud.google.com/go/dlp v1.36.0/go.mod h1:UW92dBhxvqkSKLct+Ril7Y9B4CanS5VLuDwlTGVA9VQ=
+cloud.google.com/go/documentai v1.49.0 h1:WLZOaWvK4NH7xMLxANsDgIdXugeqmVyYRCbVN1m87DQ=
+cloud.google.com/go/documentai v1.49.0/go.mod h1:VyQA+SxPnCPlVLSJ5UcFx+LQm8JCzK7uUXdkOaAHvG8=
 cloud.google.com/go/eventarc v1.25.0 h1:+XAJNEmxJIPZLMtzLYdUZN61Kmqx62hWLry4AsWaTwo=
 cloud.google.com/go/eventarc v1.25.0/go.mod h1:ncY2NKHKiX+sUjIfxVozrivvmJQ4HWo2znxms7AxlP8=
 cloud.google.com/go/filestore v1.16.0 h1:2GXy5jvq2oUX6HnCpx3GjzSqlcMz8K9gkHaF9HPcYNE=

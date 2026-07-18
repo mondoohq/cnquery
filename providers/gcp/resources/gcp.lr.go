@@ -391,6 +391,9 @@ const (
 	ResourceGcpProjectDiscoveryEngineService                                           string = "gcp.project.discoveryEngineService"
 	ResourceGcpProjectDiscoveryEngineServiceDataStore                                  string = "gcp.project.discoveryEngineService.dataStore"
 	ResourceGcpProjectDiscoveryEngineServiceEngine                                     string = "gcp.project.discoveryEngineService.engine"
+	ResourceGcpProjectDocumentaiService                                                string = "gcp.project.documentaiService"
+	ResourceGcpProjectDocumentaiServiceProcessor                                       string = "gcp.project.documentaiService.processor"
+	ResourceGcpProjectDocumentaiServiceProcessorVersion                                string = "gcp.project.documentaiService.processor.version"
 	ResourceGcpProjectEventarcService                                                  string = "gcp.project.eventarcService"
 	ResourceGcpProjectEventarcServiceTrigger                                           string = "gcp.project.eventarcService.trigger"
 	ResourceGcpProjectEventarcServiceTriggerEventFilter                                string = "gcp.project.eventarcService.trigger.eventFilter"
@@ -1975,6 +1978,18 @@ func init() {
 			// to override args, implement: initGcpProjectDiscoveryEngineServiceEngine(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectDiscoveryEngineServiceEngine,
 		},
+		"gcp.project.documentaiService": {
+			Init:   initGcpProjectDocumentaiService,
+			Create: createGcpProjectDocumentaiService,
+		},
+		"gcp.project.documentaiService.processor": {
+			// to override args, implement: initGcpProjectDocumentaiServiceProcessor(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectDocumentaiServiceProcessor,
+		},
+		"gcp.project.documentaiService.processor.version": {
+			// to override args, implement: initGcpProjectDocumentaiServiceProcessorVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectDocumentaiServiceProcessorVersion,
+		},
 		"gcp.project.eventarcService": {
 			Init:   initGcpProjectEventarcService,
 			Create: createGcpProjectEventarcService,
@@ -3239,6 +3254,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.discoveryEngine": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetDiscoveryEngine()).ToDataRes(types.Resource("gcp.project.discoveryEngineService"))
+	},
+	"gcp.project.documentai": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetDocumentai()).ToDataRes(types.Resource("gcp.project.documentaiService"))
 	},
 	"gcp.project.sccFindings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetSccFindings()).ToDataRes(types.Array(types.Resource("gcp.scc.finding")))
@@ -15492,6 +15510,75 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.discoveryEngineService.engine.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDiscoveryEngineServiceEngine).GetUpdatedAt()).ToDataRes(types.Time)
 	},
+	"gcp.project.documentaiService.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDocumentaiService).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.documentaiService.processors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDocumentaiService).GetProcessors()).ToDataRes(types.Array(types.Resource("gcp.project.documentaiService.processor")))
+	},
+	"gcp.project.documentaiService.processor.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDocumentaiServiceProcessor).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.documentaiService.processor.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDocumentaiServiceProcessor).GetType()).ToDataRes(types.String)
+	},
+	"gcp.project.documentaiService.processor.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDocumentaiServiceProcessor).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.documentaiService.processor.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDocumentaiServiceProcessor).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.documentaiService.processor.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDocumentaiServiceProcessor).GetLocation()).ToDataRes(types.String)
+	},
+	"gcp.project.documentaiService.processor.processEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDocumentaiServiceProcessor).GetProcessEndpoint()).ToDataRes(types.String)
+	},
+	"gcp.project.documentaiService.processor.defaultProcessorVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDocumentaiServiceProcessor).GetDefaultProcessorVersion()).ToDataRes(types.String)
+	},
+	"gcp.project.documentaiService.processor.satisfiesPzs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDocumentaiServiceProcessor).GetSatisfiesPzs()).ToDataRes(types.Bool)
+	},
+	"gcp.project.documentaiService.processor.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDocumentaiServiceProcessor).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
+	"gcp.project.documentaiService.processor.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDocumentaiServiceProcessor).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.documentaiService.processor.versions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDocumentaiServiceProcessor).GetVersions()).ToDataRes(types.Array(types.Resource("gcp.project.documentaiService.processor.version")))
+	},
+	"gcp.project.documentaiService.processor.version.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDocumentaiServiceProcessorVersion).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.documentaiService.processor.version.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDocumentaiServiceProcessorVersion).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.documentaiService.processor.version.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDocumentaiServiceProcessorVersion).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.documentaiService.processor.version.googleManaged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDocumentaiServiceProcessorVersion).GetGoogleManaged()).ToDataRes(types.Bool)
+	},
+	"gcp.project.documentaiService.processor.version.modelType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDocumentaiServiceProcessorVersion).GetModelType()).ToDataRes(types.String)
+	},
+	"gcp.project.documentaiService.processor.version.deprecated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDocumentaiServiceProcessorVersion).GetDeprecated()).ToDataRes(types.Bool)
+	},
+	"gcp.project.documentaiService.processor.version.deprecationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDocumentaiServiceProcessorVersion).GetDeprecationTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.documentaiService.processor.version.replacementVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDocumentaiServiceProcessorVersion).GetReplacementVersion()).ToDataRes(types.String)
+	},
+	"gcp.project.documentaiService.processor.version.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDocumentaiServiceProcessorVersion).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
+	"gcp.project.documentaiService.processor.version.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDocumentaiServiceProcessorVersion).GetCreatedAt()).ToDataRes(types.Time)
+	},
 	"gcp.project.eventarcService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectEventarcService).GetProjectId()).ToDataRes(types.String)
 	},
@@ -18815,6 +18902,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.discoveryEngine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProject).DiscoveryEngine, ok = plugin.RawToTValue[*mqlGcpProjectDiscoveryEngineService](v.Value, v.Error)
+		return
+	},
+	"gcp.project.documentai": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).Documentai, ok = plugin.RawToTValue[*mqlGcpProjectDocumentaiService](v.Value, v.Error)
 		return
 	},
 	"gcp.project.sccFindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -36565,6 +36656,110 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectDiscoveryEngineServiceEngine).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"gcp.project.documentaiService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDocumentaiService).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.documentaiService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDocumentaiService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.documentaiService.processors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDocumentaiService).Processors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.documentaiService.processor.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDocumentaiServiceProcessor).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.documentaiService.processor.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDocumentaiServiceProcessor).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.documentaiService.processor.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDocumentaiServiceProcessor).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.documentaiService.processor.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDocumentaiServiceProcessor).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.documentaiService.processor.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDocumentaiServiceProcessor).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.documentaiService.processor.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDocumentaiServiceProcessor).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.documentaiService.processor.processEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDocumentaiServiceProcessor).ProcessEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.documentaiService.processor.defaultProcessorVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDocumentaiServiceProcessor).DefaultProcessorVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.documentaiService.processor.satisfiesPzs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDocumentaiServiceProcessor).SatisfiesPzs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.documentaiService.processor.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDocumentaiServiceProcessor).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
+	"gcp.project.documentaiService.processor.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDocumentaiServiceProcessor).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.documentaiService.processor.versions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDocumentaiServiceProcessor).Versions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.documentaiService.processor.version.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDocumentaiServiceProcessorVersion).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.documentaiService.processor.version.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDocumentaiServiceProcessorVersion).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.documentaiService.processor.version.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDocumentaiServiceProcessorVersion).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.documentaiService.processor.version.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDocumentaiServiceProcessorVersion).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.documentaiService.processor.version.googleManaged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDocumentaiServiceProcessorVersion).GoogleManaged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.documentaiService.processor.version.modelType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDocumentaiServiceProcessorVersion).ModelType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.documentaiService.processor.version.deprecated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDocumentaiServiceProcessorVersion).Deprecated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.documentaiService.processor.version.deprecationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDocumentaiServiceProcessorVersion).DeprecationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.documentaiService.processor.version.replacementVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDocumentaiServiceProcessorVersion).ReplacementVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.documentaiService.processor.version.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDocumentaiServiceProcessorVersion).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
+	"gcp.project.documentaiService.processor.version.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDocumentaiServiceProcessorVersion).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"gcp.project.eventarcService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectEventarcService).__id, ok = v.Value.(string)
 		return
@@ -42346,6 +42541,7 @@ type mqlGcpProject struct {
 	ModelArmor               plugin.TValue[*mqlGcpProjectModelArmorService]
 	IdentityPlatform         plugin.TValue[*mqlGcpProjectIdentityPlatformService]
 	DiscoveryEngine          plugin.TValue[*mqlGcpProjectDiscoveryEngineService]
+	Documentai               plugin.TValue[*mqlGcpProjectDocumentaiService]
 	SccFindings              plugin.TValue[[]any]
 	Eventarc                 plugin.TValue[*mqlGcpProjectEventarcService]
 	Dlp                      plugin.TValue[*mqlGcpProjectDlpService]
@@ -43242,6 +43438,22 @@ func (c *mqlGcpProject) GetDiscoveryEngine() *plugin.TValue[*mqlGcpProjectDiscov
 		}
 
 		return c.discoveryEngine()
+	})
+}
+
+func (c *mqlGcpProject) GetDocumentai() *plugin.TValue[*mqlGcpProjectDocumentaiService] {
+	return plugin.GetOrCompute[*mqlGcpProjectDocumentaiService](&c.Documentai, func() (*mqlGcpProjectDocumentaiService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "documentai")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectDocumentaiService), nil
+			}
+		}
+
+		return c.documentai()
 	})
 }
 
@@ -85276,6 +85488,301 @@ func (c *mqlGcpProjectDiscoveryEngineServiceEngine) GetCreatedAt() *plugin.TValu
 
 func (c *mqlGcpProjectDiscoveryEngineServiceEngine) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
+}
+
+// mqlGcpProjectDocumentaiService for the gcp.project.documentaiService resource
+type mqlGcpProjectDocumentaiService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectDocumentaiServiceInternal it will be used here
+	ProjectId  plugin.TValue[string]
+	Processors plugin.TValue[[]any]
+}
+
+// createGcpProjectDocumentaiService creates a new instance of this resource
+func createGcpProjectDocumentaiService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDocumentaiService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.documentaiService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDocumentaiService) MqlName() string {
+	return "gcp.project.documentaiService"
+}
+
+func (c *mqlGcpProjectDocumentaiService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDocumentaiService) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectDocumentaiService) GetProcessors() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Processors, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.documentaiService", c.__id, "processors")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.processors()
+	})
+}
+
+// mqlGcpProjectDocumentaiServiceProcessor for the gcp.project.documentaiService.processor resource
+type mqlGcpProjectDocumentaiServiceProcessor struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectDocumentaiServiceProcessorInternal
+	Name                    plugin.TValue[string]
+	Type                    plugin.TValue[string]
+	DisplayName             plugin.TValue[string]
+	State                   plugin.TValue[string]
+	Location                plugin.TValue[string]
+	ProcessEndpoint         plugin.TValue[string]
+	DefaultProcessorVersion plugin.TValue[string]
+	SatisfiesPzs            plugin.TValue[bool]
+	KmsKey                  plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	CreatedAt               plugin.TValue[*time.Time]
+	Versions                plugin.TValue[[]any]
+}
+
+// createGcpProjectDocumentaiServiceProcessor creates a new instance of this resource
+func createGcpProjectDocumentaiServiceProcessor(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDocumentaiServiceProcessor{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.documentaiService.processor", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDocumentaiServiceProcessor) MqlName() string {
+	return "gcp.project.documentaiService.processor"
+}
+
+func (c *mqlGcpProjectDocumentaiServiceProcessor) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDocumentaiServiceProcessor) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectDocumentaiServiceProcessor) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlGcpProjectDocumentaiServiceProcessor) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectDocumentaiServiceProcessor) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectDocumentaiServiceProcessor) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlGcpProjectDocumentaiServiceProcessor) GetProcessEndpoint() *plugin.TValue[string] {
+	return &c.ProcessEndpoint
+}
+
+func (c *mqlGcpProjectDocumentaiServiceProcessor) GetDefaultProcessorVersion() *plugin.TValue[string] {
+	return &c.DefaultProcessorVersion
+}
+
+func (c *mqlGcpProjectDocumentaiServiceProcessor) GetSatisfiesPzs() *plugin.TValue[bool] {
+	return &c.SatisfiesPzs
+}
+
+func (c *mqlGcpProjectDocumentaiServiceProcessor) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.documentaiService.processor", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlGcpProjectDocumentaiServiceProcessor) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGcpProjectDocumentaiServiceProcessor) GetVersions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Versions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.documentaiService.processor", c.__id, "versions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.versions()
+	})
+}
+
+// mqlGcpProjectDocumentaiServiceProcessorVersion for the gcp.project.documentaiService.processor.version resource
+type mqlGcpProjectDocumentaiServiceProcessorVersion struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectDocumentaiServiceProcessorVersionInternal
+	Name               plugin.TValue[string]
+	DisplayName        plugin.TValue[string]
+	State              plugin.TValue[string]
+	GoogleManaged      plugin.TValue[bool]
+	ModelType          plugin.TValue[string]
+	Deprecated         plugin.TValue[bool]
+	DeprecationTime    plugin.TValue[*time.Time]
+	ReplacementVersion plugin.TValue[string]
+	KmsKey             plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	CreatedAt          plugin.TValue[*time.Time]
+}
+
+// createGcpProjectDocumentaiServiceProcessorVersion creates a new instance of this resource
+func createGcpProjectDocumentaiServiceProcessorVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDocumentaiServiceProcessorVersion{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.documentaiService.processor.version", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDocumentaiServiceProcessorVersion) MqlName() string {
+	return "gcp.project.documentaiService.processor.version"
+}
+
+func (c *mqlGcpProjectDocumentaiServiceProcessorVersion) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDocumentaiServiceProcessorVersion) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectDocumentaiServiceProcessorVersion) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectDocumentaiServiceProcessorVersion) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectDocumentaiServiceProcessorVersion) GetGoogleManaged() *plugin.TValue[bool] {
+	return &c.GoogleManaged
+}
+
+func (c *mqlGcpProjectDocumentaiServiceProcessorVersion) GetModelType() *plugin.TValue[string] {
+	return &c.ModelType
+}
+
+func (c *mqlGcpProjectDocumentaiServiceProcessorVersion) GetDeprecated() *plugin.TValue[bool] {
+	return &c.Deprecated
+}
+
+func (c *mqlGcpProjectDocumentaiServiceProcessorVersion) GetDeprecationTime() *plugin.TValue[*time.Time] {
+	return &c.DeprecationTime
+}
+
+func (c *mqlGcpProjectDocumentaiServiceProcessorVersion) GetReplacementVersion() *plugin.TValue[string] {
+	return &c.ReplacementVersion
+}
+
+func (c *mqlGcpProjectDocumentaiServiceProcessorVersion) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.documentaiService.processor.version", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlGcpProjectDocumentaiServiceProcessorVersion) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 // mqlGcpProjectEventarcService for the gcp.project.eventarcService resource

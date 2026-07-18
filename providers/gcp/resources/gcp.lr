@@ -836,6 +836,8 @@ gcp.project @defaults("name number") {
   identityPlatform() gcp.project.identityPlatformService
   // GCP Discovery Engine (AI Applications / Agentspace) resources
   discoveryEngine() gcp.project.discoveryEngineService
+  // GCP Document AI resources
+  documentai() gcp.project.documentaiService
   // Security Command Center findings for this project (active findings only)
   sccFindings() []gcp.scc.finding
   // GCP Eventarc resources
@@ -13238,6 +13240,80 @@ private gcp.project.discoveryEngineService.engine @defaults("displayName solutio
   createdAt time
   // Last update time
   updatedAt time
+}
+
+private gcp.project.documentaiService {
+  // Project ID
+  projectId string
+  // Document AI processors across all available locations
+  processors() []gcp.project.documentaiService.processor
+}
+
+// Google Cloud Document AI processor
+//
+// Deployed processor that extracts structured data from documents. Select a
+// processor by its resource name. The type field identifies the processor
+// family, such as OCR_PROCESSOR or FORM_PARSER_PROCESSOR, kmsKey resolves any
+// customer-managed encryption key protecting it, and versions enumerates the
+// model versions behind the processor, including any scheduled for deprecation.
+private gcp.project.documentaiService.processor @defaults("displayName type state location") {
+  // Resource name (projects/{project}/locations/{location}/processors/{id})
+  name string
+  // Processor type, for example OCR_PROCESSOR, FORM_PARSER_PROCESSOR, or CUSTOM_EXTRACTION_PROCESSOR
+  type string
+  // Human-readable display name
+  displayName string
+  // Provisioning state
+  //
+  // One of ENABLED, DISABLED, ENABLING, DISABLING, CREATING, DELETING, or FAILED.
+  state string
+  // Location the processor runs in, for example us or eu
+  location string
+  // Immutable prediction endpoint used to process documents
+  processEndpoint string
+  // Resource name of the default processor version
+  defaultProcessorVersion string
+  // Whether the processor satisfies data-residency (Physical Zone Separation) requirements
+  satisfiesPzs bool
+  // Customer-managed encryption key protecting the processor
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // Creation timestamp
+  createdAt time
+  // Model versions of the processor
+  versions() []gcp.project.documentaiService.processor.version
+}
+
+// Google Cloud Document AI processor version
+//
+// Single trained model version of a processor. Select a version by its resource
+// name. googleManaged distinguishes pretrained Google models from user-trained
+// ones, deprecated and deprecationTime flag versions Google is retiring, and
+// replacementVersion names the version Google recommends moving to.
+private gcp.project.documentaiService.processor.version @defaults("displayName state modelType") {
+  // Resource name
+  name string
+  // Human-readable display name
+  displayName string
+  // Deployment state
+  //
+  // One of DEPLOYED, UNDEPLOYED, DEPLOYING, UNDEPLOYING, CREATING, DELETING, IMPORTING, or FAILED.
+  state string
+  // Whether the version is a pretrained model managed by Google
+  googleManaged bool
+  // Model type
+  //
+  // One of MODEL_TYPE_GENERATIVE, MODEL_TYPE_CUSTOM, or MODEL_TYPE_UNSPECIFIED.
+  modelType string
+  // Whether the version is scheduled for deprecation
+  deprecated bool
+  // Time the version is scheduled to be, or was, deprecated
+  deprecationTime time
+  // Resource name of the processor version Google recommends as a replacement
+  replacementVersion string
+  // Customer-managed encryption key protecting the version
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // Creation timestamp
+  createdAt time
 }
 
 // ============================================================
