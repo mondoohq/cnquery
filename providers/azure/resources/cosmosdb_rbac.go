@@ -7,8 +7,10 @@ import (
 	"context"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	azruntime "github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
 	cosmos "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos/v4"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/azure/connection"
 	"go.mondoo.com/mql/v13/types"
@@ -28,37 +30,61 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccount) cosmosAccountRef() (*Resour
 	return rid, accountName, nil
 }
 
-// cosmosRoleDefinitionArgs maps a Cosmos data-plane role definition to MQL args.
-// The Cassandra, Gremlin, Table, and MongoMI role definitions all share the
-// same RoleDefinitionType enum and Permission type, so a single builder covers
-// every API surface.
-func cosmosRoleDefinitionArgs(id, name, typ, roleName *string, roleType *cosmos.RoleDefinitionType, assignable []*string, perms []*cosmos.Permission) (map[string]*llx.RawData, error) {
+// cosmosRoleDefinition is the normalized shape of a Cosmos data-plane role
+// definition. The Cassandra, Gremlin, Table, and MongoMI SDK resource types are
+// structurally identical but share no Go interface, so each accessor maps its
+// concrete type into this struct for the shared collector below.
+type cosmosRoleDefinition struct {
+	id, name, typ *string
+	systemData    *cosmos.SystemData
+	roleName      *string
+	roleType      *cosmos.RoleDefinitionType
+	scopes        []*string
+	permissions   []*cosmos.Permission
+}
+
+// cosmosRoleAssignment is the normalized shape of a Cosmos data-plane role
+// assignment (see cosmosRoleDefinition for why it exists).
+type cosmosRoleAssignment struct {
+	id, name, typ     *string
+	systemData        *cosmos.SystemData
+	principalID       *string
+	roleDefinitionID  *string
+	scope             *string
+	provisioningState *string
+}
+
+// cosmosRoleDefinitionArgs maps a normalized role definition to MQL resource
+// args: the roleType enum is coerced to its string form, nil fields default to
+// empty, nil scope/permission entries are dropped, and each permission is
+// converted to a dict. Kept as a pure function so it can be unit-tested without
+// a live pager.
+func cosmosRoleDefinitionArgs(d cosmosRoleDefinition) (map[string]*llx.RawData, error) {
 	args := map[string]*llx.RawData{
-		"__id":             llx.StringDataPtr(id),
-		"id":               llx.StringDataPtr(id),
-		"name":             llx.StringDataPtr(name),
-		"type":             llx.StringDataPtr(typ),
+		"__id":             llx.StringDataPtr(d.id),
+		"id":               llx.StringDataPtr(d.id),
+		"name":             llx.StringDataPtr(d.name),
+		"type":             llx.StringDataPtr(d.typ),
 		"roleName":         llx.StringData(""),
 		"roleType":         llx.StringData(""),
 		"assignableScopes": llx.ArrayData([]any{}, types.String),
 		"permissions":      llx.ArrayData([]any{}, types.Dict),
 	}
-	if roleName != nil {
-		args["roleName"] = llx.StringDataPtr(roleName)
+	if d.roleName != nil {
+		args["roleName"] = llx.StringDataPtr(d.roleName)
 	}
-	if roleType != nil {
-		args["roleType"] = llx.StringData(string(*roleType))
+	if d.roleType != nil {
+		args["roleType"] = llx.StringData(string(*d.roleType))
 	}
 	scopes := []any{}
-	for _, s := range assignable {
+	for _, s := range d.scopes {
 		if s != nil {
 			scopes = append(scopes, *s)
 		}
 	}
 	args["assignableScopes"] = llx.ArrayData(scopes, types.String)
-
-	permList := []any{}
-	for _, p := range perms {
+	perms := []any{}
+	for _, p := range d.permissions {
 		if p == nil {
 			continue
 		}
@@ -66,37 +92,116 @@ func cosmosRoleDefinitionArgs(id, name, typ, roleName *string, roleType *cosmos.
 		if err != nil {
 			return nil, err
 		}
-		permList = append(permList, m)
+		perms = append(perms, m)
 	}
-	args["permissions"] = llx.ArrayData(permList, types.Dict)
+	args["permissions"] = llx.ArrayData(perms, types.Dict)
 	return args, nil
 }
 
-// cosmosRoleAssignmentArgs maps a Cosmos data-plane role assignment to MQL args.
-func cosmosRoleAssignmentArgs(id, name, typ, principalID, roleDefinitionID, scope, provisioningState *string) map[string]*llx.RawData {
+// cosmosRoleAssignmentArgs maps a normalized role assignment to MQL resource
+// args (see cosmosRoleDefinitionArgs for the conventions).
+func cosmosRoleAssignmentArgs(ra cosmosRoleAssignment) map[string]*llx.RawData {
 	args := map[string]*llx.RawData{
-		"__id":              llx.StringDataPtr(id),
-		"id":                llx.StringDataPtr(id),
-		"name":              llx.StringDataPtr(name),
-		"type":              llx.StringDataPtr(typ),
+		"__id":              llx.StringDataPtr(ra.id),
+		"id":                llx.StringDataPtr(ra.id),
+		"name":              llx.StringDataPtr(ra.name),
+		"type":              llx.StringDataPtr(ra.typ),
 		"principalId":       llx.StringData(""),
 		"roleDefinitionId":  llx.StringData(""),
 		"scope":             llx.StringData(""),
 		"provisioningState": llx.StringData(""),
 	}
-	if principalID != nil {
-		args["principalId"] = llx.StringDataPtr(principalID)
+	if ra.principalID != nil {
+		args["principalId"] = llx.StringDataPtr(ra.principalID)
 	}
-	if roleDefinitionID != nil {
-		args["roleDefinitionId"] = llx.StringDataPtr(roleDefinitionID)
+	if ra.roleDefinitionID != nil {
+		args["roleDefinitionId"] = llx.StringDataPtr(ra.roleDefinitionID)
 	}
-	if scope != nil {
-		args["scope"] = llx.StringDataPtr(scope)
+	if ra.scope != nil {
+		args["scope"] = llx.StringDataPtr(ra.scope)
 	}
-	if provisioningState != nil {
-		args["provisioningState"] = llx.StringDataPtr(provisioningState)
+	if ra.provisioningState != nil {
+		args["provisioningState"] = llx.StringDataPtr(ra.provisioningState)
 	}
 	return args
+}
+
+// collectCosmosRoleDefinitions drains a role-definition pager into MQL resources.
+// values extracts the page items, extract normalizes each SDK item, and setCache
+// stores the resource's SystemData on its concrete Internal struct.
+func collectCosmosRoleDefinitions[P, T any](
+	runtime *plugin.Runtime,
+	ctx context.Context,
+	resource string,
+	pager *azruntime.Pager[P],
+	values func(P) []*T,
+	extract func(*T) cosmosRoleDefinition,
+	setCache func(plugin.Resource, any),
+) ([]any, error) {
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, item := range values(page) {
+			if item == nil {
+				continue
+			}
+			d := extract(item)
+			args, err := cosmosRoleDefinitionArgs(d)
+			if err != nil {
+				return nil, err
+			}
+			mqlDef, err := CreateResource(runtime, resource, args)
+			if err != nil {
+				return nil, err
+			}
+			sysData, err := convert.JsonToDict(d.systemData)
+			if err != nil {
+				return nil, err
+			}
+			setCache(mqlDef, sysData)
+			res = append(res, mqlDef)
+		}
+	}
+	return res, nil
+}
+
+// collectCosmosRoleAssignments drains a role-assignment pager into MQL resources.
+func collectCosmosRoleAssignments[P, T any](
+	runtime *plugin.Runtime,
+	ctx context.Context,
+	resource string,
+	pager *azruntime.Pager[P],
+	values func(P) []*T,
+	extract func(*T) cosmosRoleAssignment,
+	setCache func(plugin.Resource, any),
+) ([]any, error) {
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, item := range values(page) {
+			if item == nil {
+				continue
+			}
+			ra := extract(item)
+			mqlRA, err := CreateResource(runtime, resource, cosmosRoleAssignmentArgs(ra))
+			if err != nil {
+				return nil, err
+			}
+			sysData, err := convert.JsonToDict(ra.systemData)
+			if err != nil {
+				return nil, err
+			}
+			setCache(mqlRA, sysData)
+			res = append(res, mqlRA)
+		}
+	}
+	return res, nil
 }
 
 // Cassandra data-plane RBAC
@@ -111,7 +216,6 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition) syst
 
 func (a *mqlAzureSubscriptionCosmosDbServiceAccount) cassandraRoleDefinitions() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
 	rid, accountName, err := a.cosmosAccountRef()
 	if err != nil {
 		return nil, err
@@ -122,45 +226,26 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccount) cassandraRoleDefinitions() 
 	if err != nil {
 		return nil, err
 	}
-
-	res := []any{}
-	pager := client.NewListCassandraRoleDefinitionsPager(rid.ResourceGroup, accountName, nil)
-	for pager.More() {
-		page, err := pager.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-		for _, def := range page.Value {
-			if def == nil {
-				continue
+	return collectCosmosRoleDefinitions(a.MqlRuntime, context.Background(),
+		"azure.subscription.cosmosDbService.account.cassandraRoleDefinition",
+		client.NewListCassandraRoleDefinitionsPager(rid.ResourceGroup, accountName, nil),
+		func(p cosmos.CassandraResourcesClientListCassandraRoleDefinitionsResponse) []*cosmos.CassandraRoleDefinitionResource {
+			return p.Value
+		},
+		func(d *cosmos.CassandraRoleDefinitionResource) cosmosRoleDefinition {
+			r := cosmosRoleDefinition{id: d.ID, name: d.Name, typ: d.Type, systemData: d.SystemData}
+			if d.Properties != nil {
+				r.roleName = d.Properties.RoleName
+				r.roleType = d.Properties.Type
+				r.scopes = d.Properties.AssignableScopes
+				r.permissions = d.Properties.Permissions
 			}
-			var roleName *string
-			var roleType *cosmos.RoleDefinitionType
-			var scopes []*string
-			var perms []*cosmos.Permission
-			if def.Properties != nil {
-				roleName = def.Properties.RoleName
-				roleType = def.Properties.Type
-				scopes = def.Properties.AssignableScopes
-				perms = def.Properties.Permissions
-			}
-			args, err := cosmosRoleDefinitionArgs(def.ID, def.Name, def.Type, roleName, roleType, scopes, perms)
-			if err != nil {
-				return nil, err
-			}
-			mqlDef, err := CreateResource(a.MqlRuntime, "azure.subscription.cosmosDbService.account.cassandraRoleDefinition", args)
-			if err != nil {
-				return nil, err
-			}
-			sysData, err := convert.JsonToDict(def.SystemData)
-			if err != nil {
-				return nil, err
-			}
-			mqlDef.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition).cacheSystemData = sysData
-			res = append(res, mqlDef)
-		}
-	}
-	return res, nil
+			return r
+		},
+		func(res plugin.Resource, raw any) {
+			res.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition).cacheSystemData = raw
+		},
+	)
 }
 
 type mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignmentInternal struct {
@@ -173,7 +258,6 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment) syst
 
 func (a *mqlAzureSubscriptionCosmosDbServiceAccount) cassandraRoleAssignments() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
 	rid, accountName, err := a.cosmosAccountRef()
 	if err != nil {
 		return nil, err
@@ -184,39 +268,26 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccount) cassandraRoleAssignments() 
 	if err != nil {
 		return nil, err
 	}
-
-	res := []any{}
-	pager := client.NewListCassandraRoleAssignmentsPager(rid.ResourceGroup, accountName, nil)
-	for pager.More() {
-		page, err := pager.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-		for _, ra := range page.Value {
-			if ra == nil {
-				continue
-			}
-			var principalID, roleDefinitionID, scope, provisioningState *string
+	return collectCosmosRoleAssignments(a.MqlRuntime, context.Background(),
+		"azure.subscription.cosmosDbService.account.cassandraRoleAssignment",
+		client.NewListCassandraRoleAssignmentsPager(rid.ResourceGroup, accountName, nil),
+		func(p cosmos.CassandraResourcesClientListCassandraRoleAssignmentsResponse) []*cosmos.CassandraRoleAssignmentResource {
+			return p.Value
+		},
+		func(ra *cosmos.CassandraRoleAssignmentResource) cosmosRoleAssignment {
+			r := cosmosRoleAssignment{id: ra.ID, name: ra.Name, typ: ra.Type, systemData: ra.SystemData}
 			if ra.Properties != nil {
-				principalID = ra.Properties.PrincipalID
-				roleDefinitionID = ra.Properties.RoleDefinitionID
-				scope = ra.Properties.Scope
-				provisioningState = ra.Properties.ProvisioningState
+				r.principalID = ra.Properties.PrincipalID
+				r.roleDefinitionID = ra.Properties.RoleDefinitionID
+				r.scope = ra.Properties.Scope
+				r.provisioningState = ra.Properties.ProvisioningState
 			}
-			args := cosmosRoleAssignmentArgs(ra.ID, ra.Name, ra.Type, principalID, roleDefinitionID, scope, provisioningState)
-			mqlRA, err := CreateResource(a.MqlRuntime, "azure.subscription.cosmosDbService.account.cassandraRoleAssignment", args)
-			if err != nil {
-				return nil, err
-			}
-			sysData, err := convert.JsonToDict(ra.SystemData)
-			if err != nil {
-				return nil, err
-			}
-			mqlRA.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment).cacheSystemData = sysData
-			res = append(res, mqlRA)
-		}
-	}
-	return res, nil
+			return r
+		},
+		func(res plugin.Resource, raw any) {
+			res.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment).cacheSystemData = raw
+		},
+	)
 }
 
 // Gremlin data-plane RBAC
@@ -231,7 +302,6 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition) system
 
 func (a *mqlAzureSubscriptionCosmosDbServiceAccount) gremlinRoleDefinitions() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
 	rid, accountName, err := a.cosmosAccountRef()
 	if err != nil {
 		return nil, err
@@ -242,45 +312,26 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccount) gremlinRoleDefinitions() ([
 	if err != nil {
 		return nil, err
 	}
-
-	res := []any{}
-	pager := client.NewListGremlinRoleDefinitionsPager(rid.ResourceGroup, accountName, nil)
-	for pager.More() {
-		page, err := pager.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-		for _, def := range page.Value {
-			if def == nil {
-				continue
+	return collectCosmosRoleDefinitions(a.MqlRuntime, context.Background(),
+		"azure.subscription.cosmosDbService.account.gremlinRoleDefinition",
+		client.NewListGremlinRoleDefinitionsPager(rid.ResourceGroup, accountName, nil),
+		func(p cosmos.GremlinResourcesClientListGremlinRoleDefinitionsResponse) []*cosmos.GremlinRoleDefinitionResource {
+			return p.Value
+		},
+		func(d *cosmos.GremlinRoleDefinitionResource) cosmosRoleDefinition {
+			r := cosmosRoleDefinition{id: d.ID, name: d.Name, typ: d.Type, systemData: d.SystemData}
+			if d.Properties != nil {
+				r.roleName = d.Properties.RoleName
+				r.roleType = d.Properties.Type
+				r.scopes = d.Properties.AssignableScopes
+				r.permissions = d.Properties.Permissions
 			}
-			var roleName *string
-			var roleType *cosmos.RoleDefinitionType
-			var scopes []*string
-			var perms []*cosmos.Permission
-			if def.Properties != nil {
-				roleName = def.Properties.RoleName
-				roleType = def.Properties.Type
-				scopes = def.Properties.AssignableScopes
-				perms = def.Properties.Permissions
-			}
-			args, err := cosmosRoleDefinitionArgs(def.ID, def.Name, def.Type, roleName, roleType, scopes, perms)
-			if err != nil {
-				return nil, err
-			}
-			mqlDef, err := CreateResource(a.MqlRuntime, "azure.subscription.cosmosDbService.account.gremlinRoleDefinition", args)
-			if err != nil {
-				return nil, err
-			}
-			sysData, err := convert.JsonToDict(def.SystemData)
-			if err != nil {
-				return nil, err
-			}
-			mqlDef.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition).cacheSystemData = sysData
-			res = append(res, mqlDef)
-		}
-	}
-	return res, nil
+			return r
+		},
+		func(res plugin.Resource, raw any) {
+			res.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition).cacheSystemData = raw
+		},
+	)
 }
 
 type mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignmentInternal struct {
@@ -293,7 +344,6 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment) system
 
 func (a *mqlAzureSubscriptionCosmosDbServiceAccount) gremlinRoleAssignments() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
 	rid, accountName, err := a.cosmosAccountRef()
 	if err != nil {
 		return nil, err
@@ -304,39 +354,26 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccount) gremlinRoleAssignments() ([
 	if err != nil {
 		return nil, err
 	}
-
-	res := []any{}
-	pager := client.NewListGremlinRoleAssignmentsPager(rid.ResourceGroup, accountName, nil)
-	for pager.More() {
-		page, err := pager.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-		for _, ra := range page.Value {
-			if ra == nil {
-				continue
-			}
-			var principalID, roleDefinitionID, scope, provisioningState *string
+	return collectCosmosRoleAssignments(a.MqlRuntime, context.Background(),
+		"azure.subscription.cosmosDbService.account.gremlinRoleAssignment",
+		client.NewListGremlinRoleAssignmentsPager(rid.ResourceGroup, accountName, nil),
+		func(p cosmos.GremlinResourcesClientListGremlinRoleAssignmentsResponse) []*cosmos.GremlinRoleAssignmentResource {
+			return p.Value
+		},
+		func(ra *cosmos.GremlinRoleAssignmentResource) cosmosRoleAssignment {
+			r := cosmosRoleAssignment{id: ra.ID, name: ra.Name, typ: ra.Type, systemData: ra.SystemData}
 			if ra.Properties != nil {
-				principalID = ra.Properties.PrincipalID
-				roleDefinitionID = ra.Properties.RoleDefinitionID
-				scope = ra.Properties.Scope
-				provisioningState = ra.Properties.ProvisioningState
+				r.principalID = ra.Properties.PrincipalID
+				r.roleDefinitionID = ra.Properties.RoleDefinitionID
+				r.scope = ra.Properties.Scope
+				r.provisioningState = ra.Properties.ProvisioningState
 			}
-			args := cosmosRoleAssignmentArgs(ra.ID, ra.Name, ra.Type, principalID, roleDefinitionID, scope, provisioningState)
-			mqlRA, err := CreateResource(a.MqlRuntime, "azure.subscription.cosmosDbService.account.gremlinRoleAssignment", args)
-			if err != nil {
-				return nil, err
-			}
-			sysData, err := convert.JsonToDict(ra.SystemData)
-			if err != nil {
-				return nil, err
-			}
-			mqlRA.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment).cacheSystemData = sysData
-			res = append(res, mqlRA)
-		}
-	}
-	return res, nil
+			return r
+		},
+		func(res plugin.Resource, raw any) {
+			res.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment).cacheSystemData = raw
+		},
+	)
 }
 
 // Table data-plane RBAC
@@ -351,7 +388,6 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition) systemMe
 
 func (a *mqlAzureSubscriptionCosmosDbServiceAccount) tableRoleDefinitions() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
 	rid, accountName, err := a.cosmosAccountRef()
 	if err != nil {
 		return nil, err
@@ -362,45 +398,26 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccount) tableRoleDefinitions() ([]a
 	if err != nil {
 		return nil, err
 	}
-
-	res := []any{}
-	pager := client.NewListTableRoleDefinitionsPager(rid.ResourceGroup, accountName, nil)
-	for pager.More() {
-		page, err := pager.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-		for _, def := range page.Value {
-			if def == nil {
-				continue
+	return collectCosmosRoleDefinitions(a.MqlRuntime, context.Background(),
+		"azure.subscription.cosmosDbService.account.tableRoleDefinition",
+		client.NewListTableRoleDefinitionsPager(rid.ResourceGroup, accountName, nil),
+		func(p cosmos.TableResourcesClientListTableRoleDefinitionsResponse) []*cosmos.TableRoleDefinitionResource {
+			return p.Value
+		},
+		func(d *cosmos.TableRoleDefinitionResource) cosmosRoleDefinition {
+			r := cosmosRoleDefinition{id: d.ID, name: d.Name, typ: d.Type, systemData: d.SystemData}
+			if d.Properties != nil {
+				r.roleName = d.Properties.RoleName
+				r.roleType = d.Properties.Type
+				r.scopes = d.Properties.AssignableScopes
+				r.permissions = d.Properties.Permissions
 			}
-			var roleName *string
-			var roleType *cosmos.RoleDefinitionType
-			var scopes []*string
-			var perms []*cosmos.Permission
-			if def.Properties != nil {
-				roleName = def.Properties.RoleName
-				roleType = def.Properties.Type
-				scopes = def.Properties.AssignableScopes
-				perms = def.Properties.Permissions
-			}
-			args, err := cosmosRoleDefinitionArgs(def.ID, def.Name, def.Type, roleName, roleType, scopes, perms)
-			if err != nil {
-				return nil, err
-			}
-			mqlDef, err := CreateResource(a.MqlRuntime, "azure.subscription.cosmosDbService.account.tableRoleDefinition", args)
-			if err != nil {
-				return nil, err
-			}
-			sysData, err := convert.JsonToDict(def.SystemData)
-			if err != nil {
-				return nil, err
-			}
-			mqlDef.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition).cacheSystemData = sysData
-			res = append(res, mqlDef)
-		}
-	}
-	return res, nil
+			return r
+		},
+		func(res plugin.Resource, raw any) {
+			res.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition).cacheSystemData = raw
+		},
+	)
 }
 
 type mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignmentInternal struct {
@@ -413,7 +430,6 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment) systemMe
 
 func (a *mqlAzureSubscriptionCosmosDbServiceAccount) tableRoleAssignments() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
 	rid, accountName, err := a.cosmosAccountRef()
 	if err != nil {
 		return nil, err
@@ -424,39 +440,26 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccount) tableRoleAssignments() ([]a
 	if err != nil {
 		return nil, err
 	}
-
-	res := []any{}
-	pager := client.NewListTableRoleAssignmentsPager(rid.ResourceGroup, accountName, nil)
-	for pager.More() {
-		page, err := pager.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-		for _, ra := range page.Value {
-			if ra == nil {
-				continue
-			}
-			var principalID, roleDefinitionID, scope, provisioningState *string
+	return collectCosmosRoleAssignments(a.MqlRuntime, context.Background(),
+		"azure.subscription.cosmosDbService.account.tableRoleAssignment",
+		client.NewListTableRoleAssignmentsPager(rid.ResourceGroup, accountName, nil),
+		func(p cosmos.TableResourcesClientListTableRoleAssignmentsResponse) []*cosmos.TableRoleAssignmentResource {
+			return p.Value
+		},
+		func(ra *cosmos.TableRoleAssignmentResource) cosmosRoleAssignment {
+			r := cosmosRoleAssignment{id: ra.ID, name: ra.Name, typ: ra.Type, systemData: ra.SystemData}
 			if ra.Properties != nil {
-				principalID = ra.Properties.PrincipalID
-				roleDefinitionID = ra.Properties.RoleDefinitionID
-				scope = ra.Properties.Scope
-				provisioningState = ra.Properties.ProvisioningState
+				r.principalID = ra.Properties.PrincipalID
+				r.roleDefinitionID = ra.Properties.RoleDefinitionID
+				r.scope = ra.Properties.Scope
+				r.provisioningState = ra.Properties.ProvisioningState
 			}
-			args := cosmosRoleAssignmentArgs(ra.ID, ra.Name, ra.Type, principalID, roleDefinitionID, scope, provisioningState)
-			mqlRA, err := CreateResource(a.MqlRuntime, "azure.subscription.cosmosDbService.account.tableRoleAssignment", args)
-			if err != nil {
-				return nil, err
-			}
-			sysData, err := convert.JsonToDict(ra.SystemData)
-			if err != nil {
-				return nil, err
-			}
-			mqlRA.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment).cacheSystemData = sysData
-			res = append(res, mqlRA)
-		}
-	}
-	return res, nil
+			return r
+		},
+		func(res plugin.Resource, raw any) {
+			res.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment).cacheSystemData = raw
+		},
+	)
 }
 
 // MongoDB managed-instance data-plane RBAC
@@ -471,7 +474,6 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition) system
 
 func (a *mqlAzureSubscriptionCosmosDbServiceAccount) mongoMIRoleDefinitions() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
 	rid, accountName, err := a.cosmosAccountRef()
 	if err != nil {
 		return nil, err
@@ -482,45 +484,26 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccount) mongoMIRoleDefinitions() ([
 	if err != nil {
 		return nil, err
 	}
-
-	res := []any{}
-	pager := client.NewListMongoMIRoleDefinitionsPager(rid.ResourceGroup, accountName, nil)
-	for pager.More() {
-		page, err := pager.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-		for _, def := range page.Value {
-			if def == nil {
-				continue
+	return collectCosmosRoleDefinitions(a.MqlRuntime, context.Background(),
+		"azure.subscription.cosmosDbService.account.mongoMIRoleDefinition",
+		client.NewListMongoMIRoleDefinitionsPager(rid.ResourceGroup, accountName, nil),
+		func(p cosmos.MongoMIResourcesClientListMongoMIRoleDefinitionsResponse) []*cosmos.MongoMIRoleDefinitionResource {
+			return p.Value
+		},
+		func(d *cosmos.MongoMIRoleDefinitionResource) cosmosRoleDefinition {
+			r := cosmosRoleDefinition{id: d.ID, name: d.Name, typ: d.Type, systemData: d.SystemData}
+			if d.Properties != nil {
+				r.roleName = d.Properties.RoleName
+				r.roleType = d.Properties.Type
+				r.scopes = d.Properties.AssignableScopes
+				r.permissions = d.Properties.Permissions
 			}
-			var roleName *string
-			var roleType *cosmos.RoleDefinitionType
-			var scopes []*string
-			var perms []*cosmos.Permission
-			if def.Properties != nil {
-				roleName = def.Properties.RoleName
-				roleType = def.Properties.Type
-				scopes = def.Properties.AssignableScopes
-				perms = def.Properties.Permissions
-			}
-			args, err := cosmosRoleDefinitionArgs(def.ID, def.Name, def.Type, roleName, roleType, scopes, perms)
-			if err != nil {
-				return nil, err
-			}
-			mqlDef, err := CreateResource(a.MqlRuntime, "azure.subscription.cosmosDbService.account.mongoMIRoleDefinition", args)
-			if err != nil {
-				return nil, err
-			}
-			sysData, err := convert.JsonToDict(def.SystemData)
-			if err != nil {
-				return nil, err
-			}
-			mqlDef.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition).cacheSystemData = sysData
-			res = append(res, mqlDef)
-		}
-	}
-	return res, nil
+			return r
+		},
+		func(res plugin.Resource, raw any) {
+			res.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition).cacheSystemData = raw
+		},
+	)
 }
 
 type mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignmentInternal struct {
@@ -533,7 +516,6 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment) system
 
 func (a *mqlAzureSubscriptionCosmosDbServiceAccount) mongoMIRoleAssignments() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
 	rid, accountName, err := a.cosmosAccountRef()
 	if err != nil {
 		return nil, err
@@ -544,37 +526,24 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccount) mongoMIRoleAssignments() ([
 	if err != nil {
 		return nil, err
 	}
-
-	res := []any{}
-	pager := client.NewListMongoMIRoleAssignmentsPager(rid.ResourceGroup, accountName, nil)
-	for pager.More() {
-		page, err := pager.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-		for _, ra := range page.Value {
-			if ra == nil {
-				continue
-			}
-			var principalID, roleDefinitionID, scope, provisioningState *string
+	return collectCosmosRoleAssignments(a.MqlRuntime, context.Background(),
+		"azure.subscription.cosmosDbService.account.mongoMIRoleAssignment",
+		client.NewListMongoMIRoleAssignmentsPager(rid.ResourceGroup, accountName, nil),
+		func(p cosmos.MongoMIResourcesClientListMongoMIRoleAssignmentsResponse) []*cosmos.MongoMIRoleAssignmentResource {
+			return p.Value
+		},
+		func(ra *cosmos.MongoMIRoleAssignmentResource) cosmosRoleAssignment {
+			r := cosmosRoleAssignment{id: ra.ID, name: ra.Name, typ: ra.Type, systemData: ra.SystemData}
 			if ra.Properties != nil {
-				principalID = ra.Properties.PrincipalID
-				roleDefinitionID = ra.Properties.RoleDefinitionID
-				scope = ra.Properties.Scope
-				provisioningState = ra.Properties.ProvisioningState
+				r.principalID = ra.Properties.PrincipalID
+				r.roleDefinitionID = ra.Properties.RoleDefinitionID
+				r.scope = ra.Properties.Scope
+				r.provisioningState = ra.Properties.ProvisioningState
 			}
-			args := cosmosRoleAssignmentArgs(ra.ID, ra.Name, ra.Type, principalID, roleDefinitionID, scope, provisioningState)
-			mqlRA, err := CreateResource(a.MqlRuntime, "azure.subscription.cosmosDbService.account.mongoMIRoleAssignment", args)
-			if err != nil {
-				return nil, err
-			}
-			sysData, err := convert.JsonToDict(ra.SystemData)
-			if err != nil {
-				return nil, err
-			}
-			mqlRA.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment).cacheSystemData = sysData
-			res = append(res, mqlRA)
-		}
-	}
-	return res, nil
+			return r
+		},
+		func(res plugin.Resource, raw any) {
+			res.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment).cacheSystemData = raw
+		},
+	)
 }
