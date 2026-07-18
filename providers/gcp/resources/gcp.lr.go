@@ -14037,6 +14037,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.vertexaiService.model.satisfiesPzi": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceModel).GetSatisfiesPzi()).ToDataRes(types.Bool)
 	},
+	"gcp.project.vertexaiService.model.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceModel).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
+	},
+	"gcp.project.vertexaiService.model.public": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceModel).GetPublic()).ToDataRes(types.Bool)
+	},
 	"gcp.project.vertexaiService.model.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceModel).GetCreatedAt()).ToDataRes(types.Time)
 	},
@@ -14612,6 +14618,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.vertexaiService.notebookRuntimeTemplate.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.public": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetPublic()).ToDataRes(types.Bool)
 	},
 	"gcp.project.vertexaiService.notebookRuntimeTemplate.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetCreatedAt()).ToDataRes(types.Time)
@@ -34625,6 +34637,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectVertexaiServiceModel).SatisfiesPzi, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gcp.project.vertexaiService.model.iamPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceModel).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.model.public": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceModel).Public, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gcp.project.vertexaiService.model.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceModel).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -35435,6 +35455,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.vertexaiService.notebookRuntimeTemplate.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.iamPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.public": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).Public, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.vertexaiService.notebookRuntimeTemplate.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -80561,6 +80589,8 @@ type mqlGcpProjectVertexaiServiceModel struct {
 	PipelineJob                       plugin.TValue[*mqlGcpProjectVertexaiServicePipelineJob]
 	SatisfiesPzs                      plugin.TValue[bool]
 	SatisfiesPzi                      plugin.TValue[bool]
+	IamPolicy                         plugin.TValue[[]any]
+	Public                            plugin.TValue[bool]
 	CreatedAt                         plugin.TValue[*time.Time]
 	UpdatedAt                         plugin.TValue[*time.Time]
 }
@@ -80724,6 +80754,28 @@ func (c *mqlGcpProjectVertexaiServiceModel) GetSatisfiesPzs() *plugin.TValue[boo
 
 func (c *mqlGcpProjectVertexaiServiceModel) GetSatisfiesPzi() *plugin.TValue[bool] {
 	return &c.SatisfiesPzi
+}
+
+func (c *mqlGcpProjectVertexaiServiceModel) GetIamPolicy() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IamPolicy, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.model", c.__id, "iamPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.iamPolicy()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServiceModel) GetPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Public, func() (bool, error) {
+		return c.public()
+	})
 }
 
 func (c *mqlGcpProjectVertexaiServiceModel) GetCreatedAt() *plugin.TValue[*time.Time] {
@@ -82288,6 +82340,8 @@ type mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate struct {
 	Labels               plugin.TValue[map[string]any]
 	EncryptionSpec       plugin.TValue[any]
 	KmsKey               plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	IamPolicy            plugin.TValue[[]any]
+	Public               plugin.TValue[bool]
 	CreatedAt            plugin.TValue[*time.Time]
 	UpdatedAt            plugin.TValue[*time.Time]
 }
@@ -82466,6 +82520,28 @@ func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetKmsKey() *plugi
 		}
 
 		return c.kmsKey()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetIamPolicy() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IamPolicy, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.notebookRuntimeTemplate", c.__id, "iamPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.iamPolicy()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Public, func() (bool, error) {
+		return c.public()
 	})
 }
 

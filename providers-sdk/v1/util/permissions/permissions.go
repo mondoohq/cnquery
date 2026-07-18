@@ -1284,6 +1284,11 @@ var gcpPermissionOverrides = map[string]map[string]string{
 		// "notebookRuntimeTemplate" by default; the real IAM permission is the
 		// plural form (matching aiplatform.notebookRuntimeTemplates.list).
 		"GetNotebookRuntimeTemplate": "aiplatform.notebookRuntimeTemplates.get",
+		// GetIamPolicy is the shared google.iam.v1 mixin method on both
+		// ModelClient and NotebookClient; map each to its resource-scoped
+		// permission (clientType derived from NewModelClient/NewNotebookClient).
+		"Model.GetIamPolicy":    "aiplatform.models.getIamPolicy",
+		"Notebook.GetIamPolicy": "aiplatform.notebookRuntimeTemplates.getIamPolicy",
 	},
 	"documentai": {
 		// DocumentProcessorClient.GetProcessorVersion → singular "processorVersion"

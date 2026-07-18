@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.31.2",
-  "generated_at": "2026-07-18T07:43:11-07:00",
+  "generated_at": "2026-07-18T10:34:00-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.batchPredictionJobs.list",
@@ -20,9 +20,11 @@
     "aiplatform.metadataStores.list",
     "aiplatform.modelDeploymentMonitoringJobs.list",
     "aiplatform.models.get",
+    "aiplatform.models.getIamPolicy",
     "aiplatform.models.list",
     "aiplatform.notebookExecutionJobs.list",
     "aiplatform.notebookRuntimeTemplates.get",
+    "aiplatform.notebookRuntimeTemplates.getIamPolicy",
     "aiplatform.notebookRuntimeTemplates.list",
     "aiplatform.notebookRuntimes.list",
     "aiplatform.persistentResources.list",
@@ -374,6 +376,12 @@
       "source_file": "vertexai.go"
     },
     {
+      "permission": "aiplatform.models.getIamPolicy",
+      "service": "aiplatform",
+      "action": "GetIamPolicy",
+      "source_file": "vertexai.go"
+    },
+    {
       "permission": "aiplatform.models.list",
       "service": "aiplatform",
       "action": "ListModels",
@@ -389,6 +397,12 @@
       "permission": "aiplatform.notebookRuntimeTemplates.get",
       "service": "aiplatform",
       "action": "GetNotebookRuntimeTemplate",
+      "source_file": "vertexai.go"
+    },
+    {
+      "permission": "aiplatform.notebookRuntimeTemplates.getIamPolicy",
+      "service": "aiplatform",
+      "action": "GetIamPolicy",
       "source_file": "vertexai.go"
     },
     {

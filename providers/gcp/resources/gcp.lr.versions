@@ -5102,12 +5102,14 @@ gcp.project.vertexaiService.model.description 13.1.2
 gcp.project.vertexaiService.model.displayName 13.1.2
 gcp.project.vertexaiService.model.encryptionSpec 13.1.2
 gcp.project.vertexaiService.model.etag 13.1.2
+gcp.project.vertexaiService.model.iamPolicy 13.31.3
 gcp.project.vertexaiService.model.kmsKey 13.19.2
 gcp.project.vertexaiService.model.labels 13.1.2
 gcp.project.vertexaiService.model.modelSourceInfo 13.1.2
 gcp.project.vertexaiService.model.name 13.1.2
 gcp.project.vertexaiService.model.originalModel 13.31.3
 gcp.project.vertexaiService.model.pipelineJob 13.31.3
+gcp.project.vertexaiService.model.public 13.31.3
 gcp.project.vertexaiService.model.satisfiesPzi 13.31.3
 gcp.project.vertexaiService.model.satisfiesPzs 13.31.3
 gcp.project.vertexaiService.model.supportedDeploymentResourcesTypes 13.1.2
@@ -5194,6 +5196,7 @@ gcp.project.vertexaiService.notebookRuntimeTemplate.encryptionSpec 13.20.2
 gcp.project.vertexaiService.notebookRuntimeTemplate.etag 13.20.2
 gcp.project.vertexaiService.notebookRuntimeTemplate.eucConfig 13.20.2
 gcp.project.vertexaiService.notebookRuntimeTemplate.eucDisabled 13.31.3
+gcp.project.vertexaiService.notebookRuntimeTemplate.iamPolicy 13.31.3
 gcp.project.vertexaiService.notebookRuntimeTemplate.idleShutdownConfig 13.20.2
 gcp.project.vertexaiService.notebookRuntimeTemplate.isDefault 13.20.2
 gcp.project.vertexaiService.notebookRuntimeTemplate.kmsKey 13.20.2
@@ -5204,6 +5207,7 @@ gcp.project.vertexaiService.notebookRuntimeTemplate.network 13.31.3
 gcp.project.vertexaiService.notebookRuntimeTemplate.networkSpec 13.20.2
 gcp.project.vertexaiService.notebookRuntimeTemplate.networkTags 13.20.2
 gcp.project.vertexaiService.notebookRuntimeTemplate.notebookRuntimeType 13.20.2
+gcp.project.vertexaiService.notebookRuntimeTemplate.public 13.31.3
 gcp.project.vertexaiService.notebookRuntimeTemplate.serviceAccount 13.31.3
 gcp.project.vertexaiService.notebookRuntimeTemplate.shieldedVmConfig 13.20.2
 gcp.project.vertexaiService.notebookRuntimeTemplate.softwareConfig 13.20.2

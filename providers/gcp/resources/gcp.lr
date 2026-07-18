@@ -11735,6 +11735,10 @@ private gcp.project.vertexaiService.model @defaults("name displayName") {
   satisfiesPzs bool
   // Whether the model satisfies Physical Zone Isolation
   satisfiesPzi bool
+  // Resource-level IAM policy bindings governing who can access this model
+  iamPolicy() []gcp.resourcemanager.binding
+  // Whether the IAM policy grants access to allUsers or allAuthenticatedUsers
+  public() bool
   // Creation time
   createdAt time
   // Last update time
@@ -12267,6 +12271,10 @@ private gcp.project.vertexaiService.notebookRuntimeTemplate @defaults("displayNa
   encryptionSpec dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // Resource-level IAM policy bindings governing who can use this template
+  iamPolicy() []gcp.resourcemanager.binding
+  // Whether the IAM policy grants access to allUsers or allAuthenticatedUsers
+  public() bool
   // Creation time
   createdAt time
   // Last update time

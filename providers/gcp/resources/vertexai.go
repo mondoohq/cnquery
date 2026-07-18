@@ -12,6 +12,7 @@ import (
 
 	aiplatform "cloud.google.com/go/aiplatform/apiv1"
 	"cloud.google.com/go/aiplatform/apiv1/aiplatformpb"
+	iampb "cloud.google.com/go/iam/apiv1/iampb"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -2939,6 +2940,42 @@ func (a *mqlGcpProjectVertexaiServiceModel) kmsKey() (*mqlGcpProjectKmsServiceKe
 	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
 }
 
+func (a *mqlGcpProjectVertexaiServiceModel) iamPolicy() ([]any, error) {
+	if a.Name.Error != nil {
+		return nil, a.Name.Error
+	}
+	name := a.Name.Data
+
+	conn := a.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+	client, err := aiplatform.NewModelClient(ctx,
+		option.WithCredentials(creds), connection.GRPCClientTraceOption(),
+		option.WithEndpoint(vertexaiEndpoint(vertexaiRegionFromName(name))),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	policy, err := client.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
+		Resource: name,
+		Options:  &iampb.GetPolicyOptions{RequestedPolicyVersion: 3},
+	})
+	return vertexaiIamPolicyBindings(a.MqlRuntime, name, policy, err)
+}
+
+func (a *mqlGcpProjectVertexaiServiceModel) public() (bool, error) {
+	bindings := a.GetIamPolicy()
+	if bindings.Error != nil {
+		return false, bindings.Error
+	}
+	return iamPolicyHasPublicMember(bindings.Data)
+}
+
 func (a *mqlGcpProjectVertexaiServiceModel) originalModel() (*mqlGcpProjectVertexaiServiceModel, error) {
 	return resolveVertexaiModelRef(a.MqlRuntime, &a.OriginalModel, a.cacheOriginalModelName)
 }
@@ -3104,6 +3141,57 @@ type mqlGcpProjectVertexaiServiceNotebookRuntimeTemplateInternal struct {
 
 func (a *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
 	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+func (a *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) iamPolicy() ([]any, error) {
+	if a.Name.Error != nil {
+		return nil, a.Name.Error
+	}
+	name := a.Name.Data
+
+	conn := a.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+	client, err := aiplatform.NewNotebookClient(ctx,
+		option.WithCredentials(creds), connection.GRPCClientTraceOption(),
+		option.WithEndpoint(vertexaiEndpoint(vertexaiRegionFromName(name))),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	policy, err := client.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
+		Resource: name,
+		Options:  &iampb.GetPolicyOptions{RequestedPolicyVersion: 3},
+	})
+	return vertexaiIamPolicyBindings(a.MqlRuntime, name, policy, err)
+}
+
+func (a *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) public() (bool, error) {
+	bindings := a.GetIamPolicy()
+	if bindings.Error != nil {
+		return false, bindings.Error
+	}
+	return iamPolicyHasPublicMember(bindings.Data)
+}
+
+// vertexaiIamPolicyBindings maps a fetched resource-level IAM policy to
+// gcp.resourcemanager.binding resources. It handles the GetIamPolicy error
+// (the Model and Notebook clients share the google.iam.v1 mixin), returning nil
+// on access-denied so a scan without getIamPolicy permission degrades
+// gracefully rather than erroring.
+func vertexaiIamPolicyBindings(runtime *plugin.Runtime, name string, policy *iampb.Policy, err error) ([]any, error) {
+	if err != nil {
+		if s, ok := status.FromError(err); ok && s.Code() == codes.PermissionDenied {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return iampbBindingsToMql(runtime, name, policy.Bindings)
 }
 
 func (a *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) serviceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
