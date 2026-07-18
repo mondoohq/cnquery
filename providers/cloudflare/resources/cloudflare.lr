@@ -6,10 +6,10 @@ option go_package = "go.mondoo.com/mql/v13/providers/cloudflare/resources"
 
 // Cloudflare
 //
-// Top-level entry point for Cloudflare zones, accounts, API tokens, and
-// account-level services. The `zones` field enumerates DNS zones, `accounts`
-// exposes account-level configuration, and `apiTokens` lists the tokens
-// visible to the calling user for token inventory and policy audits.
+// Cloudflare zones, accounts, API tokens, and account-level services. The
+// `zones` field enumerates DNS zones, `accounts` exposes account-level
+// configuration, and `apiTokens` lists the tokens visible to the calling
+// user for token inventory and policy audits.
 cloudflare {
 	// List all zones
 	zones() []cloudflare.zone
@@ -481,15 +481,14 @@ private cloudflare.streams.video @defaults("name uid") {
 // enumerates every R2 bucket, which is the starting point for auditing
 // where account data is stored and which buckets serve objects publicly
 // through the managed r2.dev subdomain.
-private cloudflare.r2 @defaults("name location") {
+private cloudflare.r2 @defaults("buckets") {
 	// R2 buckets in the account
 	buckets() []cloudflare.r2.bucket
 }
 
 // Cloudflare R2 bucket
 //
-// Single R2 storage bucket, identified by name (for example
-// cloudflare.r2.buckets.where(name == "my-bucket")). The publicAccessEnabled
+// Single R2 storage bucket, identified by its name. The publicAccessEnabled
 // and publicAccessDomain fields report whether the bucket serves its objects
 // publicly over the managed r2.dev subdomain, the primary exposure to audit
 // for an R2 bucket, alongside its storage location and creation time.
