@@ -1662,8 +1662,11 @@ func initAwsBatchComputeEnvironment(runtime *plugin.Runtime, args map[string]*ll
 	if err != nil {
 		return nil, nil, err
 	}
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
 	if len(resp.ComputeEnvironments) == 0 {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("aws.batch.computeEnvironment with arn %q not found", arnStr)
 	}
 	ce := resp.ComputeEnvironments[0]
 
@@ -1730,8 +1733,11 @@ func initAwsBatchSchedulingPolicy(runtime *plugin.Runtime, args map[string]*llx.
 	if err != nil {
 		return nil, nil, err
 	}
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
 	if len(resp.SchedulingPolicies) == 0 {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("aws.batch.schedulingPolicy with arn %q not found", arnStr)
 	}
 	sp := resp.SchedulingPolicies[0]
 

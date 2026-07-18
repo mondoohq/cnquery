@@ -3157,12 +3157,12 @@ func initAwsEc2Internetgateway(runtime *plugin.Runtime, args map[string]*llx.Raw
 	})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
-			return args, nil, nil
+			return nil, nil, fmt.Errorf("access denied fetching aws.ec2.internetGateway with id %q in region %s", igwID, region)
 		}
 		return nil, nil, err
 	}
 	if len(resp.InternetGateways) == 0 {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("aws.ec2.internetGateway with id %q not found", igwID)
 	}
 	res, err := newMqlAwsEc2Internetgateway(runtime, region, conn, resp.InternetGateways[0])
 	if err != nil {
@@ -3277,12 +3277,12 @@ func initAwsEc2Transitgateway(runtime *plugin.Runtime, args map[string]*llx.RawD
 	})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
-			return args, nil, nil
+			return nil, nil, fmt.Errorf("access denied fetching aws.ec2.transitGateway with id %q in region %s", tgwID, region)
 		}
 		return nil, nil, err
 	}
 	if len(resp.TransitGateways) == 0 {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("aws.ec2.transitGateway with id %q not found", tgwID)
 	}
 	res, err := newMqlAwsEc2Transitgateway(runtime, region, resp.TransitGateways[0])
 	if err != nil {
@@ -3831,12 +3831,12 @@ func initAwsEc2EgressOnlyInternetGateway(runtime *plugin.Runtime, args map[strin
 	})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
-			return args, nil, nil
+			return nil, nil, fmt.Errorf("access denied fetching aws.ec2.egressOnlyInternetGateway with id %q in region %s", eigwID, region)
 		}
 		return nil, nil, err
 	}
 	if len(resp.EgressOnlyInternetGateways) == 0 {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("aws.ec2.egressOnlyInternetGateway with id %q not found", eigwID)
 	}
 	res, err := newMqlAwsEc2EgressOnlyInternetGateway(runtime, region, conn, resp.EgressOnlyInternetGateways[0])
 	if err != nil {

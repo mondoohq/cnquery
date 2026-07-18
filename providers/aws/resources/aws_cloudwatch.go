@@ -814,6 +814,14 @@ func (a *mqlAwsCloudwatchLoggroup) tags() (map[string]any, error) {
 }
 
 func (a *mqlAwsCloudwatchLoggroup) kmsKey() (*mqlAwsKmsKey, error) {
+	// Return the key resolved at creation time when present; only mark the field
+	// null (with an explicit state) when no key was set — e.g. the cross-account
+	// placeholder path that never populates kmsKey. Unconditionally nulling here
+	// would drop the KMS key on log groups that actually have one.
+	if a.KmsKey.Data == nil {
+		a.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
 	return a.KmsKey.Data, nil
 }
 

@@ -975,15 +975,18 @@ func (a *mqlAwsS3Bucket) logging() (map[string]any, error) {
 
 func (a *mqlAwsS3Bucket) versioning() (map[string]any, error) {
 	// Placeholder buckets (e.g., cross-account references) can't be queried
-	if !a.Exists.Data {
+	region, ok, err := a.bucketRegion()
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
 		return nil, nil
 	}
 	bucketname := a.Name.Data
-	location := a.Location.Data
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	svc := conn.S3(location)
+	svc := conn.S3(region)
 	ctx := context.Background()
 
 	versioning, err := svc.GetBucketVersioning(ctx, &s3.GetBucketVersioningInput{
@@ -1030,8 +1033,15 @@ func (a *mqlAwsS3Bucket) fetchReplicationConfig() (*s3types.ReplicationConfigura
 		return nil, nil
 	}
 	a.replicationOnce.Do(func() {
+		region, ok, err := a.bucketRegion()
+		if err != nil {
+			a.replicationErr = err
+			return
+		}
+		if !ok {
+			return
+		}
 		bucketname := a.Name.Data
-		region := a.Location.Data
 		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 		svc := conn.S3(region)
 		ctx := context.Background()
@@ -1057,8 +1067,15 @@ func (a *mqlAwsS3Bucket) fetchEncryptionConfig() (*s3types.ServerSideEncryptionC
 		return nil, nil
 	}
 	a.encryptionOnce.Do(func() {
+		region, ok, err := a.bucketRegion()
+		if err != nil {
+			a.encryptionErr = err
+			return
+		}
+		if !ok {
+			return
+		}
 		bucketname := a.Name.Data
-		region := a.Location.Data
 		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 		svc := conn.S3(region)
 		ctx := context.Background()
@@ -1218,10 +1235,18 @@ func (a *mqlAwsS3Bucket) kmsKey() (*mqlAwsKmsKey, error) {
 		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
+	region, ok, err := a.bucketRegion()
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
 	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
 		map[string]*llx.RawData{
 			"arn":    llx.StringData(keyRef),
-			"region": llx.StringData(a.Location.Data),
+			"region": llx.StringData(region),
 		})
 	if err != nil {
 		return nil, err
@@ -1277,11 +1302,14 @@ func (a *mqlAwsS3BucketMetricsConfiguration) id() (string, error) {
 
 func (a *mqlAwsS3Bucket) metricsConfigurations() ([]any, error) {
 	// Placeholder buckets (e.g., cross-account references) can't be queried
-	if !a.Exists.Data {
+	region, ok, err := a.bucketRegion()
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
 		return nil, nil
 	}
 	bucketName := a.Name.Data
-	region := a.Location.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.S3(region)
 	ctx := context.Background()
@@ -1332,8 +1360,15 @@ func (a *mqlAwsS3Bucket) fetchObjectLockConfig() (*s3types.ObjectLockConfigurati
 		return nil, nil
 	}
 	a.objectLockOnce.Do(func() {
+		region, ok, err := a.bucketRegion()
+		if err != nil {
+			a.objectLockErr = err
+			return
+		}
+		if !ok {
+			return
+		}
 		bucketname := a.Name.Data
-		region := a.Location.Data
 		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 		svc := conn.S3(region)
 		ctx := context.Background()
@@ -1393,12 +1428,15 @@ func (a *mqlAwsS3Bucket) staticWebsiteHosting() (map[string]any, error) {
 
 func (a *mqlAwsS3Bucket) website() (*mqlAwsS3BucketWebsiteConfiguration, error) {
 	// Placeholder buckets (e.g., cross-account references) can't be queried
-	if !a.Exists.Data {
+	region, ok, err := a.bucketRegion()
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
 		a.Website.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
 	bucketname := a.Name.Data
-	region := a.Location.Data
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
@@ -1530,8 +1568,15 @@ func (a *mqlAwsS3BucketPolicy) statements() ([]any, error) {
 
 func (a *mqlAwsS3Bucket) fetchLifecycleConfig() ([]s3types.LifecycleRule, error) {
 	a.lifecycleOnce.Do(func() {
+		region, ok, err := a.bucketRegion()
+		if err != nil {
+			a.lifecycleErr = err
+			return
+		}
+		if !ok {
+			return
+		}
 		bucketname := a.Name.Data
-		region := a.Location.Data
 		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 		svc := conn.S3(region)
 		ctx := context.Background()
@@ -1646,11 +1691,14 @@ func (a *mqlAwsS3BucketLifecycleRule) id() (string, error) {
 
 func (a *mqlAwsS3Bucket) notificationConfiguration() (any, error) {
 	// Placeholder buckets (e.g., cross-account references) can't be queried
-	if !a.Exists.Data {
+	region, ok, err := a.bucketRegion()
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
 		return nil, nil
 	}
 	bucketname := a.Name.Data
-	region := a.Location.Data
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.S3(region)
@@ -1700,11 +1748,14 @@ func (a *mqlAwsS3Bucket) notificationConfiguration() (any, error) {
 
 func (a *mqlAwsS3Bucket) eventNotifications() ([]any, error) {
 	// Placeholder buckets (e.g., cross-account references) can't be queried
-	if !a.Exists.Data {
+	region, ok, err := a.bucketRegion()
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
 		return nil, nil
 	}
 	bucketname := a.Name.Data
-	region := a.Location.Data
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.S3(region)
@@ -1800,12 +1851,16 @@ func (a *mqlAwsS3BucketEventNotification) topic() (*mqlAwsSnsTopic, error) {
 }
 
 func (a *mqlAwsS3Bucket) intelligentTieringConfigurations() ([]any, error) {
-	if !a.Exists.Data {
+	region, ok, err := a.bucketRegion()
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
 		return nil, nil
 	}
 	bucketName := a.Name.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.S3(a.Location.Data)
+	svc := conn.S3(region)
 	ctx := context.Background()
 
 	res := []any{}
@@ -1837,12 +1892,16 @@ func (a *mqlAwsS3Bucket) intelligentTieringConfigurations() ([]any, error) {
 }
 
 func (a *mqlAwsS3Bucket) inventoryConfigurations() ([]any, error) {
-	if !a.Exists.Data {
+	region, ok, err := a.bucketRegion()
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
 		return nil, nil
 	}
 	bucketName := a.Name.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.S3(a.Location.Data)
+	svc := conn.S3(region)
 	ctx := context.Background()
 
 	res := []any{}
@@ -1874,12 +1933,16 @@ func (a *mqlAwsS3Bucket) inventoryConfigurations() ([]any, error) {
 }
 
 func (a *mqlAwsS3Bucket) analyticsConfigurations() ([]any, error) {
-	if !a.Exists.Data {
+	region, ok, err := a.bucketRegion()
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
 		return nil, nil
 	}
 	bucketName := a.Name.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.S3(a.Location.Data)
+	svc := conn.S3(region)
 	ctx := context.Background()
 
 	res := []any{}
@@ -1911,12 +1974,16 @@ func (a *mqlAwsS3Bucket) analyticsConfigurations() ([]any, error) {
 }
 
 func (a *mqlAwsS3Bucket) requestPayment() (string, error) {
-	if !a.Exists.Data {
+	region, ok, err := a.bucketRegion()
+	if err != nil {
+		return "", err
+	}
+	if !ok {
 		return "", nil
 	}
 	bucketName := a.Name.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.S3(a.Location.Data)
+	svc := conn.S3(region)
 	ctx := context.Background()
 
 	resp, err := svc.GetBucketRequestPayment(ctx, &s3.GetBucketRequestPaymentInput{Bucket: &bucketName})
@@ -1930,12 +1997,16 @@ func (a *mqlAwsS3Bucket) requestPayment() (string, error) {
 }
 
 func (a *mqlAwsS3Bucket) transferAcceleration() (string, error) {
-	if !a.Exists.Data {
+	region, ok, err := a.bucketRegion()
+	if err != nil {
+		return "", err
+	}
+	if !ok {
 		return "", nil
 	}
 	bucketName := a.Name.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.S3(a.Location.Data)
+	svc := conn.S3(region)
 	ctx := context.Background()
 
 	resp, err := svc.GetBucketAccelerateConfiguration(ctx, &s3.GetBucketAccelerateConfigurationInput{Bucket: &bucketName})
@@ -1950,11 +2021,14 @@ func (a *mqlAwsS3Bucket) transferAcceleration() (string, error) {
 
 func (a *mqlAwsS3Bucket) ownershipControls() (string, error) {
 	// Placeholder buckets (e.g., cross-account references) can't be queried
-	if !a.Exists.Data {
+	region, ok, err := a.bucketRegion()
+	if err != nil {
+		return "", err
+	}
+	if !ok {
 		return "", nil
 	}
 	bucketname := a.Name.Data
-	region := a.Location.Data
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.S3(region)

@@ -396,7 +396,7 @@ func initAwsVpcNatgateway(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return nil, nil, err
 	}
 	if len(resp.NatGateways) == 0 {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("aws.vpc.natgateway with id %q not found", natID)
 	}
 	mqlNat, err := newMqlAwsVpcNatgateway(runtime, region, resp.NatGateways[0])
 	if err != nil {
@@ -791,12 +791,12 @@ func initAwsVpcPeeringConnection(runtime *plugin.Runtime, args map[string]*llx.R
 	})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
-			return args, nil, nil
+			return nil, nil, fmt.Errorf("access denied fetching aws.vpc.peeringConnection with id %q in region %s", pcxID, region)
 		}
 		return nil, nil, err
 	}
 	if len(resp.VpcPeeringConnections) == 0 {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("aws.vpc.peeringConnection with id %q not found", pcxID)
 	}
 	res, err := newMqlAwsVpcPeeringConnection(runtime, region, resp.VpcPeeringConnections[0])
 	if err != nil {
