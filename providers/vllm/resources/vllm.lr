@@ -6,8 +6,8 @@ option go_package = "go.mondoo.com/mql/v13/providers/vllm/resources"
 
 // vLLM inference server
 //
-// Examine the security posture and model inventory of a remote vLLM
-// HTTP inference server: the server-level summary, the per-endpoint
+// Security posture and model inventory of a remote vLLM HTTP inference
+// server: the server-level exposure summary, the per-endpoint
 // anonymous-access probe results, the minimal metrics-exposure posture,
 // the reported vLLM version, and the models loaded for serving.
 vllm {
@@ -25,11 +25,15 @@ vllm {
 
 // vLLM served model
 //
-// Examine a model loaded for serving on the vLLM instance. The `id`
-// field is the model identifier as configured at launch (typically a
-// Hugging Face model path such as `meta-llama/Llama-3.1-8B-Instruct`).
-// The `root` field is the underlying model path, and `maxModelLen` is
-// the context window length in tokens configured for this deployment.
+// Model loaded for serving on the vLLM instance, one entry per model
+// the server will answer inference requests for. The `id` field is the
+// model identifier as configured at launch (typically a Hugging Face
+// model path such as `meta-llama/Llama-3.1-8B-Instruct`) and selects
+// the model. The `root` field is the underlying model path, and
+// `maxModelLen` is the context window length in tokens configured for
+// this deployment. Auditing served models reveals which weights are
+// exposed, whether LoRA adapters are attached (via `parent`), and the
+// context window each deployment allows.
 vllm.model @defaults("id maxModelLen") {
   // Model identifier
   id string
@@ -53,12 +57,15 @@ vllm.model @defaults("id maxModelLen") {
 
 // vLLM server-level HTTP posture
 //
-// Examine the server-wide HTTP exposure findings: the base URL the
-// connection probed, whether the server is reachable, the reported
-// vLLM version, whether the connection is over TLS, and whether
-// FastAPI docs / OpenAPI / Prometheus metrics / /load / tokenizer-info
-// / dev / profiler endpoints are anonymously exposed. Also surfaces
-// CORS posture (configured at all, accepts any origin).
+// Server-wide HTTP exposure findings for a vLLM inference server: the
+// base URL that was probed, whether the server is reachable, the
+// reported vLLM version, and whether the connection runs over TLS.
+// Surfaces which sensitive routes answer anonymous requests (FastAPI
+// docs, OpenAPI, Prometheus metrics, /load, tokenizer-info, dev, and
+// profiler routes), along with CORS posture: whether CORS is
+// configured at all and whether any origin is accepted. Audit it to
+// catch an inference server that leaks its version, documentation, or
+// metrics to unauthenticated callers.
 vllm.server @defaults("baseUrl reachable version") {
   // Base URL used by this connection
   baseUrl() string
@@ -90,12 +97,12 @@ vllm.server @defaults("baseUrl reachable version") {
 
 // vLLM HTTP endpoint posture
 //
-// Examine the probe result for a single vLLM HTTP endpoint, identified
-// by `path` and `method` (e.g., `vllm.endpoint(path: "/v1/models",
-// method: "GET")`). Each probe records the endpoint category, whether
-// the route was observed at all, the anonymous and authenticated
-// status codes, whether anonymous traffic reached the route or got an
-// auth-like rejection, and human-readable notes from the probe.
+// Anonymous-access probe result for a single vLLM HTTP endpoint,
+// selected by `path` and `method`, for example
+// `vllm.endpoint(path: "/v1/models", method: "GET")`. The probe
+// compares how the route responds to unauthenticated and authenticated
+// requests to determine whether it is reachable without credentials,
+// the core signal when auditing an exposed inference server.
 vllm.endpoint @defaults("method path category present anonymousAccessible requiresAuth") {
   init(path string, method string)
   // HTTP method used by the probe
@@ -103,6 +110,11 @@ vllm.endpoint @defaults("method path category present anonymousAccessible requir
   // URL path of the probed endpoint
   path string
   // Endpoint category
+  //
+  // Functional grouping of the route: one of documentation, metadata,
+  // utility, metrics, openai, custom-inference, operational-control,
+  // development, profiler, or custom (a path not in the built-in probe
+  // list).
   category() string
   // Whether the route was observed by HTTP status behavior
   present() bool
@@ -120,10 +132,11 @@ vllm.endpoint @defaults("method path category present anonymousAccessible requir
 
 // Minimal vLLM metrics exposure posture
 //
-// Examine whether the metrics-related endpoints are anonymously
-// reachable: the Prometheus `/metrics` endpoint, the `/load` endpoint,
-// and whether `/load` returns enough state to leak load-tracking
-// information.
+// Anonymous-reachability posture for the metrics-related endpoints:
+// whether the Prometheus `/metrics` endpoint and the `/load` endpoint
+// respond to unauthenticated requests, and whether `/load` returns
+// enough state to leak load-tracking information. Use it to audit
+// whether operational telemetry is exposed to unauthenticated clients.
 vllm.metrics @defaults("prometheusExposed loadEndpointExposed") {
   // Whether /metrics is anonymously exposed
   prometheusExposed() bool
