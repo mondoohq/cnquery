@@ -6,13 +6,14 @@ option go_package = "go.mondoo.com/mql/v13/providers/mikrotik/resources"
 
 // MikroTik RouterOS device
 //
-// Examine a MikroTik RouterOS device through the RouterOS API. The mikrotik
-// resource is the entry point: read the device identity, RouterOS version, and
-// RouterBOARD hardware through `system`, and enumerate the network interfaces,
-// bridges, VLANs, IP addresses, routes, address pools, DNS settings, firewall
-// and NAT rules, management services, DHCP servers and leases, discovered
-// neighbors, user accounts, and installed packages through the respective
-// collections.
+// Root of the MikroTik RouterOS device model, read through the RouterOS API.
+// The device identity, RouterOS version, and RouterBOARD hardware are
+// available through `system`, alongside collections for the network
+// interfaces, bridges, VLANs, IP addresses, routes, address pools, DNS
+// settings, firewall and NAT rules, management services, DHCP servers and
+// leases, discovered neighbors, user accounts, and installed packages. These
+// let you audit the device's exposed management surface, filtering and NAT
+// posture, address assignments, and account configuration.
 mikrotik {
   // System identity, RouterOS version, and RouterBOARD hardware
   system() mikrotik.system
@@ -62,9 +63,9 @@ mikrotik {
 
 // MikroTik system information
 //
-// Examine the device identity, the running RouterOS version and its build
-// time, the RouterBOARD hardware model and serial number, firmware versions,
-// and runtime resources such as CPU, memory, storage, and uptime. The values
+// Device identity, the running RouterOS version and its build time, the
+// RouterBOARD hardware model and serial number, firmware versions, and
+// runtime resources such as CPU, memory, storage, and uptime. The values
 // are read from `/system/identity`, `/system/resource`, and
 // `/system/routerboard`.
 mikrotik.system @defaults("identity version boardName") {
@@ -128,9 +129,9 @@ mikrotik.system @defaults("identity version boardName") {
 
 // MikroTik software package
 //
-// Examine an installed RouterOS software package, as listed by
-// `/system/package/print`. The `name` field selects the package — for example
-// `mikrotik.packages.where(name == "security")` — and exposes its version,
+// Installed RouterOS software package, as listed by `/system/package/print`.
+// The `name` field selects the package, for example
+// `mikrotik.packages.where(name == "security")`, and exposes its version,
 // build time, and whether it is enabled.
 mikrotik.system.package @defaults("name version disabled") {
   // Package name
@@ -139,7 +140,10 @@ mikrotik.system.package @defaults("name version disabled") {
   version string
   // Build time of the package
   buildTime string
-  // Whether the package is scheduled for enable/disable on next reboot
+  // Operation scheduled to apply on next reboot
+  //
+  // Empty when no change is pending, otherwise the pending action such as
+  // enable, disable, or downgrade.
   scheduled string
   // Whether the package is disabled
   disabled bool
@@ -147,8 +151,8 @@ mikrotik.system.package @defaults("name version disabled") {
 
 // MikroTik system clock
 //
-// Examine the device clock, current date and time, and time zone
-// configuration, as read from `/system/clock`.
+// Device clock, current date and time, and time zone configuration, as read
+// from `/system/clock`.
 mikrotik.system.clock @defaults("time date timeZoneName") {
   // Current time of day on the device
   time string
@@ -166,9 +170,9 @@ mikrotik.system.clock @defaults("time date timeZoneName") {
 
 // MikroTik NTP client configuration
 //
-// Examine the Network Time Protocol client settings, as read from
-// `/system/ntp/client`: whether NTP synchronization is enabled, the configured
-// servers, and the current synchronization status.
+// Network Time Protocol client settings, as read from `/system/ntp/client`:
+// whether NTP synchronization is enabled, the configured servers, and the
+// current synchronization status.
 mikrotik.system.ntp.client @defaults("enabled status") {
   // Whether the NTP client is enabled
   enabled bool
@@ -186,9 +190,11 @@ mikrotik.system.ntp.client @defaults("enabled status") {
 
 // MikroTik SNMP configuration
 //
-// Examine the SNMP service settings, as read from `/snmp`: whether SNMP is
-// enabled, the configured contact and location strings, and the SNMP trap
-// configuration.
+// SNMP service settings read from `/snmp`, covering whether SNMP is enabled,
+// the configured contact and location strings, the engine ID, and the SNMP
+// trap configuration (community, protocol version, generators, and source
+// address). Useful for confirming that SNMP is disabled where it isn't needed
+// and that any enabled SNMP exposure is scoped and attributed.
 mikrotik.snmp @defaults("enabled contact location") {
   // Whether the SNMP service is enabled
   enabled bool
@@ -210,12 +216,12 @@ mikrotik.snmp @defaults("enabled contact location") {
 
 // MikroTik network interface
 //
-// Examine a single network interface configured on the device. The `name`
-// field selects the interface as it appears in `/interface/print` — for
-// example `mikrotik.interfaces.where(name == "ether1")` — and exposes the
-// interface type, MTU values, MAC address, traffic and error counters, and
-// running state. Use `addresses` and `ipv6Addresses` to reach the IP
-// assignments bound to this interface.
+// Single network interface configured on the device. The `name` field
+// selects the interface as it appears in `/interface/print`, for example
+// `mikrotik.interfaces.where(name == "ether1")`, and exposes the interface
+// type, MTU values, MAC address, traffic and error counters, and running
+// state. The `addresses` and `ipv6Addresses` fields hold the IP assignments
+// bound to this interface.
 mikrotik.interface @defaults("name type running") {
   // Interface name
   name string
@@ -275,9 +281,9 @@ mikrotik.interface @defaults("name type running") {
 
 // MikroTik bridge interface
 //
-// Examine a bridge interface, as listed by `/interface/bridge/print`. The
-// `name` field selects the bridge and exposes its spanning-tree protocol mode,
-// VLAN filtering and snooping settings, MTU values, and running state.
+// Bridge interface, as listed by `/interface/bridge/print`. The `name` field
+// selects the bridge and exposes its spanning-tree protocol mode, VLAN
+// filtering and snooping settings, MTU values, and running state.
 mikrotik.interface.bridge @defaults("name protocolMode vlanFiltering") {
   // Bridge name
   name string
@@ -317,10 +323,9 @@ mikrotik.interface.bridge @defaults("name protocolMode vlanFiltering") {
 
 // MikroTik VLAN interface
 //
-// Examine a VLAN interface, as listed by `/interface/vlan/print`. The `name`
-// field selects the VLAN and exposes its VLAN ID, the parent interface it runs
-// on, MTU values, and running state. Use `interface` to reach the parent
-// interface resource.
+// VLAN interface, as listed by `/interface/vlan/print`. The `name` field
+// selects the VLAN and exposes its VLAN ID (802.1Q tag), the parent interface
+// it runs on via `interface`, MTU values, and running state.
 mikrotik.interface.vlan @defaults("name vlanId running") {
   // VLAN interface name
   name string
@@ -346,12 +351,13 @@ mikrotik.interface.vlan @defaults("name vlanId running") {
 
 // MikroTik WiFi interface
 //
-// Examine a WiFi interface managed by the RouterOS 7 `wifi` subsystem (formerly
+// WiFi interface managed by the RouterOS 7 `wifi` subsystem (formerly
 // wifiwave2), as listed by `/interface/wifi/print`. The `name` field selects
 // the interface and exposes the effective SSID, mode, channel band, frequency,
-// and width, plus the accepted authentication types. Use `masterInterface` for
-// virtual interfaces. This collection is empty on older devices that still use
-// the legacy wireless package.
+// and width, plus the accepted authentication types. The `masterInterface`
+// field resolves the physical interface a virtual interface rides on. This
+// collection is empty on older devices that still use the legacy wireless
+// package.
 mikrotik.interface.wifi @defaults("name ssid channelBand disabled") {
   // WiFi interface name
   name string
@@ -385,10 +391,10 @@ mikrotik.interface.wifi @defaults("name ssid channelBand disabled") {
 
 // MikroTik IPv4 address assignment
 //
-// Examine an IPv4 address assigned to an interface, as listed by
+// IPv4 address assigned to an interface, as listed by
 // `/ip/address/print`. Exposes the address with its CIDR netmask, the network
 // address, and whether the assignment is disabled or was created dynamically.
-// Use `interface` to reach the interface the address is bound to.
+// The `interface` field resolves the interface the address is bound to.
 mikrotik.ip.address @defaults("address actualInterface disabled") {
   // IP address with CIDR netmask
   //
@@ -412,10 +418,11 @@ mikrotik.ip.address @defaults("address actualInterface disabled") {
 
 // MikroTik IPv6 address assignment
 //
-// Examine an IPv6 address assigned to an interface, as listed by
-// `/ipv6/address/print`. Exposes the address, the pool it was allocated from,
-// advertisement and EUI-64 settings, and whether the assignment is disabled,
-// dynamic, or link-local. Use `interface` to reach the bound interface.
+// IPv6 address bound to an interface, as listed by `/ipv6/address/print`.
+// Covers the address and prefix length, the pool it was allocated from, router
+// advertisement and EUI-64 generation settings, and whether the assignment is
+// disabled, dynamic, invalid, or link-local. The `interface` field resolves
+// the bound interface for auditing which links carry which addresses.
 mikrotik.ipv6.address @defaults("address actualInterface disabled") {
   // IPv6 address with prefix length
   address string
@@ -445,7 +452,7 @@ mikrotik.ipv6.address @defaults("address actualInterface disabled") {
 
 // MikroTik IPv4 route
 //
-// Examine an entry in the IPv4 routing table, as listed by `/ip/route/print`.
+// Entry in the IPv4 routing table, as listed by `/ip/route/print`.
 // Exposes the destination network, the gateway, the administrative distance
 // and scope, the routing table the route belongs to, and whether the route is
 // active, dynamic, static, connected, or disabled.
@@ -488,7 +495,7 @@ mikrotik.ip.route @defaults("dstAddress gateway active") {
 
 // MikroTik IP address pool
 //
-// Examine an IP address pool, as listed by `/ip/pool/print`. The `name` field
+// IP address pool, as listed by `/ip/pool/print`. The `name` field
 // selects the pool and exposes the address ranges it hands out and the pool to
 // continue from when exhausted.
 mikrotik.ip.pool @defaults("name ranges") {
@@ -502,7 +509,7 @@ mikrotik.ip.pool @defaults("name ranges") {
 
 // MikroTik DNS resolver configuration
 //
-// Examine the DNS resolver settings, as read from `/ip/dns`: the configured
+// DNS resolver settings, as read from `/ip/dns`: the configured
 // upstream servers, whether the device acts as a remote DNS resolver, DNS over
 // HTTPS settings, and cache configuration.
 mikrotik.ip.dns @defaults("servers allowRemoteRequests") {
@@ -532,9 +539,9 @@ mikrotik.ip.dns @defaults("servers allowRemoteRequests") {
 
 // MikroTik management service
 //
-// Examine a management service exposed by the device, as listed by
-// `/ip/service/print`. The `name` field selects the service — for example
-// `mikrotik.services.where(name == "telnet")` — and exposes the listening
+// Management service exposed by the device, as listed by
+// `/ip/service/print`. The `name` field selects the service (for example
+// `mikrotik.services.where(name == "telnet")`) and exposes the listening
 // port, the address range allowed to connect, any bound TLS certificate, and
 // whether the service is disabled. This is the primary view for auditing which
 // management protocols (ssh, www, telnet, ftp, winbox, api, ...) are reachable.
@@ -563,7 +570,7 @@ mikrotik.ip.service @defaults("name port disabled") {
 
 // MikroTik firewall filter rule
 //
-// Examine an IPv4 firewall filter rule, as listed by `/ip/firewall/filter`.
+// IPv4 firewall filter rule, as listed by `/ip/firewall/filter`.
 // Exposes the chain, action, match conditions (protocol, source and
 // destination address and port, in/out interface, connection state), logging
 // configuration, byte and packet counters, and whether the rule is disabled.
@@ -613,7 +620,7 @@ mikrotik.ip.firewall.filter @defaults("chain action disabled") {
 
 // MikroTik firewall NAT rule
 //
-// Examine an IPv4 firewall NAT rule, as listed by `/ip/firewall/nat`. Exposes
+// IPv4 firewall NAT rule, as listed by `/ip/firewall/nat`. Exposes
 // the chain (srcnat/dstnat), the action, the match conditions, the address and
 // port translation targets, byte and packet counters, and whether the rule is
 // disabled. Rules are returned in their configured order.
@@ -664,10 +671,10 @@ mikrotik.ip.firewall.nat @defaults("chain action disabled") {
 
 // MikroTik DHCP server
 //
-// Examine a DHCP server instance, as listed by `/ip/dhcp-server/print`. The
+// DHCP server instance, as listed by `/ip/dhcp-server/print`. The
 // `name` field selects the server and exposes the lease time and authoritative
-// mode. Use `interface` to reach the interface it serves, `addressPool` to
-// reach the pool it allocates from, and `leases` to enumerate its leases.
+// mode. The `interface` field resolves the interface it serves, `addressPool`
+// the pool it allocates from, and `leases` enumerates its leases.
 mikrotik.ip.dhcp.server @defaults("name leaseTime disabled") {
   // DHCP server name
   name string
@@ -695,10 +702,10 @@ mikrotik.ip.dhcp.server @defaults("name leaseTime disabled") {
 
 // MikroTik DHCP lease
 //
-// Examine a DHCP lease, as listed by `/ip/dhcp-server/lease/print`. Exposes the
+// DHCP lease, as listed by `/ip/dhcp-server/lease/print`. Exposes the
 // leased address, the client MAC address and identifier, the host name, the
-// lease status and expiry, and whether the lease is dynamic or blocked. Use
-// `server` to reach the DHCP server that issued the lease.
+// lease status and expiry, and whether the lease is dynamic or blocked. The
+// `server` field resolves the DHCP server that issued the lease.
 mikrotik.ip.dhcp.lease @defaults("address macAddress status") {
   // Leased IP address
   address string
@@ -734,7 +741,7 @@ mikrotik.ip.dhcp.lease @defaults("address macAddress status") {
 
 // MikroTik discovered neighbor
 //
-// Examine a neighboring device discovered on a connected link via MNDP, CDP, or
+// Neighboring device discovered on a connected link via MNDP, CDP, or
 // LLDP, as listed by `/ip/neighbor/print`. Exposes the neighbor's addresses,
 // MAC address, advertised identity, platform, software version, and board, plus
 // the local interface it was discovered on through `interface`.
@@ -761,11 +768,13 @@ mikrotik.ip.neighbor @defaults("identity address macAddress") {
 
 // MikroTik local user account
 //
-// Examine a local user account defined on the device, as listed by
-// `/user/print`. The `name` field selects the user and exposes the address
-// range the user may log in from, the last login time, and whether the account
-// is disabled. Use `userGroup` to reach the permission group the user belongs
-// to.
+// Local user account defined on the device, as listed by `/user/print`.
+// User accounts are a primary access-control surface, so auditing which
+// accounts exist, which are disabled, and where each may log in from is
+// central to hardening the device. The `name` field selects the user and
+// exposes the address range the user may log in from, the last login time,
+// and whether the account is disabled. The `userGroup` field points to the
+// permission group whose policies govern what the user may do.
 mikrotik.user @defaults("name group disabled") {
   // User name
   name string
@@ -785,7 +794,10 @@ mikrotik.user @defaults("name group disabled") {
 
 // MikroTik user permission group
 //
-// Examine a user permission group, as listed by `/user/group/print`. The
+// User permission group, as listed by `/user/group/print`. Permission
+// groups define what device functions their members may use, so reviewing
+// the granted policies reveals which accounts hold sensitive capabilities
+// such as configuration write, API access, or full policy control. The
 // `name` field selects the group and exposes the policy set that determines
 // which actions members may perform.
 mikrotik.user.group @defaults("name policy") {
