@@ -16,77 +16,79 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceStackit                           string = "stackit"
-	ResourceStackitProject                    string = "stackit.project"
-	ResourceStackitServer                     string = "stackit.server"
-	ResourceStackitVolume                     string = "stackit.volume"
-	ResourceStackitSnapshot                   string = "stackit.snapshot"
-	ResourceStackitImage                      string = "stackit.image"
-	ResourceStackitNetwork                    string = "stackit.network"
-	ResourceStackitNic                        string = "stackit.nic"
-	ResourceStackitPublicIp                   string = "stackit.publicIp"
-	ResourceStackitSecurityGroup              string = "stackit.securityGroup"
-	ResourceStackitSecurityGroupRule          string = "stackit.securityGroup.rule"
-	ResourceStackitNetworkExposure            string = "stackit.network.exposure"
-	ResourceStackitServerBackup               string = "stackit.server.backup"
-	ResourceStackitServerBackupSchedule       string = "stackit.server.backupSchedule"
-	ResourceStackitServerUpdate               string = "stackit.server.update"
-	ResourceStackitServerUpdateSchedule       string = "stackit.server.updateSchedule"
-	ResourceStackitKeyPair                    string = "stackit.keyPair"
-	ResourceStackitLoadBalancer               string = "stackit.loadBalancer"
-	ResourceStackitLoadBalancerListener       string = "stackit.loadBalancer.listener"
-	ResourceStackitLoadBalancerTargetPool     string = "stackit.loadBalancer.targetPool"
-	ResourceStackitSke                        string = "stackit.ske"
-	ResourceStackitSkeCluster                 string = "stackit.ske.cluster"
-	ResourceStackitSkeClusterNodePool         string = "stackit.ske.cluster.nodePool"
-	ResourceStackitObjectStorage              string = "stackit.objectStorage"
-	ResourceStackitObjectStorageBucket        string = "stackit.objectStorage.bucket"
-	ResourceStackitSfs                        string = "stackit.sfs"
-	ResourceStackitSfsResourcePool            string = "stackit.sfs.resourcePool"
-	ResourceStackitSfsShare                   string = "stackit.sfs.share"
-	ResourceStackitSfsExportPolicy            string = "stackit.sfs.exportPolicy"
-	ResourceStackitSfsExportPolicyRule        string = "stackit.sfs.exportPolicy.rule"
-	ResourceStackitSfsSnapshot                string = "stackit.sfs.snapshot"
-	ResourceStackitDns                        string = "stackit.dns"
-	ResourceStackitDnsZone                    string = "stackit.dns.zone"
-	ResourceStackitDnsRecordSet               string = "stackit.dns.recordSet"
-	ResourceStackitPostgresFlex               string = "stackit.postgresFlex"
-	ResourceStackitPostgresFlexInstance       string = "stackit.postgresFlex.instance"
-	ResourceStackitMongoDbFlex                string = "stackit.mongoDbFlex"
-	ResourceStackitMongoDbFlexInstance        string = "stackit.mongoDbFlex.instance"
-	ResourceStackitSqlServerFlex              string = "stackit.sqlServerFlex"
-	ResourceStackitSqlServerFlexInstance      string = "stackit.sqlServerFlex.instance"
-	ResourceStackitOpenSearch                 string = "stackit.openSearch"
-	ResourceStackitOpenSearchInstance         string = "stackit.openSearch.instance"
-	ResourceStackitMariaDb                    string = "stackit.mariaDb"
-	ResourceStackitMariaDbInstance            string = "stackit.mariaDb.instance"
-	ResourceStackitRedis                      string = "stackit.redis"
-	ResourceStackitRedisInstance              string = "stackit.redis.instance"
-	ResourceStackitRabbitMq                   string = "stackit.rabbitMq"
-	ResourceStackitRabbitMqInstance           string = "stackit.rabbitMq.instance"
-	ResourceStackitLogMe                      string = "stackit.logMe"
-	ResourceStackitLogMeInstance              string = "stackit.logMe.instance"
-	ResourceStackitSecretsManager             string = "stackit.secretsManager"
-	ResourceStackitSecretsManagerInstance     string = "stackit.secretsManager.instance"
-	ResourceStackitObservability              string = "stackit.observability"
-	ResourceStackitObservabilityInstance      string = "stackit.observability.instance"
-	ResourceStackitTelemetry                  string = "stackit.telemetry"
-	ResourceStackitTelemetryRouter            string = "stackit.telemetry.router"
-	ResourceStackitTelemetryRouterDestination string = "stackit.telemetry.router.destination"
-	ResourceStackitTelemetryRouterAccessToken string = "stackit.telemetry.router.accessToken"
-	ResourceStackitTelemetryLink              string = "stackit.telemetry.link"
-	ResourceStackitModelServing               string = "stackit.modelServing"
-	ResourceStackitModelServingToken          string = "stackit.modelServing.token"
-	ResourceStackitModelServingModel          string = "stackit.modelServing.model"
-	ResourceStackitServiceAccount             string = "stackit.serviceAccount"
-	ResourceStackitCertificate                string = "stackit.certificate"
-	ResourceStackitAlbLoadBalancer            string = "stackit.alb.loadBalancer"
-	ResourceStackitKms                        string = "stackit.kms"
-	ResourceStackitKmsKeyRing                 string = "stackit.kms.keyRing"
-	ResourceStackitKmsKey                     string = "stackit.kms.key"
-	ResourceStackitIam                        string = "stackit.iam"
-	ResourceStackitIamMember                  string = "stackit.iam.member"
-	ResourceStackitIamRole                    string = "stackit.iam.role"
+	ResourceStackit                              string = "stackit"
+	ResourceStackitProject                       string = "stackit.project"
+	ResourceStackitServer                        string = "stackit.server"
+	ResourceStackitVolume                        string = "stackit.volume"
+	ResourceStackitSnapshot                      string = "stackit.snapshot"
+	ResourceStackitImage                         string = "stackit.image"
+	ResourceStackitNetwork                       string = "stackit.network"
+	ResourceStackitNic                           string = "stackit.nic"
+	ResourceStackitPublicIp                      string = "stackit.publicIp"
+	ResourceStackitSecurityGroup                 string = "stackit.securityGroup"
+	ResourceStackitSecurityGroupRule             string = "stackit.securityGroup.rule"
+	ResourceStackitNetworkExposure               string = "stackit.network.exposure"
+	ResourceStackitServerBackup                  string = "stackit.server.backup"
+	ResourceStackitServerBackupSchedule          string = "stackit.server.backupSchedule"
+	ResourceStackitServerUpdate                  string = "stackit.server.update"
+	ResourceStackitServerUpdateSchedule          string = "stackit.server.updateSchedule"
+	ResourceStackitKeyPair                       string = "stackit.keyPair"
+	ResourceStackitLoadBalancer                  string = "stackit.loadBalancer"
+	ResourceStackitLoadBalancerListener          string = "stackit.loadBalancer.listener"
+	ResourceStackitLoadBalancerTargetPool        string = "stackit.loadBalancer.targetPool"
+	ResourceStackitSke                           string = "stackit.ske"
+	ResourceStackitSkeCluster                    string = "stackit.ske.cluster"
+	ResourceStackitSkeClusterNodePool            string = "stackit.ske.cluster.nodePool"
+	ResourceStackitObjectStorage                 string = "stackit.objectStorage"
+	ResourceStackitObjectStorageCredentialsGroup string = "stackit.objectStorage.credentialsGroup"
+	ResourceStackitObjectStorageAccessKey        string = "stackit.objectStorage.accessKey"
+	ResourceStackitObjectStorageBucket           string = "stackit.objectStorage.bucket"
+	ResourceStackitSfs                           string = "stackit.sfs"
+	ResourceStackitSfsResourcePool               string = "stackit.sfs.resourcePool"
+	ResourceStackitSfsShare                      string = "stackit.sfs.share"
+	ResourceStackitSfsExportPolicy               string = "stackit.sfs.exportPolicy"
+	ResourceStackitSfsExportPolicyRule           string = "stackit.sfs.exportPolicy.rule"
+	ResourceStackitSfsSnapshot                   string = "stackit.sfs.snapshot"
+	ResourceStackitDns                           string = "stackit.dns"
+	ResourceStackitDnsZone                       string = "stackit.dns.zone"
+	ResourceStackitDnsRecordSet                  string = "stackit.dns.recordSet"
+	ResourceStackitPostgresFlex                  string = "stackit.postgresFlex"
+	ResourceStackitPostgresFlexInstance          string = "stackit.postgresFlex.instance"
+	ResourceStackitMongoDbFlex                   string = "stackit.mongoDbFlex"
+	ResourceStackitMongoDbFlexInstance           string = "stackit.mongoDbFlex.instance"
+	ResourceStackitSqlServerFlex                 string = "stackit.sqlServerFlex"
+	ResourceStackitSqlServerFlexInstance         string = "stackit.sqlServerFlex.instance"
+	ResourceStackitOpenSearch                    string = "stackit.openSearch"
+	ResourceStackitOpenSearchInstance            string = "stackit.openSearch.instance"
+	ResourceStackitMariaDb                       string = "stackit.mariaDb"
+	ResourceStackitMariaDbInstance               string = "stackit.mariaDb.instance"
+	ResourceStackitRedis                         string = "stackit.redis"
+	ResourceStackitRedisInstance                 string = "stackit.redis.instance"
+	ResourceStackitRabbitMq                      string = "stackit.rabbitMq"
+	ResourceStackitRabbitMqInstance              string = "stackit.rabbitMq.instance"
+	ResourceStackitLogMe                         string = "stackit.logMe"
+	ResourceStackitLogMeInstance                 string = "stackit.logMe.instance"
+	ResourceStackitSecretsManager                string = "stackit.secretsManager"
+	ResourceStackitSecretsManagerInstance        string = "stackit.secretsManager.instance"
+	ResourceStackitObservability                 string = "stackit.observability"
+	ResourceStackitObservabilityInstance         string = "stackit.observability.instance"
+	ResourceStackitTelemetry                     string = "stackit.telemetry"
+	ResourceStackitTelemetryRouter               string = "stackit.telemetry.router"
+	ResourceStackitTelemetryRouterDestination    string = "stackit.telemetry.router.destination"
+	ResourceStackitTelemetryRouterAccessToken    string = "stackit.telemetry.router.accessToken"
+	ResourceStackitTelemetryLink                 string = "stackit.telemetry.link"
+	ResourceStackitModelServing                  string = "stackit.modelServing"
+	ResourceStackitModelServingToken             string = "stackit.modelServing.token"
+	ResourceStackitModelServingModel             string = "stackit.modelServing.model"
+	ResourceStackitServiceAccount                string = "stackit.serviceAccount"
+	ResourceStackitCertificate                   string = "stackit.certificate"
+	ResourceStackitAlbLoadBalancer               string = "stackit.alb.loadBalancer"
+	ResourceStackitKms                           string = "stackit.kms"
+	ResourceStackitKmsKeyRing                    string = "stackit.kms.keyRing"
+	ResourceStackitKmsKey                        string = "stackit.kms.key"
+	ResourceStackitIam                           string = "stackit.iam"
+	ResourceStackitIamMember                     string = "stackit.iam.member"
+	ResourceStackitIamRole                       string = "stackit.iam.role"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -188,6 +190,14 @@ func init() {
 		"stackit.objectStorage": {
 			// to override args, implement: initStackitObjectStorage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createStackitObjectStorage,
+		},
+		"stackit.objectStorage.credentialsGroup": {
+			Init:   initStackitObjectStorageCredentialsGroup,
+			Create: createStackitObjectStorageCredentialsGroup,
+		},
+		"stackit.objectStorage.accessKey": {
+			// to override args, implement: initStackitObjectStorageAccessKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitObjectStorageAccessKey,
 		},
 		"stackit.objectStorage.bucket": {
 			Init:   initStackitObjectStorageBucket,
@@ -1302,6 +1312,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.objectStorage.buckets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitObjectStorage).GetBuckets()).ToDataRes(types.Array(types.Resource("stackit.objectStorage.bucket")))
+	},
+	"stackit.objectStorage.credentialsGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitObjectStorage).GetCredentialsGroups()).ToDataRes(types.Array(types.Resource("stackit.objectStorage.credentialsGroup")))
+	},
+	"stackit.objectStorage.credentialsGroup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitObjectStorageCredentialsGroup).GetId()).ToDataRes(types.String)
+	},
+	"stackit.objectStorage.credentialsGroup.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitObjectStorageCredentialsGroup).GetDisplayName()).ToDataRes(types.String)
+	},
+	"stackit.objectStorage.credentialsGroup.urn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitObjectStorageCredentialsGroup).GetUrn()).ToDataRes(types.String)
+	},
+	"stackit.objectStorage.credentialsGroup.accessKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitObjectStorageCredentialsGroup).GetAccessKeys()).ToDataRes(types.Array(types.Resource("stackit.objectStorage.accessKey")))
+	},
+	"stackit.objectStorage.accessKey.keyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitObjectStorageAccessKey).GetKeyId()).ToDataRes(types.String)
+	},
+	"stackit.objectStorage.accessKey.credentialsGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitObjectStorageAccessKey).GetCredentialsGroupId()).ToDataRes(types.String)
+	},
+	"stackit.objectStorage.accessKey.credentialsGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitObjectStorageAccessKey).GetCredentialsGroup()).ToDataRes(types.Resource("stackit.objectStorage.credentialsGroup"))
+	},
+	"stackit.objectStorage.accessKey.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitObjectStorageAccessKey).GetDisplayName()).ToDataRes(types.String)
+	},
+	"stackit.objectStorage.accessKey.expires": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitObjectStorageAccessKey).GetExpires()).ToDataRes(types.Time)
 	},
 	"stackit.objectStorage.bucket.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitObjectStorageBucket).GetName()).ToDataRes(types.String)
@@ -3551,6 +3591,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.objectStorage.buckets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitObjectStorage).Buckets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.objectStorage.credentialsGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitObjectStorage).CredentialsGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.objectStorage.credentialsGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitObjectStorageCredentialsGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.objectStorage.credentialsGroup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitObjectStorageCredentialsGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.objectStorage.credentialsGroup.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitObjectStorageCredentialsGroup).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.objectStorage.credentialsGroup.urn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitObjectStorageCredentialsGroup).Urn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.objectStorage.credentialsGroup.accessKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitObjectStorageCredentialsGroup).AccessKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.objectStorage.accessKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitObjectStorageAccessKey).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.objectStorage.accessKey.keyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitObjectStorageAccessKey).KeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.objectStorage.accessKey.credentialsGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitObjectStorageAccessKey).CredentialsGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.objectStorage.accessKey.credentialsGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitObjectStorageAccessKey).CredentialsGroup, ok = plugin.RawToTValue[*mqlStackitObjectStorageCredentialsGroup](v.Value, v.Error)
+		return
+	},
+	"stackit.objectStorage.accessKey.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitObjectStorageAccessKey).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.objectStorage.accessKey.expires": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitObjectStorageAccessKey).Expires, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"stackit.objectStorage.bucket.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8267,7 +8355,8 @@ type mqlStackitObjectStorage struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlStackitObjectStorageInternal it will be used here
-	Buckets plugin.TValue[[]any]
+	Buckets           plugin.TValue[[]any]
+	CredentialsGroups plugin.TValue[[]any]
 }
 
 // createStackitObjectStorage creates a new instance of this resource
@@ -8321,6 +8410,179 @@ func (c *mqlStackitObjectStorage) GetBuckets() *plugin.TValue[[]any] {
 
 		return c.buckets()
 	})
+}
+
+func (c *mqlStackitObjectStorage) GetCredentialsGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CredentialsGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.objectStorage", c.__id, "credentialsGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.credentialsGroups()
+	})
+}
+
+// mqlStackitObjectStorageCredentialsGroup for the stackit.objectStorage.credentialsGroup resource
+type mqlStackitObjectStorageCredentialsGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitObjectStorageCredentialsGroupInternal it will be used here
+	Id          plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Urn         plugin.TValue[string]
+	AccessKeys  plugin.TValue[[]any]
+}
+
+// createStackitObjectStorageCredentialsGroup creates a new instance of this resource
+func createStackitObjectStorageCredentialsGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitObjectStorageCredentialsGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.objectStorage.credentialsGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitObjectStorageCredentialsGroup) MqlName() string {
+	return "stackit.objectStorage.credentialsGroup"
+}
+
+func (c *mqlStackitObjectStorageCredentialsGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitObjectStorageCredentialsGroup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitObjectStorageCredentialsGroup) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlStackitObjectStorageCredentialsGroup) GetUrn() *plugin.TValue[string] {
+	return &c.Urn
+}
+
+func (c *mqlStackitObjectStorageCredentialsGroup) GetAccessKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccessKeys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.objectStorage.credentialsGroup", c.__id, "accessKeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accessKeys()
+	})
+}
+
+// mqlStackitObjectStorageAccessKey for the stackit.objectStorage.accessKey resource
+type mqlStackitObjectStorageAccessKey struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitObjectStorageAccessKeyInternal it will be used here
+	KeyId              plugin.TValue[string]
+	CredentialsGroupId plugin.TValue[string]
+	CredentialsGroup   plugin.TValue[*mqlStackitObjectStorageCredentialsGroup]
+	DisplayName        plugin.TValue[string]
+	Expires            plugin.TValue[*time.Time]
+}
+
+// createStackitObjectStorageAccessKey creates a new instance of this resource
+func createStackitObjectStorageAccessKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitObjectStorageAccessKey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.objectStorage.accessKey", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitObjectStorageAccessKey) MqlName() string {
+	return "stackit.objectStorage.accessKey"
+}
+
+func (c *mqlStackitObjectStorageAccessKey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitObjectStorageAccessKey) GetKeyId() *plugin.TValue[string] {
+	return &c.KeyId
+}
+
+func (c *mqlStackitObjectStorageAccessKey) GetCredentialsGroupId() *plugin.TValue[string] {
+	return &c.CredentialsGroupId
+}
+
+func (c *mqlStackitObjectStorageAccessKey) GetCredentialsGroup() *plugin.TValue[*mqlStackitObjectStorageCredentialsGroup] {
+	return plugin.GetOrCompute[*mqlStackitObjectStorageCredentialsGroup](&c.CredentialsGroup, func() (*mqlStackitObjectStorageCredentialsGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.objectStorage.accessKey", c.__id, "credentialsGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitObjectStorageCredentialsGroup), nil
+			}
+		}
+
+		return c.credentialsGroup()
+	})
+}
+
+func (c *mqlStackitObjectStorageAccessKey) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlStackitObjectStorageAccessKey) GetExpires() *plugin.TValue[*time.Time] {
+	return &c.Expires
 }
 
 // mqlStackitObjectStorageBucket for the stackit.objectStorage.bucket resource

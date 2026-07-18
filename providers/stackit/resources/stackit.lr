@@ -813,6 +813,44 @@ private stackit.ske.cluster.nodePool @defaults("name machineType minimum maximum
 stackit.objectStorage {
   // Object Storage buckets
   buckets() []stackit.objectStorage.bucket
+  // S3 credentials groups holding access keys
+  credentialsGroups() []stackit.objectStorage.credentialsGroup
+}
+
+// STACKIT Object Storage credentials group
+//
+// Group of S3-compatible access keys for a project's Object Storage. The
+// group is keyed by its UUID id and exposes the display name, the URN
+// that identifies the group, and the access keys it contains.
+private stackit.objectStorage.credentialsGroup @defaults("id displayName") {
+  init(id? string)
+  // Credentials group UUID
+  id string
+  // Display name
+  displayName string
+  // URN identifying the credentials group
+  urn string
+  // Access keys belonging to the group
+  accessKeys() []stackit.objectStorage.accessKey
+}
+
+// STACKIT Object Storage access key
+//
+// S3-compatible access key belonging to a credentials group. The key is
+// keyed by its keyId and exposes the display name, the expiry timestamp
+// (unset for keys that never expire), and the credentials group the key
+// belongs to.
+private stackit.objectStorage.accessKey @defaults("keyId displayName expires") {
+  // Access key ID
+  keyId string
+  // Owning credentials group UUID
+  credentialsGroupId string
+  // Credentials group the key belongs to
+  credentialsGroup() stackit.objectStorage.credentialsGroup
+  // Display name
+  displayName string
+  // Expiry timestamp (unset for keys that never expire)
+  expires time
 }
 
 // STACKIT Object Storage bucket

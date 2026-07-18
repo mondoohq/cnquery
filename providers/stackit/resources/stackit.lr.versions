@@ -272,6 +272,12 @@ stackit.nic.securityGroupIds 13.4.2
 stackit.nic.securityGroups 13.4.2
 stackit.nic.status 13.4.2
 stackit.objectStorage 13.0.0
+stackit.objectStorage.accessKey 13.4.2
+stackit.objectStorage.accessKey.credentialsGroup 13.4.2
+stackit.objectStorage.accessKey.credentialsGroupId 13.4.2
+stackit.objectStorage.accessKey.displayName 13.4.2
+stackit.objectStorage.accessKey.expires 13.4.2
+stackit.objectStorage.accessKey.keyId 13.4.2
 stackit.objectStorage.bucket 13.0.0
 stackit.objectStorage.bucket.defaultRetentionDays 13.0.1
 stackit.objectStorage.bucket.defaultRetentionMode 13.0.1
@@ -281,6 +287,12 @@ stackit.objectStorage.bucket.region 13.0.0
 stackit.objectStorage.bucket.urlPathStyle 13.0.0
 stackit.objectStorage.bucket.urlVirtualHostedStyle 13.0.0
 stackit.objectStorage.buckets 13.0.0
+stackit.objectStorage.credentialsGroup 13.4.2
+stackit.objectStorage.credentialsGroup.accessKeys 13.4.2
+stackit.objectStorage.credentialsGroup.displayName 13.4.2
+stackit.objectStorage.credentialsGroup.id 13.4.2
+stackit.objectStorage.credentialsGroup.urn 13.4.2
+stackit.objectStorage.credentialsGroups 13.4.2
 stackit.observability 13.0.0
 stackit.observability.instance 13.0.0
 stackit.observability.instance.dashboardUrl 13.0.0

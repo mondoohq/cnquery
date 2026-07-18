@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/stackitcloud/stackit-sdk-go/services/objectstorage"
@@ -132,4 +133,120 @@ func (r *mqlStackitObjectStorageBucket) defaultRetentionDays() (int64, error) {
 func (r *mqlStackitObjectStorageBucket) defaultRetentionMode() (string, error) {
 	_, mode, err := r.fetchDefaultRetention()
 	return mode, err
+}
+
+// ------------------------- credentials groups & access keys -------------------------
+
+func (r *mqlStackitObjectStorage) credentialsGroups() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	client, err := c.ObjectStorage()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.ListCredentialsGroupsExecute(bgctx(), c.ProjectID(), c.Region())
+	if err != nil {
+		// A 404 means the project is not onboarded to Object Storage; treat it
+		// as no credentials groups.
+		if isAccessDenied(err) || isNotFound(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	groups, _ := resp.GetCredentialsGroupsOk()
+	out := make([]any, 0, len(groups))
+	for i := range groups {
+		res, err := CreateResource(r.MqlRuntime, "stackit.objectStorage.credentialsGroup", map[string]*llx.RawData{
+			"id":          llx.StringData(groups[i].GetCredentialsGroupId()),
+			"displayName": llx.StringData(groups[i].GetDisplayName()),
+			"urn":         llx.StringData(groups[i].GetUrn()),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+func (r *mqlStackitObjectStorageCredentialsGroup) id() (string, error) {
+	return "stackit.objectStorage.credentialsGroup/" + conn(r.MqlRuntime).ProjectID() + "/" + r.Id.Data, nil
+}
+
+// initStackitObjectStorageCredentialsGroup resolves a credentials group by ID,
+// used when navigating to it from an access key.
+func initStackitObjectStorageCredentialsGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := idArg(args, "id")
+	if !ok {
+		return args, nil, nil
+	}
+	c := conn(runtime)
+	client, err := c.ObjectStorage()
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.GetCredentialsGroupExecute(bgctx(), c.ProjectID(), c.Region(), id)
+	if err != nil {
+		return nil, nil, err
+	}
+	g, ok := resp.GetCredentialsGroupOk()
+	if !ok {
+		return nil, nil, fmt.Errorf("stackit object storage credentials group %q not found", id)
+	}
+	res, err := CreateResource(runtime, "stackit.objectStorage.credentialsGroup", map[string]*llx.RawData{
+		"id":          llx.StringData(g.GetCredentialsGroupId()),
+		"displayName": llx.StringData(g.GetDisplayName()),
+		"urn":         llx.StringData(g.GetUrn()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, res, nil
+}
+
+func (r *mqlStackitObjectStorageCredentialsGroup) accessKeys() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	client, err := c.ObjectStorage()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.ListAccessKeys(bgctx(), c.ProjectID(), c.Region()).
+		CredentialsGroup(r.Id.Data).Execute()
+	if err != nil {
+		if isAccessDenied(err) || isNotFound(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	keys, _ := resp.GetAccessKeysOk()
+	out := make([]any, 0, len(keys))
+	for i := range keys {
+		res, err := CreateResource(r.MqlRuntime, "stackit.objectStorage.accessKey", map[string]*llx.RawData{
+			"keyId":              llx.StringData(keys[i].GetKeyId()),
+			"credentialsGroupId": llx.StringData(r.Id.Data),
+			"displayName":        llx.StringData(keys[i].GetDisplayName()),
+			"expires":            llx.TimeDataPtr(parseRFC3339(keys[i].GetExpires())),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+func (r *mqlStackitObjectStorageAccessKey) id() (string, error) {
+	return "stackit.objectStorage.accessKey/" + r.CredentialsGroupId.Data + "/" + r.KeyId.Data, nil
+}
+
+func (r *mqlStackitObjectStorageAccessKey) credentialsGroup() (*mqlStackitObjectStorageCredentialsGroup, error) {
+	if r.CredentialsGroupId.Data == "" {
+		return markNull[mqlStackitObjectStorageCredentialsGroup](&r.CredentialsGroup)
+	}
+	res, err := NewResource(r.MqlRuntime, "stackit.objectStorage.credentialsGroup", map[string]*llx.RawData{
+		"id": llx.StringData(r.CredentialsGroupId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlStackitObjectStorageCredentialsGroup), nil
 }
