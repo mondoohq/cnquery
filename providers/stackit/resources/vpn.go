@@ -122,24 +122,24 @@ func (r *mqlStackitVpnGateway) connections() ([]any, error) {
 	items, _ := resp.GetConnectionsOk()
 	out := make([]any, 0, len(items))
 	for i := range items {
-		conn := items[i]
-		idBase := "stackit.vpn.gateway.connection/" + c.ProjectID() + "/" + r.Id.Data + "/" + conn.GetId()
+		connResp := items[i]
+		idBase := "stackit.vpn.gateway.connection/" + c.ProjectID() + "/" + r.Id.Data + "/" + connResp.GetId()
 		res, err := CreateResource(r.MqlRuntime, "stackit.vpn.gateway.connection", map[string]*llx.RawData{
 			"__id":          llx.StringData(idBase),
-			"id":            llx.StringData(conn.GetId()),
-			"name":          llx.StringData(conn.GetDisplayName()),
-			"enabled":       llx.BoolData(conn.GetEnabled()),
-			"localSubnets":  strSliceData(conn.GetLocalSubnets()),
-			"remoteSubnets": strSliceData(conn.GetRemoteSubnets()),
-			"staticRoutes":  strSliceData(conn.GetStaticRoutes()),
-			"labels":        labelData(conn.GetLabels()),
+			"id":            llx.StringData(connResp.GetId()),
+			"name":          llx.StringData(connResp.GetDisplayName()),
+			"enabled":       llx.BoolData(connResp.GetEnabled()),
+			"localSubnets":  strSliceData(connResp.GetLocalSubnets()),
+			"remoteSubnets": strSliceData(connResp.GetRemoteSubnets()),
+			"staticRoutes":  strSliceData(connResp.GetStaticRoutes()),
+			"labels":        labelData(connResp.GetLabels()),
 		})
 		if err != nil {
 			return nil, err
 		}
 		mqlConn := res.(*mqlStackitVpnGatewayConnection)
-		t1 := conn.GetTunnel1()
-		t2 := conn.GetTunnel2()
+		t1 := connResp.GetTunnel1()
+		t2 := connResp.GetTunnel2()
 		mqlConn.cacheTunnel1 = &t1
 		mqlConn.cacheTunnel2 = &t2
 		mqlConn.cacheIdBase = idBase
