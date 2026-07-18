@@ -6,12 +6,22 @@ option go_package = "go.mondoo.com/mql/v13/providers/ipmi/resources"
 
 // Intelligent Platform Management Interface (IPMI)
 //
-// Top-level entry point for an IPMI BMC connection. Examine the management
-// controller's device ID (firmware revision, IPMI version, manufacturer,
-// product ID) and its globally unique GUID — the identity an audit needs
-// to confirm out-of-band management firmware before checking chassis state.
+// Baseboard management controller (BMC) reachable over the IPMI protocol,
+// the out-of-band interface for managing a server independently of its
+// operating system. The deviceID field reports the controller's firmware
+// revision, IPMI version, manufacturer, and product identity, and guid
+// returns its globally unique identifier, together confirming which
+// management firmware answers before an audit inspects chassis state.
 ipmi {
-  // The hardware & firmware device ID
+  // Hardware and firmware device ID of the management controller
+  //
+  // Dict returned by the Get Device ID command. Keys: `deviceID`,
+  // `deviceRevision`, `providesDeviceSDRs`, `deviceAvailable`,
+  // `firmwareRevision`, `ipmiVersion`, `manufacturerID`, `manufacturerName`,
+  // `productID`, `productName`, and `additionalDeviceSupport` (a nested dict
+  // of booleans `sensorDevice`, `sdrRepositoryDevice`, `selDevice`,
+  // `fruInventoryDevice`, `ipmbEventReciever`, `ipmbEventGenerator`,
+  // `bridge`, and `chassisDevice`).
   deviceID() dict
   // GUID (Globally Unique ID) for management controller
   guid() string
@@ -19,12 +29,37 @@ ipmi {
 
 // IPMI system chassis
 //
-// Examine the high-level chassis status (power state, fault flags, intrusion
-// detection, drive / cooling fault, last power event) and the configured
-// system boot options for a server reachable via IPMI.
+// Chassis-level power and physical state of a server reachable through its
+// IPMI baseboard management controller. The status field reports whether main
+// power is on, power fault and overload flags, chassis intrusion, front-panel
+// lockout, and drive or cooling-fan faults, so an audit can confirm a host is
+// powered and healthy out of band. The systemBootOptions field exposes the
+// configured boot device and the BIOS boot-flag overrides.
 ipmi.chassis {
-  // High-level status of the system chassis and main power subsystem
+  // Chassis power and fault status
+  //
+  // Current state of the chassis and its main power subsystem. Keys:
+  // `systemPower` (main power on), the fault booleans `powerOverload`,
+  // `powerInterlock`, `mainPowerFault`, and `powerControlFault`,
+  // `powerRestorePolicy` (behavior after a power loss, one of always-off,
+  // previous, always-on, or unknown), `lastPowerEvent` (an object with the
+  // booleans ac-failed, overload, interlock, fault, and command), and the
+  // booleans `chassisIntrusion`, `frontPanelLockout`, `driveFault`, and
+  // `coolingFanFault`.
   status() dict
-  // System boot options
+  // System boot device and BIOS boot-flag overrides
+  //
+  // Configured boot options. Keys: `parameterVersion`,
+  // `parameterValidUnlocked`, and `bootFlags`, an object holding the boot-flag
+  // overrides. Within `bootFlags`: `bootDeviceSelector` (device forced for the
+  // next boot, one of none, pxe, disk, safe, diag, cdrom, bios, rfloppy,
+  // rprimary, rcdrom, rdisk, or floppy), `biosVerbosity` (default, quiet,
+  // verbose, or reserved), `consoleRedirection` (bios, skip, redirected, or
+  // reserved), `biosMuxControlOverride` (recommended, force-bmc, force-system,
+  // or reserved), and the boolean overrides `biosFlagsValid`,
+  // `applyToNextBootOnly`, `legacyBootType`, `cmosClear`, `lockKeyboard`,
+  // `screenBlank`, `lockOutResetButton`, `lockOutPowerButton`,
+  // `lockOutSleepButton`, `userPasswordBypass`, `forceProgressEventTrap`, and
+  // `biosSharedModeOverride`.
   systemBootOptions() dict
 }
