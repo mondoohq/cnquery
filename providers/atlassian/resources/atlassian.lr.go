@@ -59,11 +59,11 @@ func init() {
 			Create: createAtlassianScim,
 		},
 		"atlassian.scim.user": {
-			// to override args, implement: initAtlassianScimUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAtlassianScimUser,
 			Create: createAtlassianScimUser,
 		},
 		"atlassian.scim.group": {
-			// to override args, implement: initAtlassianScimGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAtlassianScimGroup,
 			Create: createAtlassianScimGroup,
 		},
 		"atlassian.admin.organization": {
@@ -274,11 +274,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.scim.user.title": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianScimUser).GetTitle()).ToDataRes(types.String)
 	},
+	"atlassian.scim.user.active": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianScimUser).GetActive()).ToDataRes(types.Bool)
+	},
+	"atlassian.scim.user.groups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianScimUser).GetGroups()).ToDataRes(types.Array(types.Resource("atlassian.scim.group")))
+	},
 	"atlassian.scim.group.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianScimGroup).GetId()).ToDataRes(types.String)
 	},
 	"atlassian.scim.group.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianScimGroup).GetName()).ToDataRes(types.String)
+	},
+	"atlassian.scim.group.members": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianScimGroup).GetMembers()).ToDataRes(types.Array(types.Resource("atlassian.scim.user")))
 	},
 	"atlassian.admin.organization.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganization).GetId()).ToDataRes(types.String)
@@ -556,6 +565,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.jira.serverInfo.buildNumber": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraServerInfo).GetBuildNumber()).ToDataRes(types.Int)
 	},
+	"atlassian.jira.serverInfo.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraServerInfo).GetVersion()).ToDataRes(types.String)
+	},
+	"atlassian.jira.serverInfo.buildDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraServerInfo).GetBuildDate()).ToDataRes(types.Time)
+	},
+	"atlassian.jira.serverInfo.serverTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraServerInfo).GetServerTime()).ToDataRes(types.Time)
+	},
 	"atlassian.jira.serverInfo.serverTitle": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraServerInfo).GetServerTitle()).ToDataRes(types.String)
 	},
@@ -603,6 +621,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"atlassian.jira.project.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraProject).GetName()).ToDataRes(types.String)
+	},
+	"atlassian.jira.project.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraProject).GetDescription()).ToDataRes(types.String)
 	},
 	"atlassian.jira.project.uuid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraProject).GetUuid()).ToDataRes(types.String)
@@ -793,6 +814,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.jira.customField.contextsCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraCustomField).GetContextsCount()).ToDataRes(types.Int)
 	},
+	"atlassian.jira.customField.lastUsed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraCustomField).GetLastUsed()).ToDataRes(types.Dict)
+	},
 	"atlassian.jira.workflow.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraWorkflow).GetId()).ToDataRes(types.String)
 	},
@@ -907,8 +931,26 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.confluence.page.createdBy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianConfluencePage).GetCreatedBy()).ToDataRes(types.Resource("atlassian.confluence.user"))
 	},
+	"atlassian.confluence.page.updatedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluencePage).GetUpdatedBy()).ToDataRes(types.Resource("atlassian.confluence.user"))
+	},
+	"atlassian.confluence.page.versionMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluencePage).GetVersionMessage()).ToDataRes(types.String)
+	},
+	"atlassian.confluence.page.minorEdit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluencePage).GetMinorEdit()).ToDataRes(types.Bool)
+	},
 	"atlassian.confluence.page.parent": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianConfluencePage).GetParent()).ToDataRes(types.Resource("atlassian.confluence.page"))
+	},
+	"atlassian.confluence.page.ancestorIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluencePage).GetAncestorIds()).ToDataRes(types.Array(types.String))
+	},
+	"atlassian.confluence.page.depth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluencePage).GetDepth()).ToDataRes(types.Int)
+	},
+	"atlassian.confluence.page.webUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluencePage).GetWebUrl()).ToDataRes(types.String)
 	},
 	"atlassian.confluence.page.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianConfluencePage).GetLabels()).ToDataRes(types.Array(types.String))
@@ -985,6 +1027,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAtlassianScimUser).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"atlassian.scim.user.active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianScimUser).Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"atlassian.scim.user.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianScimUser).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"atlassian.scim.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianScimGroup).__id, ok = v.Value.(string)
 		return
@@ -995,6 +1045,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"atlassian.scim.group.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianScimGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.scim.group.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianScimGroup).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"atlassian.admin.organization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1409,6 +1463,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAtlassianJiraServerInfo).BuildNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"atlassian.jira.serverInfo.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraServerInfo).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.serverInfo.buildDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraServerInfo).BuildDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.serverInfo.serverTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraServerInfo).ServerTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"atlassian.jira.serverInfo.serverTitle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraServerInfo).ServerTitle, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1483,6 +1549,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"atlassian.jira.project.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraProject).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.project.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraProject).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"atlassian.jira.project.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1765,6 +1835,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAtlassianJiraCustomField).ContextsCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"atlassian.jira.customField.lastUsed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraCustomField).LastUsed, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"atlassian.jira.workflow.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraWorkflow).__id, ok = v.Value.(string)
 		return
@@ -1945,8 +2019,32 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAtlassianConfluencePage).CreatedBy, ok = plugin.RawToTValue[*mqlAtlassianConfluenceUser](v.Value, v.Error)
 		return
 	},
+	"atlassian.confluence.page.updatedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluencePage).UpdatedBy, ok = plugin.RawToTValue[*mqlAtlassianConfluenceUser](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.page.versionMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluencePage).VersionMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.page.minorEdit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluencePage).MinorEdit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"atlassian.confluence.page.parent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianConfluencePage).Parent, ok = plugin.RawToTValue[*mqlAtlassianConfluencePage](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.page.ancestorIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluencePage).AncestorIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.page.depth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluencePage).Depth, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.page.webUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluencePage).WebUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"atlassian.confluence.page.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2095,12 +2193,14 @@ func (c *mqlAtlassianScim) GetGroups() *plugin.TValue[[]any] {
 type mqlAtlassianScimUser struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAtlassianScimUserInternal it will be used here
+	mqlAtlassianScimUserInternal
 	Id           plugin.TValue[string]
 	Name         plugin.TValue[string]
 	DisplayName  plugin.TValue[string]
 	Organization plugin.TValue[string]
 	Title        plugin.TValue[string]
+	Active       plugin.TValue[bool]
+	Groups       plugin.TValue[[]any]
 }
 
 // createAtlassianScimUser creates a new instance of this resource
@@ -2160,13 +2260,34 @@ func (c *mqlAtlassianScimUser) GetTitle() *plugin.TValue[string] {
 	return &c.Title
 }
 
+func (c *mqlAtlassianScimUser) GetActive() *plugin.TValue[bool] {
+	return &c.Active
+}
+
+func (c *mqlAtlassianScimUser) GetGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Groups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.scim.user", c.__id, "groups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.groups()
+	})
+}
+
 // mqlAtlassianScimGroup for the atlassian.scim.group resource
 type mqlAtlassianScimGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAtlassianScimGroupInternal it will be used here
-	Id   plugin.TValue[string]
-	Name plugin.TValue[string]
+	mqlAtlassianScimGroupInternal
+	Id      plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Members plugin.TValue[[]any]
 }
 
 // createAtlassianScimGroup creates a new instance of this resource
@@ -2212,6 +2333,22 @@ func (c *mqlAtlassianScimGroup) GetId() *plugin.TValue[string] {
 
 func (c *mqlAtlassianScimGroup) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlAtlassianScimGroup) GetMembers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Members, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.scim.group", c.__id, "members")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.members()
+	})
 }
 
 // mqlAtlassianAdminOrganization for the atlassian.admin.organization resource
@@ -3279,6 +3416,9 @@ type mqlAtlassianJiraServerInfo struct {
 	// optional: if you define mqlAtlassianJiraServerInfoInternal it will be used here
 	BaseUrl        plugin.TValue[string]
 	BuildNumber    plugin.TValue[int64]
+	Version        plugin.TValue[string]
+	BuildDate      plugin.TValue[*time.Time]
+	ServerTime     plugin.TValue[*time.Time]
 	ServerTitle    plugin.TValue[string]
 	DeploymentType plugin.TValue[string]
 }
@@ -3321,6 +3461,18 @@ func (c *mqlAtlassianJiraServerInfo) GetBaseUrl() *plugin.TValue[string] {
 
 func (c *mqlAtlassianJiraServerInfo) GetBuildNumber() *plugin.TValue[int64] {
 	return &c.BuildNumber
+}
+
+func (c *mqlAtlassianJiraServerInfo) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlAtlassianJiraServerInfo) GetBuildDate() *plugin.TValue[*time.Time] {
+	return &c.BuildDate
+}
+
+func (c *mqlAtlassianJiraServerInfo) GetServerTime() *plugin.TValue[*time.Time] {
+	return &c.ServerTime
 }
 
 func (c *mqlAtlassianJiraServerInfo) GetServerTitle() *plugin.TValue[string] {
@@ -3505,6 +3657,7 @@ type mqlAtlassianJiraProject struct {
 	// optional: if you define mqlAtlassianJiraProjectInternal it will be used here
 	Id               plugin.TValue[string]
 	Name             plugin.TValue[string]
+	Description      plugin.TValue[string]
 	Uuid             plugin.TValue[string]
 	Key              plugin.TValue[string]
 	Url              plugin.TValue[string]
@@ -3564,6 +3717,10 @@ func (c *mqlAtlassianJiraProject) GetId() *plugin.TValue[string] {
 
 func (c *mqlAtlassianJiraProject) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlAtlassianJiraProject) GetDescription() *plugin.TValue[string] {
+	return &c.Description
 }
 
 func (c *mqlAtlassianJiraProject) GetUuid() *plugin.TValue[string] {
@@ -4144,6 +4301,7 @@ type mqlAtlassianJiraCustomField struct {
 	SchemaCustomId plugin.TValue[int64]
 	ScreensCount   plugin.TValue[int64]
 	ContextsCount  plugin.TValue[int64]
+	LastUsed       plugin.TValue[any]
 }
 
 // createAtlassianJiraCustomField creates a new instance of this resource
@@ -4245,6 +4403,10 @@ func (c *mqlAtlassianJiraCustomField) GetScreensCount() *plugin.TValue[int64] {
 
 func (c *mqlAtlassianJiraCustomField) GetContextsCount() *plugin.TValue[int64] {
 	return &c.ContextsCount
+}
+
+func (c *mqlAtlassianJiraCustomField) GetLastUsed() *plugin.TValue[any] {
+	return &c.LastUsed
 }
 
 // mqlAtlassianJiraWorkflow for the atlassian.jira.workflow resource
@@ -4730,7 +4892,13 @@ type mqlAtlassianConfluencePage struct {
 	CreatedAt       plugin.TValue[*time.Time]
 	UpdatedAt       plugin.TValue[*time.Time]
 	CreatedBy       plugin.TValue[*mqlAtlassianConfluenceUser]
+	UpdatedBy       plugin.TValue[*mqlAtlassianConfluenceUser]
+	VersionMessage  plugin.TValue[string]
+	MinorEdit       plugin.TValue[bool]
 	Parent          plugin.TValue[*mqlAtlassianConfluencePage]
+	AncestorIds     plugin.TValue[[]any]
+	Depth           plugin.TValue[int64]
+	WebUrl          plugin.TValue[string]
 	Labels          plugin.TValue[[]any]
 	HasRestrictions plugin.TValue[bool]
 	Restrictions    plugin.TValue[[]any]
@@ -4827,6 +4995,34 @@ func (c *mqlAtlassianConfluencePage) GetCreatedBy() *plugin.TValue[*mqlAtlassian
 	})
 }
 
+func (c *mqlAtlassianConfluencePage) GetUpdatedBy() *plugin.TValue[*mqlAtlassianConfluenceUser] {
+	return plugin.GetOrCompute[*mqlAtlassianConfluenceUser](&c.UpdatedBy, func() (*mqlAtlassianConfluenceUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.confluence.page", c.__id, "updatedBy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAtlassianConfluenceUser), nil
+			}
+		}
+
+		return c.updatedBy()
+	})
+}
+
+func (c *mqlAtlassianConfluencePage) GetVersionMessage() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.VersionMessage, func() (string, error) {
+		return c.versionMessage()
+	})
+}
+
+func (c *mqlAtlassianConfluencePage) GetMinorEdit() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MinorEdit, func() (bool, error) {
+		return c.minorEdit()
+	})
+}
+
 func (c *mqlAtlassianConfluencePage) GetParent() *plugin.TValue[*mqlAtlassianConfluencePage] {
 	return plugin.GetOrCompute[*mqlAtlassianConfluencePage](&c.Parent, func() (*mqlAtlassianConfluencePage, error) {
 		if c.MqlRuntime.HasRecording {
@@ -4840,6 +5036,24 @@ func (c *mqlAtlassianConfluencePage) GetParent() *plugin.TValue[*mqlAtlassianCon
 		}
 
 		return c.parent()
+	})
+}
+
+func (c *mqlAtlassianConfluencePage) GetAncestorIds() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AncestorIds, func() ([]any, error) {
+		return c.ancestorIds()
+	})
+}
+
+func (c *mqlAtlassianConfluencePage) GetDepth() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Depth, func() (int64, error) {
+		return c.depth()
+	})
+}
+
+func (c *mqlAtlassianConfluencePage) GetWebUrl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.WebUrl, func() (string, error) {
+		return c.webUrl()
 	})
 }
 

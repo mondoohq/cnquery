@@ -35,6 +35,10 @@ atlassian.scim.user @defaults("displayName") {
   organization string
   // Job title
   title string
+  // Whether the account is active. False for deprovisioned or disabled users.
+  active bool
+  // Groups the user is a member of
+  groups() []atlassian.scim.group
 }
 
 // Atlassian SCIM provisioned group
@@ -48,6 +52,8 @@ atlassian.scim.group @defaults("name") {
   id string
   // Group name
   name string
+  // Users who are members of the group
+  members() []atlassian.scim.user
 }
 
 // Atlassian Admin organization
@@ -372,6 +378,12 @@ atlassian.jira.serverInfo @defaults("serverTitle") {
   baseUrl string
   // Build number
   buildNumber int
+  // Version string (e.g., 9.12.0). Empty on some Cloud deployments.
+  version string
+  // Build date. Null when the instance does not report one.
+  buildDate time
+  // Current server time. Useful for detecting clock drift.
+  serverTime time
   // Server display title
   serverTitle string
   // Deployment type (Cloud, Server, Data Center)
@@ -431,6 +443,8 @@ atlassian.jira.project @defaults("name projectTypeKey") {
   id string
   // Project display name
   name string
+  // Project description
+  description string
   // Project UUID
   uuid string
   // Project key (e.g., PROJ)
@@ -632,6 +646,12 @@ private atlassian.jira.customField @defaults("id name schemaType") {
   screensCount int
   // Number of contexts this field is configured in
   contextsCount int
+  // Last-used tracking for the field
+  //
+  // Dict with `type` (TRACKED, NOT_TRACKED, or NO_INFORMATION) and `value`
+  // (the last-used date, present only when type is TRACKED). Use it to find
+  // dormant custom fields that may still hold stale sensitive data.
+  lastUsed dict
 }
 
 // Jira workflow
@@ -790,8 +810,20 @@ atlassian.confluence.page @defaults("title status") {
   updatedAt() time
   // User who created the page. Null when the API does not return creator details.
   createdBy() atlassian.confluence.user
+  // User who made the current version. Null when the API does not return editor details.
+  updatedBy() atlassian.confluence.user
+  // Message recorded with the current version. Empty when none was set.
+  versionMessage() string
+  // Whether the current version was flagged as a minor edit
+  minorEdit() bool
   // Direct parent page. Null for top-level pages or when no ancestors are returned.
   parent() atlassian.confluence.page
+  // Content IDs of the full ancestor chain, root first, direct parent last
+  ancestorIds() []string
+  // Nesting depth. 0 for a top-level page, 1 for its children, and so on.
+  depth() int
+  // Absolute URL of the page in the Confluence web UI. Empty when unavailable.
+  webUrl() string
   // Labels applied to the page (label name only, without prefix)
   labels() []string
   // Whether this page has any explicit read or update restrictions applied

@@ -43,6 +43,13 @@ func (a *mqlAtlassianJira) customFields() ([]any, error) {
 			schemaCustom = f.Schema.Custom
 			schemaCustomId = int64(f.Schema.CustomID)
 		}
+		var lastUsed any
+		if f.LastUsed != nil {
+			lastUsed = map[string]any{
+				"type":  f.LastUsed.Type,
+				"value": f.LastUsed.Value,
+			}
+		}
 		mqlField, err := CreateResource(a.MqlRuntime, "atlassian.jira.customField",
 			map[string]*llx.RawData{
 				"id":             llx.StringData(f.ID),
@@ -61,6 +68,7 @@ func (a *mqlAtlassianJira) customFields() ([]any, error) {
 				"schemaCustomId": llx.IntData(schemaCustomId),
 				"screensCount":   llx.IntData(int64(f.ScreensCount)),
 				"contextsCount":  llx.IntData(int64(f.ContextsCount)),
+				"lastUsed":       llx.DictData(lastUsed),
 			})
 		if err != nil {
 			return nil, err

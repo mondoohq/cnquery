@@ -25,6 +25,22 @@ func (a *mqlAtlassianJira) id() (string, error) {
 	return "jira", nil
 }
 
+// parseJiraTime parses a Jira API timestamp, trying RFC 3339 first and then the
+// Jira-specific layout. It returns nil for empty or unparseable input so the
+// corresponding MQL field resolves to null rather than the zero time.
+func parseJiraTime(s string) *time.Time {
+	if s == "" {
+		return nil
+	}
+	if t, err := time.Parse(time.RFC3339, s); err == nil {
+		return &t
+	}
+	if t, err := time.Parse(JIRA_TIME_FORMAT, s); err == nil {
+		return &t
+	}
+	return nil
+}
+
 func (a *mqlAtlassianJira) users() ([]any, error) {
 	conn, ok := a.MqlRuntime.Connection.(*jira.JiraConnection)
 	if !ok {
@@ -184,6 +200,9 @@ func (a *mqlAtlassianJira) serverInfos() (*mqlAtlassianJiraServerInfo, error) {
 			"baseUrl":        llx.StringData(info.BaseURL),
 			"serverTitle":    llx.StringData(info.ServerTitle),
 			"buildNumber":    llx.IntData(int64(info.BuildNumber)),
+			"version":        llx.StringData(info.Version),
+			"buildDate":      llx.TimeDataPtr(parseJiraTime(info.BuildDate)),
+			"serverTime":     llx.TimeDataPtr(parseJiraTime(info.ServerTime)),
 			"deploymentType": llx.StringData(info.DeploymentType),
 		})
 	return res.(*mqlAtlassianJiraServerInfo), err
@@ -222,6 +241,7 @@ func (a *mqlAtlassianJira) projects() ([]any, error) {
 				map[string]*llx.RawData{
 					"id":             llx.StringData(project.ID),
 					"name":           llx.StringData(project.Name),
+					"description":    llx.StringData(project.Description),
 					"uuid":           llx.StringData(project.UUID),
 					"key":            llx.StringData(project.Key),
 					"url":            llx.StringData(project.URL),
