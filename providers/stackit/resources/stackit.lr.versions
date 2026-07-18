@@ -274,7 +274,6 @@ stackit.nic.status 13.4.2
 stackit.objectStorage 13.0.0
 stackit.objectStorage.accessKey 13.4.2
 stackit.objectStorage.accessKey.credentialsGroup 13.4.2
-stackit.objectStorage.accessKey.credentialsGroupId 13.4.2
 stackit.objectStorage.accessKey.displayName 13.4.2
 stackit.objectStorage.accessKey.expires 13.4.2
 stackit.objectStorage.accessKey.keyId 13.4.2

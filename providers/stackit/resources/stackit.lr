@@ -843,8 +843,6 @@ private stackit.objectStorage.credentialsGroup @defaults("id displayName") {
 private stackit.objectStorage.accessKey @defaults("keyId displayName expires") {
   // Access key ID
   keyId string
-  // Owning credentials group UUID
-  credentialsGroupId string
   // Credentials group the key belongs to
   credentialsGroup() stackit.objectStorage.credentialsGroup
   // Display name

@@ -19,6 +19,13 @@ type mqlStackitObjectStorageBucketInternal struct {
 	retentionLock    sync.Mutex
 }
 
+type mqlStackitObjectStorageAccessKeyInternal struct {
+	// cacheCredentialsGroupId holds the owning group's UUID so the lazy
+	// credentialsGroup() reference can resolve it. It is not exposed as a
+	// field because credentialsGroup() already carries the same value.
+	cacheCredentialsGroupId string
+}
+
 func (r *mqlStackitObjectStorage) buckets() ([]any, error) {
 	c := conn(r.MqlRuntime)
 	client, err := c.ObjectStorage()
@@ -220,30 +227,32 @@ func (r *mqlStackitObjectStorageCredentialsGroup) accessKeys() ([]any, error) {
 	keys, _ := resp.GetAccessKeysOk()
 	out := make([]any, 0, len(keys))
 	for i := range keys {
+		keyID := keys[i].GetKeyId()
+		// Synthetic cache key: the access key ID is unique within a group, so
+		// project + group + key keeps instances distinct. It mirrors the
+		// project-qualified form used by credentialsGroup.id().
+		accessKeyID := "stackit.objectStorage.accessKey/" + c.ProjectID() + "/" + r.Id.Data + "/" + keyID
 		res, err := CreateResource(r.MqlRuntime, "stackit.objectStorage.accessKey", map[string]*llx.RawData{
-			"keyId":              llx.StringData(keys[i].GetKeyId()),
-			"credentialsGroupId": llx.StringData(r.Id.Data),
-			"displayName":        llx.StringData(keys[i].GetDisplayName()),
-			"expires":            llx.TimeDataPtr(parseRFC3339(keys[i].GetExpires())),
+			"__id":        llx.StringData(accessKeyID),
+			"keyId":       llx.StringData(keyID),
+			"displayName": llx.StringData(keys[i].GetDisplayName()),
+			"expires":     llx.TimeDataPtr(parseRFC3339(keys[i].GetExpires())),
 		})
 		if err != nil {
 			return nil, err
 		}
+		res.(*mqlStackitObjectStorageAccessKey).cacheCredentialsGroupId = r.Id.Data
 		out = append(out, res)
 	}
 	return out, nil
 }
 
-func (r *mqlStackitObjectStorageAccessKey) id() (string, error) {
-	return "stackit.objectStorage.accessKey/" + r.CredentialsGroupId.Data + "/" + r.KeyId.Data, nil
-}
-
 func (r *mqlStackitObjectStorageAccessKey) credentialsGroup() (*mqlStackitObjectStorageCredentialsGroup, error) {
-	if r.CredentialsGroupId.Data == "" {
+	if r.cacheCredentialsGroupId == "" {
 		return markNull[mqlStackitObjectStorageCredentialsGroup](&r.CredentialsGroup)
 	}
 	res, err := NewResource(r.MqlRuntime, "stackit.objectStorage.credentialsGroup", map[string]*llx.RawData{
-		"id": llx.StringData(r.CredentialsGroupId.Data),
+		"id": llx.StringData(r.cacheCredentialsGroupId),
 	})
 	if err != nil {
 		return nil, err

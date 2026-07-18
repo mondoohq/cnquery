@@ -1331,9 +1331,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.objectStorage.accessKey.keyId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitObjectStorageAccessKey).GetKeyId()).ToDataRes(types.String)
 	},
-	"stackit.objectStorage.accessKey.credentialsGroupId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlStackitObjectStorageAccessKey).GetCredentialsGroupId()).ToDataRes(types.String)
-	},
 	"stackit.objectStorage.accessKey.credentialsGroup": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitObjectStorageAccessKey).GetCredentialsGroup()).ToDataRes(types.Resource("stackit.objectStorage.credentialsGroup"))
 	},
@@ -3623,10 +3620,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.objectStorage.accessKey.keyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitObjectStorageAccessKey).KeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"stackit.objectStorage.accessKey.credentialsGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlStackitObjectStorageAccessKey).CredentialsGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"stackit.objectStorage.accessKey.credentialsGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8508,12 +8501,11 @@ func (c *mqlStackitObjectStorageCredentialsGroup) GetAccessKeys() *plugin.TValue
 type mqlStackitObjectStorageAccessKey struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlStackitObjectStorageAccessKeyInternal it will be used here
-	KeyId              plugin.TValue[string]
-	CredentialsGroupId plugin.TValue[string]
-	CredentialsGroup   plugin.TValue[*mqlStackitObjectStorageCredentialsGroup]
-	DisplayName        plugin.TValue[string]
-	Expires            plugin.TValue[*time.Time]
+	mqlStackitObjectStorageAccessKeyInternal
+	KeyId            plugin.TValue[string]
+	CredentialsGroup plugin.TValue[*mqlStackitObjectStorageCredentialsGroup]
+	DisplayName      plugin.TValue[string]
+	Expires          plugin.TValue[*time.Time]
 }
 
 // createStackitObjectStorageAccessKey creates a new instance of this resource
@@ -8527,12 +8519,7 @@ func createStackitObjectStorageAccessKey(runtime *plugin.Runtime, args map[strin
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("stackit.objectStorage.accessKey", res.__id)
@@ -8555,10 +8542,6 @@ func (c *mqlStackitObjectStorageAccessKey) MqlID() string {
 
 func (c *mqlStackitObjectStorageAccessKey) GetKeyId() *plugin.TValue[string] {
 	return &c.KeyId
-}
-
-func (c *mqlStackitObjectStorageAccessKey) GetCredentialsGroupId() *plugin.TValue[string] {
-	return &c.CredentialsGroupId
 }
 
 func (c *mqlStackitObjectStorageAccessKey) GetCredentialsGroup() *plugin.TValue[*mqlStackitObjectStorageCredentialsGroup] {
