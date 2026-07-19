@@ -54,6 +54,7 @@ mongodbatlas.cluster.pitEnabled 13.0.0
 mongodbatlas.cluster.redactClientLogData 13.0.0
 mongodbatlas.cluster.regionConfigs 13.0.0
 mongodbatlas.cluster.rootCertType 13.0.0
+mongodbatlas.cluster.searchIndexes 13.0.1
 mongodbatlas.cluster.stateName 13.0.0
 mongodbatlas.cluster.terminationProtectionEnabled 13.0.0
 mongodbatlas.cluster.tlsCipherConfigMode 13.0.0
@@ -188,6 +189,17 @@ mongodbatlas.resourcePolicy.lastUpdatedDate 13.0.1
 mongodbatlas.resourcePolicy.name 13.0.1
 mongodbatlas.resourcePolicy.policies 13.0.1
 mongodbatlas.restrictEmployeeAccess 13.0.0
+mongodbatlas.searchIndex 13.0.1
+mongodbatlas.searchIndex.collectionName 13.0.1
+mongodbatlas.searchIndex.database 13.0.1
+mongodbatlas.searchIndex.id 13.0.1
+mongodbatlas.searchIndex.latestDefinition 13.0.1
+mongodbatlas.searchIndex.latestDefinitionVersion 13.0.1
+mongodbatlas.searchIndex.name 13.0.1
+mongodbatlas.searchIndex.queryable 13.0.1
+mongodbatlas.searchIndex.status 13.0.1
+mongodbatlas.searchIndex.statusDetail 13.0.1
+mongodbatlas.searchIndex.type 13.0.1
 mongodbatlas.securityContact 13.0.0
 mongodbatlas.serviceAccount 13.0.0
 mongodbatlas.serviceAccount.clientId 13.0.0

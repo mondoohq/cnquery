@@ -227,6 +227,55 @@ mongodbatlas.cluster @defaults("name mongoDBMajorVersion encryptionAtRestProvide
   createDate time
   // Per-region configuration, each with providerName, regionName, instanceSize, nodeCount, diskSizeGB, and priority
   regionConfigs []dict
+  // Atlas Search and Atlas Vector Search indexes on the cluster
+  searchIndexes() []mongodbatlas.searchIndex
+}
+
+// MongoDB Atlas search or vector search index
+//
+// A single Atlas Search or Atlas Vector Search index defined on a cluster,
+// covering both index kinds through the type discriminator: "search" for a
+// full-text Atlas Search index and "vectorSearch" for an Atlas Vector Search
+// index. Reports the database and collection the index is built on, its build
+// status and whether it is currently queryable, and the full index definition.
+// The latestDefinition field carries the index configuration: for vector
+// search the vector and filter fields with their numDimensions, similarity
+// function, and path, plus numPartitions; for full-text search the analyzer,
+// analyzers, mappings, searchAnalyzer, synonyms, and the storedSource clause
+// that governs which document fields are copied into the index.
+mongodbatlas.searchIndex @defaults("name type database collectionName status") {
+  // Index id
+  id string
+  // Index name
+  name string
+  // Index kind
+  //
+  // The discriminator between the two index families: "search" for a full-text
+  // Atlas Search index and "vectorSearch" for an Atlas Vector Search index.
+  type string
+  // Database the index is built on
+  database string
+  // Collection the index is built on
+  collectionName string
+  // Build status
+  //
+  // One of READY, BUILDING, FAILED, STALE, PENDING, or DELETING.
+  status string
+  // Whether the index is currently queryable
+  queryable bool
+  // Version metadata for the most recent index definition, with version and createdAt
+  latestDefinitionVersion dict
+  // Most recent index definition
+  //
+  // The full index configuration. For a vector search index this holds the
+  // fields (each with a type of vector or filter, numDimensions, similarity,
+  // and path) and numPartitions. For a full-text search index it holds the
+  // analyzer, analyzers, mappings, searchAnalyzer, synonyms, and the
+  // storedSource clause that governs which document fields are copied into the
+  // index.
+  latestDefinition dict
+  // Per-host build status detail
+  statusDetail []dict
 }
 
 // MongoDB Atlas database user

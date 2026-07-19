@@ -24,6 +24,7 @@ const (
 	ResourceMongodbatlasApiKeyRoleAssignment    string = "mongodbatlas.apiKey.roleAssignment"
 	ResourceMongodbatlasServiceAccount          string = "mongodbatlas.serviceAccount"
 	ResourceMongodbatlasCluster                 string = "mongodbatlas.cluster"
+	ResourceMongodbatlasSearchIndex             string = "mongodbatlas.searchIndex"
 	ResourceMongodbatlasDatabaseUser            string = "mongodbatlas.databaseUser"
 	ResourceMongodbatlasNetworkAccessEntry      string = "mongodbatlas.networkAccessEntry"
 	ResourceMongodbatlasProjectConfig           string = "mongodbatlas.projectConfig"
@@ -75,6 +76,10 @@ func init() {
 		"mongodbatlas.cluster": {
 			Init:   initMongodbatlasCluster,
 			Create: createMongodbatlasCluster,
+		},
+		"mongodbatlas.searchIndex": {
+			// to override args, implement: initMongodbatlasSearchIndex(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMongodbatlasSearchIndex,
 		},
 		"mongodbatlas.databaseUser": {
 			// to override args, implement: initMongodbatlasDatabaseUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -421,6 +426,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"mongodbatlas.cluster.regionConfigs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlasCluster).GetRegionConfigs()).ToDataRes(types.Array(types.Dict))
+	},
+	"mongodbatlas.cluster.searchIndexes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasCluster).GetSearchIndexes()).ToDataRes(types.Array(types.Resource("mongodbatlas.searchIndex")))
+	},
+	"mongodbatlas.searchIndex.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasSearchIndex).GetId()).ToDataRes(types.String)
+	},
+	"mongodbatlas.searchIndex.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasSearchIndex).GetName()).ToDataRes(types.String)
+	},
+	"mongodbatlas.searchIndex.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasSearchIndex).GetType()).ToDataRes(types.String)
+	},
+	"mongodbatlas.searchIndex.database": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasSearchIndex).GetDatabase()).ToDataRes(types.String)
+	},
+	"mongodbatlas.searchIndex.collectionName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasSearchIndex).GetCollectionName()).ToDataRes(types.String)
+	},
+	"mongodbatlas.searchIndex.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasSearchIndex).GetStatus()).ToDataRes(types.String)
+	},
+	"mongodbatlas.searchIndex.queryable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasSearchIndex).GetQueryable()).ToDataRes(types.Bool)
+	},
+	"mongodbatlas.searchIndex.latestDefinitionVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasSearchIndex).GetLatestDefinitionVersion()).ToDataRes(types.Dict)
+	},
+	"mongodbatlas.searchIndex.latestDefinition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasSearchIndex).GetLatestDefinition()).ToDataRes(types.Dict)
+	},
+	"mongodbatlas.searchIndex.statusDetail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasSearchIndex).GetStatusDetail()).ToDataRes(types.Array(types.Dict))
 	},
 	"mongodbatlas.databaseUser.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlasDatabaseUser).GetId()).ToDataRes(types.String)
@@ -1074,6 +1112,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mongodbatlas.cluster.regionConfigs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMongodbatlasCluster).RegionConfigs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.cluster.searchIndexes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasCluster).SearchIndexes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.searchIndex.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasSearchIndex).__id, ok = v.Value.(string)
+		return
+	},
+	"mongodbatlas.searchIndex.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasSearchIndex).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.searchIndex.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasSearchIndex).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.searchIndex.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasSearchIndex).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.searchIndex.database": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasSearchIndex).Database, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.searchIndex.collectionName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasSearchIndex).CollectionName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.searchIndex.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasSearchIndex).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.searchIndex.queryable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasSearchIndex).Queryable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.searchIndex.latestDefinitionVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasSearchIndex).LatestDefinitionVersion, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.searchIndex.latestDefinition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasSearchIndex).LatestDefinition, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.searchIndex.statusDetail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasSearchIndex).StatusDetail, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"mongodbatlas.databaseUser.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2448,6 +2534,7 @@ type mqlMongodbatlasCluster struct {
 	RootCertType                 plugin.TValue[string]
 	CreateDate                   plugin.TValue[*time.Time]
 	RegionConfigs                plugin.TValue[[]any]
+	SearchIndexes                plugin.TValue[[]any]
 }
 
 // createMongodbatlasCluster creates a new instance of this resource
@@ -2552,6 +2639,111 @@ func (c *mqlMongodbatlasCluster) GetCreateDate() *plugin.TValue[*time.Time] {
 
 func (c *mqlMongodbatlasCluster) GetRegionConfigs() *plugin.TValue[[]any] {
 	return &c.RegionConfigs
+}
+
+func (c *mqlMongodbatlasCluster) GetSearchIndexes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SearchIndexes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mongodbatlas.cluster", c.__id, "searchIndexes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.searchIndexes()
+	})
+}
+
+// mqlMongodbatlasSearchIndex for the mongodbatlas.searchIndex resource
+type mqlMongodbatlasSearchIndex struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMongodbatlasSearchIndexInternal it will be used here
+	Id                      plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	Type                    plugin.TValue[string]
+	Database                plugin.TValue[string]
+	CollectionName          plugin.TValue[string]
+	Status                  plugin.TValue[string]
+	Queryable               plugin.TValue[bool]
+	LatestDefinitionVersion plugin.TValue[any]
+	LatestDefinition        plugin.TValue[any]
+	StatusDetail            plugin.TValue[[]any]
+}
+
+// createMongodbatlasSearchIndex creates a new instance of this resource
+func createMongodbatlasSearchIndex(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMongodbatlasSearchIndex{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mongodbatlas.searchIndex", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMongodbatlasSearchIndex) MqlName() string {
+	return "mongodbatlas.searchIndex"
+}
+
+func (c *mqlMongodbatlasSearchIndex) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMongodbatlasSearchIndex) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMongodbatlasSearchIndex) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMongodbatlasSearchIndex) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlMongodbatlasSearchIndex) GetDatabase() *plugin.TValue[string] {
+	return &c.Database
+}
+
+func (c *mqlMongodbatlasSearchIndex) GetCollectionName() *plugin.TValue[string] {
+	return &c.CollectionName
+}
+
+func (c *mqlMongodbatlasSearchIndex) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlMongodbatlasSearchIndex) GetQueryable() *plugin.TValue[bool] {
+	return &c.Queryable
+}
+
+func (c *mqlMongodbatlasSearchIndex) GetLatestDefinitionVersion() *plugin.TValue[any] {
+	return &c.LatestDefinitionVersion
+}
+
+func (c *mqlMongodbatlasSearchIndex) GetLatestDefinition() *plugin.TValue[any] {
+	return &c.LatestDefinition
+}
+
+func (c *mqlMongodbatlasSearchIndex) GetStatusDetail() *plugin.TValue[[]any] {
+	return &c.StatusDetail
 }
 
 // mqlMongodbatlasDatabaseUser for the mongodbatlas.databaseUser resource
