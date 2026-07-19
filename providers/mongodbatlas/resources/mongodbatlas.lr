@@ -9,11 +9,12 @@ option go_package = "go.mondoo.com/mql/v13/providers/mongodbatlas/resources"
 // Entry point to a MongoDB Atlas organization and its projects. Connecting to
 // an organization exposes organization-wide security settings and identity
 // through the organizationName, multiFactorAuthRequired, apiAccessListRequired,
-// restrictEmployeeAccess, orgUsers, teams, apiKeys, and serviceAccounts fields,
-// and enumerates every project through the projects field. Connecting to a
-// single project exposes that project's security surface through the clusters,
-// databaseUsers, ipAccessList, projectSettings, auditing, encryptionAtRest,
-// privateEndpoints, networkPeerings, and cloudProviderAccessRoles fields.
+// restrictEmployeeAccess, orgUsers, teams, apiKeys, serviceAccounts, and
+// federationSettings fields, and enumerates every project through the projects
+// field. Connecting to a single project exposes that project's security
+// surface through the clusters, databaseUsers, customDatabaseRoles,
+// ipAccessList, projectSettings, auditing, encryptionAtRest, privateEndpoints,
+// networkPeerings, and cloudProviderAccessRoles fields.
 mongodbatlas {
   // Organization id
   organizationId() string
@@ -45,6 +46,8 @@ mongodbatlas {
   clusters() []mongodbatlas.cluster
   // Database users in the project
   databaseUsers() []mongodbatlas.databaseUser
+  // Custom database roles defined in the project
+  customDatabaseRoles() []mongodbatlas.customDatabaseRole
   // Project IP access list entries
   ipAccessList() []mongodbatlas.networkAccessEntry
   // Project feature settings
@@ -59,6 +62,8 @@ mongodbatlas {
   networkPeerings() []mongodbatlas.networkPeering
   // Cloud provider access roles configured for the project
   cloudProviderAccessRoles() []mongodbatlas.cloudProviderAccessRole
+  // Identity federation settings for the organization
+  federationSettings() mongodbatlas.federationSettings
 }
 
 // MongoDB Atlas project
@@ -390,4 +395,93 @@ mongodbatlas.cloudProviderAccessRole @defaults("providerName iamAssumedRoleArn")
   gcpServiceAccount string
   // Time the role was authorized, null when not yet authorized
   authorizedDate time
+}
+
+// MongoDB Atlas custom database role
+//
+// A user-defined database role in the project, keyed by role name. Covers the
+// individual privilege actions the role grants (each with the cluster,
+// database, and collection resources it applies to) and the built-in or custom
+// roles it inherits. Auditing custom roles surfaces over-privileged or
+// privilege-escalating grants beyond the built-in roles. Select a role by name,
+// for example `mongodbatlas.customDatabaseRoles.where(roleName == "appReadWrite")`.
+mongodbatlas.customDatabaseRole @defaults("roleName") {
+  // Role name
+  roleName string
+  // Privilege actions the role grants, each with its action name and the resources (cluster, database, collection) it applies to
+  actions []dict
+  // Roles this custom role inherits, each with its role name and database
+  inheritedRoles []dict
+}
+
+// MongoDB Atlas identity federation settings
+//
+// Organization-level identity federation configuration. Covers the connected
+// identity provider and its status, whether role mappings are configured, the
+// domains the organization has federated, and the identity providers linked to
+// the federation. Present only when the organization has federation configured,
+// and null otherwise.
+mongodbatlas.federationSettings @defaults("id identityProviderStatus") {
+  // Federation settings id
+  id string
+  // Status of the connected identity provider (ACTIVE or INACTIVE)
+  identityProviderStatus string
+  // Id of the identity provider connected to the organization
+  identityProviderId string
+  // Whether the organization has role mappings configured
+  hasRoleMappings bool
+  // Domains the organization has federated to its identity provider
+  federatedDomains []string
+  // Identity providers linked to the federation
+  identityProviders() []mongodbatlas.identityProvider
+}
+
+// MongoDB Atlas identity provider
+//
+// A SAML or OIDC identity provider linked to the organization's federation,
+// keyed by id. Covers the protocol and provider type, the activation status,
+// the issuer and associated domains, and the protocol-specific settings that
+// matter for sign-in security (SAML request binding, response signature
+// algorithm, and SSO debug mode; OIDC authorization type, client id, and
+// requested scopes). Read providers from the federation settings, for example
+// `mongodbatlas.federationSettings.identityProviders.where(ssoDebugEnabled == true)`.
+mongodbatlas.identityProvider @defaults("displayName protocol status") {
+  // Identity provider id
+  id string
+  // Human-readable name of the identity provider
+  displayName string
+  // Description of the identity provider
+  description string
+  // Protocol of the identity provider (SAML or OIDC)
+  protocol string
+  // Provider type (WORKFORCE or WORKLOAD)
+  idpType string
+  // Status of the identity provider (ACTIVE or INACTIVE)
+  status string
+  // Issuer URI of the SAML assertion or OIDC discovery document
+  issuerUri string
+  // Domains associated with the identity provider
+  associatedDomains []string
+  // SAML single sign-on URL
+  ssoUrl string
+  // Whether SAML SSO debug mode is enabled, which should be off in production
+  ssoDebugEnabled bool
+  // SAML authentication request binding (POST or REDIRECT)
+  requestBinding string
+  // SAML response signature algorithm
+  responseSignatureAlgorithm string
+  // OIDC client id assigned to the application by the identity provider
+  clientId string
+  // OIDC authorization mode (GROUP for group membership or USER for user id)
+  authorizationType string
+  // OIDC token claim that carries the identity provider group ids
+  groupsClaim string
+  // OIDC token claim that carries the user id
+  userClaim string
+  // OIDC scopes requested from the authorization endpoint
+  requestedScopes []string
+  // Time the identity provider was created
+  createdAt time
+  // Time the identity provider was last updated
+  updatedAt time
 }

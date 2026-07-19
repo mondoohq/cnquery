@@ -31,6 +31,9 @@ const (
 	ResourceMongodbatlasPrivateEndpointService  string = "mongodbatlas.privateEndpointService"
 	ResourceMongodbatlasNetworkPeering          string = "mongodbatlas.networkPeering"
 	ResourceMongodbatlasCloudProviderAccessRole string = "mongodbatlas.cloudProviderAccessRole"
+	ResourceMongodbatlasCustomDatabaseRole      string = "mongodbatlas.customDatabaseRole"
+	ResourceMongodbatlasFederationSettings      string = "mongodbatlas.federationSettings"
+	ResourceMongodbatlasIdentityProvider        string = "mongodbatlas.identityProvider"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -96,6 +99,18 @@ func init() {
 		"mongodbatlas.cloudProviderAccessRole": {
 			// to override args, implement: initMongodbatlasCloudProviderAccessRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMongodbatlasCloudProviderAccessRole,
+		},
+		"mongodbatlas.customDatabaseRole": {
+			// to override args, implement: initMongodbatlasCustomDatabaseRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMongodbatlasCustomDatabaseRole,
+		},
+		"mongodbatlas.federationSettings": {
+			// to override args, implement: initMongodbatlasFederationSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMongodbatlasFederationSettings,
+		},
+		"mongodbatlas.identityProvider": {
+			// to override args, implement: initMongodbatlasIdentityProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMongodbatlasIdentityProvider,
 		},
 	}
 }
@@ -213,6 +228,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"mongodbatlas.databaseUsers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlas).GetDatabaseUsers()).ToDataRes(types.Array(types.Resource("mongodbatlas.databaseUser")))
 	},
+	"mongodbatlas.customDatabaseRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlas).GetCustomDatabaseRoles()).ToDataRes(types.Array(types.Resource("mongodbatlas.customDatabaseRole")))
+	},
 	"mongodbatlas.ipAccessList": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlas).GetIpAccessList()).ToDataRes(types.Array(types.Resource("mongodbatlas.networkAccessEntry")))
 	},
@@ -233,6 +251,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"mongodbatlas.cloudProviderAccessRoles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlas).GetCloudProviderAccessRoles()).ToDataRes(types.Array(types.Resource("mongodbatlas.cloudProviderAccessRole")))
+	},
+	"mongodbatlas.federationSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlas).GetFederationSettings()).ToDataRes(types.Resource("mongodbatlas.federationSettings"))
 	},
 	"mongodbatlas.project.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlasProject).GetId()).ToDataRes(types.String)
@@ -537,6 +558,90 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"mongodbatlas.cloudProviderAccessRole.authorizedDate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlasCloudProviderAccessRole).GetAuthorizedDate()).ToDataRes(types.Time)
 	},
+	"mongodbatlas.customDatabaseRole.roleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasCustomDatabaseRole).GetRoleName()).ToDataRes(types.String)
+	},
+	"mongodbatlas.customDatabaseRole.actions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasCustomDatabaseRole).GetActions()).ToDataRes(types.Array(types.Dict))
+	},
+	"mongodbatlas.customDatabaseRole.inheritedRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasCustomDatabaseRole).GetInheritedRoles()).ToDataRes(types.Array(types.Dict))
+	},
+	"mongodbatlas.federationSettings.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasFederationSettings).GetId()).ToDataRes(types.String)
+	},
+	"mongodbatlas.federationSettings.identityProviderStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasFederationSettings).GetIdentityProviderStatus()).ToDataRes(types.String)
+	},
+	"mongodbatlas.federationSettings.identityProviderId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasFederationSettings).GetIdentityProviderId()).ToDataRes(types.String)
+	},
+	"mongodbatlas.federationSettings.hasRoleMappings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasFederationSettings).GetHasRoleMappings()).ToDataRes(types.Bool)
+	},
+	"mongodbatlas.federationSettings.federatedDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasFederationSettings).GetFederatedDomains()).ToDataRes(types.Array(types.String))
+	},
+	"mongodbatlas.federationSettings.identityProviders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasFederationSettings).GetIdentityProviders()).ToDataRes(types.Array(types.Resource("mongodbatlas.identityProvider")))
+	},
+	"mongodbatlas.identityProvider.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasIdentityProvider).GetId()).ToDataRes(types.String)
+	},
+	"mongodbatlas.identityProvider.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasIdentityProvider).GetDisplayName()).ToDataRes(types.String)
+	},
+	"mongodbatlas.identityProvider.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasIdentityProvider).GetDescription()).ToDataRes(types.String)
+	},
+	"mongodbatlas.identityProvider.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasIdentityProvider).GetProtocol()).ToDataRes(types.String)
+	},
+	"mongodbatlas.identityProvider.idpType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasIdentityProvider).GetIdpType()).ToDataRes(types.String)
+	},
+	"mongodbatlas.identityProvider.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasIdentityProvider).GetStatus()).ToDataRes(types.String)
+	},
+	"mongodbatlas.identityProvider.issuerUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasIdentityProvider).GetIssuerUri()).ToDataRes(types.String)
+	},
+	"mongodbatlas.identityProvider.associatedDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasIdentityProvider).GetAssociatedDomains()).ToDataRes(types.Array(types.String))
+	},
+	"mongodbatlas.identityProvider.ssoUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasIdentityProvider).GetSsoUrl()).ToDataRes(types.String)
+	},
+	"mongodbatlas.identityProvider.ssoDebugEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasIdentityProvider).GetSsoDebugEnabled()).ToDataRes(types.Bool)
+	},
+	"mongodbatlas.identityProvider.requestBinding": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasIdentityProvider).GetRequestBinding()).ToDataRes(types.String)
+	},
+	"mongodbatlas.identityProvider.responseSignatureAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasIdentityProvider).GetResponseSignatureAlgorithm()).ToDataRes(types.String)
+	},
+	"mongodbatlas.identityProvider.clientId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasIdentityProvider).GetClientId()).ToDataRes(types.String)
+	},
+	"mongodbatlas.identityProvider.authorizationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasIdentityProvider).GetAuthorizationType()).ToDataRes(types.String)
+	},
+	"mongodbatlas.identityProvider.groupsClaim": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasIdentityProvider).GetGroupsClaim()).ToDataRes(types.String)
+	},
+	"mongodbatlas.identityProvider.userClaim": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasIdentityProvider).GetUserClaim()).ToDataRes(types.String)
+	},
+	"mongodbatlas.identityProvider.requestedScopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasIdentityProvider).GetRequestedScopes()).ToDataRes(types.Array(types.String))
+	},
+	"mongodbatlas.identityProvider.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasIdentityProvider).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"mongodbatlas.identityProvider.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasIdentityProvider).GetUpdatedAt()).ToDataRes(types.Time)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -613,6 +718,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMongodbatlas).DatabaseUsers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"mongodbatlas.customDatabaseRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlas).CustomDatabaseRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"mongodbatlas.ipAccessList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMongodbatlas).IpAccessList, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -639,6 +748,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mongodbatlas.cloudProviderAccessRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMongodbatlas).CloudProviderAccessRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.federationSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlas).FederationSettings, ok = plugin.RawToTValue[*mqlMongodbatlasFederationSettings](v.Value, v.Error)
 		return
 	},
 	"mongodbatlas.project.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1101,6 +1214,130 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMongodbatlasCloudProviderAccessRole).AuthorizedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"mongodbatlas.customDatabaseRole.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasCustomDatabaseRole).__id, ok = v.Value.(string)
+		return
+	},
+	"mongodbatlas.customDatabaseRole.roleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasCustomDatabaseRole).RoleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.customDatabaseRole.actions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasCustomDatabaseRole).Actions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.customDatabaseRole.inheritedRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasCustomDatabaseRole).InheritedRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.federationSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasFederationSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"mongodbatlas.federationSettings.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasFederationSettings).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.federationSettings.identityProviderStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasFederationSettings).IdentityProviderStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.federationSettings.identityProviderId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasFederationSettings).IdentityProviderId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.federationSettings.hasRoleMappings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasFederationSettings).HasRoleMappings, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.federationSettings.federatedDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasFederationSettings).FederatedDomains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.federationSettings.identityProviders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasFederationSettings).IdentityProviders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.identityProvider.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasIdentityProvider).__id, ok = v.Value.(string)
+		return
+	},
+	"mongodbatlas.identityProvider.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasIdentityProvider).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.identityProvider.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasIdentityProvider).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.identityProvider.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasIdentityProvider).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.identityProvider.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasIdentityProvider).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.identityProvider.idpType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasIdentityProvider).IdpType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.identityProvider.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasIdentityProvider).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.identityProvider.issuerUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasIdentityProvider).IssuerUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.identityProvider.associatedDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasIdentityProvider).AssociatedDomains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.identityProvider.ssoUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasIdentityProvider).SsoUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.identityProvider.ssoDebugEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasIdentityProvider).SsoDebugEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.identityProvider.requestBinding": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasIdentityProvider).RequestBinding, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.identityProvider.responseSignatureAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasIdentityProvider).ResponseSignatureAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.identityProvider.clientId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasIdentityProvider).ClientId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.identityProvider.authorizationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasIdentityProvider).AuthorizationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.identityProvider.groupsClaim": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasIdentityProvider).GroupsClaim, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.identityProvider.userClaim": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasIdentityProvider).UserClaim, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.identityProvider.requestedScopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasIdentityProvider).RequestedScopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.identityProvider.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasIdentityProvider).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.identityProvider.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasIdentityProvider).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -1145,6 +1382,7 @@ type mqlMongodbatlas struct {
 	ServiceAccounts                        plugin.TValue[[]any]
 	Clusters                               plugin.TValue[[]any]
 	DatabaseUsers                          plugin.TValue[[]any]
+	CustomDatabaseRoles                    plugin.TValue[[]any]
 	IpAccessList                           plugin.TValue[[]any]
 	ProjectSettings                        plugin.TValue[*mqlMongodbatlasProjectConfig]
 	Auditing                               plugin.TValue[*mqlMongodbatlasAuditConfig]
@@ -1152,6 +1390,7 @@ type mqlMongodbatlas struct {
 	PrivateEndpoints                       plugin.TValue[[]any]
 	NetworkPeerings                        plugin.TValue[[]any]
 	CloudProviderAccessRoles               plugin.TValue[[]any]
+	FederationSettings                     plugin.TValue[*mqlMongodbatlasFederationSettings]
 }
 
 // createMongodbatlas creates a new instance of this resource
@@ -1351,6 +1590,22 @@ func (c *mqlMongodbatlas) GetDatabaseUsers() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlMongodbatlas) GetCustomDatabaseRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CustomDatabaseRoles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mongodbatlas", c.__id, "customDatabaseRoles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.customDatabaseRoles()
+	})
+}
+
 func (c *mqlMongodbatlas) GetIpAccessList() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.IpAccessList, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -1460,6 +1715,22 @@ func (c *mqlMongodbatlas) GetCloudProviderAccessRoles() *plugin.TValue[[]any] {
 		}
 
 		return c.cloudProviderAccessRoles()
+	})
+}
+
+func (c *mqlMongodbatlas) GetFederationSettings() *plugin.TValue[*mqlMongodbatlasFederationSettings] {
+	return plugin.GetOrCompute[*mqlMongodbatlasFederationSettings](&c.FederationSettings, func() (*mqlMongodbatlasFederationSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mongodbatlas", c.__id, "federationSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMongodbatlasFederationSettings), nil
+			}
+		}
+
+		return c.federationSettings()
 	})
 }
 
@@ -2536,4 +2807,273 @@ func (c *mqlMongodbatlasCloudProviderAccessRole) GetGcpServiceAccount() *plugin.
 
 func (c *mqlMongodbatlasCloudProviderAccessRole) GetAuthorizedDate() *plugin.TValue[*time.Time] {
 	return &c.AuthorizedDate
+}
+
+// mqlMongodbatlasCustomDatabaseRole for the mongodbatlas.customDatabaseRole resource
+type mqlMongodbatlasCustomDatabaseRole struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMongodbatlasCustomDatabaseRoleInternal it will be used here
+	RoleName       plugin.TValue[string]
+	Actions        plugin.TValue[[]any]
+	InheritedRoles plugin.TValue[[]any]
+}
+
+// createMongodbatlasCustomDatabaseRole creates a new instance of this resource
+func createMongodbatlasCustomDatabaseRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMongodbatlasCustomDatabaseRole{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mongodbatlas.customDatabaseRole", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMongodbatlasCustomDatabaseRole) MqlName() string {
+	return "mongodbatlas.customDatabaseRole"
+}
+
+func (c *mqlMongodbatlasCustomDatabaseRole) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMongodbatlasCustomDatabaseRole) GetRoleName() *plugin.TValue[string] {
+	return &c.RoleName
+}
+
+func (c *mqlMongodbatlasCustomDatabaseRole) GetActions() *plugin.TValue[[]any] {
+	return &c.Actions
+}
+
+func (c *mqlMongodbatlasCustomDatabaseRole) GetInheritedRoles() *plugin.TValue[[]any] {
+	return &c.InheritedRoles
+}
+
+// mqlMongodbatlasFederationSettings for the mongodbatlas.federationSettings resource
+type mqlMongodbatlasFederationSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMongodbatlasFederationSettingsInternal it will be used here
+	Id                     plugin.TValue[string]
+	IdentityProviderStatus plugin.TValue[string]
+	IdentityProviderId     plugin.TValue[string]
+	HasRoleMappings        plugin.TValue[bool]
+	FederatedDomains       plugin.TValue[[]any]
+	IdentityProviders      plugin.TValue[[]any]
+}
+
+// createMongodbatlasFederationSettings creates a new instance of this resource
+func createMongodbatlasFederationSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMongodbatlasFederationSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mongodbatlas.federationSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMongodbatlasFederationSettings) MqlName() string {
+	return "mongodbatlas.federationSettings"
+}
+
+func (c *mqlMongodbatlasFederationSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMongodbatlasFederationSettings) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMongodbatlasFederationSettings) GetIdentityProviderStatus() *plugin.TValue[string] {
+	return &c.IdentityProviderStatus
+}
+
+func (c *mqlMongodbatlasFederationSettings) GetIdentityProviderId() *plugin.TValue[string] {
+	return &c.IdentityProviderId
+}
+
+func (c *mqlMongodbatlasFederationSettings) GetHasRoleMappings() *plugin.TValue[bool] {
+	return &c.HasRoleMappings
+}
+
+func (c *mqlMongodbatlasFederationSettings) GetFederatedDomains() *plugin.TValue[[]any] {
+	return &c.FederatedDomains
+}
+
+func (c *mqlMongodbatlasFederationSettings) GetIdentityProviders() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IdentityProviders, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mongodbatlas.federationSettings", c.__id, "identityProviders")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.identityProviders()
+	})
+}
+
+// mqlMongodbatlasIdentityProvider for the mongodbatlas.identityProvider resource
+type mqlMongodbatlasIdentityProvider struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMongodbatlasIdentityProviderInternal it will be used here
+	Id                         plugin.TValue[string]
+	DisplayName                plugin.TValue[string]
+	Description                plugin.TValue[string]
+	Protocol                   plugin.TValue[string]
+	IdpType                    plugin.TValue[string]
+	Status                     plugin.TValue[string]
+	IssuerUri                  plugin.TValue[string]
+	AssociatedDomains          plugin.TValue[[]any]
+	SsoUrl                     plugin.TValue[string]
+	SsoDebugEnabled            plugin.TValue[bool]
+	RequestBinding             plugin.TValue[string]
+	ResponseSignatureAlgorithm plugin.TValue[string]
+	ClientId                   plugin.TValue[string]
+	AuthorizationType          plugin.TValue[string]
+	GroupsClaim                plugin.TValue[string]
+	UserClaim                  plugin.TValue[string]
+	RequestedScopes            plugin.TValue[[]any]
+	CreatedAt                  plugin.TValue[*time.Time]
+	UpdatedAt                  plugin.TValue[*time.Time]
+}
+
+// createMongodbatlasIdentityProvider creates a new instance of this resource
+func createMongodbatlasIdentityProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMongodbatlasIdentityProvider{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mongodbatlas.identityProvider", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMongodbatlasIdentityProvider) MqlName() string {
+	return "mongodbatlas.identityProvider"
+}
+
+func (c *mqlMongodbatlasIdentityProvider) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMongodbatlasIdentityProvider) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMongodbatlasIdentityProvider) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMongodbatlasIdentityProvider) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMongodbatlasIdentityProvider) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlMongodbatlasIdentityProvider) GetIdpType() *plugin.TValue[string] {
+	return &c.IdpType
+}
+
+func (c *mqlMongodbatlasIdentityProvider) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlMongodbatlasIdentityProvider) GetIssuerUri() *plugin.TValue[string] {
+	return &c.IssuerUri
+}
+
+func (c *mqlMongodbatlasIdentityProvider) GetAssociatedDomains() *plugin.TValue[[]any] {
+	return &c.AssociatedDomains
+}
+
+func (c *mqlMongodbatlasIdentityProvider) GetSsoUrl() *plugin.TValue[string] {
+	return &c.SsoUrl
+}
+
+func (c *mqlMongodbatlasIdentityProvider) GetSsoDebugEnabled() *plugin.TValue[bool] {
+	return &c.SsoDebugEnabled
+}
+
+func (c *mqlMongodbatlasIdentityProvider) GetRequestBinding() *plugin.TValue[string] {
+	return &c.RequestBinding
+}
+
+func (c *mqlMongodbatlasIdentityProvider) GetResponseSignatureAlgorithm() *plugin.TValue[string] {
+	return &c.ResponseSignatureAlgorithm
+}
+
+func (c *mqlMongodbatlasIdentityProvider) GetClientId() *plugin.TValue[string] {
+	return &c.ClientId
+}
+
+func (c *mqlMongodbatlasIdentityProvider) GetAuthorizationType() *plugin.TValue[string] {
+	return &c.AuthorizationType
+}
+
+func (c *mqlMongodbatlasIdentityProvider) GetGroupsClaim() *plugin.TValue[string] {
+	return &c.GroupsClaim
+}
+
+func (c *mqlMongodbatlasIdentityProvider) GetUserClaim() *plugin.TValue[string] {
+	return &c.UserClaim
+}
+
+func (c *mqlMongodbatlasIdentityProvider) GetRequestedScopes() *plugin.TValue[[]any] {
+	return &c.RequestedScopes
+}
+
+func (c *mqlMongodbatlasIdentityProvider) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlMongodbatlasIdentityProvider) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
 }
