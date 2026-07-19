@@ -49,9 +49,6 @@ func initSnowflakeRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	return nil, nil, fmt.Errorf("snowflake.role %q not found", name)
 }
 
-// snowflakeRoleByName resolves a role name to a typed snowflake.role, hydrated
-// through the role's init. It returns nil for an empty name; callers should set
-// the field's null state before calling in that case.
 // snowflakeRoleByName resolves an account role by name, returning nil (not an
 // error) when the name is not a listable account role. Object owners are not
 // always account roles: they can be an application, a database role, or a role
