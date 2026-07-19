@@ -9,7 +9,8 @@ option go_package = "go.mondoo.com/mql/v13/providers/alicloud/resources"
 // Entry point for querying an Alibaba Cloud account. Exposes the account
 // identity and the region IDs enabled on the account, and is the root from
 // which the RAM, ECS, VPC, OSS, SLB, and managed-database resources are
-// reached.
+// reached, along with the Key Management Service, ActionTrail, Log Service,
+// Cloud Config, and Resource Directory resources.
 alicloud {
   // Account (UID) that the active credential belongs to
   accountId() string
@@ -411,7 +412,11 @@ alicloud.ecs.disk @defaults("diskId diskName category size status") {
   // Whether the disk is encrypted
   encrypted bool
   // KMS key ID used to encrypt the disk
-  kmsKeyId string
+  //
+  // Deprecated in favor of kmsKey.
+  kmsKeyId @maturity("deprecated") string
+  // KMS key used to encrypt the disk, null when the disk is not encrypted
+  kmsKey() alicloud.kms.key
   // Instance the disk is attached to
   instance() alicloud.ecs.instance
   // Device name the disk is mounted as, for example /dev/xvda
@@ -622,6 +627,8 @@ alicloud.vpc {
   eipAddresses() []alicloud.vpc.eipAddress
   // Network ACLs across all enabled regions
   networkAcls() []alicloud.vpc.networkAcl
+  // Flow logs across all enabled regions
+  flowLogs() []alicloud.vpc.flowLog
 }
 
 // Virtual Private Cloud network
@@ -1094,6 +1101,12 @@ alicloud.oss.bucket {
   // The SSEAlgorithm from the default encryption rule (KMS, AES256, or SM4),
   // flattened for auditing. Empty when no default encryption is configured.
   sseAlgorithm() string
+  // KMS key used for default server-side encryption
+  //
+  // The customer master key named by the bucket's default encryption rule.
+  // Null when the bucket has no default encryption or uses the AES256/SM4
+  // built-in keys rather than a specific KMS key.
+  kmsKey() alicloud.kms.key
   // Access logging configuration
   //
   // The access-logging target when logging is enabled, with TargetBucket,
@@ -1655,7 +1668,11 @@ alicloud.mongodb.instance {
   // Whether disk encryption is enabled for the instance
   encrypted() bool
   // KMS key ID used for disk encryption, empty when disk encryption is disabled
-  encryptionKey() string
+  //
+  // Deprecated in favor of kmsKey.
+  encryptionKey() @maturity("deprecated") string
+  // KMS key used for disk encryption, null when disk encryption is disabled
+  kmsKey() alicloud.kms.key
   // Whether release protection is enabled for the instance
   releaseProtection() bool
   // Current minor kernel version of the database, for example 5.0.5-20220721143518_0
@@ -1823,4 +1840,603 @@ alicloud.polardb.cluster {
   // Custom), dbEndpointId, addressType (the network type, Public or Private),
   // connectionString, port, readWriteMode, and nodes.
   endpoints() []dict
+}
+
+// VPC flow log
+//
+// A single flow log that captures traffic metadata for a VPC, vSwitch, or
+// elastic network interface, keyed by flowLogId within its region. Exposes the
+// monitored resource, the traffic direction and path captured, and the Log
+// Service project and logstore that receive the records. Use it to audit
+// whether flow logging is enabled for a network and where the records are
+// delivered. For example `alicloud.vpc.flowLog(flowLogId: "fl-xxx", regionId: "cn-hangzhou")`.
+alicloud.vpc.flowLog {
+  // Region ID the flow log resides in, for example cn-hangzhou
+  regionId string
+  // Flow log ID, used as the lookup key within its region
+  flowLogId string
+  // Flow log name
+  flowLogName string
+  // Description of the flow log
+  description string
+  // Flow log state
+  //
+  // One of Active or Inactive. A flow log only captures traffic while Active.
+  status string
+  // Business (billing) state of the flow log
+  //
+  // For example Normal, or FinancialLocked when the flow log is locked for
+  // overdue payment.
+  businessStatus string
+  // ID of the monitored resource (a VPC, vSwitch, or elastic network interface)
+  resourceId string
+  // Type of the monitored resource
+  //
+  // One of VPC, VSwitch, or NetworkInterface.
+  resourceType string
+  // Traffic direction captured
+  //
+  // One of All, Allow (accepted traffic), or Drop (rejected traffic).
+  trafficType string
+  // Traffic path captured
+  //
+  // The network paths the flow log records, for example full for all paths or
+  // a subset such as internetGateway. Empty when no path filter is applied.
+  trafficPath []string
+  // IP version captured
+  //
+  // One of IPv4, IPv6, or all.
+  ipVersion string
+  // Interval in seconds over which records are aggregated, for example 600
+  aggregationInterval int
+  // Name of the Log Service project that receives the records
+  projectName string
+  // Name of the Log Service logstore that receives the records
+  logStoreName string
+  // ID of the resource group the flow log belongs to
+  resourceGroupId string
+  // Time the flow log was created
+  creationTime time
+  // Delivery state of the records to Log Service
+  //
+  // For example FlowLogDeliverStarted when records are being delivered, or a
+  // failure state when delivery is not succeeding.
+  deliverStatus string
+  // Most recent delivery error, empty when delivery is healthy
+  deliverErrorMessage string
+  // Tags applied to the flow log
+  tags map[string]string
+  // Log Service logstore that receives the records
+  logstore() alicloud.log.logstore
+  // VPC network monitored by the flow log
+  //
+  // Null when the monitored resource is a vSwitch or an elastic network
+  // interface rather than a VPC.
+  network() alicloud.vpc.network
+  // vSwitch monitored by the flow log
+  //
+  // Null when the monitored resource is a VPC or an elastic network interface
+  // rather than a vSwitch.
+  vswitch() alicloud.vpc.vswitch
+}
+
+// Alibaba Cloud Key Management Service
+//
+// Encryption keys and secrets managed for an Alibaba Cloud account. Exposes the
+// customer master keys across all enabled regions, including their lifecycle
+// state, cryptographic spec, rotation configuration, and protection level, and
+// the secrets held in Secrets Manager along with the master key that protects
+// each one. Use it to audit key rotation, deletion protection, and whether keys
+// are backed by a hardware security module.
+alicloud.kms {
+  // Customer master keys across all enabled regions
+  keys() []alicloud.kms.key
+  // Secrets held in Secrets Manager across all enabled regions
+  secrets() []alicloud.kms.secret
+}
+
+// Key Management Service customer master key
+//
+// A single customer master key (CMK), keyed by keyId within its region. Exposes
+// the key lifecycle state, cryptographic spec and usage, material origin,
+// protection level, and the automatic-rotation configuration, along with the
+// aliases that point at the key. Use it to audit whether keys rotate, whether
+// deletion protection is on, and whether the key material lives in an HSM. For
+// example `alicloud.kms.key(keyId: "0d24xxxx", regionId: "cn-hangzhou")`.
+alicloud.kms.key {
+  // Region ID the key resides in, for example cn-hangzhou
+  regionId string
+  // Key ID, used as the lookup key within its region
+  keyId string
+  // Alibaba Cloud Resource Name of the key
+  arn string
+  // Key lifecycle state
+  //
+  // One of Enabled, Disabled, PendingDeletion, or PendingImport.
+  keyState string
+  // Cryptographic operations the key may perform
+  //
+  // Either ENCRYPT/DECRYPT for encryption keys or SIGN/VERIFY for signing keys.
+  keyUsage string
+  // Cryptographic specification of the key
+  //
+  // For example Aliyun_AES_256, Aliyun_SM4, RSA_2048, EC_P256, or EC_SM2.
+  keySpec string
+  // Source of the key material
+  //
+  // Aliyun_KMS when the material was generated by KMS, or EXTERNAL when it was
+  // imported.
+  origin string
+  // Protection level of the key material
+  //
+  // SOFTWARE for software-protected keys, or HSM when the material is stored in
+  // a hardware security module.
+  protectionLevel string
+  // Automatic key-rotation state
+  //
+  // One of Enabled, Disabled, or Suspended. Suspended means rotation was
+  // enabled but KMS cannot rotate the key, for example after the key was
+  // disabled.
+  automaticRotation string
+  // Interval between automatic rotations, for example 31536000s
+  rotationInterval string
+  // Time the key was created
+  creationDate time
+  // Time the key is scheduled for deletion, null when no deletion is scheduled
+  deleteDate time
+  // Time the key material was last rotated, null when never rotated
+  lastRotationDate time
+  // Time the key is next scheduled to rotate, null when rotation is disabled
+  nextRotationDate time
+  // Time imported key material expires, null when it does not expire
+  materialExpireTime time
+  // Identifier of the current primary key version
+  primaryKeyVersion string
+  // Deletion-protection state
+  //
+  // Enabled when the key cannot be scheduled for deletion until protection is
+  // turned off.
+  deletionProtection string
+  // Account (UID) or service that created the key
+  creator string
+  // Description of the key
+  description string
+  // Dedicated KMS instance ID that holds the key, empty for the shared default KMS
+  dkmsInstanceId string
+  // Alias names that point at the key, for example alias/my-key
+  aliases() []string
+}
+
+// Key Management Service secret
+//
+// A single secret held in Secrets Manager, keyed by secretName within its
+// region. Exposes the secret metadata, type, rotation configuration, and the
+// customer master key that encrypts the secret value. The secret value itself
+// is never exposed. Use it to audit which secrets rotate and which key protects
+// each one.
+alicloud.kms.secret {
+  // Region ID the secret resides in, for example cn-hangzhou
+  regionId string
+  // Secret name, used as the lookup key within its region
+  secretName string
+  // Alibaba Cloud Resource Name of the secret
+  arn string
+  // Secret type
+  //
+  // One of Generic, Rds, RAMCredentials, or ECS. Managed types (Rds, ECS,
+  // RAMCredentials) are rotated by the owning service.
+  secretType string
+  // Automatic-rotation state
+  //
+  // One of Enabled, Disabled, or Suspended.
+  automaticRotation string
+  // Interval between automatic rotations, for example 604800s
+  rotationInterval string
+  // Time the secret was last rotated, null when never rotated
+  lastRotationDate time
+  // Time the secret is next scheduled to rotate, null when rotation is disabled
+  nextRotationDate time
+  // Time the secret is scheduled for deletion, null when no deletion is scheduled
+  plannedDeleteTime time
+  // Service that owns the secret, empty for user-managed secrets
+  owingService string
+  // Description of the secret
+  description string
+  // Dedicated KMS instance ID that holds the secret, empty for the shared default KMS
+  dkmsInstanceId string
+  // Type-specific extended configuration
+  //
+  // Parsed from the secret's extended-config document; the shape varies by
+  // secretType, for example the linked instance and account for an Rds secret.
+  // Null for Generic secrets.
+  extendedConfig dict
+  // Time the secret was created
+  createTime time
+  // Time the secret was last updated
+  updateTime time
+  // Customer master key that encrypts the secret value
+  encryptionKey() alicloud.kms.key
+  // Tags applied to the secret
+  tags map[string]string
+}
+
+// Alibaba Cloud ActionTrail
+//
+// Audit trail configuration for an Alibaba Cloud account. Exposes the trails
+// that record management and data-plane API events, including where each trail
+// delivers events (an OSS bucket or a Log Service project), whether it spans the
+// resource directory, and its live logging and delivery health. Use it to audit
+// whether API activity is being recorded and successfully delivered.
+alicloud.actiontrail {
+  // Trails configured in the account
+  trails() []alicloud.actiontrail.trail
+}
+
+// ActionTrail trail
+//
+// A single audit trail, keyed by name. Exposes the event categories it captures
+// (read, write, or all), the OSS bucket and Log Service project it delivers to,
+// the delivery roles, whether it is an organization trail, and its live logging
+// and delivery status. Use it to confirm a trail is actively logging and
+// delivering events without errors.
+alicloud.actiontrail.trail {
+  // Trail name, used as the lookup key
+  name string
+  // Configuration state of the trail
+  //
+  // One of Enable, Disable, or Fresh. Fresh means the trail was created but has
+  // never started logging.
+  status string
+  // Event categories the trail records
+  //
+  // One of Write, Read, or All.
+  eventRW string
+  // Region the trail was created in
+  homeRegion string
+  // Region whose events the trail records, or All for a multi-region trail
+  trailRegion string
+  // Alibaba Cloud Resource Name of the trail
+  trailArn string
+  // Whether the trail records events across all accounts in the resource directory
+  isOrganizationTrail bool
+  // Resource directory (organization) ID for an organization trail, empty otherwise
+  organizationId string
+  // Name of the OSS bucket that receives delivered events, empty when not delivering to OSS
+  ossBucketName string
+  // Region of the OSS bucket, for example oss-cn-hangzhou
+  ossBucketLocation string
+  // Object-name prefix applied to delivered event files
+  ossKeyPrefix string
+  // RAM role ARN ActionTrail assumes to write to the OSS bucket
+  ossWriteRoleArn string
+  // ARN of the Log Service project that receives delivered events, empty when not delivering to SLS
+  slsProjectArn string
+  // RAM role ARN ActionTrail assumes to write to the Log Service project
+  slsWriteRoleArn string
+  // Time the trail was created
+  createTime time
+  // Time the trail was last updated
+  updateTime time
+  // Time the trail most recently started logging
+  startLoggingTime time
+  // Time the trail most recently stopped logging, empty while logging
+  stopLoggingTime time
+  // OSS bucket that receives delivered events
+  ossBucket() alicloud.oss.bucket
+  // Log Service project that receives delivered events
+  slsProject() alicloud.log.project
+  // Whether the trail is actively logging events
+  //
+  // The live logging state reported by ActionTrail, which can differ from the
+  // configured status.
+  isLogging() bool
+  // Time of the most recent successful event delivery, null when none
+  latestDeliveryTime() time
+  // Most recent event-delivery error, empty when the last delivery succeeded
+  latestDeliveryError() string
+  // Time of the most recent successful delivery to Log Service, null when none
+  latestDeliveryLogServiceTime() time
+  // Most recent Log Service delivery error, empty when the last delivery succeeded
+  latestDeliveryLogServiceError() string
+}
+
+// Alibaba Cloud Log Service
+//
+// Log Service (SLS) projects and their logstores across an Alibaba Cloud
+// account. Exposes the projects in every enabled region and, within each, the
+// logstores that ingest and store logs, including their retention period and
+// server-side encryption configuration. Log Service is the delivery target for
+// ActionTrail trails and VPC flow logs, so these resources anchor the account's
+// logging posture.
+alicloud.log {
+  // Log Service projects across all enabled regions
+  projects() []alicloud.log.project
+}
+
+// Log Service project
+//
+// A single Log Service project, keyed by name within its region. A project is
+// the top-level container that groups logstores, dashboards, and alerts.
+// Exposes the project metadata, endpoints, and the logstores it contains. For
+// example `alicloud.log.project(name: "my-project", regionId: "cn-hangzhou")`.
+alicloud.log.project {
+  // Region ID the project resides in, for example cn-hangzhou
+  regionId string
+  // Project name, globally unique and used as the lookup key
+  name string
+  // Description of the project
+  description string
+  // Project status, for example Normal
+  status string
+  // Account (UID) that owns the project
+  owner string
+  // ID of the resource group the project belongs to
+  resourceGroupId string
+  // Data-redundancy type of the project storage, for example LRS or ZRS
+  dataRedundancyType string
+  // Whether the recycle bin is enabled for the project
+  recycleBinEnabled bool
+  // Internal endpoint for access from within Alibaba Cloud
+  internalEndpoint string
+  // Public endpoint for access over the Internet
+  internetEndpoint string
+  // Time the project was created
+  createTime time
+  // Time the project was last modified
+  lastModifyTime time
+  // Logstores contained in the project
+  logstores() []alicloud.log.logstore
+}
+
+// Log Service logstore
+//
+// A single logstore within a Log Service project, keyed by the owning project
+// name and logstore name. A logstore ingests, stores, and indexes a stream of
+// logs. Exposes the retention period, shard layout, telemetry type, and the
+// server-side encryption configuration. Use it to audit log retention and
+// whether logs are encrypted with a customer master key.
+alicloud.log.logstore {
+  // Region ID the logstore resides in, for example cn-hangzhou
+  regionId string
+  // Name of the project that contains the logstore
+  projectName string
+  // Logstore name, used with the project name as the lookup key
+  name string
+  // Number of days ingested logs are retained; 3650 means permanent retention
+  ttl() int
+  // Number of days logs are kept in hot storage before moving to cold storage
+  hotTtl() int
+  // Number of read/write shards the logstore is split into
+  shardCount() int
+  // Whether the logstore automatically splits shards under load
+  autoSplit() bool
+  // Maximum number of shards the logstore may auto-split into
+  maxSplitShard() int
+  // Whether the built-in reserved fields (for example __topic__) are recorded
+  appendMeta() bool
+  // Whether WebTracking ingestion is enabled for the logstore
+  enableTracking() bool
+  // Telemetry type stored, for example None for logs or Metrics
+  telemetryType() string
+  // Logstore mode, for example standard or query
+  mode() string
+  // Whether server-side encryption is enabled for the logstore
+  encryptionEnabled() bool
+  // Server-side encryption algorithm
+  //
+  // For example default or sm4. Empty when encryption is disabled.
+  encryptionType() string
+  // Customer master key used for server-side encryption
+  //
+  // Null when encryption is disabled or uses a service-managed key rather than
+  // a specific customer master key.
+  encryptionKey() alicloud.kms.key
+  // Time the logstore was created
+  createTime() time
+  // Time the logstore was last modified
+  lastModifyTime() time
+}
+
+// Alibaba Cloud Cloud Config
+//
+// Configuration-compliance state for an Alibaba Cloud account. Exposes the
+// Config rules that continuously evaluate resource configuration, the
+// account-wide compliance summary, and whether the configuration recorder and
+// its delivery channels are active. Use it to audit whether configuration
+// recording is enabled and how many resources are non-compliant.
+alicloud.config {
+  // Config rules defined in the account
+  rules() []alicloud.config.rule
+  // Whether the configuration recorder is registered and actively recording
+  //
+  // True when the recorder status is REGISTERED. When false, resource
+  // configuration changes are not being captured.
+  recorderEnabled() bool
+  // Configuration-recorder status
+  //
+  // One of REGISTRABLE, BUILDING, REGISTERED, or REBUILDING. REGISTERED means
+  // recording is active.
+  recorderStatus() string
+  // Resource types the configuration recorder captures
+  recordedResourceTypes() []string
+  // Account-wide compliance summary
+  //
+  // Counts of compliant and non-compliant rules and resources. Keys include
+  // compliantRuleCount, nonCompliantRuleCount, totalRuleCount,
+  // compliantResourceCount, nonCompliantResourceCount, totalResourceCount, and
+  // the highRisk, mediumRisk, and lowRisk non-compliant resource counts.
+  complianceSummary() dict
+  // Delivery channels that export configuration data and compliance results
+  //
+  // Each entry lists the channelId, name, type (OSS, SLS, or MNS), targetArn,
+  // assumeRoleArn, and enabled state, plus the snapshot and notification
+  // toggles. Empty when no delivery channel is configured.
+  deliveryChannels() []dict
+}
+
+// Cloud Config rule
+//
+// A single Config rule, keyed by configRuleId. A rule continuously evaluates
+// whether resources of a given type meet a configuration requirement and
+// reports each resource as compliant or non-compliant. Exposes the rule
+// definition, risk level, evaluation source, and current compliance result.
+alicloud.config.rule {
+  // Config rule ID, used as the lookup key
+  configRuleId string
+  // Config rule name
+  configRuleName string
+  // Alibaba Cloud Resource Name of the rule
+  configRuleArn string
+  // Rule state
+  //
+  // One of ACTIVE, INACTIVE, EVALUATING, or DELETING.
+  configRuleState string
+  // Description of the rule
+  description string
+  // Risk level of a non-compliant result
+  //
+  // 1 for high, 2 for medium, 3 for low.
+  riskLevel int
+  // Owner of the rule's evaluation logic
+  //
+  // ALIYUN for a managed rule, or a custom source such as CUSTOM_FC for a
+  // Function Compute-backed rule.
+  sourceOwner string
+  // Identifier of the managed rule or custom evaluation function
+  sourceIdentifier string
+  // Automation type applied to non-compliant resources, empty when none
+  automationType string
+  // Resource types the rule evaluates
+  resourceTypesScope []string
+  // Compliance result type
+  //
+  // One of COMPLIANT, NON_COMPLIANT, NOT_APPLICABLE, or INSUFFICIENT_DATA.
+  complianceType string
+  // Number of resources in the current compliance result
+  complianceCount int
+  // ID of the compliance pack the rule belongs to, empty when the rule is standalone
+  compliancePackId string
+  // Maximum interval at which a periodic rule re-evaluates
+  //
+  // One of One_Hour, Three_Hours, Six_Hours, Twelve_Hours, or
+  // TwentyFour_Hours. Empty for change-triggered rules.
+  maximumExecutionFrequency() string
+  // Time the rule was created
+  createTime() time
+  // Time the rule was last modified
+  modifiedTime() time
+  // Tags applied to the rule
+  tags map[string]string
+}
+
+// Alibaba Cloud Resource Directory
+//
+// Multi-account governance structure for an Alibaba Cloud account. Exposes the
+// resource directory (the organization), the management and member accounts it
+// contains, the folder hierarchy that groups them, and the control policies
+// available to restrict member-account permissions. Use it to audit
+// organization membership and whether control policies are enabled.
+alicloud.resourceManager {
+  // Resource directory (organization) ID
+  resourceDirectoryId() string
+  // Root folder ID of the resource directory
+  rootFolderId() string
+  // Management (master) account ID
+  masterAccountId() string
+  // Management (master) account name
+  masterAccountName() string
+  // Member-account deletion state
+  //
+  // Enabled when member accounts may be deleted from the directory.
+  memberDeletionStatus() string
+  // Control-policy enablement state
+  //
+  // Enabled when control policies may be attached to restrict member-account
+  // permissions.
+  controlPolicyStatus() string
+  // Time the resource directory was created
+  createTime() time
+  // Member and management accounts in the resource directory
+  accounts() []alicloud.resourceManager.account
+  // Folders in the resource directory
+  folders() []alicloud.resourceManager.folder
+  // Control policies in the resource directory, both system and custom
+  controlPolicies() []alicloud.resourceManager.controlPolicy
+}
+
+// Resource Directory account
+//
+// A single member or management account in the resource directory, keyed by
+// accountId. Exposes the account profile, its position in the folder hierarchy,
+// how it joined the directory, and its lifecycle timestamps.
+alicloud.resourceManager.account {
+  // Account (UID)
+  accountId string
+  // Display name of the account
+  displayName string
+  // Account status, for example CreateSuccess or InviteSuccess
+  status string
+  // Account type
+  //
+  // ResourceAccount for an account created in the directory, or CloudAccount
+  // for an existing account invited into it.
+  type string
+  // ID of the folder that contains the account
+  folderId string
+  // Resource directory (organization) ID
+  resourceDirectoryId string
+  // How the account joined the directory
+  //
+  // Either created or invited.
+  joinMethod string
+  // Time the account joined the directory
+  joinTime time
+  // Time the account was last modified
+  modifyTime time
+  // Folder that contains the account
+  folder() alicloud.resourceManager.folder
+}
+
+// Resource Directory folder
+//
+// A single folder in the resource directory hierarchy, keyed by folderId. A
+// folder groups member accounts and can nest other folders. Exposes the folder
+// name, its parent, and creation time.
+alicloud.resourceManager.folder {
+  // Folder ID, used as the lookup key
+  folderId string
+  // Folder name
+  folderName string
+  // ID of the parent folder, empty for the root folder
+  parentFolderId string
+  // Time the folder was created
+  createTime time
+}
+
+// Resource Directory control policy
+//
+// A single control policy in the resource directory, keyed by policyId. A
+// control policy sets the maximum permissions available to the accounts and
+// folders it is attached to. Exposes the policy metadata and how many entities
+// it is attached to.
+alicloud.resourceManager.controlPolicy {
+  // Policy ID, used as the lookup key
+  policyId string
+  // Policy name
+  policyName string
+  // Policy type
+  //
+  // Either System for an Alibaba Cloud-managed policy or Custom for a
+  // user-defined one.
+  policyType string
+  // Description of the policy
+  description string
+  // Identity types the policy governs, for example RAM
+  effectScope string
+  // Number of accounts and folders the policy is attached to
+  attachmentCount int
+  // Time the policy was created
+  createDate time
+  // Time the policy was last updated
+  updateDate time
 }

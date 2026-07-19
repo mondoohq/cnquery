@@ -447,6 +447,21 @@ func (r *mqlAlicloudEcsDisk) instance() (*mqlAlicloudEcsInstance, error) {
 	return resolveEcsInstance(r.MqlRuntime, r.cacheRegion, r.cacheInstanceID)
 }
 
+// kmsKey resolves the KMS key that encrypts the disk, or null when the disk is
+// not encrypted.
+func (r *mqlAlicloudEcsDisk) kmsKey() (*mqlAlicloudKmsKey, error) {
+	if r.KmsKeyId.Data == "" {
+		r.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	key, err := resolveKmsKey(r.MqlRuntime, r.RegionId.Data, r.KmsKeyId.Data)
+	if err != nil || key == nil {
+		r.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return key, nil
+}
+
 // ---------------------------------------------------------------------------
 // alicloud.ecs.image
 // ---------------------------------------------------------------------------

@@ -284,6 +284,22 @@ func (r *mqlAlicloudMongodbInstance) encryptionKey() (string, error) {
 	return tea.StringValue(attr.EncryptionKey), nil
 }
 
+// kmsKey resolves the KMS key used for disk encryption, or null when disk
+// encryption is disabled.
+func (r *mqlAlicloudMongodbInstance) kmsKey() (*mqlAlicloudKmsKey, error) {
+	attr, err := r.attribute()
+	if err != nil || attr == nil || tea.StringValue(attr.EncryptionKey) == "" {
+		r.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	key, err := resolveKmsKey(r.MqlRuntime, r.cacheRegion, tea.StringValue(attr.EncryptionKey))
+	if err != nil || key == nil {
+		r.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return key, nil
+}
+
 func (r *mqlAlicloudMongodbInstance) releaseProtection() (bool, error) {
 	attr, err := r.attribute()
 	if err != nil || attr == nil {

@@ -7,25 +7,40 @@ import (
 	"errors"
 	"fmt"
 
+	actiontrailclient "github.com/alibabacloud-go/actiontrail-20200706/v3/client"
+	configclient "github.com/alibabacloud-go/config-20200907/v4/client"
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
 	ddsclient "github.com/alibabacloud-go/dds-20151201/v9/client"
 	ecsclient "github.com/alibabacloud-go/ecs-20140526/v6/client"
+	kmsclient "github.com/alibabacloud-go/kms-20160120/v4/client"
 	polardbclient "github.com/alibabacloud-go/polardb-20170801/v7/client"
 	rkvclient "github.com/alibabacloud-go/r-kvstore-20150101/v6/client"
 	ramclient "github.com/alibabacloud-go/ram-20150501/v2/client"
 	rdsclient "github.com/alibabacloud-go/rds-20140815/v11/client"
+	rmclient "github.com/alibabacloud-go/resourcemanager-20200331/v3/client"
 	slbclient "github.com/alibabacloud-go/slb-20140515/v4/client"
+	slsclient "github.com/alibabacloud-go/sls-20201230/v6/client"
 	stsclient "github.com/alibabacloud-go/sts-20150401/v2/client"
 	vpcclient "github.com/alibabacloud-go/vpc-20160428/v6/client"
 	oss "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
 	osscred "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
 )
 
-// endpoint builds the public Alibaba Cloud service endpoint for a region. RAM is
-// a global (region-less) service, so it always uses its central endpoint.
+// endpoint builds the public Alibaba Cloud service endpoint for a region. A few
+// services do not follow the usual <service>.<region>.aliyuncs.com layout: RAM,
+// ActionTrail, and Resource Management are global (region-less), Cloud Config is
+// a center service reached through cn-shanghai, and Log Service (SLS) puts the
+// region ahead of a fixed log host.
 func endpoint(service, region string) string {
-	if service == "ram" {
-		return "ram.aliyuncs.com"
+	switch service {
+	case "ram", "actiontrail", "resourcemanager":
+		return service + ".aliyuncs.com"
+	case "config":
+		// Cloud Config is a center service; cn-shanghai serves the China and
+		// international-Alibaba partition.
+		return "config.cn-shanghai.aliyuncs.com"
+	case "sls":
+		return region + ".log.aliyuncs.com"
 	}
 	return fmt.Sprintf("%s.%s.aliyuncs.com", service, region)
 }
@@ -175,6 +190,67 @@ func (c *AlicloudConnection) OssClient(region string) (*oss.Client, error) {
 		return nil, err
 	}
 	return client.(*oss.Client), nil
+}
+
+// KmsClient returns a Key Management Service client for a region.
+func (c *AlicloudConnection) KmsClient(region string) (*kmsclient.Client, error) {
+	client, err := c.cachedClient("kms/"+region, func() (any, error) {
+		return kmsclient.NewClient(c.config("kms", region))
+	})
+	if err != nil {
+		return nil, err
+	}
+	return client.(*kmsclient.Client), nil
+}
+
+// ActionTrailClient returns the global ActionTrail client. ActionTrail is a
+// center service, so a single client sees trails across all regions.
+func (c *AlicloudConnection) ActionTrailClient() (*actiontrailclient.Client, error) {
+	client, err := c.cachedClient("actiontrail", func() (any, error) {
+		return actiontrailclient.NewClient(c.config("actiontrail", c.region))
+	})
+	if err != nil {
+		return nil, err
+	}
+	return client.(*actiontrailclient.Client), nil
+}
+
+// SlsClient returns a Log Service (SLS) client for a region. The client's
+// endpoint is <region>.log.aliyuncs.com; per-project calls take the project as
+// a method argument and the SLS gateway prepends it to the host at request time.
+func (c *AlicloudConnection) SlsClient(region string) (*slsclient.Client, error) {
+	client, err := c.cachedClient("sls/"+region, func() (any, error) {
+		return slsclient.NewClient(c.config("sls", region))
+	})
+	if err != nil {
+		return nil, err
+	}
+	return client.(*slsclient.Client), nil
+}
+
+// ConfigClient returns the Cloud Config client. Cloud Config is a center
+// service reached through the cn-shanghai endpoint, so one client is cached.
+func (c *AlicloudConnection) ConfigClient() (*configclient.Client, error) {
+	client, err := c.cachedClient("config", func() (any, error) {
+		return configclient.NewClient(c.config("config", c.region))
+	})
+	if err != nil {
+		return nil, err
+	}
+	return client.(*configclient.Client), nil
+}
+
+// ResourceManagerClient returns the global Resource Management client backing
+// the Resource Directory resources. It is a center service, so one client is
+// cached for the whole account.
+func (c *AlicloudConnection) ResourceManagerClient() (*rmclient.Client, error) {
+	client, err := c.cachedClient("resourcemanager", func() (any, error) {
+		return rmclient.NewClient(c.config("resourcemanager", c.region))
+	})
+	if err != nil {
+		return nil, err
+	}
+	return client.(*rmclient.Client), nil
 }
 
 // GetRegions returns the region IDs to scan. When the caller pinned a region
