@@ -9,6 +9,7 @@ import (
 
 	actiontrailclient "github.com/alibabacloud-go/actiontrail-20200706/v3/client"
 	configclient "github.com/alibabacloud-go/config-20200907/v4/client"
+	csclient "github.com/alibabacloud-go/cs-20151215/v6/client"
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
 	ddsclient "github.com/alibabacloud-go/dds-20151201/v9/client"
 	ecsclient "github.com/alibabacloud-go/ecs-20140526/v6/client"
@@ -190,6 +191,17 @@ func (c *AlicloudConnection) OssClient(region string) (*oss.Client, error) {
 		return nil, err
 	}
 	return client.(*oss.Client), nil
+}
+
+// CsClient returns a Container Service for Kubernetes (ACK) client for a region.
+func (c *AlicloudConnection) CsClient(region string) (*csclient.Client, error) {
+	client, err := c.cachedClient("cs/"+region, func() (any, error) {
+		return csclient.NewClient(c.config("cs", region))
+	})
+	if err != nil {
+		return nil, err
+	}
+	return client.(*csclient.Client), nil
 }
 
 // KmsClient returns a Key Management Service client for a region.

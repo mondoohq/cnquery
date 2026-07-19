@@ -9,8 +9,9 @@ option go_package = "go.mondoo.com/mql/v13/providers/alicloud/resources"
 // Entry point for querying an Alibaba Cloud account. Exposes the account
 // identity and the region IDs enabled on the account, and is the root from
 // which the RAM, ECS, VPC, OSS, SLB, and managed-database resources are
-// reached, along with the Key Management Service, ActionTrail, Log Service,
-// Cloud Config, and Resource Directory resources.
+// reached, along with the Container Service for Kubernetes, Key Management
+// Service, ActionTrail, Log Service, Cloud Config, and Resource Directory
+// resources.
 alicloud {
   // Account (UID) that the active credential belongs to
   accountId() string
@@ -2439,4 +2440,269 @@ alicloud.resourceManager.controlPolicy {
   createDate time
   // Time the policy was last updated
   updateDate time
+}
+
+// Alibaba Cloud Container Service for Kubernetes
+//
+// ACK clusters across an Alibaba Cloud account. Exposes the Kubernetes clusters
+// in every enabled region, including their type and version, network layout,
+// API server exposure, control-plane audit logging, workload-identity (RRSA)
+// settings, node pools, and installed addons. Use it to audit whether a
+// cluster's API server is reachable from the internet and whether audit logging
+// is enabled.
+alicloud.cs {
+  // Kubernetes clusters across all enabled regions
+  clusters() []alicloud.cs.cluster
+}
+
+// Container Service for Kubernetes cluster
+//
+// A single ACK cluster, keyed by clusterId within its region. Exposes the
+// cluster type and Kubernetes version, the VPC, vSwitches, and security group it
+// runs in, the pod and service CIDRs, the public and intranet API server
+// endpoints, and the derived internet-exposure of the API server. Node pools,
+// installed addons, control-plane audit logging, and workload-identity (RRSA)
+// settings are reached from here. For example
+// alicloud.cs.cluster(clusterId: "c1a2b3", regionId: "cn-hangzhou").
+alicloud.cs.cluster {
+  // Region ID the cluster resides in, for example cn-hangzhou
+  regionId string
+  // Cluster ID, used as the lookup key within its region
+  clusterId string
+  // Cluster name
+  name string
+  // Cluster type
+  //
+  // One of Kubernetes (dedicated), ManagedKubernetes, Ask (serverless), or
+  // ExternalKubernetes.
+  clusterType string
+  // Cluster profile, for example Default, Serverless, or Edge
+  profile string
+  // Managed-tier specification
+  //
+  // For example ack.pro.small or ack.standard. Empty for dedicated Kubernetes
+  // clusters.
+  clusterSpec string
+  // Cluster lifecycle state
+  //
+  // For example running, initial, failed, or deleting.
+  state string
+  // Running Kubernetes version
+  currentVersion string
+  // Kubernetes version the cluster was created with
+  initVersion string
+  // Next Kubernetes version available for upgrade, empty when up to date
+  nextVersion string
+  // Pod CIDR block
+  containerCidr string
+  // Service CIDR block
+  serviceCidr string
+  // Node subnet CIDR block
+  subnetCidr string
+  // IP stack of the cluster
+  //
+  // One of ipv4, ipv6, or dual.
+  ipStack string
+  // kube-proxy mode, either iptables or ipvs
+  proxyMode string
+  // Cluster network mode, for example vpc or overlay
+  networkMode string
+  // Cluster local DNS domain, for example cluster.local
+  clusterDomain string
+  // Whether PrivateZone (private DNS) is enabled for the cluster
+  privateZone bool
+  // Whether deletion protection is enabled for the cluster
+  deletionProtection bool
+  // Total number of nodes in the cluster
+  size int
+  // ID of the resource group the cluster belongs to
+  resourceGroupId string
+  // Zone ID the cluster's managed resources reside in
+  zoneId string
+  // Time zone configured for the cluster
+  timezone string
+  // Public (internet) API server endpoint
+  //
+  // The internet-facing Kubernetes API server URL. Empty when the API server
+  // has no public endpoint.
+  apiServerPublicEndpoint string
+  // Intranet (private) API server endpoint
+  apiServerIntranetEndpoint string
+  // Whether the Kubernetes API server is reachable from the internet
+  //
+  // True when the cluster exposes a public API server endpoint. A publicly
+  // reachable API server broadens the attack surface of the control plane.
+  apiServerInternetExposed bool
+  // Time the cluster was created
+  created time
+  // Time the cluster was last updated
+  updated time
+  // Tags applied to the cluster
+  tags map[string]string
+  // Maintenance window configuration
+  //
+  // The scheduled maintenance window, with enable, duration, maintenanceTime,
+  // recurrence, and weeklyPeriod. Null when no window is configured.
+  maintenanceWindow dict
+  // VPC the cluster runs in
+  vpc() alicloud.vpc.network
+  // vSwitches the cluster's control plane and nodes attach to
+  vswitches() []alicloud.vpc.vswitch
+  // Security group applied to the cluster nodes
+  securityGroup() alicloud.ecs.securitygroup
+  // Worker node RAM role, null when the cluster has no worker RAM role
+  workerRamRole() alicloud.ram.role
+  // Whether RAM Roles for Service Accounts (RRSA) workload identity is enabled
+  //
+  // True when the cluster issues OIDC tokens for pod-level RAM authorization
+  // instead of relying on the shared worker node role.
+  rrsaEnabled() bool
+  // OIDC issuer URL for workload identity, empty when RRSA is disabled
+  oidcIssuerUrl() string
+  // Whether Kubernetes API server audit logging is enabled
+  //
+  // True when the control-plane audit component ships logs to Log Service. When
+  // false, API server activity is not being recorded.
+  auditLogEnabled() bool
+  // Control-plane components shipping logs to Log Service
+  //
+  // For example apiserver, audit, kcm (kube-controller-manager), scheduler, or
+  // ccm (cloud-controller-manager). Empty when control-plane logging is off.
+  controlPlaneLogComponents() []string
+  // Retention in days of the control-plane logs, 0 when logging is disabled
+  controlPlaneLogTtl() int
+  // Log Service project that receives the control-plane logs
+  //
+  // Null when control-plane logging is not configured.
+  controlPlaneLogProject() alicloud.log.project
+  // Node pools in the cluster
+  nodePools() []alicloud.cs.nodePool
+  // Addons installed in the cluster
+  //
+  // Each entry lists the name, version, and state of an installed addon, for
+  // example security-inspector, logtail-ds, terway-eniip, or csi-plugin. Use it
+  // to audit which security and observability addons are present.
+  addons() []dict
+}
+
+// Container Service for Kubernetes node pool
+//
+// A single node pool within an ACK cluster, keyed by nodePoolId. Exposes the
+// node instance configuration, scaling and management policy, OS hardening
+// flags, disk encryption, and the typed references to the security groups,
+// vSwitches, RAM role, and KMS key the nodes use. Use it to audit node disk
+// encryption, OS hardening, and automatic CVE patching.
+alicloud.cs.nodePool {
+  // Region ID the node pool resides in
+  regionId string
+  // ID of the cluster the node pool belongs to
+  clusterId string
+  // Node pool ID, used as the lookup key
+  nodePoolId string
+  // Node pool name
+  name string
+  // Node pool type, for example ess or edge
+  type string
+  // ID of the resource group the node pool belongs to
+  resourceGroupId string
+  // Whether this is the cluster's default node pool
+  isDefault bool
+  // Time the node pool was created
+  created time
+  // Time the node pool was last updated
+  updated time
+  // ECS instance types used for nodes
+  instanceTypes []string
+  // System disk category, for example cloud_essd
+  systemDiskCategory string
+  // System disk size in GiB
+  systemDiskSize int
+  // Whether the system disk is encrypted
+  systemDiskEncrypted bool
+  // System disk encryption algorithm, for example aes-256 or sm4
+  systemDiskEncryptAlgorithm string
+  // Key pair name used for node SSH access, empty when password or managed login is used
+  keyPair string
+  // Image type used for nodes, for example AliyunLinux or ContainerOS
+  imageType string
+  // ID of the image used for nodes
+  imageId string
+  // Node billing method
+  //
+  // Either PrePaid (subscription) or PostPaid (pay-as-you-go).
+  instanceChargeType string
+  // Desired number of nodes in the pool
+  desiredSize int
+  // Multi-zone scaling policy, for example PRIORITY, COST_OPTIMIZED, or BALANCE
+  multiAzPolicy string
+  // Spot instance strategy
+  //
+  // One of NoSpot, SpotWithPriceLimit, or SpotAsPriceGo.
+  spotStrategy string
+  // Whether OS security hardening is applied to nodes
+  securityHardeningOs bool
+  // Whether MLPS (Multi-Level Protection Scheme) compliance hardening is enabled
+  socEnabled bool
+  // Whether CIS benchmark hardening is enabled for nodes
+  cisEnabled bool
+  // Maximum outbound internet bandwidth in Mbps assigned to nodes, 0 when nodes have no public bandwidth
+  internetMaxBandwidthOut int
+  // Data disks attached to nodes
+  //
+  // Each entry lists the category, size, encrypted, kmsKeyId, performanceLevel,
+  // and autoSnapshotPolicyId of a data disk.
+  dataDisks []dict
+  // Container runtime, for example containerd or docker
+  runtime string
+  // Container runtime version
+  runtimeVersion string
+  // Whether the CloudMonitor agent is installed on nodes
+  cmsEnabled bool
+  // CPU management policy, either none or static
+  cpuPolicy string
+  // Whether nodes are marked unschedulable
+  unschedulable bool
+  // Kubernetes labels applied to nodes
+  labels map[string]string
+  // Kubernetes taints applied to nodes
+  //
+  // Each entry lists the key, value, and effect (NoSchedule, PreferNoSchedule,
+  // or NoExecute) of a node taint.
+  taints []dict
+  // Whether autoscaling is enabled for the node pool
+  autoScalingEnabled bool
+  // Autoscaling type, for example cpu, gpu, or spot
+  autoScalingType string
+  // Minimum number of nodes when autoscaling is enabled
+  minInstances int
+  // Maximum number of nodes when autoscaling is enabled
+  maxInstances int
+  // Whether the node pool is managed (control-plane operated)
+  managed bool
+  // Whether managed nodes are automatically repaired
+  autoRepair bool
+  // Whether managed nodes are automatically upgraded
+  autoUpgrade bool
+  // Whether managed nodes automatically receive CVE fixes
+  autoVulFix bool
+  // Whether trusted (confidential) computing is enabled for nodes
+  teeEnabled bool
+  // Total number of nodes in the pool
+  totalNodes int
+  // Number of nodes serving workloads
+  servingNodes int
+  // Number of healthy nodes
+  healthyNodes int
+  // Number of failed nodes
+  failedNodes int
+  // Node pool state, for example active or scaling
+  nodePoolState string
+  // KMS key used to encrypt the system disk, null when the system disk is not encrypted
+  systemDiskKmsKey() alicloud.kms.key
+  // Security groups applied to the nodes
+  securityGroups() []alicloud.ecs.securitygroup
+  // vSwitches the nodes attach to
+  vswitches() []alicloud.vpc.vswitch
+  // RAM role assigned to the nodes, null when the node pool has no RAM role
+  ramRole() alicloud.ram.role
 }
