@@ -219,11 +219,10 @@ type UnixProcessManager struct {
 	// Exists() and Process() consult the cached list/map instead of re-running
 	// `ps`, which avoids ~2N `ps` commands when resolving N process(pid:) lookups
 	// over slow connections (e.g. SSH).
-	lock       sync.Mutex
-	loaded     bool
-	processes  []*OSProcess
-	processErr error
-	byPid      map[int64]*OSProcess
+	lock      sync.Mutex
+	loaded    bool
+	processes []*OSProcess
+	byPid     map[int64]*OSProcess
 }
 
 func (upm *UnixProcessManager) Name() string {
@@ -243,12 +242,16 @@ func (upm *UnixProcessManager) List() ([]*OSProcess, error) {
 // Callers must hold upm.lock.
 func (upm *UnixProcessManager) listLocked() ([]*OSProcess, error) {
 	if upm.loaded {
-		return upm.processes, upm.processErr
+		return upm.processes, nil
 	}
 
 	ps, err := upm.runList()
+	if err != nil {
+		// Don't memoize transient failures (SSH timeout, rate limit, ...);
+		// leaving upm.loaded false lets a later call retry the ps command.
+		return nil, err
+	}
 	upm.processes = ps
-	upm.processErr = err
 	upm.byPid = make(map[int64]*OSProcess, len(ps))
 	for i := range ps {
 		// preserve first-match semantics if duplicate pids ever appear
@@ -258,7 +261,7 @@ func (upm *UnixProcessManager) listLocked() ([]*OSProcess, error) {
 	}
 	upm.loaded = true
 
-	return upm.processes, upm.processErr
+	return upm.processes, nil
 }
 
 // runList runs the platform-appropriate `ps` command and parses its output.
