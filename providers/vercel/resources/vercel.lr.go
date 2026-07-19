@@ -798,9 +798,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vercel.accessGroup.project.role": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelAccessGroupProject).GetRole()).ToDataRes(types.String)
 	},
-	"vercel.accessGroup.project.projectId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlVercelAccessGroupProject).GetProjectId()).ToDataRes(types.String)
-	},
 	"vercel.accessGroup.project.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelAccessGroupProject).GetCreatedAt()).ToDataRes(types.Time)
 	},
@@ -1729,10 +1726,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vercel.accessGroup.project.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVercelAccessGroupProject).Role, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"vercel.accessGroup.project.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVercelAccessGroupProject).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"vercel.accessGroup.project.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3967,7 +3960,6 @@ type mqlVercelAccessGroupProject struct {
 	__id       string
 	mqlVercelAccessGroupProjectInternal
 	Role      plugin.TValue[string]
-	ProjectId plugin.TValue[string]
 	CreatedAt plugin.TValue[*time.Time]
 	UpdatedAt plugin.TValue[*time.Time]
 	Project   plugin.TValue[*mqlVercelProject]
@@ -4007,10 +3999,6 @@ func (c *mqlVercelAccessGroupProject) MqlID() string {
 
 func (c *mqlVercelAccessGroupProject) GetRole() *plugin.TValue[string] {
 	return &c.Role
-}
-
-func (c *mqlVercelAccessGroupProject) GetProjectId() *plugin.TValue[string] {
-	return &c.ProjectId
 }
 
 func (c *mqlVercelAccessGroupProject) GetCreatedAt() *plugin.TValue[*time.Time] {

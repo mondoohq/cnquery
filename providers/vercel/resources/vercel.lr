@@ -661,10 +661,6 @@ private vercel.accessGroup.project @defaults("role") {
   //
   // One of ADMIN, PROJECT_DEVELOPER, PROJECT_VIEWER, or PROJECT_GUEST.
   role string
-  // Identifier of the project the role is granted on
-  //
-  // Deprecated in favor of the project typed reference.
-  projectId @maturity("deprecated") string
   // Time the grant was created
   createdAt time
   // Time the grant was last updated

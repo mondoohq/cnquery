@@ -136,7 +136,6 @@ func (g *mqlVercelAccessGroup) projects() ([]any, error) {
 		resource, err := CreateResource(g.MqlRuntime, "vercel.accessGroup.project", map[string]*llx.RawData{
 			"__id":      llx.StringData(g.Id.Data + "/" + rec.ProjectID),
 			"role":      llx.StringData(rec.Role),
-			"projectId": llx.StringData(rec.ProjectID),
 			"createdAt": llx.TimeDataPtr(rec.CreatedAt.Time()),
 			"updatedAt": llx.TimeDataPtr(rec.UpdatedAt.Time()),
 		})
