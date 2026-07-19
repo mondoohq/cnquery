@@ -25,6 +25,8 @@ func TestSessionPolicyDescribeProps(t *testing.T) {
 		row("property", "value", "COMMENT", "mql verify"),
 		// a null value cell should map to an empty string, not panic
 		{"property": ptrAny("SESSION_MAX_LIFESPAN_MINS"), "value": ptrAny(nil)},
+		// a row missing the "value" key entirely must still map to an empty string
+		{"property": ptrAny("SESSION_UI_MAX_LIFESPAN_MINS")},
 	}
 	props := sessionPolicyDescribeProps(rows)
 
@@ -39,6 +41,9 @@ func TestSessionPolicyDescribeProps(t *testing.T) {
 	}
 	if v, ok := props["SESSION_MAX_LIFESPAN_MINS"]; !ok || v != "" {
 		t.Errorf("max lifespan = %q (present=%v), want empty string present", v, ok)
+	}
+	if v, ok := props["SESSION_UI_MAX_LIFESPAN_MINS"]; !ok || v != "" {
+		t.Errorf("ui max lifespan (missing value key) = %q (present=%v), want empty string present", v, ok)
 	}
 }
 

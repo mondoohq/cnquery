@@ -81,6 +81,9 @@ func (r *mqlSnowflakeSessionPolicy) gatherSessionPolicyDetails() error {
 	// The SDK's typed Describe expects horizontal columns, but Snowflake returns
 	// DESCRIBE SESSION POLICY as a vertical property/value table, so the typed
 	// timeout fields come back zero. Read the raw rows and parse them here.
+	// FullyQualifiedName double-quotes each identifier component (`"db"."schema"."name"`),
+	// and the components originate from Snowflake's own SHOW output, so the
+	// interpolation into the QueryUnsafe statement is a properly quoted identifier.
 	id := sdk.NewSchemaObjectIdentifier(r.DatabaseName.Data, r.SchemaName.Data, r.Name.Data)
 	rows, err := client.QueryUnsafe(ctx, fmt.Sprintf("DESCRIBE SESSION POLICY %s", id.FullyQualifiedName()))
 	if err != nil {
@@ -122,6 +125,9 @@ func sessionPolicyDescribeProps(rows []map[string]*any) map[string]string {
 func unsafeCellString(v *any) string {
 	if v == nil || *v == nil {
 		return ""
+	}
+	if s, ok := (*v).(string); ok {
+		return strings.TrimSpace(s)
 	}
 	return strings.TrimSpace(fmt.Sprintf("%v", *v))
 }
