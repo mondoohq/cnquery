@@ -1,0 +1,387 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/mql/providers/mongodbatlas"
+option go_package = "go.mondoo.com/mql/v13/providers/mongodbatlas/resources"
+
+// MongoDB Atlas
+//
+// Entry point to a MongoDB Atlas organization and its projects. Connecting to
+// an organization exposes organization-wide security settings and identity
+// through the organizationName, multiFactorAuthRequired, apiAccessListRequired,
+// restrictEmployeeAccess, orgUsers, teams, apiKeys, and serviceAccounts fields,
+// and enumerates every project through the projects field. Connecting to a
+// single project exposes that project's security surface through the clusters,
+// databaseUsers, ipAccessList, projectSettings, auditing, encryptionAtRest,
+// privateEndpoints, networkPeerings, and cloudProviderAccessRoles fields.
+mongodbatlas {
+  // Organization id
+  organizationId() string
+  // Organization name
+  organizationName() string
+  // Whether multi-factor authentication is required for all organization members
+  multiFactorAuthRequired() bool
+  // Whether an API access list is required for organization API keys and service accounts
+  apiAccessListRequired() bool
+  // Whether MongoDB support employee access to organization infrastructure is restricted
+  restrictEmployeeAccess() bool
+  // Whether generative AI features are enabled for the organization
+  genAiFeaturesEnabled() bool
+  // Maximum validity in hours for service account secrets, null when unlimited
+  maxServiceAccountSecretValidityInHours() int
+  // Email address that receives security notifications for the organization
+  securityContact() string
+  // Projects in the organization
+  projects() []mongodbatlas.project
+  // Organization members
+  orgUsers() []mongodbatlas.orgUser
+  // Teams in the organization
+  teams() []mongodbatlas.team
+  // Programmatic API keys in the organization
+  apiKeys() []mongodbatlas.apiKey
+  // Service accounts in the organization
+  serviceAccounts() []mongodbatlas.serviceAccount
+  // Clusters in the project
+  clusters() []mongodbatlas.cluster
+  // Database users in the project
+  databaseUsers() []mongodbatlas.databaseUser
+  // Project IP access list entries
+  ipAccessList() []mongodbatlas.networkAccessEntry
+  // Project feature settings
+  projectSettings() mongodbatlas.projectConfig
+  // Database auditing configuration for the project
+  auditing() mongodbatlas.auditConfig
+  // Encryption-at-rest configuration for the project
+  encryptionAtRest() mongodbatlas.encryptionConfig
+  // Private endpoint services configured for the project
+  privateEndpoints() []mongodbatlas.privateEndpointService
+  // Network peering connections for the project
+  networkPeerings() []mongodbatlas.networkPeering
+  // Cloud provider access roles configured for the project
+  cloudProviderAccessRoles() []mongodbatlas.cloudProviderAccessRole
+}
+
+// MongoDB Atlas project
+//
+// A project (also called a group) in the organization, keyed by id. Covers the
+// owning organization, the number of clusters, the creation time, and any
+// government region restrictions. Select a project by name, for example
+// `mongodbatlas.projects.where(name == "production")`.
+mongodbatlas.project @defaults("name id orgId") {
+  // Project id
+  id string
+  // Project name
+  name string
+  // Id of the organization that owns the project
+  orgId string
+  // Number of clusters in the project
+  clusterCount int
+  // Time the project was created
+  created time
+  // Government region restriction (Atlas for Government), empty for commercial projects
+  regionUsageRestrictions string
+}
+
+// MongoDB Atlas organization member
+//
+// A user account that is a member of the organization, keyed by username (the
+// login email). Covers the membership status, the organization-level roles,
+// per-project role assignments, team memberships, and the last authentication
+// time. Select a member by username, for example
+// `mongodbatlas.orgUsers.where(username == "alice@example.com")`.
+mongodbatlas.orgUser @defaults("username orgMembershipStatus") {
+  // User id
+  id string
+  // Login name (email)
+  username string
+  // Membership status (ACTIVE or PENDING)
+  orgMembershipStatus string
+  // Organization-level roles granted to the member
+  orgRoles []string
+  // Ids of the teams the member belongs to
+  teamIds []string
+  // Time the member last authenticated
+  lastAuth time
+}
+
+// MongoDB Atlas team
+//
+// A team in the organization, keyed by name. Teams group members for role
+// assignment on projects. Select a team by name, for example
+// `mongodbatlas.teams.where(name == "platform")`.
+mongodbatlas.team @defaults("name id") {
+  // Team id
+  id string
+  // Team name
+  name string
+}
+
+// MongoDB Atlas programmatic API key
+//
+// A programmatic API key in the organization, keyed by its public key. Covers
+// the description and the roles the key is granted at the organization and
+// project level. The private key is never exposed. Select a key by public key,
+// for example `mongodbatlas.apiKeys.where(description == "ci")`.
+mongodbatlas.apiKey @defaults("publicKey description") {
+  // API key id
+  id string
+  // Public key (the non-secret half of the key pair)
+  publicKey string
+  // Description of the key
+  description string
+  // Role assignments granted to the key, each with roleName and the org or project it applies to
+  roles []dict
+}
+
+// MongoDB Atlas service account
+//
+// A service account in the organization, keyed by its client id. Covers the
+// granted organization roles and the secrets issued to it (their ids and expiry
+// times, never the secret values). Select an account by client id, for example
+// `mongodbatlas.serviceAccounts.where(name == "automation")`.
+mongodbatlas.serviceAccount @defaults("name clientId") {
+  // OAuth client id
+  clientId string
+  // Service account name
+  name string
+  // Description of the service account
+  description string
+  // Organization roles granted to the service account
+  roles []string
+  // Time the service account was created
+  createdAt time
+  // Issued secrets, each with its id, creation, expiry, and last-used times (no secret values)
+  secrets []dict
+}
+
+// MongoDB Atlas cluster
+//
+// A database cluster (deployment) in the project, keyed by name. Covers the
+// MongoDB version and release track, cluster topology, backup and
+// point-in-time-recovery state, encryption-at-rest provider, the minimum
+// enabled TLS protocol, client-log redaction, termination protection, and the
+// per-region provider and instance sizing. Select a cluster by name, for
+// example `mongodbatlas.clusters.where(name == "prod-0")`.
+mongodbatlas.cluster @defaults("name mongoDBMajorVersion encryptionAtRestProvider") {
+  // Cluster id
+  id string
+  // Cluster name
+  name string
+  // Configured MongoDB major version
+  mongoDBMajorVersion string
+  // Running MongoDB version
+  mongoDBVersion string
+  // Cluster topology (REPLICASET, SHARDED, or GEOSHARDED)
+  clusterType string
+  // Current state (such as IDLE or CREATING)
+  stateName string
+  // Whether cloud backup is enabled
+  backupEnabled bool
+  // Whether continuous point-in-time recovery is enabled
+  pitEnabled bool
+  // Encryption-at-rest provider (NONE, AWS, AZURE, or GCP)
+  encryptionAtRestProvider string
+  // Minimum enabled TLS protocol (such as TLS1_2)
+  minimumEnabledTlsProtocol string
+  // TLS cipher configuration mode (DEFAULT or CUSTOM)
+  tlsCipherConfigMode string
+  // Whether client log data is redacted
+  redactClientLogData bool
+  // Whether termination protection is enabled
+  terminationProtectionEnabled bool
+  // Whether the cluster is paused
+  paused bool
+  // Version release track (LTS or CONTINUOUS)
+  versionReleaseSystem string
+  // Root CA certificate type
+  rootCertType string
+  // Time the cluster was created
+  createDate time
+  // Per-region configuration, each with providerName, regionName, instanceSize, nodeCount, diskSizeGB, and priority
+  regionConfigs []dict
+}
+
+// MongoDB Atlas database user
+//
+// A database user in the project, keyed by the username and authentication
+// database. Covers the authentication mechanism (SCRAM, X.509, AWS IAM, LDAP,
+// or OIDC), the granted roles, the scopes limiting which clusters the user may
+// access, and any automatic deletion time. The password is never exposed.
+// Select a user by username, for example
+// `mongodbatlas.databaseUsers.where(username == "app")`.
+mongodbatlas.databaseUser @defaults("username databaseName") {
+  // Composite id (authentication database and username)
+  id string
+  // Username
+  username string
+  // Authentication database (admin for SCRAM, $external for X.509/IAM/LDAP/OIDC)
+  databaseName string
+  // Description of the user
+  description string
+  // AWS IAM authentication type (NONE, USER, or ROLE)
+  awsIAMType string
+  // X.509 authentication type (NONE, MANAGED, or CUSTOMER)
+  x509Type string
+  // LDAP authentication type (NONE, USER, or GROUP)
+  ldapAuthType string
+  // OIDC authentication type (NONE, IDP_GROUP, or USER)
+  oidcAuthType string
+  // Roles granted to the user, each with roleName, databaseName, and optional collectionName
+  roles []dict
+  // Scopes limiting the clusters or data lakes the user may access, each with name and type
+  scopes []dict
+  // Time after which the user is automatically deleted, null when permanent
+  deleteAfterDate time
+}
+
+// MongoDB Atlas project IP access list entry
+//
+// A single entry in the project's IP access list, keyed by its CIDR block or IP
+// address. Only clients matching an entry may reach the project's clusters.
+// Covers the CIDR block or address, an optional AWS security group, and any
+// automatic expiry. Select an entry by value, for example
+// `mongodbatlas.ipAccessList.where(cidrBlock == "10.0.0.0/24")`.
+mongodbatlas.networkAccessEntry @defaults("cidrBlock ipAddress comment") {
+  // CIDR block granted access
+  cidrBlock string
+  // Single IP address granted access
+  ipAddress string
+  // AWS security group granted access
+  awsSecurityGroup string
+  // Comment describing the entry
+  comment string
+  // Time after which the entry is automatically removed, null when permanent
+  deleteAfterDate time
+}
+
+// MongoDB Atlas project feature settings
+//
+// Feature toggles for the project, such as whether the Data Explorer and its
+// generative AI features are enabled and whether the performance and schema
+// advisors are active. These govern which in-console data-access and analysis
+// features are exposed.
+mongodbatlas.projectConfig @defaults("isDataExplorerEnabled") {
+  // Whether the Data Explorer (in-console data browsing) is enabled
+  isDataExplorerEnabled bool
+  // Whether Data Explorer generative AI features are enabled
+  isDataExplorerGenAIFeaturesEnabled bool
+  // Whether extended storage sizes are enabled
+  isExtendedStorageSizesEnabled bool
+  // Whether the Performance Advisor is enabled
+  isPerformanceAdvisorEnabled bool
+  // Whether the real-time performance panel is enabled
+  isRealtimePerformancePanelEnabled bool
+  // Whether the Schema Advisor is enabled
+  isSchemaAdvisorEnabled bool
+  // Whether collection of database-specific statistics is enabled
+  isCollectDatabaseSpecificsStatisticsEnabled bool
+}
+
+// MongoDB Atlas database auditing configuration
+//
+// The database auditing settings for the project. Covers whether auditing is
+// enabled, whether authorization successes are audited (not just failures), the
+// audit filter, and how the filter was configured.
+mongodbatlas.auditConfig @defaults("enabled auditAuthorizationSuccess") {
+  // Whether database auditing is enabled
+  enabled bool
+  // Whether successful authorization events are audited in addition to failures
+  auditAuthorizationSuccess bool
+  // JSON audit filter selecting which events are recorded
+  auditFilter string
+  // How the audit filter was configured (NONE, FILTER_BUILDER, or FILTER_JSON)
+  configurationType string
+}
+
+// MongoDB Atlas encryption-at-rest configuration
+//
+// The customer-managed encryption-at-rest settings for the project. Covers
+// whether encryption at rest with a customer key is enabled for each cloud
+// provider (AWS KMS, Azure Key Vault, Google Cloud KMS) and for search nodes.
+// Key material is never exposed.
+mongodbatlas.encryptionConfig @defaults("awsKmsEnabled azureKeyVaultEnabled googleCloudKmsEnabled") {
+  // Whether AWS KMS customer-key encryption at rest is enabled
+  awsKmsEnabled bool
+  // Whether the AWS KMS configuration is valid
+  awsKmsValid bool
+  // Whether Azure Key Vault customer-key encryption at rest is enabled
+  azureKeyVaultEnabled bool
+  // Whether the Azure Key Vault configuration is valid
+  azureKeyVaultValid bool
+  // Whether Google Cloud KMS customer-key encryption at rest is enabled
+  googleCloudKmsEnabled bool
+  // Whether the Google Cloud KMS configuration is valid
+  googleCloudKmsValid bool
+  // Whether encryption at rest is enabled for search nodes
+  enabledForSearchNodes bool
+}
+
+// MongoDB Atlas private endpoint service
+//
+// A private endpoint service configured for the project on a single cloud
+// provider, keyed by id. Private endpoints let clients reach clusters over the
+// cloud provider's private network instead of the public internet. Covers the
+// cloud provider, region, status, and the underlying endpoint identifiers.
+mongodbatlas.privateEndpointService @defaults("cloudProvider regionName status") {
+  // Endpoint service id
+  id string
+  // Cloud provider (AWS, AZURE, or GCP)
+  cloudProvider string
+  // Region the endpoint service is in
+  regionName string
+  // Status of the endpoint service
+  status string
+  // Error message when the endpoint service is in an error state
+  errorMessage string
+  // Interface endpoint ids attached to the service
+  interfaceEndpoints []string
+}
+
+// MongoDB Atlas network peering connection
+//
+// A VPC or VNet peering connection between the project's Atlas network and a
+// customer network, keyed by id. Covers the cloud provider, the peered network
+// identifiers, and the connection status. Fields vary by provider.
+mongodbatlas.networkPeering @defaults("providerName status") {
+  // Peering connection id
+  id string
+  // Cloud provider (AWS, AZURE, or GCP)
+  providerName string
+  // Id of the Atlas network container
+  containerId string
+  // Status of the peering connection
+  status string
+  // AWS account id of the peered VPC
+  awsAccountId string
+  // Peered AWS VPC id
+  vpcId string
+  // Peered Azure VNet name
+  vnetName string
+  // Peered GCP network name
+  networkName string
+  // CIDR block of the peered route table
+  routeTableCidrBlock string
+}
+
+// MongoDB Atlas cloud provider access role
+//
+// A cloud provider identity (an AWS IAM role, Azure service principal, or GCP
+// service account) that Atlas assumes to access customer cloud resources such
+// as customer-managed encryption keys, keyed by roleId. Covers the provider,
+// the assumed identity, and when it was authorized.
+mongodbatlas.cloudProviderAccessRole @defaults("providerName iamAssumedRoleArn") {
+  // Role id
+  id string
+  // Cloud provider (AWS, AZURE, or GCP)
+  providerName string
+  // ARN of the AWS IAM role Atlas assumes
+  iamAssumedRoleArn string
+  // ARN of the Atlas AWS account authorized to assume the role
+  atlasAWSAccountArn string
+  // Azure service principal application id
+  azureAtlasAppId string
+  // Azure tenant id
+  azureTenantId string
+  // Time the role was authorized, null when not yet authorized
+  authorizedDate time
+}

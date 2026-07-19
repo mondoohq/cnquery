@@ -561,6 +561,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"mongodbatlas": {
+		Provider: &plugin.Provider{
+			Name:            "mongodbatlas",
+			ID:              "go.mondoo.com/mql/providers/mongodbatlas",
+			ConnectionTypes: []string{"mongodbatlas"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "mongodbatlas",
+					Use:   "mongodbatlas",
+					Short: "a MongoDB Atlas organization or project",
+				},
+			},
+		},
+	},
+
 	"ms365": {
 		Provider: &plugin.Provider{
 			Name:            "ms365",

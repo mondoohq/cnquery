@@ -231,6 +231,7 @@ PROVIDERS := \
 	mikrotik \
 	mistral \
 	mondoo \
+	mongodbatlas \
 	ms365 \
 	network \
 	nextdns \

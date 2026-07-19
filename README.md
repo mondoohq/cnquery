@@ -147,6 +147,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Microsoft 365 tenants         | `ms365`                    | `mql shell ms365 --tenant-id TENANT_ID --client-id CLIENT_ID --certificate-path PFX_FILE`                                                       |
 | Microsoft Azure instances     | `ssh`                      | `mql shell ssh user@host`                                                                                                                       |
 | Microsoft Azure subscriptions | `azure`                    | `mql shell azure --subscription SUBSCRIPTION_ID`                                                                                                |
+| MongoDB Atlas organization    | `mongodbatlas`             | `mql shell mongodbatlas --org-id ORG_ID --public-key PUBLIC_KEY --private-key PRIVATE_KEY`                                                       |
 | Network scanning              | `nmap`                     | `mql shell nmap --networks 192.168.1.0/24`                                                                                                      |
 | NextDNS accounts              | `nextdns`                  | `mql shell nextdns --api-key API_KEY`                                                                                                           |
 | Nutanix cluster               | `nutanix`                  | `mql shell nutanix --endpoint ENDPOINT --user USER --password PASSWORD`                                                                         |
