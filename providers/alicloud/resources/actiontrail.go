@@ -10,6 +10,7 @@ import (
 
 	actiontrailclient "github.com/alibabacloud-go/actiontrail-20200706/v3/client"
 	tea "github.com/alibabacloud-go/tea/tea"
+	"github.com/rs/zerolog/log"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -18,13 +19,6 @@ import (
 
 func (r *mqlAlicloudActiontrail) id() (string, error) {
 	return "alicloud.actiontrail", nil
-}
-
-// ossLocationToRegion converts an OSS bucket location such as oss-cn-hangzhou
-// into the region id cn-hangzhou. Returns the input unchanged when it has no
-// oss- prefix.
-func ossLocationToRegion(location string) string {
-	return strings.TrimPrefix(location, "oss-")
 }
 
 // parseSlsProjectArn extracts the region and project name from a Log Service
@@ -82,17 +76,16 @@ func (r *mqlAlicloudActiontrail) trails() ([]any, error) {
 			"ossWriteRoleArn":     llx.StringDataPtr(t.OssWriteRoleArn),
 			"slsProjectArn":       llx.StringDataPtr(t.SlsProjectArn),
 			"slsWriteRoleArn":     llx.StringDataPtr(t.SlsWriteRoleArn),
-			"createTime":          llx.TimeDataPtr(kmsParseTime(t.CreateTime)),
-			"updateTime":          llx.TimeDataPtr(kmsParseTime(t.UpdateTime)),
-			"startLoggingTime":    llx.TimeDataPtr(kmsParseTime(t.StartLoggingTime)),
-			"stopLoggingTime":     llx.TimeDataPtr(kmsParseTime(t.StopLoggingTime)),
+			"createTime":          llx.TimeDataPtr(alicloudParseTime(t.CreateTime)),
+			"updateTime":          llx.TimeDataPtr(alicloudParseTime(t.UpdateTime)),
+			"startLoggingTime":    llx.TimeDataPtr(alicloudParseTime(t.StartLoggingTime)),
+			"stopLoggingTime":     llx.TimeDataPtr(alicloudParseTime(t.StopLoggingTime)),
 		})
 		if err != nil {
 			return nil, err
 		}
 		mqlTrail := resource.(*mqlAlicloudActiontrailTrail)
 		mqlTrail.cacheOssBucketName = tea.StringValue(t.OssBucketName)
-		mqlTrail.cacheOssBucketLocation = tea.StringValue(t.OssBucketLocation)
 		mqlTrail.cacheSlsProjectArn = tea.StringValue(t.SlsProjectArn)
 		res = append(res, resource)
 	}
@@ -102,9 +95,8 @@ func (r *mqlAlicloudActiontrail) trails() ([]any, error) {
 // mqlAlicloudActiontrailTrailInternal caches the delivery-target identifiers for
 // the typed ossBucket()/slsProject() references and memoizes the trail status.
 type mqlAlicloudActiontrailTrailInternal struct {
-	cacheOssBucketName     string
-	cacheOssBucketLocation string
-	cacheSlsProjectArn     string
+	cacheOssBucketName string
+	cacheSlsProjectArn string
 
 	statusOnce sync.Once
 	status     *actiontrailclient.GetTrailStatusResponseBody
@@ -154,7 +146,13 @@ func (r *mqlAlicloudActiontrailTrail) trailStatus() *actiontrailclient.GetTrailS
 			Name:                tea.String(r.Name.Data),
 			IsOrganizationTrail: tea.Bool(r.IsOrganizationTrail.Data),
 		})
-		if err != nil || resp == nil {
+		if err != nil {
+			// Surface the failure so operators can tell a genuinely non-logging
+			// trail apart from an API/permission error that left status unknown.
+			log.Warn().Err(err).Str("trail", r.Name.Data).Msg("alicloud: failed to fetch ActionTrail status")
+			return
+		}
+		if resp == nil {
 			return
 		}
 		r.status = resp.Body
@@ -175,7 +173,7 @@ func (r *mqlAlicloudActiontrailTrail) latestDeliveryTime() (*time.Time, error) {
 	if st == nil {
 		return nil, nil
 	}
-	return kmsParseTime(st.LatestDeliveryTime), nil
+	return alicloudParseTime(st.LatestDeliveryTime), nil
 }
 
 func (r *mqlAlicloudActiontrailTrail) latestDeliveryError() (string, error) {
@@ -191,7 +189,7 @@ func (r *mqlAlicloudActiontrailTrail) latestDeliveryLogServiceTime() (*time.Time
 	if st == nil {
 		return nil, nil
 	}
-	return kmsParseTime(st.LatestDeliveryLogServiceTime), nil
+	return alicloudParseTime(st.LatestDeliveryLogServiceTime), nil
 }
 
 func (r *mqlAlicloudActiontrailTrail) latestDeliveryLogServiceError() (string, error) {

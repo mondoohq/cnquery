@@ -17,9 +17,10 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
-// kmsParseTime parses a KMS UTC timestamp (for example 2026-01-02T15:04:05Z),
-// returning nil on a nil or unparseable input.
-func kmsParseTime(s *string) *time.Time {
+// alicloudParseTime parses an Alibaba Cloud UTC timestamp (for example
+// 2026-01-02T15:04:05Z), returning nil on a nil or unparseable input. It is
+// shared by services that return RFC3339 timestamps (KMS, ActionTrail).
+func alicloudParseTime(s *string) *time.Time {
 	if s == nil || *s == "" {
 		return nil
 	}
@@ -84,6 +85,9 @@ func (r *mqlAlicloudKms) keys() ([]any, error) {
 				if k == nil || k.KeyId == nil {
 					continue
 				}
+				// ListKeys returns only KeyId and KeyArn, so a DescribeKey call
+				// per key is required to populate the key metadata. This is an
+				// unavoidable N+1 for the number of keys in the region.
 				meta, err := describeKmsKey(conn, region, tea.StringValue(k.KeyId))
 				if err != nil || meta == nil {
 					continue
@@ -138,11 +142,11 @@ func newKmsKey(runtime *plugin.Runtime, region string, meta *kmsclient.DescribeK
 		"protectionLevel":    llx.StringDataPtr(meta.ProtectionLevel),
 		"automaticRotation":  llx.StringDataPtr(meta.AutomaticRotation),
 		"rotationInterval":   llx.StringDataPtr(meta.RotationInterval),
-		"creationDate":       llx.TimeDataPtr(kmsParseTime(meta.CreationDate)),
-		"deleteDate":         llx.TimeDataPtr(kmsParseTime(meta.DeleteDate)),
-		"lastRotationDate":   llx.TimeDataPtr(kmsParseTime(meta.LastRotationDate)),
-		"nextRotationDate":   llx.TimeDataPtr(kmsParseTime(meta.NextRotationDate)),
-		"materialExpireTime": llx.TimeDataPtr(kmsParseTime(meta.MaterialExpireTime)),
+		"creationDate":       llx.TimeDataPtr(alicloudParseTime(meta.CreationDate)),
+		"deleteDate":         llx.TimeDataPtr(alicloudParseTime(meta.DeleteDate)),
+		"lastRotationDate":   llx.TimeDataPtr(alicloudParseTime(meta.LastRotationDate)),
+		"nextRotationDate":   llx.TimeDataPtr(alicloudParseTime(meta.NextRotationDate)),
+		"materialExpireTime": llx.TimeDataPtr(alicloudParseTime(meta.MaterialExpireTime)),
 		"primaryKeyVersion":  llx.StringDataPtr(meta.PrimaryKeyVersion),
 		"deletionProtection": llx.StringDataPtr(meta.DeletionProtection),
 		"creator":            llx.StringDataPtr(meta.Creator),
@@ -325,9 +329,9 @@ func newKmsSecret(runtime *plugin.Runtime, conn *connection.AlicloudConnection, 
 		"secretName":        llx.StringData(secretName),
 		"secretType":        llx.StringDataPtr(s.SecretType),
 		"owingService":      llx.StringDataPtr(s.OwingService),
-		"plannedDeleteTime": llx.TimeDataPtr(kmsParseTime(s.PlannedDeleteTime)),
-		"createTime":        llx.TimeDataPtr(kmsParseTime(s.CreateTime)),
-		"updateTime":        llx.TimeDataPtr(kmsParseTime(s.UpdateTime)),
+		"plannedDeleteTime": llx.TimeDataPtr(alicloudParseTime(s.PlannedDeleteTime)),
+		"createTime":        llx.TimeDataPtr(alicloudParseTime(s.CreateTime)),
+		"updateTime":        llx.TimeDataPtr(alicloudParseTime(s.UpdateTime)),
 		"arn":               llx.StringData(secretDetailString(detail, func(d *kmsclient.DescribeSecretResponseBody) *string { return d.Arn })),
 		"automaticRotation": llx.StringData(secretDetailString(detail, func(d *kmsclient.DescribeSecretResponseBody) *string { return d.AutomaticRotation })),
 		"rotationInterval":  llx.StringData(secretDetailString(detail, func(d *kmsclient.DescribeSecretResponseBody) *string { return d.RotationInterval })),
@@ -362,7 +366,7 @@ func secretDetailTime(d *kmsclient.DescribeSecretResponseBody, get func(*kmsclie
 	if d == nil {
 		return nil
 	}
-	return kmsParseTime(get(d))
+	return alicloudParseTime(get(d))
 }
 
 // parseExtendedConfig parses the secret's extended-config JSON into a dict,

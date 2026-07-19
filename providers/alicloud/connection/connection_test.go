@@ -30,6 +30,26 @@ func TestEndpoint(t *testing.T) {
 		assert.Equal(t, "r-kvstore.cn-beijing.aliyuncs.com", endpoint("r-kvstore", "cn-beijing"))
 		assert.Equal(t, "mongodb.cn-hangzhou.aliyuncs.com", endpoint("mongodb", "cn-hangzhou"))
 		assert.Equal(t, "polardb.us-east-1.aliyuncs.com", endpoint("polardb", "us-east-1"))
+		assert.Equal(t, "kms.cn-hangzhou.aliyuncs.com", endpoint("kms", "cn-hangzhou"))
+	})
+
+	t.Run("ActionTrail and Resource Management are global", func(t *testing.T) {
+		assert.Equal(t, "actiontrail.aliyuncs.com", endpoint("actiontrail", "cn-hangzhou"))
+		assert.Equal(t, "resourcemanager.aliyuncs.com", endpoint("resourcemanager", "ap-southeast-1"))
+	})
+
+	t.Run("Cloud Config is a cn-shanghai center service", func(t *testing.T) {
+		// The region argument is ignored: Config resolves to the cn-shanghai
+		// center regardless of the caller's region.
+		assert.Equal(t, "config.cn-shanghai.aliyuncs.com", endpoint("config", "cn-hangzhou"))
+		assert.Equal(t, "config.cn-shanghai.aliyuncs.com", endpoint("config", "us-west-1"))
+	})
+
+	t.Run("Log Service puts the region ahead of the log host", func(t *testing.T) {
+		// SLS uses <region>.log.aliyuncs.com, not the usual
+		// <service>.<region>.aliyuncs.com layout.
+		assert.Equal(t, "cn-hangzhou.log.aliyuncs.com", endpoint("sls", "cn-hangzhou"))
+		assert.Equal(t, "ap-southeast-1.log.aliyuncs.com", endpoint("sls", "ap-southeast-1"))
 	})
 }
 

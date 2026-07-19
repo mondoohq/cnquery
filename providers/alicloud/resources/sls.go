@@ -6,6 +6,7 @@ package resources
 import (
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	slsclient "github.com/alibabacloud-go/sls-20201230/v6/client"
@@ -237,8 +238,9 @@ type mqlAlicloudLogLogstoreInternal struct {
 	projectName string
 	name        string
 
-	detailOnce sync.Once
-	detail     *slsclient.Logstore
+	detailLock    sync.Mutex
+	detailFetched atomic.Bool
+	detail        *slsclient.Logstore
 }
 
 // newLogLogstore builds an alicloud.log.logstore husk keyed by region, project,
@@ -327,113 +329,129 @@ func (r *mqlAlicloudLogLogstore) id() (string, error) {
 }
 
 // fetchDetail lazily loads and caches the GetLogStore detail, shared by every
-// detail-derived accessor.
-func (r *mqlAlicloudLogLogstore) fetchDetail() *slsclient.Logstore {
-	r.detailOnce.Do(func() {
-		conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
-		client, err := conn.SlsClient(r.region)
-		if err != nil {
-			return
-		}
-		resp, err := client.GetLogStore(tea.String(r.projectName), tea.String(r.name))
-		if err != nil || resp == nil {
-			return
-		}
+// detail-derived accessor. A transient error is not cached (detailFetched is
+// set only on success), so a later access retries rather than permanently
+// reporting fabricated defaults; the error is returned so the field surfaces as
+// an error instead of a misleading zero value.
+func (r *mqlAlicloudLogLogstore) fetchDetail() (*slsclient.Logstore, error) {
+	if r.detailFetched.Load() {
+		return r.detail, nil
+	}
+	r.detailLock.Lock()
+	defer r.detailLock.Unlock()
+	if r.detailFetched.Load() {
+		return r.detail, nil
+	}
+
+	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.SlsClient(r.region)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.GetLogStore(tea.String(r.projectName), tea.String(r.name))
+	if err != nil {
+		return nil, err
+	}
+	if resp != nil {
 		r.detail = resp.Body
-	})
-	return r.detail
+	}
+	r.detailFetched.Store(true)
+	return r.detail, nil
 }
 
 func (r *mqlAlicloudLogLogstore) ttl() (int64, error) {
-	d := r.fetchDetail()
-	if d == nil {
-		return 0, nil
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return 0, err
 	}
 	return int64(tea.Int32Value(d.Ttl)), nil
 }
 
 func (r *mqlAlicloudLogLogstore) hotTtl() (int64, error) {
-	d := r.fetchDetail()
-	if d == nil {
-		return 0, nil
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return 0, err
 	}
 	return int64(tea.Int32Value(d.HotTtl)), nil
 }
 
 func (r *mqlAlicloudLogLogstore) shardCount() (int64, error) {
-	d := r.fetchDetail()
-	if d == nil {
-		return 0, nil
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return 0, err
 	}
 	return int64(tea.Int32Value(d.ShardCount)), nil
 }
 
 func (r *mqlAlicloudLogLogstore) autoSplit() (bool, error) {
-	d := r.fetchDetail()
-	if d == nil {
-		return false, nil
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return false, err
 	}
 	return tea.BoolValue(d.AutoSplit), nil
 }
 
 func (r *mqlAlicloudLogLogstore) maxSplitShard() (int64, error) {
-	d := r.fetchDetail()
-	if d == nil {
-		return 0, nil
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return 0, err
 	}
 	return int64(tea.Int32Value(d.MaxSplitShard)), nil
 }
 
 func (r *mqlAlicloudLogLogstore) appendMeta() (bool, error) {
-	d := r.fetchDetail()
-	if d == nil {
-		return false, nil
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return false, err
 	}
 	return tea.BoolValue(d.AppendMeta), nil
 }
 
 func (r *mqlAlicloudLogLogstore) enableTracking() (bool, error) {
-	d := r.fetchDetail()
-	if d == nil {
-		return false, nil
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return false, err
 	}
 	return tea.BoolValue(d.EnableTracking), nil
 }
 
 func (r *mqlAlicloudLogLogstore) telemetryType() (string, error) {
-	d := r.fetchDetail()
-	if d == nil {
-		return "", nil
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return "", err
 	}
 	return tea.StringValue(d.TelemetryType), nil
 }
 
 func (r *mqlAlicloudLogLogstore) mode() (string, error) {
-	d := r.fetchDetail()
-	if d == nil {
-		return "", nil
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return "", err
 	}
 	return tea.StringValue(d.Mode), nil
 }
 
 func (r *mqlAlicloudLogLogstore) encryptionEnabled() (bool, error) {
-	d := r.fetchDetail()
-	if d == nil || d.EncryptConf == nil {
-		return false, nil
+	d, err := r.fetchDetail()
+	if err != nil || d == nil || d.EncryptConf == nil {
+		return false, err
 	}
 	return tea.BoolValue(d.EncryptConf.Enable), nil
 }
 
 func (r *mqlAlicloudLogLogstore) encryptionType() (string, error) {
-	d := r.fetchDetail()
-	if d == nil || d.EncryptConf == nil {
-		return "", nil
+	d, err := r.fetchDetail()
+	if err != nil || d == nil || d.EncryptConf == nil {
+		return "", err
 	}
 	return tea.StringValue(d.EncryptConf.EncryptType), nil
 }
 
 func (r *mqlAlicloudLogLogstore) encryptionKey() (*mqlAlicloudKmsKey, error) {
-	d := r.fetchDetail()
+	d, err := r.fetchDetail()
+	if err != nil {
+		return nil, err
+	}
 	if d == nil || d.EncryptConf == nil || d.EncryptConf.UserCmkInfo == nil {
 		r.EncryptionKey.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
@@ -457,17 +475,17 @@ func (r *mqlAlicloudLogLogstore) encryptionKey() (*mqlAlicloudKmsKey, error) {
 }
 
 func (r *mqlAlicloudLogLogstore) createTime() (*time.Time, error) {
-	d := r.fetchDetail()
-	if d == nil {
-		return nil, nil
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return nil, err
 	}
 	return slsEpochTime(d.CreateTime), nil
 }
 
 func (r *mqlAlicloudLogLogstore) lastModifyTime() (*time.Time, error) {
-	d := r.fetchDetail()
-	if d == nil {
-		return nil, nil
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return nil, err
 	}
 	return slsEpochTime(d.LastModifyTime), nil
 }

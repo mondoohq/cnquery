@@ -184,11 +184,17 @@ func (r *mqlAlicloudResourceManager) folders() ([]any, error) {
 	res := []any{}
 	// Walk the folder tree breadth-first from the root, listing each parent's
 	// children. The root folder itself is not returned by the API, only its
-	// descendants.
+	// descendants. A visited set guards against a scan hanging if the API ever
+	// returns a folder that re-references an ancestor.
+	visited := map[string]struct{}{}
 	queue := []string{rootFolderId}
 	for len(queue) > 0 {
 		parent := queue[0]
 		queue = queue[1:]
+		if _, seen := visited[parent]; seen {
+			continue
+		}
+		visited[parent] = struct{}{}
 
 		pageNumber := int32(1)
 		pageSize := int32(100)
