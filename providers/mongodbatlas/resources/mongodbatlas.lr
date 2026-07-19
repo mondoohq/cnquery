@@ -110,8 +110,6 @@ mongodbatlas.orgUser @defaults("username orgMembershipStatus") {
   orgMembershipStatus string
   // Organization-level roles granted to the member
   orgRoles []string
-  // Ids of the teams the member belongs to
-  teamIds []string
   // Teams the member belongs to
   teams() []mongodbatlas.team
   // Time the member last authenticated
@@ -145,8 +143,22 @@ mongodbatlas.apiKey @defaults("publicKey description") {
   publicKey string
   // Description of the key
   description string
-  // Role assignments granted to the key, each with roleName and the org or project it applies to
-  roles []dict
+  // Role assignments granted to the key at the organization or project level
+  roleAssignments() []mongodbatlas.apiKey.roleAssignment
+}
+
+// MongoDB Atlas API key role assignment
+//
+// A single role granted to a programmatic API key, either at the organization
+// level or scoped to one project. Covers the role name, whether the grant is
+// organization-level, and the project a project-scoped grant applies to.
+private mongodbatlas.apiKey.roleAssignment @defaults("roleName") {
+  // Role granted (such as ORG_OWNER or GROUP_READ_ONLY)
+  roleName string
+  // Whether the role is granted at the organization level rather than a project
+  orgLevel bool
+  // Project the role applies to, null for an organization-level role
+  project() mongodbatlas.project
 }
 
 // MongoDB Atlas service account
@@ -246,6 +258,8 @@ mongodbatlas.databaseUser @defaults("username databaseName") {
   roles []dict
   // Scopes limiting the clusters or data lakes the user may access, each with name and type
   scopes []dict
+  // Clusters the user is scoped to, empty when the user may access all clusters in the project
+  scopedClusters() []mongodbatlas.cluster
   // Time after which the user is automatically deleted, null when permanent
   deleteAfterDate time
 }
@@ -433,12 +447,12 @@ mongodbatlas.federationConfig @defaults("id identityProviderStatus") {
   id string
   // Status of the connected identity provider (ACTIVE or INACTIVE)
   identityProviderStatus string
-  // Id of the identity provider connected to the organization
-  identityProviderId string
   // Whether the organization has role mappings configured
   hasRoleMappings bool
   // Domains the organization has federated to its identity provider
   federatedDomains []string
+  // Identity provider connected to the organization
+  identityProvider() mongodbatlas.identityProvider
   // Identity providers linked to the federation
   identityProviders() []mongodbatlas.identityProvider
 }
@@ -531,8 +545,8 @@ mongodbatlas.backupComplianceConfig @defaults("state pitEnabled copyProtectionEn
 mongodbatlas.pushBasedLogConfig @defaults("state bucketName") {
   // Name of the AWS S3 bucket logs are delivered to
   bucketName string
-  // Id of the cloud provider access role Atlas assumes to write to the bucket
-  iamRoleId string
+  // Cloud provider access role Atlas assumes to write to the bucket
+  cloudProviderAccessRole() mongodbatlas.cloudProviderAccessRole
   // Object key prefix under which logs are written in the bucket
   prefixPath string
   // Configuration state (such as ACTIVE, UNCONFIGURED, or INITIATING)

@@ -7,7 +7,11 @@ mongodbatlas.apiKey 13.0.0
 mongodbatlas.apiKey.description 13.0.0
 mongodbatlas.apiKey.id 13.0.0
 mongodbatlas.apiKey.publicKey 13.0.0
-mongodbatlas.apiKey.roles 13.0.0
+mongodbatlas.apiKey.roleAssignment 13.0.1
+mongodbatlas.apiKey.roleAssignment.orgLevel 13.0.1
+mongodbatlas.apiKey.roleAssignment.project 13.0.1
+mongodbatlas.apiKey.roleAssignment.roleName 13.0.1
+mongodbatlas.apiKey.roleAssignments 13.0.1
 mongodbatlas.apiKeys 13.0.0
 mongodbatlas.auditConfig 13.0.0
 mongodbatlas.auditConfig.auditAuthorizationSuccess 13.0.0
@@ -69,6 +73,7 @@ mongodbatlas.databaseUser.id 13.0.0
 mongodbatlas.databaseUser.ldapAuthType 13.0.0
 mongodbatlas.databaseUser.oidcAuthType 13.0.0
 mongodbatlas.databaseUser.roles 13.0.0
+mongodbatlas.databaseUser.scopedClusters 13.0.1
 mongodbatlas.databaseUser.scopes 13.0.0
 mongodbatlas.databaseUser.username 13.0.0
 mongodbatlas.databaseUser.x509Type 13.0.0
@@ -86,7 +91,7 @@ mongodbatlas.federationConfig 13.0.1
 mongodbatlas.federationConfig.federatedDomains 13.0.1
 mongodbatlas.federationConfig.hasRoleMappings 13.0.1
 mongodbatlas.federationConfig.id 13.0.1
-mongodbatlas.federationConfig.identityProviderId 13.0.1
+mongodbatlas.federationConfig.identityProvider 13.0.1
 mongodbatlas.federationConfig.identityProviderStatus 13.0.1
 mongodbatlas.federationConfig.identityProviders 13.0.1
 mongodbatlas.federationSettings 13.0.1
@@ -136,7 +141,6 @@ mongodbatlas.orgUser.id 13.0.0
 mongodbatlas.orgUser.lastAuth 13.0.0
 mongodbatlas.orgUser.orgMembershipStatus 13.0.0
 mongodbatlas.orgUser.orgRoles 13.0.0
-mongodbatlas.orgUser.teamIds 13.0.0
 mongodbatlas.orgUser.teams 13.0.0
 mongodbatlas.orgUser.username 13.0.0
 mongodbatlas.orgUsers 13.0.0
@@ -169,7 +173,7 @@ mongodbatlas.projectSettings 13.0.0
 mongodbatlas.projects 13.0.0
 mongodbatlas.pushBasedLogConfig 13.0.1
 mongodbatlas.pushBasedLogConfig.bucketName 13.0.1
-mongodbatlas.pushBasedLogConfig.iamRoleId 13.0.1
+mongodbatlas.pushBasedLogConfig.cloudProviderAccessRole 13.0.1
 mongodbatlas.pushBasedLogConfig.prefixPath 13.0.1
 mongodbatlas.pushBasedLogConfig.state 13.0.1
 mongodbatlas.pushBasedLogExport 13.0.1

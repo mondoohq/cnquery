@@ -6,10 +6,33 @@ package resources
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/types"
 )
+
+// newMqlMongodbatlasCloudProviderAccessRole maps a cloud provider access role to
+// its resource. Flat scalar params so the AWS, Azure, and GCP variants (and the
+// pushBasedLogConfig accessor) share one mapper.
+func newMqlMongodbatlasCloudProviderAccessRole(runtime *plugin.Runtime, pid, slug, providerName, id, iamAssumedRoleArn, atlasAWSAccountArn, azureAtlasAppId, azureTenantId, gcpServiceAccount string, authorizedDate *time.Time) (*mqlMongodbatlasCloudProviderAccessRole, error) {
+	res, err := CreateResource(runtime, "mongodbatlas.cloudProviderAccessRole", map[string]*llx.RawData{
+		"__id":               llx.StringData("mongodbatlas.cloudProviderAccessRole/" + pid + "/" + slug + "/" + id),
+		"id":                 llx.StringData(id),
+		"providerName":       llx.StringData(providerName),
+		"iamAssumedRoleArn":  llx.StringData(iamAssumedRoleArn),
+		"atlasAWSAccountArn": llx.StringData(atlasAWSAccountArn),
+		"azureAtlasAppId":    llx.StringData(azureAtlasAppId),
+		"azureTenantId":      llx.StringData(azureTenantId),
+		"gcpServiceAccount":  llx.StringData(gcpServiceAccount),
+		"authorizedDate":     llx.TimeDataPtr(authorizedDate),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlMongodbatlasCloudProviderAccessRole), nil
+}
 
 func (r *mqlMongodbatlas) ipAccessList() ([]any, error) {
 	pid, err := projectID(r.MqlRuntime)
@@ -155,55 +178,50 @@ func (r *mqlMongodbatlas) cloudProviderAccessRoles() ([]any, error) {
 
 	out := []any{}
 	for _, role := range roles.GetAwsIamRoles() {
-		res, err := CreateResource(r.MqlRuntime, "mongodbatlas.cloudProviderAccessRole", map[string]*llx.RawData{
-			"__id":               llx.StringData("mongodbatlas.cloudProviderAccessRole/" + pid + "/aws/" + role.GetRoleId()),
-			"id":                 llx.StringData(role.GetRoleId()),
-			"providerName":       llx.StringData(role.GetProviderName()),
-			"iamAssumedRoleArn":  llx.StringData(role.GetIamAssumedRoleArn()),
-			"atlasAWSAccountArn": llx.StringData(role.GetAtlasAWSAccountArn()),
-			"azureAtlasAppId":    llx.StringData(""),
-			"azureTenantId":      llx.StringData(""),
-			"gcpServiceAccount":  llx.StringData(""),
-			"authorizedDate":     llx.TimeDataPtr(timePtr(role.GetAuthorizedDate())),
-		})
+		res, err := newMqlMongodbatlasCloudProviderAccessRole(r.MqlRuntime, pid, "aws", role.GetProviderName(), role.GetRoleId(), role.GetIamAssumedRoleArn(), role.GetAtlasAWSAccountArn(), "", "", "", timePtr(role.GetAuthorizedDate()))
 		if err != nil {
 			return nil, err
 		}
 		out = append(out, res)
 	}
 	for _, sp := range roles.GetAzureServicePrincipals() {
-		res, err := CreateResource(r.MqlRuntime, "mongodbatlas.cloudProviderAccessRole", map[string]*llx.RawData{
-			"__id":               llx.StringData("mongodbatlas.cloudProviderAccessRole/" + pid + "/azure/" + sp.GetId()),
-			"id":                 llx.StringData(sp.GetId()),
-			"providerName":       llx.StringData(sp.GetProviderName()),
-			"iamAssumedRoleArn":  llx.StringData(""),
-			"atlasAWSAccountArn": llx.StringData(""),
-			"azureAtlasAppId":    llx.StringData(sp.GetAtlasAzureAppId()),
-			"azureTenantId":      llx.StringData(sp.GetTenantId()),
-			"gcpServiceAccount":  llx.StringData(""),
-			"authorizedDate":     llx.TimeDataPtr(timePtr(sp.GetCreatedDate())),
-		})
+		res, err := newMqlMongodbatlasCloudProviderAccessRole(r.MqlRuntime, pid, "azure", sp.GetProviderName(), sp.GetId(), "", "", sp.GetAtlasAzureAppId(), sp.GetTenantId(), "", timePtr(sp.GetCreatedDate()))
 		if err != nil {
 			return nil, err
 		}
 		out = append(out, res)
 	}
 	for _, sa := range roles.GetGcpServiceAccounts() {
-		res, err := CreateResource(r.MqlRuntime, "mongodbatlas.cloudProviderAccessRole", map[string]*llx.RawData{
-			"__id":               llx.StringData("mongodbatlas.cloudProviderAccessRole/" + pid + "/gcp/" + sa.GetRoleId()),
-			"id":                 llx.StringData(sa.GetRoleId()),
-			"providerName":       llx.StringData(sa.GetProviderName()),
-			"iamAssumedRoleArn":  llx.StringData(""),
-			"atlasAWSAccountArn": llx.StringData(""),
-			"azureAtlasAppId":    llx.StringData(""),
-			"azureTenantId":      llx.StringData(""),
-			"gcpServiceAccount":  llx.StringData(sa.GetGcpServiceAccountForAtlas()),
-			"authorizedDate":     llx.TimeDataPtr(timePtr(sa.GetCreatedDate())),
-		})
+		res, err := newMqlMongodbatlasCloudProviderAccessRole(r.MqlRuntime, pid, "gcp", sa.GetProviderName(), sa.GetRoleId(), "", "", "", "", sa.GetGcpServiceAccountForAtlas(), timePtr(sa.GetCreatedDate()))
 		if err != nil {
 			return nil, err
 		}
 		out = append(out, res)
 	}
 	return out, nil
+}
+
+// resolveCloudProviderAccessRole finds a project's cloud provider access role by
+// id and maps it, or returns nil when no role matches.
+func resolveCloudProviderAccessRole(runtime *plugin.Runtime, pid, roleID string) (*mqlMongodbatlasCloudProviderAccessRole, error) {
+	roles, _, err := atlasClient(runtime).CloudProviderAccessApi.ListCloudProviderAccessRoles(context.Background(), pid).Execute()
+	if err != nil {
+		return nil, err
+	}
+	for _, role := range roles.GetAwsIamRoles() {
+		if role.GetRoleId() == roleID {
+			return newMqlMongodbatlasCloudProviderAccessRole(runtime, pid, "aws", role.GetProviderName(), role.GetRoleId(), role.GetIamAssumedRoleArn(), role.GetAtlasAWSAccountArn(), "", "", "", timePtr(role.GetAuthorizedDate()))
+		}
+	}
+	for _, sp := range roles.GetAzureServicePrincipals() {
+		if sp.GetId() == roleID {
+			return newMqlMongodbatlasCloudProviderAccessRole(runtime, pid, "azure", sp.GetProviderName(), sp.GetId(), "", "", sp.GetAtlasAzureAppId(), sp.GetTenantId(), "", timePtr(sp.GetCreatedDate()))
+		}
+	}
+	for _, sa := range roles.GetGcpServiceAccounts() {
+		if sa.GetRoleId() == roleID {
+			return newMqlMongodbatlasCloudProviderAccessRole(runtime, pid, "gcp", sa.GetProviderName(), sa.GetRoleId(), "", "", "", "", sa.GetGcpServiceAccountForAtlas(), timePtr(sa.GetCreatedDate()))
+		}
+	}
+	return nil, nil
 }

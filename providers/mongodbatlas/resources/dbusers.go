@@ -10,6 +10,10 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
+type mqlMongodbatlasDatabaseUserInternal struct {
+	cacheScopeClusterNames []string
+}
+
 func (r *mqlMongodbatlas) databaseUsers() ([]any, error) {
 	pid, err := projectID(r.MqlRuntime)
 	if err != nil {
@@ -37,11 +41,15 @@ func (r *mqlMongodbatlas) databaseUsers() ([]any, error) {
 				})
 			}
 			scopes := []any{}
+			clusterScopeNames := []string{}
 			for _, sc := range u.GetScopes() {
 				scopes = append(scopes, map[string]any{
 					"name": sc.GetName(),
 					"type": sc.GetType(),
 				})
+				if sc.GetType() == "CLUSTER" && sc.GetName() != "" {
+					clusterScopeNames = append(clusterScopeNames, sc.GetName())
+				}
 			}
 
 			res, err := CreateResource(r.MqlRuntime, "mongodbatlas.databaseUser", map[string]*llx.RawData{
@@ -61,11 +69,29 @@ func (r *mqlMongodbatlas) databaseUsers() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			out = append(out, res)
+			dbUser := res.(*mqlMongodbatlasDatabaseUser)
+			dbUser.cacheScopeClusterNames = clusterScopeNames
+			out = append(out, dbUser)
 		}
 		if len(results) < pageSize {
 			break
 		}
+	}
+	return out, nil
+}
+
+// scopedClusters resolves the clusters a database user is confined to. An empty
+// result means the user may access all clusters in the project.
+func (r *mqlMongodbatlasDatabaseUser) scopedClusters() ([]any, error) {
+	out := []any{}
+	for _, name := range r.cacheScopeClusterNames {
+		res, err := NewResource(r.MqlRuntime, "mongodbatlas.cluster", map[string]*llx.RawData{
+			"name": llx.StringData(name),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
 	}
 	return out, nil
 }

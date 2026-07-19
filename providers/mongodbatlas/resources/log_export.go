@@ -11,6 +11,11 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
+type mqlMongodbatlasPushBasedLogConfigInternal struct {
+	cacheProjectID string
+	cacheRoleID    string
+}
+
 func (r *mqlMongodbatlas) pushBasedLogExport() (*mqlMongodbatlasPushBasedLogConfig, error) {
 	pid, err := projectID(r.MqlRuntime)
 	if err != nil {
@@ -31,12 +36,32 @@ func (r *mqlMongodbatlas) pushBasedLogExport() (*mqlMongodbatlasPushBasedLogConf
 	res, err := CreateResource(r.MqlRuntime, "mongodbatlas.pushBasedLogConfig", map[string]*llx.RawData{
 		"__id":       llx.StringData("mongodbatlas.pushBasedLogConfig/" + pid),
 		"bucketName": llx.StringData(cfg.GetBucketName()),
-		"iamRoleId":  llx.StringData(cfg.GetIamRoleId()),
 		"prefixPath": llx.StringData(cfg.GetPrefixPath()),
 		"state":      llx.StringData(cfg.GetState()),
 	})
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlMongodbatlasPushBasedLogConfig), nil
+	logCfg := res.(*mqlMongodbatlasPushBasedLogConfig)
+	logCfg.cacheProjectID = pid
+	logCfg.cacheRoleID = cfg.GetIamRoleId()
+	return logCfg, nil
+}
+
+// cloudProviderAccessRole resolves the cloud provider access role Atlas assumes
+// to write logs to the bucket. Null when no role is configured.
+func (r *mqlMongodbatlasPushBasedLogConfig) cloudProviderAccessRole() (*mqlMongodbatlasCloudProviderAccessRole, error) {
+	if r.cacheRoleID == "" {
+		r.CloudProviderAccessRole.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	role, err := resolveCloudProviderAccessRole(r.MqlRuntime, r.cacheProjectID, r.cacheRoleID)
+	if err != nil {
+		return nil, err
+	}
+	if role == nil {
+		r.CloudProviderAccessRole.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return role, nil
 }
