@@ -14,7 +14,7 @@ const (
 	DiscoveryProjects = "projects"
 )
 
-var (
+const (
 	PlatformIdVercelTeam    = "//platformid.api.mondoo.app/runtime/vercel/team/"
 	PlatformIdVercelProject = "//platformid.api.mondoo.app/runtime/vercel/project/"
 )

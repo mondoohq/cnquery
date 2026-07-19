@@ -352,6 +352,8 @@ type integrationConfigurationRecord struct {
 	Slug             string   `json:"slug"`
 	Scopes           []string `json:"scopes"`
 	InstallationType string   `json:"installationType"`
+	// Source is the fallback for the installationType field: older
+	// configurations report how they were installed under "source" instead.
 	Source           string   `json:"source"`
 	ProjectSelection string   `json:"projectSelection"`
 	Projects         []string `json:"projects"`

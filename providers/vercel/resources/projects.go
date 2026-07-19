@@ -219,7 +219,7 @@ func parseTargets(raw json.RawMessage) []string {
 		return nil
 	}
 	trimmed := strings.TrimSpace(string(raw))
-	if trimmed == "null" {
+	if trimmed == "null" || len(trimmed) == 0 {
 		return nil
 	}
 	if trimmed[0] == '[' {

@@ -6,6 +6,7 @@ package connection
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -49,15 +50,10 @@ func IsNotFound(err error) bool {
 	return false
 }
 
+// asAPIError unwraps err to an *APIError. It uses errors.As so a wrapped
+// APIError still degrades correctly rather than propagating as a hard error.
 func asAPIError(err error, target **APIError) bool {
-	if err == nil {
-		return false
-	}
-	if e, ok := err.(*APIError); ok {
-		*target = e
-		return true
-	}
-	return false
+	return errors.As(err, target)
 }
 
 // Get performs a GET against the Vercel API and decodes the JSON body into out.
