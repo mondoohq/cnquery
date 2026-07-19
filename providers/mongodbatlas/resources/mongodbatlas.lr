@@ -9,12 +9,13 @@ option go_package = "go.mondoo.com/mql/v13/providers/mongodbatlas/resources"
 // Entry point to a MongoDB Atlas organization and its projects. Connecting to
 // an organization exposes organization-wide security settings and identity
 // through the organizationName, multiFactorAuthRequired, apiAccessListRequired,
-// restrictEmployeeAccess, orgUsers, teams, apiKeys, serviceAccounts, and
-// federationSettings fields, and enumerates every project through the projects
-// field. Connecting to a single project exposes that project's security
-// surface through the clusters, databaseUsers, customDatabaseRoles,
-// ipAccessList, projectSettings, auditing, encryptionAtRest, privateEndpoints,
-// networkPeerings, and cloudProviderAccessRoles fields.
+// restrictEmployeeAccess, orgUsers, teams, apiKeys, serviceAccounts,
+// resourcePolicies, and federationSettings fields, and enumerates every project
+// through the projects field. Connecting to a single project exposes that
+// project's security surface through the clusters, databaseUsers,
+// customDatabaseRoles, ipAccessList, projectSettings, auditing,
+// encryptionAtRest, backupCompliancePolicy, pushBasedLogExport,
+// privateEndpoints, networkPeerings, and cloudProviderAccessRoles fields.
 mongodbatlas {
   // Organization id
   organizationId() string
@@ -42,6 +43,8 @@ mongodbatlas {
   apiKeys() []mongodbatlas.apiKey
   // Service accounts in the organization
   serviceAccounts() []mongodbatlas.serviceAccount
+  // Organization resource policies (Atlas Resource Policies)
+  resourcePolicies() []mongodbatlas.resourcePolicy
   // Clusters in the project
   clusters() []mongodbatlas.cluster
   // Database users in the project
@@ -56,6 +59,10 @@ mongodbatlas {
   auditing() mongodbatlas.auditConfig
   // Encryption-at-rest configuration for the project
   encryptionAtRest() mongodbatlas.encryptionConfig
+  // Backup Compliance Policy for the project
+  backupCompliancePolicy() mongodbatlas.backupComplianceConfig
+  // Push-based log export configuration for the project
+  pushBasedLogExport() mongodbatlas.pushBasedLogConfig
   // Private endpoint services configured for the project
   privateEndpoints() []mongodbatlas.privateEndpointService
   // Network peering connections for the project
@@ -484,4 +491,78 @@ mongodbatlas.identityProvider @defaults("displayName protocol status") {
   createdAt time
   // Time the identity provider was last updated
   updatedAt time
+}
+
+// MongoDB Atlas Backup Compliance Policy
+//
+// The Backup Compliance Policy for the project, the anti-ransomware
+// immutability guardrail that prevents backups from being modified or deleted
+// before their retention period expires. Covers whether copy protection and
+// encryption at rest are enforced, whether point-in-time recovery is required,
+// the restore window, the authorized security contact, the enablement state,
+// and the on-demand and scheduled retention policy items. Present only when a
+// Backup Compliance Policy has been configured, and null otherwise.
+mongodbatlas.backupComplianceConfig @defaults("state pitEnabled copyProtectionEnabled") {
+  // Enablement state of the Backup Compliance Policy (such as ACTIVE)
+  state string
+  // Whether snapshots are prevented from being copied to other projects
+  copyProtectionEnabled bool
+  // Whether encryption at rest is required for backups
+  encryptionAtRestEnabled bool
+  // Whether continuous point-in-time recovery is required
+  pitEnabled bool
+  // Minimum number of days backups are retained for point-in-time restore
+  restoreWindowDays int
+  // Email address of the security contact authorized to change the policy
+  authorizedEmail string
+  // On-demand backup retention rule, with frequencyType, retentionUnit, and retentionValue
+  onDemandPolicyItem dict
+  // Scheduled backup retention rules, each with frequencyType, frequencyInterval, retentionUnit, and retentionValue
+  scheduledPolicyItems []dict
+}
+
+// MongoDB Atlas push-based log export configuration
+//
+// The push-based log export configuration for the project, which delivers
+// database audit and access logs to a customer-owned AWS S3 bucket. Covers the
+// destination bucket, the AWS IAM role Atlas assumes to write to it, the object
+// key prefix, and the configuration state. Present only when push-based log
+// export has been configured, and null otherwise.
+mongodbatlas.pushBasedLogConfig @defaults("state bucketName") {
+  // Name of the AWS S3 bucket logs are delivered to
+  bucketName string
+  // Id of the cloud provider access role Atlas assumes to write to the bucket
+  iamRoleId string
+  // Object key prefix under which logs are written in the bucket
+  prefixPath string
+  // Configuration state (such as ACTIVE, UNCONFIGURED, or INITIATING)
+  state string
+}
+
+// MongoDB Atlas resource policy
+//
+// An organization-level Atlas Resource Policy, keyed by id. Resource policies
+// are Cedar-based guardrails that constrain what actions can be taken on Atlas
+// resources across the organization (for example restricting the cloud
+// providers or regions clusters may deploy to). Covers the name, description,
+// the users and times of creation and last update, and the individual policy
+// statements. Select a policy by name, for example
+// `mongodbatlas.resourcePolicies.where(name == "restrict-regions")`.
+mongodbatlas.resourcePolicy @defaults("name id") {
+  // Resource policy id
+  id string
+  // Resource policy name
+  name string
+  // Description of the resource policy
+  description string
+  // Name of the user who created the policy
+  createdByUser string
+  // Time the policy was created
+  createdDate time
+  // Name of the user who last updated the policy
+  lastUpdatedByUser string
+  // Time the policy was last updated
+  lastUpdatedDate time
+  // Policy statements, each with its id and Cedar policy body
+  policies []dict
 }
