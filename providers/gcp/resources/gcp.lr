@@ -2915,13 +2915,6 @@ private gcp.project.storageService.bucket.lifecycleRuleCondition @defaults("age 
 
 // Google Cloud (GCP) Cloud SQL
 //
-// Use this resource as the entry point for Cloud SQL in the project. It
-// hosts the managed-database `instances` — each exposing its database
-// engine and version, connection settings, automated backup configuration,
-// SSL/TLS enforcement, authorized networks, and database flags for
-// relational-database audits.
-// Google Cloud SQL service
-//
 // Entry point for Cloud SQL in the project. The instances collection lists
 // every managed MySQL, PostgreSQL, and SQL Server database instance, from
 // which their databases, users, SSL certificates, backup runs, and
@@ -12602,12 +12595,6 @@ private gcp.project.backupdrService.backupPlan @defaults("name state") {
 }
 
 // Google Cloud (GCP) Vertex AI
-//
-// Use this resource as the entry point for Vertex AI in the project. It
-// hosts the machine-learning surface: `models`, `endpoints`, `datasets`,
-// `customJobs`, `pipelineJobs`, `featureOnlineStores`, `tensorboards`,
-// `metadataStores`, and the vector-search `indexes` and `indexEndpoints`.
-// Google Cloud (GCP) Vertex AI service
 //
 // Vertex AI resources in a project: models, serving endpoints and their
 // deployments, datasets, pipeline and training jobs, tuning and
