@@ -95,7 +95,7 @@ func init() {
 			Create: createSnowflakeStage,
 		},
 		"snowflake.database": {
-			// to override args, implement: initSnowflakeDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initSnowflakeDatabase,
 			Create: createSnowflakeDatabase,
 		},
 		"snowflake.warehouse": {
@@ -171,7 +171,7 @@ func init() {
 			Create: createSnowflakeNotificationIntegration,
 		},
 		"snowflake.schema": {
-			// to override args, implement: initSnowflakeSchema(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initSnowflakeSchema,
 			Create: createSnowflakeSchema,
 		},
 		"snowflake.managedAccount": {
@@ -1270,6 +1270,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"snowflake.rowAccessPolicy.schemaName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeRowAccessPolicy).GetSchemaName()).ToDataRes(types.String)
 	},
+	"snowflake.rowAccessPolicy.database": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeRowAccessPolicy).GetDatabase()).ToDataRes(types.Resource("snowflake.database"))
+	},
+	"snowflake.rowAccessPolicy.schema": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeRowAccessPolicy).GetSchema()).ToDataRes(types.Resource("snowflake.schema"))
+	},
 	"snowflake.rowAccessPolicy.kind": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeRowAccessPolicy).GetKind()).ToDataRes(types.String)
 	},
@@ -1308,6 +1314,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"snowflake.networkRule.schemaName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeNetworkRule).GetSchemaName()).ToDataRes(types.String)
+	},
+	"snowflake.networkRule.database": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNetworkRule).GetDatabase()).ToDataRes(types.Resource("snowflake.database"))
+	},
+	"snowflake.networkRule.schema": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNetworkRule).GetSchema()).ToDataRes(types.Resource("snowflake.schema"))
 	},
 	"snowflake.networkRule.owner": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeNetworkRule).GetOwner()).ToDataRes(types.String)
@@ -1437,6 +1449,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"snowflake.schema.databaseName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeSchema).GetDatabaseName()).ToDataRes(types.String)
+	},
+	"snowflake.schema.database": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeSchema).GetDatabase()).ToDataRes(types.Resource("snowflake.database"))
 	},
 	"snowflake.schema.isDefault": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeSchema).GetIsDefault()).ToDataRes(types.Bool)
@@ -3000,6 +3015,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlSnowflakeRowAccessPolicy).SchemaName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"snowflake.rowAccessPolicy.database": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeRowAccessPolicy).Database, ok = plugin.RawToTValue[*mqlSnowflakeDatabase](v.Value, v.Error)
+		return
+	},
+	"snowflake.rowAccessPolicy.schema": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeRowAccessPolicy).Schema, ok = plugin.RawToTValue[*mqlSnowflakeSchema](v.Value, v.Error)
+		return
+	},
 	"snowflake.rowAccessPolicy.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeRowAccessPolicy).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3054,6 +3077,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"snowflake.networkRule.schemaName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeNetworkRule).SchemaName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.networkRule.database": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNetworkRule).Database, ok = plugin.RawToTValue[*mqlSnowflakeDatabase](v.Value, v.Error)
+		return
+	},
+	"snowflake.networkRule.schema": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNetworkRule).Schema, ok = plugin.RawToTValue[*mqlSnowflakeSchema](v.Value, v.Error)
 		return
 	},
 	"snowflake.networkRule.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3238,6 +3269,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"snowflake.schema.databaseName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeSchema).DatabaseName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.schema.database": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeSchema).Database, ok = plugin.RawToTValue[*mqlSnowflakeDatabase](v.Value, v.Error)
 		return
 	},
 	"snowflake.schema.isDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6579,6 +6614,8 @@ type mqlSnowflakeRowAccessPolicy struct {
 	Name          plugin.TValue[string]
 	DatabaseName  plugin.TValue[string]
 	SchemaName    plugin.TValue[string]
+	Database      plugin.TValue[*mqlSnowflakeDatabase]
+	Schema        plugin.TValue[*mqlSnowflakeSchema]
 	Kind          plugin.TValue[string]
 	Owner         plugin.TValue[string]
 	OwnerRoleType plugin.TValue[string]
@@ -6633,6 +6670,38 @@ func (c *mqlSnowflakeRowAccessPolicy) GetDatabaseName() *plugin.TValue[string] {
 
 func (c *mqlSnowflakeRowAccessPolicy) GetSchemaName() *plugin.TValue[string] {
 	return &c.SchemaName
+}
+
+func (c *mqlSnowflakeRowAccessPolicy) GetDatabase() *plugin.TValue[*mqlSnowflakeDatabase] {
+	return plugin.GetOrCompute[*mqlSnowflakeDatabase](&c.Database, func() (*mqlSnowflakeDatabase, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.rowAccessPolicy", c.__id, "database")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeDatabase), nil
+			}
+		}
+
+		return c.database()
+	})
+}
+
+func (c *mqlSnowflakeRowAccessPolicy) GetSchema() *plugin.TValue[*mqlSnowflakeSchema] {
+	return plugin.GetOrCompute[*mqlSnowflakeSchema](&c.Schema, func() (*mqlSnowflakeSchema, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.rowAccessPolicy", c.__id, "schema")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeSchema), nil
+			}
+		}
+
+		return c.schema()
+	})
 }
 
 func (c *mqlSnowflakeRowAccessPolicy) GetKind() *plugin.TValue[string] {
@@ -6701,6 +6770,8 @@ type mqlSnowflakeNetworkRule struct {
 	Name               plugin.TValue[string]
 	DatabaseName       plugin.TValue[string]
 	SchemaName         plugin.TValue[string]
+	Database           plugin.TValue[*mqlSnowflakeDatabase]
+	Schema             plugin.TValue[*mqlSnowflakeSchema]
 	Owner              plugin.TValue[string]
 	OwnerRoleType      plugin.TValue[string]
 	Comment            plugin.TValue[string]
@@ -6753,6 +6824,38 @@ func (c *mqlSnowflakeNetworkRule) GetDatabaseName() *plugin.TValue[string] {
 
 func (c *mqlSnowflakeNetworkRule) GetSchemaName() *plugin.TValue[string] {
 	return &c.SchemaName
+}
+
+func (c *mqlSnowflakeNetworkRule) GetDatabase() *plugin.TValue[*mqlSnowflakeDatabase] {
+	return plugin.GetOrCompute[*mqlSnowflakeDatabase](&c.Database, func() (*mqlSnowflakeDatabase, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.networkRule", c.__id, "database")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeDatabase), nil
+			}
+		}
+
+		return c.database()
+	})
+}
+
+func (c *mqlSnowflakeNetworkRule) GetSchema() *plugin.TValue[*mqlSnowflakeSchema] {
+	return plugin.GetOrCompute[*mqlSnowflakeSchema](&c.Schema, func() (*mqlSnowflakeSchema, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.networkRule", c.__id, "schema")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeSchema), nil
+			}
+		}
+
+		return c.schema()
+	})
 }
 
 func (c *mqlSnowflakeNetworkRule) GetOwner() *plugin.TValue[string] {
@@ -7081,6 +7184,7 @@ type mqlSnowflakeSchema struct {
 	// optional: if you define mqlSnowflakeSchemaInternal it will be used here
 	Name          plugin.TValue[string]
 	DatabaseName  plugin.TValue[string]
+	Database      plugin.TValue[*mqlSnowflakeDatabase]
 	IsDefault     plugin.TValue[bool]
 	IsCurrent     plugin.TValue[bool]
 	Owner         plugin.TValue[string]
@@ -7130,6 +7234,22 @@ func (c *mqlSnowflakeSchema) GetName() *plugin.TValue[string] {
 
 func (c *mqlSnowflakeSchema) GetDatabaseName() *plugin.TValue[string] {
 	return &c.DatabaseName
+}
+
+func (c *mqlSnowflakeSchema) GetDatabase() *plugin.TValue[*mqlSnowflakeDatabase] {
+	return plugin.GetOrCompute[*mqlSnowflakeDatabase](&c.Database, func() (*mqlSnowflakeDatabase, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.schema", c.__id, "database")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeDatabase), nil
+			}
+		}
+
+		return c.database()
+	})
 }
 
 func (c *mqlSnowflakeSchema) GetIsDefault() *plugin.TValue[bool] {

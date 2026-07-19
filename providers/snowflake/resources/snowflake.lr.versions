@@ -169,12 +169,14 @@ snowflake.networkPolicy.name 11.0.0
 snowflake.networkRule 13.3.7
 snowflake.networkRule.comment 13.3.7
 snowflake.networkRule.createdAt 13.3.7
+snowflake.networkRule.database 13.3.7
 snowflake.networkRule.databaseName 13.3.7
 snowflake.networkRule.entriesInValueList 13.3.7
 snowflake.networkRule.mode 13.3.7
 snowflake.networkRule.name 13.3.7
 snowflake.networkRule.owner 13.3.7
 snowflake.networkRule.ownerRoleType 13.3.7
+snowflake.networkRule.schema 13.3.7
 snowflake.networkRule.schemaName 13.3.7
 snowflake.networkRule.type 13.3.7
 snowflake.networkRule.valueList 13.3.7
@@ -281,6 +283,7 @@ snowflake.rowAccessPolicy 13.3.7
 snowflake.rowAccessPolicy.body 13.3.7
 snowflake.rowAccessPolicy.comment 13.3.7
 snowflake.rowAccessPolicy.createdAt 13.3.7
+snowflake.rowAccessPolicy.database 13.3.7
 snowflake.rowAccessPolicy.databaseName 13.3.7
 snowflake.rowAccessPolicy.kind 13.3.7
 snowflake.rowAccessPolicy.name 13.3.7
@@ -289,11 +292,13 @@ snowflake.rowAccessPolicy.owner 13.3.7
 snowflake.rowAccessPolicy.ownerRoleType 13.3.7
 snowflake.rowAccessPolicy.references 13.3.7
 snowflake.rowAccessPolicy.returnType 13.3.7
+snowflake.rowAccessPolicy.schema 13.3.7
 snowflake.rowAccessPolicy.schemaName 13.3.7
 snowflake.rowAccessPolicy.signature 13.3.7
 snowflake.schema 13.3.7
 snowflake.schema.comment 13.3.7
 snowflake.schema.createdAt 13.3.7
+snowflake.schema.database 13.3.7
 snowflake.schema.databaseName 13.3.7
 snowflake.schema.droppedAt 13.3.7
 snowflake.schema.isCurrent 13.3.7

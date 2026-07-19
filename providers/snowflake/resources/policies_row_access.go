@@ -123,6 +123,14 @@ func (r *mqlSnowflakeRowAccessPolicy) body() (string, error) {
 	return r.descBody, nil
 }
 
+func (r *mqlSnowflakeRowAccessPolicy) database() (*mqlSnowflakeDatabase, error) {
+	return resolveDatabaseRef(r.MqlRuntime, r.DatabaseName.Data, &r.Database)
+}
+
+func (r *mqlSnowflakeRowAccessPolicy) schema() (*mqlSnowflakeSchema, error) {
+	return resolveSchemaRef(r.MqlRuntime, r.DatabaseName.Data, r.SchemaName.Data, &r.Schema)
+}
+
 func (r *mqlSnowflakeRowAccessPolicy) references() ([]any, error) {
 	if r.refsLoaded {
 		return r.refs, r.refsLoadErr

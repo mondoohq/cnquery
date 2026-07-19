@@ -63,6 +63,14 @@ func newMqlSnowflakeNetworkRule(runtime *plugin.Runtime, rule sdk.NetworkRule) (
 	return r.(*mqlSnowflakeNetworkRule), nil
 }
 
+func (r *mqlSnowflakeNetworkRule) database() (*mqlSnowflakeDatabase, error) {
+	return resolveDatabaseRef(r.MqlRuntime, r.DatabaseName.Data, &r.Database)
+}
+
+func (r *mqlSnowflakeNetworkRule) schema() (*mqlSnowflakeSchema, error) {
+	return resolveSchemaRef(r.MqlRuntime, r.DatabaseName.Data, r.SchemaName.Data, &r.Schema)
+}
+
 func (r *mqlSnowflakeNetworkRule) valueList() ([]any, error) {
 	if r.valuesLoaded {
 		return r.values, r.valuesLoadErr

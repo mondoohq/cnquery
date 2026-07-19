@@ -1048,10 +1048,14 @@ snowflake.secret @defaults("name secretType databaseName schemaName") {
 snowflake.rowAccessPolicy @defaults("name databaseName schemaName") {
   // Policy name (not database-qualified)
   name string
-  // Database that owns the policy
+  // Name of the database that owns the policy
   databaseName string
-  // Schema that owns the policy
+  // Name of the schema that owns the policy
   schemaName string
+  // Database that owns the policy
+  database() snowflake.database
+  // Schema that owns the policy
+  schema() snowflake.schema
   // Policy kind classifier (e.g., ROW_ACCESS_POLICY)
   kind string
   // Owning role
@@ -1087,10 +1091,14 @@ snowflake.rowAccessPolicy @defaults("name databaseName schemaName") {
 snowflake.networkRule @defaults("name type mode") {
   // Rule name (not database-qualified)
   name string
-  // Database that owns the rule
+  // Name of the database that owns the rule
   databaseName string
-  // Schema that owns the rule
+  // Name of the schema that owns the rule
   schemaName string
+  // Database that owns the rule
+  database() snowflake.database
+  // Schema that owns the rule
+  schema() snowflake.schema
   // Owning role
   owner string
   // Owner role type (ROLE or DATABASE_ROLE)
@@ -1236,8 +1244,10 @@ snowflake.notificationIntegration @defaults("name notificationProvider enabled")
 snowflake.schema @defaults("name databaseName owner") {
   // Schema name (not database-qualified)
   name string
-  // Database that owns the schema
+  // Name of the database that owns the schema
   databaseName string
+  // Database that owns the schema
+  database() snowflake.database
   // Whether this is the default schema
   isDefault bool
   // Whether this is the current session schema
