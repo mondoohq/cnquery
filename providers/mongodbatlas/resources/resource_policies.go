@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"net/http"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/types"
@@ -15,8 +16,14 @@ func (r *mqlMongodbatlas) resourcePolicies() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	policies, _, err := atlasClient(r.MqlRuntime).ResourcePoliciesApi.ListOrgResourcePolicies(context.Background(), oid).Execute()
+	policies, httpResp, err := atlasClient(r.MqlRuntime).ResourcePoliciesApi.ListOrgResourcePolicies(context.Background(), oid).Execute()
 	if err != nil {
+		// Resource policies are a feature-gated org capability; a credential
+		// without access or an org without the feature degrades to an empty
+		// list rather than failing the scan, matching the singleton settings.
+		if isAccessDenied(httpResp) || (httpResp != nil && httpResp.StatusCode == http.StatusNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
