@@ -43,8 +43,7 @@ databricks.externalLocation.browseOnly 13.0.1
 databricks.externalLocation.comment 13.0.1
 databricks.externalLocation.createdAt 13.0.1
 databricks.externalLocation.createdBy 13.0.1
-databricks.externalLocation.credentialId 13.0.1
-databricks.externalLocation.credentialName 13.0.1
+databricks.externalLocation.credential 13.0.1
 databricks.externalLocation.fallback 13.0.1
 databricks.externalLocation.grants 13.0.1
 databricks.externalLocation.isolationMode 13.0.1

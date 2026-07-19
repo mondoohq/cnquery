@@ -116,7 +116,7 @@ func init() {
 			Create: createDatabricksGrant,
 		},
 		"databricks.storageCredential": {
-			// to override args, implement: initDatabricksStorageCredential(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initDatabricksStorageCredential,
 			Create: createDatabricksStorageCredential,
 		},
 		"databricks.externalLocation": {
@@ -717,11 +717,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"databricks.externalLocation.url": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksExternalLocation).GetUrl()).ToDataRes(types.String)
 	},
-	"databricks.externalLocation.credentialName": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDatabricksExternalLocation).GetCredentialName()).ToDataRes(types.String)
-	},
-	"databricks.externalLocation.credentialId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDatabricksExternalLocation).GetCredentialId()).ToDataRes(types.String)
+	"databricks.externalLocation.credential": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksExternalLocation).GetCredential()).ToDataRes(types.Resource("databricks.storageCredential"))
 	},
 	"databricks.externalLocation.owner": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksExternalLocation).GetOwner()).ToDataRes(types.String)
@@ -1600,12 +1597,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDatabricksExternalLocation).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"databricks.externalLocation.credentialName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDatabricksExternalLocation).CredentialName, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"databricks.externalLocation.credentialId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDatabricksExternalLocation).CredentialId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"databricks.externalLocation.credential": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksExternalLocation).Credential, ok = plugin.RawToTValue[*mqlDatabricksStorageCredential](v.Value, v.Error)
 		return
 	},
 	"databricks.externalLocation.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3667,11 +3660,10 @@ func (c *mqlDatabricksStorageCredential) GetGrants() *plugin.TValue[[]any] {
 type mqlDatabricksExternalLocation struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlDatabricksExternalLocationInternal it will be used here
+	mqlDatabricksExternalLocationInternal
 	Name                   plugin.TValue[string]
 	Url                    plugin.TValue[string]
-	CredentialName         plugin.TValue[string]
-	CredentialId           plugin.TValue[string]
+	Credential             plugin.TValue[*mqlDatabricksStorageCredential]
 	Owner                  plugin.TValue[string]
 	Comment                plugin.TValue[string]
 	MetastoreId            plugin.TValue[string]
@@ -3728,12 +3720,20 @@ func (c *mqlDatabricksExternalLocation) GetUrl() *plugin.TValue[string] {
 	return &c.Url
 }
 
-func (c *mqlDatabricksExternalLocation) GetCredentialName() *plugin.TValue[string] {
-	return &c.CredentialName
-}
+func (c *mqlDatabricksExternalLocation) GetCredential() *plugin.TValue[*mqlDatabricksStorageCredential] {
+	return plugin.GetOrCompute[*mqlDatabricksStorageCredential](&c.Credential, func() (*mqlDatabricksStorageCredential, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks.externalLocation", c.__id, "credential")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDatabricksStorageCredential), nil
+			}
+		}
 
-func (c *mqlDatabricksExternalLocation) GetCredentialId() *plugin.TValue[string] {
-	return &c.CredentialId
+		return c.credential()
+	})
 }
 
 func (c *mqlDatabricksExternalLocation) GetOwner() *plugin.TValue[string] {

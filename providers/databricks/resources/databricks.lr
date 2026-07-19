@@ -571,10 +571,8 @@ databricks.externalLocation @defaults("name url owner") {
   name string
   // Storage path URL the location points at
   url string
-  // Name of the storage credential used with this location
-  credentialName string
-  // Unique id of the storage credential used with this location
-  credentialId string
+  // Storage credential used to reach this location
+  credential() databricks.storageCredential
   // Principal that owns the location
   owner string
   // Location comment
