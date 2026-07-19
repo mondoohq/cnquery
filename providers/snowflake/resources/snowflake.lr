@@ -83,6 +83,20 @@ snowflake.account {
   secrets() []snowflake.secret
   // Resource monitors that govern credit usage for warehouses
   resourceMonitors() []snowflake.resourceMonitor
+  // Row-access policies in the account (row-level access control on tables and views)
+  rowAccessPolicies() []snowflake.rowAccessPolicy
+  // Network rules in the account (IP ranges, private-link endpoints, and host:port sets)
+  networkRules() []snowflake.networkRule
+  // Storage integrations in the account (external cloud storage access)
+  storageIntegrations() []snowflake.storageIntegration
+  // Notification integrations in the account (external messaging and queue endpoints)
+  notificationIntegrations() []snowflake.notificationIntegration
+  // Schemas across every database in the account
+  schemas() []snowflake.schema
+  // Managed (reader) accounts provisioned for data sharing
+  managedAccounts() []snowflake.managedAccount
+  // Connections in the account (replication and failover)
+  connections() []snowflake.connection
 }
 
 // Snowflake User
@@ -1020,4 +1034,291 @@ snowflake.secret @defaults("name secretType databaseName schemaName") {
   oauthAccessTokenExpiryTime() time
   // When the OAuth refresh token expires
   oauthRefreshTokenExpiryTime() time
+}
+
+// Snowflake Row-Access Policy
+//
+// Row-level access-control policy that filters which rows a query returns
+// based on the executing role or context. Auditing row-access policies
+// surfaces the columns each policy inspects (`signature` as `name:type`
+// pairs), the SQL predicate it enforces (`body`), and every table or view it
+// is attached to (`references`), so you can verify sensitive datasets are
+// gated as intended. Policies are schema-scoped and selected by `name`,
+// `databaseName`, and `schemaName`.
+snowflake.rowAccessPolicy @defaults("name databaseName schemaName") {
+  // Policy name (not database-qualified)
+  name string
+  // Database that owns the policy
+  databaseName string
+  // Schema that owns the policy
+  schemaName string
+  // Policy kind classifier (e.g., ROW_ACCESS_POLICY)
+  kind string
+  // Owning role
+  owner string
+  // Owner role type (ROLE or DATABASE_ROLE)
+  ownerRoleType string
+  // Optional comment
+  comment string
+  // Additional policy options reported by SHOW
+  options string
+  // When the policy was created
+  createdAt time
+  // Input column signature: list of `name:type` pairs the policy evaluates
+  signature() []string
+  // Data type the policy expression returns (typically BOOLEAN)
+  returnType() string
+  // SQL body that implements the row-access predicate
+  body() string
+  // Entities (tables/views) this policy is attached to
+  references() []snowflake.policyReference
+}
+
+// Snowflake Network Rule
+//
+// Named set of network identifiers (IP ranges, cloud private-link endpoints,
+// or host:port pairs) that network policies and external-access integrations
+// reference to allow or block traffic. The `type` field reports which kind of
+// identifier the rule holds (HOST_PORT, AWSVPCEID, or AZURELINKID), and `mode`
+// reports the traffic direction it governs (INGRESS, EGRESS, or
+// INTERNAL_STAGE). The `valueList` field returns the actual identifiers, and
+// `entriesInValueList` gives their count. Rules are schema-scoped and selected
+// by `name`, `databaseName`, and `schemaName`.
+snowflake.networkRule @defaults("name type mode") {
+  // Rule name (not database-qualified)
+  name string
+  // Database that owns the rule
+  databaseName string
+  // Schema that owns the rule
+  schemaName string
+  // Owning role
+  owner string
+  // Owner role type (ROLE or DATABASE_ROLE)
+  ownerRoleType string
+  // Optional comment
+  comment string
+  // Kind of identifier the rule holds
+  //
+  // One of HOST_PORT (hostnames or host:port pairs), AWSVPCEID (AWS VPC
+  // endpoint IDs), or AZURELINKID (Azure private-link IDs).
+  type string
+  // Traffic direction the rule governs
+  //
+  // One of INGRESS (inbound to Snowflake), EGRESS (outbound to external
+  // targets), or INTERNAL_STAGE (access to an internal stage).
+  mode string
+  // Number of identifiers in the rule's value list
+  entriesInValueList int
+  // When the rule was created
+  createdAt time
+  // Network identifiers the rule matches (IP ranges, endpoint IDs, or host:port entries)
+  valueList() []string
+}
+
+// Snowflake Storage Integration
+//
+// Account-level object that grants Snowflake access to external cloud storage
+// (Amazon S3, Google Cloud Storage, or Azure Blob) without exposing static
+// credentials, referenced by external stages. Auditing storage integrations
+// matters because they define a trust boundary to external buckets: `enabled`
+// gates whether it is live, `storageAllowedLocations` and
+// `storageBlockedLocations` constrain which URLs stages may reach, and the
+// provider-specific fields (`storageAwsRoleArn`, `storageAwsIamUserArn`,
+// `storageGcpServiceAccount`, `azureTenantId`, `azureConsentUrl`) expose the
+// assumed identity on each cloud. The `properties` map returns the complete
+// DESCRIBE STORAGE INTEGRATION output for any field not surfaced individually.
+snowflake.storageIntegration @defaults("name storageProvider enabled") {
+  // Name of the storage integration
+  name string
+  // Storage integration subtype (e.g., EXTERNAL_STAGE)
+  type string
+  // Category of the integration (always "STORAGE")
+  category string
+  // Whether the integration is enabled
+  enabled bool
+  // Comment for the integration
+  comment string
+  // When the integration was created
+  createdAt time
+  // DESCRIBE STORAGE INTEGRATION output
+  //
+  // Every property Snowflake reports for the integration, keyed by its raw
+  // uppercase property name. Common keys are STORAGE_PROVIDER,
+  // STORAGE_ALLOWED_LOCATIONS, STORAGE_BLOCKED_LOCATIONS, STORAGE_AWS_ROLE_ARN,
+  // STORAGE_AWS_IAM_USER_ARN, STORAGE_AWS_EXTERNAL_ID,
+  // STORAGE_GCP_SERVICE_ACCOUNT, AZURE_TENANT_ID, AZURE_CONSENT_URL, and
+  // AZURE_MULTI_TENANT_APP_NAME. The set of keys depends on the cloud provider.
+  properties() map[string]string
+  // Cloud provider backing the integration (S3, GCS, or AZURE)
+  storageProvider() string
+  // Cloud storage locations that stages using this integration may access
+  storageAllowedLocations() []string
+  // Cloud storage locations that stages using this integration are blocked from
+  storageBlockedLocations() []string
+  // AWS IAM role ARN that Snowflake assumes for S3 access
+  storageAwsRoleArn() string
+  // AWS IAM user ARN that Snowflake uses to assume the role
+  storageAwsIamUserArn() string
+  // External ID Snowflake presents when assuming the AWS role
+  storageAwsExternalId() string
+  // Google Cloud service account Snowflake uses for GCS access
+  storageGcpServiceAccount() string
+  // Azure tenant ID that owns the consent application
+  azureTenantId() string
+  // Azure consent URL an admin visits to grant Snowflake access
+  azureConsentUrl() string
+  // Name of the Azure multi-tenant app registered for Snowflake
+  azureMultiTenantAppName() string
+}
+
+// Snowflake Notification Integration
+//
+// Account-level object that connects Snowflake to an external messaging or
+// queue service (Amazon SNS/SQS, Google Pub/Sub, or Azure Event Grid) for
+// event notifications and auto-ingest pipelines. Auditing notification
+// integrations surfaces the trust edge to external messaging: `enabled` gates
+// whether it is live, `direction` reports inbound versus outbound flow,
+// `notificationProvider` names the backing service, and the provider-specific
+// fields expose the topics, subscriptions, and roles involved. The
+// `properties` map returns the complete DESCRIBE NOTIFICATION INTEGRATION
+// output for any field not surfaced individually.
+snowflake.notificationIntegration @defaults("name notificationProvider enabled") {
+  // Name of the notification integration
+  name string
+  // Notification integration subtype (e.g., QUEUE)
+  type string
+  // Category of the integration (always "NOTIFICATION")
+  category string
+  // Whether the integration is enabled
+  enabled bool
+  // Comment for the integration
+  comment string
+  // When the integration was created
+  createdAt time
+  // DESCRIBE NOTIFICATION INTEGRATION output
+  //
+  // Every property Snowflake reports for the integration, keyed by its raw
+  // uppercase property name. Common keys are DIRECTION, NOTIFICATION_PROVIDER,
+  // AWS_SNS_TOPIC_ARN, AWS_SNS_ROLE_ARN, GCP_PUBSUB_SUBSCRIPTION_NAME,
+  // GCP_PUBSUB_TOPIC_NAME, AZURE_STORAGE_QUEUE_PRIMARY_URI,
+  // AZURE_EVENT_GRID_TOPIC_ENDPOINT, and AZURE_TENANT_ID. The set of keys
+  // depends on the backing provider.
+  properties() map[string]string
+  // Message flow direction (INBOUND or OUTBOUND)
+  direction() string
+  // Backing messaging service (AWS_SNS, AWS_SQS, GCP_PUBSUB, or AZURE_EVENT_GRID)
+  notificationProvider() string
+  // Amazon SNS topic ARN messages are published to
+  awsSnsTopicArn() string
+  // AWS IAM role ARN Snowflake assumes to publish to SNS
+  awsSnsRoleArn() string
+  // Google Pub/Sub subscription name Snowflake reads from
+  gcpPubsubSubscriptionName() string
+  // Google Pub/Sub topic name Snowflake publishes to
+  gcpPubsubTopicName() string
+  // Azure storage queue URI that carries the notifications
+  azureStorageQueuePrimaryUri() string
+  // Azure Event Grid topic endpoint messages are published to
+  azureEventGridTopicEndpoint() string
+  // Azure tenant ID that owns the integration app
+  azureTenantId() string
+}
+
+// Snowflake Schema
+//
+// Logical container within a database that groups tables, views, and other
+// objects and carries its own retention and ownership settings. Schemas are
+// enumerated across every database in the account, each reporting its parent
+// `databaseName`, and are selected by `name`. `retentionTime` gives the
+// Time Travel data-retention window in days, `isDefault` and `isCurrent` mark
+// the session's active schema, and `ownerRoleType` distinguishes a standard
+// role owner from a database role.
+snowflake.schema @defaults("name databaseName owner") {
+  // Schema name (not database-qualified)
+  name string
+  // Database that owns the schema
+  databaseName string
+  // Whether this is the default schema
+  isDefault bool
+  // Whether this is the current session schema
+  isCurrent bool
+  // Owning role
+  owner string
+  // Owner role type (ROLE or DATABASE_ROLE)
+  ownerRoleType string
+  // Optional comment
+  comment string
+  // Additional schema options reported by SHOW (e.g., MANAGED ACCESS, TRANSIENT)
+  options string
+  // Time Travel data-retention window in days
+  retentionTime string
+  // When the schema was created
+  createdAt time
+  // When the schema was dropped (empty when active)
+  droppedAt time
+}
+
+// Snowflake Managed Account
+//
+// Reader account provisioned by a provider account to share data with a
+// consumer who has no Snowflake account of their own. Auditing managed
+// accounts surfaces every reader account created for data sharing, where it
+// lives (`cloud`, `region`), how it is reached (`url`, `accountLocatorUrl`,
+// `locator`), and whether it is a reader account (`isReader`). Accounts are
+// selected by `name`.
+snowflake.managedAccount @defaults("name cloud region") {
+  // Name of the managed account
+  name string
+  // Cloud provider hosting the account
+  cloud string
+  // Region the account is provisioned in
+  region string
+  // Account locator (unique identifier within the region)
+  locator string
+  // URL used to connect to the account
+  url string
+  // Locator-based URL for the account
+  accountLocatorUrl string
+  // Whether the account is a reader account
+  isReader bool
+  // Optional comment
+  comment string
+  // When the account was created
+  createdAt time
+}
+
+// Snowflake Connection
+//
+// Account-level connection object used for Business Critical failover and
+// client redirect across replicated accounts, exposing a stable connection
+// URL that clients target while the underlying primary account can change.
+// Auditing connections surfaces which account currently serves as primary
+// (`isPrimary`, `primary`), the accounts failover is permitted to
+// (`failoverAllowedToAccounts`), and the durable `connectionUrl` clients use.
+// Connections are selected by `name`.
+snowflake.connection @defaults("name isPrimary") {
+  // Name of the connection
+  name string
+  // Optional comment
+  comment string
+  // Whether this account is the primary for the connection
+  isPrimary bool
+  // Fully qualified name of the primary connection (when this is a replica)
+  primary string
+  // Accounts that failover is permitted to
+  failoverAllowedToAccounts []string
+  // Snowflake region the connection lives in
+  snowflakeRegion string
+  // Region group of the connection (empty when not set)
+  regionGroup string
+  // Account name that owns the connection
+  accountName string
+  // Account locator that owns the connection
+  accountLocator string
+  // Organization name that owns the connection
+  organizationName string
+  // Durable connection URL clients target
+  connectionUrl string
+  // When the connection was created
+  createdAt time
 }

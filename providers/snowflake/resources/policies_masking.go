@@ -5,7 +5,6 @@ package resources
 
 import (
 	"context"
-	"strings"
 	"sync"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -135,52 +134,8 @@ func (r *mqlSnowflakeMaskingPolicy) references() ([]any, error) {
 		return r.refs, r.refsLoadErr
 	}
 
-	conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
-	client := conn.Client()
-	ctx := context.Background()
-
-	db := client.GetConn()
-	// INFORMATION_SCHEMA.POLICY_REFERENCES is database-scoped, so we must address
-	// the function through the policy's own database. The database name is a SQL
-	// identifier and cannot be bound as a parameter — Snowflake's parser resolves
-	// it at compile time — so we escape it (`"` -> `""`) and quote it inline. The
-	// POLICY_NAME argument IS bindable: gosnowflake supports `?` inside table
-	// functions (see github.com/snowflakedb/gosnowflake doc.go), and it works for
-	// named arguments too. We pass the policy's fully qualified name there.
-	fqName := sdk.NewSchemaObjectIdentifier(r.DatabaseName.Data, r.SchemaName.Data, r.Name.Data).FullyQualifiedName()
-	quotedDB := `"` + strings.ReplaceAll(r.DatabaseName.Data, `"`, `""`) + `"`
-	q := `SELECT POLICY_DB, POLICY_SCHEMA, POLICY_NAME, POLICY_KIND,
-                  REF_DATABASE_NAME, REF_SCHEMA_NAME, REF_ENTITY_NAME, REF_ENTITY_DOMAIN,
-                  REF_COLUMN_NAME, REF_ARG_COLUMN_NAMES,
-                  TAG_DATABASE, TAG_SCHEMA, TAG_NAME,
-                  POLICY_STATUS
-           FROM TABLE(` + quotedDB + `.INFORMATION_SCHEMA.POLICY_REFERENCES(POLICY_NAME => ?))`
-
-	rows, err := db.QueryxContext(ctx, q, fqName)
+	out, err := queryPolicyReferences(r.MqlRuntime, r.DatabaseName.Data, r.SchemaName.Data, r.Name.Data)
 	if err != nil {
-		r.refsLoaded = true
-		r.refsLoadErr = err
-		return nil, err
-	}
-	defer rows.Close()
-
-	out := []any{}
-	for rows.Next() {
-		var pdb, pschema, pname, pkind, refdb, refschema, refname, refdomain, refcol, refargs, tagdb, tagschema, tagname, status *string
-		if err := rows.Scan(&pdb, &pschema, &pname, &pkind, &refdb, &refschema, &refname, &refdomain, &refcol, &refargs, &tagdb, &tagschema, &tagname, &status); err != nil {
-			r.refsLoaded = true
-			r.refsLoadErr = err
-			return nil, err
-		}
-		ref, err := newMqlSnowflakePolicyReference(r.MqlRuntime, fqName, pdb, pschema, pname, pkind, refdb, refschema, refname, refdomain, refcol, refargs, tagdb, tagschema, tagname, status)
-		if err != nil {
-			r.refsLoaded = true
-			r.refsLoadErr = err
-			return nil, err
-		}
-		out = append(out, ref)
-	}
-	if err := rows.Err(); err != nil {
 		r.refsLoaded = true
 		r.refsLoadErr = err
 		return nil, err
