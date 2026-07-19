@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -79,7 +80,7 @@ func initMongodbatlasCluster(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	}
 	name, _ := nameRaw.Value.(string)
 	if name == "" {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("mongodbatlas.cluster requires a non-empty name")
 	}
 	pid, err := projectID(runtime)
 	if err != nil {

@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -55,7 +56,7 @@ func initMongodbatlasProject(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	}
 	id, _ := idRaw.Value.(string)
 	if id == "" {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("mongodbatlas.project requires a non-empty id")
 	}
 	p, _, err := atlasClient(runtime).ProjectsApi.GetProject(context.Background(), id).Execute()
 	if err != nil {
