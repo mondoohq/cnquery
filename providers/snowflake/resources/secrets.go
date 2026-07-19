@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -23,6 +24,45 @@ type mqlSnowflakeSecretInternal struct {
 	descIntegration string
 	descAccessExp   *time.Time
 	descRefreshExp  *time.Time
+}
+
+// initSnowflakeSecret resolves a single secret by its database, schema, and
+// name so typed references (such as snowflake.function.secrets) can hydrate a
+// full secret from just its identity.
+func initSnowflakeSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 3 {
+		return args, nil, nil
+	}
+	dbRaw, ok1 := args["databaseName"]
+	schemaRaw, ok2 := args["schemaName"]
+	nameRaw, ok3 := args["name"]
+	if !ok1 || !ok2 || !ok3 {
+		return args, nil, nil
+	}
+	databaseName, _ := dbRaw.Value.(string)
+	schemaName, _ := schemaRaw.Value.(string)
+	name, _ := nameRaw.Value.(string)
+	if databaseName == "" || schemaName == "" || name == "" {
+		return args, nil, nil
+	}
+
+	conn := runtime.Connection.(*connection.SnowflakeConnection)
+	secrets, err := conn.Client().Secrets.Show(context.Background(), sdk.NewShowSecretRequest().
+		WithLike(sdk.Like{Pattern: sdk.String(name)}).
+		WithIn(sdk.ExtendedIn{In: sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)}}))
+	if err != nil {
+		return nil, nil, err
+	}
+	for i := range secrets {
+		if secrets[i].Name == name && secrets[i].SchemaName == schemaName && secrets[i].DatabaseName == databaseName {
+			res, err := newMqlSnowflakeSecret(runtime, secrets[i])
+			if err != nil {
+				return nil, nil, err
+			}
+			return nil, res, nil
+		}
+	}
+	return nil, nil, fmt.Errorf("snowflake.secret %q not found in %s.%s", name, databaseName, schemaName)
 }
 
 func (r *mqlSnowflakeAccount) secrets() ([]any, error) {

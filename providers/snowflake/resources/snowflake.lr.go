@@ -156,7 +156,7 @@ func init() {
 			Create: createSnowflakePolicyReference,
 		},
 		"snowflake.secret": {
-			// to override args, implement: initSnowflakeSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initSnowflakeSecret,
 			Create: createSnowflakeSecret,
 		},
 		"snowflake.rowAccessPolicy": {
@@ -204,7 +204,7 @@ func init() {
 			Create: createSnowflakeApplicationPackage,
 		},
 		"snowflake.externalAccessIntegration": {
-			// to override args, implement: initSnowflakeExternalAccessIntegration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initSnowflakeExternalAccessIntegration,
 			Create: createSnowflakeExternalAccessIntegration,
 		},
 	}
@@ -1698,10 +1698,10 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlSnowflakeFunction).GetDescription()).ToDataRes(types.String)
 	},
 	"snowflake.function.externalAccessIntegrations": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlSnowflakeFunction).GetExternalAccessIntegrations()).ToDataRes(types.String)
+		return (r.(*mqlSnowflakeFunction).GetExternalAccessIntegrations()).ToDataRes(types.Array(types.Resource("snowflake.externalAccessIntegration")))
 	},
 	"snowflake.function.secrets": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlSnowflakeFunction).GetSecrets()).ToDataRes(types.String)
+		return (r.(*mqlSnowflakeFunction).GetSecrets()).ToDataRes(types.Array(types.Resource("snowflake.secret")))
 	},
 	"snowflake.application.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeApplication).GetName()).ToDataRes(types.String)
@@ -3801,11 +3801,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"snowflake.function.externalAccessIntegrations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeFunction).ExternalAccessIntegrations, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlSnowflakeFunction).ExternalAccessIntegrations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.function.secrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeFunction).Secrets, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlSnowflakeFunction).Secrets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.application.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8325,7 +8325,7 @@ func (c *mqlSnowflakeTask) GetComment() *plugin.TValue[string] {
 type mqlSnowflakeFunction struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSnowflakeFunctionInternal it will be used here
+	mqlSnowflakeFunctionInternal
 	Name                       plugin.TValue[string]
 	DatabaseName               plugin.TValue[string]
 	SchemaName                 plugin.TValue[string]
@@ -8339,8 +8339,8 @@ type mqlSnowflakeFunction struct {
 	IsDataMetric               plugin.TValue[bool]
 	Arguments                  plugin.TValue[string]
 	Description                plugin.TValue[string]
-	ExternalAccessIntegrations plugin.TValue[string]
-	Secrets                    plugin.TValue[string]
+	ExternalAccessIntegrations plugin.TValue[[]any]
+	Secrets                    plugin.TValue[[]any]
 }
 
 // createSnowflakeFunction creates a new instance of this resource
@@ -8427,12 +8427,36 @@ func (c *mqlSnowflakeFunction) GetDescription() *plugin.TValue[string] {
 	return &c.Description
 }
 
-func (c *mqlSnowflakeFunction) GetExternalAccessIntegrations() *plugin.TValue[string] {
-	return &c.ExternalAccessIntegrations
+func (c *mqlSnowflakeFunction) GetExternalAccessIntegrations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ExternalAccessIntegrations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.function", c.__id, "externalAccessIntegrations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.externalAccessIntegrations()
+	})
 }
 
-func (c *mqlSnowflakeFunction) GetSecrets() *plugin.TValue[string] {
-	return &c.Secrets
+func (c *mqlSnowflakeFunction) GetSecrets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Secrets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.function", c.__id, "secrets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.secrets()
+	})
 }
 
 // mqlSnowflakeApplication for the snowflake.application resource

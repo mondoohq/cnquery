@@ -1459,10 +1459,10 @@ snowflake.function @defaults("name schemaName language") {
   arguments string
   // Description of the function
   description string
-  // External access integrations the function is allowed to use, empty when none are bound
-  externalAccessIntegrations string
-  // Secrets the function is allowed to reference, empty when none are bound
-  secrets string
+  // External access integrations the function is allowed to use
+  externalAccessIntegrations() []snowflake.externalAccessIntegration
+  // Secrets the function is allowed to reference
+  secrets() []snowflake.secret
 }
 
 // Snowflake Native App
