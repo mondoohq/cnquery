@@ -96,10 +96,6 @@ databricks.workspace @defaults("name workspaceId cloud") {
   awsRegion string
   // GCP or Azure location hosting the workspace
   location string
-  // Key id protecting control-plane managed services, empty when using Databricks-managed keys
-  managedServicesCustomerManagedKeyId string
-  // Key id protecting workspace storage, empty when using Databricks-managed keys
-  storageCustomerManagedKeyId string
   // Custom tags applied to the workspace
   customTags map[string]string
   // Time the workspace was created
@@ -108,6 +104,10 @@ databricks.workspace @defaults("name workspaceId cloud") {
   network() databricks.network
   // Private access settings applied to the workspace
   privateAccessSettings() databricks.privateAccessSetting
+  // Customer-managed key protecting control-plane managed services, null when using Databricks-managed keys
+  managedServicesCustomerManagedKey() databricks.customerManagedKey
+  // Customer-managed key protecting workspace storage, null when using Databricks-managed keys
+  storageCustomerManagedKey() databricks.customerManagedKey
 }
 
 // Databricks account user
@@ -135,7 +135,7 @@ databricks.user @defaults("userName active") {
   // Cloud roles (such as AWS instance profile ARNs) granted to the user
   roles []string
   // Groups the user belongs to
-  groups []string
+  groups() []databricks.group
 }
 
 // Databricks account group
@@ -183,7 +183,7 @@ databricks.servicePrincipal @defaults("displayName applicationId active") {
   // Cloud roles granted to the service principal
   roles []string
   // Groups the service principal belongs to
-  groups []string
+  groups() []databricks.group
 }
 
 // Unity Catalog metastore
@@ -510,6 +510,8 @@ databricks.schema @defaults("fullName owner") {
   fullName string
   // Name of the parent catalog
   catalogName string
+  // Parent catalog
+  catalog() databricks.catalog
   // Principal that owns the schema
   owner string
   // Schema comment
@@ -657,8 +659,12 @@ databricks.volume @defaults("fullName volumeType owner") {
   fullName string
   // Name of the parent catalog
   catalogName string
+  // Parent catalog
+  catalog() databricks.catalog
   // Name of the parent schema
   schemaName string
+  // Parent schema
+  schema() databricks.schema
   // Principal that owns the volume
   owner string
   // Volume comment

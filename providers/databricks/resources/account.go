@@ -14,8 +14,10 @@ import (
 )
 
 type mqlDatabricksWorkspaceInternal struct {
-	cacheNetworkId               string
-	cachePrivateAccessSettingsId string
+	cacheNetworkId                    string
+	cachePrivateAccessSettingsId      string
+	cacheManagedServicesCustomerKeyId string
+	cacheStorageCustomerKeyId         string
 }
 
 func (r *mqlDatabricks) workspaces() ([]any, error) {
@@ -42,20 +44,18 @@ func (r *mqlDatabricks) workspaces() ([]any, error) {
 
 func newMqlDatabricksWorkspace(runtime *plugin.Runtime, ws provisioning.Workspace) (*mqlDatabricksWorkspace, error) {
 	res, err := CreateResource(runtime, "databricks.workspace", map[string]*llx.RawData{
-		"__id":                                llx.StringData("databricks.workspace/" + strconv.FormatInt(ws.WorkspaceId, 10)),
-		"workspaceId":                         llx.IntData(ws.WorkspaceId),
-		"name":                                llx.StringData(ws.WorkspaceName),
-		"deploymentName":                      llx.StringData(ws.DeploymentName),
-		"status":                              llx.StringData(string(ws.WorkspaceStatus)),
-		"statusMessage":                       llx.StringData(ws.WorkspaceStatusMessage),
-		"pricingTier":                         llx.StringData(string(ws.PricingTier)),
-		"cloud":                               llx.StringData(ws.Cloud),
-		"awsRegion":                           llx.StringData(ws.AwsRegion),
-		"location":                            llx.StringData(ws.Location),
-		"managedServicesCustomerManagedKeyId": llx.StringData(ws.ManagedServicesCustomerManagedKeyId),
-		"storageCustomerManagedKeyId":         llx.StringData(ws.StorageCustomerManagedKeyId),
-		"customTags":                          llx.MapData(strMap(ws.CustomTags), types.String),
-		"creationTime":                        llx.TimeDataPtr(epochMsTime(ws.CreationTime)),
+		"__id":           llx.StringData("databricks.workspace/" + strconv.FormatInt(ws.WorkspaceId, 10)),
+		"workspaceId":    llx.IntData(ws.WorkspaceId),
+		"name":           llx.StringData(ws.WorkspaceName),
+		"deploymentName": llx.StringData(ws.DeploymentName),
+		"status":         llx.StringData(string(ws.WorkspaceStatus)),
+		"statusMessage":  llx.StringData(ws.WorkspaceStatusMessage),
+		"pricingTier":    llx.StringData(string(ws.PricingTier)),
+		"cloud":          llx.StringData(ws.Cloud),
+		"awsRegion":      llx.StringData(ws.AwsRegion),
+		"location":       llx.StringData(ws.Location),
+		"customTags":     llx.MapData(strMap(ws.CustomTags), types.String),
+		"creationTime":   llx.TimeDataPtr(epochMsTime(ws.CreationTime)),
 	})
 	if err != nil {
 		return nil, err
@@ -63,7 +63,36 @@ func newMqlDatabricksWorkspace(runtime *plugin.Runtime, ws provisioning.Workspac
 	mqlWorkspace := res.(*mqlDatabricksWorkspace)
 	mqlWorkspace.cacheNetworkId = ws.NetworkId
 	mqlWorkspace.cachePrivateAccessSettingsId = ws.PrivateAccessSettingsId
+	mqlWorkspace.cacheManagedServicesCustomerKeyId = ws.ManagedServicesCustomerManagedKeyId
+	mqlWorkspace.cacheStorageCustomerKeyId = ws.StorageCustomerManagedKeyId
 	return mqlWorkspace, nil
+}
+
+// managedServicesCustomerManagedKey resolves the customer-managed key that
+// protects the workspace's control-plane managed services, hydrated by id
+// through the customer-managed key's init.
+func (r *mqlDatabricksWorkspace) managedServicesCustomerManagedKey() (*mqlDatabricksCustomerManagedKey, error) {
+	return r.resolveCustomerManagedKey(r.cacheManagedServicesCustomerKeyId, &r.ManagedServicesCustomerManagedKey.State)
+}
+
+// storageCustomerManagedKey resolves the customer-managed key that protects the
+// workspace's storage, hydrated by id through the customer-managed key's init.
+func (r *mqlDatabricksWorkspace) storageCustomerManagedKey() (*mqlDatabricksCustomerManagedKey, error) {
+	return r.resolveCustomerManagedKey(r.cacheStorageCustomerKeyId, &r.StorageCustomerManagedKey.State)
+}
+
+func (r *mqlDatabricksWorkspace) resolveCustomerManagedKey(keyId string, state *plugin.State) (*mqlDatabricksCustomerManagedKey, error) {
+	if keyId == "" {
+		*state = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	key, err := NewResource(r.MqlRuntime, "databricks.customerManagedKey", map[string]*llx.RawData{
+		"id": llx.StringData(keyId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return key.(*mqlDatabricksCustomerManagedKey), nil
 }
 
 func (r *mqlDatabricksWorkspace) network() (*mqlDatabricksNetwork, error) {

@@ -61,7 +61,7 @@ func init() {
 			Create: createDatabricksUser,
 		},
 		"databricks.group": {
-			// to override args, implement: initDatabricksGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initDatabricksGroup,
 			Create: createDatabricksGroup,
 		},
 		"databricks.servicePrincipal": {
@@ -109,11 +109,11 @@ func init() {
 			Create: createDatabricksWarehouse,
 		},
 		"databricks.catalog": {
-			// to override args, implement: initDatabricksCatalog(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initDatabricksCatalog,
 			Create: createDatabricksCatalog,
 		},
 		"databricks.schema": {
-			// to override args, implement: initDatabricksSchema(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initDatabricksSchema,
 			Create: createDatabricksSchema,
 		},
 		"databricks.grant": {
@@ -149,7 +149,7 @@ func init() {
 			Create: createDatabricksInstanceProfile,
 		},
 		"databricks.customerManagedKey": {
-			// to override args, implement: initDatabricksCustomerManagedKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initDatabricksCustomerManagedKey,
 			Create: createDatabricksCustomerManagedKey,
 		},
 	}
@@ -316,12 +316,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"databricks.workspace.location": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksWorkspace).GetLocation()).ToDataRes(types.String)
 	},
-	"databricks.workspace.managedServicesCustomerManagedKeyId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDatabricksWorkspace).GetManagedServicesCustomerManagedKeyId()).ToDataRes(types.String)
-	},
-	"databricks.workspace.storageCustomerManagedKeyId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDatabricksWorkspace).GetStorageCustomerManagedKeyId()).ToDataRes(types.String)
-	},
 	"databricks.workspace.customTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksWorkspace).GetCustomTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -333,6 +327,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"databricks.workspace.privateAccessSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksWorkspace).GetPrivateAccessSettings()).ToDataRes(types.Resource("databricks.privateAccessSetting"))
+	},
+	"databricks.workspace.managedServicesCustomerManagedKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksWorkspace).GetManagedServicesCustomerManagedKey()).ToDataRes(types.Resource("databricks.customerManagedKey"))
+	},
+	"databricks.workspace.storageCustomerManagedKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksWorkspace).GetStorageCustomerManagedKey()).ToDataRes(types.Resource("databricks.customerManagedKey"))
 	},
 	"databricks.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksUser).GetId()).ToDataRes(types.String)
@@ -359,7 +359,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlDatabricksUser).GetRoles()).ToDataRes(types.Array(types.String))
 	},
 	"databricks.user.groups": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDatabricksUser).GetGroups()).ToDataRes(types.Array(types.String))
+		return (r.(*mqlDatabricksUser).GetGroups()).ToDataRes(types.Array(types.Resource("databricks.group")))
 	},
 	"databricks.group.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksGroup).GetId()).ToDataRes(types.String)
@@ -401,7 +401,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlDatabricksServicePrincipal).GetRoles()).ToDataRes(types.Array(types.String))
 	},
 	"databricks.servicePrincipal.groups": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDatabricksServicePrincipal).GetGroups()).ToDataRes(types.Array(types.String))
+		return (r.(*mqlDatabricksServicePrincipal).GetGroups()).ToDataRes(types.Array(types.Resource("databricks.group")))
 	},
 	"databricks.metastore.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksMetastore).GetId()).ToDataRes(types.String)
@@ -688,6 +688,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"databricks.schema.catalogName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksSchema).GetCatalogName()).ToDataRes(types.String)
 	},
+	"databricks.schema.catalog": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksSchema).GetCatalog()).ToDataRes(types.Resource("databricks.catalog"))
+	},
 	"databricks.schema.owner": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksSchema).GetOwner()).ToDataRes(types.String)
 	},
@@ -832,8 +835,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"databricks.volume.catalogName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksVolume).GetCatalogName()).ToDataRes(types.String)
 	},
+	"databricks.volume.catalog": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksVolume).GetCatalog()).ToDataRes(types.Resource("databricks.catalog"))
+	},
 	"databricks.volume.schemaName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksVolume).GetSchemaName()).ToDataRes(types.String)
+	},
+	"databricks.volume.schema": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksVolume).GetSchema()).ToDataRes(types.Resource("databricks.schema"))
 	},
 	"databricks.volume.owner": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksVolume).GetOwner()).ToDataRes(types.String)
@@ -1129,14 +1138,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDatabricksWorkspace).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"databricks.workspace.managedServicesCustomerManagedKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDatabricksWorkspace).ManagedServicesCustomerManagedKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"databricks.workspace.storageCustomerManagedKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDatabricksWorkspace).StorageCustomerManagedKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"databricks.workspace.customTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatabricksWorkspace).CustomTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -1151,6 +1152,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"databricks.workspace.privateAccessSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatabricksWorkspace).PrivateAccessSettings, ok = plugin.RawToTValue[*mqlDatabricksPrivateAccessSetting](v.Value, v.Error)
+		return
+	},
+	"databricks.workspace.managedServicesCustomerManagedKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksWorkspace).ManagedServicesCustomerManagedKey, ok = plugin.RawToTValue[*mqlDatabricksCustomerManagedKey](v.Value, v.Error)
+		return
+	},
+	"databricks.workspace.storageCustomerManagedKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksWorkspace).StorageCustomerManagedKey, ok = plugin.RawToTValue[*mqlDatabricksCustomerManagedKey](v.Value, v.Error)
 		return
 	},
 	"databricks.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1685,6 +1694,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDatabricksSchema).CatalogName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"databricks.schema.catalog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksSchema).Catalog, ok = plugin.RawToTValue[*mqlDatabricksCatalog](v.Value, v.Error)
+		return
+	},
 	"databricks.schema.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatabricksSchema).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1893,8 +1906,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDatabricksVolume).CatalogName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"databricks.volume.catalog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksVolume).Catalog, ok = plugin.RawToTValue[*mqlDatabricksCatalog](v.Value, v.Error)
+		return
+	},
 	"databricks.volume.schemaName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatabricksVolume).SchemaName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.volume.schema": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksVolume).Schema, ok = plugin.RawToTValue[*mqlDatabricksSchema](v.Value, v.Error)
 		return
 	},
 	"databricks.volume.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2564,21 +2585,21 @@ type mqlDatabricksWorkspace struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlDatabricksWorkspaceInternal
-	WorkspaceId                         plugin.TValue[int64]
-	Name                                plugin.TValue[string]
-	DeploymentName                      plugin.TValue[string]
-	Status                              plugin.TValue[string]
-	StatusMessage                       plugin.TValue[string]
-	PricingTier                         plugin.TValue[string]
-	Cloud                               plugin.TValue[string]
-	AwsRegion                           plugin.TValue[string]
-	Location                            plugin.TValue[string]
-	ManagedServicesCustomerManagedKeyId plugin.TValue[string]
-	StorageCustomerManagedKeyId         plugin.TValue[string]
-	CustomTags                          plugin.TValue[map[string]any]
-	CreationTime                        plugin.TValue[*time.Time]
-	Network                             plugin.TValue[*mqlDatabricksNetwork]
-	PrivateAccessSettings               plugin.TValue[*mqlDatabricksPrivateAccessSetting]
+	WorkspaceId                       plugin.TValue[int64]
+	Name                              plugin.TValue[string]
+	DeploymentName                    plugin.TValue[string]
+	Status                            plugin.TValue[string]
+	StatusMessage                     plugin.TValue[string]
+	PricingTier                       plugin.TValue[string]
+	Cloud                             plugin.TValue[string]
+	AwsRegion                         plugin.TValue[string]
+	Location                          plugin.TValue[string]
+	CustomTags                        plugin.TValue[map[string]any]
+	CreationTime                      plugin.TValue[*time.Time]
+	Network                           plugin.TValue[*mqlDatabricksNetwork]
+	PrivateAccessSettings             plugin.TValue[*mqlDatabricksPrivateAccessSetting]
+	ManagedServicesCustomerManagedKey plugin.TValue[*mqlDatabricksCustomerManagedKey]
+	StorageCustomerManagedKey         plugin.TValue[*mqlDatabricksCustomerManagedKey]
 }
 
 // createDatabricksWorkspace creates a new instance of this resource
@@ -2649,14 +2670,6 @@ func (c *mqlDatabricksWorkspace) GetLocation() *plugin.TValue[string] {
 	return &c.Location
 }
 
-func (c *mqlDatabricksWorkspace) GetManagedServicesCustomerManagedKeyId() *plugin.TValue[string] {
-	return &c.ManagedServicesCustomerManagedKeyId
-}
-
-func (c *mqlDatabricksWorkspace) GetStorageCustomerManagedKeyId() *plugin.TValue[string] {
-	return &c.StorageCustomerManagedKeyId
-}
-
 func (c *mqlDatabricksWorkspace) GetCustomTags() *plugin.TValue[map[string]any] {
 	return &c.CustomTags
 }
@@ -2697,11 +2710,43 @@ func (c *mqlDatabricksWorkspace) GetPrivateAccessSettings() *plugin.TValue[*mqlD
 	})
 }
 
+func (c *mqlDatabricksWorkspace) GetManagedServicesCustomerManagedKey() *plugin.TValue[*mqlDatabricksCustomerManagedKey] {
+	return plugin.GetOrCompute[*mqlDatabricksCustomerManagedKey](&c.ManagedServicesCustomerManagedKey, func() (*mqlDatabricksCustomerManagedKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks.workspace", c.__id, "managedServicesCustomerManagedKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDatabricksCustomerManagedKey), nil
+			}
+		}
+
+		return c.managedServicesCustomerManagedKey()
+	})
+}
+
+func (c *mqlDatabricksWorkspace) GetStorageCustomerManagedKey() *plugin.TValue[*mqlDatabricksCustomerManagedKey] {
+	return plugin.GetOrCompute[*mqlDatabricksCustomerManagedKey](&c.StorageCustomerManagedKey, func() (*mqlDatabricksCustomerManagedKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks.workspace", c.__id, "storageCustomerManagedKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDatabricksCustomerManagedKey), nil
+			}
+		}
+
+		return c.storageCustomerManagedKey()
+	})
+}
+
 // mqlDatabricksUser for the databricks.user resource
 type mqlDatabricksUser struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlDatabricksUserInternal it will be used here
+	mqlDatabricksUserInternal
 	Id           plugin.TValue[string]
 	UserName     plugin.TValue[string]
 	DisplayName  plugin.TValue[string]
@@ -2778,7 +2823,19 @@ func (c *mqlDatabricksUser) GetRoles() *plugin.TValue[[]any] {
 }
 
 func (c *mqlDatabricksUser) GetGroups() *plugin.TValue[[]any] {
-	return &c.Groups
+	return plugin.GetOrCompute[[]any](&c.Groups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks.user", c.__id, "groups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.groups()
+	})
 }
 
 // mqlDatabricksGroup for the databricks.group resource
@@ -2854,7 +2911,7 @@ func (c *mqlDatabricksGroup) GetRoles() *plugin.TValue[[]any] {
 type mqlDatabricksServicePrincipal struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlDatabricksServicePrincipalInternal it will be used here
+	mqlDatabricksServicePrincipalInternal
 	Id            plugin.TValue[string]
 	ApplicationId plugin.TValue[string]
 	DisplayName   plugin.TValue[string]
@@ -2926,7 +2983,19 @@ func (c *mqlDatabricksServicePrincipal) GetRoles() *plugin.TValue[[]any] {
 }
 
 func (c *mqlDatabricksServicePrincipal) GetGroups() *plugin.TValue[[]any] {
-	return &c.Groups
+	return plugin.GetOrCompute[[]any](&c.Groups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks.servicePrincipal", c.__id, "groups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.groups()
+	})
 }
 
 // mqlDatabricksMetastore for the databricks.metastore resource
@@ -3872,6 +3941,7 @@ type mqlDatabricksSchema struct {
 	Name        plugin.TValue[string]
 	FullName    plugin.TValue[string]
 	CatalogName plugin.TValue[string]
+	Catalog     plugin.TValue[*mqlDatabricksCatalog]
 	Owner       plugin.TValue[string]
 	Comment     plugin.TValue[string]
 	Grants      plugin.TValue[[]any]
@@ -3924,6 +3994,22 @@ func (c *mqlDatabricksSchema) GetFullName() *plugin.TValue[string] {
 
 func (c *mqlDatabricksSchema) GetCatalogName() *plugin.TValue[string] {
 	return &c.CatalogName
+}
+
+func (c *mqlDatabricksSchema) GetCatalog() *plugin.TValue[*mqlDatabricksCatalog] {
+	return plugin.GetOrCompute[*mqlDatabricksCatalog](&c.Catalog, func() (*mqlDatabricksCatalog, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks.schema", c.__id, "catalog")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDatabricksCatalog), nil
+			}
+		}
+
+		return c.catalog()
+	})
 }
 
 func (c *mqlDatabricksSchema) GetOwner() *plugin.TValue[string] {
@@ -4328,7 +4414,9 @@ type mqlDatabricksVolume struct {
 	Name                   plugin.TValue[string]
 	FullName               plugin.TValue[string]
 	CatalogName            plugin.TValue[string]
+	Catalog                plugin.TValue[*mqlDatabricksCatalog]
 	SchemaName             plugin.TValue[string]
+	Schema                 plugin.TValue[*mqlDatabricksSchema]
 	Owner                  plugin.TValue[string]
 	Comment                plugin.TValue[string]
 	MetastoreId            plugin.TValue[string]
@@ -4391,8 +4479,40 @@ func (c *mqlDatabricksVolume) GetCatalogName() *plugin.TValue[string] {
 	return &c.CatalogName
 }
 
+func (c *mqlDatabricksVolume) GetCatalog() *plugin.TValue[*mqlDatabricksCatalog] {
+	return plugin.GetOrCompute[*mqlDatabricksCatalog](&c.Catalog, func() (*mqlDatabricksCatalog, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks.volume", c.__id, "catalog")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDatabricksCatalog), nil
+			}
+		}
+
+		return c.catalog()
+	})
+}
+
 func (c *mqlDatabricksVolume) GetSchemaName() *plugin.TValue[string] {
 	return &c.SchemaName
+}
+
+func (c *mqlDatabricksVolume) GetSchema() *plugin.TValue[*mqlDatabricksSchema] {
+	return plugin.GetOrCompute[*mqlDatabricksSchema](&c.Schema, func() (*mqlDatabricksSchema, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks.volume", c.__id, "schema")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDatabricksSchema), nil
+			}
+		}
+
+		return c.schema()
+	})
 }
 
 func (c *mqlDatabricksVolume) GetOwner() *plugin.TValue[string] {

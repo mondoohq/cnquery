@@ -157,6 +157,7 @@ databricks.privateAccessSetting.publicAccessEnabled 13.0.0
 databricks.privateAccessSetting.region 13.0.0
 databricks.privateAccessSettings 13.0.0
 databricks.schema 13.0.0
+databricks.schema.catalog 13.0.1
 databricks.schema.catalogName 13.0.0
 databricks.schema.comment 13.0.0
 databricks.schema.fullName 13.0.0
@@ -221,6 +222,7 @@ databricks.user.roles 13.0.0
 databricks.user.userName 13.0.0
 databricks.users 13.0.0
 databricks.volume 13.0.1
+databricks.volume.catalog 13.0.1
 databricks.volume.catalogName 13.0.1
 databricks.volume.comment 13.0.1
 databricks.volume.createdAt 13.0.1
@@ -231,6 +233,7 @@ databricks.volume.id 13.0.1
 databricks.volume.metastoreId 13.0.1
 databricks.volume.name 13.0.1
 databricks.volume.owner 13.0.1
+databricks.volume.schema 13.0.1
 databricks.volume.schemaName 13.0.1
 databricks.volume.sseEncryptionAlgorithm 13.0.1
 databricks.volume.sseKmsKeyArn 13.0.1
@@ -257,14 +260,14 @@ databricks.workspace.creationTime 13.0.0
 databricks.workspace.customTags 13.0.0
 databricks.workspace.deploymentName 13.0.0
 databricks.workspace.location 13.0.0
-databricks.workspace.managedServicesCustomerManagedKeyId 13.0.0
+databricks.workspace.managedServicesCustomerManagedKey 13.0.1
 databricks.workspace.name 13.0.0
 databricks.workspace.network 13.0.0
 databricks.workspace.pricingTier 13.0.0
 databricks.workspace.privateAccessSettings 13.0.0
 databricks.workspace.status 13.0.0
 databricks.workspace.statusMessage 13.0.0
-databricks.workspace.storageCustomerManagedKeyId 13.0.0
+databricks.workspace.storageCustomerManagedKey 13.0.1
 databricks.workspace.workspaceId 13.0.0
 databricks.workspaceConf 13.0.0
 databricks.workspaceConf.automaticClusterUpdateEnabled 13.0.1
