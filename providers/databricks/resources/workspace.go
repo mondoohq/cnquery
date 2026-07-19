@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"strconv"
+	"strings"
 
 	databricks "github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/settings"
@@ -134,14 +135,26 @@ func (r *mqlDatabricks) workspaceSettings() (*mqlDatabricksWorkspaceConf, error)
 		id = conn.Host()
 	}
 
+	// The workspace-conf GET endpoint accepts a comma-separated key list and
+	// returns every requested key in one response, so all of these settings are
+	// read with a single call rather than one request per key.
+	conf := confStatus(ctx, ws,
+		"enableTokens",
+		"maxTokenLifetimeDays",
+		"enableIpAccessLists",
+		"enableDeprecatedGlobalInitScripts",
+		"enableDeprecatedClusterNamedInitScripts",
+		"storeInteractiveNotebookResultsInCustomerAccount",
+	)
+
 	res, err := CreateResource(r.MqlRuntime, "databricks.workspaceConf", map[string]*llx.RawData{
 		"__id":                                             llx.StringData("databricks.workspaceConf/" + id),
-		"tokensEnabled":                                    llx.BoolDataPtr(confBool(ctx, ws, "enableTokens")),
-		"maxTokenLifetimeDays":                             llx.IntDataPtr(confInt(ctx, ws, "maxTokenLifetimeDays")),
-		"ipAccessListsEnabled":                             llx.BoolDataPtr(confBool(ctx, ws, "enableIpAccessLists")),
-		"deprecatedGlobalInitScriptsEnabled":               llx.BoolDataPtr(confBool(ctx, ws, "enableDeprecatedGlobalInitScripts")),
-		"deprecatedClusterNamedInitScriptsEnabled":         llx.BoolDataPtr(confBool(ctx, ws, "enableDeprecatedClusterNamedInitScripts")),
-		"storeInteractiveNotebookResultsInCustomerAccount": llx.BoolDataPtr(confBool(ctx, ws, "storeInteractiveNotebookResultsInCustomerAccount")),
+		"tokensEnabled":                                    llx.BoolDataPtr(confBoolFrom(conf, "enableTokens")),
+		"maxTokenLifetimeDays":                             llx.IntDataPtr(confIntFrom(conf, "maxTokenLifetimeDays")),
+		"ipAccessListsEnabled":                             llx.BoolDataPtr(confBoolFrom(conf, "enableIpAccessLists")),
+		"deprecatedGlobalInitScriptsEnabled":               llx.BoolDataPtr(confBoolFrom(conf, "enableDeprecatedGlobalInitScripts")),
+		"deprecatedClusterNamedInitScriptsEnabled":         llx.BoolDataPtr(confBoolFrom(conf, "enableDeprecatedClusterNamedInitScripts")),
+		"storeInteractiveNotebookResultsInCustomerAccount": llx.BoolDataPtr(confBoolFrom(conf, "storeInteractiveNotebookResultsInCustomerAccount")),
 	})
 	if err != nil {
 		return nil, err
@@ -149,13 +162,23 @@ func (r *mqlDatabricks) workspaceSettings() (*mqlDatabricksWorkspaceConf, error)
 	return res.(*mqlDatabricksWorkspaceConf), nil
 }
 
-// confBool reads a single workspace conf key and interprets it as a boolean,
-// returning nil when the key is unset or cannot be read. Each key is fetched
-// individually because WorkspaceConf.GetStatus does not accept a
-// comma-separated key list (a joined string is treated as one unknown key and
-// returns nothing).
-func confBool(ctx context.Context, ws *databricks.WorkspaceClient, key string) *bool {
-	v, ok := confValue(ctx, ws, key)
+// confStatus reads the given workspace conf keys in a single request. The
+// workspace-conf GET endpoint accepts a comma-separated key list and returns
+// each requested key that is set, so one call covers every key. An empty map is
+// returned when the settings cannot be read (for example without workspace admin
+// rights), which leaves each derived field null.
+func confStatus(ctx context.Context, ws *databricks.WorkspaceClient, keys ...string) map[string]string {
+	resp, err := ws.WorkspaceConf.GetStatus(ctx, settings.GetStatusRequest{Keys: strings.Join(keys, ",")})
+	if err != nil || resp == nil {
+		return map[string]string{}
+	}
+	return *resp
+}
+
+// confBoolFrom interprets a workspace conf value as a boolean, returning nil
+// when the key is absent from the fetched status.
+func confBoolFrom(conf map[string]string, key string) *bool {
+	v, ok := conf[key]
 	if !ok {
 		return nil
 	}
@@ -163,10 +186,10 @@ func confBool(ctx context.Context, ws *databricks.WorkspaceClient, key string) *
 	return &b
 }
 
-// confInt reads a single workspace conf key and interprets it as an integer,
-// returning nil when the key is unset or cannot be parsed.
-func confInt(ctx context.Context, ws *databricks.WorkspaceClient, key string) *int64 {
-	v, ok := confValue(ctx, ws, key)
+// confIntFrom interprets a workspace conf value as an integer, returning nil
+// when the key is absent or cannot be parsed.
+func confIntFrom(conf map[string]string, key string) *int64 {
+	v, ok := conf[key]
 	if !ok {
 		return nil
 	}
@@ -175,13 +198,4 @@ func confInt(ctx context.Context, ws *databricks.WorkspaceClient, key string) *i
 		return nil
 	}
 	return &n
-}
-
-func confValue(ctx context.Context, ws *databricks.WorkspaceClient, key string) (string, bool) {
-	resp, err := ws.WorkspaceConf.GetStatus(ctx, settings.GetStatusRequest{Keys: key})
-	if err != nil || resp == nil {
-		return "", false
-	}
-	v, ok := (*resp)[key]
-	return v, ok
 }

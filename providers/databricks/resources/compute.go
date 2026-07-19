@@ -17,6 +17,36 @@ type mqlDatabricksClusterInternal struct {
 	cachePolicyId string
 }
 
+// cachedClusterPolicies lists the workspace cluster policies at most once per
+// scan, caching the result on the root databricks resource keyed by policy id so
+// that per-cluster policy resolutions (databricks.clusters { policy }) share a
+// single ListAll rather than one Get per cluster.
+func cachedClusterPolicies(runtime *plugin.Runtime) (map[string]compute.Policy, error) {
+	rootRes, err := NewResource(runtime, "databricks", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	root := rootRes.(*mqlDatabricks)
+	root.policiesOnce.Do(func() {
+		ws, err := workspaceClient(runtime)
+		if err != nil {
+			root.policiesErr = err
+			return
+		}
+		policies, err := ws.ClusterPolicies.ListAll(context.Background(), compute.ListClusterPoliciesRequest{})
+		if err != nil {
+			root.policiesErr = err
+			return
+		}
+		byID := make(map[string]compute.Policy, len(policies))
+		for i := range policies {
+			byID[policies[i].PolicyId] = policies[i]
+		}
+		root.policiesByID = byID
+	})
+	return root.policiesByID, root.policiesErr
+}
+
 func (r *mqlDatabricks) clusterPolicies() ([]any, error) {
 	ws, err := workspaceClient(r.MqlRuntime)
 	if err != nil {
@@ -101,19 +131,16 @@ func (r *mqlDatabricksCluster) policy() (*mqlDatabricksClusterPolicy, error) {
 		r.Policy.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	ws, err := workspaceClient(r.MqlRuntime)
+	byID, err := cachedClusterPolicies(r.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
-	p, err := ws.ClusterPolicies.Get(context.Background(), compute.GetClusterPolicyRequest{PolicyId: r.cachePolicyId})
-	if err != nil {
-		return nil, err
-	}
-	if p == nil {
+	p, ok := byID[r.cachePolicyId]
+	if !ok {
 		r.Policy.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return newMqlDatabricksClusterPolicy(r.MqlRuntime, *p)
+	return newMqlDatabricksClusterPolicy(r.MqlRuntime, p)
 }
 
 func (r *mqlDatabricks) warehouses() ([]any, error) {

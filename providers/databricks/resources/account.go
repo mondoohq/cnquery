@@ -95,24 +95,81 @@ func (r *mqlDatabricksWorkspace) resolveCustomerManagedKey(keyId string, state *
 	return key.(*mqlDatabricksCustomerManagedKey), nil
 }
 
+// cachedNetworks lists the account networks at most once per scan, caching the
+// result on the root databricks resource keyed by network id so per-workspace
+// network resolutions (databricks.workspaces { network }) share a single List
+// rather than one Get per workspace.
+func cachedNetworks(runtime *plugin.Runtime) (map[string]provisioning.Network, error) {
+	rootRes, err := NewResource(runtime, "databricks", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	root := rootRes.(*mqlDatabricks)
+	root.networksOnce.Do(func() {
+		acc, err := accountClient(runtime)
+		if err != nil {
+			root.networksErr = err
+			return
+		}
+		networks, err := acc.Networks.List(context.Background())
+		if err != nil {
+			root.networksErr = err
+			return
+		}
+		byID := make(map[string]provisioning.Network, len(networks))
+		for i := range networks {
+			byID[networks[i].NetworkId] = networks[i]
+		}
+		root.networksByID = byID
+	})
+	return root.networksByID, root.networksErr
+}
+
+// cachedPrivateAccessSettings lists the account private access settings at most
+// once per scan, caching the result on the root databricks resource keyed by id
+// so per-workspace resolutions (databricks.workspaces { privateAccessSettings })
+// share a single List rather than one Get per workspace.
+func cachedPrivateAccessSettings(runtime *plugin.Runtime) (map[string]provisioning.PrivateAccessSettings, error) {
+	rootRes, err := NewResource(runtime, "databricks", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	root := rootRes.(*mqlDatabricks)
+	root.privateAccessOnce.Do(func() {
+		acc, err := accountClient(runtime)
+		if err != nil {
+			root.privateAccessErr = err
+			return
+		}
+		settings, err := acc.PrivateAccess.List(context.Background())
+		if err != nil {
+			root.privateAccessErr = err
+			return
+		}
+		byID := make(map[string]provisioning.PrivateAccessSettings, len(settings))
+		for i := range settings {
+			byID[settings[i].PrivateAccessSettingsId] = settings[i]
+		}
+		root.privateAccessByID = byID
+	})
+	return root.privateAccessByID, root.privateAccessErr
+}
+
 func (r *mqlDatabricksWorkspace) network() (*mqlDatabricksNetwork, error) {
 	if r.cacheNetworkId == "" {
 		r.Network.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	acc, err := accountClient(r.MqlRuntime)
+	byID, err := cachedNetworks(r.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
-	net, err := acc.Networks.Get(context.Background(), provisioning.GetNetworkRequest{NetworkId: r.cacheNetworkId})
-	if err != nil {
-		return nil, err
-	}
-	if net == nil {
+	net, ok := byID[r.cacheNetworkId]
+	if !ok {
 		r.Network.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return newMqlDatabricksNetwork(r.MqlRuntime, *net)
+	return newMqlDatabricksNetwork(r.MqlRuntime, net)
 }
 
 func (r *mqlDatabricksWorkspace) privateAccessSettings() (*mqlDatabricksPrivateAccessSetting, error) {
@@ -120,19 +177,16 @@ func (r *mqlDatabricksWorkspace) privateAccessSettings() (*mqlDatabricksPrivateA
 		r.PrivateAccessSettings.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	acc, err := accountClient(r.MqlRuntime)
+	byID, err := cachedPrivateAccessSettings(r.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
-	pas, err := acc.PrivateAccess.Get(context.Background(), provisioning.GetPrivateAccesRequest{PrivateAccessSettingsId: r.cachePrivateAccessSettingsId})
-	if err != nil {
-		return nil, err
-	}
-	if pas == nil {
+	pas, ok := byID[r.cachePrivateAccessSettingsId]
+	if !ok {
 		r.PrivateAccessSettings.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return newMqlDatabricksPrivateAccessSetting(r.MqlRuntime, *pas)
+	return newMqlDatabricksPrivateAccessSetting(r.MqlRuntime, pas)
 }
 
 func (r *mqlDatabricks) metastores() ([]any, error) {

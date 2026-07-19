@@ -8,16 +8,34 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
+	"github.com/databricks/databricks-sdk-go/service/provisioning"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/types"
 )
 
+// mqlDatabricksInternal caches account- and workspace-wide listings on the root
+// databricks resource so cross-references resolve them once per scan rather than
+// issuing one lookup per referring resource. Each cache is a list-once map keyed
+// by the referenced resource's id.
 type mqlDatabricksInternal struct {
 	groupsOnce sync.Once
 	groupsByID map[string]iam.Group
 	groupsErr  error
+
+	policiesOnce sync.Once
+	policiesByID map[string]compute.Policy
+	policiesErr  error
+
+	networksOnce sync.Once
+	networksByID map[string]provisioning.Network
+	networksErr  error
+
+	privateAccessOnce sync.Once
+	privateAccessByID map[string]provisioning.PrivateAccessSettings
+	privateAccessErr  error
 }
 
 // cachedAccountGroups lists the account groups at most once per scan, caching

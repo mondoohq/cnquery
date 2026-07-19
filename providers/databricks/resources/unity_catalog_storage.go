@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"go.mondoo.com/mql/v13/llx"
@@ -84,7 +85,7 @@ func initDatabricksStorageCredential(runtime *plugin.Runtime, args map[string]*l
 	}
 	name, _ := nameRaw.Value.(string)
 	if name == "" {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("databricks.storageCredential requires a non-empty name")
 	}
 
 	ws, err := workspaceClient(runtime)
