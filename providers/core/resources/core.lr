@@ -128,7 +128,7 @@ regex {
   email() regex
   // Matches MAC addresses
   mac() regex
-  // Matches hyphen-deliminated UUIDs
+  // Matches hyphen-delimited UUIDs
   uuid() regex
   // Matches emojis
   emoji() regex
