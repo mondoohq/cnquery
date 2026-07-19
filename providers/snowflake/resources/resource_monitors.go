@@ -115,7 +115,7 @@ func initSnowflakeResourceMonitor(runtime *plugin.Runtime, args map[string]*llx.
 	}
 	name, _ := nameRaw.Value.(string)
 	if name == "" {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("snowflake.resourceMonitor requires a non-empty name")
 	}
 
 	conn := runtime.Connection.(*connection.SnowflakeConnection)

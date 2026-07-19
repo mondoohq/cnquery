@@ -112,7 +112,7 @@ func initSnowflakeTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	schemaName, _ := schemaRaw.Value.(string)
 	name, _ := nameRaw.Value.(string)
 	if databaseName == "" || schemaName == "" || name == "" {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("snowflake.task requires a non-empty databaseName, schemaName, and name")
 	}
 
 	conn := runtime.Connection.(*connection.SnowflakeConnection)
