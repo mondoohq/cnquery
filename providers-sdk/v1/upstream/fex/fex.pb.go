@@ -1833,6 +1833,7 @@ type Evidence struct {
 	//	*Evidence_Kubernetes
 	//	*Evidence_RegistryKey
 	//	*Evidence_Connection
+	//	*Evidence_HttpRequest
 	Details isEvidence_Details `protobuf_oneof:"details"`
 	// Additional properties specific to this evidence
 	Properties    map[string]string `protobuf:"bytes,4,rep,name=properties,proto3" json:"properties,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
@@ -1961,6 +1962,15 @@ func (x *Evidence) GetConnection() *Connection {
 	return nil
 }
 
+func (x *Evidence) GetHttpRequest() *HttpRequest {
+	if x != nil {
+		if x, ok := x.Details.(*Evidence_HttpRequest); ok {
+			return x.HttpRequest
+		}
+	}
+	return nil
+}
+
 func (x *Evidence) GetProperties() map[string]string {
 	if x != nil {
 		return x.Properties
@@ -2000,6 +2010,10 @@ type Evidence_Connection struct {
 	Connection *Connection `protobuf:"bytes,26,opt,name=connection,proto3,oneof"`
 }
 
+type Evidence_HttpRequest struct {
+	HttpRequest *HttpRequest `protobuf:"bytes,27,opt,name=http_request,json=httpRequest,proto3,oneof"`
+}
+
 func (*Evidence_User) isEvidence_Details() {}
 
 func (*Evidence_File) isEvidence_Details() {}
@@ -2013,6 +2027,8 @@ func (*Evidence_Kubernetes) isEvidence_Details() {}
 func (*Evidence_RegistryKey) isEvidence_Details() {}
 
 func (*Evidence_Connection) isEvidence_Details() {}
+
+func (*Evidence_HttpRequest) isEvidence_Details() {}
 
 // Experimental. File information
 type File struct {
@@ -2518,6 +2534,108 @@ func (x *Connection) GetProtocol() Connection_ConnectionProtocol {
 	return Connection_UNSPECIFIED
 }
 
+// HttpRequest captures the web request that triggered a finding. It is the
+// first-class evidence for DAST scanners (e.g. OWASP ZAP, Burp Suite), which
+// otherwise have to stash this context in the generic properties map.
+type HttpRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The HTTP method, e.g. GET or POST.
+	Method string `protobuf:"bytes,1,opt,name=method,proto3" json:"method,omitempty"`
+	// The full request URL.
+	Url string `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
+	// The request parameter that was tested, if any.
+	Param string `protobuf:"bytes,3,opt,name=param,proto3" json:"param,omitempty"`
+	// The attack payload sent, if any.
+	Attack string `protobuf:"bytes,4,opt,name=attack,proto3" json:"attack,omitempty"`
+	// The evidence matched in the response that confirms the finding.
+	Evidence string `protobuf:"bytes,5,opt,name=evidence,proto3" json:"evidence,omitempty"`
+	// Optional. The full raw HTTP request.
+	Request string `protobuf:"bytes,6,opt,name=request,proto3" json:"request,omitempty"`
+	// Optional. The full raw HTTP response.
+	Response      string `protobuf:"bytes,7,opt,name=response,proto3" json:"response,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *HttpRequest) Reset() {
+	*x = HttpRequest{}
+	mi := &file_fex_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HttpRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HttpRequest) ProtoMessage() {}
+
+func (x *HttpRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_fex_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HttpRequest.ProtoReflect.Descriptor instead.
+func (*HttpRequest) Descriptor() ([]byte, []int) {
+	return file_fex_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *HttpRequest) GetMethod() string {
+	if x != nil {
+		return x.Method
+	}
+	return ""
+}
+
+func (x *HttpRequest) GetUrl() string {
+	if x != nil {
+		return x.Url
+	}
+	return ""
+}
+
+func (x *HttpRequest) GetParam() string {
+	if x != nil {
+		return x.Param
+	}
+	return ""
+}
+
+func (x *HttpRequest) GetAttack() string {
+	if x != nil {
+		return x.Attack
+	}
+	return ""
+}
+
+func (x *HttpRequest) GetEvidence() string {
+	if x != nil {
+		return x.Evidence
+	}
+	return ""
+}
+
+func (x *HttpRequest) GetRequest() string {
+	if x != nil {
+		return x.Request
+	}
+	return ""
+}
+
+func (x *HttpRequest) GetResponse() string {
+	if x != nil {
+		return x.Response
+	}
+	return ""
+}
+
 // AttackTactic is used to identify the tactic used in an attack.
 // Typically this refers to identifier on the MITRE ATT&CK framework.
 type AttackTactic struct {
@@ -2534,7 +2652,7 @@ type AttackTactic struct {
 
 func (x *AttackTactic) Reset() {
 	*x = AttackTactic{}
-	mi := &file_fex_proto_msgTypes[22]
+	mi := &file_fex_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2546,7 +2664,7 @@ func (x *AttackTactic) String() string {
 func (*AttackTactic) ProtoMessage() {}
 
 func (x *AttackTactic) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[22]
+	mi := &file_fex_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2559,7 +2677,7 @@ func (x *AttackTactic) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AttackTactic.ProtoReflect.Descriptor instead.
 func (*AttackTactic) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{22}
+	return file_fex_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *AttackTactic) GetId() string {
@@ -2599,7 +2717,7 @@ type AttackTechnique struct {
 
 func (x *AttackTechnique) Reset() {
 	*x = AttackTechnique{}
-	mi := &file_fex_proto_msgTypes[23]
+	mi := &file_fex_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2611,7 +2729,7 @@ func (x *AttackTechnique) String() string {
 func (*AttackTechnique) ProtoMessage() {}
 
 func (x *AttackTechnique) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[23]
+	mi := &file_fex_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2624,7 +2742,7 @@ func (x *AttackTechnique) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AttackTechnique.ProtoReflect.Descriptor instead.
 func (*AttackTechnique) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{23}
+	return file_fex_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *AttackTechnique) GetId() string {
@@ -2663,7 +2781,7 @@ type Kubernetes_Pod struct {
 
 func (x *Kubernetes_Pod) Reset() {
 	*x = Kubernetes_Pod{}
-	mi := &file_fex_proto_msgTypes[30]
+	mi := &file_fex_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2675,7 +2793,7 @@ func (x *Kubernetes_Pod) String() string {
 func (*Kubernetes_Pod) ProtoMessage() {}
 
 func (x *Kubernetes_Pod) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[30]
+	mi := &file_fex_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2725,7 +2843,7 @@ type Kubernetes_Node struct {
 
 func (x *Kubernetes_Node) Reset() {
 	*x = Kubernetes_Node{}
-	mi := &file_fex_proto_msgTypes[31]
+	mi := &file_fex_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2737,7 +2855,7 @@ func (x *Kubernetes_Node) String() string {
 func (*Kubernetes_Node) ProtoMessage() {}
 
 func (x *Kubernetes_Node) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[31]
+	mi := &file_fex_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2921,7 +3039,7 @@ const file_fex_proto_rawDesc = "" +
 	"\x0fCATEGORY_THREAT\x10\x04\x12\x14\n" +
 	"\x10CATEGORY_MALWARE\x10\x05\x12\x1a\n" +
 	"\x16CATEGORY_INFORMATIONAL\x10\x06\x12\x13\n" +
-	"\x0fCATEGORY_SECRET\x10\a\"\xa9\x05\n" +
+	"\x0fCATEGORY_SECRET\x10\a\"\xe7\x05\n" +
 	"\bEvidence\x120\n" +
 	"\x06tactic\x18\x01 \x01(\v2\x18.mql.fex.v1.AttackTacticR\x06tactic\x129\n" +
 	"\ttechnique\x18\x02 \x01(\v2\x1b.mql.fex.v1.AttackTechniqueR\ttechnique\x126\n" +
@@ -2938,7 +3056,8 @@ const file_fex_proto_rawDesc = "" +
 	"\fregistry_key\x18\x19 \x01(\v2\x17.mql.fex.v1.RegistryKeyH\x00R\vregistryKey\x128\n" +
 	"\n" +
 	"connection\x18\x1a \x01(\v2\x16.mql.fex.v1.ConnectionH\x00R\n" +
-	"connection\x12D\n" +
+	"connection\x12<\n" +
+	"\fhttp_request\x18\x1b \x01(\v2\x17.mql.fex.v1.HttpRequestH\x00R\vhttpRequest\x12D\n" +
 	"\n" +
 	"properties\x18\x04 \x03(\v2$.mql.fex.v1.Evidence.PropertiesEntryR\n" +
 	"properties\x1a=\n" +
@@ -3001,7 +3120,15 @@ const file_fex_proto_rawDesc = "" +
 	"\vUNSPECIFIED\x10\x00\x12\b\n" +
 	"\x04ICMP\x10\x01\x12\a\n" +
 	"\x03TCP\x10\x06\x12\a\n" +
-	"\x03UDP\x10\x11\"T\n" +
+	"\x03UDP\x10\x11\"\xb7\x01\n" +
+	"\vHttpRequest\x12\x16\n" +
+	"\x06method\x18\x01 \x01(\tR\x06method\x12\x10\n" +
+	"\x03url\x18\x02 \x01(\tR\x03url\x12\x14\n" +
+	"\x05param\x18\x03 \x01(\tR\x05param\x12\x16\n" +
+	"\x06attack\x18\x04 \x01(\tR\x06attack\x12\x1a\n" +
+	"\bevidence\x18\x05 \x01(\tR\bevidence\x12\x18\n" +
+	"\arequest\x18\x06 \x01(\tR\arequest\x12\x1a\n" +
+	"\bresponse\x18\a \x01(\tR\bresponse\"T\n" +
 	"\fAttackTactic\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
@@ -3053,7 +3180,7 @@ func file_fex_proto_rawDescGZIP() []byte {
 }
 
 var file_fex_proto_enumTypes = make([]protoimpl.EnumInfo, 7)
-var file_fex_proto_msgTypes = make([]protoimpl.MessageInfo, 32)
+var file_fex_proto_msgTypes = make([]protoimpl.MessageInfo, 33)
 var file_fex_proto_goTypes = []any{
 	(Status)(0),                        // 0: mql.fex.v1.Status
 	(ScoringMethod)(0),                 // 1: mql.fex.v1.ScoringMethod
@@ -3084,43 +3211,44 @@ var file_fex_proto_goTypes = []any{
 	(*Kubernetes)(nil),                 // 26: mql.fex.v1.Kubernetes
 	(*RegistryKey)(nil),                // 27: mql.fex.v1.RegistryKey
 	(*Connection)(nil),                 // 28: mql.fex.v1.Connection
-	(*AttackTactic)(nil),               // 29: mql.fex.v1.AttackTactic
-	(*AttackTechnique)(nil),            // 30: mql.fex.v1.AttackTechnique
-	nil,                                // 31: mql.fex.v1.Reference.MetadataEntry
-	nil,                                // 32: mql.fex.v1.Component.IdentifiersEntry
-	nil,                                // 33: mql.fex.v1.Component.PropertiesEntry
-	nil,                                // 34: mql.fex.v1.FindingDetail.PropertiesEntry
-	nil,                                // 35: mql.fex.v1.Evidence.PropertiesEntry
-	nil,                                // 36: mql.fex.v1.User.PropertiesEntry
-	(*Kubernetes_Pod)(nil),             // 37: mql.fex.v1.Kubernetes.Pod
-	(*Kubernetes_Node)(nil),            // 38: mql.fex.v1.Kubernetes.Node
-	(*timestamppb.Timestamp)(nil),      // 39: google.protobuf.Timestamp
-	(*structpb.Struct)(nil),            // 40: google.protobuf.Struct
+	(*HttpRequest)(nil),                // 29: mql.fex.v1.HttpRequest
+	(*AttackTactic)(nil),               // 30: mql.fex.v1.AttackTactic
+	(*AttackTechnique)(nil),            // 31: mql.fex.v1.AttackTechnique
+	nil,                                // 32: mql.fex.v1.Reference.MetadataEntry
+	nil,                                // 33: mql.fex.v1.Component.IdentifiersEntry
+	nil,                                // 34: mql.fex.v1.Component.PropertiesEntry
+	nil,                                // 35: mql.fex.v1.FindingDetail.PropertiesEntry
+	nil,                                // 36: mql.fex.v1.Evidence.PropertiesEntry
+	nil,                                // 37: mql.fex.v1.User.PropertiesEntry
+	(*Kubernetes_Pod)(nil),             // 38: mql.fex.v1.Kubernetes.Pod
+	(*Kubernetes_Node)(nil),            // 39: mql.fex.v1.Kubernetes.Node
+	(*timestamppb.Timestamp)(nil),      // 40: google.protobuf.Timestamp
+	(*structpb.Struct)(nil),            // 41: google.protobuf.Struct
 }
 var file_fex_proto_depIdxs = []int32{
 	9,  // 0: mql.fex.v1.FindingDocument.vex:type_name -> mql.fex.v1.VulnerabilityExchange
 	19, // 1: mql.fex.v1.FindingDocument.fex:type_name -> mql.fex.v1.FindingExchange
 	7,  // 2: mql.fex.v1.FindingsUploadRequest.findings:type_name -> mql.fex.v1.FindingDocument
-	39, // 3: mql.fex.v1.FindingsUploadRequest.import_started_at:type_name -> google.protobuf.Timestamp
+	40, // 3: mql.fex.v1.FindingsUploadRequest.import_started_at:type_name -> google.protobuf.Timestamp
 	12, // 4: mql.fex.v1.VulnerabilityExchange.details:type_name -> mql.fex.v1.VulnerabilityDetails
 	11, // 5: mql.fex.v1.VulnerabilityExchange.source:type_name -> mql.fex.v1.Source
 	16, // 6: mql.fex.v1.VulnerabilityExchange.ratings:type_name -> mql.fex.v1.Rating
-	39, // 7: mql.fex.v1.VulnerabilityExchange.first_seen:type_name -> google.protobuf.Timestamp
-	39, // 8: mql.fex.v1.VulnerabilityExchange.remediated:type_name -> google.protobuf.Timestamp
+	40, // 7: mql.fex.v1.VulnerabilityExchange.first_seen:type_name -> google.protobuf.Timestamp
+	40, // 8: mql.fex.v1.VulnerabilityExchange.remediated:type_name -> google.protobuf.Timestamp
 	13, // 9: mql.fex.v1.VulnerabilityExchange.affects:type_name -> mql.fex.v1.Affects
 	0,  // 10: mql.fex.v1.VulnerabilityExchange.status:type_name -> mql.fex.v1.Status
 	10, // 11: mql.fex.v1.VulnerabilityExchange.references:type_name -> mql.fex.v1.Reference
 	18, // 12: mql.fex.v1.VulnerabilityExchange.remediations:type_name -> mql.fex.v1.Remediation
-	40, // 13: mql.fex.v1.VulnerabilityExchange.database_specific:type_name -> google.protobuf.Struct
+	41, // 13: mql.fex.v1.VulnerabilityExchange.database_specific:type_name -> google.protobuf.Struct
 	21, // 14: mql.fex.v1.VulnerabilityExchange.evidences:type_name -> mql.fex.v1.Evidence
-	31, // 15: mql.fex.v1.Reference.metadata:type_name -> mql.fex.v1.Reference.MetadataEntry
-	39, // 16: mql.fex.v1.VulnerabilityDetails.created:type_name -> google.protobuf.Timestamp
-	39, // 17: mql.fex.v1.VulnerabilityDetails.published:type_name -> google.protobuf.Timestamp
-	39, // 18: mql.fex.v1.VulnerabilityDetails.updated:type_name -> google.protobuf.Timestamp
+	32, // 15: mql.fex.v1.Reference.metadata:type_name -> mql.fex.v1.Reference.MetadataEntry
+	40, // 16: mql.fex.v1.VulnerabilityDetails.created:type_name -> google.protobuf.Timestamp
+	40, // 17: mql.fex.v1.VulnerabilityDetails.published:type_name -> google.protobuf.Timestamp
+	40, // 18: mql.fex.v1.VulnerabilityDetails.updated:type_name -> google.protobuf.Timestamp
 	14, // 19: mql.fex.v1.Affects.component:type_name -> mql.fex.v1.Component
 	14, // 20: mql.fex.v1.Affects.sub_components:type_name -> mql.fex.v1.Component
-	32, // 21: mql.fex.v1.Component.identifiers:type_name -> mql.fex.v1.Component.IdentifiersEntry
-	33, // 22: mql.fex.v1.Component.properties:type_name -> mql.fex.v1.Component.PropertiesEntry
+	33, // 21: mql.fex.v1.Component.identifiers:type_name -> mql.fex.v1.Component.IdentifiersEntry
+	34, // 22: mql.fex.v1.Component.properties:type_name -> mql.fex.v1.Component.PropertiesEntry
 	15, // 23: mql.fex.v1.Component.file:type_name -> mql.fex.v1.FileComponent
 	11, // 24: mql.fex.v1.Rating.source:type_name -> mql.fex.v1.Source
 	1,  // 25: mql.fex.v1.Rating.method:type_name -> mql.fex.v1.ScoringMethod
@@ -3129,9 +3257,9 @@ var file_fex_proto_depIdxs = []int32{
 	3,  // 28: mql.fex.v1.Severity.rating:type_name -> mql.fex.v1.SeverityRating
 	4,  // 29: mql.fex.v1.Remediation.category:type_name -> mql.fex.v1.Remediation.Category
 	20, // 30: mql.fex.v1.FindingExchange.details:type_name -> mql.fex.v1.FindingDetail
-	39, // 31: mql.fex.v1.FindingExchange.first_seen_at:type_name -> google.protobuf.Timestamp
-	39, // 32: mql.fex.v1.FindingExchange.last_seen_at:type_name -> google.protobuf.Timestamp
-	39, // 33: mql.fex.v1.FindingExchange.remediated_at:type_name -> google.protobuf.Timestamp
+	40, // 31: mql.fex.v1.FindingExchange.first_seen_at:type_name -> google.protobuf.Timestamp
+	40, // 32: mql.fex.v1.FindingExchange.last_seen_at:type_name -> google.protobuf.Timestamp
+	40, // 33: mql.fex.v1.FindingExchange.remediated_at:type_name -> google.protobuf.Timestamp
 	0,  // 34: mql.fex.v1.FindingExchange.status:type_name -> mql.fex.v1.Status
 	11, // 35: mql.fex.v1.FindingExchange.source:type_name -> mql.fex.v1.Source
 	13, // 36: mql.fex.v1.FindingExchange.affects:type_name -> mql.fex.v1.Affects
@@ -3141,9 +3269,9 @@ var file_fex_proto_depIdxs = []int32{
 	17, // 40: mql.fex.v1.FindingDetail.severity:type_name -> mql.fex.v1.Severity
 	2,  // 41: mql.fex.v1.FindingDetail.confidence:type_name -> mql.fex.v1.Confidence
 	10, // 42: mql.fex.v1.FindingDetail.references:type_name -> mql.fex.v1.Reference
-	34, // 43: mql.fex.v1.FindingDetail.properties:type_name -> mql.fex.v1.FindingDetail.PropertiesEntry
-	29, // 44: mql.fex.v1.Evidence.tactic:type_name -> mql.fex.v1.AttackTactic
-	30, // 45: mql.fex.v1.Evidence.technique:type_name -> mql.fex.v1.AttackTechnique
+	35, // 43: mql.fex.v1.FindingDetail.properties:type_name -> mql.fex.v1.FindingDetail.PropertiesEntry
+	30, // 44: mql.fex.v1.Evidence.tactic:type_name -> mql.fex.v1.AttackTactic
+	31, // 45: mql.fex.v1.Evidence.technique:type_name -> mql.fex.v1.AttackTechnique
 	2,  // 46: mql.fex.v1.Evidence.confidence:type_name -> mql.fex.v1.Confidence
 	23, // 47: mql.fex.v1.Evidence.user:type_name -> mql.fex.v1.User
 	22, // 48: mql.fex.v1.Evidence.file:type_name -> mql.fex.v1.File
@@ -3152,21 +3280,22 @@ var file_fex_proto_depIdxs = []int32{
 	26, // 51: mql.fex.v1.Evidence.kubernetes:type_name -> mql.fex.v1.Kubernetes
 	27, // 52: mql.fex.v1.Evidence.registry_key:type_name -> mql.fex.v1.RegistryKey
 	28, // 53: mql.fex.v1.Evidence.connection:type_name -> mql.fex.v1.Connection
-	35, // 54: mql.fex.v1.Evidence.properties:type_name -> mql.fex.v1.Evidence.PropertiesEntry
-	36, // 55: mql.fex.v1.User.properties:type_name -> mql.fex.v1.User.PropertiesEntry
-	22, // 56: mql.fex.v1.Process.binary:type_name -> mql.fex.v1.File
-	22, // 57: mql.fex.v1.Process.script:type_name -> mql.fex.v1.File
-	23, // 58: mql.fex.v1.Process.user:type_name -> mql.fex.v1.User
-	24, // 59: mql.fex.v1.Process.parent:type_name -> mql.fex.v1.Process
-	37, // 60: mql.fex.v1.Kubernetes.pods:type_name -> mql.fex.v1.Kubernetes.Pod
-	38, // 61: mql.fex.v1.Kubernetes.nodes:type_name -> mql.fex.v1.Kubernetes.Node
-	6,  // 62: mql.fex.v1.Connection.protocol:type_name -> mql.fex.v1.Connection.ConnectionProtocol
-	25, // 63: mql.fex.v1.Kubernetes.Pod.containers:type_name -> mql.fex.v1.Container
-	64, // [64:64] is the sub-list for method output_type
-	64, // [64:64] is the sub-list for method input_type
-	64, // [64:64] is the sub-list for extension type_name
-	64, // [64:64] is the sub-list for extension extendee
-	0,  // [0:64] is the sub-list for field type_name
+	29, // 54: mql.fex.v1.Evidence.http_request:type_name -> mql.fex.v1.HttpRequest
+	36, // 55: mql.fex.v1.Evidence.properties:type_name -> mql.fex.v1.Evidence.PropertiesEntry
+	37, // 56: mql.fex.v1.User.properties:type_name -> mql.fex.v1.User.PropertiesEntry
+	22, // 57: mql.fex.v1.Process.binary:type_name -> mql.fex.v1.File
+	22, // 58: mql.fex.v1.Process.script:type_name -> mql.fex.v1.File
+	23, // 59: mql.fex.v1.Process.user:type_name -> mql.fex.v1.User
+	24, // 60: mql.fex.v1.Process.parent:type_name -> mql.fex.v1.Process
+	38, // 61: mql.fex.v1.Kubernetes.pods:type_name -> mql.fex.v1.Kubernetes.Pod
+	39, // 62: mql.fex.v1.Kubernetes.nodes:type_name -> mql.fex.v1.Kubernetes.Node
+	6,  // 63: mql.fex.v1.Connection.protocol:type_name -> mql.fex.v1.Connection.ConnectionProtocol
+	25, // 64: mql.fex.v1.Kubernetes.Pod.containers:type_name -> mql.fex.v1.Container
+	65, // [65:65] is the sub-list for method output_type
+	65, // [65:65] is the sub-list for method input_type
+	65, // [65:65] is the sub-list for extension type_name
+	65, // [65:65] is the sub-list for extension extendee
+	0,  // [0:65] is the sub-list for field type_name
 }
 
 func init() { file_fex_proto_init() }
@@ -3189,6 +3318,7 @@ func file_fex_proto_init() {
 		(*Evidence_Kubernetes)(nil),
 		(*Evidence_RegistryKey)(nil),
 		(*Evidence_Connection)(nil),
+		(*Evidence_HttpRequest)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -3196,7 +3326,7 @@ func file_fex_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_fex_proto_rawDesc), len(file_fex_proto_rawDesc)),
 			NumEnums:      7,
-			NumMessages:   32,
+			NumMessages:   33,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

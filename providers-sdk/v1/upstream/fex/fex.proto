@@ -364,6 +364,7 @@ message Evidence {
     Kubernetes kubernetes = 24;
     RegistryKey registry_key = 25;
     Connection connection = 26;
+    HttpRequest http_request = 27;
   }
   // Additional properties specific to this evidence
   map<string, string> properties = 4;
@@ -483,6 +484,26 @@ message Connection {
   int32 source_port = 4;
   // Protocol used in the connection
   ConnectionProtocol protocol = 5;
+}
+
+// HttpRequest captures the web request that triggered a finding. It is the
+// first-class evidence for DAST scanners (e.g. OWASP ZAP, Burp Suite), which
+// otherwise have to stash this context in the generic properties map.
+message HttpRequest {
+  // The HTTP method, e.g. GET or POST.
+  string method = 1;
+  // The full request URL.
+  string url = 2;
+  // The request parameter that was tested, if any.
+  string param = 3;
+  // The attack payload sent, if any.
+  string attack = 4;
+  // The evidence matched in the response that confirms the finding.
+  string evidence = 5;
+  // Optional. The full raw HTTP request.
+  string request = 6;
+  // Optional. The full raw HTTP response.
+  string response = 7;
 }
 
 // AttackTactic is used to identify the tactic used in an attack.

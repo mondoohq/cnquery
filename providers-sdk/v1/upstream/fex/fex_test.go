@@ -63,3 +63,29 @@ func TestNewRemediation(t *testing.T) {
 	assert.Equal(t, "bump to 1.2.3", r.GetDetails())
 	assert.Equal(t, "https://example.com/advisory", r.GetUrl())
 }
+
+func TestHttpRequestEvidenceRoundTrip(t *testing.T) {
+	f := &FindingExchange{
+		Id: "xss-1",
+		Evidences: []*Evidence{{
+			Details: &Evidence_HttpRequest{HttpRequest: &HttpRequest{
+				Method:   "GET",
+				Url:      "https://example.com/search?q=x",
+				Param:    "q",
+				Attack:   "<script>alert(1)</script>",
+				Evidence: "<script>alert(1)</script>",
+			}},
+		}},
+	}
+	data, err := f.MarshalVT()
+	require.NoError(t, err)
+
+	out := &FindingExchange{}
+	require.NoError(t, out.UnmarshalVT(data))
+
+	hr := out.GetEvidences()[0].GetHttpRequest()
+	require.NotNil(t, hr)
+	assert.Equal(t, "GET", hr.GetMethod())
+	assert.Equal(t, "q", hr.GetParam())
+	assert.Equal(t, "https://example.com/search?q=x", hr.GetUrl())
+}
