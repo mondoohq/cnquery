@@ -422,7 +422,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlSnowflakeUser).GetSnowflakeLock()).ToDataRes(types.Bool)
 	},
 	"snowflake.user.defaultSecondaryRoles": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlSnowflakeUser).GetDefaultSecondaryRoles()).ToDataRes(types.String)
+		return (r.(*mqlSnowflakeUser).GetDefaultSecondaryRoles()).ToDataRes(types.Array(types.String))
 	},
 	"snowflake.user.minsToBypassMfa": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeUser).GetMinsToBypassMfa()).ToDataRes(types.String)
@@ -1825,7 +1825,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"snowflake.user.defaultSecondaryRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeUser).DefaultSecondaryRoles, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlSnowflakeUser).DefaultSecondaryRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.user.minsToBypassMfa": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4131,7 +4131,7 @@ type mqlSnowflakeUser struct {
 	Type                  plugin.TValue[string]
 	HasMfa                plugin.TValue[bool]
 	SnowflakeLock         plugin.TValue[bool]
-	DefaultSecondaryRoles plugin.TValue[string]
+	DefaultSecondaryRoles plugin.TValue[[]any]
 	MinsToBypassMfa       plugin.TValue[string]
 	Owner                 plugin.TValue[string]
 	Parameters            plugin.TValue[[]any]
@@ -4263,7 +4263,7 @@ func (c *mqlSnowflakeUser) GetSnowflakeLock() *plugin.TValue[bool] {
 	return &c.SnowflakeLock
 }
 
-func (c *mqlSnowflakeUser) GetDefaultSecondaryRoles() *plugin.TValue[string] {
+func (c *mqlSnowflakeUser) GetDefaultSecondaryRoles() *plugin.TValue[[]any] {
 	return &c.DefaultSecondaryRoles
 }
 

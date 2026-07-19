@@ -162,12 +162,12 @@ snowflake.user @defaults("name") {
   hasMfa bool
   // Whether Snowflake has temporarily locked the user after repeated failed sign-in attempts
   snowflakeLock bool
-  // Default secondary roles activated in a session
+  // Secondary roles activated by default in a session
   //
-  // Set to ALL when the user automatically activates every role granted to
+  // Contains ALL when the user automatically activates every role granted to
   // them, which broadens the privileges available in a session beyond the
   // primary role. Empty when no secondary roles activate by default.
-  defaultSecondaryRoles string
+  defaultSecondaryRoles []string
   // Minutes remaining in a temporary MFA bypass window
   //
   // Non-empty while an administrator has temporarily allowed the user to

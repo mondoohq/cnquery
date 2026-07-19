@@ -5,13 +5,36 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
+	"strings"
 	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/snowflake/connection"
+	"go.mondoo.com/mql/v13/types"
 )
+
+// parseSecondaryRoles converts Snowflake's default_secondary_roles column into
+// a list of role names. SHOW USERS returns it as a JSON array string (for
+// example `["ALL"]`), so parse that; fall back to a single bare value if the
+// server ever returns an unquoted string, and to an empty list when unset.
+func parseSecondaryRoles(raw string) []any {
+	out := []any{}
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return out
+	}
+	var arr []string
+	if err := json.Unmarshal([]byte(raw), &arr); err == nil {
+		for _, s := range arr {
+			out = append(out, s)
+		}
+		return out
+	}
+	return append(out, raw)
+}
 
 func (r *mqlSnowflakeAccount) users() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
@@ -62,7 +85,7 @@ func newMqlSnowflakeUser(runtime *plugin.Runtime, user sdk.User) (*mqlSnowflakeU
 		"type":                  llx.StringData(user.Type),
 		"hasMfa":                llx.BoolData(user.HasMfa),
 		"snowflakeLock":         llx.BoolData(user.SnowflakeLock),
-		"defaultSecondaryRoles": llx.StringData(user.DefaultSecondaryRoles),
+		"defaultSecondaryRoles": llx.ArrayData(parseSecondaryRoles(user.DefaultSecondaryRoles), types.String),
 		"minsToBypassMfa":       llx.StringData(user.MinsToBypassMfa),
 		"owner":                 llx.StringData(user.Owner),
 	})
