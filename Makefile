@@ -255,6 +255,7 @@ PROVIDERS := \
 	terraform \
 	together \
 	vcd \
+	vercel \
 	vllm \
 	vsphere
 

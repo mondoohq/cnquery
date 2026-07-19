@@ -173,6 +173,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Together AI                   | `together`                 | `mql shell together --token TOKEN`                                                                                                              |
 | UniFi network controllers     | `unifi`                    | `mql shell unifi --hostname HOST --api-key YOUR_API_KEY`                                                                                        |
 | Vagrant virtual machines      | `vagrant`                  | `mql shell vagrant HOST`                                                                                                                        |
+| Vercel teams and projects     | `vercel`                   | `mql shell vercel --token TOKEN`                                                                                                                |
 | vLLM inference servers        | `vllm`                     | `mql shell vllm http://localhost:8000`                                                                                                          |
 | VMware Cloud Director         | `vcd`                      | `mql shell vcd user@domain@host --ask-pass`                                                                                                     |
 | VMware vSphere                | `vsphere`                  | `mql shell vsphere user@domain@host --ask-pass`                                                                                                 |

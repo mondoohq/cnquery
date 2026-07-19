@@ -978,6 +978,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"vercel": {
+		Provider: &plugin.Provider{
+			Name:            "vercel",
+			ID:              "go.mondoo.com/mql/providers/vercel",
+			ConnectionTypes: []string{"vercel"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "vercel",
+					Use:   "vercel",
+					Short: "a Vercel account",
+				},
+			},
+		},
+	},
+
 	"vllm": {
 		Provider: &plugin.Provider{
 			Name:            "vllm",
