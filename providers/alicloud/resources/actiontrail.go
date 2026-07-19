@@ -6,6 +6,7 @@ package resources
 import (
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	actiontrailclient "github.com/alibabacloud-go/actiontrail-20200706/v3/client"
@@ -98,8 +99,9 @@ type mqlAlicloudActiontrailTrailInternal struct {
 	cacheOssBucketName string
 	cacheSlsProjectArn string
 
-	statusOnce sync.Once
-	status     *actiontrailclient.GetTrailStatusResponseBody
+	statusLock    sync.Mutex
+	statusFetched atomic.Bool
+	status        *actiontrailclient.GetTrailStatusResponseBody
 }
 
 func (r *mqlAlicloudActiontrailTrail) id() (string, error) {
@@ -134,68 +136,77 @@ func (r *mqlAlicloudActiontrailTrail) slsProject() (*mqlAlicloudLogProject, erro
 }
 
 // trailStatus lazily fetches and caches the GetTrailStatus response, shared by
-// the live logging and delivery accessors.
-func (r *mqlAlicloudActiontrailTrail) trailStatus() *actiontrailclient.GetTrailStatusResponseBody {
-	r.statusOnce.Do(func() {
-		conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
-		client, err := conn.ActionTrailClient()
-		if err != nil {
-			return
-		}
-		resp, err := client.GetTrailStatus(&actiontrailclient.GetTrailStatusRequest{
-			Name:                tea.String(r.Name.Data),
-			IsOrganizationTrail: tea.Bool(r.IsOrganizationTrail.Data),
-		})
-		if err != nil {
-			// Surface the failure so operators can tell a genuinely non-logging
-			// trail apart from an API/permission error that left status unknown.
-			log.Warn().Err(err).Str("trail", r.Name.Data).Msg("alicloud: failed to fetch ActionTrail status")
-			return
-		}
-		if resp == nil {
-			return
-		}
-		r.status = resp.Body
+// the live logging and delivery accessors. A transient error is not cached
+// (statusFetched is set only on success) and is returned so dependent fields
+// surface the failure rather than a fabricated "not logging" value.
+func (r *mqlAlicloudActiontrailTrail) trailStatus() (*actiontrailclient.GetTrailStatusResponseBody, error) {
+	if r.statusFetched.Load() {
+		return r.status, nil
+	}
+	r.statusLock.Lock()
+	defer r.statusLock.Unlock()
+	if r.statusFetched.Load() {
+		return r.status, nil
+	}
+
+	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.ActionTrailClient()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.GetTrailStatus(&actiontrailclient.GetTrailStatusRequest{
+		Name:                tea.String(r.Name.Data),
+		IsOrganizationTrail: tea.Bool(r.IsOrganizationTrail.Data),
 	})
-	return r.status
+	if err != nil {
+		// Surface the failure so operators can tell a genuinely non-logging
+		// trail apart from an API/permission error that left status unknown.
+		log.Warn().Err(err).Str("trail", r.Name.Data).Msg("alicloud: failed to fetch ActionTrail status")
+		return nil, err
+	}
+	if resp != nil {
+		r.status = resp.Body
+	}
+	r.statusFetched.Store(true)
+	return r.status, nil
 }
 
 func (r *mqlAlicloudActiontrailTrail) isLogging() (bool, error) {
-	st := r.trailStatus()
-	if st == nil {
-		return false, nil
+	st, err := r.trailStatus()
+	if err != nil || st == nil {
+		return false, err
 	}
 	return tea.BoolValue(st.IsLogging), nil
 }
 
 func (r *mqlAlicloudActiontrailTrail) latestDeliveryTime() (*time.Time, error) {
-	st := r.trailStatus()
-	if st == nil {
-		return nil, nil
+	st, err := r.trailStatus()
+	if err != nil || st == nil {
+		return nil, err
 	}
 	return alicloudParseTime(st.LatestDeliveryTime), nil
 }
 
 func (r *mqlAlicloudActiontrailTrail) latestDeliveryError() (string, error) {
-	st := r.trailStatus()
-	if st == nil {
-		return "", nil
+	st, err := r.trailStatus()
+	if err != nil || st == nil {
+		return "", err
 	}
 	return tea.StringValue(st.LatestDeliveryError), nil
 }
 
 func (r *mqlAlicloudActiontrailTrail) latestDeliveryLogServiceTime() (*time.Time, error) {
-	st := r.trailStatus()
-	if st == nil {
-		return nil, nil
+	st, err := r.trailStatus()
+	if err != nil || st == nil {
+		return nil, err
 	}
 	return alicloudParseTime(st.LatestDeliveryLogServiceTime), nil
 }
 
 func (r *mqlAlicloudActiontrailTrail) latestDeliveryLogServiceError() (string, error) {
-	st := r.trailStatus()
-	if st == nil {
-		return "", nil
+	st, err := r.trailStatus()
+	if err != nil || st == nil {
+		return "", err
 	}
 	return tea.StringValue(st.LatestDeliveryLogServiceError), nil
 }

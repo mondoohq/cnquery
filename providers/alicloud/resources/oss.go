@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -68,8 +69,13 @@ func (r *mqlAlicloudOss) buckets() ([]any, error) {
 func newOssBucket(runtime *plugin.Runtime, conn *connection.AlicloudConnection, b oss.BucketProperties) (*mqlAlicloudOssBucket, error) {
 	name := tea.StringValue(b.Name)
 	region := tea.StringValue(b.Region)
-	// A bucket without a resolvable region falls back to the connection's
-	// default region so the detail-client build succeeds.
+	// When ListBuckets does not populate Region, derive it from the Location
+	// (for example oss-cn-hangzhou -> cn-hangzhou) so the per-bucket detail
+	// client addresses the bucket's own region rather than the connection's
+	// default, which would make every detail call fail for cross-region buckets.
+	if region == "" {
+		region = strings.TrimPrefix(tea.StringValue(b.Location), "oss-")
+	}
 	if region == "" {
 		region = conn.Region()
 	}

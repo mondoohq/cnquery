@@ -89,7 +89,7 @@ func (r *mqlAlicloudLog) projects() ([]any, error) {
 
 			total := tea.Int64Value(resp.Body.Total)
 			offset += int32(len(items))
-			if len(items) == 0 || int64(offset) >= total {
+			if len(items) < int(size) || (total > 0 && int64(offset) >= total) {
 				break
 			}
 		}
@@ -223,7 +223,7 @@ func (r *mqlAlicloudLogProject) logstores() ([]any, error) {
 		}
 		total := tea.Int32Value(resp.Body.Total)
 		offset += int32(len(items))
-		if len(items) == 0 || offset >= total {
+		if len(items) < int(size) || (total > 0 && offset >= total) {
 			break
 		}
 	}

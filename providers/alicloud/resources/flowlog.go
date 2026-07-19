@@ -63,7 +63,7 @@ func (r *mqlAlicloudVpc) flowLogs() ([]any, error) {
 			if resp.Body.TotalCount != nil {
 				total, _ = strconv.Atoi(*resp.Body.TotalCount)
 			}
-			if len(items) == 0 || int(pageNumber)*int(pageSize) >= total {
+			if len(items) < int(pageSize) || (total > 0 && int(pageNumber)*int(pageSize) >= total) {
 				break
 			}
 			pageNumber++

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	rmclient "github.com/alibabacloud-go/resourcemanager-20200331/v3/client"
@@ -34,83 +35,96 @@ func rmParseTime(s *string) *time.Time {
 // mqlAlicloudResourceManagerInternal memoizes the resource directory detail
 // shared by the identity accessors.
 type mqlAlicloudResourceManagerInternal struct {
-	dirOnce sync.Once
-	dir     *rmclient.GetResourceDirectoryResponseBodyResourceDirectory
+	dirLock    sync.Mutex
+	dirFetched atomic.Bool
+	dir        *rmclient.GetResourceDirectoryResponseBodyResourceDirectory
 }
 
 func (r *mqlAlicloudResourceManager) id() (string, error) {
 	return "alicloud.resourceManager", nil
 }
 
-// directory lazily fetches and caches the resource directory detail.
-func (r *mqlAlicloudResourceManager) directory() *rmclient.GetResourceDirectoryResponseBodyResourceDirectory {
-	r.dirOnce.Do(func() {
-		conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
-		client, err := conn.ResourceManagerClient()
-		if err != nil {
-			return
-		}
-		resp, err := client.GetResourceDirectory()
-		if err != nil || resp == nil || resp.Body == nil {
-			return
-		}
+// directory lazily fetches and caches the resource directory detail. A
+// transient error is not cached and is returned so the identity accessors
+// surface the failure rather than empty strings.
+func (r *mqlAlicloudResourceManager) directory() (*rmclient.GetResourceDirectoryResponseBodyResourceDirectory, error) {
+	if r.dirFetched.Load() {
+		return r.dir, nil
+	}
+	r.dirLock.Lock()
+	defer r.dirLock.Unlock()
+	if r.dirFetched.Load() {
+		return r.dir, nil
+	}
+
+	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.ResourceManagerClient()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.GetResourceDirectory()
+	if err != nil {
+		return nil, err
+	}
+	if resp != nil && resp.Body != nil {
 		r.dir = resp.Body.ResourceDirectory
-	})
-	return r.dir
+	}
+	r.dirFetched.Store(true)
+	return r.dir, nil
 }
 
 func (r *mqlAlicloudResourceManager) resourceDirectoryId() (string, error) {
-	d := r.directory()
-	if d == nil {
-		return "", nil
+	d, err := r.directory()
+	if err != nil || d == nil {
+		return "", err
 	}
 	return tea.StringValue(d.ResourceDirectoryId), nil
 }
 
 func (r *mqlAlicloudResourceManager) rootFolderId() (string, error) {
-	d := r.directory()
-	if d == nil {
-		return "", nil
+	d, err := r.directory()
+	if err != nil || d == nil {
+		return "", err
 	}
 	return tea.StringValue(d.RootFolderId), nil
 }
 
 func (r *mqlAlicloudResourceManager) masterAccountId() (string, error) {
-	d := r.directory()
-	if d == nil {
-		return "", nil
+	d, err := r.directory()
+	if err != nil || d == nil {
+		return "", err
 	}
 	return tea.StringValue(d.MasterAccountId), nil
 }
 
 func (r *mqlAlicloudResourceManager) masterAccountName() (string, error) {
-	d := r.directory()
-	if d == nil {
-		return "", nil
+	d, err := r.directory()
+	if err != nil || d == nil {
+		return "", err
 	}
 	return tea.StringValue(d.MasterAccountName), nil
 }
 
 func (r *mqlAlicloudResourceManager) memberDeletionStatus() (string, error) {
-	d := r.directory()
-	if d == nil {
-		return "", nil
+	d, err := r.directory()
+	if err != nil || d == nil {
+		return "", err
 	}
 	return tea.StringValue(d.MemberDeletionStatus), nil
 }
 
 func (r *mqlAlicloudResourceManager) controlPolicyStatus() (string, error) {
-	d := r.directory()
-	if d == nil {
-		return "", nil
+	d, err := r.directory()
+	if err != nil || d == nil {
+		return "", err
 	}
 	return tea.StringValue(d.ControlPolicyStatus), nil
 }
 
 func (r *mqlAlicloudResourceManager) createTime() (*time.Time, error) {
-	d := r.directory()
-	if d == nil {
-		return nil, nil
+	d, err := r.directory()
+	if err != nil || d == nil {
+		return nil, err
 	}
 	return rmParseTime(d.CreateTime), nil
 }
@@ -161,7 +175,7 @@ func (r *mqlAlicloudResourceManager) accounts() ([]any, error) {
 		}
 
 		total := tea.Int32Value(resp.Body.TotalCount)
-		if len(items) == 0 || pageNumber*pageSize >= total {
+		if len(items) < int(pageSize) || (total > 0 && pageNumber*pageSize >= total) {
 			break
 		}
 		pageNumber++
@@ -220,7 +234,7 @@ func (r *mqlAlicloudResourceManager) folders() ([]any, error) {
 				queue = append(queue, tea.StringValue(f.FolderId))
 			}
 			total := tea.Int32Value(resp.Body.TotalCount)
-			if len(items) == 0 || pageNumber*pageSize >= total {
+			if len(items) < int(pageSize) || (total > 0 && pageNumber*pageSize >= total) {
 				break
 			}
 			pageNumber++
@@ -277,7 +291,7 @@ func (r *mqlAlicloudResourceManager) controlPolicies() ([]any, error) {
 				res = append(res, resource)
 			}
 			total := tea.Int32Value(resp.Body.TotalCount)
-			if len(items) == 0 || pageNumber*pageSize >= total {
+			if len(items) < int(pageSize) || (total > 0 && pageNumber*pageSize >= total) {
 				break
 			}
 			pageNumber++

@@ -6,6 +6,7 @@ package resources
 import (
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	configclient "github.com/alibabacloud-go/config-20200907/v4/client"
@@ -30,8 +31,9 @@ func configEpochMillis(v *int64) *time.Time {
 // mqlAlicloudConfigInternal memoizes the configuration-recorder detail shared by
 // the recorderEnabled, recorderStatus, and recordedResourceTypes accessors.
 type mqlAlicloudConfigInternal struct {
-	recorderOnce sync.Once
-	recorder     *configclient.GetConfigurationRecorderResponseBodyConfigurationRecorder
+	recorderLock    sync.Mutex
+	recorderFetched atomic.Bool
+	recorder        *configclient.GetConfigurationRecorderResponseBodyConfigurationRecorder
 }
 
 func (r *mqlAlicloudConfig) id() (string, error) {
@@ -73,7 +75,7 @@ func (r *mqlAlicloudConfig) rules() ([]any, error) {
 		}
 
 		total := tea.Int64Value(resp.Body.ConfigRules.TotalCount)
-		if len(items) == 0 || int64(pageNumber)*int64(pageSize) >= total {
+		if len(items) < int(pageSize) || (total > 0 && int64(pageNumber)*int64(pageSize) >= total) {
 			break
 		}
 		pageNumber++
@@ -137,41 +139,56 @@ func newConfigRule(runtime *plugin.Runtime, rule *configclient.ListConfigRulesRe
 	return resource.(*mqlAlicloudConfigRule), nil
 }
 
-// recorderDetail lazily fetches and caches the configuration recorder.
-func (r *mqlAlicloudConfig) recorderDetail() *configclient.GetConfigurationRecorderResponseBodyConfigurationRecorder {
-	r.recorderOnce.Do(func() {
-		conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
-		client, err := conn.ConfigClient()
-		if err != nil {
-			return
-		}
-		resp, err := client.GetConfigurationRecorder()
-		if err != nil || resp == nil || resp.Body == nil {
-			return
-		}
+// recorderDetail lazily fetches and caches the configuration recorder. A
+// transient error is not cached and is returned, so recorderEnabled cannot
+// permanently report a recording account as disabled after one failed call.
+func (r *mqlAlicloudConfig) recorderDetail() (*configclient.GetConfigurationRecorderResponseBodyConfigurationRecorder, error) {
+	if r.recorderFetched.Load() {
+		return r.recorder, nil
+	}
+	r.recorderLock.Lock()
+	defer r.recorderLock.Unlock()
+	if r.recorderFetched.Load() {
+		return r.recorder, nil
+	}
+
+	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.ConfigClient()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.GetConfigurationRecorder()
+	if err != nil {
+		return nil, err
+	}
+	if resp != nil && resp.Body != nil {
 		r.recorder = resp.Body.ConfigurationRecorder
-	})
-	return r.recorder
+	}
+	r.recorderFetched.Store(true)
+	return r.recorder, nil
 }
 
 func (r *mqlAlicloudConfig) recorderStatus() (string, error) {
-	rec := r.recorderDetail()
-	if rec == nil {
-		return "", nil
+	rec, err := r.recorderDetail()
+	if err != nil || rec == nil {
+		return "", err
 	}
 	return tea.StringValue(rec.ConfigurationRecorderStatus), nil
 }
 
 func (r *mqlAlicloudConfig) recorderEnabled() (bool, error) {
-	rec := r.recorderDetail()
-	if rec == nil {
-		return false, nil
+	rec, err := r.recorderDetail()
+	if err != nil || rec == nil {
+		return false, err
 	}
 	return tea.StringValue(rec.ConfigurationRecorderStatus) == "REGISTERED", nil
 }
 
 func (r *mqlAlicloudConfig) recordedResourceTypes() ([]any, error) {
-	rec := r.recorderDetail()
+	rec, err := r.recorderDetail()
+	if err != nil {
+		return nil, err
+	}
 	if rec == nil {
 		return []any{}, nil
 	}
@@ -250,53 +267,65 @@ func (r *mqlAlicloudConfig) deliveryChannels() ([]any, error) {
 // mqlAlicloudConfigRuleInternal memoizes the GetConfigRule detail shared by the
 // timestamp and execution-frequency accessors.
 type mqlAlicloudConfigRuleInternal struct {
-	detailOnce sync.Once
-	detail     *configclient.GetConfigRuleResponseBodyConfigRule
+	detailLock    sync.Mutex
+	detailFetched atomic.Bool
+	detail        *configclient.GetConfigRuleResponseBodyConfigRule
 }
 
 func (r *mqlAlicloudConfigRule) id() (string, error) {
 	return r.ConfigRuleId.Data, nil
 }
 
-// detailFor lazily fetches and caches the GetConfigRule detail.
-func (r *mqlAlicloudConfigRule) detailFor() *configclient.GetConfigRuleResponseBodyConfigRule {
-	r.detailOnce.Do(func() {
-		conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
-		client, err := conn.ConfigClient()
-		if err != nil {
-			return
-		}
-		resp, err := client.GetConfigRule(&configclient.GetConfigRuleRequest{
-			ConfigRuleId: tea.String(r.ConfigRuleId.Data),
-		})
-		if err != nil || resp == nil || resp.Body == nil {
-			return
-		}
-		r.detail = resp.Body.ConfigRule
+// detailFor lazily fetches and caches the GetConfigRule detail. A transient
+// error is not cached and is returned rather than swallowed.
+func (r *mqlAlicloudConfigRule) detailFor() (*configclient.GetConfigRuleResponseBodyConfigRule, error) {
+	if r.detailFetched.Load() {
+		return r.detail, nil
+	}
+	r.detailLock.Lock()
+	defer r.detailLock.Unlock()
+	if r.detailFetched.Load() {
+		return r.detail, nil
+	}
+
+	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.ConfigClient()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.GetConfigRule(&configclient.GetConfigRuleRequest{
+		ConfigRuleId: tea.String(r.ConfigRuleId.Data),
 	})
-	return r.detail
+	if err != nil {
+		return nil, err
+	}
+	if resp != nil && resp.Body != nil {
+		r.detail = resp.Body.ConfigRule
+	}
+	r.detailFetched.Store(true)
+	return r.detail, nil
 }
 
 func (r *mqlAlicloudConfigRule) maximumExecutionFrequency() (string, error) {
-	d := r.detailFor()
-	if d == nil {
-		return "", nil
+	d, err := r.detailFor()
+	if err != nil || d == nil {
+		return "", err
 	}
 	return tea.StringValue(d.MaximumExecutionFrequency), nil
 }
 
 func (r *mqlAlicloudConfigRule) createTime() (*time.Time, error) {
-	d := r.detailFor()
-	if d == nil {
-		return nil, nil
+	d, err := r.detailFor()
+	if err != nil || d == nil {
+		return nil, err
 	}
 	return configEpochMillis(d.CreateTimestamp), nil
 }
 
 func (r *mqlAlicloudConfigRule) modifiedTime() (*time.Time, error) {
-	d := r.detailFor()
-	if d == nil {
-		return nil, nil
+	d, err := r.detailFor()
+	if err != nil || d == nil {
+		return nil, err
 	}
 	return configEpochMillis(d.ModifiedTimestamp), nil
 }

@@ -10,6 +10,7 @@ import (
 
 	kmsclient "github.com/alibabacloud-go/kms-20160120/v4/client"
 	tea "github.com/alibabacloud-go/tea/tea"
+	"github.com/rs/zerolog/log"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -89,7 +90,15 @@ func (r *mqlAlicloudKms) keys() ([]any, error) {
 				// per key is required to populate the key metadata. This is an
 				// unavoidable N+1 for the number of keys in the region.
 				meta, err := describeKmsKey(conn, region, tea.StringValue(k.KeyId))
-				if err != nil || meta == nil {
+				if err != nil {
+					// Log rather than silently drop the key so a per-key
+					// permission or throttle failure leaves a trace instead of a
+					// gap in the key enumeration.
+					log.Warn().Err(err).Str("region", region).Str("keyId", tea.StringValue(k.KeyId)).
+						Msg("alicloud: failed to describe KMS key")
+					continue
+				}
+				if meta == nil {
 					continue
 				}
 				mqlKey, err := newKmsKey(r.MqlRuntime, region, meta)
@@ -100,7 +109,7 @@ func (r *mqlAlicloudKms) keys() ([]any, error) {
 			}
 
 			total := tea.Int32Value(resp.Body.TotalCount)
-			if len(items) == 0 || int(pageNumber)*int(pageSize) >= int(total) {
+			if len(items) < int(pageSize) || (int(total) > 0 && int(pageNumber)*int(pageSize) >= int(total)) {
 				break
 			}
 			pageNumber++
@@ -248,7 +257,7 @@ func (r *mqlAlicloudKmsKey) aliases() ([]any, error) {
 			res = append(res, tea.StringValue(a.AliasName))
 		}
 		total := tea.Int32Value(resp.Body.TotalCount)
-		if len(items) == 0 || int(pageNumber)*int(pageSize) >= int(total) {
+		if len(items) < int(pageSize) || (int(total) > 0 && int(pageNumber)*int(pageSize) >= int(total)) {
 			break
 		}
 		pageNumber++
@@ -297,7 +306,7 @@ func (r *mqlAlicloudKms) secrets() ([]any, error) {
 			}
 
 			total := tea.Int32Value(resp.Body.TotalCount)
-			if len(items) == 0 || int(pageNumber)*int(pageSize) >= int(total) {
+			if len(items) < int(pageSize) || (int(total) > 0 && int(pageNumber)*int(pageSize) >= int(total)) {
 				break
 			}
 			pageNumber++
