@@ -781,6 +781,8 @@ atlassian.confluence.space @defaults("name key type") {
   createdAt time
   // Pages in this space (top-level Get; lazy)
   pages() []atlassian.confluence.page
+  // Blog posts in this space
+  blogposts() []atlassian.confluence.blogpost
 }
 
 // Confluence page (content with type=page)
@@ -830,6 +832,85 @@ atlassian.confluence.page @defaults("title status") {
   hasRestrictions() bool
   // Per-operation restrictions on this page (read/update; users + groups)
   restrictions() []atlassian.confluence.page.restriction
+  // Files attached to this page
+  attachments() []atlassian.confluence.attachment
+}
+
+// Confluence blog post (content with type=blogpost)
+//
+// Confluence blog post and its access posture: status (current, trashed, or
+// draft), the space it lives in, the current version number, the creator and
+// last-editor accounts, the version metadata, whether any explicit read or
+// update restrictions are applied, and the files attached to it. Blog posts
+// are a full content type parallel to pages, with the same restriction and
+// data-disclosure surface, so they belong in the same content access reviews.
+atlassian.confluence.blogpost @defaults("title status") {
+  // Content ID
+  id string
+  // Blog post title
+  title string
+  // Content status (current, trashed, draft)
+  status string
+  // Confluence content type (blogpost)
+  type string
+  // Key of the space the blog post lives in
+  spaceKey string
+  // Current version number (1 for the first publish, increments per edit)
+  version int
+  // Creation timestamp (UTC). Null when the API does not return a creation date.
+  createdAt time
+  // Last update timestamp (UTC). Null when the API does not return an update timestamp.
+  updatedAt time
+  // User who created the blog post. Null when the API does not return creator details.
+  createdBy atlassian.confluence.user
+  // User who made the current version. Null when the API does not return editor details.
+  updatedBy atlassian.confluence.user
+  // Message recorded with the current version. Empty when none was set.
+  versionMessage string
+  // Whether the current version was flagged as a minor edit
+  minorEdit bool
+  // Absolute URL of the blog post in the Confluence web UI. Empty when unavailable.
+  webUrl string
+  // Labels applied to the blog post (label name only, without prefix)
+  labels []string
+  // Whether this blog post has any explicit read or update restrictions applied
+  hasRestrictions() bool
+  // Per-operation restrictions on this blog post (read/update; users + groups)
+  restrictions() []atlassian.confluence.page.restriction
+  // Files attached to this blog post
+  attachments() []atlassian.confluence.attachment
+}
+
+// Confluence attachment
+//
+// File attached to a Confluence page or blog post, carrying the title, media
+// type, size, upload version and uploader, and the web and download links.
+// Attachments are a data-exfiltration surface: inventory them to find files
+// (credentials, exports, PII) that should not be stored in the wiki, and to
+// review what is downloadable from a given piece of content.
+atlassian.confluence.attachment @defaults("title mediaType fileSize") {
+  // Content ID of the attachment
+  id string
+  // Attachment title (file name)
+  title string
+  // Content status (current, trashed)
+  status string
+  // MIME media type (e.g. application/pdf, image/png)
+  mediaType string
+  // File size in bytes
+  fileSize int
+  // Comment recorded with the attachment. Empty when none was set.
+  comment string
+  // Current version number of the attachment
+  version int
+  // Upload timestamp of the current version (UTC). Null when unavailable.
+  createdAt time
+  // User who uploaded the current version. Null when the API does not return uploader details.
+  createdBy atlassian.confluence.user
+  // Absolute URL to download the attachment. Empty when unavailable.
+  downloadLink string
+  // Absolute URL of the attachment in the Confluence web UI. Empty when unavailable.
+  webUrl string
 }
 
 // Per-operation restriction on a Confluence page

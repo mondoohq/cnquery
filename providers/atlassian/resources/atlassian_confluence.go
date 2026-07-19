@@ -370,13 +370,7 @@ func (a *mqlAtlassianConfluencePage) hasRestrictions() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	for _, r := range restrictions {
-		entry := r.(*mqlAtlassianConfluencePageRestriction)
-		if len(entry.UserIds.Data) > 0 || len(entry.GroupNames.Data) > 0 {
-			return true, nil
-		}
-	}
-	return false, nil
+	return contentHasRestrictions(restrictions), nil
 }
 
 func (a *mqlAtlassianConfluencePage) restrictions() ([]any, error) {
@@ -397,80 +391,10 @@ func (a *mqlAtlassianConfluencePage) fetchRestrictions() ([]any, error) {
 	if a.Restrictions.State == plugin.StateIsSet {
 		return a.Restrictions.Data, nil
 	}
-	conn, ok := a.MqlRuntime.Connection.(*confluence.ConfluenceConnection)
-	if !ok {
-		return nil, errors.New("Current connection does not allow confluence access")
+	res, err := confluenceContentRestrictions(a.MqlRuntime, a.Id.Data)
+	if err != nil {
+		return nil, err
 	}
-	client := conn.Client()
-
-	contentID := a.Id.Data
-	if contentID == "" {
-		a.Restrictions = plugin.TValue[[]any]{Data: []any{}, State: plugin.StateIsSet}
-		return []any{}, nil
-	}
-
-	res := []any{}
-	startAt := 0
-	for {
-		page, _, err := client.Content.Restriction.Gets(context.Background(),
-			contentID,
-			[]string{"restrictions.user", "restrictions.group"},
-			startAt,
-			CONFLUENCE_PAGE_LIMIT,
-		)
-		if err != nil {
-			return nil, err
-		}
-		if page == nil || len(page.Results) == 0 {
-			break
-		}
-		for _, restriction := range page.Results {
-			if restriction == nil {
-				continue
-			}
-			users := []any{}
-			groups := []any{}
-			if restriction.Restrictions != nil {
-				if restriction.Restrictions.User != nil {
-					for _, u := range restriction.Restrictions.User.Results {
-						if u == nil {
-							continue
-						}
-						if u.AccountID != "" {
-							users = append(users, u.AccountID)
-						}
-					}
-				}
-				if restriction.Restrictions.Group != nil {
-					for _, g := range restriction.Restrictions.Group.Results {
-						if g == nil {
-							continue
-						}
-						if g.Name != "" {
-							groups = append(groups, g.Name)
-						}
-					}
-				}
-			}
-			compositeID := contentID + "/" + restriction.Operation
-			mqlRestriction, err := CreateResource(a.MqlRuntime, "atlassian.confluence.page.restriction",
-				map[string]*llx.RawData{
-					"id":         llx.StringData(compositeID),
-					"operation":  llx.StringData(restriction.Operation),
-					"userIds":    llx.ArrayData(users, types.String),
-					"groupNames": llx.ArrayData(groups, types.String),
-				})
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, mqlRestriction)
-		}
-		if len(page.Results) < CONFLUENCE_PAGE_LIMIT {
-			break
-		}
-		startAt += len(page.Results)
-	}
-
 	a.Restrictions = plugin.TValue[[]any]{Data: res, State: plugin.StateIsSet}
 	return res, nil
 }
