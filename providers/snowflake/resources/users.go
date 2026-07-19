@@ -16,6 +16,10 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
+type mqlSnowflakeUserInternal struct {
+	cacheOwner string
+}
+
 // parseSecondaryRoles converts Snowflake's default_secondary_roles column into
 // a list of role names. SHOW USERS returns it as a JSON array string (for
 // example `["ALL"]`), so parse that; fall back to a single bare value if the
@@ -87,13 +91,30 @@ func newMqlSnowflakeUser(runtime *plugin.Runtime, user sdk.User) (*mqlSnowflakeU
 		"snowflakeLock":         llx.BoolData(user.SnowflakeLock),
 		"defaultSecondaryRoles": llx.ArrayData(parseSecondaryRoles(user.DefaultSecondaryRoles), types.String),
 		"minsToBypassMfa":       llx.StringData(user.MinsToBypassMfa),
-		"owner":                 llx.StringData(user.Owner),
 	})
 	if err != nil {
 		return nil, err
 	}
 	mqlResource := r.(*mqlSnowflakeUser)
+	mqlResource.cacheOwner = user.Owner
 	return mqlResource, nil
+}
+
+// owner resolves the role that owns the user. The owning role is always an
+// account role, so it hydrates through snowflake.role's init from the cached
+// owner name.
+func (r *mqlSnowflakeUser) owner() (*mqlSnowflakeRole, error) {
+	if r.cacheOwner == "" {
+		r.Owner.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	role, err := NewResource(r.MqlRuntime, "snowflake.role", map[string]*llx.RawData{
+		"name": llx.StringData(r.cacheOwner),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return role.(*mqlSnowflakeRole), nil
 }
 
 // daysSinceLastLogin returns whole days since the user's last successful login.

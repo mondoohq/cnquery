@@ -67,7 +67,7 @@ func init() {
 			Create: createSnowflakeUser,
 		},
 		"snowflake.role": {
-			// to override args, implement: initSnowflakeRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initSnowflakeRole,
 			Create: createSnowflakeRole,
 		},
 		"snowflake.securityIntegration": {
@@ -428,7 +428,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlSnowflakeUser).GetMinsToBypassMfa()).ToDataRes(types.String)
 	},
 	"snowflake.user.owner": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlSnowflakeUser).GetOwner()).ToDataRes(types.String)
+		return (r.(*mqlSnowflakeUser).GetOwner()).ToDataRes(types.Resource("snowflake.role"))
 	},
 	"snowflake.user.parameters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeUser).GetParameters()).ToDataRes(types.Array(types.Resource("snowflake.parameter")))
@@ -1833,7 +1833,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"snowflake.user.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeUser).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlSnowflakeUser).Owner, ok = plugin.RawToTValue[*mqlSnowflakeRole](v.Value, v.Error)
 		return
 	},
 	"snowflake.user.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4107,7 +4107,7 @@ func (c *mqlSnowflakeAccount) GetConnections() *plugin.TValue[[]any] {
 type mqlSnowflakeUser struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSnowflakeUserInternal it will be used here
+	mqlSnowflakeUserInternal
 	Name                  plugin.TValue[string]
 	Login                 plugin.TValue[string]
 	DisplayName           plugin.TValue[string]
@@ -4133,7 +4133,7 @@ type mqlSnowflakeUser struct {
 	SnowflakeLock         plugin.TValue[bool]
 	DefaultSecondaryRoles plugin.TValue[[]any]
 	MinsToBypassMfa       plugin.TValue[string]
-	Owner                 plugin.TValue[string]
+	Owner                 plugin.TValue[*mqlSnowflakeRole]
 	Parameters            plugin.TValue[[]any]
 	DaysSinceLastLogin    plugin.TValue[int64]
 	Grants                plugin.TValue[[]any]
@@ -4271,8 +4271,20 @@ func (c *mqlSnowflakeUser) GetMinsToBypassMfa() *plugin.TValue[string] {
 	return &c.MinsToBypassMfa
 }
 
-func (c *mqlSnowflakeUser) GetOwner() *plugin.TValue[string] {
-	return &c.Owner
+func (c *mqlSnowflakeUser) GetOwner() *plugin.TValue[*mqlSnowflakeRole] {
+	return plugin.GetOrCompute[*mqlSnowflakeRole](&c.Owner, func() (*mqlSnowflakeRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.user", c.__id, "owner")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeRole), nil
+			}
+		}
+
+		return c.owner()
+	})
 }
 
 func (c *mqlSnowflakeUser) GetParameters() *plugin.TValue[[]any] {

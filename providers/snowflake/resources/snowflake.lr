@@ -174,7 +174,7 @@ snowflake.user @defaults("name") {
   // sign in without MFA. Empty when no bypass window is active.
   minsToBypassMfa string
   // Role that owns the user
-  owner string
+  owner() snowflake.role
   // Parameters for the user
   parameters() []snowflake.parameter
   // Number of days since the user last successfully logged in (-1 if never logged in)
