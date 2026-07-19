@@ -200,6 +200,7 @@ providers/mqlr/install: providers/mqlr
 # core is excluded: it has no install target and is always built as a dependency of providers/build.
 PROVIDERS := \
 	activedirectory \
+	alicloud \
 	ansible \
 	arista \
 	atlassian \

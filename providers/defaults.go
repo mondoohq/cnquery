@@ -42,6 +42,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"alicloud": {
+		Provider: &plugin.Provider{
+			Name:            "alicloud",
+			ID:              "go.mondoo.com/mql/providers/alicloud",
+			ConnectionTypes: []string{"alicloud"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "alicloud",
+					Use:   "alicloud",
+					Short: "an Alibaba Cloud account",
+				},
+			},
+		},
+	},
+
 	"ansible": {
 		Provider: &plugin.Provider{
 			Name:            "ansible",

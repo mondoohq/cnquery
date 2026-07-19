@@ -198,6 +198,7 @@ go 1.25
 use (
    ./mql
    ./mql/providers/activedirectory
+   ./mql/providers/alicloud
    ./mql/providers/ansible
    ./mql/providers/arista
    ./mql/providers/atlassian
