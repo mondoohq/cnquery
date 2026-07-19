@@ -18,7 +18,9 @@ import (
 // snowflake.rowAccessPolicy.schema). Listing via the account goes through
 // CreateResource, which skips init, so this only runs for on-demand lookups.
 func initSnowflakeSchema(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 3 {
+	// Keyed by databaseName + name; more than those two keys means the caller
+	// already supplied full data, so skip the lookup.
+	if len(args) > 2 {
 		return args, nil, nil
 	}
 	dbRaw, ok1 := args["databaseName"]
