@@ -1223,7 +1223,16 @@ type FileComponent struct {
 	// File format or type
 	Format string `protobuf:"bytes,3,opt,name=format,proto3" json:"format,omitempty"`
 	// File size in bytes
-	Size          int64 `protobuf:"varint,4,opt,name=size,proto3" json:"size,omitempty"`
+	Size int64 `protobuf:"varint,4,opt,name=size,proto3" json:"size,omitempty"`
+	// Optional. 1-based line where the finding starts (0 = unset). SAST/SARIF
+	// tools report the code location here.
+	StartLine int32 `protobuf:"varint,5,opt,name=start_line,json=startLine,proto3" json:"start_line,omitempty"`
+	// Optional. 1-based line where the finding ends (0 = unset).
+	EndLine int32 `protobuf:"varint,6,opt,name=end_line,json=endLine,proto3" json:"end_line,omitempty"`
+	// Optional. 1-based column where the finding starts (0 = unset).
+	StartColumn int32 `protobuf:"varint,7,opt,name=start_column,json=startColumn,proto3" json:"start_column,omitempty"`
+	// Optional. 1-based column where the finding ends (0 = unset).
+	EndColumn     int32 `protobuf:"varint,8,opt,name=end_column,json=endColumn,proto3" json:"end_column,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1282,6 +1291,34 @@ func (x *FileComponent) GetFormat() string {
 func (x *FileComponent) GetSize() int64 {
 	if x != nil {
 		return x.Size
+	}
+	return 0
+}
+
+func (x *FileComponent) GetStartLine() int32 {
+	if x != nil {
+		return x.StartLine
+	}
+	return 0
+}
+
+func (x *FileComponent) GetEndLine() int32 {
+	if x != nil {
+		return x.EndLine
+	}
+	return 0
+}
+
+func (x *FileComponent) GetStartColumn() int32 {
+	if x != nil {
+		return x.StartColumn
+	}
+	return 0
+}
+
+func (x *FileComponent) GetEndColumn() int32 {
+	if x != nil {
+		return x.EndColumn
 	}
 	return 0
 }
@@ -2965,12 +3002,18 @@ const file_fex_proto_rawDesc = "" +
 	"\x0fPropertiesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\t\n" +
-	"\adetails\"c\n" +
+	"\adetails\"\xdf\x01\n" +
 	"\rFileComponent\x12\x12\n" +
 	"\x04path\x18\x01 \x01(\tR\x04path\x12\x12\n" +
 	"\x04hash\x18\x02 \x01(\tR\x04hash\x12\x16\n" +
 	"\x06format\x18\x03 \x01(\tR\x06format\x12\x12\n" +
-	"\x04size\x18\x04 \x01(\x03R\x04size\"\xb1\x01\n" +
+	"\x04size\x18\x04 \x01(\x03R\x04size\x12\x1d\n" +
+	"\n" +
+	"start_line\x18\x05 \x01(\x05R\tstartLine\x12\x19\n" +
+	"\bend_line\x18\x06 \x01(\x05R\aendLine\x12!\n" +
+	"\fstart_column\x18\a \x01(\x05R\vstartColumn\x12\x1d\n" +
+	"\n" +
+	"end_column\x18\b \x01(\x05R\tendColumn\"\xb1\x01\n" +
 	"\x06Rating\x12*\n" +
 	"\x06source\x18\x01 \x01(\v2\x12.mql.fex.v1.SourceR\x06source\x12\x14\n" +
 	"\x05score\x18\x02 \x01(\x02R\x05score\x12\x1a\n" +

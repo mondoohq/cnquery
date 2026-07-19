@@ -193,6 +193,19 @@ message FileComponent {
 
   // File size in bytes
   int64 size = 4;
+
+  // Optional. 1-based line where the finding starts (0 = unset). SAST/SARIF
+  // tools report the code location here.
+  int32 start_line = 5;
+
+  // Optional. 1-based line where the finding ends (0 = unset).
+  int32 end_line = 6;
+
+  // Optional. 1-based column where the finding starts (0 = unset).
+  int32 start_column = 7;
+
+  // Optional. 1-based column where the finding ends (0 = unset).
+  int32 end_column = 8;
 }
 
 // Rating is used to provide a score for the vulnerability.

@@ -822,6 +822,26 @@ func (m *FileComponent) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
+	if m.EndColumn != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.EndColumn))
+		i--
+		dAtA[i] = 0x40
+	}
+	if m.StartColumn != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.StartColumn))
+		i--
+		dAtA[i] = 0x38
+	}
+	if m.EndLine != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.EndLine))
+		i--
+		dAtA[i] = 0x30
+	}
+	if m.StartLine != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.StartLine))
+		i--
+		dAtA[i] = 0x28
+	}
 	if m.Size != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Size))
 		i--
@@ -2708,6 +2728,18 @@ func (m *FileComponent) SizeVT() (n int) {
 	}
 	if m.Size != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.Size))
+	}
+	if m.StartLine != 0 {
+		n += 1 + protohelpers.SizeOfVarint(uint64(m.StartLine))
+	}
+	if m.EndLine != 0 {
+		n += 1 + protohelpers.SizeOfVarint(uint64(m.EndLine))
+	}
+	if m.StartColumn != 0 {
+		n += 1 + protohelpers.SizeOfVarint(uint64(m.StartColumn))
+	}
+	if m.EndColumn != 0 {
+		n += 1 + protohelpers.SizeOfVarint(uint64(m.EndColumn))
 	}
 	n += len(m.unknownFields)
 	return n
@@ -5680,6 +5712,82 @@ func (m *FileComponent) UnmarshalVT(dAtA []byte) error {
 				b := dAtA[iNdEx]
 				iNdEx++
 				m.Size |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StartLine", wireType)
+			}
+			m.StartLine = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.StartLine |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EndLine", wireType)
+			}
+			m.EndLine = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.EndLine |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StartColumn", wireType)
+			}
+			m.StartColumn = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.StartColumn |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EndColumn", wireType)
+			}
+			m.EndColumn = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.EndColumn |= int32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
