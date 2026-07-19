@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -34,22 +33,35 @@ func complexValueIds(vals []iam.ComplexValue) []string {
 	return out
 }
 
-// resolveGroupRefs hydrates each account group id into a databricks.group,
-// skipping any id that no longer resolves (a group that was deleted after the
-// membership was recorded).
+// resolveGroupRefs hydrates each account group id into a databricks.group. It
+// lists the account groups once and resolves each membership from that set
+// (Pattern C) rather than one GetById per id (N+1). A membership whose group was
+// deleted after it was recorded is simply skipped.
 func resolveGroupRefs(runtime *plugin.Runtime, ids []string) ([]any, error) {
+	if len(ids) == 0 {
+		return []any{}, nil
+	}
+	acc, err := accountClient(runtime)
+	if err != nil {
+		return nil, err
+	}
+	groups, err := acc.Groups.ListAll(context.Background(), iam.ListAccountGroupsRequest{})
+	if err != nil {
+		return nil, err
+	}
+	byID := make(map[string]iam.Group, len(groups))
+	for i := range groups {
+		byID[groups[i].Id] = groups[i]
+	}
+
 	out := []any{}
 	for _, id := range ids {
-		if id == "" {
+		g, ok := byID[id]
+		if !ok {
 			continue
 		}
-		res, err := NewResource(runtime, "databricks.group", map[string]*llx.RawData{
-			"id": llx.StringData(id),
-		})
+		res, err := newMqlDatabricksGroup(runtime, g)
 		if err != nil {
-			if apierr.IsMissing(err) {
-				continue
-			}
 			return nil, err
 		}
 		out = append(out, res)
