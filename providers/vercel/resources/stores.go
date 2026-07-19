@@ -196,25 +196,5 @@ func storeConnectedToProject(rec *storeRecord, projectID string) bool {
 }
 
 func (s *mqlVercelStore) connectedProjects() ([]any, error) {
-	conn := s.MqlRuntime.Connection.(*connection.VercelConnection)
-
-	out := []any{}
-	for _, projectID := range s.cacheProjectIds {
-		var rec projectRecord
-		if err := conn.Get(context.Background(), "/v9/projects/"+projectID, connection.TeamQuery(s.teamID), &rec); err != nil {
-			if connection.IsForbidden(err) || connection.IsNotFound(err) {
-				continue
-			}
-			return nil, err
-		}
-		if rec.ID == "" {
-			rec.ID = projectID
-		}
-		project, err := newVercelProject(s.MqlRuntime, s.teamID, &rec)
-		if err != nil {
-			return nil, err
-		}
-		out = append(out, project)
-	}
-	return out, nil
+	return resolveProjectRefs(s.MqlRuntime, s.teamID, s.cacheProjectIds)
 }

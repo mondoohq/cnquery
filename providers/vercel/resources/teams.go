@@ -172,6 +172,29 @@ type domainRecord struct {
 	BoughtAt            flexTime `json:"boughtAt"`
 }
 
+func newVercelDomain(runtime *plugin.Runtime, teamID string, rec *domainRecord) (*mqlVercelDomain, error) {
+	renew := rec.Renew != nil && *rec.Renew
+	domain, err := CreateResource(runtime, "vercel.domain", map[string]*llx.RawData{
+		"id":                  llx.StringData(rec.ID),
+		"name":                llx.StringData(rec.Name),
+		"serviceType":         llx.StringData(rec.ServiceType),
+		"verified":            llx.BoolData(rec.Verified),
+		"nameservers":         llx.ArrayData(strSliceToAny(rec.Nameservers), types.String),
+		"intendedNameservers": llx.ArrayData(strSliceToAny(rec.IntendedNameservers), types.String),
+		"cdnEnabled":          llx.BoolData(rec.CdnEnabled),
+		"renewAutomatically":  llx.BoolData(renew),
+		"createdAt":           llx.TimeDataPtr(rec.CreatedAt.Time()),
+		"expiresAt":           llx.TimeDataPtr(rec.ExpiresAt.Time()),
+		"boughtAt":            llx.TimeDataPtr(rec.BoughtAt.Time()),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlDomain := domain.(*mqlVercelDomain)
+	mqlDomain.teamID = teamID
+	return mqlDomain, nil
+}
+
 func (c *mqlVercelTeam) domains() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.VercelConnection)
 	records, err := connection.GetPaged[domainRecord](context.Background(), conn, "/v5/domains", connection.TeamQuery(c.Id.Data), "domains")
@@ -185,25 +208,10 @@ func (c *mqlVercelTeam) domains() ([]any, error) {
 	var res []any
 	for i := range records {
 		rec := records[i]
-		renew := rec.Renew != nil && *rec.Renew
-		domain, err := CreateResource(c.MqlRuntime, "vercel.domain", map[string]*llx.RawData{
-			"id":                  llx.StringData(rec.ID),
-			"name":                llx.StringData(rec.Name),
-			"serviceType":         llx.StringData(rec.ServiceType),
-			"verified":            llx.BoolData(rec.Verified),
-			"nameservers":         llx.ArrayData(strSliceToAny(rec.Nameservers), types.String),
-			"intendedNameservers": llx.ArrayData(strSliceToAny(rec.IntendedNameservers), types.String),
-			"cdnEnabled":          llx.BoolData(rec.CdnEnabled),
-			"renewAutomatically":  llx.BoolData(renew),
-			"createdAt":           llx.TimeDataPtr(rec.CreatedAt.Time()),
-			"expiresAt":           llx.TimeDataPtr(rec.ExpiresAt.Time()),
-			"boughtAt":            llx.TimeDataPtr(rec.BoughtAt.Time()),
-		})
+		mqlDomain, err := newVercelDomain(c.MqlRuntime, c.Id.Data, &rec)
 		if err != nil {
 			return nil, err
 		}
-		mqlDomain := domain.(*mqlVercelDomain)
-		mqlDomain.teamID = c.Id.Data
 		res = append(res, mqlDomain)
 	}
 	return res, nil
@@ -305,6 +313,14 @@ func (c *mqlVercelLogDrain) id() (string, error) {
 
 // --- webhooks -------------------------------------------------------------
 
+// mqlVercelWebhookInternal caches the team a webhook belongs to and the ids of
+// the projects it is scoped to, so projects can resolve typed project
+// references without re-listing the webhook.
+type mqlVercelWebhookInternal struct {
+	teamID          string
+	cacheProjectIds []string
+}
+
 type webhookRecord struct {
 	ID         string   `json:"id"`
 	URL        string   `json:"url"`
@@ -328,17 +344,19 @@ func (c *mqlVercelTeam) webhooks() ([]any, error) {
 	for i := range records {
 		rec := records[i]
 		hook, err := CreateResource(c.MqlRuntime, "vercel.webhook", map[string]*llx.RawData{
-			"id":         llx.StringData(rec.ID),
-			"url":        llx.StringData(rec.URL),
-			"events":     llx.ArrayData(strSliceToAny(rec.Events), types.String),
-			"projectIds": llx.ArrayData(strSliceToAny(rec.ProjectIds), types.String),
-			"createdAt":  llx.TimeDataPtr(rec.CreatedAt.Time()),
-			"updatedAt":  llx.TimeDataPtr(rec.UpdatedAt.Time()),
+			"id":        llx.StringData(rec.ID),
+			"url":       llx.StringData(rec.URL),
+			"events":    llx.ArrayData(strSliceToAny(rec.Events), types.String),
+			"createdAt": llx.TimeDataPtr(rec.CreatedAt.Time()),
+			"updatedAt": llx.TimeDataPtr(rec.UpdatedAt.Time()),
 		})
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, hook)
+		mqlHook := hook.(*mqlVercelWebhook)
+		mqlHook.teamID = c.Id.Data
+		mqlHook.cacheProjectIds = rec.ProjectIds
+		res = append(res, mqlHook)
 	}
 	return res, nil
 }
@@ -347,7 +365,20 @@ func (c *mqlVercelWebhook) id() (string, error) {
 	return c.Id.Data, c.Id.Error
 }
 
+func (c *mqlVercelWebhook) projects() ([]any, error) {
+	return resolveProjectRefs(c.MqlRuntime, c.teamID, c.cacheProjectIds)
+}
+
 // --- integration configurations -------------------------------------------
+
+// mqlVercelIntegrationConfigurationInternal caches the team an integration
+// configuration belongs to and the ids of the projects it is scoped to, so
+// projects can resolve typed project references without re-listing the
+// configuration.
+type mqlVercelIntegrationConfigurationInternal struct {
+	teamID          string
+	cacheProjectIds []string
+}
 
 type integrationConfigurationRecord struct {
 	ID               string   `json:"id"`
@@ -390,20 +421,26 @@ func (c *mqlVercelTeam) integrationConfigurations() ([]any, error) {
 			"scopes":           llx.ArrayData(strSliceToAny(rec.Scopes), types.String),
 			"installationType": llx.StringData(installationType),
 			"projectSelection": llx.StringData(rec.ProjectSelection),
-			"projectIds":       llx.ArrayData(strSliceToAny(rec.Projects), types.String),
 			"createdAt":        llx.TimeDataPtr(rec.CreatedAt.Time()),
 			"updatedAt":        llx.TimeDataPtr(rec.UpdatedAt.Time()),
 		})
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, cfg)
+		mqlCfg := cfg.(*mqlVercelIntegrationConfiguration)
+		mqlCfg.teamID = c.Id.Data
+		mqlCfg.cacheProjectIds = rec.Projects
+		res = append(res, mqlCfg)
 	}
 	return res, nil
 }
 
 func (c *mqlVercelIntegrationConfiguration) id() (string, error) {
 	return c.Id.Data, c.Id.Error
+}
+
+func (c *mqlVercelIntegrationConfiguration) projects() ([]any, error) {
+	return resolveProjectRefs(c.MqlRuntime, c.teamID, c.cacheProjectIds)
 }
 
 // --- access groups (enterprise) -------------------------------------------

@@ -428,6 +428,10 @@ private vercel.project.domain @defaults("name") {
   name string
   // Apex domain the name belongs to
   apexName string
+  // Team domain the apex belongs to
+  //
+  // Null when the apex is not a Vercel-managed team domain.
+  apexDomain() vercel.domain
   // Redirect target, or null when the domain serves the project directly
   redirect string
   // HTTP status code used for the redirect, or null when not a redirect
@@ -562,10 +566,10 @@ private vercel.webhook @defaults("url") {
   url string
   // Event types the webhook subscribes to
   events []string
-  // Identifiers of projects the webhook is scoped to
+  // Projects the webhook fires on
   //
   // Empty when the webhook applies to the entire team.
-  projectIds []string
+  projects() []vercel.project
   // Time the webhook was created
   createdAt time
   // Time the webhook was last updated
@@ -594,10 +598,10 @@ private vercel.integrationConfiguration @defaults("slug") {
   //
   // One of all or selected.
   projectSelection string
-  // Identifiers of projects the integration is scoped to
+  // Projects the integration can access
   //
   // Empty when the integration can access every project.
-  projectIds []string
+  projects() []vercel.project
   // Time the integration was installed
   createdAt time
   // Time the integration was last updated

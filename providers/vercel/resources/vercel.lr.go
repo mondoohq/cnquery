@@ -594,6 +594,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vercel.project.domain.apexName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelProjectDomain).GetApexName()).ToDataRes(types.String)
 	},
+	"vercel.project.domain.apexDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProjectDomain).GetApexDomain()).ToDataRes(types.Resource("vercel.domain"))
+	},
 	"vercel.project.domain.redirect": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelProjectDomain).GetRedirect()).ToDataRes(types.String)
 	},
@@ -720,8 +723,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vercel.webhook.events": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelWebhook).GetEvents()).ToDataRes(types.Array(types.String))
 	},
-	"vercel.webhook.projectIds": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlVercelWebhook).GetProjectIds()).ToDataRes(types.Array(types.String))
+	"vercel.webhook.projects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelWebhook).GetProjects()).ToDataRes(types.Array(types.Resource("vercel.project")))
 	},
 	"vercel.webhook.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelWebhook).GetCreatedAt()).ToDataRes(types.Time)
@@ -744,8 +747,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vercel.integrationConfiguration.projectSelection": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelIntegrationConfiguration).GetProjectSelection()).ToDataRes(types.String)
 	},
-	"vercel.integrationConfiguration.projectIds": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlVercelIntegrationConfiguration).GetProjectIds()).ToDataRes(types.Array(types.String))
+	"vercel.integrationConfiguration.projects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelIntegrationConfiguration).GetProjects()).ToDataRes(types.Array(types.Resource("vercel.project")))
 	},
 	"vercel.integrationConfiguration.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelIntegrationConfiguration).GetCreatedAt()).ToDataRes(types.Time)
@@ -1424,6 +1427,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVercelProjectDomain).ApexName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"vercel.project.domain.apexDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProjectDomain).ApexDomain, ok = plugin.RawToTValue[*mqlVercelDomain](v.Value, v.Error)
+		return
+	},
 	"vercel.project.domain.redirect": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVercelProjectDomain).Redirect, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1608,8 +1615,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVercelWebhook).Events, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"vercel.webhook.projectIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVercelWebhook).ProjectIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"vercel.webhook.projects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelWebhook).Projects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vercel.webhook.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1644,8 +1651,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVercelIntegrationConfiguration).ProjectSelection, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"vercel.integrationConfiguration.projectIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVercelIntegrationConfiguration).ProjectIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"vercel.integrationConfiguration.projects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelIntegrationConfiguration).Projects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vercel.integrationConfiguration.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3235,9 +3242,10 @@ func (c *mqlVercelCertificate) GetExpiresAt() *plugin.TValue[*time.Time] {
 type mqlVercelProjectDomain struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlVercelProjectDomainInternal it will be used here
+	mqlVercelProjectDomainInternal
 	Name               plugin.TValue[string]
 	ApexName           plugin.TValue[string]
+	ApexDomain         plugin.TValue[*mqlVercelDomain]
 	Redirect           plugin.TValue[string]
 	RedirectStatusCode plugin.TValue[int64]
 	GitBranch          plugin.TValue[string]
@@ -3284,6 +3292,22 @@ func (c *mqlVercelProjectDomain) GetName() *plugin.TValue[string] {
 
 func (c *mqlVercelProjectDomain) GetApexName() *plugin.TValue[string] {
 	return &c.ApexName
+}
+
+func (c *mqlVercelProjectDomain) GetApexDomain() *plugin.TValue[*mqlVercelDomain] {
+	return plugin.GetOrCompute[*mqlVercelDomain](&c.ApexDomain, func() (*mqlVercelDomain, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vercel.project.domain", c.__id, "apexDomain")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVercelDomain), nil
+			}
+		}
+
+		return c.apexDomain()
+	})
 }
 
 func (c *mqlVercelProjectDomain) GetRedirect() *plugin.TValue[string] {
@@ -3623,13 +3647,13 @@ func (c *mqlVercelLogDrain) GetCreatedAt() *plugin.TValue[*time.Time] {
 type mqlVercelWebhook struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlVercelWebhookInternal it will be used here
-	Id         plugin.TValue[string]
-	Url        plugin.TValue[string]
-	Events     plugin.TValue[[]any]
-	ProjectIds plugin.TValue[[]any]
-	CreatedAt  plugin.TValue[*time.Time]
-	UpdatedAt  plugin.TValue[*time.Time]
+	mqlVercelWebhookInternal
+	Id        plugin.TValue[string]
+	Url       plugin.TValue[string]
+	Events    plugin.TValue[[]any]
+	Projects  plugin.TValue[[]any]
+	CreatedAt plugin.TValue[*time.Time]
+	UpdatedAt plugin.TValue[*time.Time]
 }
 
 // createVercelWebhook creates a new instance of this resource
@@ -3681,8 +3705,20 @@ func (c *mqlVercelWebhook) GetEvents() *plugin.TValue[[]any] {
 	return &c.Events
 }
 
-func (c *mqlVercelWebhook) GetProjectIds() *plugin.TValue[[]any] {
-	return &c.ProjectIds
+func (c *mqlVercelWebhook) GetProjects() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Projects, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vercel.webhook", c.__id, "projects")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.projects()
+	})
 }
 
 func (c *mqlVercelWebhook) GetCreatedAt() *plugin.TValue[*time.Time] {
@@ -3697,13 +3733,13 @@ func (c *mqlVercelWebhook) GetUpdatedAt() *plugin.TValue[*time.Time] {
 type mqlVercelIntegrationConfiguration struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlVercelIntegrationConfigurationInternal it will be used here
+	mqlVercelIntegrationConfigurationInternal
 	Id               plugin.TValue[string]
 	Slug             plugin.TValue[string]
 	Scopes           plugin.TValue[[]any]
 	InstallationType plugin.TValue[string]
 	ProjectSelection plugin.TValue[string]
-	ProjectIds       plugin.TValue[[]any]
+	Projects         plugin.TValue[[]any]
 	CreatedAt        plugin.TValue[*time.Time]
 	UpdatedAt        plugin.TValue[*time.Time]
 }
@@ -3765,8 +3801,20 @@ func (c *mqlVercelIntegrationConfiguration) GetProjectSelection() *plugin.TValue
 	return &c.ProjectSelection
 }
 
-func (c *mqlVercelIntegrationConfiguration) GetProjectIds() *plugin.TValue[[]any] {
-	return &c.ProjectIds
+func (c *mqlVercelIntegrationConfiguration) GetProjects() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Projects, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vercel.integrationConfiguration", c.__id, "projects")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.projects()
+	})
 }
 
 func (c *mqlVercelIntegrationConfiguration) GetCreatedAt() *plugin.TValue[*time.Time] {

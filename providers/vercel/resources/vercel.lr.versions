@@ -104,8 +104,8 @@ vercel.integrationConfiguration 13.0.0
 vercel.integrationConfiguration.createdAt 13.0.0
 vercel.integrationConfiguration.id 13.0.0
 vercel.integrationConfiguration.installationType 13.0.0
-vercel.integrationConfiguration.projectIds 13.0.0
 vercel.integrationConfiguration.projectSelection 13.0.0
+vercel.integrationConfiguration.projects 13.0.1
 vercel.integrationConfiguration.scopes 13.0.0
 vercel.integrationConfiguration.slug 13.0.0
 vercel.integrationConfiguration.updatedAt 13.0.0
@@ -125,6 +125,7 @@ vercel.project.cronJobs 13.0.0
 vercel.project.deployments 13.0.0
 vercel.project.devCommand 13.0.0
 vercel.project.domain 13.0.0
+vercel.project.domain.apexDomain 13.0.1
 vercel.project.domain.apexName 13.0.0
 vercel.project.domain.createdAt 13.0.0
 vercel.project.domain.gitBranch 13.0.0
@@ -235,6 +236,6 @@ vercel.webhook 13.0.0
 vercel.webhook.createdAt 13.0.0
 vercel.webhook.events 13.0.0
 vercel.webhook.id 13.0.0
-vercel.webhook.projectIds 13.0.0
+vercel.webhook.projects 13.0.1
 vercel.webhook.updatedAt 13.0.0
 vercel.webhook.url 13.0.0

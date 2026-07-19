@@ -200,6 +200,36 @@ func (c *mqlVercelProject) id() (string, error) {
 	return c.Id.Data, c.Id.Error
 }
 
+// resolveProjectRefs resolves a list of project ids into typed vercel.project
+// references. Ids that no longer resolve (project deleted, or not visible to the
+// token) are skipped rather than failing the whole list; other errors propagate.
+func resolveProjectRefs(runtime *plugin.Runtime, teamID string, projectIDs []string) ([]any, error) {
+	conn := runtime.Connection.(*connection.VercelConnection)
+
+	out := []any{}
+	for _, projectID := range projectIDs {
+		if projectID == "" {
+			continue
+		}
+		var rec projectRecord
+		if err := conn.Get(context.Background(), "/v9/projects/"+projectID, connection.TeamQuery(teamID), &rec); err != nil {
+			if connection.IsForbidden(err) || connection.IsNotFound(err) {
+				continue
+			}
+			return nil, err
+		}
+		if rec.ID == "" {
+			rec.ID = projectID
+		}
+		project, err := newVercelProject(runtime, teamID, &rec)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, project)
+	}
+	return out, nil
+}
+
 // --- environment variables ------------------------------------------------
 
 type envRecord struct {
@@ -347,6 +377,13 @@ func (c *mqlVercelDeployment) id() (string, error) {
 
 // --- project domains ------------------------------------------------------
 
+// mqlVercelProjectDomainInternal caches the team a project domain belongs to and
+// its apex name, so apexDomain can resolve the typed team-domain reference.
+type mqlVercelProjectDomainInternal struct {
+	teamID   string
+	apexName string
+}
+
 type projectDomainRecord struct {
 	Name               string   `json:"name"`
 	ApexName           string   `json:"apexName"`
@@ -385,7 +422,37 @@ func (c *mqlVercelProject) domains() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, domain)
+		mqlDomain := domain.(*mqlVercelProjectDomain)
+		mqlDomain.teamID = c.teamID
+		mqlDomain.apexName = rec.ApexName
+		res = append(res, mqlDomain)
 	}
 	return res, nil
+}
+
+// apexDomain resolves the apex to the Vercel-managed team domain. Not every apex
+// is Vercel-managed (external or delegated domains exist), so the accessor
+// degrades to null when the domain is not found or not accessible.
+func (c *mqlVercelProjectDomain) apexDomain() (*mqlVercelDomain, error) {
+	if c.apexName == "" {
+		c.ApexDomain.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	conn := c.MqlRuntime.Connection.(*connection.VercelConnection)
+	var wrapper struct {
+		Domain domainRecord `json:"domain"`
+	}
+	if err := conn.Get(context.Background(), "/v5/domains/"+c.apexName, connection.TeamQuery(c.teamID), &wrapper); err != nil {
+		if connection.IsForbidden(err) || connection.IsNotFound(err) {
+			c.ApexDomain.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+	rec := wrapper.Domain
+	if rec.Name == "" {
+		rec.Name = c.apexName
+	}
+	return newVercelDomain(c.MqlRuntime, c.teamID, &rec)
 }
