@@ -851,7 +851,7 @@ atlassian.confluence.blogpost @defaults("title status") {
   title string
   // Content status (current, trashed, draft)
   status string
-  // Confluence content type (blogpost)
+  // Confluence content type. Always "blogpost" (kept for symmetry with page).
   type string
   // Key of the space the blog post lives in
   spaceKey string
