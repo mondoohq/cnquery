@@ -202,7 +202,9 @@ func (r *mqlMongodbatlas) cloudProviderAccessRoles() ([]any, error) {
 }
 
 // resolveCloudProviderAccessRole finds a project's cloud provider access role by
-// id and maps it, or returns nil when no role matches.
+// id and maps it, or returns nil when no role matches. It lists the project's
+// roles on each call; the only caller today is pushBasedLogConfig, of which
+// there is at most one per project, so the list call is bounded to one per scan.
 func resolveCloudProviderAccessRole(runtime *plugin.Runtime, pid, roleID string) (*mqlMongodbatlasCloudProviderAccessRole, error) {
 	roles, _, err := atlasClient(runtime).CloudProviderAccessApi.ListCloudProviderAccessRoles(context.Background(), pid).Execute()
 	if err != nil {

@@ -14,7 +14,6 @@ import (
 )
 
 type mqlMongodbatlasFederationConfigInternal struct {
-	cacheFedID string
 	cacheIdpID string
 }
 
@@ -45,7 +44,6 @@ func (r *mqlMongodbatlas) federationSettings() (*mqlMongodbatlasFederationConfig
 		return nil, err
 	}
 	cfg := res.(*mqlMongodbatlasFederationConfig)
-	cfg.cacheFedID = fs.GetId()
 	cfg.cacheIdpID = fs.GetIdentityProviderId()
 	return cfg, nil
 }
@@ -88,7 +86,8 @@ func (r *mqlMongodbatlasFederationConfig) identityProvider() (*mqlMongodbatlasId
 		r.IdentityProvider.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	idp, httpResp, err := atlasClient(r.MqlRuntime).FederatedAuthenticationApi.GetIdentityProvider(context.Background(), r.cacheFedID, r.cacheIdpID).Execute()
+	fedID := r.Id.Data
+	idp, httpResp, err := atlasClient(r.MqlRuntime).FederatedAuthenticationApi.GetIdentityProvider(context.Background(), fedID, r.cacheIdpID).Execute()
 	if err != nil {
 		if isAccessDenied(httpResp) || (httpResp != nil && httpResp.StatusCode == http.StatusNotFound) {
 			r.IdentityProvider.State = plugin.StateIsSet | plugin.StateIsNull
@@ -96,7 +95,7 @@ func (r *mqlMongodbatlasFederationConfig) identityProvider() (*mqlMongodbatlasId
 		}
 		return nil, err
 	}
-	return newMqlMongodbatlasIdentityProvider(r.MqlRuntime, r.cacheFedID, *idp)
+	return newMqlMongodbatlasIdentityProvider(r.MqlRuntime, fedID, *idp)
 }
 
 func (r *mqlMongodbatlasFederationConfig) identityProviders() ([]any, error) {
