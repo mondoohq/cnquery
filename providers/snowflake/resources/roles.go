@@ -26,7 +26,7 @@ func initSnowflakeRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	}
 	name, _ := nameRaw.Value.(string)
 	if name == "" {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("snowflake.role requires a non-empty name")
 	}
 
 	conn := runtime.Connection.(*connection.SnowflakeConnection)

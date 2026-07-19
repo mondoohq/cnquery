@@ -8930,7 +8930,7 @@ func (c *mqlSnowflakeApplicationPackage) GetComment() *plugin.TValue[string] {
 type mqlSnowflakeExternalAccessIntegration struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSnowflakeExternalAccessIntegrationInternal it will be used here
+	mqlSnowflakeExternalAccessIntegrationInternal
 	Name                                 plugin.TValue[string]
 	Enabled                              plugin.TValue[bool]
 	Comment                              plugin.TValue[string]
@@ -8984,13 +8984,19 @@ func (c *mqlSnowflakeExternalAccessIntegration) GetComment() *plugin.TValue[stri
 }
 
 func (c *mqlSnowflakeExternalAccessIntegration) GetAllowedNetworkRules() *plugin.TValue[[]any] {
-	return &c.AllowedNetworkRules
+	return plugin.GetOrCompute[[]any](&c.AllowedNetworkRules, func() ([]any, error) {
+		return c.allowedNetworkRules()
+	})
 }
 
 func (c *mqlSnowflakeExternalAccessIntegration) GetAllowedAuthenticationSecrets() *plugin.TValue[[]any] {
-	return &c.AllowedAuthenticationSecrets
+	return plugin.GetOrCompute[[]any](&c.AllowedAuthenticationSecrets, func() ([]any, error) {
+		return c.allowedAuthenticationSecrets()
+	})
 }
 
 func (c *mqlSnowflakeExternalAccessIntegration) GetAllowedApiAuthenticationIntegrations() *plugin.TValue[[]any] {
-	return &c.AllowedApiAuthenticationIntegrations
+	return plugin.GetOrCompute[[]any](&c.AllowedApiAuthenticationIntegrations, func() ([]any, error) {
+		return c.allowedApiAuthenticationIntegrations()
+	})
 }

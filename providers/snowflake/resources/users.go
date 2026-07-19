@@ -147,7 +147,7 @@ func (r *mqlSnowflakeUser) parameters() ([]any, error) {
 
 	list := []any{}
 	for i := range parameters {
-		mqlResource, err := newMqlSnowflakeParameter(r.MqlRuntime, parameters[i])
+		mqlResource, err := newMqlSnowflakeParameter(r.MqlRuntime, "user/"+r.Name.Data, parameters[i])
 		if err != nil {
 			return nil, err
 		}

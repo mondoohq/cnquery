@@ -35,8 +35,8 @@ func initSnowflakeDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return args, nil, nil
 	}
 	name, ok := nameRaw.Value.(string)
-	if !ok || name == "" {
-		return args, nil, nil
+	if name == "" {
+		return nil, nil, fmt.Errorf("snowflake.database requires a non-empty name")
 	}
 
 	client := conn.Client()

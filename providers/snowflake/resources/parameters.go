@@ -65,7 +65,7 @@ func (r *mqlSnowflakeAccount) parameters() ([]any, error) {
 
 	list := []any{}
 	for i := range parameters {
-		mqlResource, err := newMqlSnowflakeParameter(r.MqlRuntime, parameters[i])
+		mqlResource, err := newMqlSnowflakeParameter(r.MqlRuntime, "account", parameters[i])
 		if err != nil {
 			return nil, err
 		}
@@ -83,9 +83,14 @@ func (r *mqlSnowflakeAccount) networkPolicy() (string, error) {
 	return findParameterValue(parameters, "NETWORK_POLICY"), nil
 }
 
-func newMqlSnowflakeParameter(runtime *plugin.Runtime, parameter *sdk.Parameter) (*mqlSnowflakeParameter, error) {
+// newMqlSnowflakeParameter builds a parameter resource. scope qualifies the
+// cache key so identically-named parameters at different scopes (account vs a
+// given user) do not collide: the same key (e.g. TIMEZONE) exists at the
+// account level and on every user, and a bare-key __id would make every user's
+// parameters resolve to the first-seen instance.
+func newMqlSnowflakeParameter(runtime *plugin.Runtime, scope string, parameter *sdk.Parameter) (*mqlSnowflakeParameter, error) {
 	r, err := CreateResource(runtime, "snowflake.parameter", map[string]*llx.RawData{
-		"__id":         llx.StringData(parameter.Key), // TODO: update key
+		"__id":         llx.StringData(scope + "/" + parameter.Key),
 		"key":          llx.StringData(parameter.Key),
 		"value":        llx.StringData(parameter.Value),
 		"description":  llx.StringData(parameter.Description),

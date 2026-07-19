@@ -27,7 +27,7 @@ func initSnowflakeWarehouse(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 	name, _ := nameRaw.Value.(string)
 	if name == "" {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("snowflake.warehouse requires a non-empty name")
 	}
 
 	conn := runtime.Connection.(*connection.SnowflakeConnection)

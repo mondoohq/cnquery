@@ -1584,9 +1584,9 @@ snowflake.externalAccessIntegration @defaults("name enabled") {
   // Comment on the integration
   comment string
   // Fully qualified names of the network rules the integration allows
-  allowedNetworkRules []string
+  allowedNetworkRules() []string
   // Fully qualified names of the secrets the integration allows
-  allowedAuthenticationSecrets []string
+  allowedAuthenticationSecrets() []string
   // Names of the API authentication integrations the integration allows
-  allowedApiAuthenticationIntegrations []string
+  allowedApiAuthenticationIntegrations() []string
 }

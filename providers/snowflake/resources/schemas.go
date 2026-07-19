@@ -31,7 +31,7 @@ func initSnowflakeSchema(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	databaseName, _ := dbRaw.Value.(string)
 	name, _ := nameRaw.Value.(string)
 	if databaseName == "" || name == "" {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("snowflake.schema requires a non-empty databaseName and name")
 	}
 
 	conn := runtime.Connection.(*connection.SnowflakeConnection)
