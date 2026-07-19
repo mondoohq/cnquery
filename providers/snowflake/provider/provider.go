@@ -47,6 +47,15 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		user = string(x.Value)
 	}
 
+	if x, ok := flags["token"]; ok && len(x.Value) != 0 {
+		// A programmatic access token (PAT) authenticates as a bearer token.
+		conf.Credentials = append(conf.Credentials, &vault.Credential{
+			Type:   vault.CredentialType_bearer,
+			User:   user,
+			Secret: x.Value,
+		})
+	}
+
 	if x, ok := flags["password"]; ok && len(x.Value) != 0 {
 		conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential(user, string(x.Value)))
 	}

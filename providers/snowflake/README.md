@@ -13,7 +13,35 @@ Required arguments:
 
 > The easiest way to get the account name and region is to look at the URL when you log in to the Snowflake web interface. When clicking on the account icon you can copy the account URL that included the account name and region.
 
-**Password Authentication**
+**Programmatic Access Token (PAT) — recommended**
+
+A programmatic access token (PAT) is Snowflake's recommended method for tools and automation. It replaces password sign-ins, which Snowflake is phasing out, and can be scoped to a role and governed by a network policy.
+
+Arguments:
+
+- `--token` - The programmatic access token.
+
+```shell
+cnspec shell snowflake --account zi12345 --region us-central1.gcp --user CHRIS --role ACCOUNTADMIN --token <your PAT>
+```
+
+> To generate a PAT, use [Snowsight](https://docs.snowflake.com/en/user-guide/programmatic-access-tokens) and assign it to your user. Prefer a token scoped to the least-privileged role that still allows the scan.
+
+**Key-Pair Authentication**
+
+Arguments:
+
+- `--identity-file` (`-i`) - The path to the private key file.
+
+```shell
+cnspec shell snowflake --account zi12345 --region us-central1.gcp --user CHRIS --role ACCOUNTADMIN --identity-file ~/.ssh/id_rsa
+```
+
+> You need to generate a RSA key pair and assign the public key to your user via [Snowsight](https://docs.snowflake.com/en/user-guide/key-pair-auth).
+
+**Password Authentication (legacy)**
+
+Password sign-ins are being deprecated by Snowflake and require MFA for interactive users. Prefer a PAT or key-pair for new setups.
 
 Arguments:
 
@@ -21,22 +49,10 @@ Arguments:
 - `--ask-pass` - Prompt for the Snowflake password.
 
 ```shell
-shell snowflake --account zi12345 --region us-central1.gcp --user CHRIS  --role ACCOUNTADMIN --ask-pass
+cnspec shell snowflake --account zi12345 --region us-central1.gcp --user CHRIS --role ACCOUNTADMIN --ask-pass
 ```
 
 > To create a username and password, use [Snowsight](https://docs.snowflake.com/en/user-guide/admin-user-management#using-snowsight) or using [SQL](https://docs.snowflake.com/en/user-guide/admin-user-management#using-sql).
-
-**Certificate Authentication**
-
-Arguments:
-
-- `--private-key` - The path to the private key file.
-
-```shell
-shell snowflake --account zi12345 --region us-central1.gcp --user CHRIS  --role ACCOUNTADMIN --private-key ~/.ssh/id_rsa
-```
-
-> You need to generate a RSA key pair and assign the public key to your user via [Snowsight](https://docs.snowflake.com/en/user-guide/key-pair-auth).
 
 ## Asset Discovery
 

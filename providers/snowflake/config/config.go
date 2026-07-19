@@ -22,13 +22,13 @@ var Config = plugin.Provider{
 			Short: "a Snowflake account",
 			Long: `Use the snowflake provider to query a Snowflake account.
 
-To access a Snowflake account, you must first authenticate with Snowflake. To do so, create an RSA key pair and assign the public key to your user account using Snowsight. To learn how, read https://docs.snowflake.com/en/user-guide/key-pair-auth.
+To access a Snowflake account, you must first authenticate with Snowflake. The recommended method is a programmatic access token (PAT), which replaces password sign-ins that Snowflake is phasing out. Generate a PAT for your user in Snowsight and pass it with --token. Key-pair authentication (--identity-file) is also supported; to learn how, read https://docs.snowflake.com/en/user-guide/key-pair-auth.
 
 Once you successfully authenticate, you can scan or query the Snowflake account.
 
 Example:
-  cnspec shell snowflake --account <account id> --region <region> --user <your id> --role <the role you use> --identity-file <path to your private RSA key>
-  cnspec scan snowflake --account <account id> --region <region> --user <your id> --role <the role you use> --identity-file <path to your private RSA key>
+  cnspec shell snowflake --account <account id> --region <region> --user <your id> --role <the role you use> --token <your PAT>
+  cnspec scan snowflake --account <account id> --region <region> --user <your id> --role <the role you use> --token <your PAT>
 `,
 			Discovery: []string{
 				connection.DiscoveryAuto,
@@ -48,6 +48,14 @@ Example:
 					Type:        plugin.FlagType_Bool,
 					Default:     "false",
 					Desc:        "Prompt for the connection password",
+					ConfigEntry: "-",
+				},
+				{
+					Long:        "token",
+					Type:        plugin.FlagType_String,
+					Default:     "",
+					Desc:        "Set the programmatic access token (PAT)",
+					Option:      plugin.FlagOption_Password,
 					ConfigEntry: "-",
 				},
 				{

@@ -79,6 +79,11 @@ func NewSnowflakeConnection(id uint32, asset *inventory.Asset, conf *inventory.C
 			}
 			cfg.PrivateKey = key
 			cfg.Authenticator = gosnowflake.AuthTypeJwt
+		case vault.CredentialType_bearer:
+			// A programmatic access token (PAT) is passed as a bearer token.
+			cfg.User = cred.User
+			cfg.Token = string(cred.Secret)
+			cfg.Authenticator = gosnowflake.AuthTypePat
 		}
 	}
 
