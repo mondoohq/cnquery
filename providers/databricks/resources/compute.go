@@ -109,6 +109,10 @@ func (r *mqlDatabricksCluster) policy() (*mqlDatabricksClusterPolicy, error) {
 	if err != nil {
 		return nil, err
 	}
+	if p == nil {
+		r.Policy.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
 	return newMqlDatabricksClusterPolicy(r.MqlRuntime, *p)
 }
 

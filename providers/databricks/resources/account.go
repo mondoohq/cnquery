@@ -79,6 +79,10 @@ func (r *mqlDatabricksWorkspace) network() (*mqlDatabricksNetwork, error) {
 	if err != nil {
 		return nil, err
 	}
+	if net == nil {
+		r.Network.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
 	return newMqlDatabricksNetwork(r.MqlRuntime, *net)
 }
 
@@ -94,6 +98,10 @@ func (r *mqlDatabricksWorkspace) privateAccessSettings() (*mqlDatabricksPrivateA
 	pas, err := acc.PrivateAccess.Get(context.Background(), provisioning.GetPrivateAccesRequest{PrivateAccessSettingsId: r.cachePrivateAccessSettingsId})
 	if err != nil {
 		return nil, err
+	}
+	if pas == nil {
+		r.PrivateAccessSettings.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
 	return newMqlDatabricksPrivateAccessSetting(r.MqlRuntime, *pas)
 }

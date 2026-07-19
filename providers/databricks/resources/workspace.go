@@ -129,8 +129,13 @@ func (r *mqlDatabricks) workspaceSettings() (*mqlDatabricksWorkspaceConf, error)
 	conn := r.MqlRuntime.Connection.(*connection.DatabricksConnection)
 	ctx := context.Background()
 
+	id := conn.WorkspaceID()
+	if id == "" {
+		id = conn.Host()
+	}
+
 	res, err := CreateResource(r.MqlRuntime, "databricks.workspaceConf", map[string]*llx.RawData{
-		"__id":                                             llx.StringData("databricks.workspaceConf/" + conn.WorkspaceID() + conn.Host()),
+		"__id":                                             llx.StringData("databricks.workspaceConf/" + id),
 		"tokensEnabled":                                    llx.BoolDataPtr(confBool(ctx, ws, "enableTokens")),
 		"maxTokenLifetimeDays":                             llx.IntDataPtr(confInt(ctx, ws, "maxTokenLifetimeDays")),
 		"ipAccessListsEnabled":                             llx.BoolDataPtr(confBool(ctx, ws, "enableIpAccessLists")),
@@ -145,7 +150,10 @@ func (r *mqlDatabricks) workspaceSettings() (*mqlDatabricksWorkspaceConf, error)
 }
 
 // confBool reads a single workspace conf key and interprets it as a boolean,
-// returning nil when the key is unset or cannot be read.
+// returning nil when the key is unset or cannot be read. Each key is fetched
+// individually because WorkspaceConf.GetStatus does not accept a
+// comma-separated key list (a joined string is treated as one unknown key and
+// returns nothing).
 func confBool(ctx context.Context, ws *databricks.WorkspaceClient, key string) *bool {
 	v, ok := confValue(ctx, ws, key)
 	if !ok {

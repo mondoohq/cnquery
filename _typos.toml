@@ -90,6 +90,9 @@ transcripting = "transcripting"
 entrys = "entrys"
 attemps = "attemps"
 iz = "iz"
+# Databricks Go SDK type name GetPrivateAccesRequest (missing the second "s").
+# The SDK's own spelling, so references to it cannot be renamed.
+acces = "acces"
 # Pre-existing misspellings in MQL schema fields / exported Go identifiers.
 # Renaming these would break the schema or API, so they are baselined.
 appliable = "appliable"
