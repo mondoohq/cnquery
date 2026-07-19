@@ -52,17 +52,27 @@ func initSnowflakeRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 // snowflakeRoleByName resolves a role name to a typed snowflake.role, hydrated
 // through the role's init. It returns nil for an empty name; callers should set
 // the field's null state before calling in that case.
+// snowflakeRoleByName resolves an account role by name, returning nil (not an
+// error) when the name is not a listable account role. Object owners are not
+// always account roles: they can be an application, a database role, or a role
+// the caller cannot see. Callers treat a nil result as a null typed reference
+// rather than failing the query, so this looks the role up directly instead of
+// through NewResource (whose init returns a not-found error for direct queries).
 func snowflakeRoleByName(runtime *plugin.Runtime, name string) (*mqlSnowflakeRole, error) {
 	if name == "" {
 		return nil, nil
 	}
-	role, err := NewResource(runtime, "snowflake.role", map[string]*llx.RawData{
-		"name": llx.StringData(name),
-	})
+	conn := runtime.Connection.(*connection.SnowflakeConnection)
+	roles, err := conn.Client().Roles.Show(context.Background(), sdk.NewShowRoleRequest().WithLike(sdk.NewLikeRequest(name)))
 	if err != nil {
 		return nil, err
 	}
-	return role.(*mqlSnowflakeRole), nil
+	for i := range roles {
+		if roles[i].Name == name {
+			return newMqlSnowflakeRole(runtime, roles[i])
+		}
+	}
+	return nil, nil
 }
 
 func (r *mqlSnowflakeAccount) roles() ([]any, error) {
@@ -115,7 +125,17 @@ func resolveOwnerRole(runtime *plugin.Runtime, name string, field *plugin.TValue
 		field.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return snowflakeRoleByName(runtime, name)
+	role, err := snowflakeRoleByName(runtime, name)
+	if err != nil {
+		return nil, err
+	}
+	if role == nil {
+		// The owner is not a listable account role (an application, database
+		// role, or one the caller cannot see); report the ref as null.
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return role, nil
 }
 
 func (r *mqlSnowflakeRole) ownerRole() (*mqlSnowflakeRole, error) {

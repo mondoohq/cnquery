@@ -57,7 +57,15 @@ func (r *mqlSnowflakeApplication) owner() (*mqlSnowflakeRole, error) {
 		r.Owner.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return snowflakeRoleByName(r.MqlRuntime, r.cacheOwner)
+	role, err := snowflakeRoleByName(r.MqlRuntime, r.cacheOwner)
+	if err != nil {
+		return nil, err
+	}
+	if role == nil {
+		r.Owner.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return role, nil
 }
 
 func (r *mqlSnowflakeAccount) applicationPackages() ([]any, error) {
@@ -94,5 +102,13 @@ func (r *mqlSnowflakeApplicationPackage) owner() (*mqlSnowflakeRole, error) {
 		r.Owner.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return snowflakeRoleByName(r.MqlRuntime, r.cacheOwner)
+	role, err := snowflakeRoleByName(r.MqlRuntime, r.cacheOwner)
+	if err != nil {
+		return nil, err
+	}
+	if role == nil {
+		r.Owner.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return role, nil
 }

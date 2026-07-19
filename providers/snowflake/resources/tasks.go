@@ -78,7 +78,15 @@ func (r *mqlSnowflakeTask) owner() (*mqlSnowflakeRole, error) {
 		r.Owner.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return snowflakeRoleByName(r.MqlRuntime, r.cacheOwner)
+	role, err := snowflakeRoleByName(r.MqlRuntime, r.cacheOwner)
+	if err != nil {
+		return nil, err
+	}
+	if role == nil {
+		r.Owner.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return role, nil
 }
 
 func (r *mqlSnowflakeTask) warehouse() (*mqlSnowflakeWarehouse, error) {
@@ -86,13 +94,15 @@ func (r *mqlSnowflakeTask) warehouse() (*mqlSnowflakeWarehouse, error) {
 		r.Warehouse.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	wh, err := NewResource(r.MqlRuntime, "snowflake.warehouse", map[string]*llx.RawData{
-		"name": llx.StringData(r.cacheWarehouse),
-	})
+	wh, err := snowflakeWarehouseByName(r.MqlRuntime, r.cacheWarehouse)
 	if err != nil {
 		return nil, err
 	}
-	return wh.(*mqlSnowflakeWarehouse), nil
+	if wh == nil {
+		r.Warehouse.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return wh, nil
 }
 
 // initSnowflakeTask resolves a task by its database, schema, and name so typed

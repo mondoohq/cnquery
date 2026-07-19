@@ -50,6 +50,27 @@ func initSnowflakeWarehouse(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	return nil, nil, fmt.Errorf("snowflake.warehouse %q not found", name)
 }
 
+// snowflakeWarehouseByName resolves a warehouse by name, returning nil (not an
+// error) when no such warehouse is listable (dropped, or not visible to the
+// caller). Callers treat a nil result as a null typed reference rather than
+// failing the query.
+func snowflakeWarehouseByName(runtime *plugin.Runtime, name string) (*mqlSnowflakeWarehouse, error) {
+	if name == "" {
+		return nil, nil
+	}
+	conn := runtime.Connection.(*connection.SnowflakeConnection)
+	warehouses, err := conn.Client().Warehouses.Show(context.Background(), &sdk.ShowWarehouseOptions{Like: &sdk.Like{Pattern: sdk.String(name)}})
+	if err != nil {
+		return nil, err
+	}
+	for i := range warehouses {
+		if warehouses[i].Name == name {
+			return newMqlSnowflakeWarehouse(runtime, warehouses[i])
+		}
+	}
+	return nil, nil
+}
+
 func (r *mqlSnowflakeAccount) warehouses() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
 	client := conn.Client()

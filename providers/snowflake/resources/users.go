@@ -108,13 +108,15 @@ func (r *mqlSnowflakeUser) owner() (*mqlSnowflakeRole, error) {
 		r.Owner.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	role, err := NewResource(r.MqlRuntime, "snowflake.role", map[string]*llx.RawData{
-		"name": llx.StringData(r.cacheOwner),
-	})
+	role, err := snowflakeRoleByName(r.MqlRuntime, r.cacheOwner)
 	if err != nil {
 		return nil, err
 	}
-	return role.(*mqlSnowflakeRole), nil
+	if role == nil {
+		r.Owner.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return role, nil
 }
 
 // daysSinceLastLogin returns whole days since the user's last successful login.
