@@ -641,9 +641,10 @@ func (a *mqlAtlassianConfluencePage) cacheFromContent(content *models.ContentSch
 	if content.Version != nil && content.Version.When != "" {
 		a.cacheUpdatedAt = parseConfluenceTime(content.Version.When)
 	}
-	if content.Links != nil && content.Links.Webui != "" {
-		// Webui is relative to the instance base; prefix it when the base is
-		// present so the field is an absolute, clickable URL.
+	if content.Links != nil && content.Links.Base != "" && content.Links.Webui != "" {
+		// Webui is relative to the instance base; only build the URL when the
+		// base is present so the field stays absolute (or empty), never a bare
+		// relative path.
 		a.cacheWebURL = content.Links.Base + content.Links.Webui
 	}
 	if content.Metadata != nil && content.Metadata.Labels != nil {

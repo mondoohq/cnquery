@@ -157,11 +157,11 @@ func initAtlassianScimUser(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 	idRaw, ok := args["id"]
 	if !ok {
-		return args, nil, nil
+		return nil, nil, errors.New("atlassian.scim.user requires an id")
 	}
 	id, ok := idRaw.Value.(string)
 	if !ok || id == "" {
-		return args, nil, nil
+		return nil, nil, errors.New("atlassian.scim.user: id must be a non-empty string")
 	}
 
 	conn, ok := runtime.Connection.(*scim.ScimConnection)
@@ -192,11 +192,11 @@ func initAtlassianScimGroup(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 	idRaw, ok := args["id"]
 	if !ok {
-		return args, nil, nil
+		return nil, nil, errors.New("atlassian.scim.group requires an id")
 	}
 	id, ok := idRaw.Value.(string)
 	if !ok || id == "" {
-		return args, nil, nil
+		return nil, nil, errors.New("atlassian.scim.group: id must be a non-empty string")
 	}
 
 	conn, ok := runtime.Connection.(*scim.ScimConnection)
