@@ -85,11 +85,12 @@ als = "als"
 # spelling, so it must stay verbatim to match the real registry key.
 transcripting = "transcripting"
 # Alibaba Cloud Go SDK field spellings baked into exported identifiers
-# (RouteEntrys, MaxLoginAttemps, IzNo). These are the SDK's own spellings, so
-# references to them cannot be renamed.
+# (RouteEntrys, MaxLoginAttemps, IzNo, LoadBalancerBussinessStatus). These are
+# the SDK's own spellings, so references to them cannot be renamed.
 entrys = "entrys"
 attemps = "attemps"
 iz = "iz"
+bussiness = "bussiness"
 # Databricks Go SDK type name GetPrivateAccesRequest (missing the second "s").
 # The SDK's own spelling, so references to it cannot be renamed.
 acces = "acces"
