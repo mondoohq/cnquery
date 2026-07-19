@@ -203,6 +203,11 @@ func (c *mqlVercelProject) id() (string, error) {
 // resolveProjectRefs resolves a list of project ids into typed vercel.project
 // references. Ids that no longer resolve (project deleted, or not visible to the
 // token) are skipped rather than failing the whole list; other errors propagate.
+//
+// This makes one project-by-id call per id (N+1); the Vercel API has no
+// filter-by-id-list endpoint, and webhooks / integrations are typically scoped
+// to a handful of projects, so the simple per-id resolve matches the existing
+// store.connectedProjects pattern.
 func resolveProjectRefs(runtime *plugin.Runtime, teamID string, projectIDs []string) ([]any, error) {
 	conn := runtime.Connection.(*connection.VercelConnection)
 
