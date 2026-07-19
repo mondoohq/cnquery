@@ -4,9 +4,11 @@
 package connection
 
 import (
+	"context"
 	"crypto/rsa"
 	"encoding/pem"
 	"errors"
+	"sync"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/snowflakedb/gosnowflake"
@@ -27,6 +29,11 @@ type SnowflakeConnection struct {
 	// database is set when the connection is scoped to a single database,
 	// making the asset a snowflake-database rather than the whole account.
 	database string
+	// account caches the current session's account name; it is resolved once
+	// via Account() so detect() and discover() share a single lookup.
+	accountOnce sync.Once
+	account     string
+	accountErr  error
 }
 
 func NewSnowflakeConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*SnowflakeConnection, error) {
@@ -125,6 +132,21 @@ func (c *SnowflakeConnection) Asset() *inventory.Asset {
 
 func (c *SnowflakeConnection) Client() *sdk.Client {
 	return c.client
+}
+
+// Account returns the current session's account name, resolving it once and
+// caching the result so repeated callers (detect and discover) share a single
+// CurrentSessionDetails round-trip.
+func (c *SnowflakeConnection) Account() (string, error) {
+	c.accountOnce.Do(func() {
+		details, err := c.client.ContextFunctions.CurrentSessionDetails(context.Background())
+		if err != nil {
+			c.accountErr = err
+			return
+		}
+		c.account = details.Account
+	})
+	return c.account, c.accountErr
 }
 
 // Database returns the database this connection is scoped to, or "" when the

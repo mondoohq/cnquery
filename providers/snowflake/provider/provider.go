@@ -165,11 +165,10 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.SnowflakeConnection) error {
-	current, err := conn.Client().ContextFunctions.CurrentSessionDetails(context.Background())
+	account, err := conn.Account()
 	if err != nil {
 		return err
 	}
-	account := current.Account
 
 	// A database-scoped connection is a single-database asset discovered under
 	// the account; otherwise the asset is the account itself.

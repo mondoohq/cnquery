@@ -31,14 +31,12 @@ func (s *Service) discover(conn *connection.SnowflakeConnection) (*inventory.Inv
 		return nil, nil
 	}
 
-	ctx := context.Background()
-	current, err := conn.Client().ContextFunctions.CurrentSessionDetails(ctx)
+	account, err := conn.Account()
 	if err != nil {
 		return nil, err
 	}
-	account := current.Account
 
-	databases, err := conn.Client().Databases.Show(ctx, &sdk.ShowDatabasesOptions{})
+	databases, err := conn.Client().Databases.Show(context.Background(), &sdk.ShowDatabasesOptions{})
 	if err != nil {
 		return nil, err
 	}
