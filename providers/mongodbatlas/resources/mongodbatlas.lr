@@ -63,7 +63,7 @@ mongodbatlas {
   // Cloud provider access roles configured for the project
   cloudProviderAccessRoles() []mongodbatlas.cloudProviderAccessRole
   // Identity federation settings for the organization
-  federationSettings() mongodbatlas.federationSettings
+  federationSettings() mongodbatlas.federationConfig
 }
 
 // MongoDB Atlas project
@@ -421,7 +421,7 @@ mongodbatlas.customDatabaseRole @defaults("roleName") {
 // domains the organization has federated, and the identity providers linked to
 // the federation. Present only when the organization has federation configured,
 // and null otherwise.
-mongodbatlas.federationSettings @defaults("id identityProviderStatus") {
+mongodbatlas.federationConfig @defaults("id identityProviderStatus") {
   // Federation settings id
   id string
   // Status of the connected identity provider (ACTIVE or INACTIVE)
@@ -444,7 +444,7 @@ mongodbatlas.federationSettings @defaults("id identityProviderStatus") {
 // matter for sign-in security (SAML request binding, response signature
 // algorithm, and SSO debug mode; OIDC authorization type, client id, and
 // requested scopes). Read providers from the federation settings, for example
-// `mongodbatlas.federationSettings.identityProviders.where(ssoDebugEnabled == true)`.
+// `mongodbatlas.federationConfig.identityProviders.where(ssoDebugEnabled == true)`.
 mongodbatlas.identityProvider @defaults("displayName protocol status") {
   // Identity provider id
   id string

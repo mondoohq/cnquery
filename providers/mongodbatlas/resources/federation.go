@@ -12,7 +12,7 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
-func (r *mqlMongodbatlas) federationSettings() (*mqlMongodbatlasFederationSettings, error) {
+func (r *mqlMongodbatlas) federationSettings() (*mqlMongodbatlasFederationConfig, error) {
 	oid, err := orgID(r.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -28,8 +28,8 @@ func (r *mqlMongodbatlas) federationSettings() (*mqlMongodbatlasFederationSettin
 		}
 		return nil, err
 	}
-	res, err := CreateResource(r.MqlRuntime, "mongodbatlas.federationSettings", map[string]*llx.RawData{
-		"__id":                   llx.StringData("mongodbatlas.federationSettings/" + fs.GetId()),
+	res, err := CreateResource(r.MqlRuntime, "mongodbatlas.federationConfig", map[string]*llx.RawData{
+		"__id":                   llx.StringData("mongodbatlas.federationConfig/" + fs.GetId()),
 		"id":                     llx.StringData(fs.GetId()),
 		"identityProviderStatus": llx.StringData(fs.GetIdentityProviderStatus()),
 		"identityProviderId":     llx.StringData(fs.GetIdentityProviderId()),
@@ -39,10 +39,10 @@ func (r *mqlMongodbatlas) federationSettings() (*mqlMongodbatlasFederationSettin
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlMongodbatlasFederationSettings), nil
+	return res.(*mqlMongodbatlasFederationConfig), nil
 }
 
-func (r *mqlMongodbatlasFederationSettings) identityProviders() ([]any, error) {
+func (r *mqlMongodbatlasFederationConfig) identityProviders() ([]any, error) {
 	client := atlasClient(r.MqlRuntime)
 	ctx := context.Background()
 	fedID := r.Id.Data
