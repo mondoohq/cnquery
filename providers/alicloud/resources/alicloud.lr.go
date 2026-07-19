@@ -85,6 +85,16 @@ const (
 	ResourceAlicloudNasMountTarget               string = "alicloud.nas.mountTarget"
 	ResourceAlicloudNasAccessGroup               string = "alicloud.nas.accessGroup"
 	ResourceAlicloudNasAccessRule                string = "alicloud.nas.accessRule"
+	ResourceAlicloudWaf                          string = "alicloud.waf"
+	ResourceAlicloudWafInstance                  string = "alicloud.waf.instance"
+	ResourceAlicloudWafDefenseResource           string = "alicloud.waf.defenseResource"
+	ResourceAlicloudWafDomain                    string = "alicloud.waf.domain"
+	ResourceAlicloudCloudFirewall                string = "alicloud.cloudFirewall"
+	ResourceAlicloudCloudFirewallControlPolicy   string = "alicloud.cloudFirewall.controlPolicy"
+	ResourceAlicloudAntiddos                     string = "alicloud.antiddos"
+	ResourceAlicloudAntiddosInstance             string = "alicloud.antiddos.instance"
+	ResourceAlicloudAntiddosWebRule              string = "alicloud.antiddos.webRule"
+	ResourceAlicloudAntiddosNetworkRule          string = "alicloud.antiddos.networkRule"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -366,6 +376,46 @@ func init() {
 		"alicloud.nas.accessRule": {
 			// to override args, implement: initAlicloudNasAccessRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAlicloudNasAccessRule,
+		},
+		"alicloud.waf": {
+			// to override args, implement: initAlicloudWaf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudWaf,
+		},
+		"alicloud.waf.instance": {
+			// to override args, implement: initAlicloudWafInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudWafInstance,
+		},
+		"alicloud.waf.defenseResource": {
+			// to override args, implement: initAlicloudWafDefenseResource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudWafDefenseResource,
+		},
+		"alicloud.waf.domain": {
+			// to override args, implement: initAlicloudWafDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudWafDomain,
+		},
+		"alicloud.cloudFirewall": {
+			// to override args, implement: initAlicloudCloudFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudCloudFirewall,
+		},
+		"alicloud.cloudFirewall.controlPolicy": {
+			// to override args, implement: initAlicloudCloudFirewallControlPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudCloudFirewallControlPolicy,
+		},
+		"alicloud.antiddos": {
+			// to override args, implement: initAlicloudAntiddos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudAntiddos,
+		},
+		"alicloud.antiddos.instance": {
+			// to override args, implement: initAlicloudAntiddosInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudAntiddosInstance,
+		},
+		"alicloud.antiddos.webRule": {
+			// to override args, implement: initAlicloudAntiddosWebRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudAntiddosWebRule,
+		},
+		"alicloud.antiddos.networkRule": {
+			// to override args, implement: initAlicloudAntiddosNetworkRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudAntiddosNetworkRule,
 		},
 	}
 }
@@ -3566,6 +3616,246 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.nas.accessRule.priority": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudNasAccessRule).GetPriority()).ToDataRes(types.Int)
+	},
+	"alicloud.waf.instances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWaf).GetInstances()).ToDataRes(types.Array(types.Resource("alicloud.waf.instance")))
+	},
+	"alicloud.waf.instance.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafInstance).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.waf.instance.instanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafInstance).GetInstanceId()).ToDataRes(types.String)
+	},
+	"alicloud.waf.instance.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafInstance).GetStatus()).ToDataRes(types.Int)
+	},
+	"alicloud.waf.instance.edition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafInstance).GetEdition()).ToDataRes(types.String)
+	},
+	"alicloud.waf.instance.payType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafInstance).GetPayType()).ToDataRes(types.String)
+	},
+	"alicloud.waf.instance.inDebt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafInstance).GetInDebt()).ToDataRes(types.String)
+	},
+	"alicloud.waf.instance.startTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafInstance).GetStartTime()).ToDataRes(types.Time)
+	},
+	"alicloud.waf.instance.endTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafInstance).GetEndTime()).ToDataRes(types.Time)
+	},
+	"alicloud.waf.instance.defenseResources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafInstance).GetDefenseResources()).ToDataRes(types.Array(types.Resource("alicloud.waf.defenseResource")))
+	},
+	"alicloud.waf.instance.domains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafInstance).GetDomains()).ToDataRes(types.Array(types.Resource("alicloud.waf.domain")))
+	},
+	"alicloud.waf.defenseResource.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseResource).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.waf.defenseResource.instanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseResource).GetInstanceId()).ToDataRes(types.String)
+	},
+	"alicloud.waf.defenseResource.resource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseResource).GetResource()).ToDataRes(types.String)
+	},
+	"alicloud.waf.defenseResource.product": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseResource).GetProduct()).ToDataRes(types.String)
+	},
+	"alicloud.waf.defenseResource.pattern": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseResource).GetPattern()).ToDataRes(types.String)
+	},
+	"alicloud.waf.defenseResource.resourceStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseResource).GetResourceStatus()).ToDataRes(types.String)
+	},
+	"alicloud.waf.defenseResource.resourceGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseResource).GetResourceGroup()).ToDataRes(types.String)
+	},
+	"alicloud.waf.defenseResource.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseResource).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"alicloud.waf.domain.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDomain).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.waf.domain.instanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDomain).GetInstanceId()).ToDataRes(types.String)
+	},
+	"alicloud.waf.domain.domain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDomain).GetDomain()).ToDataRes(types.String)
+	},
+	"alicloud.waf.domain.cname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDomain).GetCname()).ToDataRes(types.String)
+	},
+	"alicloud.waf.domain.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDomain).GetStatus()).ToDataRes(types.Int)
+	},
+	"alicloud.waf.domain.httpPorts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDomain).GetHttpPorts()).ToDataRes(types.Array(types.Int))
+	},
+	"alicloud.waf.domain.httpsPorts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDomain).GetHttpsPorts()).ToDataRes(types.Array(types.Int))
+	},
+	"alicloud.waf.domain.httpsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDomain).GetHttpsEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.waf.domain.certId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDomain).GetCertId()).ToDataRes(types.String)
+	},
+	"alicloud.waf.domain.tlsVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDomain).GetTlsVersion()).ToDataRes(types.String)
+	},
+	"alicloud.waf.domain.tls13Enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDomain).GetTls13Enabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.waf.domain.certExpireTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDomain).GetCertExpireTime()).ToDataRes(types.Time)
+	},
+	"alicloud.cloudFirewall.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewall).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.cloudFirewall.edition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewall).GetEdition()).ToDataRes(types.Int)
+	},
+	"alicloud.cloudFirewall.controlPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewall).GetControlPolicies()).ToDataRes(types.Array(types.Resource("alicloud.cloudFirewall.controlPolicy")))
+	},
+	"alicloud.cloudFirewall.controlPolicy.aclUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallControlPolicy).GetAclUuid()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.controlPolicy.direction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallControlPolicy).GetDirection()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.controlPolicy.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallControlPolicy).GetAction()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.controlPolicy.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallControlPolicy).GetSource()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.controlPolicy.sourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallControlPolicy).GetSourceType()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.controlPolicy.destination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallControlPolicy).GetDestination()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.controlPolicy.destinationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallControlPolicy).GetDestinationType()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.controlPolicy.destPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallControlPolicy).GetDestPort()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.controlPolicy.proto": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallControlPolicy).GetProto()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.controlPolicy.applicationName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallControlPolicy).GetApplicationName()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.controlPolicy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallControlPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.controlPolicy.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallControlPolicy).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.cloudFirewall.controlPolicy.order": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallControlPolicy).GetOrder()).ToDataRes(types.Int)
+	},
+	"alicloud.cloudFirewall.controlPolicy.hitTimes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallControlPolicy).GetHitTimes()).ToDataRes(types.Int)
+	},
+	"alicloud.antiddos.instances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddos).GetInstances()).ToDataRes(types.Array(types.Resource("alicloud.antiddos.instance")))
+	},
+	"alicloud.antiddos.instance.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosInstance).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.antiddos.instance.instanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosInstance).GetInstanceId()).ToDataRes(types.String)
+	},
+	"alicloud.antiddos.instance.remark": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosInstance).GetRemark()).ToDataRes(types.String)
+	},
+	"alicloud.antiddos.instance.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosInstance).GetStatus()).ToDataRes(types.Int)
+	},
+	"alicloud.antiddos.instance.edition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosInstance).GetEdition()).ToDataRes(types.Int)
+	},
+	"alicloud.antiddos.instance.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosInstance).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.antiddos.instance.ipMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosInstance).GetIpMode()).ToDataRes(types.String)
+	},
+	"alicloud.antiddos.instance.ipVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosInstance).GetIpVersion()).ToDataRes(types.String)
+	},
+	"alicloud.antiddos.instance.ip": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosInstance).GetIp()).ToDataRes(types.String)
+	},
+	"alicloud.antiddos.instance.debtStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosInstance).GetDebtStatus()).ToDataRes(types.Int)
+	},
+	"alicloud.antiddos.instance.expireTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosInstance).GetExpireTime()).ToDataRes(types.Time)
+	},
+	"alicloud.antiddos.instance.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosInstance).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"alicloud.antiddos.instance.webRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosInstance).GetWebRules()).ToDataRes(types.Array(types.Resource("alicloud.antiddos.webRule")))
+	},
+	"alicloud.antiddos.instance.networkRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosInstance).GetNetworkRules()).ToDataRes(types.Array(types.Resource("alicloud.antiddos.networkRule")))
+	},
+	"alicloud.antiddos.webRule.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosWebRule).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.antiddos.webRule.instanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosWebRule).GetInstanceId()).ToDataRes(types.String)
+	},
+	"alicloud.antiddos.webRule.domain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosWebRule).GetDomain()).ToDataRes(types.String)
+	},
+	"alicloud.antiddos.webRule.cname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosWebRule).GetCname()).ToDataRes(types.String)
+	},
+	"alicloud.antiddos.webRule.ccEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosWebRule).GetCcEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.antiddos.webRule.ccRuleEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosWebRule).GetCcRuleEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.antiddos.webRule.certName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosWebRule).GetCertName()).ToDataRes(types.String)
+	},
+	"alicloud.antiddos.webRule.certExpireTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosWebRule).GetCertExpireTime()).ToDataRes(types.Time)
+	},
+	"alicloud.antiddos.webRule.penalized": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosWebRule).GetPenalized()).ToDataRes(types.Bool)
+	},
+	"alicloud.antiddos.webRule.proxyTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosWebRule).GetProxyTypes()).ToDataRes(types.Array(types.Dict))
+	},
+	"alicloud.antiddos.webRule.realServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosWebRule).GetRealServers()).ToDataRes(types.Array(types.Dict))
+	},
+	"alicloud.antiddos.networkRule.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosNetworkRule).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.antiddos.networkRule.instanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosNetworkRule).GetInstanceId()).ToDataRes(types.String)
+	},
+	"alicloud.antiddos.networkRule.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosNetworkRule).GetProtocol()).ToDataRes(types.String)
+	},
+	"alicloud.antiddos.networkRule.frontendPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosNetworkRule).GetFrontendPort()).ToDataRes(types.Int)
+	},
+	"alicloud.antiddos.networkRule.backendPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosNetworkRule).GetBackendPort()).ToDataRes(types.Int)
+	},
+	"alicloud.antiddos.networkRule.realServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAntiddosNetworkRule).GetRealServers()).ToDataRes(types.Array(types.String))
 	},
 }
 
@@ -8025,6 +8315,366 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.nas.accessRule.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudNasAccessRule).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWaf).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.waf.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWaf).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafInstance).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.waf.instance.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafInstance).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.instance.instanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafInstance).InstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.instance.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafInstance).Status, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.instance.edition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafInstance).Edition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.instance.payType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafInstance).PayType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.instance.inDebt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafInstance).InDebt, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.instance.startTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafInstance).StartTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.instance.endTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafInstance).EndTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.instance.defenseResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafInstance).DefenseResources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.instance.domains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafInstance).Domains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseResource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseResource).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.waf.defenseResource.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseResource).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseResource.instanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseResource).InstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseResource.resource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseResource).Resource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseResource.product": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseResource).Product, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseResource.pattern": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseResource).Pattern, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseResource.resourceStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseResource).ResourceStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseResource.resourceGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseResource).ResourceGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseResource.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseResource).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDomain).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.waf.domain.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDomain).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.domain.instanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDomain).InstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.domain.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDomain).Domain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.domain.cname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDomain).Cname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.domain.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDomain).Status, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.domain.httpPorts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDomain).HttpPorts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.domain.httpsPorts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDomain).HttpsPorts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.domain.httpsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDomain).HttpsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.domain.certId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDomain).CertId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.domain.tlsVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDomain).TlsVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.domain.tls13Enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDomain).Tls13Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.domain.certExpireTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDomain).CertExpireTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewall).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.cloudFirewall.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewall).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.edition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewall).Edition, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.controlPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewall).ControlPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.controlPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallControlPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.cloudFirewall.controlPolicy.aclUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallControlPolicy).AclUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.controlPolicy.direction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallControlPolicy).Direction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.controlPolicy.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallControlPolicy).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.controlPolicy.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallControlPolicy).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.controlPolicy.sourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallControlPolicy).SourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.controlPolicy.destination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallControlPolicy).Destination, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.controlPolicy.destinationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallControlPolicy).DestinationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.controlPolicy.destPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallControlPolicy).DestPort, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.controlPolicy.proto": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallControlPolicy).Proto, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.controlPolicy.applicationName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallControlPolicy).ApplicationName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.controlPolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallControlPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.controlPolicy.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallControlPolicy).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.controlPolicy.order": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallControlPolicy).Order, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.controlPolicy.hitTimes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallControlPolicy).HitTimes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddos).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.antiddos.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddos).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosInstance).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.antiddos.instance.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosInstance).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.instance.instanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosInstance).InstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.instance.remark": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosInstance).Remark, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.instance.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosInstance).Status, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.instance.edition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosInstance).Edition, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.instance.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosInstance).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.instance.ipMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosInstance).IpMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.instance.ipVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosInstance).IpVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.instance.ip": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosInstance).Ip, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.instance.debtStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosInstance).DebtStatus, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.instance.expireTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosInstance).ExpireTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.instance.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosInstance).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.instance.webRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosInstance).WebRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.instance.networkRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosInstance).NetworkRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.webRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosWebRule).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.antiddos.webRule.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosWebRule).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.webRule.instanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosWebRule).InstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.webRule.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosWebRule).Domain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.webRule.cname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosWebRule).Cname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.webRule.ccEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosWebRule).CcEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.webRule.ccRuleEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosWebRule).CcRuleEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.webRule.certName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosWebRule).CertName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.webRule.certExpireTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosWebRule).CertExpireTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.webRule.penalized": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosWebRule).Penalized, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.webRule.proxyTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosWebRule).ProxyTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.webRule.realServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosWebRule).RealServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.networkRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosNetworkRule).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.antiddos.networkRule.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosNetworkRule).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.networkRule.instanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosNetworkRule).InstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.networkRule.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosNetworkRule).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.networkRule.frontendPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosNetworkRule).FrontendPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.networkRule.backendPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosNetworkRule).BackendPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.antiddos.networkRule.realServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAntiddosNetworkRule).RealServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 }
@@ -17988,4 +18638,935 @@ func (c *mqlAlicloudNasAccessRule) GetUserAccess() *plugin.TValue[string] {
 
 func (c *mqlAlicloudNasAccessRule) GetPriority() *plugin.TValue[int64] {
 	return &c.Priority
+}
+
+// mqlAlicloudWaf for the alicloud.waf resource
+type mqlAlicloudWaf struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudWafInternal it will be used here
+	Instances plugin.TValue[[]any]
+}
+
+// createAlicloudWaf creates a new instance of this resource
+func createAlicloudWaf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudWaf{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.waf", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudWaf) MqlName() string {
+	return "alicloud.waf"
+}
+
+func (c *mqlAlicloudWaf) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudWaf) GetInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Instances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.waf", c.__id, "instances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instances()
+	})
+}
+
+// mqlAlicloudWafInstance for the alicloud.waf.instance resource
+type mqlAlicloudWafInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudWafInstanceInternal
+	RegionId         plugin.TValue[string]
+	InstanceId       plugin.TValue[string]
+	Status           plugin.TValue[int64]
+	Edition          plugin.TValue[string]
+	PayType          plugin.TValue[string]
+	InDebt           plugin.TValue[string]
+	StartTime        plugin.TValue[*time.Time]
+	EndTime          plugin.TValue[*time.Time]
+	DefenseResources plugin.TValue[[]any]
+	Domains          plugin.TValue[[]any]
+}
+
+// createAlicloudWafInstance creates a new instance of this resource
+func createAlicloudWafInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudWafInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.waf.instance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudWafInstance) MqlName() string {
+	return "alicloud.waf.instance"
+}
+
+func (c *mqlAlicloudWafInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudWafInstance) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudWafInstance) GetInstanceId() *plugin.TValue[string] {
+	return &c.InstanceId
+}
+
+func (c *mqlAlicloudWafInstance) GetStatus() *plugin.TValue[int64] {
+	return &c.Status
+}
+
+func (c *mqlAlicloudWafInstance) GetEdition() *plugin.TValue[string] {
+	return &c.Edition
+}
+
+func (c *mqlAlicloudWafInstance) GetPayType() *plugin.TValue[string] {
+	return &c.PayType
+}
+
+func (c *mqlAlicloudWafInstance) GetInDebt() *plugin.TValue[string] {
+	return &c.InDebt
+}
+
+func (c *mqlAlicloudWafInstance) GetStartTime() *plugin.TValue[*time.Time] {
+	return &c.StartTime
+}
+
+func (c *mqlAlicloudWafInstance) GetEndTime() *plugin.TValue[*time.Time] {
+	return &c.EndTime
+}
+
+func (c *mqlAlicloudWafInstance) GetDefenseResources() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DefenseResources, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.waf.instance", c.__id, "defenseResources")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.defenseResources()
+	})
+}
+
+func (c *mqlAlicloudWafInstance) GetDomains() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Domains, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.waf.instance", c.__id, "domains")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.domains()
+	})
+}
+
+// mqlAlicloudWafDefenseResource for the alicloud.waf.defenseResource resource
+type mqlAlicloudWafDefenseResource struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudWafDefenseResourceInternal it will be used here
+	RegionId       plugin.TValue[string]
+	InstanceId     plugin.TValue[string]
+	Resource       plugin.TValue[string]
+	Product        plugin.TValue[string]
+	Pattern        plugin.TValue[string]
+	ResourceStatus plugin.TValue[string]
+	ResourceGroup  plugin.TValue[string]
+	CreateTime     plugin.TValue[*time.Time]
+}
+
+// createAlicloudWafDefenseResource creates a new instance of this resource
+func createAlicloudWafDefenseResource(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudWafDefenseResource{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.waf.defenseResource", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudWafDefenseResource) MqlName() string {
+	return "alicloud.waf.defenseResource"
+}
+
+func (c *mqlAlicloudWafDefenseResource) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudWafDefenseResource) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudWafDefenseResource) GetInstanceId() *plugin.TValue[string] {
+	return &c.InstanceId
+}
+
+func (c *mqlAlicloudWafDefenseResource) GetResource() *plugin.TValue[string] {
+	return &c.Resource
+}
+
+func (c *mqlAlicloudWafDefenseResource) GetProduct() *plugin.TValue[string] {
+	return &c.Product
+}
+
+func (c *mqlAlicloudWafDefenseResource) GetPattern() *plugin.TValue[string] {
+	return &c.Pattern
+}
+
+func (c *mqlAlicloudWafDefenseResource) GetResourceStatus() *plugin.TValue[string] {
+	return &c.ResourceStatus
+}
+
+func (c *mqlAlicloudWafDefenseResource) GetResourceGroup() *plugin.TValue[string] {
+	return &c.ResourceGroup
+}
+
+func (c *mqlAlicloudWafDefenseResource) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+// mqlAlicloudWafDomain for the alicloud.waf.domain resource
+type mqlAlicloudWafDomain struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudWafDomainInternal
+	RegionId       plugin.TValue[string]
+	InstanceId     plugin.TValue[string]
+	Domain         plugin.TValue[string]
+	Cname          plugin.TValue[string]
+	Status         plugin.TValue[int64]
+	HttpPorts      plugin.TValue[[]any]
+	HttpsPorts     plugin.TValue[[]any]
+	HttpsEnabled   plugin.TValue[bool]
+	CertId         plugin.TValue[string]
+	TlsVersion     plugin.TValue[string]
+	Tls13Enabled   plugin.TValue[bool]
+	CertExpireTime plugin.TValue[*time.Time]
+}
+
+// createAlicloudWafDomain creates a new instance of this resource
+func createAlicloudWafDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudWafDomain{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.waf.domain", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudWafDomain) MqlName() string {
+	return "alicloud.waf.domain"
+}
+
+func (c *mqlAlicloudWafDomain) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudWafDomain) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudWafDomain) GetInstanceId() *plugin.TValue[string] {
+	return &c.InstanceId
+}
+
+func (c *mqlAlicloudWafDomain) GetDomain() *plugin.TValue[string] {
+	return &c.Domain
+}
+
+func (c *mqlAlicloudWafDomain) GetCname() *plugin.TValue[string] {
+	return &c.Cname
+}
+
+func (c *mqlAlicloudWafDomain) GetStatus() *plugin.TValue[int64] {
+	return &c.Status
+}
+
+func (c *mqlAlicloudWafDomain) GetHttpPorts() *plugin.TValue[[]any] {
+	return &c.HttpPorts
+}
+
+func (c *mqlAlicloudWafDomain) GetHttpsPorts() *plugin.TValue[[]any] {
+	return &c.HttpsPorts
+}
+
+func (c *mqlAlicloudWafDomain) GetHttpsEnabled() *plugin.TValue[bool] {
+	return &c.HttpsEnabled
+}
+
+func (c *mqlAlicloudWafDomain) GetCertId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CertId, func() (string, error) {
+		return c.certId()
+	})
+}
+
+func (c *mqlAlicloudWafDomain) GetTlsVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TlsVersion, func() (string, error) {
+		return c.tlsVersion()
+	})
+}
+
+func (c *mqlAlicloudWafDomain) GetTls13Enabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Tls13Enabled, func() (bool, error) {
+		return c.tls13Enabled()
+	})
+}
+
+func (c *mqlAlicloudWafDomain) GetCertExpireTime() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CertExpireTime, func() (*time.Time, error) {
+		return c.certExpireTime()
+	})
+}
+
+// mqlAlicloudCloudFirewall for the alicloud.cloudFirewall resource
+type mqlAlicloudCloudFirewall struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudCloudFirewallInternal
+	Enabled         plugin.TValue[bool]
+	Edition         plugin.TValue[int64]
+	ControlPolicies plugin.TValue[[]any]
+}
+
+// createAlicloudCloudFirewall creates a new instance of this resource
+func createAlicloudCloudFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudCloudFirewall{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.cloudFirewall", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudCloudFirewall) MqlName() string {
+	return "alicloud.cloudFirewall"
+}
+
+func (c *mqlAlicloudCloudFirewall) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudCloudFirewall) GetEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Enabled, func() (bool, error) {
+		return c.enabled()
+	})
+}
+
+func (c *mqlAlicloudCloudFirewall) GetEdition() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Edition, func() (int64, error) {
+		return c.edition()
+	})
+}
+
+func (c *mqlAlicloudCloudFirewall) GetControlPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ControlPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.cloudFirewall", c.__id, "controlPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.controlPolicies()
+	})
+}
+
+// mqlAlicloudCloudFirewallControlPolicy for the alicloud.cloudFirewall.controlPolicy resource
+type mqlAlicloudCloudFirewallControlPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudCloudFirewallControlPolicyInternal it will be used here
+	AclUuid         plugin.TValue[string]
+	Direction       plugin.TValue[string]
+	Action          plugin.TValue[string]
+	Source          plugin.TValue[string]
+	SourceType      plugin.TValue[string]
+	Destination     plugin.TValue[string]
+	DestinationType plugin.TValue[string]
+	DestPort        plugin.TValue[string]
+	Proto           plugin.TValue[string]
+	ApplicationName plugin.TValue[string]
+	Description     plugin.TValue[string]
+	Enabled         plugin.TValue[bool]
+	Order           plugin.TValue[int64]
+	HitTimes        plugin.TValue[int64]
+}
+
+// createAlicloudCloudFirewallControlPolicy creates a new instance of this resource
+func createAlicloudCloudFirewallControlPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudCloudFirewallControlPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.cloudFirewall.controlPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudCloudFirewallControlPolicy) MqlName() string {
+	return "alicloud.cloudFirewall.controlPolicy"
+}
+
+func (c *mqlAlicloudCloudFirewallControlPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudCloudFirewallControlPolicy) GetAclUuid() *plugin.TValue[string] {
+	return &c.AclUuid
+}
+
+func (c *mqlAlicloudCloudFirewallControlPolicy) GetDirection() *plugin.TValue[string] {
+	return &c.Direction
+}
+
+func (c *mqlAlicloudCloudFirewallControlPolicy) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlAlicloudCloudFirewallControlPolicy) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlAlicloudCloudFirewallControlPolicy) GetSourceType() *plugin.TValue[string] {
+	return &c.SourceType
+}
+
+func (c *mqlAlicloudCloudFirewallControlPolicy) GetDestination() *plugin.TValue[string] {
+	return &c.Destination
+}
+
+func (c *mqlAlicloudCloudFirewallControlPolicy) GetDestinationType() *plugin.TValue[string] {
+	return &c.DestinationType
+}
+
+func (c *mqlAlicloudCloudFirewallControlPolicy) GetDestPort() *plugin.TValue[string] {
+	return &c.DestPort
+}
+
+func (c *mqlAlicloudCloudFirewallControlPolicy) GetProto() *plugin.TValue[string] {
+	return &c.Proto
+}
+
+func (c *mqlAlicloudCloudFirewallControlPolicy) GetApplicationName() *plugin.TValue[string] {
+	return &c.ApplicationName
+}
+
+func (c *mqlAlicloudCloudFirewallControlPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAlicloudCloudFirewallControlPolicy) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAlicloudCloudFirewallControlPolicy) GetOrder() *plugin.TValue[int64] {
+	return &c.Order
+}
+
+func (c *mqlAlicloudCloudFirewallControlPolicy) GetHitTimes() *plugin.TValue[int64] {
+	return &c.HitTimes
+}
+
+// mqlAlicloudAntiddos for the alicloud.antiddos resource
+type mqlAlicloudAntiddos struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudAntiddosInternal it will be used here
+	Instances plugin.TValue[[]any]
+}
+
+// createAlicloudAntiddos creates a new instance of this resource
+func createAlicloudAntiddos(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudAntiddos{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.antiddos", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudAntiddos) MqlName() string {
+	return "alicloud.antiddos"
+}
+
+func (c *mqlAlicloudAntiddos) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudAntiddos) GetInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Instances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.antiddos", c.__id, "instances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instances()
+	})
+}
+
+// mqlAlicloudAntiddosInstance for the alicloud.antiddos.instance resource
+type mqlAlicloudAntiddosInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudAntiddosInstanceInternal
+	RegionId     plugin.TValue[string]
+	InstanceId   plugin.TValue[string]
+	Remark       plugin.TValue[string]
+	Status       plugin.TValue[int64]
+	Edition      plugin.TValue[int64]
+	Enabled      plugin.TValue[bool]
+	IpMode       plugin.TValue[string]
+	IpVersion    plugin.TValue[string]
+	Ip           plugin.TValue[string]
+	DebtStatus   plugin.TValue[int64]
+	ExpireTime   plugin.TValue[*time.Time]
+	CreateTime   plugin.TValue[*time.Time]
+	WebRules     plugin.TValue[[]any]
+	NetworkRules plugin.TValue[[]any]
+}
+
+// createAlicloudAntiddosInstance creates a new instance of this resource
+func createAlicloudAntiddosInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudAntiddosInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.antiddos.instance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudAntiddosInstance) MqlName() string {
+	return "alicloud.antiddos.instance"
+}
+
+func (c *mqlAlicloudAntiddosInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudAntiddosInstance) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudAntiddosInstance) GetInstanceId() *plugin.TValue[string] {
+	return &c.InstanceId
+}
+
+func (c *mqlAlicloudAntiddosInstance) GetRemark() *plugin.TValue[string] {
+	return &c.Remark
+}
+
+func (c *mqlAlicloudAntiddosInstance) GetStatus() *plugin.TValue[int64] {
+	return &c.Status
+}
+
+func (c *mqlAlicloudAntiddosInstance) GetEdition() *plugin.TValue[int64] {
+	return &c.Edition
+}
+
+func (c *mqlAlicloudAntiddosInstance) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAlicloudAntiddosInstance) GetIpMode() *plugin.TValue[string] {
+	return &c.IpMode
+}
+
+func (c *mqlAlicloudAntiddosInstance) GetIpVersion() *plugin.TValue[string] {
+	return &c.IpVersion
+}
+
+func (c *mqlAlicloudAntiddosInstance) GetIp() *plugin.TValue[string] {
+	return &c.Ip
+}
+
+func (c *mqlAlicloudAntiddosInstance) GetDebtStatus() *plugin.TValue[int64] {
+	return &c.DebtStatus
+}
+
+func (c *mqlAlicloudAntiddosInstance) GetExpireTime() *plugin.TValue[*time.Time] {
+	return &c.ExpireTime
+}
+
+func (c *mqlAlicloudAntiddosInstance) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlAlicloudAntiddosInstance) GetWebRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.WebRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.antiddos.instance", c.__id, "webRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.webRules()
+	})
+}
+
+func (c *mqlAlicloudAntiddosInstance) GetNetworkRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NetworkRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.antiddos.instance", c.__id, "networkRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.networkRules()
+	})
+}
+
+// mqlAlicloudAntiddosWebRule for the alicloud.antiddos.webRule resource
+type mqlAlicloudAntiddosWebRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudAntiddosWebRuleInternal it will be used here
+	RegionId       plugin.TValue[string]
+	InstanceId     plugin.TValue[string]
+	Domain         plugin.TValue[string]
+	Cname          plugin.TValue[string]
+	CcEnabled      plugin.TValue[bool]
+	CcRuleEnabled  plugin.TValue[bool]
+	CertName       plugin.TValue[string]
+	CertExpireTime plugin.TValue[*time.Time]
+	Penalized      plugin.TValue[bool]
+	ProxyTypes     plugin.TValue[[]any]
+	RealServers    plugin.TValue[[]any]
+}
+
+// createAlicloudAntiddosWebRule creates a new instance of this resource
+func createAlicloudAntiddosWebRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudAntiddosWebRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.antiddos.webRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudAntiddosWebRule) MqlName() string {
+	return "alicloud.antiddos.webRule"
+}
+
+func (c *mqlAlicloudAntiddosWebRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudAntiddosWebRule) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudAntiddosWebRule) GetInstanceId() *plugin.TValue[string] {
+	return &c.InstanceId
+}
+
+func (c *mqlAlicloudAntiddosWebRule) GetDomain() *plugin.TValue[string] {
+	return &c.Domain
+}
+
+func (c *mqlAlicloudAntiddosWebRule) GetCname() *plugin.TValue[string] {
+	return &c.Cname
+}
+
+func (c *mqlAlicloudAntiddosWebRule) GetCcEnabled() *plugin.TValue[bool] {
+	return &c.CcEnabled
+}
+
+func (c *mqlAlicloudAntiddosWebRule) GetCcRuleEnabled() *plugin.TValue[bool] {
+	return &c.CcRuleEnabled
+}
+
+func (c *mqlAlicloudAntiddosWebRule) GetCertName() *plugin.TValue[string] {
+	return &c.CertName
+}
+
+func (c *mqlAlicloudAntiddosWebRule) GetCertExpireTime() *plugin.TValue[*time.Time] {
+	return &c.CertExpireTime
+}
+
+func (c *mqlAlicloudAntiddosWebRule) GetPenalized() *plugin.TValue[bool] {
+	return &c.Penalized
+}
+
+func (c *mqlAlicloudAntiddosWebRule) GetProxyTypes() *plugin.TValue[[]any] {
+	return &c.ProxyTypes
+}
+
+func (c *mqlAlicloudAntiddosWebRule) GetRealServers() *plugin.TValue[[]any] {
+	return &c.RealServers
+}
+
+// mqlAlicloudAntiddosNetworkRule for the alicloud.antiddos.networkRule resource
+type mqlAlicloudAntiddosNetworkRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudAntiddosNetworkRuleInternal it will be used here
+	RegionId     plugin.TValue[string]
+	InstanceId   plugin.TValue[string]
+	Protocol     plugin.TValue[string]
+	FrontendPort plugin.TValue[int64]
+	BackendPort  plugin.TValue[int64]
+	RealServers  plugin.TValue[[]any]
+}
+
+// createAlicloudAntiddosNetworkRule creates a new instance of this resource
+func createAlicloudAntiddosNetworkRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudAntiddosNetworkRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.antiddos.networkRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudAntiddosNetworkRule) MqlName() string {
+	return "alicloud.antiddos.networkRule"
+}
+
+func (c *mqlAlicloudAntiddosNetworkRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudAntiddosNetworkRule) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudAntiddosNetworkRule) GetInstanceId() *plugin.TValue[string] {
+	return &c.InstanceId
+}
+
+func (c *mqlAlicloudAntiddosNetworkRule) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlAlicloudAntiddosNetworkRule) GetFrontendPort() *plugin.TValue[int64] {
+	return &c.FrontendPort
+}
+
+func (c *mqlAlicloudAntiddosNetworkRule) GetBackendPort() *plugin.TValue[int64] {
+	return &c.BackendPort
+}
+
+func (c *mqlAlicloudAntiddosNetworkRule) GetRealServers() *plugin.TValue[[]any] {
+	return &c.RealServers
 }

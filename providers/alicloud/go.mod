@@ -7,9 +7,11 @@ go 1.26.4
 require (
 	github.com/alibabacloud-go/actiontrail-20200706/v3 v3.4.0
 	github.com/alibabacloud-go/alb-20200616/v2 v2.3.2
+	github.com/alibabacloud-go/cloudfw-20171207/v8 v8.2.2
 	github.com/alibabacloud-go/config-20200907/v4 v4.2.3
 	github.com/alibabacloud-go/cs-20151215/v6 v6.0.0
 	github.com/alibabacloud-go/darabonba-openapi/v2 v2.2.4
+	github.com/alibabacloud-go/ddoscoo-20200101/v5 v5.0.2
 	github.com/alibabacloud-go/dds-20151201/v9 v9.2.0
 	github.com/alibabacloud-go/ecs-20140526/v6 v6.1.0
 	github.com/alibabacloud-go/fc-20230330/v4 v4.7.8
@@ -26,6 +28,7 @@ require (
 	github.com/alibabacloud-go/sts-20150401/v2 v2.1.0
 	github.com/alibabacloud-go/tea v1.5.2
 	github.com/alibabacloud-go/vpc-20160428/v6 v6.16.0
+	github.com/alibabacloud-go/waf-openapi-20211001/v7 v7.8.2
 	github.com/aliyun/alibabacloud-oss-go-sdk-v2 v1.5.3
 	github.com/aliyun/credentials-go v1.4.12
 	github.com/rs/zerolog v1.35.1

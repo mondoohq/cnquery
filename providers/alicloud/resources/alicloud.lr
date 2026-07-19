@@ -10,8 +10,9 @@ option go_package = "go.mondoo.com/mql/v13/providers/alicloud/resources"
 // identity and the region IDs enabled on the account, and is the root from
 // which the RAM, ECS, VPC, OSS, SLB, ALB, NLB, and managed-database resources
 // are reached, along with the Container Service for Kubernetes, Function
-// Compute, NAS file storage, Key Management Service, ActionTrail, Log Service,
-// Cloud Config, and Resource Directory resources.
+// Compute, NAS file storage, Web Application Firewall, Cloud Firewall,
+// Anti-DDoS, Key Management Service, ActionTrail, Log Service, Cloud Config, and
+// Resource Directory resources.
 alicloud {
   // Account (UID) that the active credential belongs to
   accountId() string
@@ -3356,4 +3357,294 @@ alicloud.nas.accessRule {
   userAccess string
   // Rule priority, 1 (highest) to 100 (lowest)
   priority int
+}
+
+// Alibaba Cloud Web Application Firewall
+//
+// WAF 3.0 instances and the resources they protect for an Alibaba Cloud account.
+// WAF is a center service with one instance per account in each of the China and
+// international centers. Exposes the instance edition and subscription state,
+// the protected objects (domains and cloud-native resources), and the CNAME
+// domains with their TLS configuration. Use it to audit which web assets are
+// behind WAF and whether their listeners terminate TLS.
+alicloud.waf {
+  // WAF instances across the China and international centers
+  instances() []alicloud.waf.instance
+}
+
+// Web Application Firewall instance
+//
+// A single WAF 3.0 instance, keyed by instanceId. WAF provisions one instance
+// per account per center. Exposes the edition, subscription window, and status,
+// and is the parent of the protected resources and domains. Use it to confirm
+// WAF is provisioned and not expired.
+alicloud.waf.instance {
+  // Center region the instance belongs to, either cn-hangzhou or ap-southeast-1
+  regionId string
+  // WAF instance ID, used as the lookup key
+  instanceId string
+  // Instance status
+  //
+  // 1 (Normal), 2 (Expired), or 3 (Released). Only a Normal instance is
+  // actively protecting traffic.
+  status int
+  // Instance edition or plan
+  edition string
+  // Billing method, for example POSTPAY or SUBSCRIPTION
+  payType string
+  // Whether the instance is in debt (overdue payment)
+  inDebt string
+  // Start of the subscription window
+  startTime time
+  // End of the subscription window
+  endTime time
+  // Protected objects (domains and cloud-native resources) behind the instance
+  defenseResources() []alicloud.waf.defenseResource
+  // CNAME-access domains protected by the instance
+  domains() []alicloud.waf.domain
+}
+
+// Web Application Firewall protected resource
+//
+// A single protected object of a WAF instance, keyed by the owning instanceId
+// and resource name. A protected object is a CNAME domain or an attached
+// cloud-native resource (ALB, CLB, MSE). Exposes the backing product, protection
+// mode, and provisioning health. Use it to enumerate what WAF is protecting and
+// whether protection is active.
+alicloud.waf.defenseResource {
+  // Center region the resource belongs to
+  regionId string
+  // ID of the WAF instance protecting the resource
+  instanceId string
+  // Protected object name, for example a domain or a cloud resource id
+  resource string
+  // Cloud service backing the resource, for example alb, clb, or mse; empty for a CNAME domain
+  product string
+  // Protection mode of the object, for example domain
+  pattern string
+  // Provisioning status
+  //
+  // active when protection is running, or initializing / init_failed while it
+  // is being set up.
+  resourceStatus string
+  // WAF protection-group the resource belongs to
+  resourceGroup string
+  // Time the protected object was created
+  createTime time
+}
+
+// Web Application Firewall protected domain
+//
+// A single CNAME-access domain protected by a WAF instance, keyed by domain.
+// Exposes the WAF-assigned CNAME, listen ports, and the TLS configuration
+// (certificate, minimum TLS version) of the HTTPS listener. Use it to audit
+// whether an HTTPS domain enforces a strong TLS version and presents a
+// non-expired certificate.
+alicloud.waf.domain {
+  // Center region the domain belongs to
+  regionId string
+  // ID of the WAF instance protecting the domain
+  instanceId string
+  // Protected hostname, used as the lookup key
+  domain string
+  // WAF-assigned CNAME that traffic must resolve to
+  cname string
+  // Domain status
+  //
+  // 1 (normal), 2 (creating), 3 (modifying), 4 (releasing), or 5 (forwarding
+  // disabled).
+  status int
+  // HTTP listener ports
+  httpPorts []int
+  // HTTPS listener ports
+  httpsPorts []int
+  // Whether the domain serves HTTPS
+  //
+  // True when at least one HTTPS listener port is configured.
+  httpsEnabled bool
+  // ID of the certificate bound to the HTTPS listener, empty when none
+  certId() string
+  // Minimum TLS version accepted, for example tlsv1.2
+  tlsVersion() string
+  // Whether TLS 1.3 is enabled
+  tls13Enabled() bool
+  // Expiry time of the bound certificate, null when no certificate is configured
+  certExpireTime() time
+}
+
+// Alibaba Cloud Cloud Firewall
+//
+// Cloud Firewall access-control state for an Alibaba Cloud account. Cloud
+// Firewall is a center service. Exposes whether the firewall service is active,
+// its edition, and the internet-boundary control policies (the allow and deny
+// rules). Use it to audit whether the firewall is enabled and whether any rule
+// broadly permits inbound traffic.
+alicloud.cloudFirewall {
+  // Whether the Cloud Firewall service is active for the account
+  enabled() bool
+  // Cloud Firewall edition
+  //
+  // 2 (Premium), 3 (Enterprise), 4 (Ultimate), or 10 (pay-as-you-go). 0 when
+  // the service is not provisioned.
+  edition() int
+  // Internet-boundary control policies in both the inbound and outbound directions
+  controlPolicies() []alicloud.cloudFirewall.controlPolicy
+}
+
+// Cloud Firewall control policy
+//
+// A single internet-boundary access-control rule, keyed by aclUuid. A rule
+// permits or denies traffic between a source and destination on given ports and
+// protocols. Exposes the action, source, destination, and whether it is
+// enabled. Use it to find enabled rules that broadly accept inbound traffic (for
+// example an accept rule with source 0.0.0.0/0).
+alicloud.cloudFirewall.controlPolicy {
+  // Rule UUID, used as the lookup key
+  aclUuid string
+  // Traffic direction the rule applies to, either in (inbound) or out (outbound)
+  direction string
+  // Action taken on matching traffic
+  //
+  // One of accept (allow), drop (deny), or log (monitor only).
+  action string
+  // Source address, CIDR, or address-book reference
+  source string
+  // Source type, for example net (CIDR), group (address book), or location
+  sourceType string
+  // Destination address, CIDR, domain, or address-book reference
+  destination string
+  // Destination type, for example net, group, domain, or location
+  destinationType string
+  // Destination port or port range
+  destPort string
+  // Protocol, one of ANY, TCP, UDP, or ICMP
+  proto string
+  // Application-layer protocol the rule matches, for example HTTP or ANY
+  applicationName string
+  // Description of the rule
+  description string
+  // Whether the rule is enabled
+  //
+  // A disabled rule is configured but not enforced.
+  enabled bool
+  // Rule priority order
+  order int
+  // Cumulative number of times the rule has matched traffic
+  hitTimes int
+}
+
+// Alibaba Cloud Anti-DDoS
+//
+// Anti-DDoS Pro and Premium instances and the assets they protect for an
+// Alibaba Cloud account. Anti-DDoS is a center service. Exposes the scrubbing
+// instances, their subscription health, and the web domains and forwarding
+// ports under protection. Use it to audit which assets are protected and whether
+// an instance's protection has lapsed (expired, disabled, or in debt).
+alicloud.antiddos {
+  // Anti-DDoS Pro and Premium instances across the China and international centers
+  instances() []alicloud.antiddos.instance
+}
+
+// Anti-DDoS instance
+//
+// A single Anti-DDoS Pro or Premium instance, keyed by instanceId. Exposes the
+// mitigation edition, forwarding state, and subscription window, and is the
+// parent of the protected web domains and forwarding ports. Use it to confirm an
+// instance is enabled and not expired. Protection is effectively off when the
+// instance is expired or not forwarding traffic.
+alicloud.antiddos.instance {
+  // Center region the instance belongs to, either cn-hangzhou or ap-southeast-1
+  regionId string
+  // Anti-DDoS instance ID, used as the lookup key
+  instanceId string
+  // Instance remark
+  remark string
+  // Instance status
+  //
+  // 1 (Normal) or 2 (Expired). An expired instance no longer scrubs traffic.
+  status int
+  // Mitigation edition
+  //
+  // 0 (Premium Insurance), 1 (Premium Unlimited), 2 (Premium mainland
+  // acceleration), or 9 (Pro Profession).
+  edition int
+  // Whether the instance is forwarding (protecting) traffic
+  //
+  // False when the instance is not forwarding service traffic, which means its
+  // protection is effectively off.
+  enabled bool
+  // Forwarding mode of the instance IP, for example fnat
+  ipMode string
+  // IP version of the instance, either Ipv4 or Ipv6
+  ipVersion string
+  // Anti-DDoS instance IP that scrubbed traffic is delivered from
+  ip string
+  // Overdue-payment status, 0 when there is no overdue payment
+  debtStatus int
+  // Time the instance subscription expires
+  expireTime time
+  // Time the instance was created
+  createTime time
+  // Web (HTTP/HTTPS) domains protected by the instance
+  webRules() []alicloud.antiddos.webRule
+  // Non-web (TCP/UDP) forwarding ports protected by the instance
+  networkRules() []alicloud.antiddos.networkRule
+}
+
+// Anti-DDoS protected web domain
+//
+// A single web domain protected by an Anti-DDoS instance, keyed by the owning
+// instanceId and domain. Exposes the scrubbing CNAME, the HTTP flood (CC)
+// protection state, the certificate, and the origin servers. Use it to audit
+// whether a protected domain has CC protection and a non-expired certificate.
+alicloud.antiddos.webRule {
+  // Center region the domain belongs to
+  regionId string
+  // ID of the Anti-DDoS instance protecting the domain
+  instanceId string
+  // Protected hostname, used with the instance ID as the lookup key
+  domain string
+  // Anti-DDoS scrubbing CNAME that traffic must resolve to
+  cname string
+  // Whether HTTP flood (CC) protection is enabled
+  ccEnabled bool
+  // Whether a CC protection rule is enabled
+  ccRuleEnabled bool
+  // Name of the certificate bound to the domain, empty when none
+  certName string
+  // Expiry time of the bound certificate, null when no certificate is configured
+  certExpireTime time
+  // Whether the domain is currently penalized (blocked) for abnormal traffic
+  penalized bool
+  // Protocols and listener ports the domain serves
+  //
+  // Each entry lists the proxyType (http, https, websocket, or websockets) and
+  // the proxyPorts it listens on.
+  proxyTypes []dict
+  // Origin servers traffic is forwarded to after scrubbing
+  //
+  // Each entry lists the realServer (an IP or hostname) and its rsType (0 for an
+  // IP, 1 for a domain).
+  realServers []dict
+}
+
+// Anti-DDoS protected forwarding port
+//
+// A single non-web (Layer-4) forwarding rule on an Anti-DDoS instance, keyed by
+// the instanceId, protocol, and frontend port. Exposes the frontend and backend
+// ports and the origin servers. Use it to enumerate the TCP and UDP ports under
+// Anti-DDoS protection.
+alicloud.antiddos.networkRule {
+  // Center region the rule belongs to
+  regionId string
+  // ID of the Anti-DDoS instance the rule belongs to
+  instanceId string
+  // Forwarding protocol, either tcp or udp
+  protocol string
+  // Frontend (listener) port scrubbed traffic arrives on
+  frontendPort int
+  // Backend (origin) port traffic is forwarded to
+  backendPort int
+  // Origin servers traffic is forwarded to after scrubbing
+  realServers []string
 }

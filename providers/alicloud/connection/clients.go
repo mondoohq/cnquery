@@ -9,9 +9,11 @@ import (
 
 	actiontrailclient "github.com/alibabacloud-go/actiontrail-20200706/v3/client"
 	albclient "github.com/alibabacloud-go/alb-20200616/v2/client"
+	cloudfwclient "github.com/alibabacloud-go/cloudfw-20171207/v8/client"
 	configclient "github.com/alibabacloud-go/config-20200907/v4/client"
 	csclient "github.com/alibabacloud-go/cs-20151215/v6/client"
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
+	ddoscooclient "github.com/alibabacloud-go/ddoscoo-20200101/v5/client"
 	ddsclient "github.com/alibabacloud-go/dds-20151201/v9/client"
 	ecsclient "github.com/alibabacloud-go/ecs-20140526/v6/client"
 	fcclient "github.com/alibabacloud-go/fc-20230330/v4/client"
@@ -27,6 +29,7 @@ import (
 	slsclient "github.com/alibabacloud-go/sls-20201230/v6/client"
 	stsclient "github.com/alibabacloud-go/sts-20150401/v2/client"
 	vpcclient "github.com/alibabacloud-go/vpc-20160428/v6/client"
+	wafclient "github.com/alibabacloud-go/waf-openapi-20211001/v7/client"
 	oss "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
 	osscred "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
 )
@@ -256,6 +259,42 @@ func (c *AlicloudConnection) NasClient(region string) (*nasclient.Client, error)
 		return nil, err
 	}
 	return client.(*nasclient.Client), nil
+}
+
+// WafClient returns a WAF 3.0 client for a center region (cn-hangzhou for the
+// China center, ap-southeast-1 for the international center).
+func (c *AlicloudConnection) WafClient(region string) (*wafclient.Client, error) {
+	client, err := c.cachedClient("waf/"+region, func() (any, error) {
+		return wafclient.NewClient(c.config("wafopenapi", region))
+	})
+	if err != nil {
+		return nil, err
+	}
+	return client.(*wafclient.Client), nil
+}
+
+// CloudfwClient returns a Cloud Firewall client for a center region (cn-hangzhou
+// for China, ap-southeast-1 for international).
+func (c *AlicloudConnection) CloudfwClient(region string) (*cloudfwclient.Client, error) {
+	client, err := c.cachedClient("cloudfw/"+region, func() (any, error) {
+		return cloudfwclient.NewClient(c.config("cloudfw", region))
+	})
+	if err != nil {
+		return nil, err
+	}
+	return client.(*cloudfwclient.Client), nil
+}
+
+// DdoscooClient returns an Anti-DDoS Pro/Premium client for a center region
+// (cn-hangzhou for Anti-DDoS Pro, ap-southeast-1 for Anti-DDoS Premium).
+func (c *AlicloudConnection) DdoscooClient(region string) (*ddoscooclient.Client, error) {
+	client, err := c.cachedClient("ddoscoo/"+region, func() (any, error) {
+		return ddoscooclient.NewClient(c.config("ddoscoo", region))
+	})
+	if err != nil {
+		return nil, err
+	}
+	return client.(*ddoscooclient.Client), nil
 }
 
 // KmsClient returns a Key Management Service client for a region.
