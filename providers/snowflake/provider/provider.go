@@ -71,6 +71,17 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Options["role"] = string(x.Value)
 	}
 
+	// discovery flags
+	discoverTargets := []string{}
+	if x, ok := flags["discover"]; ok && len(x.Array) != 0 {
+		for i := range x.Array {
+			discoverTargets = append(discoverTargets, string(x.Array[i].Value))
+		}
+	} else {
+		discoverTargets = []string{connection.DiscoveryAuto}
+	}
+	conf.Discover = &inventory.Discovery{Targets: discoverTargets}
+
 	asset := inventory.Asset{
 		Connections: []*inventory.Config{conf},
 	}
@@ -95,11 +106,16 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		}
 	}
 
+	inv, err := s.discover(conn)
+	if err != nil {
+		return nil, err
+	}
+
 	return &plugin.ConnectRes{
 		Id:        conn.ID(),
 		Name:      conn.Name(),
 		Asset:     req.Asset,
-		Inventory: nil,
+		Inventory: inv,
 	}, nil
 }
 
@@ -149,22 +165,27 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.SnowflakeConnection) error {
-	asset.Id = conn.Conf.Type
-	asset.Name = conn.Conf.Host
-
-	asset.Platform = &inventory.Platform{
-		Name:   "snowflake",
-		Family: []string{"snowflake"},
-		Kind:   "api",
-		Title:  "Snowflake",
-	}
-
 	current, err := conn.Client().ContextFunctions.CurrentSessionDetails(context.Background())
 	if err != nil {
 		return err
 	}
+	account := current.Account
 
-	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/snowflake/account/" + current.Account}
+	// A database-scoped connection is a single-database asset discovered under
+	// the account; otherwise the asset is the account itself.
+	if conn.IsDatabaseScoped() {
+		db := conn.Database()
+		asset.Id = connection.NewSnowflakeDatabaseIdentifier(account, db)
+		asset.Name = db
+		asset.Platform = connection.NewSnowflakeDatabasePlatform(account, db)
+		asset.PlatformIds = []string{connection.NewSnowflakeDatabaseIdentifier(account, db)}
+		return nil
+	}
+
+	asset.Id = conn.Conf.Type
+	asset.Name = conn.Conf.Host
+	asset.Platform = connection.NewSnowflakeAccountPlatform(account)
+	asset.PlatformIds = []string{connection.NewSnowflakeAccountIdentifier(account)}
 	return nil
 }
 

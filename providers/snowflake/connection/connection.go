@@ -24,6 +24,9 @@ type SnowflakeConnection struct {
 	asset *inventory.Asset
 	// Custom connection fields
 	client *sdk.Client
+	// database is set when the connection is scoped to a single database,
+	// making the asset a snowflake-database rather than the whole account.
+	database string
 }
 
 func NewSnowflakeConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*SnowflakeConnection, error) {
@@ -43,10 +46,13 @@ func NewSnowflakeConnection(id uint32, asset *inventory.Asset, conf *inventory.C
 		conf.Options = make(map[string]string)
 	}
 
+	conn.database = conf.Options[OptionDatabase]
+
 	cfg := &gosnowflake.Config{
-		Account: conf.Options["account"],
-		Region:  conf.Options["region"],
-		Role:    conf.Options["role"],
+		Account:  conf.Options["account"],
+		Region:   conf.Options["region"],
+		Role:     conf.Options["role"],
+		Database: conn.database,
 	}
 
 	for i := range conf.Credentials {
@@ -119,4 +125,16 @@ func (c *SnowflakeConnection) Asset() *inventory.Asset {
 
 func (c *SnowflakeConnection) Client() *sdk.Client {
 	return c.client
+}
+
+// Database returns the database this connection is scoped to, or "" when the
+// connection covers the whole account.
+func (c *SnowflakeConnection) Database() string {
+	return c.database
+}
+
+// IsDatabaseScoped reports whether the connection is scoped to a single
+// database (a snowflake-database asset) rather than the account.
+func (c *SnowflakeConnection) IsDatabaseScoped() bool {
+	return c.database != ""
 }

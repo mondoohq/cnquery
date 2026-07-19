@@ -21,6 +21,15 @@ func initSnowflakeDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData
 	if len(args) > 2 {
 		return args, nil, nil
 	}
+
+	conn := runtime.Connection.(*connection.SnowflakeConnection)
+
+	// On a database-scoped asset, a bare `snowflake.database` resolves to the
+	// database the connection is scoped to, so it can serve as the asset root.
+	if _, ok := args["name"]; !ok && conn.IsDatabaseScoped() {
+		args["name"] = llx.StringData(conn.Database())
+	}
+
 	nameRaw, ok := args["name"]
 	if !ok {
 		return args, nil, nil
@@ -30,7 +39,6 @@ func initSnowflakeDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return args, nil, nil
 	}
 
-	conn := runtime.Connection.(*connection.SnowflakeConnection)
 	client := conn.Client()
 	ctx := context.Background()
 

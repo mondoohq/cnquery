@@ -83,6 +83,7 @@ snowflake.database.createdAt 11.0.0
 snowflake.database.droppedAt 11.0.0
 snowflake.database.isCurrent 11.0.0
 snowflake.database.isDefault 11.0.0
+snowflake.database.maskingPolicies 13.3.7
 snowflake.database.name 11.0.0
 snowflake.database.options 11.0.0
 snowflake.database.origin 11.0.0
@@ -90,6 +91,10 @@ snowflake.database.owner 11.0.0
 snowflake.database.resourceGroup 11.0.0
 snowflake.database.retentionTime 11.0.0
 snowflake.database.roles 13.1.1
+snowflake.database.rowAccessPolicies 13.3.7
+snowflake.database.schemas 13.3.7
+snowflake.database.secrets 13.3.7
+snowflake.database.tags 13.3.7
 snowflake.database.transient 11.0.0
 snowflake.databaseRole 13.1.1
 snowflake.databaseRole.comment 13.1.1

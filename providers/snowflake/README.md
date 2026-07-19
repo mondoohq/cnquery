@@ -38,6 +38,30 @@ shell snowflake --account zi12345 --region us-central1.gcp --user CHRIS  --role 
 
 > You need to generate a RSA key pair and assign the public key to your user via [Snowsight](https://docs.snowflake.com/en/user-guide/key-pair-auth).
 
+## Asset Discovery
+
+A scan surfaces the Snowflake account as its own asset and, in addition, one asset per database in the account:
+
+- The **account asset** (`snowflake`) carries the account-wide security posture: users, roles, integrations, network/password/session/authentication policies, and resource monitors.
+- Each **database asset** (`snowflake-database`) carries that database's data-governance posture: its schemas, database roles, masking policies, row-access policies, tags, and secrets.
+
+This split lets account-wide checks target the account asset while per-database checks target each database asset independently.
+
+Discovery is controlled with `--discover`:
+
+- `auto` (default) - discover the account plus every database. Same as `all`.
+- `all` - discover the account plus every database.
+- `databases` - discover one asset per database.
+- `none` - connect to the account only, without emitting per-database assets.
+
+```shell
+# Scan the account and every database
+cnspec scan snowflake --account zi12345 --region us-central1.gcp --user CHRIS --role ACCOUNTADMIN --identity-file ~/.ssh/id_rsa
+
+# Scan the account only
+cnspec scan snowflake --account zi12345 --region us-central1.gcp --user CHRIS --role ACCOUNTADMIN --identity-file ~/.ssh/id_rsa --discover none
+```
+
 ## Examples
 
 **Retrieve all users**

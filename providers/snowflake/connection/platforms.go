@@ -15,6 +15,12 @@ var Platforms = []*plugin.PlatformInfo{
 		Family: []string{"snowflake"},
 		Kind:   []string{"api"},
 	},
+	{
+		Name:   "snowflake-database",
+		Title:  "Snowflake Database",
+		Family: []string{"snowflake"},
+		Kind:   []string{"api"},
+	},
 }
 
 var platformsByName = plugin.PlatformsByName(Platforms)

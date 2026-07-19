@@ -435,7 +435,11 @@ snowflake.stage @defaults("name") {
 // retention, transient (non-fail-safe) status, and the database-scoped roles
 // that grant access to its contents. The `origin` field identifies a database
 // created from a share or replica, and `roles` enumerates the roles defined
-// within the database.
+// within the database. The database-scoped data-governance controls are reachable
+// through `schemas`, `maskingPolicies`, `rowAccessPolicies`, `tags`, and
+// `secrets`, mirroring the account-wide collections but limited to this database.
+// Asset discovery emits each database as its own asset, so these fields also form
+// the posture surface scanned per database.
 snowflake.database @defaults("name") {
   // Name of the database
   name string
@@ -469,6 +473,16 @@ snowflake.database @defaults("name") {
   droppedAt time
   // Database-scoped roles (SHOW DATABASE ROLES IN DATABASE)
   roles() []snowflake.databaseRole
+  // Schemas in the database
+  schemas() []snowflake.schema
+  // Masking policies in the database (column-level masking for sensitive data)
+  maskingPolicies() []snowflake.maskingPolicy
+  // Row-access policies in the database (row-level access control on tables and views)
+  rowAccessPolicies() []snowflake.rowAccessPolicy
+  // Tags defined in the database (governance / classification)
+  tags() []snowflake.tag
+  // Snowflake-managed secrets in the database
+  secrets() []snowflake.secret
 }
 
 // Snowflake Warehouse

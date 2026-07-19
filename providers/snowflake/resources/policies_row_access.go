@@ -27,19 +27,26 @@ type mqlSnowflakeRowAccessPolicyInternal struct {
 }
 
 func (r *mqlSnowflakeAccount) rowAccessPolicies() ([]any, error) {
-	conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
-	client := conn.Client()
-	ctx := context.Background()
+	return listSnowflakeRowAccessPolicies(r.MqlRuntime, sdk.ExtendedIn{In: sdk.In{Account: sdk.Bool(true)}})
+}
 
-	policies, err := client.RowAccessPolicies.Show(ctx, sdk.NewShowRowAccessPolicyRequest().
-		WithIn(sdk.ExtendedIn{In: sdk.In{Account: sdk.Bool(true)}}))
+func (r *mqlSnowflakeDatabase) rowAccessPolicies() ([]any, error) {
+	return listSnowflakeRowAccessPolicies(r.MqlRuntime, sdk.ExtendedIn{In: sdk.In{Database: sdk.NewAccountObjectIdentifier(r.Name.Data)}})
+}
+
+// listSnowflakeRowAccessPolicies fetches row-access policies within the given
+// scope (account-wide or a single database) and maps them to resources.
+func listSnowflakeRowAccessPolicies(runtime *plugin.Runtime, in sdk.ExtendedIn) ([]any, error) {
+	conn := runtime.Connection.(*connection.SnowflakeConnection)
+	policies, err := conn.Client().RowAccessPolicies.Show(context.Background(),
+		sdk.NewShowRowAccessPolicyRequest().WithIn(in))
 	if err != nil {
 		return nil, err
 	}
 
 	list := make([]any, 0, len(policies))
 	for i := range policies {
-		mqlPolicy, err := newMqlSnowflakeRowAccessPolicy(r.MqlRuntime, policies[i])
+		mqlPolicy, err := newMqlSnowflakeRowAccessPolicy(runtime, policies[i])
 		if err != nil {
 			return nil, err
 		}

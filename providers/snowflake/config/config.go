@@ -30,7 +30,12 @@ Example:
   cnspec shell snowflake --account <account id> --region <region> --user <your id> --role <the role you use> --identity-file <path to your private RSA key>
   cnspec scan snowflake --account <account id> --region <region> --user <your id> --role <the role you use> --identity-file <path to your private RSA key>
 `,
-			Discovery: []string{},
+			Discovery: []string{
+				connection.DiscoveryAuto,
+				connection.DiscoveryAll,
+				connection.DiscoveryDatabases,
+				connection.DiscoveryNone,
+			},
 			Flags: []plugin.Flag{
 				{
 					Long:    "user",

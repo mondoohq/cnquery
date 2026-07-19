@@ -27,20 +27,25 @@ type mqlSnowflakeMaskingPolicyInternal struct {
 }
 
 func (r *mqlSnowflakeAccount) maskingPolicies() ([]any, error) {
-	conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
-	client := conn.Client()
-	ctx := context.Background()
+	return listSnowflakeMaskingPolicies(r.MqlRuntime, sdk.ExtendedIn{In: sdk.In{Account: sdk.Bool(true)}})
+}
 
-	policies, err := client.MaskingPolicies.Show(ctx, &sdk.ShowMaskingPolicyOptions{
-		In: &sdk.ExtendedIn{In: sdk.In{Account: sdk.Bool(true)}},
-	})
+func (r *mqlSnowflakeDatabase) maskingPolicies() ([]any, error) {
+	return listSnowflakeMaskingPolicies(r.MqlRuntime, sdk.ExtendedIn{In: sdk.In{Database: sdk.NewAccountObjectIdentifier(r.Name.Data)}})
+}
+
+// listSnowflakeMaskingPolicies fetches masking policies within the given scope
+// (account-wide or a single database) and maps them to resources.
+func listSnowflakeMaskingPolicies(runtime *plugin.Runtime, in sdk.ExtendedIn) ([]any, error) {
+	conn := runtime.Connection.(*connection.SnowflakeConnection)
+	policies, err := conn.Client().MaskingPolicies.Show(context.Background(), &sdk.ShowMaskingPolicyOptions{In: &in})
 	if err != nil {
 		return nil, err
 	}
 
 	list := make([]any, 0, len(policies))
 	for i := range policies {
-		mqlPolicy, err := newMqlSnowflakeMaskingPolicy(r.MqlRuntime, policies[i])
+		mqlPolicy, err := newMqlSnowflakeMaskingPolicy(runtime, policies[i])
 		if err != nil {
 			return nil, err
 		}

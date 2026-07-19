@@ -718,6 +718,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"snowflake.database.roles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeDatabase).GetRoles()).ToDataRes(types.Array(types.Resource("snowflake.databaseRole")))
 	},
+	"snowflake.database.schemas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeDatabase).GetSchemas()).ToDataRes(types.Array(types.Resource("snowflake.schema")))
+	},
+	"snowflake.database.maskingPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeDatabase).GetMaskingPolicies()).ToDataRes(types.Array(types.Resource("snowflake.maskingPolicy")))
+	},
+	"snowflake.database.rowAccessPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeDatabase).GetRowAccessPolicies()).ToDataRes(types.Array(types.Resource("snowflake.rowAccessPolicy")))
+	},
+	"snowflake.database.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeDatabase).GetTags()).ToDataRes(types.Array(types.Resource("snowflake.tag")))
+	},
+	"snowflake.database.secrets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeDatabase).GetSecrets()).ToDataRes(types.Array(types.Resource("snowflake.secret")))
+	},
 	"snowflake.warehouse.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeWarehouse).GetName()).ToDataRes(types.String)
 	},
@@ -2217,6 +2232,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"snowflake.database.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeDatabase).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.database.schemas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeDatabase).Schemas, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.database.maskingPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeDatabase).MaskingPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.database.rowAccessPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeDatabase).RowAccessPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.database.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeDatabase).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.database.secrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeDatabase).Secrets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.warehouse.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4982,19 +5017,24 @@ type mqlSnowflakeDatabase struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlSnowflakeDatabaseInternal it will be used here
-	Name          plugin.TValue[string]
-	IsDefault     plugin.TValue[bool]
-	IsCurrent     plugin.TValue[bool]
-	Origin        plugin.TValue[string]
-	Owner         plugin.TValue[string]
-	Comment       plugin.TValue[string]
-	Options       plugin.TValue[string]
-	RetentionTime plugin.TValue[int64]
-	ResourceGroup plugin.TValue[string]
-	Transient     plugin.TValue[bool]
-	CreatedAt     plugin.TValue[*time.Time]
-	DroppedAt     plugin.TValue[*time.Time]
-	Roles         plugin.TValue[[]any]
+	Name              plugin.TValue[string]
+	IsDefault         plugin.TValue[bool]
+	IsCurrent         plugin.TValue[bool]
+	Origin            plugin.TValue[string]
+	Owner             plugin.TValue[string]
+	Comment           plugin.TValue[string]
+	Options           plugin.TValue[string]
+	RetentionTime     plugin.TValue[int64]
+	ResourceGroup     plugin.TValue[string]
+	Transient         plugin.TValue[bool]
+	CreatedAt         plugin.TValue[*time.Time]
+	DroppedAt         plugin.TValue[*time.Time]
+	Roles             plugin.TValue[[]any]
+	Schemas           plugin.TValue[[]any]
+	MaskingPolicies   plugin.TValue[[]any]
+	RowAccessPolicies plugin.TValue[[]any]
+	Tags              plugin.TValue[[]any]
+	Secrets           plugin.TValue[[]any]
 }
 
 // createSnowflakeDatabase creates a new instance of this resource
@@ -5090,6 +5130,86 @@ func (c *mqlSnowflakeDatabase) GetRoles() *plugin.TValue[[]any] {
 		}
 
 		return c.roles()
+	})
+}
+
+func (c *mqlSnowflakeDatabase) GetSchemas() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Schemas, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.database", c.__id, "schemas")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.schemas()
+	})
+}
+
+func (c *mqlSnowflakeDatabase) GetMaskingPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MaskingPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.database", c.__id, "maskingPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.maskingPolicies()
+	})
+}
+
+func (c *mqlSnowflakeDatabase) GetRowAccessPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RowAccessPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.database", c.__id, "rowAccessPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rowAccessPolicies()
+	})
+}
+
+func (c *mqlSnowflakeDatabase) GetTags() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tags, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.database", c.__id, "tags")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tags()
+	})
+}
+
+func (c *mqlSnowflakeDatabase) GetSecrets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Secrets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.database", c.__id, "secrets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.secrets()
 	})
 }
 

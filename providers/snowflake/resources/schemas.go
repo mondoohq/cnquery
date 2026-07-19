@@ -80,20 +80,28 @@ func (r *mqlSnowflakeSchema) database() (*mqlSnowflakeDatabase, error) {
 }
 
 func (r *mqlSnowflakeAccount) schemas() ([]any, error) {
-	conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
-	client := conn.Client()
-	ctx := context.Background()
+	return listSnowflakeSchemas(r.MqlRuntime, &sdk.SchemaIn{Account: sdk.Bool(true)})
+}
 
-	schemas, err := client.Schemas.Show(ctx, &sdk.ShowSchemaOptions{
-		In: &sdk.SchemaIn{Account: sdk.Bool(true)},
+func (r *mqlSnowflakeDatabase) schemas() ([]any, error) {
+	return listSnowflakeSchemas(r.MqlRuntime, &sdk.SchemaIn{
+		Database: sdk.Bool(true),
+		Name:     sdk.NewAccountObjectIdentifier(r.Name.Data),
 	})
+}
+
+// listSnowflakeSchemas fetches schemas within the given scope (account-wide or a
+// single database) and maps them to resources.
+func listSnowflakeSchemas(runtime *plugin.Runtime, in *sdk.SchemaIn) ([]any, error) {
+	conn := runtime.Connection.(*connection.SnowflakeConnection)
+	schemas, err := conn.Client().Schemas.Show(context.Background(), &sdk.ShowSchemaOptions{In: in})
 	if err != nil {
 		return nil, err
 	}
 
 	list := make([]any, 0, len(schemas))
 	for i := range schemas {
-		mqlSchema, err := newMqlSnowflakeSchema(r.MqlRuntime, schemas[i])
+		mqlSchema, err := newMqlSnowflakeSchema(runtime, schemas[i])
 		if err != nil {
 			return nil, err
 		}
