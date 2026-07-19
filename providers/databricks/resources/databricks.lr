@@ -8,12 +8,14 @@ option go_package = "go.mondoo.com/mql/v13/providers/databricks/resources"
 //
 // Entry point to a Databricks account and its workspaces. Connecting to the
 // account console exposes account-level identity and networking through the
-// users, groups, servicePrincipals, metastores, networks, and
-// privateAccessSettings fields, and enumerates every workspace through the
-// workspaces field. Connecting to a single workspace exposes that workspace's
-// security surface through the ipAccessLists, workspaceSettings, tokens,
-// secretScopes, clusters, clusterPolicies, warehouses, catalogs,
-// storageCredentials, and externalLocations fields.
+// users, groups, servicePrincipals, metastores, networks,
+// privateAccessSettings, and customerManagedKeys fields, and enumerates every
+// workspace through the workspaces field. Connecting to a single workspace
+// exposes that workspace's security surface through the ipAccessLists,
+// workspaceSettings, tokens, secretScopes, clusters, clusterPolicies,
+// warehouses, catalogs, storageCredentials, externalLocations,
+// deltaSharingRecipients, deltaSharingShares, globalInitScripts, and
+// instanceProfiles fields.
 databricks {
   // Workspaces registered in the account
   workspaces() []databricks.workspace
@@ -49,6 +51,16 @@ databricks {
   storageCredentials() []databricks.storageCredential
   // Unity Catalog external locations in the workspace's metastore
   externalLocations() []databricks.externalLocation
+  // Delta Sharing recipients configured in the workspace
+  deltaSharingRecipients() []databricks.deltaSharingRecipient
+  // Delta Sharing shares configured in the workspace
+  deltaSharingShares() []databricks.deltaSharingShare
+  // Global init scripts that run on every cluster in the workspace
+  globalInitScripts() []databricks.globalInitScript
+  // AWS instance profiles registered in the workspace
+  instanceProfiles() []databricks.instanceProfile
+  // Customer-managed encryption keys registered in the account
+  customerManagedKeys() []databricks.customerManagedKey
 }
 
 // Databricks workspace
@@ -297,6 +309,27 @@ databricks.workspaceConf @defaults("tokensEnabled ipAccessListsEnabled") {
   deprecatedClusterNamedInitScriptsEnabled bool
   // Whether interactive notebook results are stored in the customer's account
   storeInteractiveNotebookResultsInCustomerAccount bool
+  // Whether the compliance security profile is enabled on the workspace
+  complianceSecurityProfileEnabled() bool
+  // Compliance standards selected for the compliance security profile
+  //
+  // Each entry is a standard such as HIPAA, PCI_DSS, FEDRAMP_MODERATE,
+  // FEDRAMP_HIGH, FEDRAMP_IL5, IRAP_PROTECTED, CANADA_PROTECTED_B, GERMANY_C5,
+  // GERMANY_TISAX, HITRUST, ISMAP, ITAR_EAR, K_FSI, or CYBER_ESSENTIAL_PLUS.
+  // Empty when the compliance security profile is not enabled.
+  complianceSecurityStandards() []string
+  // Whether enhanced security monitoring is enabled on the workspace
+  enhancedSecurityMonitoringEnabled() bool
+  // Workspace admin restriction status
+  //
+  // One of ALLOW_ALL or RESTRICT_TOKENS_AND_JOB_RUN_AS.
+  // RESTRICT_TOKENS_AND_JOB_RUN_AS limits what workspace admins may do with
+  // personal access tokens and job run-as identities.
+  restrictWorkspaceAdminsStatus() string
+  // Whether automatic cluster update is enabled, auto-restarting clusters to apply security updates
+  automaticClusterUpdateEnabled() bool
+  // Whether legacy access to the workspace is disabled
+  disableLegacyAccess() bool
 }
 
 // Databricks personal access token
@@ -653,4 +686,153 @@ databricks.volume @defaults("fullName volumeType owner") {
   updatedBy string
   // Privilege grants assigned directly on the volume
   grants() []databricks.grant
+}
+
+// Delta Sharing recipient
+//
+// A recipient that workspace data is shared with through Delta Sharing, keyed
+// by name. Covers the authentication type (TOKEN for open sharing secured by a
+// bearer token, DATABRICKS for Databricks-to-Databricks sharing between
+// metastores), whether the recipient has been activated, the owner and
+// comment, the data recipient's global metastore id for
+// Databricks-to-Databricks sharing, the IP access list restricting where the
+// recipient may connect from, and non-secret metadata for each issued token.
+// Token secret values and activation URLs are never exposed. Select a recipient
+// by name, for example
+// `databricks.deltaSharingRecipients.where(name == "partner")`.
+databricks.deltaSharingRecipient @defaults("name authenticationType activated") {
+  // Recipient name
+  name string
+  // Principal that owns the recipient
+  owner string
+  // Recipient comment
+  comment string
+  // Authentication type
+  //
+  // One of TOKEN (open sharing secured by a bearer token), DATABRICKS
+  // (Databricks-to-Databricks sharing between metastores),
+  // OAUTH_CLIENT_CREDENTIALS, or OIDC_FEDERATION.
+  authenticationType string
+  // Whether the recipient's activation URL has been exercised
+  activated bool
+  // Global metastore id of the data recipient, present for DATABRICKS authentication
+  dataRecipientGlobalMetastoreId string
+  // Allowed IP addresses in CIDR notation the recipient may connect from
+  ipAccessList []string
+  // Non-secret metadata for each issued token
+  //
+  // One entry per token with its id, expirationTime, and createdAt. Token
+  // secret values and activation URLs are deliberately excluded.
+  tokens []dict
+  // When the recipient was created
+  createdAt time
+  // User who created the recipient
+  createdBy string
+  // When the recipient was last modified
+  updatedAt time
+  // User who last modified the recipient
+  updatedBy string
+}
+
+// Delta Sharing share
+//
+// A share, a named collection of data objects made available to Delta Sharing
+// recipients, keyed by name. Covers the owner, comment, the data objects
+// included in the share, and creation and modification metadata. Select a share
+// by name, for example `databricks.deltaSharingShares.where(name == "sales")`.
+databricks.deltaSharingShare @defaults("name owner") {
+  // Share name
+  name string
+  // Principal that owns the share
+  owner string
+  // Share comment
+  comment string
+  // Data objects included in the share
+  //
+  // One entry per shared object with its name, dataObjectType, sharedAs,
+  // cdfEnabled, comment, addedAt, and addedBy.
+  sharedObjects []dict
+  // When the share was created
+  createdAt time
+  // User who created the share
+  createdBy string
+  // When the share was last modified
+  updatedAt time
+  // User who last modified the share
+  updatedBy string
+}
+
+// Global init script
+//
+// A script that runs on every cluster in the workspace during startup, keyed by
+// its script id. Because it executes on all clusters, an enabled global init
+// script is a persistence and code-execution vector worth auditing. Covers the
+// name, whether it is enabled, its run-order position, and creation and
+// modification metadata. Select a script by id, for example
+// `databricks.globalInitScripts.where(name == "bootstrap")`.
+databricks.globalInitScript @defaults("name enabled position") {
+  // Script id
+  id string
+  // Script name
+  name string
+  // Whether the script is enabled and runs on cluster startup
+  enabled bool
+  // Run-order position, where 0 is the first script to run
+  position int
+  // When the script was created
+  createdAt time
+  // User who created the script
+  createdBy string
+  // When the script was last modified
+  updatedAt time
+  // User who last modified the script
+  updatedBy string
+}
+
+// AWS instance profile
+//
+// An AWS instance profile registered in the workspace that clusters can assume
+// to obtain AWS credentials, keyed by its ARN. This is the legacy
+// instance-profile credential path. A meta instance profile can assume a wide
+// range of roles and warrants closer review. Covers the instance profile ARN,
+// the associated IAM role ARN, and whether it is a meta instance profile.
+// Select a profile by ARN, for example
+// `databricks.instanceProfiles.where(isMetaInstanceProfile == true)`.
+databricks.instanceProfile @defaults("instanceProfileArn isMetaInstanceProfile") {
+  // ARN of the instance profile registered with Databricks
+  instanceProfileArn string
+  // ARN of the AWS IAM role associated with the instance profile
+  iamRoleArn string
+  // Whether the profile is a meta instance profile that can assume a wide range of roles
+  isMetaInstanceProfile bool
+}
+
+// Customer-managed encryption key
+//
+// An encryption key registered in the account for protecting workspace managed
+// services or storage, keyed by its configuration id. Covers the use cases the
+// key applies to (MANAGED_SERVICES for control-plane notebooks, secrets, and
+// query history, STORAGE for the workspace root bucket and, optionally, cluster
+// EBS volumes), the creation time, and the cloud key identifiers (the AWS KMS
+// key ARN, alias, and region, or the GCP KMS key resource id). Select a key by
+// id, for example `databricks.customerManagedKeys.where(id == "...")`.
+databricks.customerManagedKey @defaults("id useCases creationTime") {
+  // Encryption key configuration id
+  id string
+  // Use cases the key applies to
+  //
+  // Each entry is MANAGED_SERVICES (control-plane notebooks, secrets, and query
+  // history) or STORAGE (the workspace root bucket and, optionally, cluster EBS
+  // volumes).
+  useCases []string
+  // When the key configuration was created
+  creationTime time
+  // ARN of the AWS KMS key, empty for non-AWS keys
+  keyArn string
+  // Alias of the AWS KMS key, empty for non-AWS keys
+  keyAlias string
+  // Region of the AWS KMS key, empty for non-AWS keys
+  keyRegion string
+  // Resource id of the GCP KMS key, empty for non-GCP keys
+  kmsKeyId string
 }

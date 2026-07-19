@@ -16,27 +16,32 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceDatabricks                     string = "databricks"
-	ResourceDatabricksWorkspace            string = "databricks.workspace"
-	ResourceDatabricksUser                 string = "databricks.user"
-	ResourceDatabricksGroup                string = "databricks.group"
-	ResourceDatabricksServicePrincipal     string = "databricks.servicePrincipal"
-	ResourceDatabricksMetastore            string = "databricks.metastore"
-	ResourceDatabricksNetwork              string = "databricks.network"
-	ResourceDatabricksPrivateAccessSetting string = "databricks.privateAccessSetting"
-	ResourceDatabricksIpAccessList         string = "databricks.ipAccessList"
-	ResourceDatabricksWorkspaceConf        string = "databricks.workspaceConf"
-	ResourceDatabricksToken                string = "databricks.token"
-	ResourceDatabricksSecretScope          string = "databricks.secretScope"
-	ResourceDatabricksClusterPolicy        string = "databricks.clusterPolicy"
-	ResourceDatabricksCluster              string = "databricks.cluster"
-	ResourceDatabricksWarehouse            string = "databricks.warehouse"
-	ResourceDatabricksCatalog              string = "databricks.catalog"
-	ResourceDatabricksSchema               string = "databricks.schema"
-	ResourceDatabricksGrant                string = "databricks.grant"
-	ResourceDatabricksStorageCredential    string = "databricks.storageCredential"
-	ResourceDatabricksExternalLocation     string = "databricks.externalLocation"
-	ResourceDatabricksVolume               string = "databricks.volume"
+	ResourceDatabricks                      string = "databricks"
+	ResourceDatabricksWorkspace             string = "databricks.workspace"
+	ResourceDatabricksUser                  string = "databricks.user"
+	ResourceDatabricksGroup                 string = "databricks.group"
+	ResourceDatabricksServicePrincipal      string = "databricks.servicePrincipal"
+	ResourceDatabricksMetastore             string = "databricks.metastore"
+	ResourceDatabricksNetwork               string = "databricks.network"
+	ResourceDatabricksPrivateAccessSetting  string = "databricks.privateAccessSetting"
+	ResourceDatabricksIpAccessList          string = "databricks.ipAccessList"
+	ResourceDatabricksWorkspaceConf         string = "databricks.workspaceConf"
+	ResourceDatabricksToken                 string = "databricks.token"
+	ResourceDatabricksSecretScope           string = "databricks.secretScope"
+	ResourceDatabricksClusterPolicy         string = "databricks.clusterPolicy"
+	ResourceDatabricksCluster               string = "databricks.cluster"
+	ResourceDatabricksWarehouse             string = "databricks.warehouse"
+	ResourceDatabricksCatalog               string = "databricks.catalog"
+	ResourceDatabricksSchema                string = "databricks.schema"
+	ResourceDatabricksGrant                 string = "databricks.grant"
+	ResourceDatabricksStorageCredential     string = "databricks.storageCredential"
+	ResourceDatabricksExternalLocation      string = "databricks.externalLocation"
+	ResourceDatabricksVolume                string = "databricks.volume"
+	ResourceDatabricksDeltaSharingRecipient string = "databricks.deltaSharingRecipient"
+	ResourceDatabricksDeltaSharingShare     string = "databricks.deltaSharingShare"
+	ResourceDatabricksGlobalInitScript      string = "databricks.globalInitScript"
+	ResourceDatabricksInstanceProfile       string = "databricks.instanceProfile"
+	ResourceDatabricksCustomerManagedKey    string = "databricks.customerManagedKey"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -126,6 +131,26 @@ func init() {
 		"databricks.volume": {
 			// to override args, implement: initDatabricksVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDatabricksVolume,
+		},
+		"databricks.deltaSharingRecipient": {
+			// to override args, implement: initDatabricksDeltaSharingRecipient(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDatabricksDeltaSharingRecipient,
+		},
+		"databricks.deltaSharingShare": {
+			// to override args, implement: initDatabricksDeltaSharingShare(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDatabricksDeltaSharingShare,
+		},
+		"databricks.globalInitScript": {
+			// to override args, implement: initDatabricksGlobalInitScript(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDatabricksGlobalInitScript,
+		},
+		"databricks.instanceProfile": {
+			// to override args, implement: initDatabricksInstanceProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDatabricksInstanceProfile,
+		},
+		"databricks.customerManagedKey": {
+			// to override args, implement: initDatabricksCustomerManagedKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDatabricksCustomerManagedKey,
 		},
 	}
 }
@@ -248,6 +273,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"databricks.externalLocations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricks).GetExternalLocations()).ToDataRes(types.Array(types.Resource("databricks.externalLocation")))
+	},
+	"databricks.deltaSharingRecipients": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricks).GetDeltaSharingRecipients()).ToDataRes(types.Array(types.Resource("databricks.deltaSharingRecipient")))
+	},
+	"databricks.deltaSharingShares": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricks).GetDeltaSharingShares()).ToDataRes(types.Array(types.Resource("databricks.deltaSharingShare")))
+	},
+	"databricks.globalInitScripts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricks).GetGlobalInitScripts()).ToDataRes(types.Array(types.Resource("databricks.globalInitScript")))
+	},
+	"databricks.instanceProfiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricks).GetInstanceProfiles()).ToDataRes(types.Array(types.Resource("databricks.instanceProfile")))
+	},
+	"databricks.customerManagedKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricks).GetCustomerManagedKeys()).ToDataRes(types.Array(types.Resource("databricks.customerManagedKey")))
 	},
 	"databricks.workspace.workspaceId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksWorkspace).GetWorkspaceId()).ToDataRes(types.Int)
@@ -470,6 +510,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"databricks.workspaceConf.storeInteractiveNotebookResultsInCustomerAccount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksWorkspaceConf).GetStoreInteractiveNotebookResultsInCustomerAccount()).ToDataRes(types.Bool)
+	},
+	"databricks.workspaceConf.complianceSecurityProfileEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksWorkspaceConf).GetComplianceSecurityProfileEnabled()).ToDataRes(types.Bool)
+	},
+	"databricks.workspaceConf.complianceSecurityStandards": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksWorkspaceConf).GetComplianceSecurityStandards()).ToDataRes(types.Array(types.String))
+	},
+	"databricks.workspaceConf.enhancedSecurityMonitoringEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksWorkspaceConf).GetEnhancedSecurityMonitoringEnabled()).ToDataRes(types.Bool)
+	},
+	"databricks.workspaceConf.restrictWorkspaceAdminsStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksWorkspaceConf).GetRestrictWorkspaceAdminsStatus()).ToDataRes(types.String)
+	},
+	"databricks.workspaceConf.automaticClusterUpdateEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksWorkspaceConf).GetAutomaticClusterUpdateEnabled()).ToDataRes(types.Bool)
+	},
+	"databricks.workspaceConf.disableLegacyAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksWorkspaceConf).GetDisableLegacyAccess()).ToDataRes(types.Bool)
 	},
 	"databricks.token.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksToken).GetId()).ToDataRes(types.String)
@@ -813,6 +871,120 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"databricks.volume.grants": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksVolume).GetGrants()).ToDataRes(types.Array(types.Resource("databricks.grant")))
 	},
+	"databricks.deltaSharingRecipient.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksDeltaSharingRecipient).GetName()).ToDataRes(types.String)
+	},
+	"databricks.deltaSharingRecipient.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksDeltaSharingRecipient).GetOwner()).ToDataRes(types.String)
+	},
+	"databricks.deltaSharingRecipient.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksDeltaSharingRecipient).GetComment()).ToDataRes(types.String)
+	},
+	"databricks.deltaSharingRecipient.authenticationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksDeltaSharingRecipient).GetAuthenticationType()).ToDataRes(types.String)
+	},
+	"databricks.deltaSharingRecipient.activated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksDeltaSharingRecipient).GetActivated()).ToDataRes(types.Bool)
+	},
+	"databricks.deltaSharingRecipient.dataRecipientGlobalMetastoreId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksDeltaSharingRecipient).GetDataRecipientGlobalMetastoreId()).ToDataRes(types.String)
+	},
+	"databricks.deltaSharingRecipient.ipAccessList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksDeltaSharingRecipient).GetIpAccessList()).ToDataRes(types.Array(types.String))
+	},
+	"databricks.deltaSharingRecipient.tokens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksDeltaSharingRecipient).GetTokens()).ToDataRes(types.Array(types.Dict))
+	},
+	"databricks.deltaSharingRecipient.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksDeltaSharingRecipient).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"databricks.deltaSharingRecipient.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksDeltaSharingRecipient).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"databricks.deltaSharingRecipient.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksDeltaSharingRecipient).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"databricks.deltaSharingRecipient.updatedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksDeltaSharingRecipient).GetUpdatedBy()).ToDataRes(types.String)
+	},
+	"databricks.deltaSharingShare.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksDeltaSharingShare).GetName()).ToDataRes(types.String)
+	},
+	"databricks.deltaSharingShare.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksDeltaSharingShare).GetOwner()).ToDataRes(types.String)
+	},
+	"databricks.deltaSharingShare.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksDeltaSharingShare).GetComment()).ToDataRes(types.String)
+	},
+	"databricks.deltaSharingShare.sharedObjects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksDeltaSharingShare).GetSharedObjects()).ToDataRes(types.Array(types.Dict))
+	},
+	"databricks.deltaSharingShare.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksDeltaSharingShare).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"databricks.deltaSharingShare.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksDeltaSharingShare).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"databricks.deltaSharingShare.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksDeltaSharingShare).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"databricks.deltaSharingShare.updatedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksDeltaSharingShare).GetUpdatedBy()).ToDataRes(types.String)
+	},
+	"databricks.globalInitScript.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksGlobalInitScript).GetId()).ToDataRes(types.String)
+	},
+	"databricks.globalInitScript.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksGlobalInitScript).GetName()).ToDataRes(types.String)
+	},
+	"databricks.globalInitScript.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksGlobalInitScript).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"databricks.globalInitScript.position": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksGlobalInitScript).GetPosition()).ToDataRes(types.Int)
+	},
+	"databricks.globalInitScript.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksGlobalInitScript).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"databricks.globalInitScript.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksGlobalInitScript).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"databricks.globalInitScript.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksGlobalInitScript).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"databricks.globalInitScript.updatedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksGlobalInitScript).GetUpdatedBy()).ToDataRes(types.String)
+	},
+	"databricks.instanceProfile.instanceProfileArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksInstanceProfile).GetInstanceProfileArn()).ToDataRes(types.String)
+	},
+	"databricks.instanceProfile.iamRoleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksInstanceProfile).GetIamRoleArn()).ToDataRes(types.String)
+	},
+	"databricks.instanceProfile.isMetaInstanceProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksInstanceProfile).GetIsMetaInstanceProfile()).ToDataRes(types.Bool)
+	},
+	"databricks.customerManagedKey.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksCustomerManagedKey).GetId()).ToDataRes(types.String)
+	},
+	"databricks.customerManagedKey.useCases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksCustomerManagedKey).GetUseCases()).ToDataRes(types.Array(types.String))
+	},
+	"databricks.customerManagedKey.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksCustomerManagedKey).GetCreationTime()).ToDataRes(types.Time)
+	},
+	"databricks.customerManagedKey.keyArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksCustomerManagedKey).GetKeyArn()).ToDataRes(types.String)
+	},
+	"databricks.customerManagedKey.keyAlias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksCustomerManagedKey).GetKeyAlias()).ToDataRes(types.String)
+	},
+	"databricks.customerManagedKey.keyRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksCustomerManagedKey).GetKeyRegion()).ToDataRes(types.String)
+	},
+	"databricks.customerManagedKey.kmsKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksCustomerManagedKey).GetKmsKeyId()).ToDataRes(types.String)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -895,6 +1067,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"databricks.externalLocations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatabricks).ExternalLocations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.deltaSharingRecipients": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricks).DeltaSharingRecipients, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.deltaSharingShares": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricks).DeltaSharingShares, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.globalInitScripts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricks).GlobalInitScripts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.instanceProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricks).InstanceProfiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.customerManagedKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricks).CustomerManagedKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"databricks.workspace.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1227,6 +1419,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"databricks.workspaceConf.storeInteractiveNotebookResultsInCustomerAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatabricksWorkspaceConf).StoreInteractiveNotebookResultsInCustomerAccount, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"databricks.workspaceConf.complianceSecurityProfileEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksWorkspaceConf).ComplianceSecurityProfileEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"databricks.workspaceConf.complianceSecurityStandards": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksWorkspaceConf).ComplianceSecurityStandards, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.workspaceConf.enhancedSecurityMonitoringEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksWorkspaceConf).EnhancedSecurityMonitoringEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"databricks.workspaceConf.restrictWorkspaceAdminsStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksWorkspaceConf).RestrictWorkspaceAdminsStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.workspaceConf.automaticClusterUpdateEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksWorkspaceConf).AutomaticClusterUpdateEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"databricks.workspaceConf.disableLegacyAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksWorkspaceConf).DisableLegacyAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"databricks.token.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1729,6 +1945,178 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDatabricksVolume).Grants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"databricks.deltaSharingRecipient.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksDeltaSharingRecipient).__id, ok = v.Value.(string)
+		return
+	},
+	"databricks.deltaSharingRecipient.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksDeltaSharingRecipient).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.deltaSharingRecipient.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksDeltaSharingRecipient).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.deltaSharingRecipient.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksDeltaSharingRecipient).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.deltaSharingRecipient.authenticationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksDeltaSharingRecipient).AuthenticationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.deltaSharingRecipient.activated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksDeltaSharingRecipient).Activated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"databricks.deltaSharingRecipient.dataRecipientGlobalMetastoreId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksDeltaSharingRecipient).DataRecipientGlobalMetastoreId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.deltaSharingRecipient.ipAccessList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksDeltaSharingRecipient).IpAccessList, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.deltaSharingRecipient.tokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksDeltaSharingRecipient).Tokens, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.deltaSharingRecipient.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksDeltaSharingRecipient).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"databricks.deltaSharingRecipient.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksDeltaSharingRecipient).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.deltaSharingRecipient.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksDeltaSharingRecipient).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"databricks.deltaSharingRecipient.updatedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksDeltaSharingRecipient).UpdatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.deltaSharingShare.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksDeltaSharingShare).__id, ok = v.Value.(string)
+		return
+	},
+	"databricks.deltaSharingShare.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksDeltaSharingShare).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.deltaSharingShare.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksDeltaSharingShare).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.deltaSharingShare.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksDeltaSharingShare).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.deltaSharingShare.sharedObjects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksDeltaSharingShare).SharedObjects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.deltaSharingShare.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksDeltaSharingShare).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"databricks.deltaSharingShare.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksDeltaSharingShare).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.deltaSharingShare.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksDeltaSharingShare).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"databricks.deltaSharingShare.updatedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksDeltaSharingShare).UpdatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.globalInitScript.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksGlobalInitScript).__id, ok = v.Value.(string)
+		return
+	},
+	"databricks.globalInitScript.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksGlobalInitScript).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.globalInitScript.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksGlobalInitScript).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.globalInitScript.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksGlobalInitScript).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"databricks.globalInitScript.position": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksGlobalInitScript).Position, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"databricks.globalInitScript.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksGlobalInitScript).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"databricks.globalInitScript.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksGlobalInitScript).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.globalInitScript.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksGlobalInitScript).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"databricks.globalInitScript.updatedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksGlobalInitScript).UpdatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.instanceProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksInstanceProfile).__id, ok = v.Value.(string)
+		return
+	},
+	"databricks.instanceProfile.instanceProfileArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksInstanceProfile).InstanceProfileArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.instanceProfile.iamRoleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksInstanceProfile).IamRoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.instanceProfile.isMetaInstanceProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksInstanceProfile).IsMetaInstanceProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"databricks.customerManagedKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksCustomerManagedKey).__id, ok = v.Value.(string)
+		return
+	},
+	"databricks.customerManagedKey.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksCustomerManagedKey).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.customerManagedKey.useCases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksCustomerManagedKey).UseCases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.customerManagedKey.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksCustomerManagedKey).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"databricks.customerManagedKey.keyArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksCustomerManagedKey).KeyArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.customerManagedKey.keyAlias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksCustomerManagedKey).KeyAlias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.customerManagedKey.keyRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksCustomerManagedKey).KeyRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.customerManagedKey.kmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksCustomerManagedKey).KmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -1758,23 +2146,28 @@ type mqlDatabricks struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlDatabricksInternal it will be used here
-	Workspaces            plugin.TValue[[]any]
-	Users                 plugin.TValue[[]any]
-	Groups                plugin.TValue[[]any]
-	ServicePrincipals     plugin.TValue[[]any]
-	Metastores            plugin.TValue[[]any]
-	Networks              plugin.TValue[[]any]
-	PrivateAccessSettings plugin.TValue[[]any]
-	IpAccessLists         plugin.TValue[[]any]
-	WorkspaceSettings     plugin.TValue[*mqlDatabricksWorkspaceConf]
-	Tokens                plugin.TValue[[]any]
-	SecretScopes          plugin.TValue[[]any]
-	ClusterPolicies       plugin.TValue[[]any]
-	Clusters              plugin.TValue[[]any]
-	Warehouses            plugin.TValue[[]any]
-	Catalogs              plugin.TValue[[]any]
-	StorageCredentials    plugin.TValue[[]any]
-	ExternalLocations     plugin.TValue[[]any]
+	Workspaces             plugin.TValue[[]any]
+	Users                  plugin.TValue[[]any]
+	Groups                 plugin.TValue[[]any]
+	ServicePrincipals      plugin.TValue[[]any]
+	Metastores             plugin.TValue[[]any]
+	Networks               plugin.TValue[[]any]
+	PrivateAccessSettings  plugin.TValue[[]any]
+	IpAccessLists          plugin.TValue[[]any]
+	WorkspaceSettings      plugin.TValue[*mqlDatabricksWorkspaceConf]
+	Tokens                 plugin.TValue[[]any]
+	SecretScopes           plugin.TValue[[]any]
+	ClusterPolicies        plugin.TValue[[]any]
+	Clusters               plugin.TValue[[]any]
+	Warehouses             plugin.TValue[[]any]
+	Catalogs               plugin.TValue[[]any]
+	StorageCredentials     plugin.TValue[[]any]
+	ExternalLocations      plugin.TValue[[]any]
+	DeltaSharingRecipients plugin.TValue[[]any]
+	DeltaSharingShares     plugin.TValue[[]any]
+	GlobalInitScripts      plugin.TValue[[]any]
+	InstanceProfiles       plugin.TValue[[]any]
+	CustomerManagedKeys    plugin.TValue[[]any]
 }
 
 // createDatabricks creates a new instance of this resource
@@ -2083,6 +2476,86 @@ func (c *mqlDatabricks) GetExternalLocations() *plugin.TValue[[]any] {
 		}
 
 		return c.externalLocations()
+	})
+}
+
+func (c *mqlDatabricks) GetDeltaSharingRecipients() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DeltaSharingRecipients, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks", c.__id, "deltaSharingRecipients")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.deltaSharingRecipients()
+	})
+}
+
+func (c *mqlDatabricks) GetDeltaSharingShares() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DeltaSharingShares, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks", c.__id, "deltaSharingShares")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.deltaSharingShares()
+	})
+}
+
+func (c *mqlDatabricks) GetGlobalInitScripts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.GlobalInitScripts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks", c.__id, "globalInitScripts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.globalInitScripts()
+	})
+}
+
+func (c *mqlDatabricks) GetInstanceProfiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InstanceProfiles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks", c.__id, "instanceProfiles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instanceProfiles()
+	})
+}
+
+func (c *mqlDatabricks) GetCustomerManagedKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CustomerManagedKeys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks", c.__id, "customerManagedKeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.customerManagedKeys()
 	})
 }
 
@@ -2766,13 +3239,19 @@ func (c *mqlDatabricksIpAccessList) GetEnabled() *plugin.TValue[bool] {
 type mqlDatabricksWorkspaceConf struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlDatabricksWorkspaceConfInternal it will be used here
+	mqlDatabricksWorkspaceConfInternal
 	TokensEnabled                                    plugin.TValue[bool]
 	MaxTokenLifetimeDays                             plugin.TValue[int64]
 	IpAccessListsEnabled                             plugin.TValue[bool]
 	DeprecatedGlobalInitScriptsEnabled               plugin.TValue[bool]
 	DeprecatedClusterNamedInitScriptsEnabled         plugin.TValue[bool]
 	StoreInteractiveNotebookResultsInCustomerAccount plugin.TValue[bool]
+	ComplianceSecurityProfileEnabled                 plugin.TValue[bool]
+	ComplianceSecurityStandards                      plugin.TValue[[]any]
+	EnhancedSecurityMonitoringEnabled                plugin.TValue[bool]
+	RestrictWorkspaceAdminsStatus                    plugin.TValue[string]
+	AutomaticClusterUpdateEnabled                    plugin.TValue[bool]
+	DisableLegacyAccess                              plugin.TValue[bool]
 }
 
 // createDatabricksWorkspaceConf creates a new instance of this resource
@@ -2829,6 +3308,42 @@ func (c *mqlDatabricksWorkspaceConf) GetDeprecatedClusterNamedInitScriptsEnabled
 
 func (c *mqlDatabricksWorkspaceConf) GetStoreInteractiveNotebookResultsInCustomerAccount() *plugin.TValue[bool] {
 	return &c.StoreInteractiveNotebookResultsInCustomerAccount
+}
+
+func (c *mqlDatabricksWorkspaceConf) GetComplianceSecurityProfileEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ComplianceSecurityProfileEnabled, func() (bool, error) {
+		return c.complianceSecurityProfileEnabled()
+	})
+}
+
+func (c *mqlDatabricksWorkspaceConf) GetComplianceSecurityStandards() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ComplianceSecurityStandards, func() ([]any, error) {
+		return c.complianceSecurityStandards()
+	})
+}
+
+func (c *mqlDatabricksWorkspaceConf) GetEnhancedSecurityMonitoringEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EnhancedSecurityMonitoringEnabled, func() (bool, error) {
+		return c.enhancedSecurityMonitoringEnabled()
+	})
+}
+
+func (c *mqlDatabricksWorkspaceConf) GetRestrictWorkspaceAdminsStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RestrictWorkspaceAdminsStatus, func() (string, error) {
+		return c.restrictWorkspaceAdminsStatus()
+	})
+}
+
+func (c *mqlDatabricksWorkspaceConf) GetAutomaticClusterUpdateEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AutomaticClusterUpdateEnabled, func() (bool, error) {
+		return c.automaticClusterUpdateEnabled()
+	})
+}
+
+func (c *mqlDatabricksWorkspaceConf) GetDisableLegacyAccess() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DisableLegacyAccess, func() (bool, error) {
+		return c.disableLegacyAccess()
+	})
 }
 
 // mqlDatabricksToken for the databricks.token resource
@@ -3938,4 +4453,389 @@ func (c *mqlDatabricksVolume) GetGrants() *plugin.TValue[[]any] {
 
 		return c.grants()
 	})
+}
+
+// mqlDatabricksDeltaSharingRecipient for the databricks.deltaSharingRecipient resource
+type mqlDatabricksDeltaSharingRecipient struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDatabricksDeltaSharingRecipientInternal it will be used here
+	Name                           plugin.TValue[string]
+	Owner                          plugin.TValue[string]
+	Comment                        plugin.TValue[string]
+	AuthenticationType             plugin.TValue[string]
+	Activated                      plugin.TValue[bool]
+	DataRecipientGlobalMetastoreId plugin.TValue[string]
+	IpAccessList                   plugin.TValue[[]any]
+	Tokens                         plugin.TValue[[]any]
+	CreatedAt                      plugin.TValue[*time.Time]
+	CreatedBy                      plugin.TValue[string]
+	UpdatedAt                      plugin.TValue[*time.Time]
+	UpdatedBy                      plugin.TValue[string]
+}
+
+// createDatabricksDeltaSharingRecipient creates a new instance of this resource
+func createDatabricksDeltaSharingRecipient(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDatabricksDeltaSharingRecipient{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("databricks.deltaSharingRecipient", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDatabricksDeltaSharingRecipient) MqlName() string {
+	return "databricks.deltaSharingRecipient"
+}
+
+func (c *mqlDatabricksDeltaSharingRecipient) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDatabricksDeltaSharingRecipient) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDatabricksDeltaSharingRecipient) GetOwner() *plugin.TValue[string] {
+	return &c.Owner
+}
+
+func (c *mqlDatabricksDeltaSharingRecipient) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlDatabricksDeltaSharingRecipient) GetAuthenticationType() *plugin.TValue[string] {
+	return &c.AuthenticationType
+}
+
+func (c *mqlDatabricksDeltaSharingRecipient) GetActivated() *plugin.TValue[bool] {
+	return &c.Activated
+}
+
+func (c *mqlDatabricksDeltaSharingRecipient) GetDataRecipientGlobalMetastoreId() *plugin.TValue[string] {
+	return &c.DataRecipientGlobalMetastoreId
+}
+
+func (c *mqlDatabricksDeltaSharingRecipient) GetIpAccessList() *plugin.TValue[[]any] {
+	return &c.IpAccessList
+}
+
+func (c *mqlDatabricksDeltaSharingRecipient) GetTokens() *plugin.TValue[[]any] {
+	return &c.Tokens
+}
+
+func (c *mqlDatabricksDeltaSharingRecipient) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDatabricksDeltaSharingRecipient) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlDatabricksDeltaSharingRecipient) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlDatabricksDeltaSharingRecipient) GetUpdatedBy() *plugin.TValue[string] {
+	return &c.UpdatedBy
+}
+
+// mqlDatabricksDeltaSharingShare for the databricks.deltaSharingShare resource
+type mqlDatabricksDeltaSharingShare struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDatabricksDeltaSharingShareInternal it will be used here
+	Name          plugin.TValue[string]
+	Owner         plugin.TValue[string]
+	Comment       plugin.TValue[string]
+	SharedObjects plugin.TValue[[]any]
+	CreatedAt     plugin.TValue[*time.Time]
+	CreatedBy     plugin.TValue[string]
+	UpdatedAt     plugin.TValue[*time.Time]
+	UpdatedBy     plugin.TValue[string]
+}
+
+// createDatabricksDeltaSharingShare creates a new instance of this resource
+func createDatabricksDeltaSharingShare(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDatabricksDeltaSharingShare{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("databricks.deltaSharingShare", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDatabricksDeltaSharingShare) MqlName() string {
+	return "databricks.deltaSharingShare"
+}
+
+func (c *mqlDatabricksDeltaSharingShare) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDatabricksDeltaSharingShare) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDatabricksDeltaSharingShare) GetOwner() *plugin.TValue[string] {
+	return &c.Owner
+}
+
+func (c *mqlDatabricksDeltaSharingShare) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlDatabricksDeltaSharingShare) GetSharedObjects() *plugin.TValue[[]any] {
+	return &c.SharedObjects
+}
+
+func (c *mqlDatabricksDeltaSharingShare) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDatabricksDeltaSharingShare) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlDatabricksDeltaSharingShare) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlDatabricksDeltaSharingShare) GetUpdatedBy() *plugin.TValue[string] {
+	return &c.UpdatedBy
+}
+
+// mqlDatabricksGlobalInitScript for the databricks.globalInitScript resource
+type mqlDatabricksGlobalInitScript struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDatabricksGlobalInitScriptInternal it will be used here
+	Id        plugin.TValue[string]
+	Name      plugin.TValue[string]
+	Enabled   plugin.TValue[bool]
+	Position  plugin.TValue[int64]
+	CreatedAt plugin.TValue[*time.Time]
+	CreatedBy plugin.TValue[string]
+	UpdatedAt plugin.TValue[*time.Time]
+	UpdatedBy plugin.TValue[string]
+}
+
+// createDatabricksGlobalInitScript creates a new instance of this resource
+func createDatabricksGlobalInitScript(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDatabricksGlobalInitScript{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("databricks.globalInitScript", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDatabricksGlobalInitScript) MqlName() string {
+	return "databricks.globalInitScript"
+}
+
+func (c *mqlDatabricksGlobalInitScript) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDatabricksGlobalInitScript) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDatabricksGlobalInitScript) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDatabricksGlobalInitScript) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlDatabricksGlobalInitScript) GetPosition() *plugin.TValue[int64] {
+	return &c.Position
+}
+
+func (c *mqlDatabricksGlobalInitScript) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDatabricksGlobalInitScript) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlDatabricksGlobalInitScript) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlDatabricksGlobalInitScript) GetUpdatedBy() *plugin.TValue[string] {
+	return &c.UpdatedBy
+}
+
+// mqlDatabricksInstanceProfile for the databricks.instanceProfile resource
+type mqlDatabricksInstanceProfile struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDatabricksInstanceProfileInternal it will be used here
+	InstanceProfileArn    plugin.TValue[string]
+	IamRoleArn            plugin.TValue[string]
+	IsMetaInstanceProfile plugin.TValue[bool]
+}
+
+// createDatabricksInstanceProfile creates a new instance of this resource
+func createDatabricksInstanceProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDatabricksInstanceProfile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("databricks.instanceProfile", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDatabricksInstanceProfile) MqlName() string {
+	return "databricks.instanceProfile"
+}
+
+func (c *mqlDatabricksInstanceProfile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDatabricksInstanceProfile) GetInstanceProfileArn() *plugin.TValue[string] {
+	return &c.InstanceProfileArn
+}
+
+func (c *mqlDatabricksInstanceProfile) GetIamRoleArn() *plugin.TValue[string] {
+	return &c.IamRoleArn
+}
+
+func (c *mqlDatabricksInstanceProfile) GetIsMetaInstanceProfile() *plugin.TValue[bool] {
+	return &c.IsMetaInstanceProfile
+}
+
+// mqlDatabricksCustomerManagedKey for the databricks.customerManagedKey resource
+type mqlDatabricksCustomerManagedKey struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDatabricksCustomerManagedKeyInternal it will be used here
+	Id           plugin.TValue[string]
+	UseCases     plugin.TValue[[]any]
+	CreationTime plugin.TValue[*time.Time]
+	KeyArn       plugin.TValue[string]
+	KeyAlias     plugin.TValue[string]
+	KeyRegion    plugin.TValue[string]
+	KmsKeyId     plugin.TValue[string]
+}
+
+// createDatabricksCustomerManagedKey creates a new instance of this resource
+func createDatabricksCustomerManagedKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDatabricksCustomerManagedKey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("databricks.customerManagedKey", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDatabricksCustomerManagedKey) MqlName() string {
+	return "databricks.customerManagedKey"
+}
+
+func (c *mqlDatabricksCustomerManagedKey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDatabricksCustomerManagedKey) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDatabricksCustomerManagedKey) GetUseCases() *plugin.TValue[[]any] {
+	return &c.UseCases
+}
+
+func (c *mqlDatabricksCustomerManagedKey) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
+}
+
+func (c *mqlDatabricksCustomerManagedKey) GetKeyArn() *plugin.TValue[string] {
+	return &c.KeyArn
+}
+
+func (c *mqlDatabricksCustomerManagedKey) GetKeyAlias() *plugin.TValue[string] {
+	return &c.KeyAlias
+}
+
+func (c *mqlDatabricksCustomerManagedKey) GetKeyRegion() *plugin.TValue[string] {
+	return &c.KeyRegion
+}
+
+func (c *mqlDatabricksCustomerManagedKey) GetKmsKeyId() *plugin.TValue[string] {
+	return &c.KmsKeyId
 }
