@@ -210,6 +210,7 @@ PROVIDERS := \
 	claude \
 	cloudflare \
 	cloudformation \
+	databricks \
 	datadog \
 	depsdev \
 	digitalocean \

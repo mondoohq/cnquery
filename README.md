@@ -116,6 +116,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Confluence users              | `atlassian`                | `mql shell atlassian --host YOUR_HOST_URL --admin-token YOUR_TOKEN`                                                                             |
 | Container images              | `container`, `docker`      | `mql shell container ubuntu:latest`                                                                                                             |
 | Container registries          | `container registry`       | `mql shell container registry index.docker.io/library/rockylinux:8`                                                                             |
+| Databricks account            | `databricks`               | `mql shell databricks --account-id ACCOUNT_ID --client-id CLIENT_ID --client-secret CLIENT_SECRET`                                              |
 | Datadog organization          | `datadog`                  | `mql shell datadog --api-key API_KEY --app-key APP_KEY`                                                                                         |
 | Dockerfiles                   | `docker`                   | `mql shell docker file FILENAME`                                                                                                                |
 | DNS records                   | `host`                     | `mql shell host mondoo.com`                                                                                                                     |

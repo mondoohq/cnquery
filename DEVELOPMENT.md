@@ -207,6 +207,7 @@ use (
    ./mql/providers/claude
    ./mql/providers/cloudflare
    ./mql/providers/cloudformation
+   ./mql/providers/databricks
    ./mql/providers/datadog
    ./mql/providers/depsdev
    ./mql/providers/digitalocean

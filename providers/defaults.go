@@ -246,6 +246,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"databricks": {
+		Provider: &plugin.Provider{
+			Name:            "databricks",
+			ID:              "go.mondoo.com/mql/providers/databricks",
+			ConnectionTypes: []string{"databricks"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "databricks",
+					Use:   "databricks",
+					Short: "a Databricks account or workspace",
+				},
+			},
+		},
+	},
+
 	"datadog": {
 		Provider: &plugin.Provider{
 			Name:            "datadog",
