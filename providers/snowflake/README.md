@@ -47,12 +47,12 @@ A scan surfaces the Snowflake account as its own asset and, in addition, one ass
 
 This split lets account-wide checks target the account asset while per-database checks target each database asset independently.
 
-Discovery is controlled with `--discover`:
+The account asset is always the root of the scan; the `--discover` targets only control which additional child assets are emitted alongside it:
 
-- `auto` (default) - discover the account plus every database. Same as `all`.
-- `all` - discover the account plus every database.
-- `databases` - discover one asset per database.
-- `none` - connect to the account only, without emitting per-database assets.
+- `auto` (default) - also emit one asset per database. Same as `all`.
+- `all` - also emit one asset per database.
+- `databases` - also emit one asset per database.
+- `none` - account only, without emitting per-database assets.
 
 ```shell
 # Scan the account and every database
