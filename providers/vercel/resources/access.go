@@ -18,10 +18,12 @@ type mqlVercelAccessGroupInternal struct {
 }
 
 // mqlVercelAccessGroupProjectInternal caches the scope needed to resolve the
-// typed project reference on a grant.
+// typed project reference on a grant, plus the project object the grants
+// endpoint embeds, so project() can avoid a per-grant project-by-id fetch.
 type mqlVercelAccessGroupProjectInternal struct {
-	teamID    string
-	projectID string
+	teamID       string
+	projectID    string
+	cacheProject *projectRecord
 }
 
 // --- project members ------------------------------------------------------
@@ -112,10 +114,11 @@ func (g *mqlVercelAccessGroup) members() ([]any, error) {
 // --- access group project grants ------------------------------------------
 
 type accessGroupProjectRecord struct {
-	ProjectID string   `json:"projectId"`
-	Role      string   `json:"role"`
-	CreatedAt flexTime `json:"createdAt"`
-	UpdatedAt flexTime `json:"updatedAt"`
+	ProjectID string         `json:"projectId"`
+	Role      string         `json:"role"`
+	CreatedAt flexTime       `json:"createdAt"`
+	UpdatedAt flexTime       `json:"updatedAt"`
+	Project   *projectRecord `json:"project"`
 }
 
 func (g *mqlVercelAccessGroup) projects() ([]any, error) {
@@ -145,6 +148,7 @@ func (g *mqlVercelAccessGroup) projects() ([]any, error) {
 		grant := resource.(*mqlVercelAccessGroupProject)
 		grant.teamID = g.teamID
 		grant.projectID = rec.ProjectID
+		grant.cacheProject = rec.Project
 		res = append(res, grant)
 	}
 	return res, nil
@@ -154,6 +158,16 @@ func (p *mqlVercelAccessGroupProject) project() (*mqlVercelProject, error) {
 	if p.projectID == "" {
 		p.Project.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
+	}
+
+	// The access-group projects endpoint embeds the full project object in each
+	// grant; build the typed reference from it and skip the per-grant fetch.
+	if p.cacheProject != nil && (p.cacheProject.ID != "" || p.cacheProject.Name != "") {
+		rec := *p.cacheProject
+		if rec.ID == "" {
+			rec.ID = p.projectID
+		}
+		return newVercelProject(p.MqlRuntime, p.teamID, &rec)
 	}
 
 	conn := p.MqlRuntime.Connection.(*connection.VercelConnection)

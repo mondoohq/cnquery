@@ -5,12 +5,55 @@ package resources
 
 import (
 	"context"
+	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/vercel/connection"
 	"go.mondoo.com/mql/v13/types"
 )
+
+// mqlVercelInternal caches per-team store listings on the root resource so a
+// scan that reads stores across many projects (for example team.projects {
+// stores }) fetches each team's store list once and shares it, rather than
+// re-listing the whole team store list per project.
+type mqlVercelInternal struct {
+	storesMu     sync.Mutex
+	storesByTeam map[string][]storeRecord
+}
+
+// rootVercel returns the cached root vercel resource, creating it if a scan
+// reaches a store accessor before the root has been materialized. Both paths
+// resolve to the same singleton (cache key "vercel"), so the store cache is
+// shared regardless of entry point.
+func rootVercel(runtime *plugin.Runtime) (*mqlVercel, error) {
+	res, err := CreateResource(runtime, "vercel", nil)
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlVercel), nil
+}
+
+// teamStores returns the team's store list, fetching it once per team and
+// caching the result. Errors are not cached, so a transient failure or a
+// forbidden response is re-evaluated by the caller on the next access.
+func (v *mqlVercel) teamStores(teamID string) ([]storeRecord, error) {
+	v.storesMu.Lock()
+	defer v.storesMu.Unlock()
+	if v.storesByTeam == nil {
+		v.storesByTeam = map[string][]storeRecord{}
+	}
+	if recs, ok := v.storesByTeam[teamID]; ok {
+		return recs, nil
+	}
+	conn := v.MqlRuntime.Connection.(*connection.VercelConnection)
+	recs, err := listStores(context.Background(), conn, teamID)
+	if err != nil {
+		return nil, err
+	}
+	v.storesByTeam[teamID] = recs
+	return recs, nil
+}
 
 // mqlVercelStoreInternal caches the team a store belongs to and the ids of the
 // projects connected to it, so connectedProjects can resolve typed project
@@ -132,8 +175,11 @@ func (c *mqlVercelStore) id() (string, error) {
 }
 
 func (c *mqlVercelTeam) stores() ([]any, error) {
-	conn := c.MqlRuntime.Connection.(*connection.VercelConnection)
-	records, err := listStores(context.Background(), conn, c.Id.Data)
+	root, err := rootVercel(c.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	records, err := root.teamStores(c.Id.Data)
 	if err != nil {
 		if connection.IsForbidden(err) {
 			return []any{}, nil
@@ -159,8 +205,11 @@ func (c *mqlVercelTeam) stores() ([]any, error) {
 }
 
 func (c *mqlVercelProject) stores() ([]any, error) {
-	conn := c.MqlRuntime.Connection.(*connection.VercelConnection)
-	records, err := listStores(context.Background(), conn, c.teamID)
+	root, err := rootVercel(c.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	records, err := root.teamStores(c.teamID)
 	if err != nil {
 		if connection.IsForbidden(err) {
 			return []any{}, nil

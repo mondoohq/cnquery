@@ -1847,7 +1847,7 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 type mqlVercel struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlVercelInternal it will be used here
+	mqlVercelInternal
 	Teams        plugin.TValue[[]any]
 	Projects     plugin.TValue[[]any]
 	CurrentUser  plugin.TValue[*mqlVercelUser]

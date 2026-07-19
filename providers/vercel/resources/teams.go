@@ -456,7 +456,9 @@ type accessGroupRecord struct {
 
 func (c *mqlVercelTeam) accessGroups() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.VercelConnection)
-	records, err := connection.GetPaged[accessGroupRecord](context.Background(), conn, "/v1/access-groups", connection.TeamQuery(c.Id.Data), "accessGroups")
+	query := connection.TeamQuery(c.Id.Data)
+	query.Set("limit", "100")
+	records, err := connection.GetPagedCursor[accessGroupRecord](context.Background(), conn, "/v1/access-groups", query, "accessGroups")
 	if err != nil {
 		// Access groups are an Enterprise feature; degrade to empty on plans
 		// that do not expose the endpoint.
