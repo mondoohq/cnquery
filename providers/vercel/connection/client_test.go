@@ -63,6 +63,40 @@ func TestGetPagedFollowsCursor(t *testing.T) {
 	}
 }
 
+func TestGetPagedCursorFollowsStringCursor(t *testing.T) {
+	var calls int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		w.Header().Set("Content-Type", "application/json")
+		switch r.URL.Query().Get("next") {
+		case "":
+			io.WriteString(w, `{"members":[{"id":"a"},{"id":"b"}],"pagination":{"count":2,"next":"cursor-2"}}`)
+		case "cursor-2":
+			io.WriteString(w, `{"members":[{"id":"c"}],"pagination":{"count":1,"next":null}}`)
+		default:
+			t.Errorf("unexpected next cursor: %q", r.URL.Query().Get("next"))
+		}
+	}))
+	defer srv.Close()
+
+	got, err := GetPagedCursor[pagedItem](context.Background(), testConn(srv), "/members", nil, "members")
+	if err != nil {
+		t.Fatalf("GetPagedCursor: %v", err)
+	}
+	if calls != 2 {
+		t.Fatalf("expected 2 page requests, got %d", calls)
+	}
+	want := []string{"a", "b", "c"}
+	if len(got) != len(want) {
+		t.Fatalf("expected %v, got %v", want, got)
+	}
+	for i := range want {
+		if got[i].ID != want[i] {
+			t.Fatalf("index %d: expected %q, got %q", i, want[i], got[i].ID)
+		}
+	}
+}
+
 func TestGetPagedSinglePageNoPagination(t *testing.T) {
 	var calls int
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

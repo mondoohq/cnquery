@@ -202,7 +202,9 @@ func (c *mqlVercelTeam) domains() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, domain)
+		mqlDomain := domain.(*mqlVercelDomain)
+		mqlDomain.teamID = c.Id.Data
+		res = append(res, mqlDomain)
 	}
 	return res, nil
 }
@@ -441,7 +443,9 @@ func (c *mqlVercelTeam) accessGroups() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, group)
+		mqlGroup := group.(*mqlVercelAccessGroup)
+		mqlGroup.teamID = c.Id.Data
+		res = append(res, mqlGroup)
 	}
 	return res, nil
 }

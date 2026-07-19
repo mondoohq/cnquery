@@ -22,9 +22,12 @@ const (
 	ResourceVercelTeam                       string = "vercel.team"
 	ResourceVercelTeamMember                 string = "vercel.team.member"
 	ResourceVercelProject                    string = "vercel.project"
+	ResourceVercelProjectMember              string = "vercel.project.member"
 	ResourceVercelProjectEnvironmentVariable string = "vercel.project.environmentVariable"
 	ResourceVercelDeployment                 string = "vercel.deployment"
 	ResourceVercelDomain                     string = "vercel.domain"
+	ResourceVercelDnsRecord                  string = "vercel.dnsRecord"
+	ResourceVercelCertificate                string = "vercel.certificate"
 	ResourceVercelProjectDomain              string = "vercel.project.domain"
 	ResourceVercelEdgeConfig                 string = "vercel.edgeConfig"
 	ResourceVercelStore                      string = "vercel.store"
@@ -32,6 +35,8 @@ const (
 	ResourceVercelWebhook                    string = "vercel.webhook"
 	ResourceVercelIntegrationConfiguration   string = "vercel.integrationConfiguration"
 	ResourceVercelAccessGroup                string = "vercel.accessGroup"
+	ResourceVercelAccessGroupMember          string = "vercel.accessGroup.member"
+	ResourceVercelAccessGroupProject         string = "vercel.accessGroup.project"
 	ResourceVercelFirewall                   string = "vercel.firewall"
 	ResourceVercelFirewallRule               string = "vercel.firewall.rule"
 	ResourceVercelFirewallIpRule             string = "vercel.firewall.ipRule"
@@ -65,6 +70,10 @@ func init() {
 			Init:   initVercelProject,
 			Create: createVercelProject,
 		},
+		"vercel.project.member": {
+			// to override args, implement: initVercelProjectMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVercelProjectMember,
+		},
 		"vercel.project.environmentVariable": {
 			// to override args, implement: initVercelProjectEnvironmentVariable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVercelProjectEnvironmentVariable,
@@ -76,6 +85,14 @@ func init() {
 		"vercel.domain": {
 			// to override args, implement: initVercelDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVercelDomain,
+		},
+		"vercel.dnsRecord": {
+			// to override args, implement: initVercelDnsRecord(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVercelDnsRecord,
+		},
+		"vercel.certificate": {
+			// to override args, implement: initVercelCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVercelCertificate,
 		},
 		"vercel.project.domain": {
 			// to override args, implement: initVercelProjectDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -104,6 +121,14 @@ func init() {
 		"vercel.accessGroup": {
 			// to override args, implement: initVercelAccessGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVercelAccessGroup,
+		},
+		"vercel.accessGroup.member": {
+			// to override args, implement: initVercelAccessGroupMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVercelAccessGroupMember,
+		},
+		"vercel.accessGroup.project": {
+			// to override args, implement: initVercelAccessGroupProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVercelAccessGroupProject,
 		},
 		"vercel.firewall": {
 			// to override args, implement: initVercelFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -293,6 +318,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vercel.team.stores": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelTeam).GetStores()).ToDataRes(types.Array(types.Resource("vercel.store")))
 	},
+	"vercel.team.certificates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelTeam).GetCertificates()).ToDataRes(types.Array(types.Resource("vercel.certificate")))
+	},
 	"vercel.team.member.uid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelTeamMember).GetUid()).ToDataRes(types.String)
 	},
@@ -407,6 +435,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vercel.project.stores": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelProject).GetStores()).ToDataRes(types.Array(types.Resource("vercel.store")))
 	},
+	"vercel.project.members": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProject).GetMembers()).ToDataRes(types.Array(types.Resource("vercel.project.member")))
+	},
+	"vercel.project.member.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProjectMember).GetUid()).ToDataRes(types.String)
+	},
+	"vercel.project.member.email": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProjectMember).GetEmail()).ToDataRes(types.String)
+	},
+	"vercel.project.member.username": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProjectMember).GetUsername()).ToDataRes(types.String)
+	},
+	"vercel.project.member.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProjectMember).GetName()).ToDataRes(types.String)
+	},
+	"vercel.project.member.role": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProjectMember).GetRole()).ToDataRes(types.String)
+	},
+	"vercel.project.member.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProjectMember).GetCreatedAt()).ToDataRes(types.Time)
+	},
 	"vercel.project.environmentVariable.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelProjectEnvironmentVariable).GetId()).ToDataRes(types.String)
 	},
@@ -496,6 +545,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vercel.domain.boughtAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelDomain).GetBoughtAt()).ToDataRes(types.Time)
+	},
+	"vercel.domain.records": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelDomain).GetRecords()).ToDataRes(types.Array(types.Resource("vercel.dnsRecord")))
+	},
+	"vercel.dnsRecord.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelDnsRecord).GetId()).ToDataRes(types.String)
+	},
+	"vercel.dnsRecord.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelDnsRecord).GetName()).ToDataRes(types.String)
+	},
+	"vercel.dnsRecord.recordType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelDnsRecord).GetRecordType()).ToDataRes(types.String)
+	},
+	"vercel.dnsRecord.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelDnsRecord).GetValue()).ToDataRes(types.String)
+	},
+	"vercel.dnsRecord.ttl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelDnsRecord).GetTtl()).ToDataRes(types.Int)
+	},
+	"vercel.dnsRecord.mxPriority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelDnsRecord).GetMxPriority()).ToDataRes(types.Int)
+	},
+	"vercel.dnsRecord.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelDnsRecord).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"vercel.dnsRecord.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelDnsRecord).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"vercel.certificate.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelCertificate).GetId()).ToDataRes(types.String)
+	},
+	"vercel.certificate.commonNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelCertificate).GetCommonNames()).ToDataRes(types.Array(types.String))
+	},
+	"vercel.certificate.autoRenew": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelCertificate).GetAutoRenew()).ToDataRes(types.Bool)
+	},
+	"vercel.certificate.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelCertificate).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"vercel.certificate.expiresAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelCertificate).GetExpiresAt()).ToDataRes(types.Time)
 	},
 	"vercel.project.domain.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelProjectDomain).GetName()).ToDataRes(types.String)
@@ -679,6 +770,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vercel.accessGroup.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelAccessGroup).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"vercel.accessGroup.members": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelAccessGroup).GetMembers()).ToDataRes(types.Array(types.Resource("vercel.accessGroup.member")))
+	},
+	"vercel.accessGroup.projects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelAccessGroup).GetProjects()).ToDataRes(types.Array(types.Resource("vercel.accessGroup.project")))
+	},
+	"vercel.accessGroup.member.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelAccessGroupMember).GetUid()).ToDataRes(types.String)
+	},
+	"vercel.accessGroup.member.email": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelAccessGroupMember).GetEmail()).ToDataRes(types.String)
+	},
+	"vercel.accessGroup.member.username": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelAccessGroupMember).GetUsername()).ToDataRes(types.String)
+	},
+	"vercel.accessGroup.member.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelAccessGroupMember).GetName()).ToDataRes(types.String)
+	},
+	"vercel.accessGroup.member.teamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelAccessGroupMember).GetTeamRole()).ToDataRes(types.String)
+	},
+	"vercel.accessGroup.member.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelAccessGroupMember).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"vercel.accessGroup.project.role": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelAccessGroupProject).GetRole()).ToDataRes(types.String)
+	},
+	"vercel.accessGroup.project.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelAccessGroupProject).GetProjectId()).ToDataRes(types.String)
+	},
+	"vercel.accessGroup.project.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelAccessGroupProject).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"vercel.accessGroup.project.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelAccessGroupProject).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"vercel.accessGroup.project.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelAccessGroupProject).GetProject()).ToDataRes(types.Resource("vercel.project"))
 	},
 	"vercel.firewall.enabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelFirewall).GetEnabled()).ToDataRes(types.Bool)
@@ -893,6 +1023,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVercelTeam).Stores, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"vercel.team.certificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelTeam).Certificates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"vercel.team.member.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVercelTeamMember).__id, ok = v.Value.(string)
 		return
@@ -1053,6 +1187,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVercelProject).Stores, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"vercel.project.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProject).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vercel.project.member.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProjectMember).__id, ok = v.Value.(string)
+		return
+	},
+	"vercel.project.member.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProjectMember).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.project.member.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProjectMember).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.project.member.username": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProjectMember).Username, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.project.member.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProjectMember).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.project.member.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProjectMember).Role, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.project.member.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProjectMember).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"vercel.project.environmentVariable.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVercelProjectEnvironmentVariable).__id, ok = v.Value.(string)
 		return
@@ -1183,6 +1349,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vercel.domain.boughtAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVercelDomain).BoughtAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vercel.domain.records": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelDomain).Records, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vercel.dnsRecord.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelDnsRecord).__id, ok = v.Value.(string)
+		return
+	},
+	"vercel.dnsRecord.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelDnsRecord).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.dnsRecord.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelDnsRecord).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.dnsRecord.recordType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelDnsRecord).RecordType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.dnsRecord.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelDnsRecord).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.dnsRecord.ttl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelDnsRecord).Ttl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vercel.dnsRecord.mxPriority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelDnsRecord).MxPriority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vercel.dnsRecord.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelDnsRecord).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vercel.dnsRecord.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelDnsRecord).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vercel.certificate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelCertificate).__id, ok = v.Value.(string)
+		return
+	},
+	"vercel.certificate.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelCertificate).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.certificate.commonNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelCertificate).CommonNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vercel.certificate.autoRenew": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelCertificate).AutoRenew, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vercel.certificate.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelCertificate).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vercel.certificate.expiresAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelCertificate).ExpiresAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"vercel.project.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1455,6 +1685,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vercel.accessGroup.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVercelAccessGroup).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vercel.accessGroup.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelAccessGroup).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vercel.accessGroup.projects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelAccessGroup).Projects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vercel.accessGroup.member.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelAccessGroupMember).__id, ok = v.Value.(string)
+		return
+	},
+	"vercel.accessGroup.member.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelAccessGroupMember).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.accessGroup.member.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelAccessGroupMember).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.accessGroup.member.username": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelAccessGroupMember).Username, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.accessGroup.member.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelAccessGroupMember).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.accessGroup.member.teamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelAccessGroupMember).TeamRole, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.accessGroup.member.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelAccessGroupMember).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vercel.accessGroup.project.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelAccessGroupProject).__id, ok = v.Value.(string)
+		return
+	},
+	"vercel.accessGroup.project.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelAccessGroupProject).Role, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.accessGroup.project.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelAccessGroupProject).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.accessGroup.project.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelAccessGroupProject).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vercel.accessGroup.project.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelAccessGroupProject).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vercel.accessGroup.project.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelAccessGroupProject).Project, ok = plugin.RawToTValue[*mqlVercelProject](v.Value, v.Error)
 		return
 	},
 	"vercel.firewall.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1841,6 +2131,7 @@ type mqlVercelTeam struct {
 	IntegrationConfigurations          plugin.TValue[[]any]
 	AccessGroups                       plugin.TValue[[]any]
 	Stores                             plugin.TValue[[]any]
+	Certificates                       plugin.TValue[[]any]
 }
 
 // createVercelTeam creates a new instance of this resource
@@ -2060,6 +2351,22 @@ func (c *mqlVercelTeam) GetStores() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlVercelTeam) GetCertificates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Certificates, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vercel.team", c.__id, "certificates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.certificates()
+	})
+}
+
 // mqlVercelTeamMember for the vercel.team.member resource
 type mqlVercelTeamMember struct {
 	MqlRuntime *plugin.Runtime
@@ -2170,6 +2477,7 @@ type mqlVercelProject struct {
 	Domains                          plugin.TValue[[]any]
 	Firewall                         plugin.TValue[*mqlVercelFirewall]
 	Stores                           plugin.TValue[[]any]
+	Members                          plugin.TValue[[]any]
 }
 
 // createVercelProject creates a new instance of this resource
@@ -2393,6 +2701,91 @@ func (c *mqlVercelProject) GetStores() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlVercelProject) GetMembers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Members, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vercel.project", c.__id, "members")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.members()
+	})
+}
+
+// mqlVercelProjectMember for the vercel.project.member resource
+type mqlVercelProjectMember struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVercelProjectMemberInternal it will be used here
+	Uid       plugin.TValue[string]
+	Email     plugin.TValue[string]
+	Username  plugin.TValue[string]
+	Name      plugin.TValue[string]
+	Role      plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
+}
+
+// createVercelProjectMember creates a new instance of this resource
+func createVercelProjectMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVercelProjectMember{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vercel.project.member", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVercelProjectMember) MqlName() string {
+	return "vercel.project.member"
+}
+
+func (c *mqlVercelProjectMember) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVercelProjectMember) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlVercelProjectMember) GetEmail() *plugin.TValue[string] {
+	return &c.Email
+}
+
+func (c *mqlVercelProjectMember) GetUsername() *plugin.TValue[string] {
+	return &c.Username
+}
+
+func (c *mqlVercelProjectMember) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlVercelProjectMember) GetRole() *plugin.TValue[string] {
+	return &c.Role
+}
+
+func (c *mqlVercelProjectMember) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
 // mqlVercelProjectEnvironmentVariable for the vercel.project.environmentVariable resource
 type mqlVercelProjectEnvironmentVariable struct {
 	MqlRuntime *plugin.Runtime
@@ -2580,7 +2973,7 @@ func (c *mqlVercelDeployment) GetCreatedAt() *plugin.TValue[*time.Time] {
 type mqlVercelDomain struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlVercelDomainInternal it will be used here
+	mqlVercelDomainInternal
 	Id                  plugin.TValue[string]
 	Name                plugin.TValue[string]
 	ServiceType         plugin.TValue[string]
@@ -2592,6 +2985,7 @@ type mqlVercelDomain struct {
 	CreatedAt           plugin.TValue[*time.Time]
 	ExpiresAt           plugin.TValue[*time.Time]
 	BoughtAt            plugin.TValue[*time.Time]
+	Records             plugin.TValue[[]any]
 }
 
 // createVercelDomain creates a new instance of this resource
@@ -2673,6 +3067,175 @@ func (c *mqlVercelDomain) GetExpiresAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlVercelDomain) GetBoughtAt() *plugin.TValue[*time.Time] {
 	return &c.BoughtAt
+}
+
+func (c *mqlVercelDomain) GetRecords() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Records, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vercel.domain", c.__id, "records")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.records()
+	})
+}
+
+// mqlVercelDnsRecord for the vercel.dnsRecord resource
+type mqlVercelDnsRecord struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVercelDnsRecordInternal it will be used here
+	Id         plugin.TValue[string]
+	Name       plugin.TValue[string]
+	RecordType plugin.TValue[string]
+	Value      plugin.TValue[string]
+	Ttl        plugin.TValue[int64]
+	MxPriority plugin.TValue[int64]
+	CreatedAt  plugin.TValue[*time.Time]
+	UpdatedAt  plugin.TValue[*time.Time]
+}
+
+// createVercelDnsRecord creates a new instance of this resource
+func createVercelDnsRecord(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVercelDnsRecord{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vercel.dnsRecord", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVercelDnsRecord) MqlName() string {
+	return "vercel.dnsRecord"
+}
+
+func (c *mqlVercelDnsRecord) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVercelDnsRecord) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlVercelDnsRecord) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlVercelDnsRecord) GetRecordType() *plugin.TValue[string] {
+	return &c.RecordType
+}
+
+func (c *mqlVercelDnsRecord) GetValue() *plugin.TValue[string] {
+	return &c.Value
+}
+
+func (c *mqlVercelDnsRecord) GetTtl() *plugin.TValue[int64] {
+	return &c.Ttl
+}
+
+func (c *mqlVercelDnsRecord) GetMxPriority() *plugin.TValue[int64] {
+	return &c.MxPriority
+}
+
+func (c *mqlVercelDnsRecord) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlVercelDnsRecord) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlVercelCertificate for the vercel.certificate resource
+type mqlVercelCertificate struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVercelCertificateInternal it will be used here
+	Id          plugin.TValue[string]
+	CommonNames plugin.TValue[[]any]
+	AutoRenew   plugin.TValue[bool]
+	CreatedAt   plugin.TValue[*time.Time]
+	ExpiresAt   plugin.TValue[*time.Time]
+}
+
+// createVercelCertificate creates a new instance of this resource
+func createVercelCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVercelCertificate{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vercel.certificate", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVercelCertificate) MqlName() string {
+	return "vercel.certificate"
+}
+
+func (c *mqlVercelCertificate) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVercelCertificate) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlVercelCertificate) GetCommonNames() *plugin.TValue[[]any] {
+	return &c.CommonNames
+}
+
+func (c *mqlVercelCertificate) GetAutoRenew() *plugin.TValue[bool] {
+	return &c.AutoRenew
+}
+
+func (c *mqlVercelCertificate) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlVercelCertificate) GetExpiresAt() *plugin.TValue[*time.Time] {
+	return &c.ExpiresAt
 }
 
 // mqlVercelProjectDomain for the vercel.project.domain resource
@@ -3225,13 +3788,15 @@ func (c *mqlVercelIntegrationConfiguration) GetUpdatedAt() *plugin.TValue[*time.
 type mqlVercelAccessGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlVercelAccessGroupInternal it will be used here
+	mqlVercelAccessGroupInternal
 	Id            plugin.TValue[string]
 	Name          plugin.TValue[string]
 	MembersCount  plugin.TValue[int64]
 	ProjectsCount plugin.TValue[int64]
 	CreatedAt     plugin.TValue[*time.Time]
 	UpdatedAt     plugin.TValue[*time.Time]
+	Members       plugin.TValue[[]any]
+	Projects      plugin.TValue[[]any]
 }
 
 // createVercelAccessGroup creates a new instance of this resource
@@ -3293,6 +3858,183 @@ func (c *mqlVercelAccessGroup) GetCreatedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlVercelAccessGroup) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
+}
+
+func (c *mqlVercelAccessGroup) GetMembers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Members, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vercel.accessGroup", c.__id, "members")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.members()
+	})
+}
+
+func (c *mqlVercelAccessGroup) GetProjects() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Projects, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vercel.accessGroup", c.__id, "projects")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.projects()
+	})
+}
+
+// mqlVercelAccessGroupMember for the vercel.accessGroup.member resource
+type mqlVercelAccessGroupMember struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVercelAccessGroupMemberInternal it will be used here
+	Uid       plugin.TValue[string]
+	Email     plugin.TValue[string]
+	Username  plugin.TValue[string]
+	Name      plugin.TValue[string]
+	TeamRole  plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
+}
+
+// createVercelAccessGroupMember creates a new instance of this resource
+func createVercelAccessGroupMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVercelAccessGroupMember{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vercel.accessGroup.member", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVercelAccessGroupMember) MqlName() string {
+	return "vercel.accessGroup.member"
+}
+
+func (c *mqlVercelAccessGroupMember) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVercelAccessGroupMember) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlVercelAccessGroupMember) GetEmail() *plugin.TValue[string] {
+	return &c.Email
+}
+
+func (c *mqlVercelAccessGroupMember) GetUsername() *plugin.TValue[string] {
+	return &c.Username
+}
+
+func (c *mqlVercelAccessGroupMember) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlVercelAccessGroupMember) GetTeamRole() *plugin.TValue[string] {
+	return &c.TeamRole
+}
+
+func (c *mqlVercelAccessGroupMember) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+// mqlVercelAccessGroupProject for the vercel.accessGroup.project resource
+type mqlVercelAccessGroupProject struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlVercelAccessGroupProjectInternal
+	Role      plugin.TValue[string]
+	ProjectId plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
+	UpdatedAt plugin.TValue[*time.Time]
+	Project   plugin.TValue[*mqlVercelProject]
+}
+
+// createVercelAccessGroupProject creates a new instance of this resource
+func createVercelAccessGroupProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVercelAccessGroupProject{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vercel.accessGroup.project", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVercelAccessGroupProject) MqlName() string {
+	return "vercel.accessGroup.project"
+}
+
+func (c *mqlVercelAccessGroupProject) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVercelAccessGroupProject) GetRole() *plugin.TValue[string] {
+	return &c.Role
+}
+
+func (c *mqlVercelAccessGroupProject) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlVercelAccessGroupProject) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlVercelAccessGroupProject) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlVercelAccessGroupProject) GetProject() *plugin.TValue[*mqlVercelProject] {
+	return plugin.GetOrCompute[*mqlVercelProject](&c.Project, func() (*mqlVercelProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vercel.accessGroup.project", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVercelProject), nil
+			}
+		}
+
+		return c.project()
+	})
 }
 
 // mqlVercelFirewall for the vercel.firewall resource

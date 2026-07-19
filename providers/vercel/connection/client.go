@@ -168,6 +168,57 @@ func isJSONNull(raw json.RawMessage) bool {
 	return strings.TrimSpace(string(raw)) == "null"
 }
 
+// cursorPagination mirrors the string-cursor envelope used by a few endpoints
+// (for example access-group members and projects), where next is an opaque
+// continuation token passed back as the next parameter.
+type cursorPagination struct {
+	Next *string `json:"next"`
+}
+
+// GetPagedCursor follows string-cursor pagination for a list endpoint,
+// collecting every element under the given JSON key. It is the counterpart to
+// GetPaged for endpoints that page with an opaque next token rather than an
+// until timestamp.
+func GetPagedCursor[T any](ctx context.Context, c *VercelConnection, path string, query url.Values, key string) ([]T, error) {
+	if query == nil {
+		query = url.Values{}
+	}
+
+	var results []T
+	for {
+		body, err := c.do(ctx, path, query)
+		if err != nil {
+			return nil, err
+		}
+
+		var envelope map[string]json.RawMessage
+		if err := json.Unmarshal(body, &envelope); err != nil {
+			return nil, fmt.Errorf("vercel API %s: decode response: %w", path, err)
+		}
+
+		if raw, ok := envelope[key]; ok && len(raw) > 0 && !isJSONNull(raw) {
+			var page []T
+			if err := json.Unmarshal(raw, &page); err != nil {
+				return nil, fmt.Errorf("vercel API %s: decode %q: %w", path, key, err)
+			}
+			results = append(results, page...)
+		}
+
+		var pg struct {
+			Pagination *cursorPagination `json:"pagination"`
+		}
+		if err := json.Unmarshal(body, &pg); err != nil {
+			return nil, fmt.Errorf("vercel API %s: decode pagination: %w", path, err)
+		}
+		if pg.Pagination == nil || pg.Pagination.Next == nil || *pg.Pagination.Next == "" {
+			break
+		}
+		query.Set("next", *pg.Pagination.Next)
+	}
+
+	return results, nil
+}
+
 // TeamQuery returns a url.Values pre-populated with the given team id, or empty
 // values when teamID is blank.
 func TeamQuery(teamID string) url.Values {

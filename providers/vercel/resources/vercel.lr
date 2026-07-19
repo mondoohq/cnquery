@@ -120,6 +120,8 @@ private vercel.team @defaults("slug name") {
   accessGroups() []vercel.accessGroup
   // Storage stores owned by the team
   stores() []vercel.store
+  // TLS certificates issued for the team's domains
+  certificates() []vercel.certificate
 }
 
 // Vercel Team Member
@@ -241,6 +243,30 @@ private vercel.project @defaults("name framework") {
   firewall() vercel.firewall
   // Storage stores connected to the project
   stores() []vercel.store
+  // Members with direct access to the project
+  members() []vercel.project.member
+}
+
+// Vercel Project Member
+//
+// A member with direct access to a specific project, including their identity
+// and project role. Use it to audit per-project access separately from team-wide
+// membership. Select a member with `vercel.project.members.where(role == "ADMIN")`.
+private vercel.project.member @defaults("email role") {
+  // Unique user identifier
+  uid string
+  // Email address
+  email string
+  // Username
+  username string
+  // Display name
+  name string
+  // Project role
+  //
+  // For example ADMIN, PROJECT_DEVELOPER, PROJECT_VIEWER, or PROJECT_GUEST.
+  role string
+  // Time the member was added to the project
+  createdAt time
 }
 
 // Vercel Environment Variable
@@ -341,6 +367,54 @@ private vercel.domain @defaults("name verified") {
   expiresAt time
   // Time the domain was purchased through Vercel, or null when not applicable
   boughtAt time
+  // DNS records configured for the domain
+  records() []vercel.dnsRecord
+}
+
+// Vercel DNS Record
+//
+// A single DNS record on a domain, including its subdomain name, type, value,
+// and TTL. Query `recordType` for the kind of record and `value` for its target.
+// Useful for auditing dangling records and verifying SPF, DKIM, and DMARC
+// entries. Select a record with `vercel.domain.records.where(recordType == "TXT")`.
+private vercel.dnsRecord @defaults("name recordType value") {
+  // Unique record identifier
+  id string
+  // Record name (subdomain), or empty for the apex domain
+  name string
+  // Record type
+  //
+  // For example A, AAAA, ALIAS, CNAME, MX, TXT, NS, CAA, or SRV.
+  recordType string
+  // Record value or target
+  value string
+  // Time to live in seconds, or null when the provider default applies
+  ttl int
+  // MX record priority, or null for non-MX records
+  mxPriority int
+  // Time the record was created
+  createdAt time
+  // Time the record was last updated
+  updatedAt time
+}
+
+// Vercel TLS Certificate
+//
+// A TLS certificate issued for one or more of the team's domains, including its
+// common names, auto-renewal state, and expiry. Query `expiresAt` for expiration
+// monitoring and `autoRenew` for renewal coverage. Select a certificate with
+// `vercel.team.certificates.where(autoRenew == false)`.
+private vercel.certificate @defaults("commonNames expiresAt") {
+  // Unique certificate identifier
+  id string
+  // Domains the certificate covers
+  commonNames []string
+  // Whether the certificate renews automatically before expiry
+  autoRenew bool
+  // Time the certificate was issued
+  createdAt time
+  // Time the certificate expires
+  expiresAt time
 }
 
 // Vercel Project Domain
@@ -549,6 +623,52 @@ private vercel.accessGroup @defaults("name") {
   createdAt time
   // Time the group was last updated
   updatedAt time
+  // Members belonging to the access group
+  members() []vercel.accessGroup.member
+  // Projects the access group grants a role on
+  projects() []vercel.accessGroup.project
+}
+
+// Vercel Access Group Member
+//
+// A member of an access group, including their identity and the team role the
+// group grants. Use it to audit which accounts an access group reaches.
+private vercel.accessGroup.member @defaults("email teamRole") {
+  // Unique user identifier
+  uid string
+  // Email address
+  email string
+  // Username
+  username string
+  // Display name
+  name string
+  // Team role granted through the group
+  //
+  // For example OWNER, MEMBER, DEVELOPER, BILLING, VIEWER, CONTRIBUTOR, or SECURITY.
+  teamRole string
+  // Time the member was added to the group
+  createdAt time
+}
+
+// Vercel Access Group Project Grant
+//
+// A project that an access group grants a role on, pairing the project role with
+// a reference to the project. Query `role` for the access level and `project` to
+// traverse into the project. Select a grant with
+// `vercel.accessGroup.projects.where(role == "ADMIN")`.
+private vercel.accessGroup.project @defaults("role") {
+  // Project role granted through the group
+  //
+  // One of ADMIN, PROJECT_DEVELOPER, PROJECT_VIEWER, or PROJECT_GUEST.
+  role string
+  // Identifier of the project the role is granted on
+  projectId string
+  // Time the grant was created
+  createdAt time
+  // Time the grant was last updated
+  updatedAt time
+  // Project the role is granted on
+  project() vercel.project
 }
 
 // Vercel Project Firewall
