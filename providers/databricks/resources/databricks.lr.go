@@ -34,6 +34,9 @@ const (
 	ResourceDatabricksCatalog              string = "databricks.catalog"
 	ResourceDatabricksSchema               string = "databricks.schema"
 	ResourceDatabricksGrant                string = "databricks.grant"
+	ResourceDatabricksStorageCredential    string = "databricks.storageCredential"
+	ResourceDatabricksExternalLocation     string = "databricks.externalLocation"
+	ResourceDatabricksVolume               string = "databricks.volume"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -111,6 +114,18 @@ func init() {
 		"databricks.grant": {
 			// to override args, implement: initDatabricksGrant(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDatabricksGrant,
+		},
+		"databricks.storageCredential": {
+			// to override args, implement: initDatabricksStorageCredential(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDatabricksStorageCredential,
+		},
+		"databricks.externalLocation": {
+			// to override args, implement: initDatabricksExternalLocation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDatabricksExternalLocation,
+		},
+		"databricks.volume": {
+			// to override args, implement: initDatabricksVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDatabricksVolume,
 		},
 	}
 }
@@ -227,6 +242,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"databricks.catalogs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricks).GetCatalogs()).ToDataRes(types.Array(types.Resource("databricks.catalog")))
+	},
+	"databricks.storageCredentials": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricks).GetStorageCredentials()).ToDataRes(types.Array(types.Resource("databricks.storageCredential")))
+	},
+	"databricks.externalLocations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricks).GetExternalLocations()).ToDataRes(types.Array(types.Resource("databricks.externalLocation")))
 	},
 	"databricks.workspace.workspaceId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksWorkspace).GetWorkspaceId()).ToDataRes(types.Int)
@@ -618,6 +639,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"databricks.schema.grants": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksSchema).GetGrants()).ToDataRes(types.Array(types.Resource("databricks.grant")))
 	},
+	"databricks.schema.volumes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksSchema).GetVolumes()).ToDataRes(types.Array(types.Resource("databricks.volume")))
+	},
 	"databricks.grant.principal": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksGrant).GetPrincipal()).ToDataRes(types.String)
 	},
@@ -629,6 +653,168 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"databricks.grant.privileges": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksGrant).GetPrivileges()).ToDataRes(types.Array(types.String))
+	},
+	"databricks.storageCredential.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksStorageCredential).GetId()).ToDataRes(types.String)
+	},
+	"databricks.storageCredential.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksStorageCredential).GetName()).ToDataRes(types.String)
+	},
+	"databricks.storageCredential.fullName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksStorageCredential).GetFullName()).ToDataRes(types.String)
+	},
+	"databricks.storageCredential.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksStorageCredential).GetOwner()).ToDataRes(types.String)
+	},
+	"databricks.storageCredential.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksStorageCredential).GetComment()).ToDataRes(types.String)
+	},
+	"databricks.storageCredential.metastoreId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksStorageCredential).GetMetastoreId()).ToDataRes(types.String)
+	},
+	"databricks.storageCredential.isolationMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksStorageCredential).GetIsolationMode()).ToDataRes(types.String)
+	},
+	"databricks.storageCredential.readOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksStorageCredential).GetReadOnly()).ToDataRes(types.Bool)
+	},
+	"databricks.storageCredential.usedForManagedStorage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksStorageCredential).GetUsedForManagedStorage()).ToDataRes(types.Bool)
+	},
+	"databricks.storageCredential.awsIamRoleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksStorageCredential).GetAwsIamRoleArn()).ToDataRes(types.String)
+	},
+	"databricks.storageCredential.awsIamRoleExternalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksStorageCredential).GetAwsIamRoleExternalId()).ToDataRes(types.String)
+	},
+	"databricks.storageCredential.azureAccessConnectorId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksStorageCredential).GetAzureAccessConnectorId()).ToDataRes(types.String)
+	},
+	"databricks.storageCredential.azureServicePrincipalApplicationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksStorageCredential).GetAzureServicePrincipalApplicationId()).ToDataRes(types.String)
+	},
+	"databricks.storageCredential.gcpServiceAccountEmail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksStorageCredential).GetGcpServiceAccountEmail()).ToDataRes(types.String)
+	},
+	"databricks.storageCredential.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksStorageCredential).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"databricks.storageCredential.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksStorageCredential).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"databricks.storageCredential.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksStorageCredential).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"databricks.storageCredential.updatedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksStorageCredential).GetUpdatedBy()).ToDataRes(types.String)
+	},
+	"databricks.storageCredential.grants": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksStorageCredential).GetGrants()).ToDataRes(types.Array(types.Resource("databricks.grant")))
+	},
+	"databricks.externalLocation.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksExternalLocation).GetName()).ToDataRes(types.String)
+	},
+	"databricks.externalLocation.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksExternalLocation).GetUrl()).ToDataRes(types.String)
+	},
+	"databricks.externalLocation.credentialName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksExternalLocation).GetCredentialName()).ToDataRes(types.String)
+	},
+	"databricks.externalLocation.credentialId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksExternalLocation).GetCredentialId()).ToDataRes(types.String)
+	},
+	"databricks.externalLocation.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksExternalLocation).GetOwner()).ToDataRes(types.String)
+	},
+	"databricks.externalLocation.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksExternalLocation).GetComment()).ToDataRes(types.String)
+	},
+	"databricks.externalLocation.metastoreId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksExternalLocation).GetMetastoreId()).ToDataRes(types.String)
+	},
+	"databricks.externalLocation.isolationMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksExternalLocation).GetIsolationMode()).ToDataRes(types.String)
+	},
+	"databricks.externalLocation.readOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksExternalLocation).GetReadOnly()).ToDataRes(types.Bool)
+	},
+	"databricks.externalLocation.fallback": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksExternalLocation).GetFallback()).ToDataRes(types.Bool)
+	},
+	"databricks.externalLocation.browseOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksExternalLocation).GetBrowseOnly()).ToDataRes(types.Bool)
+	},
+	"databricks.externalLocation.sseEncryptionAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksExternalLocation).GetSseEncryptionAlgorithm()).ToDataRes(types.String)
+	},
+	"databricks.externalLocation.sseKmsKeyArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksExternalLocation).GetSseKmsKeyArn()).ToDataRes(types.String)
+	},
+	"databricks.externalLocation.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksExternalLocation).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"databricks.externalLocation.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksExternalLocation).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"databricks.externalLocation.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksExternalLocation).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"databricks.externalLocation.updatedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksExternalLocation).GetUpdatedBy()).ToDataRes(types.String)
+	},
+	"databricks.externalLocation.grants": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksExternalLocation).GetGrants()).ToDataRes(types.Array(types.Resource("databricks.grant")))
+	},
+	"databricks.volume.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksVolume).GetId()).ToDataRes(types.String)
+	},
+	"databricks.volume.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksVolume).GetName()).ToDataRes(types.String)
+	},
+	"databricks.volume.fullName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksVolume).GetFullName()).ToDataRes(types.String)
+	},
+	"databricks.volume.catalogName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksVolume).GetCatalogName()).ToDataRes(types.String)
+	},
+	"databricks.volume.schemaName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksVolume).GetSchemaName()).ToDataRes(types.String)
+	},
+	"databricks.volume.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksVolume).GetOwner()).ToDataRes(types.String)
+	},
+	"databricks.volume.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksVolume).GetComment()).ToDataRes(types.String)
+	},
+	"databricks.volume.metastoreId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksVolume).GetMetastoreId()).ToDataRes(types.String)
+	},
+	"databricks.volume.volumeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksVolume).GetVolumeType()).ToDataRes(types.String)
+	},
+	"databricks.volume.storageLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksVolume).GetStorageLocation()).ToDataRes(types.String)
+	},
+	"databricks.volume.sseEncryptionAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksVolume).GetSseEncryptionAlgorithm()).ToDataRes(types.String)
+	},
+	"databricks.volume.sseKmsKeyArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksVolume).GetSseKmsKeyArn()).ToDataRes(types.String)
+	},
+	"databricks.volume.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksVolume).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"databricks.volume.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksVolume).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"databricks.volume.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksVolume).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"databricks.volume.updatedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksVolume).GetUpdatedBy()).ToDataRes(types.String)
+	},
+	"databricks.volume.grants": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksVolume).GetGrants()).ToDataRes(types.Array(types.Resource("databricks.grant")))
 	},
 }
 
@@ -704,6 +890,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"databricks.catalogs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatabricks).Catalogs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.storageCredentials": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricks).StorageCredentials, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.externalLocations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricks).ExternalLocations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"databricks.workspace.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1290,6 +1484,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDatabricksSchema).Grants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"databricks.schema.volumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksSchema).Volumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"databricks.grant.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatabricksGrant).__id, ok = v.Value.(string)
 		return
@@ -1308,6 +1506,234 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"databricks.grant.privileges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatabricksGrant).Privileges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.storageCredential.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksStorageCredential).__id, ok = v.Value.(string)
+		return
+	},
+	"databricks.storageCredential.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksStorageCredential).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.storageCredential.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksStorageCredential).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.storageCredential.fullName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksStorageCredential).FullName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.storageCredential.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksStorageCredential).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.storageCredential.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksStorageCredential).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.storageCredential.metastoreId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksStorageCredential).MetastoreId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.storageCredential.isolationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksStorageCredential).IsolationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.storageCredential.readOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksStorageCredential).ReadOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"databricks.storageCredential.usedForManagedStorage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksStorageCredential).UsedForManagedStorage, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"databricks.storageCredential.awsIamRoleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksStorageCredential).AwsIamRoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.storageCredential.awsIamRoleExternalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksStorageCredential).AwsIamRoleExternalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.storageCredential.azureAccessConnectorId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksStorageCredential).AzureAccessConnectorId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.storageCredential.azureServicePrincipalApplicationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksStorageCredential).AzureServicePrincipalApplicationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.storageCredential.gcpServiceAccountEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksStorageCredential).GcpServiceAccountEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.storageCredential.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksStorageCredential).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"databricks.storageCredential.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksStorageCredential).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.storageCredential.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksStorageCredential).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"databricks.storageCredential.updatedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksStorageCredential).UpdatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.storageCredential.grants": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksStorageCredential).Grants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.externalLocation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksExternalLocation).__id, ok = v.Value.(string)
+		return
+	},
+	"databricks.externalLocation.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksExternalLocation).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.externalLocation.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksExternalLocation).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.externalLocation.credentialName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksExternalLocation).CredentialName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.externalLocation.credentialId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksExternalLocation).CredentialId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.externalLocation.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksExternalLocation).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.externalLocation.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksExternalLocation).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.externalLocation.metastoreId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksExternalLocation).MetastoreId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.externalLocation.isolationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksExternalLocation).IsolationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.externalLocation.readOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksExternalLocation).ReadOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"databricks.externalLocation.fallback": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksExternalLocation).Fallback, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"databricks.externalLocation.browseOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksExternalLocation).BrowseOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"databricks.externalLocation.sseEncryptionAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksExternalLocation).SseEncryptionAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.externalLocation.sseKmsKeyArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksExternalLocation).SseKmsKeyArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.externalLocation.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksExternalLocation).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"databricks.externalLocation.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksExternalLocation).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.externalLocation.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksExternalLocation).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"databricks.externalLocation.updatedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksExternalLocation).UpdatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.externalLocation.grants": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksExternalLocation).Grants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.volume.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksVolume).__id, ok = v.Value.(string)
+		return
+	},
+	"databricks.volume.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksVolume).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.volume.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksVolume).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.volume.fullName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksVolume).FullName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.volume.catalogName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksVolume).CatalogName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.volume.schemaName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksVolume).SchemaName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.volume.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksVolume).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.volume.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksVolume).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.volume.metastoreId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksVolume).MetastoreId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.volume.volumeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksVolume).VolumeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.volume.storageLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksVolume).StorageLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.volume.sseEncryptionAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksVolume).SseEncryptionAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.volume.sseKmsKeyArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksVolume).SseKmsKeyArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.volume.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksVolume).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"databricks.volume.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksVolume).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.volume.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksVolume).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"databricks.volume.updatedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksVolume).UpdatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.volume.grants": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksVolume).Grants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 }
@@ -1354,6 +1780,8 @@ type mqlDatabricks struct {
 	Clusters              plugin.TValue[[]any]
 	Warehouses            plugin.TValue[[]any]
 	Catalogs              plugin.TValue[[]any]
+	StorageCredentials    plugin.TValue[[]any]
+	ExternalLocations     plugin.TValue[[]any]
 }
 
 // createDatabricks creates a new instance of this resource
@@ -1630,6 +2058,38 @@ func (c *mqlDatabricks) GetCatalogs() *plugin.TValue[[]any] {
 		}
 
 		return c.catalogs()
+	})
+}
+
+func (c *mqlDatabricks) GetStorageCredentials() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.StorageCredentials, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks", c.__id, "storageCredentials")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.storageCredentials()
+	})
+}
+
+func (c *mqlDatabricks) GetExternalLocations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ExternalLocations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks", c.__id, "externalLocations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.externalLocations()
 	})
 }
 
@@ -2907,6 +3367,7 @@ type mqlDatabricksSchema struct {
 	Owner       plugin.TValue[string]
 	Comment     plugin.TValue[string]
 	Grants      plugin.TValue[[]any]
+	Volumes     plugin.TValue[[]any]
 }
 
 // createDatabricksSchema creates a new instance of this resource
@@ -2981,6 +3442,22 @@ func (c *mqlDatabricksSchema) GetGrants() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlDatabricksSchema) GetVolumes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Volumes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks.schema", c.__id, "volumes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.volumes()
+	})
+}
+
 // mqlDatabricksGrant for the databricks.grant resource
 type mqlDatabricksGrant struct {
 	MqlRuntime *plugin.Runtime
@@ -3038,4 +3515,427 @@ func (c *mqlDatabricksGrant) GetSecurableName() *plugin.TValue[string] {
 
 func (c *mqlDatabricksGrant) GetPrivileges() *plugin.TValue[[]any] {
 	return &c.Privileges
+}
+
+// mqlDatabricksStorageCredential for the databricks.storageCredential resource
+type mqlDatabricksStorageCredential struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDatabricksStorageCredentialInternal it will be used here
+	Id                                 plugin.TValue[string]
+	Name                               plugin.TValue[string]
+	FullName                           plugin.TValue[string]
+	Owner                              plugin.TValue[string]
+	Comment                            plugin.TValue[string]
+	MetastoreId                        plugin.TValue[string]
+	IsolationMode                      plugin.TValue[string]
+	ReadOnly                           plugin.TValue[bool]
+	UsedForManagedStorage              plugin.TValue[bool]
+	AwsIamRoleArn                      plugin.TValue[string]
+	AwsIamRoleExternalId               plugin.TValue[string]
+	AzureAccessConnectorId             plugin.TValue[string]
+	AzureServicePrincipalApplicationId plugin.TValue[string]
+	GcpServiceAccountEmail             plugin.TValue[string]
+	CreatedAt                          plugin.TValue[*time.Time]
+	CreatedBy                          plugin.TValue[string]
+	UpdatedAt                          plugin.TValue[*time.Time]
+	UpdatedBy                          plugin.TValue[string]
+	Grants                             plugin.TValue[[]any]
+}
+
+// createDatabricksStorageCredential creates a new instance of this resource
+func createDatabricksStorageCredential(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDatabricksStorageCredential{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("databricks.storageCredential", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDatabricksStorageCredential) MqlName() string {
+	return "databricks.storageCredential"
+}
+
+func (c *mqlDatabricksStorageCredential) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDatabricksStorageCredential) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDatabricksStorageCredential) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDatabricksStorageCredential) GetFullName() *plugin.TValue[string] {
+	return &c.FullName
+}
+
+func (c *mqlDatabricksStorageCredential) GetOwner() *plugin.TValue[string] {
+	return &c.Owner
+}
+
+func (c *mqlDatabricksStorageCredential) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlDatabricksStorageCredential) GetMetastoreId() *plugin.TValue[string] {
+	return &c.MetastoreId
+}
+
+func (c *mqlDatabricksStorageCredential) GetIsolationMode() *plugin.TValue[string] {
+	return &c.IsolationMode
+}
+
+func (c *mqlDatabricksStorageCredential) GetReadOnly() *plugin.TValue[bool] {
+	return &c.ReadOnly
+}
+
+func (c *mqlDatabricksStorageCredential) GetUsedForManagedStorage() *plugin.TValue[bool] {
+	return &c.UsedForManagedStorage
+}
+
+func (c *mqlDatabricksStorageCredential) GetAwsIamRoleArn() *plugin.TValue[string] {
+	return &c.AwsIamRoleArn
+}
+
+func (c *mqlDatabricksStorageCredential) GetAwsIamRoleExternalId() *plugin.TValue[string] {
+	return &c.AwsIamRoleExternalId
+}
+
+func (c *mqlDatabricksStorageCredential) GetAzureAccessConnectorId() *plugin.TValue[string] {
+	return &c.AzureAccessConnectorId
+}
+
+func (c *mqlDatabricksStorageCredential) GetAzureServicePrincipalApplicationId() *plugin.TValue[string] {
+	return &c.AzureServicePrincipalApplicationId
+}
+
+func (c *mqlDatabricksStorageCredential) GetGcpServiceAccountEmail() *plugin.TValue[string] {
+	return &c.GcpServiceAccountEmail
+}
+
+func (c *mqlDatabricksStorageCredential) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDatabricksStorageCredential) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlDatabricksStorageCredential) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlDatabricksStorageCredential) GetUpdatedBy() *plugin.TValue[string] {
+	return &c.UpdatedBy
+}
+
+func (c *mqlDatabricksStorageCredential) GetGrants() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Grants, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks.storageCredential", c.__id, "grants")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.grants()
+	})
+}
+
+// mqlDatabricksExternalLocation for the databricks.externalLocation resource
+type mqlDatabricksExternalLocation struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDatabricksExternalLocationInternal it will be used here
+	Name                   plugin.TValue[string]
+	Url                    plugin.TValue[string]
+	CredentialName         plugin.TValue[string]
+	CredentialId           plugin.TValue[string]
+	Owner                  plugin.TValue[string]
+	Comment                plugin.TValue[string]
+	MetastoreId            plugin.TValue[string]
+	IsolationMode          plugin.TValue[string]
+	ReadOnly               plugin.TValue[bool]
+	Fallback               plugin.TValue[bool]
+	BrowseOnly             plugin.TValue[bool]
+	SseEncryptionAlgorithm plugin.TValue[string]
+	SseKmsKeyArn           plugin.TValue[string]
+	CreatedAt              plugin.TValue[*time.Time]
+	CreatedBy              plugin.TValue[string]
+	UpdatedAt              plugin.TValue[*time.Time]
+	UpdatedBy              plugin.TValue[string]
+	Grants                 plugin.TValue[[]any]
+}
+
+// createDatabricksExternalLocation creates a new instance of this resource
+func createDatabricksExternalLocation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDatabricksExternalLocation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("databricks.externalLocation", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDatabricksExternalLocation) MqlName() string {
+	return "databricks.externalLocation"
+}
+
+func (c *mqlDatabricksExternalLocation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDatabricksExternalLocation) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDatabricksExternalLocation) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlDatabricksExternalLocation) GetCredentialName() *plugin.TValue[string] {
+	return &c.CredentialName
+}
+
+func (c *mqlDatabricksExternalLocation) GetCredentialId() *plugin.TValue[string] {
+	return &c.CredentialId
+}
+
+func (c *mqlDatabricksExternalLocation) GetOwner() *plugin.TValue[string] {
+	return &c.Owner
+}
+
+func (c *mqlDatabricksExternalLocation) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlDatabricksExternalLocation) GetMetastoreId() *plugin.TValue[string] {
+	return &c.MetastoreId
+}
+
+func (c *mqlDatabricksExternalLocation) GetIsolationMode() *plugin.TValue[string] {
+	return &c.IsolationMode
+}
+
+func (c *mqlDatabricksExternalLocation) GetReadOnly() *plugin.TValue[bool] {
+	return &c.ReadOnly
+}
+
+func (c *mqlDatabricksExternalLocation) GetFallback() *plugin.TValue[bool] {
+	return &c.Fallback
+}
+
+func (c *mqlDatabricksExternalLocation) GetBrowseOnly() *plugin.TValue[bool] {
+	return &c.BrowseOnly
+}
+
+func (c *mqlDatabricksExternalLocation) GetSseEncryptionAlgorithm() *plugin.TValue[string] {
+	return &c.SseEncryptionAlgorithm
+}
+
+func (c *mqlDatabricksExternalLocation) GetSseKmsKeyArn() *plugin.TValue[string] {
+	return &c.SseKmsKeyArn
+}
+
+func (c *mqlDatabricksExternalLocation) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDatabricksExternalLocation) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlDatabricksExternalLocation) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlDatabricksExternalLocation) GetUpdatedBy() *plugin.TValue[string] {
+	return &c.UpdatedBy
+}
+
+func (c *mqlDatabricksExternalLocation) GetGrants() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Grants, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks.externalLocation", c.__id, "grants")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.grants()
+	})
+}
+
+// mqlDatabricksVolume for the databricks.volume resource
+type mqlDatabricksVolume struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDatabricksVolumeInternal it will be used here
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	FullName               plugin.TValue[string]
+	CatalogName            plugin.TValue[string]
+	SchemaName             plugin.TValue[string]
+	Owner                  plugin.TValue[string]
+	Comment                plugin.TValue[string]
+	MetastoreId            plugin.TValue[string]
+	VolumeType             plugin.TValue[string]
+	StorageLocation        plugin.TValue[string]
+	SseEncryptionAlgorithm plugin.TValue[string]
+	SseKmsKeyArn           plugin.TValue[string]
+	CreatedAt              plugin.TValue[*time.Time]
+	CreatedBy              plugin.TValue[string]
+	UpdatedAt              plugin.TValue[*time.Time]
+	UpdatedBy              plugin.TValue[string]
+	Grants                 plugin.TValue[[]any]
+}
+
+// createDatabricksVolume creates a new instance of this resource
+func createDatabricksVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDatabricksVolume{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("databricks.volume", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDatabricksVolume) MqlName() string {
+	return "databricks.volume"
+}
+
+func (c *mqlDatabricksVolume) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDatabricksVolume) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDatabricksVolume) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDatabricksVolume) GetFullName() *plugin.TValue[string] {
+	return &c.FullName
+}
+
+func (c *mqlDatabricksVolume) GetCatalogName() *plugin.TValue[string] {
+	return &c.CatalogName
+}
+
+func (c *mqlDatabricksVolume) GetSchemaName() *plugin.TValue[string] {
+	return &c.SchemaName
+}
+
+func (c *mqlDatabricksVolume) GetOwner() *plugin.TValue[string] {
+	return &c.Owner
+}
+
+func (c *mqlDatabricksVolume) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlDatabricksVolume) GetMetastoreId() *plugin.TValue[string] {
+	return &c.MetastoreId
+}
+
+func (c *mqlDatabricksVolume) GetVolumeType() *plugin.TValue[string] {
+	return &c.VolumeType
+}
+
+func (c *mqlDatabricksVolume) GetStorageLocation() *plugin.TValue[string] {
+	return &c.StorageLocation
+}
+
+func (c *mqlDatabricksVolume) GetSseEncryptionAlgorithm() *plugin.TValue[string] {
+	return &c.SseEncryptionAlgorithm
+}
+
+func (c *mqlDatabricksVolume) GetSseKmsKeyArn() *plugin.TValue[string] {
+	return &c.SseKmsKeyArn
+}
+
+func (c *mqlDatabricksVolume) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDatabricksVolume) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlDatabricksVolume) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlDatabricksVolume) GetUpdatedBy() *plugin.TValue[string] {
+	return &c.UpdatedBy
+}
+
+func (c *mqlDatabricksVolume) GetGrants() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Grants, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks.volume", c.__id, "grants")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.grants()
+	})
 }

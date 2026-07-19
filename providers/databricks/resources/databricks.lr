@@ -12,7 +12,8 @@ option go_package = "go.mondoo.com/mql/v13/providers/databricks/resources"
 // privateAccessSettings fields, and enumerates every workspace through the
 // workspaces field. Connecting to a single workspace exposes that workspace's
 // security surface through the ipAccessLists, workspaceSettings, tokens,
-// secretScopes, clusters, clusterPolicies, warehouses, and catalogs fields.
+// secretScopes, clusters, clusterPolicies, warehouses, catalogs,
+// storageCredentials, and externalLocations fields.
 databricks {
   // Workspaces registered in the account
   workspaces() []databricks.workspace
@@ -44,6 +45,10 @@ databricks {
   warehouses() []databricks.warehouse
   // Unity Catalog catalogs accessible from the workspace
   catalogs() []databricks.catalog
+  // Unity Catalog storage credentials in the workspace's metastore
+  storageCredentials() []databricks.storageCredential
+  // Unity Catalog external locations in the workspace's metastore
+  externalLocations() []databricks.externalLocation
 }
 
 // Databricks workspace
@@ -478,6 +483,8 @@ databricks.schema @defaults("fullName owner") {
   comment string
   // Privilege grants assigned directly on the schema
   grants() []databricks.grant
+  // Unity Catalog volumes in the schema
+  volumes() []databricks.volume
 }
 
 // Unity Catalog privilege grant
@@ -495,4 +502,157 @@ databricks.grant @defaults("principal securableType securableName") {
   securableName string
   // Privileges granted to the principal on the securable
   privileges []string
+}
+
+// Unity Catalog storage credential
+//
+// A storage credential holds the cloud identity Unity Catalog assumes to reach
+// external storage: an AWS IAM role, an Azure managed identity or service
+// principal, or a GCP service account. Auditing storage credentials surfaces
+// the vended principal (the AWS role ARN and its external ID, the Azure access
+// connector, the Azure application ID, or the GCP service account email), the
+// isolation mode that controls which workspaces can use it, whether it is
+// read-only or backs the metastore's root managed storage, and the privilege
+// grants assigned on it. Select a credential by name, for example
+// `databricks.storageCredentials.where(name == "prod-s3")`.
+databricks.storageCredential @defaults("name owner isolationMode") {
+  // Unique identifier of the credential
+  id string
+  // Credential name
+  name string
+  // Fully qualified name of the credential
+  fullName string
+  // Principal that owns the credential
+  owner string
+  // Credential comment
+  comment string
+  // Id of the metastore the credential belongs to
+  metastoreId string
+  // Isolation mode (ISOLATED or OPEN)
+  isolationMode string
+  // Whether the credential is usable only for read operations
+  readOnly bool
+  // Whether the credential backs the metastore's root managed storage
+  usedForManagedStorage bool
+  // ARN of the AWS IAM role the credential assumes
+  awsIamRoleArn string
+  // External ID used when assuming the AWS IAM role, which guards against the confused-deputy problem
+  awsIamRoleExternalId string
+  // Azure resource ID of the Databricks access connector for the managed identity
+  azureAccessConnectorId string
+  // Application ID of the Azure service principal the credential uses
+  azureServicePrincipalApplicationId string
+  // Email of the GCP service account the credential uses
+  gcpServiceAccountEmail string
+  // When the credential was created
+  createdAt time
+  // User who created the credential
+  createdBy string
+  // When the credential was last modified
+  updatedAt time
+  // User who last modified the credential
+  updatedBy string
+  // Privilege grants assigned directly on the credential
+  grants() []databricks.grant
+}
+
+// Unity Catalog external location
+//
+// An external location maps a cloud storage path to a storage credential and
+// bounds the reach of Unity Catalog access to that path. Auditing external
+// locations surfaces the storage URL, the credential used to reach it, the
+// isolation mode that controls which workspaces can bind it, whether it is
+// read-only, whether fallback to cluster credentials is allowed, the
+// server-side encryption applied to the path, and the privilege grants
+// assigned on it. Select a location by name, for example
+// `databricks.externalLocations.where(name == "prod-landing")`.
+databricks.externalLocation @defaults("name url owner") {
+  // Location name
+  name string
+  // Storage path URL the location points at
+  url string
+  // Name of the storage credential used with this location
+  credentialName string
+  // Unique id of the storage credential used with this location
+  credentialId string
+  // Principal that owns the location
+  owner string
+  // Location comment
+  comment string
+  // Id of the metastore the location belongs to
+  metastoreId string
+  // Isolation mode (ISOLATED or OPEN)
+  isolationMode string
+  // Whether the location is read-only
+  readOnly bool
+  // Whether access falls back to cluster credentials when Unity Catalog credentials are insufficient
+  fallback bool
+  // Whether the principal is limited to browsing metadata through the BROWSE privilege
+  browseOnly bool
+  // Server-side encryption algorithm applied to the storage path
+  //
+  // One of AWS_SSE_S3 or AWS_SSE_KMS. Empty when no server-side encryption is
+  // recorded for the location.
+  sseEncryptionAlgorithm string
+  // ARN of the KMS key used for server-side encryption, when the algorithm is AWS_SSE_KMS
+  sseKmsKeyArn string
+  // When the location was created
+  createdAt time
+  // User who created the location
+  createdBy string
+  // When the location was last modified
+  updatedAt time
+  // User who last modified the location
+  updatedBy string
+  // Privilege grants assigned directly on the location
+  grants() []databricks.grant
+}
+
+// Unity Catalog volume
+//
+// A Unity Catalog volume governs access to a directory of non-tabular data
+// under a schema, keyed by its fully qualified name. Auditing volumes surfaces
+// the volume type (EXTERNAL volumes live in a cloud storage path outside
+// managed storage, MANAGED volumes live in the schema's default location), the
+// storage location backing an external volume, the server-side encryption
+// applied to it, the owner, and the privilege grants assigned on it. For
+// example `databricks.catalogs.schemas.volumes.where(volumeType == "EXTERNAL")`.
+databricks.volume @defaults("fullName volumeType owner") {
+  // Unique identifier of the volume
+  id string
+  // Volume name
+  name string
+  // Fully qualified name (catalog.schema.volume)
+  fullName string
+  // Name of the parent catalog
+  catalogName string
+  // Name of the parent schema
+  schemaName string
+  // Principal that owns the volume
+  owner string
+  // Volume comment
+  comment string
+  // Id of the metastore the volume belongs to
+  metastoreId string
+  // Volume type (EXTERNAL or MANAGED)
+  volumeType string
+  // Cloud storage path backing an external volume
+  storageLocation string
+  // Server-side encryption algorithm applied to the storage path
+  //
+  // One of AWS_SSE_S3 or AWS_SSE_KMS. Empty when no server-side encryption is
+  // recorded for the volume.
+  sseEncryptionAlgorithm string
+  // ARN of the KMS key used for server-side encryption, when the algorithm is AWS_SSE_KMS
+  sseKmsKeyArn string
+  // When the volume was created
+  createdAt time
+  // User who created the volume
+  createdBy string
+  // When the volume was last modified
+  updatedAt time
+  // User who last modified the volume
+  updatedBy string
+  // Privilege grants assigned directly on the volume
+  grants() []databricks.grant
 }
