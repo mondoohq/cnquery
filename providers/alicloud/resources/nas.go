@@ -333,7 +333,10 @@ func newNasAccessGroup(runtime *plugin.Runtime, region string, ag *nasclient.Des
 }
 
 // resolveNasAccessGroup returns the typed NAS access group for a name within a
-// region, or (nil, nil) when name is empty.
+// region, or (nil, nil) when name is empty. Following the provider's resolver
+// convention, callers must set StateIsNull on the field before invoking it with
+// a possibly-empty name (as mountTarget.accessGroup does), so a null result is
+// reported rather than causing a re-fetch or panic.
 func resolveNasAccessGroup(runtime *plugin.Runtime, region, name string) (*mqlAlicloudNasAccessGroup, error) {
 	if name == "" {
 		return nil, nil
