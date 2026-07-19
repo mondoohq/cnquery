@@ -97,6 +97,8 @@ snowflake.account {
   managedAccounts() []snowflake.managedAccount
   // Connections in the account (replication and failover)
   connections() []snowflake.connection
+  // Views across every schema in the account
+  views() []snowflake.view
 }
 
 // Snowflake User

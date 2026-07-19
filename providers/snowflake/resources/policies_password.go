@@ -71,9 +71,9 @@ func (r *mqlSnowflakePasswordPolicy) gatherPasswordPolicyDetails() error {
 		r.PasswordMinLength = plugin.TValue[int64]{Data: int64(*passwordPolicy.PasswordMinLength.Value), Error: nil, State: plugin.StateIsSet}
 	}
 
-	r.PasswordMinLength = plugin.TValue[int64]{Data: 0, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
-	if passwordPolicy.PasswordMinLength != nil && passwordPolicy.PasswordMinLength.Value != nil {
-		r.PasswordMinLength = plugin.TValue[int64]{Data: int64(*passwordPolicy.PasswordMinLength.Value), Error: nil, State: plugin.StateIsSet}
+	r.PasswordMaxLength = plugin.TValue[int64]{Data: 0, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
+	if passwordPolicy.PasswordMaxLength != nil && passwordPolicy.PasswordMaxLength.Value != nil {
+		r.PasswordMaxLength = plugin.TValue[int64]{Data: int64(*passwordPolicy.PasswordMaxLength.Value), Error: nil, State: plugin.StateIsSet}
 	}
 
 	r.PasswordMinUpperCaseChars = plugin.TValue[int64]{Data: 0, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}

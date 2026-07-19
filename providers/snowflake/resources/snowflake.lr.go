@@ -352,6 +352,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"snowflake.account.connections": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeAccount).GetConnections()).ToDataRes(types.Array(types.Resource("snowflake.connection")))
 	},
+	"snowflake.account.views": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeAccount).GetViews()).ToDataRes(types.Array(types.Resource("snowflake.view")))
+	},
 	"snowflake.user.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeUser).GetName()).ToDataRes(types.String)
 	},
@@ -1726,6 +1729,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"snowflake.account.connections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeAccount).Connections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.account.views": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeAccount).Views, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3592,6 +3599,7 @@ type mqlSnowflakeAccount struct {
 	Schemas                  plugin.TValue[[]any]
 	ManagedAccounts          plugin.TValue[[]any]
 	Connections              plugin.TValue[[]any]
+	Views                    plugin.TValue[[]any]
 }
 
 // createSnowflakeAccount creates a new instance of this resource
@@ -4100,6 +4108,22 @@ func (c *mqlSnowflakeAccount) GetConnections() *plugin.TValue[[]any] {
 		}
 
 		return c.connections()
+	})
+}
+
+func (c *mqlSnowflakeAccount) GetViews() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Views, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "views")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.views()
 	})
 }
 

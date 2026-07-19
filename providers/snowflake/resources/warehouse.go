@@ -55,6 +55,7 @@ func newMqlSnowflakeWarehouse(runtime *plugin.Runtime, warehouse sdk.Warehouse) 
 		"quiescing":                       llx.FloatData(warehouse.Quiescing),
 		"other":                           llx.FloatData(warehouse.Other),
 		"owner":                           llx.StringData(warehouse.Owner),
+		"ownerRoleType":                   llx.StringData(warehouse.OwnerRoleType),
 		"comment":                         llx.StringData(warehouse.Comment),
 		"enableQueryAcceleration":         llx.BoolData(warehouse.EnableQueryAcceleration),
 		"queryAccelerationMaxScaleFactor": llx.IntData(warehouse.QueryAccelerationMaxScaleFactor),

@@ -109,13 +109,14 @@ func (r *mqlSnowflakeAuthenticationPolicy) gatherDescribe() error {
 	return nil
 }
 
-// parseAuthPolicyList parses DESCRIBE AUTHENTICATION POLICY list values like
-// `('ALL')` or `('PASSWORD', 'SAML')` into an []any of strings. Empty list
-// values (`()` or empty string) yield an empty slice.
+// parseAuthPolicyList parses DESCRIBE AUTHENTICATION POLICY list values into an
+// []any of strings. Snowflake returns these lists wrapped in square brackets
+// (`[ALL]`, `[PASSWORD, SAML]`); older docs show parentheses (`('ALL')`), so
+// both wrappers are stripped. Empty list values (`[]`, `()`, or empty string)
+// yield an empty slice.
 func parseAuthPolicyList(s string) []any {
 	s = strings.TrimSpace(s)
-	s = strings.TrimPrefix(s, "(")
-	s = strings.TrimSuffix(s, ")")
+	s = strings.Trim(s, "()[]")
 	if s == "" {
 		return []any{}
 	}

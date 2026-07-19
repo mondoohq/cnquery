@@ -34,6 +34,7 @@ snowflake.account.storageIntegrations 13.3.7
 snowflake.account.tags 13.1.1
 snowflake.account.url 11.0.0
 snowflake.account.users 11.0.0
+snowflake.account.views 13.3.7
 snowflake.account.warehouses 11.0.0
 snowflake.apiIntegration 13.0.7
 snowflake.apiIntegration.apiAllowedPrefixes 13.0.7
