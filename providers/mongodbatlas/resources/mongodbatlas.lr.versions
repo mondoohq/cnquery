@@ -20,6 +20,7 @@ mongodbatlas.cloudProviderAccessRole.atlasAWSAccountArn 13.0.0
 mongodbatlas.cloudProviderAccessRole.authorizedDate 13.0.0
 mongodbatlas.cloudProviderAccessRole.azureAtlasAppId 13.0.0
 mongodbatlas.cloudProviderAccessRole.azureTenantId 13.0.0
+mongodbatlas.cloudProviderAccessRole.gcpServiceAccount 13.0.0
 mongodbatlas.cloudProviderAccessRole.iamAssumedRoleArn 13.0.0
 mongodbatlas.cloudProviderAccessRole.id 13.0.0
 mongodbatlas.cloudProviderAccessRole.providerName 13.0.0
@@ -93,6 +94,7 @@ mongodbatlas.orgUser.lastAuth 13.0.0
 mongodbatlas.orgUser.orgMembershipStatus 13.0.0
 mongodbatlas.orgUser.orgRoles 13.0.0
 mongodbatlas.orgUser.teamIds 13.0.0
+mongodbatlas.orgUser.teams 13.0.0
 mongodbatlas.orgUser.username 13.0.0
 mongodbatlas.orgUsers 13.0.0
 mongodbatlas.organizationId 13.0.0
@@ -135,4 +137,5 @@ mongodbatlas.serviceAccounts 13.0.0
 mongodbatlas.team 13.0.0
 mongodbatlas.team.id 13.0.0
 mongodbatlas.team.name 13.0.0
+mongodbatlas.team.users 13.0.0
 mongodbatlas.teams 13.0.0

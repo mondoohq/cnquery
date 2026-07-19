@@ -173,6 +173,14 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.MongoDBAtlasConnection) error {
+	// Resolve the organization id up front so the org asset's platform id and
+	// name are populated even when --org-id was not supplied.
+	if conn.Plane() == connection.PlaneOrg {
+		if _, err := conn.EnsureOrgID(context.Background()); err != nil {
+			return err
+		}
+	}
+
 	platform, err := conn.PlatformInfo()
 	if err != nil {
 		return err

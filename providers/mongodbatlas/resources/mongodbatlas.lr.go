@@ -267,6 +267,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"mongodbatlas.orgUser.teamIds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlasOrgUser).GetTeamIds()).ToDataRes(types.Array(types.String))
 	},
+	"mongodbatlas.orgUser.teams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasOrgUser).GetTeams()).ToDataRes(types.Array(types.Resource("mongodbatlas.team")))
+	},
 	"mongodbatlas.orgUser.lastAuth": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlasOrgUser).GetLastAuth()).ToDataRes(types.Time)
 	},
@@ -275,6 +278,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"mongodbatlas.team.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlasTeam).GetName()).ToDataRes(types.String)
+	},
+	"mongodbatlas.team.users": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasTeam).GetUsers()).ToDataRes(types.Array(types.Resource("mongodbatlas.orgUser")))
 	},
 	"mongodbatlas.apiKey.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlasApiKey).GetId()).ToDataRes(types.String)
@@ -525,6 +531,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"mongodbatlas.cloudProviderAccessRole.azureTenantId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlasCloudProviderAccessRole).GetAzureTenantId()).ToDataRes(types.String)
 	},
+	"mongodbatlas.cloudProviderAccessRole.gcpServiceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasCloudProviderAccessRole).GetGcpServiceAccount()).ToDataRes(types.String)
+	},
 	"mongodbatlas.cloudProviderAccessRole.authorizedDate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlasCloudProviderAccessRole).GetAuthorizedDate()).ToDataRes(types.Time)
 	},
@@ -684,6 +693,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMongodbatlasOrgUser).TeamIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"mongodbatlas.orgUser.teams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasOrgUser).Teams, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"mongodbatlas.orgUser.lastAuth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMongodbatlasOrgUser).LastAuth, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -698,6 +711,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mongodbatlas.team.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMongodbatlasTeam).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.team.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasTeam).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"mongodbatlas.apiKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1074,6 +1091,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mongodbatlas.cloudProviderAccessRole.azureTenantId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMongodbatlasCloudProviderAccessRole).AzureTenantId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.cloudProviderAccessRole.gcpServiceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasCloudProviderAccessRole).GcpServiceAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"mongodbatlas.cloudProviderAccessRole.authorizedDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1521,6 +1542,7 @@ type mqlMongodbatlasOrgUser struct {
 	OrgMembershipStatus plugin.TValue[string]
 	OrgRoles            plugin.TValue[[]any]
 	TeamIds             plugin.TValue[[]any]
+	Teams               plugin.TValue[[]any]
 	LastAuth            plugin.TValue[*time.Time]
 }
 
@@ -1576,6 +1598,22 @@ func (c *mqlMongodbatlasOrgUser) GetTeamIds() *plugin.TValue[[]any] {
 	return &c.TeamIds
 }
 
+func (c *mqlMongodbatlasOrgUser) GetTeams() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Teams, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mongodbatlas.orgUser", c.__id, "teams")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.teams()
+	})
+}
+
 func (c *mqlMongodbatlasOrgUser) GetLastAuth() *plugin.TValue[*time.Time] {
 	return &c.LastAuth
 }
@@ -1585,8 +1623,9 @@ type mqlMongodbatlasTeam struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlMongodbatlasTeamInternal it will be used here
-	Id   plugin.TValue[string]
-	Name plugin.TValue[string]
+	Id    plugin.TValue[string]
+	Name  plugin.TValue[string]
+	Users plugin.TValue[[]any]
 }
 
 // createMongodbatlasTeam creates a new instance of this resource
@@ -1627,6 +1666,22 @@ func (c *mqlMongodbatlasTeam) GetId() *plugin.TValue[string] {
 
 func (c *mqlMongodbatlasTeam) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlMongodbatlasTeam) GetUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mongodbatlas.team", c.__id, "users")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.users()
+	})
 }
 
 // mqlMongodbatlasApiKey for the mongodbatlas.apiKey resource
@@ -2415,6 +2470,7 @@ type mqlMongodbatlasCloudProviderAccessRole struct {
 	AtlasAWSAccountArn plugin.TValue[string]
 	AzureAtlasAppId    plugin.TValue[string]
 	AzureTenantId      plugin.TValue[string]
+	GcpServiceAccount  plugin.TValue[string]
 	AuthorizedDate     plugin.TValue[*time.Time]
 }
 
@@ -2472,6 +2528,10 @@ func (c *mqlMongodbatlasCloudProviderAccessRole) GetAzureAtlasAppId() *plugin.TV
 
 func (c *mqlMongodbatlasCloudProviderAccessRole) GetAzureTenantId() *plugin.TValue[string] {
 	return &c.AzureTenantId
+}
+
+func (c *mqlMongodbatlasCloudProviderAccessRole) GetGcpServiceAccount() *plugin.TValue[string] {
+	return &c.GcpServiceAccount
 }
 
 func (c *mqlMongodbatlasCloudProviderAccessRole) GetAuthorizedDate() *plugin.TValue[*time.Time] {

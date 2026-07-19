@@ -8,7 +8,9 @@ import (
 	"time"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/types"
+	"go.mongodb.org/atlas-sdk/v20250312006/admin"
 )
 
 // pageSize is the per-request page size used for the SDK's manual pagination.
@@ -73,17 +75,7 @@ func (r *mqlMongodbatlas) orgUsers() ([]any, error) {
 		}
 		results := resp.GetResults()
 		for i := range results {
-			u := results[i]
-			roles := u.GetRoles()
-			res, err := CreateResource(r.MqlRuntime, "mongodbatlas.orgUser", map[string]*llx.RawData{
-				"__id":                llx.StringData("mongodbatlas.orgUser/" + u.GetId()),
-				"id":                  llx.StringData(u.GetId()),
-				"username":            llx.StringData(u.GetUsername()),
-				"orgMembershipStatus": llx.StringData(u.GetOrgMembershipStatus()),
-				"orgRoles":            llx.ArrayData(strSlice(roles.GetOrgRoles()), types.String),
-				"teamIds":             llx.ArrayData(strSlice(u.GetTeamIds()), types.String),
-				"lastAuth":            llx.TimeDataPtr(timePtr(u.GetLastAuth())),
-			})
+			res, err := newMqlMongodbatlasOrgUser(r.MqlRuntime, results[i])
 			if err != nil {
 				return nil, err
 			}
@@ -92,6 +84,51 @@ func (r *mqlMongodbatlas) orgUsers() ([]any, error) {
 		if len(results) < pageSize {
 			break
 		}
+	}
+	return out, nil
+}
+
+func newMqlMongodbatlasOrgUser(runtime *plugin.Runtime, u admin.OrgUserResponse) (*mqlMongodbatlasOrgUser, error) {
+	roles := u.GetRoles()
+	res, err := CreateResource(runtime, "mongodbatlas.orgUser", map[string]*llx.RawData{
+		"__id":                llx.StringData("mongodbatlas.orgUser/" + u.GetId()),
+		"id":                  llx.StringData(u.GetId()),
+		"username":            llx.StringData(u.GetUsername()),
+		"orgMembershipStatus": llx.StringData(u.GetOrgMembershipStatus()),
+		"orgRoles":            llx.ArrayData(strSlice(roles.GetOrgRoles()), types.String),
+		"teamIds":             llx.ArrayData(strSlice(u.GetTeamIds()), types.String),
+		"lastAuth":            llx.TimeDataPtr(timePtr(u.GetLastAuth())),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlMongodbatlasOrgUser), nil
+}
+
+// teams resolves the member's team ids to the teams they belong to.
+func (r *mqlMongodbatlasOrgUser) teams() ([]any, error) {
+	oid, err := orgID(r.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	client := atlasClient(r.MqlRuntime)
+	ctx := context.Background()
+
+	out := []any{}
+	for _, raw := range r.TeamIds.Data {
+		teamID, ok := raw.(string)
+		if !ok || teamID == "" {
+			continue
+		}
+		t, _, err := client.TeamsApi.GetTeamById(ctx, oid, teamID).Execute()
+		if err != nil {
+			return nil, err
+		}
+		res, err := newMqlMongodbatlasTeam(r.MqlRuntime, *t)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
 	}
 	return out, nil
 }
@@ -112,12 +149,49 @@ func (r *mqlMongodbatlas) teams() ([]any, error) {
 		}
 		results := resp.GetResults()
 		for i := range results {
-			t := results[i]
-			res, err := CreateResource(r.MqlRuntime, "mongodbatlas.team", map[string]*llx.RawData{
-				"__id": llx.StringData("mongodbatlas.team/" + t.GetId()),
-				"id":   llx.StringData(t.GetId()),
-				"name": llx.StringData(t.GetName()),
-			})
+			res, err := newMqlMongodbatlasTeam(r.MqlRuntime, results[i])
+			if err != nil {
+				return nil, err
+			}
+			out = append(out, res)
+		}
+		if len(results) < pageSize {
+			break
+		}
+	}
+	return out, nil
+}
+
+func newMqlMongodbatlasTeam(runtime *plugin.Runtime, t admin.TeamResponse) (*mqlMongodbatlasTeam, error) {
+	res, err := CreateResource(runtime, "mongodbatlas.team", map[string]*llx.RawData{
+		"__id": llx.StringData("mongodbatlas.team/" + t.GetId()),
+		"id":   llx.StringData(t.GetId()),
+		"name": llx.StringData(t.GetName()),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlMongodbatlasTeam), nil
+}
+
+// users resolves the members of the team.
+func (r *mqlMongodbatlasTeam) users() ([]any, error) {
+	oid, err := orgID(r.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	client := atlasClient(r.MqlRuntime)
+	ctx := context.Background()
+
+	out := []any{}
+	for page := 1; ; page++ {
+		resp, _, err := client.MongoDBCloudUsersApi.ListTeamUsers(ctx, oid, r.Id.Data).ItemsPerPage(pageSize).PageNum(page).Execute()
+		if err != nil {
+			return nil, err
+		}
+		results := resp.GetResults()
+		for i := range results {
+			res, err := newMqlMongodbatlasOrgUser(r.MqlRuntime, results[i])
 			if err != nil {
 				return nil, err
 			}

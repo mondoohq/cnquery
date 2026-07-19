@@ -32,24 +32,11 @@ func atlasClient(runtime *plugin.Runtime) *admin.APIClient {
 	return runtime.Connection.(*connection.MongoDBAtlasConnection).Client()
 }
 
-// orgID returns the connected organization id, deriving it from the accessible
-// organizations when it was not supplied on the command line.
+// orgID returns the connected organization id, deriving it once (race-safe)
+// from the accessible organizations when it was not supplied.
 func orgID(runtime *plugin.Runtime) (string, error) {
 	conn := runtime.Connection.(*connection.MongoDBAtlasConnection)
-	if conn.OrgID() != "" {
-		return conn.OrgID(), nil
-	}
-	orgs, _, err := conn.Client().OrganizationsApi.ListOrganizations(context.Background()).Execute()
-	if err != nil {
-		return "", err
-	}
-	results := orgs.GetResults()
-	if len(results) == 0 {
-		return "", errors.New("no accessible MongoDB Atlas organizations; pass --org-id")
-	}
-	id := results[0].GetId()
-	conn.SetOrgID(id)
-	return id, nil
+	return conn.EnsureOrgID(context.Background())
 }
 
 // projectID returns the connected project id, or an error when the asset is an

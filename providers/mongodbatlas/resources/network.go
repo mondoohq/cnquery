@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"net/http"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/types"
@@ -64,11 +65,14 @@ func (r *mqlMongodbatlas) privateEndpoints() ([]any, error) {
 
 	out := []any{}
 	for _, provider := range []string{"AWS", "AZURE", "GCP"} {
-		services, _, err := client.PrivateEndpointServicesApi.ListPrivateEndpointServices(ctx, pid, provider).Execute()
+		services, httpResp, err := client.PrivateEndpointServicesApi.ListPrivateEndpointServices(ctx, pid, provider).Execute()
 		if err != nil {
-			// A provider without a configured private endpoint service returns an
-			// error; skip it rather than failing the whole query.
-			continue
+			// A provider without any configured private endpoint service returns
+			// 404; skip it, but surface auth, throttling, and other real errors.
+			if httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
+				continue
+			}
+			return nil, err
 		}
 		for i := range services {
 			svc := services[i]
@@ -152,13 +156,14 @@ func (r *mqlMongodbatlas) cloudProviderAccessRoles() ([]any, error) {
 	out := []any{}
 	for _, role := range roles.GetAwsIamRoles() {
 		res, err := CreateResource(r.MqlRuntime, "mongodbatlas.cloudProviderAccessRole", map[string]*llx.RawData{
-			"__id":               llx.StringData("mongodbatlas.cloudProviderAccessRole/" + pid + "/" + role.GetRoleId()),
+			"__id":               llx.StringData("mongodbatlas.cloudProviderAccessRole/" + pid + "/aws/" + role.GetRoleId()),
 			"id":                 llx.StringData(role.GetRoleId()),
 			"providerName":       llx.StringData(role.GetProviderName()),
 			"iamAssumedRoleArn":  llx.StringData(role.GetIamAssumedRoleArn()),
 			"atlasAWSAccountArn": llx.StringData(role.GetAtlasAWSAccountArn()),
 			"azureAtlasAppId":    llx.StringData(""),
 			"azureTenantId":      llx.StringData(""),
+			"gcpServiceAccount":  llx.StringData(""),
 			"authorizedDate":     llx.TimeDataPtr(timePtr(role.GetAuthorizedDate())),
 		})
 		if err != nil {
@@ -168,14 +173,32 @@ func (r *mqlMongodbatlas) cloudProviderAccessRoles() ([]any, error) {
 	}
 	for _, sp := range roles.GetAzureServicePrincipals() {
 		res, err := CreateResource(r.MqlRuntime, "mongodbatlas.cloudProviderAccessRole", map[string]*llx.RawData{
-			"__id":               llx.StringData("mongodbatlas.cloudProviderAccessRole/" + pid + "/" + sp.GetId()),
+			"__id":               llx.StringData("mongodbatlas.cloudProviderAccessRole/" + pid + "/azure/" + sp.GetId()),
 			"id":                 llx.StringData(sp.GetId()),
 			"providerName":       llx.StringData(sp.GetProviderName()),
 			"iamAssumedRoleArn":  llx.StringData(""),
 			"atlasAWSAccountArn": llx.StringData(""),
 			"azureAtlasAppId":    llx.StringData(sp.GetAtlasAzureAppId()),
 			"azureTenantId":      llx.StringData(sp.GetTenantId()),
+			"gcpServiceAccount":  llx.StringData(""),
 			"authorizedDate":     llx.TimeDataPtr(timePtr(sp.GetCreatedDate())),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	for _, sa := range roles.GetGcpServiceAccounts() {
+		res, err := CreateResource(r.MqlRuntime, "mongodbatlas.cloudProviderAccessRole", map[string]*llx.RawData{
+			"__id":               llx.StringData("mongodbatlas.cloudProviderAccessRole/" + pid + "/gcp/" + sa.GetRoleId()),
+			"id":                 llx.StringData(sa.GetRoleId()),
+			"providerName":       llx.StringData(sa.GetProviderName()),
+			"iamAssumedRoleArn":  llx.StringData(""),
+			"atlasAWSAccountArn": llx.StringData(""),
+			"azureAtlasAppId":    llx.StringData(""),
+			"azureTenantId":      llx.StringData(""),
+			"gcpServiceAccount":  llx.StringData(sa.GetGcpServiceAccountForAtlas()),
+			"authorizedDate":     llx.TimeDataPtr(timePtr(sa.GetCreatedDate())),
 		})
 		if err != nil {
 			return nil, err

@@ -27,7 +27,7 @@ mongodbatlas {
   restrictEmployeeAccess() bool
   // Whether generative AI features are enabled for the organization
   genAiFeaturesEnabled() bool
-  // Maximum validity in hours for service account secrets, null when unlimited
+  // Maximum validity in hours for service account secrets, 0 when unlimited
   maxServiceAccountSecretValidityInHours() int
   // Email address that receives security notifications for the organization
   securityContact() string
@@ -100,6 +100,8 @@ mongodbatlas.orgUser @defaults("username orgMembershipStatus") {
   orgRoles []string
   // Ids of the teams the member belongs to
   teamIds []string
+  // Teams the member belongs to
+  teams() []mongodbatlas.team
   // Time the member last authenticated
   lastAuth time
 }
@@ -114,6 +116,8 @@ mongodbatlas.team @defaults("name id") {
   id string
   // Team name
   name string
+  // Members of the team
+  users() []mongodbatlas.orgUser
 }
 
 // MongoDB Atlas programmatic API key
@@ -382,6 +386,8 @@ mongodbatlas.cloudProviderAccessRole @defaults("providerName iamAssumedRoleArn")
   azureAtlasAppId string
   // Azure tenant id
   azureTenantId string
+  // GCP service account email Atlas uses
+  gcpServiceAccount string
   // Time the role was authorized, null when not yet authorized
   authorizedDate time
 }

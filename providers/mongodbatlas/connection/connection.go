@@ -6,6 +6,7 @@ package connection
 import (
 	"context"
 	"errors"
+	"sync"
 
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -38,6 +39,7 @@ type MongoDBAtlasConnection struct {
 
 	plane     string
 	orgID     string
+	orgIDMu   sync.Mutex
 	projectID string
 
 	// client talks to the Atlas Admin API and serves both planes; org-level
@@ -118,14 +120,30 @@ func (c *MongoDBAtlasConnection) Plane() string {
 	return c.plane
 }
 
-// OrgID returns the Atlas organization id.
+// OrgID returns the Atlas organization id (empty until resolved).
 func (c *MongoDBAtlasConnection) OrgID() string {
 	return c.orgID
 }
 
-// SetOrgID records the organization id (used when it is derived at connect time).
-func (c *MongoDBAtlasConnection) SetOrgID(orgID string) {
-	c.orgID = orgID
+// EnsureOrgID returns the organization id, deriving it once from the accessible
+// organizations when it was not supplied on the command line. It is safe to
+// call concurrently from multiple resource accessors.
+func (c *MongoDBAtlasConnection) EnsureOrgID(ctx context.Context) (string, error) {
+	c.orgIDMu.Lock()
+	defer c.orgIDMu.Unlock()
+	if c.orgID != "" {
+		return c.orgID, nil
+	}
+	orgs, _, err := c.client.OrganizationsApi.ListOrganizations(ctx).Execute()
+	if err != nil {
+		return "", err
+	}
+	results := orgs.GetResults()
+	if len(results) == 0 {
+		return "", errors.New("no accessible MongoDB Atlas organizations; pass --org-id")
+	}
+	c.orgID = results[0].GetId()
+	return c.orgID, nil
 }
 
 // ProjectID returns the Atlas project (group) id for project-plane connections.
