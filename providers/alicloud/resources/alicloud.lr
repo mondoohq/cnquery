@@ -10,8 +10,8 @@ option go_package = "go.mondoo.com/mql/v13/providers/alicloud/resources"
 // identity and the region IDs enabled on the account, and is the root from
 // which the RAM, ECS, VPC, OSS, SLB, ALB, NLB, and managed-database resources
 // are reached, along with the Container Service for Kubernetes, Function
-// Compute, Key Management Service, ActionTrail, Log Service, Cloud Config, and
-// Resource Directory resources.
+// Compute, NAS file storage, Key Management Service, ActionTrail, Log Service,
+// Cloud Config, and Resource Directory resources.
 alicloud {
   // Account (UID) that the active credential belongs to
   accountId() string
@@ -3193,4 +3193,167 @@ alicloud.fc.trigger {
   internetInvocable() bool
   // RAM role the event source assumes to invoke the function, null when none
   invocationRole() alicloud.ram.role
+}
+
+// Alibaba Cloud NAS file storage
+//
+// Apsara File Storage NAS file systems and access controls across an Alibaba
+// Cloud account. Exposes the file systems in every enabled region, their mount
+// targets, and the access groups and rules that govern which clients may mount
+// them. Use it to audit whether file systems are encrypted and whether their
+// exports are open to overly broad client ranges.
+alicloud.nas {
+  // NAS file systems across all enabled regions
+  fileSystems() []alicloud.nas.fileSystem
+  // NAS access groups across all enabled regions
+  accessGroups() []alicloud.nas.accessGroup
+}
+
+// NAS file system
+//
+// A single NAS file system, keyed by fileSystemId within its region. Exposes the
+// storage and protocol type, the encryption state and key, capacity and used
+// size, and the mount targets that expose it to clients. Use it to audit
+// encryption at rest and the network exposure of the mount targets. For example
+// alicloud.nas.fileSystem(fileSystemId: "1a2b3c", regionId: "cn-hangzhou").
+alicloud.nas.fileSystem {
+  // Region ID the file system resides in, for example cn-hangzhou
+  regionId string
+  // File system ID, used as the lookup key within its region
+  fileSystemId string
+  // File system type, one of standard, extreme, cpfs, or cpfsse
+  fileSystemType string
+  // Access protocol, one of NFS, SMB, or cpfs
+  protocolType string
+  // Storage class, for example Performance, Capacity, standard, or advance
+  storageType string
+  // Description of the file system
+  description string
+  // Zone ID the file system resides in
+  zoneId string
+  // Provisioned capacity in GiB
+  capacity int
+  // Used (metered) size in bytes
+  meteredSize int
+  // File system status, for example Running, Pending, or Stopped
+  status string
+  // Billing method, either PayAsYouGo or Subscription
+  chargeType string
+  // Storage redundancy type, for example LRS
+  redundancyType string
+  // Server-side encryption type
+  //
+  // One of 0 (no encryption), 1 (NAS-managed service key), or 2 (a customer
+  // master key from KMS).
+  encryptType int
+  // Whether the file system is encrypted at rest
+  //
+  // True when the encryption type is 1 or 2. When false, data is stored
+  // unencrypted.
+  encrypted bool
+  // ID of the resource group the file system belongs to
+  resourceGroupId string
+  // Time the file system was created
+  createTime time
+  // Tags applied to the file system
+  tags map[string]string
+  // Customer master key used for encryption
+  //
+  // Null unless the encryption type is 2 (a specific KMS key). The NAS-managed
+  // service key (type 1) is not a queryable KMS key.
+  kmsKey() alicloud.kms.key
+  // Mount targets that expose the file system to clients
+  mountTargets() []alicloud.nas.mountTarget
+}
+
+// NAS mount target
+//
+// A single mount target of a NAS file system, keyed by mountTargetDomain. A
+// mount target is the network endpoint clients mount, bound to a VPC and access
+// group. Exposes the network placement and the access group that controls which
+// clients may mount it. Use it to audit whether a file system is reachable from
+// a classic (non-VPC) network.
+alicloud.nas.mountTarget {
+  // Region ID the mount target resides in
+  regionId string
+  // ID of the file system the mount target belongs to
+  fileSystemId string
+  // Mount target domain (the mount address), used as the lookup key
+  mountTargetDomain string
+  // Mount target status, for example Active or Inactive
+  status string
+  // Network type
+  //
+  // Either Vpc (isolated to a VPC) or Classic (the legacy shared network).
+  networkType string
+  // Name of the access group that controls which clients may mount the target
+  accessGroupName string
+  // VPC the mount target is attached to, null for a classic-network mount target
+  vpc() alicloud.vpc.network
+  // vSwitch the mount target attaches to, null for a classic-network mount target
+  vswitch() alicloud.vpc.vswitch
+  // Access group that controls which clients may mount the target
+  accessGroup() alicloud.nas.accessGroup
+}
+
+// NAS access group
+//
+// A single NAS access group, keyed by accessGroupName within its region. An
+// access group is a named set of access rules that govern which client IP
+// ranges may mount the file systems bound to it. Exposes the group metadata and
+// its access rules. Use it to audit the client ranges permitted to mount.
+alicloud.nas.accessGroup {
+  // Region ID the access group resides in
+  regionId string
+  // Access group name, used as the lookup key within its region
+  accessGroupName string
+  // Access group network type, either Vpc or Classic
+  accessGroupType string
+  // File system type the access group applies to
+  fileSystemType string
+  // Number of access rules in the group
+  ruleCount int
+  // Number of mount targets bound to the group
+  mountTargetCount int
+  // Description of the access group
+  description string
+  // Time the access group was created
+  createTime time
+  // Access rules that govern which clients may mount
+  accessRules() []alicloud.nas.accessRule
+}
+
+// NAS access rule
+//
+// A single access rule within a NAS access group, keyed by accessRuleId. A rule
+// permits a client IP range to mount with a given read/write and user-squash
+// policy. Exposes the allowed CIDR, access mode, and squash setting. Use it to
+// find rules that open a file system to broad client ranges or disable root
+// squashing.
+alicloud.nas.accessRule {
+  // Region ID the access rule resides in
+  regionId string
+  // Name of the access group the rule belongs to
+  accessGroupName string
+  // Access rule ID, used as the lookup key
+  accessRuleId string
+  // Allowed IPv4 client CIDR
+  //
+  // The client address range permitted to mount. 0.0.0.0/0 permits every IPv4
+  // client.
+  sourceCidrIp string
+  // Allowed IPv6 client CIDR, empty when no IPv6 rule is set
+  //
+  // The IPv6 client range permitted to mount. ::/0 permits every IPv6 client.
+  ipv6SourceCidrIp string
+  // Read/write access granted, either RDWR (read-write) or RDONLY (read-only)
+  rwAccess string
+  // Root-squash policy
+  //
+  // One of no_squash (root is not squashed), root_squash (root maps to an
+  // anonymous user), or all_squash (every user maps to anonymous). no_squash
+  // gives mounting clients full root access to the file system.
+  userAccess string
+  // Rule priority, 1 (highest) to 100 (lowest)
+  priority int
 }

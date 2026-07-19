@@ -80,6 +80,11 @@ const (
 	ResourceAlicloudFc                           string = "alicloud.fc"
 	ResourceAlicloudFcFunction                   string = "alicloud.fc.function"
 	ResourceAlicloudFcTrigger                    string = "alicloud.fc.trigger"
+	ResourceAlicloudNas                          string = "alicloud.nas"
+	ResourceAlicloudNasFileSystem                string = "alicloud.nas.fileSystem"
+	ResourceAlicloudNasMountTarget               string = "alicloud.nas.mountTarget"
+	ResourceAlicloudNasAccessGroup               string = "alicloud.nas.accessGroup"
+	ResourceAlicloudNasAccessRule                string = "alicloud.nas.accessRule"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -341,6 +346,26 @@ func init() {
 		"alicloud.fc.trigger": {
 			// to override args, implement: initAlicloudFcTrigger(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAlicloudFcTrigger,
+		},
+		"alicloud.nas": {
+			// to override args, implement: initAlicloudNas(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudNas,
+		},
+		"alicloud.nas.fileSystem": {
+			Init:   initAlicloudNasFileSystem,
+			Create: createAlicloudNasFileSystem,
+		},
+		"alicloud.nas.mountTarget": {
+			// to override args, implement: initAlicloudNasMountTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudNasMountTarget,
+		},
+		"alicloud.nas.accessGroup": {
+			Init:   initAlicloudNasAccessGroup,
+			Create: createAlicloudNasAccessGroup,
+		},
+		"alicloud.nas.accessRule": {
+			// to override args, implement: initAlicloudNasAccessRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudNasAccessRule,
 		},
 	}
 }
@@ -3400,6 +3425,147 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.fc.trigger.invocationRole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudFcTrigger).GetInvocationRole()).ToDataRes(types.Resource("alicloud.ram.role"))
+	},
+	"alicloud.nas.fileSystems": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNas).GetFileSystems()).ToDataRes(types.Array(types.Resource("alicloud.nas.fileSystem")))
+	},
+	"alicloud.nas.accessGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNas).GetAccessGroups()).ToDataRes(types.Array(types.Resource("alicloud.nas.accessGroup")))
+	},
+	"alicloud.nas.fileSystem.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasFileSystem).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.nas.fileSystem.fileSystemId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasFileSystem).GetFileSystemId()).ToDataRes(types.String)
+	},
+	"alicloud.nas.fileSystem.fileSystemType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasFileSystem).GetFileSystemType()).ToDataRes(types.String)
+	},
+	"alicloud.nas.fileSystem.protocolType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasFileSystem).GetProtocolType()).ToDataRes(types.String)
+	},
+	"alicloud.nas.fileSystem.storageType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasFileSystem).GetStorageType()).ToDataRes(types.String)
+	},
+	"alicloud.nas.fileSystem.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasFileSystem).GetDescription()).ToDataRes(types.String)
+	},
+	"alicloud.nas.fileSystem.zoneId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasFileSystem).GetZoneId()).ToDataRes(types.String)
+	},
+	"alicloud.nas.fileSystem.capacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasFileSystem).GetCapacity()).ToDataRes(types.Int)
+	},
+	"alicloud.nas.fileSystem.meteredSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasFileSystem).GetMeteredSize()).ToDataRes(types.Int)
+	},
+	"alicloud.nas.fileSystem.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasFileSystem).GetStatus()).ToDataRes(types.String)
+	},
+	"alicloud.nas.fileSystem.chargeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasFileSystem).GetChargeType()).ToDataRes(types.String)
+	},
+	"alicloud.nas.fileSystem.redundancyType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasFileSystem).GetRedundancyType()).ToDataRes(types.String)
+	},
+	"alicloud.nas.fileSystem.encryptType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasFileSystem).GetEncryptType()).ToDataRes(types.Int)
+	},
+	"alicloud.nas.fileSystem.encrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasFileSystem).GetEncrypted()).ToDataRes(types.Bool)
+	},
+	"alicloud.nas.fileSystem.resourceGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasFileSystem).GetResourceGroupId()).ToDataRes(types.String)
+	},
+	"alicloud.nas.fileSystem.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasFileSystem).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"alicloud.nas.fileSystem.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasFileSystem).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"alicloud.nas.fileSystem.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasFileSystem).GetKmsKey()).ToDataRes(types.Resource("alicloud.kms.key"))
+	},
+	"alicloud.nas.fileSystem.mountTargets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasFileSystem).GetMountTargets()).ToDataRes(types.Array(types.Resource("alicloud.nas.mountTarget")))
+	},
+	"alicloud.nas.mountTarget.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasMountTarget).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.nas.mountTarget.fileSystemId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasMountTarget).GetFileSystemId()).ToDataRes(types.String)
+	},
+	"alicloud.nas.mountTarget.mountTargetDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasMountTarget).GetMountTargetDomain()).ToDataRes(types.String)
+	},
+	"alicloud.nas.mountTarget.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasMountTarget).GetStatus()).ToDataRes(types.String)
+	},
+	"alicloud.nas.mountTarget.networkType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasMountTarget).GetNetworkType()).ToDataRes(types.String)
+	},
+	"alicloud.nas.mountTarget.accessGroupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasMountTarget).GetAccessGroupName()).ToDataRes(types.String)
+	},
+	"alicloud.nas.mountTarget.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasMountTarget).GetVpc()).ToDataRes(types.Resource("alicloud.vpc.network"))
+	},
+	"alicloud.nas.mountTarget.vswitch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasMountTarget).GetVswitch()).ToDataRes(types.Resource("alicloud.vpc.vswitch"))
+	},
+	"alicloud.nas.mountTarget.accessGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasMountTarget).GetAccessGroup()).ToDataRes(types.Resource("alicloud.nas.accessGroup"))
+	},
+	"alicloud.nas.accessGroup.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasAccessGroup).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.nas.accessGroup.accessGroupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasAccessGroup).GetAccessGroupName()).ToDataRes(types.String)
+	},
+	"alicloud.nas.accessGroup.accessGroupType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasAccessGroup).GetAccessGroupType()).ToDataRes(types.String)
+	},
+	"alicloud.nas.accessGroup.fileSystemType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasAccessGroup).GetFileSystemType()).ToDataRes(types.String)
+	},
+	"alicloud.nas.accessGroup.ruleCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasAccessGroup).GetRuleCount()).ToDataRes(types.Int)
+	},
+	"alicloud.nas.accessGroup.mountTargetCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasAccessGroup).GetMountTargetCount()).ToDataRes(types.Int)
+	},
+	"alicloud.nas.accessGroup.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasAccessGroup).GetDescription()).ToDataRes(types.String)
+	},
+	"alicloud.nas.accessGroup.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasAccessGroup).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"alicloud.nas.accessGroup.accessRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasAccessGroup).GetAccessRules()).ToDataRes(types.Array(types.Resource("alicloud.nas.accessRule")))
+	},
+	"alicloud.nas.accessRule.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasAccessRule).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.nas.accessRule.accessGroupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasAccessRule).GetAccessGroupName()).ToDataRes(types.String)
+	},
+	"alicloud.nas.accessRule.accessRuleId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasAccessRule).GetAccessRuleId()).ToDataRes(types.String)
+	},
+	"alicloud.nas.accessRule.sourceCidrIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasAccessRule).GetSourceCidrIp()).ToDataRes(types.String)
+	},
+	"alicloud.nas.accessRule.ipv6SourceCidrIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasAccessRule).GetIpv6SourceCidrIp()).ToDataRes(types.String)
+	},
+	"alicloud.nas.accessRule.rwAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasAccessRule).GetRwAccess()).ToDataRes(types.String)
+	},
+	"alicloud.nas.accessRule.userAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasAccessRule).GetUserAccess()).ToDataRes(types.String)
+	},
+	"alicloud.nas.accessRule.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudNasAccessRule).GetPriority()).ToDataRes(types.Int)
 	},
 }
 
@@ -7651,6 +7817,214 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.fc.trigger.invocationRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudFcTrigger).InvocationRole, ok = plugin.RawToTValue[*mqlAlicloudRamRole](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNas).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.nas.fileSystems": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNas).FileSystems, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.accessGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNas).AccessGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.fileSystem.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasFileSystem).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.nas.fileSystem.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasFileSystem).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.fileSystem.fileSystemId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasFileSystem).FileSystemId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.fileSystem.fileSystemType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasFileSystem).FileSystemType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.fileSystem.protocolType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasFileSystem).ProtocolType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.fileSystem.storageType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasFileSystem).StorageType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.fileSystem.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasFileSystem).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.fileSystem.zoneId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasFileSystem).ZoneId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.fileSystem.capacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasFileSystem).Capacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.fileSystem.meteredSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasFileSystem).MeteredSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.fileSystem.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasFileSystem).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.fileSystem.chargeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasFileSystem).ChargeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.fileSystem.redundancyType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasFileSystem).RedundancyType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.fileSystem.encryptType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasFileSystem).EncryptType, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.fileSystem.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasFileSystem).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.fileSystem.resourceGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasFileSystem).ResourceGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.fileSystem.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasFileSystem).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.fileSystem.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasFileSystem).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.fileSystem.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasFileSystem).KmsKey, ok = plugin.RawToTValue[*mqlAlicloudKmsKey](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.fileSystem.mountTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasFileSystem).MountTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.mountTarget.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasMountTarget).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.nas.mountTarget.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasMountTarget).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.mountTarget.fileSystemId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasMountTarget).FileSystemId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.mountTarget.mountTargetDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasMountTarget).MountTargetDomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.mountTarget.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasMountTarget).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.mountTarget.networkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasMountTarget).NetworkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.mountTarget.accessGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasMountTarget).AccessGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.mountTarget.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasMountTarget).Vpc, ok = plugin.RawToTValue[*mqlAlicloudVpcNetwork](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.mountTarget.vswitch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasMountTarget).Vswitch, ok = plugin.RawToTValue[*mqlAlicloudVpcVswitch](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.mountTarget.accessGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasMountTarget).AccessGroup, ok = plugin.RawToTValue[*mqlAlicloudNasAccessGroup](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.accessGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasAccessGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.nas.accessGroup.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasAccessGroup).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.accessGroup.accessGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasAccessGroup).AccessGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.accessGroup.accessGroupType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasAccessGroup).AccessGroupType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.accessGroup.fileSystemType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasAccessGroup).FileSystemType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.accessGroup.ruleCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasAccessGroup).RuleCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.accessGroup.mountTargetCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasAccessGroup).MountTargetCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.accessGroup.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasAccessGroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.accessGroup.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasAccessGroup).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.accessGroup.accessRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasAccessGroup).AccessRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.accessRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasAccessRule).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.nas.accessRule.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasAccessRule).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.accessRule.accessGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasAccessRule).AccessGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.accessRule.accessRuleId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasAccessRule).AccessRuleId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.accessRule.sourceCidrIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasAccessRule).SourceCidrIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.accessRule.ipv6SourceCidrIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasAccessRule).Ipv6SourceCidrIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.accessRule.rwAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasAccessRule).RwAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.accessRule.userAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasAccessRule).UserAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.nas.accessRule.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudNasAccessRule).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 }
@@ -17063,4 +17437,555 @@ func (c *mqlAlicloudFcTrigger) GetInvocationRole() *plugin.TValue[*mqlAlicloudRa
 
 		return c.invocationRole()
 	})
+}
+
+// mqlAlicloudNas for the alicloud.nas resource
+type mqlAlicloudNas struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudNasInternal it will be used here
+	FileSystems  plugin.TValue[[]any]
+	AccessGroups plugin.TValue[[]any]
+}
+
+// createAlicloudNas creates a new instance of this resource
+func createAlicloudNas(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudNas{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.nas", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudNas) MqlName() string {
+	return "alicloud.nas"
+}
+
+func (c *mqlAlicloudNas) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudNas) GetFileSystems() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FileSystems, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.nas", c.__id, "fileSystems")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.fileSystems()
+	})
+}
+
+func (c *mqlAlicloudNas) GetAccessGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccessGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.nas", c.__id, "accessGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accessGroups()
+	})
+}
+
+// mqlAlicloudNasFileSystem for the alicloud.nas.fileSystem resource
+type mqlAlicloudNasFileSystem struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudNasFileSystemInternal
+	RegionId        plugin.TValue[string]
+	FileSystemId    plugin.TValue[string]
+	FileSystemType  plugin.TValue[string]
+	ProtocolType    plugin.TValue[string]
+	StorageType     plugin.TValue[string]
+	Description     plugin.TValue[string]
+	ZoneId          plugin.TValue[string]
+	Capacity        plugin.TValue[int64]
+	MeteredSize     plugin.TValue[int64]
+	Status          plugin.TValue[string]
+	ChargeType      plugin.TValue[string]
+	RedundancyType  plugin.TValue[string]
+	EncryptType     plugin.TValue[int64]
+	Encrypted       plugin.TValue[bool]
+	ResourceGroupId plugin.TValue[string]
+	CreateTime      plugin.TValue[*time.Time]
+	Tags            plugin.TValue[map[string]any]
+	KmsKey          plugin.TValue[*mqlAlicloudKmsKey]
+	MountTargets    plugin.TValue[[]any]
+}
+
+// createAlicloudNasFileSystem creates a new instance of this resource
+func createAlicloudNasFileSystem(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudNasFileSystem{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.nas.fileSystem", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudNasFileSystem) MqlName() string {
+	return "alicloud.nas.fileSystem"
+}
+
+func (c *mqlAlicloudNasFileSystem) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudNasFileSystem) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudNasFileSystem) GetFileSystemId() *plugin.TValue[string] {
+	return &c.FileSystemId
+}
+
+func (c *mqlAlicloudNasFileSystem) GetFileSystemType() *plugin.TValue[string] {
+	return &c.FileSystemType
+}
+
+func (c *mqlAlicloudNasFileSystem) GetProtocolType() *plugin.TValue[string] {
+	return &c.ProtocolType
+}
+
+func (c *mqlAlicloudNasFileSystem) GetStorageType() *plugin.TValue[string] {
+	return &c.StorageType
+}
+
+func (c *mqlAlicloudNasFileSystem) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAlicloudNasFileSystem) GetZoneId() *plugin.TValue[string] {
+	return &c.ZoneId
+}
+
+func (c *mqlAlicloudNasFileSystem) GetCapacity() *plugin.TValue[int64] {
+	return &c.Capacity
+}
+
+func (c *mqlAlicloudNasFileSystem) GetMeteredSize() *plugin.TValue[int64] {
+	return &c.MeteredSize
+}
+
+func (c *mqlAlicloudNasFileSystem) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAlicloudNasFileSystem) GetChargeType() *plugin.TValue[string] {
+	return &c.ChargeType
+}
+
+func (c *mqlAlicloudNasFileSystem) GetRedundancyType() *plugin.TValue[string] {
+	return &c.RedundancyType
+}
+
+func (c *mqlAlicloudNasFileSystem) GetEncryptType() *plugin.TValue[int64] {
+	return &c.EncryptType
+}
+
+func (c *mqlAlicloudNasFileSystem) GetEncrypted() *plugin.TValue[bool] {
+	return &c.Encrypted
+}
+
+func (c *mqlAlicloudNasFileSystem) GetResourceGroupId() *plugin.TValue[string] {
+	return &c.ResourceGroupId
+}
+
+func (c *mqlAlicloudNasFileSystem) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlAlicloudNasFileSystem) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAlicloudNasFileSystem) GetKmsKey() *plugin.TValue[*mqlAlicloudKmsKey] {
+	return plugin.GetOrCompute[*mqlAlicloudKmsKey](&c.KmsKey, func() (*mqlAlicloudKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.nas.fileSystem", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAlicloudNasFileSystem) GetMountTargets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MountTargets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.nas.fileSystem", c.__id, "mountTargets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mountTargets()
+	})
+}
+
+// mqlAlicloudNasMountTarget for the alicloud.nas.mountTarget resource
+type mqlAlicloudNasMountTarget struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudNasMountTargetInternal
+	RegionId          plugin.TValue[string]
+	FileSystemId      plugin.TValue[string]
+	MountTargetDomain plugin.TValue[string]
+	Status            plugin.TValue[string]
+	NetworkType       plugin.TValue[string]
+	AccessGroupName   plugin.TValue[string]
+	Vpc               plugin.TValue[*mqlAlicloudVpcNetwork]
+	Vswitch           plugin.TValue[*mqlAlicloudVpcVswitch]
+	AccessGroup       plugin.TValue[*mqlAlicloudNasAccessGroup]
+}
+
+// createAlicloudNasMountTarget creates a new instance of this resource
+func createAlicloudNasMountTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudNasMountTarget{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.nas.mountTarget", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudNasMountTarget) MqlName() string {
+	return "alicloud.nas.mountTarget"
+}
+
+func (c *mqlAlicloudNasMountTarget) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudNasMountTarget) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudNasMountTarget) GetFileSystemId() *plugin.TValue[string] {
+	return &c.FileSystemId
+}
+
+func (c *mqlAlicloudNasMountTarget) GetMountTargetDomain() *plugin.TValue[string] {
+	return &c.MountTargetDomain
+}
+
+func (c *mqlAlicloudNasMountTarget) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAlicloudNasMountTarget) GetNetworkType() *plugin.TValue[string] {
+	return &c.NetworkType
+}
+
+func (c *mqlAlicloudNasMountTarget) GetAccessGroupName() *plugin.TValue[string] {
+	return &c.AccessGroupName
+}
+
+func (c *mqlAlicloudNasMountTarget) GetVpc() *plugin.TValue[*mqlAlicloudVpcNetwork] {
+	return plugin.GetOrCompute[*mqlAlicloudVpcNetwork](&c.Vpc, func() (*mqlAlicloudVpcNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.nas.mountTarget", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudVpcNetwork), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAlicloudNasMountTarget) GetVswitch() *plugin.TValue[*mqlAlicloudVpcVswitch] {
+	return plugin.GetOrCompute[*mqlAlicloudVpcVswitch](&c.Vswitch, func() (*mqlAlicloudVpcVswitch, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.nas.mountTarget", c.__id, "vswitch")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudVpcVswitch), nil
+			}
+		}
+
+		return c.vswitch()
+	})
+}
+
+func (c *mqlAlicloudNasMountTarget) GetAccessGroup() *plugin.TValue[*mqlAlicloudNasAccessGroup] {
+	return plugin.GetOrCompute[*mqlAlicloudNasAccessGroup](&c.AccessGroup, func() (*mqlAlicloudNasAccessGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.nas.mountTarget", c.__id, "accessGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudNasAccessGroup), nil
+			}
+		}
+
+		return c.accessGroup()
+	})
+}
+
+// mqlAlicloudNasAccessGroup for the alicloud.nas.accessGroup resource
+type mqlAlicloudNasAccessGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudNasAccessGroupInternal it will be used here
+	RegionId         plugin.TValue[string]
+	AccessGroupName  plugin.TValue[string]
+	AccessGroupType  plugin.TValue[string]
+	FileSystemType   plugin.TValue[string]
+	RuleCount        plugin.TValue[int64]
+	MountTargetCount plugin.TValue[int64]
+	Description      plugin.TValue[string]
+	CreateTime       plugin.TValue[*time.Time]
+	AccessRules      plugin.TValue[[]any]
+}
+
+// createAlicloudNasAccessGroup creates a new instance of this resource
+func createAlicloudNasAccessGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudNasAccessGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.nas.accessGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudNasAccessGroup) MqlName() string {
+	return "alicloud.nas.accessGroup"
+}
+
+func (c *mqlAlicloudNasAccessGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudNasAccessGroup) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudNasAccessGroup) GetAccessGroupName() *plugin.TValue[string] {
+	return &c.AccessGroupName
+}
+
+func (c *mqlAlicloudNasAccessGroup) GetAccessGroupType() *plugin.TValue[string] {
+	return &c.AccessGroupType
+}
+
+func (c *mqlAlicloudNasAccessGroup) GetFileSystemType() *plugin.TValue[string] {
+	return &c.FileSystemType
+}
+
+func (c *mqlAlicloudNasAccessGroup) GetRuleCount() *plugin.TValue[int64] {
+	return &c.RuleCount
+}
+
+func (c *mqlAlicloudNasAccessGroup) GetMountTargetCount() *plugin.TValue[int64] {
+	return &c.MountTargetCount
+}
+
+func (c *mqlAlicloudNasAccessGroup) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAlicloudNasAccessGroup) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlAlicloudNasAccessGroup) GetAccessRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccessRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.nas.accessGroup", c.__id, "accessRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accessRules()
+	})
+}
+
+// mqlAlicloudNasAccessRule for the alicloud.nas.accessRule resource
+type mqlAlicloudNasAccessRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudNasAccessRuleInternal it will be used here
+	RegionId         plugin.TValue[string]
+	AccessGroupName  plugin.TValue[string]
+	AccessRuleId     plugin.TValue[string]
+	SourceCidrIp     plugin.TValue[string]
+	Ipv6SourceCidrIp plugin.TValue[string]
+	RwAccess         plugin.TValue[string]
+	UserAccess       plugin.TValue[string]
+	Priority         plugin.TValue[int64]
+}
+
+// createAlicloudNasAccessRule creates a new instance of this resource
+func createAlicloudNasAccessRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudNasAccessRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.nas.accessRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudNasAccessRule) MqlName() string {
+	return "alicloud.nas.accessRule"
+}
+
+func (c *mqlAlicloudNasAccessRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudNasAccessRule) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudNasAccessRule) GetAccessGroupName() *plugin.TValue[string] {
+	return &c.AccessGroupName
+}
+
+func (c *mqlAlicloudNasAccessRule) GetAccessRuleId() *plugin.TValue[string] {
+	return &c.AccessRuleId
+}
+
+func (c *mqlAlicloudNasAccessRule) GetSourceCidrIp() *plugin.TValue[string] {
+	return &c.SourceCidrIp
+}
+
+func (c *mqlAlicloudNasAccessRule) GetIpv6SourceCidrIp() *plugin.TValue[string] {
+	return &c.Ipv6SourceCidrIp
+}
+
+func (c *mqlAlicloudNasAccessRule) GetRwAccess() *plugin.TValue[string] {
+	return &c.RwAccess
+}
+
+func (c *mqlAlicloudNasAccessRule) GetUserAccess() *plugin.TValue[string] {
+	return &c.UserAccess
+}
+
+func (c *mqlAlicloudNasAccessRule) GetPriority() *plugin.TValue[int64] {
+	return &c.Priority
 }

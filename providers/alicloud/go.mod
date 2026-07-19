@@ -14,6 +14,7 @@ require (
 	github.com/alibabacloud-go/ecs-20140526/v6 v6.1.0
 	github.com/alibabacloud-go/fc-20230330/v4 v4.7.8
 	github.com/alibabacloud-go/kms-20160120/v4 v4.0.0
+	github.com/alibabacloud-go/nas-20170626/v4 v4.6.0
 	github.com/alibabacloud-go/nlb-20220430/v4 v4.1.3
 	github.com/alibabacloud-go/polardb-20170801/v7 v7.22.0
 	github.com/alibabacloud-go/r-kvstore-20150101/v6 v6.0.0
