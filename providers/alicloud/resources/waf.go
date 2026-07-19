@@ -17,24 +17,6 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
-// alicloudCenterRegions are the two center endpoints that WAF, Cloud Firewall,
-// and Anti-DDoS answer at: cn-hangzhou for the China partition and
-// ap-southeast-1 for the international partition. An account belongs to one of
-// them, so the other simply returns no data.
-var alicloudCenterRegions = []string{"cn-hangzhou", "ap-southeast-1"}
-
-// int64PtrsToInts converts a []*int64 SDK slice into a []any of the non-nil
-// values, for populating MQL int list fields.
-func int64PtrsToInts(in []*int64) []any {
-	res := []any{}
-	for _, v := range in {
-		if v != nil {
-			res = append(res, *v)
-		}
-	}
-	return res
-}
-
 func (r *mqlAlicloudWaf) id() (string, error) {
 	return "alicloud.waf", nil
 }
@@ -43,16 +25,28 @@ func (r *mqlAlicloudWaf) instances() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
 
 	res := []any{}
+	// WAF is a center service; an account lives in one partition, so a call
+	// against the other center errors. Try both and skip a failing center, but
+	// remember the error and surface it only if NEITHER center responded, so a
+	// transient outage is not silently reported as "no WAF".
+	var lastErr error
+	succeeded := 0
 	for _, region := range alicloudCenterRegions {
 		client, err := conn.WafClient(region)
 		if err != nil {
-			return nil, err
+			lastErr = err
+			continue
 		}
 		resp, err := client.DescribeInstance(&wafclient.DescribeInstanceRequest{
 			RegionId: tea.String(region),
 		})
-		if err != nil || resp == nil || resp.Body == nil || resp.Body.InstanceId == nil || *resp.Body.InstanceId == "" {
-			// the account has no WAF instance in this center; skip it
+		if err != nil {
+			lastErr = err
+			continue
+		}
+		succeeded++
+		if resp == nil || resp.Body == nil || resp.Body.InstanceId == nil || *resp.Body.InstanceId == "" {
+			// this center responded but the account has no WAF instance here
 			continue
 		}
 		mqlInstance, err := newWafInstance(r.MqlRuntime, region, resp.Body)
@@ -60,6 +54,9 @@ func (r *mqlAlicloudWaf) instances() ([]any, error) {
 			return nil, err
 		}
 		res = append(res, mqlInstance)
+	}
+	if succeeded == 0 && lastErr != nil {
+		return nil, lastErr
 	}
 	return res, nil
 }

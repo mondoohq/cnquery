@@ -28,3 +28,21 @@ func strPtrsToAny(in []*string) []any {
 	}
 	return res
 }
+
+// int64PtrsToInts converts a []*int64 SDK slice into a []any of the non-nil
+// values, for populating MQL int list fields.
+func int64PtrsToInts(in []*int64) []any {
+	res := []any{}
+	for _, v := range in {
+		if v != nil {
+			res = append(res, *v)
+		}
+	}
+	return res
+}
+
+// alicloudCenterRegions are the two center endpoints that WAF, Cloud Firewall,
+// and Anti-DDoS answer at: cn-hangzhou for the China partition and
+// ap-southeast-1 for the international partition. An account belongs to one of
+// them, so a call against the other partition returns no data (or an error).
+var alicloudCenterRegions = []string{"cn-hangzhou", "ap-southeast-1"}

@@ -30,54 +30,65 @@ func (r *mqlAlicloudCloudFirewall) id() (string, error) {
 }
 
 // buyVersion probes the two centers for the account's Cloud Firewall edition and
-// caches the working center. A total failure is not cached, so a transient error
-// can retry rather than permanently reporting the firewall as absent.
-func (r *mqlAlicloudCloudFirewall) buyVersion() (string, *cloudfwclient.DescribeUserBuyVersionResponseBody) {
+// caches the working center. It returns the last error when NEITHER center
+// responds, so a transient outage is surfaced rather than masked as "not
+// provisioned". A success is cached; a total failure is not, so a later call
+// retries.
+func (r *mqlAlicloudCloudFirewall) buyVersion() (string, *cloudfwclient.DescribeUserBuyVersionResponseBody, error) {
 	if r.fetched.Load() {
-		return r.region, r.version
+		return r.region, r.version, nil
 	}
 	r.lock.Lock()
 	defer r.lock.Unlock()
 	if r.fetched.Load() {
-		return r.region, r.version
+		return r.region, r.version, nil
 	}
 
 	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
+	var lastErr error
 	for _, region := range alicloudCenterRegions {
 		client, err := conn.CloudfwClient(region)
 		if err != nil {
+			lastErr = err
 			continue
 		}
 		resp, err := client.DescribeUserBuyVersion(&cloudfwclient.DescribeUserBuyVersionRequest{})
-		if err != nil || resp == nil || resp.Body == nil {
+		if err != nil {
+			lastErr = err
+			continue
+		}
+		if resp == nil || resp.Body == nil {
 			continue
 		}
 		r.region = region
 		r.version = resp.Body
 		r.fetched.Store(true)
-		return r.region, r.version
+		return r.region, r.version, nil
 	}
-	return "", nil
+	return "", nil, lastErr
 }
 
 func (r *mqlAlicloudCloudFirewall) enabled() (bool, error) {
-	_, v := r.buyVersion()
-	if v == nil {
-		return false, nil
+	_, v, err := r.buyVersion()
+	if err != nil || v == nil {
+		return false, err
 	}
 	return tea.BoolValue(v.UserStatus), nil
 }
 
 func (r *mqlAlicloudCloudFirewall) edition() (int64, error) {
-	_, v := r.buyVersion()
-	if v == nil {
-		return 0, nil
+	_, v, err := r.buyVersion()
+	if err != nil || v == nil {
+		return 0, err
 	}
 	return int64(tea.Int32Value(v.Version)), nil
 }
 
 func (r *mqlAlicloudCloudFirewall) controlPolicies() ([]any, error) {
-	region, v := r.buyVersion()
+	region, v, err := r.buyVersion()
+	if err != nil {
+		return nil, err
+	}
 	if region == "" || v == nil {
 		// Cloud Firewall is not provisioned for this account
 		return []any{}, nil

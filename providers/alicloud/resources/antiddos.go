@@ -23,28 +23,39 @@ func (r *mqlAlicloudAntiddos) instances() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
 
 	res := []any{}
+	// Anti-DDoS is a center service; try both centers and skip a failing one,
+	// but surface the error only if NEITHER center responded, so a transient
+	// outage is not silently reported as "no Anti-DDoS".
+	var lastErr error
+	succeeded := 0
 	for _, region := range alicloudCenterRegions {
 		client, err := conn.DdoscooClient(region)
 		if err != nil {
-			return nil, err
+			lastErr = err
+			continue
 		}
 
 		pageNumber := 1
 		pageSize := 100
-		firstPage := true
+		centerOk := false
 		for {
 			resp, err := client.DescribeInstances(&ddoscooclient.DescribeInstancesRequest{
 				PageNumber: tea.String(strconv.Itoa(pageNumber)),
 				PageSize:   tea.String(strconv.Itoa(pageSize)),
 			})
 			if err != nil {
-				if firstPage {
-					// the account has no Anti-DDoS in this center; skip it
-					break
+				if !centerOk {
+					// first page failed: wrong partition or transient. Record it
+					// and move on; total failure is surfaced after the loop.
+					lastErr = err
+				} else {
+					// a mid-pagination failure in a reachable center is a real
+					// error, not a missing-service case
+					return nil, err
 				}
-				return nil, err
+				break
 			}
-			firstPage = false
+			centerOk = true
 			if resp == nil || resp.Body == nil {
 				break
 			}
@@ -64,6 +75,12 @@ func (r *mqlAlicloudAntiddos) instances() ([]any, error) {
 			}
 			pageNumber++
 		}
+		if centerOk {
+			succeeded++
+		}
+	}
+	if succeeded == 0 && lastErr != nil {
+		return nil, lastErr
 	}
 	return res, nil
 }
