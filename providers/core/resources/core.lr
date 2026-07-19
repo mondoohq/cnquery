@@ -66,9 +66,9 @@ asset @defaults("name platform version") {
   build string
   // Platform metadata such as distribution and release details
   platformMetadata map[string]string
-  // User-supplied labels on the asset
+  // Labels attached to the asset by its platform or cloud provider (for example cloud resource tags or Kubernetes labels)
   labels map[string]string
-  // Custom annotations (tags) on the asset
+  // User-supplied annotations (tags) on the asset
   annotations map[string]string
 }
 
