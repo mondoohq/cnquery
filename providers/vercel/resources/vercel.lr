@@ -118,6 +118,8 @@ private vercel.team @defaults("slug name") {
   integrationConfigurations() []vercel.integrationConfiguration
   // Access groups defined for the team
   accessGroups() []vercel.accessGroup
+  // Storage stores owned by the team
+  stores() []vercel.store
 }
 
 // Vercel Team Member
@@ -237,6 +239,8 @@ private vercel.project @defaults("name framework") {
   domains() []vercel.project.domain
   // Firewall configuration for the project
   firewall() vercel.firewall
+  // Storage stores connected to the project
+  stores() []vercel.store
 }
 
 // Vercel Environment Variable
@@ -382,6 +386,64 @@ private vercel.edgeConfig @defaults("slug") {
   createdAt time
   // Time the store was last updated
   updatedAt time
+}
+
+// Vercel Storage Store
+//
+// A storage store owned by a team, covering both native Vercel Blob stores and
+// marketplace-provisioned database stores such as Neon Postgres or Upstash
+// Redis. Query `storeType` to distinguish them, `access` and `size` for blob
+// footprint, `productName` and `secretNames` for marketplace resources, and
+// `connectedProjects` for the projects wired to the store. Select a store with
+// `vercel.team.stores.where(name == "images")`.
+private vercel.store @defaults("name storeType status") {
+  // Unique store identifier
+  id string
+  // Store name
+  name string
+  // Store type
+  //
+  // One of blob, integration, postgres, redis, or kv. An integration store is a
+  // marketplace-provisioned resource such as Neon Postgres or Upstash Redis.
+  storeType string
+  // Provisioning status, for example available or suspended
+  status string
+  // Billing state of the store
+  billingState string
+  // Whether the store has exceeded its usage quota
+  usageQuotaExceeded bool
+  // Region the store is provisioned in, or null when not applicable
+  region string
+  // Number of projects connected to the store
+  connectedProjectsCount int
+  // Time the store was created
+  createdAt time
+  // Time the store was last updated
+  updatedAt time
+  // Stored data size in bytes for a blob store, or null for other store types
+  size int
+  // Number of objects in a blob store, or null for other store types
+  objectCount int
+  // Blob store access level
+  //
+  // One of public or private for a blob store, or null for other store types.
+  access string
+  // Marketplace product name for an integration store, for example Neon, or null otherwise
+  productName string
+  // Marketplace product slug for an integration store, for example neon, or null otherwise
+  productSlug string
+  // Identifier of the backing resource on the marketplace provider, or null otherwise
+  externalResourceId string
+  // Status of the backing resource on the marketplace provider, or null otherwise
+  externalResourceStatus string
+  // Billing plan name for an integration store, or null otherwise
+  billingPlan string
+  // Names of the secrets an integration store exposes
+  //
+  // Secret values are never returned. Empty for stores that expose no secrets.
+  secretNames []string
+  // Projects connected to the store
+  connectedProjects() []vercel.project
 }
 
 // Vercel Log Drain

@@ -27,6 +27,7 @@ const (
 	ResourceVercelDomain                     string = "vercel.domain"
 	ResourceVercelProjectDomain              string = "vercel.project.domain"
 	ResourceVercelEdgeConfig                 string = "vercel.edgeConfig"
+	ResourceVercelStore                      string = "vercel.store"
 	ResourceVercelLogDrain                   string = "vercel.logDrain"
 	ResourceVercelWebhook                    string = "vercel.webhook"
 	ResourceVercelIntegrationConfiguration   string = "vercel.integrationConfiguration"
@@ -83,6 +84,10 @@ func init() {
 		"vercel.edgeConfig": {
 			// to override args, implement: initVercelEdgeConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVercelEdgeConfig,
+		},
+		"vercel.store": {
+			// to override args, implement: initVercelStore(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVercelStore,
 		},
 		"vercel.logDrain": {
 			// to override args, implement: initVercelLogDrain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -285,6 +290,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vercel.team.accessGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelTeam).GetAccessGroups()).ToDataRes(types.Array(types.Resource("vercel.accessGroup")))
 	},
+	"vercel.team.stores": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelTeam).GetStores()).ToDataRes(types.Array(types.Resource("vercel.store")))
+	},
 	"vercel.team.member.uid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelTeamMember).GetUid()).ToDataRes(types.String)
 	},
@@ -395,6 +403,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vercel.project.firewall": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelProject).GetFirewall()).ToDataRes(types.Resource("vercel.firewall"))
+	},
+	"vercel.project.stores": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProject).GetStores()).ToDataRes(types.Array(types.Resource("vercel.store")))
 	},
 	"vercel.project.environmentVariable.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelProjectEnvironmentVariable).GetId()).ToDataRes(types.String)
@@ -527,6 +538,66 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vercel.edgeConfig.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelEdgeConfig).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"vercel.store.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelStore).GetId()).ToDataRes(types.String)
+	},
+	"vercel.store.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelStore).GetName()).ToDataRes(types.String)
+	},
+	"vercel.store.storeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelStore).GetStoreType()).ToDataRes(types.String)
+	},
+	"vercel.store.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelStore).GetStatus()).ToDataRes(types.String)
+	},
+	"vercel.store.billingState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelStore).GetBillingState()).ToDataRes(types.String)
+	},
+	"vercel.store.usageQuotaExceeded": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelStore).GetUsageQuotaExceeded()).ToDataRes(types.Bool)
+	},
+	"vercel.store.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelStore).GetRegion()).ToDataRes(types.String)
+	},
+	"vercel.store.connectedProjectsCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelStore).GetConnectedProjectsCount()).ToDataRes(types.Int)
+	},
+	"vercel.store.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelStore).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"vercel.store.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelStore).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"vercel.store.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelStore).GetSize()).ToDataRes(types.Int)
+	},
+	"vercel.store.objectCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelStore).GetObjectCount()).ToDataRes(types.Int)
+	},
+	"vercel.store.access": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelStore).GetAccess()).ToDataRes(types.String)
+	},
+	"vercel.store.productName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelStore).GetProductName()).ToDataRes(types.String)
+	},
+	"vercel.store.productSlug": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelStore).GetProductSlug()).ToDataRes(types.String)
+	},
+	"vercel.store.externalResourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelStore).GetExternalResourceId()).ToDataRes(types.String)
+	},
+	"vercel.store.externalResourceStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelStore).GetExternalResourceStatus()).ToDataRes(types.String)
+	},
+	"vercel.store.billingPlan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelStore).GetBillingPlan()).ToDataRes(types.String)
+	},
+	"vercel.store.secretNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelStore).GetSecretNames()).ToDataRes(types.Array(types.String))
+	},
+	"vercel.store.connectedProjects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelStore).GetConnectedProjects()).ToDataRes(types.Array(types.Resource("vercel.project")))
 	},
 	"vercel.logDrain.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelLogDrain).GetId()).ToDataRes(types.String)
@@ -818,6 +889,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVercelTeam).AccessGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"vercel.team.stores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelTeam).Stores, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"vercel.team.member.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVercelTeamMember).__id, ok = v.Value.(string)
 		return
@@ -972,6 +1047,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vercel.project.firewall": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVercelProject).Firewall, ok = plugin.RawToTValue[*mqlVercelFirewall](v.Value, v.Error)
+		return
+	},
+	"vercel.project.stores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProject).Stores, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vercel.project.environmentVariable.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1168,6 +1247,90 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vercel.edgeConfig.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVercelEdgeConfig).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vercel.store.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelStore).__id, ok = v.Value.(string)
+		return
+	},
+	"vercel.store.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelStore).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.store.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelStore).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.store.storeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelStore).StoreType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.store.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelStore).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.store.billingState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelStore).BillingState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.store.usageQuotaExceeded": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelStore).UsageQuotaExceeded, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vercel.store.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelStore).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.store.connectedProjectsCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelStore).ConnectedProjectsCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vercel.store.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelStore).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vercel.store.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelStore).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vercel.store.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelStore).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vercel.store.objectCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelStore).ObjectCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vercel.store.access": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelStore).Access, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.store.productName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelStore).ProductName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.store.productSlug": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelStore).ProductSlug, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.store.externalResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelStore).ExternalResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.store.externalResourceStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelStore).ExternalResourceStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.store.billingPlan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelStore).BillingPlan, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.store.secretNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelStore).SecretNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vercel.store.connectedProjects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelStore).ConnectedProjects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vercel.logDrain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1677,6 +1840,7 @@ type mqlVercelTeam struct {
 	Webhooks                           plugin.TValue[[]any]
 	IntegrationConfigurations          plugin.TValue[[]any]
 	AccessGroups                       plugin.TValue[[]any]
+	Stores                             plugin.TValue[[]any]
 }
 
 // createVercelTeam creates a new instance of this resource
@@ -1880,6 +2044,22 @@ func (c *mqlVercelTeam) GetAccessGroups() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlVercelTeam) GetStores() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Stores, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vercel.team", c.__id, "stores")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.stores()
+	})
+}
+
 // mqlVercelTeamMember for the vercel.team.member resource
 type mqlVercelTeamMember struct {
 	MqlRuntime *plugin.Runtime
@@ -1989,6 +2169,7 @@ type mqlVercelProject struct {
 	Deployments                      plugin.TValue[[]any]
 	Domains                          plugin.TValue[[]any]
 	Firewall                         plugin.TValue[*mqlVercelFirewall]
+	Stores                           plugin.TValue[[]any]
 }
 
 // createVercelProject creates a new instance of this resource
@@ -2193,6 +2374,22 @@ func (c *mqlVercelProject) GetFirewall() *plugin.TValue[*mqlVercelFirewall] {
 		}
 
 		return c.firewall()
+	})
+}
+
+func (c *mqlVercelProject) GetStores() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Stores, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vercel.project", c.__id, "stores")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.stores()
 	})
 }
 
@@ -2629,6 +2826,162 @@ func (c *mqlVercelEdgeConfig) GetCreatedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlVercelEdgeConfig) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
+}
+
+// mqlVercelStore for the vercel.store resource
+type mqlVercelStore struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlVercelStoreInternal
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	StoreType              plugin.TValue[string]
+	Status                 plugin.TValue[string]
+	BillingState           plugin.TValue[string]
+	UsageQuotaExceeded     plugin.TValue[bool]
+	Region                 plugin.TValue[string]
+	ConnectedProjectsCount plugin.TValue[int64]
+	CreatedAt              plugin.TValue[*time.Time]
+	UpdatedAt              plugin.TValue[*time.Time]
+	Size                   plugin.TValue[int64]
+	ObjectCount            plugin.TValue[int64]
+	Access                 plugin.TValue[string]
+	ProductName            plugin.TValue[string]
+	ProductSlug            plugin.TValue[string]
+	ExternalResourceId     plugin.TValue[string]
+	ExternalResourceStatus plugin.TValue[string]
+	BillingPlan            plugin.TValue[string]
+	SecretNames            plugin.TValue[[]any]
+	ConnectedProjects      plugin.TValue[[]any]
+}
+
+// createVercelStore creates a new instance of this resource
+func createVercelStore(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVercelStore{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vercel.store", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVercelStore) MqlName() string {
+	return "vercel.store"
+}
+
+func (c *mqlVercelStore) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVercelStore) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlVercelStore) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlVercelStore) GetStoreType() *plugin.TValue[string] {
+	return &c.StoreType
+}
+
+func (c *mqlVercelStore) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlVercelStore) GetBillingState() *plugin.TValue[string] {
+	return &c.BillingState
+}
+
+func (c *mqlVercelStore) GetUsageQuotaExceeded() *plugin.TValue[bool] {
+	return &c.UsageQuotaExceeded
+}
+
+func (c *mqlVercelStore) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlVercelStore) GetConnectedProjectsCount() *plugin.TValue[int64] {
+	return &c.ConnectedProjectsCount
+}
+
+func (c *mqlVercelStore) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlVercelStore) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlVercelStore) GetSize() *plugin.TValue[int64] {
+	return &c.Size
+}
+
+func (c *mqlVercelStore) GetObjectCount() *plugin.TValue[int64] {
+	return &c.ObjectCount
+}
+
+func (c *mqlVercelStore) GetAccess() *plugin.TValue[string] {
+	return &c.Access
+}
+
+func (c *mqlVercelStore) GetProductName() *plugin.TValue[string] {
+	return &c.ProductName
+}
+
+func (c *mqlVercelStore) GetProductSlug() *plugin.TValue[string] {
+	return &c.ProductSlug
+}
+
+func (c *mqlVercelStore) GetExternalResourceId() *plugin.TValue[string] {
+	return &c.ExternalResourceId
+}
+
+func (c *mqlVercelStore) GetExternalResourceStatus() *plugin.TValue[string] {
+	return &c.ExternalResourceStatus
+}
+
+func (c *mqlVercelStore) GetBillingPlan() *plugin.TValue[string] {
+	return &c.BillingPlan
+}
+
+func (c *mqlVercelStore) GetSecretNames() *plugin.TValue[[]any] {
+	return &c.SecretNames
+}
+
+func (c *mqlVercelStore) GetConnectedProjects() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ConnectedProjects, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vercel.store", c.__id, "connectedProjects")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.connectedProjects()
+	})
 }
 
 // mqlVercelLogDrain for the vercel.logDrain resource
