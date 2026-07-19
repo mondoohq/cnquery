@@ -1689,10 +1689,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlSnowflakeTask).GetAllowOverlappingExecution()).ToDataRes(types.Bool)
 	},
 	"snowflake.task.predecessors": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlSnowflakeTask).GetPredecessors()).ToDataRes(types.Array(types.String))
-	},
-	"snowflake.task.predecessorTasks": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlSnowflakeTask).GetPredecessorTasks()).ToDataRes(types.Array(types.Resource("snowflake.task")))
+		return (r.(*mqlSnowflakeTask).GetPredecessors()).ToDataRes(types.Array(types.Resource("snowflake.task")))
 	},
 	"snowflake.task.comment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeTask).GetComment()).ToDataRes(types.String)
@@ -3825,10 +3822,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"snowflake.task.predecessors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeTask).Predecessors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"snowflake.task.predecessorTasks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeTask).PredecessorTasks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.task.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8505,7 +8498,6 @@ type mqlSnowflakeTask struct {
 	Condition                 plugin.TValue[string]
 	AllowOverlappingExecution plugin.TValue[bool]
 	Predecessors              plugin.TValue[[]any]
-	PredecessorTasks          plugin.TValue[[]any]
 	Comment                   plugin.TValue[string]
 }
 
@@ -8610,13 +8602,9 @@ func (c *mqlSnowflakeTask) GetAllowOverlappingExecution() *plugin.TValue[bool] {
 }
 
 func (c *mqlSnowflakeTask) GetPredecessors() *plugin.TValue[[]any] {
-	return &c.Predecessors
-}
-
-func (c *mqlSnowflakeTask) GetPredecessorTasks() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.PredecessorTasks, func() ([]any, error) {
+	return plugin.GetOrCompute[[]any](&c.Predecessors, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.task", c.__id, "predecessorTasks")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.task", c.__id, "predecessors")
 			if err != nil {
 				return nil, err
 			}
@@ -8625,7 +8613,7 @@ func (c *mqlSnowflakeTask) GetPredecessorTasks() *plugin.TValue[[]any] {
 			}
 		}
 
-		return c.predecessorTasks()
+		return c.predecessors()
 	})
 }
 

@@ -465,7 +465,6 @@ snowflake.task.definition 13.3.7
 snowflake.task.name 13.3.7
 snowflake.task.owner 13.3.7
 snowflake.task.ownerRoleType 13.3.7
-snowflake.task.predecessorTasks 13.3.7
 snowflake.task.predecessors 13.3.7
 snowflake.task.schedule 13.3.7
 snowflake.task.schemaName 13.3.7

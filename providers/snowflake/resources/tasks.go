@@ -11,12 +11,12 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/snowflake/connection"
-	"go.mondoo.com/mql/v13/types"
 )
 
 type mqlSnowflakeTaskInternal struct {
-	cacheOwner     string
-	cacheWarehouse string
+	cacheOwner        string
+	cacheWarehouse    string
+	cachePredecessors []string
 }
 
 func (r *mqlSnowflakeAccount) tasks() ([]any, error) {
@@ -41,7 +41,7 @@ func (r *mqlSnowflakeAccount) tasks() ([]any, error) {
 }
 
 func newMqlSnowflakeTask(runtime *plugin.Runtime, task sdk.Task) (*mqlSnowflakeTask, error) {
-	predecessors := []any{}
+	predecessors := make([]string, 0, len(task.Predecessors))
 	for _, p := range task.Predecessors {
 		predecessors = append(predecessors, p.FullyQualifiedName())
 	}
@@ -61,7 +61,6 @@ func newMqlSnowflakeTask(runtime *plugin.Runtime, task sdk.Task) (*mqlSnowflakeT
 		"definition":                llx.StringData(task.Definition),
 		"condition":                 llx.StringData(task.Condition),
 		"allowOverlappingExecution": llx.BoolData(task.AllowOverlappingExecution),
-		"predecessors":              llx.ArrayData(predecessors, types.String),
 		"comment":                   llx.StringData(task.Comment),
 	})
 	if err != nil {
@@ -70,6 +69,7 @@ func newMqlSnowflakeTask(runtime *plugin.Runtime, task sdk.Task) (*mqlSnowflakeT
 	mqlTask := r.(*mqlSnowflakeTask)
 	mqlTask.cacheOwner = task.Owner
 	mqlTask.cacheWarehouse = warehouse
+	mqlTask.cachePredecessors = predecessors
 	return mqlTask, nil
 }
 
@@ -96,7 +96,7 @@ func (r *mqlSnowflakeTask) warehouse() (*mqlSnowflakeWarehouse, error) {
 }
 
 // initSnowflakeTask resolves a task by its database, schema, and name so typed
-// references (such as snowflake.task.predecessorTasks) can hydrate a full task
+// references (such as snowflake.task.predecessors) can hydrate a full task
 // from a fully qualified name.
 func initSnowflakeTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 3 {
@@ -155,11 +155,12 @@ func snowflakeTaskByFQN(runtime *plugin.Runtime, fqn string) (*mqlSnowflakeTask,
 	return res.(*mqlSnowflakeTask), nil
 }
 
-func (r *mqlSnowflakeTask) predecessorTasks() ([]any, error) {
+// predecessors resolves the task's predecessor tasks from their fully qualified
+// names, forming the task graph.
+func (r *mqlSnowflakeTask) predecessors() ([]any, error) {
 	out := []any{}
-	for _, p := range r.Predecessors.Data {
-		fqn, ok := p.(string)
-		if !ok || fqn == "" {
+	for _, fqn := range r.cachePredecessors {
+		if fqn == "" {
 			continue
 		}
 		task, err := snowflakeTaskByFQN(r.MqlRuntime, fqn)
