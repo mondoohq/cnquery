@@ -84,6 +84,12 @@ als = "als"
 # (HKLM\...\PowerShell\Transcription\EnableTranscripting). Microsoft's own
 # spelling, so it must stay verbatim to match the real registry key.
 transcripting = "transcripting"
+# Alibaba Cloud Go SDK field spellings baked into exported identifiers
+# (RouteEntrys, MaxLoginAttemps, IzNo). These are the SDK's own spellings, so
+# references to them cannot be renamed.
+entrys = "entrys"
+attemps = "attemps"
+iz = "iz"
 # Pre-existing misspellings in MQL schema fields / exported Go identifiers.
 # Renaming these would break the schema or API, so they are baselined.
 appliable = "appliable"
