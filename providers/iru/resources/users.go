@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"fmt"
+
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/iru/connection"
@@ -55,7 +57,7 @@ func initIruUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 		}
 		return userArgs(&users[i]), nil, nil
 	}
-	return args, nil, nil
+	return nil, nil, fmt.Errorf("iru.user with id %q not found", id)
 }
 
 func userArgs(u *client.User) map[string]*llx.RawData {

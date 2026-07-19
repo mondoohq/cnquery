@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -117,7 +118,7 @@ func initIruDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 		}
 		return nil, dev, nil
 	}
-	return args, nil, nil
+	return nil, nil, fmt.Errorf("iru.device with id %q not found", id)
 }
 
 // getDetails is the single fetch every lazy posture/hardware/network field
