@@ -14,8 +14,8 @@ option go_package = "go.mondoo.com/mql/v13/providers/databricks/resources"
 // exposes that workspace's security surface through the ipAccessLists,
 // workspaceSettings, tokens, secretScopes, clusters, clusterPolicies,
 // warehouses, catalogs, storageCredentials, externalLocations,
-// deltaSharingRecipients, deltaSharingShares, globalInitScripts, and
-// instanceProfiles fields.
+// deltaSharingRecipients, deltaSharingShares, globalInitScripts,
+// instanceProfiles, servingEndpoints, and registeredModels fields.
 databricks {
   // Workspaces registered in the account
   workspaces() []databricks.workspace
@@ -59,6 +59,10 @@ databricks {
   globalInitScripts() []databricks.globalInitScript
   // AWS instance profiles registered in the workspace
   instanceProfiles() []databricks.instanceProfile
+  // Mosaic AI model serving endpoints in the workspace
+  servingEndpoints() []databricks.servingEndpoint
+  // Unity Catalog registered models in the workspace's metastore
+  registeredModels() []databricks.registeredModel
   // Customer-managed encryption keys registered in the account
   customerManagedKeys() []databricks.customerManagedKey
 }
@@ -692,6 +696,174 @@ databricks.volume @defaults("fullName volumeType owner") {
   updatedBy string
   // Privilege grants assigned directly on the volume
   grants() []databricks.grant
+}
+
+// Mosaic AI model serving endpoint
+//
+// A Mosaic AI model serving endpoint in the workspace, keyed by name. Covers
+// the endpoint state and pending configuration update, the creator, the task
+// type, the budget policy, and the creation and update times. The served
+// entities behind the endpoint are exposed through servedEntities, and the AI
+// Gateway governance (usage tracking, inference-table payload logging,
+// guardrails, and rate limits) through aiGateway. Select an endpoint by name,
+// for example `databricks.servingEndpoints.where(name == "prod-llm")`.
+databricks.servingEndpoint @defaults("name state task") {
+  // Endpoint name
+  name string
+  // System-generated endpoint id used by the Permissions API
+  id string
+  // Whether the endpoint is queryable
+  //
+  // READY when every served entity in the active configuration is ready,
+  // NOT_READY when any actively served entity is in a non-ready state.
+  state string
+  // State of a pending configuration update
+  //
+  // IN_PROGRESS while an update is being applied, UPDATE_FAILED when the last
+  // update failed, and NOT_UPDATING when there is no update in progress.
+  configUpdate string
+  // Email of the user that created the endpoint
+  creator string
+  // Task type served by the endpoint (such as llm/v1/chat or llm/v1/completions)
+  task string
+  // Whether route optimization is enabled for the endpoint
+  routeOptimized() bool
+  // Id of the budget policy associated with the endpoint
+  budgetPolicyId string
+  // Endpoint description
+  description string
+  // When the endpoint was created
+  createdAt time
+  // When the endpoint was last updated by a user
+  updatedAt time
+  // Tags attached to the endpoint, each with a key and value
+  tags []dict
+  // Served entities (models) fronted by the endpoint
+  servedEntities() []databricks.servingEndpoint.servedEntity
+  // AI Gateway governance configured on the endpoint
+  aiGateway() databricks.servingEndpoint.gatewayConfig
+}
+
+// Served entity behind a model serving endpoint
+private databricks.servingEndpoint.servedEntity @defaults("name entityName") {
+  // Name of the served entity within the endpoint config
+  name string
+  // Name of the served Unity Catalog model or entity
+  entityName string
+  // Version of the served entity
+  entityVersion string
+  // Name of the served Databricks foundation model, empty when the entity is not a foundation model
+  foundationModelName string
+  // Provider of the served external model
+  //
+  // One of ai21labs, amazon-bedrock, anthropic, cohere, custom,
+  // databricks-model-serving, google-cloud-vertex-ai, openai, or palm. Empty
+  // when the entity is not an external model.
+  externalModelProvider string
+  // Name of the served external model, empty when the entity is not an external model
+  externalModelName string
+  // Task type of the served external model, empty when the entity is not an external model
+  externalModelTask string
+}
+
+// AI Gateway configuration on a model serving endpoint
+private databricks.servingEndpoint.gatewayConfig @defaults("usageTrackingEnabled inferenceTableEnabled") {
+  // Whether operational usage tracking through system tables is enabled
+  usageTrackingEnabled bool
+  // Whether inference-table payload logging is enabled
+  inferenceTableEnabled bool
+  // Unity Catalog catalog holding the inference table
+  inferenceTableCatalog string
+  // Unity Catalog schema holding the inference table
+  inferenceTableSchema string
+  // Prefix of the inference table name in Unity Catalog
+  inferenceTableTablePrefix string
+  // AI guardrail filters applied to endpoint inputs and outputs
+  guardrails dict
+  // Rate limits applied to the endpoint, each with calls, renewalPeriod, key, and principal
+  rateLimits []dict
+  // Whether traffic fallback to other served entities on failure is enabled
+  fallbackEnabled bool
+}
+
+// Unity Catalog registered model
+//
+// A registered model in Unity Catalog, keyed by its three-level fully
+// qualified name (catalog.schema.model). Covers the owner, comment, storage
+// location backing the model version files, the parent catalog and schema, the
+// aliases pointing at model versions, the privilege grants assigned on it, and
+// the model versions it contains. Select a model by full name, for example
+// `databricks.registeredModels.where(name == "fraud_detector")`.
+databricks.registeredModel @defaults("fullName owner") {
+  // Fully qualified name (catalog.schema.model)
+  fullName string
+  // Model name
+  name string
+  // Name of the parent catalog
+  catalogName string
+  // Name of the parent schema
+  schemaName string
+  // Parent catalog
+  catalog() databricks.catalog
+  // Parent schema
+  schema() databricks.schema
+  // Principal that owns the model
+  owner string
+  // Model comment
+  comment string
+  // Cloud storage path under which model version files are stored
+  storageLocation string
+  // Whether the principal is limited to browsing metadata through the BROWSE privilege
+  browseOnly bool
+  // When the model was created
+  createdAt time
+  // User who created the model
+  createdBy string
+  // When the model was last modified
+  updatedAt time
+  // User who last modified the model
+  updatedBy string
+  // Aliases associated with the model, each pointing at a model version
+  aliases []dict
+  // Privilege grants assigned directly on the model
+  grants() []databricks.grant
+  // Model versions contained in the model
+  modelVersions() []databricks.modelVersion
+}
+
+// Unity Catalog model version
+//
+// A single version of a Unity Catalog registered model, keyed by the parent
+// model's fully qualified name and the version number. Covers the registration
+// status, the source artifact location, the MLflow run that produced it, the
+// storage location backing its files, and the aliases pointing at it.
+databricks.modelVersion @defaults("modelName version status") {
+  // Fully qualified name of the parent registered model
+  modelName string
+  // Integer version number
+  version int
+  // Registration status
+  //
+  // One of PENDING_REGISTRATION, FAILED_REGISTRATION, READY, or
+  // MODEL_VERSION_STATUS_UNKNOWN. Only READY versions can be loaded for
+  // inference or served.
+  status string
+  // URI locating the source artifacts for the version
+  source string
+  // MLflow run id used when creating the version, empty when not generated by a run
+  runId string
+  // Cloud storage path under which the version data files are stored
+  storageLocation string
+  // Version comment
+  comment string
+  // When the version was created
+  createdAt time
+  // User who created the version
+  createdBy string
+  // When the version was last modified
+  updatedAt time
+  // Aliases pointing at the version
+  aliases []dict
 }
 
 // Delta Sharing recipient

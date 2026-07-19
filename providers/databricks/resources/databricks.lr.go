@@ -16,32 +16,37 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceDatabricks                      string = "databricks"
-	ResourceDatabricksWorkspace             string = "databricks.workspace"
-	ResourceDatabricksUser                  string = "databricks.user"
-	ResourceDatabricksGroup                 string = "databricks.group"
-	ResourceDatabricksServicePrincipal      string = "databricks.servicePrincipal"
-	ResourceDatabricksMetastore             string = "databricks.metastore"
-	ResourceDatabricksNetwork               string = "databricks.network"
-	ResourceDatabricksPrivateAccessSetting  string = "databricks.privateAccessSetting"
-	ResourceDatabricksIpAccessList          string = "databricks.ipAccessList"
-	ResourceDatabricksWorkspaceConf         string = "databricks.workspaceConf"
-	ResourceDatabricksToken                 string = "databricks.token"
-	ResourceDatabricksSecretScope           string = "databricks.secretScope"
-	ResourceDatabricksClusterPolicy         string = "databricks.clusterPolicy"
-	ResourceDatabricksCluster               string = "databricks.cluster"
-	ResourceDatabricksWarehouse             string = "databricks.warehouse"
-	ResourceDatabricksCatalog               string = "databricks.catalog"
-	ResourceDatabricksSchema                string = "databricks.schema"
-	ResourceDatabricksGrant                 string = "databricks.grant"
-	ResourceDatabricksStorageCredential     string = "databricks.storageCredential"
-	ResourceDatabricksExternalLocation      string = "databricks.externalLocation"
-	ResourceDatabricksVolume                string = "databricks.volume"
-	ResourceDatabricksDeltaSharingRecipient string = "databricks.deltaSharingRecipient"
-	ResourceDatabricksDeltaSharingShare     string = "databricks.deltaSharingShare"
-	ResourceDatabricksGlobalInitScript      string = "databricks.globalInitScript"
-	ResourceDatabricksInstanceProfile       string = "databricks.instanceProfile"
-	ResourceDatabricksCustomerManagedKey    string = "databricks.customerManagedKey"
+	ResourceDatabricks                             string = "databricks"
+	ResourceDatabricksWorkspace                    string = "databricks.workspace"
+	ResourceDatabricksUser                         string = "databricks.user"
+	ResourceDatabricksGroup                        string = "databricks.group"
+	ResourceDatabricksServicePrincipal             string = "databricks.servicePrincipal"
+	ResourceDatabricksMetastore                    string = "databricks.metastore"
+	ResourceDatabricksNetwork                      string = "databricks.network"
+	ResourceDatabricksPrivateAccessSetting         string = "databricks.privateAccessSetting"
+	ResourceDatabricksIpAccessList                 string = "databricks.ipAccessList"
+	ResourceDatabricksWorkspaceConf                string = "databricks.workspaceConf"
+	ResourceDatabricksToken                        string = "databricks.token"
+	ResourceDatabricksSecretScope                  string = "databricks.secretScope"
+	ResourceDatabricksClusterPolicy                string = "databricks.clusterPolicy"
+	ResourceDatabricksCluster                      string = "databricks.cluster"
+	ResourceDatabricksWarehouse                    string = "databricks.warehouse"
+	ResourceDatabricksCatalog                      string = "databricks.catalog"
+	ResourceDatabricksSchema                       string = "databricks.schema"
+	ResourceDatabricksGrant                        string = "databricks.grant"
+	ResourceDatabricksStorageCredential            string = "databricks.storageCredential"
+	ResourceDatabricksExternalLocation             string = "databricks.externalLocation"
+	ResourceDatabricksVolume                       string = "databricks.volume"
+	ResourceDatabricksServingEndpoint              string = "databricks.servingEndpoint"
+	ResourceDatabricksServingEndpointServedEntity  string = "databricks.servingEndpoint.servedEntity"
+	ResourceDatabricksServingEndpointGatewayConfig string = "databricks.servingEndpoint.gatewayConfig"
+	ResourceDatabricksRegisteredModel              string = "databricks.registeredModel"
+	ResourceDatabricksModelVersion                 string = "databricks.modelVersion"
+	ResourceDatabricksDeltaSharingRecipient        string = "databricks.deltaSharingRecipient"
+	ResourceDatabricksDeltaSharingShare            string = "databricks.deltaSharingShare"
+	ResourceDatabricksGlobalInitScript             string = "databricks.globalInitScript"
+	ResourceDatabricksInstanceProfile              string = "databricks.instanceProfile"
+	ResourceDatabricksCustomerManagedKey           string = "databricks.customerManagedKey"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -131,6 +136,26 @@ func init() {
 		"databricks.volume": {
 			// to override args, implement: initDatabricksVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDatabricksVolume,
+		},
+		"databricks.servingEndpoint": {
+			// to override args, implement: initDatabricksServingEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDatabricksServingEndpoint,
+		},
+		"databricks.servingEndpoint.servedEntity": {
+			// to override args, implement: initDatabricksServingEndpointServedEntity(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDatabricksServingEndpointServedEntity,
+		},
+		"databricks.servingEndpoint.gatewayConfig": {
+			// to override args, implement: initDatabricksServingEndpointGatewayConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDatabricksServingEndpointGatewayConfig,
+		},
+		"databricks.registeredModel": {
+			// to override args, implement: initDatabricksRegisteredModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDatabricksRegisteredModel,
+		},
+		"databricks.modelVersion": {
+			// to override args, implement: initDatabricksModelVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDatabricksModelVersion,
 		},
 		"databricks.deltaSharingRecipient": {
 			// to override args, implement: initDatabricksDeltaSharingRecipient(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -285,6 +310,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"databricks.instanceProfiles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricks).GetInstanceProfiles()).ToDataRes(types.Array(types.Resource("databricks.instanceProfile")))
+	},
+	"databricks.servingEndpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricks).GetServingEndpoints()).ToDataRes(types.Array(types.Resource("databricks.servingEndpoint")))
+	},
+	"databricks.registeredModels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricks).GetRegisteredModels()).ToDataRes(types.Array(types.Resource("databricks.registeredModel")))
 	},
 	"databricks.customerManagedKeys": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricks).GetCustomerManagedKeys()).ToDataRes(types.Array(types.Resource("databricks.customerManagedKey")))
@@ -880,6 +911,177 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"databricks.volume.grants": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksVolume).GetGrants()).ToDataRes(types.Array(types.Resource("databricks.grant")))
 	},
+	"databricks.servingEndpoint.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksServingEndpoint).GetName()).ToDataRes(types.String)
+	},
+	"databricks.servingEndpoint.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksServingEndpoint).GetId()).ToDataRes(types.String)
+	},
+	"databricks.servingEndpoint.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksServingEndpoint).GetState()).ToDataRes(types.String)
+	},
+	"databricks.servingEndpoint.configUpdate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksServingEndpoint).GetConfigUpdate()).ToDataRes(types.String)
+	},
+	"databricks.servingEndpoint.creator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksServingEndpoint).GetCreator()).ToDataRes(types.String)
+	},
+	"databricks.servingEndpoint.task": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksServingEndpoint).GetTask()).ToDataRes(types.String)
+	},
+	"databricks.servingEndpoint.routeOptimized": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksServingEndpoint).GetRouteOptimized()).ToDataRes(types.Bool)
+	},
+	"databricks.servingEndpoint.budgetPolicyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksServingEndpoint).GetBudgetPolicyId()).ToDataRes(types.String)
+	},
+	"databricks.servingEndpoint.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksServingEndpoint).GetDescription()).ToDataRes(types.String)
+	},
+	"databricks.servingEndpoint.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksServingEndpoint).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"databricks.servingEndpoint.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksServingEndpoint).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"databricks.servingEndpoint.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksServingEndpoint).GetTags()).ToDataRes(types.Array(types.Dict))
+	},
+	"databricks.servingEndpoint.servedEntities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksServingEndpoint).GetServedEntities()).ToDataRes(types.Array(types.Resource("databricks.servingEndpoint.servedEntity")))
+	},
+	"databricks.servingEndpoint.aiGateway": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksServingEndpoint).GetAiGateway()).ToDataRes(types.Resource("databricks.servingEndpoint.gatewayConfig"))
+	},
+	"databricks.servingEndpoint.servedEntity.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksServingEndpointServedEntity).GetName()).ToDataRes(types.String)
+	},
+	"databricks.servingEndpoint.servedEntity.entityName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksServingEndpointServedEntity).GetEntityName()).ToDataRes(types.String)
+	},
+	"databricks.servingEndpoint.servedEntity.entityVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksServingEndpointServedEntity).GetEntityVersion()).ToDataRes(types.String)
+	},
+	"databricks.servingEndpoint.servedEntity.foundationModelName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksServingEndpointServedEntity).GetFoundationModelName()).ToDataRes(types.String)
+	},
+	"databricks.servingEndpoint.servedEntity.externalModelProvider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksServingEndpointServedEntity).GetExternalModelProvider()).ToDataRes(types.String)
+	},
+	"databricks.servingEndpoint.servedEntity.externalModelName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksServingEndpointServedEntity).GetExternalModelName()).ToDataRes(types.String)
+	},
+	"databricks.servingEndpoint.servedEntity.externalModelTask": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksServingEndpointServedEntity).GetExternalModelTask()).ToDataRes(types.String)
+	},
+	"databricks.servingEndpoint.gatewayConfig.usageTrackingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksServingEndpointGatewayConfig).GetUsageTrackingEnabled()).ToDataRes(types.Bool)
+	},
+	"databricks.servingEndpoint.gatewayConfig.inferenceTableEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksServingEndpointGatewayConfig).GetInferenceTableEnabled()).ToDataRes(types.Bool)
+	},
+	"databricks.servingEndpoint.gatewayConfig.inferenceTableCatalog": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksServingEndpointGatewayConfig).GetInferenceTableCatalog()).ToDataRes(types.String)
+	},
+	"databricks.servingEndpoint.gatewayConfig.inferenceTableSchema": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksServingEndpointGatewayConfig).GetInferenceTableSchema()).ToDataRes(types.String)
+	},
+	"databricks.servingEndpoint.gatewayConfig.inferenceTableTablePrefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksServingEndpointGatewayConfig).GetInferenceTableTablePrefix()).ToDataRes(types.String)
+	},
+	"databricks.servingEndpoint.gatewayConfig.guardrails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksServingEndpointGatewayConfig).GetGuardrails()).ToDataRes(types.Dict)
+	},
+	"databricks.servingEndpoint.gatewayConfig.rateLimits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksServingEndpointGatewayConfig).GetRateLimits()).ToDataRes(types.Array(types.Dict))
+	},
+	"databricks.servingEndpoint.gatewayConfig.fallbackEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksServingEndpointGatewayConfig).GetFallbackEnabled()).ToDataRes(types.Bool)
+	},
+	"databricks.registeredModel.fullName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksRegisteredModel).GetFullName()).ToDataRes(types.String)
+	},
+	"databricks.registeredModel.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksRegisteredModel).GetName()).ToDataRes(types.String)
+	},
+	"databricks.registeredModel.catalogName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksRegisteredModel).GetCatalogName()).ToDataRes(types.String)
+	},
+	"databricks.registeredModel.schemaName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksRegisteredModel).GetSchemaName()).ToDataRes(types.String)
+	},
+	"databricks.registeredModel.catalog": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksRegisteredModel).GetCatalog()).ToDataRes(types.Resource("databricks.catalog"))
+	},
+	"databricks.registeredModel.schema": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksRegisteredModel).GetSchema()).ToDataRes(types.Resource("databricks.schema"))
+	},
+	"databricks.registeredModel.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksRegisteredModel).GetOwner()).ToDataRes(types.String)
+	},
+	"databricks.registeredModel.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksRegisteredModel).GetComment()).ToDataRes(types.String)
+	},
+	"databricks.registeredModel.storageLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksRegisteredModel).GetStorageLocation()).ToDataRes(types.String)
+	},
+	"databricks.registeredModel.browseOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksRegisteredModel).GetBrowseOnly()).ToDataRes(types.Bool)
+	},
+	"databricks.registeredModel.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksRegisteredModel).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"databricks.registeredModel.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksRegisteredModel).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"databricks.registeredModel.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksRegisteredModel).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"databricks.registeredModel.updatedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksRegisteredModel).GetUpdatedBy()).ToDataRes(types.String)
+	},
+	"databricks.registeredModel.aliases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksRegisteredModel).GetAliases()).ToDataRes(types.Array(types.Dict))
+	},
+	"databricks.registeredModel.grants": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksRegisteredModel).GetGrants()).ToDataRes(types.Array(types.Resource("databricks.grant")))
+	},
+	"databricks.registeredModel.modelVersions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksRegisteredModel).GetModelVersions()).ToDataRes(types.Array(types.Resource("databricks.modelVersion")))
+	},
+	"databricks.modelVersion.modelName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksModelVersion).GetModelName()).ToDataRes(types.String)
+	},
+	"databricks.modelVersion.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksModelVersion).GetVersion()).ToDataRes(types.Int)
+	},
+	"databricks.modelVersion.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksModelVersion).GetStatus()).ToDataRes(types.String)
+	},
+	"databricks.modelVersion.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksModelVersion).GetSource()).ToDataRes(types.String)
+	},
+	"databricks.modelVersion.runId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksModelVersion).GetRunId()).ToDataRes(types.String)
+	},
+	"databricks.modelVersion.storageLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksModelVersion).GetStorageLocation()).ToDataRes(types.String)
+	},
+	"databricks.modelVersion.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksModelVersion).GetComment()).ToDataRes(types.String)
+	},
+	"databricks.modelVersion.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksModelVersion).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"databricks.modelVersion.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksModelVersion).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"databricks.modelVersion.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksModelVersion).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"databricks.modelVersion.aliases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksModelVersion).GetAliases()).ToDataRes(types.Array(types.Dict))
+	},
 	"databricks.deltaSharingRecipient.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksDeltaSharingRecipient).GetName()).ToDataRes(types.String)
 	},
@@ -1092,6 +1294,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"databricks.instanceProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatabricks).InstanceProfiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.servingEndpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricks).ServingEndpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.registeredModels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricks).RegisteredModels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"databricks.customerManagedKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1966,6 +2176,254 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDatabricksVolume).Grants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"databricks.servingEndpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpoint).__id, ok = v.Value.(string)
+		return
+	},
+	"databricks.servingEndpoint.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpoint).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.servingEndpoint.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpoint).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.servingEndpoint.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpoint).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.servingEndpoint.configUpdate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpoint).ConfigUpdate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.servingEndpoint.creator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpoint).Creator, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.servingEndpoint.task": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpoint).Task, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.servingEndpoint.routeOptimized": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpoint).RouteOptimized, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"databricks.servingEndpoint.budgetPolicyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpoint).BudgetPolicyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.servingEndpoint.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpoint).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.servingEndpoint.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpoint).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"databricks.servingEndpoint.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpoint).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"databricks.servingEndpoint.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpoint).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.servingEndpoint.servedEntities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpoint).ServedEntities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.servingEndpoint.aiGateway": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpoint).AiGateway, ok = plugin.RawToTValue[*mqlDatabricksServingEndpointGatewayConfig](v.Value, v.Error)
+		return
+	},
+	"databricks.servingEndpoint.servedEntity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpointServedEntity).__id, ok = v.Value.(string)
+		return
+	},
+	"databricks.servingEndpoint.servedEntity.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpointServedEntity).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.servingEndpoint.servedEntity.entityName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpointServedEntity).EntityName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.servingEndpoint.servedEntity.entityVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpointServedEntity).EntityVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.servingEndpoint.servedEntity.foundationModelName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpointServedEntity).FoundationModelName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.servingEndpoint.servedEntity.externalModelProvider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpointServedEntity).ExternalModelProvider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.servingEndpoint.servedEntity.externalModelName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpointServedEntity).ExternalModelName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.servingEndpoint.servedEntity.externalModelTask": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpointServedEntity).ExternalModelTask, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.servingEndpoint.gatewayConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpointGatewayConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"databricks.servingEndpoint.gatewayConfig.usageTrackingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpointGatewayConfig).UsageTrackingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"databricks.servingEndpoint.gatewayConfig.inferenceTableEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpointGatewayConfig).InferenceTableEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"databricks.servingEndpoint.gatewayConfig.inferenceTableCatalog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpointGatewayConfig).InferenceTableCatalog, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.servingEndpoint.gatewayConfig.inferenceTableSchema": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpointGatewayConfig).InferenceTableSchema, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.servingEndpoint.gatewayConfig.inferenceTableTablePrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpointGatewayConfig).InferenceTableTablePrefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.servingEndpoint.gatewayConfig.guardrails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpointGatewayConfig).Guardrails, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"databricks.servingEndpoint.gatewayConfig.rateLimits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpointGatewayConfig).RateLimits, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.servingEndpoint.gatewayConfig.fallbackEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServingEndpointGatewayConfig).FallbackEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"databricks.registeredModel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksRegisteredModel).__id, ok = v.Value.(string)
+		return
+	},
+	"databricks.registeredModel.fullName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksRegisteredModel).FullName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.registeredModel.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksRegisteredModel).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.registeredModel.catalogName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksRegisteredModel).CatalogName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.registeredModel.schemaName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksRegisteredModel).SchemaName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.registeredModel.catalog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksRegisteredModel).Catalog, ok = plugin.RawToTValue[*mqlDatabricksCatalog](v.Value, v.Error)
+		return
+	},
+	"databricks.registeredModel.schema": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksRegisteredModel).Schema, ok = plugin.RawToTValue[*mqlDatabricksSchema](v.Value, v.Error)
+		return
+	},
+	"databricks.registeredModel.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksRegisteredModel).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.registeredModel.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksRegisteredModel).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.registeredModel.storageLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksRegisteredModel).StorageLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.registeredModel.browseOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksRegisteredModel).BrowseOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"databricks.registeredModel.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksRegisteredModel).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"databricks.registeredModel.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksRegisteredModel).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.registeredModel.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksRegisteredModel).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"databricks.registeredModel.updatedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksRegisteredModel).UpdatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.registeredModel.aliases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksRegisteredModel).Aliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.registeredModel.grants": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksRegisteredModel).Grants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.registeredModel.modelVersions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksRegisteredModel).ModelVersions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.modelVersion.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksModelVersion).__id, ok = v.Value.(string)
+		return
+	},
+	"databricks.modelVersion.modelName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksModelVersion).ModelName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.modelVersion.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksModelVersion).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"databricks.modelVersion.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksModelVersion).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.modelVersion.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksModelVersion).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.modelVersion.runId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksModelVersion).RunId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.modelVersion.storageLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksModelVersion).StorageLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.modelVersion.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksModelVersion).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.modelVersion.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksModelVersion).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"databricks.modelVersion.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksModelVersion).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.modelVersion.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksModelVersion).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"databricks.modelVersion.aliases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksModelVersion).Aliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"databricks.deltaSharingRecipient.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatabricksDeltaSharingRecipient).__id, ok = v.Value.(string)
 		return
@@ -2188,6 +2646,8 @@ type mqlDatabricks struct {
 	DeltaSharingShares     plugin.TValue[[]any]
 	GlobalInitScripts      plugin.TValue[[]any]
 	InstanceProfiles       plugin.TValue[[]any]
+	ServingEndpoints       plugin.TValue[[]any]
+	RegisteredModels       plugin.TValue[[]any]
 	CustomerManagedKeys    plugin.TValue[[]any]
 }
 
@@ -2561,6 +3021,38 @@ func (c *mqlDatabricks) GetInstanceProfiles() *plugin.TValue[[]any] {
 		}
 
 		return c.instanceProfiles()
+	})
+}
+
+func (c *mqlDatabricks) GetServingEndpoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ServingEndpoints, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks", c.__id, "servingEndpoints")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.servingEndpoints()
+	})
+}
+
+func (c *mqlDatabricks) GetRegisteredModels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RegisteredModels, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks", c.__id, "registeredModels")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.registeredModels()
 	})
 }
 
@@ -4573,6 +5065,560 @@ func (c *mqlDatabricksVolume) GetGrants() *plugin.TValue[[]any] {
 
 		return c.grants()
 	})
+}
+
+// mqlDatabricksServingEndpoint for the databricks.servingEndpoint resource
+type mqlDatabricksServingEndpoint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlDatabricksServingEndpointInternal
+	Name           plugin.TValue[string]
+	Id             plugin.TValue[string]
+	State          plugin.TValue[string]
+	ConfigUpdate   plugin.TValue[string]
+	Creator        plugin.TValue[string]
+	Task           plugin.TValue[string]
+	RouteOptimized plugin.TValue[bool]
+	BudgetPolicyId plugin.TValue[string]
+	Description    plugin.TValue[string]
+	CreatedAt      plugin.TValue[*time.Time]
+	UpdatedAt      plugin.TValue[*time.Time]
+	Tags           plugin.TValue[[]any]
+	ServedEntities plugin.TValue[[]any]
+	AiGateway      plugin.TValue[*mqlDatabricksServingEndpointGatewayConfig]
+}
+
+// createDatabricksServingEndpoint creates a new instance of this resource
+func createDatabricksServingEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDatabricksServingEndpoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("databricks.servingEndpoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDatabricksServingEndpoint) MqlName() string {
+	return "databricks.servingEndpoint"
+}
+
+func (c *mqlDatabricksServingEndpoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDatabricksServingEndpoint) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDatabricksServingEndpoint) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDatabricksServingEndpoint) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlDatabricksServingEndpoint) GetConfigUpdate() *plugin.TValue[string] {
+	return &c.ConfigUpdate
+}
+
+func (c *mqlDatabricksServingEndpoint) GetCreator() *plugin.TValue[string] {
+	return &c.Creator
+}
+
+func (c *mqlDatabricksServingEndpoint) GetTask() *plugin.TValue[string] {
+	return &c.Task
+}
+
+func (c *mqlDatabricksServingEndpoint) GetRouteOptimized() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RouteOptimized, func() (bool, error) {
+		return c.routeOptimized()
+	})
+}
+
+func (c *mqlDatabricksServingEndpoint) GetBudgetPolicyId() *plugin.TValue[string] {
+	return &c.BudgetPolicyId
+}
+
+func (c *mqlDatabricksServingEndpoint) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlDatabricksServingEndpoint) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDatabricksServingEndpoint) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlDatabricksServingEndpoint) GetTags() *plugin.TValue[[]any] {
+	return &c.Tags
+}
+
+func (c *mqlDatabricksServingEndpoint) GetServedEntities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ServedEntities, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks.servingEndpoint", c.__id, "servedEntities")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.servedEntities()
+	})
+}
+
+func (c *mqlDatabricksServingEndpoint) GetAiGateway() *plugin.TValue[*mqlDatabricksServingEndpointGatewayConfig] {
+	return plugin.GetOrCompute[*mqlDatabricksServingEndpointGatewayConfig](&c.AiGateway, func() (*mqlDatabricksServingEndpointGatewayConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks.servingEndpoint", c.__id, "aiGateway")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDatabricksServingEndpointGatewayConfig), nil
+			}
+		}
+
+		return c.aiGateway()
+	})
+}
+
+// mqlDatabricksServingEndpointServedEntity for the databricks.servingEndpoint.servedEntity resource
+type mqlDatabricksServingEndpointServedEntity struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDatabricksServingEndpointServedEntityInternal it will be used here
+	Name                  plugin.TValue[string]
+	EntityName            plugin.TValue[string]
+	EntityVersion         plugin.TValue[string]
+	FoundationModelName   plugin.TValue[string]
+	ExternalModelProvider plugin.TValue[string]
+	ExternalModelName     plugin.TValue[string]
+	ExternalModelTask     plugin.TValue[string]
+}
+
+// createDatabricksServingEndpointServedEntity creates a new instance of this resource
+func createDatabricksServingEndpointServedEntity(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDatabricksServingEndpointServedEntity{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("databricks.servingEndpoint.servedEntity", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDatabricksServingEndpointServedEntity) MqlName() string {
+	return "databricks.servingEndpoint.servedEntity"
+}
+
+func (c *mqlDatabricksServingEndpointServedEntity) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDatabricksServingEndpointServedEntity) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDatabricksServingEndpointServedEntity) GetEntityName() *plugin.TValue[string] {
+	return &c.EntityName
+}
+
+func (c *mqlDatabricksServingEndpointServedEntity) GetEntityVersion() *plugin.TValue[string] {
+	return &c.EntityVersion
+}
+
+func (c *mqlDatabricksServingEndpointServedEntity) GetFoundationModelName() *plugin.TValue[string] {
+	return &c.FoundationModelName
+}
+
+func (c *mqlDatabricksServingEndpointServedEntity) GetExternalModelProvider() *plugin.TValue[string] {
+	return &c.ExternalModelProvider
+}
+
+func (c *mqlDatabricksServingEndpointServedEntity) GetExternalModelName() *plugin.TValue[string] {
+	return &c.ExternalModelName
+}
+
+func (c *mqlDatabricksServingEndpointServedEntity) GetExternalModelTask() *plugin.TValue[string] {
+	return &c.ExternalModelTask
+}
+
+// mqlDatabricksServingEndpointGatewayConfig for the databricks.servingEndpoint.gatewayConfig resource
+type mqlDatabricksServingEndpointGatewayConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDatabricksServingEndpointGatewayConfigInternal it will be used here
+	UsageTrackingEnabled      plugin.TValue[bool]
+	InferenceTableEnabled     plugin.TValue[bool]
+	InferenceTableCatalog     plugin.TValue[string]
+	InferenceTableSchema      plugin.TValue[string]
+	InferenceTableTablePrefix plugin.TValue[string]
+	Guardrails                plugin.TValue[any]
+	RateLimits                plugin.TValue[[]any]
+	FallbackEnabled           plugin.TValue[bool]
+}
+
+// createDatabricksServingEndpointGatewayConfig creates a new instance of this resource
+func createDatabricksServingEndpointGatewayConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDatabricksServingEndpointGatewayConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("databricks.servingEndpoint.gatewayConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDatabricksServingEndpointGatewayConfig) MqlName() string {
+	return "databricks.servingEndpoint.gatewayConfig"
+}
+
+func (c *mqlDatabricksServingEndpointGatewayConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDatabricksServingEndpointGatewayConfig) GetUsageTrackingEnabled() *plugin.TValue[bool] {
+	return &c.UsageTrackingEnabled
+}
+
+func (c *mqlDatabricksServingEndpointGatewayConfig) GetInferenceTableEnabled() *plugin.TValue[bool] {
+	return &c.InferenceTableEnabled
+}
+
+func (c *mqlDatabricksServingEndpointGatewayConfig) GetInferenceTableCatalog() *plugin.TValue[string] {
+	return &c.InferenceTableCatalog
+}
+
+func (c *mqlDatabricksServingEndpointGatewayConfig) GetInferenceTableSchema() *plugin.TValue[string] {
+	return &c.InferenceTableSchema
+}
+
+func (c *mqlDatabricksServingEndpointGatewayConfig) GetInferenceTableTablePrefix() *plugin.TValue[string] {
+	return &c.InferenceTableTablePrefix
+}
+
+func (c *mqlDatabricksServingEndpointGatewayConfig) GetGuardrails() *plugin.TValue[any] {
+	return &c.Guardrails
+}
+
+func (c *mqlDatabricksServingEndpointGatewayConfig) GetRateLimits() *plugin.TValue[[]any] {
+	return &c.RateLimits
+}
+
+func (c *mqlDatabricksServingEndpointGatewayConfig) GetFallbackEnabled() *plugin.TValue[bool] {
+	return &c.FallbackEnabled
+}
+
+// mqlDatabricksRegisteredModel for the databricks.registeredModel resource
+type mqlDatabricksRegisteredModel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDatabricksRegisteredModelInternal it will be used here
+	FullName        plugin.TValue[string]
+	Name            plugin.TValue[string]
+	CatalogName     plugin.TValue[string]
+	SchemaName      plugin.TValue[string]
+	Catalog         plugin.TValue[*mqlDatabricksCatalog]
+	Schema          plugin.TValue[*mqlDatabricksSchema]
+	Owner           plugin.TValue[string]
+	Comment         plugin.TValue[string]
+	StorageLocation plugin.TValue[string]
+	BrowseOnly      plugin.TValue[bool]
+	CreatedAt       plugin.TValue[*time.Time]
+	CreatedBy       plugin.TValue[string]
+	UpdatedAt       plugin.TValue[*time.Time]
+	UpdatedBy       plugin.TValue[string]
+	Aliases         plugin.TValue[[]any]
+	Grants          plugin.TValue[[]any]
+	ModelVersions   plugin.TValue[[]any]
+}
+
+// createDatabricksRegisteredModel creates a new instance of this resource
+func createDatabricksRegisteredModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDatabricksRegisteredModel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("databricks.registeredModel", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDatabricksRegisteredModel) MqlName() string {
+	return "databricks.registeredModel"
+}
+
+func (c *mqlDatabricksRegisteredModel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDatabricksRegisteredModel) GetFullName() *plugin.TValue[string] {
+	return &c.FullName
+}
+
+func (c *mqlDatabricksRegisteredModel) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDatabricksRegisteredModel) GetCatalogName() *plugin.TValue[string] {
+	return &c.CatalogName
+}
+
+func (c *mqlDatabricksRegisteredModel) GetSchemaName() *plugin.TValue[string] {
+	return &c.SchemaName
+}
+
+func (c *mqlDatabricksRegisteredModel) GetCatalog() *plugin.TValue[*mqlDatabricksCatalog] {
+	return plugin.GetOrCompute[*mqlDatabricksCatalog](&c.Catalog, func() (*mqlDatabricksCatalog, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks.registeredModel", c.__id, "catalog")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDatabricksCatalog), nil
+			}
+		}
+
+		return c.catalog()
+	})
+}
+
+func (c *mqlDatabricksRegisteredModel) GetSchema() *plugin.TValue[*mqlDatabricksSchema] {
+	return plugin.GetOrCompute[*mqlDatabricksSchema](&c.Schema, func() (*mqlDatabricksSchema, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks.registeredModel", c.__id, "schema")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDatabricksSchema), nil
+			}
+		}
+
+		return c.schema()
+	})
+}
+
+func (c *mqlDatabricksRegisteredModel) GetOwner() *plugin.TValue[string] {
+	return &c.Owner
+}
+
+func (c *mqlDatabricksRegisteredModel) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlDatabricksRegisteredModel) GetStorageLocation() *plugin.TValue[string] {
+	return &c.StorageLocation
+}
+
+func (c *mqlDatabricksRegisteredModel) GetBrowseOnly() *plugin.TValue[bool] {
+	return &c.BrowseOnly
+}
+
+func (c *mqlDatabricksRegisteredModel) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDatabricksRegisteredModel) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlDatabricksRegisteredModel) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlDatabricksRegisteredModel) GetUpdatedBy() *plugin.TValue[string] {
+	return &c.UpdatedBy
+}
+
+func (c *mqlDatabricksRegisteredModel) GetAliases() *plugin.TValue[[]any] {
+	return &c.Aliases
+}
+
+func (c *mqlDatabricksRegisteredModel) GetGrants() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Grants, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks.registeredModel", c.__id, "grants")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.grants()
+	})
+}
+
+func (c *mqlDatabricksRegisteredModel) GetModelVersions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ModelVersions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks.registeredModel", c.__id, "modelVersions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.modelVersions()
+	})
+}
+
+// mqlDatabricksModelVersion for the databricks.modelVersion resource
+type mqlDatabricksModelVersion struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDatabricksModelVersionInternal it will be used here
+	ModelName       plugin.TValue[string]
+	Version         plugin.TValue[int64]
+	Status          plugin.TValue[string]
+	Source          plugin.TValue[string]
+	RunId           plugin.TValue[string]
+	StorageLocation plugin.TValue[string]
+	Comment         plugin.TValue[string]
+	CreatedAt       plugin.TValue[*time.Time]
+	CreatedBy       plugin.TValue[string]
+	UpdatedAt       plugin.TValue[*time.Time]
+	Aliases         plugin.TValue[[]any]
+}
+
+// createDatabricksModelVersion creates a new instance of this resource
+func createDatabricksModelVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDatabricksModelVersion{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("databricks.modelVersion", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDatabricksModelVersion) MqlName() string {
+	return "databricks.modelVersion"
+}
+
+func (c *mqlDatabricksModelVersion) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDatabricksModelVersion) GetModelName() *plugin.TValue[string] {
+	return &c.ModelName
+}
+
+func (c *mqlDatabricksModelVersion) GetVersion() *plugin.TValue[int64] {
+	return &c.Version
+}
+
+func (c *mqlDatabricksModelVersion) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlDatabricksModelVersion) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlDatabricksModelVersion) GetRunId() *plugin.TValue[string] {
+	return &c.RunId
+}
+
+func (c *mqlDatabricksModelVersion) GetStorageLocation() *plugin.TValue[string] {
+	return &c.StorageLocation
+}
+
+func (c *mqlDatabricksModelVersion) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlDatabricksModelVersion) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDatabricksModelVersion) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlDatabricksModelVersion) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlDatabricksModelVersion) GetAliases() *plugin.TValue[[]any] {
+	return &c.Aliases
 }
 
 // mqlDatabricksDeltaSharingRecipient for the databricks.deltaSharingRecipient resource
