@@ -13,6 +13,7 @@ import (
 	tea "github.com/alibabacloud-go/tea/tea"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/alicloud/connection"
 )
 
@@ -36,6 +37,10 @@ func (r *mqlAlicloudRds) id() (string, error) {
 type mqlAlicloudRdsInstanceInternal struct {
 	region     string
 	instanceId string
+
+	cacheRegion    string
+	cacheVpcID     string
+	cacheVswitchID string
 
 	attrLock sync.Mutex
 	attrDone bool
@@ -99,8 +104,6 @@ func (r *mqlAlicloudRds) instances() ([]any, error) {
 					"connectionString":      llx.StringDataPtr(inst.ConnectionString),
 					"regionId":              llx.StringDataPtr(inst.RegionId),
 					"zoneId":                llx.StringDataPtr(inst.ZoneId),
-					"vpcId":                 llx.StringDataPtr(inst.VpcId),
-					"vSwitchId":             llx.StringDataPtr(inst.VSwitchId),
 					"instanceNetworkType":   llx.StringDataPtr(inst.InstanceNetworkType),
 					"payType":               llx.StringDataPtr(inst.PayType),
 					"createTime":            llx.TimeDataPtr(rdsParseTime(inst.CreateTime)),
@@ -119,6 +122,9 @@ func (r *mqlAlicloudRds) instances() ([]any, error) {
 				mqlInst := resource.(*mqlAlicloudRdsInstance)
 				mqlInst.region = region
 				mqlInst.instanceId = tea.StringValue(inst.DBInstanceId)
+				mqlInst.cacheRegion = region
+				mqlInst.cacheVpcID = tea.StringValue(inst.VpcId)
+				mqlInst.cacheVswitchID = tea.StringValue(inst.VSwitchId)
 				res = append(res, mqlInst)
 			}
 
@@ -296,6 +302,22 @@ func (r *mqlAlicloudRdsInstance) securityIPList() ([]any, error) {
 		}
 	}
 	return res, nil
+}
+
+func (r *mqlAlicloudRdsInstance) vpc() (*mqlAlicloudVpcNetwork, error) {
+	if r.cacheVpcID == "" {
+		r.Vpc.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return resolveVpcNetwork(r.MqlRuntime, r.cacheRegion, r.cacheVpcID)
+}
+
+func (r *mqlAlicloudRdsInstance) vswitch() (*mqlAlicloudVpcVswitch, error) {
+	if r.cacheVswitchID == "" {
+		r.Vswitch.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return resolveVpcVswitch(r.MqlRuntime, r.cacheRegion, r.cacheVswitchID)
 }
 
 func (r *mqlAlicloudRdsInstance) securityGroupIds() ([]any, error) {

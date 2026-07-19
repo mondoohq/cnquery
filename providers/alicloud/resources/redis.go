@@ -11,6 +11,7 @@ import (
 	tea "github.com/alibabacloud-go/tea/tea"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/alicloud/connection"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -50,9 +51,13 @@ func (r *mqlAlicloudRedis) id() (string, error) {
 
 // mqlAlicloudRedisInstanceInternal caches the region an instance was
 // discovered in so the security-posture accessors can build a region-scoped
-// client for the per-instance detail calls.
+// client for the per-instance detail calls, and the native VPC/vSwitch ids so
+// the typed accessors can resolve them.
 type mqlAlicloudRedisInstanceInternal struct {
-	region string
+	region         string
+	cacheRegion    string
+	cacheVpcID     string
+	cacheVswitchID string
 }
 
 func (r *mqlAlicloudRedis) instances() ([]any, error) {
@@ -104,8 +109,6 @@ func (r *mqlAlicloudRedis) instances() ([]any, error) {
 					"regionId":         llx.StringDataPtr(inst.RegionId),
 					"zoneId":           llx.StringDataPtr(inst.ZoneId),
 					"secondaryZoneId":  llx.StringDataPtr(inst.SecondaryZoneId),
-					"vpcId":            llx.StringDataPtr(inst.VpcId),
-					"vSwitchId":        llx.StringDataPtr(inst.VSwitchId),
 					"networkType":      llx.StringDataPtr(inst.NetworkType),
 					"connectionDomain": llx.StringDataPtr(inst.ConnectionDomain),
 					"port":             llx.IntDataPtr(inst.Port),
@@ -126,7 +129,11 @@ func (r *mqlAlicloudRedis) instances() ([]any, error) {
 				if err != nil {
 					return nil, err
 				}
-				mqlInst.(*mqlAlicloudRedisInstance).region = region
+				resInst := mqlInst.(*mqlAlicloudRedisInstance)
+				resInst.region = region
+				resInst.cacheRegion = region
+				resInst.cacheVpcID = tea.StringValue(inst.VpcId)
+				resInst.cacheVswitchID = tea.StringValue(inst.VSwitchId)
 				res = append(res, mqlInst)
 			}
 
@@ -142,6 +149,22 @@ func (r *mqlAlicloudRedis) instances() ([]any, error) {
 
 func (r *mqlAlicloudRedisInstance) id() (string, error) {
 	return r.InstanceId.Data, nil
+}
+
+func (r *mqlAlicloudRedisInstance) vpc() (*mqlAlicloudVpcNetwork, error) {
+	if r.cacheVpcID == "" {
+		r.Vpc.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return resolveVpcNetwork(r.MqlRuntime, r.cacheRegion, r.cacheVpcID)
+}
+
+func (r *mqlAlicloudRedisInstance) vswitch() (*mqlAlicloudVpcVswitch, error) {
+	if r.cacheVswitchID == "" {
+		r.Vswitch.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return resolveVpcVswitch(r.MqlRuntime, r.cacheRegion, r.cacheVswitchID)
 }
 
 // redisClient returns a region-scoped Redis client together with this

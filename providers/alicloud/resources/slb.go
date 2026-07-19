@@ -12,6 +12,7 @@ import (
 	tea "github.com/alibabacloud-go/tea/tea"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/alicloud/connection"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -78,7 +79,10 @@ func (r *mqlAlicloudSlb) id() (string, error) {
 }
 
 type mqlAlicloudSlbLoadBalancerInternal struct {
-	region string
+	region         string
+	cacheRegion    string
+	cacheVpcID     string
+	cacheVswitchID string
 }
 
 func (r *mqlAlicloudSlb) loadBalancers() ([]any, error) {
@@ -130,8 +134,6 @@ func (r *mqlAlicloudSlb) loadBalancers() ([]any, error) {
 					"masterZoneId":                 llx.StringDataPtr(lb.MasterZoneId),
 					"slaveZoneId":                  llx.StringDataPtr(lb.SlaveZoneId),
 					"networkType":                  llx.StringDataPtr(lb.NetworkType),
-					"vpcId":                        llx.StringDataPtr(lb.VpcId),
-					"vswitchId":                    llx.StringDataPtr(lb.VSwitchId),
 					"internetChargeType":           llx.StringDataPtr(lb.InternetChargeType),
 					"instanceChargeType":           llx.StringDataPtr(lb.InstanceChargeType),
 					"loadBalancerSpec":             llx.StringDataPtr(lb.LoadBalancerSpec),
@@ -150,6 +152,9 @@ func (r *mqlAlicloudSlb) loadBalancers() ([]any, error) {
 
 				mqlLb := resource.(*mqlAlicloudSlbLoadBalancer)
 				mqlLb.region = region
+				mqlLb.cacheRegion = region
+				mqlLb.cacheVpcID = tea.StringValue(lb.VpcId)
+				mqlLb.cacheVswitchID = tea.StringValue(lb.VSwitchId)
 				res = append(res, mqlLb)
 			}
 
@@ -164,6 +169,22 @@ func (r *mqlAlicloudSlb) loadBalancers() ([]any, error) {
 
 func (r *mqlAlicloudSlbLoadBalancer) id() (string, error) {
 	return r.LoadBalancerId.Data, nil
+}
+
+func (r *mqlAlicloudSlbLoadBalancer) vpc() (*mqlAlicloudVpcNetwork, error) {
+	if r.cacheVpcID == "" {
+		r.Vpc.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return resolveVpcNetwork(r.MqlRuntime, r.cacheRegion, r.cacheVpcID)
+}
+
+func (r *mqlAlicloudSlbLoadBalancer) vswitch() (*mqlAlicloudVpcVswitch, error) {
+	if r.cacheVswitchID == "" {
+		r.Vswitch.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return resolveVpcVswitch(r.MqlRuntime, r.cacheRegion, r.cacheVswitchID)
 }
 
 func (r *mqlAlicloudSlbLoadBalancer) listeners() ([]any, error) {

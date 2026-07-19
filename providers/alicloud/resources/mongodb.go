@@ -11,6 +11,7 @@ import (
 	ddsclient "github.com/alibabacloud-go/dds-20151201/v9/client"
 	tea "github.com/alibabacloud-go/tea/tea"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/alicloud/connection"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -129,6 +130,7 @@ func (r *mqlAlicloudMongodb) instances() ([]any, error) {
 				}
 				m := mqlInst.(*mqlAlicloudMongodbInstance)
 				m.region = region
+				m.cacheRegion = region
 				m.instanceId = id
 				res = append(res, mqlInst)
 			}
@@ -151,9 +153,13 @@ type mqlAlicloudMongodbInstanceInternal struct {
 	region     string
 	instanceId string
 
-	attrOnce sync.Once
-	attr     *ddsclient.DescribeDBInstanceAttributeResponseBodyDBInstancesDBInstance
-	attrErr  error
+	cacheRegion    string
+	cacheVpcID     string
+	cacheVswitchID string
+
+	attrLock    sync.Mutex
+	attrFetched bool
+	attr        *ddsclient.DescribeDBInstanceAttributeResponseBodyDBInstancesDBInstance
 
 	sslOnce sync.Once
 	sslBody *ddsclient.DescribeDBInstanceSSLResponseBody
@@ -164,44 +170,60 @@ func (r *mqlAlicloudMongodbInstance) id() (string, error) {
 	return r.DbInstanceId.Data, nil
 }
 
-// attribute lazily fetches and caches the DescribeDBInstanceAttribute detail.
+// attribute lazily fetches and caches the DescribeDBInstanceAttribute detail. It
+// backs several attribute-derived accessors, so it batches into a single API
+// call. A transient error is not cached: attrFetched is only set on success, so
+// a later access retries the call.
 func (r *mqlAlicloudMongodbInstance) attribute() (*ddsclient.DescribeDBInstanceAttributeResponseBodyDBInstancesDBInstance, error) {
-	r.attrOnce.Do(func() {
-		conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
-		client, err := conn.MongoDBClient(r.region)
-		if err != nil {
-			r.attrErr = err
-			return
-		}
-		resp, err := client.DescribeDBInstanceAttribute(&ddsclient.DescribeDBInstanceAttributeRequest{
-			DBInstanceId: tea.String(r.instanceId),
-		})
-		if err != nil {
-			r.attrErr = err
-			return
-		}
-		if resp == nil || resp.Body == nil || resp.Body.DBInstances == nil || len(resp.Body.DBInstances.DBInstance) == 0 {
-			return
-		}
-		r.attr = resp.Body.DBInstances.DBInstance[0]
+	if r.attrFetched {
+		return r.attr, nil
+	}
+	r.attrLock.Lock()
+	defer r.attrLock.Unlock()
+	if r.attrFetched {
+		return r.attr, nil
+	}
+
+	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.MongoDBClient(r.region)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.DescribeDBInstanceAttribute(&ddsclient.DescribeDBInstanceAttributeRequest{
+		DBInstanceId: tea.String(r.instanceId),
 	})
-	return r.attr, r.attrErr
+	if err != nil {
+		return nil, err
+	}
+	if resp != nil && resp.Body != nil && resp.Body.DBInstances != nil && len(resp.Body.DBInstances.DBInstance) > 0 {
+		r.attr = resp.Body.DBInstances.DBInstance[0]
+		r.cacheVpcID = tea.StringValue(r.attr.VPCId)
+		r.cacheVswitchID = tea.StringValue(r.attr.VSwitchId)
+	}
+	r.attrFetched = true
+	return r.attr, nil
 }
 
-func (r *mqlAlicloudMongodbInstance) vpcId() (string, error) {
-	attr, err := r.attribute()
-	if err != nil || attr == nil {
-		return "", err
+func (r *mqlAlicloudMongodbInstance) vpc() (*mqlAlicloudVpcNetwork, error) {
+	if _, err := r.attribute(); err != nil {
+		return nil, err
 	}
-	return tea.StringValue(attr.VPCId), nil
+	if r.cacheVpcID == "" {
+		r.Vpc.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return resolveVpcNetwork(r.MqlRuntime, r.cacheRegion, r.cacheVpcID)
 }
 
-func (r *mqlAlicloudMongodbInstance) vSwitchId() (string, error) {
-	attr, err := r.attribute()
-	if err != nil || attr == nil {
-		return "", err
+func (r *mqlAlicloudMongodbInstance) vswitch() (*mqlAlicloudVpcVswitch, error) {
+	if _, err := r.attribute(); err != nil {
+		return nil, err
 	}
-	return tea.StringValue(attr.VSwitchId), nil
+	if r.cacheVswitchID == "" {
+		r.Vswitch.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return resolveVpcVswitch(r.MqlRuntime, r.cacheRegion, r.cacheVswitchID)
 }
 
 func (r *mqlAlicloudMongodbInstance) storageEngine() (string, error) {

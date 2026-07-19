@@ -9,15 +9,19 @@ import (
 
 	polardb "github.com/alibabacloud-go/polardb-20170801/v7/client"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/alicloud/connection"
 	"go.mondoo.com/mql/v13/types"
 )
 
 // mqlAlicloudPolardbClusterInternal caches the values a cluster needs to make
-// its per-cluster security-posture detail calls.
+// its per-cluster security-posture detail calls and to resolve its typed VPC
+// and vSwitch references.
 type mqlAlicloudPolardbClusterInternal struct {
-	region      string
-	dbClusterId string
+	region         string
+	dbClusterId    string
+	cacheVpcID     string
+	cacheVswitchID string
 }
 
 func polardbStr(s *string) string {
@@ -139,8 +143,6 @@ func (r *mqlAlicloudPolardb) clusters() ([]any, error) {
 					"storageSpace":         llx.IntDataPtr(c.StorageSpace),
 					"regionId":             llx.StringDataPtr(c.RegionId),
 					"zoneId":               llx.StringDataPtr(c.ZoneId),
-					"vpcId":                llx.StringDataPtr(c.VpcId),
-					"vswitchId":            llx.StringDataPtr(c.VswitchId),
 					"payType":              llx.StringDataPtr(c.PayType),
 					"createTime":           llx.TimeDataPtr(polardbParseTime(c.CreateTime)),
 					"expireTime":           llx.TimeDataPtr(polardbParseTime(c.ExpireTime)),
@@ -162,6 +164,8 @@ func (r *mqlAlicloudPolardb) clusters() ([]any, error) {
 				cluster := resource.(*mqlAlicloudPolardbCluster)
 				cluster.region = region
 				cluster.dbClusterId = *c.DBClusterId
+				cluster.cacheVpcID = polardbStr(c.VpcId)
+				cluster.cacheVswitchID = polardbStr(c.VswitchId)
 				res = append(res, cluster)
 			}
 
@@ -178,6 +182,22 @@ func (r *mqlAlicloudPolardb) clusters() ([]any, error) {
 
 func (r *mqlAlicloudPolardbCluster) id() (string, error) {
 	return r.region + "/" + r.dbClusterId, nil
+}
+
+func (r *mqlAlicloudPolardbCluster) vpc() (*mqlAlicloudVpcNetwork, error) {
+	if r.cacheVpcID == "" {
+		r.Vpc.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return resolveVpcNetwork(r.MqlRuntime, r.region, r.cacheVpcID)
+}
+
+func (r *mqlAlicloudPolardbCluster) vswitch() (*mqlAlicloudVpcVswitch, error) {
+	if r.cacheVswitchID == "" {
+		r.Vswitch.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return resolveVpcVswitch(r.MqlRuntime, r.region, r.cacheVswitchID)
 }
 
 // storageMax resolves the cluster's maximum storage capacity from the cluster

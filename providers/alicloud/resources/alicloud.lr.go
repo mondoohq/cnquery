@@ -122,11 +122,11 @@ func init() {
 			Create: createAlicloudVpc,
 		},
 		"alicloud.vpc.network": {
-			// to override args, implement: initAlicloudVpcNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAlicloudVpcNetwork,
 			Create: createAlicloudVpcNetwork,
 		},
 		"alicloud.vpc.vswitch": {
-			// to override args, implement: initAlicloudVpcVswitch(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAlicloudVpcVswitch,
 			Create: createAlicloudVpcVswitch,
 		},
 		"alicloud.vpc.routeTable": {
@@ -586,11 +586,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.ecs.instance.networkType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudEcsInstance).GetNetworkType()).ToDataRes(types.String)
 	},
-	"alicloud.ecs.instance.vpcId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAlicloudEcsInstance).GetVpcId()).ToDataRes(types.String)
+	"alicloud.ecs.instance.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsInstance).GetVpc()).ToDataRes(types.Resource("alicloud.vpc.network"))
 	},
-	"alicloud.ecs.instance.vswitchId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAlicloudEcsInstance).GetVswitchId()).ToDataRes(types.String)
+	"alicloud.ecs.instance.vswitch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsInstance).GetVswitch()).ToDataRes(types.Resource("alicloud.vpc.vswitch"))
 	},
 	"alicloud.ecs.instance.securityGroupIds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudEcsInstance).GetSecurityGroupIds()).ToDataRes(types.Array(types.String))
@@ -949,8 +949,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.vpc.vswitch.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudVpcVswitch).GetStatus()).ToDataRes(types.String)
 	},
-	"alicloud.vpc.vswitch.vpcId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAlicloudVpcVswitch).GetVpcId()).ToDataRes(types.String)
+	"alicloud.vpc.vswitch.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVswitch).GetVpc()).ToDataRes(types.Resource("alicloud.vpc.network"))
 	},
 	"alicloud.vpc.vswitch.zoneId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudVpcVswitch).GetZoneId()).ToDataRes(types.String)
@@ -997,8 +997,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.vpc.routeTable.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudVpcRouteTable).GetDescription()).ToDataRes(types.String)
 	},
-	"alicloud.vpc.routeTable.vpcId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAlicloudVpcRouteTable).GetVpcId()).ToDataRes(types.String)
+	"alicloud.vpc.routeTable.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcRouteTable).GetVpc()).ToDataRes(types.Resource("alicloud.vpc.network"))
 	},
 	"alicloud.vpc.routeTable.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudVpcRouteTable).GetStatus()).ToDataRes(types.String)
@@ -1045,8 +1045,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.vpc.natGateway.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudVpcNatGateway).GetDescription()).ToDataRes(types.String)
 	},
-	"alicloud.vpc.natGateway.vpcId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAlicloudVpcNatGateway).GetVpcId()).ToDataRes(types.String)
+	"alicloud.vpc.natGateway.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcNatGateway).GetVpc()).ToDataRes(types.Resource("alicloud.vpc.network"))
 	},
 	"alicloud.vpc.natGateway.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudVpcNatGateway).GetStatus()).ToDataRes(types.String)
@@ -1246,8 +1246,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.vpc.networkAcl.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudVpcNetworkAcl).GetDescription()).ToDataRes(types.String)
 	},
-	"alicloud.vpc.networkAcl.vpcId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAlicloudVpcNetworkAcl).GetVpcId()).ToDataRes(types.String)
+	"alicloud.vpc.networkAcl.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcNetworkAcl).GetVpc()).ToDataRes(types.Resource("alicloud.vpc.network"))
 	},
 	"alicloud.vpc.networkAcl.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudVpcNetworkAcl).GetStatus()).ToDataRes(types.String)
@@ -1372,11 +1372,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.slb.loadBalancer.networkType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudSlbLoadBalancer).GetNetworkType()).ToDataRes(types.String)
 	},
-	"alicloud.slb.loadBalancer.vpcId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAlicloudSlbLoadBalancer).GetVpcId()).ToDataRes(types.String)
+	"alicloud.slb.loadBalancer.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSlbLoadBalancer).GetVpc()).ToDataRes(types.Resource("alicloud.vpc.network"))
 	},
-	"alicloud.slb.loadBalancer.vswitchId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAlicloudSlbLoadBalancer).GetVswitchId()).ToDataRes(types.String)
+	"alicloud.slb.loadBalancer.vswitch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSlbLoadBalancer).GetVswitch()).ToDataRes(types.Resource("alicloud.vpc.vswitch"))
 	},
 	"alicloud.slb.loadBalancer.internetChargeType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudSlbLoadBalancer).GetInternetChargeType()).ToDataRes(types.String)
@@ -1516,11 +1516,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.rds.instance.zoneId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRdsInstance).GetZoneId()).ToDataRes(types.String)
 	},
-	"alicloud.rds.instance.vpcId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAlicloudRdsInstance).GetVpcId()).ToDataRes(types.String)
+	"alicloud.rds.instance.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRdsInstance).GetVpc()).ToDataRes(types.Resource("alicloud.vpc.network"))
 	},
-	"alicloud.rds.instance.vSwitchId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAlicloudRdsInstance).GetVSwitchId()).ToDataRes(types.String)
+	"alicloud.rds.instance.vswitch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRdsInstance).GetVswitch()).ToDataRes(types.Resource("alicloud.vpc.vswitch"))
 	},
 	"alicloud.rds.instance.instanceNetworkType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRdsInstance).GetInstanceNetworkType()).ToDataRes(types.String)
@@ -1609,11 +1609,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.redis.instance.secondaryZoneId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRedisInstance).GetSecondaryZoneId()).ToDataRes(types.String)
 	},
-	"alicloud.redis.instance.vpcId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAlicloudRedisInstance).GetVpcId()).ToDataRes(types.String)
+	"alicloud.redis.instance.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRedisInstance).GetVpc()).ToDataRes(types.Resource("alicloud.vpc.network"))
 	},
-	"alicloud.redis.instance.vSwitchId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAlicloudRedisInstance).GetVSwitchId()).ToDataRes(types.String)
+	"alicloud.redis.instance.vswitch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRedisInstance).GetVswitch()).ToDataRes(types.Resource("alicloud.vpc.vswitch"))
 	},
 	"alicloud.redis.instance.networkType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRedisInstance).GetNetworkType()).ToDataRes(types.String)
@@ -1765,11 +1765,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.mongodb.instance.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudMongodbInstance).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
-	"alicloud.mongodb.instance.vpcId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAlicloudMongodbInstance).GetVpcId()).ToDataRes(types.String)
+	"alicloud.mongodb.instance.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudMongodbInstance).GetVpc()).ToDataRes(types.Resource("alicloud.vpc.network"))
 	},
-	"alicloud.mongodb.instance.vSwitchId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAlicloudMongodbInstance).GetVSwitchId()).ToDataRes(types.String)
+	"alicloud.mongodb.instance.vswitch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudMongodbInstance).GetVswitch()).ToDataRes(types.Resource("alicloud.vpc.vswitch"))
 	},
 	"alicloud.mongodb.instance.storageEngine": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudMongodbInstance).GetStorageEngine()).ToDataRes(types.String)
@@ -1876,11 +1876,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.polardb.cluster.zoneId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudPolardbCluster).GetZoneId()).ToDataRes(types.String)
 	},
-	"alicloud.polardb.cluster.vpcId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAlicloudPolardbCluster).GetVpcId()).ToDataRes(types.String)
+	"alicloud.polardb.cluster.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbCluster).GetVpc()).ToDataRes(types.Resource("alicloud.vpc.network"))
 	},
-	"alicloud.polardb.cluster.vswitchId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAlicloudPolardbCluster).GetVswitchId()).ToDataRes(types.String)
+	"alicloud.polardb.cluster.vswitch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbCluster).GetVswitch()).ToDataRes(types.Resource("alicloud.vpc.vswitch"))
 	},
 	"alicloud.polardb.cluster.payType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudPolardbCluster).GetPayType()).ToDataRes(types.String)
@@ -2412,12 +2412,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudEcsInstance).NetworkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"alicloud.ecs.instance.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAlicloudEcsInstance).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"alicloud.ecs.instance.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsInstance).Vpc, ok = plugin.RawToTValue[*mqlAlicloudVpcNetwork](v.Value, v.Error)
 		return
 	},
-	"alicloud.ecs.instance.vswitchId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAlicloudEcsInstance).VswitchId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"alicloud.ecs.instance.vswitch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsInstance).Vswitch, ok = plugin.RawToTValue[*mqlAlicloudVpcVswitch](v.Value, v.Error)
 		return
 	},
 	"alicloud.ecs.instance.securityGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2928,8 +2928,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudVpcVswitch).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"alicloud.vpc.vswitch.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAlicloudVpcVswitch).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"alicloud.vpc.vswitch.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVswitch).Vpc, ok = plugin.RawToTValue[*mqlAlicloudVpcNetwork](v.Value, v.Error)
 		return
 	},
 	"alicloud.vpc.vswitch.zoneId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2996,8 +2996,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudVpcRouteTable).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"alicloud.vpc.routeTable.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAlicloudVpcRouteTable).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"alicloud.vpc.routeTable.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcRouteTable).Vpc, ok = plugin.RawToTValue[*mqlAlicloudVpcNetwork](v.Value, v.Error)
 		return
 	},
 	"alicloud.vpc.routeTable.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3064,8 +3064,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudVpcNatGateway).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"alicloud.vpc.natGateway.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAlicloudVpcNatGateway).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"alicloud.vpc.natGateway.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcNatGateway).Vpc, ok = plugin.RawToTValue[*mqlAlicloudVpcNetwork](v.Value, v.Error)
 		return
 	},
 	"alicloud.vpc.natGateway.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3340,8 +3340,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudVpcNetworkAcl).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"alicloud.vpc.networkAcl.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAlicloudVpcNetworkAcl).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"alicloud.vpc.networkAcl.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcNetworkAcl).Vpc, ok = plugin.RawToTValue[*mqlAlicloudVpcNetwork](v.Value, v.Error)
 		return
 	},
 	"alicloud.vpc.networkAcl.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3524,12 +3524,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudSlbLoadBalancer).NetworkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"alicloud.slb.loadBalancer.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAlicloudSlbLoadBalancer).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"alicloud.slb.loadBalancer.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSlbLoadBalancer).Vpc, ok = plugin.RawToTValue[*mqlAlicloudVpcNetwork](v.Value, v.Error)
 		return
 	},
-	"alicloud.slb.loadBalancer.vswitchId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAlicloudSlbLoadBalancer).VswitchId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"alicloud.slb.loadBalancer.vswitch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSlbLoadBalancer).Vswitch, ok = plugin.RawToTValue[*mqlAlicloudVpcVswitch](v.Value, v.Error)
 		return
 	},
 	"alicloud.slb.loadBalancer.internetChargeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3728,12 +3728,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudRdsInstance).ZoneId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"alicloud.rds.instance.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAlicloudRdsInstance).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"alicloud.rds.instance.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRdsInstance).Vpc, ok = plugin.RawToTValue[*mqlAlicloudVpcNetwork](v.Value, v.Error)
 		return
 	},
-	"alicloud.rds.instance.vSwitchId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAlicloudRdsInstance).VSwitchId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"alicloud.rds.instance.vswitch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRdsInstance).Vswitch, ok = plugin.RawToTValue[*mqlAlicloudVpcVswitch](v.Value, v.Error)
 		return
 	},
 	"alicloud.rds.instance.instanceNetworkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3860,12 +3860,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudRedisInstance).SecondaryZoneId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"alicloud.redis.instance.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAlicloudRedisInstance).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"alicloud.redis.instance.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRedisInstance).Vpc, ok = plugin.RawToTValue[*mqlAlicloudVpcNetwork](v.Value, v.Error)
 		return
 	},
-	"alicloud.redis.instance.vSwitchId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAlicloudRedisInstance).VSwitchId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"alicloud.redis.instance.vswitch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRedisInstance).Vswitch, ok = plugin.RawToTValue[*mqlAlicloudVpcVswitch](v.Value, v.Error)
 		return
 	},
 	"alicloud.redis.instance.networkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4076,12 +4076,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudMongodbInstance).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
-	"alicloud.mongodb.instance.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAlicloudMongodbInstance).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"alicloud.mongodb.instance.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudMongodbInstance).Vpc, ok = plugin.RawToTValue[*mqlAlicloudVpcNetwork](v.Value, v.Error)
 		return
 	},
-	"alicloud.mongodb.instance.vSwitchId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAlicloudMongodbInstance).VSwitchId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"alicloud.mongodb.instance.vswitch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudMongodbInstance).Vswitch, ok = plugin.RawToTValue[*mqlAlicloudVpcVswitch](v.Value, v.Error)
 		return
 	},
 	"alicloud.mongodb.instance.storageEngine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4232,12 +4232,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudPolardbCluster).ZoneId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"alicloud.polardb.cluster.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAlicloudPolardbCluster).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"alicloud.polardb.cluster.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbCluster).Vpc, ok = plugin.RawToTValue[*mqlAlicloudVpcNetwork](v.Value, v.Error)
 		return
 	},
-	"alicloud.polardb.cluster.vswitchId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAlicloudPolardbCluster).VswitchId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"alicloud.polardb.cluster.vswitch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbCluster).Vswitch, ok = plugin.RawToTValue[*mqlAlicloudVpcVswitch](v.Value, v.Error)
 		return
 	},
 	"alicloud.polardb.cluster.payType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5240,7 +5240,7 @@ func (c *mqlAlicloudEcs) GetSecurityGroups() *plugin.TValue[[]any] {
 type mqlAlicloudEcsInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAlicloudEcsInstanceInternal it will be used here
+	mqlAlicloudEcsInstanceInternal
 	InstanceId              plugin.TValue[string]
 	InstanceName            plugin.TValue[string]
 	Description             plugin.TValue[string]
@@ -5281,8 +5281,8 @@ type mqlAlicloudEcsInstance struct {
 	LocalStorageCapacity    plugin.TValue[int64]
 	ResourceGroupId         plugin.TValue[string]
 	NetworkType             plugin.TValue[string]
-	VpcId                   plugin.TValue[string]
-	VswitchId               plugin.TValue[string]
+	Vpc                     plugin.TValue[*mqlAlicloudVpcNetwork]
+	Vswitch                 plugin.TValue[*mqlAlicloudVpcVswitch]
 	SecurityGroupIds        plugin.TValue[[]any]
 	PrivateIpAddresses      plugin.TValue[[]any]
 	PublicIpAddresses       plugin.TValue[[]any]
@@ -5489,12 +5489,36 @@ func (c *mqlAlicloudEcsInstance) GetNetworkType() *plugin.TValue[string] {
 	return &c.NetworkType
 }
 
-func (c *mqlAlicloudEcsInstance) GetVpcId() *plugin.TValue[string] {
-	return &c.VpcId
+func (c *mqlAlicloudEcsInstance) GetVpc() *plugin.TValue[*mqlAlicloudVpcNetwork] {
+	return plugin.GetOrCompute[*mqlAlicloudVpcNetwork](&c.Vpc, func() (*mqlAlicloudVpcNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ecs.instance", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudVpcNetwork), nil
+			}
+		}
+
+		return c.vpc()
+	})
 }
 
-func (c *mqlAlicloudEcsInstance) GetVswitchId() *plugin.TValue[string] {
-	return &c.VswitchId
+func (c *mqlAlicloudEcsInstance) GetVswitch() *plugin.TValue[*mqlAlicloudVpcVswitch] {
+	return plugin.GetOrCompute[*mqlAlicloudVpcVswitch](&c.Vswitch, func() (*mqlAlicloudVpcVswitch, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ecs.instance", c.__id, "vswitch")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudVpcVswitch), nil
+			}
+		}
+
+		return c.vswitch()
+	})
 }
 
 func (c *mqlAlicloudEcsInstance) GetSecurityGroupIds() *plugin.TValue[[]any] {
@@ -6308,7 +6332,7 @@ func (c *mqlAlicloudVpc) GetNetworkAcls() *plugin.TValue[[]any] {
 type mqlAlicloudVpcNetwork struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAlicloudVpcNetworkInternal it will be used here
+	mqlAlicloudVpcNetworkInternal
 	VpcId                plugin.TValue[string]
 	VpcName              plugin.TValue[string]
 	Description          plugin.TValue[string]
@@ -6472,7 +6496,7 @@ func (c *mqlAlicloudVpcNetwork) GetTags() *plugin.TValue[map[string]any] {
 type mqlAlicloudVpcVswitch struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAlicloudVpcVswitchInternal it will be used here
+	mqlAlicloudVpcVswitchInternal
 	VSwitchId               plugin.TValue[string]
 	VSwitchName             plugin.TValue[string]
 	Description             plugin.TValue[string]
@@ -6480,7 +6504,7 @@ type mqlAlicloudVpcVswitch struct {
 	Ipv6CidrBlock           plugin.TValue[string]
 	EnabledIpv6             plugin.TValue[bool]
 	Status                  plugin.TValue[string]
-	VpcId                   plugin.TValue[string]
+	Vpc                     plugin.TValue[*mqlAlicloudVpcNetwork]
 	ZoneId                  plugin.TValue[string]
 	AvailableIpAddressCount plugin.TValue[int64]
 	IsDefault               plugin.TValue[bool]
@@ -6559,8 +6583,20 @@ func (c *mqlAlicloudVpcVswitch) GetStatus() *plugin.TValue[string] {
 	return &c.Status
 }
 
-func (c *mqlAlicloudVpcVswitch) GetVpcId() *plugin.TValue[string] {
-	return &c.VpcId
+func (c *mqlAlicloudVpcVswitch) GetVpc() *plugin.TValue[*mqlAlicloudVpcNetwork] {
+	return plugin.GetOrCompute[*mqlAlicloudVpcNetwork](&c.Vpc, func() (*mqlAlicloudVpcNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.vpc.vswitch", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudVpcNetwork), nil
+			}
+		}
+
+		return c.vpc()
+	})
 }
 
 func (c *mqlAlicloudVpcVswitch) GetZoneId() *plugin.TValue[string] {
@@ -6616,7 +6652,7 @@ type mqlAlicloudVpcRouteTable struct {
 	RouteTableName         plugin.TValue[string]
 	RouteTableType         plugin.TValue[string]
 	Description            plugin.TValue[string]
-	VpcId                  plugin.TValue[string]
+	Vpc                    plugin.TValue[*mqlAlicloudVpcNetwork]
 	Status                 plugin.TValue[string]
 	CreationTime           plugin.TValue[*time.Time]
 	ResourceGroupId        plugin.TValue[string]
@@ -6684,8 +6720,20 @@ func (c *mqlAlicloudVpcRouteTable) GetDescription() *plugin.TValue[string] {
 	return &c.Description
 }
 
-func (c *mqlAlicloudVpcRouteTable) GetVpcId() *plugin.TValue[string] {
-	return &c.VpcId
+func (c *mqlAlicloudVpcRouteTable) GetVpc() *plugin.TValue[*mqlAlicloudVpcNetwork] {
+	return plugin.GetOrCompute[*mqlAlicloudVpcNetwork](&c.Vpc, func() (*mqlAlicloudVpcNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.vpc.routeTable", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudVpcNetwork), nil
+			}
+		}
+
+		return c.vpc()
+	})
 }
 
 func (c *mqlAlicloudVpcRouteTable) GetStatus() *plugin.TValue[string] {
@@ -6742,11 +6790,11 @@ func (c *mqlAlicloudVpcRouteTable) GetRouteEntries() *plugin.TValue[[]any] {
 type mqlAlicloudVpcNatGateway struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAlicloudVpcNatGatewayInternal it will be used here
+	mqlAlicloudVpcNatGatewayInternal
 	NatGatewayId              plugin.TValue[string]
 	Name                      plugin.TValue[string]
 	Description               plugin.TValue[string]
-	VpcId                     plugin.TValue[string]
+	Vpc                       plugin.TValue[*mqlAlicloudVpcNetwork]
 	Status                    plugin.TValue[string]
 	Spec                      plugin.TValue[string]
 	NatType                   plugin.TValue[string]
@@ -6825,8 +6873,20 @@ func (c *mqlAlicloudVpcNatGateway) GetDescription() *plugin.TValue[string] {
 	return &c.Description
 }
 
-func (c *mqlAlicloudVpcNatGateway) GetVpcId() *plugin.TValue[string] {
-	return &c.VpcId
+func (c *mqlAlicloudVpcNatGateway) GetVpc() *plugin.TValue[*mqlAlicloudVpcNetwork] {
+	return plugin.GetOrCompute[*mqlAlicloudVpcNetwork](&c.Vpc, func() (*mqlAlicloudVpcNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.vpc.natGateway", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudVpcNetwork), nil
+			}
+		}
+
+		return c.vpc()
+	})
 }
 
 func (c *mqlAlicloudVpcNatGateway) GetStatus() *plugin.TValue[string] {
@@ -6941,7 +7001,7 @@ func (c *mqlAlicloudVpcNatGateway) GetTags() *plugin.TValue[map[string]any] {
 type mqlAlicloudVpcEipAddress struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAlicloudVpcEipAddressInternal it will be used here
+	mqlAlicloudVpcEipAddressInternal
 	AllocationId              plugin.TValue[string]
 	Name                      plugin.TValue[string]
 	Description               plugin.TValue[string]
@@ -7165,11 +7225,11 @@ func (c *mqlAlicloudVpcEipAddress) GetTags() *plugin.TValue[map[string]any] {
 type mqlAlicloudVpcNetworkAcl struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAlicloudVpcNetworkAclInternal it will be used here
+	mqlAlicloudVpcNetworkAclInternal
 	NetworkAclId      plugin.TValue[string]
 	NetworkAclName    plugin.TValue[string]
 	Description       plugin.TValue[string]
-	VpcId             plugin.TValue[string]
+	Vpc               plugin.TValue[*mqlAlicloudVpcNetwork]
 	Status            plugin.TValue[string]
 	CreationTime      plugin.TValue[*time.Time]
 	RegionId          plugin.TValue[string]
@@ -7229,8 +7289,20 @@ func (c *mqlAlicloudVpcNetworkAcl) GetDescription() *plugin.TValue[string] {
 	return &c.Description
 }
 
-func (c *mqlAlicloudVpcNetworkAcl) GetVpcId() *plugin.TValue[string] {
-	return &c.VpcId
+func (c *mqlAlicloudVpcNetworkAcl) GetVpc() *plugin.TValue[*mqlAlicloudVpcNetwork] {
+	return plugin.GetOrCompute[*mqlAlicloudVpcNetwork](&c.Vpc, func() (*mqlAlicloudVpcNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.vpc.networkAcl", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudVpcNetwork), nil
+			}
+		}
+
+		return c.vpc()
+	})
 }
 
 func (c *mqlAlicloudVpcNetworkAcl) GetStatus() *plugin.TValue[string] {
@@ -7577,8 +7649,8 @@ type mqlAlicloudSlbLoadBalancer struct {
 	MasterZoneId                 plugin.TValue[string]
 	SlaveZoneId                  plugin.TValue[string]
 	NetworkType                  plugin.TValue[string]
-	VpcId                        plugin.TValue[string]
-	VswitchId                    plugin.TValue[string]
+	Vpc                          plugin.TValue[*mqlAlicloudVpcNetwork]
+	Vswitch                      plugin.TValue[*mqlAlicloudVpcVswitch]
 	InternetChargeType           plugin.TValue[string]
 	InstanceChargeType           plugin.TValue[string]
 	LoadBalancerSpec             plugin.TValue[string]
@@ -7672,12 +7744,36 @@ func (c *mqlAlicloudSlbLoadBalancer) GetNetworkType() *plugin.TValue[string] {
 	return &c.NetworkType
 }
 
-func (c *mqlAlicloudSlbLoadBalancer) GetVpcId() *plugin.TValue[string] {
-	return &c.VpcId
+func (c *mqlAlicloudSlbLoadBalancer) GetVpc() *plugin.TValue[*mqlAlicloudVpcNetwork] {
+	return plugin.GetOrCompute[*mqlAlicloudVpcNetwork](&c.Vpc, func() (*mqlAlicloudVpcNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.slb.loadBalancer", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudVpcNetwork), nil
+			}
+		}
+
+		return c.vpc()
+	})
 }
 
-func (c *mqlAlicloudSlbLoadBalancer) GetVswitchId() *plugin.TValue[string] {
-	return &c.VswitchId
+func (c *mqlAlicloudSlbLoadBalancer) GetVswitch() *plugin.TValue[*mqlAlicloudVpcVswitch] {
+	return plugin.GetOrCompute[*mqlAlicloudVpcVswitch](&c.Vswitch, func() (*mqlAlicloudVpcVswitch, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.slb.loadBalancer", c.__id, "vswitch")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudVpcVswitch), nil
+			}
+		}
+
+		return c.vswitch()
+	})
 }
 
 func (c *mqlAlicloudSlbLoadBalancer) GetInternetChargeType() *plugin.TValue[string] {
@@ -7965,8 +8061,8 @@ type mqlAlicloudRdsInstance struct {
 	ConnectionString      plugin.TValue[string]
 	RegionId              plugin.TValue[string]
 	ZoneId                plugin.TValue[string]
-	VpcId                 plugin.TValue[string]
-	VSwitchId             plugin.TValue[string]
+	Vpc                   plugin.TValue[*mqlAlicloudVpcNetwork]
+	Vswitch               plugin.TValue[*mqlAlicloudVpcVswitch]
 	InstanceNetworkType   plugin.TValue[string]
 	PayType               plugin.TValue[string]
 	CreateTime            plugin.TValue[*time.Time]
@@ -8076,12 +8172,36 @@ func (c *mqlAlicloudRdsInstance) GetZoneId() *plugin.TValue[string] {
 	return &c.ZoneId
 }
 
-func (c *mqlAlicloudRdsInstance) GetVpcId() *plugin.TValue[string] {
-	return &c.VpcId
+func (c *mqlAlicloudRdsInstance) GetVpc() *plugin.TValue[*mqlAlicloudVpcNetwork] {
+	return plugin.GetOrCompute[*mqlAlicloudVpcNetwork](&c.Vpc, func() (*mqlAlicloudVpcNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.rds.instance", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudVpcNetwork), nil
+			}
+		}
+
+		return c.vpc()
+	})
 }
 
-func (c *mqlAlicloudRdsInstance) GetVSwitchId() *plugin.TValue[string] {
-	return &c.VSwitchId
+func (c *mqlAlicloudRdsInstance) GetVswitch() *plugin.TValue[*mqlAlicloudVpcVswitch] {
+	return plugin.GetOrCompute[*mqlAlicloudVpcVswitch](&c.Vswitch, func() (*mqlAlicloudVpcVswitch, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.rds.instance", c.__id, "vswitch")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudVpcVswitch), nil
+			}
+		}
+
+		return c.vswitch()
+	})
 }
 
 func (c *mqlAlicloudRdsInstance) GetInstanceNetworkType() *plugin.TValue[string] {
@@ -8248,8 +8368,8 @@ type mqlAlicloudRedisInstance struct {
 	RegionId         plugin.TValue[string]
 	ZoneId           plugin.TValue[string]
 	SecondaryZoneId  plugin.TValue[string]
-	VpcId            plugin.TValue[string]
-	VSwitchId        plugin.TValue[string]
+	Vpc              plugin.TValue[*mqlAlicloudVpcNetwork]
+	Vswitch          plugin.TValue[*mqlAlicloudVpcVswitch]
 	NetworkType      plugin.TValue[string]
 	ConnectionDomain plugin.TValue[string]
 	Port             plugin.TValue[int64]
@@ -8350,12 +8470,36 @@ func (c *mqlAlicloudRedisInstance) GetSecondaryZoneId() *plugin.TValue[string] {
 	return &c.SecondaryZoneId
 }
 
-func (c *mqlAlicloudRedisInstance) GetVpcId() *plugin.TValue[string] {
-	return &c.VpcId
+func (c *mqlAlicloudRedisInstance) GetVpc() *plugin.TValue[*mqlAlicloudVpcNetwork] {
+	return plugin.GetOrCompute[*mqlAlicloudVpcNetwork](&c.Vpc, func() (*mqlAlicloudVpcNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.redis.instance", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudVpcNetwork), nil
+			}
+		}
+
+		return c.vpc()
+	})
 }
 
-func (c *mqlAlicloudRedisInstance) GetVSwitchId() *plugin.TValue[string] {
-	return &c.VSwitchId
+func (c *mqlAlicloudRedisInstance) GetVswitch() *plugin.TValue[*mqlAlicloudVpcVswitch] {
+	return plugin.GetOrCompute[*mqlAlicloudVpcVswitch](&c.Vswitch, func() (*mqlAlicloudVpcVswitch, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.redis.instance", c.__id, "vswitch")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudVpcVswitch), nil
+			}
+		}
+
+		return c.vswitch()
+	})
 }
 
 func (c *mqlAlicloudRedisInstance) GetNetworkType() *plugin.TValue[string] {
@@ -8546,8 +8690,8 @@ type mqlAlicloudMongodbInstance struct {
 	LockMode              plugin.TValue[string]
 	ResourceGroupId       plugin.TValue[string]
 	Tags                  plugin.TValue[map[string]any]
-	VpcId                 plugin.TValue[string]
-	VSwitchId             plugin.TValue[string]
+	Vpc                   plugin.TValue[*mqlAlicloudVpcNetwork]
+	Vswitch               plugin.TValue[*mqlAlicloudVpcVswitch]
 	StorageEngine         plugin.TValue[string]
 	ProtocolType          plugin.TValue[string]
 	ReadonlyReplicas      plugin.TValue[string]
@@ -8714,15 +8858,35 @@ func (c *mqlAlicloudMongodbInstance) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
-func (c *mqlAlicloudMongodbInstance) GetVpcId() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.VpcId, func() (string, error) {
-		return c.vpcId()
+func (c *mqlAlicloudMongodbInstance) GetVpc() *plugin.TValue[*mqlAlicloudVpcNetwork] {
+	return plugin.GetOrCompute[*mqlAlicloudVpcNetwork](&c.Vpc, func() (*mqlAlicloudVpcNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.mongodb.instance", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudVpcNetwork), nil
+			}
+		}
+
+		return c.vpc()
 	})
 }
 
-func (c *mqlAlicloudMongodbInstance) GetVSwitchId() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.VSwitchId, func() (string, error) {
-		return c.vSwitchId()
+func (c *mqlAlicloudMongodbInstance) GetVswitch() *plugin.TValue[*mqlAlicloudVpcVswitch] {
+	return plugin.GetOrCompute[*mqlAlicloudVpcVswitch](&c.Vswitch, func() (*mqlAlicloudVpcVswitch, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.mongodb.instance", c.__id, "vswitch")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudVpcVswitch), nil
+			}
+		}
+
+		return c.vswitch()
 	})
 }
 
@@ -8901,8 +9065,8 @@ type mqlAlicloudPolardbCluster struct {
 	StorageSpace         plugin.TValue[int64]
 	RegionId             plugin.TValue[string]
 	ZoneId               plugin.TValue[string]
-	VpcId                plugin.TValue[string]
-	VswitchId            plugin.TValue[string]
+	Vpc                  plugin.TValue[*mqlAlicloudVpcNetwork]
+	Vswitch              plugin.TValue[*mqlAlicloudVpcVswitch]
 	PayType              plugin.TValue[string]
 	CreateTime           plugin.TValue[*time.Time]
 	ExpireTime           plugin.TValue[*time.Time]
@@ -9038,12 +9202,36 @@ func (c *mqlAlicloudPolardbCluster) GetZoneId() *plugin.TValue[string] {
 	return &c.ZoneId
 }
 
-func (c *mqlAlicloudPolardbCluster) GetVpcId() *plugin.TValue[string] {
-	return &c.VpcId
+func (c *mqlAlicloudPolardbCluster) GetVpc() *plugin.TValue[*mqlAlicloudVpcNetwork] {
+	return plugin.GetOrCompute[*mqlAlicloudVpcNetwork](&c.Vpc, func() (*mqlAlicloudVpcNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.polardb.cluster", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudVpcNetwork), nil
+			}
+		}
+
+		return c.vpc()
+	})
 }
 
-func (c *mqlAlicloudPolardbCluster) GetVswitchId() *plugin.TValue[string] {
-	return &c.VswitchId
+func (c *mqlAlicloudPolardbCluster) GetVswitch() *plugin.TValue[*mqlAlicloudVpcVswitch] {
+	return plugin.GetOrCompute[*mqlAlicloudVpcVswitch](&c.Vswitch, func() (*mqlAlicloudVpcVswitch, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.polardb.cluster", c.__id, "vswitch")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudVpcVswitch), nil
+			}
+		}
+
+		return c.vswitch()
+	})
 }
 
 func (c *mqlAlicloudPolardbCluster) GetPayType() *plugin.TValue[string] {

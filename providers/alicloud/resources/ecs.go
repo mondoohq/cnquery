@@ -68,6 +68,22 @@ func (r *mqlAlicloudEcs) id() (string, error) {
 	return "alicloud.ecs", nil
 }
 
+// mqlAlicloudEcsInstanceInternal caches the identifiers needed to resolve the
+// instance's typed VPC references without a repeat API call.
+type mqlAlicloudEcsInstanceInternal struct {
+	cacheRegion    string
+	cacheVpcID     string
+	cacheVswitchID string
+}
+
+// strDeref safely dereferences a string pointer, returning "" on nil.
+func strDeref(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
+}
+
 // ---------------------------------------------------------------------------
 // alicloud.ecs.instance
 // ---------------------------------------------------------------------------
@@ -217,8 +233,6 @@ func newMqlEcsInstance(runtime *plugin.Runtime, region string, inst *ecsclient.D
 		"localStorageCapacity":    llx.IntDataPtr(inst.LocalStorageCapacity),
 		"resourceGroupId":         llx.StringDataPtr(inst.ResourceGroupId),
 		"networkType":             llx.StringDataPtr(inst.InstanceNetworkType),
-		"vpcId":                   llx.StringDataPtr(vpcId),
-		"vswitchId":               llx.StringDataPtr(vswitchId),
 		"securityGroupIds":        llx.ArrayData(llx.TArr2Raw(securityGroupIds), types.String),
 		"privateIpAddresses":      llx.ArrayData(llx.TArr2Raw(privateIps), types.String),
 		"publicIpAddresses":       llx.ArrayData(llx.TArr2Raw(publicIps), types.String),
@@ -230,7 +244,29 @@ func newMqlEcsInstance(runtime *plugin.Runtime, region string, inst *ecsclient.D
 	if err != nil {
 		return nil, err
 	}
-	return resource.(*mqlAlicloudEcsInstance), nil
+	mqlInst := resource.(*mqlAlicloudEcsInstance)
+	mqlInst.cacheRegion = region
+	mqlInst.cacheVpcID = strDeref(vpcId)
+	mqlInst.cacheVswitchID = strDeref(vswitchId)
+	return mqlInst, nil
+}
+
+// vpc resolves the VPC network the instance is attached to.
+func (r *mqlAlicloudEcsInstance) vpc() (*mqlAlicloudVpcNetwork, error) {
+	if r.cacheVpcID == "" {
+		r.Vpc.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return resolveVpcNetwork(r.MqlRuntime, r.cacheRegion, r.cacheVpcID)
+}
+
+// vswitch resolves the vSwitch the instance is connected to.
+func (r *mqlAlicloudEcsInstance) vswitch() (*mqlAlicloudVpcVswitch, error) {
+	if r.cacheVswitchID == "" {
+		r.Vswitch.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return resolveVpcVswitch(r.MqlRuntime, r.cacheRegion, r.cacheVswitchID)
 }
 
 func (r *mqlAlicloudEcsInstance) id() (string, error) {

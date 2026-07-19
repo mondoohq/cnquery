@@ -95,8 +95,8 @@ alicloud.ecs.instance.startTime 13.0.0
 alicloud.ecs.instance.status 13.0.0
 alicloud.ecs.instance.stoppedMode 13.0.0
 alicloud.ecs.instance.tags 13.0.0
-alicloud.ecs.instance.vpcId 13.0.0
-alicloud.ecs.instance.vswitchId 13.0.0
+alicloud.ecs.instance.vpc 13.0.0
+alicloud.ecs.instance.vswitch 13.0.0
 alicloud.ecs.instance.zoneId 13.0.0
 alicloud.ecs.instances 13.0.0
 alicloud.ecs.keyPairs 13.0.0
@@ -182,9 +182,9 @@ alicloud.mongodb.instance.storageEngine 13.0.0
 alicloud.mongodb.instance.storageType 13.0.0
 alicloud.mongodb.instance.tags 13.0.0
 alicloud.mongodb.instance.tdeEnabled 13.0.0
-alicloud.mongodb.instance.vSwitchId 13.0.0
+alicloud.mongodb.instance.vpc 13.0.0
 alicloud.mongodb.instance.vpcAuthMode 13.0.0
-alicloud.mongodb.instance.vpcId 13.0.0
+alicloud.mongodb.instance.vswitch 13.0.0
 alicloud.mongodb.instance.zoneId 13.0.0
 alicloud.mongodb.instances 13.0.0
 alicloud.oss 13.0.0
@@ -249,8 +249,8 @@ alicloud.polardb.cluster.strictConsistency 13.0.0
 alicloud.polardb.cluster.subCategory 13.0.0
 alicloud.polardb.cluster.tags 13.0.0
 alicloud.polardb.cluster.tdeEnabled 13.0.0
-alicloud.polardb.cluster.vpcId 13.0.0
-alicloud.polardb.cluster.vswitchId 13.0.0
+alicloud.polardb.cluster.vpc 13.0.0
+alicloud.polardb.cluster.vswitch 13.0.0
 alicloud.polardb.cluster.zoneId 13.0.0
 alicloud.polardb.clusters 13.0.0
 alicloud.ram 13.0.0
@@ -350,8 +350,8 @@ alicloud.rds.instance.sslEnabled 13.0.0
 alicloud.rds.instance.sslExpireTime 13.0.0
 alicloud.rds.instance.tags 13.0.0
 alicloud.rds.instance.tdeEnabled 13.0.0
-alicloud.rds.instance.vSwitchId 13.0.0
-alicloud.rds.instance.vpcId 13.0.0
+alicloud.rds.instance.vpc 13.0.0
+alicloud.rds.instance.vswitch 13.0.0
 alicloud.rds.instance.zoneId 13.0.0
 alicloud.rds.instances 13.0.0
 alicloud.redis 13.0.0
@@ -386,8 +386,8 @@ alicloud.redis.instance.securityIPList 13.0.0
 alicloud.redis.instance.sslEnabled 13.0.0
 alicloud.redis.instance.tags 13.0.0
 alicloud.redis.instance.tdeEnabled 13.0.0
-alicloud.redis.instance.vSwitchId 13.0.0
-alicloud.redis.instance.vpcId 13.0.0
+alicloud.redis.instance.vpc 13.0.0
+alicloud.redis.instance.vswitch 13.0.0
 alicloud.redis.instance.zoneId 13.0.0
 alicloud.redis.instances 13.0.0
 alicloud.regions 13.0.0
@@ -436,8 +436,8 @@ alicloud.slb.loadBalancer.resourceGroupId 13.0.0
 alicloud.slb.loadBalancer.slaveZoneId 13.0.0
 alicloud.slb.loadBalancer.status 13.0.0
 alicloud.slb.loadBalancer.tags 13.0.0
-alicloud.slb.loadBalancer.vpcId 13.0.0
-alicloud.slb.loadBalancer.vswitchId 13.0.0
+alicloud.slb.loadBalancer.vpc 13.0.0
+alicloud.slb.loadBalancer.vswitch 13.0.0
 alicloud.slb.loadBalancers 13.0.0
 alicloud.vpc 13.0.0
 alicloud.vpc.eipAddress 13.0.0
@@ -509,7 +509,7 @@ alicloud.vpc.natGateway.snatTableIds 13.0.0
 alicloud.vpc.natGateway.spec 13.0.0
 alicloud.vpc.natGateway.status 13.0.0
 alicloud.vpc.natGateway.tags 13.0.0
-alicloud.vpc.natGateway.vpcId 13.0.0
+alicloud.vpc.natGateway.vpc 13.0.0
 alicloud.vpc.natGateways 13.0.0
 alicloud.vpc.network 13.0.0
 alicloud.vpc.network.cenStatus 13.0.0
@@ -548,7 +548,7 @@ alicloud.vpc.networkAcl.regionId 13.0.0
 alicloud.vpc.networkAcl.resources 13.0.0
 alicloud.vpc.networkAcl.status 13.0.0
 alicloud.vpc.networkAcl.tags 13.0.0
-alicloud.vpc.networkAcl.vpcId 13.0.0
+alicloud.vpc.networkAcl.vpc 13.0.0
 alicloud.vpc.networkAcls 13.0.0
 alicloud.vpc.networks 13.0.0
 alicloud.vpc.routeTable 13.0.0
@@ -568,7 +568,7 @@ alicloud.vpc.routeTable.routerType 13.0.0
 alicloud.vpc.routeTable.status 13.0.0
 alicloud.vpc.routeTable.tags 13.0.0
 alicloud.vpc.routeTable.vSwitchIds 13.0.0
-alicloud.vpc.routeTable.vpcId 13.0.0
+alicloud.vpc.routeTable.vpc 13.0.0
 alicloud.vpc.routeTables 13.0.0
 alicloud.vpc.vswitch 13.0.0
 alicloud.vpc.vswitch.availableIpAddressCount 13.0.0
@@ -588,6 +588,6 @@ alicloud.vpc.vswitch.status 13.0.0
 alicloud.vpc.vswitch.tags 13.0.0
 alicloud.vpc.vswitch.vSwitchId 13.0.0
 alicloud.vpc.vswitch.vSwitchName 13.0.0
-alicloud.vpc.vswitch.vpcId 13.0.0
+alicloud.vpc.vswitch.vpc 13.0.0
 alicloud.vpc.vswitch.zoneId 13.0.0
 alicloud.vpc.vswitches 13.0.0

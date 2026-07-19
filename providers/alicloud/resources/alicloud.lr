@@ -356,10 +356,10 @@ alicloud.ecs.instance @defaults("instanceId instanceName status instanceType") {
   //
   // One of classic or vpc.
   networkType string
-  // VPC ID the instance is attached to
-  vpcId string
-  // vSwitch ID the instance is connected to
-  vswitchId string
+  // VPC the instance is attached to
+  vpc() alicloud.vpc.network
+  // vSwitch the instance is connected to
+  vswitch() alicloud.vpc.vswitch
   // Security group IDs applied to the instance
   securityGroupIds []string
   // Private IP addresses assigned to the instance
@@ -715,8 +715,8 @@ alicloud.vpc.vswitch {
   //
   // One of Pending or Available.
   status string
-  // ID of the VPC the vSwitch belongs to
-  vpcId string
+  // VPC the vSwitch belongs to
+  vpc() alicloud.vpc.network
   // Zone ID the vSwitch belongs to, for example cn-hangzhou-d
   zoneId string
   // Number of available IP addresses in the vSwitch
@@ -760,8 +760,8 @@ alicloud.vpc.routeTable {
   routeTableType string
   // Description of the route table
   description string
-  // ID of the VPC the route table belongs to
-  vpcId string
+  // VPC the route table belongs to
+  vpc() alicloud.vpc.network
   // Lifecycle status
   //
   // One of Pending or Available.
@@ -809,8 +809,8 @@ alicloud.vpc.natGateway {
   name string
   // Description of the NAT gateway
   description string
-  // ID of the VPC the NAT gateway belongs to
-  vpcId string
+  // VPC the NAT gateway belongs to
+  vpc() alicloud.vpc.network
   // Lifecycle status
   //
   // One of Creating, Available, Modifying, Deleting, or Converting.
@@ -1003,8 +1003,8 @@ alicloud.vpc.networkAcl {
   networkAclName string
   // Description of the network ACL
   description string
-  // ID of the VPC the network ACL belongs to
-  vpcId string
+  // VPC the network ACL belongs to
+  vpc() alicloud.vpc.network
   // Lifecycle status
   //
   // One of Available or Modifying.
@@ -1187,10 +1187,10 @@ alicloud.slb.loadBalancer {
   //
   // One of vpc or classic.
   networkType string
-  // ID of the VPC that the CLB instance belongs to
-  vpcId string
-  // ID of the vSwitch that the CLB instance belongs to
-  vswitchId string
+  // VPC that the CLB instance belongs to
+  vpc() alicloud.vpc.network
+  // vSwitch that the CLB instance belongs to
+  vswitch() alicloud.vpc.vswitch
   // Metering method of internet data transfer
   //
   // One of paybybandwidth (pay-by-bandwidth) or paybytraffic
@@ -1372,10 +1372,10 @@ alicloud.rds.instance {
   regionId string
   // Zone ID where the instance is deployed, for example cn-hangzhou-a
   zoneId string
-  // ID of the VPC that the instance belongs to
-  vpcId string
-  // ID of the vSwitch that the instance belongs to
-  vSwitchId string
+  // VPC that the instance belongs to
+  vpc() alicloud.vpc.network
+  // vSwitch that the instance belongs to
+  vswitch() alicloud.vpc.vswitch
   // Network type of the instance
   //
   // One of VPC or Classic.
@@ -1477,10 +1477,10 @@ alicloud.redis.instance {
   zoneId string
   // Secondary zone ID for a zone-redundant instance
   secondaryZoneId string
-  // ID of the VPC the instance belongs to
-  vpcId string
-  // ID of the vSwitch the instance is attached to
-  vSwitchId string
+  // VPC the instance belongs to
+  vpc() alicloud.vpc.network
+  // vSwitch the instance is attached to
+  vswitch() alicloud.vpc.vswitch
   // Network type
   //
   // One of CLASSIC (classic network) or VPC (virtual private cloud).
@@ -1636,10 +1636,10 @@ alicloud.mongodb.instance {
   resourceGroupId string
   // Tags attached to the instance, keyed by tag key
   tags map[string]string
-  // VPC ID hosting the instance, returned for VPC network instances
-  vpcId() string
-  // vSwitch ID hosting the instance, returned for VPC network instances
-  vSwitchId() string
+  // VPC hosting the instance
+  vpc() alicloud.vpc.network
+  // vSwitch hosting the instance
+  vswitch() alicloud.vpc.vswitch
   // Storage engine, for example WiredTiger or RocksDB
   storageEngine() string
   // Access protocol type of a sharded cluster instance
@@ -1750,10 +1750,10 @@ alicloud.polardb.cluster {
   regionId string
   // Zone ID the primary node resides in, for example cn-hangzhou-i
   zoneId string
-  // ID of the VPC the cluster is attached to
-  vpcId string
-  // ID of the vSwitch the cluster is attached to
-  vswitchId string
+  // VPC the cluster is attached to
+  vpc() alicloud.vpc.network
+  // vSwitch the cluster is attached to
+  vswitch() alicloud.vpc.vswitch
   // Billing method
   //
   // One of Prepaid (subscription) or Postpaid (pay-as-you-go).
