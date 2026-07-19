@@ -744,6 +744,29 @@ func resolveRamRole(runtime *plugin.Runtime, roleName string) (*mqlAlicloudRamRo
 	return res.(*mqlAlicloudRamRole), nil
 }
 
+// ramRoleTags fetches the tags attached to a RAM role via ListTagResources,
+// which is required because GetRole (unlike ListRoles) does not return them.
+// Returns an empty map on any error so a resolved role is never a husk.
+func ramRoleTags(client *ramclient.Client, roleName string) map[string]any {
+	tags := map[string]any{}
+	resourceType := "role"
+	name := roleName
+	resp, err := client.ListTagResources(&ramclient.ListTagResourcesRequest{
+		ResourceType:  &resourceType,
+		ResourceNames: []*string{&name},
+	})
+	if err != nil || resp == nil || resp.Body == nil {
+		return tags
+	}
+	for _, t := range resp.Body.TagResources {
+		if t == nil || t.TagKey == nil {
+			continue
+		}
+		tags[ramStrVal(t.TagKey)] = ramStrVal(t.TagValue)
+	}
+	return tags
+}
+
 // initAlicloudRamRole resolves a RAM role by name, reusing an already-listed
 // role from the resource cache and otherwise fetching it via GetRole. The
 // assume-role policy document is loaded lazily by its own accessor, so the init
@@ -784,7 +807,10 @@ func initAlicloudRamRole(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		"createDate":         llx.TimeDataPtr(ramParseTime(role.CreateDate)),
 		"updateDate":         llx.TimeDataPtr(ramParseTime(role.UpdateDate)),
 		"maxSessionDuration": llx.IntDataPtr(role.MaxSessionDuration),
-		"tags":               llx.MapData(map[string]any{}, types.String),
+		// GetRole does not return tags (unlike ListRoles), so fetch them
+		// separately to keep a ref-resolved role's tags consistent with a listed
+		// one.
+		"tags": llx.MapData(ramRoleTags(client, roleName), types.String),
 	})
 	if err != nil {
 		return nil, nil, err

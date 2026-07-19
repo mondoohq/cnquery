@@ -13,6 +13,7 @@ import (
 
 	csclient "github.com/alibabacloud-go/cs-20151215/v6/client"
 	tea "github.com/alibabacloud-go/tea/tea"
+	"github.com/rs/zerolog/log"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -91,8 +92,11 @@ func (r *mqlAlicloudCs) clusters() ([]any, error) {
 				PageSize:   tea.Int64(pageSize),
 			})
 			if err != nil {
-				// a region may not have ACK enabled or the credential may lack
-				// access there; skip it rather than failing the whole scan
+				// A region may not have ACK enabled or the credential may lack
+				// access there; skip it rather than failing the whole scan. Log
+				// so a transient failure leaves a trace instead of silently
+				// omitting a region's clusters.
+				log.Warn().Err(err).Str("region", region).Msg("alicloud: failed to list ACK clusters")
 				break
 			}
 			if resp == nil || resp.Body == nil {
@@ -395,12 +399,7 @@ func (r *mqlAlicloudCsCluster) controlPlaneLogProject() (*mqlAlicloudLogProject,
 		r.ControlPlaneLogProject.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	p, err := resolveLogProject(r.MqlRuntime, r.region, project)
-	if err != nil || p == nil {
-		r.ControlPlaneLogProject.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	return p, nil
+	return resolveLogProject(r.MqlRuntime, r.region, project)
 }
 
 func (r *mqlAlicloudCsCluster) vpc() (*mqlAlicloudVpcNetwork, error) {
@@ -438,12 +437,7 @@ func (r *mqlAlicloudCsCluster) workerRamRole() (*mqlAlicloudRamRole, error) {
 		r.WorkerRamRole.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	role, err := resolveRamRole(r.MqlRuntime, r.cacheWorkerRamRole)
-	if err != nil || role == nil {
-		r.WorkerRamRole.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	return role, nil
+	return resolveRamRole(r.MqlRuntime, r.cacheWorkerRamRole)
 }
 
 func (r *mqlAlicloudCsCluster) addons() ([]any, error) {
@@ -708,12 +702,7 @@ func (r *mqlAlicloudCsNodePool) systemDiskKmsKey() (*mqlAlicloudKmsKey, error) {
 		r.SystemDiskKmsKey.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	key, err := resolveKmsKey(r.MqlRuntime, r.region, r.cacheSystemDiskKmsKeyId)
-	if err != nil || key == nil {
-		r.SystemDiskKmsKey.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	return key, nil
+	return resolveKmsKey(r.MqlRuntime, r.region, r.cacheSystemDiskKmsKeyId)
 }
 
 func (r *mqlAlicloudCsNodePool) securityGroups() ([]any, error) {
@@ -749,10 +738,5 @@ func (r *mqlAlicloudCsNodePool) ramRole() (*mqlAlicloudRamRole, error) {
 		r.RamRole.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	role, err := resolveRamRole(r.MqlRuntime, r.cacheRamRoleName)
-	if err != nil || role == nil {
-		r.RamRole.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	return role, nil
+	return resolveRamRole(r.MqlRuntime, r.cacheRamRoleName)
 }
