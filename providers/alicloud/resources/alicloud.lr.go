@@ -4383,11 +4383,15 @@ func (c *mqlAlicloud) MqlID() string {
 }
 
 func (c *mqlAlicloud) GetAccountId() *plugin.TValue[string] {
-	return &c.AccountId
+	return plugin.GetOrCompute[string](&c.AccountId, func() (string, error) {
+		return c.accountId()
+	})
 }
 
 func (c *mqlAlicloud) GetRegions() *plugin.TValue[[]any] {
-	return &c.Regions
+	return plugin.GetOrCompute[[]any](&c.Regions, func() ([]any, error) {
+		return c.regions()
+	})
 }
 
 // mqlAlicloudRam for the alicloud.ram resource

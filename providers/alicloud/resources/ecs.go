@@ -116,7 +116,8 @@ func (r *mqlAlicloudEcs) instances() ([]any, error) {
 	for _, region := range regions {
 		instances, err := ecsInstancesInRegion(r.MqlRuntime, conn, region)
 		if err != nil {
-			return nil, err
+			// a region may be un-activated or access-denied; skip it rather than failing the whole scan
+			continue
 		}
 		res = append(res, instances...)
 	}
@@ -371,7 +372,8 @@ func (r *mqlAlicloudEcs) disks() ([]any, error) {
 		for {
 			resp, err := client.DescribeDisks(req)
 			if err != nil {
-				return nil, err
+				// a region may be un-activated or access-denied; skip it rather than failing the whole scan
+				break
 			}
 			if resp == nil || resp.Body == nil || resp.Body.Disks == nil {
 				break
@@ -464,7 +466,7 @@ func (r *mqlAlicloudEcs) images() ([]any, error) {
 		}
 
 		pageNumber := int32(1)
-		pageSize := int32(50)
+		pageSize := int32(100)
 		for {
 			req := &ecsclient.DescribeImagesRequest{
 				RegionId:   &region,
@@ -473,7 +475,8 @@ func (r *mqlAlicloudEcs) images() ([]any, error) {
 			}
 			resp, err := client.DescribeImages(req)
 			if err != nil {
-				return nil, err
+				// a region may be un-activated or access-denied; skip it rather than failing the whole scan
+				break
 			}
 			if resp == nil || resp.Body == nil || resp.Body.Images == nil {
 				break
@@ -575,7 +578,7 @@ func (r *mqlAlicloudEcs) keyPairs() ([]any, error) {
 		}
 
 		pageNumber := int32(1)
-		pageSize := int32(50)
+		pageSize := int32(100)
 		for {
 			req := &ecsclient.DescribeKeyPairsRequest{
 				RegionId:   &region,
@@ -584,7 +587,8 @@ func (r *mqlAlicloudEcs) keyPairs() ([]any, error) {
 			}
 			resp, err := client.DescribeKeyPairs(req)
 			if err != nil {
-				return nil, err
+				// a region may be un-activated or access-denied; skip it rather than failing the whole scan
+				break
 			}
 			if resp == nil || resp.Body == nil || resp.Body.KeyPairs == nil {
 				break
@@ -666,7 +670,8 @@ func (r *mqlAlicloudEcs) securityGroups() ([]any, error) {
 	for _, region := range regions {
 		groups, err := ecsSecurityGroupsInRegion(r.MqlRuntime, conn, region)
 		if err != nil {
-			return nil, err
+			// a region may be un-activated or access-denied; skip it rather than failing the whole scan
+			continue
 		}
 		res = append(res, groups...)
 	}
@@ -807,8 +812,15 @@ func (r *mqlAlicloudEcsSecuritygroup) permissions() ([]any, error) {
 			if p.Direction != nil {
 				direction = *p.Direction
 			}
+			// Prefer the stable securityGroupRuleId so the __id survives rule
+			// reordering across scans; fall back to the positional index only
+			// for legacy rules that predate rule IDs.
+			ruleKey := strconv.Itoa(idx)
+			if p.SecurityGroupRuleId != nil && *p.SecurityGroupRuleId != "" {
+				ruleKey = *p.SecurityGroupRuleId
+			}
 			resource, err := CreateResource(r.MqlRuntime, "alicloud.ecs.securitygroup.permission", map[string]*llx.RawData{
-				"__id":                llx.StringData(sgId + "/" + direction + "/" + strconv.Itoa(idx)),
+				"__id":                llx.StringData(sgId + "/" + direction + "/" + ruleKey),
 				"securityGroupRuleId": llx.StringDataPtr(p.SecurityGroupRuleId),
 				"direction":           llx.StringDataPtr(p.Direction),
 				"policy":              llx.StringDataPtr(p.Policy),

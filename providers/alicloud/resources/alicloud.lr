@@ -12,9 +12,9 @@ option go_package = "go.mondoo.com/mql/v13/providers/alicloud/resources"
 // reached.
 alicloud {
   // Account (UID) that the active credential belongs to
-  accountId string
+  accountId() string
   // Region IDs enabled on the account, for example cn-hangzhou
-  regions []string
+  regions() []string
 }
 
 // Alibaba Cloud Resource Access Management

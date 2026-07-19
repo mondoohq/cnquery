@@ -133,7 +133,8 @@ func (r *mqlAlicloudVpc) networks() ([]any, error) {
 			}
 			resp, err := client.DescribeVpcs(req)
 			if err != nil {
-				return nil, err
+				// a region may be un-activated or access-denied; skip it rather than failing the whole scan
+				break
 			}
 			if resp == nil || resp.Body == nil || resp.Body.Vpcs == nil {
 				break
@@ -409,7 +410,8 @@ func (r *mqlAlicloudVpc) vswitches() ([]any, error) {
 			}
 			resp, err := client.DescribeVSwitches(req)
 			if err != nil {
-				return nil, err
+				// a region may be un-activated or access-denied; skip it rather than failing the whole scan
+				break
 			}
 			if resp == nil || resp.Body == nil || resp.Body.VSwitches == nil {
 				break
@@ -548,7 +550,8 @@ func (r *mqlAlicloudVpc) routeTables() ([]any, error) {
 			}
 			resp, err := client.DescribeRouteTableList(req)
 			if err != nil {
-				return nil, err
+				// a region may be un-activated or access-denied; skip it rather than failing the whole scan
+				break
 			}
 			if resp == nil || resp.Body == nil || resp.Body.RouterTableList == nil {
 				break
@@ -764,7 +767,8 @@ func (r *mqlAlicloudVpc) natGateways() ([]any, error) {
 			}
 			resp, err := client.DescribeNatGateways(req)
 			if err != nil {
-				return nil, err
+				// a region may be un-activated or access-denied; skip it rather than failing the whole scan
+				break
 			}
 			if resp == nil || resp.Body == nil || resp.Body.NatGateways == nil {
 				break
@@ -942,7 +946,8 @@ func (r *mqlAlicloudVpc) eipAddresses() ([]any, error) {
 			}
 			resp, err := client.DescribeEipAddresses(req)
 			if err != nil {
-				return nil, err
+				// a region may be un-activated or access-denied; skip it rather than failing the whole scan
+				break
 			}
 			if resp == nil || resp.Body == nil || resp.Body.EipAddresses == nil {
 				break
@@ -1069,7 +1074,8 @@ func (r *mqlAlicloudVpc) networkAcls() ([]any, error) {
 			}
 			resp, err := client.DescribeNetworkAcls(req)
 			if err != nil {
-				return nil, err
+				// a region may be un-activated or access-denied; skip it rather than failing the whole scan
+				break
 			}
 			if resp == nil || resp.Body == nil || resp.Body.NetworkAcls == nil {
 				break

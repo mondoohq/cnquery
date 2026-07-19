@@ -6,6 +6,7 @@ package resources
 import (
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	ddsclient "github.com/alibabacloud-go/dds-20151201/v9/client"
@@ -81,7 +82,8 @@ func (r *mqlAlicloudMongodb) instances() ([]any, error) {
 				PageSize:   tea.Int32(pageSize),
 			})
 			if err != nil {
-				return nil, err
+				// a region may be un-activated or access-denied; skip it rather than failing the whole scan
+				break
 			}
 			if resp == nil || resp.Body == nil || resp.Body.DBInstances == nil {
 				break
@@ -158,7 +160,7 @@ type mqlAlicloudMongodbInstanceInternal struct {
 	cacheVswitchID string
 
 	attrLock    sync.Mutex
-	attrFetched bool
+	attrFetched atomic.Bool
 	attr        *ddsclient.DescribeDBInstanceAttributeResponseBodyDBInstancesDBInstance
 
 	sslOnce sync.Once
@@ -175,12 +177,12 @@ func (r *mqlAlicloudMongodbInstance) id() (string, error) {
 // call. A transient error is not cached: attrFetched is only set on success, so
 // a later access retries the call.
 func (r *mqlAlicloudMongodbInstance) attribute() (*ddsclient.DescribeDBInstanceAttributeResponseBodyDBInstancesDBInstance, error) {
-	if r.attrFetched {
+	if r.attrFetched.Load() {
 		return r.attr, nil
 	}
 	r.attrLock.Lock()
 	defer r.attrLock.Unlock()
-	if r.attrFetched {
+	if r.attrFetched.Load() {
 		return r.attr, nil
 	}
 
@@ -200,7 +202,7 @@ func (r *mqlAlicloudMongodbInstance) attribute() (*ddsclient.DescribeDBInstanceA
 		r.cacheVpcID = tea.StringValue(r.attr.VPCId)
 		r.cacheVswitchID = tea.StringValue(r.attr.VSwitchId)
 	}
-	r.attrFetched = true
+	r.attrFetched.Store(true)
 	return r.attr, nil
 }
 

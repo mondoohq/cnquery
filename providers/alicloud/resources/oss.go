@@ -278,7 +278,7 @@ func (a *mqlAlicloudOssBucket) fetchInfo() (*oss.BucketInfo, error) {
 		return nil, err
 	}
 	resp, err := client.GetBucketInfo(context.Background(), &oss.GetBucketInfoRequest{Bucket: &a.name})
-	if err != nil {
+	if err != nil || resp == nil {
 		a.info = nil
 		a.infoLoaded.Store(true)
 		return nil, nil

@@ -122,6 +122,9 @@ func (r *mqlAlicloudRam) users() ([]any, error) {
 			break
 		}
 		marker = resp.Body.Marker
+		if marker == nil || *marker == "" {
+			break
+		}
 	}
 	return res, nil
 }
@@ -166,6 +169,9 @@ func (r *mqlAlicloudRam) groups() ([]any, error) {
 			break
 		}
 		marker = resp.Body.Marker
+		if marker == nil || *marker == "" {
+			break
+		}
 	}
 	return res, nil
 }
@@ -224,6 +230,9 @@ func (r *mqlAlicloudRam) roles() ([]any, error) {
 			break
 		}
 		marker = resp.Body.Marker
+		if marker == nil || *marker == "" {
+			break
+		}
 	}
 	return res, nil
 }
@@ -282,6 +291,9 @@ func (r *mqlAlicloudRam) policies() ([]any, error) {
 			break
 		}
 		marker = resp.Body.Marker
+		if marker == nil || *marker == "" {
+			break
+		}
 	}
 	return res, nil
 }
@@ -678,6 +690,9 @@ func (r *mqlAlicloudRamGroup) users() ([]any, error) {
 			break
 		}
 		marker = resp.Body.Marker
+		if marker == nil || *marker == "" {
+			break
+		}
 	}
 	return res, nil
 }

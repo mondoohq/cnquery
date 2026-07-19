@@ -111,7 +111,8 @@ func (r *mqlAlicloudPolardb) clusters() ([]any, error) {
 				PageSize:   &ps,
 			})
 			if err != nil {
-				return nil, err
+				// a region may be un-activated or access-denied; skip it rather than failing the whole scan
+				break
 			}
 			if resp == nil || resp.Body == nil || resp.Body.Items == nil {
 				break
