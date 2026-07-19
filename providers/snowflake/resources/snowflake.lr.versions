@@ -83,6 +83,7 @@ snowflake.authenticationPolicy.options 13.2.7
 snowflake.authenticationPolicy.owner 13.2.7
 snowflake.authenticationPolicy.ownerRoleType 13.2.7
 snowflake.authenticationPolicy.schemaName 13.2.7
+snowflake.authenticationPolicy.securityIntegrationRefs 13.3.7
 snowflake.authenticationPolicy.securityIntegrations 13.2.7
 snowflake.connection 13.3.7
 snowflake.connection.accountLocator 13.3.7
@@ -109,6 +110,7 @@ snowflake.database.name 11.0.0
 snowflake.database.options 11.0.0
 snowflake.database.origin 11.0.0
 snowflake.database.owner 11.0.0
+snowflake.database.ownerRole 13.3.7
 snowflake.database.resourceGroup 11.0.0
 snowflake.database.retentionTime 11.0.0
 snowflake.database.roles 13.1.1
@@ -147,6 +149,7 @@ snowflake.failoverGroup.name 13.1.1
 snowflake.failoverGroup.nextScheduledRefresh 13.1.1
 snowflake.failoverGroup.objectTypes 13.1.1
 snowflake.failoverGroup.owner 13.1.1
+snowflake.failoverGroup.ownerRole 13.3.7
 snowflake.failoverGroup.primary 13.1.1
 snowflake.failoverGroup.regionGroup 13.1.1
 snowflake.failoverGroup.replicationSchedule 13.1.1
@@ -259,6 +262,7 @@ snowflake.passwordPolicy.databaseName 11.0.0
 snowflake.passwordPolicy.kind 11.0.0
 snowflake.passwordPolicy.name 11.0.0
 snowflake.passwordPolicy.owner 11.0.0
+snowflake.passwordPolicy.ownerRole 13.3.7
 snowflake.passwordPolicy.passwordHistory 11.0.0
 snowflake.passwordPolicy.passwordLockoutTimeMins 11.0.0
 snowflake.passwordPolicy.passwordMaxAgeDays 11.0.0
@@ -311,6 +315,7 @@ snowflake.resourceMonitor.name 13.2.7
 snowflake.resourceMonitor.notifyAt 13.2.7
 snowflake.resourceMonitor.notifyUsers 13.2.7
 snowflake.resourceMonitor.owner 13.2.7
+snowflake.resourceMonitor.ownerRole 13.3.7
 snowflake.resourceMonitor.remainingCredits 13.2.7
 snowflake.resourceMonitor.startTime 13.2.7
 snowflake.resourceMonitor.suspendAt 13.2.7
@@ -328,6 +333,7 @@ snowflake.role.isDefault 11.0.0
 snowflake.role.isInherited 11.0.0
 snowflake.role.name 11.0.0
 snowflake.role.owner 11.0.0
+snowflake.role.ownerRole 13.3.7
 snowflake.rowAccessPolicy 13.3.7
 snowflake.rowAccessPolicy.body 13.3.7
 snowflake.rowAccessPolicy.comment 13.3.7
@@ -399,10 +405,12 @@ snowflake.sessionPolicy.sessionUiIdleTimeoutMins 13.0.7
 snowflake.share 13.0.7
 snowflake.share.comment 13.0.7
 snowflake.share.createdAt 13.0.7
+snowflake.share.database 13.3.7
 snowflake.share.databaseName 13.0.7
 snowflake.share.kind 13.0.7
 snowflake.share.name 13.0.7
 snowflake.share.owner 13.0.7
+snowflake.share.ownerRole 13.3.7
 snowflake.share.to 13.0.7
 snowflake.stage 11.0.0
 snowflake.stage.cloud 11.0.0
@@ -417,6 +425,7 @@ snowflake.stage.name 11.0.0
 snowflake.stage.owner 11.0.0
 snowflake.stage.ownerRoleType 11.0.0
 snowflake.stage.schemaName 11.0.0
+snowflake.stage.storageIntegration 13.3.7
 snowflake.stage.storeIntegration 11.0.0
 snowflake.stage.type 11.0.0
 snowflake.stage.url 11.0.0
@@ -456,6 +465,7 @@ snowflake.task.definition 13.3.7
 snowflake.task.name 13.3.7
 snowflake.task.owner 13.3.7
 snowflake.task.ownerRoleType 13.3.7
+snowflake.task.predecessorTasks 13.3.7
 snowflake.task.predecessors 13.3.7
 snowflake.task.schedule 13.3.7
 snowflake.task.schemaName 13.3.7
@@ -467,8 +477,10 @@ snowflake.user.createdAt 11.0.0
 snowflake.user.daysSinceLastLogin 13.0.7
 snowflake.user.defaultNamespace 11.0.0
 snowflake.user.defaultRole 11.0.0
+snowflake.user.defaultRoleRef 13.3.7
 snowflake.user.defaultSecondaryRoles 13.3.7
 snowflake.user.defaultWarehouse 11.0.0
+snowflake.user.defaultWarehouseRef 13.3.7
 snowflake.user.disabled 11.0.0
 snowflake.user.displayName 11.0.0
 snowflake.user.email 11.0.0
@@ -524,6 +536,7 @@ snowflake.warehouse.queryAccelerationMaxScaleFactor 11.0.0
 snowflake.warehouse.queued 11.0.0
 snowflake.warehouse.quiescing 11.0.0
 snowflake.warehouse.resourceMonitor 11.0.0
+snowflake.warehouse.resourceMonitorRef 13.3.7
 snowflake.warehouse.resumedAt 11.0.0
 snowflake.warehouse.running 11.0.0
 snowflake.warehouse.scalingPolicy 11.0.0

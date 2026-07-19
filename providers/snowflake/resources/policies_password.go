@@ -167,3 +167,7 @@ func (r *mqlSnowflakePasswordPolicy) passwordLockoutTimeMins() (int64, error) {
 func (r *mqlSnowflakePasswordPolicy) passwordHistory() (int64, error) {
 	return 0, r.gatherPasswordPolicyDetails()
 }
+
+func (r *mqlSnowflakePasswordPolicy) ownerRole() (*mqlSnowflakeRole, error) {
+	return resolveOwnerRole(r.MqlRuntime, r.Owner.Data, &r.OwnerRole)
+}

@@ -109,3 +109,7 @@ func (r *mqlSnowflakeFailoverGroup) shares() ([]any, error) {
 	}
 	return out, nil
 }
+
+func (r *mqlSnowflakeFailoverGroup) ownerRole() (*mqlSnowflakeRole, error) {
+	return resolveOwnerRole(r.MqlRuntime, r.Owner.Data, &r.OwnerRole)
+}

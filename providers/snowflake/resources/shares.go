@@ -61,3 +61,11 @@ func newMqlSnowflakeShare(runtime *plugin.Runtime, share sdk.Share) (*mqlSnowfla
 	}
 	return r.(*mqlSnowflakeShare), nil
 }
+
+func (r *mqlSnowflakeShare) database() (*mqlSnowflakeDatabase, error) {
+	return resolveDatabaseRef(r.MqlRuntime, r.DatabaseName.Data, &r.Database)
+}
+
+func (r *mqlSnowflakeShare) ownerRole() (*mqlSnowflakeRole, error) {
+	return resolveOwnerRole(r.MqlRuntime, r.Owner.Data, &r.OwnerRole)
+}

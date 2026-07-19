@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -154,4 +155,40 @@ func (r *mqlSnowflakeStorageIntegration) azureConsentUrl() (string, error) {
 
 func (r *mqlSnowflakeStorageIntegration) azureMultiTenantAppName() (string, error) {
 	return r.prop("AZURE_MULTI_TENANT_APP_NAME")
+}
+
+// initSnowflakeStorageIntegration resolves a storage integration by name so
+// typed references (such as snowflake.stage.storageIntegration) can hydrate a
+// full integration from just its name.
+func initSnowflakeStorageIntegration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	nameRaw, ok := args["name"]
+	if !ok {
+		return args, nil, nil
+	}
+	name, _ := nameRaw.Value.(string)
+	if name == "" {
+		return args, nil, nil
+	}
+
+	conn := runtime.Connection.(*connection.SnowflakeConnection)
+	client := conn.Client()
+	ctx := context.Background()
+
+	integrations, err := client.StorageIntegrations.Show(ctx, sdk.NewShowStorageIntegrationRequest().WithLike(sdk.Like{Pattern: sdk.String(name)}))
+	if err != nil {
+		return nil, nil, err
+	}
+	for i := range integrations {
+		if integrations[i].Name == name {
+			res, err := newMqlSnowflakeStorageIntegration(runtime, integrations[i])
+			if err != nil {
+				return nil, nil, err
+			}
+			return nil, res, nil
+		}
+	}
+	return nil, nil, fmt.Errorf("snowflake.storageIntegration %q not found", name)
 }

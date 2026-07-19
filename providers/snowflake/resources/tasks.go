@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"go.mondoo.com/mql/v13/llx"
@@ -92,4 +93,80 @@ func (r *mqlSnowflakeTask) warehouse() (*mqlSnowflakeWarehouse, error) {
 		return nil, err
 	}
 	return wh.(*mqlSnowflakeWarehouse), nil
+}
+
+// initSnowflakeTask resolves a task by its database, schema, and name so typed
+// references (such as snowflake.task.predecessorTasks) can hydrate a full task
+// from a fully qualified name.
+func initSnowflakeTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 3 {
+		return args, nil, nil
+	}
+	dbRaw, ok1 := args["databaseName"]
+	schemaRaw, ok2 := args["schemaName"]
+	nameRaw, ok3 := args["name"]
+	if !ok1 || !ok2 || !ok3 {
+		return args, nil, nil
+	}
+	databaseName, _ := dbRaw.Value.(string)
+	schemaName, _ := schemaRaw.Value.(string)
+	name, _ := nameRaw.Value.(string)
+	if databaseName == "" || schemaName == "" || name == "" {
+		return args, nil, nil
+	}
+
+	conn := runtime.Connection.(*connection.SnowflakeConnection)
+	client := conn.Client()
+	ctx := context.Background()
+
+	tasks, err := client.Tasks.Show(ctx, sdk.NewShowTaskRequest().
+		WithLike(sdk.Like{Pattern: sdk.String(name)}).
+		WithIn(sdk.ExtendedIn{In: sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)}}))
+	if err != nil {
+		return nil, nil, err
+	}
+	for i := range tasks {
+		if tasks[i].Name == name && tasks[i].DatabaseName == databaseName && tasks[i].SchemaName == schemaName {
+			res, err := newMqlSnowflakeTask(runtime, tasks[i])
+			if err != nil {
+				return nil, nil, err
+			}
+			return nil, res, nil
+		}
+	}
+	return nil, nil, fmt.Errorf("snowflake.task %q not found in %q.%q", name, databaseName, schemaName)
+}
+
+// snowflakeTaskByFQN resolves a fully qualified task name (database.schema.name)
+// to a typed snowflake.task.
+func snowflakeTaskByFQN(runtime *plugin.Runtime, fqn string) (*mqlSnowflakeTask, error) {
+	id, err := sdk.ParseSchemaObjectIdentifier(fqn)
+	if err != nil {
+		return nil, err
+	}
+	res, err := NewResource(runtime, "snowflake.task", map[string]*llx.RawData{
+		"databaseName": llx.StringData(id.DatabaseName()),
+		"schemaName":   llx.StringData(id.SchemaName()),
+		"name":         llx.StringData(id.Name()),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlSnowflakeTask), nil
+}
+
+func (r *mqlSnowflakeTask) predecessorTasks() ([]any, error) {
+	out := []any{}
+	for _, p := range r.Predecessors.Data {
+		fqn, ok := p.(string)
+		if !ok || fqn == "" {
+			continue
+		}
+		task, err := snowflakeTaskByFQN(r.MqlRuntime, fqn)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, task)
+	}
+	return out, nil
 }

@@ -106,3 +106,18 @@ func newMqlSnowflakeRole(runtime *plugin.Runtime, role sdk.Role) (*mqlSnowflakeR
 	mqlResource := r.(*mqlSnowflakeRole)
 	return mqlResource, nil
 }
+
+// resolveOwnerRole resolves an account role name to a typed snowflake.role,
+// hydrated through the role's init. It sets the field's null state when the
+// owner name is empty (an unowned object) so the runtime records the null.
+func resolveOwnerRole(runtime *plugin.Runtime, name string, field *plugin.TValue[*mqlSnowflakeRole]) (*mqlSnowflakeRole, error) {
+	if name == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return snowflakeRoleByName(runtime, name)
+}
+
+func (r *mqlSnowflakeRole) ownerRole() (*mqlSnowflakeRole, error) {
+	return resolveOwnerRole(r.MqlRuntime, r.Owner.Data, &r.OwnerRole)
+}

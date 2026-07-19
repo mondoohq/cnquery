@@ -156,3 +156,22 @@ func (r *mqlSnowflakeUser) parameters() ([]any, error) {
 
 	return list, nil
 }
+
+func (r *mqlSnowflakeUser) defaultRoleRef() (*mqlSnowflakeRole, error) {
+	return resolveOwnerRole(r.MqlRuntime, r.DefaultRole.Data, &r.DefaultRoleRef)
+}
+
+func (r *mqlSnowflakeUser) defaultWarehouseRef() (*mqlSnowflakeWarehouse, error) {
+	name := r.DefaultWarehouse.Data
+	if name == "" {
+		r.DefaultWarehouseRef.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	wh, err := NewResource(r.MqlRuntime, "snowflake.warehouse", map[string]*llx.RawData{
+		"name": llx.StringData(name),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return wh.(*mqlSnowflakeWarehouse), nil
+}

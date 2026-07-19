@@ -166,3 +166,24 @@ func (r *mqlSnowflakeAuthenticationPolicy) securityIntegrations() ([]any, error)
 	}
 	return r.descSecIntegs, nil
 }
+
+func (r *mqlSnowflakeAuthenticationPolicy) securityIntegrationRefs() ([]any, error) {
+	if err := r.gatherDescribe(); err != nil {
+		return nil, err
+	}
+	out := []any{}
+	for _, s := range r.descSecIntegs {
+		name, ok := s.(string)
+		if !ok || name == "" {
+			continue
+		}
+		res, err := NewResource(r.MqlRuntime, "snowflake.securityIntegration", map[string]*llx.RawData{
+			"name": llx.StringData(name),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}

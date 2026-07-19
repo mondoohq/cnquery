@@ -59,3 +59,18 @@ func newMqlSnowflakeStage(runtime *plugin.Runtime, user sdk.Stage) (*mqlSnowflak
 	mqlResource := r.(*mqlSnowflakeStage)
 	return mqlResource, nil
 }
+
+func (r *mqlSnowflakeStage) storageIntegration() (*mqlSnowflakeStorageIntegration, error) {
+	name := r.StoreIntegration.Data
+	if name == "" {
+		r.StorageIntegration.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "snowflake.storageIntegration", map[string]*llx.RawData{
+		"name": llx.StringData(name),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlSnowflakeStorageIntegration), nil
+}

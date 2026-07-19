@@ -109,3 +109,7 @@ func newMqlSnowflakeWarehouse(runtime *plugin.Runtime, warehouse sdk.Warehouse) 
 	mqlResource := r.(*mqlSnowflakeWarehouse)
 	return mqlResource, nil
 }
+
+func (r *mqlSnowflakeWarehouse) resourceMonitorRef() (*mqlSnowflakeResourceMonitor, error) {
+	return snowflakeResourceMonitorByName(r.MqlRuntime, r.ResourceMonitor.Data, &r.ResourceMonitorRef)
+}

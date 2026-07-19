@@ -125,3 +125,7 @@ func newMqlSnowflakeDatabase(runtime *plugin.Runtime, database sdk.Database) (*m
 	mqlResource := r.(*mqlSnowflakeDatabase)
 	return mqlResource, nil
 }
+
+func (r *mqlSnowflakeDatabase) ownerRole() (*mqlSnowflakeRole, error) {
+	return resolveOwnerRole(r.MqlRuntime, r.Owner.Data, &r.OwnerRole)
+}
