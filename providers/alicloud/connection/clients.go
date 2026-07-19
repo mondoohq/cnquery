@@ -14,6 +14,7 @@ import (
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
 	ddsclient "github.com/alibabacloud-go/dds-20151201/v9/client"
 	ecsclient "github.com/alibabacloud-go/ecs-20140526/v6/client"
+	fcclient "github.com/alibabacloud-go/fc-20230330/v4/client"
 	kmsclient "github.com/alibabacloud-go/kms-20160120/v4/client"
 	nlbclient "github.com/alibabacloud-go/nlb-20220430/v4/client"
 	polardbclient "github.com/alibabacloud-go/polardb-20170801/v7/client"
@@ -226,6 +227,23 @@ func (c *AlicloudConnection) NlbClient(region string) (*nlbclient.Client, error)
 		return nil, err
 	}
 	return client.(*nlbclient.Client), nil
+}
+
+// FcClient returns a Function Compute (FC 3.0) client for a region. FC 3.0
+// resolves its regional endpoint (fcv3.<region>.aliyuncs.com, or <region>.fc for
+// finance/edge regions) from RegionId via its own EndpointMap, so the endpoint
+// is left unset rather than hard-coded.
+func (c *AlicloudConnection) FcClient(region string) (*fcclient.Client, error) {
+	client, err := c.cachedClient("fc/"+region, func() (any, error) {
+		return fcclient.NewClient(&openapi.Config{
+			Credential: c.cred,
+			RegionId:   &region,
+		})
+	})
+	if err != nil {
+		return nil, err
+	}
+	return client.(*fcclient.Client), nil
 }
 
 // KmsClient returns a Key Management Service client for a region.

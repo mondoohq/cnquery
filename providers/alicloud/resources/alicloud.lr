@@ -9,9 +9,9 @@ option go_package = "go.mondoo.com/mql/v13/providers/alicloud/resources"
 // Entry point for querying an Alibaba Cloud account. Exposes the account
 // identity and the region IDs enabled on the account, and is the root from
 // which the RAM, ECS, VPC, OSS, SLB, ALB, NLB, and managed-database resources
-// are reached, along with the Container Service for Kubernetes, Key Management
-// Service, ActionTrail, Log Service, Cloud Config, and Resource Directory
-// resources.
+// are reached, along with the Container Service for Kubernetes, Function
+// Compute, Key Management Service, ActionTrail, Log Service, Cloud Config, and
+// Resource Directory resources.
 alicloud {
   // Account (UID) that the active credential belongs to
   accountId() string
@@ -3045,4 +3045,152 @@ alicloud.nlb.serverGroup {
   tags map[string]string
   // VPC the server group belongs to
   vpc() alicloud.vpc.network
+}
+
+// Alibaba Cloud Function Compute
+//
+// Function Compute (FC 3.0) functions across an Alibaba Cloud account. Exposes
+// the serverless functions in every enabled region, along with their triggers.
+// Use it to audit function execution roles, network placement, public egress
+// and invocation, and whether environment variables might carry secrets.
+alicloud.fc {
+  // Functions across all enabled regions
+  functions() []alicloud.fc.function
+}
+
+// Function Compute function
+//
+// A single FC 3.0 function, keyed by functionName within its region. Exposes the
+// runtime and resource configuration, the execution RAM role, the VPC and log
+// configuration, public network egress, environment variables, and the
+// function's triggers. Use it to audit the function's privilege and network
+// exposure. For example
+// alicloud.fc.function(functionName: "my-fn", regionId: "cn-hangzhou").
+alicloud.fc.function {
+  // Region ID the function resides in, for example cn-hangzhou
+  regionId string
+  // Function name, used as the lookup key within its region
+  functionName string
+  // System-generated function ID
+  functionId string
+  // Alibaba Cloud Resource Name of the function
+  arn string
+  // Description of the function
+  description string
+  // Function runtime
+  //
+  // For example nodejs18, python3.10, go1, java11, php7.2, custom,
+  // custom.debian10, or custom-container.
+  runtime string
+  // Request handler entry point, for example index.handler
+  handler string
+  // Maximum execution time in seconds
+  timeout int
+  // Memory allocated to the function in MB
+  memorySize int
+  // Ephemeral disk size in MB, either 512 or 10240
+  diskSize int
+  // vCPU cores allocated to the function
+  cpu float
+  // Function state, for example Active or Pending
+  state string
+  // Reason for the current state, empty when healthy
+  stateReason string
+  // Deployed code size in bytes
+  codeSize int
+  // CRC-64 checksum of the deployed code
+  codeChecksum string
+  // Time the function was created
+  createdTime time
+  // Time the function was last modified
+  lastModifiedTime time
+  // Whether the function has public internet egress
+  //
+  // True when the function may reach the public internet for outbound requests.
+  internetAccess bool
+  // Maximum number of concurrent requests handled by one instance
+  instanceConcurrency int
+  // ID of the resource group the function belongs to
+  resourceGroupId string
+  // Environment variables configured on the function
+  //
+  // Audit these for plaintext secrets; values are returned as configured.
+  environmentVariables map[string]string
+  // Container image for a custom-container function, empty for other runtimes
+  customContainerImage string
+  // Name of the Log Service logstore that receives function logs
+  logStore string
+  // Tags applied to the function
+  tags map[string]string
+  // RAM role the function assumes when it runs
+  //
+  // Null when the function has no execution role. The role determines the
+  // permissions the function code runs with.
+  executionRole() alicloud.ram.role
+  // VPC the function is attached to, null when the function has no VPC configuration
+  vpc() alicloud.vpc.network
+  // vSwitches the function's elastic network interfaces attach to
+  vswitches() []alicloud.vpc.vswitch
+  // Security group applied to the function's VPC elastic network interface
+  securityGroup() alicloud.ecs.securitygroup
+  // Log Service project that receives function logs, null when logging is not configured
+  logProject() alicloud.log.project
+  // Triggers configured on the function
+  triggers() []alicloud.fc.trigger
+}
+
+// Function Compute trigger
+//
+// A single trigger on an FC function, keyed by the owning functionName and
+// triggerName. Exposes the trigger type and event source, the public and
+// intranet HTTP endpoints for HTTP triggers, and the RAM role the event source
+// assumes to invoke the function. Use it to audit whether a function is
+// invocable from the internet.
+alicloud.fc.trigger {
+  // Region ID the trigger resides in
+  regionId string
+  // Name of the function the trigger belongs to
+  functionName string
+  // Trigger name, used with the function name as the lookup key
+  triggerName string
+  // System-generated trigger ID
+  triggerId string
+  // Trigger type
+  //
+  // One of http, oss, timer, log, mns_topic, cdn_events, or eventbridge.
+  type string
+  // ARN of the event source that fires the trigger
+  sourceArn string
+  // ARN of the invocation target
+  targetArn string
+  // Version or alias the trigger invokes
+  qualifier string
+  // Trigger status, for example OK or Disabled
+  status string
+  // Description of the trigger
+  description string
+  // Time the trigger was created
+  createdTime time
+  // Time the trigger was last modified
+  lastModifiedTime time
+  // Public HTTP endpoint for an http trigger
+  //
+  // Empty for non-http triggers or when the public URL is disabled. A non-empty
+  // value means the function can be invoked over the internet.
+  httpUrlInternet string
+  // Intranet (VPC-only) HTTP endpoint for an http trigger
+  httpUrlIntranet string
+  // Type-specific trigger configuration
+  //
+  // Parsed from the trigger's config document; the shape varies by type, for
+  // example authType and methods for an http trigger, or events for an oss
+  // trigger.
+  triggerConfig dict
+  // Whether the function is invocable from the public internet through this trigger
+  //
+  // True when an http trigger exposes a public URL. Combine with the
+  // triggerConfig authType to determine whether anonymous invocation is allowed.
+  internetInvocable() bool
+  // RAM role the event source assumes to invoke the function, null when none
+  invocationRole() alicloud.ram.role
 }
