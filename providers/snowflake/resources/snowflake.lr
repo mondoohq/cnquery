@@ -109,6 +109,16 @@ snowflake.account {
   applicationPackages() []snowflake.applicationPackage
   // External access integrations in the account (outbound network egress governance)
   externalAccessIntegrations() []snowflake.externalAccessIntegration
+  // Cortex Search services in the account (managed retrieval indexes for RAG)
+  cortexSearchServices() []snowflake.cortexSearchService
+  // Value of the account's CORTEX_ENABLED_CROSS_REGION parameter
+  //
+  // Governs whether Snowflake Cortex may process inference requests in a region
+  // other than the account's own when a model is not available locally. Common
+  // values are DISABLED (no cross-region inference), ANY_REGION (any Snowflake
+  // region), and region-group values such as AWS_US, AWS_EU, AWS_APJ, AZURE_US,
+  // or AWS_US_ANY. Empty when the parameter is unset.
+  cortexEnabledCrossRegion() string
 }
 
 // Snowflake User
@@ -1589,4 +1599,37 @@ snowflake.externalAccessIntegration @defaults("name enabled") {
   allowedAuthenticationSecrets() []string
   // Names of the API authentication integrations the integration allows
   allowedApiAuthenticationIntegrations() []string
+}
+
+// Snowflake Cortex Search service
+//
+// A Cortex Search service in the account, the managed retrieval index that
+// powers low-latency semantic and keyword search over a source query's text,
+// the retrieval half of a Cortex retrieval-augmented-generation (RAG)
+// application. Covers where the service lives (databaseName, schemaName, name),
+// the warehouse that runs indexing and query serving, the target data
+// freshness lag, the query that defines the indexed source data, and the URL
+// clients call to issue searches. The query definition and service URL are
+// high-value review targets: together they reveal exactly which data a service
+// exposes and where it can be reached. Select a service by name, for example
+// `snowflake.account.cortexSearchServices.where(name == "SUPPORT_DOCS")`.
+snowflake.cortexSearchService @defaults("name databaseName schemaName") {
+  // Cortex Search service name
+  name string
+  // Database that contains the service
+  databaseName string
+  // Schema that contains the service
+  schemaName string
+  // Comment on the service
+  comment string
+  // Time the service was created
+  createdAt time
+  // Warehouse that runs indexing and query serving for the service
+  warehouse() snowflake.warehouse
+  // Target data freshness lag, the maximum staleness of indexed data (such as "1 hour" or "5 minutes")
+  targetLag() string
+  // Query that defines the source data indexed by the service
+  definition() string
+  // URL clients call to query the service
+  serviceQueryUrl() string
 }

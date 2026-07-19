@@ -53,6 +53,7 @@ const (
 	ResourceSnowflakeApplication               string = "snowflake.application"
 	ResourceSnowflakeApplicationPackage        string = "snowflake.applicationPackage"
 	ResourceSnowflakeExternalAccessIntegration string = "snowflake.externalAccessIntegration"
+	ResourceSnowflakeCortexSearchService       string = "snowflake.cortexSearchService"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -206,6 +207,10 @@ func init() {
 		"snowflake.externalAccessIntegration": {
 			Init:   initSnowflakeExternalAccessIntegration,
 			Create: createSnowflakeExternalAccessIntegration,
+		},
+		"snowflake.cortexSearchService": {
+			// to override args, implement: initSnowflakeCortexSearchService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSnowflakeCortexSearchService,
 		},
 	}
 }
@@ -394,6 +399,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"snowflake.account.externalAccessIntegrations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeAccount).GetExternalAccessIntegrations()).ToDataRes(types.Array(types.Resource("snowflake.externalAccessIntegration")))
+	},
+	"snowflake.account.cortexSearchServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeAccount).GetCortexSearchServices()).ToDataRes(types.Array(types.Resource("snowflake.cortexSearchService")))
+	},
+	"snowflake.account.cortexEnabledCrossRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeAccount).GetCortexEnabledCrossRegion()).ToDataRes(types.String)
 	},
 	"snowflake.user.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeUser).GetName()).ToDataRes(types.String)
@@ -1796,6 +1807,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"snowflake.externalAccessIntegration.allowedApiAuthenticationIntegrations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeExternalAccessIntegration).GetAllowedApiAuthenticationIntegrations()).ToDataRes(types.Array(types.String))
 	},
+	"snowflake.cortexSearchService.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeCortexSearchService).GetName()).ToDataRes(types.String)
+	},
+	"snowflake.cortexSearchService.databaseName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeCortexSearchService).GetDatabaseName()).ToDataRes(types.String)
+	},
+	"snowflake.cortexSearchService.schemaName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeCortexSearchService).GetSchemaName()).ToDataRes(types.String)
+	},
+	"snowflake.cortexSearchService.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeCortexSearchService).GetComment()).ToDataRes(types.String)
+	},
+	"snowflake.cortexSearchService.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeCortexSearchService).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"snowflake.cortexSearchService.warehouse": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeCortexSearchService).GetWarehouse()).ToDataRes(types.Resource("snowflake.warehouse"))
+	},
+	"snowflake.cortexSearchService.targetLag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeCortexSearchService).GetTargetLag()).ToDataRes(types.String)
+	},
+	"snowflake.cortexSearchService.definition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeCortexSearchService).GetDefinition()).ToDataRes(types.String)
+	},
+	"snowflake.cortexSearchService.serviceQueryUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeCortexSearchService).GetServiceQueryUrl()).ToDataRes(types.String)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1970,6 +2008,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"snowflake.account.externalAccessIntegrations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeAccount).ExternalAccessIntegrations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.account.cortexSearchServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeAccount).CortexSearchServices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.account.cortexEnabledCrossRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeAccount).CortexEnabledCrossRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"snowflake.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3980,6 +4026,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlSnowflakeExternalAccessIntegration).AllowedApiAuthenticationIntegrations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"snowflake.cortexSearchService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortexSearchService).__id, ok = v.Value.(string)
+		return
+	},
+	"snowflake.cortexSearchService.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortexSearchService).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.cortexSearchService.databaseName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortexSearchService).DatabaseName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.cortexSearchService.schemaName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortexSearchService).SchemaName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.cortexSearchService.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortexSearchService).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.cortexSearchService.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortexSearchService).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"snowflake.cortexSearchService.warehouse": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortexSearchService).Warehouse, ok = plugin.RawToTValue[*mqlSnowflakeWarehouse](v.Value, v.Error)
+		return
+	},
+	"snowflake.cortexSearchService.targetLag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortexSearchService).TargetLag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.cortexSearchService.definition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortexSearchService).Definition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.cortexSearchService.serviceQueryUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortexSearchService).ServiceQueryUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -4098,6 +4184,8 @@ type mqlSnowflakeAccount struct {
 	Applications               plugin.TValue[[]any]
 	ApplicationPackages        plugin.TValue[[]any]
 	ExternalAccessIntegrations plugin.TValue[[]any]
+	CortexSearchServices       plugin.TValue[[]any]
+	CortexEnabledCrossRegion   plugin.TValue[string]
 }
 
 // createSnowflakeAccount creates a new instance of this resource
@@ -4702,6 +4790,28 @@ func (c *mqlSnowflakeAccount) GetExternalAccessIntegrations() *plugin.TValue[[]a
 		}
 
 		return c.externalAccessIntegrations()
+	})
+}
+
+func (c *mqlSnowflakeAccount) GetCortexSearchServices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CortexSearchServices, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "cortexSearchServices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.cortexSearchServices()
+	})
+}
+
+func (c *mqlSnowflakeAccount) GetCortexEnabledCrossRegion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CortexEnabledCrossRegion, func() (string, error) {
+		return c.cortexEnabledCrossRegion()
 	})
 }
 
@@ -8998,5 +9108,107 @@ func (c *mqlSnowflakeExternalAccessIntegration) GetAllowedAuthenticationSecrets(
 func (c *mqlSnowflakeExternalAccessIntegration) GetAllowedApiAuthenticationIntegrations() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.AllowedApiAuthenticationIntegrations, func() ([]any, error) {
 		return c.allowedApiAuthenticationIntegrations()
+	})
+}
+
+// mqlSnowflakeCortexSearchService for the snowflake.cortexSearchService resource
+type mqlSnowflakeCortexSearchService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlSnowflakeCortexSearchServiceInternal
+	Name            plugin.TValue[string]
+	DatabaseName    plugin.TValue[string]
+	SchemaName      plugin.TValue[string]
+	Comment         plugin.TValue[string]
+	CreatedAt       plugin.TValue[*time.Time]
+	Warehouse       plugin.TValue[*mqlSnowflakeWarehouse]
+	TargetLag       plugin.TValue[string]
+	Definition      plugin.TValue[string]
+	ServiceQueryUrl plugin.TValue[string]
+}
+
+// createSnowflakeCortexSearchService creates a new instance of this resource
+func createSnowflakeCortexSearchService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSnowflakeCortexSearchService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("snowflake.cortexSearchService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSnowflakeCortexSearchService) MqlName() string {
+	return "snowflake.cortexSearchService"
+}
+
+func (c *mqlSnowflakeCortexSearchService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSnowflakeCortexSearchService) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSnowflakeCortexSearchService) GetDatabaseName() *plugin.TValue[string] {
+	return &c.DatabaseName
+}
+
+func (c *mqlSnowflakeCortexSearchService) GetSchemaName() *plugin.TValue[string] {
+	return &c.SchemaName
+}
+
+func (c *mqlSnowflakeCortexSearchService) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlSnowflakeCortexSearchService) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlSnowflakeCortexSearchService) GetWarehouse() *plugin.TValue[*mqlSnowflakeWarehouse] {
+	return plugin.GetOrCompute[*mqlSnowflakeWarehouse](&c.Warehouse, func() (*mqlSnowflakeWarehouse, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.cortexSearchService", c.__id, "warehouse")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeWarehouse), nil
+			}
+		}
+
+		return c.warehouse()
+	})
+}
+
+func (c *mqlSnowflakeCortexSearchService) GetTargetLag() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TargetLag, func() (string, error) {
+		return c.targetLag()
+	})
+}
+
+func (c *mqlSnowflakeCortexSearchService) GetDefinition() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Definition, func() (string, error) {
+		return c.definition()
+	})
+}
+
+func (c *mqlSnowflakeCortexSearchService) GetServiceQueryUrl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ServiceQueryUrl, func() (string, error) {
+		return c.serviceQueryUrl()
 	})
 }

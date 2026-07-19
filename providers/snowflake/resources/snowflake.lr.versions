@@ -10,6 +10,8 @@ snowflake.account.applicationPackages 13.3.7
 snowflake.account.applications 13.3.7
 snowflake.account.authenticationPolicies 13.2.7
 snowflake.account.connections 13.3.7
+snowflake.account.cortexEnabledCrossRegion 13.3.7
+snowflake.account.cortexSearchServices 13.3.7
 snowflake.account.databases 11.0.0
 snowflake.account.externalAccessIntegrations 13.3.7
 snowflake.account.failoverGroups 13.1.1
@@ -98,6 +100,16 @@ snowflake.connection.organizationName 13.3.7
 snowflake.connection.primary 13.3.7
 snowflake.connection.regionGroup 13.3.7
 snowflake.connection.snowflakeRegion 13.3.7
+snowflake.cortexSearchService 13.3.7
+snowflake.cortexSearchService.comment 13.3.7
+snowflake.cortexSearchService.createdAt 13.3.7
+snowflake.cortexSearchService.databaseName 13.3.7
+snowflake.cortexSearchService.definition 13.3.7
+snowflake.cortexSearchService.name 13.3.7
+snowflake.cortexSearchService.schemaName 13.3.7
+snowflake.cortexSearchService.serviceQueryUrl 13.3.7
+snowflake.cortexSearchService.targetLag 13.3.7
+snowflake.cortexSearchService.warehouse 13.3.7
 snowflake.currentRole 11.0.0
 snowflake.database 11.0.0
 snowflake.database.comment 11.0.0

@@ -83,6 +83,14 @@ func (r *mqlSnowflakeAccount) networkPolicy() (string, error) {
 	return findParameterValue(parameters, "NETWORK_POLICY"), nil
 }
 
+func (r *mqlSnowflakeAccount) cortexEnabledCrossRegion() (string, error) {
+	parameters, err := r.showAccountParameters()
+	if err != nil {
+		return "", err
+	}
+	return findParameterValue(parameters, "CORTEX_ENABLED_CROSS_REGION"), nil
+}
+
 // newMqlSnowflakeParameter builds a parameter resource. scope qualifies the
 // cache key so identically-named parameters at different scopes (account vs a
 // given user) do not collide: the same key (e.g. TIMEZONE) exists at the
