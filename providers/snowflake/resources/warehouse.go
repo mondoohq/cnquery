@@ -5,12 +5,50 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/snowflake/connection"
 )
+
+// initSnowflakeWarehouse resolves a single warehouse by name so typed
+// references (such as snowflake.task.warehouse) can hydrate a full warehouse
+// from just its name. A caller that already supplied more than the name is left
+// untouched.
+func initSnowflakeWarehouse(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	nameRaw, ok := args["name"]
+	if !ok {
+		return args, nil, nil
+	}
+	name, _ := nameRaw.Value.(string)
+	if name == "" {
+		return args, nil, nil
+	}
+
+	conn := runtime.Connection.(*connection.SnowflakeConnection)
+	client := conn.Client()
+	ctx := context.Background()
+
+	warehouses, err := client.Warehouses.Show(ctx, &sdk.ShowWarehouseOptions{Like: &sdk.Like{Pattern: sdk.String(name)}})
+	if err != nil {
+		return nil, nil, err
+	}
+	for i := range warehouses {
+		if warehouses[i].Name == name {
+			res, err := newMqlSnowflakeWarehouse(runtime, warehouses[i])
+			if err != nil {
+				return nil, nil, err
+			}
+			return nil, res, nil
+		}
+	}
+	return nil, nil, fmt.Errorf("snowflake.warehouse %q not found", name)
+}
 
 func (r *mqlSnowflakeAccount) warehouses() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)

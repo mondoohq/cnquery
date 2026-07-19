@@ -99,6 +99,16 @@ snowflake.account {
   connections() []snowflake.connection
   // Views across every schema in the account
   views() []snowflake.view
+  // Scheduled tasks across every schema in the account
+  tasks() []snowflake.task
+  // User-defined functions across every schema in the account
+  functions() []snowflake.function
+  // Installed Snowflake Native Apps in the account
+  applications() []snowflake.application
+  // Application packages in the account (Native App providers)
+  applicationPackages() []snowflake.applicationPackage
+  // External access integrations in the account (outbound network egress governance)
+  externalAccessIntegrations() []snowflake.externalAccessIntegration
 }
 
 // Snowflake User
@@ -1371,4 +1381,159 @@ snowflake.connection @defaults("name isPrimary") {
   connectionUrl string
   // When the connection was created
   createdAt time
+}
+
+// Snowflake task
+//
+// A scheduled or triggered unit of SQL in a schema, keyed by name. Tasks run
+// with the owner's rights on a warehouse and a schedule, which makes them a
+// common automation surface and a persistence or privilege-escalation vector.
+// Covers the warehouse the task runs on, the schedule and predecessor
+// relationships that form a task graph, the run state, the SQL definition and
+// its gating condition, and whether overlapping runs are allowed. Select a task
+// by name, for example `snowflake.tasks.where(name == "REFRESH_SALES")`.
+snowflake.task @defaults("name schemaName state") {
+  // Task name
+  name string
+  // Database the task belongs to
+  databaseName string
+  // Schema the task belongs to
+  schemaName string
+  // Warehouse the task runs on, null for a serverless task
+  warehouse() snowflake.warehouse
+  // Role that owns the task
+  owner() snowflake.role
+  // Type of the owning role (ROLE or DATABASE_ROLE)
+  ownerRoleType string
+  // Schedule that triggers the task, empty for a task triggered by a predecessor
+  schedule string
+  // Run state (started or suspended)
+  state string
+  // SQL statement the task runs
+  definition string
+  // Boolean SQL expression that gates whether a run proceeds
+  condition string
+  // Whether overlapping runs of the task are allowed
+  allowOverlappingExecution bool
+  // Fully qualified names of the predecessor tasks that trigger this task
+  predecessors []string
+  // Comment on the task
+  comment string
+}
+
+// Snowflake user-defined function
+//
+// A user-defined function (UDF) in a schema, keyed by name. UDFs run custom
+// logic (SQL, JavaScript, Python, Java, or Scala) with the caller's or owner's
+// rights, and can reach outside Snowflake through external access integrations
+// and secrets, so they are a code-execution and data-egress surface. Covers the
+// implementation language, whether the function is secure (its definition is
+// hidden), whether it is an external function that calls an HTTP endpoint, the
+// argument signature, and the bound external access integrations and secrets.
+// Select a function by name, for example
+// `snowflake.functions.where(language == "PYTHON")`.
+snowflake.function @defaults("name schemaName language") {
+  // Function name
+  name string
+  // Database the function belongs to
+  databaseName string
+  // Schema the function belongs to
+  schemaName string
+  // Implementation language (such as SQL, JAVASCRIPT, PYTHON, JAVA, or SCALA)
+  language string
+  // Whether the function is secure, hiding its definition from users without ownership
+  isSecure bool
+  // Whether the function is an external function that calls an HTTP endpoint through an API integration
+  isExternalFunction bool
+  // Whether the function is built into Snowflake
+  isBuiltin bool
+  // Whether the function is an aggregate function
+  isAggregate bool
+  // Whether the function is a table function
+  isTableFunction bool
+  // Whether the function caches its results (memoizable)
+  isMemoizable bool
+  // Whether the function is a data metric function
+  isDataMetric bool
+  // Argument signature of the function
+  arguments string
+  // Description of the function
+  description string
+  // External access integrations the function is allowed to use, empty when none are bound
+  externalAccessIntegrations string
+  // Secrets the function is allowed to reference, empty when none are bound
+  secrets string
+}
+
+// Snowflake Native App
+//
+// An installed Snowflake Native App in the account, keyed by name. Native Apps
+// run provider-supplied code inside the consumer account with granted
+// privileges, so they are the account's third-party-code and supply-chain
+// surface. Covers where the app was installed from (a Marketplace listing or a
+// local application package), the installed version and patch, and the owning
+// role. Select an app by name, for example
+// `snowflake.applications.where(name == "SECURITY_APP")`.
+snowflake.application @defaults("name version owner") {
+  // Application name
+  name string
+  // Role that owns the application
+  owner() snowflake.role
+  // How the application was sourced (such as REPOSITORY for a listing or a local application package)
+  sourceType string
+  // Source the application was installed from (the listing or application package)
+  source string
+  // Installed version label
+  version string
+  // Installed version display label
+  label string
+  // Installed patch number within the version
+  patch int
+  // Comment on the application
+  comment string
+}
+
+// Snowflake application package
+//
+// An application package in the account, keyed by name. Application packages are
+// the provider side of Snowflake Native Apps, bundling the code and data that
+// become an installed application. Covers the release distribution (internal or
+// external), the application class, and the owning role. Select a package by
+// name, for example `snowflake.applicationPackages.where(name == "MY_APP_PKG")`.
+snowflake.applicationPackage @defaults("name distribution owner") {
+  // Application package name
+  name string
+  // Role that owns the application package
+  owner() snowflake.role
+  // Release distribution (INTERNAL or EXTERNAL)
+  distribution string
+  // Application class of the package
+  applicationClass string
+  // Comment on the application package
+  comment string
+}
+
+// Snowflake external access integration
+//
+// An external access integration in the account, keyed by name. External access
+// integrations are the account's outbound-egress control: they whitelist which
+// network rules (hostnames and ports), secrets, and API authentication
+// integrations a function or procedure may reach, so they are central to
+// preventing data exfiltration from user code. Covers whether the integration
+// is enabled and the allowed network rules, secrets, and API authentication
+// integrations. Select an integration by name, for example
+// `snowflake.externalAccessIntegrations.where(enabled == true)`.
+snowflake.externalAccessIntegration @defaults("name enabled") {
+  // External access integration name
+  name string
+  // Whether the integration is enabled
+  enabled bool
+  // Comment on the integration
+  comment string
+  // Fully qualified names of the network rules the integration allows
+  allowedNetworkRules []string
+  // Fully qualified names of the secrets the integration allows
+  allowedAuthenticationSecrets []string
+  // Names of the API authentication integrations the integration allows
+  allowedApiAuthenticationIntegrations []string
 }

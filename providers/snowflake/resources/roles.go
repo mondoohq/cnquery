@@ -49,6 +49,22 @@ func initSnowflakeRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	return nil, nil, fmt.Errorf("snowflake.role %q not found", name)
 }
 
+// snowflakeRoleByName resolves a role name to a typed snowflake.role, hydrated
+// through the role's init. It returns nil for an empty name; callers should set
+// the field's null state before calling in that case.
+func snowflakeRoleByName(runtime *plugin.Runtime, name string) (*mqlSnowflakeRole, error) {
+	if name == "" {
+		return nil, nil
+	}
+	role, err := NewResource(runtime, "snowflake.role", map[string]*llx.RawData{
+		"name": llx.StringData(name),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return role.(*mqlSnowflakeRole), nil
+}
+
 func (r *mqlSnowflakeAccount) roles() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
 	client := conn.Client()
