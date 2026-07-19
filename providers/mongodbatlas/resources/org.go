@@ -145,25 +145,57 @@ func newMqlMongodbatlasOrgUser(runtime *plugin.Runtime, u admin.OrgUserResponse)
 	return orgUser, nil
 }
 
+// orgTeamsByID lists every team in the organization once and caches them by id
+// on the root resource, so per-user team resolution is a map lookup rather than
+// a GetTeamById call per membership.
+func (r *mqlMongodbatlas) orgTeamsByID() (map[string]admin.TeamResponse, error) {
+	r.teamsOnce.Do(func() {
+		oid, err := orgID(r.MqlRuntime)
+		if err != nil {
+			r.teamsErr = err
+			return
+		}
+		client := atlasClient(r.MqlRuntime)
+		ctx := context.Background()
+
+		m := map[string]admin.TeamResponse{}
+		for page := 1; ; page++ {
+			resp, _, err := client.TeamsApi.ListOrganizationTeams(ctx, oid).ItemsPerPage(pageSize).PageNum(page).Execute()
+			if err != nil {
+				r.teamsErr = err
+				return
+			}
+			results := resp.GetResults()
+			for i := range results {
+				m[results[i].GetId()] = results[i]
+			}
+			if len(results) < pageSize {
+				break
+			}
+		}
+		r.teamsByID = m
+	})
+	return r.teamsByID, r.teamsErr
+}
+
 // teams resolves the member's team ids to the teams they belong to.
 func (r *mqlMongodbatlasOrgUser) teams() ([]any, error) {
-	oid, err := orgID(r.MqlRuntime)
+	root, err := rootMongodbatlas(r.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
-	client := atlasClient(r.MqlRuntime)
-	ctx := context.Background()
+	teamsByID, err := root.orgTeamsByID()
+	if err != nil {
+		return nil, err
+	}
 
 	out := []any{}
 	for _, teamID := range r.cacheTeamIds {
-		if teamID == "" {
+		t, ok := teamsByID[teamID]
+		if !ok {
 			continue
 		}
-		t, _, err := client.TeamsApi.GetTeamById(ctx, oid, teamID).Execute()
-		if err != nil {
-			return nil, err
-		}
-		res, err := newMqlMongodbatlasTeam(r.MqlRuntime, *t)
+		res, err := newMqlMongodbatlasTeam(r.MqlRuntime, t)
 		if err != nil {
 			return nil, err
 		}

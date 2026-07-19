@@ -50,7 +50,7 @@ func (r *mqlMongodbatlas) auditing() (*mqlMongodbatlasAuditConfig, error) {
 	}
 	a, httpResp, err := atlasClient(r.MqlRuntime).AuditingApi.GetAuditingConfiguration(context.Background(), pid).Execute()
 	if err != nil {
-		if isAccessDenied(httpResp) {
+		if isAccessDenied(httpResp) || (httpResp != nil && httpResp.StatusCode == http.StatusNotFound) {
 			r.Auditing.State = plugin.StateIsSet | plugin.StateIsNull
 			return nil, nil
 		}
@@ -76,7 +76,7 @@ func (r *mqlMongodbatlas) encryptionAtRest() (*mqlMongodbatlasEncryptionConfig, 
 	}
 	e, httpResp, err := atlasClient(r.MqlRuntime).EncryptionAtRestUsingCustomerKeyManagementApi.GetEncryptionAtRest(context.Background(), pid).Execute()
 	if err != nil {
-		if isAccessDenied(httpResp) {
+		if isAccessDenied(httpResp) || (httpResp != nil && httpResp.StatusCode == http.StatusNotFound) {
 			r.EncryptionAtRest.State = plugin.StateIsSet | plugin.StateIsNull
 			return nil, nil
 		}

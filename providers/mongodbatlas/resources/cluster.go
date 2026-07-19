@@ -97,6 +97,26 @@ func initMongodbatlasCluster(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	return nil, res, nil
 }
 
+// projectClustersByName lists the project's clusters once and caches them by
+// name on the root resource, so scoped-cluster resolution for database users is
+// a map lookup rather than a GetCluster call per scope entry.
+func (r *mqlMongodbatlas) projectClustersByName() (map[string]*mqlMongodbatlasCluster, error) {
+	r.clustersOnce.Do(func() {
+		clusters, err := r.clusters()
+		if err != nil {
+			r.clustersErr = err
+			return
+		}
+		m := make(map[string]*mqlMongodbatlasCluster, len(clusters))
+		for _, c := range clusters {
+			cl := c.(*mqlMongodbatlasCluster)
+			m[cl.Name.Data] = cl
+		}
+		r.clustersByName = m
+	})
+	return r.clustersByName, r.clustersErr
+}
+
 func (r *mqlMongodbatlas) clusters() ([]any, error) {
 	pid, err := projectID(r.MqlRuntime)
 	if err != nil {

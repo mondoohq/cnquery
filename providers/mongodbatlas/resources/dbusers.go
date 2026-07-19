@@ -83,15 +83,22 @@ func (r *mqlMongodbatlas) databaseUsers() ([]any, error) {
 // scopedClusters resolves the clusters a database user is confined to. An empty
 // result means the user may access all clusters in the project.
 func (r *mqlMongodbatlasDatabaseUser) scopedClusters() ([]any, error) {
+	root, err := rootMongodbatlas(r.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	clustersByName, err := root.projectClustersByName()
+	if err != nil {
+		return nil, err
+	}
+
 	out := []any{}
 	for _, name := range r.cacheScopeClusterNames {
-		res, err := NewResource(r.MqlRuntime, "mongodbatlas.cluster", map[string]*llx.RawData{
-			"name": llx.StringData(name),
-		})
-		if err != nil {
-			return nil, err
+		cl, ok := clustersByName[name]
+		if !ok {
+			continue
 		}
-		out = append(out, res)
+		out = append(out, cl)
 	}
 	return out, nil
 }

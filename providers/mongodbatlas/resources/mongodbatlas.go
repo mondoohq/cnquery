@@ -6,18 +6,40 @@ package resources
 import (
 	"context"
 	"errors"
+	"net/http"
 	"sync"
 	"time"
 
+	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/mongodbatlas/connection"
 	"go.mongodb.org/atlas-sdk/v20250312006/admin"
 )
 
 type mqlMongodbatlasInternal struct {
-	orgSettingsLock sync.Mutex
-	orgSettingsDone bool
-	orgSettings     *admin.OrganizationSettings
+	orgSettingsLock   sync.Mutex
+	orgSettingsDone   bool
+	orgSettingsDenied bool
+	orgSettings       *admin.OrganizationSettings
+
+	teamsOnce sync.Once
+	teamsByID map[string]admin.TeamResponse
+	teamsErr  error
+
+	clustersOnce   sync.Once
+	clustersByName map[string]*mqlMongodbatlasCluster
+	clustersErr    error
+}
+
+// rootMongodbatlas returns the cached root resource singleton so sub-resources
+// can share the org-wide caches (teams, clusters) that hang off its Internal
+// struct.
+func rootMongodbatlas(runtime *plugin.Runtime) (*mqlMongodbatlas, error) {
+	res, err := CreateResource(runtime, "mongodbatlas", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlMongodbatlas), nil
 }
 
 func (r *mqlMongodbatlas) id() (string, error) {
@@ -50,7 +72,10 @@ func projectID(runtime *plugin.Runtime) (string, error) {
 }
 
 // fetchOrgSettings loads the organization settings once and caches them for the
-// several settings fields on the root resource.
+// several settings fields on the root resource. The endpoint requires
+// organization-level privilege, so a project-scoped credential gets 401/403 (or
+// 404); rather than failing the whole scan it degrades: the cached settings stay
+// nil and each dependent field renders null.
 func (r *mqlMongodbatlas) fetchOrgSettings() (*admin.OrganizationSettings, error) {
 	r.orgSettingsLock.Lock()
 	defer r.orgSettingsLock.Unlock()
@@ -61,8 +86,13 @@ func (r *mqlMongodbatlas) fetchOrgSettings() (*admin.OrganizationSettings, error
 	if err != nil {
 		return nil, err
 	}
-	settings, _, err := atlasClient(r.MqlRuntime).OrganizationsApi.GetOrganizationSettings(context.Background(), oid).Execute()
+	settings, httpResp, err := atlasClient(r.MqlRuntime).OrganizationsApi.GetOrganizationSettings(context.Background(), oid).Execute()
 	if err != nil {
+		if isAccessDenied(httpResp) || (httpResp != nil && httpResp.StatusCode == http.StatusNotFound) {
+			r.orgSettingsDenied = true
+			r.orgSettingsDone = true
+			return nil, nil
+		}
 		return nil, err
 	}
 	r.orgSettings = settings
@@ -79,8 +109,12 @@ func (r *mqlMongodbatlas) organizationName() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	org, _, err := atlasClient(r.MqlRuntime).OrganizationsApi.GetOrganization(context.Background(), oid).Execute()
+	org, httpResp, err := atlasClient(r.MqlRuntime).OrganizationsApi.GetOrganization(context.Background(), oid).Execute()
 	if err != nil {
+		if isAccessDenied(httpResp) || (httpResp != nil && httpResp.StatusCode == http.StatusNotFound) {
+			r.OrganizationName.State = plugin.StateIsSet | plugin.StateIsNull
+			return "", nil
+		}
 		return "", err
 	}
 	return org.GetName(), nil
@@ -91,6 +125,10 @@ func (r *mqlMongodbatlas) multiFactorAuthRequired() (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	if s == nil {
+		r.MultiFactorAuthRequired.State = plugin.StateIsSet | plugin.StateIsNull
+		return false, nil
+	}
 	return s.GetMultiFactorAuthRequired(), nil
 }
 
@@ -98,6 +136,10 @@ func (r *mqlMongodbatlas) apiAccessListRequired() (bool, error) {
 	s, err := r.fetchOrgSettings()
 	if err != nil {
 		return false, err
+	}
+	if s == nil {
+		r.ApiAccessListRequired.State = plugin.StateIsSet | plugin.StateIsNull
+		return false, nil
 	}
 	return s.GetApiAccessListRequired(), nil
 }
@@ -107,6 +149,10 @@ func (r *mqlMongodbatlas) restrictEmployeeAccess() (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	if s == nil {
+		r.RestrictEmployeeAccess.State = plugin.StateIsSet | plugin.StateIsNull
+		return false, nil
+	}
 	return s.GetRestrictEmployeeAccess(), nil
 }
 
@@ -114,6 +160,10 @@ func (r *mqlMongodbatlas) genAiFeaturesEnabled() (bool, error) {
 	s, err := r.fetchOrgSettings()
 	if err != nil {
 		return false, err
+	}
+	if s == nil {
+		r.GenAiFeaturesEnabled.State = plugin.StateIsSet | plugin.StateIsNull
+		return false, nil
 	}
 	return s.GetGenAIFeaturesEnabled(), nil
 }
@@ -123,6 +173,10 @@ func (r *mqlMongodbatlas) maxServiceAccountSecretValidityInHours() (int64, error
 	if err != nil {
 		return 0, err
 	}
+	if s == nil {
+		r.MaxServiceAccountSecretValidityInHours.State = plugin.StateIsSet | plugin.StateIsNull
+		return 0, nil
+	}
 	return int64(s.GetMaxServiceAccountSecretValidityInHours()), nil
 }
 
@@ -130,6 +184,10 @@ func (r *mqlMongodbatlas) securityContact() (string, error) {
 	s, err := r.fetchOrgSettings()
 	if err != nil {
 		return "", err
+	}
+	if s == nil {
+		r.SecurityContact.State = plugin.StateIsSet | plugin.StateIsNull
+		return "", nil
 	}
 	return s.GetSecurityContact(), nil
 }
