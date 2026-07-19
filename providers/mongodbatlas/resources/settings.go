@@ -5,9 +5,18 @@ package resources
 
 import (
 	"context"
+	"net/http"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
+
+// isAccessDenied reports whether the API response indicates the credential is
+// not authorized to read the resource (a feature-gated or elevated-privilege
+// endpoint). Such resources degrade to null rather than failing the scan.
+func isAccessDenied(resp *http.Response) bool {
+	return resp != nil && (resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden)
+}
 
 func (r *mqlMongodbatlas) projectSettings() (*mqlMongodbatlasProjectConfig, error) {
 	pid, err := projectID(r.MqlRuntime)
@@ -39,8 +48,12 @@ func (r *mqlMongodbatlas) auditing() (*mqlMongodbatlasAuditConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	a, _, err := atlasClient(r.MqlRuntime).AuditingApi.GetAuditingConfiguration(context.Background(), pid).Execute()
+	a, httpResp, err := atlasClient(r.MqlRuntime).AuditingApi.GetAuditingConfiguration(context.Background(), pid).Execute()
 	if err != nil {
+		if isAccessDenied(httpResp) {
+			r.Auditing.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	res, err := CreateResource(r.MqlRuntime, "mongodbatlas.auditConfig", map[string]*llx.RawData{
@@ -61,8 +74,12 @@ func (r *mqlMongodbatlas) encryptionAtRest() (*mqlMongodbatlasEncryptionConfig, 
 	if err != nil {
 		return nil, err
 	}
-	e, _, err := atlasClient(r.MqlRuntime).EncryptionAtRestUsingCustomerKeyManagementApi.GetEncryptionAtRest(context.Background(), pid).Execute()
+	e, httpResp, err := atlasClient(r.MqlRuntime).EncryptionAtRestUsingCustomerKeyManagementApi.GetEncryptionAtRest(context.Background(), pid).Execute()
 	if err != nil {
+		if isAccessDenied(httpResp) {
+			r.EncryptionAtRest.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	aws := e.GetAwsKms()
