@@ -2166,7 +2166,7 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 type mqlDatabricks struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlDatabricksInternal it will be used here
+	mqlDatabricksInternal
 	Workspaces             plugin.TValue[[]any]
 	Users                  plugin.TValue[[]any]
 	Groups                 plugin.TValue[[]any]

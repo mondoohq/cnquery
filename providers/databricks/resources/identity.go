@@ -6,12 +6,49 @@ package resources
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/types"
 )
+
+type mqlDatabricksInternal struct {
+	groupsOnce sync.Once
+	groupsByID map[string]iam.Group
+	groupsErr  error
+}
+
+// cachedAccountGroups lists the account groups at most once per scan, caching
+// the result on the root databricks resource so repeated group-ref resolutions
+// (e.g. databricks.users { groups }) share a single ListAll rather than one per
+// user or service principal.
+func cachedAccountGroups(runtime *plugin.Runtime) (map[string]iam.Group, error) {
+	rootRes, err := NewResource(runtime, "databricks", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	root := rootRes.(*mqlDatabricks)
+	root.groupsOnce.Do(func() {
+		acc, err := accountClient(runtime)
+		if err != nil {
+			root.groupsErr = err
+			return
+		}
+		groups, err := acc.Groups.ListAll(context.Background(), iam.ListAccountGroupsRequest{})
+		if err != nil {
+			root.groupsErr = err
+			return
+		}
+		byID := make(map[string]iam.Group, len(groups))
+		for i := range groups {
+			byID[groups[i].Id] = groups[i]
+		}
+		root.groupsByID = byID
+	})
+	return root.groupsByID, root.groupsErr
+}
 
 type mqlDatabricksUserInternal struct {
 	cacheGroupIds []string
@@ -41,17 +78,9 @@ func resolveGroupRefs(runtime *plugin.Runtime, ids []string) ([]any, error) {
 	if len(ids) == 0 {
 		return []any{}, nil
 	}
-	acc, err := accountClient(runtime)
+	byID, err := cachedAccountGroups(runtime)
 	if err != nil {
 		return nil, err
-	}
-	groups, err := acc.Groups.ListAll(context.Background(), iam.ListAccountGroupsRequest{})
-	if err != nil {
-		return nil, err
-	}
-	byID := make(map[string]iam.Group, len(groups))
-	for i := range groups {
-		byID[groups[i].Id] = groups[i]
 	}
 
 	out := []any{}
