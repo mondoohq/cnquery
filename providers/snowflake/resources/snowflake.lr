@@ -704,7 +704,9 @@ snowflake.share @defaults("name kind") {
   // Kind of share: INBOUND or OUTBOUND
   kind string
   // Database backing the share
-  databaseName string
+  //
+  // Deprecated in favor of database, the typed snowflake.database reference.
+  databaseName @maturity("deprecated") string
   // Database backing the share
   database() snowflake.database
   // For OUTBOUND shares, list of accounts the share has been granted to
