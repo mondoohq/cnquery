@@ -36,16 +36,23 @@ func (r *mqlAlicloudAlb) loadBalancers() ([]any, error) {
 		}
 
 		var nextToken *string
+		firstPage := true
 		for {
 			resp, err := client.ListLoadBalancers(&albclient.ListLoadBalancersRequest{
 				MaxResults: tea.Int32(100),
 				NextToken:  nextToken,
 			})
 			if err != nil {
-				// a region may not have ALB enabled or the credential may lack
-				// access there; skip it rather than failing the whole scan
-				break
+				if firstPage {
+					// the region may not have ALB enabled or the credential may
+					// lack access there; skip it rather than failing the scan
+					break
+				}
+				// a mid-pagination failure means the region is reachable, so the
+				// error is real and must not be masked as a partial result
+				return nil, err
 			}
+			firstPage = false
 			if resp == nil || resp.Body == nil {
 				break
 			}
@@ -136,21 +143,10 @@ func newAlbLoadBalancer(runtime *plugin.Runtime, region string, lb *albclient.Li
 	mqlLb.region = region
 	mqlLb.loadBalancerId = lbID
 	mqlLb.cacheVpcId = tea.StringValue(lb.VpcId)
-	mqlLb.cacheSecurityGroupIds = albStrList(lb.SecurityGroupIds)
+	mqlLb.cacheSecurityGroupIds = strPtrsToStrings(lb.SecurityGroupIds)
 	mqlLb.cacheAccessLogProject = accessLogProject
 	mqlLb.cacheAccessLogStore = accessLogStore
 	return mqlLb, nil
-}
-
-// albStrList converts a []*string SDK slice into a []string, dropping empties.
-func albStrList(in []*string) []string {
-	res := []string{}
-	for _, s := range in {
-		if v := tea.StringValue(s); v != "" {
-			res = append(res, v)
-		}
-	}
-	return res
 }
 
 // initAlicloudAlbLoadBalancer resolves an ALB by id within a region, reusing an
@@ -313,7 +309,12 @@ func (r *mqlAlicloudAlbLoadBalancer) listeners() ([]any, error) {
 			MaxResults:      tea.Int32(100),
 			NextToken:       nextToken,
 		})
-		if err != nil || resp == nil || resp.Body == nil {
+		if err != nil {
+			// the load balancer exists (it was listed), so an error listing its
+			// listeners is a real failure, not a missing-service case
+			return nil, err
+		}
+		if resp == nil || resp.Body == nil {
 			break
 		}
 		for _, l := range resp.Body.Listeners {
@@ -479,12 +480,20 @@ func (r *mqlAlicloudAlb) serverGroups() ([]any, error) {
 			return nil, err
 		}
 		var nextToken *string
+		firstPage := true
 		for {
 			resp, err := client.ListServerGroups(&albclient.ListServerGroupsRequest{
 				MaxResults: tea.Int32(100),
 				NextToken:  nextToken,
 			})
-			if err != nil || resp == nil || resp.Body == nil {
+			if err != nil {
+				if firstPage {
+					break
+				}
+				return nil, err
+			}
+			firstPage = false
+			if resp == nil || resp.Body == nil {
 				break
 			}
 			for _, sg := range resp.Body.ServerGroups {

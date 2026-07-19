@@ -15,28 +15,6 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
-// nlbStrSlice converts a []*string SDK slice into a []any, dropping empties.
-func nlbStrSlice(in []*string) []any {
-	res := []any{}
-	for _, s := range in {
-		if v := tea.StringValue(s); v != "" {
-			res = append(res, v)
-		}
-	}
-	return res
-}
-
-// nlbStrList converts a []*string SDK slice into a []string, dropping empties.
-func nlbStrList(in []*string) []string {
-	res := []string{}
-	for _, s := range in {
-		if v := tea.StringValue(s); v != "" {
-			res = append(res, v)
-		}
-	}
-	return res
-}
-
 func (r *mqlAlicloudNlb) id() (string, error) {
 	return "alicloud.nlb", nil
 }
@@ -56,6 +34,7 @@ func (r *mqlAlicloudNlb) loadBalancers() ([]any, error) {
 		}
 
 		var nextToken *string
+		firstPage := true
 		for {
 			resp, err := client.ListLoadBalancers(&nlbclient.ListLoadBalancersRequest{
 				RegionId:   tea.String(region),
@@ -63,10 +42,16 @@ func (r *mqlAlicloudNlb) loadBalancers() ([]any, error) {
 				NextToken:  nextToken,
 			})
 			if err != nil {
-				// a region may not have NLB enabled or the credential may lack
-				// access there; skip it rather than failing the whole scan
-				break
+				if firstPage {
+					// the region may not have NLB enabled or the credential may
+					// lack access there; skip it rather than failing the scan
+					break
+				}
+				// a mid-pagination failure means the region is reachable, so the
+				// error is real and must not be masked as a partial result
+				return nil, err
 			}
+			firstPage = false
 			if resp == nil || resp.Body == nil {
 				break
 			}
@@ -157,7 +142,7 @@ func newNlbLoadBalancer(runtime *plugin.Runtime, region string, lb *nlbclient.Li
 	mqlLb.region = region
 	mqlLb.loadBalancerId = lbID
 	mqlLb.cacheVpcId = tea.StringValue(lb.VpcId)
-	mqlLb.cacheSecurityGroupIds = nlbStrList(lb.SecurityGroupIds)
+	mqlLb.cacheSecurityGroupIds = strPtrsToStrings(lb.SecurityGroupIds)
 	mqlLb.cacheVswitchIds = vswitchIds
 	return mqlLb, nil
 }
@@ -261,7 +246,12 @@ func (r *mqlAlicloudNlbLoadBalancer) listeners() ([]any, error) {
 			MaxResults:      tea.Int32(100),
 			NextToken:       nextToken,
 		})
-		if err != nil || resp == nil || resp.Body == nil {
+		if err != nil {
+			// the load balancer exists (it was listed), so an error listing its
+			// listeners is a real failure, not a missing-service case
+			return nil, err
+		}
+		if resp == nil || resp.Body == nil {
 			break
 		}
 		for _, l := range resp.Body.Listeners {
@@ -311,8 +301,8 @@ func newNlbListener(runtime *plugin.Runtime, region string, l *nlbclient.ListLis
 		"status":               llx.StringDataPtr(l.ListenerStatus),
 		"description":          llx.StringDataPtr(l.ListenerDescription),
 		"securityPolicyId":     llx.StringDataPtr(l.SecurityPolicyId),
-		"certificateIds":       llx.ArrayData(nlbStrSlice(l.CertificateIds), types.String),
-		"caCertificateIds":     llx.ArrayData(nlbStrSlice(l.CaCertificateIds), types.String),
+		"certificateIds":       llx.ArrayData(strPtrsToAny(l.CertificateIds), types.String),
+		"caCertificateIds":     llx.ArrayData(strPtrsToAny(l.CaCertificateIds), types.String),
 		"caEnabled":            llx.BoolDataPtr(l.CaEnabled),
 		"idleTimeout":          llx.IntData(int64(tea.Int32Value(l.IdleTimeout))),
 		"proxyProtocolEnabled": llx.BoolDataPtr(l.ProxyProtocolEnabled),
@@ -357,13 +347,21 @@ func (r *mqlAlicloudNlb) serverGroups() ([]any, error) {
 			return nil, err
 		}
 		var nextToken *string
+		firstPage := true
 		for {
 			resp, err := client.ListServerGroups(&nlbclient.ListServerGroupsRequest{
 				RegionId:   tea.String(region),
 				MaxResults: tea.Int32(100),
 				NextToken:  nextToken,
 			})
-			if err != nil || resp == nil || resp.Body == nil {
+			if err != nil {
+				if firstPage {
+					break
+				}
+				return nil, err
+			}
+			firstPage = false
+			if resp == nil || resp.Body == nil {
 				break
 			}
 			for _, sg := range resp.Body.ServerGroups {

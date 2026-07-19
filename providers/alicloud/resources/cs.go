@@ -43,28 +43,6 @@ func parseCsMasterURL(s *string) (public, intranet string) {
 	return m.APIServerEndpoint, m.IntranetAPIServerEndpoint
 }
 
-// csStrSlice converts a []*string SDK slice into a []any of non-empty strings.
-func csStrSlice(in []*string) []any {
-	res := []any{}
-	for _, s := range in {
-		if v := tea.StringValue(s); v != "" {
-			res = append(res, v)
-		}
-	}
-	return res
-}
-
-// csStrList converts a []*string SDK slice into a []string, dropping empties.
-func csStrList(in []*string) []string {
-	res := []string{}
-	for _, s := range in {
-		if v := tea.StringValue(s); v != "" {
-			res = append(res, v)
-		}
-	}
-	return res
-}
-
 func (r *mqlAlicloudCs) id() (string, error) {
 	return "alicloud.cs", nil
 }
@@ -154,7 +132,7 @@ func newCsCluster(runtime *plugin.Runtime, region string, c *csclient.DescribeCl
 
 	public, intranet := parseCsMasterURL(c.MasterUrl)
 
-	vswitchIds := csStrList(c.VswitchIds)
+	vswitchIds := strPtrsToStrings(c.VswitchIds)
 	if len(vswitchIds) == 0 && tea.StringValue(c.VswitchId) != "" {
 		for _, v := range strings.Split(*c.VswitchId, ",") {
 			if v = strings.TrimSpace(v); v != "" {
@@ -371,7 +349,7 @@ func (r *mqlAlicloudCsCluster) controlPlaneLogComponents() ([]any, error) {
 	if err != nil || lb == nil {
 		return []any{}, err
 	}
-	return csStrSlice(lb.Components), nil
+	return strPtrsToAny(lb.Components), nil
 }
 
 func (r *mqlAlicloudCsCluster) controlPlaneLogTtl() (int64, error) {
@@ -518,7 +496,7 @@ func newCsNodePool(runtime *plugin.Runtime, region, clusterID string, np *csclie
 	dataDisks := []any{}
 	npTags := map[string]any{}
 	if sg != nil {
-		instanceTypes = csStrSlice(sg.InstanceTypes)
+		instanceTypes = strPtrsToAny(sg.InstanceTypes)
 		systemDiskCategory = tea.StringValue(sg.SystemDiskCategory)
 		systemDiskSize = tea.Int64Value(sg.SystemDiskSize)
 		systemDiskEncrypted = tea.BoolValue(sg.SystemDiskEncrypted)
@@ -536,11 +514,11 @@ func newCsNodePool(runtime *plugin.Runtime, region, clusterID string, np *csclie
 		socEnabled = tea.BoolValue(sg.SocEnabled)
 		cisEnabled = tea.BoolValue(sg.CisEnabled)
 		internetMaxBandwidthOut = tea.Int64Value(sg.InternetMaxBandwidthOut)
-		securityGroupIds = csStrList(sg.SecurityGroupIds)
+		securityGroupIds = strPtrsToStrings(sg.SecurityGroupIds)
 		if len(securityGroupIds) == 0 && tea.StringValue(sg.SecurityGroupId) != "" {
 			securityGroupIds = append(securityGroupIds, *sg.SecurityGroupId)
 		}
-		vswitchIds = csStrList(sg.VswitchIds)
+		vswitchIds = strPtrsToStrings(sg.VswitchIds)
 		for _, d := range sg.DataDisks {
 			if d == nil {
 				continue

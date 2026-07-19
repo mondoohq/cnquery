@@ -19,20 +19,26 @@ func (i *mqlAlicloudEcsInstance) internetExposed() (bool, error) {
 	return false, nil
 }
 
+// isInternetFacing reports whether a load balancer address type designates a
+// public (internet-facing) endpoint. Shared by the CLB, ALB, and NLB accessors.
+func isInternetFacing(addressType string) bool {
+	return strings.EqualFold(strings.TrimSpace(addressType), "internet")
+}
+
 // internetFacing reports whether the CLB instance serves traffic from the public
 // internet, which is the case when its address type is internet.
 func (l *mqlAlicloudSlbLoadBalancer) internetFacing() (bool, error) {
-	return strings.EqualFold(strings.TrimSpace(l.AddressType.Data), "internet"), nil
+	return isInternetFacing(l.AddressType.Data), nil
 }
 
 // internetFacing reports whether the ALB serves traffic from the public
 // internet, which is the case when its address type is Internet.
 func (l *mqlAlicloudAlbLoadBalancer) internetFacing() (bool, error) {
-	return strings.EqualFold(strings.TrimSpace(l.AddressType.Data), "internet"), nil
+	return isInternetFacing(l.AddressType.Data), nil
 }
 
 // internetFacing reports whether the NLB serves traffic from the public
 // internet, which is the case when its address type is Internet.
 func (l *mqlAlicloudNlbLoadBalancer) internetFacing() (bool, error) {
-	return strings.EqualFold(strings.TrimSpace(l.AddressType.Data), "internet"), nil
+	return isInternetFacing(l.AddressType.Data), nil
 }

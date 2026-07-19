@@ -41,10 +41,3 @@ func TestParseCsMasterURL(t *testing.T) {
 		assert.Equal(t, "", intranet)
 	})
 }
-
-// TestCsStrList covers the vSwitch/security-group slice flattening used to build
-// the typed cross-references, ensuring empties are dropped.
-func TestCsStrList(t *testing.T) {
-	assert.Equal(t, []string{}, csStrList(nil))
-	assert.Equal(t, []string{"vsw-a", "vsw-b"}, csStrList([]*string{strp("vsw-a"), strp(""), strp("vsw-b")}))
-}
