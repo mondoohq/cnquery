@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/snowflake/connection"
 	"go.mondoo.com/mql/v13/types"
@@ -38,7 +39,12 @@ func (r *mqlSnowflakeAccount) externalAccessIntegrations() ([]any, error) {
 		// DESC exposes the egress allowlist that SHOW omits. It is per
 		// integration, but external access integrations are few in practice.
 		descRows, derr := client.QueryUnsafe(ctx, fmt.Sprintf(`DESC EXTERNAL ACCESS INTEGRATION "%s"`, name))
-		if derr == nil {
+		if derr != nil {
+			// Distinguish a DESC failure (permissions or transient) from a
+			// genuinely empty integration: the allowlists stay empty either way,
+			// so surface the error rather than swallowing it silently.
+			log.Warn().Err(derr).Str("integration", name).Msg("snowflake: DESC EXTERNAL ACCESS INTEGRATION failed, allowlists will be empty")
+		} else {
 			for _, drow := range descRows {
 				value := unsafeString(drow["property_value"])
 				switch strings.ToUpper(unsafeString(drow["property"])) {
