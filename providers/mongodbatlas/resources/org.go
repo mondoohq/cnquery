@@ -160,8 +160,15 @@ func (r *mqlMongodbatlas) orgTeamsByID() (map[string]admin.TeamResponse, error) 
 
 		m := map[string]admin.TeamResponse{}
 		for page := 1; ; page++ {
-			resp, _, err := client.TeamsApi.ListOrganizationTeams(ctx, oid).ItemsPerPage(pageSize).PageNum(page).Execute()
+			resp, httpResp, err := client.TeamsApi.ListOrganizationTeams(ctx, oid).ItemsPerPage(pageSize).PageNum(page).Execute()
 			if err != nil {
+				// A project-scoped credential without org privilege cannot list
+				// teams; degrade to no resolvable teams rather than failing every
+				// user's teams() through the cached error.
+				if isAccessDenied(httpResp) {
+					r.teamsByID = map[string]admin.TeamResponse{}
+					return
+				}
 				r.teamsErr = err
 				return
 			}

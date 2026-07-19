@@ -17,10 +17,9 @@ import (
 )
 
 type mqlMongodbatlasInternal struct {
-	orgSettingsLock   sync.Mutex
-	orgSettingsDone   bool
-	orgSettingsDenied bool
-	orgSettings       *admin.OrganizationSettings
+	orgSettingsLock sync.Mutex
+	orgSettingsDone bool
+	orgSettings     *admin.OrganizationSettings
 
 	teamsOnce sync.Once
 	teamsByID map[string]admin.TeamResponse
@@ -89,7 +88,8 @@ func (r *mqlMongodbatlas) fetchOrgSettings() (*admin.OrganizationSettings, error
 	settings, httpResp, err := atlasClient(r.MqlRuntime).OrganizationsApi.GetOrganizationSettings(context.Background(), oid).Execute()
 	if err != nil {
 		if isAccessDenied(httpResp) || (httpResp != nil && httpResp.StatusCode == http.StatusNotFound) {
-			r.orgSettingsDenied = true
+			// Degrade: leave orgSettings nil and mark done. Each dependent
+			// accessor checks `s == nil` and renders its field null.
 			r.orgSettingsDone = true
 			return nil, nil
 		}
