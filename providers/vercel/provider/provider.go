@@ -170,6 +170,12 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.VercelConnecti
 		asset.PlatformIds = []string{connection.NewVercelTeamIdentifier(teamID)}
 		return nil
 	}
+
+	// The unscoped root is a discovery root that emits team and project child
+	// assets. Give it a stable name so it does not surface as an empty label.
+	if asset.Name == "" {
+		asset.Name = "Vercel"
+	}
 	return nil
 }
 

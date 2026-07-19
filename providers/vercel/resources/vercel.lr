@@ -188,14 +188,15 @@ private vercel.project @defaults("name framework") {
   updatedAt time
   // Vercel Authentication scope
   //
-  // Which deployments require a Vercel login to view. One of standard_protection,
-  // all_deployments, only_preview_deployments, or null when disabled.
+  // Which deployments require a Vercel login to view, for example
+  // standard_protection, all_deployments, all_except_custom_domains, or
+  // only_preview_deployments. Null when disabled.
   ssoProtectionDeploymentType string
   // Password protection scope
   //
-  // Which deployments require a shared password to view. One of
-  // standard_protection, all_deployments, only_preview_deployments, or null when
-  // disabled.
+  // Which deployments require a shared password to view, for example
+  // standard_protection, all_deployments, all_except_custom_domains, or
+  // only_preview_deployments. Null when disabled.
   passwordProtectionDeploymentType string
   // Trusted IPs protection mode
   //

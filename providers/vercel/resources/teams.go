@@ -363,8 +363,12 @@ type integrationConfigurationRecord struct {
 
 func (c *mqlVercelTeam) integrationConfigurations() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.VercelConnection)
+	// The endpoint requires a view; "account" lists every configuration
+	// installed on the team.
+	query := connection.TeamQuery(c.Id.Data)
+	query.Set("view", "account")
 	var records []integrationConfigurationRecord
-	if err := conn.Get(context.Background(), "/v1/integrations/configurations", connection.TeamQuery(c.Id.Data), &records); err != nil {
+	if err := conn.Get(context.Background(), "/v1/integrations/configurations", query, &records); err != nil {
 		if connection.IsForbidden(err) {
 			return []any{}, nil
 		}
