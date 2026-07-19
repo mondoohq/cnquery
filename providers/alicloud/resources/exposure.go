@@ -24,3 +24,15 @@ func (i *mqlAlicloudEcsInstance) internetExposed() (bool, error) {
 func (l *mqlAlicloudSlbLoadBalancer) internetFacing() (bool, error) {
 	return strings.EqualFold(strings.TrimSpace(l.AddressType.Data), "internet"), nil
 }
+
+// internetFacing reports whether the ALB serves traffic from the public
+// internet, which is the case when its address type is Internet.
+func (l *mqlAlicloudAlbLoadBalancer) internetFacing() (bool, error) {
+	return strings.EqualFold(strings.TrimSpace(l.AddressType.Data), "internet"), nil
+}
+
+// internetFacing reports whether the NLB serves traffic from the public
+// internet, which is the case when its address type is Internet.
+func (l *mqlAlicloudNlbLoadBalancer) internetFacing() (bool, error) {
+	return strings.EqualFold(strings.TrimSpace(l.AddressType.Data), "internet"), nil
+}

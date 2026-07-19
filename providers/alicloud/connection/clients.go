@@ -8,12 +8,14 @@ import (
 	"fmt"
 
 	actiontrailclient "github.com/alibabacloud-go/actiontrail-20200706/v3/client"
+	albclient "github.com/alibabacloud-go/alb-20200616/v2/client"
 	configclient "github.com/alibabacloud-go/config-20200907/v4/client"
 	csclient "github.com/alibabacloud-go/cs-20151215/v6/client"
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
 	ddsclient "github.com/alibabacloud-go/dds-20151201/v9/client"
 	ecsclient "github.com/alibabacloud-go/ecs-20140526/v6/client"
 	kmsclient "github.com/alibabacloud-go/kms-20160120/v4/client"
+	nlbclient "github.com/alibabacloud-go/nlb-20220430/v4/client"
 	polardbclient "github.com/alibabacloud-go/polardb-20170801/v7/client"
 	rkvclient "github.com/alibabacloud-go/r-kvstore-20150101/v6/client"
 	ramclient "github.com/alibabacloud-go/ram-20150501/v2/client"
@@ -202,6 +204,28 @@ func (c *AlicloudConnection) CsClient(region string) (*csclient.Client, error) {
 		return nil, err
 	}
 	return client.(*csclient.Client), nil
+}
+
+// AlbClient returns an Application Load Balancer (ALB) client for a region.
+func (c *AlicloudConnection) AlbClient(region string) (*albclient.Client, error) {
+	client, err := c.cachedClient("alb/"+region, func() (any, error) {
+		return albclient.NewClient(c.config("alb", region))
+	})
+	if err != nil {
+		return nil, err
+	}
+	return client.(*albclient.Client), nil
+}
+
+// NlbClient returns a Network Load Balancer (NLB) client for a region.
+func (c *AlicloudConnection) NlbClient(region string) (*nlbclient.Client, error) {
+	client, err := c.cachedClient("nlb/"+region, func() (any, error) {
+		return nlbclient.NewClient(c.config("nlb", region))
+	})
+	if err != nil {
+		return nil, err
+	}
+	return client.(*nlbclient.Client), nil
 }
 
 // KmsClient returns a Key Management Service client for a region.

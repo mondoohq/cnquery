@@ -6,12 +6,14 @@ go 1.26.4
 
 require (
 	github.com/alibabacloud-go/actiontrail-20200706/v3 v3.4.0
+	github.com/alibabacloud-go/alb-20200616/v2 v2.3.2
 	github.com/alibabacloud-go/config-20200907/v4 v4.2.3
 	github.com/alibabacloud-go/cs-20151215/v6 v6.0.0
 	github.com/alibabacloud-go/darabonba-openapi/v2 v2.2.4
 	github.com/alibabacloud-go/dds-20151201/v9 v9.2.0
 	github.com/alibabacloud-go/ecs-20140526/v6 v6.1.0
 	github.com/alibabacloud-go/kms-20160120/v4 v4.0.0
+	github.com/alibabacloud-go/nlb-20220430/v4 v4.1.3
 	github.com/alibabacloud-go/polardb-20170801/v7 v7.22.0
 	github.com/alibabacloud-go/r-kvstore-20150101/v6 v6.0.0
 	github.com/alibabacloud-go/ram-20150501/v2 v2.2.1

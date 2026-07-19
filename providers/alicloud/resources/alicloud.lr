@@ -8,8 +8,8 @@ option go_package = "go.mondoo.com/mql/v13/providers/alicloud/resources"
 //
 // Entry point for querying an Alibaba Cloud account. Exposes the account
 // identity and the region IDs enabled on the account, and is the root from
-// which the RAM, ECS, VPC, OSS, SLB, and managed-database resources are
-// reached, along with the Container Service for Kubernetes, Key Management
+// which the RAM, ECS, VPC, OSS, SLB, ALB, NLB, and managed-database resources
+// are reached, along with the Container Service for Kubernetes, Key Management
 // Service, ActionTrail, Log Service, Cloud Config, and Resource Directory
 // resources.
 alicloud {
@@ -2705,4 +2705,344 @@ alicloud.cs.nodePool {
   vswitches() []alicloud.vpc.vswitch
   // RAM role assigned to the nodes, null when the node pool has no RAM role
   ramRole() alicloud.ram.role
+}
+
+// Alibaba Cloud Application Load Balancer
+//
+// ALB (Layer-7) load balancers across an Alibaba Cloud account. Exposes the
+// application load balancers in every enabled region, along with their
+// listeners and server groups. Use it to audit which load balancers are
+// internet-facing, whether HTTPS listeners use a strong TLS policy, and whether
+// access logging is enabled.
+alicloud.alb {
+  // Application load balancers across all enabled regions
+  loadBalancers() []alicloud.alb.loadBalancer
+  // ALB server groups across all enabled regions
+  serverGroups() []alicloud.alb.serverGroup
+}
+
+// Application Load Balancer instance
+//
+// A single ALB load balancer, keyed by loadBalancerId within its region.
+// Exposes the address type and the derived internet-facing state, the VPC and
+// security groups it runs in, its access-logging configuration, and its
+// listeners. Use it to audit public exposure and access logging. For example
+// alicloud.alb.loadBalancer(loadBalancerId: "alb-xxx", regionId: "cn-hangzhou").
+alicloud.alb.loadBalancer {
+  // Region ID the load balancer resides in, for example cn-hangzhou
+  regionId string
+  // Load balancer ID, used as the lookup key within its region
+  loadBalancerId string
+  // Load balancer name
+  name string
+  // Load balancer status
+  //
+  // For example Active, Inactive, Provisioning, or Configuring.
+  status string
+  // Address type
+  //
+  // Either Internet (internet-facing) or Intranet (internal only).
+  addressType string
+  // Address allocation mode, either Fixed or Dynamic
+  addressAllocatedMode string
+  // IP version of the address, either IPv4 or DualStack
+  addressIpVersion string
+  // IPv6 address type, either Internet or Intranet
+  ipv6AddressType string
+  // DNS name assigned to the load balancer
+  dnsName string
+  // Load balancer edition, one of Basic, Standard, or StandardWithWaf
+  edition string
+  // Business (billing) status of the load balancer, for example Normal
+  businessStatus string
+  // ID of the bandwidth package bound to the load balancer, empty when none
+  bandwidthPackageId string
+  // ID of the resource group the load balancer belongs to
+  resourceGroupId string
+  // Time the load balancer was created
+  createTime time
+  // Whether deletion protection is enabled
+  deletionProtectionEnabled bool
+  // Modification-protection status, either NonProtection or ConsoleProtection
+  modificationProtectionStatus string
+  // Whether access logging to Log Service is enabled
+  //
+  // True when the load balancer delivers access logs to a Log Service project
+  // and logstore. When false, request-level access logs are not retained.
+  accessLoggingEnabled bool
+  // Tags applied to the load balancer
+  tags map[string]string
+  // Whether the load balancer serves traffic from the public internet
+  //
+  // True when the address type is Internet. An internet-facing load balancer is
+  // reachable from outside the VPC.
+  internetFacing() bool
+  // VPC the load balancer runs in
+  vpc() alicloud.vpc.network
+  // Security groups applied to the load balancer
+  securityGroups() []alicloud.ecs.securitygroup
+  // vSwitches the load balancer attaches to across its zones
+  vswitches() []alicloud.vpc.vswitch
+  // Log Service project that receives access logs, null when access logging is disabled
+  accessLogProject() alicloud.log.project
+  // Log Service logstore that receives access logs, null when access logging is disabled
+  accessLogStore() alicloud.log.logstore
+  // Listeners configured on the load balancer
+  listeners() []alicloud.alb.listener
+}
+
+// Application Load Balancer listener
+//
+// A single listener on an ALB load balancer, keyed by listenerId. Exposes the
+// protocol and port it serves, the TLS security policy for HTTPS/QUIC
+// listeners, and the server groups it forwards to. Use it to audit whether an
+// HTTPS listener enforces a strong TLS policy and presents certificates.
+alicloud.alb.listener {
+  // Region ID the listener resides in
+  regionId string
+  // Listener ID, used as the lookup key
+  listenerId string
+  // ID of the load balancer the listener belongs to
+  loadBalancerId string
+  // Listener protocol, one of HTTP, HTTPS, or QUIC
+  protocol string
+  // Port the listener serves on
+  port int
+  // Listener status, for example Running, Configuring, or Stopped
+  status string
+  // Description of the listener
+  description string
+  // TLS security policy applied to the listener, empty for non-TLS listeners
+  securityPolicyId string
+  // Whether HTTP/2 is enabled
+  http2Enabled bool
+  // Whether response gzip compression is enabled
+  gzipEnabled bool
+  // Idle connection timeout in seconds
+  idleTimeout int
+  // Request timeout in seconds
+  requestTimeout int
+  // Tags applied to the listener
+  tags map[string]string
+  // Server certificate IDs presented by the listener
+  //
+  // Empty for non-TLS listeners. A populated list confirms the HTTPS/QUIC
+  // listener presents a server certificate.
+  certificateIds() []string
+  // Whether mutual TLS (client certificate authentication) is enabled
+  mutualTlsEnabled() bool
+  // Server groups the listener forwards requests to
+  serverGroups() []alicloud.alb.serverGroup
+}
+
+// Application Load Balancer server group
+//
+// A single ALB server group, keyed by serverGroupId within its region. A server
+// group is a set of backends that listeners forward requests to. Exposes the
+// backend protocol, scheduling algorithm, health-check configuration, and the
+// VPC the group belongs to.
+alicloud.alb.serverGroup {
+  // Region ID the server group resides in
+  regionId string
+  // Server group ID, used as the lookup key within its region
+  serverGroupId string
+  // Server group name
+  name string
+  // Server group type, one of Instance, Ip, or Fc
+  type string
+  // Server group status
+  status string
+  // Backend protocol, one of HTTP, HTTPS, or gRPC
+  protocol string
+  // Scheduling algorithm, one of Wrr, Wlc, or Sch
+  scheduler string
+  // Number of backend servers in the group
+  serverCount int
+  // ID of the resource group the server group belongs to
+  resourceGroupId string
+  // Time the server group was created
+  createTime time
+  // Whether cross-zone load balancing is enabled
+  crossZoneEnabled bool
+  // Whether health checks are enabled for the group
+  healthCheckEnabled bool
+  // Health-check protocol, one of HTTP, TCP, or gRPC
+  healthCheckProtocol string
+  // Health-check request path, for HTTP health checks
+  healthCheckPath string
+  // Whether session stickiness is enabled
+  stickySessionEnabled bool
+  // Session stickiness type, either Insert or Server
+  stickySessionType string
+  // Tags applied to the server group
+  tags map[string]string
+  // VPC the server group belongs to
+  vpc() alicloud.vpc.network
+}
+
+// Alibaba Cloud Network Load Balancer
+//
+// NLB (Layer-4) load balancers across an Alibaba Cloud account. Exposes the
+// network load balancers in every enabled region, along with their listeners
+// and server groups. Use it to audit which load balancers are internet-facing,
+// whether security groups are applied, and whether TCPSSL listeners use a strong
+// TLS policy.
+alicloud.nlb {
+  // Network load balancers across all enabled regions
+  loadBalancers() []alicloud.nlb.loadBalancer
+  // NLB server groups across all enabled regions
+  serverGroups() []alicloud.nlb.serverGroup
+}
+
+// Network Load Balancer instance
+//
+// A single NLB load balancer, keyed by loadBalancerId within its region.
+// Exposes the address type and the derived internet-facing state, the VPC,
+// vSwitches, and security groups it runs in, and its listeners. Unlike an ALB,
+// an NLB can enforce security groups directly. For example
+// alicloud.nlb.loadBalancer(loadBalancerId: "nlb-xxx", regionId: "cn-hangzhou").
+alicloud.nlb.loadBalancer {
+  // Region ID the load balancer resides in, for example cn-hangzhou
+  regionId string
+  // Load balancer ID, used as the lookup key within its region
+  loadBalancerId string
+  // Load balancer name
+  name string
+  // Load balancer status
+  //
+  // For example Active, Inactive, Provisioning, or Configuring.
+  status string
+  // Load balancer type, always Network for NLB
+  type string
+  // Business (billing) status, either Normal or Abnormal
+  businessStatus string
+  // Address type
+  //
+  // Either Internet (internet-facing) or Intranet (internal only).
+  addressType string
+  // IP version of the address, either Ipv4 or DualStack
+  addressIpVersion string
+  // IPv6 address type, either Internet or Intranet
+  ipv6AddressType string
+  // DNS name assigned to the load balancer
+  dnsName string
+  // ID of the resource group the load balancer belongs to
+  resourceGroupId string
+  // Time the load balancer was created
+  createTime time
+  // ID of the bandwidth package bound to the load balancer, empty when none
+  bandwidthPackageId string
+  // Whether cross-zone load balancing is enabled
+  crossZoneEnabled bool
+  // Whether deletion protection is enabled
+  deletionProtectionEnabled bool
+  // Modification-protection status, either NonProtection or ConsoleProtection
+  modificationProtectionStatus string
+  // Tags applied to the load balancer
+  tags map[string]string
+  // Whether the load balancer serves traffic from the public internet
+  //
+  // True when the address type is Internet. An internet-facing load balancer is
+  // reachable from outside the VPC.
+  internetFacing() bool
+  // VPC the load balancer runs in
+  vpc() alicloud.vpc.network
+  // Security groups applied to the load balancer
+  //
+  // NLB enforces these security groups on traffic to the load balancer. An
+  // empty result means no security-group filtering is applied at the load
+  // balancer.
+  securityGroups() []alicloud.ecs.securitygroup
+  // vSwitches the load balancer attaches to across its zones
+  vswitches() []alicloud.vpc.vswitch
+  // Listeners configured on the load balancer
+  listeners() []alicloud.nlb.listener
+}
+
+// Network Load Balancer listener
+//
+// A single listener on an NLB load balancer, keyed by listenerId. Exposes the
+// protocol and port it serves, the TLS security policy and certificates for
+// TCPSSL listeners, and the server group it forwards to. Use it to audit
+// whether a TCPSSL listener enforces a strong TLS policy.
+alicloud.nlb.listener {
+  // Region ID the listener resides in
+  regionId string
+  // Listener ID, used as the lookup key
+  listenerId string
+  // ID of the load balancer the listener belongs to
+  loadBalancerId string
+  // Listener protocol, one of TCP, UDP, or TCPSSL
+  protocol string
+  // Port the listener serves on
+  port int
+  // Listener status, for example Running, Configuring, or Stopped
+  status string
+  // Description of the listener
+  description string
+  // TLS security policy applied to the listener, meaningful for TCPSSL listeners
+  securityPolicyId string
+  // Server certificate IDs presented by a TCPSSL listener
+  certificateIds []string
+  // CA certificate IDs used for mutual TLS on a TCPSSL listener
+  caCertificateIds []string
+  // Whether mutual TLS (client certificate authentication) is enabled
+  caEnabled bool
+  // Idle connection timeout in seconds
+  idleTimeout int
+  // Whether the Proxy Protocol is enabled to pass client information to backends
+  proxyProtocolEnabled bool
+  // Whether ALPN is enabled
+  alpnEnabled bool
+  // ALPN policy applied when ALPN is enabled
+  alpnPolicy string
+  // Connections-per-second limit for the listener, 0 when unlimited
+  cps int
+  // Tags applied to the listener
+  tags map[string]string
+  // Server group the listener forwards traffic to
+  serverGroup() alicloud.nlb.serverGroup
+}
+
+// Network Load Balancer server group
+//
+// A single NLB server group, keyed by serverGroupId within its region. A server
+// group is a set of backends that listeners forward traffic to. Exposes the
+// backend protocol, scheduling algorithm, client-IP preservation, health-check
+// configuration, and the VPC the group belongs to.
+alicloud.nlb.serverGroup {
+  // Region ID the server group resides in
+  regionId string
+  // Server group ID, used as the lookup key within its region
+  serverGroupId string
+  // Server group name
+  name string
+  // Server group type, either Instance or Ip
+  type string
+  // Server group status
+  status string
+  // Backend protocol, one of TCP, UDP, or TCPSSL
+  protocol string
+  // Scheduling algorithm, for example Wrr, rr, sch, tch, or qch
+  scheduler string
+  // IP version of the backends, either Ipv4 or DualStack
+  addressIpVersion string
+  // Number of backend servers in the group
+  serverCount int
+  // Whether client source IP preservation is enabled
+  preserveClientIpEnabled bool
+  // Whether connection draining is enabled
+  connectionDrainEnabled bool
+  // Whether health checks are enabled for the group
+  healthCheckEnabled bool
+  // Health-check protocol, one of TCP, HTTP, or UDP
+  healthCheckType string
+  // Health-check connection port
+  healthCheckConnectPort int
+  // ID of the resource group the server group belongs to
+  resourceGroupId string
+  // Tags applied to the server group
+  tags map[string]string
+  // VPC the server group belongs to
+  vpc() alicloud.vpc.network
 }
