@@ -36,6 +36,12 @@ Examples:
 				resources.DiscoveryAuto,
 				resources.DiscoveryAll,
 				resources.DiscoveryAccounts,
+				resources.DiscoveryK8sClusters,
+				resources.DiscoveryAlbs,
+				resources.DiscoveryNlbs,
+				resources.DiscoveryVpcs,
+				resources.DiscoveryWaf,
+				resources.DiscoveryCloudFirewall,
 			},
 			Flags: []plugin.Flag{
 				{

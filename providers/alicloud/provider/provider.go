@@ -113,11 +113,16 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		}
 	}
 
+	inv, err := s.discover(conn)
+	if err != nil {
+		return nil, err
+	}
+
 	return &plugin.ConnectRes{
 		Id:        conn.ID(),
 		Name:      conn.Name(),
 		Asset:     req.Asset,
-		Inventory: nil,
+		Inventory: inv,
 	}, nil
 }
 
@@ -174,17 +179,8 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.AlicloudConnec
 
 	asset.Id = "alicloud/" + accountID
 	asset.Name = "Alibaba Cloud account " + accountID
-
-	asset.Platform = &inventory.Platform{
-		Name:                  "alicloud",
-		Family:                []string{"alicloud"},
-		Kind:                  "api",
-		Runtime:               "alicloud",
-		Title:                 "Alibaba Cloud account " + accountID,
-		TechnologyUrlSegments: []string{"technology=alicloud", "kind=account", "account=" + accountID},
-	}
-
-	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/alicloud/account/" + accountID}
+	asset.Platform = connection.NewAccountPlatform(accountID)
+	asset.PlatformIds = []string{connection.NewAccountIdentifier(accountID)}
 	return nil
 }
 
