@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/databricks/databricks-sdk-go/service/provisioning"
 	"go.mondoo.com/mql/v13/llx"
@@ -82,7 +83,7 @@ func initDatabricksCustomerManagedKey(runtime *plugin.Runtime, args map[string]*
 	}
 	id, _ := idRaw.Value.(string)
 	if id == "" {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("databricks.customerManagedKey requires a non-empty id")
 	}
 
 	acc, err := accountClient(runtime)

@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/iam"
@@ -164,7 +165,7 @@ func initDatabricksGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 	id, _ := idRaw.Value.(string)
 	if id == "" {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("databricks.group requires a non-empty id")
 	}
 
 	acc, err := accountClient(runtime)

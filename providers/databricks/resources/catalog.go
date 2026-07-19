@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	databricks "github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
@@ -67,7 +68,7 @@ func initDatabricksCatalog(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 	name, _ := nameRaw.Value.(string)
 	if name == "" {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("databricks.catalog requires a non-empty name")
 	}
 
 	ws, err := workspaceClient(runtime)
@@ -144,7 +145,7 @@ func initDatabricksSchema(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	catalogName, _ := catalogNameRaw.Value.(string)
 	name, _ := nameRaw.Value.(string)
 	if catalogName == "" || name == "" {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("databricks.schema requires a non-empty catalogName and name")
 	}
 
 	ws, err := workspaceClient(runtime)
