@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -74,6 +75,22 @@ type mqlAlicloudEcsInstanceInternal struct {
 	cacheRegion    string
 	cacheVpcID     string
 	cacheVswitchID string
+	cacheImageID   string
+}
+
+// mqlAlicloudEcsDiskInternal caches the identifiers needed to resolve the
+// disk's typed instance reference without a repeat API call.
+type mqlAlicloudEcsDiskInternal struct {
+	cacheRegion     string
+	cacheInstanceID string
+}
+
+// mqlAlicloudEcsSecuritygroupPermissionInternal caches the identifiers needed
+// to resolve the rule's typed source/destination security group references.
+type mqlAlicloudEcsSecuritygroupPermissionInternal struct {
+	cacheRegion        string
+	cacheSourceGroupID string
+	cacheDestGroupID   string
 }
 
 // strDeref safely dereferences a string pointer, returning "" on nil.
@@ -199,7 +216,6 @@ func newMqlEcsInstance(runtime *plugin.Runtime, region string, inst *ecsclient.D
 		"status":                  llx.StringDataPtr(inst.Status),
 		"instanceType":            llx.StringDataPtr(inst.InstanceType),
 		"instanceTypeFamily":      llx.StringDataPtr(inst.InstanceTypeFamily),
-		"imageId":                 llx.StringDataPtr(inst.ImageId),
 		"regionId":                llx.StringData(region),
 		"zoneId":                  llx.StringDataPtr(inst.ZoneId),
 		"cpu":                     llx.IntDataPtr(inst.Cpu),
@@ -248,6 +264,7 @@ func newMqlEcsInstance(runtime *plugin.Runtime, region string, inst *ecsclient.D
 	mqlInst.cacheRegion = region
 	mqlInst.cacheVpcID = strDeref(vpcId)
 	mqlInst.cacheVswitchID = strDeref(vswitchId)
+	mqlInst.cacheImageID = strDeref(inst.ImageId)
 	return mqlInst, nil
 }
 
@@ -267,6 +284,15 @@ func (r *mqlAlicloudEcsInstance) vswitch() (*mqlAlicloudVpcVswitch, error) {
 		return nil, nil
 	}
 	return resolveVpcVswitch(r.MqlRuntime, r.cacheRegion, r.cacheVswitchID)
+}
+
+// image resolves the image the instance was created from.
+func (r *mqlAlicloudEcsInstance) image() (*mqlAlicloudEcsImage, error) {
+	if r.cacheImageID == "" {
+		r.Image.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return resolveEcsImage(r.MqlRuntime, r.cacheRegion, r.cacheImageID)
 }
 
 func (r *mqlAlicloudEcsInstance) id() (string, error) {
@@ -374,7 +400,6 @@ func (r *mqlAlicloudEcs) disks() ([]any, error) {
 					"status":             llx.StringDataPtr(disk.Status),
 					"encrypted":          llx.BoolDataPtr(disk.Encrypted),
 					"kmsKeyId":           llx.StringDataPtr(disk.KMSKeyId),
-					"instanceId":         llx.StringDataPtr(disk.InstanceId),
 					"device":             llx.StringDataPtr(disk.Device),
 					"deleteWithInstance": llx.BoolDataPtr(disk.DeleteWithInstance),
 					"deleteAutoSnapshot": llx.BoolDataPtr(disk.DeleteAutoSnapshot),
@@ -392,7 +417,10 @@ func (r *mqlAlicloudEcs) disks() ([]any, error) {
 				if err != nil {
 					return nil, err
 				}
-				res = append(res, resource)
+				mqlDisk := resource.(*mqlAlicloudEcsDisk)
+				mqlDisk.cacheRegion = region
+				mqlDisk.cacheInstanceID = strDeref(disk.InstanceId)
+				res = append(res, mqlDisk)
 			}
 
 			if resp.Body.NextToken == nil || *resp.Body.NextToken == "" {
@@ -406,6 +434,15 @@ func (r *mqlAlicloudEcs) disks() ([]any, error) {
 
 func (r *mqlAlicloudEcsDisk) id() (string, error) {
 	return r.RegionId.Data + "/" + r.DiskId.Data, nil
+}
+
+// instance resolves the ECS instance the disk is attached to.
+func (r *mqlAlicloudEcsDisk) instance() (*mqlAlicloudEcsInstance, error) {
+	if r.cacheInstanceID == "" {
+		r.Instance.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return resolveEcsInstance(r.MqlRuntime, r.cacheRegion, r.cacheInstanceID)
 }
 
 // ---------------------------------------------------------------------------
@@ -448,30 +485,7 @@ func (r *mqlAlicloudEcs) images() ([]any, error) {
 					continue
 				}
 				count++
-				imageId := ""
-				if img.ImageId != nil {
-					imageId = *img.ImageId
-				}
-				resource, err := CreateResource(r.MqlRuntime, "alicloud.ecs.image", map[string]*llx.RawData{
-					"__id":               llx.StringData(region + "/" + imageId),
-					"imageId":            llx.StringDataPtr(img.ImageId),
-					"imageName":          llx.StringDataPtr(img.ImageName),
-					"description":        llx.StringDataPtr(img.Description),
-					"osName":             llx.StringDataPtr(img.OSName),
-					"osType":             llx.StringDataPtr(img.OSType),
-					"architecture":       llx.StringDataPtr(img.Architecture),
-					"size":               llx.IntDataPtr(img.Size),
-					"imageOwnerAlias":    llx.StringDataPtr(img.ImageOwnerAlias),
-					"status":             llx.StringDataPtr(img.Status),
-					"isPublic":           llx.BoolDataPtr(img.IsPublic),
-					"isSelfShared":       llx.StringDataPtr(img.IsSelfShared),
-					"isSupportCloudinit": llx.BoolDataPtr(img.IsSupportCloudinit),
-					"platform":           llx.StringDataPtr(img.Platform),
-					"creationTime":       llx.TimeDataPtr(parseEcsTime(img.CreationTime)),
-					"imageVersion":       llx.StringDataPtr(img.ImageVersion),
-					"usage":              llx.StringDataPtr(img.Usage),
-					"regionId":           llx.StringData(region),
-				})
+				resource, err := newEcsImage(r.MqlRuntime, region, img)
 				if err != nil {
 					return nil, err
 				}
@@ -489,6 +503,38 @@ func (r *mqlAlicloudEcs) images() ([]any, error) {
 		}
 	}
 	return res, nil
+}
+
+// newEcsImage maps one DescribeImages item to a resource.
+func newEcsImage(runtime *plugin.Runtime, region string, img *ecsclient.DescribeImagesResponseBodyImagesImage) (*mqlAlicloudEcsImage, error) {
+	imageId := ""
+	if img.ImageId != nil {
+		imageId = *img.ImageId
+	}
+	resource, err := CreateResource(runtime, "alicloud.ecs.image", map[string]*llx.RawData{
+		"__id":               llx.StringData(region + "/" + imageId),
+		"imageId":            llx.StringDataPtr(img.ImageId),
+		"imageName":          llx.StringDataPtr(img.ImageName),
+		"description":        llx.StringDataPtr(img.Description),
+		"osName":             llx.StringDataPtr(img.OSName),
+		"osType":             llx.StringDataPtr(img.OSType),
+		"architecture":       llx.StringDataPtr(img.Architecture),
+		"size":               llx.IntDataPtr(img.Size),
+		"imageOwnerAlias":    llx.StringDataPtr(img.ImageOwnerAlias),
+		"status":             llx.StringDataPtr(img.Status),
+		"isPublic":           llx.BoolDataPtr(img.IsPublic),
+		"isSelfShared":       llx.StringDataPtr(img.IsSelfShared),
+		"isSupportCloudinit": llx.BoolDataPtr(img.IsSupportCloudinit),
+		"platform":           llx.StringDataPtr(img.Platform),
+		"creationTime":       llx.TimeDataPtr(parseEcsTime(img.CreationTime)),
+		"imageVersion":       llx.StringDataPtr(img.ImageVersion),
+		"usage":              llx.StringDataPtr(img.Usage),
+		"regionId":           llx.StringData(region),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlAlicloudEcsImage), nil
 }
 
 func (r *mqlAlicloudEcsImage) id() (string, error) {
@@ -653,26 +699,7 @@ func ecsSecurityGroupsInRegion(runtime *plugin.Runtime, conn *connection.Aliclou
 			if sg == nil {
 				continue
 			}
-			var tags []*ecsclient.DescribeSecurityGroupsResponseBodySecurityGroupsSecurityGroupTagsTag
-			if sg.Tags != nil {
-				tags = sg.Tags.Tag
-			}
-			sgId := ""
-			if sg.SecurityGroupId != nil {
-				sgId = *sg.SecurityGroupId
-			}
-			resource, err := CreateResource(runtime, "alicloud.ecs.securitygroup", map[string]*llx.RawData{
-				"__id":              llx.StringData(region + "/" + sgId),
-				"securityGroupId":   llx.StringDataPtr(sg.SecurityGroupId),
-				"securityGroupName": llx.StringDataPtr(sg.SecurityGroupName),
-				"description":       llx.StringDataPtr(sg.Description),
-				"vpcId":             llx.StringDataPtr(sg.VpcId),
-				"securityGroupType": llx.StringDataPtr(sg.SecurityGroupType),
-				"creationTime":      llx.TimeDataPtr(parseEcsTime(sg.CreationTime)),
-				"regionId":          llx.StringData(region),
-				"resourceGroupId":   llx.StringDataPtr(sg.ResourceGroupId),
-				"tags":              llx.MapData(ecsSecurityGroupTagsToMap(tags), types.String),
-			})
+			resource, err := newEcsSecuritygroup(runtime, region, sg)
 			if err != nil {
 				return nil, err
 			}
@@ -685,6 +712,34 @@ func ecsSecurityGroupsInRegion(runtime *plugin.Runtime, conn *connection.Aliclou
 		req.NextToken = resp.Body.NextToken
 	}
 	return res, nil
+}
+
+// newEcsSecuritygroup maps one DescribeSecurityGroups item to a resource.
+func newEcsSecuritygroup(runtime *plugin.Runtime, region string, sg *ecsclient.DescribeSecurityGroupsResponseBodySecurityGroupsSecurityGroup) (*mqlAlicloudEcsSecuritygroup, error) {
+	var tags []*ecsclient.DescribeSecurityGroupsResponseBodySecurityGroupsSecurityGroupTagsTag
+	if sg.Tags != nil {
+		tags = sg.Tags.Tag
+	}
+	sgId := ""
+	if sg.SecurityGroupId != nil {
+		sgId = *sg.SecurityGroupId
+	}
+	resource, err := CreateResource(runtime, "alicloud.ecs.securitygroup", map[string]*llx.RawData{
+		"__id":              llx.StringData(region + "/" + sgId),
+		"securityGroupId":   llx.StringDataPtr(sg.SecurityGroupId),
+		"securityGroupName": llx.StringDataPtr(sg.SecurityGroupName),
+		"description":       llx.StringDataPtr(sg.Description),
+		"vpcId":             llx.StringDataPtr(sg.VpcId),
+		"securityGroupType": llx.StringDataPtr(sg.SecurityGroupType),
+		"creationTime":      llx.TimeDataPtr(parseEcsTime(sg.CreationTime)),
+		"regionId":          llx.StringData(region),
+		"resourceGroupId":   llx.StringDataPtr(sg.ResourceGroupId),
+		"tags":              llx.MapData(ecsSecurityGroupTagsToMap(tags), types.String),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlAlicloudEcsSecuritygroup), nil
 }
 
 func (r *mqlAlicloudEcsSecuritygroup) id() (string, error) {
@@ -763,11 +818,9 @@ func (r *mqlAlicloudEcsSecuritygroup) permissions() ([]any, error) {
 				"portRange":           llx.StringDataPtr(p.PortRange),
 				"sourcePortRange":     llx.StringDataPtr(p.SourcePortRange),
 				"sourceCidrIp":        llx.StringDataPtr(p.SourceCidrIp),
-				"sourceGroupId":       llx.StringDataPtr(p.SourceGroupId),
 				"sourcePrefixListId":  llx.StringDataPtr(p.SourcePrefixListId),
 				"ipv6SourceCidrIp":    llx.StringDataPtr(p.Ipv6SourceCidrIp),
 				"destCidrIp":          llx.StringDataPtr(p.DestCidrIp),
-				"destGroupId":         llx.StringDataPtr(p.DestGroupId),
 				"destPrefixListId":    llx.StringDataPtr(p.DestPrefixListId),
 				"ipv6DestCidrIp":      llx.StringDataPtr(p.Ipv6DestCidrIp),
 				"description":         llx.StringDataPtr(p.Description),
@@ -776,7 +829,11 @@ func (r *mqlAlicloudEcsSecuritygroup) permissions() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			res = append(res, resource)
+			mqlPerm := resource.(*mqlAlicloudEcsSecuritygroupPermission)
+			mqlPerm.cacheRegion = region
+			mqlPerm.cacheSourceGroupID = strDeref(p.SourceGroupId)
+			mqlPerm.cacheDestGroupID = strDeref(p.DestGroupId)
+			res = append(res, mqlPerm)
 			idx++
 		}
 
@@ -790,6 +847,228 @@ func (r *mqlAlicloudEcsSecuritygroup) permissions() ([]any, error) {
 
 func (r *mqlAlicloudEcsSecuritygroupPermission) id() (string, error) {
 	return r.__id, nil
+}
+
+// sourceSecurityGroup resolves the source security group referenced by an
+// inbound rule.
+func (r *mqlAlicloudEcsSecuritygroupPermission) sourceSecurityGroup() (*mqlAlicloudEcsSecuritygroup, error) {
+	if r.cacheSourceGroupID == "" {
+		r.SourceSecurityGroup.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return resolveEcsSecuritygroup(r.MqlRuntime, r.cacheRegion, r.cacheSourceGroupID)
+}
+
+// destSecurityGroup resolves the destination security group referenced by an
+// outbound rule.
+func (r *mqlAlicloudEcsSecuritygroupPermission) destSecurityGroup() (*mqlAlicloudEcsSecuritygroup, error) {
+	if r.cacheDestGroupID == "" {
+		r.DestSecurityGroup.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return resolveEcsSecuritygroup(r.MqlRuntime, r.cacheRegion, r.cacheDestGroupID)
+}
+
+// ---------------------------------------------------------------------------
+// typed cross-reference resolvers
+// ---------------------------------------------------------------------------
+
+// resolveEcsImage returns the typed image for a native image id within a
+// region, or (nil, nil) when imageID is empty (the caller sets StateIsNull).
+// The underlying init reuses an already-listed image from the resource cache
+// and otherwise fetches it via DescribeImages.
+func resolveEcsImage(runtime *plugin.Runtime, region, imageID string) (*mqlAlicloudEcsImage, error) {
+	if imageID == "" {
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "alicloud.ecs.image", map[string]*llx.RawData{
+		"imageId":  llx.StringData(imageID),
+		"regionId": llx.StringData(region),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAlicloudEcsImage), nil
+}
+
+// resolveEcsInstance is the instance equivalent of resolveEcsImage.
+func resolveEcsInstance(runtime *plugin.Runtime, region, instanceID string) (*mqlAlicloudEcsInstance, error) {
+	if instanceID == "" {
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "alicloud.ecs.instance", map[string]*llx.RawData{
+		"instanceId": llx.StringData(instanceID),
+		"regionId":   llx.StringData(region),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAlicloudEcsInstance), nil
+}
+
+// resolveEcsSecuritygroup is the security group equivalent of resolveEcsImage.
+func resolveEcsSecuritygroup(runtime *plugin.Runtime, region, sgID string) (*mqlAlicloudEcsSecuritygroup, error) {
+	if sgID == "" {
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "alicloud.ecs.securitygroup", map[string]*llx.RawData{
+		"securityGroupId": llx.StringData(sgID),
+		"regionId":        llx.StringData(region),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAlicloudEcsSecuritygroup), nil
+}
+
+// initAlicloudEcsImage resolves an image by its native id within a region. It
+// backs both direct lookups and typed image() cross-references, reusing the
+// cached instance when the image has already been listed.
+func initAlicloudEcsImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	imageID, err := requiredStringArg(args, "imageId", "alicloud.ecs.image")
+	if err != nil {
+		return nil, nil, err
+	}
+	region, err := requiredStringArg(args, "regionId", "alicloud.ecs.image")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	key := region + "/" + imageID
+	if x, ok := runtime.Resources.Get("alicloud.ecs.image\x00" + key); ok {
+		return nil, x, nil
+	}
+
+	conn := runtime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.EcsClient(region)
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.DescribeImages(&ecsclient.DescribeImagesRequest{
+		RegionId: &region,
+		ImageId:  &imageID,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	if resp != nil && resp.Body != nil && resp.Body.Images != nil {
+		for _, img := range resp.Body.Images.Image {
+			if img == nil || img.ImageId == nil || *img.ImageId != imageID {
+				continue
+			}
+			res, err := newEcsImage(runtime, region, img)
+			if err != nil {
+				return nil, nil, err
+			}
+			return nil, res, nil
+		}
+	}
+	return nil, nil, fmt.Errorf("alicloud.ecs.image %q not found in region %q", imageID, region)
+}
+
+// initAlicloudEcsInstance resolves an instance by its native id within a
+// region. It backs both direct lookups and typed instance() cross-references,
+// reusing the cached instance when it has already been listed.
+func initAlicloudEcsInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	instanceID, err := requiredStringArg(args, "instanceId", "alicloud.ecs.instance")
+	if err != nil {
+		return nil, nil, err
+	}
+	region, err := requiredStringArg(args, "regionId", "alicloud.ecs.instance")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	key := region + "/" + instanceID
+	if x, ok := runtime.Resources.Get("alicloud.ecs.instance\x00" + key); ok {
+		return nil, x, nil
+	}
+
+	conn := runtime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.EcsClient(region)
+	if err != nil {
+		return nil, nil, err
+	}
+	// InstanceIds is a JSON array string of up to 100 instance IDs.
+	instanceIds := `["` + instanceID + `"]`
+	resp, err := client.DescribeInstances(&ecsclient.DescribeInstancesRequest{
+		RegionId:    &region,
+		InstanceIds: &instanceIds,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	if resp != nil && resp.Body != nil && resp.Body.Instances != nil {
+		for _, inst := range resp.Body.Instances.Instance {
+			if inst == nil || inst.InstanceId == nil || *inst.InstanceId != instanceID {
+				continue
+			}
+			res, err := newMqlEcsInstance(runtime, region, inst)
+			if err != nil {
+				return nil, nil, err
+			}
+			return nil, res, nil
+		}
+	}
+	return nil, nil, fmt.Errorf("alicloud.ecs.instance %q not found in region %q", instanceID, region)
+}
+
+// initAlicloudEcsSecuritygroup resolves a security group by its native id
+// within a region. It backs both direct lookups and typed source/destination
+// security group cross-references, reusing the cached instance when the group
+// has already been listed.
+func initAlicloudEcsSecuritygroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	sgID, err := requiredStringArg(args, "securityGroupId", "alicloud.ecs.securitygroup")
+	if err != nil {
+		return nil, nil, err
+	}
+	region, err := requiredStringArg(args, "regionId", "alicloud.ecs.securitygroup")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	key := region + "/" + sgID
+	if x, ok := runtime.Resources.Get("alicloud.ecs.securitygroup\x00" + key); ok {
+		return nil, x, nil
+	}
+
+	conn := runtime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.EcsClient(region)
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.DescribeSecurityGroups(&ecsclient.DescribeSecurityGroupsRequest{
+		RegionId:        &region,
+		SecurityGroupId: &sgID,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	if resp != nil && resp.Body != nil && resp.Body.SecurityGroups != nil {
+		for _, sg := range resp.Body.SecurityGroups.SecurityGroup {
+			if sg == nil || sg.SecurityGroupId == nil || *sg.SecurityGroupId != sgID {
+				continue
+			}
+			res, err := newEcsSecuritygroup(runtime, region, sg)
+			if err != nil {
+				return nil, nil, err
+			}
+			return nil, res, nil
+		}
+	}
+	return nil, nil, fmt.Errorf("alicloud.ecs.securitygroup %q not found in region %q", sgID, region)
 }
 
 // int32Ptr returns a pointer to an int32 literal for request paging fields.

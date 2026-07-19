@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"sync"
@@ -38,9 +39,10 @@ type mqlAlicloudRdsInstanceInternal struct {
 	region     string
 	instanceId string
 
-	cacheRegion    string
-	cacheVpcID     string
-	cacheVswitchID string
+	cacheRegion           string
+	cacheVpcID            string
+	cacheVswitchID        string
+	cacheMasterInstanceID string
 
 	attrLock sync.Mutex
 	attrDone bool
@@ -88,43 +90,10 @@ func (r *mqlAlicloudRds) instances() ([]any, error) {
 					continue
 				}
 
-				id := tea.StringValue(inst.DBInstanceId) + "/" + region
-				resource, err := CreateResource(r.MqlRuntime, "alicloud.rds.instance", map[string]*llx.RawData{
-					"__id":                  llx.StringData(id),
-					"dbInstanceId":          llx.StringDataPtr(inst.DBInstanceId),
-					"dbInstanceDescription": llx.StringDataPtr(inst.DBInstanceDescription),
-					"engine":                llx.StringDataPtr(inst.Engine),
-					"engineVersion":         llx.StringDataPtr(inst.EngineVersion),
-					"dbInstanceStatus":      llx.StringDataPtr(inst.DBInstanceStatus),
-					"dbInstanceType":        llx.StringDataPtr(inst.DBInstanceType),
-					"dbInstanceClass":       llx.StringDataPtr(inst.DBInstanceClass),
-					"dbInstanceStorageType": llx.StringDataPtr(inst.DBInstanceStorageType),
-					"dbInstanceNetType":     llx.StringDataPtr(inst.DBInstanceNetType),
-					"connectionMode":        llx.StringDataPtr(inst.ConnectionMode),
-					"connectionString":      llx.StringDataPtr(inst.ConnectionString),
-					"regionId":              llx.StringDataPtr(inst.RegionId),
-					"zoneId":                llx.StringDataPtr(inst.ZoneId),
-					"instanceNetworkType":   llx.StringDataPtr(inst.InstanceNetworkType),
-					"payType":               llx.StringDataPtr(inst.PayType),
-					"createTime":            llx.TimeDataPtr(rdsParseTime(inst.CreateTime)),
-					"expireTime":            llx.TimeDataPtr(rdsParseTime(inst.ExpireTime)),
-					"lockMode":              llx.StringDataPtr(inst.LockMode),
-					"lockReason":            llx.StringDataPtr(inst.LockReason),
-					"category":              llx.StringDataPtr(inst.Category),
-					"deletionProtection":    llx.BoolDataPtr(inst.DeletionProtection),
-					"masterInstanceId":      llx.StringDataPtr(inst.MasterInstanceId),
-					"resourceGroupId":       llx.StringDataPtr(inst.ResourceGroupId),
-				})
+				mqlInst, err := newRdsInstance(r.MqlRuntime, region, inst)
 				if err != nil {
 					return nil, err
 				}
-
-				mqlInst := resource.(*mqlAlicloudRdsInstance)
-				mqlInst.region = region
-				mqlInst.instanceId = tea.StringValue(inst.DBInstanceId)
-				mqlInst.cacheRegion = region
-				mqlInst.cacheVpcID = tea.StringValue(inst.VpcId)
-				mqlInst.cacheVswitchID = tea.StringValue(inst.VSwitchId)
 				res = append(res, mqlInst)
 			}
 
@@ -135,6 +104,118 @@ func (r *mqlAlicloudRds) instances() ([]any, error) {
 		}
 	}
 	return res, nil
+}
+
+// newRdsInstance builds a fully populated alicloud.rds.instance from a
+// DescribeDBInstances list item within a region. It is shared by the instances
+// list accessor and the by-id init so both produce identical resources (no husk).
+func newRdsInstance(runtime *plugin.Runtime, region string, inst *rdsclient.DescribeDBInstancesResponseBodyItemsDBInstance) (*mqlAlicloudRdsInstance, error) {
+	id := tea.StringValue(inst.DBInstanceId) + "/" + region
+	resource, err := CreateResource(runtime, "alicloud.rds.instance", map[string]*llx.RawData{
+		"__id":                  llx.StringData(id),
+		"dbInstanceId":          llx.StringDataPtr(inst.DBInstanceId),
+		"dbInstanceDescription": llx.StringDataPtr(inst.DBInstanceDescription),
+		"engine":                llx.StringDataPtr(inst.Engine),
+		"engineVersion":         llx.StringDataPtr(inst.EngineVersion),
+		"dbInstanceStatus":      llx.StringDataPtr(inst.DBInstanceStatus),
+		"dbInstanceType":        llx.StringDataPtr(inst.DBInstanceType),
+		"dbInstanceClass":       llx.StringDataPtr(inst.DBInstanceClass),
+		"dbInstanceStorageType": llx.StringDataPtr(inst.DBInstanceStorageType),
+		"dbInstanceNetType":     llx.StringDataPtr(inst.DBInstanceNetType),
+		"connectionMode":        llx.StringDataPtr(inst.ConnectionMode),
+		"connectionString":      llx.StringDataPtr(inst.ConnectionString),
+		"regionId":              llx.StringDataPtr(inst.RegionId),
+		"zoneId":                llx.StringDataPtr(inst.ZoneId),
+		"instanceNetworkType":   llx.StringDataPtr(inst.InstanceNetworkType),
+		"payType":               llx.StringDataPtr(inst.PayType),
+		"createTime":            llx.TimeDataPtr(rdsParseTime(inst.CreateTime)),
+		"expireTime":            llx.TimeDataPtr(rdsParseTime(inst.ExpireTime)),
+		"lockMode":              llx.StringDataPtr(inst.LockMode),
+		"lockReason":            llx.StringDataPtr(inst.LockReason),
+		"category":              llx.StringDataPtr(inst.Category),
+		"deletionProtection":    llx.BoolDataPtr(inst.DeletionProtection),
+		"resourceGroupId":       llx.StringDataPtr(inst.ResourceGroupId),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	mqlInst := resource.(*mqlAlicloudRdsInstance)
+	mqlInst.region = region
+	mqlInst.instanceId = tea.StringValue(inst.DBInstanceId)
+	mqlInst.cacheRegion = region
+	mqlInst.cacheVpcID = tea.StringValue(inst.VpcId)
+	mqlInst.cacheVswitchID = tea.StringValue(inst.VSwitchId)
+	mqlInst.cacheMasterInstanceID = tea.StringValue(inst.MasterInstanceId)
+	return mqlInst, nil
+}
+
+// resolveRdsInstance returns the typed RDS instance for a native DB instance id
+// within a region, or (nil, nil) when dbInstanceID is empty (the caller sets
+// StateIsNull). The underlying init reuses an already-listed instance from the
+// resource cache and otherwise fetches it via DescribeDBInstances.
+func resolveRdsInstance(runtime *plugin.Runtime, region, dbInstanceID string) (*mqlAlicloudRdsInstance, error) {
+	if dbInstanceID == "" {
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "alicloud.rds.instance", map[string]*llx.RawData{
+		"dbInstanceId": llx.StringData(dbInstanceID),
+		"regionId":     llx.StringData(region),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAlicloudRdsInstance), nil
+}
+
+// initAlicloudRdsInstance resolves an RDS instance by its native DB instance id
+// within a region. It backs both direct lookups and the typed masterInstance()
+// self-reference, reusing the cached instance when it has already been listed.
+func initAlicloudRdsInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	dbInstanceID, err := requiredStringArg(args, "dbInstanceId", "alicloud.rds.instance")
+	if err != nil {
+		return nil, nil, err
+	}
+	region, err := requiredStringArg(args, "regionId", "alicloud.rds.instance")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Matches the instance __id: dbInstanceId + "/" + region.
+	key := dbInstanceID + "/" + region
+	if x, ok := runtime.Resources.Get("alicloud.rds.instance\x00" + key); ok {
+		return nil, x, nil
+	}
+
+	conn := runtime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.RdsClient(region)
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.DescribeDBInstances(&rdsclient.DescribeDBInstancesRequest{
+		RegionId:     tea.String(region),
+		DBInstanceId: tea.String(dbInstanceID),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	if resp != nil && resp.Body != nil && resp.Body.Items != nil {
+		for _, inst := range resp.Body.Items.DBInstance {
+			if inst == nil || inst.DBInstanceId == nil || *inst.DBInstanceId != dbInstanceID {
+				continue
+			}
+			res, err := newRdsInstance(runtime, region, inst)
+			if err != nil {
+				return nil, nil, err
+			}
+			return nil, res, nil
+		}
+	}
+	return nil, nil, fmt.Errorf("alicloud.rds.instance %q not found in region %q", dbInstanceID, region)
 }
 
 func (r *mqlAlicloudRdsInstance) id() (string, error) {
@@ -318,6 +399,14 @@ func (r *mqlAlicloudRdsInstance) vswitch() (*mqlAlicloudVpcVswitch, error) {
 		return nil, nil
 	}
 	return resolveVpcVswitch(r.MqlRuntime, r.cacheRegion, r.cacheVswitchID)
+}
+
+func (r *mqlAlicloudRdsInstance) masterInstance() (*mqlAlicloudRdsInstance, error) {
+	if r.cacheMasterInstanceID == "" {
+		r.MasterInstance.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return resolveRdsInstance(r.MqlRuntime, r.cacheRegion, r.cacheMasterInstanceID)
 }
 
 func (r *mqlAlicloudRdsInstance) securityGroupIds() ([]any, error) {

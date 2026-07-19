@@ -47,6 +47,38 @@ func resolveVpcVswitch(runtime *plugin.Runtime, region, vswitchID string) (*mqlA
 	return res.(*mqlAlicloudVpcVswitch), nil
 }
 
+// resolveVpcRouteTable returns the typed route table for a native route table id
+// within a region, or (nil, nil) when routeTableID is empty.
+func resolveVpcRouteTable(runtime *plugin.Runtime, region, routeTableID string) (*mqlAlicloudVpcRouteTable, error) {
+	if routeTableID == "" {
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "alicloud.vpc.routeTable", map[string]*llx.RawData{
+		"routeTableId": llx.StringData(routeTableID),
+		"regionId":     llx.StringData(region),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAlicloudVpcRouteTable), nil
+}
+
+// resolveVpcNetworkAcl returns the typed network ACL for a native network ACL id
+// within a region, or (nil, nil) when networkAclID is empty.
+func resolveVpcNetworkAcl(runtime *plugin.Runtime, region, networkAclID string) (*mqlAlicloudVpcNetworkAcl, error) {
+	if networkAclID == "" {
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "alicloud.vpc.networkAcl", map[string]*llx.RawData{
+		"networkAclId": llx.StringData(networkAclID),
+		"regionId":     llx.StringData(region),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAlicloudVpcNetworkAcl), nil
+}
+
 // initAlicloudVpcNetwork resolves a VPC network by its native vpc id within a
 // region. It backs both direct lookups and typed vpc() cross-references, reusing
 // the cached instance when the network has already been listed.
@@ -143,6 +175,104 @@ func initAlicloudVpcVswitch(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		}
 	}
 	return nil, nil, fmt.Errorf("alicloud.vpc.vswitch %q not found in region %q", vswitchID, region)
+}
+
+// initAlicloudVpcRouteTable resolves a route table by its native id within a
+// region. It backs both direct lookups and the typed routeTable() reference,
+// reusing the cached instance when the route table has already been listed.
+func initAlicloudVpcRouteTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	routeTableID, err := requiredStringArg(args, "routeTableId", "alicloud.vpc.routeTable")
+	if err != nil {
+		return nil, nil, err
+	}
+	region, err := requiredStringArg(args, "regionId", "alicloud.vpc.routeTable")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	key := region + "/" + routeTableID
+	if x, ok := runtime.Resources.Get("alicloud.vpc.routeTable\x00" + key); ok {
+		return nil, x, nil
+	}
+
+	conn := runtime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.VpcClient(region)
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.DescribeRouteTableList(&vpcclient.DescribeRouteTableListRequest{
+		RegionId:     &region,
+		RouteTableId: &routeTableID,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	if resp != nil && resp.Body != nil && resp.Body.RouterTableList != nil {
+		for _, rt := range resp.Body.RouterTableList.RouterTableListType {
+			if rt == nil || rt.RouteTableId == nil || *rt.RouteTableId != routeTableID {
+				continue
+			}
+			res, err := newVpcRouteTable(runtime, region, rt)
+			if err != nil {
+				return nil, nil, err
+			}
+			return nil, res, nil
+		}
+	}
+	return nil, nil, fmt.Errorf("alicloud.vpc.routeTable %q not found in region %q", routeTableID, region)
+}
+
+// initAlicloudVpcNetworkAcl resolves a network ACL by its native id within a
+// region. It backs both direct lookups and the typed networkAcl() reference,
+// reusing the cached instance when the network ACL has already been listed.
+func initAlicloudVpcNetworkAcl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	networkAclID, err := requiredStringArg(args, "networkAclId", "alicloud.vpc.networkAcl")
+	if err != nil {
+		return nil, nil, err
+	}
+	region, err := requiredStringArg(args, "regionId", "alicloud.vpc.networkAcl")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	key := region + "/" + networkAclID
+	if x, ok := runtime.Resources.Get("alicloud.vpc.networkAcl\x00" + key); ok {
+		return nil, x, nil
+	}
+
+	conn := runtime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.VpcClient(region)
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.DescribeNetworkAcls(&vpcclient.DescribeNetworkAclsRequest{
+		RegionId:     &region,
+		NetworkAclId: &networkAclID,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	if resp != nil && resp.Body != nil && resp.Body.NetworkAcls != nil {
+		for _, acl := range resp.Body.NetworkAcls.NetworkAcl {
+			if acl == nil || acl.NetworkAclId == nil || *acl.NetworkAclId != networkAclID {
+				continue
+			}
+			res, err := newVpcNetworkAcl(runtime, region, acl)
+			if err != nil {
+				return nil, nil, err
+			}
+			return nil, res, nil
+		}
+	}
+	return nil, nil, fmt.Errorf("alicloud.vpc.networkAcl %q not found in region %q", networkAclID, region)
 }
 
 // requiredStringArg reads a required non-empty string argument from an init

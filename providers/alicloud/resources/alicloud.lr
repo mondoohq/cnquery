@@ -274,8 +274,8 @@ alicloud.ecs.instance @defaults("instanceId instanceName status instanceType") {
   instanceType string
   // Instance type family, for example ecs.g5
   instanceTypeFamily string
-  // Image ID the instance was created from
-  imageId string
+  // Image the instance was created from
+  image() alicloud.ecs.image
   // Region ID of the instance, for example cn-hangzhou
   regionId string
   // Zone ID of the instance, for example cn-hangzhou-g
@@ -412,8 +412,8 @@ alicloud.ecs.disk @defaults("diskId diskName category size status") {
   encrypted bool
   // KMS key ID used to encrypt the disk
   kmsKeyId string
-  // ID of the instance the disk is attached to
-  instanceId string
+  // Instance the disk is attached to
+  instance() alicloud.ecs.instance
   // Device name the disk is mounted as, for example /dev/xvda
   device string
   // Whether the disk is released together with its instance
@@ -584,16 +584,16 @@ alicloud.ecs.securitygroup.permission @defaults("direction ipProtocol portRange 
   sourcePortRange string
   // Source IPv4 CIDR block for an inbound rule
   sourceCidrIp string
-  // Source security group ID for an inbound rule
-  sourceGroupId string
+  // Source security group for an inbound rule
+  sourceSecurityGroup() alicloud.ecs.securitygroup
   // Source prefix list ID for an inbound rule
   sourcePrefixListId string
   // Source IPv6 CIDR block for an inbound rule
   ipv6SourceCidrIp string
   // Destination IPv4 CIDR block for an outbound rule
   destCidrIp string
-  // Destination security group ID for an outbound rule
-  destGroupId string
+  // Destination security group for an outbound rule
+  destSecurityGroup() alicloud.ecs.securitygroup
   // Destination prefix list ID for an outbound rule
   destPrefixListId string
   // Destination IPv6 CIDR block for an outbound rule
@@ -666,12 +666,12 @@ alicloud.vpc.network {
   resourceGroupId string
   // User CIDR blocks associated with the VPC
   userCidrs []string
-  // vSwitch IDs in the VPC
-  vswitchIds []string
-  // NAT gateway IDs attached to the VPC
-  natGatewayIds []string
-  // Route table IDs associated with the VPC
-  routeTableIds []string
+  // vSwitches in the VPC
+  vswitches() []alicloud.vpc.vswitch
+  // NAT gateways attached to the VPC
+  natGateways() []alicloud.vpc.natGateway
+  // Route tables associated with the VPC
+  routeTables() []alicloud.vpc.routeTable
   // DNS hostname feature status
   //
   // Indicates whether the DNS hostname feature is enabled, for example ENABLED
@@ -725,12 +725,12 @@ alicloud.vpc.vswitch {
   isDefault bool
   // Time when the vSwitch was created
   creationTime time
-  // ID of the route table associated with the vSwitch
-  routeTableId string
+  // Route table associated with the vSwitch
+  routeTable() alicloud.vpc.routeTable
   // Type of the associated route table, for example System or Custom
   routeTableType string
-  // ID of the network ACL bound to the vSwitch
-  networkAclId string
+  // Network ACL bound to the vSwitch
+  networkAcl() alicloud.vpc.networkAcl
   // Resource group ID the vSwitch belongs to
   resourceGroupId string
   // vSwitch sharing status
@@ -770,8 +770,8 @@ alicloud.vpc.routeTable {
   creationTime time
   // Resource group ID the route table belongs to
   resourceGroupId string
-  // vSwitch IDs associated with the route table
-  vSwitchIds []string
+  // vSwitches associated with the route table
+  vswitches() []alicloud.vpc.vswitch
   // Gateway IDs associated with the route table
   gatewayIds []string
   // Type of resource the route table is associated with
@@ -955,8 +955,8 @@ alicloud.vpc.eipAddress {
   regionId string
   // Resource group ID the EIP belongs to
   resourceGroupId string
-  // ID of the VPC the EIP is associated with
-  vpcId string
+  // VPC the EIP is associated with
+  vpc() alicloud.vpc.network
   // Zone the EIP belongs to
   zone string
   // ID of the bandwidth plan (shared bandwidth) the EIP joined
@@ -1401,8 +1401,8 @@ alicloud.rds.instance {
   category string
   // Whether release (deletion) protection is enabled for the instance
   deletionProtection bool
-  // ID of the primary instance, set for read-only and disaster recovery instances
-  masterInstanceId string
+  // Primary instance, set for read-only and disaster recovery instances
+  masterInstance() alicloud.rds.instance
   // ID of the resource group the instance belongs to
   resourceGroupId string
   // Storage capacity of the instance in GB

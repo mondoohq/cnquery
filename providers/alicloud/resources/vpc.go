@@ -160,9 +160,12 @@ func (r *mqlAlicloudVpc) networks() ([]any, error) {
 }
 
 // mqlAlicloudVpcNetworkInternal caches the region the network was discovered in
-// so its region-scoped __id can be reconstructed.
+// (so its region-scoped __id can be reconstructed) and its own native vpc id
+// (so the vswitches, natGateways, and routeTables collections can be listed
+// filtered to this VPC).
 type mqlAlicloudVpcNetworkInternal struct {
 	cacheRegion string
+	cacheVpcID  string
 }
 
 // newVpcNetwork maps a DescribeVpcs item into an alicloud.vpc.network resource.
@@ -176,18 +179,6 @@ func newVpcNetwork(runtime *plugin.Runtime, region string, vpc *vpcclient.Descri
 	userCidrs := []any{}
 	if vpc.UserCidrs != nil {
 		userCidrs = vpcStrSlice(vpc.UserCidrs.UserCidr)
-	}
-	vswitchIds := []any{}
-	if vpc.VSwitchIds != nil {
-		vswitchIds = vpcStrSlice(vpc.VSwitchIds.VSwitchId)
-	}
-	natGatewayIds := []any{}
-	if vpc.NatGatewayIds != nil {
-		natGatewayIds = vpcStrSlice(vpc.NatGatewayIds.NatGatewayIds)
-	}
-	routeTableIds := []any{}
-	if vpc.RouterTableIds != nil {
-		routeTableIds = vpcStrSlice(vpc.RouterTableIds.RouterTableIds)
 	}
 
 	ipv6Blocks := []any{}
@@ -231,9 +222,6 @@ func newVpcNetwork(runtime *plugin.Runtime, region string, vpc *vpcclient.Descri
 		"creationTime":         llx.TimeDataPtr(vpcParseTime(vpc.CreationTime)),
 		"resourceGroupId":      llx.StringDataPtr(vpc.ResourceGroupId),
 		"userCidrs":            llx.ArrayData(userCidrs, types.String),
-		"vswitchIds":           llx.ArrayData(vswitchIds, types.String),
-		"natGatewayIds":        llx.ArrayData(natGatewayIds, types.String),
-		"routeTableIds":        llx.ArrayData(routeTableIds, types.String),
 		"dnsHostnameStatus":    llx.StringDataPtr(vpc.DnsHostnameStatus),
 		"dhcpOptionsSetId":     llx.StringDataPtr(vpc.DhcpOptionsSetId),
 		"dhcpOptionsSetStatus": llx.StringDataPtr(vpc.DhcpOptionsSetStatus),
@@ -246,11 +234,155 @@ func newVpcNetwork(runtime *plugin.Runtime, region string, vpc *vpcclient.Descri
 	}
 	network := resource.(*mqlAlicloudVpcNetwork)
 	network.cacheRegion = region
+	network.cacheVpcID = vpcStr(vpc.VpcId)
 	return network, nil
 }
 
 func (r *mqlAlicloudVpcNetwork) id() (string, error) {
 	return r.cacheRegion + "/" + r.VpcId.Data, nil
+}
+
+// vswitches lists the vSwitches that belong to this VPC, in the VPC's region.
+func (r *mqlAlicloudVpcNetwork) vswitches() ([]any, error) {
+	if r.cacheVpcID == "" || r.cacheRegion == "" {
+		return []any{}, nil
+	}
+	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.VpcClient(r.cacheRegion)
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	pageNumber := int32(1)
+	pageSize := int32(100)
+	for {
+		resp, err := client.DescribeVSwitches(&vpcclient.DescribeVSwitchesRequest{
+			RegionId:   &r.cacheRegion,
+			VpcId:      &r.cacheVpcID,
+			PageNumber: &pageNumber,
+			PageSize:   &pageSize,
+		})
+		if err != nil {
+			return nil, err
+		}
+		if resp == nil || resp.Body == nil || resp.Body.VSwitches == nil {
+			break
+		}
+
+		for _, vsw := range resp.Body.VSwitches.VSwitch {
+			if vsw == nil || vsw.VSwitchId == nil {
+				continue
+			}
+			vswitch, err := newVpcVswitch(r.MqlRuntime, r.cacheRegion, vsw)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, vswitch)
+		}
+
+		if resp.Body.TotalCount == nil || int64(pageNumber)*int64(pageSize) >= int64(*resp.Body.TotalCount) {
+			break
+		}
+		pageNumber++
+	}
+	return res, nil
+}
+
+// natGateways lists the NAT gateways that belong to this VPC, in the VPC's
+// region.
+func (r *mqlAlicloudVpcNetwork) natGateways() ([]any, error) {
+	if r.cacheVpcID == "" || r.cacheRegion == "" {
+		return []any{}, nil
+	}
+	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.VpcClient(r.cacheRegion)
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	pageNumber := int32(1)
+	pageSize := int32(100)
+	for {
+		resp, err := client.DescribeNatGateways(&vpcclient.DescribeNatGatewaysRequest{
+			RegionId:   &r.cacheRegion,
+			VpcId:      &r.cacheVpcID,
+			PageNumber: &pageNumber,
+			PageSize:   &pageSize,
+		})
+		if err != nil {
+			return nil, err
+		}
+		if resp == nil || resp.Body == nil || resp.Body.NatGateways == nil {
+			break
+		}
+
+		for _, nat := range resp.Body.NatGateways.NatGateway {
+			if nat == nil || nat.NatGatewayId == nil {
+				continue
+			}
+			natGateway, err := newVpcNatGateway(r.MqlRuntime, r.cacheRegion, nat)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, natGateway)
+		}
+
+		if resp.Body.TotalCount == nil || int64(pageNumber)*int64(pageSize) >= int64(*resp.Body.TotalCount) {
+			break
+		}
+		pageNumber++
+	}
+	return res, nil
+}
+
+// routeTables lists the route tables that belong to this VPC, in the VPC's
+// region.
+func (r *mqlAlicloudVpcNetwork) routeTables() ([]any, error) {
+	if r.cacheVpcID == "" || r.cacheRegion == "" {
+		return []any{}, nil
+	}
+	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.VpcClient(r.cacheRegion)
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	pageNumber := int32(1)
+	pageSize := int32(100)
+	for {
+		resp, err := client.DescribeRouteTableList(&vpcclient.DescribeRouteTableListRequest{
+			RegionId:   &r.cacheRegion,
+			VpcId:      &r.cacheVpcID,
+			PageNumber: &pageNumber,
+			PageSize:   &pageSize,
+		})
+		if err != nil {
+			return nil, err
+		}
+		if resp == nil || resp.Body == nil || resp.Body.RouterTableList == nil {
+			break
+		}
+
+		for _, rt := range resp.Body.RouterTableList.RouterTableListType {
+			if rt == nil || rt.RouteTableId == nil {
+				continue
+			}
+			routeTable, err := newVpcRouteTable(r.MqlRuntime, r.cacheRegion, rt)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, routeTable)
+		}
+
+		if resp.Body.TotalCount == nil || int64(pageNumber)*int64(pageSize) >= int64(*resp.Body.TotalCount) {
+			break
+		}
+		pageNumber++
+	}
+	return res, nil
 }
 
 func (r *mqlAlicloudVpc) vswitches() ([]any, error) {
@@ -303,11 +435,15 @@ func (r *mqlAlicloudVpc) vswitches() ([]any, error) {
 	return res, nil
 }
 
-// mqlAlicloudVpcVswitchInternal caches the region and owning VPC id so the
-// vSwitch can expose a region-scoped __id and a typed vpc() reference.
+// mqlAlicloudVpcVswitchInternal caches the region and owning VPC id (for the
+// region-scoped __id and the typed vpc() reference) plus the associated route
+// table and network ACL ids (for the typed routeTable() and networkAcl()
+// references).
 type mqlAlicloudVpcVswitchInternal struct {
-	cacheRegion string
-	cacheVpcID  string
+	cacheRegion       string
+	cacheVpcID        string
+	cacheRouteTableID string
+	cacheNetworkAclID string
 }
 
 // newVpcVswitch maps a DescribeVSwitches item into an alicloud.vpc.vswitch
@@ -343,9 +479,7 @@ func newVpcVswitch(runtime *plugin.Runtime, region string, vsw *vpcclient.Descri
 		"availableIpAddressCount": llx.IntDataPtr(vsw.AvailableIpAddressCount),
 		"isDefault":               llx.BoolDataPtr(vsw.IsDefault),
 		"creationTime":            llx.TimeDataPtr(vpcParseTime(vsw.CreationTime)),
-		"routeTableId":            llx.StringDataPtr(routeTableId),
 		"routeTableType":          llx.StringDataPtr(routeTableType),
-		"networkAclId":            llx.StringDataPtr(vsw.NetworkAclId),
 		"resourceGroupId":         llx.StringDataPtr(vsw.ResourceGroupId),
 		"shareType":               llx.StringDataPtr(vsw.ShareType),
 		"ownerId":                 llx.IntDataPtr(vsw.OwnerId),
@@ -357,6 +491,8 @@ func newVpcVswitch(runtime *plugin.Runtime, region string, vsw *vpcclient.Descri
 	vswitch := resource.(*mqlAlicloudVpcVswitch)
 	vswitch.cacheRegion = region
 	vswitch.cacheVpcID = vpcStr(vsw.VpcId)
+	vswitch.cacheRouteTableID = vpcStr(routeTableId)
+	vswitch.cacheNetworkAclID = vpcStr(vsw.NetworkAclId)
 	return vswitch, nil
 }
 
@@ -370,6 +506,22 @@ func (r *mqlAlicloudVpcVswitch) vpc() (*mqlAlicloudVpcNetwork, error) {
 		return nil, nil
 	}
 	return resolveVpcNetwork(r.MqlRuntime, r.cacheRegion, r.cacheVpcID)
+}
+
+func (r *mqlAlicloudVpcVswitch) routeTable() (*mqlAlicloudVpcRouteTable, error) {
+	if r.cacheRouteTableID == "" {
+		r.RouteTable.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return resolveVpcRouteTable(r.MqlRuntime, r.cacheRegion, r.cacheRouteTableID)
+}
+
+func (r *mqlAlicloudVpcVswitch) networkAcl() (*mqlAlicloudVpcNetworkAcl, error) {
+	if r.cacheNetworkAclID == "" {
+		r.NetworkAcl.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return resolveVpcNetworkAcl(r.MqlRuntime, r.cacheRegion, r.cacheNetworkAclID)
 }
 
 func (r *mqlAlicloudVpc) routeTables() ([]any, error) {
@@ -406,51 +558,10 @@ func (r *mqlAlicloudVpc) routeTables() ([]any, error) {
 				if rt == nil || rt.RouteTableId == nil {
 					continue
 				}
-
-				vSwitchIds := []any{}
-				if rt.VSwitchIds != nil {
-					vSwitchIds = vpcStrSlice(rt.VSwitchIds.VSwitchId)
-				}
-				gatewayIds := []any{}
-				if rt.GatewayIds != nil {
-					gatewayIds = vpcStrSlice(rt.GatewayIds.GatewayIds)
-				}
-
-				tags := map[string]any{}
-				if rt.Tags != nil {
-					pairs := make([]*vpcTag, 0, len(rt.Tags.Tag))
-					for _, t := range rt.Tags.Tag {
-						if t != nil {
-							pairs = append(pairs, &vpcTag{key: t.Key, value: t.Value})
-						}
-					}
-					tags = vpcTagMap(pairs)
-				}
-
-				routeTable, err := CreateResource(r.MqlRuntime, "alicloud.vpc.routeTable", map[string]*llx.RawData{
-					"__id":                   llx.StringData(region + "/" + vpcStr(rt.RouteTableId)),
-					"routeTableId":           llx.StringDataPtr(rt.RouteTableId),
-					"routeTableName":         llx.StringDataPtr(rt.RouteTableName),
-					"routeTableType":         llx.StringDataPtr(rt.RouteTableType),
-					"description":            llx.StringDataPtr(rt.Description),
-					"status":                 llx.StringDataPtr(rt.Status),
-					"creationTime":           llx.TimeDataPtr(vpcParseTime(rt.CreationTime)),
-					"resourceGroupId":        llx.StringDataPtr(rt.ResourceGroupId),
-					"vSwitchIds":             llx.ArrayData(vSwitchIds, types.String),
-					"gatewayIds":             llx.ArrayData(gatewayIds, types.String),
-					"associateType":          llx.StringDataPtr(rt.AssociateType),
-					"routerId":               llx.StringDataPtr(rt.RouterId),
-					"routerType":             llx.StringDataPtr(rt.RouterType),
-					"routePropagationEnable": llx.BoolDataPtr(rt.RoutePropagationEnable),
-					"ownerId":                llx.IntDataPtr(rt.OwnerId),
-					"tags":                   llx.MapData(tags, types.String),
-				})
+				routeTable, err := newVpcRouteTable(r.MqlRuntime, region, rt)
 				if err != nil {
 					return nil, err
 				}
-				mqlRt := routeTable.(*mqlAlicloudVpcRouteTable)
-				mqlRt.cacheRegion = region
-				mqlRt.cacheVpcID = vpcStr(rt.VpcId)
 				res = append(res, routeTable)
 			}
 
@@ -465,11 +576,69 @@ func (r *mqlAlicloudVpc) routeTables() ([]any, error) {
 
 // mqlAlicloudVpcRouteTableInternal caches the region the route table was
 // discovered in (so route entries can be fetched from the correct regional
-// endpoint and the __id stays region-scoped) and its owning VPC id (for the
-// typed vpc() reference).
+// endpoint and the __id stays region-scoped), its owning VPC id (for the typed
+// vpc() reference), and the ids of the vSwitches associated with it (for the
+// typed vswitches() collection).
 type mqlAlicloudVpcRouteTableInternal struct {
-	cacheRegion string
-	cacheVpcID  string
+	cacheRegion     string
+	cacheVpcID      string
+	cacheVSwitchIDs []string
+}
+
+// newVpcRouteTable maps a DescribeRouteTableList item into an
+// alicloud.vpc.routeTable resource. It is shared by the namespace and network
+// list accessors and by initAlicloudVpcRouteTable so every path produces a
+// fully populated resource.
+func newVpcRouteTable(runtime *plugin.Runtime, region string, rt *vpcclient.DescribeRouteTableListResponseBodyRouterTableListRouterTableListType) (plugin.Resource, error) {
+	var vSwitchIDs []string
+	if rt.VSwitchIds != nil {
+		for _, s := range rt.VSwitchIds.VSwitchId {
+			if s != nil {
+				vSwitchIDs = append(vSwitchIDs, *s)
+			}
+		}
+	}
+	gatewayIds := []any{}
+	if rt.GatewayIds != nil {
+		gatewayIds = vpcStrSlice(rt.GatewayIds.GatewayIds)
+	}
+
+	tags := map[string]any{}
+	if rt.Tags != nil {
+		pairs := make([]*vpcTag, 0, len(rt.Tags.Tag))
+		for _, t := range rt.Tags.Tag {
+			if t != nil {
+				pairs = append(pairs, &vpcTag{key: t.Key, value: t.Value})
+			}
+		}
+		tags = vpcTagMap(pairs)
+	}
+
+	resource, err := CreateResource(runtime, "alicloud.vpc.routeTable", map[string]*llx.RawData{
+		"__id":                   llx.StringData(region + "/" + vpcStr(rt.RouteTableId)),
+		"routeTableId":           llx.StringDataPtr(rt.RouteTableId),
+		"routeTableName":         llx.StringDataPtr(rt.RouteTableName),
+		"routeTableType":         llx.StringDataPtr(rt.RouteTableType),
+		"description":            llx.StringDataPtr(rt.Description),
+		"status":                 llx.StringDataPtr(rt.Status),
+		"creationTime":           llx.TimeDataPtr(vpcParseTime(rt.CreationTime)),
+		"resourceGroupId":        llx.StringDataPtr(rt.ResourceGroupId),
+		"gatewayIds":             llx.ArrayData(gatewayIds, types.String),
+		"associateType":          llx.StringDataPtr(rt.AssociateType),
+		"routerId":               llx.StringDataPtr(rt.RouterId),
+		"routerType":             llx.StringDataPtr(rt.RouterType),
+		"routePropagationEnable": llx.BoolDataPtr(rt.RoutePropagationEnable),
+		"ownerId":                llx.IntDataPtr(rt.OwnerId),
+		"tags":                   llx.MapData(tags, types.String),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlRt := resource.(*mqlAlicloudVpcRouteTable)
+	mqlRt.cacheRegion = region
+	mqlRt.cacheVpcID = vpcStr(rt.VpcId)
+	mqlRt.cacheVSwitchIDs = vSwitchIDs
+	return mqlRt, nil
 }
 
 func (r *mqlAlicloudVpcRouteTable) id() (string, error) {
@@ -482,6 +651,26 @@ func (r *mqlAlicloudVpcRouteTable) vpc() (*mqlAlicloudVpcNetwork, error) {
 		return nil, nil
 	}
 	return resolveVpcNetwork(r.MqlRuntime, r.cacheRegion, r.cacheVpcID)
+}
+
+// vswitches resolves the vSwitches associated with this route table. The set is
+// small and fixed (the ids are carried on the route table item), so each is
+// resolved by id rather than by listing the whole region.
+func (r *mqlAlicloudVpcRouteTable) vswitches() ([]any, error) {
+	res := []any{}
+	for _, id := range r.cacheVSwitchIDs {
+		if id == "" {
+			continue
+		}
+		vswitch, err := resolveVpcVswitch(r.MqlRuntime, r.cacheRegion, id)
+		if err != nil {
+			return nil, err
+		}
+		if vswitch != nil {
+			res = append(res, vswitch)
+		}
+	}
+	return res, nil
 }
 
 func (r *mqlAlicloudVpcRouteTable) routeEntries() ([]any, error) {
@@ -585,109 +774,10 @@ func (r *mqlAlicloudVpc) natGateways() ([]any, error) {
 				if nat == nil || nat.NatGatewayId == nil {
 					continue
 				}
-
-				snatTableIds := []any{}
-				if nat.SnatTableIds != nil {
-					snatTableIds = vpcStrSlice(nat.SnatTableIds.SnatTableId)
-				}
-				forwardTableIds := []any{}
-				if nat.ForwardTableIds != nil {
-					forwardTableIds = vpcStrSlice(nat.ForwardTableIds.ForwardTableId)
-				}
-				fullNatTableIds := []any{}
-				if nat.FullNatTableIds != nil {
-					fullNatTableIds = vpcStrSlice(nat.FullNatTableIds.FullNatTableId)
-				}
-
-				var privateInfo any
-				if nat.NatGatewayPrivateInfo != nil {
-					pi := nat.NatGatewayPrivateInfo
-					privateInfo = map[string]any{
-						"vswitchId":               vpcStr(pi.VswitchId),
-						"privateIpAddress":        vpcStr(pi.PrivateIpAddress),
-						"eniInstanceId":           vpcStr(pi.EniInstanceId),
-						"eniType":                 vpcStr(pi.EniType),
-						"izNo":                    vpcStr(pi.IzNo),
-						"maxBandwidth":            vpcInt32(pi.MaxBandwidth),
-						"maxSessionEstablishRate": vpcInt32(pi.MaxSessionEstablishRate),
-						"maxSessionQuota":         vpcInt32(pi.MaxSessionQuota),
-					}
-				}
-
-				var accessMode any
-				if nat.AccessMode != nil {
-					accessMode = map[string]any{
-						"modeValue":  vpcStr(nat.AccessMode.ModeValue),
-						"tunnelType": vpcStr(nat.AccessMode.TunnelType),
-					}
-				}
-
-				ipLists := []any{}
-				if nat.IpLists != nil {
-					for _, ip := range nat.IpLists.IpList {
-						if ip == nil {
-							continue
-						}
-						ipLists = append(ipLists, map[string]any{
-							"allocationId":     vpcStr(ip.AllocationId),
-							"ipAddress":        vpcStr(ip.IpAddress),
-							"privateIpAddress": vpcStr(ip.PrivateIpAddress),
-							"snatEntryEnabled": vpcBool(ip.SnatEntryEnabled),
-							"usingStatus":      vpcStr(ip.UsingStatus),
-						})
-					}
-				}
-
-				tags := map[string]any{}
-				if nat.Tags != nil {
-					pairs := make([]*vpcTag, 0, len(nat.Tags.Tag))
-					for _, t := range nat.Tags.Tag {
-						if t != nil {
-							pairs = append(pairs, &vpcTag{key: t.TagKey, value: t.TagValue})
-						}
-					}
-					tags = vpcTagMap(pairs)
-				}
-
-				natGateway, err := CreateResource(r.MqlRuntime, "alicloud.vpc.natGateway", map[string]*llx.RawData{
-					"__id":                      llx.StringData(region + "/" + vpcStr(nat.NatGatewayId)),
-					"natGatewayId":              llx.StringDataPtr(nat.NatGatewayId),
-					"name":                      llx.StringDataPtr(nat.Name),
-					"description":               llx.StringDataPtr(nat.Description),
-					"status":                    llx.StringDataPtr(nat.Status),
-					"spec":                      llx.StringDataPtr(nat.Spec),
-					"natType":                   llx.StringDataPtr(nat.NatType),
-					"networkType":               llx.StringDataPtr(nat.NetworkType),
-					"businessStatus":            llx.StringDataPtr(nat.BusinessStatus),
-					"creationTime":              llx.TimeDataPtr(vpcParseTime(nat.CreationTime)),
-					"expiredTime":               llx.TimeDataPtr(vpcParseTime(nat.ExpiredTime)),
-					"internetChargeType":        llx.StringDataPtr(nat.InternetChargeType),
-					"instanceChargeType":        llx.StringDataPtr(nat.InstanceChargeType),
-					"deletionProtection":        llx.BoolDataPtr(nat.DeletionProtection),
-					"ecsMetricEnabled":          llx.BoolDataPtr(nat.EcsMetricEnabled),
-					"icmpReplyEnabled":          llx.BoolDataPtr(nat.IcmpReplyEnabled),
-					"privateLinkEnabled":        llx.BoolDataPtr(nat.PrivateLinkEnabled),
-					"privateLinkMode":           llx.StringDataPtr(nat.PrivateLinkMode),
-					"securityProtectionEnabled": llx.BoolDataPtr(nat.SecurityProtectionEnabled),
-					"eipBindMode":               llx.StringDataPtr(nat.EipBindMode),
-					"enableSessionLog":          llx.StringDataPtr(nat.EnableSessionLog),
-					"autoPay":                   llx.BoolDataPtr(nat.AutoPay),
-					"regionId":                  llx.StringDataPtr(nat.RegionId),
-					"resourceGroupId":           llx.StringDataPtr(nat.ResourceGroupId),
-					"snatTableIds":              llx.ArrayData(snatTableIds, types.String),
-					"forwardTableIds":           llx.ArrayData(forwardTableIds, types.String),
-					"fullNatTableIds":           llx.ArrayData(fullNatTableIds, types.String),
-					"natGatewayPrivateInfo":     llx.DictData(privateInfo),
-					"ipLists":                   llx.ArrayData(ipLists, types.Dict),
-					"accessMode":                llx.DictData(accessMode),
-					"tags":                      llx.MapData(tags, types.String),
-				})
+				natGateway, err := newVpcNatGateway(r.MqlRuntime, region, nat)
 				if err != nil {
 					return nil, err
 				}
-				mqlNat := natGateway.(*mqlAlicloudVpcNatGateway)
-				mqlNat.cacheRegion = region
-				mqlNat.cacheVpcID = vpcStr(nat.VpcId)
 				res = append(res, natGateway)
 			}
 
@@ -698,6 +788,115 @@ func (r *mqlAlicloudVpc) natGateways() ([]any, error) {
 		}
 	}
 	return res, nil
+}
+
+// newVpcNatGateway maps a DescribeNatGateways item into an
+// alicloud.vpc.natGateway resource. It is shared by the namespace and network
+// list accessors.
+func newVpcNatGateway(runtime *plugin.Runtime, region string, nat *vpcclient.DescribeNatGatewaysResponseBodyNatGatewaysNatGateway) (plugin.Resource, error) {
+	snatTableIds := []any{}
+	if nat.SnatTableIds != nil {
+		snatTableIds = vpcStrSlice(nat.SnatTableIds.SnatTableId)
+	}
+	forwardTableIds := []any{}
+	if nat.ForwardTableIds != nil {
+		forwardTableIds = vpcStrSlice(nat.ForwardTableIds.ForwardTableId)
+	}
+	fullNatTableIds := []any{}
+	if nat.FullNatTableIds != nil {
+		fullNatTableIds = vpcStrSlice(nat.FullNatTableIds.FullNatTableId)
+	}
+
+	var privateInfo any
+	if nat.NatGatewayPrivateInfo != nil {
+		pi := nat.NatGatewayPrivateInfo
+		privateInfo = map[string]any{
+			"vswitchId":               vpcStr(pi.VswitchId),
+			"privateIpAddress":        vpcStr(pi.PrivateIpAddress),
+			"eniInstanceId":           vpcStr(pi.EniInstanceId),
+			"eniType":                 vpcStr(pi.EniType),
+			"izNo":                    vpcStr(pi.IzNo),
+			"maxBandwidth":            vpcInt32(pi.MaxBandwidth),
+			"maxSessionEstablishRate": vpcInt32(pi.MaxSessionEstablishRate),
+			"maxSessionQuota":         vpcInt32(pi.MaxSessionQuota),
+		}
+	}
+
+	var accessMode any
+	if nat.AccessMode != nil {
+		accessMode = map[string]any{
+			"modeValue":  vpcStr(nat.AccessMode.ModeValue),
+			"tunnelType": vpcStr(nat.AccessMode.TunnelType),
+		}
+	}
+
+	ipLists := []any{}
+	if nat.IpLists != nil {
+		for _, ip := range nat.IpLists.IpList {
+			if ip == nil {
+				continue
+			}
+			ipLists = append(ipLists, map[string]any{
+				"allocationId":     vpcStr(ip.AllocationId),
+				"ipAddress":        vpcStr(ip.IpAddress),
+				"privateIpAddress": vpcStr(ip.PrivateIpAddress),
+				"snatEntryEnabled": vpcBool(ip.SnatEntryEnabled),
+				"usingStatus":      vpcStr(ip.UsingStatus),
+			})
+		}
+	}
+
+	tags := map[string]any{}
+	if nat.Tags != nil {
+		pairs := make([]*vpcTag, 0, len(nat.Tags.Tag))
+		for _, t := range nat.Tags.Tag {
+			if t != nil {
+				pairs = append(pairs, &vpcTag{key: t.TagKey, value: t.TagValue})
+			}
+		}
+		tags = vpcTagMap(pairs)
+	}
+
+	resource, err := CreateResource(runtime, "alicloud.vpc.natGateway", map[string]*llx.RawData{
+		"__id":                      llx.StringData(region + "/" + vpcStr(nat.NatGatewayId)),
+		"natGatewayId":              llx.StringDataPtr(nat.NatGatewayId),
+		"name":                      llx.StringDataPtr(nat.Name),
+		"description":               llx.StringDataPtr(nat.Description),
+		"status":                    llx.StringDataPtr(nat.Status),
+		"spec":                      llx.StringDataPtr(nat.Spec),
+		"natType":                   llx.StringDataPtr(nat.NatType),
+		"networkType":               llx.StringDataPtr(nat.NetworkType),
+		"businessStatus":            llx.StringDataPtr(nat.BusinessStatus),
+		"creationTime":              llx.TimeDataPtr(vpcParseTime(nat.CreationTime)),
+		"expiredTime":               llx.TimeDataPtr(vpcParseTime(nat.ExpiredTime)),
+		"internetChargeType":        llx.StringDataPtr(nat.InternetChargeType),
+		"instanceChargeType":        llx.StringDataPtr(nat.InstanceChargeType),
+		"deletionProtection":        llx.BoolDataPtr(nat.DeletionProtection),
+		"ecsMetricEnabled":          llx.BoolDataPtr(nat.EcsMetricEnabled),
+		"icmpReplyEnabled":          llx.BoolDataPtr(nat.IcmpReplyEnabled),
+		"privateLinkEnabled":        llx.BoolDataPtr(nat.PrivateLinkEnabled),
+		"privateLinkMode":           llx.StringDataPtr(nat.PrivateLinkMode),
+		"securityProtectionEnabled": llx.BoolDataPtr(nat.SecurityProtectionEnabled),
+		"eipBindMode":               llx.StringDataPtr(nat.EipBindMode),
+		"enableSessionLog":          llx.StringDataPtr(nat.EnableSessionLog),
+		"autoPay":                   llx.BoolDataPtr(nat.AutoPay),
+		"regionId":                  llx.StringDataPtr(nat.RegionId),
+		"resourceGroupId":           llx.StringDataPtr(nat.ResourceGroupId),
+		"snatTableIds":              llx.ArrayData(snatTableIds, types.String),
+		"forwardTableIds":           llx.ArrayData(forwardTableIds, types.String),
+		"fullNatTableIds":           llx.ArrayData(fullNatTableIds, types.String),
+		"natGatewayPrivateInfo":     llx.DictData(privateInfo),
+		"ipLists":                   llx.ArrayData(ipLists, types.Dict),
+		"accessMode":                llx.DictData(accessMode),
+		"tags":                      llx.MapData(tags, types.String),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlNat := resource.(*mqlAlicloudVpcNatGateway)
+	mqlNat.cacheRegion = region
+	mqlNat.cacheVpcID = vpcStr(nat.VpcId)
+	return mqlNat, nil
 }
 
 // mqlAlicloudVpcNatGatewayInternal caches the region and owning VPC id so the
@@ -794,7 +993,6 @@ func (r *mqlAlicloudVpc) eipAddresses() ([]any, error) {
 					"publicIpAddressPoolId":     llx.StringDataPtr(eip.PublicIpAddressPoolId),
 					"regionId":                  llx.StringDataPtr(eip.RegionId),
 					"resourceGroupId":           llx.StringDataPtr(eip.ResourceGroupId),
-					"vpcId":                     llx.StringDataPtr(eip.VpcId),
 					"zone":                      llx.StringDataPtr(eip.Zone),
 					"bandwidthPackageId":        llx.StringDataPtr(eip.BandwidthPackageId),
 					"bandwidthPackageType":      llx.StringDataPtr(eip.BandwidthPackageType),
@@ -814,6 +1012,7 @@ func (r *mqlAlicloudVpc) eipAddresses() ([]any, error) {
 				}
 				mqlEip := eipAddress.(*mqlAlicloudVpcEipAddress)
 				mqlEip.cacheRegion = region
+				mqlEip.cacheVpcID = vpcStr(eip.VpcId)
 				res = append(res, eipAddress)
 			}
 
@@ -827,13 +1026,23 @@ func (r *mqlAlicloudVpc) eipAddresses() ([]any, error) {
 }
 
 // mqlAlicloudVpcEipAddressInternal caches the region the EIP was discovered in
-// so its region-scoped __id can be reconstructed.
+// (so its region-scoped __id can be reconstructed) and its bound VPC id (for
+// the typed vpc() reference).
 type mqlAlicloudVpcEipAddressInternal struct {
 	cacheRegion string
+	cacheVpcID  string
 }
 
 func (r *mqlAlicloudVpcEipAddress) id() (string, error) {
 	return r.cacheRegion + "/" + r.AllocationId.Data, nil
+}
+
+func (r *mqlAlicloudVpcEipAddress) vpc() (*mqlAlicloudVpcNetwork, error) {
+	if r.cacheVpcID == "" {
+		r.Vpc.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return resolveVpcNetwork(r.MqlRuntime, r.cacheRegion, r.cacheVpcID)
 }
 
 func (r *mqlAlicloudVpc) networkAcls() ([]any, error) {
@@ -870,92 +1079,10 @@ func (r *mqlAlicloudVpc) networkAcls() ([]any, error) {
 				if acl == nil || acl.NetworkAclId == nil {
 					continue
 				}
-
-				ingress := []any{}
-				if acl.IngressAclEntries != nil {
-					for _, e := range acl.IngressAclEntries.IngressAclEntry {
-						if e == nil {
-							continue
-						}
-						ingress = append(ingress, map[string]any{
-							"networkAclEntryId":   vpcStr(e.NetworkAclEntryId),
-							"networkAclEntryName": vpcStr(e.NetworkAclEntryName),
-							"description":         vpcStr(e.Description),
-							"protocol":            vpcStr(e.Protocol),
-							"port":                vpcStr(e.Port),
-							"sourceCidrIp":        vpcStr(e.SourceCidrIp),
-							"policy":              vpcStr(e.Policy),
-							"entryType":           vpcStr(e.EntryType),
-							"ipVersion":           vpcStr(e.IpVersion),
-						})
-					}
-				}
-
-				egress := []any{}
-				if acl.EgressAclEntries != nil {
-					for _, e := range acl.EgressAclEntries.EgressAclEntry {
-						if e == nil {
-							continue
-						}
-						egress = append(egress, map[string]any{
-							"networkAclEntryId":   vpcStr(e.NetworkAclEntryId),
-							"networkAclEntryName": vpcStr(e.NetworkAclEntryName),
-							"description":         vpcStr(e.Description),
-							"protocol":            vpcStr(e.Protocol),
-							"port":                vpcStr(e.Port),
-							"destinationCidrIp":   vpcStr(e.DestinationCidrIp),
-							"policy":              vpcStr(e.Policy),
-							"entryType":           vpcStr(e.EntryType),
-							"ipVersion":           vpcStr(e.IpVersion),
-						})
-					}
-				}
-
-				resources := []any{}
-				if acl.Resources != nil {
-					for _, rsc := range acl.Resources.Resource {
-						if rsc == nil {
-							continue
-						}
-						resources = append(resources, map[string]any{
-							"resourceId":   vpcStr(rsc.ResourceId),
-							"resourceType": vpcStr(rsc.ResourceType),
-							"status":       vpcStr(rsc.Status),
-						})
-					}
-				}
-
-				tags := map[string]any{}
-				if acl.Tags != nil {
-					pairs := make([]*vpcTag, 0, len(acl.Tags.Tag))
-					for _, t := range acl.Tags.Tag {
-						if t != nil {
-							pairs = append(pairs, &vpcTag{key: t.Key, value: t.Value})
-						}
-					}
-					tags = vpcTagMap(pairs)
-				}
-
-				networkAcl, err := CreateResource(r.MqlRuntime, "alicloud.vpc.networkAcl", map[string]*llx.RawData{
-					"__id":              llx.StringData(region + "/" + vpcStr(acl.NetworkAclId)),
-					"networkAclId":      llx.StringDataPtr(acl.NetworkAclId),
-					"networkAclName":    llx.StringDataPtr(acl.NetworkAclName),
-					"description":       llx.StringDataPtr(acl.Description),
-					"status":            llx.StringDataPtr(acl.Status),
-					"creationTime":      llx.TimeDataPtr(vpcParseTime(acl.CreationTime)),
-					"regionId":          llx.StringDataPtr(acl.RegionId),
-					"ownerId":           llx.IntDataPtr(acl.OwnerId),
-					"ingressAclEntries": llx.ArrayData(ingress, types.Dict),
-					"egressAclEntries":  llx.ArrayData(egress, types.Dict),
-					"resources":         llx.ArrayData(resources, types.Dict),
-					"tags":              llx.MapData(tags, types.String),
-				})
+				networkAcl, err := newVpcNetworkAcl(r.MqlRuntime, region, acl)
 				if err != nil {
 					return nil, err
 				}
-				mqlAcl := networkAcl.(*mqlAlicloudVpcNetworkAcl)
-				mqlAcl.cacheRegion = region
-				mqlAcl.cacheVpcID = vpcStr(acl.VpcId)
 				res = append(res, networkAcl)
 			}
 
@@ -967,6 +1094,98 @@ func (r *mqlAlicloudVpc) networkAcls() ([]any, error) {
 		}
 	}
 	return res, nil
+}
+
+// newVpcNetworkAcl maps a DescribeNetworkAcls item into an
+// alicloud.vpc.networkAcl resource. It is shared by the namespace list accessor
+// and by initAlicloudVpcNetworkAcl.
+func newVpcNetworkAcl(runtime *plugin.Runtime, region string, acl *vpcclient.DescribeNetworkAclsResponseBodyNetworkAclsNetworkAcl) (plugin.Resource, error) {
+	ingress := []any{}
+	if acl.IngressAclEntries != nil {
+		for _, e := range acl.IngressAclEntries.IngressAclEntry {
+			if e == nil {
+				continue
+			}
+			ingress = append(ingress, map[string]any{
+				"networkAclEntryId":   vpcStr(e.NetworkAclEntryId),
+				"networkAclEntryName": vpcStr(e.NetworkAclEntryName),
+				"description":         vpcStr(e.Description),
+				"protocol":            vpcStr(e.Protocol),
+				"port":                vpcStr(e.Port),
+				"sourceCidrIp":        vpcStr(e.SourceCidrIp),
+				"policy":              vpcStr(e.Policy),
+				"entryType":           vpcStr(e.EntryType),
+				"ipVersion":           vpcStr(e.IpVersion),
+			})
+		}
+	}
+
+	egress := []any{}
+	if acl.EgressAclEntries != nil {
+		for _, e := range acl.EgressAclEntries.EgressAclEntry {
+			if e == nil {
+				continue
+			}
+			egress = append(egress, map[string]any{
+				"networkAclEntryId":   vpcStr(e.NetworkAclEntryId),
+				"networkAclEntryName": vpcStr(e.NetworkAclEntryName),
+				"description":         vpcStr(e.Description),
+				"protocol":            vpcStr(e.Protocol),
+				"port":                vpcStr(e.Port),
+				"destinationCidrIp":   vpcStr(e.DestinationCidrIp),
+				"policy":              vpcStr(e.Policy),
+				"entryType":           vpcStr(e.EntryType),
+				"ipVersion":           vpcStr(e.IpVersion),
+			})
+		}
+	}
+
+	resources := []any{}
+	if acl.Resources != nil {
+		for _, rsc := range acl.Resources.Resource {
+			if rsc == nil {
+				continue
+			}
+			resources = append(resources, map[string]any{
+				"resourceId":   vpcStr(rsc.ResourceId),
+				"resourceType": vpcStr(rsc.ResourceType),
+				"status":       vpcStr(rsc.Status),
+			})
+		}
+	}
+
+	tags := map[string]any{}
+	if acl.Tags != nil {
+		pairs := make([]*vpcTag, 0, len(acl.Tags.Tag))
+		for _, t := range acl.Tags.Tag {
+			if t != nil {
+				pairs = append(pairs, &vpcTag{key: t.Key, value: t.Value})
+			}
+		}
+		tags = vpcTagMap(pairs)
+	}
+
+	resource, err := CreateResource(runtime, "alicloud.vpc.networkAcl", map[string]*llx.RawData{
+		"__id":              llx.StringData(region + "/" + vpcStr(acl.NetworkAclId)),
+		"networkAclId":      llx.StringDataPtr(acl.NetworkAclId),
+		"networkAclName":    llx.StringDataPtr(acl.NetworkAclName),
+		"description":       llx.StringDataPtr(acl.Description),
+		"status":            llx.StringDataPtr(acl.Status),
+		"creationTime":      llx.TimeDataPtr(vpcParseTime(acl.CreationTime)),
+		"regionId":          llx.StringDataPtr(acl.RegionId),
+		"ownerId":           llx.IntDataPtr(acl.OwnerId),
+		"ingressAclEntries": llx.ArrayData(ingress, types.Dict),
+		"egressAclEntries":  llx.ArrayData(egress, types.Dict),
+		"resources":         llx.ArrayData(resources, types.Dict),
+		"tags":              llx.MapData(tags, types.String),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlAcl := resource.(*mqlAlicloudVpcNetworkAcl)
+	mqlAcl.cacheRegion = region
+	mqlAcl.cacheVpcID = vpcStr(acl.VpcId)
+	return mqlAcl, nil
 }
 
 // mqlAlicloudVpcNetworkAclInternal caches the region and owning VPC id so the
