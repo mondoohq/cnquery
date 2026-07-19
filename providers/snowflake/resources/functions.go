@@ -40,8 +40,12 @@ func (r *mqlSnowflakeAccount) functions() ([]any, error) {
 }
 
 func newMqlSnowflakeFunction(runtime *plugin.Runtime, function sdk.Function) (*mqlSnowflakeFunction, error) {
+	// Build the cache key from the raw fields rather than function.ID(): the
+	// SDK's ID() panics (nil deref in TableDataType.ToLegacyDataTypeSql) for
+	// functions whose signature involves a TABLE type. ArgumentsRaw carries the
+	// full signature, so it disambiguates overloads.
 	r, err := CreateResource(runtime, "snowflake.function", map[string]*llx.RawData{
-		"__id":               llx.StringData(function.ID().FullyQualifiedName()),
+		"__id":               llx.StringData(function.CatalogName + "." + function.SchemaName + "." + function.Name + "/" + function.ArgumentsRaw),
 		"name":               llx.StringData(function.Name),
 		"databaseName":       llx.StringData(function.CatalogName),
 		"schemaName":         llx.StringData(function.SchemaName),
