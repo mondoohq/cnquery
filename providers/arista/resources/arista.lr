@@ -13,13 +13,25 @@ option go_package = "go.mondoo.com/mql/v13/providers/arista/resources"
 // stack, control-plane policing, and the local user / role / password-policy
 // hardening that auditors check against CIS / DISA STIG benchmarks.
 arista.eos {
-  // System configuration key-value pairs
+  // Global system settings parsed from the running-config
+  //
+  // Keyed map of top-level system settings. `hostname` is the configured
+  // device hostname (defaults to `localhost` when unset), and `iprouting`
+  // is `true` or `false` reflecting whether IP routing is enabled on the
+  // device.
   systemConfig() map[string]string
   // IP-enabled interfaces with addresses
   ipInterfaces() []arista.eos.ipInterface
   // All network interfaces
   interfaces() []arista.eos.interface
-  // EOS software and hardware version info
+  // EOS software release and hardware identity
+  //
+  // Output of `show version` as a dict. Keys covering the running image are
+  // `version`, `internalVersion`, `internalBuildId`, and `architecture`.
+  // Hardware identity keys are `modelName`, `mfgName`, `serialNumber`,
+  // `hardwareRevision`, `systemMacAddress`, `configMacAddress`, and
+  // `hwMacAddress`. Memory keys `memTotal` and `memFree` are in kilobytes,
+  // and `uptime` and `bootupTimestamp` are in seconds.
   version() dict
   // System hostname
   hostname() string
@@ -69,10 +81,10 @@ arista.eos {
 
 // Arista EOS running-config (full device configuration)
 //
-// Examine the full running-configuration text as emitted by
+// Full running-configuration text as emitted by
 // `show running-config`. `content` is the entire config as one string;
 // use it for pattern matching or line-oriented audits, or as a
-// fall-through when no more specific typed resource exists. To inspect
+// fall-through when no more specific resource exists. To inspect
 // a single block of the configuration use
 // `arista.eos.runningConfig.section(name: "<header>")`.
 arista.eos.runningConfig {
@@ -82,12 +94,12 @@ arista.eos.runningConfig {
 
 // Section of the Arista EOS running-config
 //
-// Examine a single named section of the running-config when you need the
+// A single named section of the running-config, for when you need the
 // raw text of one configuration block rather than the whole device. The
-// `name` field selects the section as it appears in the running-config —
-// for example `arista.eos.runningConfig.section(name: "interface Ethernet1")`
-// or `... section(name: "router bgp 65001")` — and `content` returns the
-// raw text of that block.
+// `name` field selects the section as it appears in the running-config.
+// For example `arista.eos.runningConfig.section(name: "interface Ethernet1")`
+// or `... section(name: "router bgp 65001")`. The `content` field returns
+// the raw text of that block.
 arista.eos.runningConfig.section {
   // Section name
   name string
@@ -97,20 +109,20 @@ arista.eos.runningConfig.section {
 
 // Arista EOS local user account
 //
-// Examine a single user defined by `username ...` in the running-config:
-// login name, EOS privilege level, assigned role, the no-password and
-// password-encoding fields, the configured SSH key, and whether the
-// account is currently locked out — the input audits use to find
-// privilege-15 accounts, accounts with no password, weak secret
-// encodings, and stale credentials.
+// Local user account defined by a `username` line in the running-config:
+// login name, EOS privilege level, assigned role, password state, secret
+// encoding, and any configured SSH key. Audits use these accounts to find
+// privilege-15 users, accounts with no password, weak secret encodings,
+// and stale credentials. The `locked` predicate reports accounts that can
+// no longer authenticate.
 arista.eos.user @defaults("name privilege") {
   // The name of the user
   name string
-  // Whether the user can authenticate without a password
+  // EOS privilege level, from 0 (most restricted) to 15 (full administrative access)
   privilege string
   // User's assigned role
   role string
-  // If the user is not password protected
+  // Set to "nopassword" when the account has no password configured, empty otherwise
   nopassword string
   // Specifies how the secret is encoded
   format string
@@ -118,39 +130,61 @@ arista.eos.user @defaults("name privilege") {
   secret string
   // User's sshkey
   sshkey string
-  // Whether the account is locked
+  // Whether the account can no longer authenticate
+  //
+  // Computed as true when the account has no password (nopassword) and no
+  // configured SSH key, so no credential exists to log in with.
   locked() bool
 }
 
-// Arista EOS role resource
+// Arista EOS command-authorization role
+//
+// Named role that restricts which CLI commands the users assigned to it
+// may run, the building block of role-based access control on EOS. Each
+// role carries an ordered list of permit and deny rules matched against
+// command text (see `rules`), and `default` marks the role applied to
+// users who have no role of their own. Auditing roles confirms that
+// privileged commands are limited to the operators who should have them.
 private arista.eos.role @defaults("name default"){
   // Name of role
   name string
   // Whether this is the default role
   default bool
-  // List of rules that restricts access to specified commands
+  // Command-authorization rules that restrict access to specified commands
+  //
+  // Ordered list of rules evaluated for the role. Each entry has
+  // `cmdPermission` (whether commands matching the rule are permitted or
+  // denied), `cmdRegex` (the regular expression matched against command
+  // text), `sequenceNumber` (the rule's position in evaluation order),
+  // and `mode` (the CLI mode the rule applies to).
   rules []dict
 }
 
 // Arista EOS SNMP daemon configuration
 //
-// Examine whether SNMP logging is enabled and which trap notifications
-// the device is configured to send. For SNMPv1 / v2c community strings
-// — a common hardening finding — see `arista.eos.snmpCommunities`.
+// SNMP daemon state on the switch, covering whether SNMP logging is
+// enabled and which trap notifications the device is configured to
+// send. For SNMPv1 / v2c community strings (a common hardening finding)
+// see `arista.eos.snmpCommunities`.
 arista.eos.snmpSetting {
   // Whether SNMP logging is enabled
   enabled bool
-  // SNMP trap generation information
+  // SNMP trap notification types and their enabled state
+  //
+  // One entry per trap notification type. Each entry carries `name` (the
+  // notification name), `reason` (why it is or is not active), `enabled`
+  // (whether the device is configured to send this trap), and `component`
+  // (the subsystem the notification belongs to).
   notifications() []dict
 }
 
 // Arista EOS NTP configuration and authentication state
 //
-// Examine the NTP service status, whether `ntp authenticate` is globally
-// enabled, and the configured NTP authentication keys via `authKeys()`
-// — each key's ID, hash algorithm, and `trusted` flag. The combination
-// is what benchmarks check when they require cryptographic protection
-// of time synchronization.
+// NTP service status, whether `ntp authenticate` is globally enabled, and
+// the configured NTP authentication keys, each carrying its key ID, hash
+// algorithm, and trusted flag. This is what benchmarks check when they
+// require cryptographic protection of time synchronization, so an
+// unauthenticated or untrusted key set is a finding.
 arista.eos.ntp {
   // Status of NTP on the switch
   status string
@@ -160,9 +194,17 @@ arista.eos.ntp {
   authKeys() []arista.eos.ntpAuthKey
 }
 
-// Arista EOS interface resource
+// Arista EOS network interface
+//
+// Physical or logical interface on the switch, selected by `name`
+// (for example `arista.eos.interfaces.where(name == "Ethernet1")`).
+// Exposes administrative and line-protocol status, IP addressing,
+// MTU and layer-2 MTU, hardware and burned-in MAC addresses, the
+// forwarding model, and traffic and error counters. Use it to audit
+// which interfaces are enabled, how they are addressed, and their
+// operational state.
 private arista.eos.interface @defaults("name") {
-  // Interface name, link status, vlan, duplex, speed, and type of the specified interfaces
+  // Interface name (for example `Ethernet1` or `Management1`)
   name string
   // Interface bandwidth
   bandwidth int
@@ -174,13 +216,29 @@ private arista.eos.interface @defaults("name") {
   forwardingModel string
   // Hardware Name
   hardware string
-  // Interface address information
+  // Interface addressing
+  //
+  // One entry per configured address. Each is a dict with keys
+  // `PrimaryIP` and `VirtualIP` (each `{Address, MaskLen}`),
+  // `SecondaryIPOrderedList` (a list of the same shape),
+  // `SecondaryIPs`, and `BroadcastAddress`.
   interfaceAddress []dict
-  // Traffic count information
+  // Traffic and error counters
+  //
+  // Dict of interface counters with keys `InOctets`, `OutOctets`,
+  // `InUcastPkts`, `OutUcastPkts`, `InMulticastPkts`, `OutMulticastPkts`,
+  // `InBroadcastPkts`, `OutBroadcastPkts`, `InDiscards`, `OutDiscards`,
+  // `TotalInErrors`, `TotalOutErrors`, `LinkStatusChanges`, `LastClear`,
+  // `CounterRefreshTime`, and the nested `InputErrorsDetail` and
+  // `OutErrorsDetail` error breakdowns.
   interfaceCounters dict
   // Interface membership
   interfaceMembership string
-  // Interface statistics
+  // Interface throughput rates
+  //
+  // Dict of rate statistics with keys `InBitsRate`, `OutBitsRate`,
+  // `InPktsRate`, `OutPktsRate`, and `UpdateInterval` (the sampling
+  // window over which the rates are computed).
   interfaceStatistics dict
   // Interface status
   interfaceStatus string
@@ -194,9 +252,18 @@ private arista.eos.interface @defaults("name") {
   mtu int
   // MAC address of the interface
   physicalAddress string
-  // Interface link status, vlan, duplex, speed, and type
+  // Link status details
+  //
+  // Dict from `show interfaces status` with keys `bandwidth`,
+  // `interfaceType`, `description`, `autoNegotiateActive`, `duplex`,
+  // `linkStatus`, `lineProtocolStatus`, and `vlanInformation`
+  // (`{interfaceMode, vlanId, interfaceForwardingModel}`). The
+  // `duplex` and `autoNegotiate` fields are derived from this dict.
   status() dict
   // Whether the interface is enabled administratively
+  //
+  // True unless `interfaceStatus` is `disabled`, meaning the interface
+  // has not been shut down in the configuration.
   enabled() bool
   // Duplex setting (full, half, auto)
   duplex() string
@@ -205,6 +272,13 @@ private arista.eos.interface @defaults("name") {
 }
 
 // Arista EOS IP interface
+//
+// A Layer 3 IP interface configured on the switch, covering routed
+// Ethernet ports, VLAN (SVI) interfaces, loopbacks, and management
+// interfaces. The `name` field selects the interface as it appears in
+// the running-config, for example `Ethernet1`, `Vlan10`, `Loopback0`,
+// or `Management1`. Use it to audit which interfaces carry an IP
+// address, the addresses assigned, and the configured MTU.
 private arista.eos.ipInterface @defaults("name") {
   // Interface Name
   name string
@@ -216,9 +290,10 @@ private arista.eos.ipInterface @defaults("name") {
 
 // Arista EOS Spanning Tree Protocol (STP) configuration
 //
-// Examine every configured Multiple Spanning Tree (MST) instance via
-// `mstInstances()`, each with its bridge / root-bridge / regional-root
-// state and per-interface participation.
+// Spanning Tree Protocol state for the device, exposing each configured
+// Multiple Spanning Tree (MST) instance through mstInstances. Use it to
+// audit the STP topology: which bridge is elected root, which is the
+// regional root, and how each interface participates in loop prevention.
 arista.eos.stp {
   // Multiple Spanning Tree Protocol (MST) instances
   mstInstances() []arista.eos.stp.mst
@@ -226,10 +301,11 @@ arista.eos.stp {
 
 // Arista EOS MST (Multiple Spanning Tree) instance
 //
-// Examine a single MST instance by `instanceId`: the STP protocol
-// variant, the bridge information (forward delay, MAC, priority), the
-// elected root and regional-root bridges, and the interfaces
-// participating in this instance.
+// Single Multiple Spanning Tree instance selected by instanceId, for
+// example instanceId "0". Covers the STP protocol variant, the local
+// bridge parameters, the elected root and regional-root bridges, and
+// the interfaces participating in this instance, so you can verify the
+// spanning-tree topology and root-bridge placement.
 arista.eos.stp.mst @defaults("instanceId name") {
   // MST instance number
   instanceId string
@@ -237,11 +313,18 @@ arista.eos.stp.mst @defaults("instanceId name") {
   name string
   // Spanning Tree Protocol variant for this MST instance
   protocol string
-  // Detailed bridge information (Forward Delay, MAC, Priority)
+  // Local bridge parameters for this MST instance
+  //
+  // Keys: priority, macAddress, systemIdExtension, and (for the default
+  // instance) forwardDelay, helloTime, maxAge.
   bridge dict
-  // Root bridge information
+  // Elected root bridge for this MST instance
+  //
+  // Keys: priority, macAddress, systemIdExtension.
   rootBridge dict
-  // Regional root bridge information
+  // Regional root bridge for this MST region
+  //
+  // Keys: priority, macAddress, systemIdExtension.
   regionalRootBridge dict
   // Interfaces on the specified MST instances
   interfaces []arista.eos.spt.mstInterface
@@ -249,10 +332,12 @@ arista.eos.stp.mst @defaults("instanceId name") {
 
 // Arista EOS MST per-interface state
 //
-// Examine the per-interface state for one interface inside one MST
-// instance, identified by interface `name` and `mstInstanceId`: the
-// port role and state, priority, cost, link type, and edge-port flag,
-// plus BPDU counters and boundary / inconsistency features.
+// Spanning-tree state for one interface within one Multiple Spanning Tree
+// (MST) instance, selected by interface `name` and `mstInstanceId`. Useful
+// for confirming that a port carries the role and state expected by the
+// spanning-tree design and for surfacing loop-prevention problems: the
+// `inconsistentFeatures` map flags loop-guard, root-guard, MST/PVST-border,
+// and bridge-assurance conditions that hold a port out of forwarding.
 arista.eos.spt.mstInterface @defaults("name") {
   id string
   // MST instance number
@@ -269,27 +354,47 @@ arista.eos.spt.mstInterface @defaults("name") {
   cost int
   // Port role
   role string
-  // Interface inconsistent features
+  // Loop-prevention inconsistencies detected on the interface
+  //
+  // Boolean flags for each guard that has put the port into an inconsistent
+  // (blocked) state: `loopGuard`, `rootGuard`, `mstPvstBorder`, and
+  // `bridgeAssurance`.
   inconsistentFeatures dict
   // Port Number
   portNumber int
   // Whether the interface is an edge port
   isEdgePort bool
-  // Details about Designated root, Designated bridge and Designated port
+  // Designated root, bridge, and port for the interface
+  //
+  // Keys `designatedRootAddress` and `designatedRootPriority` identify the
+  // designated root; `designatedBridgeAddress`, `designatedBridgePriority`,
+  // `designatedPortNumber`, and `designatedPortPriority` identify the
+  // designated bridge and port; `regionalRootAddress` and
+  // `regionalRootPriority` identify the MST regional root.
   detail dict
   // Interface Boundary Type
   boundaryType string
-  // Number of BPDU transactions on this interface
+  // BPDU transaction counters for the interface
+  //
+  // Keys `bpduSent`, `bpduReceived`, `bpduTaggedError`, `bpduOtherError`,
+  // and `bpduRateLimitCount`.
   counters() dict
-  // Interface features: BPDU filter, specifies the BPDU reception rate & link type of the interface
+  // Spanning-tree feature configuration for the interface
+  //
+  // Keys `linkType`, `bpduGuard`, and `BpduFilter`, each a map holding a
+  // `value` and a `default` boolean indicating whether the value is the
+  // interface default.
   features() dict
 }
 
 // Arista EOS VLAN
 //
-// Examine a single VLAN by its ID: the VLAN name, state (active vs
-// suspend), associated trunk groups, whether it was dynamically
-// learned, and the interfaces assigned to it.
+// Layer 2 broadcast domain configured on the switch, selected by its
+// numeric `id` (for example `arista.eos.vlan(id: "10")`). Covers the
+// VLAN name, its administrative state (active or suspend), the trunk
+// groups it belongs to, whether it was learned dynamically, and the
+// interfaces assigned to it, so you can audit segmentation and confirm
+// that only expected VLANs and ports are in use.
 arista.eos.vlan @defaults("id name") {
   // VLAN ID
   id string
@@ -307,12 +412,13 @@ arista.eos.vlan @defaults("id name") {
 
 // Arista EOS IP route
 //
-// Examine a single entry in the IP routing table, identified by its
-// `destination` prefix (e.g., "10.0.0.0/8"): the VRF, source protocol
-// (connected, static, BGP, OSPF, …), administrative distance and
-// metric, hardware-programmed and kernel-programmed flags, the
-// next-hop list (interface + next-hop address), the route action, and
-// an `active()` flag indicating whether the route is currently in use.
+// Single entry in the IP routing table, selected by its `destination`
+// prefix (for example `arista.eos.routes.where(destination == "10.0.0.0/8")`):
+// the VRF it belongs to, the source protocol (connected, static, BGP,
+// OSPF, and so on), the administrative distance and metric, the
+// hardware-programmed and kernel-programmed flags, the next-hop list,
+// the route action, and an `active` flag indicating whether the route
+// is currently in use for forwarding.
 arista.eos.route @defaults("destination") {
   // Route destination prefix (e.g., "10.0.0.0/8")
   destination string
@@ -330,7 +436,13 @@ arista.eos.route @defaults("destination") {
   kernelProgrammed bool
   // Route action
   routeAction string
-  // Next-hop information (interface, nexthop address)
+  // Next hops for the route
+  //
+  // One entry per available next hop. Each carries `interface` (the
+  // outgoing interface name, e.g. "Ethernet1") and `nexthopAddr` (the
+  // next-hop IP address). Either value can be an empty string when it
+  // does not apply to the route (for example a directly connected
+  // route has no next-hop address).
   nextHops []dict
   // Whether the route is active
   active() bool
@@ -338,11 +450,12 @@ arista.eos.route @defaults("destination") {
 
 // Arista EOS Layer-2 switchport configuration
 //
-// Examine switchport state for one interface, identified by `name`
-// (e.g., "Ethernet1"): the switchport mode (access vs trunk), the
-// access VLAN, the trunk native VLAN, the allowed-VLAN list, and any
-// trunk groups — useful for finding misconfigured trunks or
-// unexpected access-VLAN assignments.
+// Layer-2 switchport state for one interface, selected by `name`
+// (for example `arista.eos.switchports.where(name == "Ethernet1")`).
+// Reports the switchport `mode` (access or trunk), the access VLAN,
+// the trunk native VLAN, the allowed-VLAN list, and any trunk groups,
+// so you can flag misconfigured trunks or unexpected access-VLAN
+// assignments.
 arista.eos.switchport @defaults("name mode") {
   // Interface name
   name string
@@ -360,10 +473,11 @@ arista.eos.switchport @defaults("name mode") {
 
 // Arista EOS BGP configuration
 //
-// Examine whether BGP is enabled, the global AS number and router ID,
-// and the per-VRF BGP configurations via `vrfs()` — each VRF lists its
-// peers with their states, prefix counts, and inbound / outbound route
-// maps.
+// Border Gateway Protocol configuration for the device, covering whether
+// BGP is enabled, the global autonomous system number, the router ID, and
+// the per-VRF configurations in vrfs. Each VRF lists its peers with their
+// session state, prefix counts, and inbound and outbound route maps, so
+// you can audit routing adjacencies and the filters applied to them.
 arista.eos.bgp {
   // Whether BGP is enabled on this device
   enabled() bool
@@ -413,10 +527,14 @@ private arista.eos.bgp.peer @defaults("peerAddress") {
 
 // Arista EOS MLAG (Multi-Chassis Link Aggregation) configuration
 //
-// Examine the MLAG domain ID, the local interface used for MLAG
-// control (typically a VLAN interface), the peer-switch IP, the
-// peer-link Port-Channel, the administrative shutdown flag, and the
-// Port-Channel interfaces that carry an MLAG ID.
+// Multi-Chassis Link Aggregation domain, which lets two switches
+// present themselves as a single logical device so downstream hosts
+// can dual-home a Port-Channel across both chassis for redundancy.
+// Query this to confirm the peer relationship is healthy: the domain
+// pairing (domainId, peerAddress), the control path (localInterface
+// and peerLink), whether the domain is administratively disabled
+// (shutdown), and which Port-Channels carry an MLAG ID. A shutdown or
+// misconfigured peer link breaks the redundancy the design depends on.
 arista.eos.mlag {
   // MLAG domain ID
   domainId() string
@@ -442,11 +560,12 @@ private arista.eos.mlag.interface @defaults("name mlagId") {
 
 // Arista EOS standard IP access control list
 //
-// Examine a single standard IP access control list by `name`: its type
-// (currently only "standard" is supported by the EOS SDK) and the
-// ordered entries — sequence number, permit / deny action, source
-// address and prefix length, and per-rule logging — used for
-// connectivity audits and ingress-filtering reviews.
+// A single standard IP access control list, selected by `name` (for
+// example `arista.eos.acl(name: "management")`). The ordered `entries`
+// give each rule's permit or deny action, source address, prefix
+// length, and per-rule logging, for connectivity audits and
+// ingress-filtering reviews. The `type` field reports the ACL type
+// (currently only "standard" is supported by the EOS SDK).
 arista.eos.acl @defaults("name") {
   // ACL name
   name string
@@ -474,11 +593,14 @@ private arista.eos.acl.entry @defaults("sequenceNumber action") {
 
 // Arista EOS hardware environment and inventory
 //
-// Examine the chassis hardware: `powerSupplies()` (each PSU's state,
-// capacity, output, embedded temperature sensors and fans), `fans()`
-// (each cooling fan's status and configured-vs-current speed), and
-// `inventory()` (every chassis / module / transceiver entry with its
-// serial number and hardware revision).
+// Chassis hardware and environmental state for an EOS device. The
+// `powerSupplies` field reports each PSU's state, capacity, output,
+// and embedded temperature sensors and fans; `fans` reports each
+// cooling fan's status and configured-versus-current speed; and
+// `inventory` lists every chassis, module, and transceiver with its
+// serial number and hardware revision. Useful for auditing power and
+// cooling redundancy (missing or failed PSUs and fans) and tracking
+// installed components by serial number.
 arista.eos.hardware {
   // Power supply units
   powerSupplies() []arista.eos.hardware.powerSupply
@@ -509,8 +631,15 @@ private arista.eos.hardware.powerSupply @defaults("name state modelName") {
   // Whether this PSU is managed by the system
   managed bool
   // Temperature sensors on this PSU
+  //
+  // One entry per sensor, each with `name` (sensor identifier),
+  // `status` (sensor operational status), and `temperature` (current
+  // reading in degrees Celsius).
   tempSensors []dict
   // Cooling fans on this PSU
+  //
+  // One entry per fan, each with `name` (fan identifier), `status`
+  // (fan operational status), and `speed` (current speed percentage).
   fans []dict
 }
 
@@ -546,11 +675,14 @@ private arista.eos.hardware.inventoryItem @defaults("name description serialNumb
 
 // Arista EOS AAA (Authentication, Authorization, Accounting) configuration
 //
-// Examine the configured method lists for login, enable, command/exec
-// authorization, and command/exec accounting, the configured TACACS+ and
-// RADIUS server hosts, and whether the default authentication list permits
-// local-only authentication (a common hardening finding in environments
-// that should require remote AAA).
+// Authentication, authorization, and accounting (AAA) settings parsed from
+// the running-config: the method lists that govern login and enable
+// authentication, command and exec authorization, and command and exec
+// accounting, plus the configured TACACS+ and RADIUS server hosts. The
+// defaultLoginPermitsLocalOnly predicate flags when the default login list
+// can authenticate against the switch's local account database alone with no
+// remote AAA source, a common hardening finding where policy requires
+// TACACS+ or RADIUS.
 arista.eos.aaa {
   // Authentication login method lists (key = list name, e.g. "default")
   authenticationLogin map[string][]string
@@ -574,10 +706,14 @@ arista.eos.aaa {
 
 // Arista EOS management SSH service configuration
 //
-// Examine SSH service enabled state, protocol version, idle timeout, server
-// port, authentication mode, configured cipher / KEX / MAC / hostkey
-// algorithms, and whether `fips restrictions` are applied — the surface
-// auditors check against SSH hardening benchmarks.
+// Configuration of the on-device SSH management service, the primary
+// remote-administration channel into the switch. Covers whether the service
+// is enabled, the negotiated protocol version and idle timeout, the server
+// port and authentication mode, and the negotiated cryptographic
+// primitives (ciphers, key-exchange, MAC, and host-key algorithms), plus
+// whether FIPS restrictions are enforced. This is the surface auditors
+// compare against SSH hardening benchmarks for weak algorithms, missing
+// idle timeouts, and non-standard ports.
 arista.eos.sshSettings {
   // Whether the SSH service is enabled (no shutdown)
   enabled bool
@@ -612,7 +748,7 @@ private arista.eos.snmpCommunity @defaults("name access acl") {
   // Empty = no ACL. When `ipv6` is true this is an IPv6 access-list;
   // otherwise IPv4.
   acl string
-  // Typed reference to the access-list ACL applied to this community
+  // Access-list that restricts this community, resolved to the `arista.eos.acl` named by `acl`
   aclResource() arista.eos.acl
   // Whether the community line declares an IPv6 ACL
   //
@@ -622,10 +758,10 @@ private arista.eos.snmpCommunity @defaults("name access acl") {
 
 // Arista EOS management telnet service
 //
-// Examine whether a `management telnet` block exists and is actually enabled,
-// the idle timeout, session limits (global and per-host), and any access-list
-// restricting connections. Telnet is a plaintext protocol; benchmarks
-// generally require it to be disabled.
+// State of the `management telnet` service, covering whether the block
+// exists and is actually enabled, the idle timeout, session limits (global
+// and per-host), and any access-list restricting connections. Telnet is a
+// plaintext protocol, so benchmarks generally require it to be disabled.
 arista.eos.telnetService {
   // Whether a `management telnet` block exists in the running-config
   configured bool
@@ -643,10 +779,12 @@ arista.eos.telnetService {
 
 // Arista EOS password policy and account-lockout configuration
 //
-// Examine lockout thresholds (failure count, observation window, lock
-// duration), whether no-password remote login is permitted, login event
-// logging, and the configured password-complexity rules (minimum length,
-// digits, uppercase, lowercase, special, repetitive, sequential characters).
+// Account-lockout thresholds and password-complexity rules enforced for
+// local authentication on the device. Covers the lockout trigger (failure
+// count, observation window, lock duration), whether users with no password
+// may log in remotely, login-event logging, and the minimum-character and
+// maximum-repetition rules from the `password policy` block. Audit these to
+// confirm brute-force protection is enabled and complexity meets policy.
 arista.eos.passwordPolicy {
   // Failures allowed before account lockout (0 = lockout not configured)
   lockoutFailure int
@@ -690,11 +828,14 @@ private arista.eos.ntpAuthKey @defaults("id hashAlgo trusted") {
 
 // Arista EOS Control-Plane Policing (CoPP) configuration
 //
-// Examine whether a `control-plane` block is present, whether a service
-// policy is applied, and which IPv4 / IPv6 access-groups are bound to the
-// control plane (with typed references to the underlying ACL resources)
-// — control-plane policing is required for protection against
-// management-plane DoS.
+// Control-Plane Policing (CoPP) protects the device CPU and management
+// plane against denial-of-service by rate-limiting and filtering the
+// traffic destined for the control plane. The fields report whether a
+// `control-plane` block is present, whether a service policy is applied,
+// and which IPv4 and IPv6 access-groups are bound to the control plane.
+// The ipAccessGroupAcl and ip6AccessGroupAcl fields resolve to the
+// underlying arista.eos.acl resources so audits can inspect the rules
+// actually enforced.
 arista.eos.controlPlanePolicer {
   // Whether a `control-plane` block exists in the running-config
   configured bool
@@ -704,15 +845,24 @@ arista.eos.controlPlanePolicer {
   policyName string
   // IPv4 access-group applied to control-plane (empty if none)
   ipAccessGroup string
-  // Typed reference to the IPv4 access-group ACL applied to control-plane
+  // IPv4 access-group ACL bound to the control plane, resolved from ipAccessGroup (null when none is bound)
   ipAccessGroupAcl() arista.eos.acl
   // IPv6 access-group applied to control-plane (empty if none)
   ip6AccessGroup string
-  // Typed reference to the IPv6 access-group ACL applied to control-plane
+  // IPv6 access-group ACL bound to the control plane, resolved from ip6AccessGroup (null when none is bound)
   ip6AccessGroupAcl() arista.eos.acl
 }
 
 // Arista EOS per-interface switchport port-security configuration
+//
+// Port-security posture for switched interfaces, covering how many MAC
+// addresses each port may learn, what the switch does when that limit is
+// exceeded, and whether learned addresses are pinned into the running
+// config. Auditing this confirms that access-facing ports restrict which
+// end stations can connect, limiting MAC-flooding and rogue-device
+// attacks. The `violationAction` field reports the enforcement mode
+// ("protect", "restrict", or "shutdown"). There is one row per interface,
+// identified by the interface field.
 private arista.eos.portSecurity @defaults("interface enabled violationAction") {
   // Parent interface name (e.g. "Ethernet1")
   interface string
@@ -728,15 +878,14 @@ private arista.eos.portSecurity @defaults("interface enabled violationAction") {
 
 // Arista EOS eAPI (management API) configuration
 //
-// Examine the management-API service surface so audits can verify that
-// the data plane through which mql itself connects is locked down.
-// `enabled` indicates whether eAPI is configured at all; the per-protocol
-// fields (`httpServerConfigured` / `httpServerRunning` / `httpServerPort`,
-// the matching `httpsServer*` and `localHttpServer*` triplets, and the
-// `unixSocketServer*` pair) tell you which transports are actually
-// listening. Common compliance audits check that `httpServerConfigured`
-// is false (no plaintext HTTP) while `httpsServerConfigured` and
-// `httpsServerRunning` are both true.
+// Management-API (eAPI) service surface, the transport through which mql
+// itself connects to the device. `enabled` indicates whether eAPI is
+// configured at all; the per-protocol fields (`httpServerConfigured` /
+// `httpServerRunning` / `httpServerPort`, the matching `httpsServer*` and
+// `localHttpServer*` triplets, and the `unixSocketServer*` pair) report
+// which transports are actually listening. Common compliance audits
+// check that `httpServerConfigured` is false (no plaintext HTTP) while
+// `httpsServerConfigured` and `httpsServerRunning` are both true.
 arista.eos.eapi @defaults("enabled httpsServerRunning httpServerRunning") {
   // Whether eAPI is enabled on the device
   enabled bool
@@ -766,12 +915,12 @@ arista.eos.eapi @defaults("enabled httpsServerRunning httpServerRunning") {
 
 // Arista EOS VRRP (Virtual Router Redundancy Protocol) configuration
 //
-// Examine the VRRP first-hop redundancy state. `groups` lists every VRRP
-// instance configured on the device (each with its parent `interface`,
-// `groupId`, `priority`, `preempt` behavior, `state` of master / backup /
-// initial, the `virtualIps` it advertises, and the `virtualMac`). Use this
-// to audit gateway redundancy — for example asserting that every L3
-// subnet has a VRRP group, that priorities are split between the pair of
+// VRRP first-hop redundancy state on the device. `groups` lists every
+// VRRP instance configured (each with its `interface`, `groupId`,
+// `priority`, `preempt` behavior, `state` of master / backup / initial,
+// the `virtualIps` it advertises, and the `virtualMac`). Query this to
+// audit gateway redundancy, for example asserting that every L3 subnet
+// has a VRRP group, that priorities are split between the pair of
 // switches, or that preempt is enabled.
 arista.eos.vrrp {
   // VRRP groups configured on this device
@@ -780,12 +929,12 @@ arista.eos.vrrp {
 
 // Arista EOS VRRP group
 //
-// Examine a single VRRP group. The group is keyed by `interface`/`groupId`
-// (a `Vlan100` SVI typically hosts group `1`); `priority` plus `preempt`
-// determine which device becomes master, `state` reports the current FSM
-// state (master / backup / initial), and `virtualIps` is the list of
-// gateway addresses the group advertises. `virtualMac` is the synthetic
-// MAC the group answers ARP for.
+// Single VRRP group, keyed by `interface`/`groupId` (a `Vlan100` SVI
+// typically hosts group `1`). `priority` plus `preempt` determine which
+// device becomes master, `state` reports the current FSM state (master /
+// backup / initial), and `virtualIps` is the list of gateway addresses
+// the group advertises. `virtualMac` is the synthetic MAC the group
+// answers ARP for.
 private arista.eos.vrrp.group @defaults("interface groupId state priority") {
   // Parent interface (the SVI or routed port the group runs on)
   interface string
