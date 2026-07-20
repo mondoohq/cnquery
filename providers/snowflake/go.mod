@@ -19,10 +19,11 @@ require (
 	golang.org/x/crypto v0.54.0
 )
 
+require github.com/rs/zerolog v1.35.1
+
 require (
 	github.com/hashicorp/terraform-json v0.28.0 // indirect
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.40.1 // indirect
-	github.com/rs/zerolog v1.35.1 // indirect
 	github.com/zclconf/go-cty v1.19.0 // indirect
 )
 
