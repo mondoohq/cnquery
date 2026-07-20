@@ -9,10 +9,8 @@ import (
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/okta/connection"
 	"go.mondoo.com/mql/v13/providers/okta/resources/sdk"
-	"go.mondoo.com/mql/v13/types"
 )
 
 func (o *mqlOkta) customRoles() ([]any, error) {
@@ -76,22 +74,9 @@ func initOktaCustomRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return nil, nil, err
 	}
 
-	// Permissions are a separate sub-resource on custom roles.
-	permissions := []any{}
-	perms, _, err := client.RoleAPI.ListRolePermissions(ctx, id).Execute()
-	if err != nil {
-		return nil, nil, err
-	}
-	if perms != nil {
-		for i := range perms.Permissions {
-			permissions = append(permissions, oktaStr(perms.Permissions[i].Label))
-		}
-	}
-
 	args["id"] = llx.StringData(oktaStr(role.Id))
 	args["label"] = llx.StringData(role.Label)
 	args["description"] = llx.StringData(role.Description)
-	args["permissions"] = llx.ArrayData(permissions, types.String)
 	return args, nil, nil
 }
 
@@ -100,8 +85,35 @@ func newMqlOktaCustomRole(runtime *plugin.Runtime, entry *sdk.CustomRole) (any, 
 		"id":          llx.StringData(entry.Id),
 		"label":       llx.StringData(entry.Label),
 		"description": llx.StringData(entry.Description),
-		"permissions": llx.ArrayData(convert.SliceAnyToInterface(entry.Permissions), types.String),
 	})
+}
+
+// permissions lists the fine-grained Okta permission identifiers this custom
+// role confers. Permissions are a sub-resource (GET /api/v1/iam/roles/{id}/
+// permissions), not embedded in the role listing, so we resolve them per role
+// on demand. This keeps the collection path (okta.customRoles) and the
+// single-role path (okta.customRole) returning the same permission set.
+func (o *mqlOktaCustomRole) permissions() ([]any, error) {
+	if o.Id.Error != nil {
+		return nil, o.Id.Error
+	}
+
+	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
+	client := conn.Client()
+	ctx := context.Background()
+
+	perms, _, err := client.RoleAPI.ListRolePermissions(ctx, o.Id.Data).Execute()
+	if err != nil {
+		return nil, err
+	}
+
+	permissions := []any{}
+	if perms != nil {
+		for i := range perms.Permissions {
+			permissions = append(permissions, oktaStr(perms.Permissions[i].Label))
+		}
+	}
+	return permissions, nil
 }
 
 func (o *mqlOktaRole) id() (string, error) {

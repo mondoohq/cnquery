@@ -6396,7 +6396,9 @@ func (c *mqlOktaCustomRole) GetDescription() *plugin.TValue[string] {
 }
 
 func (c *mqlOktaCustomRole) GetPermissions() *plugin.TValue[[]any] {
-	return &c.Permissions
+	return plugin.GetOrCompute[[]any](&c.Permissions, func() ([]any, error) {
+		return c.permissions()
+	})
 }
 
 // mqlOktaResourceSet for the okta.resourceSet resource

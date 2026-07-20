@@ -923,8 +923,9 @@ private okta.customRole @defaults("label") {
   //
   // List of Okta permission identifiers this role confers, for example
   // `okta.users.read`, `okta.users.manage`, `okta.apps.manage`, or
-  // `okta.groups.manage`.
-  permissions []string
+  // `okta.groups.manage`. Permissions are a sub-resource of the role, fetched
+  // per role rather than returned with the role listing.
+  permissions() []string
 }
 
 // Okta Resource Set
