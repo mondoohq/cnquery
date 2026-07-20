@@ -180,7 +180,7 @@ func (a *mqlOktaApplication) scopeConsentGrants() ([]any, error) {
 	list := []any{}
 	appendEntry := func(datalist []okta.OAuth2ScopeConsentGrant) error {
 		for i := range datalist {
-			r, err := newMqlOktaApplicationScopeConsentGrant(a.MqlRuntime, &datalist[i])
+			r, err := newMqlOktaApplicationScopeConsentGrant(a.MqlRuntime, appID, &datalist[i])
 			if err != nil {
 				return err
 			}
@@ -205,8 +205,9 @@ func (a *mqlOktaApplication) scopeConsentGrants() ([]any, error) {
 	return list, nil
 }
 
-func newMqlOktaApplicationScopeConsentGrant(runtime *plugin.Runtime, entry *okta.OAuth2ScopeConsentGrant) (any, error) {
+func newMqlOktaApplicationScopeConsentGrant(runtime *plugin.Runtime, appID string, entry *okta.OAuth2ScopeConsentGrant) (any, error) {
 	r, err := CreateResource(runtime, "okta.application.scopeConsentGrant", map[string]*llx.RawData{
+		"__id":        llx.StringData(fmt.Sprintf("%s/%s", appID, oktaStr(entry.Id))),
 		"id":          llx.StringData(oktaStr(entry.Id)),
 		"scopeId":     llx.StringData(entry.ScopeId),
 		"issuer":      llx.StringData(entry.Issuer),
