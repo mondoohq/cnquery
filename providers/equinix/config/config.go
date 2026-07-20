@@ -13,7 +13,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "equinix",
 	ID:              "go.mondoo.com/cnquery/v9/providers/equinix",
-	Version:         "13.0.22",
+	Version:         "13.0.23",
 	Maturity:        resources.MaturityDeprecated,
 	ConnectionTypes: []string{provider.ConnectionType},
 	Platforms:       connection.Platforms,
