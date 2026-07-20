@@ -72,25 +72,26 @@ func nodeToDict(parent *yaml.Node, key string) (any, error) {
 	return convertYamlNodeToValue(val)
 }
 
-// nodeToInt extracts a YAML integer scalar at `key`, defaulting to 0 when
-// absent. Non-integer scalars return an error so callers see malformed input
-// rather than silently defaulting.
-func nodeToInt(parent *yaml.Node, key string) (int64, error) {
+// nodeToInt extracts a YAML integer scalar at `key`, returning nil when the key
+// is absent so callers can distinguish "no constraint" from an explicit 0 (a
+// legitimate CloudFormation MinValue). Non-integer scalars return an error so
+// callers see malformed input rather than silently defaulting.
+func nodeToInt(parent *yaml.Node, key string) (*int64, error) {
 	_, val, err := gatherMapValue(parent, key)
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
-			return 0, nil
+			return nil, nil
 		}
-		return 0, err
+		return nil, err
 	}
 	if val.Kind != yaml.ScalarNode {
-		return 0, fmt.Errorf("expected scalar for %s, got kind %v", key, val.Kind)
+		return nil, fmt.Errorf("expected scalar for %s, got kind %v", key, val.Kind)
 	}
 	n, err := strconv.ParseInt(val.Value, 10, 64)
 	if err != nil {
-		return 0, fmt.Errorf("invalid integer for %s: %w", key, err)
+		return nil, fmt.Errorf("invalid integer for %s: %w", key, err)
 	}
-	return n, nil
+	return &n, nil
 }
 
 // nodeToDictList walks the sequence at `key` and returns each entry as a

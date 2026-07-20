@@ -5,8 +5,10 @@ package resources
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/aws-cloudformation/rain/cft"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -16,6 +18,18 @@ import (
 	"go.mondoo.com/ranger-rpc/status"
 	"gopkg.in/yaml.v3"
 )
+
+// parseCfnBool interprets the boolean spellings CloudFormation accepts.
+// CloudFormation parses templates as YAML 1.1, so `yes`/`on`/`1` are true in
+// addition to `true` (any case). Anything else is false. This matters for
+// NoEcho: a `NoEcho: yes` credential parameter must not read as unmasked.
+func parseCfnBool(s string) bool {
+	switch strings.ToLower(strings.TrimSpace(s)) {
+	case "true", "yes", "on", "1":
+		return true
+	}
+	return false
+}
 
 // isEvenMappingNode reports whether n is a YAML mapping with an even number of
 // content nodes — i.e. safe to iterate two-at-a-time (key, value). A template
@@ -104,12 +118,16 @@ func (r *mqlCloudformationTemplate) extractDict(section cft.Section) (map[string
 		keyNode := parameters.Content[i]
 		valueNode := parameters.Content[i+1]
 
-		dict, err := convertYamlToDict(valueNode)
+		// A section member's value need not be a mapping — a Metadata entry
+		// like `License: Apache-2.0` is a scalar, and Metadata is free-form.
+		// convertYamlNodeToValue accepts scalars, sequences, and mappings, so
+		// one scalar member no longer fails the whole section.
+		val, err := convertYamlNodeToValue(valueNode)
 		if err != nil {
 			return nil, err
 		}
 
-		result[keyNode.Value] = dict
+		result[keyNode.Value] = val
 	}
 
 	return result, nil
@@ -185,21 +203,24 @@ func (r *mqlCloudformationTemplate) resources() ([]any, error) {
 			resourceDocumentation = val.Value
 		}
 
+		// Attributes/Properties are objects in valid CloudFormation. A
+		// malformed (scalar/sequence) body shouldn't sink every other resource
+		// in the template — leave the field empty and keep going.
 		attrs := make(map[string](any))
-		_, val, err = gatherMapValue(valueNode, "Attributes")
-		if err == nil {
-			attrs, err = convertYamlToDict(val)
-			if err != nil {
-				return nil, err
+		if _, val, gerr := gatherMapValue(valueNode, "Attributes"); gerr == nil {
+			if converted, cerr := convertYamlToDict(val); cerr == nil {
+				attrs = converted
+			} else {
+				log.Warn().Err(cerr).Str("resource", keyNode.Value).Msg("cloudformation: Attributes is not an object; leaving empty")
 			}
 		}
 
 		props := make(map[string](any))
-		_, val, err = gatherMapValue(valueNode, "Properties")
-		if err == nil {
-			props, err = convertYamlToDict(val)
-			if err != nil {
-				return nil, err
+		if _, val, gerr := gatherMapValue(valueNode, "Properties"); gerr == nil {
+			if converted, cerr := convertYamlToDict(val); cerr == nil {
+				props = converted
+			} else {
+				log.Warn().Err(cerr).Str("resource", keyNode.Value).Msg("cloudformation: Properties is not an object; leaving empty")
 			}
 		}
 
@@ -373,9 +394,13 @@ func (r *mqlCloudformationTemplate) outputs() ([]any, error) {
 		keyNode := outputs.Content[i]
 		valueNode := outputs.Content[i+1]
 
-		dict, err := convertYamlToDict(valueNode)
-		if err != nil {
-			return nil, err
+		// An output body is an object in valid CloudFormation; degrade rather
+		// than fail every output if one is malformed.
+		dict := map[string]any{}
+		if converted, cerr := convertYamlToDict(valueNode); cerr == nil {
+			dict = converted
+		} else {
+			log.Warn().Err(cerr).Str("output", keyNode.Value).Msg("cloudformation: output body is not an object; leaving empty")
 		}
 
 		value, err := nodeToDict(valueNode, "Value")
@@ -469,7 +494,7 @@ func (r *mqlCloudformationTemplate) parameterList() ([]any, error) {
 
 		noEcho := false
 		if _, n, err := gatherMapValue(valueNode, "NoEcho"); err == nil {
-			noEcho = n.Value == "true" || n.Value == "True" || n.Value == "TRUE"
+			noEcho = parseCfnBool(n.Value)
 		}
 
 		minLength, err := nodeToInt(valueNode, "MinLength")
@@ -513,10 +538,10 @@ func (r *mqlCloudformationTemplate) parameterList() ([]any, error) {
 			"allowedValues":         llx.ArrayData(allowedValues, types.Dict),
 			"allowedPattern":        llx.StringData(allowedPattern),
 			"noEcho":                llx.BoolData(noEcho),
-			"minLength":             llx.IntData(minLength),
-			"maxLength":             llx.IntData(maxLength),
-			"minValue":              llx.IntData(minValue),
-			"maxValue":              llx.IntData(maxValue),
+			"minLength":             llx.IntDataPtr(minLength),
+			"maxLength":             llx.IntDataPtr(maxLength),
+			"minValue":              llx.IntDataPtr(minValue),
+			"maxValue":              llx.IntDataPtr(maxValue),
 			"constraintDescription": llx.StringData(constraintDescription),
 			"context":               llx.ResourceData(ctx, "cloudformation.context"),
 		})

@@ -6,6 +6,7 @@ package resources
 import (
 	"errors"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,6 +17,110 @@ import (
 	"go.mondoo.com/mql/v13/providers/cloudformation/connection"
 	"go.mondoo.com/mql/v13/utils/syncx"
 )
+
+// loadTemplateFromString writes content to a temp .yaml file and loads it as a
+// cloudformation.template, so tests can exercise the parse paths without a
+// committed fixture per case.
+func loadTemplateFromString(t *testing.T, content string) *mqlCloudformationTemplate {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), "template.yaml")
+	require.NoError(t, os.WriteFile(path, []byte(content), 0o600))
+	tpl, err := loadTemplate(path)
+	require.NoError(t, err)
+	return tpl
+}
+
+func TestParseCfnBool(t *testing.T) {
+	for _, s := range []string{"true", "True", "TRUE", "yes", "Yes", "on", "1", " true "} {
+		assert.True(t, parseCfnBool(s), "%q should parse true", s)
+	}
+	for _, s := range []string{"false", "False", "no", "off", "0", "", "maybe"} {
+		assert.False(t, parseCfnBool(s), "%q should parse false", s)
+	}
+}
+
+// A scalar top-level Metadata member (Metadata is free-form) must not make the
+// whole metadata() call error out and drop every member.
+func TestMetadataScalarMemberDoesNotFail(t *testing.T) {
+	tpl := loadTemplateFromString(t, `AWSTemplateFormatVersion: "2010-09-09"
+Metadata:
+  License: Apache-2.0
+  Interface:
+    ParameterGroups: []
+Resources:
+  Bucket:
+    Type: AWS::S3::Bucket
+`)
+	md := tpl.GetMetadata()
+	require.NoError(t, md.Error)
+	assert.Equal(t, "Apache-2.0", md.Data["License"])
+	assert.Contains(t, md.Data, "Interface")
+}
+
+// A resource with a malformed (scalar) Properties body must not sink the other
+// valid resources in the template.
+func TestResourcesMalformedPropertiesDegrades(t *testing.T) {
+	tpl := loadTemplateFromString(t, `Resources:
+  GoodBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: my-bucket
+  BadBucket:
+    Type: AWS::S3::Bucket
+    Properties: "oops-this-is-a-string"
+`)
+	res := tpl.GetResources()
+	require.NoError(t, res.Error)
+	assert.Equal(t, 2, len(res.Data), "a malformed Properties must not drop sibling resources")
+}
+
+// An absent numeric constraint must resolve to null, distinct from an explicit
+// MinValue: 0 (a legitimate CloudFormation value).
+func TestParameterConstraintsNullable(t *testing.T) {
+	tpl := loadTemplateFromString(t, `Parameters:
+  WithMin:
+    Type: Number
+    MinValue: 0
+  WithoutMin:
+    Type: Number
+`)
+	params := tpl.GetParameterList()
+	require.NoError(t, params.Error)
+
+	byName := map[string]*mqlCloudformationParameter{}
+	for _, p := range params.Data {
+		mp := p.(*mqlCloudformationParameter)
+		byName[mp.Name.Data] = mp
+	}
+
+	withMin := byName["WithMin"]
+	require.NotNil(t, withMin)
+	assert.Equal(t, int64(0), withMin.MinValue.Data)
+	assert.Zero(t, withMin.MinValue.State&plugin.StateIsNull, "explicit MinValue: 0 must not be null")
+
+	withoutMin := byName["WithoutMin"]
+	require.NotNil(t, withoutMin)
+	assert.NotZero(t, withoutMin.MinValue.State&plugin.StateIsNull, "absent MinValue must be null")
+}
+
+func TestNoEchoBooleanSpellings(t *testing.T) {
+	tpl := loadTemplateFromString(t, `Parameters:
+  Secret:
+    Type: String
+    NoEcho: yes
+  Plain:
+    Type: String
+`)
+	params := tpl.GetParameterList()
+	require.NoError(t, params.Error)
+	byName := map[string]*mqlCloudformationParameter{}
+	for _, p := range params.Data {
+		mp := p.(*mqlCloudformationParameter)
+		byName[mp.Name.Data] = mp
+	}
+	assert.True(t, byName["Secret"].NoEcho.Data, "NoEcho: yes must parse true")
+	assert.False(t, byName["Plain"].NoEcho.Data)
+}
 
 func loadTemplate(path string) (*mqlCloudformationTemplate, error) {
 	_, err := os.Stat(path)
