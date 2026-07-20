@@ -623,6 +623,7 @@ stackit.ske 13.0.0
 stackit.ske.cluster 13.0.0
 stackit.ske.cluster.apiServerAclAllowedCidrs 13.1.1
 stackit.ske.cluster.apiServerAclEnabled 13.1.1
+stackit.ske.cluster.auditEnabled 13.4.2
 stackit.ske.cluster.creationTime 13.0.0
 stackit.ske.cluster.credentialsRotationLastCompleted 13.1.1
 stackit.ske.cluster.credentialsRotationLastInitiated 13.1.1

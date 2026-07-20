@@ -1232,6 +1232,11 @@ azure.subscription.computeService.snapshot.diskState 13.7.1
 azure.subscription.computeService.snapshot.encryptionType 13.7.1
 azure.subscription.computeService.snapshot.hyperVGeneration 13.7.1
 azure.subscription.computeService.snapshot.id 13.7.1
+azure.subscription.computeService.snapshot.immutabilityPolicyDurationDays 13.31.1
+azure.subscription.computeService.snapshot.immutabilityPolicyExpirationTime 13.31.1
+azure.subscription.computeService.snapshot.immutabilityPolicyExpired 13.31.1
+azure.subscription.computeService.snapshot.immutabilityPolicyStartTime 13.31.1
+azure.subscription.computeService.snapshot.immutabilityPolicyType 13.31.1
 azure.subscription.computeService.snapshot.incremental 13.7.1
 azure.subscription.computeService.snapshot.incrementalSnapshotFamilyId 13.7.1
 azure.subscription.computeService.snapshot.instantAccessDurationMinutes 13.8.2

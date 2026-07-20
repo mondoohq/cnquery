@@ -875,8 +875,8 @@ stackit.ske {
 // the project and region). Exposes the `status` (aggregated lifecycle),
 // the Kubernetes version, the node pools (with their flavor, OS, taints,
 // autoscaling, labels), the hibernation and maintenance windows, network
-// and DNS overrides, extensions (ACL, observability), and the creation
-// and update timestamps.
+// and DNS overrides, extensions (ACL, observability), whether API server
+// audit logging is enabled, and the creation and update timestamps.
 private stackit.ske.cluster @defaults("name kubernetesVersion status") {
   init(name? string)
   // Cluster name
@@ -924,6 +924,8 @@ private stackit.ske.cluster @defaults("name kubernetesVersion status") {
   podAddressRanges []string
   // OIDC service-account token issuer URL
   serviceAccountIssuer string
+  // Whether Kubernetes API server audit logging is enabled for the cluster
+  auditEnabled bool
   // Whether an identity provider is enabled for cluster access
   idpEnabled bool
   // Identity-provider type configured for cluster access

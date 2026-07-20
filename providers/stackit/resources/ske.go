@@ -113,6 +113,11 @@ func buildSkeCluster(runtime *plugin.Runtime, cluster *ske.Cluster) (plugin.Reso
 		}
 	}
 
+	var auditEnabled bool
+	if audit, ok := cluster.GetAuditOk(); ok {
+		auditEnabled = audit.GetEnabled()
+	}
+
 	var idpEnabled bool
 	var idpType string
 	if access, ok := cluster.GetAccessOk(); ok {
@@ -145,6 +150,7 @@ func buildSkeCluster(runtime *plugin.Runtime, cluster *ske.Cluster) (plugin.Reso
 		"egressAddressRanges":              strSliceData(egressRanges),
 		"podAddressRanges":                 strSliceData(podRanges),
 		"serviceAccountIssuer":             llx.StringData(saIssuer),
+		"auditEnabled":                     llx.BoolData(auditEnabled),
 		"idpEnabled":                       llx.BoolData(idpEnabled),
 		"idpType":                          llx.StringData(idpType),
 		"observabilityEnabled":             llx.BoolData(obsEnabled),

@@ -3339,6 +3339,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.computeService.snapshot.instantAccessDurationMinutes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetInstantAccessDurationMinutes()).ToDataRes(types.Int)
 	},
+	"azure.subscription.computeService.snapshot.immutabilityPolicyType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetImmutabilityPolicyType()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.snapshot.immutabilityPolicyDurationDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetImmutabilityPolicyDurationDays()).ToDataRes(types.Int)
+	},
+	"azure.subscription.computeService.snapshot.immutabilityPolicyExpired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetImmutabilityPolicyExpired()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.computeService.snapshot.immutabilityPolicyStartTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetImmutabilityPolicyStartTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.computeService.snapshot.immutabilityPolicyExpirationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetImmutabilityPolicyExpirationTime()).ToDataRes(types.Time)
+	},
 	"azure.subscription.computeService.snapshot.systemData": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetSystemData()).ToDataRes(types.Dict)
 	},
@@ -19778,6 +19793,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.computeService.snapshot.instantAccessDurationMinutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionComputeServiceSnapshot).InstantAccessDurationMinutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.immutabilityPolicyType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).ImmutabilityPolicyType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.immutabilityPolicyDurationDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).ImmutabilityPolicyDurationDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.immutabilityPolicyExpired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).ImmutabilityPolicyExpired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.immutabilityPolicyStartTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).ImmutabilityPolicyStartTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.immutabilityPolicyExpirationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).ImmutabilityPolicyExpirationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.computeService.snapshot.systemData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -44793,35 +44828,40 @@ type mqlAzureSubscriptionComputeServiceSnapshot struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAzureSubscriptionComputeServiceSnapshotInternal
-	Id                           plugin.TValue[string]
-	Name                         plugin.TValue[string]
-	Location                     plugin.TValue[string]
-	Tags                         plugin.TValue[map[string]any]
-	Type                         plugin.TValue[string]
-	Sku                          plugin.TValue[any]
-	Properties                   plugin.TValue[any]
-	CreationData                 plugin.TValue[any]
-	ProvisioningState            plugin.TValue[string]
-	TimeCreated                  plugin.TValue[*time.Time]
-	UniqueId                     plugin.TValue[string]
-	DiskSizeBytes                plugin.TValue[int64]
-	HyperVGeneration             plugin.TValue[string]
-	OsType                       plugin.TValue[string]
-	DiskState                    plugin.TValue[string]
-	Incremental                  plugin.TValue[bool]
-	IncrementalSnapshotFamilyId  plugin.TValue[string]
-	SupportsHibernation          plugin.TValue[bool]
-	NetworkAccessPolicy          plugin.TValue[string]
-	PublicNetworkAccess          plugin.TValue[string]
-	EncryptionType               plugin.TValue[string]
-	DataAccessAuthMode           plugin.TValue[string]
-	DiskAccessId                 plugin.TValue[string]
-	SnapshotAccessState          plugin.TValue[string]
-	InstantAccessDurationMinutes plugin.TValue[int64]
-	SystemData                   plugin.TValue[any]
-	SystemMetadata               plugin.TValue[*mqlAzureSubscriptionSystemData]
-	SourceDisk                   plugin.TValue[*mqlAzureSubscriptionComputeServiceDisk]
-	DiskEncryptionSet            plugin.TValue[*mqlAzureSubscriptionComputeServiceDiskEncryptionSet]
+	Id                               plugin.TValue[string]
+	Name                             plugin.TValue[string]
+	Location                         plugin.TValue[string]
+	Tags                             plugin.TValue[map[string]any]
+	Type                             plugin.TValue[string]
+	Sku                              plugin.TValue[any]
+	Properties                       plugin.TValue[any]
+	CreationData                     plugin.TValue[any]
+	ProvisioningState                plugin.TValue[string]
+	TimeCreated                      plugin.TValue[*time.Time]
+	UniqueId                         plugin.TValue[string]
+	DiskSizeBytes                    plugin.TValue[int64]
+	HyperVGeneration                 plugin.TValue[string]
+	OsType                           plugin.TValue[string]
+	DiskState                        plugin.TValue[string]
+	Incremental                      plugin.TValue[bool]
+	IncrementalSnapshotFamilyId      plugin.TValue[string]
+	SupportsHibernation              plugin.TValue[bool]
+	NetworkAccessPolicy              plugin.TValue[string]
+	PublicNetworkAccess              plugin.TValue[string]
+	EncryptionType                   plugin.TValue[string]
+	DataAccessAuthMode               plugin.TValue[string]
+	DiskAccessId                     plugin.TValue[string]
+	SnapshotAccessState              plugin.TValue[string]
+	InstantAccessDurationMinutes     plugin.TValue[int64]
+	ImmutabilityPolicyType           plugin.TValue[string]
+	ImmutabilityPolicyDurationDays   plugin.TValue[int64]
+	ImmutabilityPolicyExpired        plugin.TValue[bool]
+	ImmutabilityPolicyStartTime      plugin.TValue[*time.Time]
+	ImmutabilityPolicyExpirationTime plugin.TValue[*time.Time]
+	SystemData                       plugin.TValue[any]
+	SystemMetadata                   plugin.TValue[*mqlAzureSubscriptionSystemData]
+	SourceDisk                       plugin.TValue[*mqlAzureSubscriptionComputeServiceDisk]
+	DiskEncryptionSet                plugin.TValue[*mqlAzureSubscriptionComputeServiceDiskEncryptionSet]
 }
 
 // createAzureSubscriptionComputeServiceSnapshot creates a new instance of this resource
@@ -44959,6 +44999,26 @@ func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetSnapshotAccessState() *p
 
 func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetInstantAccessDurationMinutes() *plugin.TValue[int64] {
 	return &c.InstantAccessDurationMinutes
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetImmutabilityPolicyType() *plugin.TValue[string] {
+	return &c.ImmutabilityPolicyType
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetImmutabilityPolicyDurationDays() *plugin.TValue[int64] {
+	return &c.ImmutabilityPolicyDurationDays
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetImmutabilityPolicyExpired() *plugin.TValue[bool] {
+	return &c.ImmutabilityPolicyExpired
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetImmutabilityPolicyStartTime() *plugin.TValue[*time.Time] {
+	return &c.ImmutabilityPolicyStartTime
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetImmutabilityPolicyExpirationTime() *plugin.TValue[*time.Time] {
+	return &c.ImmutabilityPolicyExpirationTime
 }
 
 func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetSystemData() *plugin.TValue[any] {

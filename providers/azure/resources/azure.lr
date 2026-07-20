@@ -838,8 +838,9 @@ azure.subscription.computeService.diskAccess @defaults("name location") {
 // `incremental` flag (incremental vs full), encryption settings
 // (platform-managed, customer-managed via diskEncryptionSet, or
 // confidential-VM encryption), the network access policy, public
-// network access, and any active SAS export for downloading the
-// underlying VHD.
+// network access, the immutability policy protecting it from
+// modification or deletion, and any active SAS export for downloading
+// the underlying VHD.
 azure.subscription.computeService.snapshot @defaults("name location diskSizeBytes diskState incremental") {
   // Snapshot ID
   id string
@@ -891,6 +892,21 @@ azure.subscription.computeService.snapshot @defaults("name location diskSizeByte
   snapshotAccessState string
   // For snapshots of Premium SSD v2 or Ultra disks, time in minutes the snapshot is retained for instant access
   instantAccessDurationMinutes int
+  // Immutability policy type protecting the snapshot from modification or deletion
+  //
+  // One of Locked (the immutability duration cannot be reduced, only
+  // extended, and the policy cannot be removed until it expires) or
+  // Unlocked (privileged users can still modify or remove the policy).
+  // Null when no immutability policy is applied to the snapshot.
+  immutabilityPolicyType string
+  // Number of days the snapshot is protected for by the immutability policy
+  immutabilityPolicyDurationDays int
+  // Whether the immutability policy on the snapshot has expired
+  immutabilityPolicyExpired bool
+  // When the immutability policy was applied to the snapshot
+  immutabilityPolicyStartTime time
+  // When the immutability policy expires on the snapshot
+  immutabilityPolicyExpirationTime time
   // Azure Resource Manager system metadata
   //
   // Deprecated in favor of systemMetadata, which exposes createdBy,

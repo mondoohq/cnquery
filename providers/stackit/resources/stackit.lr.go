@@ -1390,6 +1390,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.ske.cluster.serviceAccountIssuer": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSkeCluster).GetServiceAccountIssuer()).ToDataRes(types.String)
 	},
+	"stackit.ske.cluster.auditEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetAuditEnabled()).ToDataRes(types.Bool)
+	},
 	"stackit.ske.cluster.idpEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSkeCluster).GetIdpEnabled()).ToDataRes(types.Bool)
 	},
@@ -3964,6 +3967,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.ske.cluster.serviceAccountIssuer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitSkeCluster).ServiceAccountIssuer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.auditEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).AuditEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"stackit.ske.cluster.idpEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9244,6 +9251,7 @@ type mqlStackitSkeCluster struct {
 	EgressAddressRanges              plugin.TValue[[]any]
 	PodAddressRanges                 plugin.TValue[[]any]
 	ServiceAccountIssuer             plugin.TValue[string]
+	AuditEnabled                     plugin.TValue[bool]
 	IdpEnabled                       plugin.TValue[bool]
 	IdpType                          plugin.TValue[string]
 	ObservabilityEnabled             plugin.TValue[bool]
@@ -9373,6 +9381,10 @@ func (c *mqlStackitSkeCluster) GetPodAddressRanges() *plugin.TValue[[]any] {
 
 func (c *mqlStackitSkeCluster) GetServiceAccountIssuer() *plugin.TValue[string] {
 	return &c.ServiceAccountIssuer
+}
+
+func (c *mqlStackitSkeCluster) GetAuditEnabled() *plugin.TValue[bool] {
+	return &c.AuditEnabled
 }
 
 func (c *mqlStackitSkeCluster) GetIdpEnabled() *plugin.TValue[bool] {

@@ -1510,6 +1510,14 @@ func snapshotToMql(runtime *plugin.Runtime, snap compute.Snapshot) (*mqlAzureSub
 			cacheSourceDiskId = props.CreationData.SourceResourceID
 			args["instantAccessDurationMinutes"] = llx.IntDataPtr(props.CreationData.InstantAccessDurationMinutes)
 		}
+
+		if ip := props.ImmutabilityPolicy; ip != nil {
+			args["immutabilityPolicyType"] = llx.StringDataPtr(stringEnumPtr(ip.Type))
+			args["immutabilityPolicyDurationDays"] = llx.IntDataPtr(ip.ImmutabilityDurationDays)
+			args["immutabilityPolicyExpired"] = llx.BoolDataPtr(ip.IsPolicyExpired)
+			args["immutabilityPolicyStartTime"] = llx.TimeDataPtr(ip.PolicyStartTime)
+			args["immutabilityPolicyExpirationTime"] = llx.TimeDataPtr(ip.PolicyExpirationTime)
+		}
 	}
 
 	res, err := CreateResource(runtime, "azure.subscription.computeService.snapshot", args)
