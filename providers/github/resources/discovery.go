@@ -41,16 +41,14 @@ func Discover(runtime *plugin.Runtime, opts map[string]string) (*inventory.Inven
 
 func handleTargets(targets []string) []string {
 	if stringx.Contains(targets, connection.DiscoveryAll) {
+		// CloudFormation, Dockerfile, Bicep, Helm, and Kustomize discovery
+		// each shallow-clone matched repos, so they stay opt-in via an
+		// explicit --discover <type> and are deliberately left out of `all`.
 		return []string{
 			connection.DiscoveryRepos,
 			connection.DiscoveryUsers,
 			connection.DiscoveryTerraform,
 			connection.DiscoveryK8sManifests,
-			connection.DiscoveryCloudformation,
-			connection.DiscoveryDockerfiles,
-			connection.DiscoveryBicep,
-			connection.DiscoveryHelm,
-			connection.DiscoveryKustomize,
 		}
 	}
 	return targets
@@ -373,7 +371,7 @@ func discoverRepoIac(conn *connection.GithubConnection, repo *mqlGithubRepositor
 		}
 		assetList = append(assetList, terraformAssets...)
 	}
-	if stringx.ContainsAnyOf(targets, connection.DiscoveryAll, connection.DiscoveryCloudformation) {
+	if stringx.Contains(targets, connection.DiscoveryCloudformation) {
 		cfAssets, err := discoverCloudformation(conn, repo)
 		if err != nil {
 			return nil, err
@@ -401,20 +399,20 @@ func discoverRepoIac(conn *connection.GithubConnection, repo *mqlGithubRepositor
 		k8sAsset.Connections[0].Discover = &inventory.Discovery{Targets: []string{"auto"}}
 		assetList = append(assetList, k8sAsset)
 	}
-	if stringx.ContainsAnyOf(targets, connection.DiscoveryAll, connection.DiscoveryDockerfiles) {
+	if stringx.Contains(targets, connection.DiscoveryDockerfiles) {
 		for _, path := range iac.dockerfiles {
 			assetList = append(assetList, gitAsset("docker-file", repo, path, creds))
 		}
 	}
-	if iac.hasBicep && stringx.ContainsAnyOf(targets, connection.DiscoveryAll, connection.DiscoveryBicep) {
+	if iac.hasBicep && stringx.Contains(targets, connection.DiscoveryBicep) {
 		assetList = append(assetList, gitAsset("bicep", repo, "", creds))
 	}
-	if stringx.ContainsAnyOf(targets, connection.DiscoveryAll, connection.DiscoveryHelm) {
+	if stringx.Contains(targets, connection.DiscoveryHelm) {
 		for _, dir := range iac.helmChartDirs {
 			assetList = append(assetList, gitAsset("helm", repo, dir, creds))
 		}
 	}
-	if stringx.ContainsAnyOf(targets, connection.DiscoveryAll, connection.DiscoveryKustomize) {
+	if stringx.Contains(targets, connection.DiscoveryKustomize) {
 		for _, dir := range iac.kustomizeDirs {
 			assetList = append(assetList, gitAsset("kustomize", repo, dir, creds))
 		}
