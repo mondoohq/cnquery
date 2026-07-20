@@ -5,6 +5,7 @@ package packages
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/url"
 	"os"
 	"strings"
@@ -1139,4 +1140,146 @@ func TestWindowsAppPackagesParserInstallDate(t *testing.T) {
 	withoutDate := findPkg(pkgs, "App Without Date")
 	require.NotNil(t, withoutDate)
 	assert.True(t, withoutDate.InstallDate.IsZero(), "missing InstallDate registry value yields zero time")
+}
+
+// regWireValue / regWireItem mirror the JSON shape emitted by the PowerShell
+// registry probe (registry.GetRegistryKeyItemScript), so tests can feed
+// getDotNetFramework's readRegistryItems realistic payloads.
+type regWireValue struct {
+	Kind int `json:"kind"`
+	Data any `json:"data"`
+}
+
+type regWireItem struct {
+	Key   string       `json:"key"`
+	Value regWireValue `json:"value"`
+}
+
+func regItemsJSON(t *testing.T, items ...regWireItem) string {
+	t.Helper()
+	b, err := json.Marshal(items)
+	require.NoError(t, err)
+	return string(b)
+}
+
+func szItem(key, value string) regWireItem {
+	return regWireItem{Key: key, Value: regWireValue{Kind: registry.SZ, Data: value}}
+}
+
+func dwordItem(key string, value int) regWireItem {
+	return regWireItem{Key: key, Value: regWireValue{Kind: registry.DWORD, Data: value}}
+}
+
+func TestGetDotNetFramework(t *testing.T) {
+	const (
+		v4Key   = "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full"
+		v35Key  = "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v3.5"
+		v4Path  = "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\"
+		v35Path = "C:\\Windows\\Microsoft.NET\\Framework64\\v3.5\\"
+	)
+
+	// Command keys exactly as getDotNetFramework issues them over the connection.
+	v4RegCmd := powershell.Encode(registry.GetRegistryKeyItemScript(v4Key))
+	v35RegCmd := powershell.Encode(registry.GetRegistryKeyItemScript(v35Key))
+	v4VerCmd := powershell.Encode(fmt.Sprintf(dotNetClrVersionScript, v4Path))
+	v35VerCmd := powershell.Encode(dotNetClr2VersionScript)
+
+	v4RegItems := regItemsJSON(t, szItem("InstallPath", v4Path), dwordItem("Release", 528449))
+	v4RegNoPath := regItemsJSON(t, dwordItem("Release", 528449))
+	v35Installed := regItemsJSON(t, dwordItem("Install", 1), szItem("InstallPath", v35Path))
+	v35NotInstalled := regItemsJSON(t, dwordItem("Install", 0), szItem("InstallPath", v35Path))
+
+	// Trailing CRLF verifies runPwshVersion trims the raw stdout.
+	v4Ver := snapCommandResult{stdout: "4.8.4795.0\r\n"}
+	v35Ver := snapCommandResult{stdout: "2.0.50727.9182\r\n"}
+
+	type want struct {
+		name    string
+		version string
+	}
+	tests := []struct {
+		name     string
+		commands map[string]snapCommandResult
+		want     []want
+	}{
+		{
+			name: "both 3.5 and 4.x present, reported side by side",
+			commands: map[string]snapCommandResult{
+				v4RegCmd:  {stdout: v4RegItems},
+				v4VerCmd:  v4Ver,
+				v35RegCmd: {stdout: v35Installed},
+				v35VerCmd: v35Ver,
+			},
+			want: []want{
+				{"Microsoft .NET Framework", "4.8.4795.0"},
+				{"Microsoft .NET Framework", "2.0.50727.9182"},
+			},
+		},
+		{
+			name: "only 4.x present (v3.5 key missing)",
+			commands: map[string]snapCommandResult{
+				v4RegCmd: {stdout: v4RegItems},
+				v4VerCmd: v4Ver,
+			},
+			want: []want{{"Microsoft .NET Framework", "4.8.4795.0"}},
+		},
+		{
+			name: "only 3.5 present (v4 key missing), sourced from CLR 2.0 build",
+			commands: map[string]snapCommandResult{
+				v35RegCmd: {stdout: v35Installed},
+				v35VerCmd: v35Ver,
+			},
+			want: []want{{"Microsoft .NET Framework", "2.0.50727.9182"}},
+		},
+		{
+			name: "3.5 key present but Install=0 is not reported",
+			commands: map[string]snapCommandResult{
+				v4RegCmd:  {stdout: v4RegItems},
+				v4VerCmd:  v4Ver,
+				v35RegCmd: {stdout: v35NotInstalled},
+				v35VerCmd: v35Ver,
+			},
+			want: []want{{"Microsoft .NET Framework", "4.8.4795.0"}},
+		},
+		{
+			name: "4.x key present without InstallPath is skipped",
+			commands: map[string]snapCommandResult{
+				v4RegCmd: {stdout: v4RegNoPath},
+				v4VerCmd: v4Ver,
+			},
+			want: nil,
+		},
+		{
+			name: "4.x present but clr.dll version blank is skipped",
+			commands: map[string]snapCommandResult{
+				v4RegCmd: {stdout: v4RegItems},
+				v4VerCmd: {stdout: "\r\n"},
+			},
+			want: nil,
+		},
+		{
+			name:     "neither runtime present",
+			commands: map[string]snapCommandResult{},
+			want:     nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := &WinPkgManager{
+				conn:     &snapTestConnection{commands: tt.commands},
+				platform: &inventory.Platform{Name: "windows", Arch: "amd64", Family: []string{"windows"}},
+			}
+
+			pkgs, err := w.getDotNetFramework()
+			require.NoError(t, err)
+			require.Len(t, pkgs, len(tt.want))
+			for i, wnt := range tt.want {
+				assert.Equal(t, wnt.name, pkgs[i].Name, "package %d name", i)
+				assert.Equal(t, wnt.version, pkgs[i].Version, "package %d version", i)
+				assert.Equal(t, "windows/app", pkgs[i].Format, "package %d format", i)
+				assert.Equal(t, "amd64", pkgs[i].Arch, "package %d arch", i)
+			}
+		})
+	}
 }
