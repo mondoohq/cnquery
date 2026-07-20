@@ -5,6 +5,7 @@ package resources
 
 import (
 	"encoding/json"
+	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/types"
@@ -27,6 +28,68 @@ func decodeExchangeList[T any](raw any) ([]*T, error) {
 		return nil, err
 	}
 	return out, nil
+}
+
+// exchangeDomainList decodes Exchange domain collections whose elements are
+// MultiValuedProperty<...> values (e.g. SmtpDomainWithSubdomains on hosted
+// content filter policies, SharingPolicyDomain on sharing policies).
+//
+// Depending on the cmdlet and PowerShell's ConvertTo-Json serialization, each
+// element is rendered either as a bare domain string ("contoso.com") or as an
+// object carrying a "Domain" field ({"Domain":"contoso.com",...}); a
+// single-element collection may additionally be emitted as a scalar instead of
+// an array. Decoding such objects into a plain []string fails with
+// "cannot unmarshal object into Go struct field ... of type string", which
+// aborts the whole resource. Normalizing every shape to a []string of domains
+// keeps decoding resilient for tenants that have any of these domains set.
+type exchangeDomainList []string
+
+func (d *exchangeDomainList) UnmarshalJSON(data []byte) error {
+	var raw any
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	*d = flattenExchangeDomains(raw)
+	return nil
+}
+
+func flattenExchangeDomains(v any) []string {
+	switch t := v.(type) {
+	case string:
+		if t == "" {
+			return nil
+		}
+		return []string{t}
+	case []any:
+		out := make([]string, 0, len(t))
+		for _, e := range t {
+			out = append(out, flattenExchangeDomains(e)...)
+		}
+		return out
+	case map[string]any:
+		if domain := exchangeDomainFromObject(t); domain != "" {
+			return []string{domain}
+		}
+		return nil
+	default:
+		return nil
+	}
+}
+
+func exchangeDomainFromObject(obj map[string]any) string {
+	// Preferred, explicitly-named keys first.
+	for _, key := range []string{"Domain", "SmtpDomain", "DomainName", "Name", "Address"} {
+		if s, ok := obj[key].(string); ok && s != "" {
+			return s
+		}
+	}
+	// Fallback: any string-valued key that looks like a domain.
+	for key, val := range obj {
+		if s, ok := val.(string); ok && s != "" && strings.Contains(strings.ToLower(key), "domain") {
+			return s
+		}
+	}
+	return ""
 }
 
 // --- Transport rules ---
@@ -293,17 +356,17 @@ func convertMalwareFilterPolicies(r *mqlMs365Exchangeonline, raw any) ([]any, er
 // --- Hosted content (spam) filter policies ---
 
 type ExchangeHostedContentFilterPolicy struct {
-	Identity                       string   `json:"Identity"`
-	Name                           string   `json:"Name"`
-	SpamAction                     string   `json:"SpamAction"`
-	HighConfidenceSpamAction       string   `json:"HighConfidenceSpamAction"`
-	PhishSpamAction                string   `json:"PhishSpamAction"`
-	HighConfidencePhishAction      string   `json:"HighConfidencePhishAction"`
-	BulkSpamAction                 string   `json:"BulkSpamAction"`
-	BulkThreshold                  int64    `json:"BulkThreshold"`
-	EnableEndUserSpamNotifications bool     `json:"EnableEndUserSpamNotifications"`
-	AllowedSenderDomains           []string `json:"AllowedSenderDomains"`
-	BlockedSenderDomains           []string `json:"BlockedSenderDomains"`
+	Identity                       string             `json:"Identity"`
+	Name                           string             `json:"Name"`
+	SpamAction                     string             `json:"SpamAction"`
+	HighConfidenceSpamAction       string             `json:"HighConfidenceSpamAction"`
+	PhishSpamAction                string             `json:"PhishSpamAction"`
+	HighConfidencePhishAction      string             `json:"HighConfidencePhishAction"`
+	BulkSpamAction                 string             `json:"BulkSpamAction"`
+	BulkThreshold                  int64              `json:"BulkThreshold"`
+	EnableEndUserSpamNotifications bool               `json:"EnableEndUserSpamNotifications"`
+	AllowedSenderDomains           exchangeDomainList `json:"AllowedSenderDomains"`
+	BlockedSenderDomains           exchangeDomainList `json:"BlockedSenderDomains"`
 }
 
 func convertHostedContentFilterPolicies(r *mqlMs365Exchangeonline, raw any) ([]any, error) {
@@ -328,8 +391,8 @@ func convertHostedContentFilterPolicies(r *mqlMs365Exchangeonline, raw any) ([]a
 				"bulkSpamAction":                 llx.StringData(p.BulkSpamAction),
 				"bulkThreshold":                  llx.IntData(p.BulkThreshold),
 				"enableEndUserSpamNotifications": llx.BoolData(p.EnableEndUserSpamNotifications),
-				"allowedSenderDomains":           llx.ArrayData(llx.TArr2Raw(p.AllowedSenderDomains), types.String),
-				"blockedSenderDomains":           llx.ArrayData(llx.TArr2Raw(p.BlockedSenderDomains), types.String),
+				"allowedSenderDomains":           llx.ArrayData(llx.TArr2Raw([]string(p.AllowedSenderDomains)), types.String),
+				"blockedSenderDomains":           llx.ArrayData(llx.TArr2Raw([]string(p.BlockedSenderDomains)), types.String),
 			})
 		if err != nil {
 			return nil, err
@@ -708,11 +771,11 @@ func convertAtpPoliciesForO365(r *mqlMs365Exchangeonline, raw any) ([]any, error
 // --- Sharing policies ---
 
 type ExchangeSharingPolicy struct {
-	Identity string   `json:"Identity"`
-	Name     string   `json:"Name"`
-	Enabled  bool     `json:"Enabled"`
-	Default  bool     `json:"Default"`
-	Domains  []string `json:"Domains"`
+	Identity string             `json:"Identity"`
+	Name     string             `json:"Name"`
+	Enabled  bool               `json:"Enabled"`
+	Default  bool               `json:"Default"`
+	Domains  exchangeDomainList `json:"Domains"`
 }
 
 func convertSharingPolicies(r *mqlMs365Exchangeonline, raw any) ([]any, error) {
@@ -732,7 +795,7 @@ func convertSharingPolicies(r *mqlMs365Exchangeonline, raw any) ([]any, error) {
 				"name":      llx.StringData(p.Name),
 				"enabled":   llx.BoolData(p.Enabled),
 				"isDefault": llx.BoolData(p.Default),
-				"domains":   llx.ArrayData(llx.TArr2Raw(p.Domains), types.String),
+				"domains":   llx.ArrayData(llx.TArr2Raw([]string(p.Domains)), types.String),
 			})
 		if err != nil {
 			return nil, err
