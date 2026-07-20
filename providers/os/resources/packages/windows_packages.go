@@ -310,6 +310,10 @@ func (w *WinPkgManager) getLocalInstalledApps() ([]Package, error) {
 //
 // Registry and version probes run over the active connection via PowerShell, so
 // this works for remote connections (e.g. SSH) as well as a local Windows host.
+//
+// This is called from exactly one enumeration path per connection type
+// (getLocalInstalledApps for a local Windows host, getInstalledApps for remote
+// connections), so the returned packages are not duplicated.
 func (w *WinPkgManager) getDotNetFramework() ([]Package, error) {
 	packages := []Package{}
 
@@ -339,7 +343,7 @@ func (w *WinPkgManager) getDotNetFramework4x() (*Package, error) {
 
 	items, err := w.readRegistryItems(dotNet45plus)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not read registry key %q: %w", dotNet45plus, err)
 	}
 
 	installLocation := ""
@@ -374,7 +378,7 @@ func (w *WinPkgManager) getDotNetFramework35() (*Package, error) {
 
 	items, err := w.readRegistryItems(dotNet35)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not read registry key %q: %w", dotNet35, err)
 	}
 
 	installed := false
