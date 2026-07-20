@@ -107,6 +107,39 @@ func TestOktaLinkHref(t *testing.T) {
 	assert.Equal(t, "", oktaLinkHref(nil))
 }
 
+func TestOktaOAuthClientID(t *testing.T) {
+	tests := []struct {
+		name  string
+		creds any
+		want  string
+	}{
+		{
+			name: "OIDC app credentials",
+			creds: map[string]any{
+				"oauthClient": map[string]any{"client_id": "0oa1b2c3d4"},
+			},
+			want: "0oa1b2c3d4",
+		},
+		{
+			name:  "non-oauth app (no oauthClient)",
+			creds: map[string]any{"userNameTemplate": map[string]any{"type": "BUILT_IN"}},
+			want:  "",
+		},
+		{
+			name:  "oauthClient without client_id",
+			creds: map[string]any{"oauthClient": map[string]any{"autoKeyRotation": true}},
+			want:  "",
+		},
+		{name: "nil credentials", creds: nil, want: ""},
+		{name: "wrong type", creds: "not-a-map", want: ""},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, oktaOAuthClientID(tc.creds))
+		})
+	}
+}
+
 func TestLastPathSegment(t *testing.T) {
 	assert.Equal(t, "g1", lastPathSegment("https://x/api/v1/groups/g1"))
 	assert.Equal(t, "g1", lastPathSegment("https://x/api/v1/groups/g1/"))

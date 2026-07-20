@@ -493,6 +493,18 @@ private okta.application @defaults("name") {
   visibility dict
   // Signing keys/certificates published for this application (for SAML/OIDC signing)
   signingKeys() []okta.application.key
+  // Users assigned to the application
+  assignedUsers() []okta.application.user
+  // Groups assigned to the application
+  assignedGroups() []okta.application.groupAssignment
+  // OAuth 2.0 scope consent grants made to the application
+  scopeConsentGrants() []okta.application.scopeConsentGrant
+  // Administrator roles assigned to the application's OAuth client
+  //
+  // Admin roles granted to the app as a service (OAuth 2.0) client, for
+  // apps that authenticate to the Okta API on their own behalf. Empty for
+  // apps that are not API service clients.
+  adminRoles() []okta.role
 }
 
 // Okta application signing key
@@ -533,6 +545,102 @@ private okta.application.key @defaults("kid status expiresAt") {
   n string
   // RSA exponent
   e string
+}
+
+// User assigned to an Okta application
+//
+// Assignment of a single Okta user to an application, carrying the
+// app-specific view of that account. The `scope` field records whether the
+// assignment is direct (USER) or inherited through a group (GROUP), `status`
+// reflects the app-level provisioning state, and `credentials` and `profile`
+// hold the application username and any app-specific profile attributes. The
+// `user` field resolves the underlying Okta account. Auditing these answers
+// "who can sign in to this app, and how were they granted access".
+private okta.application.user @defaults("scope status") {
+  // Unique identifier of the assigned user (the Okta user id)
+  id string
+  // How the assignment was granted
+  //
+  // Either USER for a direct assignment or GROUP for access inherited
+  // through group membership.
+  scope string
+  // Application-level provisioning status of the user
+  status string
+  // Provisioning sync state of the assignment
+  syncState string
+  // Timestamp when the assignment was created
+  created time
+  // Timestamp when the assignment was last updated
+  lastUpdated time
+  // Timestamp of the last provisioning sync
+  lastSync time
+  // Application credentials for the user
+  //
+  // Holds the app-specific `userName` (and, for schemes that store it,
+  // password metadata) used when signing the user in to the application.
+  credentials dict
+  // Application-specific profile attributes for the user
+  profile dict
+  // The Okta user account this assignment refers to
+  user() okta.user
+}
+
+// Group assigned to an Okta application
+//
+// Assignment of an Okta group to an application, granting the app to every
+// member of the group. The `priority` field orders overlapping group
+// assignments when they supply conflicting profile values, `profile` holds
+// the app-specific attributes applied to members, and `group` resolves the
+// underlying Okta group. Auditing these surfaces access granted in bulk
+// rather than per user.
+private okta.application.groupAssignment @defaults("id priority") {
+  // Unique identifier of the assigned group (the Okta group id)
+  id string
+  // Assignment priority
+  //
+  // Orders overlapping group assignments; lower numbers win when assignments
+  // supply conflicting profile values.
+  priority int
+  // Application-specific profile attributes applied to group members
+  profile dict
+  // Timestamp when the assignment was last updated
+  lastUpdated time
+  // The Okta group this assignment refers to
+  group() okta.group
+}
+
+// OAuth 2.0 scope consent grant for an Okta application
+//
+// Consent that authorizes an application to act with a specific OAuth 2.0
+// scope against an Okta authorization server. Auditing grants surfaces the
+// API access an app (or a user through an app) has been permitted: `scopeId`
+// names the granted scope, `issuer` identifies the authorization server,
+// `status` reflects whether the grant is active, and `source` records whether
+// consent was granted by an admin or an end user. The `user` field resolves
+// the account for user-level grants and is null for org-level grants.
+private okta.application.scopeConsentGrant @defaults("scopeId status") {
+  // Unique identifier of the grant
+  id string
+  // Granted OAuth 2.0 scope
+  scopeId string
+  // Authorization server that issued the grant
+  issuer string
+  // Status of the grant: ACTIVE or INACTIVE
+  status string
+  // Consent source
+  //
+  // Records how consent was obtained, for example ADMIN for an
+  // administrator grant or END_USER for user consent.
+  source string
+  // Timestamp when the grant was created
+  created time
+  // Timestamp when the grant was last updated
+  lastUpdated time
+  // The user for a user-level grant
+  //
+  // Resolves the Okta account when the grant was made on behalf of a
+  // specific user. Null for org-level grants.
+  user() okta.user
 }
 
 // Okta Domain
