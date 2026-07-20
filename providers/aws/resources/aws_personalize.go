@@ -74,6 +74,10 @@ func (a *mqlAwsPersonalize) getDatasetGroups(conn *connection.AwsConnection) []*
 						log.Warn().Str("region", region).Msg("error accessing region for AWS Personalize API")
 						return res, nil
 					}
+					if IsServiceNotAvailableInRegionError(err) {
+						log.Debug().Str("region", region).Msg("Personalize is not available in region")
+						return res, nil
+					}
 					return nil, err
 				}
 				for _, dg := range page.DatasetGroups {
@@ -491,6 +495,10 @@ func (a *mqlAwsPersonalize) getSchemas(conn *connection.AwsConnection) []*jobpoo
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS Personalize API")
+						return res, nil
+					}
+					if IsServiceNotAvailableInRegionError(err) {
+						log.Debug().Str("region", region).Msg("Personalize is not available in region")
 						return res, nil
 					}
 					return nil, err

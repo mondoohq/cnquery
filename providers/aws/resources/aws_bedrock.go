@@ -1845,7 +1845,12 @@ func bedrockResourcePolicyJSON(runtime *plugin.Runtime, region, arn string) (str
 	svc := conn.Bedrock(region)
 	resp, err := svc.GetResourcePolicy(context.Background(), &bedrock.GetResourcePolicyInput{ResourceArn: &arn})
 	if err != nil {
-		if Is400AccessDeniedError(err) {
+		// A resource with no attached policy, or a resource type that does not
+		// support resource-based policies at all (system-defined inference
+		// profiles return ValidationException "operation is not recognized"),
+		// simply has no policy to report - degrade to empty rather than failing
+		// the whole collection.
+		if Is400AccessDeniedError(err) || isResourceNotFoundError(err) || isOperationNotSupportedError(err) {
 			return "", nil
 		}
 		return "", err

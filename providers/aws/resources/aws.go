@@ -107,6 +107,18 @@ func isResourceNotFoundError(err error) bool {
 	return false
 }
 
+// isOperationNotSupportedError reports whether err is an AWS ValidationException
+// meaning the operation is not valid for the target resource - e.g. Bedrock
+// GetResourcePolicy on a system-defined inference profile returns "The requested
+// operation is not recognized by the service". Such a resource has no
+// resource-based policy to report, so callers degrade to an empty policy.
+func isOperationNotSupportedError(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "not recognized by the service")
+}
+
 // isBadRequestError checks if the error is a 400 Bad Request error
 // This is used to handle cases where a feature is not enabled for an AWS account
 func isBadRequestError(err error) bool {
