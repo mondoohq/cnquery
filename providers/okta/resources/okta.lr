@@ -48,8 +48,6 @@ okta {
   logStreams() []okta.logStream
   // API service integrations granted OAuth 2.0 access to the org
   apiServiceIntegrations() []okta.apiServiceIntegration
-  // Organization brute-force and account-lockout protection settings
-  attackProtection() okta.attackProtection
   // Behavior detection rules evaluated during sign-on
   behaviorRules() []okta.behaviorRule
   // Third-party risk signal providers integrated with the org
@@ -1539,7 +1537,10 @@ private okta.behaviorRule @defaults("name type status") {
   name string
   // Behavior rule type
   //
-  // One of ANOMALOUS_DEVICE, ANOMALOUS_IP, ANOMALOUS_LOCATION, or VELOCITY.
+  // The behavior evaluated, such as ANOMALOUS_DEVICE, ANOMALOUS_IP,
+  // ANOMALOUS_LOCATION, VELOCITY, or a new-factor rule like NEW_ASN,
+  // NEW_DEVICE, NEW_IP, NEW_CITY, NEW_STATE, NEW_COUNTRY, or
+  // NEW_GEO_LOCATION.
   type string
   // Status of the rule: ACTIVE or INACTIVE
   status string

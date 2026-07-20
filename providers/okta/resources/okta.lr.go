@@ -219,7 +219,7 @@ func init() {
 			Create: createOktaApiServiceIntegration,
 		},
 		"okta.attackProtection": {
-			// to override args, implement: initOktaAttackProtection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOktaAttackProtection,
 			Create: createOktaAttackProtection,
 		},
 		"okta.behaviorRule": {
@@ -366,9 +366,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"okta.apiServiceIntegrations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOkta).GetApiServiceIntegrations()).ToDataRes(types.Array(types.Resource("okta.apiServiceIntegration")))
-	},
-	"okta.attackProtection": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOkta).GetAttackProtection()).ToDataRes(types.Resource("okta.attackProtection"))
 	},
 	"okta.behaviorRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOkta).GetBehaviorRules()).ToDataRes(types.Array(types.Resource("okta.behaviorRule")))
@@ -1713,10 +1710,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"okta.apiServiceIntegrations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOkta).ApiServiceIntegrations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"okta.attackProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOkta).AttackProtection, ok = plugin.RawToTValue[*mqlOktaAttackProtection](v.Value, v.Error)
 		return
 	},
 	"okta.behaviorRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3614,7 +3607,6 @@ type mqlOkta struct {
 	HookKeys                plugin.TValue[[]any]
 	LogStreams              plugin.TValue[[]any]
 	ApiServiceIntegrations  plugin.TValue[[]any]
-	AttackProtection        plugin.TValue[*mqlOktaAttackProtection]
 	BehaviorRules           plugin.TValue[[]any]
 	RiskProviders           plugin.TValue[[]any]
 	Devices                 plugin.TValue[[]any]
@@ -3944,22 +3936,6 @@ func (c *mqlOkta) GetApiServiceIntegrations() *plugin.TValue[[]any] {
 		}
 
 		return c.apiServiceIntegrations()
-	})
-}
-
-func (c *mqlOkta) GetAttackProtection() *plugin.TValue[*mqlOktaAttackProtection] {
-	return plugin.GetOrCompute[*mqlOktaAttackProtection](&c.AttackProtection, func() (*mqlOktaAttackProtection, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("okta", c.__id, "attackProtection")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlOktaAttackProtection), nil
-			}
-		}
-
-		return c.attackProtection()
 	})
 }
 

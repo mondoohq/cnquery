@@ -5,7 +5,7 @@ package resources
 
 import (
 	"context"
-	"encoding/json"
+	"net/http"
 	"time"
 
 	"github.com/okta/okta-sdk-golang/v5/okta"
@@ -13,124 +13,122 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/okta/connection"
+	"go.mondoo.com/mql/v13/providers/okta/resources/sdk"
 )
 
 // --- attack protection (org-level singleton) ---
 
-func (o *mqlOkta) attackProtection() (*mqlOktaAttackProtection, error) {
-	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
-	client := conn.Client()
+// initOktaAttackProtection populates the singleton on construction. It is an
+// init rather than an okta accessor because okta.attackProtection is a
+// directly-addressable resource: a field of the same dotted name would collide
+// with the resource and leave the fields unset when queried as
+// `okta.attackProtection`.
+func initOktaAttackProtection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	conn := runtime.Connection.(*connection.OktaConnection)
 	ctx := context.Background()
-
-	var preventLockout bool
-	lockout, _, err := client.AttackProtectionAPI.GetUserLockoutSettings(ctx).Execute()
-	if err != nil {
-		return nil, err
-	}
-	if len(lockout) > 0 && lockout[0].PreventBruteForceLockoutFromUnknownDevices != nil {
-		preventLockout = *lockout[0].PreventBruteForceLockoutFromUnknownDevices
+	apiSupplement := &sdk.ApiExtension{
+		Host:  conn.OrganizationID(),
+		Token: conn.Token(),
 	}
 
-	var verifyKnowledge bool
-	authSettings, _, err := client.AttackProtectionAPI.GetAuthenticatorSettings(ctx).Execute()
+	// Fetched through the extension: the SDK types both attack-protection
+	// endpoints as slices, but each returns a single JSON object, so the SDK's
+	// Execute() fails to unmarshal.
+	settings, _, err := apiSupplement.GetAttackProtectionSettings(ctx)
 	if err != nil {
-		return nil, err
-	}
-	if len(authSettings) > 0 && authSettings[0].VerifyKnowledgeSecondWhen2faRequired != nil {
-		verifyKnowledge = *authSettings[0].VerifyKnowledgeSecondWhen2faRequired
+		return nil, nil, err
 	}
 
-	r, err := CreateResource(o.MqlRuntime, "okta.attackProtection", map[string]*llx.RawData{
-		"__id": llx.StringData("okta.attackProtection"),
-		"preventBruteForceLockoutFromUnknownDevices": llx.BoolData(preventLockout),
-		"verifyKnowledgeSecondWhen2faRequired":       llx.BoolData(verifyKnowledge),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return r.(*mqlOktaAttackProtection), nil
+	args["__id"] = llx.StringData("okta.attackProtection")
+	args["preventBruteForceLockoutFromUnknownDevices"] = llx.BoolData(settings.PreventBruteForceLockoutFromUnknownDevices)
+	args["verifyKnowledgeSecondWhen2faRequired"] = llx.BoolData(settings.VerifyKnowledgeSecondWhen2faRequired)
+	return args, nil, nil
 }
 
 // --- behavior detection rules ---
 
 func (o *mqlOkta) behaviorRules() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
-	client := conn.Client()
-
 	ctx := context.Background()
-	slice, resp, err := client.BehaviorAPI.ListBehaviorDetectionRules(ctx).Execute()
+	apiSupplement := &sdk.ApiExtension{
+		Host:  conn.OrganizationID(),
+		Token: conn.Token(),
+	}
+
+	// Fetched through the extension rather than the SDK: the /api/v1/behaviors
+	// endpoint returns non-RFC3339 timestamps ("2026-07-20 17:34:59.0") that
+	// break the SDK's strict time unmarshaling.
+	rules, resp, err := apiSupplement.ListBehaviorRules(ctx)
 	if err != nil {
+		if resp != nil && resp.StatusCode == http.StatusNotFound {
+			return nil, nil
+		}
 		return nil, err
 	}
 
 	list := []any{}
-	appendEntry := func(datalist []okta.ListBehaviorDetectionRules200ResponseInner) error {
-		for i := range datalist {
-			r, err := newMqlOktaBehaviorRule(o.MqlRuntime, &datalist[i])
-			if err != nil {
-				return err
-			}
-			list = append(list, r)
-		}
-		return nil
-	}
-
-	if err := appendEntry(slice); err != nil {
-		return nil, err
-	}
-	for resp != nil && resp.HasNextPage() {
-		var page []okta.ListBehaviorDetectionRules200ResponseInner
-		resp, err = resp.Next(&page)
+	for i := range rules {
+		r, err := newMqlOktaBehaviorRule(o.MqlRuntime, rules[i])
 		if err != nil {
 			return nil, err
 		}
-		if err := appendEntry(page); err != nil {
-			return nil, err
-		}
+		list = append(list, r)
 	}
 	return list, nil
 }
 
-// oktaBehaviorRuleRaw flattens the polymorphic behavior rule (anomalous
-// device/IP/location or velocity). All variants share the base fields and a
-// type-specific settings object, so re-marshaling to JSON gives one code path.
-type oktaBehaviorRuleRaw struct {
-	Id          string     `json:"id"`
-	Name        string     `json:"name"`
-	Type        string     `json:"type"`
-	Status      string     `json:"status"`
-	Settings    any        `json:"settings"`
-	Created     *time.Time `json:"created"`
-	LastUpdated *time.Time `json:"lastUpdated"`
-}
-
-func newMqlOktaBehaviorRule(runtime *plugin.Runtime, entry *okta.ListBehaviorDetectionRules200ResponseInner) (any, error) {
-	raw, err := json.Marshal(entry.GetActualInstance())
-	if err != nil {
-		return nil, err
-	}
-	var rule oktaBehaviorRuleRaw
-	if err := json.Unmarshal(raw, &rule); err != nil {
-		return nil, err
-	}
-	settings, err := convert.JsonToDict(rule.Settings)
+func newMqlOktaBehaviorRule(runtime *plugin.Runtime, rule map[string]any) (any, error) {
+	settings, err := convert.JsonToDict(rule["settings"])
 	if err != nil {
 		return nil, err
 	}
 
 	return CreateResource(runtime, "okta.behaviorRule", map[string]*llx.RawData{
-		"id":          llx.StringData(rule.Id),
-		"name":        llx.StringData(rule.Name),
-		"type":        llx.StringData(rule.Type),
-		"status":      llx.StringData(rule.Status),
+		"id":          llx.StringData(oktaMapStr(rule, "id")),
+		"name":        llx.StringData(oktaMapStr(rule, "name")),
+		"type":        llx.StringData(oktaMapStr(rule, "type")),
+		"status":      llx.StringData(oktaMapStr(rule, "status")),
 		"settings":    llx.DictData(settings),
-		"created":     llx.TimeDataPtr(rule.Created),
-		"lastUpdated": llx.TimeDataPtr(rule.LastUpdated),
+		"created":     llx.TimeDataPtr(parseOktaTimestamp(oktaMapStr(rule, "created"))),
+		"lastUpdated": llx.TimeDataPtr(parseOktaTimestamp(oktaMapStr(rule, "lastUpdated"))),
 	})
 }
 
 func (o *mqlOktaBehaviorRule) id() (string, error) {
 	return "okta.behaviorRule/" + o.Id.Data, o.Id.Error
+}
+
+// oktaMapStr reads a string value from an untyped JSON map, returning "" when
+// the key is missing or not a string.
+func oktaMapStr(m map[string]any, key string) string {
+	if v, ok := m[key].(string); ok {
+		return v
+	}
+	return ""
+}
+
+// parseOktaTimestamp parses the timestamp forms Okta returns, including the
+// legacy space-separated form some endpoints (behaviors) use in addition to
+// RFC3339. Returns nil when the value is empty or unparseable so the field
+// renders as null rather than a zero time.
+func parseOktaTimestamp(s string) *time.Time {
+	if s == "" {
+		return nil
+	}
+	for _, layout := range []string{
+		time.RFC3339,
+		"2006-01-02 15:04:05.999999999",
+		"2006-01-02 15:04:05",
+	} {
+		if t, err := time.Parse(layout, s); err == nil {
+			return &t
+		}
+	}
+	return nil
 }
 
 // --- risk providers ---
@@ -142,6 +140,12 @@ func (o *mqlOkta) riskProviders() ([]any, error) {
 	ctx := context.Background()
 	slice, resp, err := client.RiskProviderAPI.ListRiskProviders(ctx).Execute()
 	if err != nil {
+		// The risk providers endpoint is not available on every org edition
+		// and returns 410 Gone (or 404) when the feature is absent; degrade to
+		// an empty result rather than failing the query.
+		if resp != nil && (resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusGone) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
