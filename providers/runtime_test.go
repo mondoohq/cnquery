@@ -12,6 +12,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	inventory "go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/recording"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
 	"go.uber.org/mock/gomock"
@@ -868,4 +870,60 @@ func mustIndex(t *testing.T, s, sub string) int {
 	}
 	t.Fatalf("substring %q not found in %q", sub, s)
 	return -1
+}
+
+func TestPropagateMondooLabelsToDiscoveredAssets(t *testing.T) {
+	connAsset := &inventory.Asset{
+		Labels: map[string]string{
+			"mondoo.com/integration-mrn": "//integration.api.mondoo.app/spaces/x/integrations/y",
+			"k8s.mondoo.com/something":   "val",
+			"some-plain-label":           "must-not-propagate",
+		},
+	}
+
+	t.Run("stamps mondoo labels on all discovered assets", func(t *testing.T) {
+		related := &inventory.Asset{Labels: map[string]string{"gcp-label": "raw"}}
+		conn := &plugin.ConnectRes{
+			Asset: connAsset,
+			Inventory: &inventory.Inventory{Spec: &inventory.InventorySpec{
+				Assets: []*inventory.Asset{
+					{Labels: map[string]string{"own-label": "kept"}, RelatedAssets: []*inventory.Asset{related}},
+					{}, // nil labels map
+				},
+			}},
+		}
+
+		propagateMondooLabelsToDiscoveredAssets(conn)
+
+		for _, discovered := range append(conn.Inventory.Spec.Assets, related) {
+			assert.Equal(t, "//integration.api.mondoo.app/spaces/x/integrations/y", discovered.Labels["mondoo.com/integration-mrn"])
+			assert.Equal(t, "val", discovered.Labels["k8s.mondoo.com/something"])
+			assert.NotContains(t, discovered.Labels, "some-plain-label")
+		}
+		assert.Equal(t, "kept", conn.Inventory.Spec.Assets[0].Labels["own-label"])
+		assert.Equal(t, "raw", related.Labels["gcp-label"])
+	})
+
+	t.Run("stamps only the first level of related assets", func(t *testing.T) {
+		nested := &inventory.Asset{}
+		related := &inventory.Asset{RelatedAssets: []*inventory.Asset{nested}}
+		conn := &plugin.ConnectRes{
+			Asset: connAsset,
+			Inventory: &inventory.Inventory{Spec: &inventory.InventorySpec{
+				Assets: []*inventory.Asset{{RelatedAssets: []*inventory.Asset{related}}},
+			}},
+		}
+
+		propagateMondooLabelsToDiscoveredAssets(conn)
+
+		assert.Equal(t, "val", related.Labels["k8s.mondoo.com/something"])
+		assert.NotContains(t, nested.Labels, "k8s.mondoo.com/something")
+	})
+
+	t.Run("tolerates nil connection, asset, and inventory", func(t *testing.T) {
+		propagateMondooLabelsToDiscoveredAssets(nil)
+		propagateMondooLabelsToDiscoveredAssets(&plugin.ConnectRes{})
+		propagateMondooLabelsToDiscoveredAssets(&plugin.ConnectRes{Asset: connAsset})
+		propagateMondooLabelsToDiscoveredAssets(&plugin.ConnectRes{Asset: connAsset, Inventory: &inventory.Inventory{}})
+	})
 }

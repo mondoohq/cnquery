@@ -398,11 +398,48 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 		}
 	}
 
+	// Providers only propagate provider-native labels (project labels, account
+	// tags) to the assets they discover. Mondoo-specific labels on the
+	// connecting asset (e.g. an integration MRN supplied via the inventory)
+	// must reach every discovered asset too, and this is the one spot all
+	// providers' discovery results pass through — including assets that are
+	// later consumed without ever being connected client-side.
+	propagateMondooLabelsToDiscoveredAssets(r.Provider.Connection)
+
 	if !r.Provider.Connection.Asset.Connections[0].DelayDiscovery {
 		r.Recording().EnsureAsset(r.Provider.Connection.Asset, r.Provider.Instance.ID, r.Provider.Connection.Id, asset.Connections[0])
 	}
 	// r.schema.prioritizeIDs(BuiltinCoreID, r.Provider.Instance.ID)
 	return nil
+}
+
+// propagateMondooLabelsToDiscoveredAssets merges the mondoo-specific labels
+// (`mondoo.com/*`) of a connection's asset into every asset that connection
+// discovered, including their direct RelatedAssets (upstream mints real asset
+// records from those, so a missing label there surfaces as an asset without
+// e.g. its integration MRN). This cascades through nested discovery: when a
+// discovered asset is connected later, its own connection re-runs this and
+// hands the labels down another level (e.g. org -> project -> instance).
+//
+// Note: only the first level of RelatedAssets is stamped for now — no
+// provider nests them deeper today. If that changes, this needs recursion
+// with cycle protection.
+func propagateMondooLabelsToDiscoveredAssets(conn *plugin.ConnectRes) {
+	if conn == nil || conn.Asset == nil || conn.Inventory == nil || conn.Inventory.Spec == nil {
+		return
+	}
+	for _, discovered := range conn.Inventory.Spec.Assets {
+		if discovered == nil {
+			continue
+		}
+		discovered.AddMondooLabels(conn.Asset)
+		for _, related := range discovered.RelatedAssets {
+			if related == nil {
+				continue
+			}
+			related.AddMondooLabels(conn.Asset)
+		}
+	}
 }
 
 func (r *Runtime) AssetUpdated(asset *inventory.Asset) {
