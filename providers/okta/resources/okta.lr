@@ -48,6 +48,18 @@ okta {
   logStreams() []okta.logStream
   // API service integrations granted OAuth 2.0 access to the org
   apiServiceIntegrations() []okta.apiServiceIntegration
+  // Organization brute-force and account-lockout protection settings
+  attackProtection() okta.attackProtection
+  // Behavior detection rules evaluated during sign-on
+  behaviorRules() []okta.behaviorRule
+  // Third-party risk signal providers integrated with the org
+  riskProviders() []okta.riskProvider
+  // Devices enrolled in the org
+  devices() []okta.device
+  // Device assurance policies enforcing device-trust requirements
+  deviceAssurancePolicies() []okta.deviceAssurancePolicy
+  // Security events providers feeding shared security signals to the org
+  securityEventsProviders() []okta.securityEventsProvider
 }
 
 // Okta Organization
@@ -1494,4 +1506,157 @@ private okta.apiServiceIntegration @defaults("name type") {
   createdBy string
   // Timestamp when the integration instance was created
   createdAt time
+}
+
+// Okta Attack Protection Settings
+//
+// Organization-wide protection against brute-force and password-spray
+// attacks. Auditing these confirms account-lockout defenses are enforced:
+// `preventBruteForceLockoutFromUnknownDevices` reports whether lockout
+// protection extends to sign-ins from unrecognized devices, and
+// `verifyKnowledgeSecondWhen2faRequired` reports whether a knowledge factor
+// is verified second when multifactor is required.
+okta.attackProtection @defaults("preventBruteForceLockoutFromUnknownDevices") {
+  // Whether brute-force lockout protection applies to unknown devices
+  preventBruteForceLockoutFromUnknownDevices bool
+  // Whether a knowledge factor is verified second when 2FA is required
+  verifyKnowledgeSecondWhen2faRequired bool
+}
+
+// Okta Behavior Detection Rule
+//
+// Rule that flags anomalous sign-in behavior so sign-on policies can require
+// step-up authentication. Auditing behavior rules surfaces which risk signals
+// the org detects: the `type` field selects the behavior evaluated (new
+// device, new IP, new geolocation, or velocity), `settings` holds the
+// type-specific thresholds, and `status` indicates whether the rule is active.
+// Select a rule by its `name`.
+private okta.behaviorRule @defaults("name type status") {
+  // Unique identifier of the behavior rule
+  id string
+  // Display name of the behavior rule
+  name string
+  // Behavior rule type
+  //
+  // One of ANOMALOUS_DEVICE, ANOMALOUS_IP, ANOMALOUS_LOCATION, or VELOCITY.
+  type string
+  // Status of the rule: ACTIVE or INACTIVE
+  status string
+  // Type-specific detection settings
+  //
+  // Shape varies by `type`. Holds the thresholds and evaluation parameters
+  // for the behavior, such as the number of recent authentications retained
+  // for a location or device rule, or the velocity distance and time.
+  settings dict
+  // Timestamp when the rule was created
+  created time
+  // Timestamp when the rule was last updated
+  lastUpdated time
+}
+
+// Okta Risk Provider
+//
+// Third-party service that feeds risk signals into Okta sign-on decisions.
+// Auditing risk providers surfaces external inputs to authentication risk:
+// `action` reports how Okta consumes the signal, and `clientId` identifies the
+// OAuth 2.0 client the provider authenticates as. Select a provider by its
+// `name`.
+private okta.riskProvider @defaults("name action") {
+  // Unique identifier of the risk provider
+  id string
+  // Display name of the risk provider
+  name string
+  // How Okta consumes the provider's risk signal
+  action string
+  // OAuth 2.0 client identifier the provider authenticates as
+  clientId string
+  // Timestamp when the risk provider was created
+  created time
+  // Timestamp when the risk provider was last updated
+  lastUpdated time
+}
+
+// Okta Device
+//
+// Device enrolled in the Okta org, tracked for device-trust and conditional
+// access decisions. Auditing devices surfaces the endpoint population and its
+// security posture: `profile` carries the hardware and OS attributes
+// (platform, OS version, disk encryption, jailbreak state, secure hardware),
+// `status` reflects the device lifecycle, and `users` lists the Okta accounts
+// that use the device. Select a device by its `id`.
+private okta.device @defaults("status") {
+  // Unique identifier of the device
+  id string
+  // Current lifecycle status of the device
+  //
+  // One of CREATED, ACTIVE, SUSPENDED, DEACTIVATED, or UNENROLLED.
+  status string
+  // Resource type of the device record
+  resourceType string
+  // Device hardware and OS attributes
+  //
+  // Profile object with keys including `displayName`, `platform`,
+  // `manufacturer`, `model`, `osVersion`, `serialNumber`, `registered`,
+  // `secureHardwarePresent`, `diskEncryptionType`, and `integrityJailbreak`.
+  profile dict
+  // Timestamp when the device was created
+  created time
+  // Timestamp when the device was last updated
+  lastUpdated time
+  // Okta users that use this device
+  users() []okta.user
+}
+
+// Okta Device Assurance Policy
+//
+// Policy that defines the device-trust requirements an endpoint must meet to
+// gain access, evaluated by sign-on policies. Auditing these confirms the
+// minimum device posture the org enforces: the `platform` field selects the
+// operating system the policy applies to, and `settings` holds the required
+// constraints such as minimum OS version, disk encryption, screen lock, and
+// secure-hardware or jailbreak checks. Select a policy by its `name`.
+private okta.deviceAssurancePolicy @defaults("name platform") {
+  // Unique identifier of the device assurance policy
+  id string
+  // Display name of the policy
+  name string
+  // Platform the policy applies to
+  //
+  // One of ANDROID, IOS, MACOS, WINDOWS, or CHROMEOS.
+  platform string
+  // Required device-trust constraints
+  //
+  // Shape varies by `platform`. Holds the enforced requirements such as
+  // `osVersion` (minimum version), `diskEncryptionType`, `screenLockType`,
+  // `jailbreak`, and `secureHardwarePresent`.
+  settings dict
+  // Timestamp when the policy was created
+  created time
+  // Timestamp when the policy was last updated
+  lastUpdated time
+}
+
+// Okta Security Events Provider
+//
+// External provider that shares security signals with the Okta org through
+// the Shared Signals Framework (SSF/CAEP), enabling continuous access
+// evaluation. Auditing these surfaces the cross-vendor trust relationships
+// feeding real-time security events: `type` identifies the provider,
+// `settings` carries the signal endpoints (issuer, JWKS URL, and well-known
+// configuration URL), and `status` indicates whether the integration is
+// active. Select a provider by its `name`.
+private okta.securityEventsProvider @defaults("name type status") {
+  // Unique identifier of the security events provider
+  id string
+  // Display name of the provider
+  name string
+  // Provider type
+  type string
+  // Status of the provider: ACTIVE or INACTIVE
+  status string
+  // Signal endpoint settings
+  //
+  // Dict with keys `issuer`, `jwks_url`, and `well_known_url` identifying the
+  // provider's security event stream and its signing keys.
+  settings dict
 }
