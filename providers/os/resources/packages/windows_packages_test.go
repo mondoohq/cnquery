@@ -1193,14 +1193,14 @@ func TestGetDotNetFramework(t *testing.T) {
 	v4Ver := snapCommandResult{stdout: "4.8.4795.0\r\n"}
 	v35Ver := snapCommandResult{stdout: "2.0.50727.9182\r\n"}
 
-	type want struct {
+	type wantPkg struct {
 		name    string
 		version string
 	}
 	tests := []struct {
 		name     string
 		commands map[string]snapCommandResult
-		want     []want
+		want     []wantPkg
 	}{
 		{
 			name: "both 3.5 and 4.x present, reported side by side",
@@ -1210,7 +1210,7 @@ func TestGetDotNetFramework(t *testing.T) {
 				v35RegCmd: {stdout: v35Installed},
 				v35VerCmd: v35Ver,
 			},
-			want: []want{
+			want: []wantPkg{
 				{"Microsoft .NET Framework", "4.8.4795.0"},
 				{"Microsoft .NET Framework", "2.0.50727.9182"},
 			},
@@ -1221,7 +1221,7 @@ func TestGetDotNetFramework(t *testing.T) {
 				v4RegCmd: {stdout: v4RegItems},
 				v4VerCmd: v4Ver,
 			},
-			want: []want{{"Microsoft .NET Framework", "4.8.4795.0"}},
+			want: []wantPkg{{"Microsoft .NET Framework", "4.8.4795.0"}},
 		},
 		{
 			name: "only 3.5 present (v4 key missing), sourced from CLR 2.0 build",
@@ -1229,7 +1229,7 @@ func TestGetDotNetFramework(t *testing.T) {
 				v35RegCmd: {stdout: v35Installed},
 				v35VerCmd: v35Ver,
 			},
-			want: []want{{"Microsoft .NET Framework", "2.0.50727.9182"}},
+			want: []wantPkg{{"Microsoft .NET Framework", "2.0.50727.9182"}},
 		},
 		{
 			name: "3.5 key present but Install=0 is not reported",
@@ -1239,7 +1239,7 @@ func TestGetDotNetFramework(t *testing.T) {
 				v35RegCmd: {stdout: v35NotInstalled},
 				v35VerCmd: v35Ver,
 			},
-			want: []want{{"Microsoft .NET Framework", "4.8.4795.0"}},
+			want: []wantPkg{{"Microsoft .NET Framework", "4.8.4795.0"}},
 		},
 		{
 			name: "4.x key present without InstallPath is skipped",
@@ -1274,9 +1274,9 @@ func TestGetDotNetFramework(t *testing.T) {
 			pkgs, err := w.getDotNetFramework()
 			require.NoError(t, err)
 			require.Len(t, pkgs, len(tt.want))
-			for i, wnt := range tt.want {
-				assert.Equal(t, wnt.name, pkgs[i].Name, "package %d name", i)
-				assert.Equal(t, wnt.version, pkgs[i].Version, "package %d version", i)
+			for i, exp := range tt.want {
+				assert.Equal(t, exp.name, pkgs[i].Name, "package %d name", i)
+				assert.Equal(t, exp.version, pkgs[i].Version, "package %d version", i)
 				assert.Equal(t, "windows/app", pkgs[i].Format, "package %d format", i)
 				assert.Equal(t, "amd64", pkgs[i].Arch, "package %d arch", i)
 			}
