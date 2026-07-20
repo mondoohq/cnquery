@@ -68,10 +68,10 @@ func (a *mqlAtlassianScim) users() ([]any, error) {
 			u.cachedGroups = true
 			res = append(res, mqlUser)
 		}
-		if len(page.Resources) < scimPageSize {
+		startIndex += len(page.Resources)
+		if scimReachedEnd(startIndex, len(page.Resources), page.TotalResults) {
 			break
 		}
-		startIndex += len(page.Resources)
 	}
 	return res, nil
 }
@@ -113,12 +113,29 @@ func (a *mqlAtlassianScim) groups() ([]any, error) {
 			g.cachedMembers = true
 			res = append(res, mqlGroup)
 		}
-		if len(page.Resources) < scimPageSize {
+		startIndex += len(page.Resources)
+		if scimReachedEnd(startIndex, len(page.Resources), page.TotalResults) {
 			break
 		}
-		startIndex += len(page.Resources)
 	}
 	return res, nil
+}
+
+// scimReachedEnd reports whether a SCIM list loop should stop. nextStartIndex is
+// the 1-based index of the next page's first resource (already advanced past the
+// page just processed), pageLen is that page's resource count, and totalResults
+// is the server-reported total.
+//
+// TotalResults is the authoritative signal: keep paging until nextStartIndex has
+// moved past it, regardless of page size. This matters because Atlassian SCIM
+// caps count server-side, so a page shorter than the requested scimPageSize does
+// NOT mean the end. Only when the server omits a total (<= 0) do we fall back to
+// the short-page heuristic.
+func scimReachedEnd(nextStartIndex, pageLen, totalResults int) bool {
+	if totalResults > 0 {
+		return nextStartIndex > totalResults
+	}
+	return pageLen < scimPageSize
 }
 
 func (a *mqlAtlassianScimUser) id() (string, error) {
