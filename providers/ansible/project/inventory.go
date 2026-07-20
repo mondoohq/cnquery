@@ -121,7 +121,10 @@ func loadInventory(root string) (*Inventory, error) {
 		if isINIInventory(data) {
 			parseINIInventory(b, data)
 		} else if err := parseYAMLInventory(b, data); err != nil {
-			return nil, err
+			// A single unparseable inventory file (e.g. YAML that yaml.v3
+			// rejects but Ansible tolerates) should not abort the whole
+			// project load; skip it, matching loadPlaybooks.
+			continue
 		}
 		found = true
 	}
@@ -183,6 +186,13 @@ func isINIInventory(data []byte) bool {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, ";") {
 			continue
+		}
+		// A YAML document marker (--- / ...) can only start a YAML inventory;
+		// INI has no such construct. Skip it so classification keys off the
+		// first real content line (e.g. an `all:` mapping) rather than
+		// mistaking `---` for a bare INI host line.
+		if line == "---" || line == "..." {
+			return false
 		}
 		if strings.HasPrefix(line, "[") {
 			return true

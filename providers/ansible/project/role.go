@@ -48,7 +48,10 @@ func loadRoles(rolesDir string) ([]*Role, error) {
 		}
 		role, err := loadRole(e.Name(), filepath.Join(rolesDir, e.Name()))
 		if err != nil {
-			return nil, err
+			// A role with an unparseable file (e.g. YAML that yaml.v3 rejects
+			// but Ansible tolerates) should not abort the whole project load;
+			// skip it, matching loadPlaybooks.
+			continue
 		}
 		roles = append(roles, role)
 	}
