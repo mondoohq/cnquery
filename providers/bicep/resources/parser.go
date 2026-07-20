@@ -267,7 +267,12 @@ func parseBicep(content string) *parsedBicepFile {
 
 		switch stmt.keyword {
 		case "param":
-			p := parseParameter(firstLine, stmt.decorators)
+			// Reassemble multi-line param statements (an object/array default
+			// spans lines) into a single line so paramRe's `(.*)$` sees the
+			// whole default instead of just the opening `{`/`[`. Inline
+			// comments are stripped string-aware so a trailing `// ...` doesn't
+			// leak into the default value.
+			p := parseParameter(reassembleParamStatement(stmtLines), stmt.decorators)
 			p.startLine, p.endLine = startLine, endLine
 			result.parameters = append(result.parameters, p)
 		case "var":
@@ -322,6 +327,37 @@ func parseBicep(content string) *parsedBicepFile {
 	}
 
 	return result
+}
+
+// reassembleParamStatement collapses a (possibly multi-line) param statement
+// into the single line parseParameter expects. Each source line has its inline
+// `// ...` comment stripped string-aware (so a `//` inside a quoted value such
+// as a URL is preserved) and is then joined with a single space. Lines are not
+// whitespace-collapsed internally, so a string default like 'hello  world'
+// keeps its spacing. A shared scanState is carried across lines so a comment
+// marker inside a multi-line triple-quoted string is not stripped.
+func reassembleParamStatement(lines []string) string {
+	st := scanState{}
+	parts := make([]string, 0, len(lines))
+	for _, l := range lines {
+		parts = append(parts, strings.TrimSpace(stripInlineComment(l, &st)))
+	}
+	return strings.Join(parts, " ")
+}
+
+// stripInlineComment returns s truncated at a trailing `// ...` line comment,
+// honoring string literals via the shared scanState so a `//` inside a string
+// (e.g. 'http://example.com') is left intact. st is advanced through s so the
+// caller can carry string/multi-line state across successive lines.
+func stripInlineComment(s string, st *scanState) string {
+	i := 0
+	for i < len(s) {
+		if st.inStr == 0 && !st.inMulti && s[i] == '/' && i+1 < len(s) && s[i+1] == '/' {
+			return s[:i]
+		}
+		i = st.stepAt(s, i)
+	}
+	return s
 }
 
 func parseParameter(line string, decorators []string) parsedParameter {

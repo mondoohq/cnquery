@@ -115,6 +115,62 @@ func TestParseParameterDefaultValues(t *testing.T) {
 	}
 }
 
+func TestParseParameterMultilineAndCommentDefaults(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   string
+		wantDef string
+	}{
+		{
+			name: "multi-line array default preserved",
+			input: `param locations array = [
+  'eastus'
+  'westus'
+]`,
+			wantDef: "[ 'eastus' 'westus' ]",
+		},
+		{
+			name: "multi-line object default preserved",
+			input: `param config object = {
+  environment: 'prod'
+  count: 3
+}`,
+			wantDef: "{ environment: 'prod' count: 3 }",
+		},
+		{
+			name:    "trailing line comment stripped",
+			input:   "param sku string = 'Standard_LRS' // default sku",
+			wantDef: "Standard_LRS",
+		},
+		{
+			name:    "double-slash inside string is not a comment",
+			input:   "param endpoint string = 'https://example.com'",
+			wantDef: "https://example.com",
+		},
+		{
+			name:    "internal string whitespace preserved",
+			input:   "param greeting string = 'hello   world'",
+			wantDef: "hello   world",
+		},
+		{
+			name: "comment on a continuation line stripped",
+			input: `param locations array = [
+  'eastus' // primary
+  'westus'
+]`,
+			wantDef: "[ 'eastus' 'westus' ]",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := parseBicep(tt.input)
+			require.Len(t, result.parameters, 1)
+			assert.Equal(t, tt.wantDef, result.parameters[0].defaultValue)
+		})
+	}
+}
+
 func TestParseParameterDecorators(t *testing.T) {
 	input := `@description('Teradici Registration Key')
 @secure()
