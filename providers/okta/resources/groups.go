@@ -59,7 +59,41 @@ func (o *mqlOkta) groups() ([]any, error) {
 	return list, nil
 }
 
-func newMqlOktaGroup(runtime *plugin.Runtime, entry *okta.Group) (any, error) {
+func initOktaGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// If we already have the full set of fields, no fetch needed.
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	idArg, ok := args["id"]
+	if !ok || idArg == nil || idArg.Value == nil {
+		// Bare resource construction (no id) is a valid empty state.
+		return args, nil, nil
+	}
+	id, ok := idArg.Value.(string)
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+
+	conn := runtime.Connection.(*connection.OktaConnection)
+	client := conn.Client()
+	ctx := context.Background()
+	group, _, err := client.GroupAPI.GetGroup(ctx, id).Execute()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	groupArgs, err := oktaGroupArgs(group)
+	if err != nil {
+		return nil, nil, err
+	}
+	for k, v := range groupArgs {
+		args[k] = v
+	}
+	return args, nil, nil
+}
+
+func oktaGroupArgs(entry *okta.Group) (map[string]*llx.RawData, error) {
 	profile, err := convert.JsonToDict(entry.Profile)
 	if err != nil {
 		return nil, err
@@ -71,7 +105,7 @@ func newMqlOktaGroup(runtime *plugin.Runtime, entry *okta.Group) (any, error) {
 		description = oktaStr(entry.Profile.Description)
 	}
 
-	return CreateResource(runtime, "okta.group", map[string]*llx.RawData{
+	return map[string]*llx.RawData{
 		"id":                    llx.StringData(oktaStr(entry.Id)),
 		"name":                  llx.StringData(name),
 		"description":           llx.StringData(description),
@@ -80,7 +114,15 @@ func newMqlOktaGroup(runtime *plugin.Runtime, entry *okta.Group) (any, error) {
 		"lastMembershipUpdated": llx.TimeDataPtr(entry.LastMembershipUpdated),
 		"lastUpdated":           llx.TimeDataPtr(entry.LastUpdated),
 		"profile":               llx.DictData(profile),
-	})
+	}, nil
+}
+
+func newMqlOktaGroup(runtime *plugin.Runtime, entry *okta.Group) (any, error) {
+	args, err := oktaGroupArgs(entry)
+	if err != nil {
+		return nil, err
+	}
+	return CreateResource(runtime, "okta.group", args)
 }
 
 func (o *mqlOktaGroup) id() (string, error) {
@@ -153,7 +195,7 @@ func (o *mqlOktaGroup) roles() ([]any, error) {
 	list := []any{}
 	appendEntry := func(datalist []okta.Role) error {
 		for i := range datalist {
-			r, err := newMqlOktaRole(o.MqlRuntime, &datalist[i])
+			r, err := newMqlOktaRole(o.MqlRuntime, &datalist[i], "group", o.Id.Data)
 			if err != nil {
 				return err
 			}

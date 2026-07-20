@@ -98,7 +98,48 @@ func (o *mqlOkta) applications() ([]any, error) {
 	return list, nil
 }
 
-func newMqlOktaApplication(runtime *plugin.Runtime, entry *oktaApplicationRaw) (any, error) {
+func initOktaApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// If we already have the full set of fields, no fetch needed.
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	idArg, ok := args["id"]
+	if !ok || idArg == nil || idArg.Value == nil {
+		// Bare resource construction (no id) is a valid empty state.
+		return args, nil, nil
+	}
+	id, ok := idArg.Value.(string)
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+
+	conn := runtime.Connection.(*connection.OktaConnection)
+	client := conn.Client()
+	ctx := context.Background()
+	item, _, err := client.ApplicationAPI.GetApplication(ctx, id).Execute()
+	if err != nil {
+		return nil, nil, err
+	}
+	if item == nil {
+		return args, nil, nil
+	}
+
+	app, err := oktaApplicationFromUnion(*item)
+	if err != nil {
+		return nil, nil, err
+	}
+	appArgs, err := oktaApplicationArgs(app)
+	if err != nil {
+		return nil, nil, err
+	}
+	for k, v := range appArgs {
+		args[k] = v
+	}
+	return args, nil, nil
+}
+
+func oktaApplicationArgs(entry *oktaApplicationRaw) (map[string]*llx.RawData, error) {
 	credentials, err := convert.JsonToDict(entry.Credentials)
 	if err != nil {
 		return nil, err
@@ -124,7 +165,7 @@ func newMqlOktaApplication(runtime *plugin.Runtime, entry *oktaApplicationRaw) (
 		return nil, err
 	}
 
-	return CreateResource(runtime, "okta.application", map[string]*llx.RawData{
+	return map[string]*llx.RawData{
 		"id":          llx.StringData(entry.Id),
 		"name":        llx.StringData(entry.Name),
 		"label":       llx.StringData(entry.Label),
@@ -138,7 +179,15 @@ func newMqlOktaApplication(runtime *plugin.Runtime, entry *oktaApplicationRaw) (
 		"signOnMode":  llx.StringData(entry.SignOnMode),
 		"status":      llx.StringData(entry.Status),
 		"visibility":  llx.DictData(visibility),
-	})
+	}, nil
+}
+
+func newMqlOktaApplication(runtime *plugin.Runtime, entry *oktaApplicationRaw) (any, error) {
+	args, err := oktaApplicationArgs(entry)
+	if err != nil {
+		return nil, err
+	}
+	return CreateResource(runtime, "okta.application", args)
 }
 
 func (o *mqlOktaApplication) id() (string, error) {

@@ -36,6 +36,8 @@ okta {
   identityProviders() []okta.identityProvider
   // Custom OAuth 2.0 authorization servers defined in the Okta org
   authorizationServers() []okta.authorizationServer
+  // Resource sets that scope custom administrator roles
+  resourceSets() []okta.resourceSet
 }
 
 // Okta Organization
@@ -343,6 +345,26 @@ private okta.role @defaults("label status") {
   // or READ_ONLY_ADMIN. A value of CUSTOM_ROLE indicates a custom role
   // whose permissions are defined by the org.
   type string
+  // Custom role definition
+  //
+  // The custom role granting this assignment's permissions, resolved when
+  // `type` is CUSTOM_ROLE. Null for standard administrator roles.
+  customRole() okta.customRole
+  // Resource set scoping this assignment
+  //
+  // The set of resources a custom-role assignment is limited to. Null for
+  // standard administrator roles and for org-wide custom-role assignments.
+  resourceSet() okta.resourceSet
+  // User the role was assigned to
+  //
+  // The account this assignment was read from, set when the role is listed
+  // for a user. Null when the assignment was read from a group.
+  user() okta.user
+  // Group the role was assigned to
+  //
+  // The group this assignment was read from, set when the role is listed
+  // for a group. Null when the assignment was read from a user.
+  group() okta.group
 }
 
 // Okta Group
@@ -773,6 +795,75 @@ private okta.customRole @defaults("label") {
   // `okta.users.read`, `okta.users.manage`, `okta.apps.manage`, or
   // `okta.groups.manage`.
   permissions []string
+}
+
+// Okta Resource Set
+//
+// Named collection of resources that a custom administrator role can be
+// scoped to. Resource sets are the "over what" half of a custom admin grant:
+// a binding ties a custom role to a set of members (users and groups) and the
+// resource set limits the resources those members may administer. Select a set
+// by its `label`. The `resources` field lists the groups, applications, and
+// users the set covers, and `bindings` lists the custom-role grants made
+// through it.
+private okta.resourceSet @defaults("label") {
+  // Unique identifier of the resource set
+  id string
+  // Human-readable label of the resource set
+  label string
+  // Description of the resource set
+  description string
+  // Timestamp when the resource set was created
+  created time
+  // Timestamp when the resource set was last updated
+  lastUpdated time
+  // Resources this set grants administrative access over
+  resources() []okta.resourceSet.resource
+  // Custom-role grants (bindings) made through this set
+  bindings() []okta.resourceSet.binding
+}
+
+// Resource covered by an Okta resource set
+//
+// A single resource that a resource set grants administrative access over.
+// The `href` field is the raw self-link identifying the target, `orn` is the
+// parsed Okta Resource Name when available, and `group`, `application`, and
+// `user` resolve the target to a modeled resource when its type is one of
+// those. At most one typed reference is populated per resource; the others
+// are null.
+private okta.resourceSet.resource @defaults("orn href") {
+  // Unique identifier of the resource-set resource entry
+  id string
+  // Description of the resource
+  description string
+  // Raw self-link URL identifying the target resource
+  href string
+  // Parsed Okta Resource Name (ORN) of the target, when available
+  orn string
+  // Target group, when the resource is a group
+  group() okta.group
+  // Target application, when the resource is an application
+  application() okta.application
+  // Target user, when the resource is a user
+  user() okta.user
+}
+
+// Okta resource set binding
+//
+// Grant of a single custom administrator role to a set of members (users and
+// groups), scoped to the parent resource set. Auditing bindings answers "who
+// was granted which custom admin role, and over which resources": the
+// `customRole` field resolves the granted role and its permissions, while
+// `users` and `groups` list the members who hold it.
+private okta.resourceSet.binding @defaults("id") {
+  // Unique identifier of the binding (the granted role id within the set)
+  id string
+  // The custom role granted by this binding
+  customRole() okta.customRole
+  // Member users granted the role over the resource set
+  users() []okta.user
+  // Member groups granted the role over the resource set
+  groups() []okta.group
 }
 
 // Okta Identity Provider

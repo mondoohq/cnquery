@@ -51,6 +51,50 @@ func (o *mqlOkta) customRoles() ([]any, error) {
 	return list, nil
 }
 
+func initOktaCustomRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// If we already have the full set of fields, no fetch needed.
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	idArg, ok := args["id"]
+	if !ok || idArg == nil || idArg.Value == nil {
+		// Bare resource construction (no id) is a valid empty state.
+		return args, nil, nil
+	}
+	id, ok := idArg.Value.(string)
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+
+	conn := runtime.Connection.(*connection.OktaConnection)
+	client := conn.Client()
+	ctx := context.Background()
+
+	role, _, err := client.RoleAPI.GetRole(ctx, id).Execute()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Permissions are a separate sub-resource on custom roles.
+	permissions := []any{}
+	perms, _, err := client.RoleAPI.ListRolePermissions(ctx, id).Execute()
+	if err != nil {
+		return nil, nil, err
+	}
+	if perms != nil {
+		for i := range perms.Permissions {
+			permissions = append(permissions, oktaStr(perms.Permissions[i].Label))
+		}
+	}
+
+	args["id"] = llx.StringData(oktaStr(role.Id))
+	args["label"] = llx.StringData(role.Label)
+	args["description"] = llx.StringData(role.Description)
+	args["permissions"] = llx.ArrayData(permissions, types.String)
+	return args, nil, nil
+}
+
 func newMqlOktaCustomRole(runtime *plugin.Runtime, entry *sdk.CustomRole) (any, error) {
 	return CreateResource(runtime, "okta.customRole", map[string]*llx.RawData{
 		"id":          llx.StringData(entry.Id),
@@ -62,4 +106,8 @@ func newMqlOktaCustomRole(runtime *plugin.Runtime, entry *sdk.CustomRole) (any, 
 
 func (o *mqlOktaRole) id() (string, error) {
 	return "okta.role/" + o.Id.Data, o.Id.Error
+}
+
+func (o *mqlOktaCustomRole) id() (string, error) {
+	return "okta.customRole/" + o.Id.Data, o.Id.Error
 }
