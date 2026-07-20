@@ -114,6 +114,33 @@ const dotNetClrVersionScript = `
 ((Get-Item "%sclr.dll").VersionInfo).ProductVersion
 `
 
+// dotNetClr2VersionScript resolves the servicing build of the CLR 2.0 runtime
+// that backs .NET Framework 3.5. CLR 2.0 has no clr.dll; its assemblies live
+// under %WINDIR%\Microsoft.NET\Framework[64]\v2.0.50727. Some files there stay
+// pinned to older builds for side-by-side compatibility, so we take the highest
+// 2.0.50727.<build> across every assembly in that directory to reflect the
+// actual patch level.
+const dotNetClr2VersionScript = `
+$paths = @(
+  "$env:WINDIR\Microsoft.NET\Framework64\v2.0.50727",
+  "$env:WINDIR\Microsoft.NET\Framework\v2.0.50727"
+)
+$best = ''
+$bestBuild = -1
+foreach ($p in $paths) {
+  if (Test-Path $p) {
+    Get-ChildItem -Path $p -Filter *.dll -ErrorAction SilentlyContinue | ForEach-Object {
+      $pv = $_.VersionInfo.ProductVersion
+      if ($pv -match '^2\.0\.50727\.(\d+)') {
+        $b = [int]$Matches[1]
+        if ($b -gt $bestBuild) { $bestBuild = $b; $best = ($pv -split '\s+')[0] }
+      }
+    }
+  }
+}
+$best
+`
+
 var (
 	WINDOWS_QUERY_HOTFIXES      = `Get-HotFix | Select-Object -Property Status, Description, HotFixId, Caption, InstalledOn, InstalledBy | ConvertTo-Json`
 	WINDOWS_QUERY_APPX_PACKAGES = `Get-AppxPackage -AllUsers | Select Name, PackageFullName, Architecture, Version, Publisher, InstallLocation | ConvertTo-Json`
@@ -277,70 +304,138 @@ func (w *WinPkgManager) getLocalInstalledApps() ([]Package, error) {
 	return packages, nil
 }
 
-// getDotNetFramework returns the .NET Framework package
+// getDotNetFramework returns the installed .NET Framework runtime packages.
+//
+// .NET Framework 3.5 (CLR 2.0) and 4.x (CLR 4.0) install side-by-side, so we
+// probe both registry keys independently and emit a package for each runtime
+// that is present, rather than letting the highest version hide the other.
 func (w *WinPkgManager) getDotNetFramework() ([]Package, error) {
+	packages := []Package{}
+
+	if pkg, err := w.getDotNetFramework4x(); err != nil {
+		log.Debug().Err(err).Msg("could not get .NET Framework 4.x runtime")
+	} else if pkg != nil {
+		packages = append(packages, *pkg)
+	}
+
+	if pkg, err := w.getDotNetFramework35(); err != nil {
+		log.Debug().Err(err).Msg("could not get .NET Framework 3.5 runtime")
+	} else if pkg != nil {
+		packages = append(packages, *pkg)
+	}
+
+	if len(packages) == 0 {
+		return nil, nil
+	}
+	return packages, nil
+}
+
+// getDotNetFramework4x reports the installed .NET Framework 4.x runtime, sourcing
+// its build from clr.dll (the CLR 4.x runtime) under the registered install path.
+func (w *WinPkgManager) getDotNetFramework4x() (*Package, error) {
 	// https://learn.microsoft.com/en-us/dotnet/framework/install/how-to-determine-which-versions-are-installed#net-framework-45-and-later-versions
-	dotNet45plus := "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full"
-	// https://learn.microsoft.com/en-us/dotnet/framework/install/how-to-determine-which-versions-are-installed#use-registry-editor-older-framework-versions
-	dotNet35 := "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v3.5"
+	const dotNet45plus = "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full"
 
 	items, err := registry.GetNativeRegistryKeyItems(dotNet45plus)
-	if err != nil && status.Code(err) != codes.NotFound {
-		return nil, err
-	}
-
-	if len(items) == 0 {
-		items, err = registry.GetNativeRegistryKeyItems(dotNet35)
-		if err != nil && status.Code(err) != codes.NotFound {
-			return nil, err
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			return nil, nil
 		}
-	}
-
-	if len(items) == 0 {
-		return nil, nil
+		return nil, err
 	}
 
 	installLocation := ""
 	for _, i := range items {
-		switch i.Key {
-		case "InstallPath":
+		if i.Key == "InstallPath" {
 			installLocation = i.Value.String
 		}
 	}
-
 	if installLocation == "" {
 		return nil, nil
 	}
 
 	dotNetRuntimeScript := fmt.Sprintf(dotNetClrVersionScript, installLocation)
-	cmd, err := w.conn.RunCommand(powershell.Encode(dotNetRuntimeScript))
+	version, err := w.runPwshVersion(dotNetRuntimeScript)
 	if err != nil {
-		return nil, fmt.Errorf("could not read app package list")
+		return nil, err
+	}
+	if version == "" {
+		return nil, nil
+	}
+
+	return createPackage("Microsoft .NET Framework", version, "windows/app", w.platform.Arch, "Microsoft", installLocation, w.platform), nil
+}
+
+// getDotNetFramework35 reports the installed .NET Framework 3.5 runtime. It is
+// detected independently of 4.x (they run side-by-side) via the NDP\v3.5 key,
+// and its build is sourced from the CLR 2.0 assemblies rather than clr.dll,
+// which does not exist for CLR 2.0.
+func (w *WinPkgManager) getDotNetFramework35() (*Package, error) {
+	// https://learn.microsoft.com/en-us/dotnet/framework/install/how-to-determine-which-versions-are-installed#use-registry-editor-older-framework-versions
+	const dotNet35 = "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v3.5"
+
+	items, err := registry.GetNativeRegistryKeyItems(dotNet35)
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	installed := false
+	installLocation := ""
+	for _, i := range items {
+		switch i.Key {
+		case "Install":
+			installed = i.Value.Number == 1
+		case "InstallPath":
+			installLocation = i.Value.String
+		}
+	}
+	if !installed {
+		return nil, nil
+	}
+
+	version, err := w.runPwshVersion(dotNetClr2VersionScript)
+	if err != nil {
+		return nil, err
+	}
+	if version == "" {
+		return nil, nil
+	}
+
+	return createPackage("Microsoft .NET Framework", version, "windows/app", w.platform.Arch, "Microsoft", installLocation, w.platform), nil
+}
+
+// runPwshVersion runs a PowerShell script that emits a single version string and
+// returns its trimmed, single-line result.
+func (w *WinPkgManager) runPwshVersion(script string) (string, error) {
+	cmd, err := w.conn.RunCommand(powershell.Encode(script))
+	if err != nil {
+		return "", fmt.Errorf("could not run powershell command")
 	}
 
 	if cmd.ExitStatus != 0 {
 		stderr, err := io.ReadAll(cmd.Stderr)
 		if err != nil {
-			return nil, err
+			return "", err
 		}
-		return nil, errors.New("failed to retrieve installed apps: " + string(stderr))
+		return "", errors.New("failed to retrieve .NET Framework version: " + string(stderr))
 	}
 
 	data, err := io.ReadAll(cmd.Stdout)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	// for empty result set do not get the '{}', therefore lets abort here
 	if len(data) == 0 {
-		return nil, nil
+		return "", nil
 	}
 	version := strings.TrimSpace(string(data))
 	version = strings.ReplaceAll(version, "\n", "")
-
-	pkg := createPackage("Microsoft .NET Framework", version, "windows/app", w.platform.Arch, "Microsoft", installLocation, w.platform)
-
-	return []Package{*pkg}, nil
+	version = strings.ReplaceAll(version, "\r", "")
+	return version, nil
 }
 
 func (w *WinPkgManager) getInstalledApps() ([]Package, error) {
