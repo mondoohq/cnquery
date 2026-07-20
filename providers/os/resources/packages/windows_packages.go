@@ -26,8 +26,6 @@ import (
 	"go.mondoo.com/mql/v13/providers/os/resources/cpe"
 	"go.mondoo.com/mql/v13/providers/os/resources/powershell"
 	"go.mondoo.com/mql/v13/providers/os/resources/purl"
-	"go.mondoo.com/ranger-rpc/codes"
-	"go.mondoo.com/ranger-rpc/status"
 )
 
 // ProcessorArchitecture Enum
@@ -309,6 +307,9 @@ func (w *WinPkgManager) getLocalInstalledApps() ([]Package, error) {
 // .NET Framework 3.5 (CLR 2.0) and 4.x (CLR 4.0) install side-by-side, so we
 // probe both registry keys independently and emit a package for each runtime
 // that is present, rather than letting the highest version hide the other.
+//
+// Registry and version probes run over the active connection via PowerShell, so
+// this works for remote connections (e.g. SSH) as well as a local Windows host.
 func (w *WinPkgManager) getDotNetFramework() ([]Package, error) {
 	packages := []Package{}
 
@@ -336,11 +337,8 @@ func (w *WinPkgManager) getDotNetFramework4x() (*Package, error) {
 	// https://learn.microsoft.com/en-us/dotnet/framework/install/how-to-determine-which-versions-are-installed#net-framework-45-and-later-versions
 	const dotNet45plus = "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full"
 
-	items, err := registry.GetNativeRegistryKeyItems(dotNet45plus)
+	items, err := w.readRegistryItems(dotNet45plus)
 	if err != nil {
-		if status.Code(err) == codes.NotFound {
-			return nil, nil
-		}
 		return nil, err
 	}
 
@@ -374,11 +372,8 @@ func (w *WinPkgManager) getDotNetFramework35() (*Package, error) {
 	// https://learn.microsoft.com/en-us/dotnet/framework/install/how-to-determine-which-versions-are-installed#use-registry-editor-older-framework-versions
 	const dotNet35 = "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v3.5"
 
-	items, err := registry.GetNativeRegistryKeyItems(dotNet35)
+	items, err := w.readRegistryItems(dotNet35)
 	if err != nil {
-		if status.Code(err) == codes.NotFound {
-			return nil, nil
-		}
 		return nil, err
 	}
 
@@ -438,6 +433,29 @@ func (w *WinPkgManager) runPwshVersion(script string) (string, error) {
 	return version, nil
 }
 
+// readRegistryItems reads the values of a single registry key over the active
+// connection. It probes via PowerShell (rather than the Windows-only native
+// registry API) so it works for remote connections such as SSH as well as a
+// local Windows host. A missing key makes the probe exit non-zero, which is
+// reported as an empty result rather than an error.
+func (w *WinPkgManager) readRegistryItems(path string) ([]registry.RegistryKeyItem, error) {
+	cmd, err := w.conn.RunCommand(powershell.Encode(registry.GetRegistryKeyItemScript(path)))
+	if err != nil {
+		return nil, err
+	}
+	if cmd.ExitStatus != 0 {
+		return nil, nil
+	}
+	data, err := io.ReadAll(cmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+	if strings.TrimSpace(string(data)) == "" {
+		return nil, nil
+	}
+	return registry.ParsePowershellRegistryKeyItems(strings.NewReader(string(data)))
+}
+
 func (w *WinPkgManager) getInstalledApps() ([]Package, error) {
 	if w.conn.Type() == shared.Type_Local && runtime.GOOS == "windows" {
 		return w.getLocalInstalledApps()
@@ -460,7 +478,22 @@ func (w *WinPkgManager) getInstalledApps() ([]Package, error) {
 		return nil, errors.New("failed to retrieve installed apps: " + string(stderr))
 	}
 
-	return ParseWindowsAppPackages(w.platform, cmd.Stdout)
+	packages, err := ParseWindowsAppPackages(w.platform, cmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+
+	// The .NET Framework runtimes don't appear in the Uninstall registry keys,
+	// so we discover them separately here as well (the local path does the same
+	// in getLocalInstalledApps).
+	dotNetFramework, err := w.getDotNetFramework()
+	if err != nil {
+		log.Debug().Err(err).Msg("could not get .NET Framework packages from registry")
+	} else {
+		packages = append(packages, dotNetFramework...)
+	}
+
+	return packages, nil
 }
 
 func (w *WinPkgManager) getAppxPackages() ([]Package, error) {
