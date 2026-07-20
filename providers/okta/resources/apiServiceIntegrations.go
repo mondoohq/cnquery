@@ -70,7 +70,7 @@ func newMqlOktaApiServiceIntegration(runtime *plugin.Runtime, entry *okta.APISer
 		"grantedScopes":  llx.ArrayData(convert.SliceAnyToInterface(entry.GrantedScopes), types.String),
 		"configGuideUrl": llx.StringData(oktaStr(entry.ConfigGuideUrl)),
 		"createdBy":      llx.StringData(oktaStr(entry.CreatedBy)),
-		"created":        llx.TimeDataPtr(created),
+		"createdAt":      llx.TimeDataPtr(created),
 	})
 }
 

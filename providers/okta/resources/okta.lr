@@ -1493,5 +1493,5 @@ private okta.apiServiceIntegration @defaults("name type") {
   // Actor that created the integration instance
   createdBy string
   // Timestamp when the integration instance was created
-  created time
+  createdAt time
 }
