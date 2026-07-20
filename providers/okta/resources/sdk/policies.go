@@ -31,6 +31,11 @@ type PolicyWrapper struct {
 	Settings    json.RawMessage `json:"settings,omitempty"`
 }
 
+// maxPages bounds the pagination loops so a malformed or cycling
+// `Link: rel="next"` header cannot spin forever and hang a scan. At queryLimit
+// (200) per page this covers 200k records, far beyond any real org.
+const maxPages = 1000
+
 // ListPolicies retrieves all policies of the given type, following Okta's
 // `Link: <url>; rel="next"` pagination until no `next` link remains. It returns
 // the first page's http.Response so callers can branch on the status code (e.g.
@@ -45,7 +50,7 @@ func (m *ApiExtension) ListPolicies(ctx context.Context, policyType string, limi
 
 	policies := []*PolicyWrapper{}
 	var firstResp *http.Response
-	for nextURL != "" {
+	for i := 0; i < maxPages && nextURL != ""; i++ {
 		var page []*PolicyWrapper
 		resp, err := m.get(ctx, nextURL, &page)
 		if firstResp == nil {
@@ -77,7 +82,7 @@ func (m *ApiExtension) ListPolicyRules(ctx context.Context, policyId string, lim
 	nextURL := m.url("/api/v1/policies/"+url.PathEscape(policyId)+"/rules") + "?" + params.Encode()
 
 	rules := []json.RawMessage{}
-	for nextURL != "" {
+	for i := 0; i < maxPages && nextURL != ""; i++ {
 		page := []json.RawMessage{}
 		resp, err := m.get(ctx, nextURL, &page)
 		if err != nil {
