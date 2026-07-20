@@ -235,10 +235,11 @@ func (o *mqlOkta) hookKeys() ([]any, error) {
 }
 
 func newMqlOktaHookKey(runtime *plugin.Runtime, entry *okta.HookKey) (any, error) {
-	publicKey, err := convert.JsonToDict(entry.Embedded)
+	embedded, err := convert.JsonToDict(entry.Embedded)
 	if err != nil {
 		return nil, err
 	}
+	publicKey := oktaHookKeyPublicKey(embedded)
 
 	var isUsed bool
 	if entry.IsUsed != nil {
@@ -258,4 +259,21 @@ func newMqlOktaHookKey(runtime *plugin.Runtime, entry *okta.HookKey) (any, error
 
 func (o *mqlOktaHookKey) id() (string, error) {
 	return "okta.hookKey/" + o.Id.Data, o.Id.Error
+}
+
+// oktaHookKeyPublicKey narrows a hook key's `_embedded` payload to the public
+// JWK. Okta nests the key under `_embedded.publicKey`, but the v5 SDK types
+// `_embedded` as a bare JsonWebKey, so the wrapper lands in the JWK's
+// AdditionalProperties and survives the dict conversion. Unwrap the publicKey
+// sub-object when present so the dict is the JWK itself; otherwise return the
+// payload unchanged (correct if the envelope is ever flattened upstream).
+func oktaHookKeyPublicKey(embedded any) any {
+	m, ok := embedded.(map[string]any)
+	if !ok {
+		return embedded
+	}
+	if pk, ok := m["publicKey"]; ok {
+		return pk
+	}
+	return m
 }

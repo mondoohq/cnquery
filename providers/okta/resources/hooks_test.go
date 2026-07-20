@@ -38,3 +38,19 @@ func TestParseInlineHookChannel_Empty(t *testing.T) {
 	assert.Equal(t, "", uri)
 	assert.Nil(t, authScheme)
 }
+
+func TestOktaHookKeyPublicKey(t *testing.T) {
+	jwk := map[string]any{"kty": "RSA", "kid": "k1", "use": "sig", "e": "AQAB"}
+
+	// Okta's actual shape: the JWK nested under a publicKey wrapper (which the
+	// SDK's *JsonWebKey typing pushes into AdditionalProperties).
+	wrapped := map[string]any{"publicKey": jwk}
+	assert.Equal(t, jwk, oktaHookKeyPublicKey(wrapped))
+
+	// Already-flat JWK: returned unchanged.
+	assert.Equal(t, jwk, oktaHookKeyPublicKey(jwk))
+
+	// Non-map payloads pass through.
+	assert.Nil(t, oktaHookKeyPublicKey(nil))
+	assert.Equal(t, "x", oktaHookKeyPublicKey("x"))
+}
