@@ -12,7 +12,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "vercel",
 	ID:              "go.mondoo.com/mql/providers/vercel",
-	Version:         "13.0.0",
+	Version:         "13.1.0",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{

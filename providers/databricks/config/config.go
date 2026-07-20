@@ -13,7 +13,7 @@ import (
 var Config = plugin.Provider{
 	Name:      "databricks",
 	ID:        "go.mondoo.com/mql/providers/databricks",
-	Version:   "13.0.0",
+	Version:   "13.1.0",
 	Platforms: connection.Platforms,
 	ConnectionTypes: []string{
 		provider.DefaultConnectionType,
