@@ -38,6 +38,16 @@ okta {
   authorizationServers() []okta.authorizationServer
   // Resource sets that scope custom administrator roles
   resourceSets() []okta.resourceSet
+  // Event hooks that deliver org events to external endpoints
+  eventHooks() []okta.eventHook
+  // Inline hooks that call out to external logic during Okta flows
+  inlineHooks() []okta.inlineHook
+  // Cryptographic keys used to sign outbound hook requests
+  hookKeys() []okta.hookKey
+  // Log streams that export System Log events to external destinations
+  logStreams() []okta.logStream
+  // API service integrations granted OAuth 2.0 access to the org
+  apiServiceIntegrations() []okta.apiServiceIntegration
 }
 
 // Okta Organization
@@ -1308,4 +1318,180 @@ private okta.authorizationServer.key @defaults("kid status") {
   n string
   // RSA exponent
   e string
+}
+
+// Okta Event Hook
+//
+// Outbound webhook that delivers Okta org events to an external service as
+// they occur. Auditing event hooks surfaces where org activity is being sent
+// and how the destination is trusted: `channelUri` is the endpoint Okta posts
+// to, `channelAuthScheme` describes how Okta authenticates to it, `events`
+// lists the subscribed event types, and `status` and `verificationStatus`
+// indicate whether the hook is active and its endpoint ownership verified. A
+// hook pointing at an untrusted URL is a data-exfiltration and persistence
+// risk. Select a hook by its `name`.
+private okta.eventHook @defaults("name status") {
+  // Unique identifier of the event hook
+  id string
+  // Display name of the event hook
+  name string
+  // Description of the event hook
+  description string
+  // Status of the event hook: ACTIVE or INACTIVE
+  status string
+  // Endpoint ownership verification status
+  //
+  // Whether Okta has verified control of the destination endpoint, for
+  // example VERIFIED or UNVERIFIED.
+  verificationStatus string
+  // Subscribed event types
+  //
+  // The Okta event types this hook fires on, for example
+  // `user.lifecycle.create` or `user.session.start`.
+  events []string
+  // Delivery channel type (for example HTTP)
+  channelType string
+  // Destination URL Okta posts events to
+  channelUri string
+  // Authentication scheme for the destination
+  //
+  // How Okta authenticates to the endpoint, as a dict with keys `type` (for
+  // example HEADER) and `key`. Secret values are not exposed.
+  channelAuthScheme dict
+  // Custom headers sent with each delivery
+  //
+  // One entry per header, each a dict with keys `key` and `value`.
+  headers []dict
+  // Timestamp when the event hook was created
+  created time
+  // Timestamp when the event hook was last updated
+  lastUpdated time
+}
+
+// Okta Inline Hook
+//
+// Synchronous callout that lets an external service influence an Okta flow
+// (such as token minting, registration, or password import) while it runs.
+// Auditing inline hooks surfaces external code injected into authentication
+// and provisioning: `channelUri` is the endpoint Okta calls, `channelAuthScheme`
+// describes how Okta authenticates to it, and `type` identifies which flow the
+// hook participates in. Select a hook by its `name`, and check `status` to
+// confirm whether it is active.
+private okta.inlineHook @defaults("name type status") {
+  // Unique identifier of the inline hook
+  id string
+  // Display name of the inline hook
+  name string
+  // Inline hook type
+  //
+  // The flow the hook participates in, for example
+  // `com.okta.oauth2.tokens.transform`, `com.okta.import.transform`, or
+  // `com.okta.user.pre-registration`.
+  type string
+  // Status of the inline hook: ACTIVE or INACTIVE
+  status string
+  // Version of the inline hook contract
+  version string
+  // Delivery channel type (for example HTTP)
+  channelType string
+  // Endpoint URL Okta calls during the flow
+  channelUri string
+  // Authentication scheme for the endpoint
+  //
+  // How Okta authenticates to the endpoint, as a dict with keys `type` (for
+  // example HEADER) and `key`. Secret values are not exposed.
+  channelAuthScheme dict
+  // Free-form metadata attached to the hook
+  metadata map[string]string
+  // Timestamp when the inline hook was created
+  created time
+  // Timestamp when the inline hook was last updated
+  lastUpdated time
+}
+
+// Okta Hook Key
+//
+// Cryptographic key pair Okta uses to sign outbound hook requests so the
+// receiving service can verify they originate from Okta. Auditing hook keys
+// surfaces stale or unused signing material: `isUsed` reports whether any hook
+// currently references the key, and `publicKey` carries the public JSON Web Key
+// metadata. Select a key by its `name`.
+private okta.hookKey @defaults("name isUsed") {
+  // Unique identifier of the hook key
+  id string
+  // Display name of the hook key
+  name string
+  // Public key identifier
+  keyId string
+  // Whether the key is currently referenced by a hook
+  isUsed bool
+  // Public key material
+  //
+  // The public JSON Web Key as a dict, with keys such as `kty`, `kid`,
+  // `use`, `alg`, and the key parameters. The private key is never exposed.
+  publicKey dict
+  // Timestamp when the hook key was created
+  created time
+  // Timestamp when the hook key was last updated
+  lastUpdated time
+}
+
+// Okta Log Stream
+//
+// Connection that exports Okta System Log events to an external destination
+// such as AWS EventBridge or Splunk Cloud. Auditing log streams answers whether
+// the org's audit trail is shipped off-box and to where: `type` selects the
+// destination kind, `settings` carries the destination coordinates (AWS
+// `accountId`, `region`, and `eventSourceName`, or Splunk `host` and `edition`),
+// and `status` indicates whether the stream is active. Select a stream by its
+// `name`.
+private okta.logStream @defaults("name type status") {
+  // Unique identifier of the log stream
+  id string
+  // Display name of the log stream
+  name string
+  // Log stream destination type
+  //
+  // One of `aws_eventbridge` or `splunk_cloud_logstreaming`.
+  type string
+  // Status of the log stream: ACTIVE or INACTIVE
+  status string
+  // Destination settings
+  //
+  // Shape varies by `type`. For AWS EventBridge the keys are `accountId`,
+  // `region`, and `eventSourceName`. For Splunk the keys are `host` and
+  // `edition`. Secret values such as the Splunk token are not exposed.
+  settings dict
+  // Timestamp when the log stream was created
+  created time
+  // Timestamp when the log stream was last updated
+  lastUpdated time
+}
+
+// Okta API Service Integration
+//
+// Third-party service granted OAuth 2.0 access to the Okta org through the
+// API service integration catalog. Auditing these surfaces machine-to-machine
+// access held by external vendors: `grantedScopes` lists the API scopes the
+// integration can exercise, `type` identifies the catalog integration, and
+// `createdBy` records the actor that installed it. Select an instance by its
+// `id`.
+private okta.apiServiceIntegration @defaults("name type") {
+  // Unique identifier of the integration instance
+  id string
+  // Display name of the integration
+  name string
+  // Catalog integration type
+  type string
+  // OAuth 2.0 scopes granted to the integration
+  //
+  // The API scopes the integration is authorized to exercise, for example
+  // `okta.users.read` or `okta.logs.read`.
+  grantedScopes []string
+  // URL of the integration's configuration guide
+  configGuideUrl string
+  // Actor that created the integration instance
+  createdBy string
+  // Timestamp when the integration instance was created
+  createdAt string
 }
