@@ -15,6 +15,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/cloudformation/connection"
+	"go.mondoo.com/mql/v13/types"
 	"go.mondoo.com/mql/v13/utils/syncx"
 )
 
@@ -101,6 +102,15 @@ func TestParameterConstraintsNullable(t *testing.T) {
 	withoutMin := byName["WithoutMin"]
 	require.NotNil(t, withoutMin)
 	assert.NotZero(t, withoutMin.MinValue.State&plugin.StateIsNull, "absent MinValue must be null")
+
+	// A null int field must serialize as a typed nil primitive (types.Nil),
+	// NOT an untyped one — otherwise MQL surfaces "primitive with no type
+	// information" when the field is queried. This is the full getter path a
+	// `cloudformation.template.parameterList { minValue }` query exercises.
+	dr := withoutMin.MinValue.ToDataRes(types.Int)
+	require.Empty(t, dr.Error)
+	require.NotNil(t, dr.Data)
+	assert.Equal(t, string(types.Nil), dr.Data.Type, "null int must carry the nil type, not an empty type")
 }
 
 func TestNoEchoBooleanSpellings(t *testing.T) {
