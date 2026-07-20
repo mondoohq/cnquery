@@ -1477,8 +1477,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"okta.apiServiceIntegration.createdBy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaApiServiceIntegration).GetCreatedBy()).ToDataRes(types.String)
 	},
-	"okta.apiServiceIntegration.createdAt": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOktaApiServiceIntegration).GetCreatedAt()).ToDataRes(types.String)
+	"okta.apiServiceIntegration.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApiServiceIntegration).GetCreated()).ToDataRes(types.Time)
 	},
 }
 
@@ -3236,8 +3236,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOktaApiServiceIntegration).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"okta.apiServiceIntegration.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaApiServiceIntegration).CreatedAt, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"okta.apiServiceIntegration.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApiServiceIntegration).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 }
@@ -7589,7 +7589,7 @@ type mqlOktaApiServiceIntegration struct {
 	GrantedScopes  plugin.TValue[[]any]
 	ConfigGuideUrl plugin.TValue[string]
 	CreatedBy      plugin.TValue[string]
-	CreatedAt      plugin.TValue[string]
+	Created        plugin.TValue[*time.Time]
 }
 
 // createOktaApiServiceIntegration creates a new instance of this resource
@@ -7653,6 +7653,6 @@ func (c *mqlOktaApiServiceIntegration) GetCreatedBy() *plugin.TValue[string] {
 	return &c.CreatedBy
 }
 
-func (c *mqlOktaApiServiceIntegration) GetCreatedAt() *plugin.TValue[string] {
-	return &c.CreatedAt
+func (c *mqlOktaApiServiceIntegration) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
 }

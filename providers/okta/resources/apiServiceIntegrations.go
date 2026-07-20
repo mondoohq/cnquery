@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"time"
 
 	"github.com/okta/okta-sdk-golang/v5/okta"
 	"go.mondoo.com/mql/v13/llx"
@@ -53,6 +54,15 @@ func (o *mqlOkta) apiServiceIntegrations() ([]any, error) {
 }
 
 func newMqlOktaApiServiceIntegration(runtime *plugin.Runtime, entry *okta.APIServiceIntegrationInstance) (any, error) {
+	// The SDK types createdAt as a plain string, but Okta returns an RFC3339
+	// timestamp; parse it so the field matches the time type used elsewhere.
+	var created *time.Time
+	if entry.CreatedAt != nil {
+		if t, err := time.Parse(time.RFC3339, *entry.CreatedAt); err == nil {
+			created = &t
+		}
+	}
+
 	return CreateResource(runtime, "okta.apiServiceIntegration", map[string]*llx.RawData{
 		"id":             llx.StringData(oktaStr(entry.Id)),
 		"name":           llx.StringData(oktaStr(entry.Name)),
@@ -60,7 +70,7 @@ func newMqlOktaApiServiceIntegration(runtime *plugin.Runtime, entry *okta.APISer
 		"grantedScopes":  llx.ArrayData(convert.SliceAnyToInterface(entry.GrantedScopes), types.String),
 		"configGuideUrl": llx.StringData(oktaStr(entry.ConfigGuideUrl)),
 		"createdBy":      llx.StringData(oktaStr(entry.CreatedBy)),
-		"createdAt":      llx.StringData(oktaStr(entry.CreatedAt)),
+		"created":        llx.TimeDataPtr(created),
 	})
 }
 

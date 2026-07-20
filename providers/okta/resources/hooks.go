@@ -87,18 +87,29 @@ func (o *mqlOktaEventHook) id() (string, error) {
 
 // --- inline hooks ---
 
-// oktaInlineHookRaw flattens the inline hook's channel, whose config (uri,
-// authScheme, headers) the v5 SDK carries in the generic channel's untyped
-// AdditionalProperties rather than a typed field. Re-marshaling to JSON gives
-// one stable path to the fields regardless of the concrete channel variant.
-type oktaInlineHookRaw struct {
-	Channel struct {
-		Type   string `json:"type"`
-		Config struct {
-			Uri        string         `json:"uri"`
-			AuthScheme map[string]any `json:"authScheme"`
-		} `json:"config"`
-	} `json:"channel"`
+// oktaInlineHookChannelRaw flattens the inline hook's channel, whose config
+// (uri, authScheme) the v5 SDK carries in the generic channel's untyped
+// AdditionalProperties rather than a typed field. Marshaling the channel to
+// JSON gives one stable path to the fields regardless of the concrete channel
+// variant. This mirrors the shape of the marshaled channel object itself
+// (`{"type":...,"config":{...}}`), not a wrapper around it.
+type oktaInlineHookChannelRaw struct {
+	Type   string `json:"type"`
+	Config struct {
+		Uri        string         `json:"uri"`
+		AuthScheme map[string]any `json:"authScheme"`
+	} `json:"config"`
+}
+
+// parseInlineHookChannel extracts the channel type, endpoint URI, and auth
+// scheme from a marshaled inline hook channel object of the shape
+// `{"type":...,"config":{"uri":...,"authScheme":{...}}}`.
+func parseInlineHookChannel(channelJSON []byte) (channelType, channelURI string, authScheme map[string]any, err error) {
+	var parsed oktaInlineHookChannelRaw
+	if err := json.Unmarshal(channelJSON, &parsed); err != nil {
+		return "", "", nil, err
+	}
+	return parsed.Type, parsed.Config.Uri, parsed.Config.AuthScheme, nil
 }
 
 func (o *mqlOkta) inlineHooks() ([]any, error) {
@@ -147,13 +158,10 @@ func newMqlOktaInlineHook(runtime *plugin.Runtime, entry *okta.InlineHook) (any,
 		if err != nil {
 			return nil, err
 		}
-		var parsed oktaInlineHookRaw
-		if err := json.Unmarshal(raw, &parsed); err != nil {
+		channelType, channelUri, authScheme, err = parseInlineHookChannel(raw)
+		if err != nil {
 			return nil, err
 		}
-		channelType = parsed.Channel.Type
-		channelUri = parsed.Channel.Config.Uri
-		authScheme = parsed.Channel.Config.AuthScheme
 	}
 	authSchemeDict, err := convert.JsonToDict(authScheme)
 	if err != nil {

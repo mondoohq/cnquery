@@ -13,7 +13,7 @@ okta.api.token.tokenWindow 13.1.6
 okta.api.token.user 13.1.6
 okta.apiServiceIntegration 13.3.2
 okta.apiServiceIntegration.configGuideUrl 13.3.2
-okta.apiServiceIntegration.createdAt 13.3.2
+okta.apiServiceIntegration.created 13.3.2
 okta.apiServiceIntegration.createdBy 13.3.2
 okta.apiServiceIntegration.grantedScopes 13.3.2
 okta.apiServiceIntegration.id 13.3.2
