@@ -113,10 +113,12 @@ func isResourceNotFoundError(err error) bool {
 // operation is not recognized by the service". Such a resource has no
 // resource-based policy to report, so callers degrade to an empty policy.
 func isOperationNotSupportedError(err error) bool {
-	if err == nil {
-		return false
+	var ae smithy.APIError
+	if errors.As(err, &ae) {
+		return ae.ErrorCode() == "ValidationException" &&
+			strings.Contains(ae.ErrorMessage(), "not recognized by the service")
 	}
-	return strings.Contains(err.Error(), "not recognized by the service")
+	return false
 }
 
 // isBadRequestError checks if the error is a 400 Bad Request error
