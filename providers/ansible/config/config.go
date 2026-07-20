@@ -12,7 +12,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "ansible",
 	ID:              "go.mondoo.com/mql/v13/providers/ansible",
-	Version:         "13.2.8",
+	Version:         "13.2.9",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       provider.Platforms,
 	Connectors: []plugin.Connector{
