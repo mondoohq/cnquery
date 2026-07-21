@@ -213,7 +213,11 @@ func (a *mqlAwsElasticacheCluster) tags() (map[string]any, error) {
 func (a *mqlAwsElasticacheCluster) kmsKey() (*mqlAwsKmsKey, error) {
 	// The KMS key protecting a cluster's data at rest lives on its replication
 	// group, so delegate through the group rather than fetching replication
-	// groups a second time.
+	// groups a second time. A cluster with no replication group has no key.
+	if a.cacheReplicationGroupId == nil || *a.cacheReplicationGroupId == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
 	rg := a.GetReplicationGroup()
 	if rg.Error != nil {
 		return nil, rg.Error
