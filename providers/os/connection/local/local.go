@@ -20,6 +20,7 @@ import (
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	"go.mondoo.com/mql/v13/providers/os/connection/ssh/cat"
 	"go.mondoo.com/mql/v13/providers/os/registry"
+	"go.mondoo.com/mql/v13/providers/os/resources/powershell"
 )
 
 type LocalConnection struct {
@@ -204,7 +205,15 @@ func (c *CommandRunner) Exec(usercmd string, args []string) (*shared.Command, er
 	var cmd string
 	cmdArgs := []string{}
 
-	if len(c.Shell) > 0 {
+	// When the default shell is PowerShell and the command is already a
+	// self-contained PowerShell invocation (as produced by powershell.Encode /
+	// powershell.Wrap), run it directly. Otherwise it would be nested inside a
+	// second `powershell -c "..."`, spawning a redundant powershell.exe that
+	// endpoint protection flags as an encoded-command / LOLBIN-chain attack.
+	if argv, ok := unnestPowershell(c.Shell, usercmd); ok {
+		cmd = argv[0]
+		cmdArgs = append(cmdArgs, argv[1:]...)
+	} else if len(c.Shell) > 0 {
 		shellCommand, shellArgs := c.Shell[0], c.Shell[1:]
 		cmd = shellCommand
 		cmdArgs = append(cmdArgs, shellArgs...)
@@ -246,4 +255,21 @@ func (c *CommandRunner) Exec(usercmd string, args []string) (*shared.Command, er
 
 	// all other errors are real errors and not expected
 	return &c.Command, err
+}
+
+// unnestPowershell returns the argv to run usercmd directly, without wrapping
+// it in the shell, when both the shell and the command are PowerShell. This
+// avoids spawning powershell.exe inside powershell.exe. It only fires for the
+// PowerShell shell (Windows local default) so unix `sh -c` behavior and plain
+// commands (e.g. `hostname`) are untouched.
+func unnestPowershell(shell []string, usercmd string) ([]string, bool) {
+	if len(shell) == 0 {
+		return nil, false
+	}
+	switch strings.ToLower(shell[0]) {
+	case "powershell", "powershell.exe", "pwsh", "pwsh.exe":
+		return powershell.SplitInvocation(usercmd)
+	default:
+		return nil, false
+	}
 }
