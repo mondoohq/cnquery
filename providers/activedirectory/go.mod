@@ -6,6 +6,7 @@ replace go.mondoo.com/mql/v13 => ../..
 
 require (
 	github.com/go-ldap/ldap/v3 v3.4.13
+	github.com/jcmturner/gofork v1.7.6
 	github.com/jcmturner/gokrb5/v8 v8.4.4
 	github.com/jfjallid/go-smb v0.10.1
 	github.com/jfjallid/golog v0.4.0
@@ -67,7 +68,6 @@ require (
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/jcmturner/aescts/v2 v2.0.0 // indirect
 	github.com/jcmturner/dnsutils/v2 v2.0.0 // indirect
-	github.com/jcmturner/gofork v1.7.6 // indirect
 	github.com/jcmturner/goidentity/v6 v6.0.1 // indirect
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
 	github.com/jfjallid/gofork v1.7.6 // indirect

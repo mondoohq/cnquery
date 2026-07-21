@@ -5,6 +5,7 @@ package connection
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"net"
@@ -344,7 +345,7 @@ func newLDAPTLSConfig(serverName string, insecure bool) *tls.Config {
 // Kerberos/GSSAPI or simple bind.
 func bindLDAPConn(conn *ldap.Conn, dcHost, user, password string, opts map[string]string, transport ldapTransport, warnOnPlaintext bool) error {
 	if isTrueOption(opts[OptionKerberos]) {
-		return kerberosGSSAPIBind(conn, dcHost, user, password, opts)
+		return kerberosGSSAPIBind(conn, dcHost, user, password, opts, serverCertFromConn(conn))
 	}
 	if warnOnPlaintext && !transport.usesTLS() {
 		log.Warn().Str("dc", dcHost).Msg("LDAP simple bind over plaintext connection — credentials are transmitted in the clear; use LDAPS (the default transport) or --starttls unless you explicitly opt into --plain-ldap for a lab")
@@ -355,7 +356,18 @@ func bindLDAPConn(conn *ldap.Conn, dcHost, user, password string, opts map[strin
 	return nil
 }
 
-func newKerberosClient(user, password string, opts map[string]string) (ldap.GSSAPIClient, func() error, kerberosAuthSource, string, error) {
+// serverCertFromConn returns the DC's leaf TLS certificate for the connection,
+// or nil when the transport is plaintext LDAP. It is used to derive the RFC 5929
+// channel binding for Kerberos SASL binds.
+func serverCertFromConn(conn *ldap.Conn) *x509.Certificate {
+	state, ok := conn.TLSConnectionState()
+	if !ok || len(state.PeerCertificates) == 0 {
+		return nil
+	}
+	return state.PeerCertificates[0]
+}
+
+func newKerberosClient(user, password string, opts map[string]string, serverCert *x509.Certificate) (ldap.GSSAPIClient, func() error, kerberosAuthSource, string, error) {
 	source, err := selectKerberosAuthSource(user, password, opts)
 	if err != nil {
 		return nil, nil, "", "", err
@@ -369,14 +381,16 @@ func newKerberosClient(user, password string, opts map[string]string) (ldap.GSSA
 		if err != nil {
 			return nil, nil, "", "", fmt.Errorf("kerberos keytab client: %w", err)
 		}
-		return gssClient, gssClient.Close, source, krb5confPath, nil
+		cb := newChannelBindingClient(gssClient, serverCert)
+		return cb, cb.Close, source, krb5confPath, nil
 	case kerberosAuthSourceCCache:
 		krb5confPath := resolveKrb5Conf(opts[OptionKrb5Conf])
 		gssClient, err := gssapi.NewClientFromCCache(opts[OptionCCache], krb5confPath, client.DisablePAFXFAST(true))
 		if err != nil {
 			return nil, nil, "", "", fmt.Errorf("kerberos ccache client: %w", err)
 		}
-		return gssClient, gssClient.Close, source, krb5confPath, nil
+		cb := newChannelBindingClient(gssClient, serverCert)
+		return cb, cb.Close, source, krb5confPath, nil
 	case kerberosAuthSourcePassword:
 		krb5confPath := resolveKrb5Conf(opts[OptionKrb5Conf])
 		principal, realm := splitPrincipal(user)
@@ -384,9 +398,10 @@ func newKerberosClient(user, password string, opts map[string]string) (ldap.GSSA
 		if err != nil {
 			return nil, nil, "", "", fmt.Errorf("kerberos password client: %w", err)
 		}
-		return gssClient, gssClient.Close, source, krb5confPath, nil
+		cb := newChannelBindingClient(gssClient, serverCert)
+		return cb, cb.Close, source, krb5confPath, nil
 	default:
-		gssClient, cleanup, err := newImplicitKerberosClient()
+		gssClient, cleanup, err := newImplicitKerberosClient(serverCert)
 		if err != nil {
 			return nil, nil, "", "", err
 		}
@@ -401,11 +416,15 @@ func newKerberosClient(user, password string, opts map[string]string) (ldap.GSSA
 //  3. --user + --password: password-based Kerberos AS exchange
 //  4. On Windows only, the current logon session when no explicit credential
 //     material is supplied.
-func kerberosGSSAPIBind(conn *ldap.Conn, dcHost, user, password string, opts map[string]string) error {
+//
+// serverCert is the DC's leaf TLS certificate (nil for plaintext LDAP); it lets
+// the client emit an RFC 5929 tls-server-end-point channel binding so DCs that
+// enforce LDAP channel binding accept the bind.
+func kerberosGSSAPIBind(conn *ldap.Conn, dcHost, user, password string, opts map[string]string, serverCert *x509.Certificate) error {
 	// LDAP service principal: ldap/<dc_hostname>
 	servicePrincipal := "ldap/" + dcHost
 
-	gssClient, cleanup, source, krb5confPath, err := newKerberosClient(user, password, opts)
+	gssClient, cleanup, source, krb5confPath, err := newKerberosClient(user, password, opts, serverCert)
 	if err != nil {
 		return err
 	}
@@ -413,28 +432,52 @@ func kerberosGSSAPIBind(conn *ldap.Conn, dcHost, user, password string, opts map
 
 	authLogger := log.Debug().
 		Str("servicePrincipal", servicePrincipal).
-		Str("credentialSource", string(source))
+		Str("credentialSource", string(source)).
+		Bool("channelBinding", serverCert != nil)
 	if krb5confPath != "" {
 		authLogger = authLogger.Str("krb5conf", krb5confPath)
 	}
 	authLogger.Msg("performing GSSAPI/Kerberos bind")
 
 	if err := conn.GSSAPIBind(gssClient, servicePrincipal, ""); err != nil {
-		// AD error 80090308 (SEC_E_INVALID_TOKEN) with data 57 typically means
-		// the DC requires LDAP signing/sealing for SASL binds but the go-ldap
-		// GSSAPI client does not negotiate SASL security layers (upstream
-		// issue: https://github.com/go-ldap/ldap/issues/552). SSPI-backed
-		// current-session auth changes how we source tickets on Windows, but it
-		// does not change this SASL-layer limitation.
-		if strings.Contains(err.Error(), "80090308") {
-			return fmt.Errorf("GSSAPI bind to %s failed (the domain controller likely requires "+
-				"LDAP signing for SASL binds; use LDAPS (the default transport) or --starttls, or fall back to "+
-				"simple bind with --user/--password without --kerberos): %w", servicePrincipal, err)
-		}
-		return fmt.Errorf("GSSAPI bind to %s failed: %w", servicePrincipal, err)
+		return enrichKerberosBindError(err, servicePrincipal, serverCert != nil)
 	}
 
 	return nil
+}
+
+// enrichKerberosBindError turns opaque AD GSSAPI bind failures into actionable
+// guidance. overTLS reports whether the bind ran over LDAPS/StartTLS, in which
+// case a tls-server-end-point channel binding was supplied.
+func enrichKerberosBindError(err error, servicePrincipal string, overTLS bool) error {
+	msg := err.Error()
+	switch {
+	case strings.Contains(msg, "80090346"):
+		// SEC_E_BAD_BINDINGS: the DC enforces LDAP channel binding and rejected
+		// the token. Over plaintext LDAP no binding can be sent at all.
+		if !overTLS {
+			return fmt.Errorf("GSSAPI bind to %s failed: the domain controller requires LDAP "+
+				"channel binding, which is only possible over TLS — use LDAPS (the default transport) "+
+				"or --starttls: %w", servicePrincipal, err)
+		}
+		return fmt.Errorf("GSSAPI bind to %s failed: the domain controller rejected the channel "+
+			"binding token (ensure --dc is the DC's certificate hostname and the TLS connection "+
+			"terminates at the DC, not a proxy/load balancer): %w", servicePrincipal, err)
+	case strings.Contains(msg, "80090308"):
+		// AD error 80090308 (SEC_E_INVALID_TOKEN). data 57 signals the DC
+		// requires LDAP signing and/or channel binding for SASL binds. Over TLS
+		// we now supply a channel binding, so a remaining failure points at
+		// signing enforcement on a non-TLS transport.
+		if !overTLS {
+			return fmt.Errorf("GSSAPI bind to %s failed: the domain controller requires LDAP signing "+
+				"and/or channel binding for SASL binds — use LDAPS (the default transport) or --starttls, "+
+				"or fall back to simple bind with --user/--password without --kerberos: %w", servicePrincipal, err)
+		}
+		return fmt.Errorf("GSSAPI bind to %s failed (the domain controller rejected the SASL bind; "+
+			"try simple bind with --user/--password without --kerberos over LDAPS): %w", servicePrincipal, err)
+	default:
+		return fmt.Errorf("GSSAPI bind to %s failed: %w", servicePrincipal, err)
+	}
 }
 
 // resolveKrb5Conf returns the krb5.conf path from the explicit option,
