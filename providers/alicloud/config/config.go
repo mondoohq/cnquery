@@ -6,6 +6,7 @@ package config
 import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/alicloud/connection"
 	"go.mondoo.com/mql/v13/providers/alicloud/provider"
 	"go.mondoo.com/mql/v13/providers/alicloud/resources"
 )
@@ -13,7 +14,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "alicloud",
 	ID:              "go.mondoo.com/mql/providers/alicloud",
-	Version:         "13.1.1",
+	Version:         "13.1.2",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{
 		{
@@ -99,4 +100,5 @@ Examples:
 			},
 		},
 	},
+	Platforms: connection.Platforms,
 }
