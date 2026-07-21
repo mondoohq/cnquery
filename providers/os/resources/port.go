@@ -445,7 +445,16 @@ func (p *mqlPorts) listWindows() ([]any, error) {
 	}
 
 	conn := p.MqlRuntime.Connection.(shared.Connection)
-	encodedCmd := powershell.Encode("Get-NetTCPConnection | ConvertTo-Json")
+	// Project only the fields parseWindowsPorts consumes before serializing.
+	// A bare `Get-NetTCPConnection | ConvertTo-Json` emits the full CIM object
+	// per connection (CimClass, CimInstanceProperties, and ~30 null fields);
+	// on a busy host that is a large buffered read + unmarshal that can stall
+	// the provider long enough to miss its heartbeat and get killed (surfaces
+	// as event_name="provider.crashed", resource=port). Select-Object keeps the
+	// payload to the six fields we read; @(...) forces an array so a single
+	// connection still decodes as []WinPort. State is cast to int to match
+	// ports.WinPort.State regardless of how the enum is serialized.
+	encodedCmd := powershell.Encode("@(Get-NetTCPConnection | Select-Object LocalAddress, LocalPort, RemoteAddress, RemotePort, @{Name='State';Expression={[int]$_.State}}, OwningProcess) | ConvertTo-Json")
 	executedCmd, err := conn.RunCommand(encodedCmd)
 	if err != nil {
 		return nil, err
