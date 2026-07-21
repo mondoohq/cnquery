@@ -88,10 +88,14 @@ gcp.organization @defaults("name") {
   sccOrganizationSettings() gcp.scc.organizationSettings
   // VPC Service Controls access policies
   accessPolicies() []gcp.accesscontextmanager.accessPolicy
+  // Context-aware access bindings gating organization members by access level
+  gcpUserAccessBindings() []gcp.accesscontextmanager.gcpUserAccessBinding
   // Custom Organization Policy constraints defined on the organization
   customConstraints() []gcp.orgPolicy.customConstraint
   // Cloud Identity groups in the associated Google Workspace / Cloud Identity account
   cloudIdentityGroups() []gcp.cloudIdentity.group
+  // Workforce Identity Federation pools defined on the organization
+  workforcePools() []gcp.organization.workforcePool
   // Network Security profiles defined for the organization
   networkSecurityProfiles() []gcp.organization.networkSecurityProfile
   // Network Security profile groups defined for the organization
@@ -249,6 +253,34 @@ private gcp.cloudIdentity.group @defaults("displayName email") {
   created time
   // Members of the group
   memberships() []gcp.cloudIdentity.membership
+  // Settings restricting which member types may join the group
+  securitySettings() gcp.cloudIdentity.group.securitySettings
+}
+
+// Google Cloud Identity group security settings
+//
+// Membership restriction attached to a Cloud Identity group. The
+// `memberRestrictionQuery` is a CEL expression that limits which principal
+// types (users, service accounts, groups, or specific customers) may be
+// added as members, and `memberRestrictionEvaluationState` reports whether
+// the current membership complies with that query. An empty query means the
+// group accepts any member type. Use this to audit groups that grant access
+// through IAM but do not constrain who can join them.
+private gcp.cloudIdentity.group.securitySettings @defaults("memberRestrictionQuery memberRestrictionEvaluationState") {
+  // Resource name of the settings (groups/{groupId}/securitySettings)
+  name string
+  // CEL query restricting which member types may join the group
+  //
+  // Limits the principal types allowed as members (for example
+  // `member.customer_id == 'C0xxxxxxx'` to allow only same-customer members).
+  // An empty query applies no restriction.
+  memberRestrictionQuery string
+  // Evaluation state of the member restriction
+  //
+  // One of EVALUATION_STATE_UNSPECIFIED, EVALUATING, COMPLIANT,
+  // FORWARD_COMPLIANT, NON_COMPLIANT, or EVALUATION_PAUSED. NON_COMPLIANT
+  // means existing members violate the restriction query.
+  memberRestrictionEvaluationState string
 }
 
 // Google Cloud Identity group membership
@@ -6204,6 +6236,98 @@ private gcp.project.iamService.workloadIdentityPool.provider @defaults("displayN
   x509TrustAnchorCount int
 }
 
+// Google Cloud (GCP) Workforce Identity Federation pool
+//
+// Federation pool that lets human identities from an external identity
+// provider (Okta, Microsoft Entra ID, or any OIDC/SAML IdP) sign in to
+// Google Cloud without Google accounts. Where workload pools federate
+// machine identities, workforce pools federate users. The `disabled` flag
+// and `expireTime` govern the pool lifecycle, `sessionDuration` bounds how
+// long minted credentials and console sessions stay valid, and the
+// `disableProgrammaticSignin` / `allowedServices` fields carry the access
+// restrictions that limit where pool users may sign in. The `providers`
+// accessor returns the OIDC and SAML identity providers whose assertions
+// the pool trusts.
+private gcp.organization.workforcePool @defaults("displayName name state") {
+  // Full resource name (locations/{location}/workforcePools/{poolId})
+  name string
+  // Short pool ID (the last segment of `name`)
+  poolId string
+  // Resource name of the parent organization (organizations/{orgId})
+  parent string
+  // User-specified display name
+  displayName string
+  // Human-readable description of the pool
+  description string
+  // Pool lifecycle state (STATE_UNSPECIFIED, ACTIVE, DELETED)
+  state string
+  // Whether the pool is disabled. Disabled pools cannot exchange tokens.
+  disabled bool
+  // Validity of credentials and console sign-in sessions minted from the pool
+  //
+  // A duration string such as `3600s`. Must be between 900s (15 minutes) and
+  // 43200s (12 hours). Empty means the one-hour default.
+  sessionDuration string
+  // Time the pool is scheduled to be permanently purged (set when `state` is DELETED)
+  expireTime time
+  // Whether programmatic sign-in via the Security Token Service is disabled for pool users
+  disableProgrammaticSignin bool
+  // Service domains web sign-in is restricted to
+  //
+  // Domain names of the Google Cloud services pool users may sign in to (for
+  // example `console.cloud.google`). Empty means no service restriction.
+  allowedServices []string
+  // Identity providers whose OIDC or SAML assertions the pool trusts
+  providers() []gcp.organization.workforcePool.provider
+}
+
+// Google Cloud (GCP) Workforce Identity Federation pool provider
+//
+// External OIDC or SAML identity provider whose assertions a workforce pool
+// trusts to sign human users in to Google Cloud. The `attributeMapping` and
+// `attributeCondition` gate which assertions are accepted and how they map to
+// Google identities, `detailedAuditLogging` controls whether mapped attribute
+// values are written to data-access logs, and `scimUsage` records whether
+// SCIM-managed groups override the mapped groups for authorization. The
+// `providerType` field is the discriminator (`oidc` or `saml`); the matching
+// `oidc*` / `saml*` fields carry the trust configuration for that type.
+private gcp.organization.workforcePool.provider @defaults("displayName providerType state") {
+  // Full resource name (locations/{location}/workforcePools/{poolId}/providers/{providerId})
+  name string
+  // Short provider ID (the last segment of `name`)
+  providerId string
+  // Short pool ID this provider belongs to
+  poolId string
+  // User-specified display name
+  displayName string
+  // Human-readable description of the provider
+  description string
+  // Provider lifecycle state (STATE_UNSPECIFIED, ACTIVE, DELETED)
+  state string
+  // Whether the provider is disabled. Disabled providers cannot exchange tokens.
+  disabled bool
+  // Time the provider is scheduled to be permanently purged (set when `state` is DELETED)
+  expireTime time
+  // Maps assertion attributes to Google Cloud attributes such as `google.subject` and `google.groups`
+  attributeMapping map[string]string
+  // CEL expression restricting which otherwise-valid assertions are accepted. When empty, all valid credentials are accepted.
+  attributeCondition string
+  // Whether additional attribute mapping debug information is written to Cloud Audit Logs (sts.googleapis.com data-access logs)
+  detailedAuditLogging bool
+  // Whether SCIM-managed groups are used for authorization instead of the mapped `google.groups` attribute
+  //
+  // One of SCIM_USAGE_UNSPECIFIED (do not use SCIM data) or ENABLED_FOR_GROUPS.
+  scimUsage string
+  // Discriminator for which protocol this provider trusts: `oidc` or `saml`
+  providerType string
+  // For OIDC providers: the issuer URL of the trusted IdP
+  oidcIssuerUri string
+  // For OIDC providers: the OAuth 2.0 client ID registered with the IdP
+  oidcClientId string
+  // For SAML providers: the SAML 2.0 IdP metadata XML document defining the trust
+  samlIdpMetadataXml string
+}
+
 // Google Cloud (GCP) Cloud Function (1st gen)
 //
 // First-generation Cloud Function deployed to a project, covering the
@@ -9586,6 +9710,8 @@ private gcp.project.certificateAuthorityService {
   projectId string
   // CA Pools in the project
   caPools() []gcp.project.certificateAuthorityService.caPool
+  // Certificate templates that constrain issuance in the project
+  certificateTemplates() []gcp.project.certificateAuthorityService.certificateTemplate
 }
 
 // Google Cloud (GCP) Certificate Authority Service CA pool
@@ -9709,6 +9835,90 @@ private gcp.project.certificateAuthorityService.certificateAuthority @defaults("
   expired() bool
   // Whole days until the certificate authority's certificate expires, rounded down (0 means within the next 24 hours; negative once expired)
   daysUntilExpiry() int
+  // Certificate revocation lists published by this certificate authority
+  certificateRevocationLists() []gcp.project.certificateAuthorityService.certificateRevocationList
+}
+
+// Google Cloud (GCP) Certificate Authority Service certificate revocation list
+//
+// Certificate revocation list (CRL) published by a certificate authority,
+// naming the certificates it has revoked. Each entry in
+// `revokedCertificates` carries the revoked certificate's serial number and
+// the reason it was revoked, while `state` distinguishes the current
+// `ACTIVE` list from a `SUPERSEDED` one and `sequenceNumber` orders the
+// series. The `accessUrl` is where relying parties fetch the CRL. Use this
+// to audit revocation coverage and confirm that superseded lists are not
+// still being served.
+private gcp.project.certificateAuthorityService.certificateRevocationList @defaults("name state sequenceNumber") {
+  // Project ID
+  projectId string
+  // Full resource name (projects/{project}/locations/{location}/caPools/{pool}/certificateAuthorities/{ca}/certificateRevocationLists/{crl})
+  resourcePath string
+  // Short CRL ID (the last segment of the resource name)
+  name string
+  // Location the CRL is hosted in
+  location string
+  // Monotonically increasing sequence number of the CRL within its series
+  sequenceNumber int
+  // CRL lifecycle state (STATE_UNSPECIFIED, ACTIVE, SUPERSEDED)
+  state string
+  // Revision ID identifying the content of this CRL
+  revisionId string
+  // URL where the CRL is published for relying parties
+  accessUrl string
+  // PEM-encoded CRL document
+  pemCrl string
+  // Certificates revoked by this CRL
+  //
+  // Each entry is a dict with `certificate` (the revoked certificate resource
+  // name), `hexSerialNumber` (its serial number), and `revocationReason`
+  // (REVOCATION_REASON_UNSPECIFIED, KEY_COMPROMISE, CERTIFICATE_AUTHORITY_COMPROMISE,
+  // AFFILIATION_CHANGED, SUPERSEDED, CESSATION_OF_OPERATION, CERTIFICATE_HOLD,
+  // PRIVILEGE_WITHDRAWN, or ATTRIBUTE_AUTHORITY_COMPROMISE).
+  revokedCertificates []dict
+  // Labels applied to the CRL
+  labels map[string]string
+  // Time the CRL was created
+  createdAt time
+  // Time the CRL was last updated
+  updatedAt time
+}
+
+// Google Cloud (GCP) Certificate Authority Service certificate template
+//
+// Reusable issuance template that constrains what certificates a CA pool may
+// issue. The `predefinedValues` carry the X.509 values (key usage, extended
+// key usage, CA options) baked into every certificate issued with the
+// template, `identityConstraints` limit which subject and subject-alternative
+// names a requester may set, `passthroughExtensions` list which requested
+// extensions are allowed through, and `maximumLifetime` caps how long an
+// issued certificate may be valid. Use this to audit the issuance guardrails
+// applied to certificate requests.
+private gcp.project.certificateAuthorityService.certificateTemplate @defaults("name") {
+  // Project ID
+  projectId string
+  // Full resource name (projects/{project}/locations/{location}/certificateTemplates/{template})
+  resourcePath string
+  // Short template ID (the last segment of the resource name)
+  name string
+  // Location the template is defined in
+  location string
+  // Human-readable description of the template
+  description string
+  // Maximum validity of certificates issued with the template, as a duration string (empty means no template-imposed cap)
+  maximumLifetime string
+  // X.509 values (key usage, extended key usage, CA options, policy IDs) baked into issued certificates
+  predefinedValues dict
+  // Constraints on the subject and subject-alternative names a requester may set
+  identityConstraints dict
+  // Which requested X.509 extensions are allowed to pass through into issued certificates
+  passthroughExtensions dict
+  // Labels applied to the template
+  labels map[string]string
+  // Time the template was created
+  createdAt time
+  // Time the template was last updated
+  updatedAt time
 }
 
 // Google Cloud (GCP) Certificate Authority Service certificate
@@ -14015,6 +14225,24 @@ private gcp.accesscontextmanager.accessPolicy @defaults("name title") {
   accessLevels() []gcp.accesscontextmanager.accessLevel
   // Service perimeters within this policy
   servicePerimeters() []gcp.accesscontextmanager.servicePerimeter
+}
+
+// Google Cloud Access Context Manager context-aware access binding
+//
+// Binding that requires the members of a Google group to satisfy one or
+// more VPC Service Controls access levels before they can reach Google
+// Cloud console and API surfaces. The `groupKey` selects the group and
+// `accessLevels` lists the levels its members must meet, so a binding with
+// an empty `accessLevels` list gates a group behind no conditions. Use this
+// to audit which groups in the organization are subject to context-aware
+// access and which are unrestricted.
+private gcp.accesscontextmanager.gcpUserAccessBinding @defaults("groupKey") {
+  // Full resource name (organizations/{orgId}/gcpUserAccessBindings/{bindingId})
+  name string
+  // Google group ID whose members the binding applies to
+  groupKey string
+  // Access levels members must satisfy (accessPolicies/{policyId}/accessLevels/{levelId})
+  accessLevels []string
 }
 
 // Google Cloud Access Context Manager access level

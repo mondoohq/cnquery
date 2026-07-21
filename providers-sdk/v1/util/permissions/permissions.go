@@ -1097,15 +1097,36 @@ func findMeaningfulResource(chain []string) string {
 		"Projects": true, "Locations": true, "Regions": true,
 		"Zones": true, "Global": true,
 	}
+	// Generic container segments that collide across different parents. Both
+	// WorkloadIdentityPools and WorkforcePools expose a ".Providers.List", so a
+	// bare "Providers" cannot be mapped to a single IAM permission. Qualify such
+	// leaves with their nearest non-skip parent (e.g. "WorkforcePools.Providers")
+	// so the override map can disambiguate them.
+	qualify := map[string]bool{"Providers": true}
+
+	leafIdx := -1
 	for i := len(chain) - 1; i >= 0; i-- {
 		if i == len(chain)-1 || !skip[chain[i]] {
-			return chain[i]
+			leafIdx = i
+			break
 		}
 	}
-	if len(chain) > 0 {
-		return chain[len(chain)-1]
+	if leafIdx < 0 {
+		if len(chain) > 0 {
+			return chain[len(chain)-1]
+		}
+		return ""
 	}
-	return ""
+
+	leaf := chain[leafIdx]
+	if qualify[leaf] {
+		for j := leafIdx - 1; j >= 0; j-- {
+			if !skip[chain[j]] {
+				return chain[j] + "." + leaf
+			}
+		}
+	}
+	return leaf
 }
 
 func isGCPAPIMethod(name string) bool {
@@ -1302,9 +1323,11 @@ var gcpPermissionOverrides = map[string]map[string]string{
 		"GetSchema": "pubsub.schemas.get",
 	},
 	"iam": {
-		// WorkloadIdentityPools.Providers.List → the resource segment is "Providers",
-		// but the real IAM permission is "iam.workloadIdentityPoolProviders.list".
-		"Providers.List": "iam.workloadIdentityPoolProviders.list",
+		// The resource segment for a pool's providers is the generic "Providers",
+		// which findMeaningfulResource qualifies with the parent pool type so the
+		// two pool families map to their distinct IAM permissions.
+		"WorkloadIdentityPools.Providers.List": "iam.workloadIdentityPoolProviders.list",
+		"WorkforcePools.Providers.List":        "iam.workforcePoolProviders.list",
 		// IAM v2 deny policies are listed via iam.denypolicies.list, not the
 		// generic "iam.policies.list" (which is not a real permission).
 		"ListPolicies": "iam.denypolicies.list",

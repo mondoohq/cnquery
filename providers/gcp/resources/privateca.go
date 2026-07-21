@@ -396,3 +396,161 @@ func (g *mqlGcpProjectCertificateAuthorityServiceCertificate) id() (string, erro
 	}
 	return g.ResourcePath.Data, nil
 }
+
+func (g *mqlGcpProjectCertificateAuthorityServiceCertificateRevocationList) id() (string, error) {
+	if g.ResourcePath.Error != nil {
+		return "", g.ResourcePath.Error
+	}
+	return g.ResourcePath.Data, nil
+}
+
+func (g *mqlGcpProjectCertificateAuthorityServiceCertificateAuthority) certificateRevocationLists() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	if g.ResourcePath.Error != nil {
+		return nil, g.ResourcePath.Error
+	}
+	projectId := g.ProjectId.Data
+	caPath := g.ResourcePath.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(privateca.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := privateca.NewCertificateAuthorityClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	it := client.ListCertificateRevocationLists(ctx, &privatecapb.ListCertificateRevocationListsRequest{
+		Parent: caPath,
+	})
+
+	var res []any
+	for {
+		crl, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		revoked := make([]any, 0, len(crl.RevokedCertificates))
+		for _, rc := range crl.RevokedCertificates {
+			revoked = append(revoked, map[string]any{
+				"certificate":      rc.Certificate,
+				"hexSerialNumber":  rc.HexSerialNumber,
+				"revocationReason": rc.RevocationReason.String(),
+			})
+		}
+
+		mqlCrl, err := CreateResource(g.MqlRuntime, "gcp.project.certificateAuthorityService.certificateRevocationList", map[string]*llx.RawData{
+			"projectId":           llx.StringData(projectId),
+			"resourcePath":        llx.StringData(crl.Name),
+			"name":                llx.StringData(parseResourceName(crl.Name)),
+			"location":            llx.StringData(parseLocationFromPath(crl.Name)),
+			"sequenceNumber":      llx.IntData(crl.SequenceNumber),
+			"state":               llx.StringData(crl.State.String()),
+			"revisionId":          llx.StringData(crl.RevisionId),
+			"accessUrl":           llx.StringData(crl.AccessUrl),
+			"pemCrl":              llx.StringData(crl.PemCrl),
+			"revokedCertificates": llx.ArrayData(revoked, types.Dict),
+			"labels":              llx.MapData(convert.MapToInterfaceMap(crl.Labels), types.String),
+			"createdAt":           llx.TimeDataPtr(timestampAsTimePtr(crl.CreateTime)),
+			"updatedAt":           llx.TimeDataPtr(timestampAsTimePtr(crl.UpdateTime)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlCrl)
+	}
+
+	return res, nil
+}
+
+func (g *mqlGcpProjectCertificateAuthorityServiceCertificateTemplate) id() (string, error) {
+	if g.ResourcePath.Error != nil {
+		return "", g.ResourcePath.Error
+	}
+	return g.ResourcePath.Data, nil
+}
+
+func (g *mqlGcpProjectCertificateAuthorityService) certificateTemplates() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(privateca.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := privateca.NewCertificateAuthorityClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	it := client.ListCertificateTemplates(ctx, &privatecapb.ListCertificateTemplatesRequest{
+		Parent: fmt.Sprintf("projects/%s/locations/-", projectId),
+	})
+
+	var res []any
+	for {
+		tmpl, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		predefinedValues, err := protoToDict(tmpl.PredefinedValues)
+		if err != nil {
+			return nil, err
+		}
+		identityConstraints, err := protoToDict(tmpl.IdentityConstraints)
+		if err != nil {
+			return nil, err
+		}
+		passthroughExtensions, err := protoToDict(tmpl.PassthroughExtensions)
+		if err != nil {
+			return nil, err
+		}
+
+		maximumLifetime := ""
+		if tmpl.MaximumLifetime != nil {
+			maximumLifetime = tmpl.MaximumLifetime.AsDuration().String()
+		}
+
+		mqlTmpl, err := CreateResource(g.MqlRuntime, "gcp.project.certificateAuthorityService.certificateTemplate", map[string]*llx.RawData{
+			"projectId":             llx.StringData(projectId),
+			"resourcePath":          llx.StringData(tmpl.Name),
+			"name":                  llx.StringData(parseResourceName(tmpl.Name)),
+			"location":              llx.StringData(parseLocationFromPath(tmpl.Name)),
+			"description":           llx.StringData(tmpl.Description),
+			"maximumLifetime":       llx.StringData(maximumLifetime),
+			"predefinedValues":      llx.DictData(predefinedValues),
+			"identityConstraints":   llx.DictData(identityConstraints),
+			"passthroughExtensions": llx.DictData(passthroughExtensions),
+			"labels":                llx.MapData(convert.MapToInterfaceMap(tmpl.Labels), types.String),
+			"createdAt":             llx.TimeDataPtr(timestampAsTimePtr(tmpl.CreateTime)),
+			"updatedAt":             llx.TimeDataPtr(timestampAsTimePtr(tmpl.UpdateTime)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlTmpl)
+	}
+
+	return res, nil
+}

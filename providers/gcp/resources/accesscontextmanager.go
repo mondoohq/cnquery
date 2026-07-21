@@ -30,6 +30,51 @@ func (g *mqlGcpAccesscontextmanagerServicePerimeter) id() (string, error) {
 	return g.Name.Data, g.Name.Error
 }
 
+func (g *mqlGcpAccesscontextmanagerGcpUserAccessBinding) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
+func (g *mqlGcpOrganization) gcpUserAccessBindings() ([]any, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	orgId, err := conn.OrganizationID()
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := newACMClient(conn)
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	it := client.ListGcpUserAccessBindings(context.Background(), &acmpb.ListGcpUserAccessBindingsRequest{
+		Parent: "organizations/" + orgId,
+	})
+
+	var res []any
+	for {
+		binding, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		mqlBinding, err := CreateResource(g.MqlRuntime, "gcp.accesscontextmanager.gcpUserAccessBinding", map[string]*llx.RawData{
+			"name":         llx.StringData(binding.Name),
+			"groupKey":     llx.StringData(binding.GroupKey),
+			"accessLevels": llx.ArrayData(convert.SliceAnyToInterface(binding.AccessLevels), types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlBinding)
+	}
+
+	return res, nil
+}
+
 func newACMClient(conn *connection.GcpConnection) (*accesscontextmanager.Client, error) {
 	creds, err := conn.Credentials(accesscontextmanager.DefaultAuthScopes()...)
 	if err != nil {

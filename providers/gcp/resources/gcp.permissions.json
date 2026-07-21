@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
-  "version": "13.31.2",
-  "generated_at": "2026-07-18T10:34:00-07:00",
+  "version": "13.32.0",
+  "generated_at": "2026-07-21T08:12:38-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.batchPredictionJobs.list",
@@ -73,6 +73,7 @@
     "clouddeploy.targets.list",
     "cloudfunctions.functions.getIamPolicy",
     "cloudfunctions.functions.list",
+    "cloudidentity.groups.getsecuritysettings",
     "cloudkms.cryptoKeyVersions.list",
     "cloudkms.cryptoKeys.get",
     "cloudkms.cryptoKeys.getIamPolicy",
@@ -190,6 +191,8 @@
     "iam.serviceAccountKeys.list",
     "iam.serviceAccounts.getIamPolicy",
     "iam.serviceAccounts.list",
+    "iam.workforcePoolProviders.list",
+    "iam.workforcePools.list",
     "iam.workloadIdentityPoolProviders.list",
     "iam.workloadIdentityPools.list",
     "iap.projects.getSettings",
@@ -236,6 +239,8 @@
     "policyanalyzer.serviceAccountLastAuthenticationActivities.query",
     "privateca.caPools.list",
     "privateca.certificateAuthorities.list",
+    "privateca.certificateRevocationLists.list",
+    "privateca.certificateTemplates.list",
     "privateca.certificates.list",
     "pubsub.schemas.get",
     "pubsub.schemas.list",
@@ -704,6 +709,12 @@
       "service": "cloudfunctions",
       "action": "ListFunctions",
       "source_file": "cloud_functions_v2.go"
+    },
+    {
+      "permission": "cloudidentity.groups.getsecuritysettings",
+      "service": "cloudidentity",
+      "action": "Groups.GetSecuritySettings",
+      "source_file": "cloudidentity.go"
     },
     {
       "permission": "cloudkms.cryptoKeyVersions.list",
@@ -1450,9 +1461,21 @@
       "source_file": "iam.go"
     },
     {
+      "permission": "iam.workforcePoolProviders.list",
+      "service": "iam",
+      "action": "WorkforcePools.Providers.List",
+      "source_file": "iam_workforce.go"
+    },
+    {
+      "permission": "iam.workforcePools.list",
+      "service": "iam",
+      "action": "WorkforcePools.List",
+      "source_file": "iam_workforce.go"
+    },
+    {
       "permission": "iam.workloadIdentityPoolProviders.list",
       "service": "iam",
-      "action": "Providers.List",
+      "action": "WorkloadIdentityPools.Providers.List",
       "source_file": "iam_workload_identity.go"
     },
     {
@@ -1730,6 +1753,18 @@
       "permission": "privateca.certificateAuthorities.list",
       "service": "privateca",
       "action": "ListCertificateAuthorities",
+      "source_file": "privateca.go"
+    },
+    {
+      "permission": "privateca.certificateRevocationLists.list",
+      "service": "privateca",
+      "action": "ListCertificateRevocationLists",
+      "source_file": "privateca.go"
+    },
+    {
+      "permission": "privateca.certificateTemplates.list",
+      "service": "privateca",
+      "action": "ListCertificateTemplates",
       "source_file": "privateca.go"
     },
     {

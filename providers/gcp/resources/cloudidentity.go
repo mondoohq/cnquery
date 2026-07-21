@@ -8,6 +8,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"go.mondoo.com/mql/v13/types"
@@ -21,6 +22,69 @@ func (g *mqlGcpCloudIdentityGroup) id() (string, error) {
 
 func (g *mqlGcpCloudIdentityMembership) id() (string, error) {
 	return g.Name.Data, g.Name.Error
+}
+
+func (g *mqlGcpCloudIdentityGroupSecuritySettings) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
+func (g *mqlGcpCloudIdentityGroup) securitySettings() (*mqlGcpCloudIdentityGroupSecuritySettings, error) {
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	groupName := g.Name.Data
+	if groupName == "" {
+		g.SecuritySettings.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	conn, ok := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	if !ok {
+		g.SecuritySettings.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	client, err := conn.Client(cloudidentity.CloudIdentityGroupsReadonlyScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	cloudIdentitySvc, err := cloudidentity.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	// read_mask selects which settings the API returns; member_restriction is
+	// the only member-governance surface exposed here.
+	settings, err := cloudIdentitySvc.Groups.GetSecuritySettings(groupName + "/securitySettings").
+		ReadMask("memberRestriction").Context(ctx).Do()
+	if err != nil {
+		if isHTTPSkippable(err) {
+			log.Warn().Err(err).Str("group", groupName).Msg("could not get Cloud Identity group security settings")
+			g.SecuritySettings.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	query := ""
+	evaluationState := ""
+	if settings.MemberRestriction != nil {
+		query = settings.MemberRestriction.Query
+		if settings.MemberRestriction.Evaluation != nil {
+			evaluationState = settings.MemberRestriction.Evaluation.State
+		}
+	}
+
+	res, err := CreateResource(g.MqlRuntime, "gcp.cloudIdentity.group.securitySettings", map[string]*llx.RawData{
+		"name":                             llx.StringData(settings.Name),
+		"memberRestrictionQuery":           llx.StringData(query),
+		"memberRestrictionEvaluationState": llx.StringData(evaluationState),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpCloudIdentityGroupSecuritySettings), nil
 }
 
 // cloudIdentityGroups lists the Cloud Identity / Workspace groups for the
