@@ -9,7 +9,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"strings"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
@@ -17,6 +19,9 @@ import (
 	"go.mondoo.com/mql/v13/providers/os/resources/powershell"
 	"go.mondoo.com/mql/v13/utils/multierr"
 )
+
+// var so tests can override the endpoint
+var imdsBaseURL = "http://169.254.169.254"
 
 const (
 	// https://learn.microsoft.com/en-us/azure/virtual-machines/instance-metadata-service?tabs=windows#supported-api-versions
@@ -138,7 +143,34 @@ func (m *commandInstanceMetadata) Identify() (Identity, error) {
 	}, nil
 }
 
+// httpMetadata fetches an IMDS endpoint over HTTP (local connection path).
+func (m *commandInstanceMetadata) httpMetadata(endpoint string) ([]byte, error) {
+	url := fmt.Sprintf("%s/metadata/%s?api-version=%s", imdsBaseURL, endpoint, IMDSApiVersion)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Metadata", "true")
+
+	// link-local, never via a proxy
+	client := &http.Client{
+		Timeout:   10 * time.Second,
+		Transport: &http.Transport{Proxy: nil},
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	return io.ReadAll(resp.Body)
+}
+
 func (m *commandInstanceMetadata) instanceDocument() ([]byte, error) {
+	if m.conn.Type() == shared.Type_Local {
+		return m.httpMetadata("instance")
+	}
+
 	var (
 		cmd *shared.Command
 		err error
@@ -161,6 +193,10 @@ func (m *commandInstanceMetadata) instanceDocument() ([]byte, error) {
 }
 
 func (m *commandInstanceMetadata) loadbalancerDocument() ([]byte, error) {
+	if m.conn.Type() == shared.Type_Local {
+		return m.httpMetadata("loadbalancer")
+	}
+
 	var (
 		cmd *shared.Command
 		err error

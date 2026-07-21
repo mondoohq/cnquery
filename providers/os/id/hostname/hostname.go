@@ -6,6 +6,8 @@ package hostname
 import (
 	"fmt"
 	"io"
+	"os"
+	"runtime"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -51,6 +53,17 @@ func Hostname(conn shared.Connection, pf *inventory.Platform) (string, bool) {
 			return hostname, true
 		}
 		log.Debug().Err(err).Str("ipversion", "IPv6").Msg("could not detect hostname")
+	}
+
+	// On local Windows, resolve in-process to avoid spawning `powershell -c hostname`.
+	if conn.Type() == shared.Type_Local && runtime.GOOS == "windows" {
+		if hn, err := os.Hostname(); err == nil {
+			if hn = strings.TrimSpace(hn); hn != "" {
+				return hn, true
+			}
+		} else {
+			log.Debug().Err(err).Msg("could not resolve hostname via os.Hostname, falling back to command")
+		}
 	}
 
 	// This is the preferred way to get the hostname on windows, it is important to not use the -f flag here

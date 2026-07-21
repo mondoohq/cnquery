@@ -6,11 +6,15 @@ package azcompute
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers/os/connection/local"
 	"go.mondoo.com/mql/v13/providers/os/connection/mock"
 	"go.mondoo.com/mql/v13/providers/os/detector"
 )
@@ -254,4 +258,29 @@ func expectedRawMetadataLoadbalancer() string {
     }
   }
 `
+}
+
+func TestLocalHTTPMetadata(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "true", r.Header.Get("Metadata"))
+		if strings.Contains(r.URL.Path, "/metadata/instance") {
+			_, _ = w.Write([]byte(`{"compute":{"resourceId":"/subscriptions/sub-123/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm","subscriptionId":"sub-123","tags":""}}`))
+			return
+		}
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer srv.Close()
+
+	old := imdsBaseURL
+	imdsBaseURL = srv.URL
+	defer func() { imdsBaseURL = old }()
+
+	conn := local.NewConnection(0, &inventory.Config{}, &inventory.Asset{})
+	require.Equal(t, "local", string(conn.Type()))
+
+	md := commandInstanceMetadata{conn, &inventory.Platform{Name: "windows", Family: []string{"windows"}}}
+	ident, err := md.Identify()
+	require.NoError(t, err)
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/azure/subscriptions/sub-123/resourcegroups/rg/providers/microsoft.compute/virtualmachines/vm", ident.InstanceID)
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/azure/subscriptions/sub-123", ident.AccountID)
 }

@@ -144,20 +144,7 @@ func (s *WindowsSmbiosManager) Info() (*SmBiosInfo, error) {
 		return s.smInfo, nil
 	}
 
-	c, err := s.provider.RunCommand(powershell.Encode(smbiosWindowsScript))
-	if err != nil {
-		return nil, err
-	}
-
-	if c.ExitStatus != 0 {
-		stderr, err := io.ReadAll(c.Stderr)
-		if err != nil {
-			return nil, err
-		}
-		return nil, errors.New("failed to retrieve smbios info: " + string(stderr))
-	}
-
-	winBios, err := ParseWindowsSmbiosInfo(c.Stdout)
+	winBios, err := fetchWindowsSmbios(s.provider)
 	if err != nil {
 		return nil, err
 	}
@@ -203,6 +190,26 @@ func toString(i *string) string {
 		return ""
 	}
 	return *i
+}
+
+// remote path, and fallback for the local native path
+func fetchWindowsSmbiosPowershell(conn shared.Connection) (smbiosWindows, error) {
+	var winBios smbiosWindows
+
+	c, err := conn.RunCommand(powershell.Encode(smbiosWindowsScript))
+	if err != nil {
+		return winBios, err
+	}
+
+	if c.ExitStatus != 0 {
+		stderr, err := io.ReadAll(c.Stderr)
+		if err != nil {
+			return winBios, err
+		}
+		return winBios, errors.New("failed to retrieve smbios info: " + string(stderr))
+	}
+
+	return ParseWindowsSmbiosInfo(c.Stdout)
 }
 
 func ParseWindowsSmbiosInfo(r io.Reader) (smbiosWindows, error) {
