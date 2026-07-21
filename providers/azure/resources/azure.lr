@@ -10436,6 +10436,12 @@ private azure.subscription.policy @defaults("subscriptionId") {
   // Aggregate policy compliance summary for the subscription
   complianceSummary() azure.subscription.policy.complianceSummary
   // Per-resource policy compliance states in the subscription
+  //
+  // Enumerates the latest compliance evaluation of every resource
+  // against every applicable policy, so the result set can be large on
+  // subscriptions with many resources and assignments. Fetched only
+  // when queried; filter by `complianceState` to isolate non-compliant
+  // resources.
   states() []azure.subscription.policy.state
 }
 
@@ -10451,7 +10457,9 @@ private azure.subscription.policy @defaults("subscriptionId") {
 private azure.subscription.policy.state @defaults("complianceState resourceType policyDefinitionName") {
   // Compliance state ("Compliant", "NonCompliant", "Conflict", "Exempt")
   complianceState string
-  // ARM resource ID of the evaluated resource
+  // Full ARM resource ID of the evaluated resource
+  //
+  // For example `/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Compute/virtualMachines/<vm>`.
   resourceId string
   // Resource type of the evaluated resource
   resourceType string
@@ -10459,14 +10467,14 @@ private azure.subscription.policy.state @defaults("complianceState resourceType 
   resourceGroup string
   // Location of the evaluated resource
   resourceLocation string
-  // Resource ID of the policy assignment that produced this state
-  policyAssignmentId string
+  // Policy assignment that produced this state
+  policyAssignment() azure.subscription.policy.assignment
   // Name of the policy assignment
   policyAssignmentName string
   // Scope of the policy assignment
   policyAssignmentScope string
-  // Resource ID of the policy definition evaluated
-  policyDefinitionId string
+  // Policy definition evaluated
+  policyDefinition() azure.subscription.policy.definition
   // Name of the policy definition
   policyDefinitionName string
   // Reference ID of the definition within an initiative (set definition), if applicable
@@ -10475,8 +10483,8 @@ private azure.subscription.policy.state @defaults("complianceState resourceType 
   policyDefinitionAction string
   // Category of the policy definition (e.g. "Security Center", "Storage")
   policyDefinitionCategory string
-  // Resource ID of the initiative (set definition), if the assignment is an initiative
-  policySetDefinitionId string
+  // Initiative (set definition) the assignment applies, if any
+  policySetDefinition() azure.subscription.policy.setDefinition
   // Name of the initiative (set definition), if applicable
   policySetDefinitionName string
   // When the evaluation was recorded
