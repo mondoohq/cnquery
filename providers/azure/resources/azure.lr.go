@@ -261,6 +261,8 @@ const (
 	ResourceAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties                string = "azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties"
 	ResourceAzureSubscriptionKeyVaultServiceSecret                                                    string = "azure.subscription.keyVaultService.secret"
 	ResourceAzureSubscriptionMonitorService                                                           string = "azure.subscription.monitorService"
+	ResourceAzureSubscriptionMonitorServiceMetricAlert                                                string = "azure.subscription.monitorService.metricAlert"
+	ResourceAzureSubscriptionMonitorServiceScheduledQueryRule                                         string = "azure.subscription.monitorService.scheduledQueryRule"
 	ResourceAzureSubscriptionMonitorServiceActionGroup                                                string = "azure.subscription.monitorService.actionGroup"
 	ResourceAzureSubscriptionMonitorServiceActivityLog                                                string = "azure.subscription.monitorService.activityLog"
 	ResourceAzureSubscriptionMonitorServiceApplicationInsight                                         string = "azure.subscription.monitorService.applicationInsight"
@@ -1471,6 +1473,14 @@ func init() {
 		"azure.subscription.monitorService": {
 			Init:   initAzureSubscriptionMonitorService,
 			Create: createAzureSubscriptionMonitorService,
+		},
+		"azure.subscription.monitorService.metricAlert": {
+			// to override args, implement: initAzureSubscriptionMonitorServiceMetricAlert(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionMonitorServiceMetricAlert,
+		},
+		"azure.subscription.monitorService.scheduledQueryRule": {
+			// to override args, implement: initAzureSubscriptionMonitorServiceScheduledQueryRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionMonitorServiceScheduledQueryRule,
 		},
 		"azure.subscription.monitorService.actionGroup": {
 			// to override args, implement: initAzureSubscriptionMonitorServiceActionGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -11508,6 +11518,102 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.monitorService.actionGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorService).GetActionGroups()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.actionGroup")))
+	},
+	"azure.subscription.monitorService.metricAlerts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorService).GetMetricAlerts()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.metricAlert")))
+	},
+	"azure.subscription.monitorService.scheduledQueryRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorService).GetScheduledQueryRules()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.scheduledQueryRule")))
+	},
+	"azure.subscription.monitorService.metricAlert.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.metricAlert.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.metricAlert.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.metricAlert.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.monitorService.metricAlert.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).GetSeverity()).ToDataRes(types.Int)
+	},
+	"azure.subscription.monitorService.metricAlert.scopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).GetScopes()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.monitorService.metricAlert.evaluationFrequency": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).GetEvaluationFrequency()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.metricAlert.windowSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).GetWindowSize()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.metricAlert.autoMitigate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).GetAutoMitigate()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.monitorService.metricAlert.targetResourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).GetTargetResourceType()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.metricAlert.targetResourceRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).GetTargetResourceRegion()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.metricAlert.criteria": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).GetCriteria()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.monitorService.metricAlert.lastUpdatedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).GetLastUpdatedTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.monitorService.metricAlert.actionGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).GetActionGroups()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.actionGroup")))
+	},
+	"azure.subscription.monitorService.metricAlert.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).GetDisplayName()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).GetSeverity()).ToDataRes(types.Int)
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.scopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).GetScopes()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.evaluationFrequency": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).GetEvaluationFrequency()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.windowSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).GetWindowSize()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.muteActionsDuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).GetMuteActionsDuration()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.autoMitigate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).GetAutoMitigate()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.targetResourceTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).GetTargetResourceTypes()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.criteria": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).GetCriteria()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.actionGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).GetActionGroups()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.actionGroup")))
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
 	"azure.subscription.monitorService.actionGroup.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorServiceActionGroup).GetId()).ToDataRes(types.String)
@@ -31916,6 +32022,142 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.monitorService.actionGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionMonitorService).ActionGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.metricAlerts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorService).MetricAlerts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.scheduledQueryRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorService).ScheduledQueryRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.metricAlert.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.monitorService.metricAlert.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.metricAlert.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.metricAlert.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.metricAlert.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.metricAlert.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).Severity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.metricAlert.scopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).Scopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.metricAlert.evaluationFrequency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).EvaluationFrequency, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.metricAlert.windowSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).WindowSize, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.metricAlert.autoMitigate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).AutoMitigate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.metricAlert.targetResourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).TargetResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.metricAlert.targetResourceRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).TargetResourceRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.metricAlert.criteria": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).Criteria, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.metricAlert.lastUpdatedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).LastUpdatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.metricAlert.actionGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).ActionGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.metricAlert.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).Severity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.scopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).Scopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.evaluationFrequency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).EvaluationFrequency, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.windowSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).WindowSize, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.muteActionsDuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).MuteActionsDuration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.autoMitigate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).AutoMitigate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.targetResourceTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).TargetResourceTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.criteria": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).Criteria, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.actionGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).ActionGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.monitorService.actionGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -74182,6 +74424,8 @@ type mqlAzureSubscriptionMonitorService struct {
 	Workspaces          plugin.TValue[[]any]
 	QueryPacks          plugin.TValue[[]any]
 	ActionGroups        plugin.TValue[[]any]
+	MetricAlerts        plugin.TValue[[]any]
+	ScheduledQueryRules plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionMonitorService creates a new instance of this resource
@@ -74334,6 +74578,324 @@ func (c *mqlAzureSubscriptionMonitorService) GetActionGroups() *plugin.TValue[[]
 		}
 
 		return c.actionGroups()
+	})
+}
+
+func (c *mqlAzureSubscriptionMonitorService) GetMetricAlerts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MetricAlerts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.monitorService", c.__id, "metricAlerts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.metricAlerts()
+	})
+}
+
+func (c *mqlAzureSubscriptionMonitorService) GetScheduledQueryRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ScheduledQueryRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.monitorService", c.__id, "scheduledQueryRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.scheduledQueryRules()
+	})
+}
+
+// mqlAzureSubscriptionMonitorServiceMetricAlert for the azure.subscription.monitorService.metricAlert resource
+type mqlAzureSubscriptionMonitorServiceMetricAlert struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionMonitorServiceMetricAlertInternal
+	Id                   plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Description          plugin.TValue[string]
+	Enabled              plugin.TValue[bool]
+	Severity             plugin.TValue[int64]
+	Scopes               plugin.TValue[[]any]
+	EvaluationFrequency  plugin.TValue[string]
+	WindowSize           plugin.TValue[string]
+	AutoMitigate         plugin.TValue[bool]
+	TargetResourceType   plugin.TValue[string]
+	TargetResourceRegion plugin.TValue[string]
+	Criteria             plugin.TValue[any]
+	LastUpdatedTime      plugin.TValue[*time.Time]
+	ActionGroups         plugin.TValue[[]any]
+	SystemMetadata       plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionMonitorServiceMetricAlert creates a new instance of this resource
+func createAzureSubscriptionMonitorServiceMetricAlert(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionMonitorServiceMetricAlert{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.monitorService.metricAlert", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceMetricAlert) MqlName() string {
+	return "azure.subscription.monitorService.metricAlert"
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceMetricAlert) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceMetricAlert) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceMetricAlert) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceMetricAlert) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceMetricAlert) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceMetricAlert) GetSeverity() *plugin.TValue[int64] {
+	return &c.Severity
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceMetricAlert) GetScopes() *plugin.TValue[[]any] {
+	return &c.Scopes
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceMetricAlert) GetEvaluationFrequency() *plugin.TValue[string] {
+	return &c.EvaluationFrequency
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceMetricAlert) GetWindowSize() *plugin.TValue[string] {
+	return &c.WindowSize
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceMetricAlert) GetAutoMitigate() *plugin.TValue[bool] {
+	return &c.AutoMitigate
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceMetricAlert) GetTargetResourceType() *plugin.TValue[string] {
+	return &c.TargetResourceType
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceMetricAlert) GetTargetResourceRegion() *plugin.TValue[string] {
+	return &c.TargetResourceRegion
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceMetricAlert) GetCriteria() *plugin.TValue[any] {
+	return &c.Criteria
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceMetricAlert) GetLastUpdatedTime() *plugin.TValue[*time.Time] {
+	return &c.LastUpdatedTime
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceMetricAlert) GetActionGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ActionGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.monitorService.metricAlert", c.__id, "actionGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.actionGroups()
+	})
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceMetricAlert) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.monitorService.metricAlert", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionMonitorServiceScheduledQueryRule for the azure.subscription.monitorService.scheduledQueryRule resource
+type mqlAzureSubscriptionMonitorServiceScheduledQueryRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionMonitorServiceScheduledQueryRuleInternal
+	Id                  plugin.TValue[string]
+	Name                plugin.TValue[string]
+	DisplayName         plugin.TValue[string]
+	Description         plugin.TValue[string]
+	Enabled             plugin.TValue[bool]
+	Severity            plugin.TValue[int64]
+	Scopes              plugin.TValue[[]any]
+	EvaluationFrequency plugin.TValue[string]
+	WindowSize          plugin.TValue[string]
+	MuteActionsDuration plugin.TValue[string]
+	AutoMitigate        plugin.TValue[bool]
+	TargetResourceTypes plugin.TValue[[]any]
+	Criteria            plugin.TValue[any]
+	ActionGroups        plugin.TValue[[]any]
+	SystemMetadata      plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionMonitorServiceScheduledQueryRule creates a new instance of this resource
+func createAzureSubscriptionMonitorServiceScheduledQueryRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionMonitorServiceScheduledQueryRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.monitorService.scheduledQueryRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceScheduledQueryRule) MqlName() string {
+	return "azure.subscription.monitorService.scheduledQueryRule"
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceScheduledQueryRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceScheduledQueryRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceScheduledQueryRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceScheduledQueryRule) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceScheduledQueryRule) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceScheduledQueryRule) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceScheduledQueryRule) GetSeverity() *plugin.TValue[int64] {
+	return &c.Severity
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceScheduledQueryRule) GetScopes() *plugin.TValue[[]any] {
+	return &c.Scopes
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceScheduledQueryRule) GetEvaluationFrequency() *plugin.TValue[string] {
+	return &c.EvaluationFrequency
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceScheduledQueryRule) GetWindowSize() *plugin.TValue[string] {
+	return &c.WindowSize
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceScheduledQueryRule) GetMuteActionsDuration() *plugin.TValue[string] {
+	return &c.MuteActionsDuration
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceScheduledQueryRule) GetAutoMitigate() *plugin.TValue[bool] {
+	return &c.AutoMitigate
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceScheduledQueryRule) GetTargetResourceTypes() *plugin.TValue[[]any] {
+	return &c.TargetResourceTypes
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceScheduledQueryRule) GetCriteria() *plugin.TValue[any] {
+	return &c.Criteria
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceScheduledQueryRule) GetActionGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ActionGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.monitorService.scheduledQueryRule", c.__id, "actionGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.actionGroups()
+	})
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceScheduledQueryRule) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.monitorService.scheduledQueryRule", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
 	})
 }
 

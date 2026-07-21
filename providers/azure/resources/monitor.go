@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -491,6 +492,267 @@ func (a *mqlAzureSubscriptionMonitorService) actionGroups() ([]any, error) {
 			}
 			mqlAg.(*mqlAzureSubscriptionMonitorServiceActionGroup).cacheSystemData = sysData
 			res = append(res, mqlAg)
+		}
+	}
+	return res, nil
+}
+
+// resolveActionGroups resolves a list of action-group ARM IDs to the typed
+// actionGroup resources by filtering the subscription's action groups. ARM IDs
+// are matched case-insensitively. Returns an empty list when the rule
+// references no action groups.
+func resolveActionGroups(runtime *plugin.Runtime, subscriptionId string, actionGroupIds []string) ([]any, error) {
+	if len(actionGroupIds) == 0 {
+		return []any{}, nil
+	}
+	msRes, err := CreateResource(runtime, "azure.subscription.monitorService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(subscriptionId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	agsVal := msRes.(*mqlAzureSubscriptionMonitorService).GetActionGroups()
+	if agsVal.Error != nil {
+		return nil, agsVal.Error
+	}
+	want := make(map[string]struct{}, len(actionGroupIds))
+	for _, id := range actionGroupIds {
+		if id != "" {
+			want[strings.ToLower(id)] = struct{}{}
+		}
+	}
+	res := []any{}
+	for _, agAny := range agsVal.Data {
+		ag, ok := agAny.(*mqlAzureSubscriptionMonitorServiceActionGroup)
+		if !ok {
+			continue
+		}
+		if _, ok := want[strings.ToLower(ag.Id.Data)]; ok {
+			res = append(res, ag)
+		}
+	}
+	return res, nil
+}
+
+type mqlAzureSubscriptionMonitorServiceMetricAlertInternal struct {
+	cacheSystemData any
+	subscriptionId  string
+	actionGroupIds  []string
+}
+
+func (a *mqlAzureSubscriptionMonitorServiceMetricAlert) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionMonitorServiceMetricAlert) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionMonitorServiceMetricAlert) actionGroups() ([]any, error) {
+	return resolveActionGroups(a.MqlRuntime, a.subscriptionId, a.actionGroupIds)
+}
+
+func (a *mqlAzureSubscriptionMonitorService) metricAlerts() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+	client, err := monitor.NewMetricAlertsClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListBySubscriptionPager(&monitor.MetricAlertsClientListBySubscriptionOptions{})
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, ma := range page.Value {
+			if ma == nil {
+				continue
+			}
+			var description, evaluationFrequency, windowSize, targetResourceType, targetResourceRegion string
+			var enabled, autoMitigate *bool
+			var severity int64
+			var lastUpdated *time.Time
+			scopes := []any{}
+			var criteria any
+			actionGroupIds := []string{}
+			if p := ma.Properties; p != nil {
+				description = convert.ToValue(p.Description)
+				enabled = p.Enabled
+				autoMitigate = p.AutoMitigate
+				if p.Severity != nil {
+					severity = int64(*p.Severity)
+				}
+				evaluationFrequency = convert.ToValue(p.EvaluationFrequency)
+				windowSize = convert.ToValue(p.WindowSize)
+				targetResourceType = convert.ToValue(p.TargetResourceType)
+				targetResourceRegion = convert.ToValue(p.TargetResourceRegion)
+				lastUpdated = p.LastUpdatedTime
+				for _, s := range p.Scopes {
+					if s != nil {
+						scopes = append(scopes, *s)
+					}
+				}
+				if p.Criteria != nil {
+					criteria, err = convert.JsonToDict(p.Criteria)
+					if err != nil {
+						return nil, err
+					}
+				}
+				for _, act := range p.Actions {
+					if act != nil && act.ActionGroupID != nil {
+						actionGroupIds = append(actionGroupIds, *act.ActionGroupID)
+					}
+				}
+			}
+			mqlMa, err := CreateResource(a.MqlRuntime, "azure.subscription.monitorService.metricAlert", map[string]*llx.RawData{
+				"id":                   llx.StringDataPtr(ma.ID),
+				"name":                 llx.StringDataPtr(ma.Name),
+				"description":          llx.StringData(description),
+				"enabled":              llx.BoolDataPtr(enabled),
+				"severity":             llx.IntData(severity),
+				"scopes":               llx.ArrayData(scopes, types.String),
+				"evaluationFrequency":  llx.StringData(evaluationFrequency),
+				"windowSize":           llx.StringData(windowSize),
+				"autoMitigate":         llx.BoolDataPtr(autoMitigate),
+				"targetResourceType":   llx.StringData(targetResourceType),
+				"targetResourceRegion": llx.StringData(targetResourceRegion),
+				"criteria":             llx.DictData(criteria),
+				"lastUpdatedTime":      llx.TimeDataPtr(lastUpdated),
+			})
+			if err != nil {
+				return nil, err
+			}
+			m := mqlMa.(*mqlAzureSubscriptionMonitorServiceMetricAlert)
+			m.subscriptionId = subId
+			m.actionGroupIds = actionGroupIds
+			sysData, err := convert.JsonToDict(ma.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			m.cacheSystemData = sysData
+			res = append(res, mqlMa)
+		}
+	}
+	return res, nil
+}
+
+type mqlAzureSubscriptionMonitorServiceScheduledQueryRuleInternal struct {
+	cacheSystemData any
+	subscriptionId  string
+	actionGroupIds  []string
+}
+
+func (a *mqlAzureSubscriptionMonitorServiceScheduledQueryRule) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionMonitorServiceScheduledQueryRule) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionMonitorServiceScheduledQueryRule) actionGroups() ([]any, error) {
+	return resolveActionGroups(a.MqlRuntime, a.subscriptionId, a.actionGroupIds)
+}
+
+func (a *mqlAzureSubscriptionMonitorService) scheduledQueryRules() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+	client, err := monitor.NewScheduledQueryRulesClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListBySubscriptionPager(&monitor.ScheduledQueryRulesClientListBySubscriptionOptions{})
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, sqr := range page.Value {
+			if sqr == nil {
+				continue
+			}
+			var displayName, description, evaluationFrequency, windowSize, muteActionsDuration string
+			var enabled, autoMitigate *bool
+			var severity int64
+			scopes := []any{}
+			targetResourceTypes := []any{}
+			var criteria any
+			actionGroupIds := []string{}
+			if p := sqr.Properties; p != nil {
+				displayName = convert.ToValue(p.DisplayName)
+				description = convert.ToValue(p.Description)
+				enabled = p.Enabled
+				autoMitigate = p.AutoMitigate
+				if p.Severity != nil {
+					severity = int64(*p.Severity)
+				}
+				evaluationFrequency = convert.ToValue(p.EvaluationFrequency)
+				windowSize = convert.ToValue(p.WindowSize)
+				muteActionsDuration = convert.ToValue(p.MuteActionsDuration)
+				for _, s := range p.Scopes {
+					if s != nil {
+						scopes = append(scopes, *s)
+					}
+				}
+				for _, t := range p.TargetResourceTypes {
+					if t != nil {
+						targetResourceTypes = append(targetResourceTypes, *t)
+					}
+				}
+				if p.Criteria != nil {
+					criteria, err = convert.JsonToDict(p.Criteria)
+					if err != nil {
+						return nil, err
+					}
+				}
+				if p.Actions != nil {
+					for _, ag := range p.Actions.ActionGroups {
+						if ag != nil {
+							actionGroupIds = append(actionGroupIds, *ag)
+						}
+					}
+				}
+			}
+			mqlSqr, err := CreateResource(a.MqlRuntime, "azure.subscription.monitorService.scheduledQueryRule", map[string]*llx.RawData{
+				"id":                  llx.StringDataPtr(sqr.ID),
+				"name":                llx.StringDataPtr(sqr.Name),
+				"displayName":         llx.StringData(displayName),
+				"description":         llx.StringData(description),
+				"enabled":             llx.BoolDataPtr(enabled),
+				"severity":            llx.IntData(severity),
+				"scopes":              llx.ArrayData(scopes, types.String),
+				"evaluationFrequency": llx.StringData(evaluationFrequency),
+				"windowSize":          llx.StringData(windowSize),
+				"muteActionsDuration": llx.StringData(muteActionsDuration),
+				"autoMitigate":        llx.BoolDataPtr(autoMitigate),
+				"targetResourceTypes": llx.ArrayData(targetResourceTypes, types.String),
+				"criteria":            llx.DictData(criteria),
+			})
+			if err != nil {
+				return nil, err
+			}
+			s := mqlSqr.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule)
+			s.subscriptionId = subId
+			s.actionGroupIds = actionGroupIds
+			sysData, err := convert.JsonToDict(sqr.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			s.cacheSystemData = sysData
+			res = append(res, mqlSqr)
 		}
 	}
 	return res, nil

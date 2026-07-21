@@ -8407,6 +8407,96 @@ private azure.subscription.monitorService {
   queryPacks() []azure.subscription.monitorService.queryPack
   // Action groups (notification and automation targets referenced by alert rules)
   actionGroups() []azure.subscription.monitorService.actionGroup
+  // Metric alert rules in the subscription
+  metricAlerts() []azure.subscription.monitorService.metricAlert
+  // Scheduled query (log) alert rules in the subscription
+  scheduledQueryRules() []azure.subscription.monitorService.scheduledQueryRule
+}
+
+// Azure Monitor metric alert rule
+//
+// An alert rule that fires when a resource metric crosses a threshold.
+// Surfaces whether the rule is enabled, its severity, the resources it
+// watches, how often it evaluates and over what window, and the action
+// groups it notifies. Audit these to confirm that critical resources
+// have active metric alerting wired to a responder. Select by the
+// rule's Azure resource ID.
+private azure.subscription.monitorService.metricAlert @defaults("name enabled severity") {
+  // ARM resource ID
+  id string
+  // Rule name
+  name string
+  // Description
+  description string
+  // Whether the rule is enabled
+  enabled bool
+  // Severity (0 = Critical through 4 = Verbose)
+  severity int
+  // Resource IDs the rule monitors
+  scopes []string
+  // How often the rule evaluates its criteria (ISO 8601 duration)
+  evaluationFrequency string
+  // Time window over which metrics are aggregated (ISO 8601 duration)
+  windowSize string
+  // Whether the alert auto-resolves when the condition clears
+  autoMitigate bool
+  // Resource type of the monitored scopes (set for multi-resource alerts)
+  targetResourceType string
+  // Region of the monitored scopes (set for multi-resource alerts)
+  targetResourceRegion string
+  // Alert criteria
+  //
+  // The threshold conditions. Keys vary by criteria type (single- or multi-resource, static or dynamic thresholds); each condition carries a `metricName`, `operator`, `threshold`, and `timeAggregation`.
+  criteria dict
+  // When the rule was last updated
+  lastUpdatedTime time
+  // Action groups notified when the rule fires
+  actionGroups() []azure.subscription.monitorService.actionGroup
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Azure Monitor scheduled query (log) alert rule
+//
+// An alert rule that runs a KQL query on Log Analytics or resource logs
+// on a schedule and fires when the results meet its criteria. Surfaces
+// whether the rule is enabled, its severity, the resources it queries,
+// the evaluation cadence and window, and the action groups it notifies.
+// Audit these to confirm log-based detections are active and wired to a
+// responder. Select by the rule's Azure resource ID.
+private azure.subscription.monitorService.scheduledQueryRule @defaults("name displayName enabled") {
+  // ARM resource ID
+  id string
+  // Rule name
+  name string
+  // Display name
+  displayName string
+  // Description
+  description string
+  // Whether the rule is enabled
+  enabled bool
+  // Severity (0 = Critical through 4 = Verbose)
+  severity int
+  // Resource IDs the rule queries
+  scopes []string
+  // How often the rule evaluates its query (ISO 8601 duration)
+  evaluationFrequency string
+  // Time window the query covers (ISO 8601 duration)
+  windowSize string
+  // Duration for which actions are muted after firing (ISO 8601 duration)
+  muteActionsDuration string
+  // Whether the alert auto-resolves when the condition clears
+  autoMitigate bool
+  // Resource types the rule queries
+  targetResourceTypes []string
+  // Alert criteria
+  //
+  // The `allOf` conditions evaluated against the query results; each carries the KQL `query`, a `timeAggregation`, an `operator`, a `threshold`, and optional `dimensions`.
+  criteria dict
+  // Action groups notified when the rule fires
+  actionGroups() []azure.subscription.monitorService.actionGroup
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Monitor action group
