@@ -12,6 +12,7 @@ import (
 	iampb "cloud.google.com/go/iam/apiv1/iampb"
 	privateca "cloud.google.com/go/security/privateca/apiv1"
 	"cloud.google.com/go/security/privateca/apiv1/privatecapb"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -178,6 +179,7 @@ func (g *mqlGcpProjectCertificateAuthorityServiceCaPool) iamPolicy() ([]any, err
 	})
 	if err != nil {
 		if s, ok := status.FromError(err); ok && s.Code() == codes.PermissionDenied {
+			log.Warn().Str("caPool", poolPath).Err(err).Msg("could not retrieve CA pool IAM policy")
 			return nil, nil
 		}
 		return nil, err
