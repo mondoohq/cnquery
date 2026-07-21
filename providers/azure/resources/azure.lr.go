@@ -297,6 +297,8 @@ const (
 	ResourceAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension                       string = "azure.subscription.cloudDefenderService.defenderForContainers.extension"
 	ResourceAzureSubscriptionCloudDefenderServiceSecurityContact                                      string = "azure.subscription.cloudDefenderService.securityContact"
 	ResourceAzureSubscriptionAuthorizationService                                                     string = "azure.subscription.authorizationService"
+	ResourceAzureSubscriptionAuthorizationServiceRoleManagementPolicy                                 string = "azure.subscription.authorizationService.roleManagementPolicy"
+	ResourceAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule                             string = "azure.subscription.authorizationService.roleManagementPolicy.rule"
 	ResourceAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule                              string = "azure.subscription.authorizationService.roleEligibilitySchedule"
 	ResourceAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule                               string = "azure.subscription.authorizationService.roleAssignmentSchedule"
 	ResourceAzureSubscriptionAuthorizationServiceDenyAssignment                                       string = "azure.subscription.authorizationService.denyAssignment"
@@ -1609,6 +1611,14 @@ func init() {
 		"azure.subscription.authorizationService": {
 			Init:   initAzureSubscriptionAuthorizationService,
 			Create: createAzureSubscriptionAuthorizationService,
+		},
+		"azure.subscription.authorizationService.roleManagementPolicy": {
+			// to override args, implement: initAzureSubscriptionAuthorizationServiceRoleManagementPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionAuthorizationServiceRoleManagementPolicy,
+		},
+		"azure.subscription.authorizationService.roleManagementPolicy.rule": {
+			// to override args, implement: initAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule,
 		},
 		"azure.subscription.authorizationService.roleEligibilitySchedule": {
 			// to override args, implement: initAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -12684,6 +12694,78 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.authorizationService.roleAssignmentSchedules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAuthorizationService).GetRoleAssignmentSchedules()).ToDataRes(types.Array(types.Resource("azure.subscription.authorizationService.roleAssignmentSchedule")))
+	},
+	"azure.subscription.authorizationService.roleManagementPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationService).GetRoleManagementPolicies()).ToDataRes(types.Array(types.Resource("azure.subscription.authorizationService.roleManagementPolicy")))
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy).GetScope()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy).GetDisplayName()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.isOrganizationDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy).GetIsOrganizationDefault()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.lastModifiedDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy).GetLastModifiedDateTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.lastModifiedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy).GetLastModifiedBy()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy).GetRules()).ToDataRes(types.Array(types.Resource("azure.subscription.authorizationService.roleManagementPolicy.rule")))
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rule.ruleType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule).GetRuleType()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rule.target": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule).GetTarget()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rule.enabledRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule).GetEnabledRules()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rule.isExpirationRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule).GetIsExpirationRequired()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rule.maximumDuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule).GetMaximumDuration()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rule.approvalSetting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule).GetApprovalSetting()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rule.isEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule).GetIsEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rule.claimValue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule).GetClaimValue()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rule.notificationLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule).GetNotificationLevel()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rule.notificationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule).GetNotificationType()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rule.recipientType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule).GetRecipientType()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rule.notificationRecipients": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule).GetNotificationRecipients()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rule.isDefaultRecipientsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule).GetIsDefaultRecipientsEnabled()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.authorizationService.roleEligibilitySchedule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule).GetId()).ToDataRes(types.String)
@@ -33350,6 +33432,110 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.authorizationService.roleAssignmentSchedules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionAuthorizationService).RoleAssignmentSchedules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleManagementPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationService).RoleManagementPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.isOrganizationDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy).IsOrganizationDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.lastModifiedDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy).LastModifiedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.lastModifiedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy).LastModifiedBy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rule.ruleType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule).RuleType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rule.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule).Target, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rule.enabledRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule).EnabledRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rule.isExpirationRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule).IsExpirationRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rule.maximumDuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule).MaximumDuration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rule.approvalSetting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule).ApprovalSetting, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rule.isEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule).IsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rule.claimValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule).ClaimValue, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rule.notificationLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule).NotificationLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rule.notificationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule).NotificationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rule.recipientType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule).RecipientType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rule.notificationRecipients": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule).NotificationRecipients, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleManagementPolicy.rule.isDefaultRecipientsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule).IsDefaultRecipientsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.authorizationService.roleEligibilitySchedule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -77638,6 +77824,7 @@ type mqlAzureSubscriptionAuthorizationService struct {
 	ClassicAdministrators    plugin.TValue[[]any]
 	RoleEligibilitySchedules plugin.TValue[[]any]
 	RoleAssignmentSchedules  plugin.TValue[[]any]
+	RoleManagementPolicies   plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionAuthorizationService creates a new instance of this resource
@@ -77791,6 +77978,232 @@ func (c *mqlAzureSubscriptionAuthorizationService) GetRoleAssignmentSchedules() 
 
 		return c.roleAssignmentSchedules()
 	})
+}
+
+func (c *mqlAzureSubscriptionAuthorizationService) GetRoleManagementPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RoleManagementPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.authorizationService", c.__id, "roleManagementPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.roleManagementPolicies()
+	})
+}
+
+// mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy for the azure.subscription.authorizationService.roleManagementPolicy resource
+type mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyInternal
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Scope                 plugin.TValue[string]
+	DisplayName           plugin.TValue[string]
+	Description           plugin.TValue[string]
+	IsOrganizationDefault plugin.TValue[bool]
+	LastModifiedDateTime  plugin.TValue[*time.Time]
+	LastModifiedBy        plugin.TValue[any]
+	Rules                 plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionAuthorizationServiceRoleManagementPolicy creates a new instance of this resource
+func createAzureSubscriptionAuthorizationServiceRoleManagementPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.authorizationService.roleManagementPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy) MqlName() string {
+	return "azure.subscription.authorizationService.roleManagementPolicy"
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy) GetIsOrganizationDefault() *plugin.TValue[bool] {
+	return &c.IsOrganizationDefault
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy) GetLastModifiedDateTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedDateTime
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy) GetLastModifiedBy() *plugin.TValue[any] {
+	return &c.LastModifiedBy
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.authorizationService.roleManagementPolicy", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rules()
+	})
+}
+
+// mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule for the azure.subscription.authorizationService.roleManagementPolicy.rule resource
+type mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRuleInternal it will be used here
+	Id                         plugin.TValue[string]
+	RuleType                   plugin.TValue[string]
+	Target                     plugin.TValue[any]
+	EnabledRules               plugin.TValue[[]any]
+	IsExpirationRequired       plugin.TValue[bool]
+	MaximumDuration            plugin.TValue[string]
+	ApprovalSetting            plugin.TValue[any]
+	IsEnabled                  plugin.TValue[bool]
+	ClaimValue                 plugin.TValue[string]
+	NotificationLevel          plugin.TValue[string]
+	NotificationType           plugin.TValue[string]
+	RecipientType              plugin.TValue[string]
+	NotificationRecipients     plugin.TValue[[]any]
+	IsDefaultRecipientsEnabled plugin.TValue[bool]
+}
+
+// createAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule creates a new instance of this resource
+func createAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.authorizationService.roleManagementPolicy.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule) MqlName() string {
+	return "azure.subscription.authorizationService.roleManagementPolicy.rule"
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule) GetRuleType() *plugin.TValue[string] {
+	return &c.RuleType
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule) GetTarget() *plugin.TValue[any] {
+	return &c.Target
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule) GetEnabledRules() *plugin.TValue[[]any] {
+	return &c.EnabledRules
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule) GetIsExpirationRequired() *plugin.TValue[bool] {
+	return &c.IsExpirationRequired
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule) GetMaximumDuration() *plugin.TValue[string] {
+	return &c.MaximumDuration
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule) GetApprovalSetting() *plugin.TValue[any] {
+	return &c.ApprovalSetting
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule) GetIsEnabled() *plugin.TValue[bool] {
+	return &c.IsEnabled
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule) GetClaimValue() *plugin.TValue[string] {
+	return &c.ClaimValue
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule) GetNotificationLevel() *plugin.TValue[string] {
+	return &c.NotificationLevel
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule) GetNotificationType() *plugin.TValue[string] {
+	return &c.NotificationType
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule) GetRecipientType() *plugin.TValue[string] {
+	return &c.RecipientType
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule) GetNotificationRecipients() *plugin.TValue[[]any] {
+	return &c.NotificationRecipients
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule) GetIsDefaultRecipientsEnabled() *plugin.TValue[bool] {
+	return &c.IsDefaultRecipientsEnabled
 }
 
 // mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule for the azure.subscription.authorizationService.roleEligibilitySchedule resource

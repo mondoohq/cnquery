@@ -9508,6 +9508,99 @@ private azure.subscription.authorizationService {
   roleEligibilitySchedules() []azure.subscription.authorizationService.roleEligibilitySchedule
   // PIM role assignment schedules: currently active (including time-bound) privileged role assignments
   roleAssignmentSchedules() []azure.subscription.authorizationService.roleAssignmentSchedule
+  // PIM role management policies: the rules governing how privileged roles are activated and assigned
+  roleManagementPolicies() []azure.subscription.authorizationService.roleManagementPolicy
+}
+
+// Azure PIM role management policy
+//
+// A Privileged Identity Management policy governing how a role is
+// activated and assigned at a scope: whether activation requires
+// approval, multi-factor authentication, justification, or a ticket,
+// how long an activation lasts, and who is notified. The behavior is
+// expressed through the policy `rules`. Select by the policy's Azure
+// resource ID. Audit these to confirm privileged roles are gated
+// rather than freely self-activated.
+private azure.subscription.authorizationService.roleManagementPolicy @defaults("displayName scope isOrganizationDefault") {
+  // Policy resource ID
+  id string
+  // Policy name
+  name string
+  // Scope the policy applies to
+  scope string
+  // Policy display name
+  displayName string
+  // Policy description
+  description string
+  // Whether this is the organization's default policy
+  isOrganizationDefault bool
+  // When the policy was last modified
+  lastModifiedDateTime time
+  // Principal that last modified the policy
+  //
+  // Keys: `id`, `displayName`, `email`, and `type`.
+  lastModifiedBy dict
+  // Rules governing activation and assignment (approval, enablement, expiration, notification, authentication context)
+  rules() []azure.subscription.authorizationService.roleManagementPolicy.rule
+}
+
+// PIM role management policy rule
+//
+// A single rule within a role management policy, identified by
+// `ruleType`. Which fields carry values depends on that type: an
+// enablement rule populates `enabledRules` (Justification,
+// MultiFactorAuthentication, Ticketing) to say what activation demands;
+// an expiration rule populates `isExpirationRequired` and
+// `maximumDuration`; an approval rule populates `approvalSetting`; an
+// authentication context rule populates `isEnabled` and `claimValue`;
+// a notification rule populates the notification fields. The `target`
+// describes which caller, level, and operations the rule governs.
+// Select by the rule's `id`.
+private azure.subscription.authorizationService.roleManagementPolicy.rule @defaults("id ruleType") {
+  // Rule ID (unique within the policy, e.g. "Enablement_Admin_Eligibility")
+  id string
+  // Rule type
+  //
+  // One of RoleManagementPolicyApprovalRule,
+  // RoleManagementPolicyAuthenticationContextRule,
+  // RoleManagementPolicyEnablementRule,
+  // RoleManagementPolicyExpirationRule, or
+  // RoleManagementPolicyNotificationRule.
+  ruleType string
+  // What the rule governs
+  //
+  // Keys: `caller`, `level`, `operations`, `targetObjects`,
+  // `inheritableSettings`, and `enforcedSettings`.
+  target dict
+  // Enablement rule: activation requirements enabled on the role
+  //
+  // Any of Justification, MultiFactorAuthentication, or Ticketing.
+  // Empty on rule types other than the enablement rule.
+  enabledRules []string
+  // Expiration rule: whether an expiration is required on the assignment or activation
+  isExpirationRequired bool
+  // Expiration rule: maximum duration (ISO 8601 duration) of an activation or assignment
+  maximumDuration string
+  // Approval rule: approval settings
+  //
+  // Keys: `approvalMode`, `isApprovalRequired`,
+  // `isApprovalRequiredForExtension`, `isRequestorJustificationRequired`,
+  // and `approvalStages` (each stage listing its approvers).
+  approvalSetting dict
+  // Authentication context rule: whether the rule is enabled
+  isEnabled bool
+  // Authentication context rule: the required claim value
+  claimValue string
+  // Notification rule: notification level (None, Critical, All)
+  notificationLevel string
+  // Notification rule: delivery mechanism (e.g. Email)
+  notificationType string
+  // Notification rule: recipient type (Requestor, Approver, Admin)
+  recipientType string
+  // Notification rule: explicit notification recipients
+  notificationRecipients []string
+  // Notification rule: whether default recipients also receive the notification
+  isDefaultRecipientsEnabled bool
 }
 
 // Azure PIM role eligibility schedule

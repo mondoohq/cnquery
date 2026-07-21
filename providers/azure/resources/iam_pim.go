@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -16,6 +17,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/azure/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 // scopeForSubscription is the PIM list scope for a subscription's privileged
@@ -199,6 +201,171 @@ func (a *mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule) id() (s
 
 func (a *mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule) roleDefinition() (*mqlAzureSubscriptionAuthorizationServiceRoleDefinition, error) {
 	return resolveRoleDefinition(a.MqlRuntime, a.roleDefinitionId, &a.RoleDefinition)
+}
+
+type mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicyInternal struct {
+	cacheRules []authorization.RoleManagementPolicyRuleClassification
+}
+
+func (a *mqlAzureSubscriptionAuthorizationService) roleManagementPolicies() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	client, err := authorization.NewRoleManagementPoliciesClient(conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	res := []any{}
+	pager := client.NewListForScopePager(scopeForSubscription(a.SubscriptionId.Data), nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			if pimUnavailable(err) {
+				log.Warn().Str("subscription", a.SubscriptionId.Data).Msg("PIM role management policies unavailable (requires Entra ID P2 / Governance)")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, policy := range page.Value {
+			if policy == nil {
+				continue
+			}
+			var scope, displayName, description string
+			var isOrgDefault *bool
+			var lastModified *time.Time
+			var lastModifiedBy any
+			var rules []authorization.RoleManagementPolicyRuleClassification
+			if p := policy.Properties; p != nil {
+				scope = convert.ToValue(p.Scope)
+				displayName = convert.ToValue(p.DisplayName)
+				description = convert.ToValue(p.Description)
+				isOrgDefault = p.IsOrganizationDefault
+				lastModified = p.LastModifiedDateTime
+				if p.LastModifiedBy != nil {
+					lastModifiedBy, err = convert.JsonToDict(p.LastModifiedBy)
+					if err != nil {
+						return nil, err
+					}
+				}
+				rules = p.Rules
+			}
+			mqlPolicy, err := CreateResource(a.MqlRuntime, "azure.subscription.authorizationService.roleManagementPolicy",
+				map[string]*llx.RawData{
+					"id":                    llx.StringDataPtr(policy.ID),
+					"name":                  llx.StringDataPtr(policy.Name),
+					"scope":                 llx.StringData(scope),
+					"displayName":           llx.StringData(displayName),
+					"description":           llx.StringData(description),
+					"isOrganizationDefault": llx.BoolDataPtr(isOrgDefault),
+					"lastModifiedDateTime":  llx.TimeDataPtr(lastModified),
+					"lastModifiedBy":        llx.DictData(lastModifiedBy),
+				})
+			if err != nil {
+				return nil, err
+			}
+			mqlPolicy.(*mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy).cacheRules = rules
+			res = append(res, mqlPolicy)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+// rules maps the policy's heterogeneous rule set to the unified rule
+// resource, discriminated by ruleType. Fields that don't apply to a given
+// rule type are left null.
+func (a *mqlAzureSubscriptionAuthorizationServiceRoleManagementPolicy) rules() ([]any, error) {
+	res := []any{}
+	for _, r := range a.cacheRules {
+		if r == nil {
+			continue
+		}
+		base := r.GetRoleManagementPolicyRule()
+		if base == nil {
+			continue
+		}
+		ruleId := convert.ToValue(base.ID)
+		ruleType := ""
+		if base.RuleType != nil {
+			ruleType = string(*base.RuleType)
+		}
+		targetDict, err := convert.JsonToDict(base.Target)
+		if err != nil {
+			return nil, err
+		}
+
+		args := map[string]*llx.RawData{
+			"__id":                       llx.StringData(fmt.Sprintf("%s/rules/%s", a.Id.Data, ruleId)),
+			"id":                         llx.StringData(ruleId),
+			"ruleType":                   llx.StringData(ruleType),
+			"target":                     llx.DictData(targetDict),
+			"enabledRules":               llx.ArrayData([]any{}, types.String),
+			"isExpirationRequired":       llx.BoolDataPtr(nil),
+			"maximumDuration":            llx.StringData(""),
+			"approvalSetting":            llx.DictData(nil),
+			"isEnabled":                  llx.BoolDataPtr(nil),
+			"claimValue":                 llx.StringData(""),
+			"notificationLevel":          llx.StringData(""),
+			"notificationType":           llx.StringData(""),
+			"recipientType":              llx.StringData(""),
+			"notificationRecipients":     llx.ArrayData([]any{}, types.String),
+			"isDefaultRecipientsEnabled": llx.BoolDataPtr(nil),
+		}
+
+		switch rule := r.(type) {
+		case *authorization.RoleManagementPolicyEnablementRule:
+			enabled := []any{}
+			for _, er := range rule.EnabledRules {
+				if er != nil {
+					enabled = append(enabled, string(*er))
+				}
+			}
+			args["enabledRules"] = llx.ArrayData(enabled, types.String)
+		case *authorization.RoleManagementPolicyExpirationRule:
+			args["isExpirationRequired"] = llx.BoolDataPtr(rule.IsExpirationRequired)
+			args["maximumDuration"] = llx.StringDataPtr(rule.MaximumDuration)
+		case *authorization.RoleManagementPolicyApprovalRule:
+			if rule.Setting != nil {
+				setting, err := convert.JsonToDict(rule.Setting)
+				if err != nil {
+					return nil, err
+				}
+				args["approvalSetting"] = llx.DictData(setting)
+			}
+		case *authorization.RoleManagementPolicyAuthenticationContextRule:
+			args["isEnabled"] = llx.BoolDataPtr(rule.IsEnabled)
+			args["claimValue"] = llx.StringDataPtr(rule.ClaimValue)
+		case *authorization.RoleManagementPolicyNotificationRule:
+			if rule.NotificationLevel != nil {
+				args["notificationLevel"] = llx.StringData(string(*rule.NotificationLevel))
+			}
+			if rule.NotificationType != nil {
+				args["notificationType"] = llx.StringData(string(*rule.NotificationType))
+			}
+			if rule.RecipientType != nil {
+				args["recipientType"] = llx.StringData(string(*rule.RecipientType))
+			}
+			args["isDefaultRecipientsEnabled"] = llx.BoolDataPtr(rule.IsDefaultRecipientsEnabled)
+			recipients := []any{}
+			for _, nr := range rule.NotificationRecipients {
+				if nr != nil {
+					recipients = append(recipients, *nr)
+				}
+			}
+			args["notificationRecipients"] = llx.ArrayData(recipients, types.String)
+		}
+
+		mqlRule, err := CreateResource(a.MqlRuntime, "azure.subscription.authorizationService.roleManagementPolicy.rule", args)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlRule)
+	}
+	return res, nil
 }
 
 // expandedPrincipalAndRoleNames pulls the human-readable principal and role

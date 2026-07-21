@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.32.0",
-  "generated_at": "2026-07-21T08:12:38-07:00",
+  "generated_at": "2026-07-21T11:36:08-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -22,6 +22,7 @@
     "Microsoft.Authorization/roleAssignments/read",
     "Microsoft.Authorization/roleDefinitions/read",
     "Microsoft.Authorization/roleEligibilitySchedules/read",
+    "Microsoft.Authorization/roleManagementPolicies/read",
     "Microsoft.Automation/account/read",
     "Microsoft.Automation/certificate/read",
     "Microsoft.Automation/credential/read",
@@ -414,6 +415,12 @@
     },
     {
       "permission": "Microsoft.Authorization/roleEligibilitySchedules/read",
+      "service": "Microsoft.Authorization",
+      "action": "NewListForScopePager",
+      "source_file": "iam_pim.go"
+    },
+    {
+      "permission": "Microsoft.Authorization/roleManagementPolicies/read",
       "service": "Microsoft.Authorization",
       "action": "NewListForScopePager",
       "source_file": "iam_pim.go"
