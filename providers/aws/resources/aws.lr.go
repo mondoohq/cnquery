@@ -15437,6 +15437,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cloudwatch.metricsalarm.actionsEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudwatchMetricsalarm).GetActionsEnabled()).ToDataRes(types.Bool)
 	},
+	"aws.cloudwatch.metricsalarm.comparisonOperator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchMetricsalarm).GetComparisonOperator()).ToDataRes(types.String)
+	},
+	"aws.cloudwatch.metricsalarm.threshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchMetricsalarm).GetThreshold()).ToDataRes(types.Float)
+	},
+	"aws.cloudwatch.metricsalarm.thresholdMetricId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchMetricsalarm).GetThresholdMetricId()).ToDataRes(types.String)
+	},
+	"aws.cloudwatch.metricsalarm.evaluationPeriods": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchMetricsalarm).GetEvaluationPeriods()).ToDataRes(types.Int)
+	},
+	"aws.cloudwatch.metricsalarm.datapointsToAlarm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchMetricsalarm).GetDatapointsToAlarm()).ToDataRes(types.Int)
+	},
+	"aws.cloudwatch.metricsalarm.period": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchMetricsalarm).GetPeriod()).ToDataRes(types.Int)
+	},
+	"aws.cloudwatch.metricsalarm.statistic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchMetricsalarm).GetStatistic()).ToDataRes(types.String)
+	},
+	"aws.cloudwatch.metricsalarm.extendedStatistic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchMetricsalarm).GetExtendedStatistic()).ToDataRes(types.String)
+	},
+	"aws.cloudwatch.metricsalarm.treatMissingData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchMetricsalarm).GetTreatMissingData()).ToDataRes(types.String)
+	},
+	"aws.cloudwatch.metricsalarm.unit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchMetricsalarm).GetUnit()).ToDataRes(types.String)
+	},
+	"aws.cloudwatch.metricsalarm.alarmDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchMetricsalarm).GetAlarmDescription()).ToDataRes(types.String)
+	},
+	"aws.cloudwatch.metricsalarm.stateReasonData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchMetricsalarm).GetStateReasonData()).ToDataRes(types.String)
+	},
+	"aws.cloudwatch.metricsalarm.dimensions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchMetricsalarm).GetDimensions()).ToDataRes(types.Array(types.Resource("aws.cloudwatch.metricdimension")))
+	},
+	"aws.cloudwatch.metricsalarm.alarmConfigurationUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchMetricsalarm).GetAlarmConfigurationUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.cloudwatch.metricsalarm.stateUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchMetricsalarm).GetStateUpdatedAt()).ToDataRes(types.Time)
+	},
 	"aws.cloudwatch.metric.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudwatchMetric).GetName()).ToDataRes(types.String)
 	},
@@ -31687,6 +31732,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ssm.complianceSummary.nonCompliantCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmComplianceSummary).GetNonCompliantCount()).ToDataRes(types.Int)
+	},
+	"aws.ssm.complianceSummary.overallSeverity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmComplianceSummary).GetOverallSeverity()).ToDataRes(types.String)
+	},
+	"aws.ssm.complianceSummary.compliantSeveritySummary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmComplianceSummary).GetCompliantSeveritySummary()).ToDataRes(types.Dict)
+	},
+	"aws.ssm.complianceSummary.nonCompliantSeveritySummary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmComplianceSummary).GetNonCompliantSeveritySummary()).ToDataRes(types.Dict)
 	},
 	"aws.ssm.complianceSummary.executionSummary": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmComplianceSummary).GetExecutionSummary()).ToDataRes(types.Dict)
@@ -50388,6 +50442,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.cloudwatch.metricsalarm.actionsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudwatchMetricsalarm).ActionsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.metricsalarm.comparisonOperator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchMetricsalarm).ComparisonOperator, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.metricsalarm.threshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchMetricsalarm).Threshold, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.metricsalarm.thresholdMetricId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchMetricsalarm).ThresholdMetricId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.metricsalarm.evaluationPeriods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchMetricsalarm).EvaluationPeriods, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.metricsalarm.datapointsToAlarm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchMetricsalarm).DatapointsToAlarm, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.metricsalarm.period": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchMetricsalarm).Period, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.metricsalarm.statistic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchMetricsalarm).Statistic, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.metricsalarm.extendedStatistic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchMetricsalarm).ExtendedStatistic, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.metricsalarm.treatMissingData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchMetricsalarm).TreatMissingData, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.metricsalarm.unit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchMetricsalarm).Unit, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.metricsalarm.alarmDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchMetricsalarm).AlarmDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.metricsalarm.stateReasonData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchMetricsalarm).StateReasonData, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.metricsalarm.dimensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchMetricsalarm).Dimensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.metricsalarm.alarmConfigurationUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchMetricsalarm).AlarmConfigurationUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.metricsalarm.stateUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchMetricsalarm).StateUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.cloudwatch.metric.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -73904,6 +74018,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ssm.complianceSummary.nonCompliantCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSsmComplianceSummary).NonCompliantCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.complianceSummary.overallSeverity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmComplianceSummary).OverallSeverity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.complianceSummary.compliantSeveritySummary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmComplianceSummary).CompliantSeveritySummary, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.complianceSummary.nonCompliantSeveritySummary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmComplianceSummary).NonCompliantSeveritySummary, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.ssm.complianceSummary.executionSummary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -120632,17 +120758,32 @@ type mqlAwsCloudwatchMetricsalarm struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsCloudwatchMetricsalarmInternal it will be used here
-	Arn                     plugin.TValue[string]
-	MetricName              plugin.TValue[string]
-	MetricNamespace         plugin.TValue[string]
-	Region                  plugin.TValue[string]
-	Actions                 plugin.TValue[[]any]
-	State                   plugin.TValue[string]
-	StateReason             plugin.TValue[string]
-	InsufficientDataActions plugin.TValue[[]any]
-	OkActions               plugin.TValue[[]any]
-	Name                    plugin.TValue[string]
-	ActionsEnabled          plugin.TValue[bool]
+	Arn                         plugin.TValue[string]
+	MetricName                  plugin.TValue[string]
+	MetricNamespace             plugin.TValue[string]
+	Region                      plugin.TValue[string]
+	Actions                     plugin.TValue[[]any]
+	State                       plugin.TValue[string]
+	StateReason                 plugin.TValue[string]
+	InsufficientDataActions     plugin.TValue[[]any]
+	OkActions                   plugin.TValue[[]any]
+	Name                        plugin.TValue[string]
+	ActionsEnabled              plugin.TValue[bool]
+	ComparisonOperator          plugin.TValue[string]
+	Threshold                   plugin.TValue[float64]
+	ThresholdMetricId           plugin.TValue[string]
+	EvaluationPeriods           plugin.TValue[int64]
+	DatapointsToAlarm           plugin.TValue[int64]
+	Period                      plugin.TValue[int64]
+	Statistic                   plugin.TValue[string]
+	ExtendedStatistic           plugin.TValue[string]
+	TreatMissingData            plugin.TValue[string]
+	Unit                        plugin.TValue[string]
+	AlarmDescription            plugin.TValue[string]
+	StateReasonData             plugin.TValue[string]
+	Dimensions                  plugin.TValue[[]any]
+	AlarmConfigurationUpdatedAt plugin.TValue[*time.Time]
+	StateUpdatedAt              plugin.TValue[*time.Time]
 }
 
 // createAwsCloudwatchMetricsalarm creates a new instance of this resource
@@ -120724,6 +120865,66 @@ func (c *mqlAwsCloudwatchMetricsalarm) GetName() *plugin.TValue[string] {
 
 func (c *mqlAwsCloudwatchMetricsalarm) GetActionsEnabled() *plugin.TValue[bool] {
 	return &c.ActionsEnabled
+}
+
+func (c *mqlAwsCloudwatchMetricsalarm) GetComparisonOperator() *plugin.TValue[string] {
+	return &c.ComparisonOperator
+}
+
+func (c *mqlAwsCloudwatchMetricsalarm) GetThreshold() *plugin.TValue[float64] {
+	return &c.Threshold
+}
+
+func (c *mqlAwsCloudwatchMetricsalarm) GetThresholdMetricId() *plugin.TValue[string] {
+	return &c.ThresholdMetricId
+}
+
+func (c *mqlAwsCloudwatchMetricsalarm) GetEvaluationPeriods() *plugin.TValue[int64] {
+	return &c.EvaluationPeriods
+}
+
+func (c *mqlAwsCloudwatchMetricsalarm) GetDatapointsToAlarm() *plugin.TValue[int64] {
+	return &c.DatapointsToAlarm
+}
+
+func (c *mqlAwsCloudwatchMetricsalarm) GetPeriod() *plugin.TValue[int64] {
+	return &c.Period
+}
+
+func (c *mqlAwsCloudwatchMetricsalarm) GetStatistic() *plugin.TValue[string] {
+	return &c.Statistic
+}
+
+func (c *mqlAwsCloudwatchMetricsalarm) GetExtendedStatistic() *plugin.TValue[string] {
+	return &c.ExtendedStatistic
+}
+
+func (c *mqlAwsCloudwatchMetricsalarm) GetTreatMissingData() *plugin.TValue[string] {
+	return &c.TreatMissingData
+}
+
+func (c *mqlAwsCloudwatchMetricsalarm) GetUnit() *plugin.TValue[string] {
+	return &c.Unit
+}
+
+func (c *mqlAwsCloudwatchMetricsalarm) GetAlarmDescription() *plugin.TValue[string] {
+	return &c.AlarmDescription
+}
+
+func (c *mqlAwsCloudwatchMetricsalarm) GetStateReasonData() *plugin.TValue[string] {
+	return &c.StateReasonData
+}
+
+func (c *mqlAwsCloudwatchMetricsalarm) GetDimensions() *plugin.TValue[[]any] {
+	return &c.Dimensions
+}
+
+func (c *mqlAwsCloudwatchMetricsalarm) GetAlarmConfigurationUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.AlarmConfigurationUpdatedAt
+}
+
+func (c *mqlAwsCloudwatchMetricsalarm) GetStateUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.StateUpdatedAt
 }
 
 // mqlAwsCloudwatchMetric for the aws.cloudwatch.metric resource
@@ -179193,14 +179394,17 @@ type mqlAwsSsmComplianceSummary struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsSsmComplianceSummaryInternal it will be used here
-	ComplianceType    plugin.TValue[string]
-	ResourceId        plugin.TValue[string]
-	ResourceType      plugin.TValue[string]
-	Region            plugin.TValue[string]
-	Status            plugin.TValue[string]
-	CompliantCount    plugin.TValue[int64]
-	NonCompliantCount plugin.TValue[int64]
-	ExecutionSummary  plugin.TValue[any]
+	ComplianceType              plugin.TValue[string]
+	ResourceId                  plugin.TValue[string]
+	ResourceType                plugin.TValue[string]
+	Region                      plugin.TValue[string]
+	Status                      plugin.TValue[string]
+	CompliantCount              plugin.TValue[int64]
+	NonCompliantCount           plugin.TValue[int64]
+	OverallSeverity             plugin.TValue[string]
+	CompliantSeveritySummary    plugin.TValue[any]
+	NonCompliantSeveritySummary plugin.TValue[any]
+	ExecutionSummary            plugin.TValue[any]
 }
 
 // createAwsSsmComplianceSummary creates a new instance of this resource
@@ -179266,6 +179470,18 @@ func (c *mqlAwsSsmComplianceSummary) GetCompliantCount() *plugin.TValue[int64] {
 
 func (c *mqlAwsSsmComplianceSummary) GetNonCompliantCount() *plugin.TValue[int64] {
 	return &c.NonCompliantCount
+}
+
+func (c *mqlAwsSsmComplianceSummary) GetOverallSeverity() *plugin.TValue[string] {
+	return &c.OverallSeverity
+}
+
+func (c *mqlAwsSsmComplianceSummary) GetCompliantSeveritySummary() *plugin.TValue[any] {
+	return &c.CompliantSeveritySummary
+}
+
+func (c *mqlAwsSsmComplianceSummary) GetNonCompliantSeveritySummary() *plugin.TValue[any] {
+	return &c.NonCompliantSeveritySummary
 }
 
 func (c *mqlAwsSsmComplianceSummary) GetExecutionSummary() *plugin.TValue[any] {

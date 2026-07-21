@@ -10247,6 +10247,46 @@ private aws.cloudwatch.metricsalarm @defaults("arn") {
   name string
   // Whether actions are enabled for the alarm
   actionsEnabled bool
+  // Arithmetic comparison used against the threshold
+  //
+  // One of `GreaterThanOrEqualToThreshold`, `GreaterThanThreshold`,
+  // `LessThanThreshold`, `LessThanOrEqualToThreshold`,
+  // `LessThanLowerOrGreaterThanUpperThreshold`, `LessThanLowerThreshold`, or
+  // `GreaterThanUpperThreshold`.
+  comparisonOperator string
+  // Value the metric statistic is compared against
+  threshold float
+  // Metric math expression ID that supplies the threshold for anomaly-detection alarms
+  thresholdMetricId string
+  // Number of periods over which data is compared to the threshold
+  evaluationPeriods int
+  // Number of breaching data points required to trigger the alarm
+  datapointsToAlarm int
+  // Length in seconds of each evaluation period
+  period int
+  // Statistic applied to the metric
+  //
+  // One of `SampleCount`, `Average`, `Sum`, `Minimum`, or `Maximum`. Mutually
+  // exclusive with `extendedStatistic`.
+  statistic string
+  // Percentile statistic applied to the metric, for example `p95`
+  extendedStatistic string
+  // How missing data points are treated when evaluating the alarm
+  //
+  // One of `breaching`, `notBreaching`, `ignore`, or `missing`.
+  treatMissingData string
+  // Unit of the metric associated with the alarm
+  unit string
+  // Description of the alarm
+  alarmDescription string
+  // JSON explaining the data that led to the current alarm state
+  stateReasonData string
+  // Dimensions scoping the metric the alarm watches
+  dimensions []aws.cloudwatch.metricdimension
+  // Time the alarm configuration was last updated
+  alarmConfigurationUpdatedAt time
+  // Time the alarm state was last updated
+  stateUpdatedAt time
 }
 
 // Amazon CloudWatch metric
@@ -25963,6 +26003,20 @@ private aws.ssm.complianceSummary @defaults("complianceType resourceId status") 
   compliantCount int
   // Count of non-compliant items
   nonCompliantCount int
+  // Highest severity found among the resource's non-compliant items
+  //
+  // One of `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFORMATIONAL`, or `UNSPECIFIED`.
+  overallSeverity string
+  // Per-severity counts of compliant items
+  //
+  // Map of severity level to count, with keys `criticalCount`, `highCount`,
+  // `mediumCount`, `lowCount`, `informationalCount`, and `unspecifiedCount`.
+  compliantSeveritySummary dict
+  // Per-severity counts of non-compliant items
+  //
+  // Map of severity level to count, with keys `criticalCount`, `highCount`,
+  // `mediumCount`, `lowCount`, `informationalCount`, and `unspecifiedCount`.
+  nonCompliantSeveritySummary dict
   // Execution summary
   //
   // Details of the most recent compliance evaluation run: `executionTime` (when it ran),

@@ -517,19 +517,52 @@ func (a *mqlAwsCloudwatch) getAlarms(conn *connection.AwsConnection) []*jobpool.
 						okActions = append(okActions, mqlokAction)
 					}
 
+					dimensions := []any{}
+					for _, d := range alarm.Dimensions {
+						mqlDimension, err := CreateResource(a.MqlRuntime, "aws.cloudwatch.metricdimension",
+							map[string]*llx.RawData{
+								"name":  llx.StringDataPtr(d.Name),
+								"value": llx.StringDataPtr(d.Value),
+							})
+						if err != nil {
+							return nil, err
+						}
+						dimensions = append(dimensions, mqlDimension)
+					}
+
+					threshold := llx.NilData
+					if alarm.Threshold != nil {
+						threshold = llx.FloatData(*alarm.Threshold)
+					}
+
 					mqlAlarm, err := CreateResource(a.MqlRuntime, "aws.cloudwatch.metricsalarm",
 						map[string]*llx.RawData{
-							"arn":                     llx.StringDataPtr(alarm.AlarmArn),
-							"metricName":              llx.StringDataPtr(alarm.MetricName),
-							"metricNamespace":         llx.StringDataPtr(alarm.Namespace),
-							"region":                  llx.StringData(region),
-							"state":                   llx.StringData(string(alarm.StateValue)),
-							"stateReason":             llx.StringDataPtr(alarm.StateReason),
-							"insufficientDataActions": llx.ArrayData(insuffActions, types.Resource("aws.sns.topic")),
-							"okActions":               llx.ArrayData(okActions, types.Resource("aws.sns.topic")),
-							"name":                    llx.StringDataPtr(alarm.AlarmName),
-							"actions":                 llx.ArrayData(actions, types.Resource("aws.sns.topic")),
-							"actionsEnabled":          llx.BoolDataPtr(alarm.ActionsEnabled),
+							"arn":                         llx.StringDataPtr(alarm.AlarmArn),
+							"metricName":                  llx.StringDataPtr(alarm.MetricName),
+							"metricNamespace":             llx.StringDataPtr(alarm.Namespace),
+							"region":                      llx.StringData(region),
+							"state":                       llx.StringData(string(alarm.StateValue)),
+							"stateReason":                 llx.StringDataPtr(alarm.StateReason),
+							"stateReasonData":             llx.StringDataPtr(alarm.StateReasonData),
+							"insufficientDataActions":     llx.ArrayData(insuffActions, types.Resource("aws.sns.topic")),
+							"okActions":                   llx.ArrayData(okActions, types.Resource("aws.sns.topic")),
+							"name":                        llx.StringDataPtr(alarm.AlarmName),
+							"actions":                     llx.ArrayData(actions, types.Resource("aws.sns.topic")),
+							"actionsEnabled":              llx.BoolDataPtr(alarm.ActionsEnabled),
+							"comparisonOperator":          llx.StringData(string(alarm.ComparisonOperator)),
+							"threshold":                   threshold,
+							"thresholdMetricId":           llx.StringDataPtr(alarm.ThresholdMetricId),
+							"evaluationPeriods":           llx.IntDataPtr(alarm.EvaluationPeriods),
+							"datapointsToAlarm":           llx.IntDataPtr(alarm.DatapointsToAlarm),
+							"period":                      llx.IntDataPtr(alarm.Period),
+							"statistic":                   llx.StringData(string(alarm.Statistic)),
+							"extendedStatistic":           llx.StringDataPtr(alarm.ExtendedStatistic),
+							"treatMissingData":            llx.StringDataPtr(alarm.TreatMissingData),
+							"unit":                        llx.StringData(string(alarm.Unit)),
+							"alarmDescription":            llx.StringDataPtr(alarm.AlarmDescription),
+							"dimensions":                  llx.ArrayData(dimensions, types.Resource("aws.cloudwatch.metricdimension")),
+							"alarmConfigurationUpdatedAt": llx.TimeDataPtr(alarm.AlarmConfigurationUpdatedTimestamp),
+							"stateUpdatedAt":              llx.TimeDataPtr(alarm.StateUpdatedTimestamp),
 						})
 					if err != nil {
 						return nil, err

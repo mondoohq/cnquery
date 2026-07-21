@@ -661,6 +661,20 @@ func (a *mqlAwsSsmAssociation) id() (string, error) {
 	return a.Region.Data + "/" + a.AssociationId.Data, nil
 }
 
+func severitySummaryToDict(s *types.SeveritySummary) map[string]any {
+	if s == nil {
+		return nil
+	}
+	return map[string]any{
+		"criticalCount":      int64(s.CriticalCount),
+		"highCount":          int64(s.HighCount),
+		"mediumCount":        int64(s.MediumCount),
+		"lowCount":           int64(s.LowCount),
+		"informationalCount": int64(s.InformationalCount),
+		"unspecifiedCount":   int64(s.UnspecifiedCount),
+	}
+}
+
 func (a *mqlAwsSsm) complianceSummaries() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
@@ -704,11 +718,14 @@ func (a *mqlAwsSsm) getComplianceSummaries(conn *connection.AwsConnection) []*jo
 
 				for _, item := range resp.ResourceComplianceSummaryItems {
 					var compliantCount, nonCompliantCount int64
+					var compliantSeverity, nonCompliantSeverity map[string]any
 					if item.CompliantSummary != nil {
 						compliantCount = int64(item.CompliantSummary.CompliantCount)
+						compliantSeverity = severitySummaryToDict(item.CompliantSummary.SeveritySummary)
 					}
 					if item.NonCompliantSummary != nil {
 						nonCompliantCount = int64(item.NonCompliantSummary.NonCompliantCount)
+						nonCompliantSeverity = severitySummaryToDict(item.NonCompliantSummary.SeveritySummary)
 					}
 
 					var execSummary map[string]any
@@ -722,14 +739,17 @@ func (a *mqlAwsSsm) getComplianceSummaries(conn *connection.AwsConnection) []*jo
 
 					mqlItem, err := CreateResource(a.MqlRuntime, "aws.ssm.complianceSummary",
 						map[string]*llx.RawData{
-							"complianceType":    llx.StringDataPtr(item.ComplianceType),
-							"resourceId":        llx.StringDataPtr(item.ResourceId),
-							"resourceType":      llx.StringDataPtr(item.ResourceType),
-							"region":            llx.StringData(region),
-							"status":            llx.StringData(string(item.Status)),
-							"compliantCount":    llx.IntData(compliantCount),
-							"nonCompliantCount": llx.IntData(nonCompliantCount),
-							"executionSummary":  llx.DictData(execSummary),
+							"complianceType":              llx.StringDataPtr(item.ComplianceType),
+							"resourceId":                  llx.StringDataPtr(item.ResourceId),
+							"resourceType":                llx.StringDataPtr(item.ResourceType),
+							"region":                      llx.StringData(region),
+							"status":                      llx.StringData(string(item.Status)),
+							"compliantCount":              llx.IntData(compliantCount),
+							"nonCompliantCount":           llx.IntData(nonCompliantCount),
+							"overallSeverity":             llx.StringData(string(item.OverallSeverity)),
+							"compliantSeveritySummary":    llx.DictData(compliantSeverity),
+							"nonCompliantSeveritySummary": llx.DictData(nonCompliantSeverity),
+							"executionSummary":            llx.DictData(execSummary),
 						})
 					if err != nil {
 						return nil, err
