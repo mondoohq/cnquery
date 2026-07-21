@@ -6326,6 +6326,15 @@ private gcp.organization.workforcePool.provider @defaults("displayName providerT
   oidcClientId string
   // For SAML providers: the SAML 2.0 IdP metadata XML document defining the trust
   samlIdpMetadataXml string
+  // Attribute type the provider fetches from an external endpoint to augment group claims
+  //
+  // Set when the provider makes a backchannel OAuth 2.0 call to the identity
+  // provider for additional user attributes. One of ATTRIBUTES_TYPE_UNSPECIFIED,
+  // AZURE_AD_GROUPS_MAIL, AZURE_AD_GROUPS_ID, or AZURE_AD_GROUPS_DISPLAY_NAME.
+  // Empty when no extra-attributes fetch is configured.
+  extraAttributesType string
+  // Issuer URL of the external endpoint queried for extra user attributes. Empty when no extra-attributes fetch is configured.
+  extraAttributesIssuerUri string
 }
 
 // Google Cloud (GCP) Cloud Function (1st gen)

@@ -8277,6 +8277,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.organization.workforcePool.provider.samlIdpMetadataXml": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrganizationWorkforcePoolProvider).GetSamlIdpMetadataXml()).ToDataRes(types.String)
 	},
+	"gcp.organization.workforcePool.provider.extraAttributesType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationWorkforcePoolProvider).GetExtraAttributesType()).ToDataRes(types.String)
+	},
+	"gcp.organization.workforcePool.provider.extraAttributesIssuerUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationWorkforcePoolProvider).GetExtraAttributesIssuerUri()).ToDataRes(types.String)
+	},
 	"gcp.project.cloudFunction.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudFunction).GetProjectId()).ToDataRes(types.String)
 	},
@@ -26437,6 +26443,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.organization.workforcePool.provider.samlIdpMetadataXml": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpOrganizationWorkforcePoolProvider).SamlIdpMetadataXml, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.workforcePool.provider.extraAttributesType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationWorkforcePoolProvider).ExtraAttributesType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.workforcePool.provider.extraAttributesIssuerUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationWorkforcePoolProvider).ExtraAttributesIssuerUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.cloudFunction.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -61067,22 +61081,24 @@ type mqlGcpOrganizationWorkforcePoolProvider struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpOrganizationWorkforcePoolProviderInternal it will be used here
-	Name                 plugin.TValue[string]
-	ProviderId           plugin.TValue[string]
-	PoolId               plugin.TValue[string]
-	DisplayName          plugin.TValue[string]
-	Description          plugin.TValue[string]
-	State                plugin.TValue[string]
-	Disabled             plugin.TValue[bool]
-	ExpireTime           plugin.TValue[*time.Time]
-	AttributeMapping     plugin.TValue[map[string]any]
-	AttributeCondition   plugin.TValue[string]
-	DetailedAuditLogging plugin.TValue[bool]
-	ScimUsage            plugin.TValue[string]
-	ProviderType         plugin.TValue[string]
-	OidcIssuerUri        plugin.TValue[string]
-	OidcClientId         plugin.TValue[string]
-	SamlIdpMetadataXml   plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	ProviderId               plugin.TValue[string]
+	PoolId                   plugin.TValue[string]
+	DisplayName              plugin.TValue[string]
+	Description              plugin.TValue[string]
+	State                    plugin.TValue[string]
+	Disabled                 plugin.TValue[bool]
+	ExpireTime               plugin.TValue[*time.Time]
+	AttributeMapping         plugin.TValue[map[string]any]
+	AttributeCondition       plugin.TValue[string]
+	DetailedAuditLogging     plugin.TValue[bool]
+	ScimUsage                plugin.TValue[string]
+	ProviderType             plugin.TValue[string]
+	OidcIssuerUri            plugin.TValue[string]
+	OidcClientId             plugin.TValue[string]
+	SamlIdpMetadataXml       plugin.TValue[string]
+	ExtraAttributesType      plugin.TValue[string]
+	ExtraAttributesIssuerUri plugin.TValue[string]
 }
 
 // createGcpOrganizationWorkforcePoolProvider creates a new instance of this resource
@@ -61184,6 +61200,14 @@ func (c *mqlGcpOrganizationWorkforcePoolProvider) GetOidcClientId() *plugin.TVal
 
 func (c *mqlGcpOrganizationWorkforcePoolProvider) GetSamlIdpMetadataXml() *plugin.TValue[string] {
 	return &c.SamlIdpMetadataXml
+}
+
+func (c *mqlGcpOrganizationWorkforcePoolProvider) GetExtraAttributesType() *plugin.TValue[string] {
+	return &c.ExtraAttributesType
+}
+
+func (c *mqlGcpOrganizationWorkforcePoolProvider) GetExtraAttributesIssuerUri() *plugin.TValue[string] {
+	return &c.ExtraAttributesIssuerUri
 }
 
 // mqlGcpProjectCloudFunction for the gcp.project.cloudFunction resource

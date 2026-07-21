@@ -237,6 +237,8 @@ gcp.organization.workforcePool.provider.detailedAuditLogging 13.32.1
 gcp.organization.workforcePool.provider.disabled 13.32.1
 gcp.organization.workforcePool.provider.displayName 13.32.1
 gcp.organization.workforcePool.provider.expireTime 13.32.1
+gcp.organization.workforcePool.provider.extraAttributesIssuerUri 13.32.1
+gcp.organization.workforcePool.provider.extraAttributesType 13.32.1
 gcp.organization.workforcePool.provider.name 13.32.1
 gcp.organization.workforcePool.provider.oidcClientId 13.32.1
 gcp.organization.workforcePool.provider.oidcIssuerUri 13.32.1

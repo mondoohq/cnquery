@@ -120,24 +120,32 @@ func (g *mqlGcpOrganizationWorkforcePool) providers() ([]any, error) {
 			for _, p := range resp.WorkforcePoolProviders {
 				providerType, oidcIssuer, oidcClientId, samlMetadata := flattenWorkforceProviderConfig(p)
 
+				var extraAttributesType, extraAttributesIssuerUri string
+				if p.ExtraAttributesOauth2Client != nil {
+					extraAttributesType = p.ExtraAttributesOauth2Client.AttributesType
+					extraAttributesIssuerUri = p.ExtraAttributesOauth2Client.IssuerUri
+				}
+
 				mqlProvider, err := CreateResource(g.MqlRuntime, "gcp.organization.workforcePool.provider",
 					map[string]*llx.RawData{
-						"name":                 llx.StringData(p.Name),
-						"providerId":           llx.StringData(lastSegment(p.Name)),
-						"poolId":               llx.StringData(lastSegment(poolName)),
-						"displayName":          llx.StringData(p.DisplayName),
-						"description":          llx.StringData(p.Description),
-						"state":                llx.StringData(p.State),
-						"disabled":             llx.BoolData(p.Disabled),
-						"expireTime":           llx.TimeDataPtr(parseTime(p.ExpireTime)),
-						"attributeMapping":     llx.MapData(convert.MapToInterfaceMap(p.AttributeMapping), types.String),
-						"attributeCondition":   llx.StringData(p.AttributeCondition),
-						"detailedAuditLogging": llx.BoolData(p.DetailedAuditLogging),
-						"scimUsage":            llx.StringData(p.ScimUsage),
-						"providerType":         llx.StringData(providerType),
-						"oidcIssuerUri":        llx.StringData(oidcIssuer),
-						"oidcClientId":         llx.StringData(oidcClientId),
-						"samlIdpMetadataXml":   llx.StringData(samlMetadata),
+						"name":                     llx.StringData(p.Name),
+						"providerId":               llx.StringData(lastSegment(p.Name)),
+						"poolId":                   llx.StringData(lastSegment(poolName)),
+						"displayName":              llx.StringData(p.DisplayName),
+						"description":              llx.StringData(p.Description),
+						"state":                    llx.StringData(p.State),
+						"disabled":                 llx.BoolData(p.Disabled),
+						"expireTime":               llx.TimeDataPtr(parseTime(p.ExpireTime)),
+						"attributeMapping":         llx.MapData(convert.MapToInterfaceMap(p.AttributeMapping), types.String),
+						"attributeCondition":       llx.StringData(p.AttributeCondition),
+						"detailedAuditLogging":     llx.BoolData(p.DetailedAuditLogging),
+						"scimUsage":                llx.StringData(p.ScimUsage),
+						"providerType":             llx.StringData(providerType),
+						"oidcIssuerUri":            llx.StringData(oidcIssuer),
+						"oidcClientId":             llx.StringData(oidcClientId),
+						"samlIdpMetadataXml":       llx.StringData(samlMetadata),
+						"extraAttributesType":      llx.StringData(extraAttributesType),
+						"extraAttributesIssuerUri": llx.StringData(extraAttributesIssuerUri),
 					})
 				if err != nil {
 					return err
