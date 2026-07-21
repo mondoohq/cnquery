@@ -45,6 +45,14 @@ func ParseConfig(in io.Reader) map[string]any {
 		if indent > 0 {
 			level = indent / 3
 		}
+		// An ascent only ever pushes one stack entry, so a line that is
+		// indented more than one level deeper than the previous line (e.g. an
+		// indented banner or comment block that isn't real config nesting)
+		// would later be popped by more than was pushed, underflowing the
+		// stack. Clamp to one level deeper to keep the stack balanced.
+		if level > lastDepth+1 {
+			level = lastDepth + 1
+		}
 
 		if level > lastDepth {
 			// add level to stack
@@ -97,6 +105,13 @@ func GetSection(in io.Reader, section string) string {
 		level := 0
 		if indent > 0 {
 			level = indent / 3
+		}
+		// An ascent only ever pushes one key, so clamp a multi-level indent
+		// jump (e.g. an indented banner line) to one level deeper. Without
+		// this a later dedent pops more than was pushed and slices keyStack
+		// to a negative length, panicking the whole query.
+		if level > lastDepth+1 {
+			level = lastDepth + 1
 		}
 
 		if level > lastDepth {

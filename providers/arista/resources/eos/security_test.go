@@ -43,6 +43,17 @@ func TestParseAaaConfig_LocalOnly(t *testing.T) {
 	assert.True(t, a.DefaultLoginPermitsLocalOnly)
 }
 
+func TestParseAaaConfig_LocalBeforeGroup(t *testing.T) {
+	// "local" precedes "group", so local authenticates without a working
+	// remote source (the worse hardening posture). Order matters: presence of
+	// a group token alone must not clear the flag.
+	cfg := `aaa authentication login default local group tacacs+
+`
+	a := ParseAaaConfig(cfg)
+	assert.Equal(t, []string{"local", "group", "tacacs+"}, a.AuthenticationLogin["default"])
+	assert.True(t, a.DefaultLoginPermitsLocalOnly)
+}
+
 func TestParseAaaConfig_NoConfig(t *testing.T) {
 	a := ParseAaaConfig("")
 	assert.Empty(t, a.AuthenticationLogin)

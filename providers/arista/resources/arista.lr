@@ -372,8 +372,12 @@ arista.eos.spt.mstInterface @defaults("name") {
   // designated bridge and port; `regionalRootAddress` and
   // `regionalRootPriority` identify the MST regional root.
   detail dict
-  // Interface Boundary Type
-  boundaryType string
+  // Interface boundary type
+  //
+  // Deprecated, please use state. This field never carried a distinct
+  // boundary type: it returns the same value as state. It will be removed in
+  // a future major release once a real boundary source is wired up.
+  boundaryType @maturity("deprecated") string
   // BPDU transaction counters for the interface
   //
   // Keys `bpduSent`, `bpduReceived`, `bpduTaggedError`, `bpduOtherError`,

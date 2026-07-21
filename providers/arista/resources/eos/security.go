@@ -128,24 +128,20 @@ func ParseAaaConfig(runningConfig string) *AaaConfig {
 		}
 	}
 
-	// DefaultLoginPermitsLocalOnly: the "default" login list contains "local"
-	// with no `group` token preceding it — i.e. local is reachable without
-	// going through remote AAA.
+	// DefaultLoginPermitsLocalOnly: methods in the "default" login list are
+	// tried in order, so local authentication is reachable without a working
+	// remote source whenever "local" appears before the first "group" (remote
+	// AAA) method, or when there is no remote group at all. A "group" that
+	// precedes "local" makes local a fallback, not the primary source, so it
+	// does not count.
 	if methods, ok := cfg.AuthenticationLogin["default"]; ok {
-		hasGroup := false
 		for _, m := range methods {
 			if m == "group" {
-				hasGroup = true
 				break
 			}
-		}
-		// If there's no remote group at all, local is the only source.
-		if !hasGroup {
-			for _, m := range methods {
-				if m == "local" {
-					cfg.DefaultLoginPermitsLocalOnly = true
-					break
-				}
+			if m == "local" {
+				cfg.DefaultLoginPermitsLocalOnly = true
+				break
 			}
 		}
 	}

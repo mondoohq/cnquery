@@ -408,7 +408,11 @@ func (a *mqlAristaEosInterface) duplex() (string, error) {
 	if tv.Data == nil {
 		return "", nil
 	}
-	if duplex, ok := tv.Data.(map[string]any)["duplex"].(string); ok {
+	status, ok := tv.Data.(map[string]any)
+	if !ok {
+		return "", nil
+	}
+	if duplex, ok := status["duplex"].(string); ok {
 		return duplex, nil
 	}
 	return "", nil
@@ -422,7 +426,11 @@ func (a *mqlAristaEosInterface) autoNegotiate() (bool, error) {
 	if tv.Data == nil {
 		return false, nil
 	}
-	if autoNeg, ok := tv.Data.(map[string]any)["autoNegotiateActive"].(bool); ok {
+	status, ok := tv.Data.(map[string]any)
+	if !ok {
+		return false, nil
+	}
+	if autoNeg, ok := status["autoNegotiateActive"].(bool); ok {
 		return autoNeg, nil
 	}
 	return false, nil
@@ -469,6 +477,11 @@ func (a *mqlAristaEosStp) mstInstances() ([]any, error) {
 		mstInstance := mstInstances[mstk]
 
 		m := aristaMstInstanceID.FindStringSubmatch(mstk)
+		// Same guard as the pre-fetch loop above: a key without a trailing
+		// instance number does not match, and m[1] below would panic on nil.
+		if m == nil {
+			continue
+		}
 
 		bridge, err := convert.JsonToDict(mstInstance.Bridge)
 		if err != nil {
@@ -512,7 +525,9 @@ func (a *mqlAristaEosStp) mstInstances() ([]any, error) {
 				"portNumber":           llx.IntData(int64(iface.PortNumber)),
 				"isEdgePort":           llx.BoolData(iface.IsEdgePort),
 				"detail":               llx.DictData(detail),
-				"boundaryType":         llx.StringData(iface.State),
+				// Deprecated: duplicates state; no real boundary source exists
+				// in the SDK response yet.
+				"boundaryType": llx.StringData(iface.State),
 			})
 			if err != nil {
 				return nil, err
