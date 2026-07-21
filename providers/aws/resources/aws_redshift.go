@@ -377,14 +377,9 @@ func initAwsRedshiftCluster(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch redshift cluster")
+	arnVal, err := resolveArnArg(runtime, args, "redshift cluster", "redshift")
+	if err != nil {
+		return nil, nil, err
 	}
 
 	// load all rds db instances
@@ -399,7 +394,6 @@ func initAwsRedshiftCluster(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return nil, nil, rawResources.Error
 	}
 
-	arnVal := args["arn"].Value.(string)
 	for _, rawResource := range rawResources.Data {
 		cluster := rawResource.(*mqlAwsRedshiftCluster)
 		if cluster.Arn.Data == arnVal {

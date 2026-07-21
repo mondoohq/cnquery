@@ -107,16 +107,11 @@ func initAwsTransferServer(runtime *plugin.Runtime, args map[string]*llx.RawData
 
 	// During a discovered-asset scan the resource is queried with no args; recover
 	// the server's region and id from the ARN carried on the asset.
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch transfer server")
+	arnVal, err := resolveArnArg(runtime, args, "transfer server", "transfer")
+	if err != nil {
+		return nil, nil, err
 	}
 
-	arnVal := args["arn"].Value.(string)
 	parsed, err := arn.Parse(arnVal)
 	if err != nil {
 		return nil, nil, err

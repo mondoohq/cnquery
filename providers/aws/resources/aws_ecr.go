@@ -507,14 +507,9 @@ func initAwsEcrImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch ecr image")
+	arnVal, err := resolveArnArg(runtime, args, "ecr image", "ecr")
+	if err != nil {
+		return nil, nil, err
 	}
 
 	obj, err := CreateResource(runtime, "aws.ecr", map[string]*llx.RawData{})
@@ -527,7 +522,6 @@ func initAwsEcrImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	if rawResources.Error != nil {
 		return nil, nil, rawResources.Error
 	}
-	arnVal := args["arn"].Value.(string)
 	for _, rawResource := range rawResources.Data {
 		image := rawResource.(*mqlAwsEcrImage)
 		if image.Arn.Data == arnVal {
@@ -965,7 +959,7 @@ func initAwsEcrRepository(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifierForService(runtime, "ecr"); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}

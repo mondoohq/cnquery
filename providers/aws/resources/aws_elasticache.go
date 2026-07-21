@@ -646,14 +646,9 @@ func initAwsElasticacheCluster(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch elasticache cluster")
+	arnVal, err := resolveArnArg(runtime, args, "elasticache cluster", "elasticache")
+	if err != nil {
+		return nil, nil, err
 	}
 
 	obj, err := CreateResource(runtime, "aws.elasticache", map[string]*llx.RawData{})
@@ -667,10 +662,6 @@ func initAwsElasticacheCluster(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return nil, nil, rawResources.Error
 	}
 
-	arnVal, ok := args["arn"].Value.(string)
-	if !ok {
-		return nil, nil, errors.New("arn must be a string")
-	}
 	for _, rawResource := range rawResources.Data {
 		cluster := rawResource.(*mqlAwsElasticacheCluster)
 		if cluster.Arn.Data == arnVal {

@@ -429,7 +429,7 @@ func initAwsEsDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	}
 
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifierForService(runtime, "es"); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}

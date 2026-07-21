@@ -284,14 +284,9 @@ func initAwsSsmInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch ssm instance")
+	arnVal, err := resolveArnArg(runtime, args, "ssm instance", "ssm")
+	if err != nil {
+		return nil, nil, err
 	}
 
 	obj, err := CreateResource(runtime, "aws.ssm", map[string]*llx.RawData{})
@@ -305,7 +300,6 @@ func initAwsSsmInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return nil, nil, rawResources.Error
 	}
 
-	arnVal := args["arn"].Value.(string)
 	for _, rawResource := range rawResources.Data {
 		instance := rawResource.(*mqlAwsSsmInstance)
 		if instance.Arn.Data == arnVal {

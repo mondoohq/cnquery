@@ -258,13 +258,9 @@ func initAwsDocumentdbCluster(runtime *plugin.Runtime, args map[string]*llx.RawD
 	if len(args) > 2 {
 		return args, nil, nil
 	}
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch documentdb cluster")
+	arnVal, err := resolveArnArg(runtime, args, "documentdb cluster", "rds")
+	if err != nil {
+		return nil, nil, err
 	}
 	d, err := docdbGetParent(runtime)
 	if err != nil {
@@ -274,7 +270,6 @@ func initAwsDocumentdbCluster(runtime *plugin.Runtime, args map[string]*llx.RawD
 	if rawResources.Error != nil {
 		return nil, nil, rawResources.Error
 	}
-	arnVal := args["arn"].Value.(string)
 	for _, raw := range rawResources.Data {
 		c := raw.(*mqlAwsDocumentdbCluster)
 		if c.Arn.Data == arnVal {
@@ -735,13 +730,9 @@ func initAwsDocumentdbInstance(runtime *plugin.Runtime, args map[string]*llx.Raw
 	if len(args) > 2 {
 		return args, nil, nil
 	}
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch documentdb instance")
+	arnVal, err := resolveArnArg(runtime, args, "documentdb instance", "rds")
+	if err != nil {
+		return nil, nil, err
 	}
 	d, err := docdbGetParent(runtime)
 	if err != nil {
@@ -751,7 +742,6 @@ func initAwsDocumentdbInstance(runtime *plugin.Runtime, args map[string]*llx.Raw
 	if rawResources.Error != nil {
 		return nil, nil, rawResources.Error
 	}
-	arnVal := args["arn"].Value.(string)
 	for _, raw := range rawResources.Data {
 		i := raw.(*mqlAwsDocumentdbInstance)
 		if i.Arn.Data == arnVal {

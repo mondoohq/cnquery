@@ -158,17 +158,10 @@ func initAwsEfsFilesystem(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
+	arnVal, err := resolveArnArg(runtime, args, "efs filesystem", "elasticfilesystem")
+	if err != nil {
+		return nil, nil, err
 	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch efs filesystem")
-	}
-
-	arnVal := args["arn"].Value.(string)
 
 	// Derive region + filesystem id for a single targeted DescribeFileSystems
 	// call instead of listing every filesystem in every region.

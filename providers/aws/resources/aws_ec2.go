@@ -2138,7 +2138,7 @@ func initAwsEc2Securitygroup(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	}
 
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifierForService(runtime, "ec2"); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}
@@ -2506,16 +2506,10 @@ func initAwsEc2Volume(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
+	arnVal, err := resolveArnArg(runtime, args, "aws volume", "ec2")
+	if err != nil {
+		return nil, nil, err
 	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch aws volume")
-	}
-	arnVal := args["arn"].Value.(string)
 
 	parsed, err := arn.Parse(arnVal)
 	if err == nil && parsed.Region != "" && strings.HasPrefix(parsed.Resource, "volume/") {
@@ -2655,16 +2649,10 @@ func initAwsEc2Instance(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	log.Debug().Msg("init an ec2 instance")
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
+	arnVal, err := resolveArnArg(runtime, args, "ec2 instance", "ec2")
+	if err != nil {
+		return nil, nil, err
 	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch ec2 instance")
-	}
-	arnVal := args["arn"].Value.(string)
 
 	// Parse the ARN to extract region + instance id and target a single
 	// DescribeInstances call. Fall back to the cross-region list path only
@@ -2756,7 +2744,7 @@ func initAwsEc2Snapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifierForService(runtime, "ec2"); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}

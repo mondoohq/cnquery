@@ -333,17 +333,10 @@ func initAwsDynamodbTable(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
+	arnVal, err := resolveArnArg(runtime, args, "dynamodb table", "dynamodb")
+	if err != nil {
+		return nil, nil, err
 	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch dynamodb table")
-	}
-
-	arnVal := args["arn"].Value.(string)
 
 	// No API call is required: the DynamoDB table ARN
 	// (arn:aws:dynamodb:<region>:<acct>:table/<name>) carries both the region
@@ -928,14 +921,9 @@ func initAwsDynamodbGlobaltable(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch dynamodb table")
+	arnVal, err := resolveArnArg(runtime, args, "dynamodb global table", "dynamodb")
+	if err != nil {
+		return nil, nil, err
 	}
 
 	obj, err := CreateResource(runtime, "aws.dynamodb", map[string]*llx.RawData{})
@@ -949,7 +937,6 @@ func initAwsDynamodbGlobaltable(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return nil, nil, rawResources.Error
 	}
 
-	arnVal := args["arn"].Value.(string)
 	for _, rawResource := range rawResources.Data {
 		dbInstance := rawResource.(*mqlAwsDynamodbGlobaltable)
 		if dbInstance.Arn.Data == arnVal {

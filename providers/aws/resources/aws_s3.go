@@ -172,7 +172,7 @@ func initAwsS3Bucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		return args, nil, nil
 	}
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifierForService(runtime, "s3"); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}

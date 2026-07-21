@@ -70,15 +70,10 @@ func initAwsSagemakerModel(runtime *plugin.Runtime, args map[string]*llx.RawData
 	if len(args) > 2 {
 		return args, nil, nil
 	}
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
+	arnVal, err := resolveArnArg(runtime, args, "sagemaker model", "sagemaker")
+	if err != nil {
+		return nil, nil, err
 	}
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to resolve sagemaker model")
-	}
-	arnVal := args["arn"].Value.(string)
 
 	obj, err := CreateResource(runtime, "aws.sagemaker", map[string]*llx.RawData{})
 	if err != nil {

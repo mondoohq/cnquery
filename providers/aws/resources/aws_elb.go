@@ -449,23 +449,9 @@ func initAwsElbLoadbalancer(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch elb loadbalancer")
-	}
-
-	arnVal := args["arn"].Value.(string)
-
-	// Quick check: if the ARN doesn't belong to elasticloadbalancing, this asset
-	// is not an ELB. This happens when the query runs against non-ELB discovered
-	// assets (e.g., DynamoDB tables, IAM users, S3 buckets).
-	if arnVal == "" || !strings.Contains(arnVal, ":elasticloadbalancing:") {
-		return nil, nil, errors.New("elb load balancer does not exist")
+	arnVal, err := resolveArnArg(runtime, args, "elb loadbalancer", "elasticloadbalancing")
+	if err != nil {
+		return nil, nil, err
 	}
 
 	// Issue a single targeted Describe against the ARN's region instead of

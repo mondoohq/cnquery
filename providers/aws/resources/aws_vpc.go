@@ -1470,8 +1470,15 @@ func initAwsVpcSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 // (which may be a "Name" tag, not the vpc-id), keeping asset-name-vs-id
 // resolution correct. It may populate args["arn"] from the asset identifier.
 func deriveVpcTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (region, vpcId string) {
+	// aws.vpc also resolves by a bare "id" arg, so resolveArnArg (which requires
+	// an ARN) does not apply here.
+	//
+	// VPC ARNs use the provider's custom vpcArnPattern service token "vpc" (see
+	// the comment below), not the "ec2" token real AWS would use. Only "vpc" is
+	// accepted: allowing "ec2" here would let any EC2 asset (an instance,
+	// volume, or security group) be adopted as this VPC's ARN.
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifierForService(runtime, "vpc"); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}

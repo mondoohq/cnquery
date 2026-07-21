@@ -613,13 +613,9 @@ func initAwsBatchJobDefinition(runtime *plugin.Runtime, args map[string]*llx.Raw
 	if len(args) > 2 {
 		return args, nil, nil
 	}
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-	if args["arn"] == nil {
-		return args, nil, fmt.Errorf("arn required to fetch batch job definition")
+	wantArn, err := resolveArnArg(runtime, args, "batch job definition", "batch")
+	if err != nil {
+		return nil, nil, err
 	}
 
 	obj, err := CreateResource(runtime, "aws.batch", map[string]*llx.RawData{})
@@ -631,7 +627,6 @@ func initAwsBatchJobDefinition(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return nil, nil, jds.Error
 	}
 
-	wantArn := args["arn"].Value.(string)
 	for _, r := range jds.Data {
 		jd := r.(*mqlAwsBatchJobDefinition)
 		if jd.Arn.Data == wantArn {

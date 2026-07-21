@@ -125,14 +125,9 @@ func initAwsFsxFilesystem(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch fsx filesystem")
+	arnVal, err := resolveArnArg(runtime, args, "fsx filesystem", "fsx")
+	if err != nil {
+		return nil, nil, err
 	}
 
 	// load all fsx filesystems
@@ -147,7 +142,6 @@ func initAwsFsxFilesystem(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return nil, nil, rawResources.Error
 	}
 
-	arnVal := args["arn"].Value.(string)
 	for _, rawResource := range rawResources.Data {
 		fs := rawResource.(*mqlAwsFsxFilesystem)
 		if fs.Arn.Data == arnVal {
@@ -319,14 +313,9 @@ func initAwsFsxCache(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch fsx cache")
+	arnVal, err := resolveArnArg(runtime, args, "fsx cache", "fsx")
+	if err != nil {
+		return nil, nil, err
 	}
 
 	// load all fsx caches
@@ -341,7 +330,6 @@ func initAwsFsxCache(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		return nil, nil, rawResources.Error
 	}
 
-	arnVal := args["arn"].Value.(string)
 	for _, rawResource := range rawResources.Data {
 		cache := rawResource.(*mqlAwsFsxCache)
 		if cache.Arn.Data == arnVal {
@@ -496,14 +484,9 @@ func initAwsFsxBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch fsx backup")
+	arnVal, err := resolveArnArg(runtime, args, "fsx backup", "fsx")
+	if err != nil {
+		return nil, nil, err
 	}
 
 	// load all fsx backups
@@ -518,7 +501,6 @@ func initAwsFsxBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 		return nil, nil, rawResources.Error
 	}
 
-	arnVal := args["arn"].Value.(string)
 	for _, rawResource := range rawResources.Data {
 		backup := rawResource.(*mqlAwsFsxBackup)
 		if backup.Arn.Data == arnVal {

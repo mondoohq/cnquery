@@ -702,17 +702,12 @@ func initAwsCloudwatchLoggroup(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch cloudwatch log group")
+	arnVal, err := resolveArnArg(runtime, args, "cloudwatch log group", "logs")
+	if err != nil {
+		return nil, nil, err
 	}
 
 	conn := runtime.Connection.(*connection.AwsConnection)
-	arnVal := args["arn"].Value.(string)
 
 	// Targeted lookup: derive the region + group name from the ARN and fetch
 	// just this one log group (by name prefix) instead of describing every log

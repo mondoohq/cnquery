@@ -276,14 +276,9 @@ func initAwsSagemakerNotebookinstance(runtime *plugin.Runtime, args map[string]*
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch sagemaker notebookinstance")
+	arnVal, err := resolveArnArg(runtime, args, "sagemaker notebookinstance", "sagemaker")
+	if err != nil {
+		return nil, nil, err
 	}
 
 	obj, err := CreateResource(runtime, "aws.sagemaker", map[string]*llx.RawData{})
@@ -297,7 +292,6 @@ func initAwsSagemakerNotebookinstance(runtime *plugin.Runtime, args map[string]*
 		return nil, nil, rawResources.Error
 	}
 
-	arnVal := args["arn"].Value.(string)
 	for _, rawResource := range rawResources.Data {
 		ni := rawResource.(*mqlAwsSagemakerNotebookinstance)
 		if ni.Arn.Data == arnVal {
@@ -2082,14 +2076,9 @@ func initAwsSagemakerDomain(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch sagemaker domain")
+	arnVal, err := resolveArnArg(runtime, args, "sagemaker domain", "sagemaker")
+	if err != nil {
+		return nil, nil, err
 	}
 
 	obj, err := CreateResource(runtime, "aws.sagemaker", map[string]*llx.RawData{})
@@ -2103,7 +2092,6 @@ func initAwsSagemakerDomain(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return nil, nil, rawResources.Error
 	}
 
-	arnVal := args["arn"].Value.(string)
 	for _, rawResource := range rawResources.Data {
 		d := rawResource.(*mqlAwsSagemakerDomain)
 		if d.Arn.Data == arnVal {
@@ -4514,7 +4502,7 @@ func initAwsSagemakerTrainingjob(runtime *plugin.Runtime, args map[string]*llx.R
 	}
 
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifierForService(runtime, "sagemaker"); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}
@@ -4556,7 +4544,7 @@ func initAwsSagemakerProcessingjob(runtime *plugin.Runtime, args map[string]*llx
 	}
 
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifierForService(runtime, "sagemaker"); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}

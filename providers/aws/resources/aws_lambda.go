@@ -331,7 +331,7 @@ func initAwsLambdaFunction(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifierForService(runtime, "lambda"); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}

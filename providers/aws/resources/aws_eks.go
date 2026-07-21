@@ -484,14 +484,9 @@ func initAwsEksCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch eks cluster")
+	arnVal, err := resolveArnArg(runtime, args, "eks cluster", "eks")
+	if err != nil {
+		return nil, nil, err
 	}
 
 	// load all eks clusters
@@ -503,7 +498,6 @@ func initAwsEksCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	eks := obj.(*mqlAwsEks)
 	rawResources := eks.GetClusters()
 
-	arnVal := args["arn"].Value.(string)
 	for _, rawResource := range rawResources.Data {
 		cluster := rawResource.(*mqlAwsEksCluster)
 		if cluster.Arn.Data == arnVal {

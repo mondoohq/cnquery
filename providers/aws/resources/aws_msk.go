@@ -444,15 +444,10 @@ func initAwsMskCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	if len(args) >= 2 {
 		return args, nil, nil
 	}
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
+	arnVal, err := resolveArnArg(runtime, args, "aws msk cluster", "kafka")
+	if err != nil {
+		return nil, nil, err
 	}
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch aws msk cluster")
-	}
-	arnVal := args["arn"].Value.(string)
 	parsed, err := arn.Parse(arnVal)
 	if err != nil {
 		args["__id"] = llx.StringData(arnVal)

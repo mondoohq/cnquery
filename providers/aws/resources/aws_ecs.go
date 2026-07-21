@@ -157,16 +157,10 @@ func initAwsEcsCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
+	a, err := resolveArnArg(runtime, args, "ecs cluster", "ecs")
+	if err != nil {
+		return nil, nil, err
 	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch ecs cluster")
-	}
-	a := args["arn"].Value.(string)
 	conn := runtime.Connection.(*connection.AwsConnection)
 
 	// Validate and parse ARN if provided
@@ -428,16 +422,10 @@ func initAwsEcsTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
+	a, err := resolveArnArg(runtime, args, "ecs task", "ecs")
+	if err != nil {
+		return nil, nil, err
 	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch ecs task")
-	}
-	a := args["arn"].Value.(string)
 	conn := runtime.Connection.(*connection.AwsConnection)
 
 	parsedARN, err := validateAndParseARN(a, "ecs")
@@ -2085,16 +2073,10 @@ func initAwsEcsService(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
+	a, err := resolveArnArg(runtime, args, "ecs service", "ecs")
+	if err != nil {
+		return nil, nil, err
 	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch ecs service")
-	}
-	a := args["arn"].Value.(string)
 	conn := runtime.Connection.(*connection.AwsConnection)
 
 	// Validate and parse ARN if provided
@@ -2596,14 +2578,9 @@ func initAwsEcsTaskDefinition(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch aws ecs task definition")
+	arnVal, err := resolveArnArg(runtime, args, "aws ecs task definition", "ecs")
+	if err != nil {
+		return nil, nil, err
 	}
 
 	obj, err := CreateResource(runtime, "aws.ecs", map[string]*llx.RawData{})
@@ -2617,7 +2594,6 @@ func initAwsEcsTaskDefinition(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return nil, nil, rawResources.Error
 	}
 
-	arnVal, _ := args["arn"].Value.(string)
 	for _, rawResource := range rawResources.Data {
 		td := rawResource.(*mqlAwsEcsTaskDefinition)
 		if td.Arn.Data == arnVal {

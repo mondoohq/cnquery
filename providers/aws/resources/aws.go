@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -318,6 +319,74 @@ func getAssetIdentifier(runtime *plugin.Runtime) string {
 	}
 
 	return arnStr
+}
+
+// getAssetIdentifierForService returns the discovered asset's ARN, but only when
+// its service matches one of wantServices. Resource init functions adopt the
+// current asset's ARN (via getAssetIdentifier) when invoked with no arguments so
+// that a bare singular query like `aws.msk.cluster` resolves to the asset being
+// scanned. Without a service check, an asset from an unrelated service (e.g. a
+// Route53 hosted zone being synchronized while a policy references
+// aws.msk.cluster) would be adopted as this resource's own ARN, fabricating a
+// bogus husk resource keyed on the wrong ARN. Returning "" on a service mismatch
+// leaves args["arn"] unset so the caller falls through to its "arn required"
+// path instead.
+func getAssetIdentifierForService(runtime *plugin.Runtime, wantServices ...string) string {
+	assetArn := getAssetIdentifier(runtime)
+	if assetArn == "" {
+		return ""
+	}
+	parsed, err := arn.Parse(assetArn)
+	if err != nil {
+		return ""
+	}
+	for _, svc := range wantServices {
+		if parsed.Service == svc {
+			return assetArn
+		}
+	}
+	return ""
+}
+
+// resolveArnArg resolves and validates the args["arn"] an init function needs,
+// adopting the scanned asset's ARN when args is empty. It returns that ARN, and
+// on a nil error guarantees it is well-formed and belongs to one of
+// wantServices; everything else is an error, named after resource ("arn
+// required to fetch aws msk cluster"). Validating here also catches the ARN a
+// caller supplied explicitly, which getAssetIdentifierForService never sees.
+//
+// Use it only where an ARN is mandatory. Resources that accept an alternative
+// key -- a name, an id, or the bare key ID and "alias/..." forms aws.kms.key
+// takes -- must call getAssetIdentifierForService directly instead, since every
+// one of those is rejected here.
+func resolveArnArg(runtime *plugin.Runtime, args map[string]*llx.RawData, resource string, wantServices ...string) (string, error) {
+	// Adopt the scanned asset's ARN for a bare singular query like
+	// `aws.msk.cluster`, so it resolves to the asset being scanned.
+	if len(args) == 0 {
+		if assetArn := getAssetIdentifierForService(runtime, wantServices...); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
+		}
+	}
+
+	if args["arn"] == nil {
+		return "", fmt.Errorf("arn required to fetch %s", resource)
+	}
+	arnVal, ok := args["arn"].Value.(string)
+	if !ok {
+		// Returning the ARN spares callers a bare args["arn"].Value.(string),
+		// which panics on a null or non-string argument -- and a panic in an
+		// init takes down the whole scan, not just this query.
+		return "", fmt.Errorf("arn for %s must be a string, got %T", resource, args["arn"].Value)
+	}
+
+	parsed, err := arn.Parse(arnVal)
+	if err != nil {
+		return "", fmt.Errorf("invalid arn %q for %s: %w", arnVal, resource, err)
+	}
+	if slices.Contains(wantServices, parsed.Service) {
+		return arnVal, nil
+	}
+	return "", fmt.Errorf("arn %q is not a %s arn: service is %q, expected %s", arnVal, resource, parsed.Service, strings.Join(wantServices, " or "))
 }
 
 // getAssetName returns the discovered asset's name, or "" when the connection

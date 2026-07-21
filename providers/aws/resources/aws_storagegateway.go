@@ -125,14 +125,9 @@ func initAwsStoragegatewayGateway(runtime *plugin.Runtime, args map[string]*llx.
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch storage gateway")
+	arnVal, err := resolveArnArg(runtime, args, "storage gateway", "storagegateway")
+	if err != nil {
+		return nil, nil, err
 	}
 
 	obj, err := CreateResource(runtime, ResourceAwsStoragegateway, map[string]*llx.RawData{})
@@ -145,7 +140,6 @@ func initAwsStoragegatewayGateway(runtime *plugin.Runtime, args map[string]*llx.
 		return nil, nil, rawResources.Error
 	}
 
-	arnVal := args["arn"].Value.(string)
 	for _, rawResource := range rawResources.Data {
 		gw := rawResource.(*mqlAwsStoragegatewayGateway)
 		if gw.Arn.Data == arnVal {

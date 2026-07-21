@@ -5,7 +5,6 @@ package resources
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -54,17 +53,11 @@ func initAwsSecretsmanagerSecret(runtime *plugin.Runtime, args map[string]*llx.R
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
+	arnVal, err := resolveArnArg(runtime, args, "secretsmanager secret", "secretsmanager")
+	if err != nil {
+		return nil, nil, err
 	}
 
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch secretsmanager secret")
-	}
-
-	arnVal := args["arn"].Value.(string)
 	region, err := GetRegionFromArn(arnVal)
 	if err != nil {
 		// Returning (args, nil, nil) here would let the runtime create a

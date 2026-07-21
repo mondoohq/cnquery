@@ -198,14 +198,9 @@ func initAwsNeptuneCluster(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch neptune cluster")
+	arnVal, err := resolveArnArg(runtime, args, "neptune cluster", "rds")
+	if err != nil {
+		return nil, nil, err
 	}
 
 	obj, err := CreateResource(runtime, "aws.neptune", map[string]*llx.RawData{})
@@ -219,10 +214,6 @@ func initAwsNeptuneCluster(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return nil, nil, rawResources.Error
 	}
 
-	arnVal, ok := args["arn"].Value.(string)
-	if !ok {
-		return nil, nil, errors.New("arn must be a string")
-	}
 	for _, rawResource := range rawResources.Data {
 		cluster := rawResource.(*mqlAwsNeptuneCluster)
 		if cluster.Arn.Data == arnVal {

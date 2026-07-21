@@ -196,7 +196,7 @@ func initAwsRoute53HostedZone(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifierForService(runtime, "route53"); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}
