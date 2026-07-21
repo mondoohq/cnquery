@@ -869,22 +869,22 @@ func (a *mqlAwsElbListener) sslPolicyRef() (*mqlAwsElbSslPolicy, error) {
 	if err != nil {
 		return nil, err
 	}
-	parent, err := CreateResource(a.MqlRuntime, ResourceAwsElb, map[string]*llx.RawData{})
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Elbv2(region)
+	ctx := context.Background()
+	resp, err := svc.DescribeSSLPolicies(ctx, &elasticloadbalancingv2.DescribeSSLPoliciesInput{Names: []string{name}})
 	if err != nil {
+		if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
+			a.SslPolicyRef.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
 		return nil, err
 	}
-	policies := parent.(*mqlAwsElb).GetSslPolicies()
-	if policies.Error != nil {
-		return nil, policies.Error
+	if len(resp.SslPolicies) == 0 {
+		a.SslPolicyRef.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
 	}
-	for _, p := range policies.Data {
-		sp := p.(*mqlAwsElbSslPolicy)
-		if sp.Name.Data == name && sp.Region.Data == region {
-			return sp, nil
-		}
-	}
-	a.SslPolicyRef.State = plugin.StateIsNull | plugin.StateIsSet
-	return nil, nil
+	return buildElbSSLPolicyResource(a.MqlRuntime, region, resp.SslPolicies[0])
 }
 
 func (a *mqlAwsElbListener) trustStore() (*mqlAwsElbTruststore, error) {
@@ -892,22 +892,26 @@ func (a *mqlAwsElbListener) trustStore() (*mqlAwsElbTruststore, error) {
 		a.TrustStore.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	parent, err := CreateResource(a.MqlRuntime, ResourceAwsElb, map[string]*llx.RawData{})
+	region, err := GetRegionFromArn(a.Arn.Data)
 	if err != nil {
 		return nil, err
 	}
-	stores := parent.(*mqlAwsElb).GetTrustStores()
-	if stores.Error != nil {
-		return nil, stores.Error
-	}
-	for _, s := range stores.Data {
-		ts := s.(*mqlAwsElbTruststore)
-		if ts.Arn.Data == a.mutualAuthTrustStoreArn {
-			return ts, nil
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Elbv2(region)
+	ctx := context.Background()
+	resp, err := svc.DescribeTrustStores(ctx, &elasticloadbalancingv2.DescribeTrustStoresInput{TrustStoreArns: []string{a.mutualAuthTrustStoreArn}})
+	if err != nil {
+		if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
+			a.TrustStore.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
 		}
+		return nil, err
 	}
-	a.TrustStore.State = plugin.StateIsNull | plugin.StateIsSet
-	return nil, nil
+	if len(resp.TrustStores) == 0 {
+		a.TrustStore.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return buildElbTrustStoreResource(a.MqlRuntime, region, resp.TrustStores[0])
 }
 
 func (a *mqlAwsElbListener) rules() ([]any, error) {
@@ -924,6 +928,10 @@ func (a *mqlAwsElbListener) rules() ([]any, error) {
 	for paginator.HasMorePages() {
 		resp, err := paginator.NextPage(ctx)
 		if err != nil {
+			if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
+				log.Warn().Str("listener", arnVal).Msg("access denied listing listener rules")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, r := range resp.Rules {
