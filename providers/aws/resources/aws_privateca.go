@@ -90,7 +90,10 @@ func initAwsPrivatecaCertificateAuthority(runtime *plugin.Runtime, args map[stri
 	if args["arn"] == nil {
 		return nil, nil, errors.New("arn required to fetch aws privateca certificate authority")
 	}
-	arnVal := args["arn"].Value.(string)
+	arnVal, ok := args["arn"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("arn must be a string")
+	}
 
 	obj, err := CreateResource(runtime, "aws.privateca", map[string]*llx.RawData{})
 	if err != nil {
