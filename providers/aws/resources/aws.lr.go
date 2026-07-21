@@ -18902,7 +18902,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsElasticacheReplicationGroup).GetReplicationGroupCreatedAt()).ToDataRes(types.Time)
 	},
 	"aws.elasticache.replicationGroup.memberClusters": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsElasticacheReplicationGroup).GetMemberClusters()).ToDataRes(types.Array(types.String))
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetMemberClusters()).ToDataRes(types.Array(types.Resource("aws.elasticache.cluster")))
 	},
 	"aws.elasticache.replicationGroup.userGroupIds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheReplicationGroup).GetUserGroupIds()).ToDataRes(types.Array(types.String))
@@ -133584,7 +133584,7 @@ func (c *mqlAwsRdsParameterGroupParameter) GetSupportedEngineModes() *plugin.TVa
 type mqlAwsElasticache struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlAwsElasticacheInternal
+	// optional: if you define mqlAwsElasticacheInternal it will be used here
 	CacheClusters     plugin.TValue[[]any]
 	ServerlessCaches  plugin.TValue[[]any]
 	ParameterGroups   plugin.TValue[[]any]
@@ -133944,7 +133944,19 @@ func (c *mqlAwsElasticacheReplicationGroup) GetReplicationGroupCreatedAt() *plug
 }
 
 func (c *mqlAwsElasticacheReplicationGroup) GetMemberClusters() *plugin.TValue[[]any] {
-	return &c.MemberClusters
+	return plugin.GetOrCompute[[]any](&c.MemberClusters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elasticache.replicationGroup", c.__id, "memberClusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.memberClusters()
+	})
 }
 
 func (c *mqlAwsElasticacheReplicationGroup) GetUserGroupIds() *plugin.TValue[[]any] {

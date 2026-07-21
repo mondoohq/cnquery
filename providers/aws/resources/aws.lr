@@ -13800,8 +13800,8 @@ private aws.elasticache.replicationGroup @defaults("replicationGroupId status de
   snapshottingClusterId string
   // Time the replication group was created
   replicationGroupCreatedAt time
-  // Identifiers of the clusters that belong to the replication group
-  memberClusters []string
+  // Clusters that belong to the replication group
+  memberClusters() []aws.elasticache.cluster
   // RBAC user groups associated with the replication group
   userGroupIds []string
   // Network type: ipv4, ipv6, or dual_stack
