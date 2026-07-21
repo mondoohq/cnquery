@@ -82,8 +82,11 @@ private hetzner.server @defaults("id name status") {
   // Server type (VM size)
   serverType() hetzner.serverType
   // Datacenter the server runs in
-  datacenter() hetzner.datacenter
-  // Location of the datacenter
+  //
+  // Deprecated, please use location. Hetzner removed the datacenter
+  // association from servers, so this always resolves to null.
+  datacenter() @maturity("deprecated") hetzner.datacenter
+  // Location the server runs in
   location() hetzner.location
   // Image the server was created from (nullable)
   image() hetzner.image
@@ -479,7 +482,10 @@ private hetzner.primaryIp @defaults("id ip type") {
   // Whether the IP is blocked
   blocked bool
   // Datacenter the IP belongs to
-  datacenter() hetzner.datacenter
+  //
+  // Deprecated, please use location. Hetzner removed the datacenter
+  // association from primary IPs, so this always resolves to null.
+  datacenter() @maturity("deprecated") hetzner.datacenter
   // Location the IP belongs to
   location() hetzner.location
   // Server the IP is assigned to (nullable)
@@ -869,7 +875,11 @@ private hetzner.datacenter @defaults("id name") {
   // Server types available for migration into this datacenter
   serverTypesAvailableForMigration() []hetzner.serverType
   // Servers running in this datacenter
-  servers() []hetzner.server
+  //
+  // Hetzner removed the datacenter association from servers, so servers can
+  // no longer be mapped back to a datacenter. This field is deprecated and
+  // always resolves to an empty list.
+  servers() @maturity("deprecated") []hetzner.server
 }
 
 // Hetzner Cloud Storage Box (managed backup/file storage)

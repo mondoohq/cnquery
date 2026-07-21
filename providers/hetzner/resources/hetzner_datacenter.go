@@ -94,10 +94,11 @@ func (m *mqlHetznerDatacenter) serverTypesAvailableForMigration() ([]any, error)
 }
 
 func (m *mqlHetznerDatacenter) servers() ([]any, error) {
-	dcID := m.Id.Data
-	return serversMatching(m.MqlRuntime, func(s *hcloud.Server) bool {
-		return s.Datacenter != nil && s.Datacenter.ID == dcID
-	})
+	// Hetzner removed the datacenter association from servers, so servers can no
+	// longer be mapped back to a datacenter (a location holds many datacenters,
+	// so the server's location cannot recover it). The field is retained
+	// (deprecated) and always resolves to an empty list.
+	return []any{}, nil
 }
 
 func serverTypeRefs(runtime *plugin.Runtime, types []*hcloud.ServerType) ([]any, error) {

@@ -15,7 +15,7 @@ import (
 
 type mqlHetznerInternal struct {
 	// serversOnce guards a single project-wide Server.List so the servers()
-	// field and the location/datacenter server rollups share one API round-trip
+	// field and the location server rollups share one API round-trip
 	// instead of each firing its own list call.
 	serversOnce sync.Once
 	serversList []*hcloud.Server
@@ -24,7 +24,6 @@ type mqlHetznerInternal struct {
 
 type mqlHetznerServerInternal struct {
 	cacheServerType     *hcloud.ServerType
-	cacheDatacenter     *hcloud.Datacenter
 	cacheLocation       *hcloud.Location
 	cacheImage          *hcloud.Image
 	cacheVolumes        []*hcloud.Volume
@@ -85,8 +84,8 @@ func hetznerNamespace(runtime *plugin.Runtime) (*mqlHetzner, error) {
 
 // serversMatching returns full server resources for the servers the match
 // predicate selects, filtering the once-cached project server list in memory.
-// Reverse edges (location.servers, datacenter.servers) use it so repeated
-// calls across a bulk query share a single Server.List round-trip.
+// The location.servers reverse edge uses it so repeated calls across a bulk
+// query share a single Server.List round-trip.
 func serversMatching(runtime *plugin.Runtime, match func(*hcloud.Server) bool) ([]any, error) {
 	h, err := hetznerNamespace(runtime)
 	if err != nil {
@@ -145,7 +144,6 @@ func newMqlHetznerServer(runtime *plugin.Runtime, s *hcloud.Server) (*mqlHetzner
 	}
 	m := res.(*mqlHetznerServer)
 	m.cacheServerType = s.ServerType
-	m.cacheDatacenter = s.Datacenter
 	m.cacheLocation = s.Location
 	m.cacheImage = s.Image
 	m.cacheVolumes = s.Volumes
@@ -183,17 +181,15 @@ func (m *mqlHetznerServer) serverType() (*mqlHetznerServerType, error) {
 }
 
 func (m *mqlHetznerServer) datacenter() (*mqlHetznerDatacenter, error) {
-	return resolveTypedResource(&m.Datacenter, m.cacheDatacenter, func(dc *hcloud.Datacenter) (*mqlHetznerDatacenter, error) {
-		return newMqlHetznerDatacenter(m.MqlRuntime, dc)
-	})
+	// Hetzner removed the datacenter association from servers; the API now
+	// reports only the location. The field is retained (deprecated) and
+	// always resolves to null.
+	m.Datacenter.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (m *mqlHetznerServer) location() (*mqlHetznerLocation, error) {
-	loc := m.cacheLocation
-	if loc == nil && m.cacheDatacenter != nil {
-		loc = m.cacheDatacenter.Location
-	}
-	return resolveTypedResource(&m.Location, loc, func(l *hcloud.Location) (*mqlHetznerLocation, error) {
+	return resolveTypedResource(&m.Location, m.cacheLocation, func(l *hcloud.Location) (*mqlHetznerLocation, error) {
 		return newMqlHetznerLocation(m.MqlRuntime, l)
 	})
 }

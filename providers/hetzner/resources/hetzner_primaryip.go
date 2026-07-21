@@ -12,9 +12,8 @@ import (
 )
 
 type mqlHetznerPrimaryIpInternal struct {
-	cacheDatacenter *hcloud.Datacenter
-	cacheLocation   *hcloud.Location
-	cacheServerID   int64
+	cacheLocation *hcloud.Location
+	cacheServerID int64
 }
 
 func (r *mqlHetznerPrimaryIp) id() (string, error) {
@@ -64,7 +63,6 @@ func newMqlHetznerPrimaryIp(runtime *plugin.Runtime, p *hcloud.PrimaryIP) (*mqlH
 		return nil, err
 	}
 	m := res.(*mqlHetznerPrimaryIp)
-	m.cacheDatacenter = p.Datacenter
 	m.cacheLocation = p.Location
 	if p.AssigneeType == "server" {
 		m.cacheServerID = p.AssigneeID
@@ -89,17 +87,15 @@ func initHetznerPrimaryIp(runtime *plugin.Runtime, args map[string]*llx.RawData)
 }
 
 func (m *mqlHetznerPrimaryIp) datacenter() (*mqlHetznerDatacenter, error) {
-	return resolveTypedResource(&m.Datacenter, m.cacheDatacenter, func(dc *hcloud.Datacenter) (*mqlHetznerDatacenter, error) {
-		return newMqlHetznerDatacenter(m.MqlRuntime, dc)
-	})
+	// Hetzner removed the datacenter association from primary IPs; the API now
+	// reports only the location. The field is retained (deprecated) and always
+	// resolves to null.
+	m.Datacenter.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (m *mqlHetznerPrimaryIp) location() (*mqlHetznerLocation, error) {
-	loc := m.cacheLocation
-	if loc == nil && m.cacheDatacenter != nil {
-		loc = m.cacheDatacenter.Location
-	}
-	return resolveTypedResource(&m.Location, loc, func(l *hcloud.Location) (*mqlHetznerLocation, error) {
+	return resolveTypedResource(&m.Location, m.cacheLocation, func(l *hcloud.Location) (*mqlHetznerLocation, error) {
 		return newMqlHetznerLocation(m.MqlRuntime, l)
 	})
 }
