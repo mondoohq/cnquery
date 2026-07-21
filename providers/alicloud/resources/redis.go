@@ -75,7 +75,7 @@ func (r *mqlAlicloudRedis) instances() ([]any, error) {
 		}
 
 		pageNumber := int32(1)
-		pageSize := int32(100)
+		pageSize := int32(50)
 		for {
 			resp, err := client.DescribeInstances(&rkvclient.DescribeInstancesRequest{
 				RegionId:   tea.String(region),

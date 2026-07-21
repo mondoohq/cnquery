@@ -101,6 +101,7 @@ func (r *mqlAlicloudSlb) loadBalancers() ([]any, error) {
 
 		pageNumber := int32(1)
 		pageSize := int32(100)
+		firstPage := true
 		for {
 			resp, err := client.DescribeLoadBalancers(&slbclient.DescribeLoadBalancersRequest{
 				RegionId:   tea.String(region),
@@ -108,10 +109,16 @@ func (r *mqlAlicloudSlb) loadBalancers() ([]any, error) {
 				PageSize:   tea.Int32(pageSize),
 			})
 			if err != nil {
-				// A region may not have SLB enabled or the credential may lack
-				// access there. Skip it rather than failing the whole list.
-				break
+				// A first-page error means the region has no SLB or the
+				// credential lacks access there — skip it. A later-page error
+				// means the region is reachable and the failure is real; surface
+				// it rather than silently truncating the list (matches ALB/NLB).
+				if firstPage {
+					break
+				}
+				return nil, err
 			}
+			firstPage = false
 			if resp == nil || resp.Body == nil || resp.Body.LoadBalancers == nil {
 				break
 			}

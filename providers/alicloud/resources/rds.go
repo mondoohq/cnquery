@@ -362,12 +362,19 @@ func (r *mqlAlicloudRdsInstance) securityIPList() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
 	client, err := conn.RdsClient(r.region)
 	if err != nil {
-		return []any{}, nil
+		return nil, err
 	}
 	resp, err := client.DescribeDBInstanceIPArrayList(&rdsclient.DescribeDBInstanceIPArrayListRequest{
 		DBInstanceId: tea.String(r.instanceId),
 	})
-	if err != nil || resp == nil || resp.Body == nil || resp.Body.Items == nil {
+	// Propagate a real fetch error rather than returning an empty list: a
+	// swallowed error here reads as a locked-down (empty) whitelist and lets an
+	// actually-open instance pass an exposure check. A genuinely empty response
+	// (no error, no items) is still a legitimate empty whitelist.
+	if err != nil {
+		return nil, err
+	}
+	if resp == nil || resp.Body == nil || resp.Body.Items == nil {
 		return []any{}, nil
 	}
 	res := []any{}

@@ -94,10 +94,7 @@ func newOssBucket(runtime *plugin.Runtime, conn *connection.AlicloudConnection, 
 	if err != nil {
 		return nil, err
 	}
-	mqlBucket := bucket.(*mqlAlicloudOssBucket)
-	mqlBucket.name = name
-	mqlBucket.region = region
-	return mqlBucket, nil
+	return bucket.(*mqlAlicloudOssBucket), nil
 }
 
 // resolveOssBucket returns the typed bucket for a name, or (nil, nil) when name
@@ -171,9 +168,6 @@ func initAlicloudOssBucket(runtime *plugin.Runtime, args map[string]*llx.RawData
 // OSS client and memoizes the two detail calls (GetBucketInfo and
 // GetBucketEncryption) that back more than one accessor.
 type mqlAlicloudOssBucketInternal struct {
-	name   string
-	region string
-
 	infoLock   sync.Mutex
 	infoLoaded atomic.Bool
 	info       *oss.BucketInfo
@@ -191,7 +185,7 @@ func (a *mqlAlicloudOssBucket) id() (string, error) {
 // per-bucket detail APIs address the correct endpoint.
 func (a *mqlAlicloudOssBucket) ossClient() (*oss.Client, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AlicloudConnection)
-	return conn.OssClient(a.region)
+	return conn.OssClient(a.Region.Data)
 }
 
 func (a *mqlAlicloudOssBucket) acl() (string, error) {
@@ -199,7 +193,7 @@ func (a *mqlAlicloudOssBucket) acl() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	resp, err := client.GetBucketAcl(context.Background(), &oss.GetBucketAclRequest{Bucket: &a.name})
+	resp, err := client.GetBucketAcl(context.Background(), &oss.GetBucketAclRequest{Bucket: &a.Name.Data})
 	if err != nil {
 		// tolerate access-denied / transient errors on this optional detail call
 		return "", nil
@@ -215,7 +209,7 @@ func (a *mqlAlicloudOssBucket) versioning() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	resp, err := client.GetBucketVersioning(context.Background(), &oss.GetBucketVersioningRequest{Bucket: &a.name})
+	resp, err := client.GetBucketVersioning(context.Background(), &oss.GetBucketVersioningRequest{Bucket: &a.Name.Data})
 	if err != nil {
 		return "", nil
 	}
@@ -242,7 +236,7 @@ func (a *mqlAlicloudOssBucket) fetchEncryption() (*oss.ApplyServerSideEncryption
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.GetBucketEncryption(context.Background(), &oss.GetBucketEncryptionRequest{Bucket: &a.name})
+	resp, err := client.GetBucketEncryption(context.Background(), &oss.GetBucketEncryptionRequest{Bucket: &a.Name.Data})
 	if err != nil {
 		// no encryption rule configured, or access denied
 		a.encRule = nil
@@ -290,7 +284,7 @@ func (a *mqlAlicloudOssBucket) kmsKey() (*mqlAlicloudKmsKey, error) {
 		a.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	key, err := resolveKmsKey(a.MqlRuntime, a.region, *rule.KMSMasterKeyID)
+	key, err := resolveKmsKey(a.MqlRuntime, a.Region.Data, *rule.KMSMasterKeyID)
 	if err != nil || key == nil {
 		a.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
@@ -303,7 +297,7 @@ func (a *mqlAlicloudOssBucket) logging() (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.GetBucketLogging(context.Background(), &oss.GetBucketLoggingRequest{Bucket: &a.name})
+	resp, err := client.GetBucketLogging(context.Background(), &oss.GetBucketLoggingRequest{Bucket: &a.Name.Data})
 	if err != nil {
 		return nil, nil
 	}
@@ -318,7 +312,7 @@ func (a *mqlAlicloudOssBucket) policy() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	resp, err := client.GetBucketPolicy(context.Background(), &oss.GetBucketPolicyRequest{Bucket: &a.name})
+	resp, err := client.GetBucketPolicy(context.Background(), &oss.GetBucketPolicyRequest{Bucket: &a.Name.Data})
 	if err != nil {
 		// most buckets have no policy (NoSuchBucketPolicy)
 		return "", nil
@@ -334,7 +328,7 @@ func (a *mqlAlicloudOssBucket) tags() (map[string]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.GetBucketTags(context.Background(), &oss.GetBucketTagsRequest{Bucket: &a.name})
+	resp, err := client.GetBucketTags(context.Background(), &oss.GetBucketTagsRequest{Bucket: &a.Name.Data})
 	if err != nil {
 		return nil, nil
 	}
@@ -355,7 +349,7 @@ func (a *mqlAlicloudOssBucket) publicAccessBlock() (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.GetBucketPublicAccessBlock(context.Background(), &oss.GetBucketPublicAccessBlockRequest{Bucket: &a.name})
+	resp, err := client.GetBucketPublicAccessBlock(context.Background(), &oss.GetBucketPublicAccessBlockRequest{Bucket: &a.Name.Data})
 	if err != nil {
 		return nil, nil
 	}
@@ -382,7 +376,7 @@ func (a *mqlAlicloudOssBucket) fetchInfo() (*oss.BucketInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.GetBucketInfo(context.Background(), &oss.GetBucketInfoRequest{Bucket: &a.name})
+	resp, err := client.GetBucketInfo(context.Background(), &oss.GetBucketInfoRequest{Bucket: &a.Name.Data})
 	if err != nil || resp == nil {
 		a.info = nil
 		a.infoLoaded.Store(true)

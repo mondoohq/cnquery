@@ -102,11 +102,16 @@ func (r *mqlAlicloudCloudFirewall) controlPolicies() ([]any, error) {
 	res := []any{}
 	for _, direction := range []string{"in", "out"} {
 		currentPage := 1
+		collected := 0
 		for {
 			resp, err := client.DescribeControlPolicy(&cloudfwclient.DescribeControlPolicyRequest{
 				Direction:   tea.String(direction),
 				CurrentPage: tea.String(strconv.Itoa(currentPage)),
-				PageSize:    tea.String("100"),
+				// The API caps PageSize server-side (documented example is 10),
+				// so use a conservative page and terminate on the accumulated
+				// count vs TotalCount below — robust to whatever the server caps
+				// the page at, rather than assuming a full page means "more".
+				PageSize: tea.String("50"),
 			})
 			if err != nil {
 				return nil, err
@@ -141,7 +146,9 @@ func (r *mqlAlicloudCloudFirewall) controlPolicies() ([]any, error) {
 				}
 				res = append(res, resource)
 			}
-			if len(items) < 100 {
+			collected += len(items)
+			total, _ := strconv.Atoi(tea.StringValue(resp.Body.TotalCount))
+			if len(items) == 0 || collected >= total {
 				break
 			}
 			currentPage++

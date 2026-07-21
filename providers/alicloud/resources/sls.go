@@ -61,16 +61,23 @@ func (r *mqlAlicloudLog) projects() ([]any, error) {
 
 		offset := int32(0)
 		size := int32(100)
+		firstPage := true
 		for {
 			resp, err := client.ListProject(&slsclient.ListProjectRequest{
 				Offset: tea.Int32(offset),
 				Size:   tea.Int32(size),
 			})
 			if err != nil {
-				// a region may not have SLS enabled or the credential may lack
-				// access there; skip it rather than failing the whole scan
-				break
+				// A first-page error means the region has no SLS or the
+				// credential lacks access there; skip it. A later-page error is
+				// real — surface it rather than silently truncating the project
+				// list.
+				if firstPage {
+					break
+				}
+				return nil, err
 			}
+			firstPage = false
 			if resp == nil || resp.Body == nil {
 				break
 			}
@@ -202,12 +209,22 @@ func (r *mqlAlicloudLogProject) logstores() ([]any, error) {
 	res := []any{}
 	offset := int32(0)
 	size := int32(200)
+	firstPage := true
 	for {
 		resp, err := client.ListLogStores(tea.String(projectName), &slsclient.ListLogStoresRequest{
 			Offset: tea.Int32(offset),
 			Size:   tea.Int32(size),
 		})
-		if err != nil || resp == nil || resp.Body == nil {
+		if err != nil {
+			// First-page error = can't read this project's stores (skip);
+			// later-page error is real — surface rather than truncate.
+			if firstPage {
+				break
+			}
+			return nil, err
+		}
+		firstPage = false
+		if resp == nil || resp.Body == nil {
 			break
 		}
 		items := resp.Body.Logstores

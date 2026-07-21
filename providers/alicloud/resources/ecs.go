@@ -481,7 +481,7 @@ func (r *mqlAlicloudEcs) images() ([]any, error) {
 		}
 
 		pageNumber := int32(1)
-		pageSize := int32(100)
+		pageSize := int32(50)
 		for {
 			req := &ecsclient.DescribeImagesRequest{
 				RegionId:   &region,
@@ -593,7 +593,7 @@ func (r *mqlAlicloudEcs) keyPairs() ([]any, error) {
 		}
 
 		pageNumber := int32(1)
-		pageSize := int32(100)
+		pageSize := int32(50)
 		for {
 			req := &ecsclient.DescribeKeyPairsRequest{
 				RegionId:   &region,

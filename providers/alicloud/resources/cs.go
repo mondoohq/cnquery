@@ -255,7 +255,10 @@ func initAlicloudCsCluster(runtime *plugin.Runtime, args map[string]*llx.RawData
 }
 
 func (r *mqlAlicloudCsCluster) id() (string, error) {
-	return r.region + "/" + r.clusterId, nil
+	// Read the public fields (populated by SetAllData on every path) rather
+	// than the Internal cache fields, which are unset when the resource is
+	// built from args on the init fast-path — leaving __id "/" and colliding.
+	return r.RegionId.Data + "/" + r.ClusterId.Data, nil
 }
 
 // clusterDetail lazily fetches and caches DescribeClusterDetail, which carries

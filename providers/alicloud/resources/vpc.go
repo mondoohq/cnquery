@@ -124,7 +124,7 @@ func (r *mqlAlicloudVpc) networks() ([]any, error) {
 		}
 
 		pageNumber := int32(1)
-		pageSize := int32(100)
+		pageSize := int32(50)
 		for {
 			req := &vpcclient.DescribeVpcsRequest{
 				RegionId:   &region,
@@ -256,7 +256,7 @@ func (r *mqlAlicloudVpcNetwork) vswitches() ([]any, error) {
 
 	res := []any{}
 	pageNumber := int32(1)
-	pageSize := int32(100)
+	pageSize := int32(50)
 	for {
 		resp, err := client.DescribeVSwitches(&vpcclient.DescribeVSwitchesRequest{
 			RegionId:   &r.cacheRegion,
@@ -304,7 +304,7 @@ func (r *mqlAlicloudVpcNetwork) natGateways() ([]any, error) {
 
 	res := []any{}
 	pageNumber := int32(1)
-	pageSize := int32(100)
+	pageSize := int32(50)
 	for {
 		resp, err := client.DescribeNatGateways(&vpcclient.DescribeNatGatewaysRequest{
 			RegionId:   &r.cacheRegion,
@@ -352,7 +352,7 @@ func (r *mqlAlicloudVpcNetwork) routeTables() ([]any, error) {
 
 	res := []any{}
 	pageNumber := int32(1)
-	pageSize := int32(100)
+	pageSize := int32(50)
 	for {
 		resp, err := client.DescribeRouteTableList(&vpcclient.DescribeRouteTableListRequest{
 			RegionId:   &r.cacheRegion,
@@ -401,7 +401,7 @@ func (r *mqlAlicloudVpc) vswitches() ([]any, error) {
 		}
 
 		pageNumber := int32(1)
-		pageSize := int32(100)
+		pageSize := int32(50)
 		for {
 			req := &vpcclient.DescribeVSwitchesRequest{
 				RegionId:   &region,
@@ -541,7 +541,7 @@ func (r *mqlAlicloudVpc) routeTables() ([]any, error) {
 		}
 
 		pageNumber := int32(1)
-		pageSize := int32(100)
+		pageSize := int32(50)
 		for {
 			req := &vpcclient.DescribeRouteTableListRequest{
 				RegionId:   &region,
@@ -758,7 +758,7 @@ func (r *mqlAlicloudVpc) natGateways() ([]any, error) {
 		}
 
 		pageNumber := int32(1)
-		pageSize := int32(100)
+		pageSize := int32(50)
 		for {
 			req := &vpcclient.DescribeNatGatewaysRequest{
 				RegionId:   &region,
@@ -937,7 +937,7 @@ func (r *mqlAlicloudVpc) eipAddresses() ([]any, error) {
 		}
 
 		pageNumber := int32(1)
-		pageSize := int32(100)
+		pageSize := int32(50)
 		for {
 			req := &vpcclient.DescribeEipAddressesRequest{
 				RegionId:   &region,
@@ -1065,7 +1065,7 @@ func (r *mqlAlicloudVpc) networkAcls() ([]any, error) {
 		}
 
 		pageNumber := int32(1)
-		pageSize := int32(100)
+		pageSize := int32(50)
 		for {
 			req := &vpcclient.DescribeNetworkAclsRequest{
 				RegionId:   &region,

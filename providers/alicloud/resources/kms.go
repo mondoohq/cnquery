@@ -67,16 +67,23 @@ func (r *mqlAlicloudKms) keys() ([]any, error) {
 
 		pageNumber := int32(1)
 		pageSize := int32(100)
+		firstPage := true
 		for {
 			resp, err := client.ListKeys(&kmsclient.ListKeysRequest{
 				PageNumber: tea.Int32(pageNumber),
 				PageSize:   tea.Int32(pageSize),
 			})
 			if err != nil {
-				// a region may not have KMS enabled or the credential may lack
-				// access there; skip it rather than failing the whole scan
-				break
+				// A first-page error means the region has no KMS or the
+				// credential lacks access there; skip it. A later-page error is
+				// real (region reachable) — surface it rather than silently
+				// truncating the key list.
+				if firstPage {
+					break
+				}
+				return nil, err
 			}
+			firstPage = false
 			if resp == nil || resp.Body == nil || resp.Body.Keys == nil {
 				break
 			}
@@ -281,14 +288,21 @@ func (r *mqlAlicloudKms) secrets() ([]any, error) {
 
 		pageNumber := int32(1)
 		pageSize := int32(100)
+		firstPage := true
 		for {
 			resp, err := client.ListSecrets(&kmsclient.ListSecretsRequest{
 				PageNumber: tea.Int32(pageNumber),
 				PageSize:   tea.Int32(pageSize),
 			})
 			if err != nil {
-				break
+				// First-page error = region has no KMS / no access (skip);
+				// later-page error is real — surface rather than truncate.
+				if firstPage {
+					break
+				}
+				return nil, err
 			}
+			firstPage = false
 			if resp == nil || resp.Body == nil || resp.Body.SecretList == nil {
 				break
 			}

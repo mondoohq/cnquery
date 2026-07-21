@@ -97,6 +97,31 @@ func TestAlicloudParseTime(t *testing.T) {
 	require.NotNil(t, got)
 	assert.Equal(t, 2026, got.Year())
 	assert.Equal(t, 5, got.Second())
+
+	// A timezone offset must parse and normalize (12:00+08:00 == 04:00 UTC),
+	// not just Z-suffixed UTC.
+	off := alicloudParseTime(strp("2026-07-20T12:00:00+08:00"))
+	require.NotNil(t, off)
+	assert.Equal(t, 4, off.UTC().Hour())
+}
+
+// TestSlsParseTime covers slsParseTime — the RFC3339 string parser used by SLS
+// and the untested twin of alicloudParseTime — including nil/empty/garbage and
+// a timezone-offset form (a regression to a Z-only layout would silently drop
+// offset-stamped times).
+func TestSlsParseTime(t *testing.T) {
+	assert.Nil(t, slsParseTime(nil))
+	assert.Nil(t, slsParseTime(strp("")))
+	assert.Nil(t, slsParseTime(strp("not-a-time")))
+
+	got := slsParseTime(strp("2026-01-02T15:04:05Z"))
+	require.NotNil(t, got)
+	assert.Equal(t, 2026, got.Year())
+	assert.Equal(t, 5, got.Second())
+
+	off := slsParseTime(strp("2026-07-20T12:00:00+08:00"))
+	require.NotNil(t, off)
+	assert.Equal(t, 4, off.UTC().Hour())
 }
 
 // TestRmParseTime covers the Resource Management parser, which must accept the

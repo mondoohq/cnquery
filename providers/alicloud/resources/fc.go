@@ -213,7 +213,10 @@ func initAlicloudFcFunction(runtime *plugin.Runtime, args map[string]*llx.RawDat
 }
 
 func (r *mqlAlicloudFcFunction) id() (string, error) {
-	return r.region + "/" + r.functionName, nil
+	// Read the public fields (always set by SetAllData) rather than the
+	// Internal cache fields, which are empty on the init fast-path — otherwise
+	// __id is "/" and every such function collides in the cache.
+	return r.RegionId.Data + "/" + r.FunctionName.Data, nil
 }
 
 func (r *mqlAlicloudFcFunction) executionRole() (*mqlAlicloudRamRole, error) {

@@ -36,7 +36,7 @@ func (r *mqlAlicloudAntiddos) instances() ([]any, error) {
 		}
 
 		pageNumber := 1
-		pageSize := 100
+		pageSize := 50
 		centerOk := false
 		for {
 			resp, err := client.DescribeInstances(&ddoscooclient.DescribeInstancesRequest{
@@ -131,7 +131,7 @@ func (r *mqlAlicloudAntiddosInstance) webRules() ([]any, error) {
 
 	res := []any{}
 	pageNumber := int32(1)
-	pageSize := int32(100)
+	pageSize := int32(10)
 	for {
 		resp, err := client.DescribeWebRules(&ddoscooclient.DescribeWebRulesRequest{
 			InstanceIds: []*string{tea.String(r.instanceId)},
@@ -218,7 +218,7 @@ func (r *mqlAlicloudAntiddosInstance) networkRules() ([]any, error) {
 
 	res := []any{}
 	pageNumber := int32(1)
-	pageSize := int32(100)
+	pageSize := int32(10)
 	for {
 		resp, err := client.DescribeNetworkRules(&ddoscooclient.DescribeNetworkRulesRequest{
 			InstanceId: tea.String(r.instanceId),
