@@ -281,6 +281,13 @@ func compileResourceMap(c *compiler, typ types.Type, ref uint64, id string, call
 		return types.Nil, multierr.Wrap(err, "called '"+id+"' with a bad function block, types don't match")
 	}
 
+	// The map body's entrypoint is the value this map collects, not something
+	// that gets rendered on its own. Mark the block so postCompile won't
+	// display-expand a resource(-list) entrypoint into an anonymous `{}` block,
+	// which would otherwise make the mapped elements lose their resource type.
+	// See https://github.com/mondoohq/mql/issues/8474
+	c.valueBodyBlocks[refs.block] = struct{}{}
+
 	listType, err := compileResourceDefault(c, typ, ref, "list", nil)
 	if err != nil {
 		return listType, err

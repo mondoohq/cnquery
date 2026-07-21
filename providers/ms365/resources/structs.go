@@ -36,7 +36,7 @@ func newAssignedPlan(p models.AssignedPlanable) AssignedPlan {
 		AssignedDateTime: p.GetAssignedDateTime(),
 		CapabilityStatus: convert.ToValue(p.GetCapabilityStatus()),
 		Service:          convert.ToValue(p.GetService()),
-		ServicePlanId:    p.GetServicePlanId().String(),
+		ServicePlanId:    convert.ToValue(newUuidString(p.GetServicePlanId())),
 	}
 }
 
@@ -213,6 +213,41 @@ func newDirectoryPrincipal(p models.DirectoryObjectable) *DirectoryObject {
 		},
 		DeletedDateTime: p.GetDeletedDateTime(),
 	}
+}
+
+// directoryObjectDisplayName extracts a directory object's display name from
+// the additional-data bag the Graph SDK populates for $expand-ed references
+// (the base DirectoryObject type has no typed displayName accessor). It
+// tolerates the value being a string or *string and returns "" otherwise.
+func directoryObjectDisplayName(additionalData map[string]any) string {
+	v, ok := additionalData["displayName"]
+	if !ok {
+		return ""
+	}
+	switch name := v.(type) {
+	case string:
+		return name
+	case *string:
+		if name != nil {
+			return *name
+		}
+	}
+	return ""
+}
+
+// directoryPrincipalInfo derives the short principal type (e.g. "user",
+// "group", "servicePrincipal") and display name for a directory principal,
+// such as the assignee on a role assignment. Both values are best-effort and
+// return "" when the API omits them.
+func directoryPrincipalInfo(p models.DirectoryObjectable) (principalType string, principalName string) {
+	if p == nil {
+		return "", ""
+	}
+	if t := normalizeOwnerType(p.GetOdataType()); t != nil {
+		principalType = *t
+	}
+	principalName = directoryObjectDisplayName(p.GetAdditionalData())
+	return principalType, principalName
 }
 
 type PolicyBase struct {
@@ -557,7 +592,13 @@ type PermissionGrantConditionSet struct {
 }
 
 func newPermissionGrantConditionSet(p models.PermissionGrantConditionSetable) PermissionGrantConditionSet {
-	t := PermissionType(*p.GetPermissionType())
+	if p == nil {
+		return PermissionGrantConditionSet{}
+	}
+	var t PermissionType
+	if pt := p.GetPermissionType(); pt != nil {
+		t = PermissionType(*pt)
+	}
 
 	return PermissionGrantConditionSet{
 		Entity: Entity{

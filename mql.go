@@ -4,6 +4,7 @@
 package mql
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -62,7 +63,18 @@ var mqlLatestReleaseUrl = "https://releases.mondoo.com/mql/latest.json?ignoreCac
 
 // GetLatestReleaseName fetches the name of the latest release from releases.mondoo.com
 func GetLatestReleaseName(releaseUrl string, client *http.Client) (string, error) {
-	resp, err := client.Get(releaseUrl)
+	return GetLatestReleaseNameContext(context.Background(), releaseUrl, client)
+}
+
+// GetLatestReleaseNameContext behaves like GetLatestReleaseName but honors the
+// provided context, so callers can bound the request with a deadline or cancel it.
+func GetLatestReleaseNameContext(ctx context.Context, releaseUrl string, client *http.Client) (string, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, releaseUrl, nil)
+	if err != nil {
+		return "", fmt.Errorf("error building latest release request: %v", err)
+	}
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("error fetching latest release: %v", err)
 	}

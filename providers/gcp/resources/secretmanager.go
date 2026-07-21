@@ -21,6 +21,8 @@ import (
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	iampb "google.golang.org/genproto/googleapis/iam/v1"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -100,7 +102,7 @@ func (g *mqlGcpProjectSecretmanagerService) secrets() ([]any, error) {
 
 	ctx := context.Background()
 
-	client, err := secretmanager.NewClient(ctx, option.WithCredentials(creds))
+	client, err := secretmanager.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -261,7 +263,7 @@ func (g *mqlGcpProjectSecretmanagerServiceSecret) versions() ([]any, error) {
 
 	ctx := context.Background()
 
-	client, err := secretmanager.NewClient(ctx, option.WithCredentials(creds))
+	client, err := secretmanager.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -390,14 +392,25 @@ func (g *mqlGcpProjectSecretmanagerServiceSecret) iamPolicy() ([]any, error) {
 
 	ctx := context.Background()
 
-	client, err := secretmanager.NewClient(ctx, option.WithCredentials(creds))
+	client, err := secretmanager.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
 	defer client.Close()
 
-	policy, err := client.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: secretPath})
+	policy, err := client.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
+		Resource: secretPath,
+		// Request policy schema v3 so conditional bindings (which can include
+		// conditional allUsers/allAuthenticatedUsers grants) are returned;
+		// the default v1 silently strips any binding carrying a condition.
+		Options: &iampb.GetPolicyOptions{RequestedPolicyVersion: 3},
+	})
 	if err != nil {
+		// Tolerate access-denied on a single secret so one inaccessible secret
+		// doesn't fail the whole collection (mirrors the KMS accessors).
+		if s, ok := status.FromError(err); ok && s.Code() == codes.PermissionDenied {
+			return nil, nil
+		}
 		return nil, err
 	}
 	res := make([]any, 0, len(policy.Bindings))

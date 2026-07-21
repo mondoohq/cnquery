@@ -14,7 +14,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "hetzner",
 	ID:              "go.mondoo.com/mql/providers/hetzner",
-	Version:         "13.2.4",
+	Version:         "13.4.0",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{
 		{
@@ -31,9 +31,14 @@ Authenticate with a Hetzner Cloud API token:
 
 You can also pass the token via the %s environment variable.
 `, connection.HCLOUD_TOKEN_VAR),
-			MinArgs:   0,
-			MaxArgs:   0,
-			Discovery: []string{},
+			MinArgs: 0,
+			MaxArgs: 0,
+			Discovery: []string{
+				connection.DiscoveryAuto,
+				connection.DiscoveryAll,
+				connection.DiscoveryFirewalls,
+				connection.DiscoveryLoadBalancers,
+			},
 			Flags: []plugin.Flag{
 				{
 					Long:    connection.OPTION_TOKEN,

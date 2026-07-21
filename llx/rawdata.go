@@ -265,22 +265,45 @@ func isTruthy(data any, typ types.Type) (bool, bool) {
 		return false, true
 
 	case types.Bool:
-		return data.(bool), true
+		b, ok := data.(bool)
+		if !ok {
+			return false, false
+		}
+		return b, true
 
 	case types.Int:
-		return data.(int64) != 0, true
+		i, ok := data.(int64)
+		if !ok {
+			return false, false
+		}
+		return i != 0, true
 
 	case types.Float:
-		return data.(float64) != 0, true
+		f, ok := data.(float64)
+		if !ok {
+			return false, false
+		}
+		return f != 0, true
 
 	case types.String:
-		return data.(string) != "", true
+		s, ok := data.(string)
+		if !ok {
+			return false, false
+		}
+		return s != "", true
 
 	case types.Regex:
-		return data.(string) != "", true
+		s, ok := data.(string)
+		if !ok {
+			return false, false
+		}
+		return s != "", true
 
 	case types.Time:
-		dt := data.(*time.Time)
+		dt, ok := data.(*time.Time)
+		if !ok {
+			return false, false
+		}
 
 		// needs separate testing due to: https://go.dev/doc/faq#nil_error
 		if dt == nil {
@@ -292,7 +315,10 @@ func isTruthy(data any, typ types.Type) (bool, bool) {
 	case types.Block:
 		res := true
 
-		m := data.(map[string]any)
+		m, ok := data.(map[string]any)
+		if !ok {
+			return false, false
+		}
 		if m != nil {
 			if bif, ok := m["__t"]; ok {
 				if rd, ok := bif.(*RawData); ok {
@@ -310,14 +336,24 @@ func isTruthy(data any, typ types.Type) (bool, bool) {
 		return res, true
 
 	case types.Version:
-		return data.(string) != "", true
+		s, ok := data.(string)
+		if !ok {
+			return false, false
+		}
+		return s != "", true
 
 	case types.IP:
-		d := data.(RawIP)
+		d, ok := data.(RawIP)
+		if !ok {
+			return false, false
+		}
 		return len(d.IP) != 0, true
 
 	case types.ArrayLike:
-		arr := data.([]any)
+		arr, ok := data.([]any)
+		if !ok {
+			return false, false
+		}
 
 		// Empty arrays count as false here, this is because users
 		// frequently write statements like:
@@ -346,7 +382,10 @@ func isTruthy(data any, typ types.Type) (bool, bool) {
 
 		switch typ.Key() {
 		case types.String:
-			m := data.(map[string]any)
+			m, ok := data.(map[string]any)
+			if !ok {
+				return false, false
+			}
 			for _, v := range m {
 				t1, f1 := isTruthy(v, typ.Child())
 				if f1 {
@@ -355,7 +394,10 @@ func isTruthy(data any, typ types.Type) (bool, bool) {
 			}
 
 		case types.Int:
-			m := data.(map[int64]any)
+			m, ok := data.(map[int64]any)
+			if !ok {
+				return false, false
+			}
 			for _, v := range m {
 				t1, f1 := isTruthy(v, typ.Child())
 				if f1 {
@@ -400,9 +442,16 @@ func isSuccess(data any, typ types.Type) (bool, bool) {
 		}
 		return false, false
 	case types.Bool:
-		return data.(bool), true
+		b, ok := data.(bool)
+		if !ok {
+			return false, false
+		}
+		return b, true
 	case types.Block:
-		m := data.(map[string]any)
+		m, ok := data.(map[string]any)
+		if !ok {
+			return false, false
+		}
 		if m != nil {
 			if bif, ok := m["__s"]; ok {
 				if rd, ok := bif.(*RawData); ok {
@@ -415,7 +464,10 @@ func isSuccess(data any, typ types.Type) (bool, bool) {
 		return false, false
 
 	case types.ArrayLike:
-		arr := data.([]any)
+		arr, ok := data.([]any)
+		if !ok {
+			return false, false
+		}
 		res := true
 		valid := false
 

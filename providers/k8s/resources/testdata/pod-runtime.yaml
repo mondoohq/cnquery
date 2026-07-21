@@ -1,0 +1,59 @@
+# Copyright Mondoo, Inc. 2024, 2026
+# SPDX-License-Identifier: BUSL-1.1
+#
+# Exercises runtime image-digest truth from pod status.
+---
+# Mutable tag in spec, but the kubelet resolved it to a concrete digest: drift.
+# A second container is digest-pinned in spec and never drifts.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: drift-pod
+  namespace: default
+spec:
+  containers:
+  - name: app
+    image: nginx:1.25
+  - name: pinned
+    image: redis@sha256:2222222222222222222222222222222222222222222222222222222222222222
+status:
+  containerStatuses:
+  - name: app
+    image: nginx:1.25
+    imageID: docker-pullable://nginx@sha256:1111111111111111111111111111111111111111111111111111111111111111
+    ready: true
+    restartCount: 0
+  - name: pinned
+    image: redis@sha256:2222222222222222222222222222222222222222222222222222222222222222
+    imageID: docker-pullable://redis@sha256:2222222222222222222222222222222222222222222222222222222222222222
+    ready: true
+    restartCount: 0
+---
+# Spec is digest-pinned, so no drift even though it is running.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pinned-pod
+  namespace: default
+spec:
+  containers:
+  - name: app
+    image: nginx@sha256:1111111111111111111111111111111111111111111111111111111111111111
+status:
+  containerStatuses:
+  - name: app
+    image: nginx@sha256:1111111111111111111111111111111111111111111111111111111111111111
+    imageID: docker-pullable://nginx@sha256:1111111111111111111111111111111111111111111111111111111111111111
+    ready: true
+    restartCount: 0
+---
+# No status (e.g. a not-yet-scheduled pod): no running digests, no drift.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: no-status-pod
+  namespace: default
+spec:
+  containers:
+  - name: app
+    image: nginx:1.25

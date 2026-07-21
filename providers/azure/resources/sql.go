@@ -243,6 +243,11 @@ func (a *mqlAzureSubscriptionSqlServiceServer) databases() ([]any, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			// Properties is a nullable pointer; the args map below dereferences
+			// it throughout, so normalize to an empty struct to avoid a panic.
+			if entry.Properties == nil {
+				entry.Properties = &sql.DatabaseProperties{}
+			}
 			var editionTier *string
 			if entry.SKU != nil {
 				editionTier = entry.SKU.Tier
@@ -582,7 +587,15 @@ func (a *mqlAzureSubscriptionSqlServiceServer) azureAdOnlyAuthentication() (bool
 	}
 	result, err := client.Get(ctx, resourceID.ResourceGroup, server, sql.AuthenticationNameDefault, &sql.ServerAzureADOnlyAuthenticationsClientGetOptions{})
 	if err != nil {
-		return false, nil
+		// Only tolerate access-denied / not-found: swallowing every error would
+		// report a transient/permission failure as Azure-AD-only-auth disabled,
+		// which is the insecure value for a security check. Some server SKUs
+		// don't support the endpoint and return 404 rather than 403.
+		var rerr *azcore.ResponseError
+		if errors.As(err, &rerr) && (rerr.StatusCode == http.StatusForbidden || rerr.StatusCode == http.StatusNotFound) {
+			return false, nil
+		}
+		return false, err
 	}
 	if result.Properties != nil && result.Properties.AzureADOnlyAuthentication != nil {
 		return *result.Properties.AzureADOnlyAuthentication, nil
@@ -614,6 +627,15 @@ func (a *mqlAzureSubscriptionSqlServiceServer) vulnerabilityAssessmentSettings()
 	vaSettings, err := serverClient.Get(ctx, resourceID.ResourceGroup, server, sql.VulnerabilityAssessmentNameDefault, &sql.ServerVulnerabilityAssessmentsClientGetOptions{})
 	if err != nil {
 		return nil, err
+	}
+	// Properties and the nested RecurringScans are nullable; a server with VA
+	// configured but no recurring scans returns RecurringScans == nil. The args
+	// map dereferences both, so normalize to empty structs to avoid a panic.
+	if vaSettings.Properties == nil {
+		vaSettings.Properties = &sql.ServerVulnerabilityAssessmentProperties{}
+	}
+	if vaSettings.Properties.RecurringScans == nil {
+		vaSettings.Properties.RecurringScans = &sql.VulnerabilityAssessmentRecurringScansProperties{}
 	}
 	res, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.server.vulnerabilityassessmentsettings",
 		map[string]*llx.RawData{

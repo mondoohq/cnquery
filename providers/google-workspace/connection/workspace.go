@@ -39,6 +39,7 @@ var DefaultWorkspaceClientScopes = []string{
 	reports.AdminReportsUsageReadonlyScope,
 	cloudidentity.CloudIdentityGroupsReadonlyScope,
 	cloudidentity.CloudIdentityDevicesReadonlyScope,
+	cloudidentity.CloudIdentityPoliciesReadonlyScope,
 }
 
 func (c *GoogleWorkspaceConnection) GetWorkspaceCustomer(customerID string) (*directory.Customer, error) {

@@ -46,6 +46,18 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Options[connection.OPTION_ENDPOINT] = string(v.Value)
 	}
 
+	// Discovery expands the project into specific child assets (firewalls
+	// and load balancers). Default to "auto" so a plain `hetzner` scan
+	// surfaces per-resource assets alongside the project.
+	discoverTargets := []string{connection.DiscoveryAuto}
+	if v, ok := flags["discover"]; ok && len(v.Array) != 0 {
+		discoverTargets = discoverTargets[:0]
+		for i := range v.Array {
+			discoverTargets = append(discoverTargets, string(v.Array[i].Value))
+		}
+	}
+	conf.Discover = &inventory.Discovery{Targets: discoverTargets}
+
 	asset := &inventory.Asset{
 		Name:        "Hetzner Cloud",
 		Connections: []*inventory.Config{conf},
@@ -70,12 +82,30 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		}
 	}
 
+	inv, err := s.discover(conn)
+	if err != nil {
+		return nil, err
+	}
+
 	return &plugin.ConnectRes{
 		Id:        conn.ID(),
 		Name:      conn.Name(),
 		Asset:     req.Asset,
-		Inventory: nil,
+		Inventory: inv,
 	}, nil
+}
+
+func (s *Service) discover(conn *connection.HetznerConnection) (*inventory.Inventory, error) {
+	conf := conn.Asset().Connections[0]
+	if conf.Discover == nil {
+		return nil, nil
+	}
+
+	runtime, err := s.GetRuntime(conn.ID())
+	if err != nil {
+		return nil, err
+	}
+	return resources.Discover(runtime)
 }
 
 func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*connection.HetznerConnection, error) {
@@ -122,6 +152,17 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.HetznerConnection) error {
+	// A connection scoped to a single discovered sub-asset carries its
+	// type and id in the connection options; surface the specific
+	// platform for it instead of the project root.
+	if platform, platformID, name := conn.SubAssetPlatform(); platform != nil {
+		asset.Id = platformID
+		asset.Name = name
+		asset.Platform = platform
+		asset.PlatformIds = []string{platformID}
+		return nil
+	}
+
 	asset.Id = conn.Conf.Type
 	asset.Platform = conn.PlatformInfo()
 	asset.PlatformIds = []string{conn.Identifier()}

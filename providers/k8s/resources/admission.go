@@ -45,21 +45,32 @@ func (k *mqlK8sAdmissionreview) request() (*mqlK8sAdmissionrequest, error) {
 	}
 
 	aRequest := result[0].Request
-	obj, err := resources.ResourcesFromManifest(bytes.NewReader(aRequest.Object.Raw))
-	if err != nil {
-		return nil, err
-	}
-
-	objDict, err := convert.JsonToDict(obj[0])
-	if err != nil {
-		return nil, err
+	if aRequest == nil {
+		k.Request.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
 
 	args := map[string]*llx.RawData{
 		"name":      llx.StringData(aRequest.Name),
 		"namespace": llx.StringData(aRequest.Namespace),
 		"operation": llx.StringData(string(aRequest.Operation)),
-		"object":    llx.DictData(objDict),
+	}
+
+	// The incoming object is empty on DELETE requests (the object lives in
+	// oldObject instead), so guard against an empty parse result rather than
+	// indexing obj[0] unconditionally.
+	obj, err := resources.ResourcesFromManifest(bytes.NewReader(aRequest.Object.Raw))
+	if err != nil {
+		return nil, err
+	}
+	if len(obj) == 1 {
+		objDict, err := convert.JsonToDict(obj[0])
+		if err != nil {
+			return nil, err
+		}
+		args["object"] = llx.DictData(objDict)
+	} else {
+		args["object"] = llx.NilData
 	}
 
 	oldObj, err := resources.ResourcesFromManifest(bytes.NewReader(aRequest.OldObject.Raw))
@@ -160,6 +171,19 @@ func (k *mqlK8sAdmissionValidatingwebhookconfiguration) webhooks() ([]any, error
 		return nil, err
 	}
 	return dict, nil
+}
+
+// failsOpen reports whether any webhook has failurePolicy: Ignore, meaning
+// admission proceeds when the webhook is unreachable or errors — the guardrail
+// can be bypassed by making it fail. An unset failurePolicy defaults to Fail.
+func (k *mqlK8sAdmissionValidatingwebhookconfiguration) failsOpen() (bool, error) {
+	for i := range k.obj.Webhooks {
+		fp := k.obj.Webhooks[i].FailurePolicy
+		if fp != nil && *fp == admissionregistrationv1.Ignore {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 func (k *mqlK8sAdmissionValidatingwebhookconfiguration) id() (string, error) {

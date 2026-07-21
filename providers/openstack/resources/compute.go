@@ -98,27 +98,31 @@ func newMqlOpenstackComputeServer(runtime *plugin.Runtime, s *servers.Server) (*
 	volumeIDs := serverVolumeIDs(s.AttachedVolumes)
 
 	res, err := CreateResource(runtime, "openstack.compute.server", map[string]*llx.RawData{
-		"__id":             llx.StringData("openstack.compute.server/" + s.ID),
-		"id":               llx.StringData(s.ID),
-		"name":             llx.StringData(s.Name),
-		"status":           llx.StringData(s.Status),
-		"powerState":       llx.IntData(int64(s.PowerState)),
-		"vmState":          llx.StringData(s.VmState),
-		"taskState":        llx.StringData(s.TaskState),
-		"locked":           llx.BoolData(s.Locked != nil && *s.Locked),
-		"hostId":           llx.StringData(s.HostID),
-		"accessIPv4":       llx.StringData(s.AccessIPv4),
-		"accessIPv6":       llx.StringData(s.AccessIPv6),
-		"keyName":          llx.StringData(s.KeyName),
-		"availabilityZone": llx.StringData(s.AvailabilityZone),
-		"diskConfig":       llx.StringData(string(s.DiskConfig)),
-		"addresses":        llx.DictData(toDict(s.Addresses)),
-		"metadata":         stringMapData(s.Metadata),
-		"tags":             stringSliceData(derefStrings(s.Tags)),
-		"created":          llx.TimeDataPtr(timePtr(s.Created)),
-		"updated":          llx.TimeDataPtr(timePtr(s.Updated)),
-		"launchedAt":       llx.TimeDataPtr(timePtr(s.LaunchedAt)),
-		"terminatedAt":     llx.TimeDataPtr(timePtr(s.TerminatedAt)),
+		"__id":               llx.StringData("openstack.compute.server/" + s.ID),
+		"id":                 llx.StringData(s.ID),
+		"name":               llx.StringData(s.Name),
+		"status":             llx.StringData(s.Status),
+		"powerState":         llx.IntData(int64(s.PowerState)),
+		"vmState":            llx.StringData(s.VmState),
+		"taskState":          llx.StringData(s.TaskState),
+		"locked":             llx.BoolData(s.Locked != nil && *s.Locked),
+		"hostId":             llx.StringData(s.HostID),
+		"accessIPv4":         llx.StringData(s.AccessIPv4),
+		"accessIPv6":         llx.StringData(s.AccessIPv6),
+		"keyName":            llx.StringData(s.KeyName),
+		"availabilityZone":   llx.StringData(s.AvailabilityZone),
+		"diskConfig":         llx.StringData(string(s.DiskConfig)),
+		"configDrive":        llx.BoolData(s.ConfigDrive),
+		"host":               llx.StringData(s.Host),
+		"hypervisorHostname": llx.StringData(s.HypervisorHostname),
+		"userData":           llx.StringDataPtr(s.Userdata),
+		"addresses":          llx.DictData(toDict(s.Addresses)),
+		"metadata":           stringMapData(s.Metadata),
+		"tags":               stringSliceData(derefStrings(s.Tags)),
+		"created":            llx.TimeDataPtr(timePtr(s.Created)),
+		"updated":            llx.TimeDataPtr(timePtr(s.Updated)),
+		"launchedAt":         llx.TimeDataPtr(timePtr(s.LaunchedAt)),
+		"terminatedAt":       llx.TimeDataPtr(timePtr(s.TerminatedAt)),
 	})
 	if err != nil {
 		return nil, err
@@ -958,4 +962,8 @@ func (o *mqlOpenstack) computeLimits() (*mqlOpenstackComputeLimits, error) {
 		return nil, err
 	}
 	return res.(*mqlOpenstackComputeLimits), nil
+}
+
+func (r *mqlOpenstackComputeLimits) project() (*mqlOpenstackProject, error) {
+	return resolveProject(r.MqlRuntime, r.ProjectId.Data, &r.Project)
 }

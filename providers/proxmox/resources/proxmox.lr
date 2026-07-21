@@ -810,6 +810,17 @@ proxmox.firewall.rule @defaults("pos action") {
   // than a verb like ACCEPT/DROP, and apply that named rule set in
   // place. This resolves the reference; null for non-group rules.
   group() proxmox.firewall.group
+  // Whether this rule permits inbound traffic from any source
+  //
+  // True when the rule is enabled, an inbound (`type == "in"`) ACCEPT
+  // rule, and its `source` is unrestricted: empty (Proxmox treats an
+  // empty source as "any"), `0.0.0.0/0`, `::/0`, or an equivalent
+  // all-addresses match. Such a rule opens the guarded VM, container,
+  // node, or cluster to every network the host can reach, including the
+  // internet when the bridge is routed publicly. False for outbound
+  // rules, DROP/REJECT rules, disabled rules, and rules restricted to a
+  // specific CIDR, IP, alias, or IPset reference.
+  allowsPublicIngress() bool
 }
 
 // Proxmox VE user

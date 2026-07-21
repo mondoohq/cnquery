@@ -7,6 +7,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -78,6 +79,7 @@ func (g *mqlGcpProject) essentialContacts() ([]any, error) {
 		return nil, err
 	}
 	if !serviceEnabled {
+		log.Debug().Str("service", service_essential_contacts).Msg("gcp service is not enabled, skipping")
 		return nil, nil
 	}
 

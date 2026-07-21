@@ -1,0 +1,236 @@
+# Copyright Mondoo, Inc. 2024, 2026
+# SPDX-License-Identifier: BUSL-1.1
+#
+# Fixture for the exposure-to-workload edges (service.pods, pod.services,
+# ingress.pods, gateway.pods, networkExposure.pods) and the secret-hygiene
+# predicates (isServiceAccountToken, isImagePullSecret, isUnused).
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: prod
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: staging
+---
+# Two pods the web service selects, one pod it does not, plus a same-labeled pod
+# in another namespace (must be excluded by namespace scoping).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web-1
+  namespace: prod
+  labels:
+    app: web
+spec:
+  serviceAccountName: web-sa
+  imagePullSecrets:
+    - name: pull
+  containers:
+    - name: web
+      image: nginx:1.27
+      volumeMounts:
+        - name: creds
+          mountPath: /etc/creds
+  volumes:
+    - name: creds
+      secret:
+        secretName: used-secret
+status:
+  phase: Running
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web-2
+  namespace: prod
+  labels:
+    app: web
+spec:
+  containers:
+    - name: web
+      image: nginx:1.27
+status:
+  phase: Running
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: other-1
+  namespace: prod
+  labels:
+    app: other
+spec:
+  containers:
+    - name: other
+      image: busybox
+status:
+  phase: Running
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web-staging
+  namespace: staging
+  labels:
+    app: web
+spec:
+  containers:
+    - name: web
+      image: nginx:1.27
+status:
+  phase: Running
+---
+# Public LoadBalancer service selecting app=web — produces a network exposure
+# whose pods() must resolve back to web-1 and web-2.
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-svc
+  namespace: prod
+spec:
+  type: LoadBalancer
+  selector:
+    app: web
+  ports:
+    - port: 80
+      targetPort: 80
+status:
+  loadBalancer:
+    ingress:
+      - ip: 203.0.113.10
+---
+# Selectorless service — selects no pods.
+apiVersion: v1
+kind: Service
+metadata:
+  name: headless
+  namespace: prod
+spec:
+  clusterIP: None
+  ports:
+    - port: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web-ing
+  namespace: prod
+spec:
+  rules:
+    - host: example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web-svc
+                port:
+                  number: 80
+status:
+  loadBalancer:
+    ingress:
+      - hostname: lb.example.com
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: istio
+spec:
+  controllerName: istio.io/gateway-controller
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: gw
+  namespace: prod
+spec:
+  gatewayClassName: istio
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+status:
+  addresses:
+    - type: IPAddress
+      value: 203.0.113.20
+---
+# HTTPRoute bound to gw, routing to web-svc.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: web-route
+  namespace: prod
+spec:
+  parentRefs:
+    - name: gw
+  rules:
+    - backendRefs:
+        - name: web-svc
+          port: 80
+---
+# GRPCRoute bound to gw, also routing to web-svc (dedup must collapse the pods).
+apiVersion: gateway.networking.k8s.io/v1
+kind: GRPCRoute
+metadata:
+  name: grpc-route
+  namespace: prod
+spec:
+  parentRefs:
+    - name: gw
+  rules:
+    - backendRefs:
+        - name: web-svc
+          port: 80
+---
+# Secret mounted by web-1 — used, not orphaned.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: used-secret
+  namespace: prod
+type: Opaque
+data:
+  key: dmFsdWU=
+---
+# Image-pull secret referenced by web-1.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pull
+  namespace: prod
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: e30=
+---
+# Orphaned secret — no pod and no service account references it.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: orphan
+  namespace: prod
+type: Opaque
+data:
+  key: dmFsdWU=
+---
+# ServiceAccount token secret referenced only by a ServiceAccount, not a pod.
+# isUnused must be false because of the ServiceAccount reference.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: sa-token
+  namespace: prod
+type: kubernetes.io/service-account-token
+data:
+  token: dG9rZW4=
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: web-sa
+  namespace: prod
+secrets:
+  - name: sa-token

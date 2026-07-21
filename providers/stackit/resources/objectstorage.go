@@ -26,7 +26,9 @@ func (r *mqlStackitObjectStorage) buckets() ([]any, error) {
 	}
 	resp, err := client.ListBucketsExecute(bgctx(), c.ProjectID(), c.Region())
 	if err != nil {
-		if isAccessDenied(err) {
+		// A 404 here means the project is not onboarded to Object Storage
+		// (the service returns "project.not_found"); treat it as no buckets.
+		if isAccessDenied(err) || isNotFound(err) {
 			return []any{}, nil
 		}
 		return nil, err

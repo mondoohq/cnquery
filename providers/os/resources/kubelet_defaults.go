@@ -14,7 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// https://github.com/kubernetes/kubernetes/blob/release-1.25/pkg/kubelet/apis/config/v1beta1/defaults.go
+// https://github.com/kubernetes/kubernetes/blob/release-1.34/pkg/kubelet/apis/config/v1beta1/defaults.go
+//
+// Pinned to release-1.34, the oldest Kubernetes release that is still
+// supported upstream. The constants and the eviction defaults that upstream
+// keeps in dependency-heavy packages (k8s.io/kubernetes/...) are inlined here
+// so this package does not have to depend on the full Kubernetes tree.
 package resources
 
 import (
@@ -33,18 +38,23 @@ const (
 	DefaultIPTablesMasqueradeBit = 14
 	DefaultIPTablesDropBit       = 15
 	DefaultVolumePluginDir       = "/usr/libexec/kubernetes/kubelet-plugins/volume/exec/"
+	DefaultPodLogsDir            = "/var/log/pods"
 
 	// See https://github.com/kubernetes/enhancements/tree/master/keps/sig-node/2570-memory-qos
-	DefaultMemoryThrottlingFactor = 0.8
+	DefaultMemoryThrottlingFactor = 0.9
+
+	// MaxContainerBackOff is the max backoff period for container restarts,
+	// applied when the KubeletCrashLoopBackOffMax feature gate is enabled.
+	MaxContainerBackOff = 300 * time.Second
 )
 
-// https://github.com/kubernetes/kubernetes/blob/release-1.25/pkg/kubelet/types/constants.go
+// https://github.com/kubernetes/kubernetes/blob/release-1.34/pkg/kubelet/types/constants.go
 const (
 	// ResolvConfDefault is the system default DNS resolver configuration.
 	ResolvConfDefault = "/etc/resolv.conf"
 )
 
-// https://github.com/kubernetes/kubernetes/blob/release-1.25/pkg/cluster/ports/ports.go
+// https://github.com/kubernetes/kubernetes/blob/release-1.34/pkg/cluster/ports/ports.go
 const (
 	// KubeletPort is the default port for the kubelet server on each host machine.
 	// May be overridden by a flag at startup.
@@ -60,14 +70,14 @@ const (
 	KubeletHealthzPort = 10248
 )
 
-// https://github.com/kubernetes/kubernetes/blob/release-1.25/pkg/kubelet/qos/policy.go
+// https://github.com/kubernetes/kubernetes/blob/release-1.34/pkg/kubelet/qos/policy.go
 const (
 	// KubeletOOMScoreAdj is the OOM score adjustment for Kubelet
 	KubeletOOMScoreAdj int = -999
 )
 
-// https://github.com/kubernetes/kubernetes/blob/release-1.25/pkg/kubelet/apis/config/v1beta1/defaults_linux.go
-// DefaultEvictionHard includes default options for hard eviction.
+// https://github.com/kubernetes/kubernetes/blob/release-1.34/pkg/kubelet/apis/config/v1beta1/defaults_linux.go
+// DefaultEvictionHard includes default options for hard eviction on Linux nodes.
 var DefaultEvictionHard = map[string]string{
 	"memory.available":  "100Mi",
 	"nodefs.available":  "10%",
@@ -81,6 +91,18 @@ var (
 	// Refer to [Node Allocatable](https://github.com/kubernetes/design-proposals-archive/blob/main/node/node-allocatable.md) doc for more information.
 	DefaultNodeAllocatableEnforcement = []string{"pods"}
 )
+
+// featureGateEnabled reports whether the named feature gate is explicitly
+// enabled in the kubelet's FeatureGates map. Upstream resolves feature-gate
+// defaults through k8s.io/kubernetes, which we deliberately do not depend on;
+// instead we only honor gates the operator set explicitly, which is enough to
+// reflect the effective config of any node we scan.
+func featureGateEnabled(obj *kubeletconfigv1beta1.KubeletConfiguration, name string) bool {
+	if obj.FeatureGates == nil {
+		return false
+	}
+	return obj.FeatureGates[name]
+}
 
 func SetDefaults_KubeletConfiguration(obj *kubeletconfigv1beta1.KubeletConfiguration) {
 	if obj.EnableServer == nil {
@@ -126,10 +148,10 @@ func SetDefaults_KubeletConfiguration(obj *kubeletconfigv1beta1.KubeletConfigura
 		obj.RegistryBurst = 10
 	}
 	if obj.EventRecordQPS == nil {
-		obj.EventRecordQPS = ptr.To(int32(5))
+		obj.EventRecordQPS = ptr.To(int32(50))
 	}
 	if obj.EventBurst == 0 {
-		obj.EventBurst = 10
+		obj.EventBurst = 100
 	}
 	if obj.EnableDebuggingHandlers == nil {
 		obj.EnableDebuggingHandlers = ptr.To(true)
@@ -230,19 +252,28 @@ func SetDefaults_KubeletConfiguration(obj *kubeletconfigv1beta1.KubeletConfigura
 		obj.ContentType = "application/vnd.kubernetes.protobuf"
 	}
 	if obj.KubeAPIQPS == nil {
-		obj.KubeAPIQPS = ptr.To(int32(5))
+		obj.KubeAPIQPS = ptr.To(int32(50))
 	}
 	if obj.KubeAPIBurst == 0 {
-		obj.KubeAPIBurst = 10
+		obj.KubeAPIBurst = 100
 	}
 	if obj.SerializeImagePulls == nil {
-		obj.SerializeImagePulls = ptr.To(true)
+		// SerializeImagePulls defaults to true unless parallel image pulls are
+		// explicitly requested via MaxParallelImagePulls >= 2.
+		if obj.MaxParallelImagePulls == nil || *obj.MaxParallelImagePulls < 2 {
+			obj.SerializeImagePulls = ptr.To(true)
+		} else {
+			obj.SerializeImagePulls = ptr.To(false)
+		}
 	}
 	if obj.EvictionHard == nil {
 		obj.EvictionHard = DefaultEvictionHard
 	}
 	if obj.EvictionPressureTransitionPeriod == zeroDuration {
 		obj.EvictionPressureTransitionPeriod = metav1.Duration{Duration: 5 * time.Minute}
+	}
+	if obj.MergeDefaultEvictionSettings == nil {
+		obj.MergeDefaultEvictionSettings = ptr.To(false)
 	}
 	if obj.EnableControllerAttachDetach == nil {
 		obj.EnableControllerAttachDetach = ptr.To(true)
@@ -264,6 +295,12 @@ func SetDefaults_KubeletConfiguration(obj *kubeletconfigv1beta1.KubeletConfigura
 	}
 	if obj.ContainerLogMaxFiles == nil {
 		obj.ContainerLogMaxFiles = ptr.To(int32(5))
+	}
+	if obj.ContainerLogMaxWorkers == nil {
+		obj.ContainerLogMaxWorkers = ptr.To(int32(1))
+	}
+	if obj.ContainerLogMonitorInterval == nil {
+		obj.ContainerLogMonitorInterval = &metav1.Duration{Duration: 10 * time.Second}
 	}
 	if obj.ConfigMapAndSecretChangeDetectionStrategy == "" {
 		obj.ConfigMapAndSecretChangeDetectionStrategy = kubeletconfigv1beta1.WatchChangeDetectionStrategy
@@ -288,6 +325,9 @@ func SetDefaults_KubeletConfiguration(obj *kubeletconfigv1beta1.KubeletConfigura
 	if obj.SeccompDefault == nil {
 		obj.SeccompDefault = ptr.To(false)
 	}
+	if obj.FailCgroupV1 == nil {
+		obj.FailCgroupV1 = ptr.To(false)
+	}
 	if obj.MemoryThrottlingFactor == nil {
 		obj.MemoryThrottlingFactor = ptr.To(DefaultMemoryThrottlingFactor)
 	}
@@ -296,5 +336,25 @@ func SetDefaults_KubeletConfiguration(obj *kubeletconfigv1beta1.KubeletConfigura
 	}
 	if obj.LocalStorageCapacityIsolation == nil {
 		obj.LocalStorageCapacityIsolation = ptr.To(true)
+	}
+	if obj.ContainerRuntimeEndpoint == "" {
+		obj.ContainerRuntimeEndpoint = "unix:///run/containerd/containerd.sock"
+	}
+	if obj.PodLogsDir == "" {
+		obj.PodLogsDir = DefaultPodLogsDir
+	}
+
+	// The following defaults are guarded by feature gates upstream. We only
+	// apply them when the operator explicitly enabled the gate (see
+	// featureGateEnabled), since we do not model upstream gate default states.
+	if featureGateEnabled(obj, "KubeletCrashLoopBackOffMax") {
+		if obj.CrashLoopBackOff.MaxContainerRestartPeriod == nil {
+			obj.CrashLoopBackOff.MaxContainerRestartPeriod = &metav1.Duration{Duration: MaxContainerBackOff}
+		}
+	}
+	if featureGateEnabled(obj, "KubeletEnsureSecretPulledImages") {
+		if obj.ImagePullCredentialsVerificationPolicy == "" {
+			obj.ImagePullCredentialsVerificationPolicy = kubeletconfigv1beta1.NeverVerifyPreloadedImages
+		}
 	}
 }

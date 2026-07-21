@@ -97,6 +97,8 @@ private hetzner.server @defaults("id name status") {
   firewalls() []hetzner.firewall
   // Firewalls applied to the server, with per-binding application status (applied, pending)
   firewallBindings() []hetzner.server.firewallBinding
+  // Internet-exposure breakdown (public IP combined with firewall ingress)
+  exposure() hetzner.network.exposure
   // Load balancers attached to the server
   loadBalancers() []hetzner.loadBalancer
   // Backup window (e.g., "22-02"); empty if backups disabled
@@ -147,6 +149,31 @@ private hetzner.server.firewallBinding @defaults("status") {
   firewall() hetzner.firewall
   // Application status (applied, pending)
   status string
+}
+
+// Internet-exposure breakdown
+//
+// Explains whether a resource is reachable from the internet: whether it has a
+// public IP and whether inbound traffic from any address is admitted. For a
+// server that means a firewall inbound rule open to the internet (or no firewall
+// attached at all); for a load balancer it means an enabled public network with
+// at least one forwarding service.
+private hetzner.network.exposure @defaults("internetReachable hasPublicIp") {
+  // Whether the resource is reachable from the internet (a public IP and ingress that admits any address)
+  internetReachable bool
+  // Whether the resource has a public IPv4 or IPv6 address
+  hasPublicIp bool
+  // Whether inbound traffic from any address is admitted
+  //
+  // For a server, a firewall inbound rule open to the internet or no firewall
+  // attached at all; for a load balancer, an enabled public network with at
+  // least one forwarding service.
+  firewallAllowsIngress bool
+  // Ingress rules or services that admit traffic from any address
+  //
+  // For a server, firewall inbound rules whose source is 0.0.0.0/0 or ::/0; for
+  // a load balancer, the forwarding services reachable on the public network.
+  openIngressRules []dict
 }
 
 // Hetzner Cloud server type (VM size)
@@ -369,7 +396,15 @@ private hetzner.primaryIp @defaults("id ip type") {
 }
 
 // Hetzner Cloud load balancer
-private hetzner.loadBalancer @defaults("id name") {
+//
+// A managed L4/L7 load balancer. Surfaces the routing `algorithm`, the
+// public network configuration, the `services()` it exposes (listen and
+// destination ports, health checks, the HTTP redirect flag, and attached
+// `certificates`), the backend `targets()`, the `privateNet`
+// attachments, the traffic counters, resource protection, applied
+// `labels`, and the creation timestamp. Select a load balancer by id
+// with `hetzner.loadBalancer(id: 123)`.
+hetzner.loadBalancer @defaults("id name") {
   init(id? int)
   // Load balancer ID
   id int
@@ -389,6 +424,8 @@ private hetzner.loadBalancer @defaults("id name") {
   services() []hetzner.loadBalancer.service
   // Targets behind the load balancer
   targets() []hetzner.loadBalancer.target
+  // Internet-exposure breakdown (public network combined with forwarding services)
+  exposure() hetzner.network.exposure
   // Resource protection (delete)
   protection dict
   // User-defined labels for organizing the resource
@@ -475,7 +512,14 @@ private hetzner.loadBalancerType @defaults("id name") {
 }
 
 // Hetzner Cloud firewall
-private hetzner.firewall @defaults("id name") {
+//
+// A stateful, project-level firewall rule set applied to servers
+// directly or by label selector. Surfaces the firewall `rules` (each
+// with direction, protocol, port, and the `sourceIps`/`destinationIps`
+// CIDRs), the `servers()` the firewall is directly applied to, the
+// `labelSelectors` it targets, applied `labels`, and the creation
+// timestamp. Select a firewall by id with `hetzner.firewall(id: 123)`.
+hetzner.firewall @defaults("id name") {
   init(id? int)
   // Firewall ID
   id int

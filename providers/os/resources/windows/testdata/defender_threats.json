@@ -1,0 +1,24 @@
+[
+  {
+    "CategoryID": 8,
+    "DidThreatExecute": false,
+    "IsActive": false,
+    "Resources": ["file:_C:\\Users\\test\\Downloads\\eicar.com"],
+    "RollupStatus": 7,
+    "SchemaVersion": "1.0.0.0",
+    "SeverityID": 5,
+    "ThreatID": 2147519003,
+    "ThreatName": "Virus:DOS/EICAR_Test_File"
+  },
+  {
+    "CategoryID": 42,
+    "DidThreatExecute": true,
+    "IsActive": true,
+    "Resources": ["file:_C:\\temp\\sample.exe", "process:_pid:1234"],
+    "RollupStatus": 3,
+    "SchemaVersion": "1.0.0.0",
+    "SeverityID": 4,
+    "ThreatID": 2147685180,
+    "ThreatName": "Trojan:Win32/Wacatac.B!ml"
+  }
+]

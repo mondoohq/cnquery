@@ -135,7 +135,7 @@ func (g *mqlGcpProjectEventarcService) triggers() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := eventarc.NewClient(ctx, option.WithCredentials(creds))
+	client, err := eventarc.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -250,7 +250,7 @@ func (g *mqlGcpProjectEventarcService) channels() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := eventarc.NewClient(ctx, option.WithCredentials(creds))
+	client, err := eventarc.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}

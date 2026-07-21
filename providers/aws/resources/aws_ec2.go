@@ -323,7 +323,7 @@ func (a *mqlAwsEc2NetworkaclEntry) id() (string, error) {
 // entire internet, matching every IPv4 address (0.0.0.0/0) or every IPv6
 // address (::/0).
 func cidrEntryIsPublic(cidrBlock, ipv6CidrBlock string) bool {
-	return cidrBlock == "0.0.0.0/0" || ipv6CidrBlock == "::/0"
+	return cidrIsPublic(cidrBlock) || cidrIsPublic(ipv6CidrBlock)
 }
 
 // isPublic reports whether the entry opens traffic to the entire internet.
@@ -2155,14 +2155,40 @@ func (a *mqlAwsEc2SecuritygroupIppermission) includesPublicSource() (bool, error
 	if ipv4.Error != nil {
 		return false, ipv4.Error
 	}
-	if anyStringEquals(ipv4.Data, "0.0.0.0/0") {
+	if anyCidrPublic(ipv4.Data) {
 		return true, nil
 	}
 	ipv6 := a.GetIpv6Ranges()
 	if ipv6.Error != nil {
 		return false, ipv6.Error
 	}
-	return anyStringEquals(ipv6.Data, "::/0"), nil
+	if anyCidrPublic(ipv6.Data) {
+		return true, nil
+	}
+
+	// A referenced managed prefix list can itself contain public ranges, so a
+	// rule that names only a prefix list can still be internet-facing.
+	prefixLists := a.GetPrefixLists()
+	if prefixLists.Error != nil {
+		return false, prefixLists.Error
+	}
+	for _, pl := range prefixLists.Data {
+		mpl, ok := pl.(*mqlAwsEc2ManagedPrefixList)
+		if !ok {
+			continue
+		}
+		entries := mpl.GetEntries()
+		if entries.Error != nil {
+			return false, entries.Error
+		}
+		for _, e := range entries.Data {
+			entry, ok := e.(*mqlAwsEc2ManagedPrefixListEntry)
+			if ok && cidrIsPublic(entry.Cidr.Data) {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
 }
 
 // anyStringEquals reports whether any element of the slice equals target.
@@ -3748,4 +3774,510 @@ func (a *mqlAwsEc2Launchtemplate) imageId() (string, error) {
 		return "", nil
 	}
 	return *data.ImageId, nil
+}
+
+// networkInterfacesByFilter fetches the network interfaces in a region that match
+// a single server-side EC2 filter and returns them as typed
+// aws.ec2.networkinterface resources. It backs the security-group and subnet
+// backreferences, which both reduce to "which ENIs reference me".
+func networkInterfacesByFilter(runtime *plugin.Runtime, region, filterName, filterValue string) ([]any, error) {
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Ec2(region)
+	ctx := context.Background()
+	filters := conn.Filters.General.ToServerSideEc2Filters()
+	filters = append(filters, ec2types.Filter{Name: aws.String(filterName), Values: []string{filterValue}})
+	params := &ec2.DescribeNetworkInterfacesInput{Filters: filters}
+	res := []any{}
+	paginator := ec2.NewDescribeNetworkInterfacesPaginator(svc, params)
+	for paginator.HasMorePages() {
+		nis, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				log.Warn().Str("region", region).Msg("access denied for DescribeNetworkInterfaces")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, ni := range nis.NetworkInterfaces {
+			if conn.Filters.General.MatchesExcludeTags(ec2TagsToMap(ni.TagSet)) {
+				log.Debug().Interface("networkInterface", ni.NetworkInterfaceId).Msg("excluding network interface due to filters")
+				continue
+			}
+			_, mqlEni, err := buildNetworkInterfaceResource(runtime, region, ni)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlEni)
+		}
+	}
+	return res, nil
+}
+
+// instancesFromNetworkInterfaces projects a set of network interfaces onto the
+// distinct EC2 instances they are attached to, dropping interfaces that are not
+// attached to an instance (for example load balancer, RDS, or Lambda ENIs).
+func instancesFromNetworkInterfaces(enis []any) ([]any, error) {
+	seen := map[string]struct{}{}
+	res := []any{}
+	for _, e := range enis {
+		eni, ok := e.(*mqlAwsEc2Networkinterface)
+		if !ok {
+			continue
+		}
+		inst := eni.GetInstance()
+		if inst.Error != nil {
+			// An ENI can reference an instance that is terminated or otherwise
+			// no longer resolvable. A single missing instance should not break
+			// the whole backref scan, so log and skip it.
+			log.Warn().Err(inst.Error).Msg("skipping network interface whose instance could not be resolved")
+			continue
+		}
+		if inst.Data == nil {
+			continue
+		}
+		arn := inst.Data.Arn.Data
+		if _, dup := seen[arn]; dup {
+			continue
+		}
+		seen[arn] = struct{}{}
+		res = append(res, inst.Data)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsEc2Securitygroup) networkInterfaces() ([]any, error) {
+	return networkInterfacesByFilter(a.MqlRuntime, a.Region.Data, "group-id", a.Id.Data)
+}
+
+func (a *mqlAwsEc2Securitygroup) instances() ([]any, error) {
+	nis := a.GetNetworkInterfaces()
+	if nis.Error != nil {
+		return nil, nis.Error
+	}
+	return instancesFromNetworkInterfaces(nis.Data)
+}
+
+// securityGroupsAllowPublicIngress reports whether any of the given security
+// groups permits inbound traffic from 0.0.0.0/0 or ::/0. It shares the traversal
+// with openIngressRulesFromSecurityGroups so the two cannot diverge.
+func securityGroupsAllowPublicIngress(sgs *plugin.TValue[[]any]) (bool, error) {
+	rules, err := openIngressRulesFromSecurityGroups(sgs)
+	if err != nil {
+		return false, err
+	}
+	return len(rules) > 0, nil
+}
+
+// subnet returns the subnet of the instance's primary network interface, which
+// is what ec2types.Instance.SubnetId reports. Instances with additional ENIs in
+// other subnets are not represented here.
+func (i *mqlAwsEc2Instance) subnet() (*mqlAwsVpcSubnet, error) {
+	subnetId := i.instanceCache.SubnetId
+	if subnetId == nil || *subnetId == "" {
+		i.Subnet.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
+	arn := fmt.Sprintf(subnetArnPattern, i.Region.Data, conn.AccountId(), *subnetId)
+	res, err := NewResource(i.MqlRuntime, ResourceAwsVpcSubnet, map[string]*llx.RawData{"arn": llx.StringData(arn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsVpcSubnet), nil
+}
+
+// instanceInPublicSubnet reports whether the instance's subnet routes to an
+// internet gateway (the defining property of a public subnet).
+func instanceInPublicSubnet(i *mqlAwsEc2Instance) (bool, error) {
+	subnet := i.GetSubnet()
+	if subnet.Error != nil {
+		return false, subnet.Error
+	}
+	if subnet.Data == nil {
+		return false, nil
+	}
+	rt := subnet.Data.GetRouteTable()
+	if rt.Error != nil {
+		return false, rt.Error
+	}
+	if rt.Data == nil {
+		return false, nil
+	}
+	entries := rt.Data.GetRouteEntries()
+	if entries.Error != nil {
+		return false, entries.Error
+	}
+	for _, e := range entries.Data {
+		route, ok := e.(*mqlAwsVpcRoutetableRoute)
+		if !ok {
+			continue
+		}
+		gw := route.GetGatewayId()
+		if gw.Error == nil && strings.HasPrefix(gw.Data, "igw-") {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// instanceSubnetNaclAllowsPublicIngress reports whether the instance's subnet
+// network ACL permits inbound internet traffic. Missing subnet/NACL data does
+// not block (it defaults to allow), so it never overrides the other positive
+// signals on its own.
+func instanceSubnetNaclAllowsPublicIngress(i *mqlAwsEc2Instance) (bool, error) {
+	subnet := i.GetSubnet()
+	if subnet.Error != nil {
+		return false, subnet.Error
+	}
+	if subnet.Data == nil {
+		return true, nil
+	}
+	nacl := subnet.Data.GetNetworkAcl()
+	if nacl.Error != nil {
+		return false, nacl.Error
+	}
+	if nacl.Data == nil {
+		return true, nil
+	}
+	return networkAclAllowsPublicIngress(nacl.Data)
+}
+
+// instanceOpenIngressRules returns the security group ingress rules across the
+// instance's attached security groups that permit inbound traffic from the
+// internet.
+func instanceOpenIngressRules(i *mqlAwsEc2Instance) ([]any, error) {
+	rules := []any{}
+	sgs := i.GetSecurityGroups()
+	if sgs.Error != nil {
+		return nil, sgs.Error
+	}
+	for _, s := range sgs.Data {
+		sg, ok := s.(*mqlAwsEc2Securitygroup)
+		if !ok {
+			continue
+		}
+		perms := sg.GetIpPermissions()
+		if perms.Error != nil {
+			return nil, perms.Error
+		}
+		for _, p := range perms.Data {
+			perm, ok := p.(*mqlAwsEc2SecuritygroupIppermission)
+			if !ok {
+				continue
+			}
+			public := perm.GetIncludesPublicSource()
+			if public.Error != nil {
+				return nil, public.Error
+			}
+			if public.Data {
+				rules = append(rules, perm)
+			}
+		}
+	}
+	return rules, nil
+}
+
+// instanceInternetFacingLoadBalancers returns the load balancers that route to
+// the instance and have an internet-facing scheme.
+func instanceInternetFacingLoadBalancers(i *mqlAwsEc2Instance) ([]any, error) {
+	res := []any{}
+	lbs := i.GetLoadBalancers()
+	if lbs.Error != nil {
+		return nil, lbs.Error
+	}
+	for _, l := range lbs.Data {
+		lb, ok := l.(*mqlAwsElbLoadbalancer)
+		if !ok {
+			continue
+		}
+		scheme := lb.GetScheme()
+		if scheme.Error != nil {
+			return nil, scheme.Error
+		}
+		if scheme.Data == "internet-facing" {
+			res = append(res, lb)
+		}
+	}
+	return res, nil
+}
+
+func (i *mqlAwsEc2Instance) exposure() (*mqlAwsEc2InstanceExposure, error) {
+	arn := i.GetArn()
+	if arn.Error != nil {
+		return nil, arn.Error
+	}
+
+	publicIp := i.GetPublicIp()
+	if publicIp.Error != nil {
+		return nil, publicIp.Error
+	}
+	hasPublicIp := publicIp.Data != ""
+
+	inPublicSubnet, err := instanceInPublicSubnet(i)
+	if err != nil {
+		return nil, err
+	}
+
+	openRules, err := instanceOpenIngressRules(i)
+	if err != nil {
+		return nil, err
+	}
+	sgAllows := len(openRules) > 0
+
+	naclAllows, err := instanceSubnetNaclAllowsPublicIngress(i)
+	if err != nil {
+		return nil, err
+	}
+
+	internetFacingLBs, err := instanceInternetFacingLoadBalancers(i)
+	if err != nil {
+		return nil, err
+	}
+
+	internetReachable := hasPublicIp && inPublicSubnet && sgAllows && naclAllows
+
+	res, err := CreateResource(i.MqlRuntime, "aws.ec2.instance.exposure", map[string]*llx.RawData{
+		"__id":                        llx.StringData(arn.Data + "/exposure"),
+		"internetReachable":           llx.BoolData(internetReachable),
+		"hasPublicIp":                 llx.BoolData(hasPublicIp),
+		"inPublicSubnet":              llx.BoolData(inPublicSubnet),
+		"securityGroupAllowsIngress":  llx.BoolData(sgAllows),
+		"networkAclAllowsIngress":     llx.BoolData(naclAllows),
+		"openIngressRules":            llx.ArrayData(openRules, types.Resource("aws.ec2.securitygroup.ippermission")),
+		"internetFacingLoadBalancers": llx.ArrayData(internetFacingLBs, types.Resource("aws.elb.loadbalancer")),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEc2InstanceExposure), nil
+}
+
+// naclIngressRule is the minimal shape of a network ACL inbound rule needed to
+// decide public reachability.
+type naclIngressRule struct {
+	ruleNumber int
+	allow      bool
+	public     bool // source is 0.0.0.0/0 or ::/0
+}
+
+// naclAllowsPublicIngress reports whether a network ACL permits inbound traffic
+// from the internet. Network ACL rules are evaluated in ascending rule-number
+// order and the first match wins, so the lowest-numbered rule whose source is
+// public decides the outcome. When no rule matches a public source the implicit
+// final deny blocks the traffic.
+func naclAllowsPublicIngress(rules []naclIngressRule) bool {
+	found := false
+	bestNum := 0
+	allow := false
+	for _, r := range rules {
+		if !r.public {
+			continue
+		}
+		if !found || r.ruleNumber < bestNum {
+			found = true
+			bestNum = r.ruleNumber
+			allow = r.allow
+		}
+	}
+	return found && allow
+}
+
+// networkAclAllowsPublicIngress evaluates a network ACL's inbound rules for
+// reachability from the internet.
+func networkAclAllowsPublicIngress(nacl *mqlAwsEc2Networkacl) (bool, error) {
+	entries := nacl.GetEntries()
+	if entries.Error != nil {
+		return false, entries.Error
+	}
+	rules := make([]naclIngressRule, 0, len(entries.Data))
+	for _, e := range entries.Data {
+		entry, ok := e.(*mqlAwsEc2NetworkaclEntry)
+		if !ok || entry.Egress.Data {
+			continue
+		}
+		rules = append(rules, naclIngressRule{
+			ruleNumber: int(entry.RuleNumber.Data),
+			allow:      strings.EqualFold(entry.RuleAction.Data, "allow"),
+			public:     cidrEntryIsPublic(entry.CidrBlock.Data, entry.Ipv6CidrBlock.Data),
+		})
+	}
+	return naclAllowsPublicIngress(rules), nil
+}
+
+// loadBalancers returns the load balancers that route traffic to this instance.
+// AWS has no "describe load balancers by instance" API, so this scans the
+// account's load balancers (a cross-region list cached after first use) and
+// matches on the instances each one targets — directly for classic ELBs, and
+// through target groups for Application and Network Load Balancers.
+func (i *mqlAwsEc2Instance) loadBalancers() ([]any, error) {
+	obj, err := CreateResource(i.MqlRuntime, ResourceAwsElb, map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	lbs := obj.(*mqlAwsElb).GetLoadBalancers()
+	if lbs.Error != nil {
+		return nil, lbs.Error
+	}
+	instanceArn := i.Arn.Data
+	res := []any{}
+	for _, l := range lbs.Data {
+		lb, ok := l.(*mqlAwsElbLoadbalancer)
+		if !ok {
+			continue
+		}
+		targets, err := loadBalancerTargetsInstance(lb, instanceArn)
+		if err != nil {
+			return nil, err
+		}
+		if targets {
+			res = append(res, lb)
+		}
+	}
+	return res, nil
+}
+
+// loadBalancerTargetsInstance reports whether a load balancer routes traffic to
+// the given instance. Classic ELBs register instances directly; Application and
+// Network Load Balancers register them through target groups, so both paths are
+// checked.
+func loadBalancerTargetsInstance(lb *mqlAwsElbLoadbalancer, instanceArn string) (bool, error) {
+	insts := lb.GetInstances()
+	if insts.Error != nil {
+		return false, insts.Error
+	}
+	for _, x := range insts.Data {
+		if inst, ok := x.(*mqlAwsEc2Instance); ok && inst.Arn.Data == instanceArn {
+			return true, nil
+		}
+	}
+
+	tgs := lb.GetTargetGroups()
+	if tgs.Error != nil {
+		return false, tgs.Error
+	}
+	for _, t := range tgs.Data {
+		tg, ok := t.(*mqlAwsElbTargetgroup)
+		if !ok {
+			continue
+		}
+		ec2Targets := tg.GetEc2Targets()
+		if ec2Targets.Error != nil {
+			return false, ec2Targets.Error
+		}
+		for _, x := range ec2Targets.Data {
+			if inst, ok := x.(*mqlAwsEc2Instance); ok && inst.Arn.Data == instanceArn {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
+}
+
+func (i *mqlAwsEc2Instance) cloudformationStack() (*mqlAwsCloudformationStack, error) {
+	stack, err := cloudformationStackForTags(i.MqlRuntime, i.Region.Data, i.Tags.Data)
+	if err != nil {
+		return nil, err
+	}
+	if stack == nil {
+		i.CloudformationStack.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return stack, nil
+}
+
+func (a *mqlAwsEc2Securitygroup) cloudformationStack() (*mqlAwsCloudformationStack, error) {
+	stack, err := cloudformationStackForTags(a.MqlRuntime, a.Region.Data, a.Tags.Data)
+	if err != nil {
+		return nil, err
+	}
+	if stack == nil {
+		a.CloudformationStack.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return stack, nil
+}
+
+func (i *mqlAwsEc2Instance) managedBy() (string, error) {
+	return managedByFromTags(i.Tags.Data), nil
+}
+
+func (a *mqlAwsEc2Securitygroup) managedBy() (string, error) {
+	return managedByFromTags(a.Tags.Data), nil
+}
+
+func (i *mqlAwsEc2Image) sharedWithAccounts() ([]any, error) {
+	perms := i.GetLaunchPermissions()
+	if perms.Error != nil {
+		return nil, perms.Error
+	}
+	res := []any{}
+	for _, p := range perms.Data {
+		perm, ok := p.(*mqlAwsEc2ImageLaunchPermission)
+		if !ok {
+			continue
+		}
+		userId := perm.GetUserId()
+		if userId.Error != nil {
+			return nil, userId.Error
+		}
+		if userId.Data != "" {
+			res = append(res, userId.Data)
+		}
+	}
+	return res, nil
+}
+
+func (i *mqlAwsEc2Image) sharedExternally() (bool, error) {
+	public := i.GetPublic()
+	if public.Error != nil {
+		return false, public.Error
+	}
+	if public.Data {
+		return true, nil
+	}
+	accounts := i.GetSharedWithAccounts()
+	if accounts.Error != nil {
+		return false, accounts.Error
+	}
+	return len(accounts.Data) > 0, nil
+}
+
+// accountIdsFromVolumePermissions extracts the account IDs from a snapshot's
+// createVolumePermission entries, ignoring the public ("all" group) entry which
+// carries no UserId.
+func accountIdsFromVolumePermissions(perms []any) []any {
+	res := []any{}
+	for _, p := range perms {
+		m, ok := p.(map[string]any)
+		if !ok {
+			continue
+		}
+		if uid, ok := m["UserId"].(string); ok && uid != "" {
+			res = append(res, uid)
+		}
+	}
+	return res
+}
+
+func (a *mqlAwsEc2Snapshot) sharedWithAccounts() ([]any, error) {
+	perms := a.GetCreateVolumePermission()
+	if perms.Error != nil {
+		return nil, perms.Error
+	}
+	return accountIdsFromVolumePermissions(perms.Data), nil
+}
+
+func (a *mqlAwsEc2Snapshot) sharedExternally() (bool, error) {
+	public := a.GetIsPublic()
+	if public.Error != nil {
+		return false, public.Error
+	}
+	if public.Data {
+		return true, nil
+	}
+	accounts := a.GetSharedWithAccounts()
+	if accounts.Error != nil {
+		return false, accounts.Error
+	}
+	return len(accounts.Data) > 0, nil
 }

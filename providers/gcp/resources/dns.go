@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -112,6 +113,9 @@ func (g *mqlGcpProject) dns() (*mqlGcpProjectDnsService, error) {
 	dnsService := res.(*mqlGcpProjectDnsService)
 	dnsService.serviceEnabled = serviceEnabled
 	dnsService.serviceChecked = true
+	if !serviceEnabled {
+		log.Debug().Str("service", service_dns).Msg("gcp service is not enabled, skipping")
+	}
 
 	return dnsService, nil
 }
@@ -590,7 +594,7 @@ func (g *mqlGcpProjectDnsServiceManagedzone) iamPolicy() ([]any, error) {
 	}
 
 	resourcePath := "projects/" + projectId + "/managedZones/" + zoneName
-	policy, err := dnsSvc.ManagedZones.GetIamPolicy(resourcePath, &dns.GoogleIamV1GetIamPolicyRequest{}).Context(ctx).Do()
+	policy, err := dnsSvc.ManagedZones.GetIamPolicy(resourcePath, &dns.GoogleIamV1GetIamPolicyRequest{Options: &dns.GoogleIamV1GetPolicyOptions{RequestedPolicyVersion: 3}}).Context(ctx).Do()
 	if err != nil {
 		return nil, err
 	}

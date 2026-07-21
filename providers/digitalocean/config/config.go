@@ -5,13 +5,14 @@ package config
 
 import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/digitalocean/connection"
 	"go.mondoo.com/mql/v13/providers/digitalocean/provider"
 )
 
 var Config = plugin.Provider{
 	Name:            "digitalocean",
 	ID:              "go.mondoo.com/mql/providers/digitalocean",
-	Version:         "13.6.1",
+	Version:         "13.8.0",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{
 		{
@@ -27,9 +28,17 @@ Examples:
 Notes:
   If you set the DIGITALOCEAN_TOKEN environment variable, you can omit the token flag.
 `,
-			MinArgs:   0,
-			MaxArgs:   0,
-			Discovery: []string{},
+			MinArgs: 0,
+			MaxArgs: 0,
+			Discovery: []string{
+				connection.DiscoveryAuto,
+				connection.DiscoveryAll,
+				connection.DiscoveryDatabases,
+				connection.DiscoveryKubernetes,
+				connection.DiscoveryLoadBalancers,
+				connection.DiscoveryFirewalls,
+				connection.DiscoverySpacesBuckets,
+			},
 			Flags: []plugin.Flag{
 				{
 					Long:    "token",

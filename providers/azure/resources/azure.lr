@@ -443,6 +443,12 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   patchMode string
   // Virtual Machine Scale Set that manages this VM, if any (resolved from managedBy)
   vmScaleSet() azure.subscription.computeService.vmScaleSet
+  // Internet-exposure summary combining public IPs and NSG ingress rules
+  //
+  // Reports whether the VM is reachable from the public internet by checking for
+  // an assigned public IP and an attached network security group rule that
+  // allows inbound traffic from any source.
+  exposure() azure.subscription.networkService.exposure
 }
 
 // Azure VM image reference
@@ -2524,6 +2530,32 @@ private azure.subscription.networkService.securityrule @defaults("id name") {
   provisioningState string
 }
 
+// Internet-exposure summary for a network-reachable Azure resource
+//
+// Combines whether the resource has a public IP with whether its effective
+// network security rules permit inbound traffic from the internet. A resource
+// is considered internet-reachable only when it has a public IP AND an
+// effective rule allows ingress from any source (0.0.0.0/0, ::/0, *, or the
+// "Internet" service tag). The effective rules merge the NSG on the NIC, the
+// NSG on its subnet, and application security groups.
+private azure.subscription.networkService.exposure {
+  // Whether the resource is reachable from the public internet
+  //
+  // True when the resource has a public IP AND an attached security group
+  // allows inbound traffic from any source. False when either signal is absent.
+  internetReachable bool
+  // Whether the resource has at least one public IP address assigned
+  hasPublicIp bool
+  // Whether an effective NSG rule (NIC, subnet, or ASG) has an inbound Allow rule open to any source
+  securityGroupAllowsIngress bool
+  // Effective inbound security rules that allow traffic from any internet source
+  //
+  // Sourced from the NIC's effective security rules, which merge the NSG
+  // attached to the NIC, the NSG attached to its subnet, and any application
+  // security group rules. Each entry is the raw Azure effective-rule object.
+  openIngressRules []dict
+}
+
 // Azure Network Watcher
 private azure.subscription.networkService.watcher @defaults("name location") {
   // Network watcher ID
@@ -3659,6 +3691,13 @@ private azure.subscription.storageService.account @defaults("id name location") 
   defenderForStorage() azure.subscription.storageService.account.defenderForStorageSetting
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
+  // Whether the storage account is exposed to anonymous public access
+  //
+  // True when public network access is not disabled, the network rule set
+  // defaults to Allow (no deny-by-default firewall), AND blob containers may be
+  // configured for anonymous public access (`allowBlobPublicAccess`). All three
+  // gates must be open for anonymous internet reads to be possible.
+  isPublic() bool
 }
 
 // Azure Storage account queue
@@ -4806,6 +4845,13 @@ private azure.subscription.sqlService.server @defaults("name location properties
   failoverGroups() []azure.subscription.sqlService.server.failoverGroup
   // Geo-replication links from databases on this server to partners
   replicationLinks() []azure.subscription.sqlService.server.replicationLink
+  // Whether the SQL server is reachable from the public internet
+  //
+  // True when `publicNetworkAccess` is enabled AND at least one firewall rule
+  // opens the server to the entire public internet — a rule whose range spans
+  // 0.0.0.0-255.255.255.255. The special "allow all Azure services" rule
+  // (0.0.0.0-0.0.0.0) does not count, since it admits only Azure-internal IPs.
+  internetReachable() bool
 }
 
 // Azure SQL Database server vulnerability assessment settings
@@ -5392,6 +5438,13 @@ private azure.subscription.postgreSqlService.flexibleServer @defaults("name loca
   threatProtectionState() string
   // Private endpoint connections for the PostgreSQL flexible server
   privateEndpointConnections() []azure.subscription.privateEndpointConnection
+  // Whether the PostgreSQL flexible server is reachable from the public internet
+  //
+  // True when `publicNetworkAccess` is enabled AND at least one firewall rule
+  // opens the server to the entire public internet — a rule whose range spans
+  // 0.0.0.0-255.255.255.255. The special "allow all Azure services" rule
+  // (0.0.0.0-0.0.0.0) does not count, since it admits only Azure-internal IPs.
+  internetReachable() bool
 }
 
 // Azure Database for PostgreSQL server
@@ -5428,6 +5481,13 @@ private azure.subscription.postgreSqlService.server @defaults("id name location"
   databases() []azure.subscription.postgreSqlService.database
   // PostgreSQL server firewall rules
   firewallRules() []azure.subscription.sqlService.firewallrule
+  // Whether the PostgreSQL server is reachable from the public internet
+  //
+  // True when `publicNetworkAccess` is enabled AND at least one firewall rule
+  // opens the server to the entire public internet — a rule whose range spans
+  // 0.0.0.0-255.255.255.255. The special "allow all Azure services" rule
+  // (0.0.0.0-0.0.0.0) does not count, since it admits only Azure-internal IPs.
+  internetReachable() bool
 }
 
 // Azure Database for PostgreSQL database
@@ -5642,6 +5702,13 @@ private azure.subscription.mySqlService.server @defaults("id name location") {
   databases() []azure.subscription.mySqlService.database
   // MySQL server firewall rules
   firewallRules() []azure.subscription.sqlService.firewallrule
+  // Whether the MySQL server is reachable from the public internet
+  //
+  // True when `publicNetworkAccess` is enabled AND at least one firewall rule
+  // opens the server to the entire public internet — a rule whose range spans
+  // 0.0.0.0-255.255.255.255. The special "allow all Azure services" rule
+  // (0.0.0.0-0.0.0.0) does not count, since it admits only Azure-internal IPs.
+  internetReachable() bool
 }
 
 // Azure Database for MySQL database
@@ -5698,6 +5765,13 @@ private azure.subscription.mySqlService.flexibleServer @defaults("name location 
   highAvailabilityMode string
   // High availability state ("NotEnabled", "CreatingStandby", "ReplicatingData", "FailingOver", "Healthy", or "RemovingStandby")
   highAvailabilityState string
+  // Whether the MySQL flexible server is reachable from the public internet
+  //
+  // True when `publicNetworkAccess` is enabled AND at least one firewall rule
+  // opens the server to the entire public internet — a rule whose range spans
+  // 0.0.0.0-255.255.255.255. The special "allow all Azure services" rule
+  // (0.0.0.0-0.0.0.0) does not count, since it admits only Azure-internal IPs.
+  internetReachable() bool
 }
 
 // Azure Cosmos DB
@@ -7507,6 +7581,13 @@ azure.subscription.aksService.cluster @defaults("name location kubernetesVersion
   identityBindings() []azure.subscription.aksService.cluster.identityBinding
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
+  // Whether the AKS API server is reachable from the public internet
+  //
+  // True when the cluster is not a private cluster, `publicNetworkAccess` is not
+  // disabled, and no authorized-IP-range allowlist restricts API access. False
+  // when any of those gates (private cluster, disabled public access, or a
+  // non-empty authorized-IP-range list) is present.
+  internetReachable() bool
 }
 
 // Azure Kubernetes Service cluster AAD profile

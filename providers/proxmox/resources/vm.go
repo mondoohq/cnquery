@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/proxmox/connection"
@@ -305,7 +306,13 @@ func (r *mqlProxmoxVm) updates() ([]any, error) {
 	})
 	if r.osInfoErr != nil {
 		if errors.Is(r.osInfoErr, connection.ErrQGANotRunning) {
-			return nil, fmt.Errorf("guest agent not reachable for VM %d", vmid)
+			// Without the guest agent we can't enumerate updates; return an
+			// empty list rather than failing the field, so iterating
+			// `vms { updates }` doesn't error on the first agent-less VM
+			// (consistent with the Windows-update path). Warn so operators can
+			// still see which VMs are agent-less.
+			log.Warn().Int("vmid", vmid).Msg("guest agent not reachable, returning empty updates list")
+			return []any{}, nil
 		}
 		return nil, r.osInfoErr
 	}

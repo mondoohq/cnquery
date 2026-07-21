@@ -34,6 +34,20 @@ type mqlGoogleworkspaceInternal struct {
 	usersByEmail     map[string]*mqlGoogleworkspaceUser
 	usersByEmailErr  error
 
+	// usersById indexes the customer's users by their unique directory ID so
+	// role-assignment accessors (assignedTo is an ID, not an email) resolve to
+	// a typed user via a single shared Users.List instead of one Get per
+	// assignment.
+	usersByIdOnce sync.Once
+	usersById     map[string]*mqlGoogleworkspaceUser
+	usersByIdErr  error
+
+	// rolesById indexes the customer's admin roles by ID so role-assignment
+	// accessors resolve roleId -> role via a single shared Roles.List.
+	rolesByIdOnce sync.Once
+	rolesById     map[int64]*mqlGoogleworkspaceRole
+	rolesByIdErr  error
+
 	// usageReportsOnce guards a single batched UserUsageReport.Get("all", date)
 	// fetch that returns every user's usage report. user.usageReport() and
 	// report.users.list() both look up by primary email instead of issuing
@@ -65,6 +79,58 @@ func (g *mqlGoogleworkspace) userByEmail(email string) (*mqlGoogleworkspaceUser,
 		return nil, g.usersByEmailErr
 	}
 	return g.usersByEmail[email], nil
+}
+
+func (g *mqlGoogleworkspace) userById(id string) (*mqlGoogleworkspaceUser, error) {
+	g.usersByIdOnce.Do(func() {
+		// Go through GetUsers() so the lazily-computed users field is resolved
+		// even when the caller never touched googleworkspace.users directly.
+		users := g.GetUsers()
+		if users.Error != nil {
+			g.usersByIdErr = users.Error
+			return
+		}
+		m := make(map[string]*mqlGoogleworkspaceUser, len(users.Data))
+		for _, u := range users.Data {
+			user := u.(*mqlGoogleworkspaceUser)
+			if user.Id.Error != nil {
+				g.usersByIdErr = user.Id.Error
+				return
+			}
+			m[user.Id.Data] = user
+		}
+		g.usersById = m
+	})
+	if g.usersByIdErr != nil {
+		return nil, g.usersByIdErr
+	}
+	return g.usersById[id], nil
+}
+
+func (g *mqlGoogleworkspace) roleById(id int64) (*mqlGoogleworkspaceRole, error) {
+	g.rolesByIdOnce.Do(func() {
+		// Go through GetRoles() so the lazily-computed roles field is resolved
+		// even when the caller never touched googleworkspace.roles directly.
+		roles := g.GetRoles()
+		if roles.Error != nil {
+			g.rolesByIdErr = roles.Error
+			return
+		}
+		m := make(map[int64]*mqlGoogleworkspaceRole, len(roles.Data))
+		for _, r := range roles.Data {
+			role := r.(*mqlGoogleworkspaceRole)
+			if role.Id.Error != nil {
+				g.rolesByIdErr = role.Id.Error
+				return
+			}
+			m[role.Id.Data] = role
+		}
+		g.rolesById = m
+	})
+	if g.rolesByIdErr != nil {
+		return nil, g.rolesByIdErr
+	}
+	return g.rolesById[id], nil
 }
 
 func (r *mqlGoogleworkspace) id() (string, error) {

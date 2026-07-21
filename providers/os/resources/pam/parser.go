@@ -71,12 +71,23 @@ func complicatedParse(fields []string) (*PamLine, error) {
 	pamType := fields[0]
 	control := fields[1]
 	i := 2
-	for ; i < len(fields)-1; i++ {
+	closed := false
+	// Accumulate fields into the bracketed control until the closing `]`.
+	// The loop must be able to inspect the final field as well, otherwise a
+	// control that runs to the end of the line is never recognized as closed.
+	for ; i < len(fields); i++ {
 		str := fields[i]
 		control += " " + str
-		if str[len(str)-1:] == "]" {
+		if strings.HasSuffix(str, "]") {
+			closed = true
 			break
 		}
+	}
+	// The module is the token after the closing bracket. If the bracket was
+	// never closed, or there is no field after it, the line is malformed —
+	// return an error rather than indexing out of range.
+	if !closed || i+1 >= len(fields) {
+		return &PamLine{}, fmt.Errorf("invalid pam entry: %s", strings.Join(fields, " "))
 	}
 	module := fields[i+1]
 	options := []any{}

@@ -76,7 +76,7 @@ func (r *mqlDigitalocean) images() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -130,7 +130,7 @@ func (r *mqlDigitalocean) snapshots() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}

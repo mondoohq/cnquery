@@ -57,7 +57,8 @@ func BuildFilesFindCmd(from string, xdev bool, fileType string, regex string, pe
 
 	if depth != nil {
 		call.WriteString(" -maxdepth ")
-		call.WriteString(Octal2string(*depth))
+		// -maxdepth takes a decimal level count, not an octal value.
+		call.WriteString(strconv.FormatInt(*depth, 10))
 	}
 	return call.String()
 }

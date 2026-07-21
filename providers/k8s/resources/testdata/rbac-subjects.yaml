@@ -1,0 +1,173 @@
+# Copyright Mondoo, Inc. 2024, 2026
+# SPDX-License-Identifier: BUSL-1.1
+#
+# Exercises subject enumeration (k8s.rbacSubjects), the per-subject effective
+# permission predicates, and the k8s.rbac.whoCan resolver. Covers User, Group,
+# and ServiceAccount subjects, a subject named in two bindings (dedup), and the
+# namespace scoping difference between ClusterRoleBindings and RoleBindings.
+---
+# cluster-admin style: wildcard verbs/groups/resources.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: wildcard-admin
+rules:
+  - apiGroups: ["*"]
+    resources: ["*"]
+    verbs: ["*"]
+---
+# Reads secrets in the core group.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: secret-reader
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "watch"]
+---
+# Can bind roles (privilege escalation), namespaced.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: binder
+  namespace: default
+rules:
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["roles"]
+    verbs: ["bind", "create"]
+---
+# Benign read-only role over configmaps, namespaced.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: configmap-reader
+  namespace: default
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: secret-sa
+  namespace: default
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: reader-sa
+  namespace: default
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: named-sa
+  namespace: default
+---
+# Reads a single named secret only (ResourceNames-scoped), namespaced.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: named-secret-reader
+  namespace: default
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+    resourceNames: ["app-secret"]
+---
+# Cluster-wide cluster-admin to a user and a group (no namespace on subjects).
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: crb-admins
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: wildcard-admin
+subjects:
+  - kind: User
+    name: alice
+    apiGroup: rbac.authorization.k8s.io
+  - kind: Group
+    name: ops-admins
+    apiGroup: rbac.authorization.k8s.io
+---
+# Secret read granted to secret-sa via a namespaced RoleBinding (scope: default).
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: rb-secrets
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: secret-reader
+subjects:
+  - kind: ServiceAccount
+    name: secret-sa
+    namespace: default
+---
+# Privilege-escalating binder Role granted to a user (scope: default).
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: rb-binder
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: binder
+subjects:
+  - kind: User
+    name: bob
+    apiGroup: rbac.authorization.k8s.io
+---
+# Benign configmap read to reader-sa (scope: default).
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: rb-config
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: configmap-reader
+subjects:
+  - kind: ServiceAccount
+    name: reader-sa
+    namespace: default
+---
+# alice appears a second time here; she must dedup to a single subject and keep
+# her cluster-admin capabilities from crb-admins.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: rb-alice-config
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: configmap-reader
+subjects:
+  - kind: User
+    name: alice
+    apiGroup: rbac.authorization.k8s.io
+---
+# Grants the named-secret-reader Role (get on secret "app-secret" only) to
+# named-sa, scoped to the default namespace.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: rb-named-secret
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: named-secret-reader
+subjects:
+  - kind: ServiceAccount
+    name: named-sa
+    namespace: default

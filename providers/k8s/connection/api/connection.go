@@ -16,6 +16,7 @@ import (
 	"go.mondoo.com/mql/v13/providers/k8s/connection/shared"
 	"go.mondoo.com/mql/v13/providers/k8s/connection/shared/resources"
 	admissionv1 "k8s.io/api/admission/v1"
+	authorizationv1 "k8s.io/api/authorization/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -304,6 +305,37 @@ func (c *Connection) resources(kind string, name string, namespace string) (*sha
 
 func (c *Connection) AdmissionReviews() ([]admissionv1.AdmissionReview, error) {
 	return []admissionv1.AdmissionReview{}, nil
+}
+
+// SubjectAccessAllowed asks the API server, authoritatively, whether the given
+// subject may perform verb on the (group, resource, name) in namespace. It
+// returns the decision and the authorizer's reason. This folds in aggregated
+// ClusterRoles, group bindings, and built-in roles that a static rule analysis
+// cannot reconstruct.
+func (c *Connection) SubjectAccessAllowed(ctx context.Context, subject, namespace, verb, group, resource, name string) (bool, string, error) {
+	return subjectAccessAllowed(ctx, c.clientset, subject, namespace, verb, group, resource, name)
+}
+
+// subjectAccessAllowed runs a SubjectAccessReview against the given client. It is
+// split out from the connection method so it can be tested with a fake clientset.
+func subjectAccessAllowed(ctx context.Context, client kubernetes.Interface, subject, namespace, verb, group, resource, name string) (bool, string, error) {
+	sar := &authorizationv1.SubjectAccessReview{
+		Spec: authorizationv1.SubjectAccessReviewSpec{
+			User: subject,
+			ResourceAttributes: &authorizationv1.ResourceAttributes{
+				Namespace: namespace,
+				Verb:      verb,
+				Group:     group,
+				Resource:  resource,
+				Name:      name,
+			},
+		},
+	}
+	res, err := client.AuthorizationV1().SubjectAccessReviews().Create(ctx, sar, metav1.CreateOptions{})
+	if err != nil {
+		return false, "", err
+	}
+	return res.Status.Allowed, res.Status.Reason, nil
 }
 
 func (c *Connection) Namespace(name string) (*v1.Namespace, error) {

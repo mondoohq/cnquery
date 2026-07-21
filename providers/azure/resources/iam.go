@@ -198,6 +198,12 @@ type mqlAzureSubscriptionAuthorizationServiceRoleAssignmentInternal struct {
 }
 
 func newMqlRoleAssignment(runtime *plugin.Runtime, roleAssignment *authorization.RoleAssignment) (*mqlAzureSubscriptionAuthorizationServiceRoleAssignment, error) {
+	// Properties is a nullable pointer; the args map dereferences it throughout,
+	// so normalize to an empty struct to avoid a panic (mirrors the
+	// denyAssignments/classicAdministrators paths below).
+	if roleAssignment.Properties == nil {
+		roleAssignment.Properties = &authorization.RoleAssignmentProperties{}
+	}
 	principalType := string(convert.ToValue(roleAssignment.Properties.PrincipalType))
 	r, err := CreateResource(runtime, "azure.subscription.authorizationService.roleAssignment",
 		map[string]*llx.RawData{
@@ -373,13 +379,21 @@ type mqlAzureSubscriptionManagedIdentityInternal struct {
 }
 
 func newMqlManagedIdentity(runtime *plugin.Runtime, managedIdentity *armmsi.Identity) (*mqlAzureSubscriptionManagedIdentity, error) {
+	// Properties (and the *TenantID inside it) are nullable; guard before
+	// dereferencing to avoid a panic on a partially-populated identity.
+	var clientID, principalID, tenantID *string
+	if p := managedIdentity.Properties; p != nil {
+		clientID = p.ClientID
+		principalID = p.PrincipalID
+		tenantID = (*string)(p.TenantID)
+	}
 	r, err := CreateResource(runtime, "azure.subscription.managedIdentity",
 		map[string]*llx.RawData{
 			"__id":        llx.StringDataPtr(managedIdentity.ID),
 			"name":        llx.StringDataPtr(managedIdentity.Name),
-			"clientId":    llx.StringDataPtr(managedIdentity.Properties.ClientID),
-			"principalId": llx.StringDataPtr(managedIdentity.Properties.PrincipalID),
-			"tenantId":    llx.StringData(string(*managedIdentity.Properties.TenantID)),
+			"clientId":    llx.StringDataPtr(clientID),
+			"principalId": llx.StringDataPtr(principalID),
+			"tenantId":    llx.StringDataPtr(tenantID),
 		})
 	if err != nil {
 		return nil, err

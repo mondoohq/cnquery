@@ -1732,6 +1732,11 @@ gcp.project.computeService.instance.enableDisplay 9.0.0
 gcp.project.computeService.instance.enableIntegrityMonitoring 9.0.0
 gcp.project.computeService.instance.enableSecureBoot 9.0.0
 gcp.project.computeService.instance.enableVtpm 9.0.0
+gcp.project.computeService.instance.exposure 13.24.1
+gcp.project.computeService.instance.exposure.firewallAllowsIngress 13.24.1
+gcp.project.computeService.instance.exposure.hasPublicIp 13.24.1
+gcp.project.computeService.instance.exposure.internetReachable 13.24.1
+gcp.project.computeService.instance.exposure.openIngressFirewalls 13.24.1
 gcp.project.computeService.instance.fingerprint 9.0.0
 gcp.project.computeService.instance.guestAccelerators 9.0.0
 gcp.project.computeService.instance.hasFullCloudPlatformScope 13.12.2
@@ -3096,6 +3101,7 @@ gcp.project.gkeService.cluster.conditions 13.16.3
 gcp.project.gkeService.cluster.confidentialNodesConfig 9.0.0
 gcp.project.gkeService.cluster.confidentialNodesEnabled 13.18.1
 gcp.project.gkeService.cluster.controlPlaneEndpointsConfig 13.16.3
+gcp.project.gkeService.cluster.controlPlaneInternetReachable 13.24.1
 gcp.project.gkeService.cluster.controlPlaneLoggingComponents 13.18.1
 gcp.project.gkeService.cluster.controlPlaneMonitoringComponents 13.18.1
 gcp.project.gkeService.cluster.controlPlanePublicEndpointEnabled 13.18.1
@@ -4444,6 +4450,7 @@ gcp.project.sqlService.instance.gceZone 9.0.0
 gcp.project.sqlService.instance.hasBuiltInUsers 13.12.2
 gcp.project.sqlService.instance.iamAuthenticationEnabled 13.21.2
 gcp.project.sqlService.instance.instanceType 9.0.0
+gcp.project.sqlService.instance.internetReachable 13.24.1
 gcp.project.sqlService.instance.ipAddresses 9.0.0
 gcp.project.sqlService.instance.ipMapping 9.0.0
 gcp.project.sqlService.instance.ipMapping.id 9.0.0

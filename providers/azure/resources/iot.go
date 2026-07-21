@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/iothub/armiothub"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -45,7 +46,9 @@ func (a *mqlAzureSubscriptionIotService) hubs() ([]any, error) {
 
 	subscriptionID := a.SubscriptionId.Data
 
-	clientFactory, err := armiothub.NewClientFactory(subscriptionID, token, nil)
+	clientFactory, err := armiothub.NewClientFactory(subscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +81,9 @@ func (a *mqlAzureSubscriptionIotService) iotHubs() ([]any, error) {
 	token := conn.Token()
 	subscriptionID := a.SubscriptionId.Data
 
-	clientFactory, err := armiothub.NewClientFactory(subscriptionID, token, nil)
+	clientFactory, err := armiothub.NewClientFactory(subscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}

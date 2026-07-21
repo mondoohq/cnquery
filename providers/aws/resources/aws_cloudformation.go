@@ -511,3 +511,61 @@ func (a *mqlAwsCloudformationStackSet) organizationalUnitIds() ([]any, error) {
 	}
 	return res, nil
 }
+
+// managedByFromTags infers the infrastructure-management system that owns a
+// resource from the provenance tags AWS injects on managed resources. It returns
+// "" when no known management signal is present — the resource is unmanaged, or
+// managed by a tool that leaves no recognizable tag (raw API calls, or Terraform
+// without a tagging convention).
+func managedByFromTags(tags map[string]any) string {
+	for _, sig := range []struct {
+		key   string
+		owner string
+	}{
+		{"aws:cloudformation:stack-name", "cloudformation"},
+		{"elasticbeanstalk:environment-name", "elasticbeanstalk"},
+		{"eks:cluster-name", "eks"},
+		{"aws:servicecatalog:provisioningPrincipalArn", "servicecatalog"},
+		{"aws:autoscaling:groupName", "autoscaling"},
+	} {
+		if _, ok := tags[sig.key]; ok {
+			return sig.owner
+		}
+	}
+	return ""
+}
+
+// cloudformationStackForTags resolves the CloudFormation stack that manages a
+// resource from the AWS-injected `aws:cloudformation:stack-name` tag. It scans
+// the account's stacks (a cross-region list cached after first use) and matches
+// on stack name and region. Returns (nil, nil) when the resource is not part of
+// a stack; callers set the field's null state before returning.
+func cloudformationStackForTags(runtime *plugin.Runtime, region string, tags map[string]any) (*mqlAwsCloudformationStack, error) {
+	raw, ok := tags["aws:cloudformation:stack-name"]
+	if !ok {
+		return nil, nil
+	}
+	name, ok := raw.(string)
+	if !ok || name == "" {
+		return nil, nil
+	}
+
+	obj, err := CreateResource(runtime, ResourceAwsCloudformation, map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	stacks := obj.(*mqlAwsCloudformation).GetStacks()
+	if stacks.Error != nil {
+		return nil, stacks.Error
+	}
+	for _, s := range stacks.Data {
+		st, ok := s.(*mqlAwsCloudformationStack)
+		if !ok {
+			continue
+		}
+		if st.Name.Data == name && st.Region.Data == region {
+			return st, nil
+		}
+	}
+	return nil, nil
+}

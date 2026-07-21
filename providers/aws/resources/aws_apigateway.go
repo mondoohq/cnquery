@@ -147,7 +147,7 @@ func initAwsApigatewayRestapi(runtime *plugin.Runtime, args map[string]*llx.RawD
 
 	rawResources := gw.GetRestApis()
 	if rawResources.Error != nil {
-		return nil, nil, err
+		return nil, nil, rawResources.Error
 	}
 
 	arnVal := args["arn"].Value.(string)

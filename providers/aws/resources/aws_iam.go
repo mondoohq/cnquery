@@ -124,6 +124,11 @@ func (a *mqlAwsIam) credentialReport() ([]any, error) {
 			if maxRetries == 5 {
 				return nil, errors.Wrap(err, "timed out trying to gather aws iam credential report")
 			}
+			// re-extract the API error so the loop condition reflects the latest
+			// response; without this it keeps testing the original error code.
+			if !errors.As(err, &ae) {
+				return nil, errors.Wrap(err, "could not gather aws iam credential report")
+			}
 			time.Sleep(200 * time.Millisecond)
 			maxRetries++
 		}
@@ -1799,6 +1804,66 @@ func (a *mqlAwsIamRole) inlinePolicies() ([]any, error) {
 		}
 	}
 
+	return res, nil
+}
+
+// usedByInstances returns the EC2 instances that use this role through an
+// instance profile. EC2 references an instance *profile*, which in turn contains
+// roles. It derives the role's instance profiles from the account-wide instance
+// profile list (a single ListInstanceProfiles call cached and shared across all
+// role evaluations, rather than a per-role ListInstanceProfilesForRole call),
+// then scans the cached instance list for ones whose profile is among them.
+func (a *mqlAwsIamRole) usedByInstances() ([]any, error) {
+	roleArn := a.Arn.Data
+
+	iamObj, err := CreateResource(a.MqlRuntime, ResourceAwsIam, map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	profiles := iamObj.(*mqlAwsIam).GetInstanceProfiles()
+	if profiles.Error != nil {
+		return nil, profiles.Error
+	}
+
+	profileArns := map[string]struct{}{}
+	for _, p := range profiles.Data {
+		prof, ok := p.(*mqlAwsIamInstanceProfile)
+		if !ok {
+			continue
+		}
+		for _, role := range prof.rolesCache {
+			if role.Arn != nil && *role.Arn == roleArn {
+				profileArns[prof.Arn.Data] = struct{}{}
+				break
+			}
+		}
+	}
+	if len(profileArns) == 0 {
+		return []any{}, nil
+	}
+
+	obj, err := CreateResource(a.MqlRuntime, ResourceAwsEc2, map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	instances := obj.(*mqlAwsEc2).GetInstances()
+	if instances.Error != nil {
+		return nil, instances.Error
+	}
+	res := []any{}
+	for _, it := range instances.Data {
+		inst, ok := it.(*mqlAwsEc2Instance)
+		if !ok {
+			continue
+		}
+		prof := inst.instanceCache.IamInstanceProfile
+		if prof == nil || prof.Arn == nil {
+			continue
+		}
+		if _, match := profileArns[*prof.Arn]; match {
+			res = append(res, inst)
+		}
+	}
 	return res, nil
 }
 

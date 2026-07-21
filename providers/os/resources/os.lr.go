@@ -16,434 +16,484 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceAsset                         string = "asset"
-	ResourceAssetEol                      string = "asset.eol"
-	ResourceMondooEol                     string = "mondoo.eol"
-	ResourceVulnmgmt                      string = "vulnmgmt"
-	ResourceVulnCve                       string = "vuln.cve"
-	ResourceVulnAdvisory                  string = "vuln.advisory"
-	ResourceVulnPackage                   string = "vuln.package"
-	ResourcePlatformAdvisories            string = "platform.advisories"
-	ResourcePlatformCves                  string = "platform.cves"
-	ResourceAuditCvss                     string = "audit.cvss"
-	ResourceAuditAdvisory                 string = "audit.advisory"
-	ResourceAuditCve                      string = "audit.cve"
-	ResourceMachine                       string = "machine"
-	ResourceMachineBios                   string = "machine.bios"
-	ResourceMachineSystem                 string = "machine.system"
-	ResourceMachineBaseboard              string = "machine.baseboard"
-	ResourceMachineChassis                string = "machine.chassis"
-	ResourceMachineCpu                    string = "machine.cpu"
-	ResourceMachineSecureboot             string = "machine.secureboot"
-	ResourceOs                            string = "os"
-	ResourceOsDate                        string = "os.date"
-	ResourceOsUpdate                      string = "os.update"
-	ResourceOsBase                        string = "os.base"
-	ResourceOsUnix                        string = "os.unix"
-	ResourceOsLinux                       string = "os.linux"
-	ResourceOsRootCertificates            string = "os.rootCertificates"
-	ResourceCommand                       string = "command"
-	ResourcePowershell                    string = "powershell"
-	ResourceFile                          string = "file"
-	ResourceFileContext                   string = "file.context"
-	ResourceFilePermissions               string = "file.permissions"
-	ResourceFiles                         string = "files"
-	ResourceFilesFind                     string = "files.find"
-	ResourceParseIni                      string = "parse.ini"
-	ResourceParseJson                     string = "parse.json"
-	ResourceParseXml                      string = "parse.xml"
-	ResourceParsePlist                    string = "parse.plist"
-	ResourceParseYaml                     string = "parse.yaml"
-	ResourceParseCertificates             string = "parse.certificates"
-	ResourceParseOpenpgp                  string = "parse.openpgp"
-	ResourceUser                          string = "user"
-	ResourcePrivatekey                    string = "privatekey"
-	ResourceUsers                         string = "users"
-	ResourceAuthorizedkeys                string = "authorizedkeys"
-	ResourceAuthorizedkeysEntry           string = "authorizedkeys.entry"
-	ResourceGroup                         string = "group"
-	ResourceGroups                        string = "groups"
-	ResourcePackage                       string = "package"
-	ResourcePkgFileInfo                   string = "pkgFileInfo"
-	ResourcePackages                      string = "packages"
-	ResourcePamConf                       string = "pam.conf"
-	ResourcePamConfServiceEntry           string = "pam.conf.serviceEntry"
-	ResourcePamConfService                string = "pam.conf.service"
-	ResourcePamModule                     string = "pam.module"
-	ResourceSshd                          string = "sshd"
-	ResourceSshdConfig                    string = "sshd.config"
-	ResourceSshdConfigMatchBlock          string = "sshd.config.matchBlock"
-	ResourceInetd                         string = "inetd"
-	ResourceInetdConfig                   string = "inetd.config"
-	ResourceInetdConfigEntry              string = "inetd.config.entry"
-	ResourceSnmpd                         string = "snmpd"
-	ResourceSnmpdConfig                   string = "snmpd.config"
-	ResourceAuditdConfig                  string = "auditd.config"
-	ResourceAuditdRules                   string = "auditd.rules"
-	ResourceAuditdRule                    string = "auditd.rule"
-	ResourceAuditdRuleControl             string = "auditd.rule.control"
-	ResourceAuditdRuleFile                string = "auditd.rule.file"
-	ResourceAuditdRuleSyscall             string = "auditd.rule.syscall"
-	ResourceApache2                       string = "apache2"
-	ResourceApache2Conf                   string = "apache2.conf"
-	ResourceApache2ConfEnvvars            string = "apache2.conf.envvars"
-	ResourceApache2ConfModule             string = "apache2.conf.module"
-	ResourceApache2ConfVirtualHost        string = "apache2.conf.virtualHost"
-	ResourceApache2ConfDirectory          string = "apache2.conf.directory"
-	ResourceApache2ConfLocation           string = "apache2.conf.location"
-	ResourceNginx                         string = "nginx"
-	ResourceNginxConf                     string = "nginx.conf"
-	ResourceNginxConfServer               string = "nginx.conf.server"
-	ResourceNginxConfUpstream             string = "nginx.conf.upstream"
-	ResourceNginxConfLocation             string = "nginx.conf.location"
-	ResourceSquid                         string = "squid"
-	ResourceSquidConf                     string = "squid.conf"
-	ResourceSquidConfListen               string = "squid.conf.listen"
-	ResourceSquidConfAcl                  string = "squid.conf.acl"
-	ResourceSquidConfAccessRule           string = "squid.conf.accessRule"
-	ResourceSquidConfCachePeer            string = "squid.conf.cachePeer"
-	ResourceSquidConfCacheDir             string = "squid.conf.cacheDir"
-	ResourceSquidConfRefreshPattern       string = "squid.conf.refreshPattern"
-	ResourceSquidConfAccessLog            string = "squid.conf.accessLog"
-	ResourceHaproxy                       string = "haproxy"
-	ResourceHaproxyConfig                 string = "haproxy.config"
-	ResourceHaproxyConfigSection          string = "haproxy.config.section"
-	ResourceHaproxyConfigGlobal           string = "haproxy.config.global"
-	ResourceHaproxyConfigDefaultsSection  string = "haproxy.config.defaultsSection"
-	ResourceHaproxyConfigFrontend         string = "haproxy.config.frontend"
-	ResourceHaproxyConfigBackend          string = "haproxy.config.backend"
-	ResourceHaproxyConfigListen           string = "haproxy.config.listen"
-	ResourceHaproxyConfigBind             string = "haproxy.config.bind"
-	ResourceHaproxyConfigServer           string = "haproxy.config.server"
-	ResourceHaproxyConfigResolversSection string = "haproxy.config.resolversSection"
-	ResourceHaproxyConfigUserlist         string = "haproxy.config.userlist"
-	ResourceHaproxyConfigPeersSection     string = "haproxy.config.peersSection"
-	ResourceJournaldConfig                string = "journald.config"
-	ResourceJournaldConfigSection         string = "journald.config.section"
-	ResourceJournaldConfigSectionParam    string = "journald.config.section.param"
-	ResourceService                       string = "service"
-	ResourceServices                      string = "services"
-	ResourceSystemdTimer                  string = "systemd.timer"
-	ResourceSystemdTimers                 string = "systemd.timers"
-	ResourceSystemdSocket                 string = "systemd.socket"
-	ResourceSystemdSockets                string = "systemd.sockets"
-	ResourceSystemdTarget                 string = "systemd.target"
-	ResourceSystemdTargets                string = "systemd.targets"
-	ResourceSystemdResolved               string = "systemd.resolved"
-	ResourceSystemdTimesyncd              string = "systemd.timesyncd"
-	ResourceKernel                        string = "kernel"
-	ResourceKernelModule                  string = "kernel.module"
-	ResourceKernelCmdline                 string = "kernel.cmdline"
-	ResourceKernelTaint                   string = "kernel.taint"
-	ResourceKernelLockdown                string = "kernel.lockdown"
-	ResourceKernelAslr                    string = "kernel.aslr"
-	ResourceCgroups                       string = "cgroups"
-	ResourceCgroup                        string = "cgroup"
-	ResourceDocker                        string = "docker"
-	ResourceDockerFile                    string = "docker.file"
-	ResourceDockerFileStage               string = "docker.file.stage"
-	ResourceDockerFileOci                 string = "docker.file.oci"
-	ResourceDockerFileArg                 string = "docker.file.arg"
-	ResourceDockerFileEnv                 string = "docker.file.env"
-	ResourceDockerFileUser                string = "docker.file.user"
-	ResourceDockerFileExpose              string = "docker.file.expose"
-	ResourceDockerFileFrom                string = "docker.file.from"
-	ResourceDockerFileRun                 string = "docker.file.run"
-	ResourceDockerFileRunCommand          string = "docker.file.run.command"
-	ResourceDockerFileRunMount            string = "docker.file.run.mount"
-	ResourceDockerFileAdd                 string = "docker.file.add"
-	ResourceDockerFileCopy                string = "docker.file.copy"
-	ResourceDockerFileHealthcheck         string = "docker.file.healthcheck"
-	ResourceDockerFileVolume              string = "docker.file.volume"
-	ResourceDockerFileShell               string = "docker.file.shell"
-	ResourceDockerFileWorkdir             string = "docker.file.workdir"
-	ResourceDockerFileStopsignal          string = "docker.file.stopsignal"
-	ResourceDockerFileOnbuild             string = "docker.file.onbuild"
-	ResourceDockerImage                   string = "docker.image"
-	ResourceDockerContainer               string = "docker.container"
-	ResourceContainerd                    string = "containerd"
-	ResourceContainerdContainer           string = "containerd.container"
-	ResourceIptables                      string = "iptables"
-	ResourceIp6tables                     string = "ip6tables"
-	ResourceIptablesTable                 string = "iptables.table"
-	ResourceIptablesChain                 string = "iptables.chain"
-	ResourceIptablesEntry                 string = "iptables.entry"
-	ResourceNftables                      string = "nftables"
-	ResourceNftablesTable                 string = "nftables.table"
-	ResourceNftablesChain                 string = "nftables.chain"
-	ResourceNftablesRule                  string = "nftables.rule"
-	ResourceNftablesSet                   string = "nftables.set"
-	ResourceUfw                           string = "ufw"
-	ResourceUfwRule                       string = "ufw.rule"
-	ResourceUfwApplication                string = "ufw.application"
-	ResourceFirewalld                     string = "firewalld"
-	ResourceFirewalldZone                 string = "firewalld.zone"
-	ResourceFirewalldRichrule             string = "firewalld.richrule"
-	ResourceFstab                         string = "fstab"
-	ResourceFstabEntry                    string = "fstab.entry"
-	ResourceGrubConfig                    string = "grub.config"
-	ResourceGrubConfigEntry               string = "grub.config.entry"
-	ResourceSysrc                         string = "sysrc"
-	ResourceSysrcEntry                    string = "sysrc.entry"
-	ResourceProcess                       string = "process"
-	ResourceProcesses                     string = "processes"
-	ResourcePort                          string = "port"
-	ResourcePorts                         string = "ports"
-	ResourceAuditpol                      string = "auditpol"
-	ResourceAuditpolEntry                 string = "auditpol.entry"
-	ResourceSecpol                        string = "secpol"
-	ResourceNtpConf                       string = "ntp.conf"
-	ResourceChronyConf                    string = "chrony.conf"
-	ResourcePostfix                       string = "postfix"
-	ResourcePostfixService                string = "postfix.service"
-	ResourceExim                          string = "exim"
-	ResourceRsyslogConf                   string = "rsyslog.conf"
-	ResourceRsyslogModule                 string = "rsyslog.module"
-	ResourceRsyslogInput                  string = "rsyslog.input"
-	ResourceRsyslogAction                 string = "rsyslog.action"
-	ResourceRsyslogRule                   string = "rsyslog.rule"
-	ResourceLogindefs                     string = "logindefs"
-	ResourceLimits                        string = "limits"
-	ResourceLimitsEntry                   string = "limits.entry"
-	ResourceSudo                          string = "sudo"
-	ResourceSudoPlugin                    string = "sudo.plugin"
-	ResourceSudoValidation                string = "sudo.validation"
-	ResourceSudoValidationError           string = "sudo.validation.error"
-	ResourceSudoers                       string = "sudoers"
-	ResourceSudoersUserSpec               string = "sudoers.userSpec"
-	ResourceSudoersDefault                string = "sudoers.default"
-	ResourceSudoersAlias                  string = "sudoers.alias"
-	ResourceLsblk                         string = "lsblk"
-	ResourceLsblkEntry                    string = "lsblk.entry"
-	ResourceLuks                          string = "luks"
-	ResourceLuksVolume                    string = "luks.volume"
-	ResourceLuksVolumeCipher              string = "luks.volume.cipher"
-	ResourceLuksKeyslot                   string = "luks.keyslot"
-	ResourceApparmor                      string = "apparmor"
-	ResourceApparmorProfile               string = "apparmor.profile"
-	ResourceApparmorProcess               string = "apparmor.process"
-	ResourceSelinux                       string = "selinux"
-	ResourceSelinuxBoolean                string = "selinux.boolean"
-	ResourceSelinuxModule                 string = "selinux.module"
-	ResourceModprobe                      string = "modprobe"
-	ResourceModprobeInstall               string = "modprobe.install"
-	ResourceModprobeRemove                string = "modprobe.remove"
-	ResourceModprobeBlacklist             string = "modprobe.blacklist"
-	ResourceModprobeOption                string = "modprobe.option"
-	ResourceModprobeAlias                 string = "modprobe.alias"
-	ResourceModprobeSoftdep               string = "modprobe.softdep"
-	ResourceMount                         string = "mount"
-	ResourceNfs                           string = "nfs"
-	ResourceNfsExport                     string = "nfs.export"
-	ResourceNfsMount                      string = "nfs.mount"
-	ResourceMountPoint                    string = "mount.point"
-	ResourceShadow                        string = "shadow"
-	ResourceShadowEntry                   string = "shadow.entry"
-	ResourceYum                           string = "yum"
-	ResourceYumRepo                       string = "yum.repo"
-	ResourceYumConfig                     string = "yum.config"
-	ResourceApt                           string = "apt"
-	ResourceAptRepo                       string = "apt.repo"
-	ResourceRegistrykey                   string = "registrykey"
-	ResourceRegistrykeyProperty           string = "registrykey.property"
-	ResourceContainerImage                string = "container.image"
-	ResourceContainerRepository           string = "container.repository"
-	ResourceKubelet                       string = "kubelet"
-	ResourcePython                        string = "python"
-	ResourcePythonPackage                 string = "python.package"
-	ResourceNpmPackages                   string = "npm.packages"
-	ResourceNpmPackage                    string = "npm.package"
-	ResourceGoPackages                    string = "go.packages"
-	ResourceGoPackage                     string = "go.package"
-	ResourceJavaPackages                  string = "java.packages"
-	ResourceJavaPackage                   string = "java.package"
-	ResourceRustPackages                  string = "rust.packages"
-	ResourceRustPackage                   string = "rust.package"
-	ResourceDotnetPackages                string = "dotnet.packages"
-	ResourceDotnetPackage                 string = "dotnet.package"
-	ResourcePhpPackages                   string = "php.packages"
-	ResourcePhpPackage                    string = "php.package"
-	ResourceGithubactionsPackages         string = "githubactions.packages"
-	ResourceGithubactionsPackage          string = "githubactions.package"
-	ResourceSwiftPackages                 string = "swift.packages"
-	ResourceSwiftPackage                  string = "swift.package"
-	ResourceTerraformPackages             string = "terraform.packages"
-	ResourceTerraformPackage              string = "terraform.package"
-	ResourceHomebrewPackages              string = "homebrew.packages"
-	ResourceHomebrewPackage               string = "homebrew.package"
-	ResourceChocolateyPackages            string = "chocolatey.packages"
-	ResourceChocolateyPackage             string = "chocolatey.package"
-	ResourceJenkinsPackages               string = "jenkins.packages"
-	ResourceJenkinsPackage                string = "jenkins.package"
-	ResourceWordpressPackages             string = "wordpress.packages"
-	ResourceWordpressPackage              string = "wordpress.package"
-	ResourceRubyPackages                  string = "ruby.packages"
-	ResourceRubyPackage                   string = "ruby.package"
-	ResourceDartPackages                  string = "dart.packages"
-	ResourceDartPackage                   string = "dart.package"
-	ResourceHaskellPackages               string = "haskell.packages"
-	ResourceHaskellPackage                string = "haskell.package"
-	ResourceElixirPackages                string = "elixir.packages"
-	ResourceElixirPackage                 string = "elixir.package"
-	ResourceErlangPackages                string = "erlang.packages"
-	ResourceErlangPackage                 string = "erlang.package"
-	ResourcePrologPackages                string = "prolog.packages"
-	ResourcePrologPackage                 string = "prolog.package"
-	ResourceCondaPackages                 string = "conda.packages"
-	ResourceCondaPackage                  string = "conda.package"
-	ResourceJuliaPackages                 string = "julia.packages"
-	ResourceJuliaPackage                  string = "julia.package"
-	ResourceRPackages                     string = "r.packages"
-	ResourceRPackage                      string = "r.package"
-	ResourceLuaPackages                   string = "lua.packages"
-	ResourceLuaPackage                    string = "lua.package"
-	ResourceMacos                         string = "macos"
-	ResourceMacosHardware                 string = "macos.hardware"
-	ResourceMacosAlf                      string = "macos.alf"
-	ResourceMacosFirewall                 string = "macos.firewall"
-	ResourceMacosFirewallApp              string = "macos.firewall.app"
-	ResourceMacosFilevault                string = "macos.filevault"
-	ResourceMacosGatekeeper               string = "macos.gatekeeper"
-	ResourceMacosSip                      string = "macos.sip"
-	ResourceMacosXprotect                 string = "macos.xprotect"
-	ResourceMacosSharing                  string = "macos.sharing"
-	ResourceMacosMdm                      string = "macos.mdm"
-	ResourceMacosProfiles                 string = "macos.profiles"
-	ResourceMacosProfile                  string = "macos.profile"
-	ResourceMacosProfilePayload           string = "macos.profile.payload"
-	ResourceMacosSoftwareupdate           string = "macos.softwareupdate"
-	ResourceMacosSoftwareupdateEntry      string = "macos.softwareupdate.entry"
-	ResourceMacosTimemachine              string = "macos.timemachine"
-	ResourceMacosSystemsetup              string = "macos.systemsetup"
-	ResourceOpenBSMAudit                  string = "openBSMAudit"
-	ResourceWindows                       string = "windows"
-	ResourceWindowsScheduledTask          string = "windows.scheduledTask"
-	ResourceWindowsScheduledTaskPrincipal string = "windows.scheduledTask.principal"
-	ResourceWindowsScheduledTaskAction    string = "windows.scheduledTask.action"
-	ResourceWindowsScheduledTaskTrigger   string = "windows.scheduledTask.trigger"
-	ResourceWindowsScheduledTaskSettings  string = "windows.scheduledTask.settings"
-	ResourceMacosSystemExtension          string = "macos.systemExtension"
-	ResourceSafari                        string = "safari"
-	ResourceSafariExtension               string = "safari.extension"
-	ResourceLaunchd                       string = "launchd"
-	ResourceLaunchdJob                    string = "launchd.job"
-	ResourceWindowsHotfix                 string = "windows.hotfix"
-	ResourceWindowsUpdate                 string = "windows.update"
-	ResourceWindowsUpdateEntry            string = "windows.update.entry"
-	ResourceWindowsUpdateConfig           string = "windows.update.config"
-	ResourceWindowsServerFeature          string = "windows.serverFeature"
-	ResourceWindowsOptionalFeature        string = "windows.optionalFeature"
-	ResourceWindowsEventlog               string = "windows.eventlog"
-	ResourceWindowsRdp                    string = "windows.rdp"
-	ResourceWindowsTpm                    string = "windows.tpm"
-	ResourceWindowsAuditPolicy            string = "windows.auditPolicy"
-	ResourceWindowsAuditPolicySubcategory string = "windows.auditPolicy.subcategory"
-	ResourceWindowsFirewall               string = "windows.firewall"
-	ResourceWindowsFirewallProfile        string = "windows.firewall.profile"
-	ResourceWindowsFirewallRule           string = "windows.firewall.rule"
-	ResourceWindowsBitlocker              string = "windows.bitlocker"
-	ResourceWindowsBitlockerVolume        string = "windows.bitlocker.volume"
-	ResourceWindowsSecurity               string = "windows.security"
-	ResourceWindowsSecurityProduct        string = "windows.security.product"
-	ResourceWindowsSecurityHealth         string = "windows.security.health"
-	ResourceCloud                         string = "cloud"
-	ResourceCloudInstance                 string = "cloudInstance"
-	ResourceIpAddress                     string = "ipAddress"
-	ResourceNetwork                       string = "network"
-	ResourceNetworkInterface              string = "networkInterface"
-	ResourceNetworkRoutes                 string = "networkRoutes"
-	ResourceNetworkRoute                  string = "networkRoute"
-	ResourceChrome                        string = "chrome"
-	ResourceChromeExtension               string = "chrome.extension"
-	ResourceChromeExtensionContentScript  string = "chrome.extensionContentScript"
-	ResourceFirefox                       string = "firefox"
-	ResourceFirefoxAddon                  string = "firefox.addon"
-	ResourceUsb                           string = "usb"
-	ResourceUsbDevice                     string = "usb.device"
-	ResourceCrontab                       string = "crontab"
-	ResourceCrontabEntry                  string = "crontab.entry"
-	ResourceVscode                        string = "vscode"
-	ResourceVscodeExtension               string = "vscode.extension"
-	ResourceLogrotate                     string = "logrotate"
-	ResourceLogrotateEntry                string = "logrotate.entry"
-	ResourceLvm                           string = "lvm"
-	ResourceLvmPhysicalVolume             string = "lvm.physicalVolume"
-	ResourceLvmVolumeGroup                string = "lvm.volumeGroup"
-	ResourceLvmLogicalVolume              string = "lvm.logicalVolume"
-	ResourceMdadm                         string = "mdadm"
-	ResourceMdadmArray                    string = "mdadm.array"
-	ResourceMdadmDevice                   string = "mdadm.device"
-	ResourceZfs                           string = "zfs"
-	ResourceZfsPool                       string = "zfs.pool"
-	ResourceZfsPoolVdev                   string = "zfs.pool.vdev"
-	ResourceZfsDataset                    string = "zfs.dataset"
-	ResourceAi                            string = "ai"
-	ResourceAiModel                       string = "ai.model"
-	ResourceClaudeCode                    string = "claude.code"
-	ResourceClaudeCodePlugin              string = "claude.code.plugin"
-	ResourceClaudeCodeSkill               string = "claude.code.skill"
-	ResourceClaudeCodeProject             string = "claude.code.project"
-	ResourceClaudeCodeMcpServer           string = "claude.code.mcpServer"
-	ResourceOpenaiCodex                   string = "openai.codex"
-	ResourceOpenaiCodexPlugin             string = "openai.codex.plugin"
-	ResourceOpenaiCodexSkill              string = "openai.codex.skill"
-	ResourceOpenaiCodexMcpServer          string = "openai.codex.mcpServer"
-	ResourceOpenaiCodexConnector          string = "openai.codex.connector"
-	ResourceCursor                        string = "cursor"
-	ResourceCursorMcpServer               string = "cursor.mcpServer"
-	ResourceCursorRule                    string = "cursor.rule"
-	ResourceCursorSkill                   string = "cursor.skill"
-	ResourceGithubCopilot                 string = "github.copilot"
-	ResourceGithubCopilotAccount          string = "github.copilot.account"
-	ResourceGithubCopilotMcpServer        string = "github.copilot.mcpServer"
-	ResourceGithubCopilotSkill            string = "github.copilot.skill"
-	ResourceGoose                         string = "goose"
-	ResourceGooseExtension                string = "goose.extension"
-	ResourceGooseSkill                    string = "goose.skill"
-	ResourceGemini                        string = "gemini"
-	ResourceGeminiMcpServer               string = "gemini.mcpServer"
-	ResourceGeminiSkill                   string = "gemini.skill"
-	ResourceWindsurf                      string = "windsurf"
-	ResourceWindsurfRule                  string = "windsurf.rule"
-	ResourceWindsurfMcpServer             string = "windsurf.mcpServer"
-	ResourceWindsurfSkill                 string = "windsurf.skill"
-	ResourceZed                           string = "zed"
-	ResourceRoo                           string = "roo"
-	ResourceRooSkill                      string = "roo.skill"
-	ResourceCline                         string = "cline"
-	ResourceClineSkill                    string = "cline.skill"
-	ResourceKiro                          string = "kiro"
-	ResourceKiroSkill                     string = "kiro.skill"
-	ResourceContinuedev                   string = "continuedev"
-	ResourceContinuedevSkill              string = "continuedev.skill"
-	ResourceTrae                          string = "trae"
-	ResourceTraeSkill                     string = "trae.skill"
-	ResourceOpencode                      string = "opencode"
-	ResourceOpencodeSkill                 string = "opencode.skill"
-	ResourcePi                            string = "pi"
-	ResourcePiSkill                       string = "pi.skill"
-	ResourceMistralVibe                   string = "mistral.vibe"
-	ResourceMistralVibeSkill              string = "mistral.vibe.skill"
-	ResourceAntigravity                   string = "antigravity"
-	ResourceAntigravitySkill              string = "antigravity.skill"
-	ResourceIbmBob                        string = "ibm.bob"
-	ResourceIbmBobSkill                   string = "ibm.bob.skill"
-	ResourceOpenclaw                      string = "openclaw"
-	ResourceOpenclawSkill                 string = "openclaw.skill"
-	ResourceSnowflakeCortex               string = "snowflake.cortex"
-	ResourceSnowflakeCortexSkill          string = "snowflake.cortex.skill"
-	ResourceJunie                         string = "junie"
-	ResourceJunieSkill                    string = "junie.skill"
-	ResourceAugment                       string = "augment"
-	ResourceAugmentSkill                  string = "augment.skill"
-	ResourceWarp                          string = "warp"
-	ResourceWarpSkill                     string = "warp.skill"
-	ResourceKilocode                      string = "kilocode"
-	ResourceKilocodeSkill                 string = "kilocode.skill"
-	ResourceOpenhands                     string = "openhands"
-	ResourceOpenhandsSkill                string = "openhands.skill"
-	ResourceQwenCode                      string = "qwen.code"
-	ResourceQwenCodeSkill                 string = "qwen.code.skill"
+	ResourceAsset                                         string = "asset"
+	ResourceAssetEol                                      string = "asset.eol"
+	ResourceMondooEol                                     string = "mondoo.eol"
+	ResourceVulnmgmt                                      string = "vulnmgmt"
+	ResourceVulnCve                                       string = "vuln.cve"
+	ResourceVulnAdvisory                                  string = "vuln.advisory"
+	ResourceVulnPackage                                   string = "vuln.package"
+	ResourcePlatformAdvisories                            string = "platform.advisories"
+	ResourcePlatformCves                                  string = "platform.cves"
+	ResourceAuditCvss                                     string = "audit.cvss"
+	ResourceAuditAdvisory                                 string = "audit.advisory"
+	ResourceAuditCve                                      string = "audit.cve"
+	ResourceMachine                                       string = "machine"
+	ResourceMachineBios                                   string = "machine.bios"
+	ResourceMachineSystem                                 string = "machine.system"
+	ResourceMachineBaseboard                              string = "machine.baseboard"
+	ResourceMachineChassis                                string = "machine.chassis"
+	ResourceMachineCpu                                    string = "machine.cpu"
+	ResourceMachineSecureboot                             string = "machine.secureboot"
+	ResourceOs                                            string = "os"
+	ResourceOsDate                                        string = "os.date"
+	ResourceOsUpdate                                      string = "os.update"
+	ResourceOsBase                                        string = "os.base"
+	ResourceOsUnix                                        string = "os.unix"
+	ResourceOsLinux                                       string = "os.linux"
+	ResourceOsRootCertificates                            string = "os.rootCertificates"
+	ResourceCommand                                       string = "command"
+	ResourcePowershell                                    string = "powershell"
+	ResourceFile                                          string = "file"
+	ResourceFileContext                                   string = "file.context"
+	ResourceFilePermissions                               string = "file.permissions"
+	ResourceFiles                                         string = "files"
+	ResourceFilesFind                                     string = "files.find"
+	ResourceParseIni                                      string = "parse.ini"
+	ResourceParseJson                                     string = "parse.json"
+	ResourceParseXml                                      string = "parse.xml"
+	ResourceParsePlist                                    string = "parse.plist"
+	ResourceParseYaml                                     string = "parse.yaml"
+	ResourceParseCertificates                             string = "parse.certificates"
+	ResourceParseOpenpgp                                  string = "parse.openpgp"
+	ResourceUser                                          string = "user"
+	ResourcePrivatekey                                    string = "privatekey"
+	ResourceUsers                                         string = "users"
+	ResourceAuthorizedkeys                                string = "authorizedkeys"
+	ResourceAuthorizedkeysEntry                           string = "authorizedkeys.entry"
+	ResourceGroup                                         string = "group"
+	ResourceGroups                                        string = "groups"
+	ResourcePackage                                       string = "package"
+	ResourcePkgFileInfo                                   string = "pkgFileInfo"
+	ResourcePackages                                      string = "packages"
+	ResourcePamConf                                       string = "pam.conf"
+	ResourcePamConfServiceEntry                           string = "pam.conf.serviceEntry"
+	ResourcePamConfService                                string = "pam.conf.service"
+	ResourcePamModule                                     string = "pam.module"
+	ResourceSshd                                          string = "sshd"
+	ResourceSshdConfig                                    string = "sshd.config"
+	ResourceSshdConfigMatchBlock                          string = "sshd.config.matchBlock"
+	ResourceInetd                                         string = "inetd"
+	ResourceInetdConfig                                   string = "inetd.config"
+	ResourceInetdConfigEntry                              string = "inetd.config.entry"
+	ResourceSnmpd                                         string = "snmpd"
+	ResourceSnmpdConfig                                   string = "snmpd.config"
+	ResourceAuditdConfig                                  string = "auditd.config"
+	ResourceAuditdRules                                   string = "auditd.rules"
+	ResourceAuditdRule                                    string = "auditd.rule"
+	ResourceAuditdRuleControl                             string = "auditd.rule.control"
+	ResourceAuditdRuleFile                                string = "auditd.rule.file"
+	ResourceAuditdRuleSyscall                             string = "auditd.rule.syscall"
+	ResourceApache2                                       string = "apache2"
+	ResourceApache2Conf                                   string = "apache2.conf"
+	ResourceApache2ConfEnvvars                            string = "apache2.conf.envvars"
+	ResourceApache2ConfModule                             string = "apache2.conf.module"
+	ResourceApache2ConfVirtualHost                        string = "apache2.conf.virtualHost"
+	ResourceApache2ConfDirectory                          string = "apache2.conf.directory"
+	ResourceApache2ConfLocation                           string = "apache2.conf.location"
+	ResourceNginx                                         string = "nginx"
+	ResourceNginxConf                                     string = "nginx.conf"
+	ResourceNginxConfServer                               string = "nginx.conf.server"
+	ResourceNginxConfUpstream                             string = "nginx.conf.upstream"
+	ResourceNginxConfLocation                             string = "nginx.conf.location"
+	ResourceSquid                                         string = "squid"
+	ResourceSquidConf                                     string = "squid.conf"
+	ResourceSquidConfListen                               string = "squid.conf.listen"
+	ResourceSquidConfAcl                                  string = "squid.conf.acl"
+	ResourceSquidConfAccessRule                           string = "squid.conf.accessRule"
+	ResourceSquidConfCachePeer                            string = "squid.conf.cachePeer"
+	ResourceSquidConfCacheDir                             string = "squid.conf.cacheDir"
+	ResourceSquidConfRefreshPattern                       string = "squid.conf.refreshPattern"
+	ResourceSquidConfAccessLog                            string = "squid.conf.accessLog"
+	ResourceHaproxy                                       string = "haproxy"
+	ResourceHaproxyConfig                                 string = "haproxy.config"
+	ResourceHaproxyConfigSection                          string = "haproxy.config.section"
+	ResourceHaproxyConfigGlobal                           string = "haproxy.config.global"
+	ResourceHaproxyConfigDefaultsSection                  string = "haproxy.config.defaultsSection"
+	ResourceHaproxyConfigFrontend                         string = "haproxy.config.frontend"
+	ResourceHaproxyConfigBackend                          string = "haproxy.config.backend"
+	ResourceHaproxyConfigListen                           string = "haproxy.config.listen"
+	ResourceHaproxyConfigBind                             string = "haproxy.config.bind"
+	ResourceHaproxyConfigServer                           string = "haproxy.config.server"
+	ResourceHaproxyConfigResolversSection                 string = "haproxy.config.resolversSection"
+	ResourceHaproxyConfigUserlist                         string = "haproxy.config.userlist"
+	ResourceHaproxyConfigPeersSection                     string = "haproxy.config.peersSection"
+	ResourceJournaldConfig                                string = "journald.config"
+	ResourceJournaldConfigSection                         string = "journald.config.section"
+	ResourceJournaldConfigSectionParam                    string = "journald.config.section.param"
+	ResourceService                                       string = "service"
+	ResourceServices                                      string = "services"
+	ResourceSystemdTimer                                  string = "systemd.timer"
+	ResourceSystemdTimers                                 string = "systemd.timers"
+	ResourceSystemdSocket                                 string = "systemd.socket"
+	ResourceSystemdSockets                                string = "systemd.sockets"
+	ResourceSystemdTarget                                 string = "systemd.target"
+	ResourceSystemdTargets                                string = "systemd.targets"
+	ResourceSystemdResolved                               string = "systemd.resolved"
+	ResourceSystemdTimesyncd                              string = "systemd.timesyncd"
+	ResourceKernel                                        string = "kernel"
+	ResourceKernelModule                                  string = "kernel.module"
+	ResourceKernelCmdline                                 string = "kernel.cmdline"
+	ResourceKernelTaint                                   string = "kernel.taint"
+	ResourceKernelLockdown                                string = "kernel.lockdown"
+	ResourceKernelAslr                                    string = "kernel.aslr"
+	ResourceCgroups                                       string = "cgroups"
+	ResourceCgroup                                        string = "cgroup"
+	ResourceDocker                                        string = "docker"
+	ResourceDockerFile                                    string = "docker.file"
+	ResourceDockerFileStage                               string = "docker.file.stage"
+	ResourceDockerFileOci                                 string = "docker.file.oci"
+	ResourceDockerFileArg                                 string = "docker.file.arg"
+	ResourceDockerFileEnv                                 string = "docker.file.env"
+	ResourceDockerFileUser                                string = "docker.file.user"
+	ResourceDockerFileExpose                              string = "docker.file.expose"
+	ResourceDockerFileFrom                                string = "docker.file.from"
+	ResourceDockerFileRun                                 string = "docker.file.run"
+	ResourceDockerFileRunCommand                          string = "docker.file.run.command"
+	ResourceDockerFileRunMount                            string = "docker.file.run.mount"
+	ResourceDockerFileAdd                                 string = "docker.file.add"
+	ResourceDockerFileCopy                                string = "docker.file.copy"
+	ResourceDockerFileHealthcheck                         string = "docker.file.healthcheck"
+	ResourceDockerFileVolume                              string = "docker.file.volume"
+	ResourceDockerFileShell                               string = "docker.file.shell"
+	ResourceDockerFileWorkdir                             string = "docker.file.workdir"
+	ResourceDockerFileStopsignal                          string = "docker.file.stopsignal"
+	ResourceDockerFileOnbuild                             string = "docker.file.onbuild"
+	ResourceDockerImage                                   string = "docker.image"
+	ResourceDockerContainer                               string = "docker.container"
+	ResourceContainerd                                    string = "containerd"
+	ResourceContainerdContainer                           string = "containerd.container"
+	ResourceIptables                                      string = "iptables"
+	ResourceIp6tables                                     string = "ip6tables"
+	ResourceIptablesTable                                 string = "iptables.table"
+	ResourceIptablesChain                                 string = "iptables.chain"
+	ResourceIptablesEntry                                 string = "iptables.entry"
+	ResourceNftables                                      string = "nftables"
+	ResourceNftablesTable                                 string = "nftables.table"
+	ResourceNftablesChain                                 string = "nftables.chain"
+	ResourceNftablesRule                                  string = "nftables.rule"
+	ResourceNftablesSet                                   string = "nftables.set"
+	ResourceUfw                                           string = "ufw"
+	ResourceUfwRule                                       string = "ufw.rule"
+	ResourceUfwApplication                                string = "ufw.application"
+	ResourceFirewalld                                     string = "firewalld"
+	ResourceFirewalldZone                                 string = "firewalld.zone"
+	ResourceFirewalldRichrule                             string = "firewalld.richrule"
+	ResourceFstab                                         string = "fstab"
+	ResourceFstabEntry                                    string = "fstab.entry"
+	ResourceGrubConfig                                    string = "grub.config"
+	ResourceGrubConfigEntry                               string = "grub.config.entry"
+	ResourceSysrc                                         string = "sysrc"
+	ResourceSysrcEntry                                    string = "sysrc.entry"
+	ResourceProcess                                       string = "process"
+	ResourceProcesses                                     string = "processes"
+	ResourcePort                                          string = "port"
+	ResourcePorts                                         string = "ports"
+	ResourceAuditpol                                      string = "auditpol"
+	ResourceAuditpolEntry                                 string = "auditpol.entry"
+	ResourceSecpol                                        string = "secpol"
+	ResourceNtpConf                                       string = "ntp.conf"
+	ResourceChronyConf                                    string = "chrony.conf"
+	ResourcePostfix                                       string = "postfix"
+	ResourcePostfixService                                string = "postfix.service"
+	ResourceExim                                          string = "exim"
+	ResourceRsyslogConf                                   string = "rsyslog.conf"
+	ResourceRsyslogModule                                 string = "rsyslog.module"
+	ResourceRsyslogInput                                  string = "rsyslog.input"
+	ResourceRsyslogAction                                 string = "rsyslog.action"
+	ResourceRsyslogRule                                   string = "rsyslog.rule"
+	ResourceLogindefs                                     string = "logindefs"
+	ResourceLimits                                        string = "limits"
+	ResourceLimitsEntry                                   string = "limits.entry"
+	ResourceSudo                                          string = "sudo"
+	ResourceSudoPlugin                                    string = "sudo.plugin"
+	ResourceSudoValidation                                string = "sudo.validation"
+	ResourceSudoValidationError                           string = "sudo.validation.error"
+	ResourceSudoers                                       string = "sudoers"
+	ResourceSudoersUserSpec                               string = "sudoers.userSpec"
+	ResourceSudoersDefault                                string = "sudoers.default"
+	ResourceSudoersAlias                                  string = "sudoers.alias"
+	ResourceLsblk                                         string = "lsblk"
+	ResourceLsblkEntry                                    string = "lsblk.entry"
+	ResourceLuks                                          string = "luks"
+	ResourceLuksVolume                                    string = "luks.volume"
+	ResourceLuksVolumeCipher                              string = "luks.volume.cipher"
+	ResourceLuksKeyslot                                   string = "luks.keyslot"
+	ResourceApparmor                                      string = "apparmor"
+	ResourceApparmorProfile                               string = "apparmor.profile"
+	ResourceApparmorProcess                               string = "apparmor.process"
+	ResourceSelinux                                       string = "selinux"
+	ResourceSelinuxBoolean                                string = "selinux.boolean"
+	ResourceSelinuxModule                                 string = "selinux.module"
+	ResourceModprobe                                      string = "modprobe"
+	ResourceModprobeInstall                               string = "modprobe.install"
+	ResourceModprobeRemove                                string = "modprobe.remove"
+	ResourceModprobeBlacklist                             string = "modprobe.blacklist"
+	ResourceModprobeOption                                string = "modprobe.option"
+	ResourceModprobeAlias                                 string = "modprobe.alias"
+	ResourceModprobeSoftdep                               string = "modprobe.softdep"
+	ResourceMount                                         string = "mount"
+	ResourceNfs                                           string = "nfs"
+	ResourceNfsExport                                     string = "nfs.export"
+	ResourceNfsMount                                      string = "nfs.mount"
+	ResourceMountPoint                                    string = "mount.point"
+	ResourceShadow                                        string = "shadow"
+	ResourceShadowEntry                                   string = "shadow.entry"
+	ResourceYum                                           string = "yum"
+	ResourceYumRepo                                       string = "yum.repo"
+	ResourceYumConfig                                     string = "yum.config"
+	ResourceApt                                           string = "apt"
+	ResourceAptRepo                                       string = "apt.repo"
+	ResourceRegistrykey                                   string = "registrykey"
+	ResourceRegistrykeyProperty                           string = "registrykey.property"
+	ResourceContainerImage                                string = "container.image"
+	ResourceContainerRepository                           string = "container.repository"
+	ResourceKubelet                                       string = "kubelet"
+	ResourcePython                                        string = "python"
+	ResourcePythonPackage                                 string = "python.package"
+	ResourceNpmPackages                                   string = "npm.packages"
+	ResourceNpmPackage                                    string = "npm.package"
+	ResourceGoPackages                                    string = "go.packages"
+	ResourceGoPackage                                     string = "go.package"
+	ResourceJavaPackages                                  string = "java.packages"
+	ResourceJavaPackage                                   string = "java.package"
+	ResourceRustPackages                                  string = "rust.packages"
+	ResourceRustPackage                                   string = "rust.package"
+	ResourceDotnetPackages                                string = "dotnet.packages"
+	ResourceDotnetPackage                                 string = "dotnet.package"
+	ResourcePhpPackages                                   string = "php.packages"
+	ResourcePhpPackage                                    string = "php.package"
+	ResourceGithubactionsPackages                         string = "githubactions.packages"
+	ResourceGithubactionsPackage                          string = "githubactions.package"
+	ResourceSwiftPackages                                 string = "swift.packages"
+	ResourceSwiftPackage                                  string = "swift.package"
+	ResourceTerraformPackages                             string = "terraform.packages"
+	ResourceTerraformPackage                              string = "terraform.package"
+	ResourceHomebrewPackages                              string = "homebrew.packages"
+	ResourceHomebrewPackage                               string = "homebrew.package"
+	ResourceChocolateyPackages                            string = "chocolatey.packages"
+	ResourceChocolateyPackage                             string = "chocolatey.package"
+	ResourceJenkinsPackages                               string = "jenkins.packages"
+	ResourceJenkinsPackage                                string = "jenkins.package"
+	ResourceWordpressPackages                             string = "wordpress.packages"
+	ResourceWordpressPackage                              string = "wordpress.package"
+	ResourceRubyPackages                                  string = "ruby.packages"
+	ResourceRubyPackage                                   string = "ruby.package"
+	ResourceDartPackages                                  string = "dart.packages"
+	ResourceDartPackage                                   string = "dart.package"
+	ResourceHaskellPackages                               string = "haskell.packages"
+	ResourceHaskellPackage                                string = "haskell.package"
+	ResourceElixirPackages                                string = "elixir.packages"
+	ResourceElixirPackage                                 string = "elixir.package"
+	ResourceErlangPackages                                string = "erlang.packages"
+	ResourceErlangPackage                                 string = "erlang.package"
+	ResourcePrologPackages                                string = "prolog.packages"
+	ResourcePrologPackage                                 string = "prolog.package"
+	ResourceCondaPackages                                 string = "conda.packages"
+	ResourceCondaPackage                                  string = "conda.package"
+	ResourceJuliaPackages                                 string = "julia.packages"
+	ResourceJuliaPackage                                  string = "julia.package"
+	ResourceRPackages                                     string = "r.packages"
+	ResourceRPackage                                      string = "r.package"
+	ResourceLuaPackages                                   string = "lua.packages"
+	ResourceLuaPackage                                    string = "lua.package"
+	ResourceMacos                                         string = "macos"
+	ResourceMacosHardware                                 string = "macos.hardware"
+	ResourceMacosAlf                                      string = "macos.alf"
+	ResourceMacosFirewall                                 string = "macos.firewall"
+	ResourceMacosFirewallApp                              string = "macos.firewall.app"
+	ResourceMacosFilevault                                string = "macos.filevault"
+	ResourceMacosGatekeeper                               string = "macos.gatekeeper"
+	ResourceMacosSip                                      string = "macos.sip"
+	ResourceMacosXprotect                                 string = "macos.xprotect"
+	ResourceMacosSharing                                  string = "macos.sharing"
+	ResourceMacosMdm                                      string = "macos.mdm"
+	ResourceMacosProfiles                                 string = "macos.profiles"
+	ResourceMacosProfile                                  string = "macos.profile"
+	ResourceMacosProfilePayload                           string = "macos.profile.payload"
+	ResourceMacosSoftwareupdate                           string = "macos.softwareupdate"
+	ResourceMacosSoftwareupdateEntry                      string = "macos.softwareupdate.entry"
+	ResourceMacosTimemachine                              string = "macos.timemachine"
+	ResourceMacosSystemsetup                              string = "macos.systemsetup"
+	ResourceOpenBSMAudit                                  string = "openBSMAudit"
+	ResourceWindows                                       string = "windows"
+	ResourceWindowsExploitProtection                      string = "windows.exploitProtection"
+	ResourceWindowsExploitProtectionDep                   string = "windows.exploitProtection.dep"
+	ResourceWindowsExploitProtectionAslr                  string = "windows.exploitProtection.aslr"
+	ResourceWindowsExploitProtectionCfg                   string = "windows.exploitProtection.cfg"
+	ResourceWindowsExploitProtectionSehop                 string = "windows.exploitProtection.sehop"
+	ResourceWindowsExploitProtectionHeap                  string = "windows.exploitProtection.heap"
+	ResourceWindowsSmartScreen                            string = "windows.smartScreen"
+	ResourceWindowsScheduledTask                          string = "windows.scheduledTask"
+	ResourceWindowsScheduledTaskPrincipal                 string = "windows.scheduledTask.principal"
+	ResourceWindowsScheduledTaskAction                    string = "windows.scheduledTask.action"
+	ResourceWindowsScheduledTaskTrigger                   string = "windows.scheduledTask.trigger"
+	ResourceWindowsScheduledTaskSettings                  string = "windows.scheduledTask.settings"
+	ResourceMacosSystemExtension                          string = "macos.systemExtension"
+	ResourceSafari                                        string = "safari"
+	ResourceSafariExtension                               string = "safari.extension"
+	ResourceLaunchd                                       string = "launchd"
+	ResourceLaunchdJob                                    string = "launchd.job"
+	ResourceWindowsHotfix                                 string = "windows.hotfix"
+	ResourceWindowsUpdate                                 string = "windows.update"
+	ResourceWindowsUpdateEntry                            string = "windows.update.entry"
+	ResourceWindowsUpdateConfig                           string = "windows.update.config"
+	ResourceWindowsUpdatePolicy                           string = "windows.update.policy"
+	ResourceWindowsServerFeature                          string = "windows.serverFeature"
+	ResourceWindowsOptionalFeature                        string = "windows.optionalFeature"
+	ResourceWindowsEventlog                               string = "windows.eventlog"
+	ResourceWindowsRdp                                    string = "windows.rdp"
+	ResourceWindowsWinrm                                  string = "windows.winrm"
+	ResourceWindowsWinrmClient                            string = "windows.winrm.client"
+	ResourceWindowsWinrmService                           string = "windows.winrm.service"
+	ResourceWindowsDeviceGuard                            string = "windows.deviceGuard"
+	ResourceWindowsLsa                                    string = "windows.lsa"
+	ResourceWindowsLsaNtlm                                string = "windows.lsa.ntlm"
+	ResourceWindowsLsaSecureChannel                       string = "windows.lsa.secureChannel"
+	ResourceWindowsSpooler                                string = "windows.spooler"
+	ResourceWindowsSpoolerPointAndPrint                   string = "windows.spooler.pointAndPrint"
+	ResourceWindowsSpoolerRpc                             string = "windows.spooler.rpc"
+	ResourceWindowsSpoolerIpp                             string = "windows.spooler.ipp"
+	ResourceWindowsTelemetry                              string = "windows.telemetry"
+	ResourceWindowsPowershell                             string = "windows.powershell"
+	ResourceWindowsPowershellScriptBlockLogging           string = "windows.powershell.scriptBlockLogging"
+	ResourceWindowsPowershellTranscription                string = "windows.powershell.transcription"
+	ResourceWindowsTpm                                    string = "windows.tpm"
+	ResourceWindowsAuditPolicy                            string = "windows.auditPolicy"
+	ResourceWindowsAuditPolicySubcategory                 string = "windows.auditPolicy.subcategory"
+	ResourceWindowsFirewall                               string = "windows.firewall"
+	ResourceWindowsFirewallProfile                        string = "windows.firewall.profile"
+	ResourceWindowsFirewallRule                           string = "windows.firewall.rule"
+	ResourceWindowsSmb                                    string = "windows.smb"
+	ResourceWindowsSmbServerConfiguration                 string = "windows.smb.serverConfiguration"
+	ResourceWindowsSmbClientConfiguration                 string = "windows.smb.clientConfiguration"
+	ResourceWindowsSmbShare                               string = "windows.smb.share"
+	ResourceWindowsSmbSession                             string = "windows.smb.session"
+	ResourceWindowsSmbConnection                          string = "windows.smb.connection"
+	ResourceWindowsBitlocker                              string = "windows.bitlocker"
+	ResourceWindowsBitlockerPolicy                        string = "windows.bitlocker.policy"
+	ResourceWindowsBitlockerPolicyDriveSettings           string = "windows.bitlocker.policy.driveSettings"
+	ResourceWindowsBitlockerVolume                        string = "windows.bitlocker.volume"
+	ResourceWindowsSecurity                               string = "windows.security"
+	ResourceWindowsSecurityProduct                        string = "windows.security.product"
+	ResourceWindowsSecurityHealth                         string = "windows.security.health"
+	ResourceWindowsDefender                               string = "windows.defender"
+	ResourceWindowsDefenderStatus                         string = "windows.defender.status"
+	ResourceWindowsDefenderPreferences                    string = "windows.defender.preferences"
+	ResourceWindowsDefenderScanSettings                   string = "windows.defender.scanSettings"
+	ResourceWindowsDefenderRealTimeSettings               string = "windows.defender.realTimeSettings"
+	ResourceWindowsDefenderCloudSettings                  string = "windows.defender.cloudSettings"
+	ResourceWindowsDefenderSignatureSettings              string = "windows.defender.signatureSettings"
+	ResourceWindowsDefenderThreatActionSettings           string = "windows.defender.threatActionSettings"
+	ResourceWindowsDefenderThreatIdAction                 string = "windows.defender.threatIdAction"
+	ResourceWindowsDefenderControlledFolderAccess         string = "windows.defender.controlledFolderAccess"
+	ResourceWindowsDefenderNetworkProtectionSettings      string = "windows.defender.networkProtectionSettings"
+	ResourceWindowsDefenderBehavioralNetworkBlockSettings string = "windows.defender.behavioralNetworkBlockSettings"
+	ResourceWindowsDefenderLocalSettingOverrides          string = "windows.defender.localSettingOverrides"
+	ResourceWindowsDefenderRemediationSettings            string = "windows.defender.remediationSettings"
+	ResourceWindowsDefenderExclusions                     string = "windows.defender.exclusions"
+	ResourceWindowsDefenderAsrRule                        string = "windows.defender.asrRule"
+	ResourceWindowsDefenderThreat                         string = "windows.defender.threat"
+	ResourceWindowsDefenderThreatDetection                string = "windows.defender.threatDetection"
+	ResourceCloud                                         string = "cloud"
+	ResourceCloudInstance                                 string = "cloudInstance"
+	ResourceIpAddress                                     string = "ipAddress"
+	ResourceNetwork                                       string = "network"
+	ResourceNetworkNeighbor                               string = "networkNeighbor"
+	ResourceNetworkInterface                              string = "networkInterface"
+	ResourceNetworkRoutes                                 string = "networkRoutes"
+	ResourceNetworkRoute                                  string = "networkRoute"
+	ResourceChrome                                        string = "chrome"
+	ResourceChromeExtension                               string = "chrome.extension"
+	ResourceChromeExtensionContentScript                  string = "chrome.extensionContentScript"
+	ResourceFirefox                                       string = "firefox"
+	ResourceFirefoxAddon                                  string = "firefox.addon"
+	ResourceUsb                                           string = "usb"
+	ResourceUsbDevice                                     string = "usb.device"
+	ResourceCrontab                                       string = "crontab"
+	ResourceCrontabEntry                                  string = "crontab.entry"
+	ResourceVscode                                        string = "vscode"
+	ResourceVscodeExtension                               string = "vscode.extension"
+	ResourceLogrotate                                     string = "logrotate"
+	ResourceLogrotateEntry                                string = "logrotate.entry"
+	ResourceLvm                                           string = "lvm"
+	ResourceLvmPhysicalVolume                             string = "lvm.physicalVolume"
+	ResourceLvmVolumeGroup                                string = "lvm.volumeGroup"
+	ResourceLvmLogicalVolume                              string = "lvm.logicalVolume"
+	ResourceMdadm                                         string = "mdadm"
+	ResourceMdadmArray                                    string = "mdadm.array"
+	ResourceMdadmDevice                                   string = "mdadm.device"
+	ResourceZfs                                           string = "zfs"
+	ResourceZfsPool                                       string = "zfs.pool"
+	ResourceZfsPoolVdev                                   string = "zfs.pool.vdev"
+	ResourceZfsDataset                                    string = "zfs.dataset"
+	ResourceAi                                            string = "ai"
+	ResourceAiModel                                       string = "ai.model"
+	ResourceClaudeCode                                    string = "claude.code"
+	ResourceClaudeCodePlugin                              string = "claude.code.plugin"
+	ResourceClaudeCodeSkill                               string = "claude.code.skill"
+	ResourceClaudeCodeProject                             string = "claude.code.project"
+	ResourceClaudeCodeMcpServer                           string = "claude.code.mcpServer"
+	ResourceOpenaiCodex                                   string = "openai.codex"
+	ResourceOpenaiCodexPlugin                             string = "openai.codex.plugin"
+	ResourceOpenaiCodexSkill                              string = "openai.codex.skill"
+	ResourceOpenaiCodexMcpServer                          string = "openai.codex.mcpServer"
+	ResourceOpenaiCodexConnector                          string = "openai.codex.connector"
+	ResourceCursor                                        string = "cursor"
+	ResourceCursorMcpServer                               string = "cursor.mcpServer"
+	ResourceCursorRule                                    string = "cursor.rule"
+	ResourceCursorSkill                                   string = "cursor.skill"
+	ResourceGithubCopilot                                 string = "github.copilot"
+	ResourceGithubCopilotAccount                          string = "github.copilot.account"
+	ResourceGithubCopilotMcpServer                        string = "github.copilot.mcpServer"
+	ResourceGithubCopilotSkill                            string = "github.copilot.skill"
+	ResourceGoose                                         string = "goose"
+	ResourceGooseExtension                                string = "goose.extension"
+	ResourceGooseSkill                                    string = "goose.skill"
+	ResourceGemini                                        string = "gemini"
+	ResourceGeminiMcpServer                               string = "gemini.mcpServer"
+	ResourceGeminiSkill                                   string = "gemini.skill"
+	ResourceWindsurf                                      string = "windsurf"
+	ResourceWindsurfRule                                  string = "windsurf.rule"
+	ResourceWindsurfMcpServer                             string = "windsurf.mcpServer"
+	ResourceWindsurfSkill                                 string = "windsurf.skill"
+	ResourceZed                                           string = "zed"
+	ResourceRoo                                           string = "roo"
+	ResourceRooSkill                                      string = "roo.skill"
+	ResourceCline                                         string = "cline"
+	ResourceClineSkill                                    string = "cline.skill"
+	ResourceKiro                                          string = "kiro"
+	ResourceKiroSkill                                     string = "kiro.skill"
+	ResourceContinuedev                                   string = "continuedev"
+	ResourceContinuedevSkill                              string = "continuedev.skill"
+	ResourceTrae                                          string = "trae"
+	ResourceTraeSkill                                     string = "trae.skill"
+	ResourceOpencode                                      string = "opencode"
+	ResourceOpencodeSkill                                 string = "opencode.skill"
+	ResourcePi                                            string = "pi"
+	ResourcePiSkill                                       string = "pi.skill"
+	ResourceMistralVibe                                   string = "mistral.vibe"
+	ResourceMistralVibeSkill                              string = "mistral.vibe.skill"
+	ResourceAntigravity                                   string = "antigravity"
+	ResourceAntigravitySkill                              string = "antigravity.skill"
+	ResourceIbmBob                                        string = "ibm.bob"
+	ResourceIbmBobSkill                                   string = "ibm.bob.skill"
+	ResourceOpenclaw                                      string = "openclaw"
+	ResourceOpenclawSkill                                 string = "openclaw.skill"
+	ResourceSnowflakeCortex                               string = "snowflake.cortex"
+	ResourceSnowflakeCortexSkill                          string = "snowflake.cortex.skill"
+	ResourceJunie                                         string = "junie"
+	ResourceJunieSkill                                    string = "junie.skill"
+	ResourceAugment                                       string = "augment"
+	ResourceAugmentSkill                                  string = "augment.skill"
+	ResourceWarp                                          string = "warp"
+	ResourceWarpSkill                                     string = "warp.skill"
+	ResourceKilocode                                      string = "kilocode"
+	ResourceKilocodeSkill                                 string = "kilocode.skill"
+	ResourceOpenhands                                     string = "openhands"
+	ResourceOpenhandsSkill                                string = "openhands.skill"
+	ResourceQwenCode                                      string = "qwen.code"
+	ResourceQwenCodeSkill                                 string = "qwen.code.skill"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -1654,6 +1704,34 @@ func init() {
 			// to override args, implement: initWindows(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindows,
 		},
+		"windows.exploitProtection": {
+			// to override args, implement: initWindowsExploitProtection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsExploitProtection,
+		},
+		"windows.exploitProtection.dep": {
+			// to override args, implement: initWindowsExploitProtectionDep(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsExploitProtectionDep,
+		},
+		"windows.exploitProtection.aslr": {
+			// to override args, implement: initWindowsExploitProtectionAslr(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsExploitProtectionAslr,
+		},
+		"windows.exploitProtection.cfg": {
+			// to override args, implement: initWindowsExploitProtectionCfg(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsExploitProtectionCfg,
+		},
+		"windows.exploitProtection.sehop": {
+			// to override args, implement: initWindowsExploitProtectionSehop(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsExploitProtectionSehop,
+		},
+		"windows.exploitProtection.heap": {
+			// to override args, implement: initWindowsExploitProtectionHeap(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsExploitProtectionHeap,
+		},
+		"windows.smartScreen": {
+			// to override args, implement: initWindowsSmartScreen(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsSmartScreen,
+		},
 		"windows.scheduledTask": {
 			// to override args, implement: initWindowsScheduledTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsScheduledTask,
@@ -1710,6 +1788,10 @@ func init() {
 			// to override args, implement: initWindowsUpdateConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsUpdateConfig,
 		},
+		"windows.update.policy": {
+			// to override args, implement: initWindowsUpdatePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsUpdatePolicy,
+		},
 		"windows.serverFeature": {
 			Init:   initWindowsServerFeature,
 			Create: createWindowsServerFeature,
@@ -1725,6 +1807,66 @@ func init() {
 		"windows.rdp": {
 			// to override args, implement: initWindowsRdp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsRdp,
+		},
+		"windows.winrm": {
+			// to override args, implement: initWindowsWinrm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsWinrm,
+		},
+		"windows.winrm.client": {
+			// to override args, implement: initWindowsWinrmClient(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsWinrmClient,
+		},
+		"windows.winrm.service": {
+			// to override args, implement: initWindowsWinrmService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsWinrmService,
+		},
+		"windows.deviceGuard": {
+			// to override args, implement: initWindowsDeviceGuard(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDeviceGuard,
+		},
+		"windows.lsa": {
+			// to override args, implement: initWindowsLsa(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsLsa,
+		},
+		"windows.lsa.ntlm": {
+			// to override args, implement: initWindowsLsaNtlm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsLsaNtlm,
+		},
+		"windows.lsa.secureChannel": {
+			// to override args, implement: initWindowsLsaSecureChannel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsLsaSecureChannel,
+		},
+		"windows.spooler": {
+			// to override args, implement: initWindowsSpooler(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsSpooler,
+		},
+		"windows.spooler.pointAndPrint": {
+			// to override args, implement: initWindowsSpoolerPointAndPrint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsSpoolerPointAndPrint,
+		},
+		"windows.spooler.rpc": {
+			// to override args, implement: initWindowsSpoolerRpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsSpoolerRpc,
+		},
+		"windows.spooler.ipp": {
+			// to override args, implement: initWindowsSpoolerIpp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsSpoolerIpp,
+		},
+		"windows.telemetry": {
+			// to override args, implement: initWindowsTelemetry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsTelemetry,
+		},
+		"windows.powershell": {
+			// to override args, implement: initWindowsPowershell(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsPowershell,
+		},
+		"windows.powershell.scriptBlockLogging": {
+			// to override args, implement: initWindowsPowershellScriptBlockLogging(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsPowershellScriptBlockLogging,
+		},
+		"windows.powershell.transcription": {
+			// to override args, implement: initWindowsPowershellTranscription(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsPowershellTranscription,
 		},
 		"windows.tpm": {
 			// to override args, implement: initWindowsTpm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1750,9 +1892,41 @@ func init() {
 			// to override args, implement: initWindowsFirewallRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsFirewallRule,
 		},
+		"windows.smb": {
+			// to override args, implement: initWindowsSmb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsSmb,
+		},
+		"windows.smb.serverConfiguration": {
+			// to override args, implement: initWindowsSmbServerConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsSmbServerConfiguration,
+		},
+		"windows.smb.clientConfiguration": {
+			// to override args, implement: initWindowsSmbClientConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsSmbClientConfiguration,
+		},
+		"windows.smb.share": {
+			// to override args, implement: initWindowsSmbShare(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsSmbShare,
+		},
+		"windows.smb.session": {
+			// to override args, implement: initWindowsSmbSession(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsSmbSession,
+		},
+		"windows.smb.connection": {
+			// to override args, implement: initWindowsSmbConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsSmbConnection,
+		},
 		"windows.bitlocker": {
 			// to override args, implement: initWindowsBitlocker(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsBitlocker,
+		},
+		"windows.bitlocker.policy": {
+			// to override args, implement: initWindowsBitlockerPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsBitlockerPolicy,
+		},
+		"windows.bitlocker.policy.driveSettings": {
+			// to override args, implement: initWindowsBitlockerPolicyDriveSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsBitlockerPolicyDriveSettings,
 		},
 		"windows.bitlocker.volume": {
 			// to override args, implement: initWindowsBitlockerVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1770,6 +1944,78 @@ func init() {
 			Init:   initWindowsSecurityHealth,
 			Create: createWindowsSecurityHealth,
 		},
+		"windows.defender": {
+			// to override args, implement: initWindowsDefender(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDefender,
+		},
+		"windows.defender.status": {
+			// to override args, implement: initWindowsDefenderStatus(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDefenderStatus,
+		},
+		"windows.defender.preferences": {
+			// to override args, implement: initWindowsDefenderPreferences(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDefenderPreferences,
+		},
+		"windows.defender.scanSettings": {
+			// to override args, implement: initWindowsDefenderScanSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDefenderScanSettings,
+		},
+		"windows.defender.realTimeSettings": {
+			// to override args, implement: initWindowsDefenderRealTimeSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDefenderRealTimeSettings,
+		},
+		"windows.defender.cloudSettings": {
+			// to override args, implement: initWindowsDefenderCloudSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDefenderCloudSettings,
+		},
+		"windows.defender.signatureSettings": {
+			// to override args, implement: initWindowsDefenderSignatureSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDefenderSignatureSettings,
+		},
+		"windows.defender.threatActionSettings": {
+			// to override args, implement: initWindowsDefenderThreatActionSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDefenderThreatActionSettings,
+		},
+		"windows.defender.threatIdAction": {
+			// to override args, implement: initWindowsDefenderThreatIdAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDefenderThreatIdAction,
+		},
+		"windows.defender.controlledFolderAccess": {
+			// to override args, implement: initWindowsDefenderControlledFolderAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDefenderControlledFolderAccess,
+		},
+		"windows.defender.networkProtectionSettings": {
+			// to override args, implement: initWindowsDefenderNetworkProtectionSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDefenderNetworkProtectionSettings,
+		},
+		"windows.defender.behavioralNetworkBlockSettings": {
+			// to override args, implement: initWindowsDefenderBehavioralNetworkBlockSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDefenderBehavioralNetworkBlockSettings,
+		},
+		"windows.defender.localSettingOverrides": {
+			// to override args, implement: initWindowsDefenderLocalSettingOverrides(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDefenderLocalSettingOverrides,
+		},
+		"windows.defender.remediationSettings": {
+			// to override args, implement: initWindowsDefenderRemediationSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDefenderRemediationSettings,
+		},
+		"windows.defender.exclusions": {
+			// to override args, implement: initWindowsDefenderExclusions(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDefenderExclusions,
+		},
+		"windows.defender.asrRule": {
+			// to override args, implement: initWindowsDefenderAsrRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDefenderAsrRule,
+		},
+		"windows.defender.threat": {
+			// to override args, implement: initWindowsDefenderThreat(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDefenderThreat,
+		},
+		"windows.defender.threatDetection": {
+			// to override args, implement: initWindowsDefenderThreatDetection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDefenderThreatDetection,
+		},
 		"cloud": {
 			// to override args, implement: initCloud(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createCloud,
@@ -1785,6 +2031,10 @@ func init() {
 		"network": {
 			// to override args, implement: initNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createNetwork,
+		},
+		"networkNeighbor": {
+			// to override args, implement: initNetworkNeighbor(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNetworkNeighbor,
 		},
 		"networkInterface": {
 			// to override args, implement: initNetworkInterface(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2835,6 +3085,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"user.loggedIn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUser).GetLoggedIn()).ToDataRes(types.Bool)
+	},
+	"user.ntuserDat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUser).GetNtuserDat()).ToDataRes(types.String)
 	},
 	"privatekey.pem": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPrivatekey).GetPem()).ToDataRes(types.String)
@@ -6442,6 +6695,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"registrykey.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRegistrykey).GetPath()).ToDataRes(types.String)
 	},
+	"registrykey.userSid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRegistrykey).GetUserSid()).ToDataRes(types.String)
+	},
+	"registrykey.ntuserDat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRegistrykey).GetNtuserDat()).ToDataRes(types.String)
+	},
 	"registrykey.exists": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRegistrykey).GetExists()).ToDataRes(types.Bool)
 	},
@@ -6459,6 +6718,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"registrykey.property.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRegistrykeyProperty).GetName()).ToDataRes(types.String)
+	},
+	"registrykey.property.userSid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRegistrykeyProperty).GetUserSid()).ToDataRes(types.String)
+	},
+	"registrykey.property.ntuserDat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRegistrykeyProperty).GetNtuserDat()).ToDataRes(types.String)
 	},
 	"registrykey.property.exists": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRegistrykeyProperty).GetExists()).ToDataRes(types.Bool)
@@ -6507,6 +6772,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"kubelet.configuration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKubelet).GetConfiguration()).ToDataRes(types.Dict)
+	},
+	"kubelet.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetVersion()).ToDataRes(types.String)
+	},
+	"kubelet.anonymousAuthEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetAnonymousAuthEnabled()).ToDataRes(types.Bool)
+	},
+	"kubelet.authorizationMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetAuthorizationMode()).ToDataRes(types.String)
+	},
+	"kubelet.clientCAFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetClientCAFile()).ToDataRes(types.String)
+	},
+	"kubelet.readOnlyPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetReadOnlyPort()).ToDataRes(types.Int)
+	},
+	"kubelet.streamingConnectionIdleTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetStreamingConnectionIdleTimeout()).ToDataRes(types.String)
+	},
+	"kubelet.protectKernelDefaults": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetProtectKernelDefaults()).ToDataRes(types.Bool)
+	},
+	"kubelet.makeIPTablesUtilChains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetMakeIPTablesUtilChains()).ToDataRes(types.Bool)
+	},
+	"kubelet.eventRecordQPS": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetEventRecordQPS()).ToDataRes(types.Int)
+	},
+	"kubelet.tlsCertFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetTlsCertFile()).ToDataRes(types.String)
+	},
+	"kubelet.tlsPrivateKeyFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetTlsPrivateKeyFile()).ToDataRes(types.String)
+	},
+	"kubelet.rotateCertificates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetRotateCertificates()).ToDataRes(types.Bool)
+	},
+	"kubelet.serverTLSBootstrap": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetServerTLSBootstrap()).ToDataRes(types.Bool)
+	},
+	"kubelet.tlsCipherSuites": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetTlsCipherSuites()).ToDataRes(types.Array(types.String))
+	},
+	"kubelet.tlsMinVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetTlsMinVersion()).ToDataRes(types.String)
 	},
 	"python.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPython).GetPath()).ToDataRes(types.String)
@@ -7678,6 +7988,93 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.scheduledTasks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindows).GetScheduledTasks()).ToDataRes(types.Array(types.Resource("windows.scheduledTask")))
 	},
+	"windows.deviceGuard": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindows).GetDeviceGuard()).ToDataRes(types.Resource("windows.deviceGuard"))
+	},
+	"windows.exploitProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindows).GetExploitProtection()).ToDataRes(types.Resource("windows.exploitProtection"))
+	},
+	"windows.smartScreen": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindows).GetSmartScreen()).ToDataRes(types.Resource("windows.smartScreen"))
+	},
+	"windows.exploitProtection.available": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtection).GetAvailable()).ToDataRes(types.Bool)
+	},
+	"windows.exploitProtection.disallowOverride": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtection).GetDisallowOverride()).ToDataRes(types.Bool)
+	},
+	"windows.exploitProtection.dep": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtection).GetDep()).ToDataRes(types.Resource("windows.exploitProtection.dep"))
+	},
+	"windows.exploitProtection.aslr": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtection).GetAslr()).ToDataRes(types.Resource("windows.exploitProtection.aslr"))
+	},
+	"windows.exploitProtection.controlFlowGuard": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtection).GetControlFlowGuard()).ToDataRes(types.Resource("windows.exploitProtection.cfg"))
+	},
+	"windows.exploitProtection.sehop": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtection).GetSehop()).ToDataRes(types.Resource("windows.exploitProtection.sehop"))
+	},
+	"windows.exploitProtection.heap": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtection).GetHeap()).ToDataRes(types.Resource("windows.exploitProtection.heap"))
+	},
+	"windows.exploitProtection.dep.enable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtectionDep).GetEnable()).ToDataRes(types.String)
+	},
+	"windows.exploitProtection.dep.emulateAtlThunks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtectionDep).GetEmulateAtlThunks()).ToDataRes(types.String)
+	},
+	"windows.exploitProtection.aslr.bottomUp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtectionAslr).GetBottomUp()).ToDataRes(types.String)
+	},
+	"windows.exploitProtection.aslr.forceRelocateImages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtectionAslr).GetForceRelocateImages()).ToDataRes(types.String)
+	},
+	"windows.exploitProtection.aslr.highEntropy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtectionAslr).GetHighEntropy()).ToDataRes(types.String)
+	},
+	"windows.exploitProtection.aslr.requireInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtectionAslr).GetRequireInfo()).ToDataRes(types.String)
+	},
+	"windows.exploitProtection.cfg.enable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtectionCfg).GetEnable()).ToDataRes(types.String)
+	},
+	"windows.exploitProtection.cfg.suppressExports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtectionCfg).GetSuppressExports()).ToDataRes(types.String)
+	},
+	"windows.exploitProtection.cfg.strictControlFlowGuard": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtectionCfg).GetStrictControlFlowGuard()).ToDataRes(types.String)
+	},
+	"windows.exploitProtection.sehop.enable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtectionSehop).GetEnable()).ToDataRes(types.String)
+	},
+	"windows.exploitProtection.sehop.telemetryOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtectionSehop).GetTelemetryOnly()).ToDataRes(types.String)
+	},
+	"windows.exploitProtection.heap.terminateOnError": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtectionHeap).GetTerminateOnError()).ToDataRes(types.String)
+	},
+	"windows.smartScreen.explorerEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmartScreen).GetExplorerEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.smartScreen.explorerLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmartScreen).GetExplorerLevel()).ToDataRes(types.String)
+	},
+	"windows.smartScreen.edgeEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmartScreen).GetEdgeEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.smartScreen.edgePuaEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmartScreen).GetEdgePuaEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.smartScreen.edgePreventOverride": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmartScreen).GetEdgePreventOverride()).ToDataRes(types.Bool)
+	},
+	"windows.smartScreen.edgePreventOverrideForFiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmartScreen).GetEdgePreventOverrideForFiles()).ToDataRes(types.Bool)
+	},
+	"windows.smartScreen.storeAppsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmartScreen).GetStoreAppsEnabled()).ToDataRes(types.Bool)
+	},
 	"windows.scheduledTask.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsScheduledTask).GetName()).ToDataRes(types.String)
 	},
@@ -8029,6 +8426,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.update.config": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsUpdate).GetConfig()).ToDataRes(types.Resource("windows.update.config"))
 	},
+	"windows.update.policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdate).GetPolicy()).ToDataRes(types.Resource("windows.update.policy"))
+	},
 	"windows.update.installed": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsUpdate).GetInstalled()).ToDataRes(types.Array(types.Resource("windows.update.entry")))
 	},
@@ -8103,6 +8503,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.update.config.policyState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsUpdateConfig).GetPolicyState()).ToDataRes(types.Int)
+	},
+	"windows.update.policy.automaticUpdatesEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdatePolicy).GetAutomaticUpdatesEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.update.policy.noAutoUpdate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdatePolicy).GetNoAutoUpdate()).ToDataRes(types.Bool)
+	},
+	"windows.update.policy.scheduledInstallDay": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdatePolicy).GetScheduledInstallDay()).ToDataRes(types.Int)
+	},
+	"windows.update.policy.scheduledInstallTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdatePolicy).GetScheduledInstallTime()).ToDataRes(types.Int)
+	},
+	"windows.update.policy.noAutoRebootWithLoggedOnUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdatePolicy).GetNoAutoRebootWithLoggedOnUsers()).ToDataRes(types.Bool)
+	},
+	"windows.update.policy.managePreviewBuilds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdatePolicy).GetManagePreviewBuilds()).ToDataRes(types.Int)
+	},
+	"windows.update.policy.deferFeatureUpdates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdatePolicy).GetDeferFeatureUpdates()).ToDataRes(types.Bool)
+	},
+	"windows.update.policy.deferFeatureUpdatesPeriodInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdatePolicy).GetDeferFeatureUpdatesPeriodInDays()).ToDataRes(types.Int)
+	},
+	"windows.update.policy.deferQualityUpdates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdatePolicy).GetDeferQualityUpdates()).ToDataRes(types.Bool)
+	},
+	"windows.update.policy.deferQualityUpdatesPeriodInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdatePolicy).GetDeferQualityUpdatesPeriodInDays()).ToDataRes(types.Int)
+	},
+	"windows.update.policy.allowTemporaryEnterpriseFeatureControl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdatePolicy).GetAllowTemporaryEnterpriseFeatureControl()).ToDataRes(types.Bool)
+	},
+	"windows.update.policy.allowOptionalContent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdatePolicy).GetAllowOptionalContent()).ToDataRes(types.Int)
+	},
+	"windows.update.policy.disablePauseUXAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdatePolicy).GetDisablePauseUXAccess()).ToDataRes(types.Bool)
 	},
 	"windows.serverFeature.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsServerFeature).GetPath()).ToDataRes(types.String)
@@ -8187,6 +8626,312 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.rdp.maxDisconnectionTimeMs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsRdp).GetMaxDisconnectionTimeMs()).ToDataRes(types.Int)
+	},
+	"windows.rdp.connectionsDenied": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetConnectionsDenied()).ToDataRes(types.Bool)
+	},
+	"windows.rdp.singleSessionPerUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetSingleSessionPerUser()).ToDataRes(types.Bool)
+	},
+	"windows.rdp.perSessionTempDirsUsed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetPerSessionTempDirsUsed()).ToDataRes(types.Bool)
+	},
+	"windows.rdp.solicitedRemoteAssistanceAllowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetSolicitedRemoteAssistanceAllowed()).ToDataRes(types.Bool)
+	},
+	"windows.rdp.offerRemoteAssistanceAllowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetOfferRemoteAssistanceAllowed()).ToDataRes(types.Bool)
+	},
+	"windows.rdp.webAuthnRedirectionDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetWebAuthnRedirectionDisabled()).ToDataRes(types.Bool)
+	},
+	"windows.rdp.locationRedirectionDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetLocationRedirectionDisabled()).ToDataRes(types.Bool)
+	},
+	"windows.rdp.uiAutomationRedirectionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetUiAutomationRedirectionEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.rdp.clipboardServerToClientLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetClipboardServerToClientLevel()).ToDataRes(types.Int)
+	},
+	"windows.rdp.endSessionWhenTimeLimitReached": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetEndSessionWhenTimeLimitReached()).ToDataRes(types.Bool)
+	},
+	"windows.rdp.cloudClipboardIntegrationDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetCloudClipboardIntegrationDisabled()).ToDataRes(types.Bool)
+	},
+	"windows.winrm.client": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrm).GetClient()).ToDataRes(types.Resource("windows.winrm.client"))
+	},
+	"windows.winrm.service": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrm).GetService()).ToDataRes(types.Resource("windows.winrm.service"))
+	},
+	"windows.winrm.serviceStartMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrm).GetServiceStartMode()).ToDataRes(types.Int)
+	},
+	"windows.winrm.client.allowBasic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrmClient).GetAllowBasic()).ToDataRes(types.Bool)
+	},
+	"windows.winrm.client.allowUnencryptedTraffic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrmClient).GetAllowUnencryptedTraffic()).ToDataRes(types.Bool)
+	},
+	"windows.winrm.client.allowDigest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrmClient).GetAllowDigest()).ToDataRes(types.Bool)
+	},
+	"windows.winrm.service.allowBasic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrmService).GetAllowBasic()).ToDataRes(types.Bool)
+	},
+	"windows.winrm.service.allowUnencryptedTraffic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrmService).GetAllowUnencryptedTraffic()).ToDataRes(types.Bool)
+	},
+	"windows.winrm.service.disableRunAs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrmService).GetDisableRunAs()).ToDataRes(types.Bool)
+	},
+	"windows.winrm.service.allowAutoConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrmService).GetAllowAutoConfig()).ToDataRes(types.Bool)
+	},
+	"windows.winrm.service.allowRemoteShellAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrmService).GetAllowRemoteShellAccess()).ToDataRes(types.Bool)
+	},
+	"windows.deviceGuard.virtualizationBasedSecurityEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDeviceGuard).GetVirtualizationBasedSecurityEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.deviceGuard.requirePlatformSecurityFeatures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDeviceGuard).GetRequirePlatformSecurityFeatures()).ToDataRes(types.Int)
+	},
+	"windows.deviceGuard.hypervisorEnforcedCodeIntegrity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDeviceGuard).GetHypervisorEnforcedCodeIntegrity()).ToDataRes(types.Int)
+	},
+	"windows.deviceGuard.hvciMatRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDeviceGuard).GetHvciMatRequired()).ToDataRes(types.Bool)
+	},
+	"windows.deviceGuard.credentialGuardConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDeviceGuard).GetCredentialGuardConfig()).ToDataRes(types.Int)
+	},
+	"windows.deviceGuard.systemGuardLaunch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDeviceGuard).GetSystemGuardLaunch()).ToDataRes(types.Bool)
+	},
+	"windows.deviceGuard.kernelShadowStacksLaunch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDeviceGuard).GetKernelShadowStacksLaunch()).ToDataRes(types.Int)
+	},
+	"windows.lsa.disableDomainCreds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetDisableDomainCreds()).ToDataRes(types.Bool)
+	},
+	"windows.lsa.everyoneIncludesAnonymous": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetEveryoneIncludesAnonymous()).ToDataRes(types.Bool)
+	},
+	"windows.lsa.forceGuest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetForceGuest()).ToDataRes(types.Bool)
+	},
+	"windows.lsa.limitBlankPasswordUse": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetLimitBlankPasswordUse()).ToDataRes(types.Bool)
+	},
+	"windows.lsa.lmCompatibilityLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetLmCompatibilityLevel()).ToDataRes(types.Int)
+	},
+	"windows.lsa.noLmHash": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetNoLmHash()).ToDataRes(types.Bool)
+	},
+	"windows.lsa.restrictAnonymous": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetRestrictAnonymous()).ToDataRes(types.Int)
+	},
+	"windows.lsa.restrictAnonymousSam": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetRestrictAnonymousSam()).ToDataRes(types.Bool)
+	},
+	"windows.lsa.restrictRemoteSam": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetRestrictRemoteSam()).ToDataRes(types.String)
+	},
+	"windows.lsa.runAsPpl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetRunAsPpl()).ToDataRes(types.Int)
+	},
+	"windows.lsa.sceNoApplyLegacyAuditPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetSceNoApplyLegacyAuditPolicy()).ToDataRes(types.Bool)
+	},
+	"windows.lsa.submitControl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetSubmitControl()).ToDataRes(types.Bool)
+	},
+	"windows.lsa.useMachineId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetUseMachineId()).ToDataRes(types.Bool)
+	},
+	"windows.lsa.ntlm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetNtlm()).ToDataRes(types.Resource("windows.lsa.ntlm"))
+	},
+	"windows.lsa.secureChannel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetSecureChannel()).ToDataRes(types.Resource("windows.lsa.secureChannel"))
+	},
+	"windows.lsa.ntlm.allowNullSessionFallback": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaNtlm).GetAllowNullSessionFallback()).ToDataRes(types.Bool)
+	},
+	"windows.lsa.ntlm.auditReceivingNtlmTraffic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaNtlm).GetAuditReceivingNtlmTraffic()).ToDataRes(types.Int)
+	},
+	"windows.lsa.ntlm.ntlmMinClientSec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaNtlm).GetNtlmMinClientSec()).ToDataRes(types.Int)
+	},
+	"windows.lsa.ntlm.ntlmMinServerSec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaNtlm).GetNtlmMinServerSec()).ToDataRes(types.Int)
+	},
+	"windows.lsa.ntlm.restrictSendingNtlmTraffic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaNtlm).GetRestrictSendingNtlmTraffic()).ToDataRes(types.Int)
+	},
+	"windows.lsa.ntlm.useLogonCredential": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaNtlm).GetUseLogonCredential()).ToDataRes(types.Bool)
+	},
+	"windows.lsa.ntlm.allowOnlineId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaNtlm).GetAllowOnlineId()).ToDataRes(types.Bool)
+	},
+	"windows.lsa.secureChannel.auditNtlmInDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaSecureChannel).GetAuditNtlmInDomain()).ToDataRes(types.Int)
+	},
+	"windows.lsa.secureChannel.blockNetbiosDiscovery": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaSecureChannel).GetBlockNetbiosDiscovery()).ToDataRes(types.Bool)
+	},
+	"windows.lsa.secureChannel.disablePasswordChange": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaSecureChannel).GetDisablePasswordChange()).ToDataRes(types.Bool)
+	},
+	"windows.lsa.secureChannel.maximumPasswordAge": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaSecureChannel).GetMaximumPasswordAge()).ToDataRes(types.Int)
+	},
+	"windows.lsa.secureChannel.refusePasswordChange": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaSecureChannel).GetRefusePasswordChange()).ToDataRes(types.Bool)
+	},
+	"windows.lsa.secureChannel.requireSignOrSeal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaSecureChannel).GetRequireSignOrSeal()).ToDataRes(types.Bool)
+	},
+	"windows.lsa.secureChannel.requireStrongKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaSecureChannel).GetRequireStrongKey()).ToDataRes(types.Bool)
+	},
+	"windows.lsa.secureChannel.sealSecureChannel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaSecureChannel).GetSealSecureChannel()).ToDataRes(types.Bool)
+	},
+	"windows.lsa.secureChannel.signSecureChannel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaSecureChannel).GetSignSecureChannel()).ToDataRes(types.Bool)
+	},
+	"windows.lsa.secureChannel.vulnerableChannelAllowList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaSecureChannel).GetVulnerableChannelAllowList()).ToDataRes(types.String)
+	},
+	"windows.spooler.startMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpooler).GetStartMode()).ToDataRes(types.Int)
+	},
+	"windows.spooler.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpooler).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"windows.spooler.registerRemoteRpcEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpooler).GetRegisterRemoteRpcEndpoint()).ToDataRes(types.Bool)
+	},
+	"windows.spooler.redirectionGuardPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpooler).GetRedirectionGuardPolicy()).ToDataRes(types.Bool)
+	},
+	"windows.spooler.webPnpDownloadDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpooler).GetWebPnpDownloadDisabled()).ToDataRes(types.Bool)
+	},
+	"windows.spooler.httpPrintingDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpooler).GetHttpPrintingDisabled()).ToDataRes(types.Bool)
+	},
+	"windows.spooler.copyFilesPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpooler).GetCopyFilesPolicy()).ToDataRes(types.Bool)
+	},
+	"windows.spooler.rpcAuthnLevelPrivacyEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpooler).GetRpcAuthnLevelPrivacyEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.spooler.addPrinterDriversRestricted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpooler).GetAddPrinterDriversRestricted()).ToDataRes(types.Bool)
+	},
+	"windows.spooler.pointAndPrint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpooler).GetPointAndPrint()).ToDataRes(types.Resource("windows.spooler.pointAndPrint"))
+	},
+	"windows.spooler.rpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpooler).GetRpc()).ToDataRes(types.Resource("windows.spooler.rpc"))
+	},
+	"windows.spooler.ipp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpooler).GetIpp()).ToDataRes(types.Resource("windows.spooler.ipp"))
+	},
+	"windows.spooler.windowsProtectedPrintGroupPolicyState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpooler).GetWindowsProtectedPrintGroupPolicyState()).ToDataRes(types.Bool)
+	},
+	"windows.spooler.pointAndPrint.restrictDriverInstallationToAdministrators": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpoolerPointAndPrint).GetRestrictDriverInstallationToAdministrators()).ToDataRes(types.Bool)
+	},
+	"windows.spooler.pointAndPrint.noWarningNoElevationOnInstall": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpoolerPointAndPrint).GetNoWarningNoElevationOnInstall()).ToDataRes(types.Bool)
+	},
+	"windows.spooler.pointAndPrint.updatePromptSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpoolerPointAndPrint).GetUpdatePromptSettings()).ToDataRes(types.Int)
+	},
+	"windows.spooler.rpc.useNamedPipeProtocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpoolerRpc).GetUseNamedPipeProtocol()).ToDataRes(types.Bool)
+	},
+	"windows.spooler.rpc.authentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpoolerRpc).GetAuthentication()).ToDataRes(types.Int)
+	},
+	"windows.spooler.rpc.protocols": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpoolerRpc).GetProtocols()).ToDataRes(types.Int)
+	},
+	"windows.spooler.rpc.tcpPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpoolerRpc).GetTcpPort()).ToDataRes(types.Int)
+	},
+	"windows.spooler.rpc.forceKerberos": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpoolerRpc).GetForceKerberos()).ToDataRes(types.Bool)
+	},
+	"windows.spooler.ipp.requireIpps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpoolerIpp).GetRequireIpps()).ToDataRes(types.Bool)
+	},
+	"windows.spooler.ipp.blockUnknownCA": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpoolerIpp).GetBlockUnknownCA()).ToDataRes(types.Bool)
+	},
+	"windows.spooler.ipp.blockCertWrongUsage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpoolerIpp).GetBlockCertWrongUsage()).ToDataRes(types.Bool)
+	},
+	"windows.spooler.ipp.blockCertDateInvalid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpoolerIpp).GetBlockCertDateInvalid()).ToDataRes(types.Bool)
+	},
+	"windows.spooler.ipp.blockCertCNInvalid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpoolerIpp).GetBlockCertCNInvalid()).ToDataRes(types.Bool)
+	},
+	"windows.telemetry.allowTelemetry": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTelemetry).GetAllowTelemetry()).ToDataRes(types.Int)
+	},
+	"windows.telemetry.disableEnterpriseAuthProxy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTelemetry).GetDisableEnterpriseAuthProxy()).ToDataRes(types.Bool)
+	},
+	"windows.telemetry.disableOneSettingsDownloads": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTelemetry).GetDisableOneSettingsDownloads()).ToDataRes(types.Bool)
+	},
+	"windows.telemetry.doNotShowFeedbackNotifications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTelemetry).GetDoNotShowFeedbackNotifications()).ToDataRes(types.Bool)
+	},
+	"windows.telemetry.enableOneSettingsAuditing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTelemetry).GetEnableOneSettingsAuditing()).ToDataRes(types.Bool)
+	},
+	"windows.telemetry.limitDiagnosticLogCollection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTelemetry).GetLimitDiagnosticLogCollection()).ToDataRes(types.Bool)
+	},
+	"windows.telemetry.limitDumpCollection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTelemetry).GetLimitDumpCollection()).ToDataRes(types.Bool)
+	},
+	"windows.telemetry.disableCloudOptimizedContent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTelemetry).GetDisableCloudOptimizedContent()).ToDataRes(types.Bool)
+	},
+	"windows.telemetry.disableConsumerAccountStateContent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTelemetry).GetDisableConsumerAccountStateContent()).ToDataRes(types.Bool)
+	},
+	"windows.telemetry.disableWindowsConsumerFeatures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTelemetry).GetDisableWindowsConsumerFeatures()).ToDataRes(types.Bool)
+	},
+	"windows.powershell.scriptBlockLogging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsPowershell).GetScriptBlockLogging()).ToDataRes(types.Resource("windows.powershell.scriptBlockLogging"))
+	},
+	"windows.powershell.transcription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsPowershell).GetTranscription()).ToDataRes(types.Resource("windows.powershell.transcription"))
+	},
+	"windows.powershell.executionPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsPowershell).GetExecutionPolicy()).ToDataRes(types.String)
+	},
+	"windows.powershell.scriptBlockLogging.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsPowershellScriptBlockLogging).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.powershell.transcription.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsPowershellTranscription).GetEnabled()).ToDataRes(types.Bool)
 	},
 	"windows.tpm.present": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsTpm).GetPresent()).ToDataRes(types.Bool)
@@ -8344,8 +9089,212 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.firewall.rule.policyStoreSourceType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsFirewallRule).GetPolicyStoreSourceType()).ToDataRes(types.Int)
 	},
+	"windows.smb.shares": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmb).GetShares()).ToDataRes(types.Array(types.Resource("windows.smb.share")))
+	},
+	"windows.smb.sessions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmb).GetSessions()).ToDataRes(types.Array(types.Resource("windows.smb.session")))
+	},
+	"windows.smb.connections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmb).GetConnections()).ToDataRes(types.Array(types.Resource("windows.smb.connection")))
+	},
+	"windows.smb.serverConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmb).GetServerConfiguration()).ToDataRes(types.Resource("windows.smb.serverConfiguration"))
+	},
+	"windows.smb.clientConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmb).GetClientConfiguration()).ToDataRes(types.Resource("windows.smb.clientConfiguration"))
+	},
+	"windows.smb.smbv1Enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmb).GetSmbv1Enabled()).ToDataRes(types.Bool)
+	},
+	"windows.smb.serverConfiguration.requireSecuritySignature": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbServerConfiguration).GetRequireSecuritySignature()).ToDataRes(types.Bool)
+	},
+	"windows.smb.serverConfiguration.enableSecuritySignature": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbServerConfiguration).GetEnableSecuritySignature()).ToDataRes(types.Bool)
+	},
+	"windows.smb.serverConfiguration.smb1Enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbServerConfiguration).GetSmb1Enabled()).ToDataRes(types.Bool)
+	},
+	"windows.smb.serverConfiguration.restrictNullSessionAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbServerConfiguration).GetRestrictNullSessionAccess()).ToDataRes(types.Bool)
+	},
+	"windows.smb.serverConfiguration.nullSessionPipes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbServerConfiguration).GetNullSessionPipes()).ToDataRes(types.Array(types.String))
+	},
+	"windows.smb.serverConfiguration.nullSessionShares": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbServerConfiguration).GetNullSessionShares()).ToDataRes(types.Array(types.String))
+	},
+	"windows.smb.serverConfiguration.autoDisconnectMinutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbServerConfiguration).GetAutoDisconnectMinutes()).ToDataRes(types.Int)
+	},
+	"windows.smb.serverConfiguration.enableForcedLogoff": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbServerConfiguration).GetEnableForcedLogoff()).ToDataRes(types.Bool)
+	},
+	"windows.smb.serverConfiguration.serverNameHardeningLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbServerConfiguration).GetServerNameHardeningLevel()).ToDataRes(types.Int)
+	},
+	"windows.smb.serverConfiguration.enableAuthRateLimiter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbServerConfiguration).GetEnableAuthRateLimiter()).ToDataRes(types.Bool)
+	},
+	"windows.smb.serverConfiguration.invalidAuthenticationDelayMs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbServerConfiguration).GetInvalidAuthenticationDelayMs()).ToDataRes(types.Int)
+	},
+	"windows.smb.serverConfiguration.auditClientDoesNotSupportSigning": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbServerConfiguration).GetAuditClientDoesNotSupportSigning()).ToDataRes(types.Bool)
+	},
+	"windows.smb.serverConfiguration.auditClientDoesNotSupportEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbServerConfiguration).GetAuditClientDoesNotSupportEncryption()).ToDataRes(types.Bool)
+	},
+	"windows.smb.serverConfiguration.serviceStart": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbServerConfiguration).GetServiceStart()).ToDataRes(types.Int)
+	},
+	"windows.smb.clientConfiguration.requireSecuritySignature": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbClientConfiguration).GetRequireSecuritySignature()).ToDataRes(types.Bool)
+	},
+	"windows.smb.clientConfiguration.enableSecuritySignature": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbClientConfiguration).GetEnableSecuritySignature()).ToDataRes(types.Bool)
+	},
+	"windows.smb.clientConfiguration.enablePlainTextPassword": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbClientConfiguration).GetEnablePlainTextPassword()).ToDataRes(types.Bool)
+	},
+	"windows.smb.clientConfiguration.allowInsecureGuestAuth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbClientConfiguration).GetAllowInsecureGuestAuth()).ToDataRes(types.Bool)
+	},
+	"windows.smb.clientConfiguration.requireEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbClientConfiguration).GetRequireEncryption()).ToDataRes(types.Bool)
+	},
+	"windows.smb.clientConfiguration.minSmb2Dialect": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbClientConfiguration).GetMinSmb2Dialect()).ToDataRes(types.Int)
+	},
+	"windows.smb.clientConfiguration.auditInsecureGuestLogon": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbClientConfiguration).GetAuditInsecureGuestLogon()).ToDataRes(types.Bool)
+	},
+	"windows.smb.clientConfiguration.auditServerDoesNotSupportSigning": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbClientConfiguration).GetAuditServerDoesNotSupportSigning()).ToDataRes(types.Bool)
+	},
+	"windows.smb.clientConfiguration.auditServerDoesNotSupportEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbClientConfiguration).GetAuditServerDoesNotSupportEncryption()).ToDataRes(types.Bool)
+	},
+	"windows.smb.clientConfiguration.serviceStart": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbClientConfiguration).GetServiceStart()).ToDataRes(types.Int)
+	},
+	"windows.smb.share.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbShare).GetName()).ToDataRes(types.String)
+	},
+	"windows.smb.share.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbShare).GetPath()).ToDataRes(types.String)
+	},
+	"windows.smb.share.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbShare).GetDescription()).ToDataRes(types.String)
+	},
+	"windows.smb.share.scopeName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbShare).GetScopeName()).ToDataRes(types.String)
+	},
+	"windows.smb.share.shareType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbShare).GetShareType()).ToDataRes(types.String)
+	},
+	"windows.smb.session.clientComputerName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbSession).GetClientComputerName()).ToDataRes(types.String)
+	},
+	"windows.smb.session.clientUserName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbSession).GetClientUserName()).ToDataRes(types.String)
+	},
+	"windows.smb.session.dialect": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbSession).GetDialect()).ToDataRes(types.String)
+	},
+	"windows.smb.session.numOpens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbSession).GetNumOpens()).ToDataRes(types.Int)
+	},
+	"windows.smb.connection.serverName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbConnection).GetServerName()).ToDataRes(types.String)
+	},
+	"windows.smb.connection.shareName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbConnection).GetShareName()).ToDataRes(types.String)
+	},
+	"windows.smb.connection.userName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbConnection).GetUserName()).ToDataRes(types.String)
+	},
+	"windows.smb.connection.dialect": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbConnection).GetDialect()).ToDataRes(types.String)
+	},
 	"windows.bitlocker.volumes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsBitlocker).GetVolumes()).ToDataRes(types.Array(types.Resource("windows.bitlocker.volume")))
+	},
+	"windows.bitlocker.policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlocker).GetPolicy()).ToDataRes(types.Resource("windows.bitlocker.policy"))
+	},
+	"windows.bitlocker.policy.useAdvancedStartup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicy).GetUseAdvancedStartup()).ToDataRes(types.Bool)
+	},
+	"windows.bitlocker.policy.useEnhancedPin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicy).GetUseEnhancedPin()).ToDataRes(types.Bool)
+	},
+	"windows.bitlocker.policy.enableBdeWithNoTpm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicy).GetEnableBdeWithNoTpm()).ToDataRes(types.Bool)
+	},
+	"windows.bitlocker.policy.disableExternalDmaUnderLock": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicy).GetDisableExternalDmaUnderLock()).ToDataRes(types.Bool)
+	},
+	"windows.bitlocker.policy.osAllowSecureBootForIntegrity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicy).GetOsAllowSecureBootForIntegrity()).ToDataRes(types.Bool)
+	},
+	"windows.bitlocker.policy.operatingSystemDrives": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicy).GetOperatingSystemDrives()).ToDataRes(types.Resource("windows.bitlocker.policy.driveSettings"))
+	},
+	"windows.bitlocker.policy.fixedDataDrives": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicy).GetFixedDataDrives()).ToDataRes(types.Resource("windows.bitlocker.policy.driveSettings"))
+	},
+	"windows.bitlocker.policy.removableDataDrives": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicy).GetRemovableDataDrives()).ToDataRes(types.Resource("windows.bitlocker.policy.driveSettings"))
+	},
+	"windows.bitlocker.policy.driveSettings.driveType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetDriveType()).ToDataRes(types.String)
+	},
+	"windows.bitlocker.policy.driveSettings.recovery": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetRecovery()).ToDataRes(types.Int)
+	},
+	"windows.bitlocker.policy.driveSettings.manageDRA": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetManageDRA()).ToDataRes(types.Bool)
+	},
+	"windows.bitlocker.policy.driveSettings.recoveryPassword": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetRecoveryPassword()).ToDataRes(types.Int)
+	},
+	"windows.bitlocker.policy.driveSettings.recoveryKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetRecoveryKey()).ToDataRes(types.Int)
+	},
+	"windows.bitlocker.policy.driveSettings.hideRecoveryPage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetHideRecoveryPage()).ToDataRes(types.Bool)
+	},
+	"windows.bitlocker.policy.driveSettings.activeDirectoryBackup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetActiveDirectoryBackup()).ToDataRes(types.Bool)
+	},
+	"windows.bitlocker.policy.driveSettings.activeDirectoryInfoToStore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetActiveDirectoryInfoToStore()).ToDataRes(types.Int)
+	},
+	"windows.bitlocker.policy.driveSettings.requireActiveDirectoryBackup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetRequireActiveDirectoryBackup()).ToDataRes(types.Bool)
+	},
+	"windows.bitlocker.policy.driveSettings.hardwareEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetHardwareEncryption()).ToDataRes(types.Int)
+	},
+	"windows.bitlocker.policy.driveSettings.passphrase": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetPassphrase()).ToDataRes(types.Int)
+	},
+	"windows.bitlocker.policy.driveSettings.allowUserCert": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetAllowUserCert()).ToDataRes(types.Bool)
+	},
+	"windows.bitlocker.policy.driveSettings.enforceUserCert": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetEnforceUserCert()).ToDataRes(types.Bool)
+	},
+	"windows.bitlocker.policy.driveSettings.discoveryVolumeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetDiscoveryVolumeType()).ToDataRes(types.String)
+	},
+	"windows.bitlocker.policy.driveSettings.denyWriteAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetDenyWriteAccess()).ToDataRes(types.Bool)
+	},
+	"windows.bitlocker.policy.driveSettings.denyCrossOrg": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetDenyCrossOrg()).ToDataRes(types.Bool)
 	},
 	"windows.bitlocker.volume.deviceID": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsBitlockerVolume).GetDeviceID()).ToDataRes(types.String)
@@ -8416,6 +9365,534 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.security.health.securityCenterService": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsSecurityHealth).GetSecurityCenterService()).ToDataRes(types.Dict)
 	},
+	"windows.defender.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefender).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.defender.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefender).GetStatus()).ToDataRes(types.Resource("windows.defender.status"))
+	},
+	"windows.defender.preferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefender).GetPreferences()).ToDataRes(types.Resource("windows.defender.preferences"))
+	},
+	"windows.defender.threats": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefender).GetThreats()).ToDataRes(types.Array(types.Resource("windows.defender.threat")))
+	},
+	"windows.defender.threatDetections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefender).GetThreatDetections()).ToDataRes(types.Array(types.Resource("windows.defender.threatDetection")))
+	},
+	"windows.defender.status.amEngineVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetAmEngineVersion()).ToDataRes(types.String)
+	},
+	"windows.defender.status.amProductVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetAmProductVersion()).ToDataRes(types.String)
+	},
+	"windows.defender.status.amServiceEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetAmServiceEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.defender.status.amServiceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetAmServiceVersion()).ToDataRes(types.String)
+	},
+	"windows.defender.status.antispywareEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetAntispywareEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.defender.status.antispywareSignatureAge": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetAntispywareSignatureAge()).ToDataRes(types.Int)
+	},
+	"windows.defender.status.antispywareSignatureLastUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetAntispywareSignatureLastUpdated()).ToDataRes(types.Time)
+	},
+	"windows.defender.status.antispywareSignatureVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetAntispywareSignatureVersion()).ToDataRes(types.String)
+	},
+	"windows.defender.status.antivirusEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetAntivirusEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.defender.status.antivirusSignatureAge": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetAntivirusSignatureAge()).ToDataRes(types.Int)
+	},
+	"windows.defender.status.antivirusSignatureLastUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetAntivirusSignatureLastUpdated()).ToDataRes(types.Time)
+	},
+	"windows.defender.status.antivirusSignatureVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetAntivirusSignatureVersion()).ToDataRes(types.String)
+	},
+	"windows.defender.status.behaviorMonitorEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetBehaviorMonitorEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.defender.status.computerID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetComputerID()).ToDataRes(types.String)
+	},
+	"windows.defender.status.computerState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetComputerState()).ToDataRes(types.Int)
+	},
+	"windows.defender.status.defenderSignaturesOutOfDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetDefenderSignaturesOutOfDate()).ToDataRes(types.Bool)
+	},
+	"windows.defender.status.deviceControlDefaultEnforcement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetDeviceControlDefaultEnforcement()).ToDataRes(types.Int)
+	},
+	"windows.defender.status.deviceControlPoliciesLastUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetDeviceControlPoliciesLastUpdated()).ToDataRes(types.Time)
+	},
+	"windows.defender.status.deviceControlState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetDeviceControlState()).ToDataRes(types.Int)
+	},
+	"windows.defender.status.fullScanAge": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetFullScanAge()).ToDataRes(types.Int)
+	},
+	"windows.defender.status.fullScanStartTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetFullScanStartTime()).ToDataRes(types.Time)
+	},
+	"windows.defender.status.fullScanEndTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetFullScanEndTime()).ToDataRes(types.Time)
+	},
+	"windows.defender.status.fullScanOverdue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetFullScanOverdue()).ToDataRes(types.Bool)
+	},
+	"windows.defender.status.fullScanRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetFullScanRequired()).ToDataRes(types.Bool)
+	},
+	"windows.defender.status.fullScanSignatureVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetFullScanSignatureVersion()).ToDataRes(types.String)
+	},
+	"windows.defender.status.ioavProtectionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetIoavProtectionEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.defender.status.isTamperProtected": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetIsTamperProtected()).ToDataRes(types.Bool)
+	},
+	"windows.defender.status.isVirtualMachine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetIsVirtualMachine()).ToDataRes(types.Bool)
+	},
+	"windows.defender.status.lastFullScanSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetLastFullScanSource()).ToDataRes(types.Int)
+	},
+	"windows.defender.status.lastQuickScanSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetLastQuickScanSource()).ToDataRes(types.Int)
+	},
+	"windows.defender.status.nisEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetNisEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.defender.status.nisEngineVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetNisEngineVersion()).ToDataRes(types.String)
+	},
+	"windows.defender.status.nisSignatureAge": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetNisSignatureAge()).ToDataRes(types.Int)
+	},
+	"windows.defender.status.nisSignatureLastUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetNisSignatureLastUpdated()).ToDataRes(types.Time)
+	},
+	"windows.defender.status.nisSignatureVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetNisSignatureVersion()).ToDataRes(types.String)
+	},
+	"windows.defender.status.onAccessProtectionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetOnAccessProtectionEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.defender.status.productStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetProductStatus()).ToDataRes(types.Int)
+	},
+	"windows.defender.status.quickScanAge": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetQuickScanAge()).ToDataRes(types.Int)
+	},
+	"windows.defender.status.quickScanStartTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetQuickScanStartTime()).ToDataRes(types.Time)
+	},
+	"windows.defender.status.quickScanEndTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetQuickScanEndTime()).ToDataRes(types.Time)
+	},
+	"windows.defender.status.quickScanOverdue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetQuickScanOverdue()).ToDataRes(types.Bool)
+	},
+	"windows.defender.status.quickScanSignatureVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetQuickScanSignatureVersion()).ToDataRes(types.String)
+	},
+	"windows.defender.status.realTimeProtectionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetRealTimeProtectionEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.defender.status.realTimeScanDirection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetRealTimeScanDirection()).ToDataRes(types.Int)
+	},
+	"windows.defender.status.rebootRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetRebootRequired()).ToDataRes(types.Bool)
+	},
+	"windows.defender.status.smartAppControlState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetSmartAppControlState()).ToDataRes(types.String)
+	},
+	"windows.defender.status.smartAppControlExpiration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetSmartAppControlExpiration()).ToDataRes(types.Time)
+	},
+	"windows.defender.status.tamperProtectionSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetTamperProtectionSource()).ToDataRes(types.String)
+	},
+	"windows.defender.preferences.scan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderPreferences).GetScan()).ToDataRes(types.Resource("windows.defender.scanSettings"))
+	},
+	"windows.defender.preferences.realTimeProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderPreferences).GetRealTimeProtection()).ToDataRes(types.Resource("windows.defender.realTimeSettings"))
+	},
+	"windows.defender.preferences.cloudProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderPreferences).GetCloudProtection()).ToDataRes(types.Resource("windows.defender.cloudSettings"))
+	},
+	"windows.defender.preferences.signatureUpdates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderPreferences).GetSignatureUpdates()).ToDataRes(types.Resource("windows.defender.signatureSettings"))
+	},
+	"windows.defender.preferences.threatActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderPreferences).GetThreatActions()).ToDataRes(types.Resource("windows.defender.threatActionSettings"))
+	},
+	"windows.defender.preferences.controlledFolderAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderPreferences).GetControlledFolderAccess()).ToDataRes(types.Resource("windows.defender.controlledFolderAccess"))
+	},
+	"windows.defender.preferences.networkProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderPreferences).GetNetworkProtection()).ToDataRes(types.Resource("windows.defender.networkProtectionSettings"))
+	},
+	"windows.defender.preferences.behavioralNetworkBlocks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderPreferences).GetBehavioralNetworkBlocks()).ToDataRes(types.Resource("windows.defender.behavioralNetworkBlockSettings"))
+	},
+	"windows.defender.preferences.remediation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderPreferences).GetRemediation()).ToDataRes(types.Resource("windows.defender.remediationSettings"))
+	},
+	"windows.defender.preferences.localSettingOverrides": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderPreferences).GetLocalSettingOverrides()).ToDataRes(types.Resource("windows.defender.localSettingOverrides"))
+	},
+	"windows.defender.preferences.exclusions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderPreferences).GetExclusions()).ToDataRes(types.Resource("windows.defender.exclusions"))
+	},
+	"windows.defender.preferences.attackSurfaceReductionRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderPreferences).GetAttackSurfaceReductionRules()).ToDataRes(types.Array(types.Resource("windows.defender.asrRule")))
+	},
+	"windows.defender.preferences.puaProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderPreferences).GetPuaProtection()).ToDataRes(types.Int)
+	},
+	"windows.defender.preferences.uiLockdown": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderPreferences).GetUiLockdown()).ToDataRes(types.Bool)
+	},
+	"windows.defender.preferences.randomizeScheduleTaskTimes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderPreferences).GetRandomizeScheduleTaskTimes()).ToDataRes(types.Bool)
+	},
+	"windows.defender.preferences.disableAutoExclusions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderPreferences).GetDisableAutoExclusions()).ToDataRes(types.Bool)
+	},
+	"windows.defender.preferences.disableGenericReports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderPreferences).GetDisableGenericReports()).ToDataRes(types.Bool)
+	},
+	"windows.defender.scanSettings.scanParameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderScanSettings).GetScanParameters()).ToDataRes(types.Int)
+	},
+	"windows.defender.scanSettings.scanScheduleDay": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderScanSettings).GetScanScheduleDay()).ToDataRes(types.Int)
+	},
+	"windows.defender.scanSettings.scanScheduleTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderScanSettings).GetScanScheduleTime()).ToDataRes(types.String)
+	},
+	"windows.defender.scanSettings.scanScheduleQuickScanTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderScanSettings).GetScanScheduleQuickScanTime()).ToDataRes(types.String)
+	},
+	"windows.defender.scanSettings.scanScheduleOffset": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderScanSettings).GetScanScheduleOffset()).ToDataRes(types.Int)
+	},
+	"windows.defender.scanSettings.scanAvgCPULoadFactor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderScanSettings).GetScanAvgCPULoadFactor()).ToDataRes(types.Int)
+	},
+	"windows.defender.scanSettings.scanOnlyIfIdleEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderScanSettings).GetScanOnlyIfIdleEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.defender.scanSettings.checkForSignaturesBeforeRunningScan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderScanSettings).GetCheckForSignaturesBeforeRunningScan()).ToDataRes(types.Int)
+	},
+	"windows.defender.scanSettings.disableArchiveScanning": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderScanSettings).GetDisableArchiveScanning()).ToDataRes(types.Bool)
+	},
+	"windows.defender.scanSettings.disableEmailScanning": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderScanSettings).GetDisableEmailScanning()).ToDataRes(types.Bool)
+	},
+	"windows.defender.scanSettings.disableRemovableDriveScanning": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderScanSettings).GetDisableRemovableDriveScanning()).ToDataRes(types.Bool)
+	},
+	"windows.defender.scanSettings.disableScanningMappedNetworkDrivesForFullScan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderScanSettings).GetDisableScanningMappedNetworkDrivesForFullScan()).ToDataRes(types.Bool)
+	},
+	"windows.defender.scanSettings.disableScanningNetworkFiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderScanSettings).GetDisableScanningNetworkFiles()).ToDataRes(types.Bool)
+	},
+	"windows.defender.scanSettings.disableCatchupFullScan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderScanSettings).GetDisableCatchupFullScan()).ToDataRes(types.Bool)
+	},
+	"windows.defender.scanSettings.disableCatchupQuickScan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderScanSettings).GetDisableCatchupQuickScan()).ToDataRes(types.Bool)
+	},
+	"windows.defender.scanSettings.disableCpuThrottleOnIdleScans": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderScanSettings).GetDisableCpuThrottleOnIdleScans()).ToDataRes(types.Bool)
+	},
+	"windows.defender.scanSettings.enableFullScanOnBatteryPower": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderScanSettings).GetEnableFullScanOnBatteryPower()).ToDataRes(types.Bool)
+	},
+	"windows.defender.scanSettings.enableLowCpuPriority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderScanSettings).GetEnableLowCpuPriority()).ToDataRes(types.Bool)
+	},
+	"windows.defender.realTimeSettings.disableRealtimeMonitoring": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderRealTimeSettings).GetDisableRealtimeMonitoring()).ToDataRes(types.Bool)
+	},
+	"windows.defender.realTimeSettings.disableBehaviorMonitoring": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderRealTimeSettings).GetDisableBehaviorMonitoring()).ToDataRes(types.Bool)
+	},
+	"windows.defender.realTimeSettings.disableIOAVProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderRealTimeSettings).GetDisableIOAVProtection()).ToDataRes(types.Bool)
+	},
+	"windows.defender.realTimeSettings.disableScriptScanning": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderRealTimeSettings).GetDisableScriptScanning()).ToDataRes(types.Bool)
+	},
+	"windows.defender.realTimeSettings.disableIntrusionPreventionSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderRealTimeSettings).GetDisableIntrusionPreventionSystem()).ToDataRes(types.Bool)
+	},
+	"windows.defender.realTimeSettings.realTimeScanDirection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderRealTimeSettings).GetRealTimeScanDirection()).ToDataRes(types.Int)
+	},
+	"windows.defender.realTimeSettings.enableFileHashComputation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderRealTimeSettings).GetEnableFileHashComputation()).ToDataRes(types.Bool)
+	},
+	"windows.defender.cloudSettings.mapsReporting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderCloudSettings).GetMapsReporting()).ToDataRes(types.Int)
+	},
+	"windows.defender.cloudSettings.submitSamplesConsent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderCloudSettings).GetSubmitSamplesConsent()).ToDataRes(types.Int)
+	},
+	"windows.defender.cloudSettings.cloudBlockLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderCloudSettings).GetCloudBlockLevel()).ToDataRes(types.Int)
+	},
+	"windows.defender.cloudSettings.cloudExtendedTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderCloudSettings).GetCloudExtendedTimeout()).ToDataRes(types.Int)
+	},
+	"windows.defender.cloudSettings.disableBlockAtFirstSeen": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderCloudSettings).GetDisableBlockAtFirstSeen()).ToDataRes(types.Bool)
+	},
+	"windows.defender.signatureSettings.signatureScheduleDay": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderSignatureSettings).GetSignatureScheduleDay()).ToDataRes(types.Int)
+	},
+	"windows.defender.signatureSettings.signatureScheduleTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderSignatureSettings).GetSignatureScheduleTime()).ToDataRes(types.String)
+	},
+	"windows.defender.signatureSettings.signatureUpdateInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderSignatureSettings).GetSignatureUpdateInterval()).ToDataRes(types.Int)
+	},
+	"windows.defender.signatureSettings.signatureUpdateCatchupInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderSignatureSettings).GetSignatureUpdateCatchupInterval()).ToDataRes(types.Int)
+	},
+	"windows.defender.signatureSettings.signatureFallbackOrder": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderSignatureSettings).GetSignatureFallbackOrder()).ToDataRes(types.String)
+	},
+	"windows.defender.signatureSettings.signatureDefinitionUpdateFileSharesSources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderSignatureSettings).GetSignatureDefinitionUpdateFileSharesSources()).ToDataRes(types.String)
+	},
+	"windows.defender.signatureSettings.signatureDisableUpdateOnStartupWithoutEngine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderSignatureSettings).GetSignatureDisableUpdateOnStartupWithoutEngine()).ToDataRes(types.Bool)
+	},
+	"windows.defender.signatureSettings.signatureFirstAuGracePeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderSignatureSettings).GetSignatureFirstAuGracePeriod()).ToDataRes(types.Int)
+	},
+	"windows.defender.signatureSettings.signatureAuGracePeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderSignatureSettings).GetSignatureAuGracePeriod()).ToDataRes(types.Int)
+	},
+	"windows.defender.signatureSettings.definitionUpdatesChannel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderSignatureSettings).GetDefinitionUpdatesChannel()).ToDataRes(types.Int)
+	},
+	"windows.defender.signatureSettings.engineUpdatesChannel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderSignatureSettings).GetEngineUpdatesChannel()).ToDataRes(types.Int)
+	},
+	"windows.defender.signatureSettings.platformUpdatesChannel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderSignatureSettings).GetPlatformUpdatesChannel()).ToDataRes(types.Int)
+	},
+	"windows.defender.signatureSettings.meteredConnectionUpdates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderSignatureSettings).GetMeteredConnectionUpdates()).ToDataRes(types.Bool)
+	},
+	"windows.defender.threatActionSettings.severeThreatDefaultAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderThreatActionSettings).GetSevereThreatDefaultAction()).ToDataRes(types.Int)
+	},
+	"windows.defender.threatActionSettings.highThreatDefaultAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderThreatActionSettings).GetHighThreatDefaultAction()).ToDataRes(types.Int)
+	},
+	"windows.defender.threatActionSettings.moderateThreatDefaultAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderThreatActionSettings).GetModerateThreatDefaultAction()).ToDataRes(types.Int)
+	},
+	"windows.defender.threatActionSettings.lowThreatDefaultAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderThreatActionSettings).GetLowThreatDefaultAction()).ToDataRes(types.Int)
+	},
+	"windows.defender.threatActionSettings.unknownThreatDefaultAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderThreatActionSettings).GetUnknownThreatDefaultAction()).ToDataRes(types.Int)
+	},
+	"windows.defender.threatActionSettings.idActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderThreatActionSettings).GetIdActions()).ToDataRes(types.Array(types.Resource("windows.defender.threatIdAction")))
+	},
+	"windows.defender.threatIdAction.threatId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderThreatIdAction).GetThreatId()).ToDataRes(types.String)
+	},
+	"windows.defender.threatIdAction.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderThreatIdAction).GetAction()).ToDataRes(types.Int)
+	},
+	"windows.defender.controlledFolderAccess.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderControlledFolderAccess).GetEnabled()).ToDataRes(types.Int)
+	},
+	"windows.defender.controlledFolderAccess.allowedApplications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderControlledFolderAccess).GetAllowedApplications()).ToDataRes(types.Array(types.String))
+	},
+	"windows.defender.controlledFolderAccess.protectedFolders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderControlledFolderAccess).GetProtectedFolders()).ToDataRes(types.Array(types.String))
+	},
+	"windows.defender.networkProtectionSettings.enableNetworkProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderNetworkProtectionSettings).GetEnableNetworkProtection()).ToDataRes(types.Int)
+	},
+	"windows.defender.networkProtectionSettings.allowNetworkProtectionOnWinServer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderNetworkProtectionSettings).GetAllowNetworkProtectionOnWinServer()).ToDataRes(types.Bool)
+	},
+	"windows.defender.networkProtectionSettings.allowNetworkProtectionDownLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderNetworkProtectionSettings).GetAllowNetworkProtectionDownLevel()).ToDataRes(types.Bool)
+	},
+	"windows.defender.networkProtectionSettings.allowDatagramProcessingOnWinServer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderNetworkProtectionSettings).GetAllowDatagramProcessingOnWinServer()).ToDataRes(types.Bool)
+	},
+	"windows.defender.networkProtectionSettings.enableDnsSinkhole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderNetworkProtectionSettings).GetEnableDnsSinkhole()).ToDataRes(types.Bool)
+	},
+	"windows.defender.behavioralNetworkBlockSettings.bruteForceProtectionConfiguredState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderBehavioralNetworkBlockSettings).GetBruteForceProtectionConfiguredState()).ToDataRes(types.Int)
+	},
+	"windows.defender.behavioralNetworkBlockSettings.bruteForceProtectionAggressiveness": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderBehavioralNetworkBlockSettings).GetBruteForceProtectionAggressiveness()).ToDataRes(types.Int)
+	},
+	"windows.defender.behavioralNetworkBlockSettings.bruteForceProtectionMaxBlockTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderBehavioralNetworkBlockSettings).GetBruteForceProtectionMaxBlockTime()).ToDataRes(types.Int)
+	},
+	"windows.defender.behavioralNetworkBlockSettings.remoteEncryptionProtectionConfiguredState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderBehavioralNetworkBlockSettings).GetRemoteEncryptionProtectionConfiguredState()).ToDataRes(types.Int)
+	},
+	"windows.defender.behavioralNetworkBlockSettings.remoteEncryptionProtectionAggressiveness": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderBehavioralNetworkBlockSettings).GetRemoteEncryptionProtectionAggressiveness()).ToDataRes(types.Int)
+	},
+	"windows.defender.behavioralNetworkBlockSettings.remoteEncryptionProtectionMaxBlockTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderBehavioralNetworkBlockSettings).GetRemoteEncryptionProtectionMaxBlockTime()).ToDataRes(types.Int)
+	},
+	"windows.defender.localSettingOverrides.spynetReporting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderLocalSettingOverrides).GetSpynetReporting()).ToDataRes(types.Bool)
+	},
+	"windows.defender.localSettingOverrides.realtimeMonitoring": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderLocalSettingOverrides).GetRealtimeMonitoring()).ToDataRes(types.Bool)
+	},
+	"windows.defender.localSettingOverrides.disableBehaviorMonitoring": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderLocalSettingOverrides).GetDisableBehaviorMonitoring()).ToDataRes(types.Bool)
+	},
+	"windows.defender.localSettingOverrides.disableIOAVProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderLocalSettingOverrides).GetDisableIOAVProtection()).ToDataRes(types.Bool)
+	},
+	"windows.defender.localSettingOverrides.disableIntrusionPreventionSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderLocalSettingOverrides).GetDisableIntrusionPreventionSystem()).ToDataRes(types.Bool)
+	},
+	"windows.defender.localSettingOverrides.disableOnAccessProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderLocalSettingOverrides).GetDisableOnAccessProtection()).ToDataRes(types.Bool)
+	},
+	"windows.defender.localSettingOverrides.scanParameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderLocalSettingOverrides).GetScanParameters()).ToDataRes(types.Bool)
+	},
+	"windows.defender.localSettingOverrides.scanScheduleDay": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderLocalSettingOverrides).GetScanScheduleDay()).ToDataRes(types.Bool)
+	},
+	"windows.defender.localSettingOverrides.avgCPULoadFactor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderLocalSettingOverrides).GetAvgCPULoadFactor()).ToDataRes(types.Bool)
+	},
+	"windows.defender.remediationSettings.remediationScheduleDay": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderRemediationSettings).GetRemediationScheduleDay()).ToDataRes(types.Int)
+	},
+	"windows.defender.remediationSettings.remediationScheduleTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderRemediationSettings).GetRemediationScheduleTime()).ToDataRes(types.String)
+	},
+	"windows.defender.remediationSettings.quarantinePurgeItemsAfterDelay": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderRemediationSettings).GetQuarantinePurgeItemsAfterDelay()).ToDataRes(types.Int)
+	},
+	"windows.defender.remediationSettings.disableRestorePoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderRemediationSettings).GetDisableRestorePoint()).ToDataRes(types.Bool)
+	},
+	"windows.defender.exclusions.paths": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderExclusions).GetPaths()).ToDataRes(types.Array(types.String))
+	},
+	"windows.defender.exclusions.extensions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderExclusions).GetExtensions()).ToDataRes(types.Array(types.String))
+	},
+	"windows.defender.exclusions.processes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderExclusions).GetProcesses()).ToDataRes(types.Array(types.String))
+	},
+	"windows.defender.exclusions.ipAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderExclusions).GetIpAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"windows.defender.asrRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderAsrRule).GetId()).ToDataRes(types.String)
+	},
+	"windows.defender.asrRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderAsrRule).GetName()).ToDataRes(types.String)
+	},
+	"windows.defender.asrRule.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderAsrRule).GetAction()).ToDataRes(types.Int)
+	},
+	"windows.defender.threat.threatId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderThreat).GetThreatId()).ToDataRes(types.Int)
+	},
+	"windows.defender.threat.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderThreat).GetName()).ToDataRes(types.String)
+	},
+	"windows.defender.threat.severityID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderThreat).GetSeverityID()).ToDataRes(types.Int)
+	},
+	"windows.defender.threat.categoryID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderThreat).GetCategoryID()).ToDataRes(types.Int)
+	},
+	"windows.defender.threat.isActive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderThreat).GetIsActive()).ToDataRes(types.Bool)
+	},
+	"windows.defender.threat.didThreatExecute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderThreat).GetDidThreatExecute()).ToDataRes(types.Bool)
+	},
+	"windows.defender.threat.rollupStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderThreat).GetRollupStatus()).ToDataRes(types.Int)
+	},
+	"windows.defender.threat.resources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderThreat).GetResources()).ToDataRes(types.Array(types.String))
+	},
+	"windows.defender.threatDetection.detectionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderThreatDetection).GetDetectionId()).ToDataRes(types.String)
+	},
+	"windows.defender.threatDetection.threatId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderThreatDetection).GetThreatId()).ToDataRes(types.Int)
+	},
+	"windows.defender.threatDetection.processName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderThreatDetection).GetProcessName()).ToDataRes(types.String)
+	},
+	"windows.defender.threatDetection.domainUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderThreatDetection).GetDomainUser()).ToDataRes(types.String)
+	},
+	"windows.defender.threatDetection.detectionSourceTypeId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderThreatDetection).GetDetectionSourceTypeId()).ToDataRes(types.Int)
+	},
+	"windows.defender.threatDetection.currentThreatExecutionStatusID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderThreatDetection).GetCurrentThreatExecutionStatusID()).ToDataRes(types.Int)
+	},
+	"windows.defender.threatDetection.threatStatusID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderThreatDetection).GetThreatStatusID()).ToDataRes(types.Int)
+	},
+	"windows.defender.threatDetection.cleaningActionID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderThreatDetection).GetCleaningActionID()).ToDataRes(types.Int)
+	},
+	"windows.defender.threatDetection.actionSuccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderThreatDetection).GetActionSuccess()).ToDataRes(types.Bool)
+	},
+	"windows.defender.threatDetection.initialDetectionTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderThreatDetection).GetInitialDetectionTime()).ToDataRes(types.Time)
+	},
+	"windows.defender.threatDetection.lastThreatStatusChangeTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderThreatDetection).GetLastThreatStatusChangeTime()).ToDataRes(types.Time)
+	},
+	"windows.defender.threatDetection.remediationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderThreatDetection).GetRemediationTime()).ToDataRes(types.Time)
+	},
+	"windows.defender.threatDetection.resources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderThreatDetection).GetResources()).ToDataRes(types.Array(types.String))
+	},
 	"cloud.provider": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloud).GetProvider()).ToDataRes(types.String)
 	},
@@ -8469,6 +9946,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"network.primaryIPv6": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetwork).GetPrimaryIPv6()).ToDataRes(types.IP)
+	},
+	"network.neighbors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetwork).GetNeighbors()).ToDataRes(types.Array(types.Resource("networkNeighbor")))
+	},
+	"networkNeighbor.ip": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkNeighbor).GetIp()).ToDataRes(types.IP)
+	},
+	"networkNeighbor.mac": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkNeighbor).GetMac()).ToDataRes(types.String)
+	},
+	"networkNeighbor.interface": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkNeighbor).GetInterface()).ToDataRes(types.String)
+	},
+	"networkNeighbor.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkNeighbor).GetState()).ToDataRes(types.String)
 	},
 	"networkInterface.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetworkInterface).GetName()).ToDataRes(types.String)
@@ -11050,6 +12542,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"user.loggedIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlUser).LoggedIn, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"user.ntuserDat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUser).NtuserDat, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"privatekey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16612,6 +18108,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlRegistrykey).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"registrykey.userSid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRegistrykey).UserSid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"registrykey.ntuserDat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRegistrykey).NtuserDat, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"registrykey.exists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlRegistrykey).Exists, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -16638,6 +18142,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"registrykey.property.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlRegistrykeyProperty).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"registrykey.property.userSid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRegistrykeyProperty).UserSid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"registrykey.property.ntuserDat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRegistrykeyProperty).NtuserDat, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"registrykey.property.exists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16714,6 +18226,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"kubelet.configuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKubelet).Configuration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"kubelet.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kubelet.anonymousAuthEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).AnonymousAuthEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"kubelet.authorizationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).AuthorizationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kubelet.clientCAFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).ClientCAFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kubelet.readOnlyPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).ReadOnlyPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"kubelet.streamingConnectionIdleTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).StreamingConnectionIdleTimeout, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kubelet.protectKernelDefaults": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).ProtectKernelDefaults, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"kubelet.makeIPTablesUtilChains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).MakeIPTablesUtilChains, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"kubelet.eventRecordQPS": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).EventRecordQPS, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"kubelet.tlsCertFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).TlsCertFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kubelet.tlsPrivateKeyFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).TlsPrivateKeyFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kubelet.rotateCertificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).RotateCertificates, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"kubelet.serverTLSBootstrap": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).ServerTLSBootstrap, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"kubelet.tlsCipherSuites": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).TlsCipherSuites, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"kubelet.tlsMinVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).TlsMinVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"python.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -18548,6 +20120,150 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlWindows).ScheduledTasks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"windows.deviceGuard": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindows).DeviceGuard, ok = plugin.RawToTValue[*mqlWindowsDeviceGuard](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindows).ExploitProtection, ok = plugin.RawToTValue[*mqlWindowsExploitProtection](v.Value, v.Error)
+		return
+	},
+	"windows.smartScreen": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindows).SmartScreen, ok = plugin.RawToTValue[*mqlWindowsSmartScreen](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtection).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.exploitProtection.available": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtection).Available, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.disallowOverride": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtection).DisallowOverride, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.dep": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtection).Dep, ok = plugin.RawToTValue[*mqlWindowsExploitProtectionDep](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.aslr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtection).Aslr, ok = plugin.RawToTValue[*mqlWindowsExploitProtectionAslr](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.controlFlowGuard": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtection).ControlFlowGuard, ok = plugin.RawToTValue[*mqlWindowsExploitProtectionCfg](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.sehop": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtection).Sehop, ok = plugin.RawToTValue[*mqlWindowsExploitProtectionSehop](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.heap": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtection).Heap, ok = plugin.RawToTValue[*mqlWindowsExploitProtectionHeap](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.dep.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionDep).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.exploitProtection.dep.enable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionDep).Enable, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.dep.emulateAtlThunks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionDep).EmulateAtlThunks, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.aslr.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionAslr).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.exploitProtection.aslr.bottomUp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionAslr).BottomUp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.aslr.forceRelocateImages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionAslr).ForceRelocateImages, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.aslr.highEntropy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionAslr).HighEntropy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.aslr.requireInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionAslr).RequireInfo, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.cfg.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionCfg).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.exploitProtection.cfg.enable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionCfg).Enable, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.cfg.suppressExports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionCfg).SuppressExports, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.cfg.strictControlFlowGuard": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionCfg).StrictControlFlowGuard, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.sehop.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionSehop).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.exploitProtection.sehop.enable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionSehop).Enable, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.sehop.telemetryOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionSehop).TelemetryOnly, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.heap.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionHeap).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.exploitProtection.heap.terminateOnError": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionHeap).TerminateOnError, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.smartScreen.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmartScreen).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.smartScreen.explorerEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmartScreen).ExplorerEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smartScreen.explorerLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmartScreen).ExplorerLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.smartScreen.edgeEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmartScreen).EdgeEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smartScreen.edgePuaEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmartScreen).EdgePuaEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smartScreen.edgePreventOverride": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmartScreen).EdgePreventOverride, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smartScreen.edgePreventOverrideForFiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmartScreen).EdgePreventOverrideForFiles, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smartScreen.storeAppsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmartScreen).StoreAppsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"windows.scheduledTask.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsScheduledTask).__id, ok = v.Value.(string)
 		return
@@ -19064,6 +20780,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlWindowsUpdate).Config, ok = plugin.RawToTValue[*mqlWindowsUpdateConfig](v.Value, v.Error)
 		return
 	},
+	"windows.update.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdate).Policy, ok = plugin.RawToTValue[*mqlWindowsUpdatePolicy](v.Value, v.Error)
+		return
+	},
 	"windows.update.installed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsUpdate).Installed, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -19170,6 +20890,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.update.config.policyState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsUpdateConfig).PolicyState, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.update.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdatePolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.update.policy.automaticUpdatesEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdatePolicy).AutomaticUpdatesEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.update.policy.noAutoUpdate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdatePolicy).NoAutoUpdate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.update.policy.scheduledInstallDay": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdatePolicy).ScheduledInstallDay, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.update.policy.scheduledInstallTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdatePolicy).ScheduledInstallTime, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.update.policy.noAutoRebootWithLoggedOnUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdatePolicy).NoAutoRebootWithLoggedOnUsers, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.update.policy.managePreviewBuilds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdatePolicy).ManagePreviewBuilds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.update.policy.deferFeatureUpdates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdatePolicy).DeferFeatureUpdates, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.update.policy.deferFeatureUpdatesPeriodInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdatePolicy).DeferFeatureUpdatesPeriodInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.update.policy.deferQualityUpdates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdatePolicy).DeferQualityUpdates, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.update.policy.deferQualityUpdatesPeriodInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdatePolicy).DeferQualityUpdatesPeriodInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.update.policy.allowTemporaryEnterpriseFeatureControl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdatePolicy).AllowTemporaryEnterpriseFeatureControl, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.update.policy.allowOptionalContent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdatePolicy).AllowOptionalContent, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.update.policy.disablePauseUXAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdatePolicy).DisablePauseUXAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.serverFeature.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19298,6 +21074,474 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.rdp.maxDisconnectionTimeMs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsRdp).MaxDisconnectionTimeMs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.connectionsDenied": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).ConnectionsDenied, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.singleSessionPerUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).SingleSessionPerUser, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.perSessionTempDirsUsed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).PerSessionTempDirsUsed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.solicitedRemoteAssistanceAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).SolicitedRemoteAssistanceAllowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.offerRemoteAssistanceAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).OfferRemoteAssistanceAllowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.webAuthnRedirectionDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).WebAuthnRedirectionDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.locationRedirectionDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).LocationRedirectionDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.uiAutomationRedirectionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).UiAutomationRedirectionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.clipboardServerToClientLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).ClipboardServerToClientLevel, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.endSessionWhenTimeLimitReached": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).EndSessionWhenTimeLimitReached, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.cloudClipboardIntegrationDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).CloudClipboardIntegrationDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrm).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.winrm.client": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrm).Client, ok = plugin.RawToTValue[*mqlWindowsWinrmClient](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrm).Service, ok = plugin.RawToTValue[*mqlWindowsWinrmService](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.serviceStartMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrm).ServiceStartMode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.client.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrmClient).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.winrm.client.allowBasic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrmClient).AllowBasic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.client.allowUnencryptedTraffic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrmClient).AllowUnencryptedTraffic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.client.allowDigest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrmClient).AllowDigest, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrmService).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.winrm.service.allowBasic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrmService).AllowBasic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.service.allowUnencryptedTraffic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrmService).AllowUnencryptedTraffic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.service.disableRunAs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrmService).DisableRunAs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.service.allowAutoConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrmService).AllowAutoConfig, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.service.allowRemoteShellAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrmService).AllowRemoteShellAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.deviceGuard.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDeviceGuard).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.deviceGuard.virtualizationBasedSecurityEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDeviceGuard).VirtualizationBasedSecurityEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.deviceGuard.requirePlatformSecurityFeatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDeviceGuard).RequirePlatformSecurityFeatures, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.deviceGuard.hypervisorEnforcedCodeIntegrity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDeviceGuard).HypervisorEnforcedCodeIntegrity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.deviceGuard.hvciMatRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDeviceGuard).HvciMatRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.deviceGuard.credentialGuardConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDeviceGuard).CredentialGuardConfig, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.deviceGuard.systemGuardLaunch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDeviceGuard).SystemGuardLaunch, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.deviceGuard.kernelShadowStacksLaunch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDeviceGuard).KernelShadowStacksLaunch, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.lsa.disableDomainCreds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).DisableDomainCreds, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.everyoneIncludesAnonymous": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).EveryoneIncludesAnonymous, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.forceGuest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).ForceGuest, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.limitBlankPasswordUse": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).LimitBlankPasswordUse, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.lmCompatibilityLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).LmCompatibilityLevel, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.noLmHash": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).NoLmHash, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.restrictAnonymous": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).RestrictAnonymous, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.restrictAnonymousSam": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).RestrictAnonymousSam, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.restrictRemoteSam": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).RestrictRemoteSam, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.runAsPpl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).RunAsPpl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.sceNoApplyLegacyAuditPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).SceNoApplyLegacyAuditPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.submitControl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).SubmitControl, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.useMachineId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).UseMachineId, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.ntlm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).Ntlm, ok = plugin.RawToTValue[*mqlWindowsLsaNtlm](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.secureChannel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).SecureChannel, ok = plugin.RawToTValue[*mqlWindowsLsaSecureChannel](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.ntlm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaNtlm).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.lsa.ntlm.allowNullSessionFallback": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaNtlm).AllowNullSessionFallback, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.ntlm.auditReceivingNtlmTraffic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaNtlm).AuditReceivingNtlmTraffic, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.ntlm.ntlmMinClientSec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaNtlm).NtlmMinClientSec, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.ntlm.ntlmMinServerSec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaNtlm).NtlmMinServerSec, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.ntlm.restrictSendingNtlmTraffic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaNtlm).RestrictSendingNtlmTraffic, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.ntlm.useLogonCredential": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaNtlm).UseLogonCredential, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.ntlm.allowOnlineId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaNtlm).AllowOnlineId, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.secureChannel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaSecureChannel).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.lsa.secureChannel.auditNtlmInDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaSecureChannel).AuditNtlmInDomain, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.secureChannel.blockNetbiosDiscovery": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaSecureChannel).BlockNetbiosDiscovery, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.secureChannel.disablePasswordChange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaSecureChannel).DisablePasswordChange, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.secureChannel.maximumPasswordAge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaSecureChannel).MaximumPasswordAge, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.secureChannel.refusePasswordChange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaSecureChannel).RefusePasswordChange, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.secureChannel.requireSignOrSeal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaSecureChannel).RequireSignOrSeal, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.secureChannel.requireStrongKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaSecureChannel).RequireStrongKey, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.secureChannel.sealSecureChannel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaSecureChannel).SealSecureChannel, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.secureChannel.signSecureChannel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaSecureChannel).SignSecureChannel, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.secureChannel.vulnerableChannelAllowList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaSecureChannel).VulnerableChannelAllowList, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpooler).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.spooler.startMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpooler).StartMode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpooler).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.registerRemoteRpcEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpooler).RegisterRemoteRpcEndpoint, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.redirectionGuardPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpooler).RedirectionGuardPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.webPnpDownloadDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpooler).WebPnpDownloadDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.httpPrintingDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpooler).HttpPrintingDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.copyFilesPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpooler).CopyFilesPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.rpcAuthnLevelPrivacyEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpooler).RpcAuthnLevelPrivacyEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.addPrinterDriversRestricted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpooler).AddPrinterDriversRestricted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.pointAndPrint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpooler).PointAndPrint, ok = plugin.RawToTValue[*mqlWindowsSpoolerPointAndPrint](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.rpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpooler).Rpc, ok = plugin.RawToTValue[*mqlWindowsSpoolerRpc](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.ipp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpooler).Ipp, ok = plugin.RawToTValue[*mqlWindowsSpoolerIpp](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.windowsProtectedPrintGroupPolicyState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpooler).WindowsProtectedPrintGroupPolicyState, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.pointAndPrint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerPointAndPrint).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.spooler.pointAndPrint.restrictDriverInstallationToAdministrators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerPointAndPrint).RestrictDriverInstallationToAdministrators, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.pointAndPrint.noWarningNoElevationOnInstall": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerPointAndPrint).NoWarningNoElevationOnInstall, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.pointAndPrint.updatePromptSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerPointAndPrint).UpdatePromptSettings, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.rpc.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerRpc).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.spooler.rpc.useNamedPipeProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerRpc).UseNamedPipeProtocol, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.rpc.authentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerRpc).Authentication, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.rpc.protocols": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerRpc).Protocols, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.rpc.tcpPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerRpc).TcpPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.rpc.forceKerberos": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerRpc).ForceKerberos, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.ipp.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerIpp).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.spooler.ipp.requireIpps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerIpp).RequireIpps, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.ipp.blockUnknownCA": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerIpp).BlockUnknownCA, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.ipp.blockCertWrongUsage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerIpp).BlockCertWrongUsage, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.ipp.blockCertDateInvalid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerIpp).BlockCertDateInvalid, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.ipp.blockCertCNInvalid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerIpp).BlockCertCNInvalid, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.telemetry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTelemetry).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.telemetry.allowTelemetry": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTelemetry).AllowTelemetry, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.telemetry.disableEnterpriseAuthProxy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTelemetry).DisableEnterpriseAuthProxy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.telemetry.disableOneSettingsDownloads": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTelemetry).DisableOneSettingsDownloads, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.telemetry.doNotShowFeedbackNotifications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTelemetry).DoNotShowFeedbackNotifications, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.telemetry.enableOneSettingsAuditing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTelemetry).EnableOneSettingsAuditing, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.telemetry.limitDiagnosticLogCollection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTelemetry).LimitDiagnosticLogCollection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.telemetry.limitDumpCollection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTelemetry).LimitDumpCollection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.telemetry.disableCloudOptimizedContent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTelemetry).DisableCloudOptimizedContent, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.telemetry.disableConsumerAccountStateContent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTelemetry).DisableConsumerAccountStateContent, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.telemetry.disableWindowsConsumerFeatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTelemetry).DisableWindowsConsumerFeatures, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.powershell.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsPowershell).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.powershell.scriptBlockLogging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsPowershell).ScriptBlockLogging, ok = plugin.RawToTValue[*mqlWindowsPowershellScriptBlockLogging](v.Value, v.Error)
+		return
+	},
+	"windows.powershell.transcription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsPowershell).Transcription, ok = plugin.RawToTValue[*mqlWindowsPowershellTranscription](v.Value, v.Error)
+		return
+	},
+	"windows.powershell.executionPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsPowershell).ExecutionPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.powershell.scriptBlockLogging.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsPowershellScriptBlockLogging).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.powershell.scriptBlockLogging.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsPowershellScriptBlockLogging).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.powershell.transcription.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsPowershellTranscription).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.powershell.transcription.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsPowershellTranscription).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.tpm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19532,12 +21776,316 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlWindowsFirewallRule).PolicyStoreSourceType, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"windows.smb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmb).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.smb.shares": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmb).Shares, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.smb.sessions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmb).Sessions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.smb.connections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmb).Connections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.smb.serverConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmb).ServerConfiguration, ok = plugin.RawToTValue[*mqlWindowsSmbServerConfiguration](v.Value, v.Error)
+		return
+	},
+	"windows.smb.clientConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmb).ClientConfiguration, ok = plugin.RawToTValue[*mqlWindowsSmbClientConfiguration](v.Value, v.Error)
+		return
+	},
+	"windows.smb.smbv1Enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmb).Smbv1Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.serverConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbServerConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.smb.serverConfiguration.requireSecuritySignature": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbServerConfiguration).RequireSecuritySignature, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.serverConfiguration.enableSecuritySignature": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbServerConfiguration).EnableSecuritySignature, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.serverConfiguration.smb1Enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbServerConfiguration).Smb1Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.serverConfiguration.restrictNullSessionAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbServerConfiguration).RestrictNullSessionAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.serverConfiguration.nullSessionPipes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbServerConfiguration).NullSessionPipes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.smb.serverConfiguration.nullSessionShares": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbServerConfiguration).NullSessionShares, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.smb.serverConfiguration.autoDisconnectMinutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbServerConfiguration).AutoDisconnectMinutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.smb.serverConfiguration.enableForcedLogoff": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbServerConfiguration).EnableForcedLogoff, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.serverConfiguration.serverNameHardeningLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbServerConfiguration).ServerNameHardeningLevel, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.smb.serverConfiguration.enableAuthRateLimiter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbServerConfiguration).EnableAuthRateLimiter, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.serverConfiguration.invalidAuthenticationDelayMs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbServerConfiguration).InvalidAuthenticationDelayMs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.smb.serverConfiguration.auditClientDoesNotSupportSigning": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbServerConfiguration).AuditClientDoesNotSupportSigning, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.serverConfiguration.auditClientDoesNotSupportEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbServerConfiguration).AuditClientDoesNotSupportEncryption, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.serverConfiguration.serviceStart": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbServerConfiguration).ServiceStart, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.smb.clientConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbClientConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.smb.clientConfiguration.requireSecuritySignature": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbClientConfiguration).RequireSecuritySignature, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.clientConfiguration.enableSecuritySignature": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbClientConfiguration).EnableSecuritySignature, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.clientConfiguration.enablePlainTextPassword": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbClientConfiguration).EnablePlainTextPassword, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.clientConfiguration.allowInsecureGuestAuth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbClientConfiguration).AllowInsecureGuestAuth, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.clientConfiguration.requireEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbClientConfiguration).RequireEncryption, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.clientConfiguration.minSmb2Dialect": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbClientConfiguration).MinSmb2Dialect, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.smb.clientConfiguration.auditInsecureGuestLogon": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbClientConfiguration).AuditInsecureGuestLogon, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.clientConfiguration.auditServerDoesNotSupportSigning": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbClientConfiguration).AuditServerDoesNotSupportSigning, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.clientConfiguration.auditServerDoesNotSupportEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbClientConfiguration).AuditServerDoesNotSupportEncryption, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.clientConfiguration.serviceStart": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbClientConfiguration).ServiceStart, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.smb.share.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbShare).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.smb.share.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbShare).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.smb.share.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbShare).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.smb.share.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbShare).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.smb.share.scopeName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbShare).ScopeName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.smb.share.shareType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbShare).ShareType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.smb.session.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbSession).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.smb.session.clientComputerName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbSession).ClientComputerName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.smb.session.clientUserName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbSession).ClientUserName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.smb.session.dialect": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbSession).Dialect, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.smb.session.numOpens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbSession).NumOpens, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.smb.connection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.smb.connection.serverName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbConnection).ServerName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.smb.connection.shareName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbConnection).ShareName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.smb.connection.userName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbConnection).UserName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.smb.connection.dialect": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbConnection).Dialect, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"windows.bitlocker.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsBitlocker).__id, ok = v.Value.(string)
 		return
 	},
 	"windows.bitlocker.volumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsBitlocker).Volumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlocker).Policy, ok = plugin.RawToTValue[*mqlWindowsBitlockerPolicy](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.bitlocker.policy.useAdvancedStartup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicy).UseAdvancedStartup, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.useEnhancedPin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicy).UseEnhancedPin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.enableBdeWithNoTpm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicy).EnableBdeWithNoTpm, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.disableExternalDmaUnderLock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicy).DisableExternalDmaUnderLock, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.osAllowSecureBootForIntegrity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicy).OsAllowSecureBootForIntegrity, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.operatingSystemDrives": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicy).OperatingSystemDrives, ok = plugin.RawToTValue[*mqlWindowsBitlockerPolicyDriveSettings](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.fixedDataDrives": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicy).FixedDataDrives, ok = plugin.RawToTValue[*mqlWindowsBitlockerPolicyDriveSettings](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.removableDataDrives": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicy).RemovableDataDrives, ok = plugin.RawToTValue[*mqlWindowsBitlockerPolicyDriveSettings](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.driveType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).DriveType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.recovery": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).Recovery, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.manageDRA": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).ManageDRA, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.recoveryPassword": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).RecoveryPassword, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.recoveryKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).RecoveryKey, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.hideRecoveryPage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).HideRecoveryPage, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.activeDirectoryBackup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).ActiveDirectoryBackup, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.activeDirectoryInfoToStore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).ActiveDirectoryInfoToStore, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.requireActiveDirectoryBackup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).RequireActiveDirectoryBackup, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.hardwareEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).HardwareEncryption, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.passphrase": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).Passphrase, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.allowUserCert": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).AllowUserCert, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.enforceUserCert": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).EnforceUserCert, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.discoveryVolumeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).DiscoveryVolumeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.denyWriteAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).DenyWriteAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.denyCrossOrg": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).DenyCrossOrg, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.bitlocker.volume.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19648,6 +22196,782 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlWindowsSecurityHealth).SecurityCenterService, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"windows.defender.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefender).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.defender.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefender).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefender).Status, ok = plugin.RawToTValue[*mqlWindowsDefenderStatus](v.Value, v.Error)
+		return
+	},
+	"windows.defender.preferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefender).Preferences, ok = plugin.RawToTValue[*mqlWindowsDefenderPreferences](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threats": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefender).Threats, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threatDetections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefender).ThreatDetections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.defender.status.amEngineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).AmEngineVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.amProductVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).AmProductVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.amServiceEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).AmServiceEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.amServiceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).AmServiceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.antispywareEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).AntispywareEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.antispywareSignatureAge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).AntispywareSignatureAge, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.antispywareSignatureLastUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).AntispywareSignatureLastUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.antispywareSignatureVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).AntispywareSignatureVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.antivirusEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).AntivirusEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.antivirusSignatureAge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).AntivirusSignatureAge, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.antivirusSignatureLastUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).AntivirusSignatureLastUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.antivirusSignatureVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).AntivirusSignatureVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.behaviorMonitorEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).BehaviorMonitorEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.computerID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).ComputerID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.computerState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).ComputerState, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.defenderSignaturesOutOfDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).DefenderSignaturesOutOfDate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.deviceControlDefaultEnforcement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).DeviceControlDefaultEnforcement, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.deviceControlPoliciesLastUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).DeviceControlPoliciesLastUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.deviceControlState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).DeviceControlState, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.fullScanAge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).FullScanAge, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.fullScanStartTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).FullScanStartTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.fullScanEndTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).FullScanEndTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.fullScanOverdue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).FullScanOverdue, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.fullScanRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).FullScanRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.fullScanSignatureVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).FullScanSignatureVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.ioavProtectionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).IoavProtectionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.isTamperProtected": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).IsTamperProtected, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.isVirtualMachine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).IsVirtualMachine, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.lastFullScanSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).LastFullScanSource, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.lastQuickScanSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).LastQuickScanSource, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.nisEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).NisEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.nisEngineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).NisEngineVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.nisSignatureAge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).NisSignatureAge, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.nisSignatureLastUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).NisSignatureLastUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.nisSignatureVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).NisSignatureVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.onAccessProtectionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).OnAccessProtectionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.productStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).ProductStatus, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.quickScanAge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).QuickScanAge, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.quickScanStartTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).QuickScanStartTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.quickScanEndTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).QuickScanEndTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.quickScanOverdue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).QuickScanOverdue, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.quickScanSignatureVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).QuickScanSignatureVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.realTimeProtectionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).RealTimeProtectionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.realTimeScanDirection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).RealTimeScanDirection, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.rebootRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).RebootRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.smartAppControlState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).SmartAppControlState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.smartAppControlExpiration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).SmartAppControlExpiration, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.tamperProtectionSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).TamperProtectionSource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.defender.preferences.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderPreferences).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.defender.preferences.scan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderPreferences).Scan, ok = plugin.RawToTValue[*mqlWindowsDefenderScanSettings](v.Value, v.Error)
+		return
+	},
+	"windows.defender.preferences.realTimeProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderPreferences).RealTimeProtection, ok = plugin.RawToTValue[*mqlWindowsDefenderRealTimeSettings](v.Value, v.Error)
+		return
+	},
+	"windows.defender.preferences.cloudProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderPreferences).CloudProtection, ok = plugin.RawToTValue[*mqlWindowsDefenderCloudSettings](v.Value, v.Error)
+		return
+	},
+	"windows.defender.preferences.signatureUpdates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderPreferences).SignatureUpdates, ok = plugin.RawToTValue[*mqlWindowsDefenderSignatureSettings](v.Value, v.Error)
+		return
+	},
+	"windows.defender.preferences.threatActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderPreferences).ThreatActions, ok = plugin.RawToTValue[*mqlWindowsDefenderThreatActionSettings](v.Value, v.Error)
+		return
+	},
+	"windows.defender.preferences.controlledFolderAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderPreferences).ControlledFolderAccess, ok = plugin.RawToTValue[*mqlWindowsDefenderControlledFolderAccess](v.Value, v.Error)
+		return
+	},
+	"windows.defender.preferences.networkProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderPreferences).NetworkProtection, ok = plugin.RawToTValue[*mqlWindowsDefenderNetworkProtectionSettings](v.Value, v.Error)
+		return
+	},
+	"windows.defender.preferences.behavioralNetworkBlocks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderPreferences).BehavioralNetworkBlocks, ok = plugin.RawToTValue[*mqlWindowsDefenderBehavioralNetworkBlockSettings](v.Value, v.Error)
+		return
+	},
+	"windows.defender.preferences.remediation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderPreferences).Remediation, ok = plugin.RawToTValue[*mqlWindowsDefenderRemediationSettings](v.Value, v.Error)
+		return
+	},
+	"windows.defender.preferences.localSettingOverrides": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderPreferences).LocalSettingOverrides, ok = plugin.RawToTValue[*mqlWindowsDefenderLocalSettingOverrides](v.Value, v.Error)
+		return
+	},
+	"windows.defender.preferences.exclusions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderPreferences).Exclusions, ok = plugin.RawToTValue[*mqlWindowsDefenderExclusions](v.Value, v.Error)
+		return
+	},
+	"windows.defender.preferences.attackSurfaceReductionRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderPreferences).AttackSurfaceReductionRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.defender.preferences.puaProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderPreferences).PuaProtection, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.preferences.uiLockdown": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderPreferences).UiLockdown, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.preferences.randomizeScheduleTaskTimes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderPreferences).RandomizeScheduleTaskTimes, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.preferences.disableAutoExclusions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderPreferences).DisableAutoExclusions, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.preferences.disableGenericReports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderPreferences).DisableGenericReports, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.scanSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderScanSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.defender.scanSettings.scanParameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderScanSettings).ScanParameters, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.scanSettings.scanScheduleDay": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderScanSettings).ScanScheduleDay, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.scanSettings.scanScheduleTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderScanSettings).ScanScheduleTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.defender.scanSettings.scanScheduleQuickScanTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderScanSettings).ScanScheduleQuickScanTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.defender.scanSettings.scanScheduleOffset": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderScanSettings).ScanScheduleOffset, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.scanSettings.scanAvgCPULoadFactor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderScanSettings).ScanAvgCPULoadFactor, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.scanSettings.scanOnlyIfIdleEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderScanSettings).ScanOnlyIfIdleEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.scanSettings.checkForSignaturesBeforeRunningScan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderScanSettings).CheckForSignaturesBeforeRunningScan, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.scanSettings.disableArchiveScanning": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderScanSettings).DisableArchiveScanning, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.scanSettings.disableEmailScanning": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderScanSettings).DisableEmailScanning, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.scanSettings.disableRemovableDriveScanning": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderScanSettings).DisableRemovableDriveScanning, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.scanSettings.disableScanningMappedNetworkDrivesForFullScan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderScanSettings).DisableScanningMappedNetworkDrivesForFullScan, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.scanSettings.disableScanningNetworkFiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderScanSettings).DisableScanningNetworkFiles, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.scanSettings.disableCatchupFullScan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderScanSettings).DisableCatchupFullScan, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.scanSettings.disableCatchupQuickScan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderScanSettings).DisableCatchupQuickScan, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.scanSettings.disableCpuThrottleOnIdleScans": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderScanSettings).DisableCpuThrottleOnIdleScans, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.scanSettings.enableFullScanOnBatteryPower": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderScanSettings).EnableFullScanOnBatteryPower, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.scanSettings.enableLowCpuPriority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderScanSettings).EnableLowCpuPriority, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.realTimeSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderRealTimeSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.defender.realTimeSettings.disableRealtimeMonitoring": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderRealTimeSettings).DisableRealtimeMonitoring, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.realTimeSettings.disableBehaviorMonitoring": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderRealTimeSettings).DisableBehaviorMonitoring, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.realTimeSettings.disableIOAVProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderRealTimeSettings).DisableIOAVProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.realTimeSettings.disableScriptScanning": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderRealTimeSettings).DisableScriptScanning, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.realTimeSettings.disableIntrusionPreventionSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderRealTimeSettings).DisableIntrusionPreventionSystem, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.realTimeSettings.realTimeScanDirection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderRealTimeSettings).RealTimeScanDirection, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.realTimeSettings.enableFileHashComputation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderRealTimeSettings).EnableFileHashComputation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.cloudSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderCloudSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.defender.cloudSettings.mapsReporting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderCloudSettings).MapsReporting, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.cloudSettings.submitSamplesConsent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderCloudSettings).SubmitSamplesConsent, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.cloudSettings.cloudBlockLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderCloudSettings).CloudBlockLevel, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.cloudSettings.cloudExtendedTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderCloudSettings).CloudExtendedTimeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.cloudSettings.disableBlockAtFirstSeen": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderCloudSettings).DisableBlockAtFirstSeen, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.signatureSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderSignatureSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.defender.signatureSettings.signatureScheduleDay": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderSignatureSettings).SignatureScheduleDay, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.signatureSettings.signatureScheduleTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderSignatureSettings).SignatureScheduleTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.defender.signatureSettings.signatureUpdateInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderSignatureSettings).SignatureUpdateInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.signatureSettings.signatureUpdateCatchupInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderSignatureSettings).SignatureUpdateCatchupInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.signatureSettings.signatureFallbackOrder": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderSignatureSettings).SignatureFallbackOrder, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.defender.signatureSettings.signatureDefinitionUpdateFileSharesSources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderSignatureSettings).SignatureDefinitionUpdateFileSharesSources, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.defender.signatureSettings.signatureDisableUpdateOnStartupWithoutEngine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderSignatureSettings).SignatureDisableUpdateOnStartupWithoutEngine, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.signatureSettings.signatureFirstAuGracePeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderSignatureSettings).SignatureFirstAuGracePeriod, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.signatureSettings.signatureAuGracePeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderSignatureSettings).SignatureAuGracePeriod, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.signatureSettings.definitionUpdatesChannel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderSignatureSettings).DefinitionUpdatesChannel, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.signatureSettings.engineUpdatesChannel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderSignatureSettings).EngineUpdatesChannel, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.signatureSettings.platformUpdatesChannel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderSignatureSettings).PlatformUpdatesChannel, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.signatureSettings.meteredConnectionUpdates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderSignatureSettings).MeteredConnectionUpdates, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threatActionSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreatActionSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.defender.threatActionSettings.severeThreatDefaultAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreatActionSettings).SevereThreatDefaultAction, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threatActionSettings.highThreatDefaultAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreatActionSettings).HighThreatDefaultAction, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threatActionSettings.moderateThreatDefaultAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreatActionSettings).ModerateThreatDefaultAction, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threatActionSettings.lowThreatDefaultAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreatActionSettings).LowThreatDefaultAction, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threatActionSettings.unknownThreatDefaultAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreatActionSettings).UnknownThreatDefaultAction, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threatActionSettings.idActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreatActionSettings).IdActions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threatIdAction.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreatIdAction).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.defender.threatIdAction.threatId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreatIdAction).ThreatId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threatIdAction.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreatIdAction).Action, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.controlledFolderAccess.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderControlledFolderAccess).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.defender.controlledFolderAccess.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderControlledFolderAccess).Enabled, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.controlledFolderAccess.allowedApplications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderControlledFolderAccess).AllowedApplications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.defender.controlledFolderAccess.protectedFolders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderControlledFolderAccess).ProtectedFolders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.defender.networkProtectionSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderNetworkProtectionSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.defender.networkProtectionSettings.enableNetworkProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderNetworkProtectionSettings).EnableNetworkProtection, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.networkProtectionSettings.allowNetworkProtectionOnWinServer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderNetworkProtectionSettings).AllowNetworkProtectionOnWinServer, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.networkProtectionSettings.allowNetworkProtectionDownLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderNetworkProtectionSettings).AllowNetworkProtectionDownLevel, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.networkProtectionSettings.allowDatagramProcessingOnWinServer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderNetworkProtectionSettings).AllowDatagramProcessingOnWinServer, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.networkProtectionSettings.enableDnsSinkhole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderNetworkProtectionSettings).EnableDnsSinkhole, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.behavioralNetworkBlockSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderBehavioralNetworkBlockSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.defender.behavioralNetworkBlockSettings.bruteForceProtectionConfiguredState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderBehavioralNetworkBlockSettings).BruteForceProtectionConfiguredState, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.behavioralNetworkBlockSettings.bruteForceProtectionAggressiveness": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderBehavioralNetworkBlockSettings).BruteForceProtectionAggressiveness, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.behavioralNetworkBlockSettings.bruteForceProtectionMaxBlockTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderBehavioralNetworkBlockSettings).BruteForceProtectionMaxBlockTime, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.behavioralNetworkBlockSettings.remoteEncryptionProtectionConfiguredState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderBehavioralNetworkBlockSettings).RemoteEncryptionProtectionConfiguredState, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.behavioralNetworkBlockSettings.remoteEncryptionProtectionAggressiveness": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderBehavioralNetworkBlockSettings).RemoteEncryptionProtectionAggressiveness, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.behavioralNetworkBlockSettings.remoteEncryptionProtectionMaxBlockTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderBehavioralNetworkBlockSettings).RemoteEncryptionProtectionMaxBlockTime, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.localSettingOverrides.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderLocalSettingOverrides).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.defender.localSettingOverrides.spynetReporting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderLocalSettingOverrides).SpynetReporting, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.localSettingOverrides.realtimeMonitoring": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderLocalSettingOverrides).RealtimeMonitoring, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.localSettingOverrides.disableBehaviorMonitoring": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderLocalSettingOverrides).DisableBehaviorMonitoring, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.localSettingOverrides.disableIOAVProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderLocalSettingOverrides).DisableIOAVProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.localSettingOverrides.disableIntrusionPreventionSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderLocalSettingOverrides).DisableIntrusionPreventionSystem, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.localSettingOverrides.disableOnAccessProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderLocalSettingOverrides).DisableOnAccessProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.localSettingOverrides.scanParameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderLocalSettingOverrides).ScanParameters, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.localSettingOverrides.scanScheduleDay": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderLocalSettingOverrides).ScanScheduleDay, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.localSettingOverrides.avgCPULoadFactor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderLocalSettingOverrides).AvgCPULoadFactor, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.remediationSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderRemediationSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.defender.remediationSettings.remediationScheduleDay": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderRemediationSettings).RemediationScheduleDay, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.remediationSettings.remediationScheduleTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderRemediationSettings).RemediationScheduleTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.defender.remediationSettings.quarantinePurgeItemsAfterDelay": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderRemediationSettings).QuarantinePurgeItemsAfterDelay, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.remediationSettings.disableRestorePoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderRemediationSettings).DisableRestorePoint, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.exclusions.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderExclusions).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.defender.exclusions.paths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderExclusions).Paths, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.defender.exclusions.extensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderExclusions).Extensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.defender.exclusions.processes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderExclusions).Processes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.defender.exclusions.ipAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderExclusions).IpAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.defender.asrRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderAsrRule).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.defender.asrRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderAsrRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.defender.asrRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderAsrRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.defender.asrRule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderAsrRule).Action, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threat.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreat).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.defender.threat.threatId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreat).ThreatId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threat.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreat).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threat.severityID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreat).SeverityID, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threat.categoryID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreat).CategoryID, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threat.isActive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreat).IsActive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threat.didThreatExecute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreat).DidThreatExecute, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threat.rollupStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreat).RollupStatus, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threat.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreat).Resources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threatDetection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreatDetection).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.defender.threatDetection.detectionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreatDetection).DetectionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threatDetection.threatId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreatDetection).ThreatId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threatDetection.processName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreatDetection).ProcessName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threatDetection.domainUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreatDetection).DomainUser, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threatDetection.detectionSourceTypeId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreatDetection).DetectionSourceTypeId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threatDetection.currentThreatExecutionStatusID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreatDetection).CurrentThreatExecutionStatusID, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threatDetection.threatStatusID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreatDetection).ThreatStatusID, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threatDetection.cleaningActionID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreatDetection).CleaningActionID, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threatDetection.actionSuccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreatDetection).ActionSuccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threatDetection.initialDetectionTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreatDetection).InitialDetectionTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threatDetection.lastThreatStatusChangeTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreatDetection).LastThreatStatusChangeTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threatDetection.remediationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreatDetection).RemediationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"windows.defender.threatDetection.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderThreatDetection).Resources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"cloud.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloud).__id, ok = v.Value.(string)
 		return
@@ -19734,6 +23058,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"network.primaryIPv6": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNetwork).PrimaryIPv6, ok = plugin.RawToTValue[llx.RawIP](v.Value, v.Error)
+		return
+	},
+	"network.neighbors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetwork).Neighbors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"networkNeighbor.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkNeighbor).__id, ok = v.Value.(string)
+		return
+	},
+	"networkNeighbor.ip": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkNeighbor).Ip, ok = plugin.RawToTValue[llx.RawIP](v.Value, v.Error)
+		return
+	},
+	"networkNeighbor.mac": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkNeighbor).Mac, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"networkNeighbor.interface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkNeighbor).Interface, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"networkNeighbor.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkNeighbor).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"networkInterface.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25595,6 +28943,7 @@ type mqlUser struct {
 	Sshkeys        plugin.TValue[[]any]
 	Group          plugin.TValue[*mqlGroup]
 	LoggedIn       plugin.TValue[bool]
+	NtuserDat      plugin.TValue[string]
 }
 
 // createUser creates a new instance of this resource
@@ -25723,6 +29072,17 @@ func (c *mqlUser) GetGroup() *plugin.TValue[*mqlGroup] {
 func (c *mqlUser) GetLoggedIn() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.LoggedIn, func() (bool, error) {
 		return c.loggedIn()
+	})
+}
+
+func (c *mqlUser) GetNtuserDat() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.NtuserDat, func() (string, error) {
+		vargHome := c.GetHome()
+		if vargHome.Error != nil {
+			return "", vargHome.Error
+		}
+
+		return c.ntuserDat(vargHome.Data)
 	})
 }
 
@@ -42609,6 +45969,8 @@ type mqlRegistrykey struct {
 	__id       string
 	// optional: if you define mqlRegistrykeyInternal it will be used here
 	Path       plugin.TValue[string]
+	UserSid    plugin.TValue[string]
+	NtuserDat  plugin.TValue[string]
 	Exists     plugin.TValue[bool]
 	Properties plugin.TValue[map[string]any]
 	Items      plugin.TValue[[]any]
@@ -42656,6 +46018,14 @@ func (c *mqlRegistrykey) GetPath() *plugin.TValue[string] {
 	return &c.Path
 }
 
+func (c *mqlRegistrykey) GetUserSid() *plugin.TValue[string] {
+	return &c.UserSid
+}
+
+func (c *mqlRegistrykey) GetNtuserDat() *plugin.TValue[string] {
+	return &c.NtuserDat
+}
+
 func (c *mqlRegistrykey) GetExists() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.Exists, func() (bool, error) {
 		return c.exists()
@@ -42695,12 +46065,14 @@ type mqlRegistrykeyProperty struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlRegistrykeyPropertyInternal it will be used here
-	Path   plugin.TValue[string]
-	Name   plugin.TValue[string]
-	Exists plugin.TValue[bool]
-	Value  plugin.TValue[string]
-	Type   plugin.TValue[string]
-	Data   plugin.TValue[any]
+	Path      plugin.TValue[string]
+	Name      plugin.TValue[string]
+	UserSid   plugin.TValue[string]
+	NtuserDat plugin.TValue[string]
+	Exists    plugin.TValue[bool]
+	Value     plugin.TValue[string]
+	Type      plugin.TValue[string]
+	Data      plugin.TValue[any]
 }
 
 // createRegistrykeyProperty creates a new instance of this resource
@@ -42746,6 +46118,14 @@ func (c *mqlRegistrykeyProperty) GetPath() *plugin.TValue[string] {
 
 func (c *mqlRegistrykeyProperty) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlRegistrykeyProperty) GetUserSid() *plugin.TValue[string] {
+	return &c.UserSid
+}
+
+func (c *mqlRegistrykeyProperty) GetNtuserDat() *plugin.TValue[string] {
+	return &c.NtuserDat
 }
 
 func (c *mqlRegistrykeyProperty) GetExists() *plugin.TValue[bool] {
@@ -42922,9 +46302,24 @@ type mqlKubelet struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlKubeletInternal it will be used here
-	ConfigFile    plugin.TValue[*mqlFile]
-	Process       plugin.TValue[*mqlProcess]
-	Configuration plugin.TValue[any]
+	ConfigFile                     plugin.TValue[*mqlFile]
+	Process                        plugin.TValue[*mqlProcess]
+	Configuration                  plugin.TValue[any]
+	Version                        plugin.TValue[string]
+	AnonymousAuthEnabled           plugin.TValue[bool]
+	AuthorizationMode              plugin.TValue[string]
+	ClientCAFile                   plugin.TValue[string]
+	ReadOnlyPort                   plugin.TValue[int64]
+	StreamingConnectionIdleTimeout plugin.TValue[string]
+	ProtectKernelDefaults          plugin.TValue[bool]
+	MakeIPTablesUtilChains         plugin.TValue[bool]
+	EventRecordQPS                 plugin.TValue[int64]
+	TlsCertFile                    plugin.TValue[string]
+	TlsPrivateKeyFile              plugin.TValue[string]
+	RotateCertificates             plugin.TValue[bool]
+	ServerTLSBootstrap             plugin.TValue[bool]
+	TlsCipherSuites                plugin.TValue[[]any]
+	TlsMinVersion                  plugin.TValue[string]
 }
 
 // createKubelet creates a new instance of this resource
@@ -42970,6 +46365,96 @@ func (c *mqlKubelet) GetProcess() *plugin.TValue[*mqlProcess] {
 func (c *mqlKubelet) GetConfiguration() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.Configuration, func() (any, error) {
 		return c.configuration()
+	})
+}
+
+func (c *mqlKubelet) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlKubelet) GetAnonymousAuthEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AnonymousAuthEnabled, func() (bool, error) {
+		return c.anonymousAuthEnabled()
+	})
+}
+
+func (c *mqlKubelet) GetAuthorizationMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AuthorizationMode, func() (string, error) {
+		return c.authorizationMode()
+	})
+}
+
+func (c *mqlKubelet) GetClientCAFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ClientCAFile, func() (string, error) {
+		return c.clientCAFile()
+	})
+}
+
+func (c *mqlKubelet) GetReadOnlyPort() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ReadOnlyPort, func() (int64, error) {
+		return c.readOnlyPort()
+	})
+}
+
+func (c *mqlKubelet) GetStreamingConnectionIdleTimeout() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.StreamingConnectionIdleTimeout, func() (string, error) {
+		return c.streamingConnectionIdleTimeout()
+	})
+}
+
+func (c *mqlKubelet) GetProtectKernelDefaults() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ProtectKernelDefaults, func() (bool, error) {
+		return c.protectKernelDefaults()
+	})
+}
+
+func (c *mqlKubelet) GetMakeIPTablesUtilChains() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MakeIPTablesUtilChains, func() (bool, error) {
+		return c.makeIPTablesUtilChains()
+	})
+}
+
+func (c *mqlKubelet) GetEventRecordQPS() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.EventRecordQPS, func() (int64, error) {
+		return c.eventRecordQPS()
+	})
+}
+
+func (c *mqlKubelet) GetTlsCertFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TlsCertFile, func() (string, error) {
+		return c.tlsCertFile()
+	})
+}
+
+func (c *mqlKubelet) GetTlsPrivateKeyFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TlsPrivateKeyFile, func() (string, error) {
+		return c.tlsPrivateKeyFile()
+	})
+}
+
+func (c *mqlKubelet) GetRotateCertificates() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RotateCertificates, func() (bool, error) {
+		return c.rotateCertificates()
+	})
+}
+
+func (c *mqlKubelet) GetServerTLSBootstrap() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ServerTLSBootstrap, func() (bool, error) {
+		return c.serverTLSBootstrap()
+	})
+}
+
+func (c *mqlKubelet) GetTlsCipherSuites() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TlsCipherSuites, func() ([]any, error) {
+		return c.tlsCipherSuites()
+	})
+}
+
+func (c *mqlKubelet) GetTlsMinVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TlsMinVersion, func() (string, error) {
+		return c.tlsMinVersion()
 	})
 }
 
@@ -49297,11 +52782,14 @@ type mqlWindows struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlWindowsInternal it will be used here
-	ComputerInfo     plugin.TValue[any]
-	Hotfixes         plugin.TValue[[]any]
-	ServerFeatures   plugin.TValue[[]any]
-	OptionalFeatures plugin.TValue[[]any]
-	ScheduledTasks   plugin.TValue[[]any]
+	ComputerInfo      plugin.TValue[any]
+	Hotfixes          plugin.TValue[[]any]
+	ServerFeatures    plugin.TValue[[]any]
+	OptionalFeatures  plugin.TValue[[]any]
+	ScheduledTasks    plugin.TValue[[]any]
+	DeviceGuard       plugin.TValue[*mqlWindowsDeviceGuard]
+	ExploitProtection plugin.TValue[*mqlWindowsExploitProtection]
+	SmartScreen       plugin.TValue[*mqlWindowsSmartScreen]
 }
 
 // createWindows creates a new instance of this resource
@@ -49403,6 +52891,540 @@ func (c *mqlWindows) GetScheduledTasks() *plugin.TValue[[]any] {
 		}
 
 		return c.scheduledTasks()
+	})
+}
+
+func (c *mqlWindows) GetDeviceGuard() *plugin.TValue[*mqlWindowsDeviceGuard] {
+	return plugin.GetOrCompute[*mqlWindowsDeviceGuard](&c.DeviceGuard, func() (*mqlWindowsDeviceGuard, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows", c.__id, "deviceGuard")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsDeviceGuard), nil
+			}
+		}
+
+		return c.deviceGuard()
+	})
+}
+
+func (c *mqlWindows) GetExploitProtection() *plugin.TValue[*mqlWindowsExploitProtection] {
+	return plugin.GetOrCompute[*mqlWindowsExploitProtection](&c.ExploitProtection, func() (*mqlWindowsExploitProtection, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows", c.__id, "exploitProtection")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsExploitProtection), nil
+			}
+		}
+
+		return c.exploitProtection()
+	})
+}
+
+func (c *mqlWindows) GetSmartScreen() *plugin.TValue[*mqlWindowsSmartScreen] {
+	return plugin.GetOrCompute[*mqlWindowsSmartScreen](&c.SmartScreen, func() (*mqlWindowsSmartScreen, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows", c.__id, "smartScreen")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsSmartScreen), nil
+			}
+		}
+
+		return c.smartScreen()
+	})
+}
+
+// mqlWindowsExploitProtection for the windows.exploitProtection resource
+type mqlWindowsExploitProtection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlWindowsExploitProtectionInternal
+	Available        plugin.TValue[bool]
+	DisallowOverride plugin.TValue[bool]
+	Dep              plugin.TValue[*mqlWindowsExploitProtectionDep]
+	Aslr             plugin.TValue[*mqlWindowsExploitProtectionAslr]
+	ControlFlowGuard plugin.TValue[*mqlWindowsExploitProtectionCfg]
+	Sehop            plugin.TValue[*mqlWindowsExploitProtectionSehop]
+	Heap             plugin.TValue[*mqlWindowsExploitProtectionHeap]
+}
+
+// createWindowsExploitProtection creates a new instance of this resource
+func createWindowsExploitProtection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsExploitProtection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.exploitProtection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsExploitProtection) MqlName() string {
+	return "windows.exploitProtection"
+}
+
+func (c *mqlWindowsExploitProtection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsExploitProtection) GetAvailable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Available, func() (bool, error) {
+		return c.available()
+	})
+}
+
+func (c *mqlWindowsExploitProtection) GetDisallowOverride() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DisallowOverride, func() (bool, error) {
+		return c.disallowOverride()
+	})
+}
+
+func (c *mqlWindowsExploitProtection) GetDep() *plugin.TValue[*mqlWindowsExploitProtectionDep] {
+	return plugin.GetOrCompute[*mqlWindowsExploitProtectionDep](&c.Dep, func() (*mqlWindowsExploitProtectionDep, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.exploitProtection", c.__id, "dep")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsExploitProtectionDep), nil
+			}
+		}
+
+		return c.dep()
+	})
+}
+
+func (c *mqlWindowsExploitProtection) GetAslr() *plugin.TValue[*mqlWindowsExploitProtectionAslr] {
+	return plugin.GetOrCompute[*mqlWindowsExploitProtectionAslr](&c.Aslr, func() (*mqlWindowsExploitProtectionAslr, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.exploitProtection", c.__id, "aslr")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsExploitProtectionAslr), nil
+			}
+		}
+
+		return c.aslr()
+	})
+}
+
+func (c *mqlWindowsExploitProtection) GetControlFlowGuard() *plugin.TValue[*mqlWindowsExploitProtectionCfg] {
+	return plugin.GetOrCompute[*mqlWindowsExploitProtectionCfg](&c.ControlFlowGuard, func() (*mqlWindowsExploitProtectionCfg, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.exploitProtection", c.__id, "controlFlowGuard")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsExploitProtectionCfg), nil
+			}
+		}
+
+		return c.controlFlowGuard()
+	})
+}
+
+func (c *mqlWindowsExploitProtection) GetSehop() *plugin.TValue[*mqlWindowsExploitProtectionSehop] {
+	return plugin.GetOrCompute[*mqlWindowsExploitProtectionSehop](&c.Sehop, func() (*mqlWindowsExploitProtectionSehop, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.exploitProtection", c.__id, "sehop")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsExploitProtectionSehop), nil
+			}
+		}
+
+		return c.sehop()
+	})
+}
+
+func (c *mqlWindowsExploitProtection) GetHeap() *plugin.TValue[*mqlWindowsExploitProtectionHeap] {
+	return plugin.GetOrCompute[*mqlWindowsExploitProtectionHeap](&c.Heap, func() (*mqlWindowsExploitProtectionHeap, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.exploitProtection", c.__id, "heap")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsExploitProtectionHeap), nil
+			}
+		}
+
+		return c.heap()
+	})
+}
+
+// mqlWindowsExploitProtectionDep for the windows.exploitProtection.dep resource
+type mqlWindowsExploitProtectionDep struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsExploitProtectionDepInternal it will be used here
+	Enable           plugin.TValue[string]
+	EmulateAtlThunks plugin.TValue[string]
+}
+
+// createWindowsExploitProtectionDep creates a new instance of this resource
+func createWindowsExploitProtectionDep(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsExploitProtectionDep{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.exploitProtection.dep", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsExploitProtectionDep) MqlName() string {
+	return "windows.exploitProtection.dep"
+}
+
+func (c *mqlWindowsExploitProtectionDep) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsExploitProtectionDep) GetEnable() *plugin.TValue[string] {
+	return &c.Enable
+}
+
+func (c *mqlWindowsExploitProtectionDep) GetEmulateAtlThunks() *plugin.TValue[string] {
+	return &c.EmulateAtlThunks
+}
+
+// mqlWindowsExploitProtectionAslr for the windows.exploitProtection.aslr resource
+type mqlWindowsExploitProtectionAslr struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsExploitProtectionAslrInternal it will be used here
+	BottomUp            plugin.TValue[string]
+	ForceRelocateImages plugin.TValue[string]
+	HighEntropy         plugin.TValue[string]
+	RequireInfo         plugin.TValue[string]
+}
+
+// createWindowsExploitProtectionAslr creates a new instance of this resource
+func createWindowsExploitProtectionAslr(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsExploitProtectionAslr{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.exploitProtection.aslr", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsExploitProtectionAslr) MqlName() string {
+	return "windows.exploitProtection.aslr"
+}
+
+func (c *mqlWindowsExploitProtectionAslr) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsExploitProtectionAslr) GetBottomUp() *plugin.TValue[string] {
+	return &c.BottomUp
+}
+
+func (c *mqlWindowsExploitProtectionAslr) GetForceRelocateImages() *plugin.TValue[string] {
+	return &c.ForceRelocateImages
+}
+
+func (c *mqlWindowsExploitProtectionAslr) GetHighEntropy() *plugin.TValue[string] {
+	return &c.HighEntropy
+}
+
+func (c *mqlWindowsExploitProtectionAslr) GetRequireInfo() *plugin.TValue[string] {
+	return &c.RequireInfo
+}
+
+// mqlWindowsExploitProtectionCfg for the windows.exploitProtection.cfg resource
+type mqlWindowsExploitProtectionCfg struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsExploitProtectionCfgInternal it will be used here
+	Enable                 plugin.TValue[string]
+	SuppressExports        plugin.TValue[string]
+	StrictControlFlowGuard plugin.TValue[string]
+}
+
+// createWindowsExploitProtectionCfg creates a new instance of this resource
+func createWindowsExploitProtectionCfg(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsExploitProtectionCfg{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.exploitProtection.cfg", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsExploitProtectionCfg) MqlName() string {
+	return "windows.exploitProtection.cfg"
+}
+
+func (c *mqlWindowsExploitProtectionCfg) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsExploitProtectionCfg) GetEnable() *plugin.TValue[string] {
+	return &c.Enable
+}
+
+func (c *mqlWindowsExploitProtectionCfg) GetSuppressExports() *plugin.TValue[string] {
+	return &c.SuppressExports
+}
+
+func (c *mqlWindowsExploitProtectionCfg) GetStrictControlFlowGuard() *plugin.TValue[string] {
+	return &c.StrictControlFlowGuard
+}
+
+// mqlWindowsExploitProtectionSehop for the windows.exploitProtection.sehop resource
+type mqlWindowsExploitProtectionSehop struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsExploitProtectionSehopInternal it will be used here
+	Enable        plugin.TValue[string]
+	TelemetryOnly plugin.TValue[string]
+}
+
+// createWindowsExploitProtectionSehop creates a new instance of this resource
+func createWindowsExploitProtectionSehop(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsExploitProtectionSehop{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.exploitProtection.sehop", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsExploitProtectionSehop) MqlName() string {
+	return "windows.exploitProtection.sehop"
+}
+
+func (c *mqlWindowsExploitProtectionSehop) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsExploitProtectionSehop) GetEnable() *plugin.TValue[string] {
+	return &c.Enable
+}
+
+func (c *mqlWindowsExploitProtectionSehop) GetTelemetryOnly() *plugin.TValue[string] {
+	return &c.TelemetryOnly
+}
+
+// mqlWindowsExploitProtectionHeap for the windows.exploitProtection.heap resource
+type mqlWindowsExploitProtectionHeap struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsExploitProtectionHeapInternal it will be used here
+	TerminateOnError plugin.TValue[string]
+}
+
+// createWindowsExploitProtectionHeap creates a new instance of this resource
+func createWindowsExploitProtectionHeap(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsExploitProtectionHeap{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.exploitProtection.heap", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsExploitProtectionHeap) MqlName() string {
+	return "windows.exploitProtection.heap"
+}
+
+func (c *mqlWindowsExploitProtectionHeap) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsExploitProtectionHeap) GetTerminateOnError() *plugin.TValue[string] {
+	return &c.TerminateOnError
+}
+
+// mqlWindowsSmartScreen for the windows.smartScreen resource
+type mqlWindowsSmartScreen struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlWindowsSmartScreenInternal
+	ExplorerEnabled             plugin.TValue[bool]
+	ExplorerLevel               plugin.TValue[string]
+	EdgeEnabled                 plugin.TValue[bool]
+	EdgePuaEnabled              plugin.TValue[bool]
+	EdgePreventOverride         plugin.TValue[bool]
+	EdgePreventOverrideForFiles plugin.TValue[bool]
+	StoreAppsEnabled            plugin.TValue[bool]
+}
+
+// createWindowsSmartScreen creates a new instance of this resource
+func createWindowsSmartScreen(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsSmartScreen{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.smartScreen", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsSmartScreen) MqlName() string {
+	return "windows.smartScreen"
+}
+
+func (c *mqlWindowsSmartScreen) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsSmartScreen) GetExplorerEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ExplorerEnabled, func() (bool, error) {
+		return c.explorerEnabled()
+	})
+}
+
+func (c *mqlWindowsSmartScreen) GetExplorerLevel() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ExplorerLevel, func() (string, error) {
+		return c.explorerLevel()
+	})
+}
+
+func (c *mqlWindowsSmartScreen) GetEdgeEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EdgeEnabled, func() (bool, error) {
+		return c.edgeEnabled()
+	})
+}
+
+func (c *mqlWindowsSmartScreen) GetEdgePuaEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EdgePuaEnabled, func() (bool, error) {
+		return c.edgePuaEnabled()
+	})
+}
+
+func (c *mqlWindowsSmartScreen) GetEdgePreventOverride() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EdgePreventOverride, func() (bool, error) {
+		return c.edgePreventOverride()
+	})
+}
+
+func (c *mqlWindowsSmartScreen) GetEdgePreventOverrideForFiles() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EdgePreventOverrideForFiles, func() (bool, error) {
+		return c.edgePreventOverrideForFiles()
+	})
+}
+
+func (c *mqlWindowsSmartScreen) GetStoreAppsEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.StoreAppsEnabled, func() (bool, error) {
+		return c.storeAppsEnabled()
 	})
 }
 
@@ -50520,6 +54542,7 @@ type mqlWindowsUpdate struct {
 	__id       string
 	// optional: if you define mqlWindowsUpdateInternal it will be used here
 	Config    plugin.TValue[*mqlWindowsUpdateConfig]
+	Policy    plugin.TValue[*mqlWindowsUpdatePolicy]
 	Installed plugin.TValue[[]any]
 	Available plugin.TValue[[]any]
 }
@@ -50574,6 +54597,22 @@ func (c *mqlWindowsUpdate) GetConfig() *plugin.TValue[*mqlWindowsUpdateConfig] {
 		}
 
 		return c.config()
+	})
+}
+
+func (c *mqlWindowsUpdate) GetPolicy() *plugin.TValue[*mqlWindowsUpdatePolicy] {
+	return plugin.GetOrCompute[*mqlWindowsUpdatePolicy](&c.Policy, func() (*mqlWindowsUpdatePolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.update", c.__id, "policy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsUpdatePolicy), nil
+			}
+		}
+
+		return c.policy()
 	})
 }
 
@@ -50824,6 +54863,115 @@ func (c *mqlWindowsUpdateConfig) GetPolicyState() *plugin.TValue[int64] {
 	return &c.PolicyState
 }
 
+// mqlWindowsUpdatePolicy for the windows.update.policy resource
+type mqlWindowsUpdatePolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsUpdatePolicyInternal it will be used here
+	AutomaticUpdatesEnabled                plugin.TValue[bool]
+	NoAutoUpdate                           plugin.TValue[bool]
+	ScheduledInstallDay                    plugin.TValue[int64]
+	ScheduledInstallTime                   plugin.TValue[int64]
+	NoAutoRebootWithLoggedOnUsers          plugin.TValue[bool]
+	ManagePreviewBuilds                    plugin.TValue[int64]
+	DeferFeatureUpdates                    plugin.TValue[bool]
+	DeferFeatureUpdatesPeriodInDays        plugin.TValue[int64]
+	DeferQualityUpdates                    plugin.TValue[bool]
+	DeferQualityUpdatesPeriodInDays        plugin.TValue[int64]
+	AllowTemporaryEnterpriseFeatureControl plugin.TValue[bool]
+	AllowOptionalContent                   plugin.TValue[int64]
+	DisablePauseUXAccess                   plugin.TValue[bool]
+}
+
+// createWindowsUpdatePolicy creates a new instance of this resource
+func createWindowsUpdatePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsUpdatePolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.update.policy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsUpdatePolicy) MqlName() string {
+	return "windows.update.policy"
+}
+
+func (c *mqlWindowsUpdatePolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsUpdatePolicy) GetAutomaticUpdatesEnabled() *plugin.TValue[bool] {
+	return &c.AutomaticUpdatesEnabled
+}
+
+func (c *mqlWindowsUpdatePolicy) GetNoAutoUpdate() *plugin.TValue[bool] {
+	return &c.NoAutoUpdate
+}
+
+func (c *mqlWindowsUpdatePolicy) GetScheduledInstallDay() *plugin.TValue[int64] {
+	return &c.ScheduledInstallDay
+}
+
+func (c *mqlWindowsUpdatePolicy) GetScheduledInstallTime() *plugin.TValue[int64] {
+	return &c.ScheduledInstallTime
+}
+
+func (c *mqlWindowsUpdatePolicy) GetNoAutoRebootWithLoggedOnUsers() *plugin.TValue[bool] {
+	return &c.NoAutoRebootWithLoggedOnUsers
+}
+
+func (c *mqlWindowsUpdatePolicy) GetManagePreviewBuilds() *plugin.TValue[int64] {
+	return &c.ManagePreviewBuilds
+}
+
+func (c *mqlWindowsUpdatePolicy) GetDeferFeatureUpdates() *plugin.TValue[bool] {
+	return &c.DeferFeatureUpdates
+}
+
+func (c *mqlWindowsUpdatePolicy) GetDeferFeatureUpdatesPeriodInDays() *plugin.TValue[int64] {
+	return &c.DeferFeatureUpdatesPeriodInDays
+}
+
+func (c *mqlWindowsUpdatePolicy) GetDeferQualityUpdates() *plugin.TValue[bool] {
+	return &c.DeferQualityUpdates
+}
+
+func (c *mqlWindowsUpdatePolicy) GetDeferQualityUpdatesPeriodInDays() *plugin.TValue[int64] {
+	return &c.DeferQualityUpdatesPeriodInDays
+}
+
+func (c *mqlWindowsUpdatePolicy) GetAllowTemporaryEnterpriseFeatureControl() *plugin.TValue[bool] {
+	return &c.AllowTemporaryEnterpriseFeatureControl
+}
+
+func (c *mqlWindowsUpdatePolicy) GetAllowOptionalContent() *plugin.TValue[int64] {
+	return &c.AllowOptionalContent
+}
+
+func (c *mqlWindowsUpdatePolicy) GetDisablePauseUXAccess() *plugin.TValue[bool] {
+	return &c.DisablePauseUXAccess
+}
+
 // mqlWindowsServerFeature for the windows.serverFeature resource
 type mqlWindowsServerFeature struct {
 	MqlRuntime *plugin.Runtime
@@ -51042,19 +55190,30 @@ type mqlWindowsRdp struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlWindowsRdpInternal
-	NetworkLevelAuthentication   plugin.TValue[bool]
-	AlwaysPromptForPassword      plugin.TValue[bool]
-	DriveRedirectionDisabled     plugin.TValue[bool]
-	ComPortRedirectionDisabled   plugin.TValue[bool]
-	LptPortRedirectionDisabled   plugin.TValue[bool]
-	PnpDeviceRedirectionDisabled plugin.TValue[bool]
-	PasswordSavingDisabled       plugin.TValue[bool]
-	DeleteTempDirsOnExit         plugin.TValue[bool]
-	SecureRpcRequired            plugin.TValue[bool]
-	SecurityLayer                plugin.TValue[int64]
-	MinEncryptionLevel           plugin.TValue[int64]
-	MaxIdleTimeMs                plugin.TValue[int64]
-	MaxDisconnectionTimeMs       plugin.TValue[int64]
+	NetworkLevelAuthentication        plugin.TValue[bool]
+	AlwaysPromptForPassword           plugin.TValue[bool]
+	DriveRedirectionDisabled          plugin.TValue[bool]
+	ComPortRedirectionDisabled        plugin.TValue[bool]
+	LptPortRedirectionDisabled        plugin.TValue[bool]
+	PnpDeviceRedirectionDisabled      plugin.TValue[bool]
+	PasswordSavingDisabled            plugin.TValue[bool]
+	DeleteTempDirsOnExit              plugin.TValue[bool]
+	SecureRpcRequired                 plugin.TValue[bool]
+	SecurityLayer                     plugin.TValue[int64]
+	MinEncryptionLevel                plugin.TValue[int64]
+	MaxIdleTimeMs                     plugin.TValue[int64]
+	MaxDisconnectionTimeMs            plugin.TValue[int64]
+	ConnectionsDenied                 plugin.TValue[bool]
+	SingleSessionPerUser              plugin.TValue[bool]
+	PerSessionTempDirsUsed            plugin.TValue[bool]
+	SolicitedRemoteAssistanceAllowed  plugin.TValue[bool]
+	OfferRemoteAssistanceAllowed      plugin.TValue[bool]
+	WebAuthnRedirectionDisabled       plugin.TValue[bool]
+	LocationRedirectionDisabled       plugin.TValue[bool]
+	UiAutomationRedirectionEnabled    plugin.TValue[bool]
+	ClipboardServerToClientLevel      plugin.TValue[int64]
+	EndSessionWhenTimeLimitReached    plugin.TValue[bool]
+	CloudClipboardIntegrationDisabled plugin.TValue[bool]
 }
 
 // createWindowsRdp creates a new instance of this resource
@@ -51170,6 +55329,1365 @@ func (c *mqlWindowsRdp) GetMaxDisconnectionTimeMs() *plugin.TValue[int64] {
 	return plugin.GetOrCompute[int64](&c.MaxDisconnectionTimeMs, func() (int64, error) {
 		return c.maxDisconnectionTimeMs()
 	})
+}
+
+func (c *mqlWindowsRdp) GetConnectionsDenied() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ConnectionsDenied, func() (bool, error) {
+		return c.connectionsDenied()
+	})
+}
+
+func (c *mqlWindowsRdp) GetSingleSessionPerUser() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SingleSessionPerUser, func() (bool, error) {
+		return c.singleSessionPerUser()
+	})
+}
+
+func (c *mqlWindowsRdp) GetPerSessionTempDirsUsed() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PerSessionTempDirsUsed, func() (bool, error) {
+		return c.perSessionTempDirsUsed()
+	})
+}
+
+func (c *mqlWindowsRdp) GetSolicitedRemoteAssistanceAllowed() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SolicitedRemoteAssistanceAllowed, func() (bool, error) {
+		return c.solicitedRemoteAssistanceAllowed()
+	})
+}
+
+func (c *mqlWindowsRdp) GetOfferRemoteAssistanceAllowed() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.OfferRemoteAssistanceAllowed, func() (bool, error) {
+		return c.offerRemoteAssistanceAllowed()
+	})
+}
+
+func (c *mqlWindowsRdp) GetWebAuthnRedirectionDisabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.WebAuthnRedirectionDisabled, func() (bool, error) {
+		return c.webAuthnRedirectionDisabled()
+	})
+}
+
+func (c *mqlWindowsRdp) GetLocationRedirectionDisabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LocationRedirectionDisabled, func() (bool, error) {
+		return c.locationRedirectionDisabled()
+	})
+}
+
+func (c *mqlWindowsRdp) GetUiAutomationRedirectionEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UiAutomationRedirectionEnabled, func() (bool, error) {
+		return c.uiAutomationRedirectionEnabled()
+	})
+}
+
+func (c *mqlWindowsRdp) GetClipboardServerToClientLevel() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ClipboardServerToClientLevel, func() (int64, error) {
+		return c.clipboardServerToClientLevel()
+	})
+}
+
+func (c *mqlWindowsRdp) GetEndSessionWhenTimeLimitReached() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EndSessionWhenTimeLimitReached, func() (bool, error) {
+		return c.endSessionWhenTimeLimitReached()
+	})
+}
+
+func (c *mqlWindowsRdp) GetCloudClipboardIntegrationDisabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.CloudClipboardIntegrationDisabled, func() (bool, error) {
+		return c.cloudClipboardIntegrationDisabled()
+	})
+}
+
+// mqlWindowsWinrm for the windows.winrm resource
+type mqlWindowsWinrm struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsWinrmInternal it will be used here
+	Client           plugin.TValue[*mqlWindowsWinrmClient]
+	Service          plugin.TValue[*mqlWindowsWinrmService]
+	ServiceStartMode plugin.TValue[int64]
+}
+
+// createWindowsWinrm creates a new instance of this resource
+func createWindowsWinrm(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsWinrm{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.winrm", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsWinrm) MqlName() string {
+	return "windows.winrm"
+}
+
+func (c *mqlWindowsWinrm) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsWinrm) GetClient() *plugin.TValue[*mqlWindowsWinrmClient] {
+	return plugin.GetOrCompute[*mqlWindowsWinrmClient](&c.Client, func() (*mqlWindowsWinrmClient, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.winrm", c.__id, "client")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsWinrmClient), nil
+			}
+		}
+
+		return c.client()
+	})
+}
+
+func (c *mqlWindowsWinrm) GetService() *plugin.TValue[*mqlWindowsWinrmService] {
+	return plugin.GetOrCompute[*mqlWindowsWinrmService](&c.Service, func() (*mqlWindowsWinrmService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.winrm", c.__id, "service")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsWinrmService), nil
+			}
+		}
+
+		return c.service()
+	})
+}
+
+func (c *mqlWindowsWinrm) GetServiceStartMode() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ServiceStartMode, func() (int64, error) {
+		return c.serviceStartMode()
+	})
+}
+
+// mqlWindowsWinrmClient for the windows.winrm.client resource
+type mqlWindowsWinrmClient struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsWinrmClientInternal it will be used here
+	AllowBasic              plugin.TValue[bool]
+	AllowUnencryptedTraffic plugin.TValue[bool]
+	AllowDigest             plugin.TValue[bool]
+}
+
+// createWindowsWinrmClient creates a new instance of this resource
+func createWindowsWinrmClient(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsWinrmClient{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.winrm.client", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsWinrmClient) MqlName() string {
+	return "windows.winrm.client"
+}
+
+func (c *mqlWindowsWinrmClient) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsWinrmClient) GetAllowBasic() *plugin.TValue[bool] {
+	return &c.AllowBasic
+}
+
+func (c *mqlWindowsWinrmClient) GetAllowUnencryptedTraffic() *plugin.TValue[bool] {
+	return &c.AllowUnencryptedTraffic
+}
+
+func (c *mqlWindowsWinrmClient) GetAllowDigest() *plugin.TValue[bool] {
+	return &c.AllowDigest
+}
+
+// mqlWindowsWinrmService for the windows.winrm.service resource
+type mqlWindowsWinrmService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsWinrmServiceInternal it will be used here
+	AllowBasic              plugin.TValue[bool]
+	AllowUnencryptedTraffic plugin.TValue[bool]
+	DisableRunAs            plugin.TValue[bool]
+	AllowAutoConfig         plugin.TValue[bool]
+	AllowRemoteShellAccess  plugin.TValue[bool]
+}
+
+// createWindowsWinrmService creates a new instance of this resource
+func createWindowsWinrmService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsWinrmService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.winrm.service", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsWinrmService) MqlName() string {
+	return "windows.winrm.service"
+}
+
+func (c *mqlWindowsWinrmService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsWinrmService) GetAllowBasic() *plugin.TValue[bool] {
+	return &c.AllowBasic
+}
+
+func (c *mqlWindowsWinrmService) GetAllowUnencryptedTraffic() *plugin.TValue[bool] {
+	return &c.AllowUnencryptedTraffic
+}
+
+func (c *mqlWindowsWinrmService) GetDisableRunAs() *plugin.TValue[bool] {
+	return &c.DisableRunAs
+}
+
+func (c *mqlWindowsWinrmService) GetAllowAutoConfig() *plugin.TValue[bool] {
+	return &c.AllowAutoConfig
+}
+
+func (c *mqlWindowsWinrmService) GetAllowRemoteShellAccess() *plugin.TValue[bool] {
+	return &c.AllowRemoteShellAccess
+}
+
+// mqlWindowsDeviceGuard for the windows.deviceGuard resource
+type mqlWindowsDeviceGuard struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDeviceGuardInternal it will be used here
+	VirtualizationBasedSecurityEnabled plugin.TValue[bool]
+	RequirePlatformSecurityFeatures    plugin.TValue[int64]
+	HypervisorEnforcedCodeIntegrity    plugin.TValue[int64]
+	HvciMatRequired                    plugin.TValue[bool]
+	CredentialGuardConfig              plugin.TValue[int64]
+	SystemGuardLaunch                  plugin.TValue[bool]
+	KernelShadowStacksLaunch           plugin.TValue[int64]
+}
+
+// createWindowsDeviceGuard creates a new instance of this resource
+func createWindowsDeviceGuard(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDeviceGuard{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.deviceGuard", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDeviceGuard) MqlName() string {
+	return "windows.deviceGuard"
+}
+
+func (c *mqlWindowsDeviceGuard) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDeviceGuard) GetVirtualizationBasedSecurityEnabled() *plugin.TValue[bool] {
+	return &c.VirtualizationBasedSecurityEnabled
+}
+
+func (c *mqlWindowsDeviceGuard) GetRequirePlatformSecurityFeatures() *plugin.TValue[int64] {
+	return &c.RequirePlatformSecurityFeatures
+}
+
+func (c *mqlWindowsDeviceGuard) GetHypervisorEnforcedCodeIntegrity() *plugin.TValue[int64] {
+	return &c.HypervisorEnforcedCodeIntegrity
+}
+
+func (c *mqlWindowsDeviceGuard) GetHvciMatRequired() *plugin.TValue[bool] {
+	return &c.HvciMatRequired
+}
+
+func (c *mqlWindowsDeviceGuard) GetCredentialGuardConfig() *plugin.TValue[int64] {
+	return &c.CredentialGuardConfig
+}
+
+func (c *mqlWindowsDeviceGuard) GetSystemGuardLaunch() *plugin.TValue[bool] {
+	return &c.SystemGuardLaunch
+}
+
+func (c *mqlWindowsDeviceGuard) GetKernelShadowStacksLaunch() *plugin.TValue[int64] {
+	return &c.KernelShadowStacksLaunch
+}
+
+// mqlWindowsLsa for the windows.lsa resource
+type mqlWindowsLsa struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsLsaInternal it will be used here
+	DisableDomainCreds          plugin.TValue[bool]
+	EveryoneIncludesAnonymous   plugin.TValue[bool]
+	ForceGuest                  plugin.TValue[bool]
+	LimitBlankPasswordUse       plugin.TValue[bool]
+	LmCompatibilityLevel        plugin.TValue[int64]
+	NoLmHash                    plugin.TValue[bool]
+	RestrictAnonymous           plugin.TValue[int64]
+	RestrictAnonymousSam        plugin.TValue[bool]
+	RestrictRemoteSam           plugin.TValue[string]
+	RunAsPpl                    plugin.TValue[int64]
+	SceNoApplyLegacyAuditPolicy plugin.TValue[bool]
+	SubmitControl               plugin.TValue[bool]
+	UseMachineId                plugin.TValue[bool]
+	Ntlm                        plugin.TValue[*mqlWindowsLsaNtlm]
+	SecureChannel               plugin.TValue[*mqlWindowsLsaSecureChannel]
+}
+
+// createWindowsLsa creates a new instance of this resource
+func createWindowsLsa(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsLsa{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.lsa", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsLsa) MqlName() string {
+	return "windows.lsa"
+}
+
+func (c *mqlWindowsLsa) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsLsa) GetDisableDomainCreds() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DisableDomainCreds, func() (bool, error) {
+		return c.disableDomainCreds()
+	})
+}
+
+func (c *mqlWindowsLsa) GetEveryoneIncludesAnonymous() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EveryoneIncludesAnonymous, func() (bool, error) {
+		return c.everyoneIncludesAnonymous()
+	})
+}
+
+func (c *mqlWindowsLsa) GetForceGuest() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ForceGuest, func() (bool, error) {
+		return c.forceGuest()
+	})
+}
+
+func (c *mqlWindowsLsa) GetLimitBlankPasswordUse() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LimitBlankPasswordUse, func() (bool, error) {
+		return c.limitBlankPasswordUse()
+	})
+}
+
+func (c *mqlWindowsLsa) GetLmCompatibilityLevel() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.LmCompatibilityLevel, func() (int64, error) {
+		return c.lmCompatibilityLevel()
+	})
+}
+
+func (c *mqlWindowsLsa) GetNoLmHash() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.NoLmHash, func() (bool, error) {
+		return c.noLmHash()
+	})
+}
+
+func (c *mqlWindowsLsa) GetRestrictAnonymous() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.RestrictAnonymous, func() (int64, error) {
+		return c.restrictAnonymous()
+	})
+}
+
+func (c *mqlWindowsLsa) GetRestrictAnonymousSam() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RestrictAnonymousSam, func() (bool, error) {
+		return c.restrictAnonymousSam()
+	})
+}
+
+func (c *mqlWindowsLsa) GetRestrictRemoteSam() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RestrictRemoteSam, func() (string, error) {
+		return c.restrictRemoteSam()
+	})
+}
+
+func (c *mqlWindowsLsa) GetRunAsPpl() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.RunAsPpl, func() (int64, error) {
+		return c.runAsPpl()
+	})
+}
+
+func (c *mqlWindowsLsa) GetSceNoApplyLegacyAuditPolicy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SceNoApplyLegacyAuditPolicy, func() (bool, error) {
+		return c.sceNoApplyLegacyAuditPolicy()
+	})
+}
+
+func (c *mqlWindowsLsa) GetSubmitControl() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SubmitControl, func() (bool, error) {
+		return c.submitControl()
+	})
+}
+
+func (c *mqlWindowsLsa) GetUseMachineId() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UseMachineId, func() (bool, error) {
+		return c.useMachineId()
+	})
+}
+
+func (c *mqlWindowsLsa) GetNtlm() *plugin.TValue[*mqlWindowsLsaNtlm] {
+	return plugin.GetOrCompute[*mqlWindowsLsaNtlm](&c.Ntlm, func() (*mqlWindowsLsaNtlm, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.lsa", c.__id, "ntlm")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsLsaNtlm), nil
+			}
+		}
+
+		return c.ntlm()
+	})
+}
+
+func (c *mqlWindowsLsa) GetSecureChannel() *plugin.TValue[*mqlWindowsLsaSecureChannel] {
+	return plugin.GetOrCompute[*mqlWindowsLsaSecureChannel](&c.SecureChannel, func() (*mqlWindowsLsaSecureChannel, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.lsa", c.__id, "secureChannel")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsLsaSecureChannel), nil
+			}
+		}
+
+		return c.secureChannel()
+	})
+}
+
+// mqlWindowsLsaNtlm for the windows.lsa.ntlm resource
+type mqlWindowsLsaNtlm struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsLsaNtlmInternal it will be used here
+	AllowNullSessionFallback   plugin.TValue[bool]
+	AuditReceivingNtlmTraffic  plugin.TValue[int64]
+	NtlmMinClientSec           plugin.TValue[int64]
+	NtlmMinServerSec           plugin.TValue[int64]
+	RestrictSendingNtlmTraffic plugin.TValue[int64]
+	UseLogonCredential         plugin.TValue[bool]
+	AllowOnlineId              plugin.TValue[bool]
+}
+
+// createWindowsLsaNtlm creates a new instance of this resource
+func createWindowsLsaNtlm(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsLsaNtlm{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.lsa.ntlm", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsLsaNtlm) MqlName() string {
+	return "windows.lsa.ntlm"
+}
+
+func (c *mqlWindowsLsaNtlm) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsLsaNtlm) GetAllowNullSessionFallback() *plugin.TValue[bool] {
+	return &c.AllowNullSessionFallback
+}
+
+func (c *mqlWindowsLsaNtlm) GetAuditReceivingNtlmTraffic() *plugin.TValue[int64] {
+	return &c.AuditReceivingNtlmTraffic
+}
+
+func (c *mqlWindowsLsaNtlm) GetNtlmMinClientSec() *plugin.TValue[int64] {
+	return &c.NtlmMinClientSec
+}
+
+func (c *mqlWindowsLsaNtlm) GetNtlmMinServerSec() *plugin.TValue[int64] {
+	return &c.NtlmMinServerSec
+}
+
+func (c *mqlWindowsLsaNtlm) GetRestrictSendingNtlmTraffic() *plugin.TValue[int64] {
+	return &c.RestrictSendingNtlmTraffic
+}
+
+func (c *mqlWindowsLsaNtlm) GetUseLogonCredential() *plugin.TValue[bool] {
+	return &c.UseLogonCredential
+}
+
+func (c *mqlWindowsLsaNtlm) GetAllowOnlineId() *plugin.TValue[bool] {
+	return &c.AllowOnlineId
+}
+
+// mqlWindowsLsaSecureChannel for the windows.lsa.secureChannel resource
+type mqlWindowsLsaSecureChannel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsLsaSecureChannelInternal it will be used here
+	AuditNtlmInDomain          plugin.TValue[int64]
+	BlockNetbiosDiscovery      plugin.TValue[bool]
+	DisablePasswordChange      plugin.TValue[bool]
+	MaximumPasswordAge         plugin.TValue[int64]
+	RefusePasswordChange       plugin.TValue[bool]
+	RequireSignOrSeal          plugin.TValue[bool]
+	RequireStrongKey           plugin.TValue[bool]
+	SealSecureChannel          plugin.TValue[bool]
+	SignSecureChannel          plugin.TValue[bool]
+	VulnerableChannelAllowList plugin.TValue[string]
+}
+
+// createWindowsLsaSecureChannel creates a new instance of this resource
+func createWindowsLsaSecureChannel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsLsaSecureChannel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.lsa.secureChannel", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsLsaSecureChannel) MqlName() string {
+	return "windows.lsa.secureChannel"
+}
+
+func (c *mqlWindowsLsaSecureChannel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsLsaSecureChannel) GetAuditNtlmInDomain() *plugin.TValue[int64] {
+	return &c.AuditNtlmInDomain
+}
+
+func (c *mqlWindowsLsaSecureChannel) GetBlockNetbiosDiscovery() *plugin.TValue[bool] {
+	return &c.BlockNetbiosDiscovery
+}
+
+func (c *mqlWindowsLsaSecureChannel) GetDisablePasswordChange() *plugin.TValue[bool] {
+	return &c.DisablePasswordChange
+}
+
+func (c *mqlWindowsLsaSecureChannel) GetMaximumPasswordAge() *plugin.TValue[int64] {
+	return &c.MaximumPasswordAge
+}
+
+func (c *mqlWindowsLsaSecureChannel) GetRefusePasswordChange() *plugin.TValue[bool] {
+	return &c.RefusePasswordChange
+}
+
+func (c *mqlWindowsLsaSecureChannel) GetRequireSignOrSeal() *plugin.TValue[bool] {
+	return &c.RequireSignOrSeal
+}
+
+func (c *mqlWindowsLsaSecureChannel) GetRequireStrongKey() *plugin.TValue[bool] {
+	return &c.RequireStrongKey
+}
+
+func (c *mqlWindowsLsaSecureChannel) GetSealSecureChannel() *plugin.TValue[bool] {
+	return &c.SealSecureChannel
+}
+
+func (c *mqlWindowsLsaSecureChannel) GetSignSecureChannel() *plugin.TValue[bool] {
+	return &c.SignSecureChannel
+}
+
+func (c *mqlWindowsLsaSecureChannel) GetVulnerableChannelAllowList() *plugin.TValue[string] {
+	return &c.VulnerableChannelAllowList
+}
+
+// mqlWindowsSpooler for the windows.spooler resource
+type mqlWindowsSpooler struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlWindowsSpoolerInternal
+	StartMode                             plugin.TValue[int64]
+	Disabled                              plugin.TValue[bool]
+	RegisterRemoteRpcEndpoint             plugin.TValue[bool]
+	RedirectionGuardPolicy                plugin.TValue[bool]
+	WebPnpDownloadDisabled                plugin.TValue[bool]
+	HttpPrintingDisabled                  plugin.TValue[bool]
+	CopyFilesPolicy                       plugin.TValue[bool]
+	RpcAuthnLevelPrivacyEnabled           plugin.TValue[bool]
+	AddPrinterDriversRestricted           plugin.TValue[bool]
+	PointAndPrint                         plugin.TValue[*mqlWindowsSpoolerPointAndPrint]
+	Rpc                                   plugin.TValue[*mqlWindowsSpoolerRpc]
+	Ipp                                   plugin.TValue[*mqlWindowsSpoolerIpp]
+	WindowsProtectedPrintGroupPolicyState plugin.TValue[bool]
+}
+
+// createWindowsSpooler creates a new instance of this resource
+func createWindowsSpooler(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsSpooler{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.spooler", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsSpooler) MqlName() string {
+	return "windows.spooler"
+}
+
+func (c *mqlWindowsSpooler) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsSpooler) GetStartMode() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.StartMode, func() (int64, error) {
+		return c.startMode()
+	})
+}
+
+func (c *mqlWindowsSpooler) GetDisabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Disabled, func() (bool, error) {
+		return c.disabled()
+	})
+}
+
+func (c *mqlWindowsSpooler) GetRegisterRemoteRpcEndpoint() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RegisterRemoteRpcEndpoint, func() (bool, error) {
+		return c.registerRemoteRpcEndpoint()
+	})
+}
+
+func (c *mqlWindowsSpooler) GetRedirectionGuardPolicy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RedirectionGuardPolicy, func() (bool, error) {
+		return c.redirectionGuardPolicy()
+	})
+}
+
+func (c *mqlWindowsSpooler) GetWebPnpDownloadDisabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.WebPnpDownloadDisabled, func() (bool, error) {
+		return c.webPnpDownloadDisabled()
+	})
+}
+
+func (c *mqlWindowsSpooler) GetHttpPrintingDisabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HttpPrintingDisabled, func() (bool, error) {
+		return c.httpPrintingDisabled()
+	})
+}
+
+func (c *mqlWindowsSpooler) GetCopyFilesPolicy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.CopyFilesPolicy, func() (bool, error) {
+		return c.copyFilesPolicy()
+	})
+}
+
+func (c *mqlWindowsSpooler) GetRpcAuthnLevelPrivacyEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RpcAuthnLevelPrivacyEnabled, func() (bool, error) {
+		return c.rpcAuthnLevelPrivacyEnabled()
+	})
+}
+
+func (c *mqlWindowsSpooler) GetAddPrinterDriversRestricted() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AddPrinterDriversRestricted, func() (bool, error) {
+		return c.addPrinterDriversRestricted()
+	})
+}
+
+func (c *mqlWindowsSpooler) GetPointAndPrint() *plugin.TValue[*mqlWindowsSpoolerPointAndPrint] {
+	return plugin.GetOrCompute[*mqlWindowsSpoolerPointAndPrint](&c.PointAndPrint, func() (*mqlWindowsSpoolerPointAndPrint, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.spooler", c.__id, "pointAndPrint")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsSpoolerPointAndPrint), nil
+			}
+		}
+
+		return c.pointAndPrint()
+	})
+}
+
+func (c *mqlWindowsSpooler) GetRpc() *plugin.TValue[*mqlWindowsSpoolerRpc] {
+	return plugin.GetOrCompute[*mqlWindowsSpoolerRpc](&c.Rpc, func() (*mqlWindowsSpoolerRpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.spooler", c.__id, "rpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsSpoolerRpc), nil
+			}
+		}
+
+		return c.rpc()
+	})
+}
+
+func (c *mqlWindowsSpooler) GetIpp() *plugin.TValue[*mqlWindowsSpoolerIpp] {
+	return plugin.GetOrCompute[*mqlWindowsSpoolerIpp](&c.Ipp, func() (*mqlWindowsSpoolerIpp, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.spooler", c.__id, "ipp")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsSpoolerIpp), nil
+			}
+		}
+
+		return c.ipp()
+	})
+}
+
+func (c *mqlWindowsSpooler) GetWindowsProtectedPrintGroupPolicyState() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.WindowsProtectedPrintGroupPolicyState, func() (bool, error) {
+		return c.windowsProtectedPrintGroupPolicyState()
+	})
+}
+
+// mqlWindowsSpoolerPointAndPrint for the windows.spooler.pointAndPrint resource
+type mqlWindowsSpoolerPointAndPrint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsSpoolerPointAndPrintInternal it will be used here
+	RestrictDriverInstallationToAdministrators plugin.TValue[bool]
+	NoWarningNoElevationOnInstall              plugin.TValue[bool]
+	UpdatePromptSettings                       plugin.TValue[int64]
+}
+
+// createWindowsSpoolerPointAndPrint creates a new instance of this resource
+func createWindowsSpoolerPointAndPrint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsSpoolerPointAndPrint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.spooler.pointAndPrint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsSpoolerPointAndPrint) MqlName() string {
+	return "windows.spooler.pointAndPrint"
+}
+
+func (c *mqlWindowsSpoolerPointAndPrint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsSpoolerPointAndPrint) GetRestrictDriverInstallationToAdministrators() *plugin.TValue[bool] {
+	return &c.RestrictDriverInstallationToAdministrators
+}
+
+func (c *mqlWindowsSpoolerPointAndPrint) GetNoWarningNoElevationOnInstall() *plugin.TValue[bool] {
+	return &c.NoWarningNoElevationOnInstall
+}
+
+func (c *mqlWindowsSpoolerPointAndPrint) GetUpdatePromptSettings() *plugin.TValue[int64] {
+	return &c.UpdatePromptSettings
+}
+
+// mqlWindowsSpoolerRpc for the windows.spooler.rpc resource
+type mqlWindowsSpoolerRpc struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsSpoolerRpcInternal it will be used here
+	UseNamedPipeProtocol plugin.TValue[bool]
+	Authentication       plugin.TValue[int64]
+	Protocols            plugin.TValue[int64]
+	TcpPort              plugin.TValue[int64]
+	ForceKerberos        plugin.TValue[bool]
+}
+
+// createWindowsSpoolerRpc creates a new instance of this resource
+func createWindowsSpoolerRpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsSpoolerRpc{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.spooler.rpc", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsSpoolerRpc) MqlName() string {
+	return "windows.spooler.rpc"
+}
+
+func (c *mqlWindowsSpoolerRpc) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsSpoolerRpc) GetUseNamedPipeProtocol() *plugin.TValue[bool] {
+	return &c.UseNamedPipeProtocol
+}
+
+func (c *mqlWindowsSpoolerRpc) GetAuthentication() *plugin.TValue[int64] {
+	return &c.Authentication
+}
+
+func (c *mqlWindowsSpoolerRpc) GetProtocols() *plugin.TValue[int64] {
+	return &c.Protocols
+}
+
+func (c *mqlWindowsSpoolerRpc) GetTcpPort() *plugin.TValue[int64] {
+	return &c.TcpPort
+}
+
+func (c *mqlWindowsSpoolerRpc) GetForceKerberos() *plugin.TValue[bool] {
+	return &c.ForceKerberos
+}
+
+// mqlWindowsSpoolerIpp for the windows.spooler.ipp resource
+type mqlWindowsSpoolerIpp struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsSpoolerIppInternal it will be used here
+	RequireIpps          plugin.TValue[bool]
+	BlockUnknownCA       plugin.TValue[bool]
+	BlockCertWrongUsage  plugin.TValue[bool]
+	BlockCertDateInvalid plugin.TValue[bool]
+	BlockCertCNInvalid   plugin.TValue[bool]
+}
+
+// createWindowsSpoolerIpp creates a new instance of this resource
+func createWindowsSpoolerIpp(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsSpoolerIpp{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.spooler.ipp", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsSpoolerIpp) MqlName() string {
+	return "windows.spooler.ipp"
+}
+
+func (c *mqlWindowsSpoolerIpp) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsSpoolerIpp) GetRequireIpps() *plugin.TValue[bool] {
+	return &c.RequireIpps
+}
+
+func (c *mqlWindowsSpoolerIpp) GetBlockUnknownCA() *plugin.TValue[bool] {
+	return &c.BlockUnknownCA
+}
+
+func (c *mqlWindowsSpoolerIpp) GetBlockCertWrongUsage() *plugin.TValue[bool] {
+	return &c.BlockCertWrongUsage
+}
+
+func (c *mqlWindowsSpoolerIpp) GetBlockCertDateInvalid() *plugin.TValue[bool] {
+	return &c.BlockCertDateInvalid
+}
+
+func (c *mqlWindowsSpoolerIpp) GetBlockCertCNInvalid() *plugin.TValue[bool] {
+	return &c.BlockCertCNInvalid
+}
+
+// mqlWindowsTelemetry for the windows.telemetry resource
+type mqlWindowsTelemetry struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsTelemetryInternal it will be used here
+	AllowTelemetry                     plugin.TValue[int64]
+	DisableEnterpriseAuthProxy         plugin.TValue[bool]
+	DisableOneSettingsDownloads        plugin.TValue[bool]
+	DoNotShowFeedbackNotifications     plugin.TValue[bool]
+	EnableOneSettingsAuditing          plugin.TValue[bool]
+	LimitDiagnosticLogCollection       plugin.TValue[bool]
+	LimitDumpCollection                plugin.TValue[bool]
+	DisableCloudOptimizedContent       plugin.TValue[bool]
+	DisableConsumerAccountStateContent plugin.TValue[bool]
+	DisableWindowsConsumerFeatures     plugin.TValue[bool]
+}
+
+// createWindowsTelemetry creates a new instance of this resource
+func createWindowsTelemetry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsTelemetry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.telemetry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsTelemetry) MqlName() string {
+	return "windows.telemetry"
+}
+
+func (c *mqlWindowsTelemetry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsTelemetry) GetAllowTelemetry() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.AllowTelemetry, func() (int64, error) {
+		return c.allowTelemetry()
+	})
+}
+
+func (c *mqlWindowsTelemetry) GetDisableEnterpriseAuthProxy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DisableEnterpriseAuthProxy, func() (bool, error) {
+		return c.disableEnterpriseAuthProxy()
+	})
+}
+
+func (c *mqlWindowsTelemetry) GetDisableOneSettingsDownloads() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DisableOneSettingsDownloads, func() (bool, error) {
+		return c.disableOneSettingsDownloads()
+	})
+}
+
+func (c *mqlWindowsTelemetry) GetDoNotShowFeedbackNotifications() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DoNotShowFeedbackNotifications, func() (bool, error) {
+		return c.doNotShowFeedbackNotifications()
+	})
+}
+
+func (c *mqlWindowsTelemetry) GetEnableOneSettingsAuditing() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EnableOneSettingsAuditing, func() (bool, error) {
+		return c.enableOneSettingsAuditing()
+	})
+}
+
+func (c *mqlWindowsTelemetry) GetLimitDiagnosticLogCollection() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LimitDiagnosticLogCollection, func() (bool, error) {
+		return c.limitDiagnosticLogCollection()
+	})
+}
+
+func (c *mqlWindowsTelemetry) GetLimitDumpCollection() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LimitDumpCollection, func() (bool, error) {
+		return c.limitDumpCollection()
+	})
+}
+
+func (c *mqlWindowsTelemetry) GetDisableCloudOptimizedContent() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DisableCloudOptimizedContent, func() (bool, error) {
+		return c.disableCloudOptimizedContent()
+	})
+}
+
+func (c *mqlWindowsTelemetry) GetDisableConsumerAccountStateContent() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DisableConsumerAccountStateContent, func() (bool, error) {
+		return c.disableConsumerAccountStateContent()
+	})
+}
+
+func (c *mqlWindowsTelemetry) GetDisableWindowsConsumerFeatures() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DisableWindowsConsumerFeatures, func() (bool, error) {
+		return c.disableWindowsConsumerFeatures()
+	})
+}
+
+// mqlWindowsPowershell for the windows.powershell resource
+type mqlWindowsPowershell struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsPowershellInternal it will be used here
+	ScriptBlockLogging plugin.TValue[*mqlWindowsPowershellScriptBlockLogging]
+	Transcription      plugin.TValue[*mqlWindowsPowershellTranscription]
+	ExecutionPolicy    plugin.TValue[string]
+}
+
+// createWindowsPowershell creates a new instance of this resource
+func createWindowsPowershell(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsPowershell{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.powershell", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsPowershell) MqlName() string {
+	return "windows.powershell"
+}
+
+func (c *mqlWindowsPowershell) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsPowershell) GetScriptBlockLogging() *plugin.TValue[*mqlWindowsPowershellScriptBlockLogging] {
+	return plugin.GetOrCompute[*mqlWindowsPowershellScriptBlockLogging](&c.ScriptBlockLogging, func() (*mqlWindowsPowershellScriptBlockLogging, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.powershell", c.__id, "scriptBlockLogging")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsPowershellScriptBlockLogging), nil
+			}
+		}
+
+		return c.scriptBlockLogging()
+	})
+}
+
+func (c *mqlWindowsPowershell) GetTranscription() *plugin.TValue[*mqlWindowsPowershellTranscription] {
+	return plugin.GetOrCompute[*mqlWindowsPowershellTranscription](&c.Transcription, func() (*mqlWindowsPowershellTranscription, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.powershell", c.__id, "transcription")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsPowershellTranscription), nil
+			}
+		}
+
+		return c.transcription()
+	})
+}
+
+func (c *mqlWindowsPowershell) GetExecutionPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ExecutionPolicy, func() (string, error) {
+		return c.executionPolicy()
+	})
+}
+
+// mqlWindowsPowershellScriptBlockLogging for the windows.powershell.scriptBlockLogging resource
+type mqlWindowsPowershellScriptBlockLogging struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsPowershellScriptBlockLoggingInternal it will be used here
+	Enabled plugin.TValue[bool]
+}
+
+// createWindowsPowershellScriptBlockLogging creates a new instance of this resource
+func createWindowsPowershellScriptBlockLogging(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsPowershellScriptBlockLogging{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.powershell.scriptBlockLogging", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsPowershellScriptBlockLogging) MqlName() string {
+	return "windows.powershell.scriptBlockLogging"
+}
+
+func (c *mqlWindowsPowershellScriptBlockLogging) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsPowershellScriptBlockLogging) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+// mqlWindowsPowershellTranscription for the windows.powershell.transcription resource
+type mqlWindowsPowershellTranscription struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsPowershellTranscriptionInternal it will be used here
+	Enabled plugin.TValue[bool]
+}
+
+// createWindowsPowershellTranscription creates a new instance of this resource
+func createWindowsPowershellTranscription(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsPowershellTranscription{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.powershell.transcription", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsPowershellTranscription) MqlName() string {
+	return "windows.powershell.transcription"
+}
+
+func (c *mqlWindowsPowershellTranscription) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsPowershellTranscription) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
 }
 
 // mqlWindowsTpm for the windows.tpm resource
@@ -51736,12 +57254,539 @@ func (c *mqlWindowsFirewallRule) GetPolicyStoreSourceType() *plugin.TValue[int64
 	return &c.PolicyStoreSourceType
 }
 
+// mqlWindowsSmb for the windows.smb resource
+type mqlWindowsSmb struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsSmbInternal it will be used here
+	Shares              plugin.TValue[[]any]
+	Sessions            plugin.TValue[[]any]
+	Connections         plugin.TValue[[]any]
+	ServerConfiguration plugin.TValue[*mqlWindowsSmbServerConfiguration]
+	ClientConfiguration plugin.TValue[*mqlWindowsSmbClientConfiguration]
+	Smbv1Enabled        plugin.TValue[bool]
+}
+
+// createWindowsSmb creates a new instance of this resource
+func createWindowsSmb(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsSmb{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.smb", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsSmb) MqlName() string {
+	return "windows.smb"
+}
+
+func (c *mqlWindowsSmb) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsSmb) GetShares() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Shares, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.smb", c.__id, "shares")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.shares()
+	})
+}
+
+func (c *mqlWindowsSmb) GetSessions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Sessions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.smb", c.__id, "sessions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sessions()
+	})
+}
+
+func (c *mqlWindowsSmb) GetConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Connections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.smb", c.__id, "connections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.connections()
+	})
+}
+
+func (c *mqlWindowsSmb) GetServerConfiguration() *plugin.TValue[*mqlWindowsSmbServerConfiguration] {
+	return plugin.GetOrCompute[*mqlWindowsSmbServerConfiguration](&c.ServerConfiguration, func() (*mqlWindowsSmbServerConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.smb", c.__id, "serverConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsSmbServerConfiguration), nil
+			}
+		}
+
+		return c.serverConfiguration()
+	})
+}
+
+func (c *mqlWindowsSmb) GetClientConfiguration() *plugin.TValue[*mqlWindowsSmbClientConfiguration] {
+	return plugin.GetOrCompute[*mqlWindowsSmbClientConfiguration](&c.ClientConfiguration, func() (*mqlWindowsSmbClientConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.smb", c.__id, "clientConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsSmbClientConfiguration), nil
+			}
+		}
+
+		return c.clientConfiguration()
+	})
+}
+
+func (c *mqlWindowsSmb) GetSmbv1Enabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Smbv1Enabled, func() (bool, error) {
+		return c.smbv1Enabled()
+	})
+}
+
+// mqlWindowsSmbServerConfiguration for the windows.smb.serverConfiguration resource
+type mqlWindowsSmbServerConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsSmbServerConfigurationInternal it will be used here
+	RequireSecuritySignature            plugin.TValue[bool]
+	EnableSecuritySignature             plugin.TValue[bool]
+	Smb1Enabled                         plugin.TValue[bool]
+	RestrictNullSessionAccess           plugin.TValue[bool]
+	NullSessionPipes                    plugin.TValue[[]any]
+	NullSessionShares                   plugin.TValue[[]any]
+	AutoDisconnectMinutes               plugin.TValue[int64]
+	EnableForcedLogoff                  plugin.TValue[bool]
+	ServerNameHardeningLevel            plugin.TValue[int64]
+	EnableAuthRateLimiter               plugin.TValue[bool]
+	InvalidAuthenticationDelayMs        plugin.TValue[int64]
+	AuditClientDoesNotSupportSigning    plugin.TValue[bool]
+	AuditClientDoesNotSupportEncryption plugin.TValue[bool]
+	ServiceStart                        plugin.TValue[int64]
+}
+
+// createWindowsSmbServerConfiguration creates a new instance of this resource
+func createWindowsSmbServerConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsSmbServerConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.smb.serverConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsSmbServerConfiguration) MqlName() string {
+	return "windows.smb.serverConfiguration"
+}
+
+func (c *mqlWindowsSmbServerConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsSmbServerConfiguration) GetRequireSecuritySignature() *plugin.TValue[bool] {
+	return &c.RequireSecuritySignature
+}
+
+func (c *mqlWindowsSmbServerConfiguration) GetEnableSecuritySignature() *plugin.TValue[bool] {
+	return &c.EnableSecuritySignature
+}
+
+func (c *mqlWindowsSmbServerConfiguration) GetSmb1Enabled() *plugin.TValue[bool] {
+	return &c.Smb1Enabled
+}
+
+func (c *mqlWindowsSmbServerConfiguration) GetRestrictNullSessionAccess() *plugin.TValue[bool] {
+	return &c.RestrictNullSessionAccess
+}
+
+func (c *mqlWindowsSmbServerConfiguration) GetNullSessionPipes() *plugin.TValue[[]any] {
+	return &c.NullSessionPipes
+}
+
+func (c *mqlWindowsSmbServerConfiguration) GetNullSessionShares() *plugin.TValue[[]any] {
+	return &c.NullSessionShares
+}
+
+func (c *mqlWindowsSmbServerConfiguration) GetAutoDisconnectMinutes() *plugin.TValue[int64] {
+	return &c.AutoDisconnectMinutes
+}
+
+func (c *mqlWindowsSmbServerConfiguration) GetEnableForcedLogoff() *plugin.TValue[bool] {
+	return &c.EnableForcedLogoff
+}
+
+func (c *mqlWindowsSmbServerConfiguration) GetServerNameHardeningLevel() *plugin.TValue[int64] {
+	return &c.ServerNameHardeningLevel
+}
+
+func (c *mqlWindowsSmbServerConfiguration) GetEnableAuthRateLimiter() *plugin.TValue[bool] {
+	return &c.EnableAuthRateLimiter
+}
+
+func (c *mqlWindowsSmbServerConfiguration) GetInvalidAuthenticationDelayMs() *plugin.TValue[int64] {
+	return &c.InvalidAuthenticationDelayMs
+}
+
+func (c *mqlWindowsSmbServerConfiguration) GetAuditClientDoesNotSupportSigning() *plugin.TValue[bool] {
+	return &c.AuditClientDoesNotSupportSigning
+}
+
+func (c *mqlWindowsSmbServerConfiguration) GetAuditClientDoesNotSupportEncryption() *plugin.TValue[bool] {
+	return &c.AuditClientDoesNotSupportEncryption
+}
+
+func (c *mqlWindowsSmbServerConfiguration) GetServiceStart() *plugin.TValue[int64] {
+	return &c.ServiceStart
+}
+
+// mqlWindowsSmbClientConfiguration for the windows.smb.clientConfiguration resource
+type mqlWindowsSmbClientConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsSmbClientConfigurationInternal it will be used here
+	RequireSecuritySignature            plugin.TValue[bool]
+	EnableSecuritySignature             plugin.TValue[bool]
+	EnablePlainTextPassword             plugin.TValue[bool]
+	AllowInsecureGuestAuth              plugin.TValue[bool]
+	RequireEncryption                   plugin.TValue[bool]
+	MinSmb2Dialect                      plugin.TValue[int64]
+	AuditInsecureGuestLogon             plugin.TValue[bool]
+	AuditServerDoesNotSupportSigning    plugin.TValue[bool]
+	AuditServerDoesNotSupportEncryption plugin.TValue[bool]
+	ServiceStart                        plugin.TValue[int64]
+}
+
+// createWindowsSmbClientConfiguration creates a new instance of this resource
+func createWindowsSmbClientConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsSmbClientConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.smb.clientConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsSmbClientConfiguration) MqlName() string {
+	return "windows.smb.clientConfiguration"
+}
+
+func (c *mqlWindowsSmbClientConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsSmbClientConfiguration) GetRequireSecuritySignature() *plugin.TValue[bool] {
+	return &c.RequireSecuritySignature
+}
+
+func (c *mqlWindowsSmbClientConfiguration) GetEnableSecuritySignature() *plugin.TValue[bool] {
+	return &c.EnableSecuritySignature
+}
+
+func (c *mqlWindowsSmbClientConfiguration) GetEnablePlainTextPassword() *plugin.TValue[bool] {
+	return &c.EnablePlainTextPassword
+}
+
+func (c *mqlWindowsSmbClientConfiguration) GetAllowInsecureGuestAuth() *plugin.TValue[bool] {
+	return &c.AllowInsecureGuestAuth
+}
+
+func (c *mqlWindowsSmbClientConfiguration) GetRequireEncryption() *plugin.TValue[bool] {
+	return &c.RequireEncryption
+}
+
+func (c *mqlWindowsSmbClientConfiguration) GetMinSmb2Dialect() *plugin.TValue[int64] {
+	return &c.MinSmb2Dialect
+}
+
+func (c *mqlWindowsSmbClientConfiguration) GetAuditInsecureGuestLogon() *plugin.TValue[bool] {
+	return &c.AuditInsecureGuestLogon
+}
+
+func (c *mqlWindowsSmbClientConfiguration) GetAuditServerDoesNotSupportSigning() *plugin.TValue[bool] {
+	return &c.AuditServerDoesNotSupportSigning
+}
+
+func (c *mqlWindowsSmbClientConfiguration) GetAuditServerDoesNotSupportEncryption() *plugin.TValue[bool] {
+	return &c.AuditServerDoesNotSupportEncryption
+}
+
+func (c *mqlWindowsSmbClientConfiguration) GetServiceStart() *plugin.TValue[int64] {
+	return &c.ServiceStart
+}
+
+// mqlWindowsSmbShare for the windows.smb.share resource
+type mqlWindowsSmbShare struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsSmbShareInternal it will be used here
+	Name        plugin.TValue[string]
+	Path        plugin.TValue[string]
+	Description plugin.TValue[string]
+	ScopeName   plugin.TValue[string]
+	ShareType   plugin.TValue[string]
+}
+
+// createWindowsSmbShare creates a new instance of this resource
+func createWindowsSmbShare(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsSmbShare{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.smb.share", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsSmbShare) MqlName() string {
+	return "windows.smb.share"
+}
+
+func (c *mqlWindowsSmbShare) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsSmbShare) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindowsSmbShare) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlWindowsSmbShare) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlWindowsSmbShare) GetScopeName() *plugin.TValue[string] {
+	return &c.ScopeName
+}
+
+func (c *mqlWindowsSmbShare) GetShareType() *plugin.TValue[string] {
+	return &c.ShareType
+}
+
+// mqlWindowsSmbSession for the windows.smb.session resource
+type mqlWindowsSmbSession struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsSmbSessionInternal it will be used here
+	ClientComputerName plugin.TValue[string]
+	ClientUserName     plugin.TValue[string]
+	Dialect            plugin.TValue[string]
+	NumOpens           plugin.TValue[int64]
+}
+
+// createWindowsSmbSession creates a new instance of this resource
+func createWindowsSmbSession(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsSmbSession{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.smb.session", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsSmbSession) MqlName() string {
+	return "windows.smb.session"
+}
+
+func (c *mqlWindowsSmbSession) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsSmbSession) GetClientComputerName() *plugin.TValue[string] {
+	return &c.ClientComputerName
+}
+
+func (c *mqlWindowsSmbSession) GetClientUserName() *plugin.TValue[string] {
+	return &c.ClientUserName
+}
+
+func (c *mqlWindowsSmbSession) GetDialect() *plugin.TValue[string] {
+	return &c.Dialect
+}
+
+func (c *mqlWindowsSmbSession) GetNumOpens() *plugin.TValue[int64] {
+	return &c.NumOpens
+}
+
+// mqlWindowsSmbConnection for the windows.smb.connection resource
+type mqlWindowsSmbConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsSmbConnectionInternal it will be used here
+	ServerName plugin.TValue[string]
+	ShareName  plugin.TValue[string]
+	UserName   plugin.TValue[string]
+	Dialect    plugin.TValue[string]
+}
+
+// createWindowsSmbConnection creates a new instance of this resource
+func createWindowsSmbConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsSmbConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.smb.connection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsSmbConnection) MqlName() string {
+	return "windows.smb.connection"
+}
+
+func (c *mqlWindowsSmbConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsSmbConnection) GetServerName() *plugin.TValue[string] {
+	return &c.ServerName
+}
+
+func (c *mqlWindowsSmbConnection) GetShareName() *plugin.TValue[string] {
+	return &c.ShareName
+}
+
+func (c *mqlWindowsSmbConnection) GetUserName() *plugin.TValue[string] {
+	return &c.UserName
+}
+
+func (c *mqlWindowsSmbConnection) GetDialect() *plugin.TValue[string] {
+	return &c.Dialect
+}
+
 // mqlWindowsBitlocker for the windows.bitlocker resource
 type mqlWindowsBitlocker struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlWindowsBitlockerInternal it will be used here
 	Volumes plugin.TValue[[]any]
+	Policy  plugin.TValue[*mqlWindowsBitlockerPolicy]
 }
 
 // createWindowsBitlocker creates a new instance of this resource
@@ -51790,6 +57835,266 @@ func (c *mqlWindowsBitlocker) GetVolumes() *plugin.TValue[[]any] {
 
 		return c.volumes()
 	})
+}
+
+func (c *mqlWindowsBitlocker) GetPolicy() *plugin.TValue[*mqlWindowsBitlockerPolicy] {
+	return plugin.GetOrCompute[*mqlWindowsBitlockerPolicy](&c.Policy, func() (*mqlWindowsBitlockerPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.bitlocker", c.__id, "policy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsBitlockerPolicy), nil
+			}
+		}
+
+		return c.policy()
+	})
+}
+
+// mqlWindowsBitlockerPolicy for the windows.bitlocker.policy resource
+type mqlWindowsBitlockerPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlWindowsBitlockerPolicyInternal
+	UseAdvancedStartup            plugin.TValue[bool]
+	UseEnhancedPin                plugin.TValue[bool]
+	EnableBdeWithNoTpm            plugin.TValue[bool]
+	DisableExternalDmaUnderLock   plugin.TValue[bool]
+	OsAllowSecureBootForIntegrity plugin.TValue[bool]
+	OperatingSystemDrives         plugin.TValue[*mqlWindowsBitlockerPolicyDriveSettings]
+	FixedDataDrives               plugin.TValue[*mqlWindowsBitlockerPolicyDriveSettings]
+	RemovableDataDrives           plugin.TValue[*mqlWindowsBitlockerPolicyDriveSettings]
+}
+
+// createWindowsBitlockerPolicy creates a new instance of this resource
+func createWindowsBitlockerPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsBitlockerPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.bitlocker.policy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsBitlockerPolicy) MqlName() string {
+	return "windows.bitlocker.policy"
+}
+
+func (c *mqlWindowsBitlockerPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsBitlockerPolicy) GetUseAdvancedStartup() *plugin.TValue[bool] {
+	return &c.UseAdvancedStartup
+}
+
+func (c *mqlWindowsBitlockerPolicy) GetUseEnhancedPin() *plugin.TValue[bool] {
+	return &c.UseEnhancedPin
+}
+
+func (c *mqlWindowsBitlockerPolicy) GetEnableBdeWithNoTpm() *plugin.TValue[bool] {
+	return &c.EnableBdeWithNoTpm
+}
+
+func (c *mqlWindowsBitlockerPolicy) GetDisableExternalDmaUnderLock() *plugin.TValue[bool] {
+	return &c.DisableExternalDmaUnderLock
+}
+
+func (c *mqlWindowsBitlockerPolicy) GetOsAllowSecureBootForIntegrity() *plugin.TValue[bool] {
+	return &c.OsAllowSecureBootForIntegrity
+}
+
+func (c *mqlWindowsBitlockerPolicy) GetOperatingSystemDrives() *plugin.TValue[*mqlWindowsBitlockerPolicyDriveSettings] {
+	return plugin.GetOrCompute[*mqlWindowsBitlockerPolicyDriveSettings](&c.OperatingSystemDrives, func() (*mqlWindowsBitlockerPolicyDriveSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.bitlocker.policy", c.__id, "operatingSystemDrives")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsBitlockerPolicyDriveSettings), nil
+			}
+		}
+
+		return c.operatingSystemDrives()
+	})
+}
+
+func (c *mqlWindowsBitlockerPolicy) GetFixedDataDrives() *plugin.TValue[*mqlWindowsBitlockerPolicyDriveSettings] {
+	return plugin.GetOrCompute[*mqlWindowsBitlockerPolicyDriveSettings](&c.FixedDataDrives, func() (*mqlWindowsBitlockerPolicyDriveSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.bitlocker.policy", c.__id, "fixedDataDrives")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsBitlockerPolicyDriveSettings), nil
+			}
+		}
+
+		return c.fixedDataDrives()
+	})
+}
+
+func (c *mqlWindowsBitlockerPolicy) GetRemovableDataDrives() *plugin.TValue[*mqlWindowsBitlockerPolicyDriveSettings] {
+	return plugin.GetOrCompute[*mqlWindowsBitlockerPolicyDriveSettings](&c.RemovableDataDrives, func() (*mqlWindowsBitlockerPolicyDriveSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.bitlocker.policy", c.__id, "removableDataDrives")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsBitlockerPolicyDriveSettings), nil
+			}
+		}
+
+		return c.removableDataDrives()
+	})
+}
+
+// mqlWindowsBitlockerPolicyDriveSettings for the windows.bitlocker.policy.driveSettings resource
+type mqlWindowsBitlockerPolicyDriveSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsBitlockerPolicyDriveSettingsInternal it will be used here
+	DriveType                    plugin.TValue[string]
+	Recovery                     plugin.TValue[int64]
+	ManageDRA                    plugin.TValue[bool]
+	RecoveryPassword             plugin.TValue[int64]
+	RecoveryKey                  plugin.TValue[int64]
+	HideRecoveryPage             plugin.TValue[bool]
+	ActiveDirectoryBackup        plugin.TValue[bool]
+	ActiveDirectoryInfoToStore   plugin.TValue[int64]
+	RequireActiveDirectoryBackup plugin.TValue[bool]
+	HardwareEncryption           plugin.TValue[int64]
+	Passphrase                   plugin.TValue[int64]
+	AllowUserCert                plugin.TValue[bool]
+	EnforceUserCert              plugin.TValue[bool]
+	DiscoveryVolumeType          plugin.TValue[string]
+	DenyWriteAccess              plugin.TValue[bool]
+	DenyCrossOrg                 plugin.TValue[bool]
+}
+
+// createWindowsBitlockerPolicyDriveSettings creates a new instance of this resource
+func createWindowsBitlockerPolicyDriveSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsBitlockerPolicyDriveSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.bitlocker.policy.driveSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) MqlName() string {
+	return "windows.bitlocker.policy.driveSettings"
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetDriveType() *plugin.TValue[string] {
+	return &c.DriveType
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetRecovery() *plugin.TValue[int64] {
+	return &c.Recovery
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetManageDRA() *plugin.TValue[bool] {
+	return &c.ManageDRA
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetRecoveryPassword() *plugin.TValue[int64] {
+	return &c.RecoveryPassword
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetRecoveryKey() *plugin.TValue[int64] {
+	return &c.RecoveryKey
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetHideRecoveryPage() *plugin.TValue[bool] {
+	return &c.HideRecoveryPage
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetActiveDirectoryBackup() *plugin.TValue[bool] {
+	return &c.ActiveDirectoryBackup
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetActiveDirectoryInfoToStore() *plugin.TValue[int64] {
+	return &c.ActiveDirectoryInfoToStore
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetRequireActiveDirectoryBackup() *plugin.TValue[bool] {
+	return &c.RequireActiveDirectoryBackup
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetHardwareEncryption() *plugin.TValue[int64] {
+	return &c.HardwareEncryption
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetPassphrase() *plugin.TValue[int64] {
+	return &c.Passphrase
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetAllowUserCert() *plugin.TValue[bool] {
+	return &c.AllowUserCert
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetEnforceUserCert() *plugin.TValue[bool] {
+	return &c.EnforceUserCert
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetDiscoveryVolumeType() *plugin.TValue[string] {
+	return &c.DiscoveryVolumeType
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetDenyWriteAccess() *plugin.TValue[bool] {
+	return &c.DenyWriteAccess
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetDenyCrossOrg() *plugin.TValue[bool] {
+	return &c.DenyCrossOrg
 }
 
 // mqlWindowsBitlockerVolume for the windows.bitlocker.volume resource
@@ -52085,6 +58390,1804 @@ func (c *mqlWindowsSecurityHealth) GetSecurityCenterService() *plugin.TValue[any
 	return &c.SecurityCenterService
 }
 
+// mqlWindowsDefender for the windows.defender resource
+type mqlWindowsDefender struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDefenderInternal it will be used here
+	Enabled          plugin.TValue[bool]
+	Status           plugin.TValue[*mqlWindowsDefenderStatus]
+	Preferences      plugin.TValue[*mqlWindowsDefenderPreferences]
+	Threats          plugin.TValue[[]any]
+	ThreatDetections plugin.TValue[[]any]
+}
+
+// createWindowsDefender creates a new instance of this resource
+func createWindowsDefender(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDefender{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.defender", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDefender) MqlName() string {
+	return "windows.defender"
+}
+
+func (c *mqlWindowsDefender) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDefender) GetEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Enabled, func() (bool, error) {
+		return c.enabled()
+	})
+}
+
+func (c *mqlWindowsDefender) GetStatus() *plugin.TValue[*mqlWindowsDefenderStatus] {
+	return plugin.GetOrCompute[*mqlWindowsDefenderStatus](&c.Status, func() (*mqlWindowsDefenderStatus, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.defender", c.__id, "status")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsDefenderStatus), nil
+			}
+		}
+
+		return c.status()
+	})
+}
+
+func (c *mqlWindowsDefender) GetPreferences() *plugin.TValue[*mqlWindowsDefenderPreferences] {
+	return plugin.GetOrCompute[*mqlWindowsDefenderPreferences](&c.Preferences, func() (*mqlWindowsDefenderPreferences, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.defender", c.__id, "preferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsDefenderPreferences), nil
+			}
+		}
+
+		return c.preferences()
+	})
+}
+
+func (c *mqlWindowsDefender) GetThreats() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Threats, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.defender", c.__id, "threats")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.threats()
+	})
+}
+
+func (c *mqlWindowsDefender) GetThreatDetections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ThreatDetections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.defender", c.__id, "threatDetections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.threatDetections()
+	})
+}
+
+// mqlWindowsDefenderStatus for the windows.defender.status resource
+type mqlWindowsDefenderStatus struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDefenderStatusInternal it will be used here
+	AmEngineVersion                  plugin.TValue[string]
+	AmProductVersion                 plugin.TValue[string]
+	AmServiceEnabled                 plugin.TValue[bool]
+	AmServiceVersion                 plugin.TValue[string]
+	AntispywareEnabled               plugin.TValue[bool]
+	AntispywareSignatureAge          plugin.TValue[int64]
+	AntispywareSignatureLastUpdated  plugin.TValue[*time.Time]
+	AntispywareSignatureVersion      plugin.TValue[string]
+	AntivirusEnabled                 plugin.TValue[bool]
+	AntivirusSignatureAge            plugin.TValue[int64]
+	AntivirusSignatureLastUpdated    plugin.TValue[*time.Time]
+	AntivirusSignatureVersion        plugin.TValue[string]
+	BehaviorMonitorEnabled           plugin.TValue[bool]
+	ComputerID                       plugin.TValue[string]
+	ComputerState                    plugin.TValue[int64]
+	DefenderSignaturesOutOfDate      plugin.TValue[bool]
+	DeviceControlDefaultEnforcement  plugin.TValue[int64]
+	DeviceControlPoliciesLastUpdated plugin.TValue[*time.Time]
+	DeviceControlState               plugin.TValue[int64]
+	FullScanAge                      plugin.TValue[int64]
+	FullScanStartTime                plugin.TValue[*time.Time]
+	FullScanEndTime                  plugin.TValue[*time.Time]
+	FullScanOverdue                  plugin.TValue[bool]
+	FullScanRequired                 plugin.TValue[bool]
+	FullScanSignatureVersion         plugin.TValue[string]
+	IoavProtectionEnabled            plugin.TValue[bool]
+	IsTamperProtected                plugin.TValue[bool]
+	IsVirtualMachine                 plugin.TValue[bool]
+	LastFullScanSource               plugin.TValue[int64]
+	LastQuickScanSource              plugin.TValue[int64]
+	NisEnabled                       plugin.TValue[bool]
+	NisEngineVersion                 plugin.TValue[string]
+	NisSignatureAge                  plugin.TValue[int64]
+	NisSignatureLastUpdated          plugin.TValue[*time.Time]
+	NisSignatureVersion              plugin.TValue[string]
+	OnAccessProtectionEnabled        plugin.TValue[bool]
+	ProductStatus                    plugin.TValue[int64]
+	QuickScanAge                     plugin.TValue[int64]
+	QuickScanStartTime               plugin.TValue[*time.Time]
+	QuickScanEndTime                 plugin.TValue[*time.Time]
+	QuickScanOverdue                 plugin.TValue[bool]
+	QuickScanSignatureVersion        plugin.TValue[string]
+	RealTimeProtectionEnabled        plugin.TValue[bool]
+	RealTimeScanDirection            plugin.TValue[int64]
+	RebootRequired                   plugin.TValue[bool]
+	SmartAppControlState             plugin.TValue[string]
+	SmartAppControlExpiration        plugin.TValue[*time.Time]
+	TamperProtectionSource           plugin.TValue[string]
+}
+
+// createWindowsDefenderStatus creates a new instance of this resource
+func createWindowsDefenderStatus(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDefenderStatus{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.defender.status", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDefenderStatus) MqlName() string {
+	return "windows.defender.status"
+}
+
+func (c *mqlWindowsDefenderStatus) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDefenderStatus) GetAmEngineVersion() *plugin.TValue[string] {
+	return &c.AmEngineVersion
+}
+
+func (c *mqlWindowsDefenderStatus) GetAmProductVersion() *plugin.TValue[string] {
+	return &c.AmProductVersion
+}
+
+func (c *mqlWindowsDefenderStatus) GetAmServiceEnabled() *plugin.TValue[bool] {
+	return &c.AmServiceEnabled
+}
+
+func (c *mqlWindowsDefenderStatus) GetAmServiceVersion() *plugin.TValue[string] {
+	return &c.AmServiceVersion
+}
+
+func (c *mqlWindowsDefenderStatus) GetAntispywareEnabled() *plugin.TValue[bool] {
+	return &c.AntispywareEnabled
+}
+
+func (c *mqlWindowsDefenderStatus) GetAntispywareSignatureAge() *plugin.TValue[int64] {
+	return &c.AntispywareSignatureAge
+}
+
+func (c *mqlWindowsDefenderStatus) GetAntispywareSignatureLastUpdated() *plugin.TValue[*time.Time] {
+	return &c.AntispywareSignatureLastUpdated
+}
+
+func (c *mqlWindowsDefenderStatus) GetAntispywareSignatureVersion() *plugin.TValue[string] {
+	return &c.AntispywareSignatureVersion
+}
+
+func (c *mqlWindowsDefenderStatus) GetAntivirusEnabled() *plugin.TValue[bool] {
+	return &c.AntivirusEnabled
+}
+
+func (c *mqlWindowsDefenderStatus) GetAntivirusSignatureAge() *plugin.TValue[int64] {
+	return &c.AntivirusSignatureAge
+}
+
+func (c *mqlWindowsDefenderStatus) GetAntivirusSignatureLastUpdated() *plugin.TValue[*time.Time] {
+	return &c.AntivirusSignatureLastUpdated
+}
+
+func (c *mqlWindowsDefenderStatus) GetAntivirusSignatureVersion() *plugin.TValue[string] {
+	return &c.AntivirusSignatureVersion
+}
+
+func (c *mqlWindowsDefenderStatus) GetBehaviorMonitorEnabled() *plugin.TValue[bool] {
+	return &c.BehaviorMonitorEnabled
+}
+
+func (c *mqlWindowsDefenderStatus) GetComputerID() *plugin.TValue[string] {
+	return &c.ComputerID
+}
+
+func (c *mqlWindowsDefenderStatus) GetComputerState() *plugin.TValue[int64] {
+	return &c.ComputerState
+}
+
+func (c *mqlWindowsDefenderStatus) GetDefenderSignaturesOutOfDate() *plugin.TValue[bool] {
+	return &c.DefenderSignaturesOutOfDate
+}
+
+func (c *mqlWindowsDefenderStatus) GetDeviceControlDefaultEnforcement() *plugin.TValue[int64] {
+	return &c.DeviceControlDefaultEnforcement
+}
+
+func (c *mqlWindowsDefenderStatus) GetDeviceControlPoliciesLastUpdated() *plugin.TValue[*time.Time] {
+	return &c.DeviceControlPoliciesLastUpdated
+}
+
+func (c *mqlWindowsDefenderStatus) GetDeviceControlState() *plugin.TValue[int64] {
+	return &c.DeviceControlState
+}
+
+func (c *mqlWindowsDefenderStatus) GetFullScanAge() *plugin.TValue[int64] {
+	return &c.FullScanAge
+}
+
+func (c *mqlWindowsDefenderStatus) GetFullScanStartTime() *plugin.TValue[*time.Time] {
+	return &c.FullScanStartTime
+}
+
+func (c *mqlWindowsDefenderStatus) GetFullScanEndTime() *plugin.TValue[*time.Time] {
+	return &c.FullScanEndTime
+}
+
+func (c *mqlWindowsDefenderStatus) GetFullScanOverdue() *plugin.TValue[bool] {
+	return &c.FullScanOverdue
+}
+
+func (c *mqlWindowsDefenderStatus) GetFullScanRequired() *plugin.TValue[bool] {
+	return &c.FullScanRequired
+}
+
+func (c *mqlWindowsDefenderStatus) GetFullScanSignatureVersion() *plugin.TValue[string] {
+	return &c.FullScanSignatureVersion
+}
+
+func (c *mqlWindowsDefenderStatus) GetIoavProtectionEnabled() *plugin.TValue[bool] {
+	return &c.IoavProtectionEnabled
+}
+
+func (c *mqlWindowsDefenderStatus) GetIsTamperProtected() *plugin.TValue[bool] {
+	return &c.IsTamperProtected
+}
+
+func (c *mqlWindowsDefenderStatus) GetIsVirtualMachine() *plugin.TValue[bool] {
+	return &c.IsVirtualMachine
+}
+
+func (c *mqlWindowsDefenderStatus) GetLastFullScanSource() *plugin.TValue[int64] {
+	return &c.LastFullScanSource
+}
+
+func (c *mqlWindowsDefenderStatus) GetLastQuickScanSource() *plugin.TValue[int64] {
+	return &c.LastQuickScanSource
+}
+
+func (c *mqlWindowsDefenderStatus) GetNisEnabled() *plugin.TValue[bool] {
+	return &c.NisEnabled
+}
+
+func (c *mqlWindowsDefenderStatus) GetNisEngineVersion() *plugin.TValue[string] {
+	return &c.NisEngineVersion
+}
+
+func (c *mqlWindowsDefenderStatus) GetNisSignatureAge() *plugin.TValue[int64] {
+	return &c.NisSignatureAge
+}
+
+func (c *mqlWindowsDefenderStatus) GetNisSignatureLastUpdated() *plugin.TValue[*time.Time] {
+	return &c.NisSignatureLastUpdated
+}
+
+func (c *mqlWindowsDefenderStatus) GetNisSignatureVersion() *plugin.TValue[string] {
+	return &c.NisSignatureVersion
+}
+
+func (c *mqlWindowsDefenderStatus) GetOnAccessProtectionEnabled() *plugin.TValue[bool] {
+	return &c.OnAccessProtectionEnabled
+}
+
+func (c *mqlWindowsDefenderStatus) GetProductStatus() *plugin.TValue[int64] {
+	return &c.ProductStatus
+}
+
+func (c *mqlWindowsDefenderStatus) GetQuickScanAge() *plugin.TValue[int64] {
+	return &c.QuickScanAge
+}
+
+func (c *mqlWindowsDefenderStatus) GetQuickScanStartTime() *plugin.TValue[*time.Time] {
+	return &c.QuickScanStartTime
+}
+
+func (c *mqlWindowsDefenderStatus) GetQuickScanEndTime() *plugin.TValue[*time.Time] {
+	return &c.QuickScanEndTime
+}
+
+func (c *mqlWindowsDefenderStatus) GetQuickScanOverdue() *plugin.TValue[bool] {
+	return &c.QuickScanOverdue
+}
+
+func (c *mqlWindowsDefenderStatus) GetQuickScanSignatureVersion() *plugin.TValue[string] {
+	return &c.QuickScanSignatureVersion
+}
+
+func (c *mqlWindowsDefenderStatus) GetRealTimeProtectionEnabled() *plugin.TValue[bool] {
+	return &c.RealTimeProtectionEnabled
+}
+
+func (c *mqlWindowsDefenderStatus) GetRealTimeScanDirection() *plugin.TValue[int64] {
+	return &c.RealTimeScanDirection
+}
+
+func (c *mqlWindowsDefenderStatus) GetRebootRequired() *plugin.TValue[bool] {
+	return &c.RebootRequired
+}
+
+func (c *mqlWindowsDefenderStatus) GetSmartAppControlState() *plugin.TValue[string] {
+	return &c.SmartAppControlState
+}
+
+func (c *mqlWindowsDefenderStatus) GetSmartAppControlExpiration() *plugin.TValue[*time.Time] {
+	return &c.SmartAppControlExpiration
+}
+
+func (c *mqlWindowsDefenderStatus) GetTamperProtectionSource() *plugin.TValue[string] {
+	return &c.TamperProtectionSource
+}
+
+// mqlWindowsDefenderPreferences for the windows.defender.preferences resource
+type mqlWindowsDefenderPreferences struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlWindowsDefenderPreferencesInternal
+	Scan                        plugin.TValue[*mqlWindowsDefenderScanSettings]
+	RealTimeProtection          plugin.TValue[*mqlWindowsDefenderRealTimeSettings]
+	CloudProtection             plugin.TValue[*mqlWindowsDefenderCloudSettings]
+	SignatureUpdates            plugin.TValue[*mqlWindowsDefenderSignatureSettings]
+	ThreatActions               plugin.TValue[*mqlWindowsDefenderThreatActionSettings]
+	ControlledFolderAccess      plugin.TValue[*mqlWindowsDefenderControlledFolderAccess]
+	NetworkProtection           plugin.TValue[*mqlWindowsDefenderNetworkProtectionSettings]
+	BehavioralNetworkBlocks     plugin.TValue[*mqlWindowsDefenderBehavioralNetworkBlockSettings]
+	Remediation                 plugin.TValue[*mqlWindowsDefenderRemediationSettings]
+	LocalSettingOverrides       plugin.TValue[*mqlWindowsDefenderLocalSettingOverrides]
+	Exclusions                  plugin.TValue[*mqlWindowsDefenderExclusions]
+	AttackSurfaceReductionRules plugin.TValue[[]any]
+	PuaProtection               plugin.TValue[int64]
+	UiLockdown                  plugin.TValue[bool]
+	RandomizeScheduleTaskTimes  plugin.TValue[bool]
+	DisableAutoExclusions       plugin.TValue[bool]
+	DisableGenericReports       plugin.TValue[bool]
+}
+
+// createWindowsDefenderPreferences creates a new instance of this resource
+func createWindowsDefenderPreferences(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDefenderPreferences{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.defender.preferences", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDefenderPreferences) MqlName() string {
+	return "windows.defender.preferences"
+}
+
+func (c *mqlWindowsDefenderPreferences) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDefenderPreferences) GetScan() *plugin.TValue[*mqlWindowsDefenderScanSettings] {
+	return plugin.GetOrCompute[*mqlWindowsDefenderScanSettings](&c.Scan, func() (*mqlWindowsDefenderScanSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.defender.preferences", c.__id, "scan")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsDefenderScanSettings), nil
+			}
+		}
+
+		return c.scan()
+	})
+}
+
+func (c *mqlWindowsDefenderPreferences) GetRealTimeProtection() *plugin.TValue[*mqlWindowsDefenderRealTimeSettings] {
+	return plugin.GetOrCompute[*mqlWindowsDefenderRealTimeSettings](&c.RealTimeProtection, func() (*mqlWindowsDefenderRealTimeSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.defender.preferences", c.__id, "realTimeProtection")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsDefenderRealTimeSettings), nil
+			}
+		}
+
+		return c.realTimeProtection()
+	})
+}
+
+func (c *mqlWindowsDefenderPreferences) GetCloudProtection() *plugin.TValue[*mqlWindowsDefenderCloudSettings] {
+	return plugin.GetOrCompute[*mqlWindowsDefenderCloudSettings](&c.CloudProtection, func() (*mqlWindowsDefenderCloudSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.defender.preferences", c.__id, "cloudProtection")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsDefenderCloudSettings), nil
+			}
+		}
+
+		return c.cloudProtection()
+	})
+}
+
+func (c *mqlWindowsDefenderPreferences) GetSignatureUpdates() *plugin.TValue[*mqlWindowsDefenderSignatureSettings] {
+	return plugin.GetOrCompute[*mqlWindowsDefenderSignatureSettings](&c.SignatureUpdates, func() (*mqlWindowsDefenderSignatureSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.defender.preferences", c.__id, "signatureUpdates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsDefenderSignatureSettings), nil
+			}
+		}
+
+		return c.signatureUpdates()
+	})
+}
+
+func (c *mqlWindowsDefenderPreferences) GetThreatActions() *plugin.TValue[*mqlWindowsDefenderThreatActionSettings] {
+	return plugin.GetOrCompute[*mqlWindowsDefenderThreatActionSettings](&c.ThreatActions, func() (*mqlWindowsDefenderThreatActionSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.defender.preferences", c.__id, "threatActions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsDefenderThreatActionSettings), nil
+			}
+		}
+
+		return c.threatActions()
+	})
+}
+
+func (c *mqlWindowsDefenderPreferences) GetControlledFolderAccess() *plugin.TValue[*mqlWindowsDefenderControlledFolderAccess] {
+	return plugin.GetOrCompute[*mqlWindowsDefenderControlledFolderAccess](&c.ControlledFolderAccess, func() (*mqlWindowsDefenderControlledFolderAccess, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.defender.preferences", c.__id, "controlledFolderAccess")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsDefenderControlledFolderAccess), nil
+			}
+		}
+
+		return c.controlledFolderAccess()
+	})
+}
+
+func (c *mqlWindowsDefenderPreferences) GetNetworkProtection() *plugin.TValue[*mqlWindowsDefenderNetworkProtectionSettings] {
+	return plugin.GetOrCompute[*mqlWindowsDefenderNetworkProtectionSettings](&c.NetworkProtection, func() (*mqlWindowsDefenderNetworkProtectionSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.defender.preferences", c.__id, "networkProtection")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsDefenderNetworkProtectionSettings), nil
+			}
+		}
+
+		return c.networkProtection()
+	})
+}
+
+func (c *mqlWindowsDefenderPreferences) GetBehavioralNetworkBlocks() *plugin.TValue[*mqlWindowsDefenderBehavioralNetworkBlockSettings] {
+	return plugin.GetOrCompute[*mqlWindowsDefenderBehavioralNetworkBlockSettings](&c.BehavioralNetworkBlocks, func() (*mqlWindowsDefenderBehavioralNetworkBlockSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.defender.preferences", c.__id, "behavioralNetworkBlocks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsDefenderBehavioralNetworkBlockSettings), nil
+			}
+		}
+
+		return c.behavioralNetworkBlocks()
+	})
+}
+
+func (c *mqlWindowsDefenderPreferences) GetRemediation() *plugin.TValue[*mqlWindowsDefenderRemediationSettings] {
+	return plugin.GetOrCompute[*mqlWindowsDefenderRemediationSettings](&c.Remediation, func() (*mqlWindowsDefenderRemediationSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.defender.preferences", c.__id, "remediation")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsDefenderRemediationSettings), nil
+			}
+		}
+
+		return c.remediation()
+	})
+}
+
+func (c *mqlWindowsDefenderPreferences) GetLocalSettingOverrides() *plugin.TValue[*mqlWindowsDefenderLocalSettingOverrides] {
+	return plugin.GetOrCompute[*mqlWindowsDefenderLocalSettingOverrides](&c.LocalSettingOverrides, func() (*mqlWindowsDefenderLocalSettingOverrides, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.defender.preferences", c.__id, "localSettingOverrides")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsDefenderLocalSettingOverrides), nil
+			}
+		}
+
+		return c.localSettingOverrides()
+	})
+}
+
+func (c *mqlWindowsDefenderPreferences) GetExclusions() *plugin.TValue[*mqlWindowsDefenderExclusions] {
+	return plugin.GetOrCompute[*mqlWindowsDefenderExclusions](&c.Exclusions, func() (*mqlWindowsDefenderExclusions, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.defender.preferences", c.__id, "exclusions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsDefenderExclusions), nil
+			}
+		}
+
+		return c.exclusions()
+	})
+}
+
+func (c *mqlWindowsDefenderPreferences) GetAttackSurfaceReductionRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AttackSurfaceReductionRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.defender.preferences", c.__id, "attackSurfaceReductionRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.attackSurfaceReductionRules()
+	})
+}
+
+func (c *mqlWindowsDefenderPreferences) GetPuaProtection() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.PuaProtection, func() (int64, error) {
+		return c.puaProtection()
+	})
+}
+
+func (c *mqlWindowsDefenderPreferences) GetUiLockdown() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UiLockdown, func() (bool, error) {
+		return c.uiLockdown()
+	})
+}
+
+func (c *mqlWindowsDefenderPreferences) GetRandomizeScheduleTaskTimes() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RandomizeScheduleTaskTimes, func() (bool, error) {
+		return c.randomizeScheduleTaskTimes()
+	})
+}
+
+func (c *mqlWindowsDefenderPreferences) GetDisableAutoExclusions() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DisableAutoExclusions, func() (bool, error) {
+		return c.disableAutoExclusions()
+	})
+}
+
+func (c *mqlWindowsDefenderPreferences) GetDisableGenericReports() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DisableGenericReports, func() (bool, error) {
+		return c.disableGenericReports()
+	})
+}
+
+// mqlWindowsDefenderScanSettings for the windows.defender.scanSettings resource
+type mqlWindowsDefenderScanSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDefenderScanSettingsInternal it will be used here
+	ScanParameters                                plugin.TValue[int64]
+	ScanScheduleDay                               plugin.TValue[int64]
+	ScanScheduleTime                              plugin.TValue[string]
+	ScanScheduleQuickScanTime                     plugin.TValue[string]
+	ScanScheduleOffset                            plugin.TValue[int64]
+	ScanAvgCPULoadFactor                          plugin.TValue[int64]
+	ScanOnlyIfIdleEnabled                         plugin.TValue[bool]
+	CheckForSignaturesBeforeRunningScan           plugin.TValue[int64]
+	DisableArchiveScanning                        plugin.TValue[bool]
+	DisableEmailScanning                          plugin.TValue[bool]
+	DisableRemovableDriveScanning                 plugin.TValue[bool]
+	DisableScanningMappedNetworkDrivesForFullScan plugin.TValue[bool]
+	DisableScanningNetworkFiles                   plugin.TValue[bool]
+	DisableCatchupFullScan                        plugin.TValue[bool]
+	DisableCatchupQuickScan                       plugin.TValue[bool]
+	DisableCpuThrottleOnIdleScans                 plugin.TValue[bool]
+	EnableFullScanOnBatteryPower                  plugin.TValue[bool]
+	EnableLowCpuPriority                          plugin.TValue[bool]
+}
+
+// createWindowsDefenderScanSettings creates a new instance of this resource
+func createWindowsDefenderScanSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDefenderScanSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.defender.scanSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDefenderScanSettings) MqlName() string {
+	return "windows.defender.scanSettings"
+}
+
+func (c *mqlWindowsDefenderScanSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDefenderScanSettings) GetScanParameters() *plugin.TValue[int64] {
+	return &c.ScanParameters
+}
+
+func (c *mqlWindowsDefenderScanSettings) GetScanScheduleDay() *plugin.TValue[int64] {
+	return &c.ScanScheduleDay
+}
+
+func (c *mqlWindowsDefenderScanSettings) GetScanScheduleTime() *plugin.TValue[string] {
+	return &c.ScanScheduleTime
+}
+
+func (c *mqlWindowsDefenderScanSettings) GetScanScheduleQuickScanTime() *plugin.TValue[string] {
+	return &c.ScanScheduleQuickScanTime
+}
+
+func (c *mqlWindowsDefenderScanSettings) GetScanScheduleOffset() *plugin.TValue[int64] {
+	return &c.ScanScheduleOffset
+}
+
+func (c *mqlWindowsDefenderScanSettings) GetScanAvgCPULoadFactor() *plugin.TValue[int64] {
+	return &c.ScanAvgCPULoadFactor
+}
+
+func (c *mqlWindowsDefenderScanSettings) GetScanOnlyIfIdleEnabled() *plugin.TValue[bool] {
+	return &c.ScanOnlyIfIdleEnabled
+}
+
+func (c *mqlWindowsDefenderScanSettings) GetCheckForSignaturesBeforeRunningScan() *plugin.TValue[int64] {
+	return &c.CheckForSignaturesBeforeRunningScan
+}
+
+func (c *mqlWindowsDefenderScanSettings) GetDisableArchiveScanning() *plugin.TValue[bool] {
+	return &c.DisableArchiveScanning
+}
+
+func (c *mqlWindowsDefenderScanSettings) GetDisableEmailScanning() *plugin.TValue[bool] {
+	return &c.DisableEmailScanning
+}
+
+func (c *mqlWindowsDefenderScanSettings) GetDisableRemovableDriveScanning() *plugin.TValue[bool] {
+	return &c.DisableRemovableDriveScanning
+}
+
+func (c *mqlWindowsDefenderScanSettings) GetDisableScanningMappedNetworkDrivesForFullScan() *plugin.TValue[bool] {
+	return &c.DisableScanningMappedNetworkDrivesForFullScan
+}
+
+func (c *mqlWindowsDefenderScanSettings) GetDisableScanningNetworkFiles() *plugin.TValue[bool] {
+	return &c.DisableScanningNetworkFiles
+}
+
+func (c *mqlWindowsDefenderScanSettings) GetDisableCatchupFullScan() *plugin.TValue[bool] {
+	return &c.DisableCatchupFullScan
+}
+
+func (c *mqlWindowsDefenderScanSettings) GetDisableCatchupQuickScan() *plugin.TValue[bool] {
+	return &c.DisableCatchupQuickScan
+}
+
+func (c *mqlWindowsDefenderScanSettings) GetDisableCpuThrottleOnIdleScans() *plugin.TValue[bool] {
+	return &c.DisableCpuThrottleOnIdleScans
+}
+
+func (c *mqlWindowsDefenderScanSettings) GetEnableFullScanOnBatteryPower() *plugin.TValue[bool] {
+	return &c.EnableFullScanOnBatteryPower
+}
+
+func (c *mqlWindowsDefenderScanSettings) GetEnableLowCpuPriority() *plugin.TValue[bool] {
+	return &c.EnableLowCpuPriority
+}
+
+// mqlWindowsDefenderRealTimeSettings for the windows.defender.realTimeSettings resource
+type mqlWindowsDefenderRealTimeSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDefenderRealTimeSettingsInternal it will be used here
+	DisableRealtimeMonitoring        plugin.TValue[bool]
+	DisableBehaviorMonitoring        plugin.TValue[bool]
+	DisableIOAVProtection            plugin.TValue[bool]
+	DisableScriptScanning            plugin.TValue[bool]
+	DisableIntrusionPreventionSystem plugin.TValue[bool]
+	RealTimeScanDirection            plugin.TValue[int64]
+	EnableFileHashComputation        plugin.TValue[bool]
+}
+
+// createWindowsDefenderRealTimeSettings creates a new instance of this resource
+func createWindowsDefenderRealTimeSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDefenderRealTimeSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.defender.realTimeSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDefenderRealTimeSettings) MqlName() string {
+	return "windows.defender.realTimeSettings"
+}
+
+func (c *mqlWindowsDefenderRealTimeSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDefenderRealTimeSettings) GetDisableRealtimeMonitoring() *plugin.TValue[bool] {
+	return &c.DisableRealtimeMonitoring
+}
+
+func (c *mqlWindowsDefenderRealTimeSettings) GetDisableBehaviorMonitoring() *plugin.TValue[bool] {
+	return &c.DisableBehaviorMonitoring
+}
+
+func (c *mqlWindowsDefenderRealTimeSettings) GetDisableIOAVProtection() *plugin.TValue[bool] {
+	return &c.DisableIOAVProtection
+}
+
+func (c *mqlWindowsDefenderRealTimeSettings) GetDisableScriptScanning() *plugin.TValue[bool] {
+	return &c.DisableScriptScanning
+}
+
+func (c *mqlWindowsDefenderRealTimeSettings) GetDisableIntrusionPreventionSystem() *plugin.TValue[bool] {
+	return &c.DisableIntrusionPreventionSystem
+}
+
+func (c *mqlWindowsDefenderRealTimeSettings) GetRealTimeScanDirection() *plugin.TValue[int64] {
+	return &c.RealTimeScanDirection
+}
+
+func (c *mqlWindowsDefenderRealTimeSettings) GetEnableFileHashComputation() *plugin.TValue[bool] {
+	return &c.EnableFileHashComputation
+}
+
+// mqlWindowsDefenderCloudSettings for the windows.defender.cloudSettings resource
+type mqlWindowsDefenderCloudSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDefenderCloudSettingsInternal it will be used here
+	MapsReporting           plugin.TValue[int64]
+	SubmitSamplesConsent    plugin.TValue[int64]
+	CloudBlockLevel         plugin.TValue[int64]
+	CloudExtendedTimeout    plugin.TValue[int64]
+	DisableBlockAtFirstSeen plugin.TValue[bool]
+}
+
+// createWindowsDefenderCloudSettings creates a new instance of this resource
+func createWindowsDefenderCloudSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDefenderCloudSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.defender.cloudSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDefenderCloudSettings) MqlName() string {
+	return "windows.defender.cloudSettings"
+}
+
+func (c *mqlWindowsDefenderCloudSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDefenderCloudSettings) GetMapsReporting() *plugin.TValue[int64] {
+	return &c.MapsReporting
+}
+
+func (c *mqlWindowsDefenderCloudSettings) GetSubmitSamplesConsent() *plugin.TValue[int64] {
+	return &c.SubmitSamplesConsent
+}
+
+func (c *mqlWindowsDefenderCloudSettings) GetCloudBlockLevel() *plugin.TValue[int64] {
+	return &c.CloudBlockLevel
+}
+
+func (c *mqlWindowsDefenderCloudSettings) GetCloudExtendedTimeout() *plugin.TValue[int64] {
+	return &c.CloudExtendedTimeout
+}
+
+func (c *mqlWindowsDefenderCloudSettings) GetDisableBlockAtFirstSeen() *plugin.TValue[bool] {
+	return &c.DisableBlockAtFirstSeen
+}
+
+// mqlWindowsDefenderSignatureSettings for the windows.defender.signatureSettings resource
+type mqlWindowsDefenderSignatureSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDefenderSignatureSettingsInternal it will be used here
+	SignatureScheduleDay                         plugin.TValue[int64]
+	SignatureScheduleTime                        plugin.TValue[string]
+	SignatureUpdateInterval                      plugin.TValue[int64]
+	SignatureUpdateCatchupInterval               plugin.TValue[int64]
+	SignatureFallbackOrder                       plugin.TValue[string]
+	SignatureDefinitionUpdateFileSharesSources   plugin.TValue[string]
+	SignatureDisableUpdateOnStartupWithoutEngine plugin.TValue[bool]
+	SignatureFirstAuGracePeriod                  plugin.TValue[int64]
+	SignatureAuGracePeriod                       plugin.TValue[int64]
+	DefinitionUpdatesChannel                     plugin.TValue[int64]
+	EngineUpdatesChannel                         plugin.TValue[int64]
+	PlatformUpdatesChannel                       plugin.TValue[int64]
+	MeteredConnectionUpdates                     plugin.TValue[bool]
+}
+
+// createWindowsDefenderSignatureSettings creates a new instance of this resource
+func createWindowsDefenderSignatureSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDefenderSignatureSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.defender.signatureSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDefenderSignatureSettings) MqlName() string {
+	return "windows.defender.signatureSettings"
+}
+
+func (c *mqlWindowsDefenderSignatureSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDefenderSignatureSettings) GetSignatureScheduleDay() *plugin.TValue[int64] {
+	return &c.SignatureScheduleDay
+}
+
+func (c *mqlWindowsDefenderSignatureSettings) GetSignatureScheduleTime() *plugin.TValue[string] {
+	return &c.SignatureScheduleTime
+}
+
+func (c *mqlWindowsDefenderSignatureSettings) GetSignatureUpdateInterval() *plugin.TValue[int64] {
+	return &c.SignatureUpdateInterval
+}
+
+func (c *mqlWindowsDefenderSignatureSettings) GetSignatureUpdateCatchupInterval() *plugin.TValue[int64] {
+	return &c.SignatureUpdateCatchupInterval
+}
+
+func (c *mqlWindowsDefenderSignatureSettings) GetSignatureFallbackOrder() *plugin.TValue[string] {
+	return &c.SignatureFallbackOrder
+}
+
+func (c *mqlWindowsDefenderSignatureSettings) GetSignatureDefinitionUpdateFileSharesSources() *plugin.TValue[string] {
+	return &c.SignatureDefinitionUpdateFileSharesSources
+}
+
+func (c *mqlWindowsDefenderSignatureSettings) GetSignatureDisableUpdateOnStartupWithoutEngine() *plugin.TValue[bool] {
+	return &c.SignatureDisableUpdateOnStartupWithoutEngine
+}
+
+func (c *mqlWindowsDefenderSignatureSettings) GetSignatureFirstAuGracePeriod() *plugin.TValue[int64] {
+	return &c.SignatureFirstAuGracePeriod
+}
+
+func (c *mqlWindowsDefenderSignatureSettings) GetSignatureAuGracePeriod() *plugin.TValue[int64] {
+	return &c.SignatureAuGracePeriod
+}
+
+func (c *mqlWindowsDefenderSignatureSettings) GetDefinitionUpdatesChannel() *plugin.TValue[int64] {
+	return &c.DefinitionUpdatesChannel
+}
+
+func (c *mqlWindowsDefenderSignatureSettings) GetEngineUpdatesChannel() *plugin.TValue[int64] {
+	return &c.EngineUpdatesChannel
+}
+
+func (c *mqlWindowsDefenderSignatureSettings) GetPlatformUpdatesChannel() *plugin.TValue[int64] {
+	return &c.PlatformUpdatesChannel
+}
+
+func (c *mqlWindowsDefenderSignatureSettings) GetMeteredConnectionUpdates() *plugin.TValue[bool] {
+	return &c.MeteredConnectionUpdates
+}
+
+// mqlWindowsDefenderThreatActionSettings for the windows.defender.threatActionSettings resource
+type mqlWindowsDefenderThreatActionSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlWindowsDefenderThreatActionSettingsInternal
+	SevereThreatDefaultAction   plugin.TValue[int64]
+	HighThreatDefaultAction     plugin.TValue[int64]
+	ModerateThreatDefaultAction plugin.TValue[int64]
+	LowThreatDefaultAction      plugin.TValue[int64]
+	UnknownThreatDefaultAction  plugin.TValue[int64]
+	IdActions                   plugin.TValue[[]any]
+}
+
+// createWindowsDefenderThreatActionSettings creates a new instance of this resource
+func createWindowsDefenderThreatActionSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDefenderThreatActionSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.defender.threatActionSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDefenderThreatActionSettings) MqlName() string {
+	return "windows.defender.threatActionSettings"
+}
+
+func (c *mqlWindowsDefenderThreatActionSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDefenderThreatActionSettings) GetSevereThreatDefaultAction() *plugin.TValue[int64] {
+	return &c.SevereThreatDefaultAction
+}
+
+func (c *mqlWindowsDefenderThreatActionSettings) GetHighThreatDefaultAction() *plugin.TValue[int64] {
+	return &c.HighThreatDefaultAction
+}
+
+func (c *mqlWindowsDefenderThreatActionSettings) GetModerateThreatDefaultAction() *plugin.TValue[int64] {
+	return &c.ModerateThreatDefaultAction
+}
+
+func (c *mqlWindowsDefenderThreatActionSettings) GetLowThreatDefaultAction() *plugin.TValue[int64] {
+	return &c.LowThreatDefaultAction
+}
+
+func (c *mqlWindowsDefenderThreatActionSettings) GetUnknownThreatDefaultAction() *plugin.TValue[int64] {
+	return &c.UnknownThreatDefaultAction
+}
+
+func (c *mqlWindowsDefenderThreatActionSettings) GetIdActions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IdActions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.defender.threatActionSettings", c.__id, "idActions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.idActions()
+	})
+}
+
+// mqlWindowsDefenderThreatIdAction for the windows.defender.threatIdAction resource
+type mqlWindowsDefenderThreatIdAction struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDefenderThreatIdActionInternal it will be used here
+	ThreatId plugin.TValue[string]
+	Action   plugin.TValue[int64]
+}
+
+// createWindowsDefenderThreatIdAction creates a new instance of this resource
+func createWindowsDefenderThreatIdAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDefenderThreatIdAction{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.defender.threatIdAction", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDefenderThreatIdAction) MqlName() string {
+	return "windows.defender.threatIdAction"
+}
+
+func (c *mqlWindowsDefenderThreatIdAction) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDefenderThreatIdAction) GetThreatId() *plugin.TValue[string] {
+	return &c.ThreatId
+}
+
+func (c *mqlWindowsDefenderThreatIdAction) GetAction() *plugin.TValue[int64] {
+	return &c.Action
+}
+
+// mqlWindowsDefenderControlledFolderAccess for the windows.defender.controlledFolderAccess resource
+type mqlWindowsDefenderControlledFolderAccess struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDefenderControlledFolderAccessInternal it will be used here
+	Enabled             plugin.TValue[int64]
+	AllowedApplications plugin.TValue[[]any]
+	ProtectedFolders    plugin.TValue[[]any]
+}
+
+// createWindowsDefenderControlledFolderAccess creates a new instance of this resource
+func createWindowsDefenderControlledFolderAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDefenderControlledFolderAccess{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.defender.controlledFolderAccess", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDefenderControlledFolderAccess) MqlName() string {
+	return "windows.defender.controlledFolderAccess"
+}
+
+func (c *mqlWindowsDefenderControlledFolderAccess) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDefenderControlledFolderAccess) GetEnabled() *plugin.TValue[int64] {
+	return &c.Enabled
+}
+
+func (c *mqlWindowsDefenderControlledFolderAccess) GetAllowedApplications() *plugin.TValue[[]any] {
+	return &c.AllowedApplications
+}
+
+func (c *mqlWindowsDefenderControlledFolderAccess) GetProtectedFolders() *plugin.TValue[[]any] {
+	return &c.ProtectedFolders
+}
+
+// mqlWindowsDefenderNetworkProtectionSettings for the windows.defender.networkProtectionSettings resource
+type mqlWindowsDefenderNetworkProtectionSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDefenderNetworkProtectionSettingsInternal it will be used here
+	EnableNetworkProtection            plugin.TValue[int64]
+	AllowNetworkProtectionOnWinServer  plugin.TValue[bool]
+	AllowNetworkProtectionDownLevel    plugin.TValue[bool]
+	AllowDatagramProcessingOnWinServer plugin.TValue[bool]
+	EnableDnsSinkhole                  plugin.TValue[bool]
+}
+
+// createWindowsDefenderNetworkProtectionSettings creates a new instance of this resource
+func createWindowsDefenderNetworkProtectionSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDefenderNetworkProtectionSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.defender.networkProtectionSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDefenderNetworkProtectionSettings) MqlName() string {
+	return "windows.defender.networkProtectionSettings"
+}
+
+func (c *mqlWindowsDefenderNetworkProtectionSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDefenderNetworkProtectionSettings) GetEnableNetworkProtection() *plugin.TValue[int64] {
+	return &c.EnableNetworkProtection
+}
+
+func (c *mqlWindowsDefenderNetworkProtectionSettings) GetAllowNetworkProtectionOnWinServer() *plugin.TValue[bool] {
+	return &c.AllowNetworkProtectionOnWinServer
+}
+
+func (c *mqlWindowsDefenderNetworkProtectionSettings) GetAllowNetworkProtectionDownLevel() *plugin.TValue[bool] {
+	return &c.AllowNetworkProtectionDownLevel
+}
+
+func (c *mqlWindowsDefenderNetworkProtectionSettings) GetAllowDatagramProcessingOnWinServer() *plugin.TValue[bool] {
+	return &c.AllowDatagramProcessingOnWinServer
+}
+
+func (c *mqlWindowsDefenderNetworkProtectionSettings) GetEnableDnsSinkhole() *plugin.TValue[bool] {
+	return &c.EnableDnsSinkhole
+}
+
+// mqlWindowsDefenderBehavioralNetworkBlockSettings for the windows.defender.behavioralNetworkBlockSettings resource
+type mqlWindowsDefenderBehavioralNetworkBlockSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDefenderBehavioralNetworkBlockSettingsInternal it will be used here
+	BruteForceProtectionConfiguredState       plugin.TValue[int64]
+	BruteForceProtectionAggressiveness        plugin.TValue[int64]
+	BruteForceProtectionMaxBlockTime          plugin.TValue[int64]
+	RemoteEncryptionProtectionConfiguredState plugin.TValue[int64]
+	RemoteEncryptionProtectionAggressiveness  plugin.TValue[int64]
+	RemoteEncryptionProtectionMaxBlockTime    plugin.TValue[int64]
+}
+
+// createWindowsDefenderBehavioralNetworkBlockSettings creates a new instance of this resource
+func createWindowsDefenderBehavioralNetworkBlockSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDefenderBehavioralNetworkBlockSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.defender.behavioralNetworkBlockSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDefenderBehavioralNetworkBlockSettings) MqlName() string {
+	return "windows.defender.behavioralNetworkBlockSettings"
+}
+
+func (c *mqlWindowsDefenderBehavioralNetworkBlockSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDefenderBehavioralNetworkBlockSettings) GetBruteForceProtectionConfiguredState() *plugin.TValue[int64] {
+	return &c.BruteForceProtectionConfiguredState
+}
+
+func (c *mqlWindowsDefenderBehavioralNetworkBlockSettings) GetBruteForceProtectionAggressiveness() *plugin.TValue[int64] {
+	return &c.BruteForceProtectionAggressiveness
+}
+
+func (c *mqlWindowsDefenderBehavioralNetworkBlockSettings) GetBruteForceProtectionMaxBlockTime() *plugin.TValue[int64] {
+	return &c.BruteForceProtectionMaxBlockTime
+}
+
+func (c *mqlWindowsDefenderBehavioralNetworkBlockSettings) GetRemoteEncryptionProtectionConfiguredState() *plugin.TValue[int64] {
+	return &c.RemoteEncryptionProtectionConfiguredState
+}
+
+func (c *mqlWindowsDefenderBehavioralNetworkBlockSettings) GetRemoteEncryptionProtectionAggressiveness() *plugin.TValue[int64] {
+	return &c.RemoteEncryptionProtectionAggressiveness
+}
+
+func (c *mqlWindowsDefenderBehavioralNetworkBlockSettings) GetRemoteEncryptionProtectionMaxBlockTime() *plugin.TValue[int64] {
+	return &c.RemoteEncryptionProtectionMaxBlockTime
+}
+
+// mqlWindowsDefenderLocalSettingOverrides for the windows.defender.localSettingOverrides resource
+type mqlWindowsDefenderLocalSettingOverrides struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDefenderLocalSettingOverridesInternal it will be used here
+	SpynetReporting                  plugin.TValue[bool]
+	RealtimeMonitoring               plugin.TValue[bool]
+	DisableBehaviorMonitoring        plugin.TValue[bool]
+	DisableIOAVProtection            plugin.TValue[bool]
+	DisableIntrusionPreventionSystem plugin.TValue[bool]
+	DisableOnAccessProtection        plugin.TValue[bool]
+	ScanParameters                   plugin.TValue[bool]
+	ScanScheduleDay                  plugin.TValue[bool]
+	AvgCPULoadFactor                 plugin.TValue[bool]
+}
+
+// createWindowsDefenderLocalSettingOverrides creates a new instance of this resource
+func createWindowsDefenderLocalSettingOverrides(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDefenderLocalSettingOverrides{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.defender.localSettingOverrides", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDefenderLocalSettingOverrides) MqlName() string {
+	return "windows.defender.localSettingOverrides"
+}
+
+func (c *mqlWindowsDefenderLocalSettingOverrides) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDefenderLocalSettingOverrides) GetSpynetReporting() *plugin.TValue[bool] {
+	return &c.SpynetReporting
+}
+
+func (c *mqlWindowsDefenderLocalSettingOverrides) GetRealtimeMonitoring() *plugin.TValue[bool] {
+	return &c.RealtimeMonitoring
+}
+
+func (c *mqlWindowsDefenderLocalSettingOverrides) GetDisableBehaviorMonitoring() *plugin.TValue[bool] {
+	return &c.DisableBehaviorMonitoring
+}
+
+func (c *mqlWindowsDefenderLocalSettingOverrides) GetDisableIOAVProtection() *plugin.TValue[bool] {
+	return &c.DisableIOAVProtection
+}
+
+func (c *mqlWindowsDefenderLocalSettingOverrides) GetDisableIntrusionPreventionSystem() *plugin.TValue[bool] {
+	return &c.DisableIntrusionPreventionSystem
+}
+
+func (c *mqlWindowsDefenderLocalSettingOverrides) GetDisableOnAccessProtection() *plugin.TValue[bool] {
+	return &c.DisableOnAccessProtection
+}
+
+func (c *mqlWindowsDefenderLocalSettingOverrides) GetScanParameters() *plugin.TValue[bool] {
+	return &c.ScanParameters
+}
+
+func (c *mqlWindowsDefenderLocalSettingOverrides) GetScanScheduleDay() *plugin.TValue[bool] {
+	return &c.ScanScheduleDay
+}
+
+func (c *mqlWindowsDefenderLocalSettingOverrides) GetAvgCPULoadFactor() *plugin.TValue[bool] {
+	return &c.AvgCPULoadFactor
+}
+
+// mqlWindowsDefenderRemediationSettings for the windows.defender.remediationSettings resource
+type mqlWindowsDefenderRemediationSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDefenderRemediationSettingsInternal it will be used here
+	RemediationScheduleDay         plugin.TValue[int64]
+	RemediationScheduleTime        plugin.TValue[string]
+	QuarantinePurgeItemsAfterDelay plugin.TValue[int64]
+	DisableRestorePoint            plugin.TValue[bool]
+}
+
+// createWindowsDefenderRemediationSettings creates a new instance of this resource
+func createWindowsDefenderRemediationSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDefenderRemediationSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.defender.remediationSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDefenderRemediationSettings) MqlName() string {
+	return "windows.defender.remediationSettings"
+}
+
+func (c *mqlWindowsDefenderRemediationSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDefenderRemediationSettings) GetRemediationScheduleDay() *plugin.TValue[int64] {
+	return &c.RemediationScheduleDay
+}
+
+func (c *mqlWindowsDefenderRemediationSettings) GetRemediationScheduleTime() *plugin.TValue[string] {
+	return &c.RemediationScheduleTime
+}
+
+func (c *mqlWindowsDefenderRemediationSettings) GetQuarantinePurgeItemsAfterDelay() *plugin.TValue[int64] {
+	return &c.QuarantinePurgeItemsAfterDelay
+}
+
+func (c *mqlWindowsDefenderRemediationSettings) GetDisableRestorePoint() *plugin.TValue[bool] {
+	return &c.DisableRestorePoint
+}
+
+// mqlWindowsDefenderExclusions for the windows.defender.exclusions resource
+type mqlWindowsDefenderExclusions struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDefenderExclusionsInternal it will be used here
+	Paths       plugin.TValue[[]any]
+	Extensions  plugin.TValue[[]any]
+	Processes   plugin.TValue[[]any]
+	IpAddresses plugin.TValue[[]any]
+}
+
+// createWindowsDefenderExclusions creates a new instance of this resource
+func createWindowsDefenderExclusions(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDefenderExclusions{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.defender.exclusions", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDefenderExclusions) MqlName() string {
+	return "windows.defender.exclusions"
+}
+
+func (c *mqlWindowsDefenderExclusions) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDefenderExclusions) GetPaths() *plugin.TValue[[]any] {
+	return &c.Paths
+}
+
+func (c *mqlWindowsDefenderExclusions) GetExtensions() *plugin.TValue[[]any] {
+	return &c.Extensions
+}
+
+func (c *mqlWindowsDefenderExclusions) GetProcesses() *plugin.TValue[[]any] {
+	return &c.Processes
+}
+
+func (c *mqlWindowsDefenderExclusions) GetIpAddresses() *plugin.TValue[[]any] {
+	return &c.IpAddresses
+}
+
+// mqlWindowsDefenderAsrRule for the windows.defender.asrRule resource
+type mqlWindowsDefenderAsrRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDefenderAsrRuleInternal it will be used here
+	Id     plugin.TValue[string]
+	Name   plugin.TValue[string]
+	Action plugin.TValue[int64]
+}
+
+// createWindowsDefenderAsrRule creates a new instance of this resource
+func createWindowsDefenderAsrRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDefenderAsrRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.defender.asrRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDefenderAsrRule) MqlName() string {
+	return "windows.defender.asrRule"
+}
+
+func (c *mqlWindowsDefenderAsrRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDefenderAsrRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlWindowsDefenderAsrRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindowsDefenderAsrRule) GetAction() *plugin.TValue[int64] {
+	return &c.Action
+}
+
+// mqlWindowsDefenderThreat for the windows.defender.threat resource
+type mqlWindowsDefenderThreat struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDefenderThreatInternal it will be used here
+	ThreatId         plugin.TValue[int64]
+	Name             plugin.TValue[string]
+	SeverityID       plugin.TValue[int64]
+	CategoryID       plugin.TValue[int64]
+	IsActive         plugin.TValue[bool]
+	DidThreatExecute plugin.TValue[bool]
+	RollupStatus     plugin.TValue[int64]
+	Resources        plugin.TValue[[]any]
+}
+
+// createWindowsDefenderThreat creates a new instance of this resource
+func createWindowsDefenderThreat(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDefenderThreat{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.defender.threat", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDefenderThreat) MqlName() string {
+	return "windows.defender.threat"
+}
+
+func (c *mqlWindowsDefenderThreat) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDefenderThreat) GetThreatId() *plugin.TValue[int64] {
+	return &c.ThreatId
+}
+
+func (c *mqlWindowsDefenderThreat) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindowsDefenderThreat) GetSeverityID() *plugin.TValue[int64] {
+	return &c.SeverityID
+}
+
+func (c *mqlWindowsDefenderThreat) GetCategoryID() *plugin.TValue[int64] {
+	return &c.CategoryID
+}
+
+func (c *mqlWindowsDefenderThreat) GetIsActive() *plugin.TValue[bool] {
+	return &c.IsActive
+}
+
+func (c *mqlWindowsDefenderThreat) GetDidThreatExecute() *plugin.TValue[bool] {
+	return &c.DidThreatExecute
+}
+
+func (c *mqlWindowsDefenderThreat) GetRollupStatus() *plugin.TValue[int64] {
+	return &c.RollupStatus
+}
+
+func (c *mqlWindowsDefenderThreat) GetResources() *plugin.TValue[[]any] {
+	return &c.Resources
+}
+
+// mqlWindowsDefenderThreatDetection for the windows.defender.threatDetection resource
+type mqlWindowsDefenderThreatDetection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDefenderThreatDetectionInternal it will be used here
+	DetectionId                    plugin.TValue[string]
+	ThreatId                       plugin.TValue[int64]
+	ProcessName                    plugin.TValue[string]
+	DomainUser                     plugin.TValue[string]
+	DetectionSourceTypeId          plugin.TValue[int64]
+	CurrentThreatExecutionStatusID plugin.TValue[int64]
+	ThreatStatusID                 plugin.TValue[int64]
+	CleaningActionID               plugin.TValue[int64]
+	ActionSuccess                  plugin.TValue[bool]
+	InitialDetectionTime           plugin.TValue[*time.Time]
+	LastThreatStatusChangeTime     plugin.TValue[*time.Time]
+	RemediationTime                plugin.TValue[*time.Time]
+	Resources                      plugin.TValue[[]any]
+}
+
+// createWindowsDefenderThreatDetection creates a new instance of this resource
+func createWindowsDefenderThreatDetection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDefenderThreatDetection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.defender.threatDetection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDefenderThreatDetection) MqlName() string {
+	return "windows.defender.threatDetection"
+}
+
+func (c *mqlWindowsDefenderThreatDetection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDefenderThreatDetection) GetDetectionId() *plugin.TValue[string] {
+	return &c.DetectionId
+}
+
+func (c *mqlWindowsDefenderThreatDetection) GetThreatId() *plugin.TValue[int64] {
+	return &c.ThreatId
+}
+
+func (c *mqlWindowsDefenderThreatDetection) GetProcessName() *plugin.TValue[string] {
+	return &c.ProcessName
+}
+
+func (c *mqlWindowsDefenderThreatDetection) GetDomainUser() *plugin.TValue[string] {
+	return &c.DomainUser
+}
+
+func (c *mqlWindowsDefenderThreatDetection) GetDetectionSourceTypeId() *plugin.TValue[int64] {
+	return &c.DetectionSourceTypeId
+}
+
+func (c *mqlWindowsDefenderThreatDetection) GetCurrentThreatExecutionStatusID() *plugin.TValue[int64] {
+	return &c.CurrentThreatExecutionStatusID
+}
+
+func (c *mqlWindowsDefenderThreatDetection) GetThreatStatusID() *plugin.TValue[int64] {
+	return &c.ThreatStatusID
+}
+
+func (c *mqlWindowsDefenderThreatDetection) GetCleaningActionID() *plugin.TValue[int64] {
+	return &c.CleaningActionID
+}
+
+func (c *mqlWindowsDefenderThreatDetection) GetActionSuccess() *plugin.TValue[bool] {
+	return &c.ActionSuccess
+}
+
+func (c *mqlWindowsDefenderThreatDetection) GetInitialDetectionTime() *plugin.TValue[*time.Time] {
+	return &c.InitialDetectionTime
+}
+
+func (c *mqlWindowsDefenderThreatDetection) GetLastThreatStatusChangeTime() *plugin.TValue[*time.Time] {
+	return &c.LastThreatStatusChangeTime
+}
+
+func (c *mqlWindowsDefenderThreatDetection) GetRemediationTime() *plugin.TValue[*time.Time] {
+	return &c.RemediationTime
+}
+
+func (c *mqlWindowsDefenderThreatDetection) GetResources() *plugin.TValue[[]any] {
+	return &c.Resources
+}
+
 // mqlCloud for the cloud resource
 type mqlCloud struct {
 	MqlRuntime *plugin.Runtime
@@ -52322,6 +60425,7 @@ type mqlNetwork struct {
 	Ipv6        plugin.TValue[[]any]
 	PrimaryIPv4 plugin.TValue[llx.RawIP]
 	PrimaryIPv6 plugin.TValue[llx.RawIP]
+	Neighbors   plugin.TValue[[]any]
 }
 
 // createNetwork creates a new instance of this resource
@@ -52410,6 +60514,81 @@ func (c *mqlNetwork) GetPrimaryIPv6() *plugin.TValue[llx.RawIP] {
 	return plugin.GetOrCompute[llx.RawIP](&c.PrimaryIPv6, func() (llx.RawIP, error) {
 		return c.primaryIPv6()
 	})
+}
+
+func (c *mqlNetwork) GetNeighbors() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Neighbors, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("network", c.__id, "neighbors")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.neighbors()
+	})
+}
+
+// mqlNetworkNeighbor for the networkNeighbor resource
+type mqlNetworkNeighbor struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNetworkNeighborInternal it will be used here
+	Ip        plugin.TValue[llx.RawIP]
+	Mac       plugin.TValue[string]
+	Interface plugin.TValue[string]
+	State     plugin.TValue[string]
+}
+
+// createNetworkNeighbor creates a new instance of this resource
+func createNetworkNeighbor(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNetworkNeighbor{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("networkNeighbor", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNetworkNeighbor) MqlName() string {
+	return "networkNeighbor"
+}
+
+func (c *mqlNetworkNeighbor) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNetworkNeighbor) GetIp() *plugin.TValue[llx.RawIP] {
+	return &c.Ip
+}
+
+func (c *mqlNetworkNeighbor) GetMac() *plugin.TValue[string] {
+	return &c.Mac
+}
+
+func (c *mqlNetworkNeighbor) GetInterface() *plugin.TValue[string] {
+	return &c.Interface
+}
+
+func (c *mqlNetworkNeighbor) GetState() *plugin.TValue[string] {
+	return &c.State
 }
 
 // mqlNetworkInterface for the networkInterface resource

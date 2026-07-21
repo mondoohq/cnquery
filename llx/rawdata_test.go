@@ -105,6 +105,40 @@ func TestTruthy(t *testing.T) {
 	}
 }
 
+// TestTruthyTypeMismatch ensures that a RawData whose declared type disagrees
+// with the Go type of its value does not panic in IsTruthy; instead it returns
+// (false, false) — "could not determine". See issue #8430.
+func TestTruthyTypeMismatch(t *testing.T) {
+	tests := []struct {
+		name string
+		data *RawData
+	}{
+		{"int type with string value", &RawData{Type: types.Int, Value: "not-an-int"}},
+		{"string type with int value", &RawData{Type: types.String, Value: int64(1)}},
+		{"bool type with string value", &RawData{Type: types.Bool, Value: "nope"}},
+		{"float type with string value", &RawData{Type: types.Float, Value: "nope"}},
+		{"regex type with int value", &RawData{Type: types.Regex, Value: int64(1)}},
+		{"version type with int value", &RawData{Type: types.Version, Value: int64(1)}},
+		{"time type with string value", &RawData{Type: types.Time, Value: "nope"}},
+		{"ip type with string value", &RawData{Type: types.IP, Value: "nope"}},
+		{"array type with string value", &RawData{Type: types.Array(types.Bool), Value: "nope"}},
+		{"map type with string value", &RawData{Type: types.Map(types.String, types.Bool), Value: "nope"}},
+		{"block type with string value", &RawData{Type: types.Block, Value: "nope"}},
+	}
+
+	for i := range tests {
+		o := tests[i]
+		t.Run(o.name, func(t *testing.T) {
+			var truthy, valid bool
+			require.NotPanics(t, func() {
+				truthy, valid = o.data.IsTruthy()
+			})
+			assert.False(t, truthy)
+			assert.False(t, valid)
+		})
+	}
+}
+
 func TestSuccess(t *testing.T) {
 	tests := []struct {
 		data    *RawData

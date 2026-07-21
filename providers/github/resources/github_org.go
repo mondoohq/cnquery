@@ -81,7 +81,10 @@ func initGithubOrganization(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	plan, _ := convert.JsonToDict(org.Plan)
 	args["plan"] = llx.MapData(plan, types.Any)
 
-	args["twoFactorRequirementEnabled"] = llx.BoolData(convert.ToValue(org.TwoFactorRequirementEnabled))
+	// Use BoolDataPtr so an unset value (GitHub returns null when the caller
+	// lacks org-admin scope) reads as MQL null rather than false — otherwise a
+	// scoped-down token would report 2FA-not-required for an org that enforces it.
+	args["twoFactorRequirementEnabled"] = llx.BoolDataPtr(org.TwoFactorRequirementEnabled)
 	args["isVerified"] = llx.BoolData(convert.ToValue(org.IsVerified))
 
 	args["hasOrganizationProjects"] = llx.BoolData(convert.ToValue(org.HasOrganizationProjects))

@@ -13,6 +13,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	armresources "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v3"
 	subscriptions "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
+	"github.com/rs/zerolog/log"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
@@ -202,12 +203,9 @@ func getDiscoveryTargets(config *inventory.Config) []string {
 		return All
 	}
 	if stringx.ContainsAnyOf(targets, DiscoveryAuto) {
-		for i, target := range targets {
-			if target == DiscoveryAuto {
-				// remove the auto keyword
-				targets = slices.Delete(targets, i, i+1)
-			}
-		}
+		// remove the auto keyword (DeleteFunc handles every occurrence; mutating
+		// the slice inside a range loop would skip elements after a deletion)
+		targets = slices.DeleteFunc(targets, func(s string) bool { return s == DiscoveryAuto })
 		// add in the required discovery targets
 		return append(targets, Auto...)
 	}
@@ -243,6 +241,10 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 	}
 
 	targets := getDiscoveryTargets(rootConf)
+	log.Debug().
+		Int("subscriptions", len(subsWithConfigs)).
+		Strs("targets", targets).
+		Msg("azure.discovery> starting discovery")
 
 	if stringx.ContainsAnyOf(targets, DiscoverySubscriptions) {
 		// we've already discovered those, simply add them as assets
@@ -283,6 +285,7 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 	}
 	assets = append(assets, genericAssets...)
 
+	log.Debug().Int("assets", len(assets)).Msg("azure.discovery> discovery complete")
 	return &inventory.Inventory{
 		Spec: &inventory.InventorySpec{
 			Assets: assets,
@@ -433,6 +436,7 @@ func discoverGeneric(conn *connection.AzureConnection, subsWithConfigs []subWith
 	var assets []*inventory.Asset
 	for _, swc := range subsWithConfigs {
 		subId := *swc.sub.SubscriptionID
+		log.Debug().Str("subscription", subId).Str("filter", filter).Msg("azure.discovery> listing resources in subscription")
 		client, err := armresources.NewClient(subId, conn.Token(), &arm.ClientOptions{
 			ClientOptions: conn.ClientOptions(),
 		})

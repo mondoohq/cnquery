@@ -289,6 +289,20 @@ func newMqlGoogleWorkspaceUsageReport(runtime *plugin.Runtime, entry *reports.Us
 		"account":    llx.MapData(accountUsage, types.Any),
 		"security":   llx.MapData(securityUsage, types.Any),
 		"appUsage":   llx.MapData(appUsage, types.Any),
+		// Typed promotions of the account/security dicts (already parsed into
+		// r above) so audits can assert on them directly.
+		"isDisabled":                    llx.BoolData(r.Account.IsDisabled),
+		"isSuperAdmin":                  llx.BoolData(r.Account.IsSuperAdmin),
+		"is2svEnrolled":                 llx.BoolData(r.Account.IsS2svEnrolled),
+		"is2svEnforced":                 llx.BoolData(r.Account.Is2svEnforced),
+		"passwordStrength":              llx.StringData(r.Account.PasswordStrength),
+		"passwordLengthCompliance":      llx.StringData(r.Account.PasswordLengthCompliance),
+		"isLessSecureAppsAccessAllowed": llx.BoolData(r.Account.IsLessSecureAppsAccessAllowed),
+		"numAuthorizedApps":             llx.IntData(r.Security.NumAuthorizedApps),
+		"numSecurityKeys":               llx.IntData(r.Security.NumSecurityKeys),
+		"gmailUsedQuotaInMb":            llx.IntData(r.Account.GmailUsedQuotaInMb),
+		"driveUsedQuotaInMb":            llx.IntData(r.Account.DriveUsedQuotaInMb),
+		"usedQuotaInMb":                 llx.IntData(r.Account.UsedQuotaInMb),
 	})
 	return report.(*mqlGoogleworkspaceReportUsage), err
 }

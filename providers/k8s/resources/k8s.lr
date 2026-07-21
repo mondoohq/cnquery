@@ -12,10 +12,10 @@ option go_package = "go.mondoo.com/mql/v13/providers/k8s/resources"
 // Use the Kubernetes namespace as the cluster-wide handle for every
 // modeled API object. Read `serverVersion` for the control-plane
 // version and `apiResources()` for the list of resource types the
-// API server advertises. Iterate the workload accessors —
+// API server advertises. Iterate the workload accessors
 // `namespaces()`, `nodes()`, `pods()`, `deployments()`, `daemonsets()`,
 // `statefulsets()`, `replicasets()`, `jobs()`, `cronjobs()`, and
-// `apps()` — for the running workload, and `services()`, `ingresses()`,
+// `apps()` for the running workload, and `services()`, `ingresses()`,
 // `endpointSlices()`, and `networkPolicies()` for the network plane.
 // `secrets()`, `configmaps()`, and `serviceaccounts()` cover identity
 // and configuration data; `clusterroles()`, `clusterrolebindings()`,
@@ -66,8 +66,18 @@ k8s {
   roles() []k8s.rbac.role
   // Kubernetes RBAC RoleBindings
   rolebindings() []k8s.rbac.rolebinding
+  // Distinct RBAC subjects with their effective cluster permissions
+  rbacSubjects() []k8s.rbac.subject
   // Kubernetes network policies
   networkPolicies() []k8s.networkpolicy
+  // Normalized network exposures from Services, Ingresses, Gateways, and network intent sources
+  networkExposures() []k8s.networkExposure
+  // Normalized egress routes from HBN/network intent sources
+  egressRoutes() []k8s.egressRoute
+  // Normalized egress NAT entries from HBN/network intent sources
+  egressNats() []k8s.egressNat
+  // Normalized network policy coverage summaries
+  networkPolicyCoverages() []k8s.networkPolicyCoverage
   // Kubernetes custom resources
   customresources() []k8s.customresource
   // Kubernetes admission webhook configurations
@@ -98,10 +108,20 @@ k8s {
   httpRoutes() []k8s.httproute
   // Kubernetes Gateway API GRPCRoutes
   grpcRoutes() []k8s.grpcroute
+  // Kubernetes Gateway API TLSRoutes
+  tlsRoutes() []k8s.tlsroute
+  // Kubernetes Gateway API TCPRoutes
+  tcpRoutes() []k8s.tcproute
+  // Kubernetes Gateway API UDPRoutes
+  udpRoutes() []k8s.udproute
   // Kubernetes Gateway API ReferenceGrants
   referenceGrants() []k8s.referencegrant
   // Kubernetes admission mutating webhook configurations
   mutatingWebhookConfigurations() []k8s.admission.mutatingwebhookconfiguration
+  // Kubernetes built-in (CEL) ValidatingAdmissionPolicies
+  validatingAdmissionPolicies() []k8s.admission.validatingadmissionpolicy
+  // Kubernetes built-in (CEL) ValidatingAdmissionPolicyBindings
+  validatingAdmissionPolicyBindings() []k8s.admission.validatingadmissionpolicybinding
   // Kubernetes PodDisruptionBudgets
   podDisruptionBudgets() []k8s.poddisruptionbudget
   // Kubernetes coordination Leases
@@ -114,7 +134,13 @@ k8s {
   ingressClasses() []k8s.ingressclass
 }
 
-// Kubernetes API resources
+// Kubernetes API resource type
+//
+// Resource type the API server advertises through discovery, selected by its
+// plural name and kind. The group and version report the preferred API path,
+// namespaced indicates whether instances are scoped to a namespace, and
+// shortNames and categories list the kubectl aliases and groupings (such as
+// "all") the type belongs to.
 private k8s.apiresource @defaults("name kind") {
   // Plural name of the resource
   name string
@@ -135,6 +161,16 @@ private k8s.apiresource @defaults("name kind") {
 }
 
 // Kubernetes namespace
+//
+// Namespace that partitions a cluster into isolated scopes, selected by name.
+// The workload accessors (pods, deployments, statefulsets, daemonsets,
+// replicasets, jobs, cronjobs) and the services, ingresses, endpointSlices,
+// and networkPolicies accessors return only the objects in this namespace,
+// while secrets, configmaps, serviceaccounts, persistentVolumeClaims, roles,
+// and rolebindings cover its configuration, identity, storage, and RBAC. The
+// podSecurityEnforce, podSecurityAudit, and podSecurityWarn fields (with their
+// version companions) report the Pod Security Standards level applied by Pod
+// Security admission.
 private k8s.namespace @defaults("name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -178,6 +214,10 @@ private k8s.namespace @defaults("name created") {
   endpointSlices() []k8s.endpointslice
   // NetworkPolicies in this namespace
   networkPolicies() []k8s.networkpolicy
+  // Normalized network exposures in this namespace
+  networkExposures() []k8s.networkExposure
+  // Normalized network policy coverage summaries in this namespace
+  networkPolicyCoverages() []k8s.networkPolicyCoverage
   // Secrets in this namespace
   secrets() []k8s.secret
   // ConfigMaps in this namespace
@@ -198,9 +238,54 @@ private k8s.namespace @defaults("name created") {
   roles() []k8s.rbac.role
   // RBAC RoleBindings in this namespace
   rolebindings() []k8s.rbac.rolebinding
+  // Pod Security Standards level enforced on this namespace
+  //
+  // Value of the `pod-security.kubernetes.io/enforce` label (privileged,
+  // baseline, or restricted). Empty when the namespace opts out of Pod
+  // Security admission enforcement, in which case violating pods are still
+  // admitted.
+  podSecurityEnforce() string
+  // Pod Security Standards version pinned for enforcement
+  //
+  // Value of the `pod-security.kubernetes.io/enforce-version` label (a
+  // Kubernetes minor version like "v1.30" or "latest"). Empty when unset.
+  podSecurityEnforceVersion() string
+  // Pod Security Standards level audited on this namespace
+  //
+  // Value of the `pod-security.kubernetes.io/audit` label (privileged,
+  // baseline, or restricted). Violations are recorded in the audit log but
+  // not blocked. Empty when unset.
+  podSecurityAudit() string
+  // Pod Security Standards version pinned for auditing
+  //
+  // Value of the `pod-security.kubernetes.io/audit-version` label. Empty when
+  // unset.
+  podSecurityAuditVersion() string
+  // Pod Security Standards level warned on this namespace
+  //
+  // Value of the `pod-security.kubernetes.io/warn` label (privileged,
+  // baseline, or restricted). Violations return a client warning but are not
+  // blocked. Empty when unset.
+  podSecurityWarn() string
+  // Pod Security Standards version pinned for warnings
+  //
+  // Value of the `pod-security.kubernetes.io/warn-version` label. Empty when
+  // unset.
+  podSecurityWarnVersion() string
+  // Whether the namespace enforces a non-privileged Pod Security Standards level (baseline or restricted)
+  enforcesPodSecurity() bool
 }
 
 // Kubernetes node
+//
+// Worker or control-plane machine that runs pods, selected by name. The
+// capacity and allocatable fields report total and schedulable resources,
+// conditions surfaces health signals such as Ready and MemoryPressure, taints
+// lists the scheduling restrictions pods must tolerate, and addresses holds
+// the node's hostnames and IPs. The osImage, kernelVersion, kubeletVersion,
+// containerRuntimeVersion, operatingSystem, and architecture fields report the
+// node's software stack, and unschedulable reports whether the node is
+// cordoned.
 private k8s.node @defaults("name labels['kubernetes.io/arch'] labels['kubernetes.io/os'] ") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -301,7 +386,102 @@ private k8s.nodeAddress @defaults("type address") {
 }
 
 // Kubernetes Pod
+//
+// Smallest deployable unit, one or more co-scheduled containers sharing a
+// network and storage context, selected by namespace and name. The containers,
+// initContainers, and ephemeralContainers accessors expose the workload and
+// its images, command, resources, and securityContext, while containerStatuses
+// reports their runtime state. Scheduling is described by node, nodeSelector,
+// tolerations, affinity, priorityClass, and serviceAccount; the host-namespace
+// and security posture by hostNetwork, hostPID, hostIPC, and securityContext;
+// and runtime status by phase, qosClass, podIP, and conditions. The owning
+// controller is reached through replicaSet, statefulSet, daemonSet, job, and
+// deployment.
 private k8s.pod @defaults("namespace name created"){
+  // Whether any container runs in privileged mode, across regular, init, and ephemeral containers
+  runsPrivileged() bool
+  // Whether privilege escalation is possible for any container
+  //
+  // True when a container does not explicitly set allowPrivilegeEscalation to
+  // false, across regular, init, and ephemeral containers.
+  allowsPrivilegeEscalation() bool
+  // Whether any container may run as the root user
+  //
+  // True when a container is not guaranteed to run as a non-root user, after
+  // folding runAsNonRoot and runAsUser from both the pod and the container.
+  // Covers regular, init, and ephemeral containers.
+  runsAsRoot() bool
+  // Whether any container can write to its own root filesystem
+  //
+  // True when a container does not set readOnlyRootFilesystem to true, across
+  // regular, init, and ephemeral containers.
+  hasWritableRootFilesystem() bool
+  // Whether every container drops all Linux capabilities
+  //
+  // True only when each container drops the ALL capability, across regular,
+  // init, and ephemeral containers.
+  dropsAllCapabilities() bool
+  // Linux capabilities added to any container, deduplicated across all containers
+  addedCapabilities() []string
+  // Whether the pod shares the host network, PID, or IPC namespace
+  usesHostNamespaces() bool
+  // Whether the pod mounts a hostPath volume
+  usesHostPath() bool
+  // Whether any container effectively runs with the Unconfined seccomp profile
+  //
+  // Resolves the container-level seccomp profile, falling back to the pod-level
+  // default. True when any container ends up Unconfined (no syscall filtering).
+  usesUnconfinedSeccomp() bool
+  // Whether every container has a confining seccomp profile set
+  //
+  // True only when each container effectively uses RuntimeDefault or Localhost
+  // (container-level setting wins over the pod default). An unset or Unconfined
+  // profile on any container makes this false.
+  hasSeccompProfile() bool
+  // Whether any container runs with an Unconfined AppArmor profile
+  usesUnconfinedAppArmor() bool
+  // Whether the pod requests a sysctl outside the kubelet safe set
+  hasUnsafeSysctls() bool
+  // Whether any container sets procMount to Unmasked
+  usesUnmaskedProcMount() bool
+  // Whether every container sets a CPU limit (regular and init containers)
+  hasCpuLimit() bool
+  // Whether every container sets a memory limit (regular and init containers)
+  hasMemoryLimit() bool
+  // Whether every container sets both CPU and memory limits
+  hasResourceLimits() bool
+  // Whether every container sets both CPU and memory requests
+  hasResourceRequests() bool
+  // Highest Pod Security Standards level the workload satisfies
+  //
+  // One of "restricted", "baseline", or "privileged" (the level a PodSecurity
+  // admission controller would assign), computed from the pod template's
+  // securityContext, capabilities, volumes, and host settings.
+  podSecurityStandard() string
+  // Whether the workload satisfies the Pod Security Standards baseline profile
+  meetsPodSecurityBaseline() bool
+  // Whether the workload satisfies the Pod Security Standards restricted profile
+  meetsPodSecurityRestricted() bool
+  // Whether any container injects a Secret as an environment variable (secretKeyRef or envFrom)
+  usesSecretsAsEnv() bool
+  // Whether the workload mounts a Secret as a volume (including projected secret sources)
+  mountsSecretVolumes() bool
+  // Names of every Secret the workload references (env vars, mounted/projected volumes, and image-pull secrets)
+  consumedSecrets() []string
+  // Whether every container image is pinned by digest (immutable)
+  usesImageDigest() bool
+  // Whether any container image uses the mutable "latest" tag (explicitly or implicitly)
+  usesLatestTag() bool
+  // Distinct registry domains the container images are pulled from
+  imageRegistries() []string
+  // Whether every container uses imagePullPolicy Always (forces a registry re-pull, not a node cache)
+  usesAlwaysImagePullPolicy() bool
+  // Whether any container risks a stale or attacker-cached image: a mutable tag with a pull policy other than Always
+  risksStaleImage() bool
+  // Image references of all regular and init containers
+  containerImages() []string
+  // Image references that are not pinned by digest (mutable)
+  unpinnedImages() []string
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -338,6 +518,22 @@ private k8s.pod @defaults("namespace name created"){
   containers() []k8s.container
   // Container statuses
   containerStatuses() []k8s.containerStatus
+  // Running image digests
+  //
+  // Unique sha256 digests actually running in this pod, as resolved by the
+  // kubelet from container statuses. Carries a digest even when the spec used a
+  // mutable tag, so it reflects what is really executing rather than declared.
+  runningImageDigests() []string
+  // Whether a running image has drifted from its spec reference
+  //
+  // True when a container's spec references a mutable tag (not a digest) but the
+  // kubelet resolved it to a concrete digest, so a restart or reschedule could
+  // silently pull a different image for that tag.
+  hasImageDigestDrift() bool
+  // Services whose label selector matches this pod
+  services() []k8s.service
+  // Network exposures that route to this pod through a Service, Ingress, or Gateway
+  exposures() []k8s.networkExposure
   // Node the pod runs on
   node() k8s.node
   // Name of the node the pod is bound to
@@ -368,6 +564,12 @@ private k8s.pod @defaults("namespace name created"){
   automountServiceAccountToken() bool
   // Whether the pod shares the host network namespace
   hostNetwork() bool
+  // Whether NetworkPolicy does not apply to this pod
+  //
+  // True when the pod uses host networking, so Kubernetes NetworkPolicy governs
+  // neither its ingress nor its egress traffic. Such pods are a coverage gap for
+  // any default-deny posture.
+  escapesNetworkPolicy() bool
   // Whether the pod shares the host PID namespace
   hostPID() bool
   // Whether the pod shares the host IPC namespace
@@ -435,7 +637,109 @@ private k8s.pod @defaults("namespace name created"){
 }
 
 // Kubernetes Deployment
+//
+// Controller that manages a replicated, declaratively updated set of pods
+// through ReplicaSets, selected by namespace and name. The pod template is
+// available through podSpec, containers, and initContainers; the rollout is
+// governed by desiredReplicas, strategy, paused, and revisionHistoryLimit; and
+// the current rollout state is reported by replicas, readyReplicas,
+// availableReplicas, updatedReplicas, unavailableReplicas, and conditions. The
+// pods field returns the pods currently backing the deployment.
 private k8s.deployment @defaults("namespace name desiredReplicas readyReplicas created") {
+  // Whether an API token is automatically mounted for the ServiceAccount
+  automountServiceAccountToken() bool
+  // Whether the pod shares the host network namespace
+  hostNetwork() bool
+  // Whether the pod shares the host PID namespace
+  hostPID() bool
+  // Whether the pod shares the host IPC namespace
+  hostIPC() bool
+  // Pod-level security context (runAsUser, runAsGroup, runAsNonRoot, fsGroup, seccompProfile, supplementalGroups, sysctls, windowsOptions)
+  securityContext() dict
+  // Whether any container runs in privileged mode, across regular, init, and ephemeral containers
+  runsPrivileged() bool
+  // Whether privilege escalation is possible for any container
+  //
+  // True when a container does not explicitly set allowPrivilegeEscalation to
+  // false, across regular, init, and ephemeral containers.
+  allowsPrivilegeEscalation() bool
+  // Whether any container may run as the root user
+  //
+  // True when a container is not guaranteed to run as a non-root user, after
+  // folding runAsNonRoot and runAsUser from both the pod and the container.
+  // Covers regular, init, and ephemeral containers.
+  runsAsRoot() bool
+  // Whether any container can write to its own root filesystem
+  //
+  // True when a container does not set readOnlyRootFilesystem to true, across
+  // regular, init, and ephemeral containers.
+  hasWritableRootFilesystem() bool
+  // Whether every container drops all Linux capabilities
+  //
+  // True only when each container drops the ALL capability, across regular,
+  // init, and ephemeral containers.
+  dropsAllCapabilities() bool
+  // Linux capabilities added to any container, deduplicated across all containers
+  addedCapabilities() []string
+  // Whether the pod shares the host network, PID, or IPC namespace
+  usesHostNamespaces() bool
+  // Whether the pod mounts a hostPath volume
+  usesHostPath() bool
+  // Whether any container effectively runs with the Unconfined seccomp profile
+  //
+  // Resolves the container-level seccomp profile, falling back to the pod-level
+  // default. True when any container ends up Unconfined (no syscall filtering).
+  usesUnconfinedSeccomp() bool
+  // Whether every container has a confining seccomp profile set
+  //
+  // True only when each container effectively uses RuntimeDefault or Localhost
+  // (container-level setting wins over the pod default). An unset or Unconfined
+  // profile on any container makes this false.
+  hasSeccompProfile() bool
+  // Whether any container runs with an Unconfined AppArmor profile
+  usesUnconfinedAppArmor() bool
+  // Whether the pod requests a sysctl outside the kubelet safe set
+  hasUnsafeSysctls() bool
+  // Whether any container sets procMount to Unmasked
+  usesUnmaskedProcMount() bool
+  // Whether every container sets a CPU limit (regular and init containers)
+  hasCpuLimit() bool
+  // Whether every container sets a memory limit (regular and init containers)
+  hasMemoryLimit() bool
+  // Whether every container sets both CPU and memory limits
+  hasResourceLimits() bool
+  // Whether every container sets both CPU and memory requests
+  hasResourceRequests() bool
+  // Highest Pod Security Standards level the workload satisfies
+  //
+  // One of "restricted", "baseline", or "privileged" (the level a PodSecurity
+  // admission controller would assign), computed from the pod template's
+  // securityContext, capabilities, volumes, and host settings.
+  podSecurityStandard() string
+  // Whether the workload satisfies the Pod Security Standards baseline profile
+  meetsPodSecurityBaseline() bool
+  // Whether the workload satisfies the Pod Security Standards restricted profile
+  meetsPodSecurityRestricted() bool
+  // Whether any container injects a Secret as an environment variable (secretKeyRef or envFrom)
+  usesSecretsAsEnv() bool
+  // Whether the workload mounts a Secret as a volume (including projected secret sources)
+  mountsSecretVolumes() bool
+  // Names of every Secret the workload references (env vars, mounted/projected volumes, and image-pull secrets)
+  consumedSecrets() []string
+  // Whether every container image is pinned by digest (immutable)
+  usesImageDigest() bool
+  // Whether any container image uses the mutable "latest" tag (explicitly or implicitly)
+  usesLatestTag() bool
+  // Distinct registry domains the container images are pulled from
+  imageRegistries() []string
+  // Whether every container uses imagePullPolicy Always (forces a registry re-pull, not a node cache)
+  usesAlwaysImagePullPolicy() bool
+  // Whether any container risks a stale or attacker-cached image: a mutable tag with a pull policy other than Always
+  risksStaleImage() bool
+  // Image references of all regular and init containers
+  containerImages() []string
+  // Image references that are not pinned by digest (mutable)
+  unpinnedImages() []string
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -501,7 +805,109 @@ private k8s.deployment @defaults("namespace name desiredReplicas readyReplicas c
 }
 
 // Kubernetes DaemonSet
+//
+// Controller that runs one copy of a pod on every matching node, selected by
+// namespace and name. The pod template is available through podSpec,
+// containers, and initContainers, the rollout is governed by updateStrategy
+// and revisionHistoryLimit, and scheduling coverage is reported by
+// desiredNumberScheduled, currentNumberScheduled, numberReady, numberAvailable,
+// numberMisscheduled, and updatedNumberScheduled. The pods field returns the
+// daemon pods currently running.
 private k8s.daemonset @defaults("namespace name desiredNumberScheduled numberReady created") {
+  // Whether an API token is automatically mounted for the ServiceAccount
+  automountServiceAccountToken() bool
+  // Whether the pod shares the host network namespace
+  hostNetwork() bool
+  // Whether the pod shares the host PID namespace
+  hostPID() bool
+  // Whether the pod shares the host IPC namespace
+  hostIPC() bool
+  // Pod-level security context (runAsUser, runAsGroup, runAsNonRoot, fsGroup, seccompProfile, supplementalGroups, sysctls, windowsOptions)
+  securityContext() dict
+  // Whether any container runs in privileged mode, across regular, init, and ephemeral containers
+  runsPrivileged() bool
+  // Whether privilege escalation is possible for any container
+  //
+  // True when a container does not explicitly set allowPrivilegeEscalation to
+  // false, across regular, init, and ephemeral containers.
+  allowsPrivilegeEscalation() bool
+  // Whether any container may run as the root user
+  //
+  // True when a container is not guaranteed to run as a non-root user, after
+  // folding runAsNonRoot and runAsUser from both the pod and the container.
+  // Covers regular, init, and ephemeral containers.
+  runsAsRoot() bool
+  // Whether any container can write to its own root filesystem
+  //
+  // True when a container does not set readOnlyRootFilesystem to true, across
+  // regular, init, and ephemeral containers.
+  hasWritableRootFilesystem() bool
+  // Whether every container drops all Linux capabilities
+  //
+  // True only when each container drops the ALL capability, across regular,
+  // init, and ephemeral containers.
+  dropsAllCapabilities() bool
+  // Linux capabilities added to any container, deduplicated across all containers
+  addedCapabilities() []string
+  // Whether the pod shares the host network, PID, or IPC namespace
+  usesHostNamespaces() bool
+  // Whether the pod mounts a hostPath volume
+  usesHostPath() bool
+  // Whether any container effectively runs with the Unconfined seccomp profile
+  //
+  // Resolves the container-level seccomp profile, falling back to the pod-level
+  // default. True when any container ends up Unconfined (no syscall filtering).
+  usesUnconfinedSeccomp() bool
+  // Whether every container has a confining seccomp profile set
+  //
+  // True only when each container effectively uses RuntimeDefault or Localhost
+  // (container-level setting wins over the pod default). An unset or Unconfined
+  // profile on any container makes this false.
+  hasSeccompProfile() bool
+  // Whether any container runs with an Unconfined AppArmor profile
+  usesUnconfinedAppArmor() bool
+  // Whether the pod requests a sysctl outside the kubelet safe set
+  hasUnsafeSysctls() bool
+  // Whether any container sets procMount to Unmasked
+  usesUnmaskedProcMount() bool
+  // Whether every container sets a CPU limit (regular and init containers)
+  hasCpuLimit() bool
+  // Whether every container sets a memory limit (regular and init containers)
+  hasMemoryLimit() bool
+  // Whether every container sets both CPU and memory limits
+  hasResourceLimits() bool
+  // Whether every container sets both CPU and memory requests
+  hasResourceRequests() bool
+  // Highest Pod Security Standards level the workload satisfies
+  //
+  // One of "restricted", "baseline", or "privileged" (the level a PodSecurity
+  // admission controller would assign), computed from the pod template's
+  // securityContext, capabilities, volumes, and host settings.
+  podSecurityStandard() string
+  // Whether the workload satisfies the Pod Security Standards baseline profile
+  meetsPodSecurityBaseline() bool
+  // Whether the workload satisfies the Pod Security Standards restricted profile
+  meetsPodSecurityRestricted() bool
+  // Whether any container injects a Secret as an environment variable (secretKeyRef or envFrom)
+  usesSecretsAsEnv() bool
+  // Whether the workload mounts a Secret as a volume (including projected secret sources)
+  mountsSecretVolumes() bool
+  // Names of every Secret the workload references (env vars, mounted/projected volumes, and image-pull secrets)
+  consumedSecrets() []string
+  // Whether every container image is pinned by digest (immutable)
+  usesImageDigest() bool
+  // Whether any container image uses the mutable "latest" tag (explicitly or implicitly)
+  usesLatestTag() bool
+  // Distinct registry domains the container images are pulled from
+  imageRegistries() []string
+  // Whether every container uses imagePullPolicy Always (forces a registry re-pull, not a node cache)
+  usesAlwaysImagePullPolicy() bool
+  // Whether any container risks a stale or attacker-cached image: a mutable tag with a pull policy other than Always
+  risksStaleImage() bool
+  // Image references of all regular and init containers
+  containerImages() []string
+  // Image references that are not pinned by digest (mutable)
+  unpinnedImages() []string
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -565,7 +971,110 @@ private k8s.daemonset @defaults("namespace name desiredNumberScheduled numberRea
 }
 
 // Kubernetes StatefulSet
+//
+// Controller that manages pods with stable identities and persistent storage,
+// selected by namespace and name. The pod template is available through
+// podSpec, containers, and initContainers; identity and ordering are governed
+// by serviceName, podManagementPolicy, ordinalsStart, and updateStrategy; and
+// persistentVolumeClaimRetentionPolicy controls whether per-pod volumes survive
+// scale-down. Rollout state is reported by replicas, readyReplicas,
+// currentReplicas, updatedReplicas, currentRevision, updateRevision, and
+// conditions, and the pods field returns the backing pods.
 private k8s.statefulset @defaults("namespace name desiredReplicas readyReplicas created") {
+  // Whether an API token is automatically mounted for the ServiceAccount
+  automountServiceAccountToken() bool
+  // Whether the pod shares the host network namespace
+  hostNetwork() bool
+  // Whether the pod shares the host PID namespace
+  hostPID() bool
+  // Whether the pod shares the host IPC namespace
+  hostIPC() bool
+  // Pod-level security context (runAsUser, runAsGroup, runAsNonRoot, fsGroup, seccompProfile, supplementalGroups, sysctls, windowsOptions)
+  securityContext() dict
+  // Whether any container runs in privileged mode, across regular, init, and ephemeral containers
+  runsPrivileged() bool
+  // Whether privilege escalation is possible for any container
+  //
+  // True when a container does not explicitly set allowPrivilegeEscalation to
+  // false, across regular, init, and ephemeral containers.
+  allowsPrivilegeEscalation() bool
+  // Whether any container may run as the root user
+  //
+  // True when a container is not guaranteed to run as a non-root user, after
+  // folding runAsNonRoot and runAsUser from both the pod and the container.
+  // Covers regular, init, and ephemeral containers.
+  runsAsRoot() bool
+  // Whether any container can write to its own root filesystem
+  //
+  // True when a container does not set readOnlyRootFilesystem to true, across
+  // regular, init, and ephemeral containers.
+  hasWritableRootFilesystem() bool
+  // Whether every container drops all Linux capabilities
+  //
+  // True only when each container drops the ALL capability, across regular,
+  // init, and ephemeral containers.
+  dropsAllCapabilities() bool
+  // Linux capabilities added to any container, deduplicated across all containers
+  addedCapabilities() []string
+  // Whether the pod shares the host network, PID, or IPC namespace
+  usesHostNamespaces() bool
+  // Whether the pod mounts a hostPath volume
+  usesHostPath() bool
+  // Whether any container effectively runs with the Unconfined seccomp profile
+  //
+  // Resolves the container-level seccomp profile, falling back to the pod-level
+  // default. True when any container ends up Unconfined (no syscall filtering).
+  usesUnconfinedSeccomp() bool
+  // Whether every container has a confining seccomp profile set
+  //
+  // True only when each container effectively uses RuntimeDefault or Localhost
+  // (container-level setting wins over the pod default). An unset or Unconfined
+  // profile on any container makes this false.
+  hasSeccompProfile() bool
+  // Whether any container runs with an Unconfined AppArmor profile
+  usesUnconfinedAppArmor() bool
+  // Whether the pod requests a sysctl outside the kubelet safe set
+  hasUnsafeSysctls() bool
+  // Whether any container sets procMount to Unmasked
+  usesUnmaskedProcMount() bool
+  // Whether every container sets a CPU limit (regular and init containers)
+  hasCpuLimit() bool
+  // Whether every container sets a memory limit (regular and init containers)
+  hasMemoryLimit() bool
+  // Whether every container sets both CPU and memory limits
+  hasResourceLimits() bool
+  // Whether every container sets both CPU and memory requests
+  hasResourceRequests() bool
+  // Highest Pod Security Standards level the workload satisfies
+  //
+  // One of "restricted", "baseline", or "privileged" (the level a PodSecurity
+  // admission controller would assign), computed from the pod template's
+  // securityContext, capabilities, volumes, and host settings.
+  podSecurityStandard() string
+  // Whether the workload satisfies the Pod Security Standards baseline profile
+  meetsPodSecurityBaseline() bool
+  // Whether the workload satisfies the Pod Security Standards restricted profile
+  meetsPodSecurityRestricted() bool
+  // Whether any container injects a Secret as an environment variable (secretKeyRef or envFrom)
+  usesSecretsAsEnv() bool
+  // Whether the workload mounts a Secret as a volume (including projected secret sources)
+  mountsSecretVolumes() bool
+  // Names of every Secret the workload references (env vars, mounted/projected volumes, and image-pull secrets)
+  consumedSecrets() []string
+  // Whether every container image is pinned by digest (immutable)
+  usesImageDigest() bool
+  // Whether any container image uses the mutable "latest" tag (explicitly or implicitly)
+  usesLatestTag() bool
+  // Distinct registry domains the container images are pulled from
+  imageRegistries() []string
+  // Whether every container uses imagePullPolicy Always (forces a registry re-pull, not a node cache)
+  usesAlwaysImagePullPolicy() bool
+  // Whether any container risks a stale or attacker-cached image: a mutable tag with a pull policy other than Always
+  risksStaleImage() bool
+  // Image references of all regular and init containers
+  containerImages() []string
+  // Image references that are not pinned by digest (mutable)
+  unpinnedImages() []string
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -639,7 +1148,108 @@ private k8s.statefulset @defaults("namespace name desiredReplicas readyReplicas 
 }
 
 // Kubernetes ReplicaSet
+//
+// Controller that maintains a stable set of replica pods, usually owned by a
+// Deployment, selected by namespace and name. The pod template is available
+// through podSpec, containers, and initContainers, the target count comes from
+// desiredReplicas and selector, and the observed state is reported by replicas,
+// readyReplicas, availableReplicas, fullyLabeledReplicas, and conditions. The
+// pods field returns the pods the ReplicaSet owns.
 private k8s.replicaset @defaults("namespace name desiredReplicas readyReplicas created") {
+  // Whether an API token is automatically mounted for the ServiceAccount
+  automountServiceAccountToken() bool
+  // Whether the pod shares the host network namespace
+  hostNetwork() bool
+  // Whether the pod shares the host PID namespace
+  hostPID() bool
+  // Whether the pod shares the host IPC namespace
+  hostIPC() bool
+  // Pod-level security context (runAsUser, runAsGroup, runAsNonRoot, fsGroup, seccompProfile, supplementalGroups, sysctls, windowsOptions)
+  securityContext() dict
+  // Whether any container runs in privileged mode, across regular, init, and ephemeral containers
+  runsPrivileged() bool
+  // Whether privilege escalation is possible for any container
+  //
+  // True when a container does not explicitly set allowPrivilegeEscalation to
+  // false, across regular, init, and ephemeral containers.
+  allowsPrivilegeEscalation() bool
+  // Whether any container may run as the root user
+  //
+  // True when a container is not guaranteed to run as a non-root user, after
+  // folding runAsNonRoot and runAsUser from both the pod and the container.
+  // Covers regular, init, and ephemeral containers.
+  runsAsRoot() bool
+  // Whether any container can write to its own root filesystem
+  //
+  // True when a container does not set readOnlyRootFilesystem to true, across
+  // regular, init, and ephemeral containers.
+  hasWritableRootFilesystem() bool
+  // Whether every container drops all Linux capabilities
+  //
+  // True only when each container drops the ALL capability, across regular,
+  // init, and ephemeral containers.
+  dropsAllCapabilities() bool
+  // Linux capabilities added to any container, deduplicated across all containers
+  addedCapabilities() []string
+  // Whether the pod shares the host network, PID, or IPC namespace
+  usesHostNamespaces() bool
+  // Whether the pod mounts a hostPath volume
+  usesHostPath() bool
+  // Whether any container effectively runs with the Unconfined seccomp profile
+  //
+  // Resolves the container-level seccomp profile, falling back to the pod-level
+  // default. True when any container ends up Unconfined (no syscall filtering).
+  usesUnconfinedSeccomp() bool
+  // Whether every container has a confining seccomp profile set
+  //
+  // True only when each container effectively uses RuntimeDefault or Localhost
+  // (container-level setting wins over the pod default). An unset or Unconfined
+  // profile on any container makes this false.
+  hasSeccompProfile() bool
+  // Whether any container runs with an Unconfined AppArmor profile
+  usesUnconfinedAppArmor() bool
+  // Whether the pod requests a sysctl outside the kubelet safe set
+  hasUnsafeSysctls() bool
+  // Whether any container sets procMount to Unmasked
+  usesUnmaskedProcMount() bool
+  // Whether every container sets a CPU limit (regular and init containers)
+  hasCpuLimit() bool
+  // Whether every container sets a memory limit (regular and init containers)
+  hasMemoryLimit() bool
+  // Whether every container sets both CPU and memory limits
+  hasResourceLimits() bool
+  // Whether every container sets both CPU and memory requests
+  hasResourceRequests() bool
+  // Highest Pod Security Standards level the workload satisfies
+  //
+  // One of "restricted", "baseline", or "privileged" (the level a PodSecurity
+  // admission controller would assign), computed from the pod template's
+  // securityContext, capabilities, volumes, and host settings.
+  podSecurityStandard() string
+  // Whether the workload satisfies the Pod Security Standards baseline profile
+  meetsPodSecurityBaseline() bool
+  // Whether the workload satisfies the Pod Security Standards restricted profile
+  meetsPodSecurityRestricted() bool
+  // Whether any container injects a Secret as an environment variable (secretKeyRef or envFrom)
+  usesSecretsAsEnv() bool
+  // Whether the workload mounts a Secret as a volume (including projected secret sources)
+  mountsSecretVolumes() bool
+  // Names of every Secret the workload references (env vars, mounted/projected volumes, and image-pull secrets)
+  consumedSecrets() []string
+  // Whether every container image is pinned by digest (immutable)
+  usesImageDigest() bool
+  // Whether any container image uses the mutable "latest" tag (explicitly or implicitly)
+  usesLatestTag() bool
+  // Distinct registry domains the container images are pulled from
+  imageRegistries() []string
+  // Whether every container uses imagePullPolicy Always (forces a registry re-pull, not a node cache)
+  usesAlwaysImagePullPolicy() bool
+  // Whether any container risks a stale or attacker-cached image: a mutable tag with a pull policy other than Always
+  risksStaleImage() bool
+  // Image references of all regular and init containers
+  containerImages() []string
+  // Image references that are not pinned by digest (mutable)
+  unpinnedImages() []string
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -693,7 +1303,108 @@ private k8s.replicaset @defaults("namespace name desiredReplicas readyReplicas c
 }
 
 // Kubernetes Job
+//
+// Controller that runs pods to completion, selected by namespace and name. The
+// pod template is available through podSpec, containers, and initContainers;
+// execution is governed by parallelism, completions, completionMode,
+// backoffLimit, activeDeadlineSeconds, and suspend; and progress is reported by
+// active, succeeded, failed, ready, startTime, completionTime, and conditions.
+// The pods field returns the pods the job has created.
 private k8s.job @defaults("namespace name succeeded failed created") {
+  // Whether an API token is automatically mounted for the ServiceAccount
+  automountServiceAccountToken() bool
+  // Whether the pod shares the host network namespace
+  hostNetwork() bool
+  // Whether the pod shares the host PID namespace
+  hostPID() bool
+  // Whether the pod shares the host IPC namespace
+  hostIPC() bool
+  // Pod-level security context (runAsUser, runAsGroup, runAsNonRoot, fsGroup, seccompProfile, supplementalGroups, sysctls, windowsOptions)
+  securityContext() dict
+  // Whether any container runs in privileged mode, across regular, init, and ephemeral containers
+  runsPrivileged() bool
+  // Whether privilege escalation is possible for any container
+  //
+  // True when a container does not explicitly set allowPrivilegeEscalation to
+  // false, across regular, init, and ephemeral containers.
+  allowsPrivilegeEscalation() bool
+  // Whether any container may run as the root user
+  //
+  // True when a container is not guaranteed to run as a non-root user, after
+  // folding runAsNonRoot and runAsUser from both the pod and the container.
+  // Covers regular, init, and ephemeral containers.
+  runsAsRoot() bool
+  // Whether any container can write to its own root filesystem
+  //
+  // True when a container does not set readOnlyRootFilesystem to true, across
+  // regular, init, and ephemeral containers.
+  hasWritableRootFilesystem() bool
+  // Whether every container drops all Linux capabilities
+  //
+  // True only when each container drops the ALL capability, across regular,
+  // init, and ephemeral containers.
+  dropsAllCapabilities() bool
+  // Linux capabilities added to any container, deduplicated across all containers
+  addedCapabilities() []string
+  // Whether the pod shares the host network, PID, or IPC namespace
+  usesHostNamespaces() bool
+  // Whether the pod mounts a hostPath volume
+  usesHostPath() bool
+  // Whether any container effectively runs with the Unconfined seccomp profile
+  //
+  // Resolves the container-level seccomp profile, falling back to the pod-level
+  // default. True when any container ends up Unconfined (no syscall filtering).
+  usesUnconfinedSeccomp() bool
+  // Whether every container has a confining seccomp profile set
+  //
+  // True only when each container effectively uses RuntimeDefault or Localhost
+  // (container-level setting wins over the pod default). An unset or Unconfined
+  // profile on any container makes this false.
+  hasSeccompProfile() bool
+  // Whether any container runs with an Unconfined AppArmor profile
+  usesUnconfinedAppArmor() bool
+  // Whether the pod requests a sysctl outside the kubelet safe set
+  hasUnsafeSysctls() bool
+  // Whether any container sets procMount to Unmasked
+  usesUnmaskedProcMount() bool
+  // Whether every container sets a CPU limit (regular and init containers)
+  hasCpuLimit() bool
+  // Whether every container sets a memory limit (regular and init containers)
+  hasMemoryLimit() bool
+  // Whether every container sets both CPU and memory limits
+  hasResourceLimits() bool
+  // Whether every container sets both CPU and memory requests
+  hasResourceRequests() bool
+  // Highest Pod Security Standards level the workload satisfies
+  //
+  // One of "restricted", "baseline", or "privileged" (the level a PodSecurity
+  // admission controller would assign), computed from the pod template's
+  // securityContext, capabilities, volumes, and host settings.
+  podSecurityStandard() string
+  // Whether the workload satisfies the Pod Security Standards baseline profile
+  meetsPodSecurityBaseline() bool
+  // Whether the workload satisfies the Pod Security Standards restricted profile
+  meetsPodSecurityRestricted() bool
+  // Whether any container injects a Secret as an environment variable (secretKeyRef or envFrom)
+  usesSecretsAsEnv() bool
+  // Whether the workload mounts a Secret as a volume (including projected secret sources)
+  mountsSecretVolumes() bool
+  // Names of every Secret the workload references (env vars, mounted/projected volumes, and image-pull secrets)
+  consumedSecrets() []string
+  // Whether every container image is pinned by digest (immutable)
+  usesImageDigest() bool
+  // Whether any container image uses the mutable "latest" tag (explicitly or implicitly)
+  usesLatestTag() bool
+  // Distinct registry domains the container images are pulled from
+  imageRegistries() []string
+  // Whether every container uses imagePullPolicy Always (forces a registry re-pull, not a node cache)
+  usesAlwaysImagePullPolicy() bool
+  // Whether any container risks a stale or attacker-cached image: a mutable tag with a pull policy other than Always
+  risksStaleImage() bool
+  // Image references of all regular and init containers
+  containerImages() []string
+  // Image references that are not pinned by digest (mutable)
+  unpinnedImages() []string
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -771,7 +1482,109 @@ private k8s.job @defaults("namespace name succeeded failed created") {
 }
 
 // Kubernetes CronJob
+//
+// Controller that creates Jobs on a repeating schedule, selected by namespace
+// and name. The schedule and timeZone fields define when jobs run,
+// concurrencyPolicy, startingDeadlineSeconds, and suspend govern execution, and
+// successfulJobsHistoryLimit and failedJobsHistoryLimit control how many
+// finished jobs are retained. The activeJobs field returns the jobs currently
+// running, jobs returns every job the CronJob still owns, and the shared pod
+// template is available through podSpec, containers, and initContainers.
 private k8s.cronjob @defaults("namespace name schedule suspend created") {
+  // Whether an API token is automatically mounted for the ServiceAccount
+  automountServiceAccountToken() bool
+  // Whether the pod shares the host network namespace
+  hostNetwork() bool
+  // Whether the pod shares the host PID namespace
+  hostPID() bool
+  // Whether the pod shares the host IPC namespace
+  hostIPC() bool
+  // Pod-level security context (runAsUser, runAsGroup, runAsNonRoot, fsGroup, seccompProfile, supplementalGroups, sysctls, windowsOptions)
+  securityContext() dict
+  // Whether any container runs in privileged mode, across regular, init, and ephemeral containers
+  runsPrivileged() bool
+  // Whether privilege escalation is possible for any container
+  //
+  // True when a container does not explicitly set allowPrivilegeEscalation to
+  // false, across regular, init, and ephemeral containers.
+  allowsPrivilegeEscalation() bool
+  // Whether any container may run as the root user
+  //
+  // True when a container is not guaranteed to run as a non-root user, after
+  // folding runAsNonRoot and runAsUser from both the pod and the container.
+  // Covers regular, init, and ephemeral containers.
+  runsAsRoot() bool
+  // Whether any container can write to its own root filesystem
+  //
+  // True when a container does not set readOnlyRootFilesystem to true, across
+  // regular, init, and ephemeral containers.
+  hasWritableRootFilesystem() bool
+  // Whether every container drops all Linux capabilities
+  //
+  // True only when each container drops the ALL capability, across regular,
+  // init, and ephemeral containers.
+  dropsAllCapabilities() bool
+  // Linux capabilities added to any container, deduplicated across all containers
+  addedCapabilities() []string
+  // Whether the pod shares the host network, PID, or IPC namespace
+  usesHostNamespaces() bool
+  // Whether the pod mounts a hostPath volume
+  usesHostPath() bool
+  // Whether any container effectively runs with the Unconfined seccomp profile
+  //
+  // Resolves the container-level seccomp profile, falling back to the pod-level
+  // default. True when any container ends up Unconfined (no syscall filtering).
+  usesUnconfinedSeccomp() bool
+  // Whether every container has a confining seccomp profile set
+  //
+  // True only when each container effectively uses RuntimeDefault or Localhost
+  // (container-level setting wins over the pod default). An unset or Unconfined
+  // profile on any container makes this false.
+  hasSeccompProfile() bool
+  // Whether any container runs with an Unconfined AppArmor profile
+  usesUnconfinedAppArmor() bool
+  // Whether the pod requests a sysctl outside the kubelet safe set
+  hasUnsafeSysctls() bool
+  // Whether any container sets procMount to Unmasked
+  usesUnmaskedProcMount() bool
+  // Whether every container sets a CPU limit (regular and init containers)
+  hasCpuLimit() bool
+  // Whether every container sets a memory limit (regular and init containers)
+  hasMemoryLimit() bool
+  // Whether every container sets both CPU and memory limits
+  hasResourceLimits() bool
+  // Whether every container sets both CPU and memory requests
+  hasResourceRequests() bool
+  // Highest Pod Security Standards level the workload satisfies
+  //
+  // One of "restricted", "baseline", or "privileged" (the level a PodSecurity
+  // admission controller would assign), computed from the pod template's
+  // securityContext, capabilities, volumes, and host settings.
+  podSecurityStandard() string
+  // Whether the workload satisfies the Pod Security Standards baseline profile
+  meetsPodSecurityBaseline() bool
+  // Whether the workload satisfies the Pod Security Standards restricted profile
+  meetsPodSecurityRestricted() bool
+  // Whether any container injects a Secret as an environment variable (secretKeyRef or envFrom)
+  usesSecretsAsEnv() bool
+  // Whether the workload mounts a Secret as a volume (including projected secret sources)
+  mountsSecretVolumes() bool
+  // Names of every Secret the workload references (env vars, mounted/projected volumes, and image-pull secrets)
+  consumedSecrets() []string
+  // Whether every container image is pinned by digest (immutable)
+  usesImageDigest() bool
+  // Whether any container image uses the mutable "latest" tag (explicitly or implicitly)
+  usesLatestTag() bool
+  // Distinct registry domains the container images are pulled from
+  imageRegistries() []string
+  // Whether every container uses imagePullPolicy Always (forces a registry re-pull, not a node cache)
+  usesAlwaysImagePullPolicy() bool
+  // Whether any container risks a stale or attacker-cached image: a mutable tag with a pull policy other than Always
+  risksStaleImage() bool
+  // Image references of all regular and init containers
+  containerImages() []string
+  // Image references that are not pinned by digest (mutable)
+  unpinnedImages() []string
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -1127,6 +1940,13 @@ private k8s.ephemeralContainer @defaults("name") {
 }
 
 // Kubernetes Secret
+//
+// Object that holds sensitive data such as passwords, tokens, and keys,
+// selected by namespace and name. The type field reports the secret's purpose
+// (for example kubernetes.io/tls or kubernetes.io/dockerconfigjson),
+// certificates parses any X.509 certificates the secret carries, and usedBy
+// returns the pods that consume the secret through volumes, environment
+// variables, or image-pull references.
 private k8s.secret @defaults("namespace name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1158,9 +1978,32 @@ private k8s.secret @defaults("namespace name created") {
   certificates() []network.certificate
   // Pods that reference this Secret through volumes, env, envFrom, or imagePullSecrets
   usedBy() []k8s.pod
+  // Whether this is a service account token Secret (type kubernetes.io/service-account-token)
+  isServiceAccountToken() bool
+  // Whether this is an image-pull Secret (type kubernetes.io/dockercfg or kubernetes.io/dockerconfigjson)
+  isImagePullSecret() bool
+  // Whether no pod and no service account reference this Secret
+  //
+  // True when no pod consumes the Secret through a volume, environment
+  // variable, or image-pull reference, and no service account lists it among
+  // its tokens or image-pull secrets. A signal for orphaned credentials.
+  isUnused() bool
+  // Whether the secret holds a TLS certificate that has expired
+  hasExpiredCertificate() bool
+  // Earliest expiry among the secret's TLS certificates
+  //
+  // The notAfter of the soonest-expiring certificate in the tls.crt chain, so a
+  // single comparison covers the whole chain. Null when the secret holds no
+  // certificate.
+  certificateExpiry() time
 }
 
 // Kubernetes ConfigMap
+//
+// Object that holds non-confidential configuration as key-value pairs,
+// selected by namespace and name. The data field exposes the stored
+// configuration entries, and usedBy returns the pods that consume the ConfigMap
+// through volumes, environment variables, or envFrom.
 private k8s.configmap @defaults("namespace name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1193,6 +2036,15 @@ private k8s.configmap @defaults("namespace name created") {
 }
 
 // Kubernetes Service
+//
+// Stable network endpoint that load-balances traffic to a set of pods,
+// selected by namespace and name. The type field distinguishes ClusterIP,
+// NodePort, LoadBalancer, and ExternalName services; clusterIP, externalIPs,
+// loadBalancerIngress, and ports report the addresses and ports it exposes; and
+// selector identifies the backing pods. Traffic and affinity behavior is
+// governed by externalTrafficPolicy, internalTrafficPolicy, and
+// sessionAffinity, and endpointSlices returns the slices listing the current
+// backing endpoints.
 private k8s.service @defaults("namespace name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1262,6 +2114,18 @@ private k8s.service @defaults("namespace name created") {
   loadBalancerIngress() []dict
   // EndpointSlices that back this service (filtered by the kubernetes.io/service-name label)
   endpointSlices() []k8s.endpointslice
+  // Pods selected by the service's label selector (empty for selectorless and ExternalName services)
+  pods() []k8s.pod
+  // Backend endpoint addresses that are not in-cluster pods
+  //
+  // Addresses from the service's EndpointSlices whose endpoints have no Pod
+  // targetRef, so the service forwards to manually managed targets that are
+  // often outside the cluster. Empty for an ordinary selector-backed service.
+  externalEndpoints() []string
+  // Whether the service forwards to a public, non-pod endpoint address
+  routesToPublicEndpoint() bool
+  // Normalized network exposure records for this Service
+  networkExposures() []k8s.networkExposure
 }
 
 // Kubernetes Ingress resource backend
@@ -1331,6 +2195,13 @@ private k8s.ingresstls {
 }
 
 // Kubernetes Ingress
+//
+// HTTP and HTTPS routing rules that expose Services to traffic from outside the
+// cluster, selected by namespace and name. The rules field maps hostnames and
+// paths to backend services, tls lists the hostnames and certificates
+// terminated by the ingress, and ingressClass identifies the controller that
+// implements the rules. The loadBalancerIngress field reports the addresses the
+// controller has assigned.
 private k8s.ingress @defaults("namespace name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1366,9 +2237,19 @@ private k8s.ingress @defaults("namespace name created") {
   ingressClass() k8s.ingressclass
   // Load-balancer ingress entries published in status (ip, hostname, ports)
   loadBalancerIngress() []dict
+  // Pods behind the ingress, resolved through its backend services
+  pods() []k8s.pod
+  // Normalized network exposure records for this Ingress
+  networkExposures() []k8s.networkExposure
 }
 
 // Kubernetes service account
+//
+// Identity that pods use to authenticate to the API server, selected by
+// namespace and name. The secrets and imagePullSecrets fields list the tokens
+// and registry credentials associated with the account, and
+// automountServiceAccountToken reports whether its API token is mounted into
+// pods by default.
 private k8s.serviceaccount @defaults("namespace name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1400,9 +2281,26 @@ private k8s.serviceaccount @defaults("namespace name created") {
   imagePullSecrets []dict
   // Whether pods running as this service account should have an API token automatically mounted
   automountServiceAccountToken bool
+  // RoleBindings in this namespace that grant this service account a role
+  roleBindings() []k8s.rbac.rolebinding
+  // ClusterRoleBindings that grant this service account a cluster role
+  clusterRoleBindings() []k8s.rbac.clusterrolebinding
+  // Whether any bound role confers cluster-admin (wildcard verbs, API groups, and resources)
+  isClusterAdmin() bool
+  // Whether any bound role allows RBAC privilege escalation (escalate/bind/impersonate)
+  canEscalatePrivileges() bool
+  // Whether any bound role can read Secrets (get, list, or watch)
+  canReadSecrets() bool
+  // Whether any bound role has a wildcard rule (wildcard verbs, API groups, or resources)
+  hasWildcardPermissions() bool
 }
 
 // Kubernetes ClusterRole
+//
+// Cluster-wide set of RBAC permissions, selected by name. The rules field lists
+// the API groups, resources, and verbs the role grants, aggregationRule
+// describes how the role aggregates other ClusterRoles by label, and boundBy
+// returns the ClusterRoleBindings that grant this role to subjects.
 private k8s.rbac.clusterrole @defaults("name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1428,13 +2326,52 @@ private k8s.rbac.clusterrole @defaults("name created") {
   manifest() dict
   // ClusterRole rules
   rules []dict
+  // Access rules as typed policy-rule resources (a structured view of `rules`)
+  policyRules() []k8s.rbac.policyRule
+  // Whether any rule uses a wildcard ("*") for verbs, API groups, or resources
+  hasWildcardRule() bool
+  // Whether any rule grants RBAC privilege escalation
+  //
+  // True when a rule allows the `escalate` or `bind` verb on RBAC roles or
+  // bindings, or the `impersonate` verb on users, groups, or service accounts —
+  // the canonical ways a subject can grant itself more privileges than it
+  // currently holds. Wildcard verbs/resources/apiGroups that cover those
+  // permissions also count.
+  allowsPrivilegeEscalation() bool
+  // Whether any rule grants read access (get, list, or watch) to Secrets
+  canReadSecrets() bool
+  // Whether any rule grants unrestricted access (wildcard verbs, API groups, and resources), i.e. cluster-admin
+  grantsClusterAdmin() bool
   // ClusterRole aggregation rule
   aggregationRule dict
   // ClusterRoleBindings that reference this ClusterRole via roleRef
   boundBy() []k8s.rbac.clusterrolebinding
 }
 
+// Kubernetes RBAC policy rule
+//
+// Single grant from the rules list of a Role or ClusterRole, combining the
+// verbs, apiGroups, resources, resourceNames, and nonResourceURLs that
+// together determine which actions a subject bound to the role may perform.
+private k8s.rbac.policyRule @defaults("verbs apiGroups resources") {
+  // Verbs that apply to the listed resources or non-resource URLs (e.g., get, list, watch, create; "*" matches all)
+  verbs []string
+  // API groups the rule applies to ("" is the core group; "*" matches all)
+  apiGroups []string
+  // Resources the rule applies to (e.g., pods, secrets; "*" matches all; may include subresources like pods/exec)
+  resources []string
+  // Object names the rule is restricted to (empty means all objects of the listed resources)
+  resourceNames []string
+  // Non-resource URLs the rule grants access to (e.g., /healthz; mutually exclusive with resources)
+  nonResourceURLs []string
+}
+
 // Kubernetes ClusterRoleBinding
+//
+// Grant that binds a ClusterRole to a set of subjects cluster-wide, selected by
+// name. The subjects field lists the users, groups, and service accounts the
+// role is granted to, serviceAccounts resolves the service-account subjects to
+// their objects, and clusterRole returns the ClusterRole named by roleRef.
 private k8s.rbac.clusterrolebinding @defaults("name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1464,11 +2401,24 @@ private k8s.rbac.clusterrolebinding @defaults("name created") {
   roleRef dict
   // ServiceAccounts referenced as subjects (entries where kind == "ServiceAccount" resolved to typed resources)
   serviceAccounts() []k8s.serviceaccount
+  // Whether the granted ClusterRole confers cluster-admin (wildcard verbs, API groups, and resources)
+  grantsClusterAdmin() bool
+  // Whether the granted ClusterRole has any wildcard rule
+  hasWildcardRule() bool
+  // Whether the granted ClusterRole allows RBAC privilege escalation (escalate/bind/impersonate)
+  allowsPrivilegeEscalation() bool
+  // Whether the granted ClusterRole can read Secrets (get, list, or watch)
+  canReadSecrets() bool
   // The ClusterRole granted by this binding (roleRef.name)
   clusterRole() k8s.rbac.clusterrole
 }
 
 // Kubernetes Role
+//
+// Namespaced set of RBAC permissions, selected by namespace and name. The rules
+// field lists the API groups, resources, and verbs the role grants within its
+// namespace, and boundBy returns the RoleBindings that grant this role to
+// subjects.
 private k8s.rbac.role @defaults("name namespace") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1496,11 +2446,33 @@ private k8s.rbac.role @defaults("name namespace") {
   manifest() dict
   // Role rules defining the permissions granted within this namespace
   rules []dict
+  // Access rules as typed policy-rule resources (a structured view of `rules`)
+  policyRules() []k8s.rbac.policyRule
+  // Whether any rule uses a wildcard ("*") for verbs, API groups, or resources
+  hasWildcardRule() bool
+  // Whether any rule grants RBAC privilege escalation
+  //
+  // True when a rule allows the `escalate` or `bind` verb on RBAC roles or
+  // bindings, or the `impersonate` verb on users, groups, or service accounts —
+  // the canonical ways a subject can grant itself more privileges than it
+  // currently holds. Wildcard verbs/resources/apiGroups that cover those
+  // permissions also count.
+  allowsPrivilegeEscalation() bool
+  // Whether any rule grants read access (get, list, or watch) to Secrets
+  canReadSecrets() bool
+  // Whether any rule grants unrestricted access (wildcard verbs, API groups, and resources), i.e. cluster-admin
+  grantsClusterAdmin() bool
   // RoleBindings in this namespace that reference this Role via roleRef
   boundBy() []k8s.rbac.rolebinding
 }
 
 // Kubernetes RoleBinding
+//
+// Grant that binds a Role or ClusterRole to subjects within a namespace,
+// selected by namespace and name. The subjects field lists the users, groups,
+// and service accounts the permissions are granted to, serviceAccounts resolves
+// the service-account subjects to their objects, and role or clusterRole
+// returns the object named by roleRef depending on its kind.
 private k8s.rbac.rolebinding @defaults("name namespace created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1532,13 +2504,92 @@ private k8s.rbac.rolebinding @defaults("name namespace created") {
   roleRef dict
   // ServiceAccounts referenced as subjects (entries where kind == "ServiceAccount" resolved to typed resources)
   serviceAccounts() []k8s.serviceaccount
+  // Whether the granted role confers cluster-admin (wildcard verbs, API groups, and resources)
+  grantsClusterAdmin() bool
+  // Whether the granted role has any wildcard rule
+  hasWildcardRule() bool
+  // Whether the granted role allows RBAC privilege escalation (escalate/bind/impersonate)
+  allowsPrivilegeEscalation() bool
+  // Whether the granted role can read Secrets (get, list, or watch)
+  canReadSecrets() bool
   // The Role granted by this binding (null when roleRef points to a ClusterRole)
   role() k8s.rbac.role
   // The ClusterRole granted by this binding (null when roleRef points to a Role)
   clusterRole() k8s.rbac.clusterrole
 }
 
+// RBAC subject and its effective cluster permissions
+//
+// A single user, group, or service account named as a subject in at least one
+// RoleBinding or ClusterRoleBinding, with the permissions of every bound Role
+// and ClusterRole folded into one view of what the subject is allowed to do.
+// The kind, name, and namespace fields identify the subject (namespace is set
+// only for service accounts), serviceAccount resolves a ServiceAccount subject
+// to its object, and roleBindings and clusterRoleBindings list the grants that
+// name the subject. The isClusterAdmin, canEscalatePrivileges, canReadSecrets,
+// and hasWildcardPermissions predicates summarize the most security-relevant
+// capabilities the bound roles confer. Enumerate every subject in the cluster
+// through k8s.rbacSubjects, or find the subjects allowed a specific action with
+// k8s.rbac.whoCan.
+private k8s.rbac.subject @defaults("kind name namespace isClusterAdmin") {
+  // Subject kind: User, Group, or ServiceAccount
+  kind string
+  // Subject name
+  name string
+  // Namespace of a service account subject (empty for users and groups)
+  namespace string
+  // ServiceAccount object for a service account subject (null for users and groups)
+  serviceAccount() k8s.serviceaccount
+  // RoleBindings that name this subject
+  roleBindings() []k8s.rbac.rolebinding
+  // ClusterRoleBindings that name this subject
+  clusterRoleBindings() []k8s.rbac.clusterrolebinding
+  // Whether any bound role confers cluster-admin (wildcard verbs, API groups, and resources)
+  isClusterAdmin() bool
+  // Whether any bound role allows RBAC privilege escalation (escalate, bind, or impersonate)
+  canEscalatePrivileges() bool
+  // Whether any bound role can read Secrets (get, list, or watch)
+  canReadSecrets() bool
+  // Whether any bound role has a wildcard rule (wildcard verbs, API groups, or resources)
+  hasWildcardPermissions() bool
+}
+
+// RBAC subjects permitted to perform an action
+//
+// Resolution of which users, groups, and service accounts the cluster's
+// RoleBindings and ClusterRoleBindings allow to perform a given action,
+// computed from the rules of the granted roles. The verb and resource arguments
+// select the action, group narrows it to an API group (empty for the core
+// group), namespace restricts the check to one namespace (empty considers every
+// namespace), and name targets a specific object. For example,
+// `k8s.rbac.whoCan(verb: "list", resource: "secrets").subjects` lists every
+// subject that can read Secrets across the cluster. The result reflects RBAC
+// grants only and does not account for the node or webhook authorizers; pair it
+// with k8s.accessReview for an authoritative per-subject decision from the API
+// server.
+private k8s.rbac.whoCan @defaults("verb resource namespace") {
+  init(verb string, resource string, group string, namespace string, name string)
+  // Kubernetes API verb the action requires (get, list, create, delete, and so on)
+  verb string
+  // Resource type the action targets (secrets, pods, and so on)
+  resource string
+  // API group of the resource (empty for the core group)
+  group string
+  // Namespace the action is checked in (empty considers every namespace)
+  namespace string
+  // Specific object name the action targets (empty matches any object)
+  name string
+  // Subjects whose bound roles allow the action
+  subjects() []k8s.rbac.subject
+}
+
 // Kubernetes Network Policy
+//
+// Rule set that controls allowed network traffic to and from pods, selected by
+// namespace and name. The podSelector field chooses the pods the policy
+// governs, policyTypes reports whether ingress, egress, or both are restricted,
+// and the ingress and egress fields list the permitted peers and ports. Pods
+// selected by a policy deny all traffic not explicitly allowed by these rules.
 private k8s.networkpolicy @defaults("namespace name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1574,9 +2625,166 @@ private k8s.networkpolicy @defaults("namespace name created") {
   ingress() []dict
   // Egress rules; each rule lists `to` peers and `ports`
   egress() []dict
+  // Normalized policy coverage summary for this NetworkPolicy
+  coverage() k8s.networkPolicyCoverage
+}
+
+// Normalized Kubernetes network exposure
+//
+// Represents an inbound exposure signal from Kubernetes Services, Ingresses,
+// Gateway API resources, and HBN/network intent sources when they are
+// available. The `confidence` field describes static-analysis confidence, not
+// packet-level reachability.
+private k8s.networkExposure @defaults("sourceKind namespace name internetExposed exposureReason") {
+  // Source kind that produced the exposure, for example Service, Ingress, Gateway, Pod (hostNetwork or hostPort), HBNInbound, or LegacyHBN
+  sourceKind string
+  // Source object reference in kind:namespace:name or kind:name form
+  sourceRef string
+  // Source namespace
+  namespace string
+  // Source name
+  name string
+  // Published IPs or hostnames
+  addresses []string
+  // Published ports with protocol and optional name metadata
+  ports []dict
+  // Published protocols such as TCP, UDP, HTTP, HTTPS, or TLS
+  protocols []string
+  // Whether this exposure appears reachable from the public Internet
+  internetExposed bool
+  // Classification reason, for example publicLoadBalancerAddress, nodePortPublicNode, publicIngressAddress, or gatewayPublicAddress
+  exposureReason string
+  // Network classifications such as internet, private, hostname, restrictedSourceRange, or internalOnly
+  networkClassifications []string
+  // Explicit classification metadata from source object annotations or labels
+  metadataClassification string
+  // Explicit owner metadata from source object annotations or labels
+  owner string
+  // VRF associated with the exposure when HBN intent is available
+  vrf string
+  // Network associated with the exposure when HBN intent is available
+  network string
+  // Route identifiers associated with the exposure when HBN intent is available
+  routes []string
+  // Policy coverage identifiers associated with the exposure
+  policyCoverage []string
+  // Static-analysis confidence: high, medium, or low
+  confidence string
+  // Pods behind this exposure, resolved through the source Service, Ingress, or Gateway
+  pods() []k8s.pod
+}
+
+// Normalized Kubernetes egress route
+//
+// Represents egress routing intent or observed compiled routing state from
+// HBN network CRDs, Coil Egress resources, and compatible integrations.
+// Kubernetes-only clusters without those integrations expose an empty list.
+private k8s.egressRoute @defaults("sourceRef vrf network classification confidence") {
+  // Source object reference in kind:namespace:name or kind:name form
+  sourceRef string
+  // VRF associated with this route
+  vrf string
+  // Network associated with this route
+  network string
+  // Destination references
+  destinations []string
+  // Route CIDRs
+  cidrs []string
+  // Public CIDRs included in the route
+  publicCidrs []string
+  // Whether NAT is configured or inferred for this route
+  nat bool
+  // Node status references that reported this route
+  nodeStatuses []string
+  // BGP peering references associated with this route
+  bgpPeerings []string
+  // Route classification
+  classification string
+  // Explicit classification metadata from the source object
+  metadataClassification string
+  // Explicit owner metadata from the source object
+  owner string
+  // Static-analysis confidence: high, medium, or low
+  confidence string
+}
+
+// Normalized Kubernetes egress NAT
+//
+// Represents NAT intent or observed compiled NAT state from Coil Egress,
+// Calico IPPool, HBN, and compatible network integrations. Kubernetes-only
+// clusters without those integrations expose an empty list.
+private k8s.egressNat @defaults("sourceRef vrf network classification") {
+  // Source object reference in kind:namespace:name or kind:name form
+  sourceRef string
+  // VRF associated with this NAT entry
+  vrf string
+  // Network associated with this NAT entry
+  network string
+  // NAT addresses
+  addresses []string
+  // NAT CIDRs
+  cidrs []string
+  // Public CIDRs included in the NAT entry
+  publicCidrs []string
+  // Node status references that reported this NAT entry
+  nodeStatuses []string
+  // NAT classification
+  classification string
+  // Explicit classification metadata from the source object
+  metadataClassification string
+  // Owning object reference
+  owner string
+}
+
+// Normalized Kubernetes network policy coverage
+//
+// Represents policy coverage for a workload selector and network interfaces.
+// Native Kubernetes NetworkPolicy applies to primary pod networking unless the
+// CNI explicitly extends it; secondary-interface policy coverage is tracked
+// separately through MultiNetworkPolicy and compatible integrations.
+private k8s.networkPolicyCoverage @defaults("namespace policyRef defaultDenyIngress defaultDenyEgress") {
+  // Workload reference when coverage is tied to a specific workload
+  workloadRef string
+  // Policy object reference
+  policyRef string
+  // Policy namespace
+  namespace string
+  // Pod selector covered by the policy
+  podSelector dict
+  // Interfaces covered by this summary, for example primary or secondary network names
+  interfaces []string
+  // Native Kubernetes NetworkPolicy references
+  nativeNetworkPolicies []string
+  // Kubernetes AdminNetworkPolicy and BaselineAdminNetworkPolicy references
+  adminNetworkPolicies []string
+  // MultiNetworkPolicy references
+  multiNetworkPolicies []string
+  // Calico policy references
+  calicoPolicies []string
+  // Cilium policy references
+  ciliumPolicies []string
+  // Whether selected pods have ingress default-deny semantics
+  defaultDenyIngress bool
+  // Whether selected pods have egress default-deny semantics
+  defaultDenyEgress bool
+  // Whether admin network policy coverage supplies ingress catch-all deny semantics
+  adminDefaultDenyIngress bool
+  // Whether admin network policy coverage supplies egress catch-all deny semantics
+  adminDefaultDenyEgress bool
+  // Whether secondary interface ingress is covered
+  secondaryInterfaceIngressCovered bool
+  // Whether secondary interface egress is covered
+  secondaryInterfaceEgressCovered bool
+  // Coverage gaps that should be shown to users
+  coverageGaps []string
 }
 
 // Kubernetes CustomResource
+//
+// Instance of a custom resource defined by a CustomResourceDefinition, selected
+// by namespace and name. The kind field reports the custom type and manifest
+// exposes the object's full content, so custom API extensions can be queried
+// alongside built-in Kubernetes objects.
 private k8s.customresource @defaults("name namespace created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1605,6 +2813,13 @@ private k8s.customresource @defaults("name namespace created") {
 }
 
 // Kubernetes PersistentVolume
+//
+// Cluster-wide piece of storage provisioned for use by pods, selected by name.
+// The capacity, accessModes, volumeMode, and storageClass fields describe the
+// volume's size and capabilities, persistentVolumeReclaimPolicy governs what
+// happens when its claim is released, and phase reports its lifecycle state
+// (Available, Bound, Released, or Failed). The claim field returns the
+// PersistentVolumeClaim currently bound to the volume.
 private k8s.persistentvolume @defaults("name capacity['storage'] phase storageClassName created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1663,6 +2878,12 @@ private k8s.persistentvolume @defaults("name capacity['storage'] phase storageCl
 }
 
 // Kubernetes StorageClass
+//
+// Template that describes how volumes are dynamically provisioned, selected by
+// name. The provisioner field names the plugin that creates volumes, parameters
+// carries the provisioner-specific settings, and reclaimPolicy,
+// volumeBindingMode, and allowVolumeExpansion govern reclamation, binding
+// timing, and whether bound volumes may grow.
 private k8s.storageclass @defaults("name provisioner") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1701,6 +2922,12 @@ private k8s.storageclass @defaults("name provisioner") {
 }
 
 // Kubernetes PriorityClass
+//
+// Named scheduling priority that pods can request, selected by name. The value
+// field sets the integer priority used during scheduling and preemption,
+// globalDefault marks the class applied to pods that request none, and
+// preemptionPolicy controls whether higher-priority pods may evict
+// lower-priority ones.
 private k8s.priorityclass @defaults("name value") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1735,6 +2962,14 @@ private k8s.priorityclass @defaults("name value") {
 }
 
 // Kubernetes HorizontalPodAutoscaler
+//
+// Controller that scales a workload's replica count to meet observed metrics,
+// selected by namespace and name. The scaleTargetKind and scaleTargetName
+// fields identify the scaled workload (reached through scaleTargetDeployment,
+// scaleTargetStatefulSet, or scaleTargetReplicaSet), minReplicas and maxReplicas
+// bound the replica count, and metrics and behavior define the targets and
+// scaling policies. Current state is reported by currentReplicas,
+// desiredReplicas, currentMetrics, lastScaleTime, and conditions.
 private k8s.horizontalpodautoscaler @defaults("namespace name minReplicas maxReplicas currentReplicas created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1799,6 +3034,11 @@ private k8s.horizontalpodautoscaler @defaults("namespace name minReplicas maxRep
 }
 
 // Kubernetes ResourceQuota
+//
+// Constraint on the aggregate resource consumption of a namespace, selected by
+// namespace and name. The hard field lists the enforced limits (such as CPU,
+// memory, and object counts) and used reports current consumption against them.
+// The scopes and scopeSelector fields narrow which objects the quota applies to.
 private k8s.resourcequota @defaults("namespace name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1839,6 +3079,12 @@ private k8s.resourcequota @defaults("namespace name created") {
 }
 
 // Kubernetes LimitRange
+//
+// Policy that constrains resource requests and limits for objects in a
+// namespace, selected by namespace and name. The limits field lists the
+// default, minimum, and maximum values applied per object type (Container, Pod,
+// or PersistentVolumeClaim), supplying defaults to objects that omit them and
+// rejecting objects that fall outside the bounds.
 private k8s.limitrange @defaults("namespace name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1871,6 +3117,12 @@ private k8s.limitrange @defaults("namespace name created") {
 }
 
 // Kubernetes PersistentVolumeClaim
+//
+// Request for storage by a pod, selected by namespace and name. The accessModes,
+// resources, storageClass, and volumeMode fields describe the storage requested,
+// volume and volumeName identify the bound PersistentVolume, and phase reports
+// whether the claim is Pending, Bound, or Lost. The capacity and
+// boundAccessModes fields report what the bound volume actually provides.
 private k8s.persistentvolumeclaim @defaults("namespace name phase capacity['storage'] storageClassName created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1931,6 +3183,12 @@ private k8s.persistentvolumeclaim @defaults("namespace name phase capacity['stor
 }
 
 // Kubernetes EndpointSlice
+//
+// Scalable list of network endpoints that back a Service, selected by namespace
+// and name. The addressType field reports whether the slice holds IPv4, IPv6, or
+// FQDN endpoints, endpoints lists the backing addresses and their readiness,
+// ports lists the ports they expose, and service returns the Service the slice
+// belongs to.
 private k8s.endpointslice @defaults("namespace name addressType") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1964,13 +3222,18 @@ private k8s.endpointslice @defaults("namespace name addressType") {
   ports() []dict
   // The Service this slice backs (resolved from the kubernetes.io/service-name label)
   service() k8s.service
+  // Endpoint addresses not backed by an in-cluster pod
+  //
+  // Addresses of endpoints whose targetRef is not a Pod, i.e. manually managed
+  // targets. On a selectorless service these often point outside the cluster.
+  externalAddresses() []string
 }
 
 // Kubernetes AdmissionReview
 //
 // Examine an AdmissionReview that an admission controller is being
 // asked to evaluate. Use `request()` to read the embedded
-// `k8s.admissionrequest` — the operation, requesting user, target
+// `k8s.admissionrequest`: the operation, requesting user, target
 // namespace, the incoming object, and (for UPDATE/DELETE) the prior
 // object. This resource is populated when MQL is invoked from inside a
 // dynamic admission webhook so policies can decide whether to admit
@@ -2005,6 +3268,12 @@ private k8s.userinfo @defaults("username") {
 }
 
 // Kubernetes Validating Webhook Configuration
+//
+// Configuration that registers external webhooks to validate API requests,
+// selected by name. The webhooks field lists each registered webhook with its
+// endpoint, the resource rules and namespace and object selectors that decide
+// when it is called, its failure policy, and its admission side effects.
+// Validating webhooks may reject a request but cannot modify the object.
 private k8s.admission.validatingwebhookconfiguration @defaults("name") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -2030,9 +3299,18 @@ private k8s.admission.validatingwebhookconfiguration @defaults("name") {
   manifest() dict
   // Webhooks configuration
   webhooks() []dict
+  // Whether any webhook is fail-open (failurePolicy: Ignore), so admission proceeds when the webhook errors or is unreachable
+  failsOpen() bool
 }
 
 // Kubernetes Application
+//
+// Logical application reconstructed from the recommended app.kubernetes.io
+// labels shared across a group of objects. The name, version, and instance
+// fields identify the application, managedBy names the tool that operates it
+// (such as helm), partOf names a larger application it belongs to, and
+// components lists the architectural pieces (such as database, cache, or
+// frontend) discovered for it.
 private k8s.app {
   // Application name
   name string
@@ -2049,6 +3327,12 @@ private k8s.app {
 }
 
 // Kubernetes Gateway API GatewayClass
+//
+// Gateway API template that ties Gateways to a controller implementation,
+// selected by name. The controllerName field names the controller that manages
+// Gateways of this class, parametersRef points to a controller-specific
+// configuration resource, and conditions reports whether the class has been
+// accepted.
 private k8s.gatewayclass @defaults("name controllerName created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -2083,6 +3367,13 @@ private k8s.gatewayclass @defaults("name controllerName created") {
 }
 
 // Kubernetes Gateway API Gateway
+//
+// Gateway API object that configures how external traffic enters the cluster,
+// selected by namespace and name. The gatewayClass field selects the
+// implementing controller, listeners defines the ports, protocols, and
+// hostnames the Gateway accepts, and addresses requests specific entry
+// addresses. The statusAddresses and listenerStatus fields report the addresses
+// the controller assigned and the routes attached to each listener.
 private k8s.gateway @defaults("namespace name gatewayClassName created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -2124,9 +3415,20 @@ private k8s.gateway @defaults("namespace name gatewayClassName created") {
   listenerStatus []dict
   // Status conditions
   conditions []dict
+  // Pods behind the gateway, resolved through the HTTPRoutes and GRPCRoutes attached to it and their backend services
+  pods() []k8s.pod
+  // Normalized network exposure records for this Gateway
+  networkExposures() []k8s.networkExposure
 }
 
 // Kubernetes Gateway API HTTPRoute
+//
+// Gateway API rules that route HTTP traffic from Gateways to backend services,
+// selected by namespace and name. The parentRefs field binds the route to the
+// Gateways or Services that delegate to it, hostnames narrows the route to
+// specific hosts, and rules describes the matches, filters, and backend
+// forwarding applied to requests. The parentStatus field reports whether each
+// parent accepted the route.
 private k8s.httproute @defaults("namespace name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -2163,6 +3465,13 @@ private k8s.httproute @defaults("namespace name created") {
 }
 
 // Kubernetes Gateway API GRPCRoute
+//
+// Gateway API rules that route gRPC traffic from Gateways to backend services,
+// selected by namespace and name. The parentRefs field binds the route to the
+// Gateways or Services that delegate to it, hostnames narrows the route to
+// specific hosts, and rules describes the method matches, filters, and backend
+// forwarding applied to requests. The parentStatus field reports whether each
+// parent accepted the route.
 private k8s.grpcroute @defaults("namespace name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -2198,7 +3507,140 @@ private k8s.grpcroute @defaults("namespace name created") {
   parentStatus []dict
 }
 
+// Kubernetes Gateway API TLSRoute
+//
+// Gateway API rules that route TLS traffic from Gateways to backend services by
+// SNI hostname without terminating the connection, selected by namespace and
+// name. The parentRefs field binds the route to the Gateways that delegate to
+// it, hostnames narrows the route to specific SNI hosts, and rules describes the
+// backend forwarding applied to connections. The parentStatus field reports
+// whether each parent accepted the route.
+private k8s.tlsroute @defaults("namespace name created") {
+  // Mondoo ID for the Kubernetes object
+  id string
+  // Kubernetes object UID
+  uid string
+  // Kubernetes resource version
+  resourceVersion string
+  // Kubernetes labels
+  labels() map[string]string
+  // Kubernetes annotations
+  annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
+  // Kubernetes object name
+  name string
+  // Kubernetes object namespace
+  namespace string
+  // Kubernetes object type
+  kind string
+  // Kubernetes object creation timestamp
+  created time
+  // Full resource manifest
+  manifest() dict
+  // Parent resources this route is associated with (Gateways, Services, etc.)
+  parentRefs []dict
+  // Hostnames this route should respond to
+  hostnames []string
+  // Rules describing matches, filters, and backend forwarding
+  rules []dict
+  // Status of the route per parent reference
+  parentStatus []dict
+}
+
+// Kubernetes Gateway API TCPRoute
+//
+// Gateway API rules that route raw TCP traffic from Gateways to backend
+// services, selected by namespace and name. The parentRefs field binds the
+// route to the Gateways that delegate to it and rules describes the backend
+// forwarding applied to connections; TCPRoute does not match on hostnames. The
+// parentStatus field reports whether each parent accepted the route.
+private k8s.tcproute @defaults("namespace name created") {
+  // Mondoo ID for the Kubernetes object
+  id string
+  // Kubernetes object UID
+  uid string
+  // Kubernetes resource version
+  resourceVersion string
+  // Kubernetes labels
+  labels() map[string]string
+  // Kubernetes annotations
+  annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
+  // Kubernetes object name
+  name string
+  // Kubernetes object namespace
+  namespace string
+  // Kubernetes object type
+  kind string
+  // Kubernetes object creation timestamp
+  created time
+  // Full resource manifest
+  manifest() dict
+  // Parent resources this route is associated with (Gateways, Services, etc.)
+  parentRefs []dict
+  // Hostnames this route should respond to, empty for TCPRoute
+  hostnames []string
+  // Rules describing matches, filters, and backend forwarding
+  rules []dict
+  // Status of the route per parent reference
+  parentStatus []dict
+}
+
+// Kubernetes Gateway API UDPRoute
+//
+// Gateway API rules that route raw UDP traffic from Gateways to backend
+// services, selected by namespace and name. The parentRefs field binds the
+// route to the Gateways that delegate to it and rules describes the backend
+// forwarding applied to datagrams; UDPRoute does not match on hostnames. The
+// parentStatus field reports whether each parent accepted the route.
+private k8s.udproute @defaults("namespace name created") {
+  // Mondoo ID for the Kubernetes object
+  id string
+  // Kubernetes object UID
+  uid string
+  // Kubernetes resource version
+  resourceVersion string
+  // Kubernetes labels
+  labels() map[string]string
+  // Kubernetes annotations
+  annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
+  // Kubernetes object name
+  name string
+  // Kubernetes object namespace
+  namespace string
+  // Kubernetes object type
+  kind string
+  // Kubernetes object creation timestamp
+  created time
+  // Full resource manifest
+  manifest() dict
+  // Parent resources this route is associated with (Gateways, Services, etc.)
+  parentRefs []dict
+  // Hostnames this route should respond to, empty for UDPRoute
+  hostnames []string
+  // Rules describing matches, filters, and backend forwarding
+  rules []dict
+  // Status of the route per parent reference
+  parentStatus []dict
+}
+
 // Kubernetes Gateway API ReferenceGrant
+//
+// Gateway API grant that permits cross-namespace references into its namespace,
+// selected by namespace and name. The from field lists the resource kinds and
+// namespaces allowed to make references, and the to field lists the resource
+// kinds in this namespace they may reference, letting routes and other objects
+// point at targets they would otherwise be denied.
 private k8s.referencegrant @defaults("namespace name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -2231,6 +3673,13 @@ private k8s.referencegrant @defaults("namespace name created") {
 }
 
 // Kubernetes MutatingWebhookConfiguration
+//
+// Configuration that registers external webhooks to modify API requests,
+// selected by name. The webhooks field lists each registered webhook with its
+// endpoint, the resource rules and namespace and object selectors that decide
+// when it is called, its reinvocation and failure policies, and its admission
+// side effects. Mutating webhooks run before validation and may patch the
+// incoming object.
 private k8s.admission.mutatingwebhookconfiguration @defaults("name") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -2256,9 +3705,114 @@ private k8s.admission.mutatingwebhookconfiguration @defaults("name") {
   manifest() dict
   // Webhooks configuration
   webhooks() []dict
+  // Whether any webhook is fail-open (failurePolicy: Ignore), so admission proceeds when the webhook errors or is unreachable
+  failsOpen() bool
+}
+
+// Kubernetes ValidatingAdmissionPolicy
+//
+// Examine a built-in, CEL-based admission policy that the API server
+// evaluates in-process (no external webhook). Read `failurePolicy` for how
+// CEL errors are handled, `validations()` for the expressions enforced
+// against matching requests, `matchConstraints()` for the resources the
+// policy targets, and `matchConditions()`/`variables()` for the guards and
+// reusable expressions. A policy is inert until a
+// `k8s.admission.validatingadmissionpolicybinding` activates it; use
+// `bindings()` to reach the bindings that reference this policy by name and
+// the enforcement actions (Deny, Warn, Audit) they apply.
+private k8s.admission.validatingadmissionpolicy @defaults("name failurePolicy") {
+  // Mondoo ID for the Kubernetes object
+  id string
+  // Kubernetes object UID
+  uid string
+  // Kubernetes resource version
+  resourceVersion string
+  // Kubernetes labels
+  labels() map[string]string
+  // Kubernetes annotations
+  annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
+  // Kubernetes object name
+  name string
+  // Kubernetes object type
+  kind string
+  // Kubernetes object creation timestamp
+  created time
+  // Full resource manifest
+  manifest() dict
+  // How CEL evaluation failures are handled (Ignore or Fail; defaults to Fail)
+  failurePolicy string
+  // CEL validation expressions enforced against matching requests (expression, message, reason)
+  validations() []dict
+  // CEL match conditions that gate whether the policy is evaluated for a request
+  matchConditions() []dict
+  // Resource matching constraints (resourceRules, namespaceSelector, objectSelector, matchPolicy)
+  matchConstraints() dict
+  // Named CEL variables available to the policy's expressions
+  variables() []dict
+  // CEL expressions that produce audit annotations on the audit event
+  auditAnnotations() []dict
+  // Kind of resource used to parameterize the policy (apiVersion, kind); null when the policy takes no parameters
+  paramKind() dict
+  // Bindings that activate this policy (filtered by spec.policyName)
+  bindings() []k8s.admission.validatingadmissionpolicybinding
+}
+
+// Kubernetes ValidatingAdmissionPolicyBinding
+//
+// Examine a binding that activates a `k8s.admission.validatingadmissionpolicy`
+// and decides how its validation failures are enforced. `policyName` (and the
+// typed `policy()` accessor) identify the bound policy; `validationActions`
+// lists the enforcement actions applied on failure. `Deny` blocks the
+// request, `Warn` returns a client warning, and `Audit` records the failure in
+// the audit log. Use `matchResources()` to see how the binding narrows the
+// policy's scope and `paramRef()` for the parameter resource it supplies.
+private k8s.admission.validatingadmissionpolicybinding @defaults("name policyName") {
+  // Mondoo ID for the Kubernetes object
+  id string
+  // Kubernetes object UID
+  uid string
+  // Kubernetes resource version
+  resourceVersion string
+  // Kubernetes labels
+  labels() map[string]string
+  // Kubernetes annotations
+  annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
+  // Kubernetes object name
+  name string
+  // Kubernetes object type
+  kind string
+  // Kubernetes object creation timestamp
+  created time
+  // Full resource manifest
+  manifest() dict
+  // Name of the ValidatingAdmissionPolicy this binding activates
+  policyName string
+  // The ValidatingAdmissionPolicy this binding activates (null if the referenced policy does not exist)
+  policy() k8s.admission.validatingadmissionpolicy
+  // Enforcement actions applied to validation failures (Deny, Warn, Audit)
+  validationActions []string
+  // Parameter resource reference used to configure the policy (name, namespace, selector, parameterNotFoundAction); null when unset
+  paramRef() dict
+  // Additional resource matching constraints, intersected with the policy's matchConstraints; null when unset
+  matchResources() dict
 }
 
 // Kubernetes PodDisruptionBudget
+//
+// Policy that limits how many pods of a workload may be down at once during
+// voluntary disruptions, selected by namespace and name. The minAvailable and
+// maxUnavailable fields set the budget, selector chooses the protected pods, and
+// unhealthyPodEvictionPolicy governs eviction of unhealthy pods. Current state
+// is reported by currentHealthy, desiredHealthy, expectedPods, and
+// disruptionsAllowed.
 private k8s.poddisruptionbudget @defaults("namespace name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -2307,6 +3861,12 @@ private k8s.poddisruptionbudget @defaults("namespace name created") {
 }
 
 // Kubernetes Lease (coordination.k8s.io)
+//
+// Coordination object that backs leader election and node heartbeats, selected
+// by namespace and name. The holderIdentity field names the current holder,
+// leaseDurationSeconds and renewTime report how long the lease is held and when
+// it was last renewed, and acquireTime and leaseTransitions track when it was
+// acquired and how often it has changed hands.
 private k8s.lease @defaults("namespace name holderIdentity created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -2349,6 +3909,13 @@ private k8s.lease @defaults("namespace name holderIdentity created") {
 }
 
 // Kubernetes CertificateSigningRequest
+//
+// Request for a certificate to be issued by a cluster signer, selected by name.
+// The request field carries the PEM-encoded certificate signing request,
+// signerName names the signer that should handle it, and usages and
+// expirationSeconds state the requested key usages and lifetime. The username,
+// groups, and requesterUid fields identify the requester, conditions reports
+// approval state, and certificate holds the issued certificate once signed.
 private k8s.certificatesigningrequest @defaults("name signerName username created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -2393,6 +3960,14 @@ private k8s.certificatesigningrequest @defaults("name signerName username create
 }
 
 // Kubernetes APIService (aggregation layer)
+//
+// Registration that adds an API group and version to the cluster through the
+// aggregation layer, selected by name. The group and version fields name the API
+// the registration serves, serviceName and serviceNamespace identify the backend
+// that handles it (reached through service, or empty when served by
+// kube-apiserver itself), and caBundle and insecureSkipTLSVerify govern how the
+// API server trusts that backend. The conditions field reports whether the API
+// is available.
 private k8s.apiservice @defaults("name group version created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -2441,6 +4016,11 @@ private k8s.apiservice @defaults("name group version created") {
 }
 
 // Kubernetes IngressClass
+//
+// Template that ties Ingress objects to a controller implementation, selected by
+// name. The controller field names the controller that handles ingresses of this
+// class, and parameters points to a controller-specific configuration resource
+// that tunes its behavior.
 private k8s.ingressclass @defaults("name controller created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -2515,4 +4095,34 @@ private k8s.managedField @defaults("manager operation") {
   fieldsType string
   // Set of fields this manager owns, as a nested map
   fieldsV1 dict
+}
+
+// Authoritative RBAC access check
+//
+// Answers, via the Kubernetes API server's SubjectAccessReview, whether a
+// subject may perform a verb on a resource. Unlike the rule-derived RBAC
+// rollups, this folds in aggregated ClusterRoles, group bindings, and built-in
+// roles. Requires a live cluster connection; on a manifest scan the result
+// fields error. Construct it with the action under test, for example
+// k8s.accessReview(subject: "system:serviceaccount:prod:web", verb: "create",
+// resource: "pods") or k8s.accessReview(subject: "alice", verb: "get",
+// resource: "secrets", namespace: "prod").
+private k8s.accessReview @defaults("subject verb resource allowed") {
+  init(subject string, verb string, resource string, group string, namespace string, name string)
+  // Subject under test (e.g. "system:serviceaccount:prod:web", a user, or a group)
+  subject string
+  // Kubernetes API verb (get, list, create, delete, *, ...)
+  verb string
+  // Resource type (secrets, pods, *, ...)
+  resource string
+  // API group of the resource ("" for the core group)
+  group string
+  // Namespace of the action ("" for a cluster-scoped check)
+  namespace string
+  // Optional specific object name
+  name string
+  // Whether the API server allows the action
+  allowed() bool
+  // Authorizer's explanation for the decision
+  reason() string
 }

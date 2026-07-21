@@ -757,6 +757,14 @@ user @defaults("name uid gid") {
   group(gid) group
   // Whether the user is currently logged in
   loggedIn() bool
+  // Path to this user's NTUSER.DAT registry hive file (Windows)
+  //
+  // The per-user registry hive on disk, located at `<home>\NTUSER.DAT`. Pass
+  // it together with `sid` to `registrykey`/`registrykey.property` to read a
+  // user's HKCU settings even when their hive is not loaded — for example a
+  // SYSTEM scan running with no interactive session. Empty on non-Windows
+  // platforms or when the home directory is unknown.
+  ntuserDat(home) string
 }
 
 // Private key on disk
@@ -4886,9 +4894,23 @@ private apt.repo @defaults("type url distribution") {
 //
 // Examine items, child keys, and existence at a given registry path
 registrykey @defaults("path") {
-  init(path string)
+  init(path string, userSid? string, ntuserDat? string)
   // Registry key path
   path string
+  // SID of the user whose registry hive to read
+  //
+  // Optional. When set, `path` is interpreted relative to that user's
+  // per-user registry (HKCU): the loaded `HKEY_USERS\<sid>` hive when the
+  // user is logged in, otherwise the profile's `NTUSER.DAT` (see `ntuserDat`)
+  // loaded on demand. Leave empty to treat `path` as an absolute registry
+  // path.
+  userSid string
+  // Path to the user's NTUSER.DAT hive file
+  //
+  // Optional. Used with `userSid` to read a user's registry when their hive
+  // is not currently loaded — for example a SYSTEM scan running with no
+  // interactive session. Typically populated from `user.ntuserDat`.
+  ntuserDat string
   // Whether the property exists
   exists() bool
   // Properties of the registry key as a name-to-value map
@@ -4909,11 +4931,21 @@ registrykey @defaults("path") {
 // and the parsed `data`. Initialize by path and name to look up a specific
 // value, or iterate from `registrykey.items()`.
 registrykey.property @defaults("path name") {
-  init(path string, name string)
+  init(path string, name string, userSid? string, ntuserDat? string)
   // Registry key path
   path string
   // Registry key name
   name string
+  // SID of the user whose registry hive to read
+  //
+  // Optional. Forwarded to the underlying `registrykey` so `path` resolves
+  // against that user's per-user registry (HKCU). See `registrykey.userSid`.
+  userSid string
+  // Path to the user's NTUSER.DAT hive file
+  //
+  // Optional. Forwarded to the underlying `registrykey`. See
+  // `registrykey.ntuserDat`.
+  ntuserDat string
   // Whether the property exists
   exists() bool
   // Registry property value as a string
@@ -4966,6 +4998,39 @@ kubelet {
   process process
   // Combination of config file parameters and CLI parameters
   configuration() dict
+  // Kubelet version reported by the running binary (for example "v1.34.0")
+  version() string
+  // Whether the kubelet server accepts anonymous, unauthenticated requests
+  anonymousAuthEnabled() bool
+  // Authorization mode the kubelet enforces on incoming requests
+  //
+  // Either "Webhook" (delegate authorization to the API server) or
+  // "AlwaysAllow" (no authorization, every authenticated request is granted).
+  authorizationMode() string
+  // Path to the CA bundle used to verify client certificates on the kubelet server
+  clientCAFile() string
+  // Read-only, unauthenticated port that serves the kubelet API; 0 disables it
+  readOnlyPort() int
+  // Idle timeout after which the kubelet closes streaming connections (for example "4h0m0s"); "0" disables it
+  streamingConnectionIdleTimeout() string
+  // Whether the kubelet refuses to start when kernel tunables differ from its expected values
+  protectKernelDefaults() bool
+  // Whether the kubelet manages the iptables utility chains on the node
+  makeIPTablesUtilChains() bool
+  // Maximum number of event creations per second the kubelet allows; 0 means unlimited
+  eventRecordQPS() int
+  // Path to the x509 certificate the kubelet uses to serve HTTPS
+  tlsCertFile() string
+  // Path to the private key matching the kubelet serving certificate
+  tlsPrivateKeyFile() string
+  // Whether the kubelet automatically rotates its client certificates as they near expiry
+  rotateCertificates() bool
+  // Whether the kubelet requests a serving certificate from the certificates API instead of self-signing
+  serverTLSBootstrap() bool
+  // TLS cipher suites the kubelet server accepts
+  tlsCipherSuites() []string
+  // Minimum TLS version the kubelet server accepts (for example "VersionTLS12")
+  tlsMinVersion() string
 }
 
 // Python package inventory
@@ -6354,6 +6419,134 @@ windows {
 
   // Registered Windows Task Scheduler tasks
   scheduledTasks() []windows.scheduledTask
+
+  // Device Guard policy (Virtualization-Based Security, HVCI, and Credential Guard)
+  deviceGuard() windows.deviceGuard
+  // System-wide Windows Exploit Protection configuration
+  exploitProtection() windows.exploitProtection
+
+  // Microsoft Defender SmartScreen policy
+  smartScreen() windows.smartScreen
+}
+
+// Windows Exploit Protection
+//
+// Examine the system-wide Windows Exploit Protection (the successor to EMET)
+// configuration reported by `Get-ProcessMitigation -System`. Five mitigations
+// are supported system-wide: data execution prevention (`dep`), address space
+// layout randomization (`aslr`), Control Flow Guard (`controlFlowGuard`),
+// structured exception handling overwrite protection (`sehop`), and heap
+// integrity (`heap`). `disallowOverride` reflects whether users may override
+// these settings. On systems without the ProcessMitigations module the
+// mitigation accessors resolve to null while `disallowOverride` still resolves
+// from the registry.
+windows.exploitProtection @defaults("disallowOverride") {
+  // Whether the Get-ProcessMitigation cmdlet is available on the target
+  available() bool
+  // Whether users are prevented from overriding the exploit protection settings
+  disallowOverride() bool
+  // Data execution prevention (DEP) settings
+  dep() windows.exploitProtection.dep
+  // Address space layout randomization (ASLR) settings
+  aslr() windows.exploitProtection.aslr
+  // Control Flow Guard (CFG) settings
+  controlFlowGuard() windows.exploitProtection.cfg
+  // Structured Exception Handling Overwrite Protection (SEHOP) settings
+  sehop() windows.exploitProtection.sehop
+  // Heap integrity settings
+  heap() windows.exploitProtection.heap
+}
+
+// Windows Exploit Protection: data execution prevention (DEP)
+//
+// DEP prevents memory not explicitly marked executable from running as code.
+// Each value is "ON", "OFF", or "NOTSET". Reached through
+// `windows.exploitProtection.dep`.
+private windows.exploitProtection.dep @defaults("enable") {
+  // Whether DEP is enabled
+  enable string
+  // Whether ATL thunk emulation is enabled
+  emulateAtlThunks string
+}
+
+// Windows Exploit Protection: address space layout randomization (ASLR)
+//
+// ASLR randomizes the memory layout of a process to frustrate exploits that
+// rely on predictable addresses. Each value is "ON", "OFF", or "NOTSET".
+// Reached through `windows.exploitProtection.aslr`.
+private windows.exploitProtection.aslr @defaults("bottomUp forceRelocateImages") {
+  // Whether bottom-up randomization is enabled
+  bottomUp string
+  // Whether images without /DYNAMICBASE are forcibly relocated
+  forceRelocateImages string
+  // Whether high-entropy bottom-up randomization is enabled
+  highEntropy string
+  // Whether images are required to declare ASLR support
+  requireInfo string
+}
+
+// Windows Exploit Protection: Control Flow Guard (CFG)
+//
+// CFG protects against memory-corruption exploits that hijack indirect calls.
+// Each value is "ON", "OFF", or "NOTSET". Reached through
+// `windows.exploitProtection.controlFlowGuard`.
+private windows.exploitProtection.cfg @defaults("enable") {
+  // Whether Control Flow Guard is enabled
+  enable string
+  // Whether export suppression is enabled
+  suppressExports string
+  // Whether strict Control Flow Guard is enabled
+  strictControlFlowGuard string
+}
+
+// Windows Exploit Protection: structured exception handling overwrite protection (SEHOP)
+//
+// SEHOP blocks exploits that overwrite the structured exception handler chain.
+// Each value is "ON", "OFF", or "NOTSET". Reached through
+// `windows.exploitProtection.sehop`.
+private windows.exploitProtection.sehop @defaults("enable") {
+  // Whether SEHOP is enabled
+  enable string
+  // Whether SEHOP runs in telemetry-only mode
+  telemetryOnly string
+}
+
+// Windows Exploit Protection: heap integrity
+//
+// Terminating on heap corruption prevents an attacker from continuing
+// execution after corrupting the heap. The value is "ON", "OFF", or "NOTSET".
+// Reached through `windows.exploitProtection.heap`.
+private windows.exploitProtection.heap @defaults("terminateOnError") {
+  // Whether the process is terminated on heap corruption
+  terminateOnError string
+}
+
+// Microsoft Defender SmartScreen
+//
+// Examine the Microsoft Defender SmartScreen policy configuration across its
+// three surfaces: Windows / File Explorer (which checks apps and files), the
+// Microsoft Edge browser, and Microsoft Store apps. SmartScreen is configured
+// through Group Policy registry values rather than a dedicated cmdlet; a value
+// that has not been configured resolves to its disabled default (false, or an
+// empty string for `explorerLevel`).
+windows.smartScreen @defaults("explorerEnabled explorerLevel edgeEnabled") {
+  // Whether SmartScreen is enabled for Windows / File Explorer
+  explorerEnabled() bool
+  // Enforcement level for Windows / File Explorer SmartScreen
+  //
+  // "Block" prevents the user from bypassing warnings; "Warn" lets the user
+  // continue; an empty string means no level is configured.
+  explorerLevel() string
+  // Whether SmartScreen is enabled for Microsoft Edge
+  edgeEnabled() bool
+  // Whether Edge SmartScreen blocks potentially unwanted applications (PUA)
+  edgePuaEnabled() bool
+  // Whether users are prevented from bypassing Edge SmartScreen warnings about sites
+  edgePreventOverride() bool
+  // Whether users are prevented from bypassing Edge SmartScreen warnings about downloads
+  edgePreventOverrideForFiles() bool
+  // Whether SmartScreen web-content evaluation is enabled for Microsoft Store apps
+  storeAppsEnabled() bool
 }
 
 // Windows Task Scheduler task
@@ -6707,6 +6900,11 @@ windows.hotfix {
 windows.update {
   // Windows Update Agent configuration and freshness
   config() windows.update.config
+  // Windows Update for Business and Automatic Updates group policy configuration
+  //
+  // Each policy value is nullable: a null value signals that the setting is not
+  // configured, distinguishing an absent policy from one explicitly set to 0.
+  policy() windows.update.policy
   // Updates that have been installed (Windows Update Agent history)
   installed() []windows.update.entry
   // Updates that are available but not yet installed
@@ -6796,6 +6994,48 @@ private windows.update.config @defaults("catalogSource rebootPending") {
   rebootPending bool
   // Windows Update for Business policy state (HKLM\SOFTWARE\Microsoft\WindowsUpdate\UpdatePolicy\PolicyState)
   policyState int
+}
+
+// Windows Update for Business and Automatic Updates group policy
+//
+// Examine the managed Windows Update policy as configured through group
+// policy (the "Windows Components > Windows Update" administrative templates).
+// Every value is read directly from the registry under
+// `HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate` and its `AU`
+// subkey, so this resource works on any connection where the registry is
+// readable, including filesystem scans. Integer fields mirror the underlying
+// REG_DWORD policy values and are null when the corresponding policy is not
+// configured, which lets checks tell "explicitly set to 0" apart from "left
+// at the default".
+private windows.update.policy @defaults("automaticUpdatesEnabled noAutoUpdate scheduledInstallDay") {
+  // Whether automatic updates are configured and enabled (AU\NoAutoUpdate is present and 0)
+  automaticUpdatesEnabled bool
+  // Whether automatic updates are turned off (AU\NoAutoUpdate); null when not configured
+  noAutoUpdate bool
+  // Scheduled install day (AU\ScheduledInstallDay): 0 = every day, 1-7 = Sunday-Saturday; null when not configured
+  scheduledInstallDay int
+  // Scheduled install time as the hour of day (AU\ScheduledInstallTime), 0-23; null when not configured
+  scheduledInstallTime int
+  // Whether scheduled installations do not auto-restart while users are logged on (AU\NoAutoRebootWithLoggedOnUsers); null when not configured
+  noAutoRebootWithLoggedOnUsers bool
+  // Manage preview builds (WindowsUpdate\ManagePreviewBuildsPolicyValue)
+  //
+  // 0 = disable preview builds, 1 = enable, 2 = enable for next release; null when not configured.
+  managePreviewBuilds int
+  // Whether feature update deferral is enabled (WindowsUpdate\DeferFeatureUpdates); null when not configured
+  deferFeatureUpdates bool
+  // Number of days feature updates are deferred (WindowsUpdate\DeferFeatureUpdatesPeriodInDays); null when not configured
+  deferFeatureUpdatesPeriodInDays int
+  // Whether quality update deferral is enabled (WindowsUpdate\DeferQualityUpdates); null when not configured
+  deferQualityUpdates bool
+  // Number of days quality updates are deferred (WindowsUpdate\DeferQualityUpdatesPeriodInDays); null when not configured
+  deferQualityUpdatesPeriodInDays int
+  // Whether temporary enterprise feature control is allowed (WindowsUpdate\AllowTemporaryEnterpriseFeatureControl); null when not configured
+  allowTemporaryEnterpriseFeatureControl bool
+  // Enable optional updates / optional content (WindowsUpdate\SetAllowOptionalContent); null when not configured
+  allowOptionalContent int
+  // Whether access to pause updates is removed (WindowsUpdate\SetDisablePauseUXAccess); null when not configured
+  disablePauseUXAccess bool
 }
 
 // Windows Server feature resource
@@ -6898,6 +7138,480 @@ windows.rdp {
   maxIdleTimeMs() int
   // Time limit in milliseconds for disconnected sessions, 0 to never end them (MaxDisconnectionTime)
   maxDisconnectionTimeMs() int
+  // Whether Remote Desktop connections to this host are denied (fDenyTSConnections)
+  connectionsDenied() bool
+  // Whether each user is restricted to a single Remote Desktop session (fSingleSessionPerUser)
+  singleSessionPerUser() bool
+  // Whether per-session temporary folders are used (PerSessionTempDir)
+  perSessionTempDirsUsed() bool
+  // Whether solicited Remote Assistance (users requesting help) is allowed (fAllowToGetHelp)
+  solicitedRemoteAssistanceAllowed() bool
+  // Whether offer (unsolicited) Remote Assistance is allowed (fAllowUnsolicited)
+  offerRemoteAssistanceAllowed() bool
+  // Whether WebAuthn (FIDO2 security key) redirection is disabled (fDisableWebAuthn)
+  webAuthnRedirectionDisabled() bool
+  // Whether client location redirection is disabled (fDisableLocationRedir)
+  locationRedirectionDisabled() bool
+  // Whether UI Automation redirection is enabled (EnableUiaRedirection)
+  uiAutomationRedirectionEnabled() bool
+  // Server-to-client clipboard redirection level (SCClipLevel)
+  //
+  // The raw SCClipLevel DWORD. 0 disables clipboard transfers from the server
+  // to the client; higher values permit progressively more content. Resolves
+  // to 3 (unrestricted) when the policy is not configured.
+  clipboardServerToClientLevel() int
+  // Whether a session is ended rather than disconnected when a time limit is reached (fResetBroken)
+  endSessionWhenTimeLimitReached() bool
+  // Whether RDP Cloud Clipboard integration for server-to-client data transfer is disabled (DisableCloudClipboardIntegration)
+  cloudClipboardIntegrationDisabled() bool
+}
+
+// Windows Remote Management (WinRM)
+//
+// Examine the effective WinRM (Windows Remote Management) policy posture for
+// both the WinRM client and service, plus the WinRS remote shell setting and
+// the WinRM service start mode. The client and service settings are read from
+// the Group Policy key HKLM\SOFTWARE\Policies\Microsoft\Windows\WinRM; these
+// are GPO-only values with no per-listener effective fallback, so when a value
+// is absent the documented Windows default applies. `serviceStartMode` reflects
+// HKLM\SYSTEM\CurrentControlSet\Services\WinRM\Start. Read from the registry, so
+// it is available even on connections that cannot run commands.
+windows.winrm {
+  // WinRM client authentication and transport policy
+  client() windows.winrm.client
+  // WinRM service authentication, transport, and listener policy
+  service() windows.winrm.service
+  // WinRM service start mode (Services\WinRM\Start)
+  //
+  // The HKLM\SYSTEM\CurrentControlSet\Services\WinRM\Start DWORD: 2=automatic,
+  // 3=manual, 4=disabled. Defaults to 3 (manual) when the value is absent.
+  serviceStartMode() int
+}
+
+// WinRM client policy
+//
+// Examine the WinRM client policy under HKLM\SOFTWARE\Policies\Microsoft
+// \Windows\WinRM\Client. These are GPO-only values; when a value is absent the
+// documented Windows default applies.
+private windows.winrm.client @defaults("allowBasic allowUnencryptedTraffic") {
+  // Whether the WinRM client allows Basic authentication (Client\AllowBasic)
+  //
+  // Defaults to true (Windows historically allows Basic auth on the client
+  // when the policy is not configured).
+  allowBasic bool
+  // Whether the WinRM client allows unencrypted traffic (Client\AllowUnencryptedTraffic)
+  //
+  // Defaults to true (Windows historically allows unencrypted traffic on the
+  // client when the policy is not configured).
+  allowUnencryptedTraffic bool
+  // Whether the WinRM client allows Digest authentication (Client\AllowDigest)
+  //
+  // Defaults to true (Digest authentication is enabled on the client when the
+  // policy is not configured).
+  allowDigest bool
+}
+
+// WinRM service policy
+//
+// Examine the WinRM service policy under HKLM\SOFTWARE\Policies\Microsoft
+// \Windows\WinRM\Service (and the WinRS subkey). These are GPO-only values;
+// when a value is absent the documented Windows default applies.
+private windows.winrm.service @defaults("allowBasic allowUnencryptedTraffic") {
+  // Whether the WinRM service allows Basic authentication (Service\AllowBasic)
+  //
+  // Defaults to true (Windows historically allows Basic auth on the service
+  // when the policy is not configured).
+  allowBasic bool
+  // Whether the WinRM service allows unencrypted traffic (Service\AllowUnencryptedTraffic)
+  //
+  // Defaults to true (Windows historically allows unencrypted traffic on the
+  // service when the policy is not configured).
+  allowUnencryptedTraffic bool
+  // Whether the WinRM service disallows storing RunAs credentials (Service\DisableRunAs)
+  //
+  // Defaults to false (RunAs credential storage is not disabled when the
+  // policy is not configured).
+  disableRunAs bool
+  // Whether the WinRM service allows remote server management / auto config (Service\AllowAutoConfig)
+  //
+  // Defaults to false (the listener is not auto-configured when the policy is
+  // not configured).
+  allowAutoConfig bool
+  // Whether WinRS allows remote shell access (Service\WinRS\AllowRemoteShellAccess)
+  //
+  // Defaults to true (remote shell access is allowed when the policy is not
+  // configured).
+  allowRemoteShellAccess bool
+}
+
+// Windows Device Guard policy (Virtualization-Based Security, HVCI, and Credential Guard)
+//
+// Examine the Device Guard Group Policy values under HKLM\SOFTWARE\Policies
+// \Microsoft\Windows\DeviceGuard. These configure Virtualization-Based
+// Security (VBS), Hypervisor-Enforced Code Integrity (HVCI / Memory
+// Integrity), Credential Guard, System Guard Secure Launch, and kernel-mode
+// hardware-enforced stack protection. On/off settings are exposed as booleans
+// and graded settings (such as the HVCI and Credential Guard lock modes) as
+// integers. Every field reads null when the underlying value is absent, so "not
+// configured" is distinguishable from an explicit false or 0. Read from the
+// Windows registry, so it is available even on connections that cannot run
+// commands.
+private windows.deviceGuard @defaults("virtualizationBasedSecurityEnabled hypervisorEnforcedCodeIntegrity credentialGuardConfig") {
+  // Whether Virtualization-Based Security is enabled (EnableVirtualizationBasedSecurity)
+  virtualizationBasedSecurityEnabled bool
+  // Required platform security features for VBS (RequirePlatformSecurityFeatures)
+  //
+  // 1=Secure Boot, 3=Secure Boot and DMA Protection. Null when not configured.
+  requirePlatformSecurityFeatures int
+  // Hypervisor-Enforced Code Integrity / Memory Integrity (HypervisorEnforcedCodeIntegrity)
+  //
+  // 0=disabled, 1=enabled with UEFI lock, 2=enabled without lock. Null when
+  // not configured.
+  hypervisorEnforcedCodeIntegrity int
+  // Whether HVCI requires a Memory Access Table (HVCIMATRequired)
+  hvciMatRequired bool
+  // Credential Guard configuration (LsaCfgFlags)
+  //
+  // 0=off, 1=enabled with UEFI lock, 2=enabled without lock. Null when not
+  // configured.
+  credentialGuardConfig int
+  // Whether System Guard Secure Launch is enabled (ConfigureSystemGuardLaunch)
+  systemGuardLaunch bool
+  // Kernel-mode hardware-enforced stack protection (ConfigureKernelShadowStacksLaunch)
+  //
+  // 1=enabled in enforcement mode, 2=enabled in audit mode, 0=disabled. Null
+  // when not configured.
+  kernelShadowStacksLaunch int
+}
+
+// Windows Local Security Authority (LSA) security policy
+//
+// Examine the Local Security Authority configuration that backs the
+// "Network access", "Network security", and related security options under
+// HKLM\SYSTEM\CurrentControlSet\Control\Lsa. These values control anonymous
+// access restrictions, blank-password use, LAN Manager authentication level,
+// NTLM hashing, LSA protection (RunAsPPL), and audit behaviour. On/off settings
+// are exposed as booleans and graded settings (such as the LAN Manager
+// authentication level) as integers. NTLM (MSV1_0 and WDigest) settings are
+// grouped under `ntlm` and the Netlogon secure-channel settings under
+// `secureChannel`. Values are nullable: an absent value resolves to null so it
+// is distinguishable from an explicit false or 0, letting checks assert on
+// configured-vs-default precisely.
+windows.lsa {
+  // Whether storing network authentication credentials is disabled (Lsa\DisableDomainCreds)
+  disableDomainCreds() bool
+  // Whether the Everyone permissions apply to anonymous users (Lsa\EveryoneIncludesAnonymous)
+  everyoneIncludesAnonymous() bool
+  // Whether the guest-only sharing and security model is used for local accounts (Lsa\ForceGuest)
+  forceGuest() bool
+  // Whether local accounts with blank passwords are limited to console logon (Lsa\LimitBlankPasswordUse)
+  limitBlankPasswordUse() bool
+  // LAN Manager authentication level (Lsa\LmCompatibilityLevel; 0-5, higher is stronger)
+  lmCompatibilityLevel() int
+  // Whether the LAN Manager (LM) hash of new passwords is not stored (Lsa\NoLMHash)
+  noLmHash() bool
+  // Restrictions on anonymous (null session) connections (Lsa\RestrictAnonymous; higher is more restrictive)
+  restrictAnonymous() int
+  // Whether anonymous enumeration of SAM accounts is disallowed (Lsa\RestrictAnonymousSAM)
+  restrictAnonymousSam() bool
+  // SDDL string controlling which clients may make remote SAM calls (Lsa\restrictremotesam, REG_SZ)
+  restrictRemoteSam() string
+  // LSA protection / Run as Protected Process Light level (Lsa\RunAsPPL; 1 or 2 enables LSA protection)
+  runAsPpl() int
+  // Whether advanced audit policy is forced over legacy audit categories (Lsa\SCENoApplyLegacyAuditPolicy)
+  //
+  // When set, the advanced audit policy subcategories are forced and the
+  // legacy audit categories are ignored.
+  sceNoApplyLegacyAuditPolicy() bool
+  // Whether recovery console authority delegation submit-control is allowed (Lsa\SubmitControl)
+  submitControl() bool
+  // Whether the computer account identity is used for outbound authentication (Lsa\UseMachineId)
+  useMachineId() bool
+  // NTLM authentication settings (Lsa\MSV1_0 and the WDigest provider)
+  ntlm() windows.lsa.ntlm
+  // Netlogon secure-channel settings (Services\Netlogon\Parameters)
+  secureChannel() windows.lsa.secureChannel
+}
+
+// Windows LSA NTLM authentication settings
+//
+// Examine the NTLM security settings under
+// HKLM\SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0 together with the WDigest
+// provider's UseLogonCredential value under
+// HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest. These
+// control NULL session fallback, inbound/outbound NTLM auditing and
+// restriction, the minimum negotiated NTLM session security for clients and
+// servers, and whether WDigest caches plaintext credentials in memory. On/off
+// settings are exposed as booleans and graded settings (audit and restriction
+// levels, the minimum-session-security bitmasks) as integers. Values are
+// nullable so an absent value is distinguishable from an explicit false or 0.
+private windows.lsa.ntlm {
+  // Whether NTLM NULL session fallback is allowed (MSV1_0\AllowNullSessionFallback)
+  allowNullSessionFallback bool
+  // Audit level for incoming NTLM traffic (MSV1_0\AuditReceivingNTLMTraffic; 0 off, 1 allow, 2 deny-all)
+  auditReceivingNtlmTraffic int
+  // Minimum session security negotiated for NTLM SSP clients (MSV1_0\NTLMMinClientSec, bitmask)
+  ntlmMinClientSec int
+  // Minimum session security negotiated for NTLM SSP servers (MSV1_0\NTLMMinServerSec, bitmask)
+  ntlmMinServerSec int
+  // Restriction level for outgoing NTLM traffic to remote servers (MSV1_0\RestrictSendingNTLMTraffic; 0 allow, 1 audit, 2 deny-all)
+  restrictSendingNtlmTraffic int
+  // Whether WDigest caches plaintext credentials in memory (WDigest\UseLogonCredential)
+  useLogonCredential bool
+  // Whether online identities (PKU2U) may authenticate to this computer (Lsa\pku2u\AllowOnlineID)
+  allowOnlineId bool
+}
+
+// Windows LSA Netlogon secure-channel settings
+//
+// Examine the Netlogon secure-channel (domain member) settings under
+// HKLM\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters. These control
+// digital signing and sealing of secure-channel data, the machine account
+// password change behaviour and maximum age, strong session keys, NETBIOS
+// discovery, the vulnerable-channel allow list, and inbound NTLM auditing in
+// the domain. BlockNetbiosDiscovery is read from the GPO location
+// HKLM\SOFTWARE\Policies\Microsoft\Netlogon\Parameters. On/off settings are
+// exposed as booleans and graded settings (the inbound NTLM audit bitmask and
+// the maximum password age) as integers. Values are nullable so an absent value
+// is distinguishable from an explicit false or 0.
+private windows.lsa.secureChannel {
+  // Audit level for inbound NTLM traffic on domain controllers (Netlogon\Parameters\AuditNTLMInDomain, bitmask)
+  auditNtlmInDomain int
+  // Whether NetBIOS-based domain controller discovery is blocked (Policies\Microsoft\Netlogon\Parameters\BlockNetbiosDiscovery)
+  blockNetbiosDiscovery bool
+  // Whether automatic machine account password changes are disabled (Netlogon\Parameters\DisablePasswordChange)
+  disablePasswordChange bool
+  // Maximum machine account password age in days (Netlogon\Parameters\MaximumPasswordAge)
+  maximumPasswordAge int
+  // Whether the domain controller refuses machine account password changes (Netlogon\Parameters\RefusePasswordChange)
+  refusePasswordChange bool
+  // Whether secure-channel data is digitally signed or sealed when possible (Netlogon\Parameters\RequireSignOrSeal)
+  requireSignOrSeal bool
+  // Whether a strong (128-bit) secure-channel session key is required (Netlogon\Parameters\RequireStrongKey)
+  requireStrongKey bool
+  // Whether secure-channel data is digitally encrypted when possible (Netlogon\Parameters\SealSecureChannel)
+  sealSecureChannel bool
+  // Whether secure-channel data is digitally signed when possible (Netlogon\Parameters\SignSecureChannel)
+  signSecureChannel bool
+  // Allow list of vulnerable Netlogon secure channels (Netlogon\Parameters\vulnerablechannelallowlist, REG_SZ)
+  vulnerableChannelAllowList string
+}
+
+// Windows Print Spooler security configuration
+//
+// Examine the hardening-relevant state of the Windows Print Spooler and
+// printing subsystem. The fields are sourced from the Group Policy printer
+// keys under
+// HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Printers (and its
+// PointAndPrint, RPC, IPP, and WPP subkeys), the machine-wide
+// HKLM\SYSTEM\CurrentControlSet\Control\Print key, and the spooler service
+// start configuration under HKLM\SYSTEM\CurrentControlSet\Services\Spooler.
+//
+// Integer settings that are not present in the registry resolve to null so
+// "not configured" is distinguishable from an explicit value of 0 — important
+// because several controls (for example registerRemoteRpcEndpoint == 0) are
+// compliant precisely when set to 0. Boolean settings resolve to their
+// documented Windows default when the value is absent.
+windows.spooler {
+  // Print Spooler service start type (HKLM\SYSTEM\CurrentControlSet\Services\Spooler\Start)
+  //
+  // One of 2 (Automatic), 3 (Manual), or 4 (Disabled). Null when the value
+  // is not present.
+  startMode() int
+  // Whether the Print Spooler service is disabled (Start == 4)
+  disabled() bool
+  // Whether incoming remote RPC connections to the spooler are allowed (Printers\RegisterSpoolerRemoteRpcEndPoint)
+  //
+  // The hardened state is false (the remote RPC endpoint is disabled). Null
+  // when not configured.
+  registerRemoteRpcEndpoint() bool
+  // Whether Redirection Guard is enabled (Printers\RedirectionguardPolicy). Null when not configured
+  redirectionGuardPolicy() bool
+  // Whether downloading of print drivers over HTTP / Web Point-and-Print is disabled (Printers\DisableWebPnPDownload)
+  //
+  // Defaults to false (downloads allowed) when not configured.
+  webPnpDownloadDisabled() bool
+  // Whether printing over HTTP is disabled (Printers\DisableHTTPPrinting)
+  //
+  // Defaults to false (HTTP printing allowed) when not configured.
+  httpPrintingDisabled() bool
+  // Whether the spooler restricts copied files to the Windows color system (Printers\CopyFilesPolicy). Null when not configured
+  copyFilesPolicy() bool
+  // Whether incoming RPC connections to the spooler require packet privacy (Control\Print\RpcAuthnLevelPrivacyEnabled)
+  //
+  // Defaults to true (packet privacy enabled), the modern Windows default,
+  // when not configured.
+  rpcAuthnLevelPrivacyEnabled() bool
+  // Whether adding printer drivers is restricted to administrators
+  //
+  // Maps the LanMan print provider AddPrinterDrivers value
+  // (Control\Print\Providers\LanMan Print Services\Servers\AddPrinterDrivers).
+  // Null when not configured.
+  addPrinterDriversRestricted() bool
+  // Point and Print restriction settings (Printers\PointAndPrint)
+  pointAndPrint() windows.spooler.pointAndPrint
+  // Spooler RPC settings (Printers\RPC)
+  rpc() windows.spooler.rpc
+  // Internet Printing Protocol (IPP) certificate validation settings (Printers\IPP)
+  ipp() windows.spooler.ipp
+  // Whether Windows Protected Print mode is enabled (Printers\WPP\WindowsProtectedPrintGroupPolicyState). Null when not configured
+  windowsProtectedPrintGroupPolicyState() bool
+}
+
+// Windows Print Spooler Point and Print restrictions
+//
+// Settings under HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Printers\PointAndPrint
+// that govern how non-administrators may install printer drivers from a print
+// server. Values are null when not configured.
+private windows.spooler.pointAndPrint @defaults("restrictDriverInstallationToAdministrators") {
+  // Whether printer driver installation is restricted to administrators (RestrictDriverInstallationToAdministrators)
+  //
+  // Defaults to true (the hardened Windows default introduced by the
+  // PrintNightmare mitigations) when not configured.
+  restrictDriverInstallationToAdministrators bool
+  // Whether elevation/warning prompts are suppressed when installing a Point-and-Print driver (NoWarningNoElevationOnInstall)
+  //
+  // The hardened state is false (the warning/elevation prompt is kept). Null
+  // when not configured.
+  noWarningNoElevationOnInstall bool
+  // Whether to suppress elevation/warning prompts when updating a Point-and-Print driver (UpdatePromptSettings)
+  //
+  // 0 keeps the warning/elevation prompt (the hardened state). Null when not configured.
+  updatePromptSettings int
+}
+
+// Windows Print Spooler RPC settings
+//
+// Settings under HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Printers\RPC
+// that control the transport and authentication used for spooler RPC.
+// Integer values are null when not configured.
+private windows.spooler.rpc @defaults("authentication protocols") {
+  // Whether the spooler allows RPC over named pipes in addition to TCP (RpcUseNamedPipeProtocol)
+  //
+  // The hardened state is false (RPC over TCP only). Null when not configured.
+  useNamedPipeProtocol bool
+  // RPC authentication requirement for incoming connections (RpcAuthentication)
+  //
+  // 1 = default, 2 = negotiate, 3 = none. Null when not configured.
+  authentication int
+  // Allowed RPC transport protocols bitmask (RpcProtocols)
+  //
+  // 5 allows RPC over TCP and named pipes; 7 adds local. Null when not configured.
+  protocols int
+  // Fixed TCP port used for RPC over TCP, 0 for dynamic (RpcTcpPort)
+  //
+  // Null when not configured.
+  tcpPort int
+  // Whether Kerberos is required for incoming spooler RPC connections (ForceKerberosForRpc)
+  //
+  // Defaults to false when not configured.
+  forceKerberos bool
+}
+
+// Windows Print Spooler Internet Printing Protocol (IPP) settings
+//
+// Certificate validation flags under
+// HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Printers\IPP. The boolean
+// fields report whether each certificate check is enforced; they default to
+// false (the check is not enforced) when the corresponding value is absent.
+private windows.spooler.ipp @defaults("requireIpps") {
+  // Whether IPP connections must use IPP over HTTPS (RequireIpps)
+  //
+  // Defaults to false when not configured.
+  requireIpps bool
+  // Whether IPP rejects server certificates from an unknown CA (SecurityFlagsBlockUnknownCA)
+  blockUnknownCA bool
+  // Whether IPP rejects server certificates used for the wrong purpose (SecurityFlagsBlockCertWrongUsage)
+  blockCertWrongUsage bool
+  // Whether IPP rejects expired or not-yet-valid server certificates (SecurityFlagsBlockCertDateInvalid)
+  blockCertDateInvalid bool
+  // Whether IPP rejects server certificates whose CN does not match (SecurityFlagsBlockCertCNInvalid)
+  blockCertCNInvalid bool
+}
+
+// Windows diagnostic data (telemetry) and consumer cloud-content policy
+//
+// Examine the effective Windows privacy and telemetry posture read from the
+// Group Policy keys HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection and
+// HKLM\SOFTWARE\Policies\Microsoft\Windows\CloudContent. These are GPO-only
+// DWORD values. The diagnostic data level is a graded integer; the remaining
+// settings are on/off booleans. Every field is nullable so that an absent value
+// (the policy is not configured) is distinguishable from an explicit false or
+// 0. Read from the registry, so it is available even on connections that cannot
+// run commands.
+windows.telemetry {
+  // Diagnostic data level (DataCollection\AllowTelemetry): 0=Security, 1=Basic/Required, 2=Enhanced, 3=Full. Null when not configured.
+  allowTelemetry() int
+  // Whether the telemetry service may not use an authenticated proxy (DataCollection\DisableEnterpriseAuthProxy)
+  //
+  // Applies to the Connected User Experiences and Telemetry service. Null when
+  // the policy is not configured.
+  disableEnterpriseAuthProxy() bool
+  // Whether downloading configuration from the OneSettings service is disabled (DataCollection\DisableOneSettingsDownloads). Null when not configured.
+  disableOneSettingsDownloads() bool
+  // Whether feedback notifications are suppressed (DataCollection\DoNotShowFeedbackNotifications)
+  //
+  // When set, the user does not receive telemetry feedback notifications. Null
+  // when the policy is not configured.
+  doNotShowFeedbackNotifications() bool
+  // Whether auditing of OneSettings usage is enabled (DataCollection\EnableOneSettingsAuditing). Null when not configured.
+  enableOneSettingsAuditing() bool
+  // Whether collection of diagnostic logs is limited (DataCollection\LimitDiagnosticLogCollection). Null when not configured.
+  limitDiagnosticLogCollection() bool
+  // Whether collection of crash dumps is limited (DataCollection\LimitDumpCollection). Null when not configured.
+  limitDumpCollection() bool
+  // Whether cloud-optimized content is disabled (CloudContent\DisableCloudOptimizedContent)
+  //
+  // Cloud-optimized content tailors suggestions using cloud data. Null when the
+  // policy is not configured.
+  disableCloudOptimizedContent() bool
+  // Whether consumer account state content is disabled (CloudContent\DisableConsumerAccountStateContent). Null when not configured.
+  disableConsumerAccountStateContent() bool
+  // Whether Windows consumer features are disabled (CloudContent\DisableWindowsConsumerFeatures)
+  //
+  // Consumer features include app suggestions and consumer experiences. Null
+  // when the policy is not configured.
+  disableWindowsConsumerFeatures() bool
+}
+
+// Windows PowerShell logging policy
+//
+// Examine the PowerShell logging settings configured via Group Policy under
+// HKLM\SOFTWARE\Policies\Microsoft\Windows\PowerShell: Script Block Logging,
+// Transcription, and the machine execution policy. These are GPO-only values
+// with no effective fallback, so when a value is absent the corresponding field
+// is null, which is distinguishable from an explicit 0. Read from the registry,
+// so it is available even on connections that cannot run commands.
+windows.powershell {
+  // Script Block Logging policy (PowerShell\ScriptBlockLogging)
+  scriptBlockLogging() windows.powershell.scriptBlockLogging
+  // Transcription policy (PowerShell\Transcription)
+  transcription() windows.powershell.transcription
+  // PowerShell execution policy (PowerShell\ExecutionPolicy)
+  //
+  // The machine-wide execution policy string set by Group Policy, e.g.
+  // "AllSigned", "RemoteSigned", or "Restricted". Null when the value is absent.
+  executionPolicy() string
+}
+
+// PowerShell Script Block Logging policy
+//
+// Examine the Script Block Logging policy under HKLM\SOFTWARE\Policies
+// \Microsoft\Windows\PowerShell\ScriptBlockLogging. This is a GPO-only value;
+// when it is absent the field is null, distinguishable from an explicit 0.
+private windows.powershell.scriptBlockLogging @defaults("enabled") {
+  // Whether script block logging is enabled (EnableScriptBlockLogging); null when the value is absent
+  enabled bool
+}
+
+// PowerShell Transcription policy
+//
+// Examine the Transcription policy under HKLM\SOFTWARE\Policies\Microsoft
+// \Windows\PowerShell\Transcription. This is a GPO-only value; when it is
+// absent the field is null, distinguishable from an explicit 0.
+private windows.powershell.transcription @defaults("enabled") {
+  // Whether PowerShell transcription is enabled (EnableTranscripting); null when the value is absent
+  enabled bool
 }
 
 // Windows Trusted Platform Module (TPM)
@@ -7079,12 +7793,290 @@ windows.firewall.rule {
   policyStoreSourceType int
 }
 
+// Windows SMB (Server Message Block) server
+//
+// Examine SMB shares published by the host, active inbound client sessions,
+// and outbound connections to other SMB servers. Backed by the `Get-SmbShare`,
+// `Get-SmbSession`, and `Get-SmbConnection` PowerShell cmdlets.
+windows.smb {
+  // SMB shares published by this host
+  shares() []windows.smb.share
+  // Active inbound SMB sessions (clients connected to this host)
+  sessions() []windows.smb.session
+  // Outbound SMB connections (this host connected to other SMB servers)
+  connections() []windows.smb.connection
+  // SMB server (LanmanServer) registry configuration
+  serverConfiguration() windows.smb.serverConfiguration
+  // SMB client (LanmanWorkstation) registry configuration
+  clientConfiguration() windows.smb.clientConfiguration
+  // Whether the SMBv1 client driver (mrxsmb10) is enabled (Start != 4)
+  //
+  // True when the mrxsmb10 service Start value is anything other than 4
+  // (disabled). SMBv1 is deprecated and should be disabled.
+  smbv1Enabled() bool
+}
+
+// Windows SMB server configuration
+//
+// SMB server (LanmanServer) hardening settings sourced from the registry.
+// Values configured through Group Policy
+// (HKLM\SOFTWARE\Policies\Microsoft\Windows\LanmanServer) take precedence over
+// the service parameters
+// (HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters). Integer and
+// boolean fields whose compliant value is 0 are null when the value is not
+// configured anywhere, so an explicit 0 can be told apart from an absent value.
+private windows.smb.serverConfiguration {
+  // Whether the server requires SMB packet signing (RequireSecuritySignature)
+  //
+  // Maps the RequireSecuritySignature DWORD; 1 = required. Null when unset.
+  requireSecuritySignature bool
+  // Whether the server enables (offers) SMB packet signing (EnableSecuritySignature)
+  //
+  // Maps the EnableSecuritySignature DWORD; 1 = enabled. Null when unset.
+  enableSecuritySignature bool
+  // Whether SMBv1 is enabled on the server (SMB1)
+  //
+  // Maps the SMB1 DWORD; 1 = enabled, 0 = disabled. Null when unset (in which
+  // case the OS default applies). SMBv1 should be disabled.
+  smb1Enabled bool
+  // Whether anonymous (null session) access is restricted (RestrictNullSessAccess)
+  //
+  // Maps the RestrictNullSessAccess DWORD; 1 = restricted. Null when unset.
+  restrictNullSessionAccess bool
+  // Named pipes accessible to anonymous (null session) users (NullSessionPipes)
+  //
+  // The REG_MULTI_SZ NullSessionPipes value. Empty when unset; a compliant
+  // configuration is an empty list.
+  nullSessionPipes []string
+  // Shares accessible to anonymous (null session) users (NullSessionShares)
+  //
+  // The REG_MULTI_SZ NullSessionShares value. Empty when unset; a compliant
+  // configuration is an empty list.
+  nullSessionShares []string
+  // Idle time in minutes before a session is disconnected (AutoDisconnect)
+  //
+  // Maps the AutoDisconnect DWORD. Null when unset. The CIS-recommended value
+  // is 15 minutes or less.
+  autoDisconnectMinutes int
+  // Whether clients are forced to log off when logon hours expire (enableforcedlogoff)
+  //
+  // Maps the enableforcedlogoff DWORD; 1 = forced logoff enabled. Null when unset.
+  enableForcedLogoff bool
+  // SMB server name hardening level (SMBServerNameHardeningLevel)
+  //
+  // Maps the SMBServerNameHardeningLevel DWORD (0, 1, or 2). Null when unset.
+  serverNameHardeningLevel int
+  // Whether the SMB authentication rate limiter is enabled (EnableAuthRateLimiter)
+  //
+  // Maps the EnableAuthRateLimiter DWORD; 1 = enabled. Null when unset.
+  enableAuthRateLimiter bool
+  // Delay in milliseconds applied to invalid SMB authentication attempts (InvalidAuthenticationDelayTimeInMs)
+  //
+  // Maps the InvalidAuthenticationDelayTimeInMs DWORD. Null when unset.
+  invalidAuthenticationDelayMs int
+  // Whether to audit clients that do not support SMB signing (AuditClientDoesNotSupportSigning)
+  //
+  // Maps the AuditClientDoesNotSupportSigning DWORD; 1 = auditing enabled. Null when unset.
+  auditClientDoesNotSupportSigning bool
+  // Whether to audit clients that do not support SMB encryption (AuditClientDoesNotSupportEncryption)
+  //
+  // Maps the AuditClientDoesNotSupportEncryption DWORD; 1 = auditing enabled. Null when unset.
+  auditClientDoesNotSupportEncryption bool
+  // The LanmanServer service Start value (registry Start)
+  //
+  // Maps the LanmanServer service Start DWORD (2 = automatic, 3 = manual,
+  // 4 = disabled). Null when unset.
+  serviceStart int
+}
+
+// Windows SMB client configuration
+//
+// SMB client (LanmanWorkstation) hardening settings sourced from the registry.
+// Values configured through Group Policy
+// (HKLM\SOFTWARE\Policies\Microsoft\Windows\LanmanWorkstation) take precedence
+// over the service parameters
+// (HKLM\SYSTEM\CurrentControlSet\Services\LanmanWorkstation\Parameters).
+// Integer and boolean fields whose compliant value is 0 are null when the value
+// is not configured anywhere, so an explicit 0 can be told apart from absent.
+private windows.smb.clientConfiguration {
+  // Whether the client requires SMB packet signing (RequireSecuritySignature)
+  //
+  // Maps the RequireSecuritySignature DWORD; 1 = required. Null when unset.
+  requireSecuritySignature bool
+  // Whether the client enables (offers) SMB packet signing (EnableSecuritySignature)
+  //
+  // Maps the EnableSecuritySignature DWORD; 1 = enabled. Null when unset.
+  enableSecuritySignature bool
+  // Whether the client sends plaintext passwords to SMB servers (EnablePlainTextPassword)
+  //
+  // Maps the EnablePlainTextPassword DWORD; 0 = disabled (compliant). Null when
+  // unset, so an explicit 0 is distinguishable from absent.
+  enablePlainTextPassword bool
+  // Whether insecure guest logons are allowed (AllowInsecureGuestAuth)
+  //
+  // Maps the AllowInsecureGuestAuth DWORD; 0 = disallowed (compliant). Null when
+  // unset, so an explicit 0 is distinguishable from absent.
+  allowInsecureGuestAuth bool
+  // Whether the client requires SMB encryption (RequireEncryption)
+  //
+  // Maps the RequireEncryption DWORD; 1 = required. Null when unset.
+  requireEncryption bool
+  // Minimum SMB2 dialect the client will negotiate (MinSmb2Dialect)
+  //
+  // Maps the MinSmb2Dialect DWORD. Null when unset.
+  minSmb2Dialect int
+  // Whether to audit insecure guest logons (AuditInsecureGuestLogon)
+  //
+  // Maps the AuditInsecureGuestLogon DWORD; 1 = auditing enabled. Null when unset.
+  auditInsecureGuestLogon bool
+  // Whether to audit servers that do not support SMB signing (AuditServerDoesNotSupportSigning)
+  //
+  // Maps the AuditServerDoesNotSupportSigning DWORD; 1 = auditing enabled. Null when unset.
+  auditServerDoesNotSupportSigning bool
+  // Whether to audit servers that do not support SMB encryption (AuditServerDoesNotSupportEncryption)
+  //
+  // Maps the AuditServerDoesNotSupportEncryption DWORD; 1 = auditing enabled. Null when unset.
+  auditServerDoesNotSupportEncryption bool
+  // The LanmanWorkstation service Start value (registry Start)
+  //
+  // Maps the LanmanWorkstation service Start DWORD (2 = automatic, 3 = manual,
+  // 4 = disabled). Null when unset.
+  serviceStart int
+}
+
+// Windows SMB share
+//
+// A single SMB share published by the host: its `name`, the local filesystem
+// `path` it exposes, a `description`, the `scopeName` it is published under,
+// and its `shareType`. Iterated from `windows.smb.shares`.
+private windows.smb.share @defaults("name path") {
+  // Share name (e.g. C$, SYSVOL, or a custom share name)
+  name string
+  // Local filesystem path backing the share
+  path string
+  // Share description
+  description string
+  // Scope name the share is published under (e.g. * for the default scope)
+  scopeName string
+  // Share type (e.g. FileSystemDirectory)
+  shareType string
+}
+
+// Windows SMB session
+//
+// A single inbound SMB session: the connecting client's computer name and
+// user, the SMB `dialect` negotiated, and the number of files the client has
+// open. Iterated from `windows.smb.sessions`.
+private windows.smb.session @defaults("clientComputerName clientUserName") {
+  // Client computer name or IP address
+  clientComputerName string
+  // User account the session authenticated as
+  clientUserName string
+  // SMB dialect negotiated for the session (e.g. 3.1.1)
+  dialect string
+  // Number of files the client currently has open
+  numOpens int
+}
+
+// Windows SMB connection
+//
+// A single outbound SMB connection from this host to an SMB server: the
+// `serverName`, `shareName`, authenticated `userName`, and negotiated
+// `dialect`. Iterated from `windows.smb.connections`.
+private windows.smb.connection @defaults("serverName shareName") {
+  // SMB server name the host is connected to
+  serverName string
+  // Share name on the server
+  shareName string
+  // User account used for the connection
+  userName string
+  // SMB dialect negotiated for the connection (e.g. 3.1.1)
+  dialect string
+}
+
 // Windows BitLocker drive encryption
 //
 // Examine encryption, lock, and protection status across BitLocker volumes
 windows.bitlocker {
   // Windows BitLocker volumes
   volumes() []windows.bitlocker.volume
+  // BitLocker Group Policy (FVE) settings configured for this system
+  policy() windows.bitlocker.policy
+}
+
+// Windows BitLocker Group Policy (FVE) settings
+//
+// Examine the BitLocker Drive Encryption Group Policy settings stored under
+// `HKLM\SOFTWARE\Policies\Microsoft\FVE`. Global settings are exposed
+// directly; per-drive-type settings are grouped under `operatingSystemDrives`,
+// `fixedDataDrives`, and `removableDataDrives`. A field is null when the
+// corresponding policy value is not configured.
+windows.bitlocker.policy {
+  // Whether additional authentication is required at startup (UseAdvancedStartup)
+  useAdvancedStartup bool
+  // Whether enhanced PINs for startup are allowed (UseEnhancedPin)
+  useEnhancedPin bool
+  // Whether BitLocker is allowed without a compatible TPM (EnableBDEWithNoTPM)
+  enableBdeWithNoTpm bool
+  // Whether new DMA devices are disabled when this computer is locked (DisableExternalDMAUnderLock)
+  disableExternalDmaUnderLock bool
+  // Whether Secure Boot is allowed for integrity validation on operating system drives (OSAllowSecureBootForIntegrity)
+  osAllowSecureBootForIntegrity bool
+  // BitLocker policy settings for operating system drives (OS* values)
+  operatingSystemDrives() windows.bitlocker.policy.driveSettings
+  // BitLocker policy settings for fixed data drives (FDV* values)
+  fixedDataDrives() windows.bitlocker.policy.driveSettings
+  // BitLocker policy settings for removable data drives (RDV* values)
+  removableDataDrives() windows.bitlocker.policy.driveSettings
+}
+
+// Windows BitLocker per-drive-type Group Policy (FVE) settings
+//
+// Examine the BitLocker policy values that apply to a single drive type
+// (operating system, fixed data, or removable data). Fields that the drive
+// type does not define, or that are not configured, are null. For example,
+// operating system drives have no `allowUserCert`, and only removable data
+// drives define `denyCrossOrg` and `denyWriteAccess`.
+private windows.bitlocker.policy.driveSettings {
+  // Drive type these settings apply to: operatingSystem, fixedData, or removableData
+  driveType string
+  // Choose how BitLocker-protected drives can be recovered (*Recovery)
+  recovery int
+  // Whether a data recovery agent is allowed (*ManageDRA)
+  manageDRA bool
+  // Allow 48-digit recovery password (*RecoveryPassword)
+  //
+  // 0 = disallow, 1 = require, 2 = allow. Null when not configured.
+  recoveryPassword int
+  // Allow 256-bit recovery key (*RecoveryKey)
+  //
+  // 0 = disallow, 1 = require, 2 = allow. Null when not configured.
+  recoveryKey int
+  // Whether recovery options are omitted from the BitLocker setup wizard (*HideRecoveryPage)
+  hideRecoveryPage bool
+  // Whether BitLocker recovery information is saved to Active Directory Domain Services (*ActiveDirectoryBackup)
+  activeDirectoryBackup bool
+  // Configure what BitLocker recovery information is stored in AD DS (*ActiveDirectoryInfoToStore)
+  //
+  // 1 = store recovery passwords and key packages, 2 = store recovery passwords
+  // only. Null when not configured.
+  activeDirectoryInfoToStore int
+  // Whether BitLocker is blocked until recovery information is stored in AD DS (*RequireActiveDirectoryBackup)
+  requireActiveDirectoryBackup bool
+  // Configure use of hardware-based encryption (*HardwareEncryption)
+  hardwareEncryption int
+  // Configure use of passwords (*Passphrase)
+  passphrase int
+  // Whether a certificate-based data recovery agent / smart card is allowed (*AllowUserCert)
+  allowUserCert bool
+  // Whether a certificate-based data recovery agent / smart card is enforced (*EnforceUserCert)
+  enforceUserCert bool
+  // Configure the format used when a drive is auto-unlocked / discovery volume type (*DiscoveryVolumeType)
+  discoveryVolumeType string
+  // Whether write access is denied to removable drives not protected by BitLocker (RDVDenyWriteAccess)
+  denyWriteAccess bool
+  // Whether write access is denied to devices configured in another organization (RDVDenyCrossOrg)
+  denyCrossOrg bool
 }
 
 // Windows BitLocker volume
@@ -7165,6 +8157,580 @@ windows.security.health {
   securityCenterService dict
 }
 
+// Microsoft Defender Antivirus
+//
+// Examine the complete runtime status and configuration of Microsoft Defender
+// Antivirus so policies can assert on every Defender security control. The
+// `status` accessor exposes the live engine, signature, and protection state
+// reported by `Get-MpComputerStatus` (real-time protection, behavior
+// monitoring, network inspection, tamper protection, scan ages, and signature
+// freshness). The `preferences` accessor exposes the configurable policy
+// reported by `Get-MpPreference`, grouped into scan, real-time, cloud-delivered
+// protection, signature-update, threat-action, controlled-folder-access,
+// network-protection, and remediation settings, plus exclusions and Attack
+// Surface Reduction rules. The `threats` and `threatDetections` accessors
+// expose the recorded threat history. On systems without Defender (for example
+// servers running a third-party antivirus) the accessors resolve to null
+// rather than failing the query.
+windows.defender @defaults("enabled") {
+  // Whether the Defender antimalware service and real-time antivirus and antispyware protection are all active
+  enabled() bool
+  // Live engine, signature, and protection status (Get-MpComputerStatus)
+  status() windows.defender.status
+  // Configurable Defender preferences and policy (Get-MpPreference)
+  preferences() windows.defender.preferences
+  // Threats recorded in the Defender threat history
+  threats() []windows.defender.threat
+  // Malware detections recorded by Defender
+  threatDetections() []windows.defender.threatDetection
+}
+
+// Microsoft Defender Antivirus runtime status
+//
+// Examine the live state reported by `Get-MpComputerStatus`: whether the
+// antimalware service and each protection component (real-time, behavior
+// monitoring, IOAV, on-access, network inspection) are enabled, the engine
+// and signature versions and their ages, the most recent quick and full scan
+// times and whether they are overdue, tamper-protection state and source, and
+// whether a reboot or signature update is pending. Reached through
+// `windows.defender.status`.
+windows.defender.status @defaults("antivirusEnabled realTimeProtectionEnabled isTamperProtected") {
+  // Antimalware engine version
+  amEngineVersion string
+  // Antimalware client (product) version
+  amProductVersion string
+  // Whether the Windows Defender antimalware service is running
+  amServiceEnabled bool
+  // Antimalware service version
+  amServiceVersion string
+  // Whether antispyware protection is enabled
+  antispywareEnabled bool
+  // Number of days since antispyware definitions were last updated
+  antispywareSignatureAge int
+  // Date the antispyware definitions were last updated
+  antispywareSignatureLastUpdated time
+  // Antispyware definition version
+  antispywareSignatureVersion string
+  // Whether antivirus protection is enabled
+  antivirusEnabled bool
+  // Number of days since antivirus definitions were last updated
+  antivirusSignatureAge int
+  // Date the antivirus definitions were last updated
+  antivirusSignatureLastUpdated time
+  // Antivirus definition version
+  antivirusSignatureVersion string
+  // Whether behavior monitoring is enabled
+  behaviorMonitorEnabled bool
+  // Unique identifier of the computer as known to Defender
+  computerID string
+  // Current state of the computer as a bitmask of Defender component states
+  computerState int
+  // Whether the Defender signatures are out of date
+  defenderSignaturesOutOfDate bool
+  // Default enforcement mode for device control
+  deviceControlDefaultEnforcement int
+  // Date the device-control policies were last updated
+  deviceControlPoliciesLastUpdated time
+  // Operational state of device control
+  deviceControlState int
+  // Number of days since the last full scan completed
+  fullScanAge int
+  // Time the last full scan started
+  fullScanStartTime time
+  // Time the last full scan completed
+  fullScanEndTime time
+  // Whether a scheduled full scan is overdue
+  fullScanOverdue bool
+  // Whether a full scan is required to complete remediation
+  fullScanRequired bool
+  // Definition version used by the last full scan
+  fullScanSignatureVersion string
+  // Whether scanning of downloaded files and attachments (IOAV) is enabled
+  ioavProtectionEnabled bool
+  // Whether tamper protection is shielding Defender settings
+  isTamperProtected bool
+  // Whether the host is a virtual machine
+  isVirtualMachine bool
+  // Source that triggered the last full scan
+  lastFullScanSource int
+  // Source that triggered the last quick scan
+  lastQuickScanSource int
+  // Whether the Network Inspection System (NIS) is enabled
+  nisEnabled bool
+  // Network Inspection System engine version
+  nisEngineVersion string
+  // Number of days since the NIS definitions were last updated
+  nisSignatureAge int
+  // Date the NIS definitions were last updated
+  nisSignatureLastUpdated time
+  // Network Inspection System definition version
+  nisSignatureVersion string
+  // Whether on-access protection is enabled
+  onAccessProtectionEnabled bool
+  // Aggregate product status bitmask
+  productStatus int
+  // Number of days since the last quick scan completed
+  quickScanAge int
+  // Time the last quick scan started
+  quickScanStartTime time
+  // Time the last quick scan completed
+  quickScanEndTime time
+  // Whether a scheduled quick scan is overdue
+  quickScanOverdue bool
+  // Definition version used by the last quick scan
+  quickScanSignatureVersion string
+  // Whether real-time protection is enabled
+  realTimeProtectionEnabled bool
+  // Direction in which real-time scanning inspects files
+  //
+  // 0 = both incoming and outgoing, 1 = incoming only, 2 = outgoing only.
+  realTimeScanDirection int
+  // Whether a reboot is required to finish remediation
+  rebootRequired bool
+  // State of Smart App Control
+  //
+  // One of On, Off, Eval, or an empty string when unsupported.
+  smartAppControlState string
+  // Expiration time of the Smart App Control evaluation period
+  smartAppControlExpiration time
+  // Source that manages tamper protection (for example Intune, signatures, or the local UI)
+  tamperProtectionSource string
+}
+
+// Microsoft Defender Antivirus preferences
+//
+// Examine the configurable Defender policy reported by `Get-MpPreference`,
+// grouped into typed accessors so audits can assert on individual controls:
+// `scan` (schedule and scan behavior), `realTimeProtection`, `cloudProtection`
+// (MAPS / cloud-delivered protection), `signatureUpdates`, `threatActions`
+// (per-severity default actions), `controlledFolderAccess`, `networkProtection`,
+// `remediation`, `exclusions`, and `attackSurfaceReductionRules`. Reached
+// through `windows.defender.preferences`.
+windows.defender.preferences @defaults("puaProtection") {
+  // Scan schedule and scan-behavior settings
+  scan() windows.defender.scanSettings
+  // Real-time and behavior-monitoring protection settings
+  realTimeProtection() windows.defender.realTimeSettings
+  // Cloud-delivered protection (MAPS) settings
+  cloudProtection() windows.defender.cloudSettings
+  // Definition, engine, and platform update settings
+  signatureUpdates() windows.defender.signatureSettings
+  // Per-severity default threat actions
+  threatActions() windows.defender.threatActionSettings
+  // Controlled folder access (ransomware protection) settings
+  controlledFolderAccess() windows.defender.controlledFolderAccess
+  // Network protection settings
+  networkProtection() windows.defender.networkProtectionSettings
+  // Behavioral network block settings (brute-force and remote-encryption protection)
+  behavioralNetworkBlocks() windows.defender.behavioralNetworkBlockSettings
+  // Threat remediation settings
+  remediation() windows.defender.remediationSettings
+  // Whether a local preference may override the corresponding policy setting
+  localSettingOverrides() windows.defender.localSettingOverrides
+  // Scan exclusions (paths, extensions, processes, IP addresses)
+  exclusions() windows.defender.exclusions
+  // Configured Attack Surface Reduction (ASR) rules and their actions
+  attackSurfaceReductionRules() []windows.defender.asrRule
+  // Potentially unwanted application (PUA) protection mode
+  //
+  // 0 = disabled, 1 = enabled (block), 2 = audit mode.
+  puaProtection() int
+  // Whether the Defender user interface is locked down (hidden from users)
+  uiLockdown() bool
+  // Whether scheduled task start times are randomized
+  randomizeScheduleTaskTimes() bool
+  // Whether automatic exclusions for server roles are disabled
+  disableAutoExclusions() bool
+  // Whether sending Watson (generic) reports to Microsoft is disabled
+  disableGenericReports() bool
+}
+
+// Microsoft Defender scan settings
+//
+// Examine the scheduled-scan and scan-behavior preferences: the schedule day
+// and time, the quick-scan time, CPU load factor, and the toggles that disable
+// scanning of archives, email, removable drives, mapped network drives, and
+// network files. Reached through `windows.defender.preferences.scan`.
+windows.defender.scanSettings @defaults("scanParameters scanScheduleDay") {
+  // Default scan type (1 = quick scan, 2 = full scan)
+  scanParameters int
+  // Day of the week a scheduled scan runs
+  //
+  // 0 = every day, 1 = Sunday through 7 = Saturday, 8 = never.
+  scanScheduleDay int
+  // Time of day a scheduled scan runs (raw schedule value)
+  scanScheduleTime string
+  // Time of day a scheduled quick scan runs (raw schedule value)
+  scanScheduleQuickScanTime string
+  // Number of minutes after midnight to offset the scheduled scan
+  scanScheduleOffset int
+  // Maximum percentage of CPU a scan may consume
+  scanAvgCPULoadFactor int
+  // Whether scheduled scans run only when the computer is idle
+  scanOnlyIfIdleEnabled bool
+  // Whether to check for new signatures before running a scheduled scan
+  //
+  // 0 = never, 1 = before every scan, 2 = disabled.
+  checkForSignaturesBeforeRunningScan int
+  // Whether scanning inside archive files is disabled
+  disableArchiveScanning bool
+  // Whether email scanning is disabled
+  disableEmailScanning bool
+  // Whether scanning of removable drives during full scans is disabled
+  disableRemovableDriveScanning bool
+  // Whether scanning of mapped network drives during full scans is disabled
+  disableScanningMappedNetworkDrivesForFullScan bool
+  // Whether scanning of files on the network is disabled
+  disableScanningNetworkFiles bool
+  // Whether catch-up full scans are disabled
+  disableCatchupFullScan bool
+  // Whether catch-up quick scans are disabled
+  disableCatchupQuickScan bool
+  // Whether CPU throttling during idle scans is disabled
+  disableCpuThrottleOnIdleScans bool
+  // Whether full scans are allowed to run while on battery power
+  enableFullScanOnBatteryPower bool
+  // Whether scans run at low CPU priority
+  enableLowCpuPriority bool
+}
+
+// Microsoft Defender real-time protection settings
+//
+// Examine the real-time protection preferences: the master real-time
+// monitoring toggle, behavior monitoring, downloaded-file (IOAV) scanning,
+// script scanning, on-access protection, the intrusion-prevention system, the
+// scan direction, and file-hash computation. Reached through
+// `windows.defender.preferences.realTimeProtection`.
+windows.defender.realTimeSettings @defaults("disableRealtimeMonitoring") {
+  // Whether real-time monitoring is disabled
+  disableRealtimeMonitoring bool
+  // Whether behavior monitoring is disabled
+  disableBehaviorMonitoring bool
+  // Whether scanning of downloaded files and attachments (IOAV) is disabled
+  disableIOAVProtection bool
+  // Whether script scanning is disabled
+  disableScriptScanning bool
+  // Whether the Network Inspection System (intrusion prevention) is disabled
+  disableIntrusionPreventionSystem bool
+  // Direction in which real-time scanning inspects files
+  //
+  // 0 = both incoming and outgoing, 1 = incoming only, 2 = outgoing only.
+  realTimeScanDirection int
+  // Whether file-hash computation is enabled
+  enableFileHashComputation bool
+}
+
+// Microsoft Defender cloud-delivered protection settings
+//
+// Examine the Microsoft Active Protection Service (MAPS) and cloud-delivered
+// protection preferences: the reporting membership level, the sample-submission
+// consent, the cloud block level and extended timeout, and the block-at-first-
+// seen toggle. Reached through `windows.defender.preferences.cloudProtection`.
+windows.defender.cloudSettings @defaults("mapsReporting cloudBlockLevel") {
+  // MAPS reporting membership level
+  //
+  // 0 = disabled, 1 = basic membership, 2 = advanced membership.
+  mapsReporting int
+  // Sample-submission consent
+  //
+  // 0 = always prompt, 1 = send safe samples automatically, 2 = never send,
+  // 3 = send all samples automatically.
+  submitSamplesConsent int
+  // Cloud-delivered protection block level
+  //
+  // 0 = default, 2 = high, 4 = high plus, 6 = zero tolerance.
+  cloudBlockLevel int
+  // Number of seconds Defender may extend a cloud check (0-50)
+  cloudExtendedTimeout int
+  // Whether block-at-first-seen cloud protection is disabled
+  disableBlockAtFirstSeen bool
+}
+
+// Microsoft Defender signature and platform update settings
+//
+// Examine the definition, engine, and platform update preferences: the update
+// schedule and interval, the catch-up interval, the fallback source order,
+// file-share sources, and the release channels for definitions, engine, and
+// platform. Reached through `windows.defender.preferences.signatureUpdates`.
+windows.defender.signatureSettings @defaults("signatureUpdateInterval") {
+  // Day of the week scheduled signature updates run
+  signatureScheduleDay int
+  // Time of day scheduled signature updates run (raw schedule value)
+  signatureScheduleTime string
+  // Hours between signature update checks
+  signatureUpdateInterval int
+  // Hours after which a missed signature update is retried
+  signatureUpdateCatchupInterval int
+  // Ordered list of signature update sources
+  signatureFallbackOrder string
+  // UNC file-share sources for signature updates
+  signatureDefinitionUpdateFileSharesSources string
+  // Whether signature updates on startup without an engine are disabled
+  signatureDisableUpdateOnStartupWithoutEngine bool
+  // Grace period (minutes) before the first scheduled update after install
+  signatureFirstAuGracePeriod int
+  // Grace period (minutes) for automatic signature updates
+  signatureAuGracePeriod int
+  // Release channel for definition updates
+  definitionUpdatesChannel int
+  // Release channel for engine updates
+  engineUpdatesChannel int
+  // Release channel for platform updates
+  platformUpdatesChannel int
+  // Whether updates are allowed over metered connections
+  meteredConnectionUpdates bool
+}
+
+// Microsoft Defender default threat actions
+//
+// Examine the default remediation action applied to threats of each severity
+// (severe, high, moderate, low, and unknown) plus any per-threat-ID action
+// overrides. Reached through `windows.defender.preferences.threatActions`.
+windows.defender.threatActionSettings @defaults("severeThreatDefaultAction highThreatDefaultAction") {
+  // Default action for severe-severity threats
+  //
+  // 1 = clean, 2 = quarantine, 3 = remove, 6 = allow, 8 = user defined,
+  // 9 = no action, 10 = block.
+  severeThreatDefaultAction int
+  // Default action for high-severity threats (see severeThreatDefaultAction for values)
+  highThreatDefaultAction int
+  // Default action for moderate-severity threats (see severeThreatDefaultAction for values)
+  moderateThreatDefaultAction int
+  // Default action for low-severity threats (see severeThreatDefaultAction for values)
+  lowThreatDefaultAction int
+  // Default action for unknown-severity threats (see severeThreatDefaultAction for values)
+  unknownThreatDefaultAction int
+  // Per-threat-ID default action overrides
+  idActions() []windows.defender.threatIdAction
+}
+
+// Microsoft Defender per-threat-ID action override
+//
+// Examine a single override that pins the remediation action for a specific
+// threat ID, pairing the `threatId` with the configured `action`. Iterated
+// from `windows.defender.preferences.threatActions.idActions`.
+windows.defender.threatIdAction @defaults("threatId action") {
+  // Threat ID the override applies to
+  threatId string
+  // Action applied to the threat
+  //
+  // 1 = clean, 2 = quarantine, 3 = remove, 6 = allow, 8 = user defined,
+  // 9 = no action, 10 = block.
+  action int
+}
+
+// Microsoft Defender controlled folder access settings
+//
+// Examine the controlled-folder-access (ransomware protection) configuration:
+// whether it is enabled or in audit mode, the applications allowed to write to
+// protected folders, and the list of additional protected folders. Reached
+// through `windows.defender.preferences.controlledFolderAccess`.
+windows.defender.controlledFolderAccess @defaults("enabled") {
+  // Controlled folder access mode
+  //
+  // 0 = disabled, 1 = enabled (block), 2 = audit mode, 3 = block disk
+  // modification only, 4 = audit disk modification only.
+  enabled int
+  // Applications explicitly allowed to write to protected folders
+  allowedApplications []string
+  // Additional folders protected beyond the system defaults
+  protectedFolders []string
+}
+
+// Microsoft Defender network protection settings
+//
+// Examine the network-protection configuration: the enforcement mode and the
+// toggles that extend protection to Windows Server, down-level clients, and
+// datagram processing, plus DNS sinkhole enforcement. Reached through
+// `windows.defender.preferences.networkProtection`.
+windows.defender.networkProtectionSettings @defaults("enableNetworkProtection") {
+  // Network protection enforcement mode
+  //
+  // 0 = disabled, 1 = enabled (block), 2 = audit mode.
+  enableNetworkProtection int
+  // Whether network protection is allowed on Windows Server
+  allowNetworkProtectionOnWinServer bool
+  // Whether network protection is allowed on down-level (older) clients
+  allowNetworkProtectionDownLevel bool
+  // Whether datagram processing is allowed on Windows Server
+  allowDatagramProcessingOnWinServer bool
+  // Whether DNS sinkhole enforcement is enabled
+  enableDnsSinkhole bool
+}
+
+// Microsoft Defender behavioral network block settings
+//
+// Examine the behavioral network protection preferences that block attacks
+// observed from the network: brute-force protection (against password-guessing
+// attacks) and remote-encryption protection (against remote ransomware
+// encryption). Each exposes its configured state, aggressiveness, and maximum
+// block time. Reached through
+// `windows.defender.preferences.behavioralNetworkBlocks`.
+windows.defender.behavioralNetworkBlockSettings @defaults("bruteForceProtectionConfiguredState remoteEncryptionProtectionConfiguredState") {
+  // Brute-force protection configured state
+  //
+  // 0 = not configured, 1 = block, 2 = audit.
+  bruteForceProtectionConfiguredState int
+  // Brute-force protection aggressiveness
+  //
+  // 0 = low, 1 = medium, 2 = high.
+  bruteForceProtectionAggressiveness int
+  // Maximum time (minutes) a brute-force source is blocked
+  bruteForceProtectionMaxBlockTime int
+  // Remote-encryption protection configured state
+  //
+  // 0 = not configured, 1 = block, 2 = audit.
+  remoteEncryptionProtectionConfiguredState int
+  // Remote-encryption protection aggressiveness
+  //
+  // 0 = low, 1 = medium, 2 = high.
+  remoteEncryptionProtectionAggressiveness int
+  // Maximum time (minutes) a remote-encryption source is blocked
+  remoteEncryptionProtectionMaxBlockTime int
+}
+
+// Microsoft Defender local setting overrides
+//
+// Examine whether a locally configured preference is allowed to override the
+// corresponding Group Policy setting. When an override is disabled (false) the
+// policy value is enforced and users cannot change it locally; CIS benchmarks
+// generally require these overrides to be disabled. Reached through
+// `windows.defender.preferences.localSettingOverrides`.
+windows.defender.localSettingOverrides @defaults("spynetReporting realtimeMonitoring") {
+  // Whether a local setting may override MAPS (SpyNet) reporting
+  spynetReporting bool
+  // Whether a local setting may override real-time monitoring
+  realtimeMonitoring bool
+  // Whether a local setting may override behavior monitoring
+  disableBehaviorMonitoring bool
+  // Whether a local setting may override downloaded-file (IOAV) scanning
+  disableIOAVProtection bool
+  // Whether a local setting may override the intrusion prevention system
+  disableIntrusionPreventionSystem bool
+  // Whether a local setting may override on-access protection
+  disableOnAccessProtection bool
+  // Whether a local setting may override the default scan type
+  scanParameters bool
+  // Whether a local setting may override the scheduled scan day
+  scanScheduleDay bool
+  // Whether a local setting may override the scan CPU load factor
+  avgCPULoadFactor bool
+}
+
+// Microsoft Defender remediation settings
+//
+// Examine the threat-remediation preferences: the scheduled remediation day
+// and time, how long quarantined items are retained, and whether system
+// restore points are created before remediation. Reached through
+// `windows.defender.preferences.remediation`.
+windows.defender.remediationSettings @defaults("quarantinePurgeItemsAfterDelay") {
+  // Day of the week scheduled remediation runs
+  remediationScheduleDay int
+  // Time of day scheduled remediation runs (raw schedule value)
+  remediationScheduleTime string
+  // Number of days quarantined items are kept before purging
+  quarantinePurgeItemsAfterDelay int
+  // Whether creation of a system restore point before remediation is disabled
+  disableRestorePoint bool
+}
+
+// Microsoft Defender scan exclusions
+//
+// Examine every configured scan exclusion: file and folder `paths`, file
+// `extensions`, `processes`, and `ipAddresses`. Empty lists mean no exclusions
+// of that kind are configured. Reached through
+// `windows.defender.preferences.exclusions`.
+windows.defender.exclusions @defaults("paths extensions processes") {
+  // Excluded file and folder paths
+  paths []string
+  // Excluded file extensions
+  extensions []string
+  // Excluded processes
+  processes []string
+  // Excluded IP addresses
+  ipAddresses []string
+}
+
+// Microsoft Defender Attack Surface Reduction rule
+//
+// Examine a single Attack Surface Reduction (ASR) rule: its `id` (the rule
+// GUID), the friendly `name` when the GUID is recognized, and the configured
+// `action`. The `id` selects the rule — for example
+// `windows.defender.preferences.attackSurfaceReductionRules.where(id == "...")`.
+// Iterated from `windows.defender.preferences.attackSurfaceReductionRules`.
+windows.defender.asrRule @defaults("id name action") {
+  // Attack Surface Reduction rule GUID
+  id string
+  // Friendly name of the rule, when the GUID is recognized
+  name string
+  // Configured action for the rule
+  //
+  // 0 = not configured (disabled), 1 = block, 2 = audit, 5 = not configured,
+  // 6 = warn.
+  action int
+}
+
+// Microsoft Defender recorded threat
+//
+// Examine a single threat recorded in the Defender threat history: its
+// `threatId`, `name`, `severityID`, `categoryID`, whether it `isActive` and
+// whether it executed, and the affected `resources`. Iterated from
+// `windows.defender.threats`.
+windows.defender.threat @defaults("name severityID isActive") {
+  // Numeric threat identifier
+  threatId int
+  // Threat name as reported by Defender
+  name string
+  // Severity identifier (higher is more severe)
+  severityID int
+  // Category identifier of the threat
+  categoryID int
+  // Whether the threat is currently active
+  isActive bool
+  // Whether the threat executed on the system
+  didThreatExecute bool
+  // Aggregate rollup status of the threat
+  rollupStatus int
+  // Resources (files, registry keys, processes) affected by the threat
+  resources []string
+}
+
+// Microsoft Defender threat detection
+//
+// Examine a single detection event recorded by Defender: the `detectionId`,
+// the associated `threatId`, the `processName` and `domainUser` involved, the
+// detection source and status, the action taken and whether it succeeded, and
+// the detection and remediation timestamps. Iterated from
+// `windows.defender.threatDetections`.
+windows.defender.threatDetection @defaults("threatId processName actionSuccess") {
+  // Unique detection identifier
+  detectionId string
+  // Numeric threat identifier associated with the detection
+  threatId int
+  // Name of the process involved in the detection
+  processName string
+  // Domain user in whose context the detection occurred
+  domainUser string
+  // Detection source type identifier
+  detectionSourceTypeId int
+  // Current execution status of the detected threat
+  currentThreatExecutionStatusID int
+  // Status identifier of the threat
+  threatStatusID int
+  // Identifier of the cleaning action applied
+  cleaningActionID int
+  // Whether the remediation action succeeded
+  actionSuccess bool
+  // Time the threat was first detected
+  initialDetectionTime time
+  // Time the threat status last changed
+  lastThreatStatusChangeTime time
+  // Time remediation completed
+  remediationTime time
+  // Resources (files, registry keys, processes) affected by the detection
+  resources []string
+}
+
 // Cloud-asset metadata
 //
 // Examine the cloud provider and exposed instance metadata
@@ -7226,6 +8792,28 @@ network {
 
   // Primary IPv6 address determined by the default route
   primaryIPv6() ip
+
+  // ARP (IPv4) / NDP (IPv6) neighbor cache entries
+  neighbors() []networkNeighbor
+}
+
+// Network neighbor (ARP / NDP cache entry)
+//
+// A single entry from the system's ARP (IPv4) or NDP (IPv6) neighbor cache:
+// the neighbor's `ip`, its `mac` (link-layer address, empty for incomplete
+// entries), the `interface` it was observed on, and the cache `state`
+// (e.g. reachable, stale, permanent, incomplete). Backed by `ip -j neigh` /
+// `/proc/net/arp` on Linux, `arp -an` on macOS, and `Get-NetNeighbor` on
+// Windows. Iterated from `network.neighbors`.
+private networkNeighbor @defaults("ip mac interface state") {
+  // Neighbor IP address (v4 or v6)
+  ip ip
+  // Link-layer (MAC) address; empty for incomplete or failed entries
+  mac string
+  // Network interface the neighbor was observed on
+  interface string
+  // Neighbor cache state (e.g. reachable, stale, permanent, incomplete)
+  state string
 }
 
 // Detailed information of a network interface

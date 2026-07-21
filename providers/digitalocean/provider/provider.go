@@ -53,6 +53,19 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential("", token))
 	}
 
+	// Discovery expands the account into specific child assets
+	// (databases, Kubernetes clusters, load balancers, firewalls, and
+	// Spaces buckets). Default to "auto" so a plain `digitalocean` scan
+	// surfaces per-resource assets alongside the account.
+	discoverTargets := []string{connection.DiscoveryAuto}
+	if x, ok := flags["discover"]; ok && len(x.Array) != 0 {
+		discoverTargets = discoverTargets[:0]
+		for i := range x.Array {
+			discoverTargets = append(discoverTargets, string(x.Array[i].Value))
+		}
+	}
+	conf.Discover = &inventory.Discovery{Targets: discoverTargets}
+
 	asset := inventory.Asset{
 		Connections: []*inventory.Config{conf},
 	}
@@ -76,12 +89,30 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		}
 	}
 
+	inv, err := s.discover(conn)
+	if err != nil {
+		return nil, err
+	}
+
 	return &plugin.ConnectRes{
 		Id:        conn.ID(),
 		Name:      conn.Name(),
 		Asset:     req.Asset,
-		Inventory: nil,
+		Inventory: inv,
 	}, nil
+}
+
+func (s *Service) discover(conn *connection.DigitaloceanConnection) (*inventory.Inventory, error) {
+	conf := conn.Asset().Connections[0]
+	if conf.Discover == nil {
+		return nil, nil
+	}
+
+	runtime, err := s.GetRuntime(conn.ID())
+	if err != nil {
+		return nil, err
+	}
+	return resources.Discover(runtime)
 }
 
 func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*connection.DigitaloceanConnection, error) {
@@ -124,23 +155,21 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.DigitaloceanConnection) error {
+	// A connection scoped to a single discovered sub-asset carries its
+	// type and id in the connection options; surface the specific
+	// platform for it instead of the account root.
+	if platform, platformID, name := conn.SubAssetPlatform(); platform != nil {
+		asset.Id = platformID
+		asset.Name = name
+		asset.Platform = platform
+		asset.PlatformIds = []string{platformID}
+		return nil
+	}
+
 	asset.Id = conn.Conf.Type
 	asset.Name = "DigitalOcean Account"
-
-	asset.Platform = &inventory.Platform{
-		Name:    "digitalocean",
-		Family:  []string{"digitalocean"},
-		Kind:    "api",
-		Runtime: "digitalocean",
-		Title:   "DigitalOcean",
-	}
-
-	platformId := "//platformid.api.mondoo.app/runtime/digitalocean"
-	acct, _, err := conn.Client().Account.Get(context.Background())
-	if err == nil && acct.UUID != "" {
-		platformId += "/account/" + acct.UUID
-	}
-	asset.PlatformIds = []string{platformId}
+	asset.Platform = connection.AccountPlatform()
+	asset.PlatformIds = []string{connection.NewAccountIdentifier(conn.AccountUUID())}
 	return nil
 }
 

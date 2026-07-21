@@ -264,3 +264,112 @@ func (a *mqlAwsS3Bucket) policyStatements() ([]any, error) {
 	}
 	return policyStatementsFromString(a.MqlRuntime, a.Name.Data, policy.Data.GetDocument())
 }
+
+// hasPublicPrincipal reports whether an Allow statement grants access to a
+// wildcard principal ("*"). It is a structural predicate — it does not evaluate
+// conditions — mirroring hasWildcardAction and hasWildcardResource. Callers that
+// need "effectively public" should also check that conditions do not scope the
+// grant (see statementsAllowPublic / the resource-level isPublic fields).
+func (a *mqlAwsIamPolicyStatement) hasPublicPrincipal() (bool, error) {
+	effect := a.GetEffect()
+	if effect.Error != nil {
+		return false, effect.Error
+	}
+	if !strings.EqualFold(effect.Data, "Allow") {
+		return false, nil
+	}
+	principals := a.GetPrincipals()
+	if principals.Error != nil {
+		return false, principals.Error
+	}
+	return hasWildcardPrincipal(principals.Data), nil
+}
+
+// statementsAllowPublic reports whether any statement grants a wildcard
+// principal access that is not scoped by a condition on aws:SourceArn,
+// aws:SourceAccount, or aws:PrincipalOrgID. It shares hasWildcardPrincipal and
+// hasSourceScopingCondition with aws.lambda.function.allowsPublicAccess so the
+// two predicates cannot disagree; conditions that don't scope the principal
+// (for example aws:RequestedRegion) do not make a public grant private.
+func statementsAllowPublic(statements []any) (bool, error) {
+	for _, s := range statements {
+		stmt, ok := s.(*mqlAwsIamPolicyStatement)
+		if !ok {
+			continue
+		}
+		public, err := stmt.hasPublicPrincipal()
+		if err != nil {
+			return false, err
+		}
+		if !public {
+			continue
+		}
+		conditions := stmt.GetConditions()
+		if conditions.Error != nil {
+			return false, conditions.Error
+		}
+		if !hasSourceScopingCondition(conditions.Data) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// resourceIsPublic is shared by the resource-level isPublic fields: a resource
+// is public when its policy contains a statement that grants to a wildcard
+// principal without a source-scoping condition.
+func resourceIsPublic(statements *plugin.TValue[[]any]) (bool, error) {
+	if statements.Error != nil {
+		return false, statements.Error
+	}
+	return statementsAllowPublic(statements.Data)
+}
+
+func (a *mqlAwsKmsKey) isPublic() (bool, error) {
+	return resourceIsPublic(a.GetPolicyStatements())
+}
+
+func (a *mqlAwsSnsTopic) isPublic() (bool, error) {
+	return resourceIsPublic(a.GetPolicyStatements())
+}
+
+func (a *mqlAwsSqsQueue) isPublic() (bool, error) {
+	return resourceIsPublic(a.GetPolicyStatements())
+}
+
+func (a *mqlAwsEcrRepository) isPublic() (bool, error) {
+	return resourceIsPublic(a.GetPolicyStatements())
+}
+
+// isPublic reports whether the function is exposed publicly — either its
+// resource policy grants a wildcard principal, or it has a Function URL whose
+// auth type is NONE (unauthenticated invocation over the internet).
+func (a *mqlAwsLambdaFunction) isPublic() (bool, error) {
+	policyPublic, err := resourceIsPublic(a.GetPolicyStatements())
+	if err != nil {
+		return false, err
+	}
+	if policyPublic {
+		return true, nil
+	}
+
+	url := a.GetUrlConfig()
+	if url.Error != nil {
+		return false, url.Error
+	}
+	if url.Data == nil {
+		return false, nil
+	}
+	authType := url.Data.GetAuthType()
+	if authType.Error != nil {
+		return false, authType.Error
+	}
+	return functionUrlIsPublic(authType.Data), nil
+}
+
+// functionUrlIsPublic reports whether a Lambda Function URL auth type permits
+// unauthenticated public invocation. AWS_IAM requires a signed request; NONE
+// allows anyone on the internet.
+func functionUrlIsPublic(authType string) bool {
+	return strings.EqualFold(authType, "NONE")
+}

@@ -1,0 +1,309 @@
+# Copyright Mondoo, Inc. 2024, 2026
+# SPDX-License-Identifier: BUSL-1.1
+#
+# Exercises the workload-level securityContext rollup predicates.
+---
+# Fully hardened: PSS "restricted" compliant, no host access.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hardened
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: hardened
+  template:
+    metadata:
+      labels:
+        app: hardened
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: app
+        image: nginx:1.25
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+        securityContext:
+          privileged: false
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          readOnlyRootFilesystem: true
+          capabilities:
+            add: ["NET_BIND_SERVICE"]
+            drop: ["ALL"]
+---
+# Risky: privileged main container, host namespaces, hostPath volume, and a
+# capability added in the init container too (to exercise dedup + init folding).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: risky
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: risky
+  template:
+    metadata:
+      labels:
+        app: risky
+    spec:
+      hostNetwork: true
+      hostPID: true
+      initContainers:
+      - name: setup
+        image: busybox:1.36
+        securityContext:
+          allowPrivilegeEscalation: true
+          runAsUser: 0
+          capabilities:
+            add: ["NET_RAW", "SYS_ADMIN"]
+      containers:
+      - name: main
+        image: docker:24
+        securityContext:
+          privileged: true
+          runAsUser: 0
+          seccompProfile:
+            type: Unconfined
+          capabilities:
+            add: ["NET_RAW"]
+      volumes:
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock
+---
+# Container is silent on runAsNonRoot, but the pod-level context guarantees
+# non-root: runsAsRoot must fold the pod default and report false.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: podlevelnonroot
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: podlevelnonroot
+  template:
+    metadata:
+      labels:
+        app: podlevelnonroot
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+      - name: app
+        image: nginx:1.25
+        securityContext:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
+---
+# A privileged pod, to exercise the pod accessor path (podSpecTyped).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: risky-pod
+  namespace: default
+spec:
+  hostIPC: true
+  containers:
+  - name: main
+    image: docker:24
+    securityContext:
+      privileged: true
+      runAsUser: 0
+      capabilities:
+        add: ["SYS_ADMIN"]
+  volumes:
+  - name: host
+    hostPath:
+      path: /
+---
+# One of each remaining workload kind with a privileged container, to verify
+# the per-kind accessor wiring (all share the rollup logic).
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: ds-privileged
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: ds-privileged
+  template:
+    metadata:
+      labels:
+        app: ds-privileged
+    spec:
+      containers:
+      - name: main
+        image: docker:24
+        securityContext:
+          privileged: true
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ss-privileged
+  namespace: default
+spec:
+  serviceName: ss-privileged
+  selector:
+    matchLabels:
+      app: ss-privileged
+  template:
+    metadata:
+      labels:
+        app: ss-privileged
+    spec:
+      containers:
+      - name: main
+        image: docker:24
+        securityContext:
+          privileged: true
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: rs-privileged
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: rs-privileged
+  template:
+    metadata:
+      labels:
+        app: rs-privileged
+    spec:
+      containers:
+      - name: main
+        image: docker:24
+        securityContext:
+          privileged: true
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: job-privileged
+  namespace: default
+spec:
+  template:
+    metadata:
+      labels:
+        app: job-privileged
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: main
+        image: docker:24
+        securityContext:
+          privileged: true
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cronjob-privileged
+  namespace: default
+spec:
+  schedule: "* * * * *"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: cronjob-privileged
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: main
+            image: docker:24
+            securityContext:
+              privileged: true
+---
+# Consumes Secrets every which way: env (secretKeyRef + envFrom), a mounted
+# secret volume, and an image-pull secret. Used by the secret-consumption tests.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: secret-consumer
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: secret-consumer
+  template:
+    metadata:
+      labels:
+        app: secret-consumer
+    spec:
+      imagePullSecrets:
+      - name: registry-creds
+      containers:
+      - name: app
+        image: nginx:1.25
+        env:
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api-secret
+              key: key
+        envFrom:
+        - secretRef:
+            name: env-secret
+      volumes:
+      - name: tls
+        secret:
+          secretName: tls-secret
+---
+# All images pinned by digest (immutable). Used by image-provenance tests.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: digest-pinned
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: digest-pinned
+  template:
+    metadata:
+      labels:
+        app: digest-pinned
+    spec:
+      containers:
+      - name: app
+        image: nginx@sha256:0000000000000000000000000000000000000000000000000000000000000000
+---
+# Uses the latest tag implicitly (nginx) and explicitly from another registry.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: latest-image
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: latest-image
+  template:
+    metadata:
+      labels:
+        app: latest-image
+    spec:
+      containers:
+      - name: app
+        image: nginx
+      - name: side
+        image: gcr.io/foo/bar:latest

@@ -230,6 +230,7 @@ func (g *mqlGcpProjectComputeService) regions() ([]any, error) {
 		res = append(res, mqlRegion)
 	}
 
+	log.Debug().Str("project", projectId).Int("regions", len(res)).Msg("gcp.compute> listed regions")
 	return res, nil
 }
 
@@ -281,6 +282,7 @@ func (g *mqlGcpProjectComputeService) zones() ([]any, error) {
 		return nil, err
 	}
 
+	log.Debug().Str("project", projectId).Int("zones", len(res)).Msg("gcp.compute> listed zones")
 	return res, nil
 }
 
@@ -924,6 +926,7 @@ func (g *mqlGcpProjectComputeService) instances() ([]any, error) {
 	}); err != nil {
 		return nil, err
 	}
+	log.Debug().Str("project", projectId).Int("instances", len(res)).Msg("gcp.compute> listed instances")
 	return res, nil
 }
 
@@ -3537,7 +3540,7 @@ func (g *mqlGcpProjectComputeServiceImage) iamPolicy() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	policy, err := svc.Images.GetIamPolicy(projectId, name).Context(ctx).Do()
+	policy, err := svc.Images.GetIamPolicy(projectId, name).OptionsRequestedPolicyVersion(3).Context(ctx).Do()
 	if err != nil {
 		return nil, err
 	}
@@ -3619,7 +3622,7 @@ func (g *mqlGcpProjectComputeServiceSnapshot) iamPolicy() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	policy, err := svc.Snapshots.GetIamPolicy(projectId, name).Context(ctx).Do()
+	policy, err := svc.Snapshots.GetIamPolicy(projectId, name).OptionsRequestedPolicyVersion(3).Context(ctx).Do()
 	if err != nil {
 		return nil, err
 	}
@@ -3948,7 +3951,7 @@ func (g *mqlGcpProjectComputeServiceBackendService) iapEnabled() (bool, error) {
 	if !ok {
 		return false, nil
 	}
-	enabled, _ := iapMap["enabled"].(bool)
+	enabled, _ := iapMap["serviceEnabled"].(bool)
 	return enabled, nil
 }
 

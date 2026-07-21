@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sort"
+	"strings"
 	"sync"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/directory"
@@ -163,6 +165,48 @@ func newMicrosoftTenant(runtime *plugin.Runtime, org models.Organizationable) (*
 		return nil, err
 	}
 	return mqlResource.(*mqlMicrosoftTenant), nil
+}
+
+// enabledServicePlanServices returns the distinct, alphabetically sorted set of
+// service families from a tenant's assignedPlans whose capabilityStatus is
+// "Enabled". The input is the assignedPlans dict slice as stored on the
+// resource (each element a map with "service" and "capabilityStatus" keys);
+// entries that are not maps, lack an enabled status, or carry an empty service
+// name are skipped. It is the pure core of the enabledServicePlans() accessor.
+func enabledServicePlanServices(assignedPlans []any) []string {
+	seen := map[string]struct{}{}
+	for _, p := range assignedPlans {
+		plan, ok := p.(map[string]any)
+		if !ok {
+			continue
+		}
+		status, _ := plan["capabilityStatus"].(string)
+		if !strings.EqualFold(status, "Enabled") {
+			continue
+		}
+		service, _ := plan["service"].(string)
+		if service == "" {
+			continue
+		}
+		seen[service] = struct{}{}
+	}
+
+	services := make([]string, 0, len(seen))
+	for service := range seen {
+		services = append(services, service)
+	}
+	sort.Strings(services)
+	return services
+}
+
+// enabledServicePlans surfaces the tenant's enabled service families so checks
+// can gate on licensing without parsing the assignedPlans dicts by hand.
+func (a *mqlMicrosoftTenant) enabledServicePlans() ([]any, error) {
+	assignedPlans := a.GetAssignedPlans()
+	if assignedPlans.Error != nil {
+		return nil, assignedPlans.Error
+	}
+	return convert.SliceAnyToInterface(enabledServicePlanServices(assignedPlans.Data)), nil
 }
 
 // https://learn.microsoft.com/en-us/entra/identity/users/licensing-service-plan-reference

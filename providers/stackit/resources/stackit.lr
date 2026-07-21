@@ -24,7 +24,7 @@ stackit {
   // STACKIT project the connection is scoped to
   project() stackit.project
   // Region the connection targets (e.g., eu01)
-  region string
+  region() string
   // Compute servers (virtual machines)
   servers() []stackit.server
   // Block storage volumes
@@ -73,6 +73,8 @@ stackit {
   observability() stackit.observability
   // Telemetry routing and federation namespace
   telemetry() stackit.telemetry
+  // Managed AI Model Serving namespace
+  modelServing() stackit.modelServing
   // Project service accounts
   serviceAccounts() []stackit.serviceAccount
   // TLS server certificates managed by STACKIT Certificates
@@ -156,6 +158,8 @@ private stackit.server @defaults("id name status machineType") {
   securityGroupIds []string
   // Security groups attached to the server
   securityGroups() []stackit.securityGroup
+  // Internet-exposure breakdown (public IP combined with security group ingress)
+  exposure() stackit.network.exposure
   // Service account mail addresses attached to the server
   serviceAccountMails []string
   // Network interfaces: [{nicId, ipv4, ipv6, mac, networkId, securityGroups, allowedAddresses}]
@@ -391,6 +395,22 @@ private stackit.securityGroup.rule @defaults("id direction protocol") {
   remoteSecurityGroupId string
 }
 
+// Server internet-exposure breakdown
+//
+// Explains whether a server is reachable from the internet: whether one of its
+// network interfaces has a public IP and whether an attached security group
+// admits inbound traffic from any address.
+private stackit.network.exposure @defaults("internetReachable hasPublicIp") {
+  // Whether the server is reachable from the internet (a public IP and a security group ingress rule that admits any address)
+  internetReachable bool
+  // Whether any network interface has a public IP
+  hasPublicIp bool
+  // Whether an attached security group permits inbound traffic from any address (0.0.0.0/0 or ::/0)
+  securityGroupAllowsIngress bool
+  // Security group ingress rules that admit traffic from any address
+  openIngressRules []stackit.securityGroup.rule
+}
+
 // STACKIT SSH key pair
 //
 // Examine a single SSH key pair available in the project. The pair is
@@ -443,6 +463,8 @@ private stackit.loadBalancer @defaults("name status externalAddress") {
   options dict
   // Errors reported during creation/operation [{type, description}]
   errors []dict
+  // Internet-exposure breakdown (public address combined with the access-control allow-list)
+  exposure() stackit.network.exposure
 }
 
 // STACKIT load balancer listener
@@ -528,10 +550,44 @@ private stackit.ske.cluster @defaults("name kubernetesVersion status") {
   maintenance dict
   // Extensions (acl, argus, dns) — observability/network add-ons
   extensions dict
-  // Cluster networking overrides (services range, pods range, …)
+  // Network association: the STACKIT network id and control-plane access scope
   network dict
   // Creation timestamp
   creationTime time
+  // Whether the kube-apiserver access ACL is enforced
+  apiServerAclEnabled bool
+  // CIDR blocks permitted to reach the kube-apiserver when the access ACL is enforced
+  apiServerAclAllowedCidrs []string
+  // Credentials-rotation phase
+  //
+  // One of NEVER, PREPARING, PREPARED, COMPLETING, or COMPLETED.
+  credentialsRotationPhase string
+  // Time the most recent credentials rotation was initiated
+  credentialsRotationLastInitiated time
+  // Time the most recent credentials rotation completed
+  credentialsRotationLastCompleted time
+  // Egress IP ranges from which cluster traffic originates
+  egressAddressRanges []string
+  // Pod IP ranges assigned to the cluster
+  podAddressRanges []string
+  // OIDC service-account token issuer URL
+  serviceAccountIssuer string
+  // Whether an identity provider is enabled for cluster access
+  idpEnabled bool
+  // Identity-provider type configured for cluster access
+  idpType string
+  // Whether the observability (argus) extension is enabled
+  observabilityEnabled bool
+  // Observability instance the cluster ships metrics and logs to
+  observabilityInstance() stackit.observability.instance
+  // Whether the DNS extension is enabled
+  dnsEnabled bool
+  // Whether the DNS extension exposes the Kubernetes Gateway API
+  dnsGatewayApi bool
+  // DNS zones managed by the DNS extension
+  dnsZones []string
+  // STACKIT network the cluster is attached to
+  networkRef() stackit.network
 }
 
 // SKE node pool
@@ -575,6 +631,8 @@ private stackit.ske.cluster.nodePool @defaults("name machineType minimum maximum
   labels map[string]string
   // Whether DaemonSets/system components may schedule on this pool
   allowSystemComponents bool
+  // Kubernetes version running on this node pool, when it differs from the control plane
+  kubernetesVersion string
 }
 
 // STACKIT Object Storage namespace
@@ -910,6 +968,13 @@ private stackit.postgresFlex.instance @defaults("id name version status") {
   backupSchedule() string
   // Free-form operator-tunable options (lazy-loaded from the detail API)
   options() map[string]string
+  // Whether the instance accepts connections from any address
+  //
+  // True only when the connection ACL explicitly admits a default route
+  // (0.0.0.0/0 or ::/0). An empty ACL is not flagged: the Flex API exposes no
+  // public-endpoint indicator, so an unpopulated ACL cannot be assumed to be
+  // internet-reachable.
+  internetReachable() bool
 }
 
 // STACKIT MongoDB Flex namespace
@@ -951,6 +1016,13 @@ private stackit.mongoDbFlex.instance @defaults("id name version status") {
   acl() []string
   // Free-form operator-tunable options (lazy-loaded from the detail API)
   options() map[string]string
+  // Whether the instance accepts connections from any address
+  //
+  // True only when the connection ACL explicitly admits a default route
+  // (0.0.0.0/0 or ::/0). An empty ACL is not flagged: the Flex API exposes no
+  // public-endpoint indicator, so an unpopulated ACL cannot be assumed to be
+  // internet-reachable.
+  internetReachable() bool
 }
 
 // STACKIT SQLServer Flex namespace
@@ -992,6 +1064,13 @@ private stackit.sqlServerFlex.instance @defaults("id name version status") {
   backupSchedule() string
   // Free-form operator-tunable options (lazy-loaded from the detail API)
   options() map[string]string
+  // Whether the instance accepts connections from any address
+  //
+  // True only when the connection ACL explicitly admits a default route
+  // (0.0.0.0/0 or ::/0). An empty ACL is not flagged: the Flex API exposes no
+  // public-endpoint indicator, so an unpopulated ACL cannot be assumed to be
+  // internet-reachable.
+  internetReachable() bool
 }
 
 // STACKIT OpenSearch namespace
@@ -1034,6 +1113,12 @@ private stackit.openSearch.instance @defaults("id name status planName") {
   imageUrl string
   // Connection parameters returned by the API (free-form)
   parameters dict
+  // Whether the instance accepts connections from any address
+  //
+  // True when the instance's parameters enable public access and the
+  // source-IP allow-list (`sgw_acl`) is empty or admits any address
+  // (0.0.0.0/0 or ::/0), making the instance reachable from the internet.
+  internetReachable() bool
 }
 
 // STACKIT MariaDB namespace
@@ -1074,6 +1159,12 @@ private stackit.mariaDb.instance @defaults("id name status planName") {
   imageUrl string
   // Connection parameters returned by the API
   parameters dict
+  // Whether the instance accepts connections from any address
+  //
+  // True when the instance's parameters enable public access and the
+  // source-IP allow-list (`sgw_acl`) is empty or admits any address
+  // (0.0.0.0/0 or ::/0), making the instance reachable from the internet.
+  internetReachable() bool
 }
 
 // STACKIT Redis namespace
@@ -1114,6 +1205,12 @@ private stackit.redis.instance @defaults("id name status planName") {
   imageUrl string
   // Connection parameters returned by the API
   parameters dict
+  // Whether the instance accepts connections from any address
+  //
+  // True when the instance's parameters enable public access and the
+  // source-IP allow-list (`sgw_acl`) is empty or admits any address
+  // (0.0.0.0/0 or ::/0), making the instance reachable from the internet.
+  internetReachable() bool
 }
 
 // STACKIT RabbitMQ namespace
@@ -1154,6 +1251,12 @@ private stackit.rabbitMq.instance @defaults("id name status planName") {
   imageUrl string
   // Connection parameters returned by the API
   parameters dict
+  // Whether the instance accepts connections from any address
+  //
+  // True when the instance's parameters enable public access and the
+  // source-IP allow-list (`sgw_acl`) is empty or admits any address
+  // (0.0.0.0/0 or ::/0), making the instance reachable from the internet.
+  internetReachable() bool
 }
 
 // STACKIT LogMe namespace
@@ -1194,6 +1297,12 @@ private stackit.logMe.instance @defaults("id name status planName") {
   imageUrl string
   // Connection parameters returned by the API
   parameters dict
+  // Whether the instance accepts connections from any address
+  //
+  // True when the instance's parameters enable public access and the
+  // source-IP allow-list (`sgw_acl`) is empty or admits any address
+  // (0.0.0.0/0 or ::/0), making the instance reachable from the internet.
+  internetReachable() bool
 }
 
 // STACKIT Secrets Manager namespace
@@ -1385,6 +1494,72 @@ private stackit.telemetry.link @defaults("id displayName enabled status") {
   router() stackit.telemetry.router
 }
 
+// STACKIT Model Serving namespace
+//
+// Use the Model Serving namespace to enumerate the project's
+// authentication `tokens()` for the managed AI inference API, and the
+// catalog of `models()` (chat and embedding) available in the region.
+stackit.modelServing {
+  // Authentication tokens for the Model Serving API in the project
+  tokens() []stackit.modelServing.token
+  // Models (chat and embedding) available in the region
+  models() []stackit.modelServing.model
+}
+
+// STACKIT Model Serving authentication token
+//
+// Examine the metadata of a single Model Serving auth token. The token
+// is keyed by its UUID `id` — for example
+// `stackit.modelServing.token(id: "fa1d2…")` — and exposes the `name`,
+// `description`, lifecycle `state`, region, and the `validUntil` expiry
+// time. The secret token value is only returned once at creation and is
+// not exposed here.
+private stackit.modelServing.token @defaults("id name state validUntil") {
+  init(id? string)
+  // Token UUID
+  id string
+  // Token name
+  name string
+  // Description
+  description string
+  // Lifecycle state (active, …)
+  state string
+  // Region the token is valid in
+  region string
+  // Expiry timestamp
+  validUntil time
+}
+
+// STACKIT Model Serving model
+//
+// Examine a single model offered by the Model Serving catalog. The
+// model is keyed by its UUID `id` and exposes the API `name`, the
+// `displayedName`, a `description`, the `type` (for example chat or
+// embedding), the `category`, the region, the inference `url`, free-form
+// `tags`, and the available pricing `skus`.
+private stackit.modelServing.model @defaults("name type category") {
+  // Model UUID
+  id string
+  // API model name
+  name string
+  // Human-readable display name
+  displayedName string
+  // Description
+  description string
+  // Model type (for example chat, embedding)
+  type string
+  // Model category
+  category string
+  // Region the model is served in
+  region string
+  // Inference endpoint URL
+  url string
+  // Free-form tags attached to the model
+  tags []string
+  // Available pricing SKUs ({id, type, description} entries)
+  skus []dict
+}
+
 // STACKIT project service account
 //
 // Examine a single service account in the project. Service accounts
@@ -1463,6 +1638,8 @@ private stackit.alb.loadBalancer @defaults("name status externalAddress") {
   disableTargetSecurityGroupAssignment bool
   // User-defined labels
   labels map[string]string
+  // Internet-exposure breakdown (public address combined with the access-control allow-list)
+  exposure() stackit.network.exposure
 }
 
 // STACKIT KMS namespace

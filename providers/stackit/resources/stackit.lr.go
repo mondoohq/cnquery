@@ -26,6 +26,7 @@ const (
 	ResourceStackitPublicIp                   string = "stackit.publicIp"
 	ResourceStackitSecurityGroup              string = "stackit.securityGroup"
 	ResourceStackitSecurityGroupRule          string = "stackit.securityGroup.rule"
+	ResourceStackitNetworkExposure            string = "stackit.network.exposure"
 	ResourceStackitKeyPair                    string = "stackit.keyPair"
 	ResourceStackitLoadBalancer               string = "stackit.loadBalancer"
 	ResourceStackitLoadBalancerListener       string = "stackit.loadBalancer.listener"
@@ -69,6 +70,9 @@ const (
 	ResourceStackitTelemetryRouterDestination string = "stackit.telemetry.router.destination"
 	ResourceStackitTelemetryRouterAccessToken string = "stackit.telemetry.router.accessToken"
 	ResourceStackitTelemetryLink              string = "stackit.telemetry.link"
+	ResourceStackitModelServing               string = "stackit.modelServing"
+	ResourceStackitModelServingToken          string = "stackit.modelServing.token"
+	ResourceStackitModelServingModel          string = "stackit.modelServing.model"
 	ResourceStackitServiceAccount             string = "stackit.serviceAccount"
 	ResourceStackitCertificate                string = "stackit.certificate"
 	ResourceStackitAlbLoadBalancer            string = "stackit.alb.loadBalancer"
@@ -123,6 +127,10 @@ func init() {
 		"stackit.securityGroup.rule": {
 			// to override args, implement: initStackitSecurityGroupRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createStackitSecurityGroupRule,
+		},
+		"stackit.network.exposure": {
+			// to override args, implement: initStackitNetworkExposure(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitNetworkExposure,
 		},
 		"stackit.keyPair": {
 			Init:   initStackitKeyPair,
@@ -295,6 +303,18 @@ func init() {
 		"stackit.telemetry.link": {
 			// to override args, implement: initStackitTelemetryLink(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createStackitTelemetryLink,
+		},
+		"stackit.modelServing": {
+			// to override args, implement: initStackitModelServing(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitModelServing,
+		},
+		"stackit.modelServing.token": {
+			Init:   initStackitModelServingToken,
+			Create: createStackitModelServingToken,
+		},
+		"stackit.modelServing.model": {
+			// to override args, implement: initStackitModelServingModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitModelServingModel,
 		},
 		"stackit.serviceAccount": {
 			Init:   initStackitServiceAccount,
@@ -481,6 +501,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.telemetry": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackit).GetTelemetry()).ToDataRes(types.Resource("stackit.telemetry"))
 	},
+	"stackit.modelServing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackit).GetModelServing()).ToDataRes(types.Resource("stackit.modelServing"))
+	},
 	"stackit.serviceAccounts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackit).GetServiceAccounts()).ToDataRes(types.Array(types.Resource("stackit.serviceAccount")))
 	},
@@ -570,6 +593,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.server.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitServer).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("stackit.securityGroup")))
+	},
+	"stackit.server.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitServer).GetExposure()).ToDataRes(types.Resource("stackit.network.exposure"))
 	},
 	"stackit.server.serviceAccountMails": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitServer).GetServiceAccountMails()).ToDataRes(types.Array(types.String))
@@ -823,6 +849,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.securityGroup.rule.remoteSecurityGroupId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSecurityGroupRule).GetRemoteSecurityGroupId()).ToDataRes(types.String)
 	},
+	"stackit.network.exposure.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitNetworkExposure).GetInternetReachable()).ToDataRes(types.Bool)
+	},
+	"stackit.network.exposure.hasPublicIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitNetworkExposure).GetHasPublicIp()).ToDataRes(types.Bool)
+	},
+	"stackit.network.exposure.securityGroupAllowsIngress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitNetworkExposure).GetSecurityGroupAllowsIngress()).ToDataRes(types.Bool)
+	},
+	"stackit.network.exposure.openIngressRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitNetworkExposure).GetOpenIngressRules()).ToDataRes(types.Array(types.Resource("stackit.securityGroup.rule")))
+	},
 	"stackit.keyPair.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitKeyPair).GetName()).ToDataRes(types.String)
 	},
@@ -873,6 +911,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.loadBalancer.errors": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLoadBalancer).GetErrors()).ToDataRes(types.Array(types.Dict))
+	},
+	"stackit.loadBalancer.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLoadBalancer).GetExposure()).ToDataRes(types.Resource("stackit.network.exposure"))
 	},
 	"stackit.loadBalancer.listener.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLoadBalancerListener).GetName()).ToDataRes(types.String)
@@ -952,6 +993,54 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.ske.cluster.creationTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSkeCluster).GetCreationTime()).ToDataRes(types.Time)
 	},
+	"stackit.ske.cluster.apiServerAclEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetApiServerAclEnabled()).ToDataRes(types.Bool)
+	},
+	"stackit.ske.cluster.apiServerAclAllowedCidrs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetApiServerAclAllowedCidrs()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.ske.cluster.credentialsRotationPhase": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetCredentialsRotationPhase()).ToDataRes(types.String)
+	},
+	"stackit.ske.cluster.credentialsRotationLastInitiated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetCredentialsRotationLastInitiated()).ToDataRes(types.Time)
+	},
+	"stackit.ske.cluster.credentialsRotationLastCompleted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetCredentialsRotationLastCompleted()).ToDataRes(types.Time)
+	},
+	"stackit.ske.cluster.egressAddressRanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetEgressAddressRanges()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.ske.cluster.podAddressRanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetPodAddressRanges()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.ske.cluster.serviceAccountIssuer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetServiceAccountIssuer()).ToDataRes(types.String)
+	},
+	"stackit.ske.cluster.idpEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetIdpEnabled()).ToDataRes(types.Bool)
+	},
+	"stackit.ske.cluster.idpType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetIdpType()).ToDataRes(types.String)
+	},
+	"stackit.ske.cluster.observabilityEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetObservabilityEnabled()).ToDataRes(types.Bool)
+	},
+	"stackit.ske.cluster.observabilityInstance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetObservabilityInstance()).ToDataRes(types.Resource("stackit.observability.instance"))
+	},
+	"stackit.ske.cluster.dnsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetDnsEnabled()).ToDataRes(types.Bool)
+	},
+	"stackit.ske.cluster.dnsGatewayApi": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetDnsGatewayApi()).ToDataRes(types.Bool)
+	},
+	"stackit.ske.cluster.dnsZones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetDnsZones()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.ske.cluster.networkRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetNetworkRef()).ToDataRes(types.Resource("stackit.network"))
+	},
 	"stackit.ske.cluster.nodePool.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSkeClusterNodePool).GetName()).ToDataRes(types.String)
 	},
@@ -999,6 +1088,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.ske.cluster.nodePool.allowSystemComponents": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSkeClusterNodePool).GetAllowSystemComponents()).ToDataRes(types.Bool)
+	},
+	"stackit.ske.cluster.nodePool.kubernetesVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeClusterNodePool).GetKubernetesVersion()).ToDataRes(types.String)
 	},
 	"stackit.objectStorage.buckets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitObjectStorage).GetBuckets()).ToDataRes(types.Array(types.Resource("stackit.objectStorage.bucket")))
@@ -1309,6 +1401,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.postgresFlex.instance.options": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitPostgresFlexInstance).GetOptions()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"stackit.postgresFlex.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitPostgresFlexInstance).GetInternetReachable()).ToDataRes(types.Bool)
+	},
 	"stackit.mongoDbFlex.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitMongoDbFlex).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.mongoDbFlex.instance")))
 	},
@@ -1344,6 +1439,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.mongoDbFlex.instance.options": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitMongoDbFlexInstance).GetOptions()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"stackit.mongoDbFlex.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMongoDbFlexInstance).GetInternetReachable()).ToDataRes(types.Bool)
 	},
 	"stackit.sqlServerFlex.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSqlServerFlex).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.sqlServerFlex.instance")))
@@ -1381,6 +1479,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.sqlServerFlex.instance.options": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSqlServerFlexInstance).GetOptions()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"stackit.sqlServerFlex.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSqlServerFlexInstance).GetInternetReachable()).ToDataRes(types.Bool)
+	},
 	"stackit.openSearch.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitOpenSearch).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.openSearch.instance")))
 	},
@@ -1416,6 +1517,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.openSearch.instance.parameters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitOpenSearchInstance).GetParameters()).ToDataRes(types.Dict)
+	},
+	"stackit.openSearch.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchInstance).GetInternetReachable()).ToDataRes(types.Bool)
 	},
 	"stackit.mariaDb.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitMariaDb).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.mariaDb.instance")))
@@ -1453,6 +1557,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.mariaDb.instance.parameters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitMariaDbInstance).GetParameters()).ToDataRes(types.Dict)
 	},
+	"stackit.mariaDb.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbInstance).GetInternetReachable()).ToDataRes(types.Bool)
+	},
 	"stackit.redis.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitRedis).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.redis.instance")))
 	},
@@ -1488,6 +1595,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.redis.instance.parameters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitRedisInstance).GetParameters()).ToDataRes(types.Dict)
+	},
+	"stackit.redis.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisInstance).GetInternetReachable()).ToDataRes(types.Bool)
 	},
 	"stackit.rabbitMq.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitRabbitMq).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.rabbitMq.instance")))
@@ -1525,6 +1635,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.rabbitMq.instance.parameters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitRabbitMqInstance).GetParameters()).ToDataRes(types.Dict)
 	},
+	"stackit.rabbitMq.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqInstance).GetInternetReachable()).ToDataRes(types.Bool)
+	},
 	"stackit.logMe.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLogMe).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.logMe.instance")))
 	},
@@ -1560,6 +1673,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.logMe.instance.parameters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLogMeInstance).GetParameters()).ToDataRes(types.Dict)
+	},
+	"stackit.logMe.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetInternetReachable()).ToDataRes(types.Bool)
 	},
 	"stackit.secretsManager.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSecretsManager).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.secretsManager.instance")))
@@ -1714,6 +1830,60 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.telemetry.link.router": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitTelemetryLink).GetRouter()).ToDataRes(types.Resource("stackit.telemetry.router"))
 	},
+	"stackit.modelServing.tokens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServing).GetTokens()).ToDataRes(types.Array(types.Resource("stackit.modelServing.token")))
+	},
+	"stackit.modelServing.models": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServing).GetModels()).ToDataRes(types.Array(types.Resource("stackit.modelServing.model")))
+	},
+	"stackit.modelServing.token.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingToken).GetId()).ToDataRes(types.String)
+	},
+	"stackit.modelServing.token.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingToken).GetName()).ToDataRes(types.String)
+	},
+	"stackit.modelServing.token.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingToken).GetDescription()).ToDataRes(types.String)
+	},
+	"stackit.modelServing.token.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingToken).GetState()).ToDataRes(types.String)
+	},
+	"stackit.modelServing.token.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingToken).GetRegion()).ToDataRes(types.String)
+	},
+	"stackit.modelServing.token.validUntil": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingToken).GetValidUntil()).ToDataRes(types.Time)
+	},
+	"stackit.modelServing.model.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingModel).GetId()).ToDataRes(types.String)
+	},
+	"stackit.modelServing.model.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingModel).GetName()).ToDataRes(types.String)
+	},
+	"stackit.modelServing.model.displayedName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingModel).GetDisplayedName()).ToDataRes(types.String)
+	},
+	"stackit.modelServing.model.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingModel).GetDescription()).ToDataRes(types.String)
+	},
+	"stackit.modelServing.model.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingModel).GetType()).ToDataRes(types.String)
+	},
+	"stackit.modelServing.model.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingModel).GetCategory()).ToDataRes(types.String)
+	},
+	"stackit.modelServing.model.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingModel).GetRegion()).ToDataRes(types.String)
+	},
+	"stackit.modelServing.model.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingModel).GetUrl()).ToDataRes(types.String)
+	},
+	"stackit.modelServing.model.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingModel).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.modelServing.model.skus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingModel).GetSkus()).ToDataRes(types.Array(types.Dict))
+	},
 	"stackit.serviceAccount.email": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitServiceAccount).GetEmail()).ToDataRes(types.String)
 	},
@@ -1785,6 +1955,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.alb.loadBalancer.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitAlbLoadBalancer).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"stackit.alb.loadBalancer.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbLoadBalancer).GetExposure()).ToDataRes(types.Resource("stackit.network.exposure"))
 	},
 	"stackit.kms.keyRings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitKms).GetKeyRings()).ToDataRes(types.Array(types.Resource("stackit.kms.keyRing")))
@@ -1987,6 +2160,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackit).Telemetry, ok = plugin.RawToTValue[*mqlStackitTelemetry](v.Value, v.Error)
 		return
 	},
+	"stackit.modelServing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackit).ModelServing, ok = plugin.RawToTValue[*mqlStackitModelServing](v.Value, v.Error)
+		return
+	},
 	"stackit.serviceAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackit).ServiceAccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -2113,6 +2290,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.server.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitServer).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.server.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitServer).Exposure, ok = plugin.RawToTValue[*mqlStackitNetworkExposure](v.Value, v.Error)
 		return
 	},
 	"stackit.server.serviceAccountMails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2479,6 +2660,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitSecurityGroupRule).RemoteSecurityGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"stackit.network.exposure.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitNetworkExposure).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.network.exposure.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitNetworkExposure).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.network.exposure.hasPublicIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitNetworkExposure).HasPublicIp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.network.exposure.securityGroupAllowsIngress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitNetworkExposure).SecurityGroupAllowsIngress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.network.exposure.openIngressRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitNetworkExposure).OpenIngressRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"stackit.keyPair.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitKeyPair).__id, ok = v.Value.(string)
 		return
@@ -2553,6 +2754,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.loadBalancer.errors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitLoadBalancer).Errors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.loadBalancer.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLoadBalancer).Exposure, ok = plugin.RawToTValue[*mqlStackitNetworkExposure](v.Value, v.Error)
 		return
 	},
 	"stackit.loadBalancer.listener.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2675,6 +2880,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitSkeCluster).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"stackit.ske.cluster.apiServerAclEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).ApiServerAclEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.apiServerAclAllowedCidrs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).ApiServerAclAllowedCidrs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.credentialsRotationPhase": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).CredentialsRotationPhase, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.credentialsRotationLastInitiated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).CredentialsRotationLastInitiated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.credentialsRotationLastCompleted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).CredentialsRotationLastCompleted, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.egressAddressRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).EgressAddressRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.podAddressRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).PodAddressRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.serviceAccountIssuer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).ServiceAccountIssuer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.idpEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).IdpEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.idpType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).IdpType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.observabilityEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).ObservabilityEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.observabilityInstance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).ObservabilityInstance, ok = plugin.RawToTValue[*mqlStackitObservabilityInstance](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.dnsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).DnsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.dnsGatewayApi": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).DnsGatewayApi, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.dnsZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).DnsZones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.networkRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).NetworkRef, ok = plugin.RawToTValue[*mqlStackitNetwork](v.Value, v.Error)
+		return
+	},
 	"stackit.ske.cluster.nodePool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitSkeClusterNodePool).__id, ok = v.Value.(string)
 		return
@@ -2741,6 +3010,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.ske.cluster.nodePool.allowSystemComponents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitSkeClusterNodePool).AllowSystemComponents, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.nodePool.kubernetesVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeClusterNodePool).KubernetesVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"stackit.objectStorage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3207,6 +3480,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitPostgresFlexInstance).Options, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"stackit.postgresFlex.instance.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitPostgresFlexInstance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"stackit.mongoDbFlex.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitMongoDbFlex).__id, ok = v.Value.(string)
 		return
@@ -3261,6 +3538,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.mongoDbFlex.instance.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitMongoDbFlexInstance).Options, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"stackit.mongoDbFlex.instance.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMongoDbFlexInstance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"stackit.sqlServerFlex.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3319,6 +3600,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitSqlServerFlexInstance).Options, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"stackit.sqlServerFlex.instance.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSqlServerFlexInstance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"stackit.openSearch.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitOpenSearch).__id, ok = v.Value.(string)
 		return
@@ -3373,6 +3658,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.openSearch.instance.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitOpenSearchInstance).Parameters, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.instance.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchInstance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"stackit.mariaDb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3431,6 +3720,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitMariaDbInstance).Parameters, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"stackit.mariaDb.instance.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbInstance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"stackit.redis.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitRedis).__id, ok = v.Value.(string)
 		return
@@ -3485,6 +3778,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.redis.instance.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitRedisInstance).Parameters, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.instance.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"stackit.rabbitMq.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3543,6 +3840,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitRabbitMqInstance).Parameters, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"stackit.rabbitMq.instance.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqInstance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"stackit.logMe.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitLogMe).__id, ok = v.Value.(string)
 		return
@@ -3597,6 +3898,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.logMe.instance.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitLogMeInstance).Parameters, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"stackit.secretsManager.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3839,6 +4144,90 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitTelemetryLink).Router, ok = plugin.RawToTValue[*mqlStackitTelemetryRouter](v.Value, v.Error)
 		return
 	},
+	"stackit.modelServing.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServing).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.modelServing.tokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServing).Tokens, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.models": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServing).Models, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.token.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingToken).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.modelServing.token.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingToken).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.token.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingToken).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.token.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingToken).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.token.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingToken).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.token.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingToken).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.token.validUntil": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingToken).ValidUntil, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.model.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingModel).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.modelServing.model.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingModel).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.model.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingModel).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.model.displayedName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingModel).DisplayedName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.model.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingModel).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.model.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingModel).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.model.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingModel).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.model.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingModel).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.model.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingModel).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.model.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingModel).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.model.skus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingModel).Skus, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"stackit.serviceAccount.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitServiceAccount).__id, ok = v.Value.(string)
 		return
@@ -3945,6 +4334,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.alb.loadBalancer.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitAlbLoadBalancer).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.loadBalancer.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbLoadBalancer).Exposure, ok = plugin.RawToTValue[*mqlStackitNetworkExposure](v.Value, v.Error)
 		return
 	},
 	"stackit.kms.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4134,6 +4527,7 @@ type mqlStackit struct {
 	SecretsManager   plugin.TValue[*mqlStackitSecretsManager]
 	Observability    plugin.TValue[*mqlStackitObservability]
 	Telemetry        plugin.TValue[*mqlStackitTelemetry]
+	ModelServing     plugin.TValue[*mqlStackitModelServing]
 	ServiceAccounts  plugin.TValue[[]any]
 	Certificates     plugin.TValue[[]any]
 	AlbLoadBalancers plugin.TValue[[]any]
@@ -4195,7 +4589,9 @@ func (c *mqlStackit) GetProject() *plugin.TValue[*mqlStackitProject] {
 }
 
 func (c *mqlStackit) GetRegion() *plugin.TValue[string] {
-	return &c.Region
+	return plugin.GetOrCompute[string](&c.Region, func() (string, error) {
+		return c.region()
+	})
 }
 
 func (c *mqlStackit) GetServers() *plugin.TValue[[]any] {
@@ -4582,6 +4978,22 @@ func (c *mqlStackit) GetTelemetry() *plugin.TValue[*mqlStackitTelemetry] {
 	})
 }
 
+func (c *mqlStackit) GetModelServing() *plugin.TValue[*mqlStackitModelServing] {
+	return plugin.GetOrCompute[*mqlStackitModelServing](&c.ModelServing, func() (*mqlStackitModelServing, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit", c.__id, "modelServing")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitModelServing), nil
+			}
+		}
+
+		return c.modelServing()
+	})
+}
+
 func (c *mqlStackit) GetServiceAccounts() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.ServiceAccounts, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -4760,6 +5172,7 @@ type mqlStackitServer struct {
 	Volumes             plugin.TValue[[]any]
 	SecurityGroupIds    plugin.TValue[[]any]
 	SecurityGroups      plugin.TValue[[]any]
+	Exposure            plugin.TValue[*mqlStackitNetworkExposure]
 	ServiceAccountMails plugin.TValue[[]any]
 	Nics                plugin.TValue[[]any]
 	UserData            plugin.TValue[string]
@@ -4925,6 +5338,22 @@ func (c *mqlStackitServer) GetSecurityGroups() *plugin.TValue[[]any] {
 		}
 
 		return c.securityGroups()
+	})
+}
+
+func (c *mqlStackitServer) GetExposure() *plugin.TValue[*mqlStackitNetworkExposure] {
+	return plugin.GetOrCompute[*mqlStackitNetworkExposure](&c.Exposure, func() (*mqlStackitNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.server", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
 	})
 }
 
@@ -5699,6 +6128,65 @@ func (c *mqlStackitSecurityGroupRule) GetRemoteSecurityGroupId() *plugin.TValue[
 	return &c.RemoteSecurityGroupId
 }
 
+// mqlStackitNetworkExposure for the stackit.network.exposure resource
+type mqlStackitNetworkExposure struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitNetworkExposureInternal it will be used here
+	InternetReachable          plugin.TValue[bool]
+	HasPublicIp                plugin.TValue[bool]
+	SecurityGroupAllowsIngress plugin.TValue[bool]
+	OpenIngressRules           plugin.TValue[[]any]
+}
+
+// createStackitNetworkExposure creates a new instance of this resource
+func createStackitNetworkExposure(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitNetworkExposure{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.network.exposure", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitNetworkExposure) MqlName() string {
+	return "stackit.network.exposure"
+}
+
+func (c *mqlStackitNetworkExposure) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitNetworkExposure) GetInternetReachable() *plugin.TValue[bool] {
+	return &c.InternetReachable
+}
+
+func (c *mqlStackitNetworkExposure) GetHasPublicIp() *plugin.TValue[bool] {
+	return &c.HasPublicIp
+}
+
+func (c *mqlStackitNetworkExposure) GetSecurityGroupAllowsIngress() *plugin.TValue[bool] {
+	return &c.SecurityGroupAllowsIngress
+}
+
+func (c *mqlStackitNetworkExposure) GetOpenIngressRules() *plugin.TValue[[]any] {
+	return &c.OpenIngressRules
+}
+
 // mqlStackitKeyPair for the stackit.keyPair resource
 type mqlStackitKeyPair struct {
 	MqlRuntime *plugin.Runtime
@@ -5789,6 +6277,7 @@ type mqlStackitLoadBalancer struct {
 	TargetPools        plugin.TValue[[]any]
 	Options            plugin.TValue[any]
 	Errors             plugin.TValue[[]any]
+	Exposure           plugin.TValue[*mqlStackitNetworkExposure]
 }
 
 // createStackitLoadBalancer creates a new instance of this resource
@@ -5894,6 +6383,22 @@ func (c *mqlStackitLoadBalancer) GetOptions() *plugin.TValue[any] {
 
 func (c *mqlStackitLoadBalancer) GetErrors() *plugin.TValue[[]any] {
 	return &c.Errors
+}
+
+func (c *mqlStackitLoadBalancer) GetExposure() *plugin.TValue[*mqlStackitNetworkExposure] {
+	return plugin.GetOrCompute[*mqlStackitNetworkExposure](&c.Exposure, func() (*mqlStackitNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.loadBalancer", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
+	})
 }
 
 // mqlStackitLoadBalancerListener for the stackit.loadBalancer.listener resource
@@ -6125,16 +6630,32 @@ type mqlStackitSkeCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlStackitSkeClusterInternal
-	Name              plugin.TValue[string]
-	Status            plugin.TValue[string]
-	StatusDetails     plugin.TValue[any]
-	KubernetesVersion plugin.TValue[string]
-	NodePools         plugin.TValue[[]any]
-	Hibernations      plugin.TValue[[]any]
-	Maintenance       plugin.TValue[any]
-	Extensions        plugin.TValue[any]
-	Network           plugin.TValue[any]
-	CreationTime      plugin.TValue[*time.Time]
+	Name                             plugin.TValue[string]
+	Status                           plugin.TValue[string]
+	StatusDetails                    plugin.TValue[any]
+	KubernetesVersion                plugin.TValue[string]
+	NodePools                        plugin.TValue[[]any]
+	Hibernations                     plugin.TValue[[]any]
+	Maintenance                      plugin.TValue[any]
+	Extensions                       plugin.TValue[any]
+	Network                          plugin.TValue[any]
+	CreationTime                     plugin.TValue[*time.Time]
+	ApiServerAclEnabled              plugin.TValue[bool]
+	ApiServerAclAllowedCidrs         plugin.TValue[[]any]
+	CredentialsRotationPhase         plugin.TValue[string]
+	CredentialsRotationLastInitiated plugin.TValue[*time.Time]
+	CredentialsRotationLastCompleted plugin.TValue[*time.Time]
+	EgressAddressRanges              plugin.TValue[[]any]
+	PodAddressRanges                 plugin.TValue[[]any]
+	ServiceAccountIssuer             plugin.TValue[string]
+	IdpEnabled                       plugin.TValue[bool]
+	IdpType                          plugin.TValue[string]
+	ObservabilityEnabled             plugin.TValue[bool]
+	ObservabilityInstance            plugin.TValue[*mqlStackitObservabilityInstance]
+	DnsEnabled                       plugin.TValue[bool]
+	DnsGatewayApi                    plugin.TValue[bool]
+	DnsZones                         plugin.TValue[[]any]
+	NetworkRef                       plugin.TValue[*mqlStackitNetwork]
 }
 
 // createStackitSkeCluster creates a new instance of this resource
@@ -6226,6 +6747,94 @@ func (c *mqlStackitSkeCluster) GetCreationTime() *plugin.TValue[*time.Time] {
 	return &c.CreationTime
 }
 
+func (c *mqlStackitSkeCluster) GetApiServerAclEnabled() *plugin.TValue[bool] {
+	return &c.ApiServerAclEnabled
+}
+
+func (c *mqlStackitSkeCluster) GetApiServerAclAllowedCidrs() *plugin.TValue[[]any] {
+	return &c.ApiServerAclAllowedCidrs
+}
+
+func (c *mqlStackitSkeCluster) GetCredentialsRotationPhase() *plugin.TValue[string] {
+	return &c.CredentialsRotationPhase
+}
+
+func (c *mqlStackitSkeCluster) GetCredentialsRotationLastInitiated() *plugin.TValue[*time.Time] {
+	return &c.CredentialsRotationLastInitiated
+}
+
+func (c *mqlStackitSkeCluster) GetCredentialsRotationLastCompleted() *plugin.TValue[*time.Time] {
+	return &c.CredentialsRotationLastCompleted
+}
+
+func (c *mqlStackitSkeCluster) GetEgressAddressRanges() *plugin.TValue[[]any] {
+	return &c.EgressAddressRanges
+}
+
+func (c *mqlStackitSkeCluster) GetPodAddressRanges() *plugin.TValue[[]any] {
+	return &c.PodAddressRanges
+}
+
+func (c *mqlStackitSkeCluster) GetServiceAccountIssuer() *plugin.TValue[string] {
+	return &c.ServiceAccountIssuer
+}
+
+func (c *mqlStackitSkeCluster) GetIdpEnabled() *plugin.TValue[bool] {
+	return &c.IdpEnabled
+}
+
+func (c *mqlStackitSkeCluster) GetIdpType() *plugin.TValue[string] {
+	return &c.IdpType
+}
+
+func (c *mqlStackitSkeCluster) GetObservabilityEnabled() *plugin.TValue[bool] {
+	return &c.ObservabilityEnabled
+}
+
+func (c *mqlStackitSkeCluster) GetObservabilityInstance() *plugin.TValue[*mqlStackitObservabilityInstance] {
+	return plugin.GetOrCompute[*mqlStackitObservabilityInstance](&c.ObservabilityInstance, func() (*mqlStackitObservabilityInstance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.ske.cluster", c.__id, "observabilityInstance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitObservabilityInstance), nil
+			}
+		}
+
+		return c.observabilityInstance()
+	})
+}
+
+func (c *mqlStackitSkeCluster) GetDnsEnabled() *plugin.TValue[bool] {
+	return &c.DnsEnabled
+}
+
+func (c *mqlStackitSkeCluster) GetDnsGatewayApi() *plugin.TValue[bool] {
+	return &c.DnsGatewayApi
+}
+
+func (c *mqlStackitSkeCluster) GetDnsZones() *plugin.TValue[[]any] {
+	return &c.DnsZones
+}
+
+func (c *mqlStackitSkeCluster) GetNetworkRef() *plugin.TValue[*mqlStackitNetwork] {
+	return plugin.GetOrCompute[*mqlStackitNetwork](&c.NetworkRef, func() (*mqlStackitNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.ske.cluster", c.__id, "networkRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitNetwork), nil
+			}
+		}
+
+		return c.networkRef()
+	})
+}
+
 // mqlStackitSkeClusterNodePool for the stackit.ske.cluster.nodePool resource
 type mqlStackitSkeClusterNodePool struct {
 	MqlRuntime *plugin.Runtime
@@ -6247,6 +6856,7 @@ type mqlStackitSkeClusterNodePool struct {
 	Taints                plugin.TValue[[]any]
 	Labels                plugin.TValue[map[string]any]
 	AllowSystemComponents plugin.TValue[bool]
+	KubernetesVersion     plugin.TValue[string]
 }
 
 // createStackitSkeClusterNodePool creates a new instance of this resource
@@ -6348,6 +6958,10 @@ func (c *mqlStackitSkeClusterNodePool) GetLabels() *plugin.TValue[map[string]any
 
 func (c *mqlStackitSkeClusterNodePool) GetAllowSystemComponents() *plugin.TValue[bool] {
 	return &c.AllowSystemComponents
+}
+
+func (c *mqlStackitSkeClusterNodePool) GetKubernetesVersion() *plugin.TValue[string] {
+	return &c.KubernetesVersion
 }
 
 // mqlStackitObjectStorage for the stackit.objectStorage resource
@@ -7459,17 +8073,18 @@ type mqlStackitPostgresFlexInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlStackitPostgresFlexInstanceInternal
-	Id             plugin.TValue[string]
-	Name           plugin.TValue[string]
-	Status         plugin.TValue[string]
-	Region         plugin.TValue[string]
-	Version        plugin.TValue[string]
-	Flavor         plugin.TValue[any]
-	Acl            plugin.TValue[[]any]
-	Replicas       plugin.TValue[int64]
-	Storage        plugin.TValue[any]
-	BackupSchedule plugin.TValue[string]
-	Options        plugin.TValue[map[string]any]
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Status            plugin.TValue[string]
+	Region            plugin.TValue[string]
+	Version           plugin.TValue[string]
+	Flavor            plugin.TValue[any]
+	Acl               plugin.TValue[[]any]
+	Replicas          plugin.TValue[int64]
+	Storage           plugin.TValue[any]
+	BackupSchedule    plugin.TValue[string]
+	Options           plugin.TValue[map[string]any]
+	InternetReachable plugin.TValue[bool]
 }
 
 // createStackitPostgresFlexInstance creates a new instance of this resource
@@ -7567,6 +8182,12 @@ func (c *mqlStackitPostgresFlexInstance) GetOptions() *plugin.TValue[map[string]
 	})
 }
 
+func (c *mqlStackitPostgresFlexInstance) GetInternetReachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
+		return c.internetReachable()
+	})
+}
+
 // mqlStackitMongoDbFlex for the stackit.mongoDbFlex resource
 type mqlStackitMongoDbFlex struct {
 	MqlRuntime *plugin.Runtime
@@ -7633,17 +8254,18 @@ type mqlStackitMongoDbFlexInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlStackitMongoDbFlexInstanceInternal
-	Id             plugin.TValue[string]
-	Name           plugin.TValue[string]
-	Status         plugin.TValue[string]
-	Region         plugin.TValue[string]
-	Version        plugin.TValue[string]
-	Flavor         plugin.TValue[any]
-	Replicas       plugin.TValue[int64]
-	Storage        plugin.TValue[any]
-	BackupSchedule plugin.TValue[string]
-	Acl            plugin.TValue[[]any]
-	Options        plugin.TValue[map[string]any]
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Status            plugin.TValue[string]
+	Region            plugin.TValue[string]
+	Version           plugin.TValue[string]
+	Flavor            plugin.TValue[any]
+	Replicas          plugin.TValue[int64]
+	Storage           plugin.TValue[any]
+	BackupSchedule    plugin.TValue[string]
+	Acl               plugin.TValue[[]any]
+	Options           plugin.TValue[map[string]any]
+	InternetReachable plugin.TValue[bool]
 }
 
 // createStackitMongoDbFlexInstance creates a new instance of this resource
@@ -7741,6 +8363,12 @@ func (c *mqlStackitMongoDbFlexInstance) GetOptions() *plugin.TValue[map[string]a
 	})
 }
 
+func (c *mqlStackitMongoDbFlexInstance) GetInternetReachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
+		return c.internetReachable()
+	})
+}
+
 // mqlStackitSqlServerFlex for the stackit.sqlServerFlex resource
 type mqlStackitSqlServerFlex struct {
 	MqlRuntime *plugin.Runtime
@@ -7802,17 +8430,18 @@ type mqlStackitSqlServerFlexInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlStackitSqlServerFlexInstanceInternal
-	Id             plugin.TValue[string]
-	Name           plugin.TValue[string]
-	Status         plugin.TValue[string]
-	Region         plugin.TValue[string]
-	Version        plugin.TValue[string]
-	Flavor         plugin.TValue[any]
-	Acl            plugin.TValue[[]any]
-	Replicas       plugin.TValue[int64]
-	Storage        plugin.TValue[any]
-	BackupSchedule plugin.TValue[string]
-	Options        plugin.TValue[map[string]any]
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Status            plugin.TValue[string]
+	Region            plugin.TValue[string]
+	Version           plugin.TValue[string]
+	Flavor            plugin.TValue[any]
+	Acl               plugin.TValue[[]any]
+	Replicas          plugin.TValue[int64]
+	Storage           plugin.TValue[any]
+	BackupSchedule    plugin.TValue[string]
+	Options           plugin.TValue[map[string]any]
+	InternetReachable plugin.TValue[bool]
 }
 
 // createStackitSqlServerFlexInstance creates a new instance of this resource
@@ -7910,6 +8539,12 @@ func (c *mqlStackitSqlServerFlexInstance) GetOptions() *plugin.TValue[map[string
 	})
 }
 
+func (c *mqlStackitSqlServerFlexInstance) GetInternetReachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
+		return c.internetReachable()
+	})
+}
+
 // mqlStackitOpenSearch for the stackit.openSearch resource
 type mqlStackitOpenSearch struct {
 	MqlRuntime *plugin.Runtime
@@ -7987,6 +8622,7 @@ type mqlStackitOpenSearchInstance struct {
 	DashboardUrl       plugin.TValue[string]
 	ImageUrl           plugin.TValue[string]
 	Parameters         plugin.TValue[any]
+	InternetReachable  plugin.TValue[bool]
 }
 
 // createStackitOpenSearchInstance creates a new instance of this resource
@@ -8070,6 +8706,12 @@ func (c *mqlStackitOpenSearchInstance) GetParameters() *plugin.TValue[any] {
 	return &c.Parameters
 }
 
+func (c *mqlStackitOpenSearchInstance) GetInternetReachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
+		return c.internetReachable()
+	})
+}
+
 // mqlStackitMariaDb for the stackit.mariaDb resource
 type mqlStackitMariaDb struct {
 	MqlRuntime *plugin.Runtime
@@ -8147,6 +8789,7 @@ type mqlStackitMariaDbInstance struct {
 	DashboardUrl       plugin.TValue[string]
 	ImageUrl           plugin.TValue[string]
 	Parameters         plugin.TValue[any]
+	InternetReachable  plugin.TValue[bool]
 }
 
 // createStackitMariaDbInstance creates a new instance of this resource
@@ -8230,6 +8873,12 @@ func (c *mqlStackitMariaDbInstance) GetParameters() *plugin.TValue[any] {
 	return &c.Parameters
 }
 
+func (c *mqlStackitMariaDbInstance) GetInternetReachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
+		return c.internetReachable()
+	})
+}
+
 // mqlStackitRedis for the stackit.redis resource
 type mqlStackitRedis struct {
 	MqlRuntime *plugin.Runtime
@@ -8307,6 +8956,7 @@ type mqlStackitRedisInstance struct {
 	DashboardUrl       plugin.TValue[string]
 	ImageUrl           plugin.TValue[string]
 	Parameters         plugin.TValue[any]
+	InternetReachable  plugin.TValue[bool]
 }
 
 // createStackitRedisInstance creates a new instance of this resource
@@ -8390,6 +9040,12 @@ func (c *mqlStackitRedisInstance) GetParameters() *plugin.TValue[any] {
 	return &c.Parameters
 }
 
+func (c *mqlStackitRedisInstance) GetInternetReachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
+		return c.internetReachable()
+	})
+}
+
 // mqlStackitRabbitMq for the stackit.rabbitMq resource
 type mqlStackitRabbitMq struct {
 	MqlRuntime *plugin.Runtime
@@ -8467,6 +9123,7 @@ type mqlStackitRabbitMqInstance struct {
 	DashboardUrl       plugin.TValue[string]
 	ImageUrl           plugin.TValue[string]
 	Parameters         plugin.TValue[any]
+	InternetReachable  plugin.TValue[bool]
 }
 
 // createStackitRabbitMqInstance creates a new instance of this resource
@@ -8550,6 +9207,12 @@ func (c *mqlStackitRabbitMqInstance) GetParameters() *plugin.TValue[any] {
 	return &c.Parameters
 }
 
+func (c *mqlStackitRabbitMqInstance) GetInternetReachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
+		return c.internetReachable()
+	})
+}
+
 // mqlStackitLogMe for the stackit.logMe resource
 type mqlStackitLogMe struct {
 	MqlRuntime *plugin.Runtime
@@ -8622,6 +9285,7 @@ type mqlStackitLogMeInstance struct {
 	DashboardUrl       plugin.TValue[string]
 	ImageUrl           plugin.TValue[string]
 	Parameters         plugin.TValue[any]
+	InternetReachable  plugin.TValue[bool]
 }
 
 // createStackitLogMeInstance creates a new instance of this resource
@@ -8703,6 +9367,12 @@ func (c *mqlStackitLogMeInstance) GetImageUrl() *plugin.TValue[string] {
 
 func (c *mqlStackitLogMeInstance) GetParameters() *plugin.TValue[any] {
 	return &c.Parameters
+}
+
+func (c *mqlStackitLogMeInstance) GetInternetReachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
+		return c.internetReachable()
+	})
 }
 
 // mqlStackitSecretsManager for the stackit.secretsManager resource
@@ -9445,6 +10115,247 @@ func (c *mqlStackitTelemetryLink) GetRouter() *plugin.TValue[*mqlStackitTelemetr
 	})
 }
 
+// mqlStackitModelServing for the stackit.modelServing resource
+type mqlStackitModelServing struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitModelServingInternal it will be used here
+	Tokens plugin.TValue[[]any]
+	Models plugin.TValue[[]any]
+}
+
+// createStackitModelServing creates a new instance of this resource
+func createStackitModelServing(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitModelServing{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.modelServing", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitModelServing) MqlName() string {
+	return "stackit.modelServing"
+}
+
+func (c *mqlStackitModelServing) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitModelServing) GetTokens() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tokens, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.modelServing", c.__id, "tokens")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tokens()
+	})
+}
+
+func (c *mqlStackitModelServing) GetModels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Models, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.modelServing", c.__id, "models")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.models()
+	})
+}
+
+// mqlStackitModelServingToken for the stackit.modelServing.token resource
+type mqlStackitModelServingToken struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitModelServingTokenInternal it will be used here
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	State       plugin.TValue[string]
+	Region      plugin.TValue[string]
+	ValidUntil  plugin.TValue[*time.Time]
+}
+
+// createStackitModelServingToken creates a new instance of this resource
+func createStackitModelServingToken(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitModelServingToken{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.modelServing.token", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitModelServingToken) MqlName() string {
+	return "stackit.modelServing.token"
+}
+
+func (c *mqlStackitModelServingToken) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitModelServingToken) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitModelServingToken) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlStackitModelServingToken) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlStackitModelServingToken) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlStackitModelServingToken) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlStackitModelServingToken) GetValidUntil() *plugin.TValue[*time.Time] {
+	return &c.ValidUntil
+}
+
+// mqlStackitModelServingModel for the stackit.modelServing.model resource
+type mqlStackitModelServingModel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitModelServingModelInternal it will be used here
+	Id            plugin.TValue[string]
+	Name          plugin.TValue[string]
+	DisplayedName plugin.TValue[string]
+	Description   plugin.TValue[string]
+	Type          plugin.TValue[string]
+	Category      plugin.TValue[string]
+	Region        plugin.TValue[string]
+	Url           plugin.TValue[string]
+	Tags          plugin.TValue[[]any]
+	Skus          plugin.TValue[[]any]
+}
+
+// createStackitModelServingModel creates a new instance of this resource
+func createStackitModelServingModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitModelServingModel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.modelServing.model", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitModelServingModel) MqlName() string {
+	return "stackit.modelServing.model"
+}
+
+func (c *mqlStackitModelServingModel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitModelServingModel) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitModelServingModel) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlStackitModelServingModel) GetDisplayedName() *plugin.TValue[string] {
+	return &c.DisplayedName
+}
+
+func (c *mqlStackitModelServingModel) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlStackitModelServingModel) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlStackitModelServingModel) GetCategory() *plugin.TValue[string] {
+	return &c.Category
+}
+
+func (c *mqlStackitModelServingModel) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlStackitModelServingModel) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlStackitModelServingModel) GetTags() *plugin.TValue[[]any] {
+	return &c.Tags
+}
+
+func (c *mqlStackitModelServingModel) GetSkus() *plugin.TValue[[]any] {
+	return &c.Skus
+}
+
 // mqlStackitServiceAccount for the stackit.serviceAccount resource
 type mqlStackitServiceAccount struct {
 	MqlRuntime *plugin.Runtime
@@ -9602,6 +10513,7 @@ type mqlStackitAlbLoadBalancer struct {
 	TargetSecurityGroup                  plugin.TValue[any]
 	DisableTargetSecurityGroupAssignment plugin.TValue[bool]
 	Labels                               plugin.TValue[map[string]any]
+	Exposure                             plugin.TValue[*mqlStackitNetworkExposure]
 }
 
 // createStackitAlbLoadBalancer creates a new instance of this resource
@@ -9699,6 +10611,22 @@ func (c *mqlStackitAlbLoadBalancer) GetDisableTargetSecurityGroupAssignment() *p
 
 func (c *mqlStackitAlbLoadBalancer) GetLabels() *plugin.TValue[map[string]any] {
 	return &c.Labels
+}
+
+func (c *mqlStackitAlbLoadBalancer) GetExposure() *plugin.TValue[*mqlStackitNetworkExposure] {
+	return plugin.GetOrCompute[*mqlStackitNetworkExposure](&c.Exposure, func() (*mqlStackitNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.alb.loadBalancer", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
+	})
 }
 
 // mqlStackitKms for the stackit.kms resource

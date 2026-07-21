@@ -53,7 +53,7 @@ func newMqlAnsiblePlay(runtime *plugin.Runtime, id, baseDir string, p *play.Play
 		"becomeFlags":       llx.StringData(p.BecomeFlags),
 		"serial":            dictData(p.Serial),
 		"strategy":          llx.StringData(p.Strategy),
-		"maxFailPercentage": llx.IntData(p.MaxFailPercentage),
+		"maxFailPercentage": llx.IntData(p.MaxFailPercentageValue()),
 		"ignoreUnreachable": llx.BoolData(p.IgnoreUnreachable),
 		"anyErrorsFatal":    llx.BoolData(p.AnyErrorsFatal),
 		"gatherFacts":       llx.StringData(p.GatherFacts),

@@ -4,10 +4,36 @@
 package resources
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestParseResolvedConfCache(t *testing.T) {
+	tests := []struct {
+		name     string
+		content  string
+		fallback bool
+		want     bool
+	}{
+		{"cache disabled", "[Resolve]\nCache=no\n", true, false},
+		{"cache enabled", "[Resolve]\nCache=yes\n", false, true},
+		{"no-negative still caches", "[Resolve]\nCache=no-negative\n", false, true},
+		{"case-insensitive key and value", "[Resolve]\n  cache = NO \n", true, false},
+		{"commented out keeps fallback", "[Resolve]\n#Cache=no\n", true, true},
+		{"absent keeps fallback", "[Resolve]\nDNSSEC=yes\n", true, true},
+		{"last assignment wins", "[Resolve]\nCache=yes\nCache=no\n", true, false},
+		{"cache outside resolve section ignored", "[DHCPv4]\nCache=no\n", true, true},
+		{"cache after leaving resolve section ignored", "[Resolve]\nDNSSEC=yes\n[Network]\nCache=no\n", true, true},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := parseResolvedConfCache(strings.NewReader(tc.content), tc.fallback)
+			assert.Equal(t, tc.want, got)
+		})
+	}
+}
 
 func TestParseResolvectlGlobal_Basic(t *testing.T) {
 	input := `Global

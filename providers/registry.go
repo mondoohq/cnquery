@@ -82,7 +82,12 @@ func (r *MondooProviderRegistry) GetLatestVersion(ctx context.Context, name stri
 		return "", errors.Wrap(err, "failed to construct latest version URL")
 	}
 
-	res, err := client.Get(latestURL)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, latestURL, nil)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to build latest version request")
+	}
+
+	res, err := client.Do(req)
 	if err != nil {
 		return "", err
 	}

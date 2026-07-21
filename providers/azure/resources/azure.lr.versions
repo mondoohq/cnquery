@@ -89,6 +89,7 @@ azure.subscription.aksService.cluster.identityBinding.provisioningState 13.15.2
 azure.subscription.aksService.cluster.identityBindings 13.15.2
 azure.subscription.aksService.cluster.imageCleanerEnabled 11.4.28
 azure.subscription.aksService.cluster.imageCleanerIntervalHours 11.4.28
+azure.subscription.aksService.cluster.internetReachable 13.20.1
 azure.subscription.aksService.cluster.kubernetesVersion 9.0.1
 azure.subscription.aksService.cluster.location 9.0.1
 azure.subscription.aksService.cluster.name 9.0.1
@@ -1087,6 +1088,7 @@ azure.subscription.computeService.vm.dependencyAgentInstalled 13.12.2
 azure.subscription.computeService.vm.disablePasswordAuthentication 13.5.1
 azure.subscription.computeService.vm.enableAutomaticUpdates 13.5.1
 azure.subscription.computeService.vm.encryptionAtHost 11.4.28
+azure.subscription.computeService.vm.exposure 13.20.1
 azure.subscription.computeService.vm.extensions 9.0.1
 azure.subscription.computeService.vm.fipsEncryptionEnabled 13.8.2
 azure.subscription.computeService.vm.id 9.0.1
@@ -2683,6 +2685,7 @@ azure.subscription.mySqlService.flexibleServer.geoRedundantBackup 13.8.2
 azure.subscription.mySqlService.flexibleServer.highAvailabilityMode 13.8.2
 azure.subscription.mySqlService.flexibleServer.highAvailabilityState 13.8.2
 azure.subscription.mySqlService.flexibleServer.id 9.0.1
+azure.subscription.mySqlService.flexibleServer.internetReachable 13.20.1
 azure.subscription.mySqlService.flexibleServer.location 9.0.1
 azure.subscription.mySqlService.flexibleServer.name 9.0.1
 azure.subscription.mySqlService.flexibleServer.properties 9.0.1
@@ -2700,6 +2703,7 @@ azure.subscription.mySqlService.server.firewallRules 9.0.1
 azure.subscription.mySqlService.server.geoRedundantBackup 13.1.8
 azure.subscription.mySqlService.server.id 9.0.1
 azure.subscription.mySqlService.server.infrastructureEncryption 11.4.28
+azure.subscription.mySqlService.server.internetReachable 13.20.1
 azure.subscription.mySqlService.server.location 9.0.1
 azure.subscription.mySqlService.server.minimalTlsVersion 11.4.28
 azure.subscription.mySqlService.server.name 9.0.1
@@ -2832,6 +2836,11 @@ azure.subscription.networkService.ddosProtectionPlan.tags 13.3.3
 azure.subscription.networkService.ddosProtectionPlan.type 13.3.3
 azure.subscription.networkService.ddosProtectionPlan.virtualNetworks 13.3.3
 azure.subscription.networkService.ddosProtectionPlans 13.3.3
+azure.subscription.networkService.exposure 13.20.1
+azure.subscription.networkService.exposure.hasPublicIp 13.20.1
+azure.subscription.networkService.exposure.internetReachable 13.20.1
+azure.subscription.networkService.exposure.openIngressRules 13.20.1
+azure.subscription.networkService.exposure.securityGroupAllowsIngress 13.20.1
 azure.subscription.networkService.expressRouteCircuit 13.12.2
 azure.subscription.networkService.expressRouteCircuit.allowClassicOperations 13.12.2
 azure.subscription.networkService.expressRouteCircuit.authorization 13.12.2
@@ -3612,6 +3621,7 @@ azure.subscription.postgreSqlService.flexibleServer.geoBackupEncryptionKey 13.1.
 azure.subscription.postgreSqlService.flexibleServer.geoBackupEncryptionKeyStatus 11.4.28
 azure.subscription.postgreSqlService.flexibleServer.geoRedundantBackup 13.1.8
 azure.subscription.postgreSqlService.flexibleServer.id 11.0.9
+azure.subscription.postgreSqlService.flexibleServer.internetReachable 13.20.1
 azure.subscription.postgreSqlService.flexibleServer.location 11.0.9
 azure.subscription.postgreSqlService.flexibleServer.name 11.0.9
 azure.subscription.postgreSqlService.flexibleServer.passwordAuth 11.4.28
@@ -3632,6 +3642,7 @@ azure.subscription.postgreSqlService.server.firewallRules 9.0.1
 azure.subscription.postgreSqlService.server.geoRedundantBackup 13.1.8
 azure.subscription.postgreSqlService.server.id 9.0.1
 azure.subscription.postgreSqlService.server.infrastructureEncryption 11.4.28
+azure.subscription.postgreSqlService.server.internetReachable 13.20.1
 azure.subscription.postgreSqlService.server.location 9.0.1
 azure.subscription.postgreSqlService.server.minimalTlsVersion 11.4.28
 azure.subscription.postgreSqlService.server.name 9.0.1
@@ -4146,6 +4157,7 @@ azure.subscription.sqlService.server.failoverGroups 13.8.2
 azure.subscription.sqlService.server.firewallRules 9.0.1
 azure.subscription.sqlService.server.fullyQualifiedDomainName 11.4.28
 azure.subscription.sqlService.server.id 9.0.1
+azure.subscription.sqlService.server.internetReachable 13.20.1
 azure.subscription.sqlService.server.key 13.8.2
 azure.subscription.sqlService.server.key.autoRotationEnabled 13.8.2
 azure.subscription.sqlService.server.key.creationDate 13.8.2
@@ -4354,6 +4366,7 @@ azure.subscription.storageService.account.immutableStoragePolicyPeriodDays 13.10
 azure.subscription.storageService.account.immutableStoragePolicyState 13.10.2
 azure.subscription.storageService.account.isHnsEnabled 11.4.28
 azure.subscription.storageService.account.isLocalUserEnabled 11.4.28
+azure.subscription.storageService.account.isPublic 13.20.1
 azure.subscription.storageService.account.isSftpEnabled 11.4.28
 azure.subscription.storageService.account.keyExpirationPeriodInDays 13.5.1
 azure.subscription.storageService.account.kind 9.0.1

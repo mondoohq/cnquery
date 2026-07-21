@@ -179,6 +179,14 @@ microsoft.tenant @defaults("name") {
   id string
   // Service plans associated with the tenant
   assignedPlans []dict
+  // Enabled service families on the tenant
+  //
+  // Distinct list of `service` names from `assignedPlans` whose
+  // `capabilityStatus` is `Enabled`, sorted alphabetically. Use this to gate
+  // license-dependent checks without digging through the `assignedPlans` dicts
+  // — for example `microsoft.tenant.enabledServicePlans.contains("AADPremiumService")`
+  // to confirm Microsoft Entra ID P1/P2 is active.
+  enabledServicePlans() []string
   // Provisioned plan
   provisionedPlans []dict
   // Tenant creation date and time
@@ -2464,6 +2472,19 @@ private microsoft.rolemanagement.roleassignment @defaults("id principalId") {
   roleDefinition() microsoft.rolemanagement.roledefinition
   // Service principal ID
   principalId string
+  // Principal type
+  //
+  // Short directory type of the assigned principal, derived from its
+  // `@odata.type` — typically `user`, `group`, or `servicePrincipal`. Empty
+  // when the API does not return the principal type. Use it to scope
+  // privileged-role audits, e.g. flag direct `user` assignments to
+  // Global Administrator.
+  principalType string
+  // Principal display name
+  //
+  // Display name of the assigned principal as returned by the directory.
+  // Empty when the API does not return a display name.
+  principalName string
   // Service principal
   principal dict
 }

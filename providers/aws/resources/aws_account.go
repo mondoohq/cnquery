@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -22,7 +23,7 @@ import (
 
 type mqlAwsAccountInternal struct {
 	descLock    sync.Mutex
-	descFetched bool
+	descFetched atomic.Bool
 	descAccount *orgtypes.Account
 }
 
@@ -30,12 +31,12 @@ type mqlAwsAccountInternal struct {
 // DescribeAccount response. Returns (nil, nil) when the call is denied — the
 // caller is not in the management or a delegated administrator account.
 func (a *mqlAwsAccount) fetchOrgAccountDescription() (*orgtypes.Account, error) {
-	if a.descFetched {
+	if a.descFetched.Load() {
 		return a.descAccount, nil
 	}
 	a.descLock.Lock()
 	defer a.descLock.Unlock()
-	if a.descFetched {
+	if a.descFetched.Load() {
 		return a.descAccount, nil
 	}
 
@@ -47,13 +48,15 @@ func (a *mqlAwsAccount) fetchOrgAccountDescription() (*orgtypes.Account, error) 
 	})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
-			a.descFetched = true
+			a.descFetched.Store(true)
 			return nil, nil
 		}
 		return nil, err
 	}
-	a.descFetched = true
+	// set descAccount before the flag so the lock-free fast path can't observe
+	// descFetched == true with descAccount still unwritten.
 	a.descAccount = resp.Account
+	a.descFetched.Store(true)
 	return a.descAccount, nil
 }
 

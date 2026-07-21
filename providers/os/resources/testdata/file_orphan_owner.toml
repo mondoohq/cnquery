@@ -1,0 +1,15 @@
+[commands."getent passwd"]
+stdout = """root:x:0:0:root:/root:/bin/bash
+bin:x:1:1:bin:/bin:/sbin/nologin
+"""
+
+[commands."getent group"]
+stdout = """root:x:0:
+bin:x:1:
+"""
+
+[files."/etc/group"]
+path = "/etc/group"
+content = """root:x:0:
+bin:x:1:
+"""

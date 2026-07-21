@@ -5,12 +5,16 @@ package resources
 
 import (
 	"bufio"
+	"io"
 	"strings"
 	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 )
+
+const resolvedConfPath = "/etc/systemd/resolved.conf"
 
 func (r *mqlSystemdResolved) id() (string, error) {
 	return "systemd.resolved", nil
@@ -50,9 +54,58 @@ func (r *mqlSystemdResolved) resolveGlobal() (*resolvedGlobal, error) {
 	if ok {
 		parseResolvectlGlobal(stdout, g)
 	}
+
+	// `resolvectl status` does not report the cache setting, so resolve it from
+	// the authoritative config when available; otherwise the default stands.
+	if conn, ok := r.MqlRuntime.Connection.(shared.Connection); ok {
+		if fs := conn.FileSystem(); fs != nil {
+			if f, err := fs.Open(resolvedConfPath); err == nil {
+				defer f.Close()
+				g.cache = parseResolvedConfCache(f, g.cache)
+			}
+		}
+	}
+
 	r.fetched = true
 	r.cachedGlobal = g
 	return g, nil
+}
+
+// parseResolvedConfCache reads the `Cache=` directive from a
+// systemd-resolved.conf file. systemd accepts yes/no plus the special
+// `no-negative` value (which still caches positive answers). Unknown or
+// absent values leave the caller's fallback in place. The last matching
+// assignment wins, mirroring systemd's own last-one-wins parsing. The
+// directive is only honored inside the `[Resolve]` section so a `Cache=`
+// under any other section header is ignored.
+func parseResolvedConfCache(r io.Reader, fallback bool) bool {
+	result := fallback
+	inResolve := false
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || line[0] == '#' || line[0] == ';' {
+			continue
+		}
+		if line[0] == '[' {
+			inResolve = strings.EqualFold(line, "[Resolve]")
+			continue
+		}
+		if !inResolve {
+			continue
+		}
+		key, value, found := strings.Cut(line, "=")
+		if !found || !strings.EqualFold(strings.TrimSpace(key), "Cache") {
+			continue
+		}
+		switch strings.ToLower(strings.TrimSpace(value)) {
+		case "no", "false", "off", "0":
+			result = false
+		case "yes", "true", "on", "1", "no-negative":
+			result = true
+		}
+	}
+	return result
 }
 
 func (r *mqlSystemdResolved) dns() ([]any, error) {
@@ -155,9 +208,9 @@ type mqlSystemdResolvedInternal struct {
 //	       DNS Servers: 1.1.1.1 1.0.0.1
 //	        DNS Domain: corp.example.com ~example.com
 func parseResolvectlGlobal(stdout string, g *resolvedGlobal) {
-	// Default cache to true — systemd-resolved caches by default, and the
-	// `Cache` line only appears in some versions. The `Protocols` line is
-	// where modern resolvectl puts the cache state.
+	// Default cache to true — systemd-resolved caches by default. resolvectl
+	// status does not reliably report the cache setting, so the authoritative
+	// value is resolved from resolved.conf by the caller (resolveGlobal).
 	g.cache = true
 
 	scanner := bufio.NewScanner(strings.NewReader(stdout))

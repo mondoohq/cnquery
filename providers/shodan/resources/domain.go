@@ -115,6 +115,50 @@ func (r *mqlShodanDomain) nsrecords() ([]any, error) {
 	return nil, r.fetchBaseInformation()
 }
 
+func (r *mqlShodanDomain) hosts() ([]any, error) {
+	nsrecords := r.GetNsrecords()
+	if nsrecords.Error != nil {
+		return nil, nsrecords.Error
+	}
+
+	// A and AAAA records carry the IP addresses the domain and its subdomains
+	// resolve to. Map each unique address to a Shodan host so callers can
+	// traverse from a domain to host-level data (ports, vulnerabilities, ...).
+	hosts := []any{}
+	seen := map[string]struct{}{}
+	for _, raw := range nsrecords.Data {
+		record, ok := raw.(*mqlShodanNsrecord)
+		if !ok {
+			continue
+		}
+
+		switch record.Type.Data {
+		case "A", "AAAA":
+		default:
+			continue
+		}
+
+		ip := record.Value.Data
+		if ip == "" {
+			continue
+		}
+		if _, dup := seen[ip]; dup {
+			continue
+		}
+		seen[ip] = struct{}{}
+
+		host, err := NewResource(r.MqlRuntime, "shodan.host", map[string]*llx.RawData{
+			"ip": llx.StringData(ip),
+		})
+		if err != nil {
+			return nil, err
+		}
+		hosts = append(hosts, host)
+	}
+
+	return hosts, nil
+}
+
 func (r *mqlShodanNsrecord) id() (string, error) {
 	id := "shodan.nsrecord/" + r.Domain.Data
 	if r.Subdomain.Data != "" {

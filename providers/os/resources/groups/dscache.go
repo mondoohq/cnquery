@@ -56,7 +56,11 @@ func ParseDscacheutilResult(input io.Reader) ([]*Group, error) {
 		case "gid":
 			gid, err := strconv.ParseInt(m[2], 10, 0)
 			if err != nil {
-				log.Error().Err(err).Str("group", m[0]).Msg("could not parse gid")
+				// m[0] is the whole matched line, not the group name; log the
+				// group's name and the offending value instead. Skip recording
+				// a bogus ID/gid so the malformed entry is dropped by add().
+				log.Error().Err(err).Str("group", group.Name).Str("value", m[2]).Msg("could not parse gid")
+				continue
 			}
 			group.ID = m[2]
 			group.Gid = gid

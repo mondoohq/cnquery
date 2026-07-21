@@ -108,7 +108,7 @@ func initAwsCodebuildProject(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return args, nil, nil
 	}
 
-	if args["name"] == nil && args["region"] == nil {
+	if args["name"] == nil || args["region"] == nil {
 		return nil, nil, errors.New("name and region required to fetch codebuild project")
 	}
 

@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"strconv"
+
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
@@ -20,6 +22,17 @@ func (r *mqlDigitaloceanVpcPeering) vpcs() ([]interface{}, error) {
 }
 
 // ----- Kubernetes node pool -----
+
+func (r *mqlDigitaloceanKubernetesNode) droplet() (*mqlDigitaloceanDroplet, error) {
+	// The API returns the backing droplet's ID as a numeric string; it is
+	// empty until the node's droplet has been provisioned.
+	dropletID, err := strconv.ParseInt(r.cacheDropletID, 10, 64)
+	if err != nil || dropletID == 0 {
+		r.Droplet.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return dropletRef(r.MqlRuntime, dropletID, &r.Droplet)
+}
 
 func (r *mqlDigitaloceanKubernetesNodePool) cluster() (*mqlDigitaloceanKubernetesCluster, error) {
 	if r.ClusterId.Data == "" {
@@ -39,6 +52,60 @@ func (r *mqlDigitaloceanKubernetesNodePool) cluster() (*mqlDigitaloceanKubernete
 		return nil, nil
 	}
 	return cluster, nil
+}
+
+// ----- Droplet -----
+
+func (r *mqlDigitaloceanDroplet) volumes() ([]interface{}, error) {
+	parent, err := parentDigitalocean(r.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	return parent.volumesByIDs(r.cacheVolumeIDs)
+}
+
+func (r *mqlDigitaloceanDroplet) snapshots() ([]interface{}, error) {
+	parent, err := parentDigitalocean(r.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	ids := make([]string, len(r.cacheSnapshotIDs))
+	for i, id := range r.cacheSnapshotIDs {
+		ids[i] = strconv.Itoa(id)
+	}
+	return parent.snapshotsByIDs(ids)
+}
+
+func (r *mqlDigitaloceanDroplet) backups() ([]interface{}, error) {
+	parent, err := parentDigitalocean(r.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	return parent.imagesByIDs(r.cacheBackupIDs)
+}
+
+// ----- Load balancer -----
+
+func (r *mqlDigitaloceanLoadBalancer) project() (*mqlDigitaloceanProject, error) {
+	return projectRef(r.MqlRuntime, r.ProjectId.Data, &r.Project)
+}
+
+func (r *mqlDigitaloceanLoadBalancer) targetLoadBalancers() ([]interface{}, error) {
+	parent, err := parentDigitalocean(r.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	ids := make([]any, len(r.cacheTargetLoadBalancerIDs))
+	for i, id := range r.cacheTargetLoadBalancerIDs {
+		ids[i] = id
+	}
+	return parent.loadBalancerByUIDs(ids)
+}
+
+// ----- App Platform -----
+
+func (r *mqlDigitaloceanApp) project() (*mqlDigitaloceanProject, error) {
+	return projectRef(r.MqlRuntime, r.ProjectId.Data, &r.Project)
 }
 
 // ----- Reserved IP (v4) -----

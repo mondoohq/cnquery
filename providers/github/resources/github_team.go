@@ -97,6 +97,12 @@ func (g *mqlGithubTeam) members() ([]any, error) {
 	for {
 		members, resp, err := conn.Client().Teams.ListTeamMembersByID(conn.Context(), orgID, teamID, listOpts)
 		if err != nil {
+			// A team that's gone (deleted between list and access) or not
+			// visible to the token 404s; degrade to an empty member list
+			// rather than failing the whole query, like team.repositories().
+			if strings.Contains(err.Error(), "404") {
+				return nil, nil
+			}
 			return nil, err
 		}
 		allMembers = append(allMembers, members...)

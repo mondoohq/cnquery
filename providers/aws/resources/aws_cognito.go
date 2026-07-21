@@ -737,6 +737,11 @@ func (a *mqlAwsCognitoUserPool) domain() (*mqlAwsCognitoUserPoolDomain, error) {
 	dd := detail.DomainDescription
 	customConfig, _ := convert.JsonToDict(dd.CustomDomainConfig)
 
+	tlsSecurityPolicy := ""
+	if dd.CustomDomainConfig != nil {
+		tlsSecurityPolicy = string(dd.CustomDomainConfig.SecurityPolicy)
+	}
+
 	res, err := CreateResource(a.MqlRuntime, "aws.cognito.userPoolDomain", map[string]*llx.RawData{
 		"domain":                 llx.StringData(name),
 		"userPoolId":             llx.StringDataPtr(dd.UserPoolId),
@@ -745,6 +750,7 @@ func (a *mqlAwsCognitoUserPool) domain() (*mqlAwsCognitoUserPoolDomain, error) {
 		"cloudFrontDistribution": llx.StringDataPtr(dd.CloudFrontDistribution),
 		"s3Bucket":               llx.StringDataPtr(dd.S3Bucket),
 		"customDomainConfig":     llx.DictData(customConfig),
+		"tlsSecurityPolicy":      llx.StringData(tlsSecurityPolicy),
 		"version":                llx.StringDataPtr(dd.Version),
 	})
 	if err != nil {

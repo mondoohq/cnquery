@@ -873,7 +873,7 @@ func TestCompiler_Switch(t *testing.T) {
 					// will already be available for any blocks
 					llx.RefPrimitiveV2((1 << 32) | 1),
 				}, types.Ref),
-				llx.BoolPrimitive(true),
+				llx.UnsetPrimitive,
 				llx.FunctionPrimitive(3 << 32),
 				llx.ArrayPrimitive([]*llx.Primitive{
 					// TODO: this shouldn't be needed
@@ -1019,6 +1019,69 @@ func TestCompiler_NamedBindingScope(t *testing.T) {
 			}
 		}
 	})
+}
+
+// TestCompiler_MapBodyKeepsResourceType is a regression test for
+// https://github.com/mondoohq/mql/issues/8474
+//
+// The body of `.map(...)` returns a value the map collects; it is not rendered
+// on its own. postCompile used to display-expand a resource(-list) entrypoint
+// into an anonymous `{}` block, flipping the body's type from `[]file` to
+// `[]block`. The mapped (and later flattened) elements then lost their `file`
+// type, so a `.path`/`.size`/`.permissions` access on the result failed at
+// runtime with "cannot find functions for type 'block'". This covers both the
+// array map (compileArrayMap) and the resource-list map (compileResourceMap).
+func TestCompiler_MapBodyKeepsResourceType(t *testing.T) {
+	tests := []struct {
+		name  string
+		query string
+	}{
+		{"array map", `["/etc/pam.d"].map(files.find(from: _, type: "file").list).flat()`},
+		{"resource-list map", `users.map(file("/etc/hosts")).flat()`},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			compileT(t, tc.query, func(res *llx.CodeBundle) {
+				code := res.CodeV2
+
+				var mapChunk *llx.Chunk
+				for _, b := range code.Blocks {
+					for _, ch := range b.Chunks {
+						if ch.Id == "map" && ch.Call == llx.Chunk_FUNCTION {
+							mapChunk = ch
+						}
+					}
+				}
+				require.NotNil(t, mapChunk, "expected a map chunk")
+
+				// The mapped element type must stay a resource (the map collects
+				// `file`/`[]file`), never the anonymous `block` type.
+				elem := types.Type(mapChunk.Function.Type).Child()
+				for elem.IsArray() {
+					elem = elem.Child()
+				}
+				assert.True(t, elem.IsResource(),
+					"map element type must stay a resource, got "+types.Type(mapChunk.Function.Type).Label())
+
+				// The map body block's single entrypoint must still be the
+				// collected value, not a display `{}` block that strips the type.
+				bodyRef, ok := mapChunk.Function.Args[1].RefV2()
+				require.True(t, ok, "map should carry a function block reference")
+				body := code.Block(bodyRef)
+				require.Len(t, body.Entrypoints, 1)
+				ep := code.Chunk(body.Entrypoints[0])
+				assert.NotEqual(t, "{}", ep.Id,
+					"map body entrypoint must not be an auto-expanded display block")
+				epType := ep.Type()
+				for epType.IsArray() {
+					epType = epType.Child()
+				}
+				assert.True(t, epType.IsResource(),
+					"map body entrypoint must keep its resource type, got "+ep.Type().Label())
+			})
+		})
+	}
 }
 
 func TestCompiler_ArrayContains(t *testing.T) {
@@ -2198,7 +2261,7 @@ func TestSuggestions(t *testing.T) {
 		{
 			// resource suggestions
 			"ssh",
-			[]string{"macos.sharing", "os.unix.sshd", "sshd", "sshd.config", "windows.security.health"},
+			[]string{"macos.sharing", "os.unix.sshd", "sshd", "sshd.config", "windows.powershell", "windows.security.health"},
 			errors.New("cannot find resource for identifier 'ssh'"),
 			nil,
 		},

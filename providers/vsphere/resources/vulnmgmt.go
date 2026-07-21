@@ -54,18 +54,13 @@ func (v *mqlVulnmgmt) lastAssessment() (*time.Time, error) {
 		return v.setUnavailableLastAssessment(errors.New("no update time available"))
 	}
 
-	var lastUpdateTime *time.Time
-	if lastUpdate != "" {
-		parsedLastUpdateTime, err := time.Parse(time.RFC3339, lastUpdate)
-		if err != nil {
-			return nil, errors.New("could not parse last update time: " + lastUpdate)
-		}
-		lastUpdateTime = &parsedLastUpdateTime
-	} else {
-		lastUpdateTime = &llx.NeverFutureTime
+	// lastUpdate is guaranteed non-empty here (the empty case returned above).
+	parsedLastUpdateTime, err := time.Parse(time.RFC3339, lastUpdate)
+	if err != nil {
+		return nil, errors.New("could not parse last update time: " + lastUpdate)
 	}
 
-	return lastUpdateTime, nil
+	return &parsedLastUpdateTime, nil
 }
 
 func (v *mqlVulnmgmt) cves() ([]any, error) {
@@ -178,6 +173,20 @@ func (v *mqlVulnmgmt) populateData() error {
 		mqlVulnCves[i] = mqlVulnCve
 	}
 
+	mqlVulnPackages := make([]any, len(vulnReport.Packages))
+	for i, p := range vulnReport.Packages {
+		mqlVulnPackage, err := CreateResource(v.MqlRuntime, "vuln.package", map[string]*llx.RawData{
+			"name":      llx.StringData(p.Name),
+			"version":   llx.StringData(p.Version),
+			"available": llx.StringData(p.Available),
+			"arch":      llx.StringData(p.Arch),
+		})
+		if err != nil {
+			return err
+		}
+		mqlVulnPackages[i] = mqlVulnPackage
+	}
+
 	id := fmt.Sprintf("%d-%s", vulnReport.Stats.Score.Value, vulnReport.Stats.Score.Vector)
 	res, err := CreateResource(v.MqlRuntime, "audit.cvss", map[string]*llx.RawData{
 		"__id":   llx.StringData(id),
@@ -191,6 +200,7 @@ func (v *mqlVulnmgmt) populateData() error {
 
 	v.Advisories = plugin.TValue[[]any]{Data: mqlVulAdvisories, State: plugin.StateIsSet}
 	v.Cves = plugin.TValue[[]any]{Data: mqlVulnCves, State: plugin.StateIsSet}
+	v.Packages = plugin.TValue[[]any]{Data: mqlVulnPackages, State: plugin.StateIsSet}
 	v.Stats = plugin.TValue[*mqlAuditCvss]{Data: statsCvssScore, State: plugin.StateIsSet}
 
 	return nil

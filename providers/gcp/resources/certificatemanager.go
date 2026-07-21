@@ -93,7 +93,7 @@ func (g *mqlGcpProjectCertificateManagerService) certificates() ([]any, error) {
 		return nil, err
 	}
 	ctx := context.Background()
-	client, err := certificatemanager.NewClient(ctx, option.WithCredentials(creds))
+	client, err := certificatemanager.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -198,7 +198,7 @@ func (g *mqlGcpProjectCertificateManagerService) certificateMaps() ([]any, error
 		return nil, err
 	}
 	ctx := context.Background()
-	client, err := certificatemanager.NewClient(ctx, option.WithCredentials(creds))
+	client, err := certificatemanager.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -261,7 +261,7 @@ func (g *mqlGcpProjectCertificateManagerServiceCertificateMap) entries() ([]any,
 		return nil, err
 	}
 	ctx := context.Background()
-	client, err := certificatemanager.NewClient(ctx, option.WithCredentials(creds))
+	client, err := certificatemanager.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -326,7 +326,7 @@ func (g *mqlGcpProjectCertificateManagerService) dnsAuthorizations() ([]any, err
 		return nil, err
 	}
 	ctx := context.Background()
-	client, err := certificatemanager.NewClient(ctx, option.WithCredentials(creds))
+	client, err := certificatemanager.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -395,7 +395,7 @@ func (g *mqlGcpProjectCertificateManagerService) certificateIssuanceConfigs() ([
 		return nil, err
 	}
 	ctx := context.Background()
-	client, err := certificatemanager.NewClient(ctx, option.WithCredentials(creds))
+	client, err := certificatemanager.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -465,7 +465,7 @@ func (g *mqlGcpProjectCertificateManagerService) trustConfigs() ([]any, error) {
 		return nil, err
 	}
 	ctx := context.Background()
-	client, err := certificatemanager.NewClient(ctx, option.WithCredentials(creds))
+	client, err := certificatemanager.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -687,7 +687,7 @@ func initGcpProjectCertificateManagerServiceCertificate(runtime *plugin.Runtime,
 		return nil, nil, err
 	}
 	ctx := context.Background()
-	client, err := certificatemanager.NewClient(ctx, option.WithCredentials(creds))
+	client, err := certificatemanager.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -731,7 +731,7 @@ func initGcpProjectCertificateManagerServiceDnsAuthorization(runtime *plugin.Run
 		return nil, nil, err
 	}
 	ctx := context.Background()
-	client, err := certificatemanager.NewClient(ctx, option.WithCredentials(creds))
+	client, err := certificatemanager.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -792,7 +792,7 @@ func initGcpProjectCertificateManagerServiceCertificateIssuanceConfig(runtime *p
 		return nil, nil, err
 	}
 	ctx := context.Background()
-	client, err := certificatemanager.NewClient(ctx, option.WithCredentials(creds))
+	client, err := certificatemanager.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, nil, err
 	}

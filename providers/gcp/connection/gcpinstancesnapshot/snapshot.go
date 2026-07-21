@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
@@ -27,6 +28,10 @@ const (
 	createdValue   = "cnspec"
 )
 
+// invalidDiskNameChars matches any character that is not allowed in a GCP disk
+// name (i.e. anything outside [a-z0-9-]).
+var invalidDiskNameChars = regexp.MustCompile(`[^a-z0-9-]`)
+
 func NewInstanceUrl(projectID, zone, instanceName string) string {
 	return fmt.Sprintf(
 		"projects/%s/zones/%s/instances/%s", projectID, zone, instanceName,
@@ -37,6 +42,46 @@ func NewSourceDiskUrl(projectID, zone, diskName string) string {
 	return fmt.Sprintf(
 		"projects/%s/zones/%s/disks/%s", projectID, zone, diskName,
 	)
+}
+
+// newDiskName builds a GCP-compliant temporary disk name for the scanner's
+// clone/snapshot disk. See buildDiskName.
+func newDiskName(instanceName string) string {
+	return buildDiskName(instanceName, time.Now())
+}
+
+// buildDiskName produces a name matching GCP's rule
+// [a-z]([-a-z0-9]{0,61}[a-z0-9])? with a max length of 63. It lowercases and
+// replaces invalid characters in the instance name and truncates it so the
+// full "cnspec-<instance>-<timestamp>" name fits.
+func buildDiskName(instanceName string, t time.Time) string {
+	prefix := "cnspec-"
+	timestamp := t.Format("20060102t150405") // 15 chars, all valid characters
+
+	// sanitize the instance name: lowercase, and replace any character that is
+	// not in [a-z0-9-] with '-'
+	sanitized := invalidDiskNameChars.ReplaceAllString(strings.ToLower(instanceName), "-")
+
+	// reserve room for the prefix and the "-"+timestamp suffix, then truncate
+	// the sanitized instance name so the assembled name fits within 63 chars
+	avail := max(63-len(prefix)-1-len(timestamp), 0)
+	if len(sanitized) > avail {
+		sanitized = sanitized[:avail]
+	}
+
+	// trim trailing '-' from the (possibly truncated) instance name so the
+	// assembled name reads cleanly
+	sanitized = strings.TrimRight(sanitized, "-")
+
+	// if nothing usable remains, drop the separator to avoid a double dash
+	if sanitized == "" {
+		return prefix + timestamp
+	}
+
+	// the timestamp always ends in a digit, so the assembled name ends in
+	// [a-z0-9] and starts with the "cnspec-" prefix (a letter) — both required
+	// by GCP's rule
+	return prefix + sanitized + "-" + timestamp
 }
 
 func NewSnapshotCreator() (*SnapshotCreator, error) {

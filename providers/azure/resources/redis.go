@@ -147,7 +147,9 @@ func (a *mqlAzureSubscriptionCacheService) redis() ([]any, error) {
 				return nil, err
 			}
 			mqlRedis := cacheData.(*mqlAzureSubscriptionCacheServiceRedisInstance)
-			mqlRedis.cachePrivateEndpointConnections = cache.Properties.PrivateEndpointConnections
+			if cache.Properties != nil {
+				mqlRedis.cachePrivateEndpointConnections = cache.Properties.PrivateEndpointConnections
+			}
 			caches = append(caches, mqlRedis)
 		}
 	}
@@ -156,6 +158,13 @@ func (a *mqlAzureSubscriptionCacheService) redis() ([]any, error) {
 }
 
 func createRedisInstanceRawData(runtime *plugin.Runtime, cache *armredis.ResourceInfo) (map[string]*llx.RawData, error) {
+	// Properties is a nullable pointer that the field reads below dereference
+	// throughout; normalize to an empty struct so a cache returned without
+	// properties doesn't panic here (the callers reach this before their own
+	// nil guards).
+	if cache.Properties == nil {
+		cache.Properties = &armredis.Properties{}
+	}
 	properties, err := convert.JsonToDict(cache)
 	if err != nil {
 		return nil, err

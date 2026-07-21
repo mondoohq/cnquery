@@ -10,6 +10,7 @@ shodan.apiPlan.telnet 11.0.0
 shodan.apiPlan.unlocked 11.0.0
 shodan.apiPlan.unlockedLeft 11.0.0
 shodan.domain 11.0.0
+shodan.domain.hosts 13.1.2
 shodan.domain.name 11.0.0
 shodan.domain.nsrecords 11.0.0
 shodan.domain.subdomains 11.0.0

@@ -597,3 +597,108 @@ webhooks:
     sideEffects: None
     admissionReviewVersions: ["v1"]
     failurePolicy: Ignore
+---
+# --- Storage cross-references -------------------------------------------------
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: fast
+provisioner: kubernetes.io/no-provisioner
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-data
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: fast
+  claimRef:
+    name: data-claim
+    namespace: prod
+  hostPath:
+    path: /tmp/pv-data
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-unbound
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes: ["ReadWriteOnce"]
+  hostPath:
+    path: /tmp/pv-unbound
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-claim
+  namespace: prod
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: fast
+  volumeName: pv-data
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: missing-sc-claim
+  namespace: prod
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: nonexistent
+  resources:
+    requests:
+      storage: 1Gi
+---
+# --- Ingress cross-references -------------------------------------------------
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: nginx
+spec:
+  controller: k8s.io/ingress-nginx
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web
+  namespace: prod
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api
+                port:
+                  number: 80
+---
+# --- Gateway API cross-references ---------------------------------------------
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: istio
+spec:
+  controllerName: istio.io/gateway-controller
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: public-gw
+  namespace: prod
+spec:
+  gatewayClassName: istio
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80

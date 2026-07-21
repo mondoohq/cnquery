@@ -525,7 +525,7 @@ func (a *mqlAwsEventbridgeScheduleTargetEcsParameters) taskDefinition() (*mqlAws
 		a.TaskDefinition.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	res, err := NewResource(a.MqlRuntime, "aws.ecs.taskdefinition", map[string]*llx.RawData{
+	res, err := NewResource(a.MqlRuntime, "aws.ecs.taskDefinition", map[string]*llx.RawData{
 		"arn": llx.StringData(a.cacheTaskDefArn),
 	})
 	if err != nil {

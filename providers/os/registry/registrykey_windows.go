@@ -43,6 +43,22 @@ func parseRegistryKeyPath(path string) (registry.Key, string, error) {
 	return registry.LOCAL_MACHINE, "", errors.New("invalid registry key hive: " + path)
 }
 
+// IsUserHiveLoaded reports whether the given user's registry hive is currently
+// loaded under HKEY_USERS. This is true while the user has an active logon
+// session; for logged-off users the hive must be loaded from NTUSER.DAT (see
+// RegistryHandler.LoadUserHive) before it can be read.
+func IsUserHiveLoaded(sid string) bool {
+	if sid == "" {
+		return false
+	}
+	regKey, err := registry.OpenKey(registry.USERS, sid, registry.QUERY_VALUE)
+	if err != nil {
+		return false
+	}
+	regKey.Close()
+	return true
+}
+
 func GetNativeRegistryKeyItems(path string) ([]RegistryKeyItem, error) {
 	log.Debug().Str("path", path).Msg("search registry key values using native registry api")
 	key, path, err := parseRegistryKeyPath(path)

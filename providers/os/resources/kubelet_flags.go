@@ -65,6 +65,21 @@ func mergeFlagsIntoConfig(kubeletConfig map[string]any, flags map[string]any) er
 	return nil
 }
 
+// parseKeyValueListFlag parses a comma-separated `key=value` flag list into a
+// map. Entries without a `=` are skipped rather than indexed out of range,
+// which previously panicked on malformed input (e.g. a trailing comma).
+func parseKeyValueListFlag(s string) map[string]string {
+	res := map[string]string{}
+	for _, item := range strings.Split(s, ",") {
+		kv := strings.SplitN(strings.TrimSpace(item), "=", 2)
+		if len(kv) < 2 {
+			continue
+		}
+		res[kv[0]] = kv[1]
+	}
+	return res
+}
+
 // mergeDeprecatedFlagsIntoConfig merges deprecated cli flags into the kubelet config
 // It only takes care of deprecated flags.
 // This is a separate function in hope we can get rid of it in the future
@@ -94,10 +109,13 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]any, flags map[stri
 	if _, ok := flags["manifest-url"]; ok {
 		kubeletConfig["staticPodURL"] = flags["manifest-url"]
 	}
-	if _, ok := flags["manifest-url-header"]; ok {
+	if v, ok := flags["manifest-url-header"]; ok {
 		urlHeaders := map[string]string{}
-		for _, urlHeader := range strings.Split(flags["	"].(string), ",") {
-			urlHeaderSplit := strings.Split(urlHeader, ":")
+		for _, urlHeader := range strings.Split(v.(string), ",") {
+			urlHeaderSplit := strings.SplitN(urlHeader, ":", 2)
+			if len(urlHeaderSplit) < 2 {
+				continue
+			}
 			urlHeaders[urlHeaderSplit[0]] = urlHeaderSplit[1]
 		}
 		data, err := convert.JsonToDict(urlHeaders)
@@ -115,82 +133,90 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]any, flags map[stri
 	if _, ok := flags["read-only-port"]; ok {
 		kubeletConfig["readOnlyPort"] = flags["read-only-port"]
 	}
-	if _, ok := flags["anonymous-auth"]; ok {
+	if v, ok := flags["anonymous-auth"]; ok {
 		auth := map[string]any{}
-		if _, ok := kubeletConfig["authentication"]; ok {
-			auth = kubeletConfig["authentication"].(map[string]any)
+		if existing, ok := kubeletConfig["authentication"].(map[string]any); ok {
+			auth = existing
 		}
 		anon := map[string]any{}
-		if _, ok := auth["anonymous"]; ok {
-			anon = auth["anonymous"].(map[string]any)
+		if existing, ok := auth["anonymous"].(map[string]any); ok {
+			anon = existing
 		}
-		anon["enabled"] = flags["anonymous-auth"]
-	}
-	if _, ok := flags["authentication-token-webhook"]; ok {
-		auth := map[string]any{}
-		if _, ok := kubeletConfig["authentication"]; ok {
-			auth = kubeletConfig["authentication"].(map[string]any)
-		}
-		webhook := map[string]any{}
-		if _, ok := auth["webhook"]; ok {
-			webhook = auth["webhook"].(map[string]any)
-		}
-		webhook["enabled"] = flags["authentication-token-webhook"]
-	}
-	if _, ok := flags["authentication-token-webhook-cache-ttl"]; ok {
-		auth := map[string]any{}
-		if _, ok := kubeletConfig["authentication"]; ok {
-			auth = kubeletConfig["authentication"].(map[string]any)
-		}
-		webhook := map[string]any{}
-		if _, ok := auth["webhook"]; ok {
-			webhook = auth["webhook"].(map[string]any)
-		}
-		webhook["cacheTTL"] = flags["authentication-token-webhook-cache-ttl"].(string)
+		anon["enabled"] = v
+		auth["anonymous"] = anon
 		kubeletConfig["authentication"] = auth
 	}
-	if _, ok := flags["client-ca-file"]; ok {
+	if v, ok := flags["authentication-token-webhook"]; ok {
 		auth := map[string]any{}
-		if _, ok := kubeletConfig["authentication"]; ok {
-			auth = kubeletConfig["authentication"].(map[string]any)
+		if existing, ok := kubeletConfig["authentication"].(map[string]any); ok {
+			auth = existing
+		}
+		webhook := map[string]any{}
+		if existing, ok := auth["webhook"].(map[string]any); ok {
+			webhook = existing
+		}
+		webhook["enabled"] = v
+		auth["webhook"] = webhook
+		kubeletConfig["authentication"] = auth
+	}
+	if v, ok := flags["authentication-token-webhook-cache-ttl"]; ok {
+		auth := map[string]any{}
+		if existing, ok := kubeletConfig["authentication"].(map[string]any); ok {
+			auth = existing
+		}
+		webhook := map[string]any{}
+		if existing, ok := auth["webhook"].(map[string]any); ok {
+			webhook = existing
+		}
+		webhook["cacheTTL"] = v
+		auth["webhook"] = webhook
+		kubeletConfig["authentication"] = auth
+	}
+	if v, ok := flags["client-ca-file"]; ok {
+		auth := map[string]any{}
+		if existing, ok := kubeletConfig["authentication"].(map[string]any); ok {
+			auth = existing
 		}
 		x509 := map[string]any{}
-		if _, ok := auth["x509"]; ok {
-			x509 = auth["x509"].(map[string]any)
+		if existing, ok := auth["x509"].(map[string]any); ok {
+			x509 = existing
 		}
-		x509["clientCAFile"] = flags["client-ca-file"]
+		x509["clientCAFile"] = v
+		auth["x509"] = x509
 		kubeletConfig["authentication"] = auth
 	}
-	if _, ok := flags["authorization-mode"]; ok {
+	if v, ok := flags["authorization-mode"]; ok {
 		authz := map[string]any{}
-		if _, ok := kubeletConfig["authorization"]; ok {
-			authz = kubeletConfig["authorization"].(map[string]any)
+		if existing, ok := kubeletConfig["authorization"].(map[string]any); ok {
+			authz = existing
 		}
-		authz["mode"] = flags["authorization-mode"]
+		authz["mode"] = v
 		kubeletConfig["authorization"] = authz
 	}
-	if _, ok := flags["authorization-webhook-cache-authorized-ttl"]; ok {
+	if v, ok := flags["authorization-webhook-cache-authorized-ttl"]; ok {
 		authz := map[string]any{}
-		if _, ok := kubeletConfig["authorization"]; ok {
-			authz = kubeletConfig["authorization"].(map[string]any)
+		if existing, ok := kubeletConfig["authorization"].(map[string]any); ok {
+			authz = existing
 		}
 		webhook := map[string]any{}
-		if _, ok := authz["webhook"]; ok {
-			webhook = authz["webhook"].(map[string]any)
+		if existing, ok := authz["webhook"].(map[string]any); ok {
+			webhook = existing
 		}
-		webhook["cacheAuthorizedTTL"] = flags["authorization-webhook-cache-authorized-ttl"]
+		webhook["cacheAuthorizedTTL"] = v
+		authz["webhook"] = webhook
 		kubeletConfig["authorization"] = authz
 	}
-	if _, ok := flags["authorization-webhook-cache-unauthorized-ttl"]; ok {
+	if v, ok := flags["authorization-webhook-cache-unauthorized-ttl"]; ok {
 		authz := map[string]any{}
-		if _, ok := kubeletConfig["authorization"]; ok {
-			authz = kubeletConfig["authorization"].(map[string]any)
+		if existing, ok := kubeletConfig["authorization"].(map[string]any); ok {
+			authz = existing
 		}
 		webhook := map[string]any{}
-		if _, ok := authz["webhook"]; ok {
-			webhook = authz["webhook"].(map[string]any)
+		if existing, ok := authz["webhook"].(map[string]any); ok {
+			webhook = existing
 		}
-		webhook["cacheUnauthorizedTTL"] = flags["authorization-webhook-cache-unauthorized-ttl"]
+		webhook["cacheUnauthorizedTTL"] = v
+		authz["webhook"] = webhook
 		kubeletConfig["authorization"] = authz
 	}
 	if _, ok := flags["tls-cert-file"]; ok {
@@ -271,12 +297,7 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]any, flags map[stri
 		kubeletConfig["volumeStatsAggPeriod"] = flags["volume-stats-agg-period"]
 	}
 	if _, ok := flags["feature-gates"]; ok {
-		featureFlags := map[string]string{}
-		for _, feature := range strings.Split(flags["feature-gates"].(string), ",") {
-			featureSplit := strings.Split(feature, "=")
-			featureFlags[featureSplit[0]] = featureSplit[1]
-		}
-		data, err := convert.JsonToDict(featureFlags)
+		data, err := convert.JsonToDict(parseKeyValueListFlag(flags["feature-gates"].(string)))
 		if err != nil {
 			return err
 		}
@@ -304,12 +325,7 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]any, flags map[stri
 		kubeletConfig["cpuManagerPolicy"] = flags["cpu-manager-policy"]
 	}
 	if _, ok := flags["cpu-manager-policy-options"]; ok {
-		cpuPolicies := map[string]string{}
-		for _, cpuPolicy := range strings.Split(flags["cpu-manager-policy-options"].(string), ",") {
-			cpuPolicySplit := strings.Split(cpuPolicy, "=")
-			cpuPolicies[cpuPolicySplit[0]] = cpuPolicySplit[1]
-		}
-		data, err := convert.JsonToDict(cpuPolicies)
+		data, err := convert.JsonToDict(parseKeyValueListFlag(flags["cpu-manager-policy-options"].(string)))
 		if err != nil {
 			return err
 		}
@@ -319,12 +335,7 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]any, flags map[stri
 		kubeletConfig["cpuManagerReconcilePeriod"] = flags["cpu-manager-reconcile-period"]
 	}
 	if _, ok := flags["qos-reserved"]; ok {
-		qosReserved := map[string]string{}
-		for _, qosReserve := range strings.Split(flags["qos-reserved"].(string), ",") {
-			qosReserveSplit := strings.Split(qosReserve, "=")
-			qosReserved[qosReserveSplit[0]] = qosReserveSplit[1]
-		}
-		data, err := convert.JsonToDict(qosReserved)
+		data, err := convert.JsonToDict(parseKeyValueListFlag(flags["qos-reserved"].(string)))
 		if err != nil {
 			return err
 		}
@@ -436,12 +447,7 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]any, flags map[stri
 		kubeletConfig["evictionSoft"] = data
 	}
 	if _, ok := flags["eviction-soft-grace-period"]; ok {
-		softPeriods := map[string]string{}
-		for _, softPeriod := range strings.Split(flags["eviction-soft-grace-period"].(string), ",") {
-			softPeriodSplit := strings.Split(softPeriod, "=")
-			softPeriods[softPeriodSplit[0]] = softPeriodSplit[1]
-		}
-		data, err := convert.JsonToDict(softPeriods)
+		data, err := convert.JsonToDict(parseKeyValueListFlag(flags["eviction-soft-grace-period"].(string)))
 		if err != nil {
 			return err
 		}
@@ -454,12 +460,7 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]any, flags map[stri
 		kubeletConfig["evictionMaxPodGracePeriod"] = flags["eviction-max-pod-grace-period"]
 	}
 	if _, ok := flags["eviction-minimum-reclaim"]; ok {
-		minReclaims := map[string]string{}
-		for _, minReclaim := range strings.Split(flags["eviction-minimum-reclaim"].(string), ",") {
-			minReclaimSplit := strings.Split(minReclaim, "=")
-			minReclaims[minReclaimSplit[0]] = minReclaimSplit[1]
-		}
-		data, err := convert.JsonToDict(minReclaims)
+		data, err := convert.JsonToDict(parseKeyValueListFlag(flags["eviction-minimum-reclaim"].(string)))
 		if err != nil {
 			return err
 		}
@@ -478,24 +479,14 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]any, flags map[stri
 		kubeletConfig["topologyManagerScope"] = flags["topology-manager-scope"]
 	}
 	if _, ok := flags["system-reserved"]; ok {
-		systemReserved := map[string]string{}
-		for _, systemReserve := range strings.Split(flags["system-reserved"].(string), ",") {
-			systemReserveSplit := strings.Split(systemReserve, "=")
-			systemReserved[systemReserveSplit[0]] = systemReserveSplit[1]
-		}
-		data, err := convert.JsonToDict(systemReserved)
+		data, err := convert.JsonToDict(parseKeyValueListFlag(flags["system-reserved"].(string)))
 		if err != nil {
 			return err
 		}
 		kubeletConfig["systemReserved"] = data
 	}
 	if _, ok := flags["kube-reserved"]; ok {
-		kubeReserved := map[string]string{}
-		for _, kubeReserve := range strings.Split(flags["kube-reserved"].(string), ",") {
-			kubeReserveSplit := strings.Split(kubeReserve, "=")
-			kubeReserved[kubeReserveSplit[0]] = kubeReserveSplit[1]
-		}
-		data, err := convert.JsonToDict(kubeReserved)
+		data, err := convert.JsonToDict(parseKeyValueListFlag(flags["kube-reserved"].(string)))
 		if err != nil {
 			return err
 		}

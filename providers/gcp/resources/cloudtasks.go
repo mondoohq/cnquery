@@ -54,7 +54,7 @@ func (g *mqlGcpProjectCloudTasksService) queues() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := cloudtasks.NewClient(ctx, option.WithCredentials(creds))
+	client, err := cloudtasks.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -96,16 +96,22 @@ func (g *mqlGcpProjectCloudTasksService) queues() ([]any, error) {
 				return nil, err
 			}
 
-			mqlQueue, err := CreateResource(g.MqlRuntime, "gcp.project.cloudTasksService.queue", map[string]*llx.RawData{
+			queueArgs := map[string]*llx.RawData{
 				"projectId":                llx.StringData(projectId),
 				"name":                     llx.StringData(queue.Name),
 				"state":                    llx.StringData(queue.State.String()),
 				"rateLimits":               llx.DictData(rateLimits),
-				"retryConfig":              llx.ResourceData(retryConfig, "gcp.retryConfig"),
 				"appEngineRoutingOverride": llx.DictData(appEngineRouting),
-			})
+			}
+			if retryConfig != nil {
+				queueArgs["retryConfig"] = llx.ResourceData(retryConfig, "gcp.retryConfig")
+			}
+			mqlQueue, err := CreateResource(g.MqlRuntime, "gcp.project.cloudTasksService.queue", queueArgs)
 			if err != nil {
 				return nil, err
+			}
+			if retryConfig == nil {
+				mqlQueue.(*mqlGcpProjectCloudTasksServiceQueue).RetryConfig.State = plugin.StateIsNull | plugin.StateIsSet
 			}
 			res = append(res, mqlQueue)
 		}
@@ -155,13 +161,13 @@ func (g *mqlGcpProjectCloudTasksServiceQueue) iamPolicy() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := cloudtasks.NewClient(ctx, option.WithCredentials(creds))
+	client, err := cloudtasks.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
 	defer client.Close()
 
-	policy, err := client.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: name})
+	policy, err := client.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: name, Options: &iampb.GetPolicyOptions{RequestedPolicyVersion: 3}})
 	if err != nil {
 		if s, ok := status.FromError(err); ok && s.Code() == codes.PermissionDenied {
 			return nil, nil

@@ -12,6 +12,7 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/mtu"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/portsecurity"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/provider"
+	qospolicies "github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/qos/policies"
 	neutronquotas "github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/quotas"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
@@ -25,17 +26,22 @@ import (
 // ---- openstack.network ----
 
 type mqlOpenstackNetworkInternal struct {
-	cacheSubnetIDs []string
-	cacheProjectID string
+	cacheSubnetIDs   []string
+	cacheProjectID   string
+	cacheQosPolicyID string
 }
 
 // networkExt is the union of the base network with provider:*, router:external,
-// and mtu extensions so a single list call returns all the fields we expose.
+// mtu, port-security, and qos extensions so a single list call returns all the
+// fields we expose. Clouds without a given extension simply leave its fields at
+// their zero value.
 type networkExt struct {
 	networks.Network
 	provider.NetworkProviderExt
 	external.NetworkExternalExt
 	mtu.NetworkMTUExt
+	portsecurity.PortSecurityExt
+	qospolicies.QoSPolicyExt
 }
 
 // portExt is the base port plus the port-security extension; it lets one list
@@ -109,6 +115,7 @@ func (o *mqlOpenstack) networks() ([]any, error) {
 			"providerNetworkType":     llx.StringData(n.NetworkType),
 			"providerPhysicalNetwork": llx.StringData(n.PhysicalNetwork),
 			"providerSegmentationId":  llx.IntData(parseSegmentationID(n.SegmentationID)),
+			"portSecurityEnabled":     llx.BoolData(n.PortSecurityEnabled),
 			"createdAt":               llx.TimeDataPtr(timePtr(n.CreatedAt)),
 			"updatedAt":               llx.TimeDataPtr(timePtr(n.UpdatedAt)),
 		})
@@ -118,6 +125,7 @@ func (o *mqlOpenstack) networks() ([]any, error) {
 		mqlNetwork := res.(*mqlOpenstackNetwork)
 		mqlNetwork.cacheSubnetIDs = n.Subnets
 		mqlNetwork.cacheProjectID = n.ProjectID
+		mqlNetwork.cacheQosPolicyID = n.QoSPolicyID
 		out = append(out, mqlNetwork)
 	}
 	return out, nil
@@ -145,6 +153,20 @@ func (r *mqlOpenstackNetwork) subnets() ([]any, error) {
 
 func (r *mqlOpenstackNetwork) project() (*mqlOpenstackProject, error) {
 	return resolveProject(r.MqlRuntime, r.cacheProjectID, &r.Project)
+}
+
+func (r *mqlOpenstackNetwork) qosPolicy() (*mqlOpenstackQosPolicy, error) {
+	if r.cacheQosPolicyID == "" {
+		r.QosPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.qosPolicy", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheQosPolicyID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackQosPolicy), nil
 }
 
 // parseSegmentationID coerces the provider:segmentation_id field into int64.
@@ -367,6 +389,7 @@ func (o *mqlOpenstack) routers() ([]any, error) {
 			"description":         llx.StringData(rt.Description),
 			"tags":                stringSliceData(rt.Tags),
 			"externalGatewayInfo": llx.DictData(gatewayInfoToDict(rt.GatewayInfo)),
+			"enableSnat":          llx.BoolData(rt.GatewayInfo.EnableSNAT != nil && *rt.GatewayInfo.EnableSNAT),
 			"routes":              dictSliceData(routesToDict(rt.Routes)),
 			"createdAt":           llx.TimeDataPtr(timePtr(rt.CreatedAt)),
 			"updatedAt":           llx.TimeDataPtr(timePtr(rt.UpdatedAt)),
@@ -502,6 +525,7 @@ func (o *mqlOpenstack) ports() ([]any, error) {
 			"macAddress":            llx.StringData(p.MACAddress),
 			"deviceOwner":           llx.StringData(p.DeviceOwner),
 			"fixedIps":              dictSliceData(fixedIPsToDict(p.FixedIPs)),
+			"allowedAddressPairs":   dictSliceData(allowedAddressPairsToDict(p.AllowedAddressPairs)),
 			"portSecurityEnabled":   llx.BoolData(p.PortSecurityEnabled),
 			"propagateUplinkStatus": llx.BoolData(p.PropagateUplinkStatus),
 			"description":           llx.StringData(p.Description),
@@ -563,6 +587,17 @@ func fixedIPsToDict(in []ports.IP) []any {
 		out = append(out, map[string]any{
 			"subnet_id":  ip.SubnetID,
 			"ip_address": ip.IPAddress,
+		})
+	}
+	return out
+}
+
+func allowedAddressPairsToDict(in []ports.AddressPair) []any {
+	out := make([]any, 0, len(in))
+	for _, pair := range in {
+		out = append(out, map[string]any{
+			"ip_address":  pair.IPAddress,
+			"mac_address": pair.MACAddress,
 		})
 	}
 	return out
@@ -779,7 +814,17 @@ func (r *mqlOpenstackSecurityGroup) id() (string, error) {
 func initOpenstackSecurityGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := stringArg(args, "id")
 	if !ok || id == "" {
-		return args, nil, nil
+		// On a discovered openstack-security-group asset the connection is
+		// scoped to a single group; resolve it when the caller passes no id, so
+		// a bare `openstack.securityGroup` query works on that platform. A root
+		// (project/domain/system) scope has no scoped group, so fall back to the
+		// bare empty resource as before.
+		sgID := conn(runtime).SecurityGroupID()
+		if sgID == "" {
+			return args, nil, nil
+		}
+		id = sgID
+		args["id"] = llx.StringData(id)
 	}
 	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
 	if err != nil {
@@ -839,12 +884,58 @@ func initOpenstackSecurityGroup(runtime *plugin.Runtime, args map[string]*llx.Ra
 	return args, mqlSG, nil
 }
 
+// newMqlOpenstackSecurityGroup maps a Neutron security group to its MQL
+// resource, including embedded rules and the cached project id used by the
+// project() accessor.
+func newMqlOpenstackSecurityGroup(runtime *plugin.Runtime, sg *groups.SecGroup) (*mqlOpenstackSecurityGroup, error) {
+	ruleResources, err := buildSecurityGroupRules(runtime, sg)
+	if err != nil {
+		return nil, err
+	}
+	res, err := CreateResource(runtime, "openstack.securityGroup", map[string]*llx.RawData{
+		"__id":        llx.StringData("openstack.securityGroup/" + sg.ID),
+		"id":          llx.StringData(sg.ID),
+		"name":        llx.StringData(sg.Name),
+		"description": llx.StringData(sg.Description),
+		"stateful":    llx.BoolData(sg.Stateful),
+		"tags":        stringSliceData(sg.Tags),
+		"createdAt":   llx.TimeDataPtr(timePtr(sg.CreatedAt)),
+		"updatedAt":   llx.TimeDataPtr(timePtr(sg.UpdatedAt)),
+		"rules":       llx.ArrayData(ruleResources, types.Resource("openstack.securityGroup.rule")),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlSG := res.(*mqlOpenstackSecurityGroup)
+	mqlSG.cacheProjectID = sg.ProjectID
+	return mqlSG, nil
+}
+
 func (o *mqlOpenstack) securityGroups() ([]any, error) {
 	c := conn(o.MqlRuntime)
 	client, err := c.NetworkClient()
 	if err != nil {
 		return nil, err
 	}
+
+	// On a discovered openstack-security-group asset the connection is scoped to
+	// a single group; return just that one (fetched directly) so per-asset checks
+	// operate on it without listing the whole project.
+	if sgID := c.SecurityGroupID(); sgID != "" {
+		sg, err := groups.Get(ctx(), client, sgID).Extract()
+		if err != nil {
+			if translateGetError(err) == nil {
+				return []any{}, nil
+			}
+			return nil, err
+		}
+		mqlSG, err := newMqlOpenstackSecurityGroup(o.MqlRuntime, sg)
+		if err != nil {
+			return nil, err
+		}
+		return []any{mqlSG}, nil
+	}
+
 	pages, err := groups.List(client, groups.ListOpts{}).AllPages(ctx())
 	if err != nil {
 		if translateOpenstackError(err) == nil {
@@ -874,27 +965,10 @@ func (o *mqlOpenstack) securityGroups() ([]any, error) {
 
 	out := make([]any, 0, len(items))
 	for i := range items {
-		sg := &items[i]
-		ruleResources, err := buildSecurityGroupRules(o.MqlRuntime, sg)
+		mqlSG, err := newMqlOpenstackSecurityGroup(o.MqlRuntime, &items[i])
 		if err != nil {
 			return nil, err
 		}
-		res, err := CreateResource(o.MqlRuntime, "openstack.securityGroup", map[string]*llx.RawData{
-			"__id":        llx.StringData("openstack.securityGroup/" + sg.ID),
-			"id":          llx.StringData(sg.ID),
-			"name":        llx.StringData(sg.Name),
-			"description": llx.StringData(sg.Description),
-			"stateful":    llx.BoolData(sg.Stateful),
-			"tags":        stringSliceData(sg.Tags),
-			"createdAt":   llx.TimeDataPtr(timePtr(sg.CreatedAt)),
-			"updatedAt":   llx.TimeDataPtr(timePtr(sg.UpdatedAt)),
-			"rules":       llx.ArrayData(ruleResources, types.Resource("openstack.securityGroup.rule")),
-		})
-		if err != nil {
-			return nil, err
-		}
-		mqlSG := res.(*mqlOpenstackSecurityGroup)
-		mqlSG.cacheProjectID = sg.ProjectID
 		out = append(out, mqlSG)
 	}
 	return out, nil
@@ -1066,4 +1140,8 @@ func (o *mqlOpenstack) networkQuotaSet() (*mqlOpenstackNetworkQuotaSet, error) {
 		return nil, err
 	}
 	return res.(*mqlOpenstackNetworkQuotaSet), nil
+}
+
+func (r *mqlOpenstackNetworkQuotaSet) project() (*mqlOpenstackProject, error) {
+	return resolveProject(r.MqlRuntime, r.ProjectId.Data, &r.Project)
 }

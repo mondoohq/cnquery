@@ -17,6 +17,7 @@ import (
 	"github.com/aws/smithy-go"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/digitalocean/connection"
 	"go.mondoo.com/mql/v13/types"
@@ -43,6 +44,64 @@ const bucketConcurrency = 8
 
 func (r *mqlDigitaloceanSpacesBucket) id() (string, error) {
 	return "digitalocean.spacesBucket/" + r.Region.Data + "/" + r.Name.Data, nil
+}
+
+// initDigitaloceanSpacesBucket resolves a single bucket — either from
+// explicit name/region args (digitalocean.spacesBucket(name: "...",
+// region: "...")) or from a connected digitalocean-spaces-bucket asset,
+// whose name and region the discovery step stamped on the connection
+// options. A bucket is addressed by (region, name) on the S3-compatible
+// API, so both are required.
+func initDigitaloceanSpacesBucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	conn := runtime.Connection.(*connection.DigitaloceanConnection)
+
+	name := ""
+	if a, ok := args["name"]; ok {
+		name, _ = a.Value.(string)
+	}
+	region := ""
+	if a, ok := args["region"]; ok {
+		region, _ = a.Value.(string)
+	}
+	if name == "" {
+		name = conn.Conf.Options[connection.OptionSpacesBucket]
+	}
+	if region == "" {
+		region = conn.Conf.Options[connection.OptionSpacesRegion]
+	}
+	if name == "" || region == "" {
+		return nil, nil, errors.New("digitalocean.spacesBucket requires name and region (or a connected digitalocean-spaces-bucket asset)")
+	}
+	if _, _, ok := conn.SpacesCredentials(); !ok {
+		return nil, nil, errors.New("DIGITALOCEAN_SPACES_KEY and DIGITALOCEAN_SPACES_SECRET must be set to audit Spaces buckets")
+	}
+
+	client, err := conn.SpacesClient(region)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Look up the bucket summary in its region so createdAt is
+	// preserved; fall back to a name-only summary if the listing is
+	// unavailable.
+	summary := s3types.Bucket{Name: aws.String(name)}
+	if out, err := client.ListBuckets(context.Background(), &s3.ListBucketsInput{}); err == nil {
+		for _, b := range out.Buckets {
+			if aws.ToString(b.Name) == name {
+				summary = b
+				break
+			}
+		}
+	}
+
+	res, err := newSpacesBucket(runtime, client, region, summary)
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, res.(plugin.Resource), nil
 }
 
 // bucketRef carries the (region, client, summary) tuple from the
@@ -124,7 +183,7 @@ func fetchSpacesBucketDetails(r *mqlDigitalocean, refs []bucketRef) ([]interface
 	for i, ref := range refs {
 		idx, ref := i, ref
 		jobs = append(jobs, jobpool.NewJob(func() (jobpool.JobResult, error) {
-			res, err := newSpacesBucket(r, ref.client, ref.region, ref.b)
+			res, err := newSpacesBucket(r.MqlRuntime, ref.client, ref.region, ref.b)
 			if err != nil {
 				return nil, err
 			}
@@ -151,7 +210,7 @@ func fetchSpacesBucketDetails(r *mqlDigitalocean, refs []bucketRef) ([]interface
 // Each call tolerates the "not configured" S3 error codes so an
 // un-customized bucket still produces a resource with sensible nil
 // defaults.
-func newSpacesBucket(r *mqlDigitalocean, client *s3.Client, region string, b s3types.Bucket) (interface{}, error) {
+func newSpacesBucket(runtime *plugin.Runtime, client *s3.Client, region string, b s3types.Bucket) (interface{}, error) {
 	ctx := context.Background()
 	name := aws.ToString(b.Name)
 
@@ -292,7 +351,7 @@ func newSpacesBucket(r *mqlDigitalocean, client *s3.Client, region string, b s3t
 		return nil, err
 	}
 
-	return CreateResource(r.MqlRuntime, "digitalocean.spacesBucket", map[string]*llx.RawData{
+	return CreateResource(runtime, "digitalocean.spacesBucket", map[string]*llx.RawData{
 		"name":                 llx.StringData(name),
 		"region":               llx.StringData(region),
 		"createdAt":            llx.TimeDataPtr(createdAt),

@@ -27,7 +27,14 @@ func transformError(err error) error {
 	oDataErr, ok := err.(*odataerrors.ODataError)
 	if ok && oDataErr != nil {
 		if err := oDataErr.GetErrorEscaped(); err != nil {
-			return errors.Newf("error while performing request. Code: %s, Message: %s", *err.GetCode(), *err.GetMessage())
+			code, msg := "", ""
+			if c := err.GetCode(); c != nil {
+				code = *c
+			}
+			if m := err.GetMessage(); m != nil {
+				msg = *m
+			}
+			return errors.Newf("error while performing request. Code: %s, Message: %s", code, msg)
 		}
 	}
 	return err

@@ -196,6 +196,38 @@ func (c *mqlNetwork) primaryIPv6() (llx.RawIP, error) {
 	return res, nil
 }
 
+func (c *mqlNetwork) neighbors() ([]any, error) {
+	log.Debug().Msg("os.network> neighbors")
+	conn := c.MqlRuntime.Connection.(shared.Connection)
+	platform := conn.Asset().Platform
+
+	neighbors, err := networki.Neighbors(conn, platform)
+	if err != nil {
+		log.Error().Err(err).Msg("unable to detect network neighbors")
+		c.Neighbors = plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
+		return nil, nil
+	}
+
+	resources := make([]any, 0, len(neighbors))
+	for _, nb := range neighbors {
+		if nb.IP == "" {
+			continue
+		}
+		resource, err := CreateResource(c.MqlRuntime, "networkNeighbor", map[string]*llx.RawData{
+			"__id":      llx.StringData(nb.Interface + "/" + nb.IP),
+			"ip":        llx.IPData(llx.ParseIP(nb.IP)),
+			"mac":       llx.StringData(nb.MAC),
+			"interface": llx.StringData(nb.Interface),
+			"state":     llx.StringData(nb.State),
+		})
+		if err != nil {
+			return nil, err
+		}
+		resources = append(resources, resource)
+	}
+	return resources, nil
+}
+
 func (c *mqlNetwork) routes() (*mqlNetworkRoutes, error) {
 	log.Debug().Msg("os.network> routes")
 	conn := c.MqlRuntime.Connection.(shared.Connection)

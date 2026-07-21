@@ -118,7 +118,7 @@ func (g *mqlGcpProjectBigtableService) instances() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	iac, err := bigtable.NewInstanceAdminClient(ctx, projectId, option.WithCredentials(creds))
+	iac, err := bigtable.NewInstanceAdminClient(ctx, projectId, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +202,7 @@ func (g *mqlGcpProjectBigtableServiceInstance) clusters() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	iac, err := bigtable.NewInstanceAdminClient(ctx, projectId, option.WithCredentials(creds))
+	iac, err := bigtable.NewInstanceAdminClient(ctx, projectId, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -324,7 +324,7 @@ func (g *mqlGcpProjectBigtableServiceInstance) iamPolicy() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	iac, err := bigtable.NewInstanceAdminClient(ctx, projectId, option.WithCredentials(creds))
+	iac, err := bigtable.NewInstanceAdminClient(ctx, projectId, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -376,7 +376,7 @@ func (g *mqlGcpProjectBigtableServiceInstance) tables() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	ac, err := bigtable.NewAdminClient(ctx, projectId, instanceName, option.WithCredentials(creds))
+	ac, err := bigtable.NewAdminClient(ctx, projectId, instanceName, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -493,7 +493,7 @@ func (g *mqlGcpProjectBigtableServiceInstance) appProfiles() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	iac, err := bigtable.NewInstanceAdminClient(ctx, projectId, option.WithCredentials(creds))
+	iac, err := bigtable.NewInstanceAdminClient(ctx, projectId, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -581,7 +581,7 @@ func (g *mqlGcpProjectBigtableServiceInstance) backups() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	iac, err := bigtable.NewInstanceAdminClient(ctx, projectId, option.WithCredentials(creds))
+	iac, err := bigtable.NewInstanceAdminClient(ctx, projectId, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -597,7 +597,7 @@ func (g *mqlGcpProjectBigtableServiceInstance) backups() ([]any, error) {
 	}
 
 	// For each cluster, list backups
-	ac, err := bigtable.NewAdminClient(ctx, projectId, instanceName, option.WithCredentials(creds))
+	ac, err := bigtable.NewAdminClient(ctx, projectId, instanceName, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}

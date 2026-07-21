@@ -252,7 +252,14 @@ func listRoleManagementPolicyRules(runtime *plugin.Runtime, policyID string, cre
 		return nil, nil
 	}
 
-	for _, rule := range rulesResult.GetValue() {
+	// Follow @odata.nextLink so policies with more than one page of rules are
+	// fully enumerated rather than truncated to the first page.
+	rules, err := iterate[models.UnifiedRoleManagementPolicyRuleable](ctx, rulesResult, graphClient.GetAdapter(), models.CreateUnifiedRoleManagementPolicyRuleCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, rule := range rules {
 		if rule.GetId() == nil {
 			continue
 		}

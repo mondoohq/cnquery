@@ -10,6 +10,7 @@ import (
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	"go.mondoo.com/mql/v13/providers/os/resources/groups"
 )
@@ -179,7 +180,7 @@ func (x *mqlGroups) findID(id int64) (*mqlGroup, error) {
 
 	res, ok := x.groupsByID[id]
 	if !ok {
-		return nil, errors.New("cannot find group for uid " + strconv.Itoa(int(id)))
+		return nil, resources.NotFoundError{Resource: "group", ID: strconv.Itoa(int(id))}
 	}
 	return res, nil
 }

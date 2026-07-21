@@ -28,6 +28,24 @@ func TestParseProcessStatus(t *testing.T) {
 	assert.Equal(t, "bash", processStatus.Executable, "detected process name")
 }
 
+func TestParseProcessStatus_PidAndPPidDistinct(t *testing.T) {
+	// Pid and PPid must be parsed into their own fields; previously the PPid
+	// line was written into Pid, corrupting Pid and leaving PPid at 0.
+	status := "Name:\tsshd\n" +
+		"State:\tS (sleeping)\n" +
+		"Tgid:\t4242\n" +
+		"Ngid:\t0\n" +
+		"Pid:\t4242\n" +
+		"PPid:\t1\n"
+
+	processStatus, err := ParseProcessStatus(bytes.NewBufferString(status))
+	require.NoError(t, err)
+	require.NotNil(t, processStatus)
+
+	assert.Equal(t, int64(4242), processStatus.Pid, "Pid keeps the process id")
+	assert.Equal(t, int64(1), processStatus.PPid, "PPid holds the parent process id")
+}
+
 func TestParseProcessCmdline(t *testing.T) {
 	trans, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/process-pid1.toml"))
 	require.NoError(t, err)

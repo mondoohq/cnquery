@@ -1,0 +1,72 @@
+# Copyright Mondoo, Inc. 2024, 2026
+# SPDX-License-Identifier: BUSL-1.1
+#
+# Fixture for the securityContext hardening predicates (usesUnconfinedAppArmor,
+# hasUnsafeSysctls, usesUnmaskedProcMount) across a Pod and a Deployment, which
+# resolve their pod spec through different accessors.
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: prod
+---
+# Violates all three hardening dimensions at once.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: violator
+  namespace: prod
+spec:
+  securityContext:
+    sysctls:
+      - name: kernel.msgmax
+        value: "65536"
+  containers:
+    - name: app
+      image: nginx:1.27
+      securityContext:
+        appArmorProfile:
+          type: Unconfined
+        procMount: Unmasked
+status:
+  phase: Running
+---
+# Compliant pod: confined AppArmor, default procMount, no unsafe sysctls.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: clean
+  namespace: prod
+spec:
+  containers:
+    - name: app
+      image: nginx:1.27
+      securityContext:
+        appArmorProfile:
+          type: RuntimeDefault
+status:
+  phase: Running
+---
+# Deployment whose template runs Unconfined AppArmor, to exercise the controller
+# spec accessor.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy-violator
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: deploy-violator
+  template:
+    metadata:
+      labels:
+        app: deploy-violator
+    spec:
+      containers:
+        - name: app
+          image: nginx:1.27
+          securityContext:
+            appArmorProfile:
+              type: Unconfined

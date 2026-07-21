@@ -228,6 +228,8 @@ shodan.domain @defaults("name") {
   subdomains() []string
   // DNS NS records
   nsrecords() []shodan.nsrecord
+  // Hosts the domain and its subdomains resolve to, from A and AAAA records
+  hosts() []shodan.host
 }
 
 // Shodan Search Engine DNS NS record

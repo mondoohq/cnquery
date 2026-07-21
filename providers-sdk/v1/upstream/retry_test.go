@@ -1,0 +1,130 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package upstream
+
+import (
+	"context"
+	"errors"
+	"net/http"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.mondoo.com/ranger-rpc/codes"
+	"go.mondoo.com/ranger-rpc/status"
+)
+
+func TestRetryableRPCError(t *testing.T) {
+	tests := []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{"nil", nil, false},
+		{"unavailable", status.Error(codes.Unavailable, "down"), true},
+		{"deadline", status.Error(codes.DeadlineExceeded, "slow"), true},
+		{"resource exhausted", status.Error(codes.ResourceExhausted, "throttled"), true},
+		{"aborted", status.Error(codes.Aborted, "conflict"), true},
+		{"plain transport error (unknown)", errors.New("connection reset"), true},
+		{"unauthenticated", status.Error(codes.Unauthenticated, "no creds"), false},
+		{"permission denied", status.Error(codes.PermissionDenied, "nope"), false},
+		{"invalid argument", status.Error(codes.InvalidArgument, "bad"), false},
+		{"not found", status.Error(codes.NotFound, "missing"), false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, RetryableRPCError(tt.err))
+		})
+	}
+}
+
+func TestRetryableHTTPStatus(t *testing.T) {
+	assert.True(t, RetryableHTTPStatus(http.StatusTooManyRequests))
+	assert.True(t, RetryableHTTPStatus(http.StatusInternalServerError))
+	assert.True(t, RetryableHTTPStatus(http.StatusBadGateway))
+	assert.False(t, RetryableHTTPStatus(http.StatusOK))
+	assert.False(t, RetryableHTTPStatus(http.StatusBadRequest))
+	assert.False(t, RetryableHTTPStatus(http.StatusUnauthorized))
+	assert.False(t, RetryableHTTPStatus(http.StatusForbidden))
+}
+
+func TestRetryAfter(t *testing.T) {
+	mk := func(v string) http.Header {
+		h := http.Header{}
+		if v != "" {
+			h.Set("Retry-After", v)
+		}
+		return h
+	}
+	assert.Equal(t, 5*time.Second, RetryAfter(mk("5")))
+	assert.Equal(t, time.Duration(0), RetryAfter(mk("")))
+	assert.Equal(t, time.Duration(0), RetryAfter(mk("Wed, 21 Oct 2026 07:28:00 GMT"))) // HTTP-date form unsupported
+	assert.Equal(t, time.Duration(0), RetryAfter(mk("-1")))
+}
+
+func TestWithRetry_SucceedsImmediately(t *testing.T) {
+	calls := 0
+	err := WithRetry(context.Background(), "op", func() (bool, time.Duration, error) {
+		calls++
+		return false, 0, nil
+	})
+	require.NoError(t, err)
+	assert.Equal(t, 1, calls)
+}
+
+func TestWithRetry_RetriesThenSucceeds(t *testing.T) {
+	calls := 0
+	err := WithRetry(context.Background(), "op", func() (bool, time.Duration, error) {
+		calls++
+		if calls < 3 {
+			return true, time.Nanosecond, errors.New("transient")
+		}
+		return false, 0, nil
+	})
+	require.NoError(t, err)
+	assert.Equal(t, 3, calls)
+}
+
+func TestWithRetry_NonRetryableFailsFast(t *testing.T) {
+	calls := 0
+	err := WithRetry(context.Background(), "op", func() (bool, time.Duration, error) {
+		calls++
+		return false, 0, errors.New("permanent")
+	})
+	require.Error(t, err)
+	assert.Equal(t, 1, calls, "non-retryable error must not retry")
+}
+
+func TestWithRetry_ExhaustsAttempts(t *testing.T) {
+	calls := 0
+	err := WithRetry(context.Background(), "op", func() (bool, time.Duration, error) {
+		calls++
+		return true, time.Nanosecond, errors.New("always transient")
+	})
+	require.Error(t, err)
+	assert.Equal(t, DefaultRetryAttempts, calls)
+}
+
+func TestWithRetry_ContextCancelled(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	calls := 0
+	err := WithRetry(ctx, "op", func() (bool, time.Duration, error) {
+		calls++
+		cancel() // cancel before the backoff wait
+		return true, time.Hour, errors.New("transient")
+	})
+	require.ErrorIs(t, err, context.Canceled)
+	assert.Equal(t, 1, calls)
+}
+
+func TestRetryRPC_FailsFastOnPermanent(t *testing.T) {
+	calls := 0
+	err := RetryRPC(context.Background(), "rpc", func() error {
+		calls++
+		return status.Error(codes.Unauthenticated, "no creds")
+	})
+	require.Error(t, err)
+	assert.Equal(t, 1, calls, "permanent RPC error must not retry")
+}

@@ -38,8 +38,11 @@ func newMqlRecommendation(runtime *plugin.Runtime, item *recommenderpb.Recommend
 	priority := item.Priority.String()
 	state, _ := convert.JsonToDict(item.StateInfo)
 
-	// /projects/{projectid}/locations/{zone}/recommenders/{recommender}/recommendations/{id}
+	// projects/{projectid}/locations/{zone}/recommenders/{recommender}/recommendations/{id}
 	values := strings.Split(item.Name, "/")
+	if len(values) < 8 {
+		return nil, fmt.Errorf("unexpected recommendation name format: %q", item.Name)
+	}
 
 	res, err := CreateResource(runtime, "gcp.recommendation", map[string]*llx.RawData{
 		"id":               llx.StringData(values[7]),
@@ -124,7 +127,7 @@ func (g *mqlGcpProject) recommendations() ([]any, error) {
 		return nil, err
 	}
 
-	c, err := recommender.NewClient(ctx, option.WithCredentials(credentials))
+	c, err := recommender.NewClient(ctx, option.WithCredentials(credentials), connection.GRPCClientTraceOption())
 	if err != nil {
 		log.Info().Err(err).Msg("could not create client")
 		return nil, err

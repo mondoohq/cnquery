@@ -146,6 +146,25 @@ func TestParseGrubCfgEntriesBraceOnNextLine(t *testing.T) {
 	assert.Contains(t, entries[0].Initrd, "initrd.img")
 }
 
+func TestParseGrubCfgEntriesBlankLineBeforeBrace(t *testing.T) {
+	// A blank line between `menuentry` and the opening brace must not cause the
+	// entry to be flushed before its linux/initrd lines are read.
+	input := `menuentry 'Test Entry'
+
+{
+	linux /vmlinuz root=/dev/sda1 ro
+	initrd /initrd.img
+}
+`
+	entries, err := ParseGrubCfgEntries(strings.NewReader(input))
+	require.NoError(t, err)
+	require.Len(t, entries, 1)
+
+	assert.Equal(t, "Test Entry", entries[0].Title)
+	assert.Contains(t, entries[0].Cmdline, "vmlinuz")
+	assert.Contains(t, entries[0].Initrd, "initrd.img")
+}
+
 func TestParseGrubCfgEntriesDuplicateTitles(t *testing.T) {
 	input := `menuentry 'Ubuntu' {
 	linux /vmlinuz-5.4 root=/dev/sda1 ro

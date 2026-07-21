@@ -137,7 +137,9 @@ func (t *mqlSystemdTimer) persistent() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return props["Persistent"] == "yes", nil
+	// `systemctl show` normalizes booleans to yes/no, but the filesystem-based
+	// path passes the unit file's raw value through, which may be true/1/on.
+	return parseYesNo(props["Persistent"], false), nil
 }
 
 // =============================================================================
@@ -280,7 +282,9 @@ func (s *mqlSystemdSocket) accept() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return props["Accept"] == "yes", nil
+	// `systemctl show` normalizes booleans to yes/no, but the filesystem-based
+	// path passes the unit file's raw value through, which may be true/1/on.
+	return parseYesNo(props["Accept"], false), nil
 }
 
 func (s *mqlSystemdSocket) listenAddresses() ([]any, error) {

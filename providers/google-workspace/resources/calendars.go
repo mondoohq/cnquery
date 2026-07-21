@@ -74,7 +74,7 @@ func (g *mqlGoogleworkspaceCalendar) acl() ([]any, error) {
 				scopeValue = a.Scope.Value
 			}
 			scope, err := CreateResource(g.MqlRuntime, "googleworkspace.calendar.aclRule.scope", map[string]*llx.RawData{
-				"__id":  llx.StringData(a.Id + scopeType + scopeValue),
+				"__id":  llx.StringData(a.Id + "/" + scopeType + "/" + scopeValue),
 				"type":  llx.StringData(scopeType),
 				"value": llx.StringData(scopeValue),
 			})

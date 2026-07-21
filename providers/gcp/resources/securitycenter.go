@@ -8,6 +8,7 @@ import (
 
 	securitycenter "cloud.google.com/go/securitycenter/apiv1"
 	sccpb "cloud.google.com/go/securitycenter/apiv1/securitycenterpb"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
@@ -44,7 +45,7 @@ func newSCCClient(conn *connection.GcpConnection) (*securitycenter.Client, error
 	if err != nil {
 		return nil, err
 	}
-	return securitycenter.NewClient(context.Background(), option.WithCredentials(creds))
+	return securitycenter.NewClient(context.Background(), option.WithCredentials(creds), connection.GRPCClientTraceOption())
 }
 
 // listSCCSources lists Security Command Center sources for a given parent.
@@ -489,6 +490,7 @@ func (g *mqlGcpProject) sccFindings() ([]any, error) {
 		return nil, err
 	}
 	if !serviceEnabled {
+		log.Debug().Str("service", service_securitycenter).Msg("gcp service is not enabled, skipping")
 		return nil, nil
 	}
 

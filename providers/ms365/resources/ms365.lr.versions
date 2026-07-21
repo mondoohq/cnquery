@@ -866,6 +866,8 @@ microsoft.rolemanagement.roleassignment 9.0.0
 microsoft.rolemanagement.roleassignment.id 9.0.0
 microsoft.rolemanagement.roleassignment.principal 9.0.0
 microsoft.rolemanagement.roleassignment.principalId 9.0.0
+microsoft.rolemanagement.roleassignment.principalName 13.7.2
+microsoft.rolemanagement.roleassignment.principalType 13.7.2
 microsoft.rolemanagement.roleassignment.roleDefinition 13.3.1
 microsoft.rolemanagement.roleassignment.roleDefinitionId 9.0.0
 microsoft.rolemanagement.roledefinition 9.0.0
@@ -1072,6 +1074,7 @@ microsoft.tenant.brandingInfo.useTransparentLightbox 11.1.76
 microsoft.tenant.countryLetterCode 11.2.1
 microsoft.tenant.createdAt 11.0.29
 microsoft.tenant.createdDateTime 11.0.29
+microsoft.tenant.enabledServicePlans 13.7.2
 microsoft.tenant.formsSettings 11.0.29
 microsoft.tenant.id 11.0.29
 microsoft.tenant.name 11.0.29

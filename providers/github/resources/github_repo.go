@@ -623,6 +623,9 @@ func (g *mqlGithubBranch) protectionRules() (*mqlGithubBranchprotection, error) 
 	var err error
 
 	// if the branch is not protected, we don't need to fetch the protection rules
+	if g.IsProtected.Error != nil {
+		return nil, g.IsProtected.Error
+	}
 	if !g.IsProtected.Data {
 		g.ProtectionRules.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
@@ -808,9 +811,24 @@ func (g *mqlGithubBranch) protectionRules() (*mqlGithubBranchprotection, error) 
 }
 
 func (g *mqlGithubBranch) headCommit() (*mqlGithubCommit, error) {
+	if g.Owner.Error != nil {
+		return nil, g.Owner.Error
+	}
+	// newMqlGithubRepository sets owner to null for owner-less repos, so
+	// g.Owner.Data can be nil; guard before dereferencing it.
 	ownerName := g.Owner.Data
+	if ownerName == nil {
+		g.HeadCommit.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
 	if ownerName.Login.Error != nil {
 		return nil, ownerName.Login.Error
+	}
+	if g.HeadCommitSha.Error != nil {
+		return nil, g.HeadCommitSha.Error
+	}
+	if g.RepoName.Error != nil {
+		return nil, g.RepoName.Error
 	}
 	ownerLogin := ownerName.Login.Data
 
@@ -1420,8 +1438,15 @@ func (g *mqlGithubRepository) workflows() ([]any, error) {
 	for {
 		workflows, resp, err := conn.Client().Actions.ListWorkflows(conn.Context(), ownerLogin, repoName, listOpts)
 		if err != nil {
-			if strings.Contains(err.Error(), "404") {
-				return nil, nil
+			// The Actions API returns 404/403 when the token lacks the "Actions"
+			// (read) permission on a fine-grained PAT, or the full "repo" scope on
+			// a classic PAT (and also when Actions is disabled on the repository).
+			// Surface this instead of returning an empty list: an empty list makes
+			// a security check (e.g. "packages are scanned for vulnerabilities")
+			// silently FAIL as if no scanning workflow were configured, when in
+			// fact the scanner simply could not read the workflows.
+			if isAccessDeniedOrNotFound(err) {
+				return nil, fmt.Errorf("cannot list workflows for %q: %w; grant the scanning token the \"Actions\" read permission (fine-grained PAT) or the full \"repo\" scope (classic PAT)", fullName, err)
 			}
 			return nil, err
 		}

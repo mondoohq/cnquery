@@ -55,7 +55,7 @@ func (g *mqlGcpProjectCloudBuildService) triggers() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := cloudbuild.NewClient(ctx, option.WithCredentials(creds))
+	client, err := cloudbuild.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -387,7 +387,7 @@ func (g *mqlGcpProjectCloudBuildService) workerPools() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := cloudbuild.NewClient(ctx, option.WithCredentials(creds))
+	client, err := cloudbuild.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -560,7 +560,7 @@ func (g *mqlGcpProjectCloudBuildService) builds() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := cloudbuild.NewClient(ctx, option.WithCredentials(creds))
+	client, err := cloudbuild.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}

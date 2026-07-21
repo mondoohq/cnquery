@@ -392,6 +392,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"shodan.domain.nsrecords": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlShodanDomain).GetNsrecords()).ToDataRes(types.Array(types.Resource("shodan.nsrecord")))
 	},
+	"shodan.domain.hosts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanDomain).GetHosts()).ToDataRes(types.Array(types.Resource("shodan.host")))
+	},
 	"shodan.nsrecord.domain": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlShodanNsrecord).GetDomain()).ToDataRes(types.String)
 	},
@@ -807,6 +810,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"shodan.domain.nsrecords": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlShodanDomain).Nsrecords, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"shodan.domain.hosts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanDomain).Hosts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"shodan.nsrecord.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1621,6 +1628,7 @@ type mqlShodanDomain struct {
 	Tags       plugin.TValue[[]any]
 	Subdomains plugin.TValue[[]any]
 	Nsrecords  plugin.TValue[[]any]
+	Hosts      plugin.TValue[[]any]
 }
 
 // createShodanDomain creates a new instance of this resource
@@ -1689,6 +1697,22 @@ func (c *mqlShodanDomain) GetNsrecords() *plugin.TValue[[]any] {
 		}
 
 		return c.nsrecords()
+	})
+}
+
+func (c *mqlShodanDomain) GetHosts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Hosts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("shodan.domain", c.__id, "hosts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.hosts()
 	})
 }
 

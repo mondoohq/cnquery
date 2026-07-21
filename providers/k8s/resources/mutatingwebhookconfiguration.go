@@ -65,6 +65,19 @@ func (k *mqlK8sAdmissionMutatingwebhookconfiguration) webhooks() ([]any, error) 
 	return convert.JsonToDictSlice(k.obj.Webhooks)
 }
 
+// failsOpen reports whether any webhook has failurePolicy: Ignore, meaning
+// admission proceeds when the webhook is unreachable or errors — the guardrail
+// can be bypassed by making it fail. An unset failurePolicy defaults to Fail.
+func (k *mqlK8sAdmissionMutatingwebhookconfiguration) failsOpen() (bool, error) {
+	for i := range k.obj.Webhooks {
+		fp := k.obj.Webhooks[i].FailurePolicy
+		if fp != nil && *fp == admissionregistrationv1.Ignore {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func initK8sAdmissionMutatingwebhookconfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	return initResource[*mqlK8sAdmissionMutatingwebhookconfiguration](runtime, args, func(k *mqlK8s) *plugin.TValue[[]any] {
 		return k.GetMutatingWebhookConfigurations()

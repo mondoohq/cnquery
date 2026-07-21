@@ -109,6 +109,53 @@ func (k *mqlK8sRbacClusterrolebinding) clusterRole() (*mqlK8sRbacClusterrole, er
 	return r.(*mqlK8sRbacClusterrole), nil
 }
 
+// referencedRules returns the policy rules of the ClusterRole this binding
+// grants. It resolves to nil (no rules) when the roleRef is missing or the
+// referenced ClusterRole cannot be found, so the rollups below report false
+// rather than erroring on a dangling reference.
+func (k *mqlK8sRbacClusterrolebinding) referencedRules() ([]rbacv1.PolicyRule, error) {
+	cr := k.GetClusterRole()
+	if cr.Error != nil {
+		return nil, cr.Error
+	}
+	if cr.Data == nil {
+		return nil, nil
+	}
+	return cr.Data.obj.Rules, nil
+}
+
+func (k *mqlK8sRbacClusterrolebinding) grantsClusterAdmin() (bool, error) {
+	rules, err := k.referencedRules()
+	if err != nil {
+		return false, err
+	}
+	return rbacGrantsClusterAdmin(rules), nil
+}
+
+func (k *mqlK8sRbacClusterrolebinding) hasWildcardRule() (bool, error) {
+	rules, err := k.referencedRules()
+	if err != nil {
+		return false, err
+	}
+	return rbacHasWildcardRule(rules), nil
+}
+
+func (k *mqlK8sRbacClusterrolebinding) allowsPrivilegeEscalation() (bool, error) {
+	rules, err := k.referencedRules()
+	if err != nil {
+		return false, err
+	}
+	return rbacAllowsPrivilegeEscalation(rules), nil
+}
+
+func (k *mqlK8sRbacClusterrolebinding) canReadSecrets() (bool, error) {
+	rules, err := k.referencedRules()
+	if err != nil {
+		return false, err
+	}
+	return rbacCanReadSecrets(rules), nil
+}
+
 func (k *mqlK8sRbacClusterrolebinding) ownerReferences() ([]any, error) {
 	return k8sOwnerReferences(k.MqlRuntime, k.obj)
 }

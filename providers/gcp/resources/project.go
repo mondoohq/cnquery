@@ -142,7 +142,7 @@ func (g *mqlGcpProject) fetchIamPolicy() (*cloudresourcemanager.Policy, error) {
 			g.iamPolicyErr = err
 			return
 		}
-		g.iamPolicyCache, g.iamPolicyErr = svc.Projects.GetIamPolicy(fmt.Sprintf("projects/%s", projectId), &cloudresourcemanager.GetIamPolicyRequest{}).Do()
+		g.iamPolicyCache, g.iamPolicyErr = svc.Projects.GetIamPolicy(fmt.Sprintf("projects/%s", projectId), &cloudresourcemanager.GetIamPolicyRequest{Options: &cloudresourcemanager.GetPolicyOptions{RequestedPolicyVersion: 3}}).Do()
 	})
 	return g.iamPolicyCache, g.iamPolicyErr
 }

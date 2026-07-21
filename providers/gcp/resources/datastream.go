@@ -114,7 +114,7 @@ func (g *mqlGcpProjectDatastreamService) streams() ([]any, error) {
 		return nil, err
 	}
 	ctx := context.Background()
-	client, err := datastream.NewClient(ctx, option.WithCredentials(creds))
+	client, err := datastream.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -306,7 +306,7 @@ func initGcpProjectDatastreamServiceConnectionProfile(runtime *plugin.Runtime, a
 		return nil, nil, err
 	}
 	ctx := context.Background()
-	client, err := datastream.NewClient(ctx, option.WithCredentials(creds))
+	client, err := datastream.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -336,7 +336,7 @@ func (g *mqlGcpProjectDatastreamService) connectionProfiles() ([]any, error) {
 		return nil, err
 	}
 	ctx := context.Background()
-	client, err := datastream.NewClient(ctx, option.WithCredentials(creds))
+	client, err := datastream.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -524,7 +524,7 @@ func initGcpProjectDatastreamServicePrivateConnection(runtime *plugin.Runtime, a
 		return nil, nil, err
 	}
 	ctx := context.Background()
-	client, err := datastream.NewClient(ctx, option.WithCredentials(creds))
+	client, err := datastream.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -554,7 +554,7 @@ func (g *mqlGcpProjectDatastreamService) privateConnections() ([]any, error) {
 		return nil, err
 	}
 	ctx := context.Background()
-	client, err := datastream.NewClient(ctx, option.WithCredentials(creds))
+	client, err := datastream.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -647,7 +647,7 @@ func (g *mqlGcpProjectDatastreamServicePrivateConnection) routes() ([]any, error
 		return nil, err
 	}
 	ctx := context.Background()
-	client, err := datastream.NewClient(ctx, option.WithCredentials(creds))
+	client, err := datastream.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}

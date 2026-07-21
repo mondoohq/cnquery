@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -44,6 +45,10 @@ func (w *mqlWindowsUpdate) id() (string, error) {
 
 func (c *mqlWindowsUpdateConfig) id() (string, error) {
 	return "windows.update.config", nil
+}
+
+func (p *mqlWindowsUpdatePolicy) id() (string, error) {
+	return "windows.update.policy", nil
 }
 
 func (e *mqlWindowsUpdateEntry) id() (string, error) {
@@ -116,6 +121,15 @@ func regInt(items map[string]registry.RegistryKeyItem, name string) int64 {
 func regHas(items map[string]registry.RegistryKeyItem, name string) bool {
 	_, ok := items[strings.ToLower(name)]
 	return ok
+}
+
+// intPtrData maps a nullable int into MQL data, emitting null when the value
+// was not configured.
+func intPtrData(v *int64) *llx.RawData {
+	if v == nil {
+		return llx.NilData
+	}
+	return llx.IntData(*v)
 }
 
 func parseWULastSuccessTime(s string) *time.Time {
@@ -211,6 +225,84 @@ func (c *mqlWindowsUpdateConfig) service() (*mqlService, error) {
 		return nil, nil
 	}
 	return o.(*mqlService), nil
+}
+
+// windowsUpdatePolicyValues holds the Windows Update for Business / Automatic
+// Updates group policy settings extracted from the registry. Nil pointers mean
+// the corresponding policy value is not configured.
+type windowsUpdatePolicyValues struct {
+	automaticUpdatesEnabled                bool
+	noAutoUpdate                           *bool
+	scheduledInstallDay                    *int64
+	scheduledInstallTime                   *int64
+	noAutoRebootWithLoggedOnUsers          *bool
+	managePreviewBuilds                    *int64
+	deferFeatureUpdates                    *bool
+	deferFeatureUpdatesPeriodInDays        *int64
+	deferQualityUpdates                    *bool
+	deferQualityUpdatesPeriodInDays        *int64
+	allowTemporaryEnterpriseFeatureControl *bool
+	allowOptionalContent                   *int64
+	disablePauseUXAccess                   *bool
+}
+
+// computeWindowsUpdatePolicy maps the raw registry values from the
+// WindowsUpdate policy key and its AU subkey into the policy settings. It is
+// pure so it can be unit tested without a live registry.
+func computeWindowsUpdatePolicy(policy, au map[string]registry.RegistryKeyItem) windowsUpdatePolicyValues {
+	return windowsUpdatePolicyValues{
+		// Automatic Updates is "enabled" only when NoAutoUpdate is explicitly
+		// present and set to 0; an absent value is the unmanaged default.
+		automaticUpdatesEnabled:                regHas(au, "NoAutoUpdate") && regInt(au, "NoAutoUpdate") == 0,
+		noAutoUpdate:                           regBoolPtr(au, "NoAutoUpdate"),
+		scheduledInstallDay:                    regIntPtr(au, "ScheduledInstallDay"),
+		scheduledInstallTime:                   regIntPtr(au, "ScheduledInstallTime"),
+		noAutoRebootWithLoggedOnUsers:          regBoolPtr(au, "NoAutoRebootWithLoggedOnUsers"),
+		managePreviewBuilds:                    regIntPtr(policy, "ManagePreviewBuildsPolicyValue"),
+		deferFeatureUpdates:                    regBoolPtr(policy, "DeferFeatureUpdates"),
+		deferFeatureUpdatesPeriodInDays:        regIntPtr(policy, "DeferFeatureUpdatesPeriodInDays"),
+		deferQualityUpdates:                    regBoolPtr(policy, "DeferQualityUpdates"),
+		deferQualityUpdatesPeriodInDays:        regIntPtr(policy, "DeferQualityUpdatesPeriodInDays"),
+		allowTemporaryEnterpriseFeatureControl: regBoolPtr(policy, "AllowTemporaryEnterpriseFeatureControl"),
+		allowOptionalContent:                   regIntPtr(policy, "SetAllowOptionalContent"),
+		disablePauseUXAccess:                   regBoolPtr(policy, "SetDisablePauseUXAccess"),
+	}
+}
+
+func (w *mqlWindowsUpdate) policy() (*mqlWindowsUpdatePolicy, error) {
+	policy, okPolicy := w.readRegistryKey(wuPolicyKey)
+	au, okAU := w.readRegistryKey(wuPolicyAUKey)
+
+	// readRegistryKey returns true when the registry was queryable at all, even
+	// when the key is simply absent (the default on an unmanaged host). When
+	// neither key could be read the registry connection itself is broken, so
+	// surface that rather than silently reporting an unconfigured policy.
+	if !okPolicy && !okAU {
+		return nil, errors.New("windows.update.policy: could not read the Windows Update policy registry keys")
+	}
+
+	v := computeWindowsUpdatePolicy(policy, au)
+
+	o, err := CreateResource(w.MqlRuntime, "windows.update.policy", map[string]*llx.RawData{
+		"__id":                                   llx.StringData("windows.update.policy"),
+		"automaticUpdatesEnabled":                llx.BoolData(v.automaticUpdatesEnabled),
+		"noAutoUpdate":                           llx.BoolDataPtr(v.noAutoUpdate),
+		"scheduledInstallDay":                    intPtrData(v.scheduledInstallDay),
+		"scheduledInstallTime":                   intPtrData(v.scheduledInstallTime),
+		"noAutoRebootWithLoggedOnUsers":          llx.BoolDataPtr(v.noAutoRebootWithLoggedOnUsers),
+		"managePreviewBuilds":                    intPtrData(v.managePreviewBuilds),
+		"deferFeatureUpdates":                    llx.BoolDataPtr(v.deferFeatureUpdates),
+		"deferFeatureUpdatesPeriodInDays":        intPtrData(v.deferFeatureUpdatesPeriodInDays),
+		"deferQualityUpdates":                    llx.BoolDataPtr(v.deferQualityUpdates),
+		"deferQualityUpdatesPeriodInDays":        intPtrData(v.deferQualityUpdatesPeriodInDays),
+		"allowTemporaryEnterpriseFeatureControl": llx.BoolDataPtr(v.allowTemporaryEnterpriseFeatureControl),
+		"allowOptionalContent":                   intPtrData(v.allowOptionalContent),
+		"disablePauseUXAccess":                   llx.BoolDataPtr(v.disablePauseUXAccess),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return o.(*mqlWindowsUpdatePolicy), nil
 }
 
 func (w *mqlWindowsUpdate) installed() ([]any, error) {

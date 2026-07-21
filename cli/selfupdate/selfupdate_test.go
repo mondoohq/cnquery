@@ -138,6 +138,64 @@ func TestCheckAndUpdate_EnvVarBehavior(t *testing.T) {
 	})
 }
 
+// TestCheckLocalAndUpdate verifies the local-only entry point used by the
+// "version" command (issue #7751): it shares CheckAndUpdate's guards but never
+// performs a network request.
+func TestCheckLocalAndUpdate(t *testing.T) {
+	t.Run("skips when MONDOO_AUTO_UPDATE is false", func(t *testing.T) {
+		t.Setenv(EnvAutoUpdate, "false")
+		t.Setenv(EnvAutoUpdateEngine, "")
+
+		updated, err := CheckLocalAndUpdate(Config{Enabled: true, CurrentVersion: "1.0.0"})
+		assert.NoError(t, err)
+		assert.False(t, updated)
+	})
+
+	t.Run("skips when MONDOO_AUTO_UPDATE_ENGINE is false", func(t *testing.T) {
+		t.Setenv(EnvAutoUpdate, "")
+		t.Setenv(EnvAutoUpdateEngine, "false")
+
+		updated, err := CheckLocalAndUpdate(Config{Enabled: true, CurrentVersion: "1.0.0"})
+		assert.NoError(t, err)
+		assert.False(t, updated)
+	})
+
+	t.Run("skips when config is disabled", func(t *testing.T) {
+		t.Setenv(EnvAutoUpdate, "")
+		t.Setenv(EnvAutoUpdateEngine, "")
+
+		updated, err := CheckLocalAndUpdate(Config{Enabled: false, CurrentVersion: "1.0.0"})
+		assert.NoError(t, err)
+		assert.False(t, updated)
+	})
+
+	t.Run("skips for rolling version", func(t *testing.T) {
+		t.Setenv(EnvAutoUpdate, "")
+		t.Setenv(EnvAutoUpdateEngine, "")
+
+		updated, err := CheckLocalAndUpdate(Config{Enabled: true, CurrentVersion: "1.0.0-rolling"})
+		assert.NoError(t, err)
+		assert.False(t, updated)
+	})
+
+	t.Run("performs no network request", func(t *testing.T) {
+		t.Setenv(EnvAutoUpdate, "")
+		t.Setenv(EnvAutoUpdateEngine, "")
+
+		// A binary name that cannot be staged locally makes execLocalIfNewer
+		// return immediately, and the unroutable ReleaseURL would surface as an
+		// error if the local-only path ever reached the network.
+		updated, err := CheckLocalAndUpdate(Config{
+			Enabled:        true,
+			CurrentVersion: "999.999.999",
+			ReleaseURL:     "https://invalid.invalid/should-never-be-called.json",
+			BinaryName:     "mql-selfupdate-test-nonexistent",
+		})
+		assert.NoError(t, err)
+		assert.False(t, updated)
+	})
+}
+
 // TestEnvVarSeparation verifies that MONDOO_AUTO_UPDATE_ENGINE is separate from
 // MONDOO_AUTO_UPDATE, ensuring that:
 // 1. Engine binary auto-update can be disabled independently of provider auto-update

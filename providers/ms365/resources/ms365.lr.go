@@ -1129,6 +1129,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.tenant.assignedPlans": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenant).GetAssignedPlans()).ToDataRes(types.Array(types.Dict))
 	},
+	"microsoft.tenant.enabledServicePlans": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenant).GetEnabledServicePlans()).ToDataRes(types.Array(types.String))
+	},
 	"microsoft.tenant.provisionedPlans": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenant).GetProvisionedPlans()).ToDataRes(types.Array(types.Dict))
 	},
@@ -3387,6 +3390,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.rolemanagement.roleassignment.principalId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftRolemanagementRoleassignment).GetPrincipalId()).ToDataRes(types.String)
+	},
+	"microsoft.rolemanagement.roleassignment.principalType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftRolemanagementRoleassignment).GetPrincipalType()).ToDataRes(types.String)
+	},
+	"microsoft.rolemanagement.roleassignment.principalName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftRolemanagementRoleassignment).GetPrincipalName()).ToDataRes(types.String)
 	},
 	"microsoft.rolemanagement.roleassignment.principal": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftRolemanagementRoleassignment).GetPrincipal()).ToDataRes(types.Dict)
@@ -5888,6 +5897,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.tenant.assignedPlans": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftTenant).AssignedPlans, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.tenant.enabledServicePlans": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenant).EnabledServicePlans, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"microsoft.tenant.provisionedPlans": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9312,6 +9325,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.rolemanagement.roleassignment.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftRolemanagementRoleassignment).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.rolemanagement.roleassignment.principalType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftRolemanagementRoleassignment).PrincipalType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.rolemanagement.roleassignment.principalName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftRolemanagementRoleassignment).PrincipalName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.rolemanagement.roleassignment.principal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13406,6 +13427,7 @@ type mqlMicrosoftTenant struct {
 	mqlMicrosoftTenantInternal
 	Id                                   plugin.TValue[string]
 	AssignedPlans                        plugin.TValue[[]any]
+	EnabledServicePlans                  plugin.TValue[[]any]
 	ProvisionedPlans                     plugin.TValue[[]any]
 	CreatedDateTime                      plugin.TValue[*time.Time]
 	Name                                 plugin.TValue[string]
@@ -13469,6 +13491,12 @@ func (c *mqlMicrosoftTenant) GetId() *plugin.TValue[string] {
 
 func (c *mqlMicrosoftTenant) GetAssignedPlans() *plugin.TValue[[]any] {
 	return &c.AssignedPlans
+}
+
+func (c *mqlMicrosoftTenant) GetEnabledServicePlans() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EnabledServicePlans, func() ([]any, error) {
+		return c.enabledServicePlans()
+	})
 }
 
 func (c *mqlMicrosoftTenant) GetProvisionedPlans() *plugin.TValue[[]any] {
@@ -22373,6 +22401,8 @@ type mqlMicrosoftRolemanagementRoleassignment struct {
 	RoleDefinitionId plugin.TValue[string]
 	RoleDefinition   plugin.TValue[*mqlMicrosoftRolemanagementRoledefinition]
 	PrincipalId      plugin.TValue[string]
+	PrincipalType    plugin.TValue[string]
+	PrincipalName    plugin.TValue[string]
 	Principal        plugin.TValue[any]
 }
 
@@ -22439,6 +22469,14 @@ func (c *mqlMicrosoftRolemanagementRoleassignment) GetRoleDefinition() *plugin.T
 
 func (c *mqlMicrosoftRolemanagementRoleassignment) GetPrincipalId() *plugin.TValue[string] {
 	return &c.PrincipalId
+}
+
+func (c *mqlMicrosoftRolemanagementRoleassignment) GetPrincipalType() *plugin.TValue[string] {
+	return &c.PrincipalType
+}
+
+func (c *mqlMicrosoftRolemanagementRoleassignment) GetPrincipalName() *plugin.TValue[string] {
+	return &c.PrincipalName
 }
 
 func (c *mqlMicrosoftRolemanagementRoleassignment) GetPrincipal() *plugin.TValue[any] {

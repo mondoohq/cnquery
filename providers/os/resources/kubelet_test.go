@@ -76,6 +76,41 @@ func TestResource_K8sKubelet(t *testing.T) {
 		assert.Empty(t, res[0].Result().Error)
 		assert.Contains(t, "/var/lib/minikube/certs/ca.crt", res[0].Data.Value)
 	})
+
+	t.Run("typed anonymousAuthEnabled", func(t *testing.T) {
+		res := x.TestQuery(t, "kubelet.anonymousAuthEnabled")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, false, res[0].Data.Value)
+	})
+
+	t.Run("typed authorizationMode", func(t *testing.T) {
+		res := x.TestQuery(t, "kubelet.authorizationMode")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, "Webhook", res[0].Data.Value)
+	})
+
+	t.Run("typed clientCAFile", func(t *testing.T) {
+		res := x.TestQuery(t, "kubelet.clientCAFile")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, "/var/lib/minikube/certs/ca.crt", res[0].Data.Value)
+	})
+
+	t.Run("typed makeIPTablesUtilChains default", func(t *testing.T) {
+		res := x.TestQuery(t, "kubelet.makeIPTablesUtilChains")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, true, res[0].Data.Value)
+	})
+
+	t.Run("typed eventRecordQPS default", func(t *testing.T) {
+		res := x.TestQuery(t, "kubelet.eventRecordQPS")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, int64(50), res[0].Data.Value)
+	})
 }
 
 func TestResource_K8sKubeletAKS(t *testing.T) {
@@ -150,6 +185,28 @@ func TestResource_K8sKubeletAKS(t *testing.T) {
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, "0", res[0].Data.Value)
 	})
+
+	t.Run("typed readOnlyPort coerces string flag", func(t *testing.T) {
+		res := x.TestQuery(t, "kubelet.readOnlyPort")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, int64(0), res[0].Data.Value)
+	})
+
+	t.Run("typed tlsCipherSuites", func(t *testing.T) {
+		res := x.TestQuery(t, "kubelet.tlsCipherSuites")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, 8, len(res[0].Data.Value.([]any)))
+		assert.Contains(t, res[0].Data.Value.([]any), "TLS_RSA_WITH_AES_128_GCM_SHA256")
+	})
+
+	t.Run("typed anonymousAuthEnabled from flag", func(t *testing.T) {
+		res := x.TestQuery(t, "kubelet.anonymousAuthEnabled")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, false, res[0].Data.Value)
+	})
 }
 
 func TestResource_K8sKubeletEKS(t *testing.T) {
@@ -174,5 +231,12 @@ func TestResource_K8sKubeletEKS(t *testing.T) {
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, 0.0, res[0].Data.Value)
+	})
+
+	t.Run("typed readOnlyPort coerces float config", func(t *testing.T) {
+		res := x.TestQuery(t, "kubelet.readOnlyPort")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, int64(0), res[0].Data.Value)
 	})
 }

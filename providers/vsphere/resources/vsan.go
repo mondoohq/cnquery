@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/mo"
@@ -223,7 +224,7 @@ func (v *mqlVsphereHost) vsan() (*mqlVsphereHostVsan, error) {
 // cache-disk UUID appearing on two hosts can't collide in the resource cache.
 func (v *mqlVsphereHostVsan) diskGroups() ([]any, error) {
 	mqlDiskGroups := make([]any, 0, len(v.cacheDiskMappings))
-	for _, dm := range v.cacheDiskMappings {
+	for i, dm := range v.cacheDiskMappings {
 		capacityDisks := make([]any, 0, len(dm.NonSsd))
 		var capacityBytes int64
 		for _, disk := range dm.NonSsd {
@@ -231,8 +232,15 @@ func (v *mqlVsphereHostVsan) diskGroups() ([]any, error) {
 			capacityBytes += scsiDiskCapacityBytes(disk)
 		}
 
+		// The cache SSD UUID is the natural key, but it can be empty on
+		// all-flash/ESA topologies with no dedicated cache disk; fall back to
+		// the mapping index so disk groups don't collide on one cache __id.
+		dgKey := dm.Ssd.Uuid
+		if dgKey == "" {
+			dgKey = "dg" + strconv.Itoa(i)
+		}
 		res, err := CreateResource(v.MqlRuntime, "vsphere.host.vsan.diskGroup", map[string]*llx.RawData{
-			"__id":              llx.StringData(v.cacheHostMoid + "/vsanDiskGroup/" + dm.Ssd.Uuid),
+			"__id":              llx.StringData(v.cacheHostMoid + "/vsanDiskGroup/" + dgKey),
 			"cacheDiskUuid":     llx.StringData(dm.Ssd.Uuid),
 			"cacheDisk":         llx.StringData(scsiDiskName(dm.Ssd)),
 			"capacityDisks":     llx.ArrayData(capacityDisks, types.String),

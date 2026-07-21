@@ -104,6 +104,9 @@ func (a *mqlAzureSubscriptionMonitorService) logProfiles() ([]any, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil || entry.Properties == nil {
+				continue
+			}
 
 			properties, err := convert.JsonToDict(entry.Properties)
 			if err != nil {
@@ -304,17 +307,26 @@ func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]any, error) 
 		}
 
 		for _, entry := range page.Value {
+			if entry == nil || entry.Properties == nil {
+				continue
+			}
 			actions := []mqlAlertAction{}
 			conditions := []mqlAlertCondition{}
 
-			for _, act := range entry.Properties.Actions.ActionGroups {
-				mqlAction := mqlAlertAction{
-					ActionGroupId:     convert.ToValue(act.ActionGroupID),
-					WebhookProperties: convert.PtrMapStrToStr(act.WebhookProperties),
+			if entry.Properties.Actions != nil {
+				for _, act := range entry.Properties.Actions.ActionGroups {
+					mqlAction := mqlAlertAction{
+						ActionGroupId:     convert.ToValue(act.ActionGroupID),
+						WebhookProperties: convert.PtrMapStrToStr(act.WebhookProperties),
+					}
+					actions = append(actions, mqlAction)
 				}
-				actions = append(actions, mqlAction)
 			}
-			for _, cond := range entry.Properties.Condition.AllOf {
+			var allOf []*monitor.AlertRuleAnyOfOrLeafCondition
+			if entry.Properties.Condition != nil {
+				allOf = entry.Properties.Condition.AllOf
+			}
+			for _, cond := range allOf {
 				anyOf := []mqlAlertLeafCondition{}
 				for _, leaf := range cond.AnyOf {
 					mqlAnyOfLeaf := mqlAlertLeafCondition{

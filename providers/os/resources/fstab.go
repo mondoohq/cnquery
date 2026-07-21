@@ -91,8 +91,9 @@ func ParseFstab(file io.Reader) ([]FstabEntry, error) {
 
 	var entries []FstabEntry
 	for scanner.Scan() {
-		line := scanner.Text()
-		// Skip comments and empty lines
+		line := strings.TrimSpace(scanner.Text())
+		// Skip comments and empty lines, including indented comments and
+		// whitespace-only lines (both are valid in /etc/fstab).
 		if line == "" || line[0] == '#' {
 			continue
 		}

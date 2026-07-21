@@ -5,7 +5,6 @@ package resources
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -468,7 +467,7 @@ func (g *mqlGoogleworkspaceUser) usageReport() (*mqlGoogleworkspaceReportUsage, 
 	if err != nil {
 		return nil, err
 	}
-	reportsByEmail, date, err := parent.loadUsageReports()
+	reportsByEmail, _, err := parent.loadUsageReports()
 	if err != nil {
 		return nil, err
 	}
@@ -479,9 +478,9 @@ func (g *mqlGoogleworkspaceUser) usageReport() (*mqlGoogleworkspaceReportUsage, 
 		// users. Surface this as a null field rather than an error so audits
 		// can still iterate the user list.
 		g.UsageReport.State = plugin.StateIsSet | plugin.StateIsNull
-		if date == "" {
-			return nil, errors.New("no usage reports published yet for this customer")
-		}
+		// A customer with no published reports at all (date == "") is not an
+		// error condition — return a null field so `users { usageReport }`
+		// doesn't fail for every user on a new/report-disabled tenant.
 		return nil, nil
 	}
 	return newMqlGoogleWorkspaceUsageReport(g.MqlRuntime, report)

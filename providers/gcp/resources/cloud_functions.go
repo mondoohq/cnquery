@@ -50,7 +50,7 @@ func (g *mqlGcpProject) cloudFunctions() ([]any, error) {
 
 	ctx := context.Background()
 
-	cloudFuncSvc, err := functions.NewCloudFunctionsClient(ctx, option.WithCredentials(creds))
+	cloudFuncSvc, err := functions.NewCloudFunctionsClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -269,14 +269,14 @@ func (g *mqlGcpProjectCloudFunction) iamPolicy() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	cloudFuncSvc, err := functions.NewCloudFunctionsClient(ctx, option.WithCredentials(creds))
+	cloudFuncSvc, err := functions.NewCloudFunctionsClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
 	defer cloudFuncSvc.Close()
 
 	resourcePath := fmt.Sprintf("projects/%s/locations/%s/functions/%s", projectId, location, name)
-	policy, err := cloudFuncSvc.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: resourcePath})
+	policy, err := cloudFuncSvc.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: resourcePath, Options: &iampb.GetPolicyOptions{RequestedPolicyVersion: 3}})
 	if err != nil {
 		if s, ok := status.FromError(err); ok && s.Code() == codes.PermissionDenied {
 			log.Warn().Str("project", projectId).Str("function", name).Err(err).Msg("could not retrieve cloud function IAM policy")

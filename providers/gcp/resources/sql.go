@@ -629,7 +629,7 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 				"failoverReplica":              llx.DictData(mqlFailoverReplica),
 				"gceZone":                      llx.StringData(instance.GceZone),
 				"instanceType":                 llx.StringData(instance.InstanceType),
-				"ipAddresses":                  llx.ArrayData(mqlIpAddresses, types.String),
+				"ipAddresses":                  llx.ArrayData(mqlIpAddresses, types.Resource("gcp.project.sqlService.instance.ipMapping")),
 				"maintenanceVersion":           llx.StringData(instance.MaintenanceVersion),
 				"masterInstanceName":           llx.StringData(instance.MasterInstanceName),
 				"maxDiskSize":                  llx.IntData(instance.MaxDiskSize),

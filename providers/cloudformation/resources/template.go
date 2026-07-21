@@ -15,6 +15,14 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// isEvenMappingNode reports whether n is a YAML mapping with an even number of
+// content nodes — i.e. safe to iterate two-at-a-time (key, value). A template
+// section written as a sequence (or with odd content) would otherwise index
+// out of range in the stride-2 loops below and panic the whole scan.
+func isEvenMappingNode(n *yaml.Node) bool {
+	return n != nil && n.Kind == yaml.MappingNode && len(n.Content)%2 == 0
+}
+
 func initCloudformationTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 0 {
 		return args, nil, nil
@@ -73,6 +81,9 @@ func (r *mqlCloudformationTemplate) extractDict(section cft.Section) (map[string
 	}
 	if err != nil {
 		return nil, err
+	}
+	if !isEvenMappingNode(parameters) {
+		return nil, nil
 	}
 
 	result := make(map[string]any)
@@ -134,6 +145,9 @@ func (r *mqlCloudformationTemplate) resources() ([]any, error) {
 		return nil, nil
 	} else if err != nil {
 		return nil, err
+	}
+	if !isEvenMappingNode(resources) {
+		return nil, nil
 	}
 
 	result := make([]any, 0)
@@ -260,6 +274,9 @@ func (r *mqlCloudformationTemplate) outputs() ([]any, error) {
 	} else if err != nil {
 		return nil, err
 	}
+	if !isEvenMappingNode(outputs) {
+		return nil, nil
+	}
 
 	result := make([]any, 0)
 	for i := 0; i < len(outputs.Content); i += 2 {
@@ -324,6 +341,9 @@ func (r *mqlCloudformationTemplate) parameterList() ([]any, error) {
 		return nil, nil
 	} else if err != nil {
 		return nil, err
+	}
+	if !isEvenMappingNode(params) {
+		return nil, nil
 	}
 
 	result := make([]any, 0)
@@ -410,6 +430,24 @@ func (r *mqlCloudformationTemplate) parameterList() ([]any, error) {
 func (r *mqlCloudformationTemplate) types() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.CloudformationConnection)
 	template := conn.CftTemplate()
+	if template.Node == nil || len(template.Node.Content) == 0 {
+		return nil, nil
+	}
+	// GetTypes iterates the Resources section assuming an even mapping and
+	// dereferences Content[0]; skip when the template/Resources body is
+	// degenerate or malformed so the upstream stride-2 access can't panic. A
+	// missing Resources section is a valid empty state, but any other
+	// gatherMapValue error is a real parse failure and must surface rather than
+	// be swallowed as "no types."
+	_, body, err := gatherMapValue(template.Node.Content[0], string(cft.Resources))
+	if err != nil && status.Code(err) == codes.NotFound {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+	if !isEvenMappingNode(body) {
+		return nil, nil
+	}
 
 	list, err := template.GetTypes()
 	if err != nil {

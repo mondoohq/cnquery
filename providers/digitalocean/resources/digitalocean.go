@@ -76,6 +76,16 @@ func toIntSlice(s []int) []interface{} {
 	return r
 }
 
+// formatDoTime renders a time as RFC3339 for storage in a dict, returning ""
+// for the zero value so timestamps don't surface a misleading
+// "0001-01-01T00:00:00Z" when the API omitted them.
+func formatDoTime(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+	return t.Format(time.RFC3339)
+}
+
 // helper to parse DigitalOcean time strings
 func parseDoTime(s string) *time.Time {
 	if s == "" {
@@ -92,6 +102,14 @@ type mqlDigitaloceanDropletInternal struct {
 	// image caches the godo image embedded in the droplet list response so the
 	// typed baseImage() accessor can build a digitalocean.image without a refetch.
 	image *godo.Image
+	// cacheVolumeIDs holds the block-storage volume IDs attached to the droplet so
+	// the typed volumes() accessor can resolve them without a refetch.
+	cacheVolumeIDs []string
+	// cacheSnapshotIDs and cacheBackupIDs hold the image IDs of the droplet's
+	// snapshots and automated backups so the typed snapshots()/backups()
+	// accessors can resolve them without a refetch.
+	cacheSnapshotIDs []int
+	cacheBackupIDs   []int
 }
 
 func (r *mqlDigitalocean) droplets() ([]interface{}, error) {
@@ -163,32 +181,60 @@ func (r *mqlDigitalocean) droplets() ([]interface{}, error) {
 				sizeSlug = d.Size.Slug
 			}
 
+			var kernelDict map[string]interface{}
+			if d.Kernel != nil {
+				kernelDict = map[string]interface{}{
+					"id":      float64(d.Kernel.ID),
+					"name":    d.Kernel.Name,
+					"version": d.Kernel.Version,
+				}
+			}
+
+			var nextBackupStart, nextBackupEnd *time.Time
+			if d.NextBackupWindow != nil {
+				if d.NextBackupWindow.Start != nil {
+					nextBackupStart = &d.NextBackupWindow.Start.Time
+				}
+				if d.NextBackupWindow.End != nil {
+					nextBackupEnd = &d.NextBackupWindow.End.Time
+				}
+			}
+
 			res, err := CreateResource(r.MqlRuntime, "digitalocean.droplet", map[string]*llx.RawData{
-				"id":                llx.IntData(int64(d.ID)),
-				"name":              llx.StringData(d.Name),
-				"memory":            llx.IntData(int64(d.Memory)),
-				"vcpus":             llx.IntData(int64(d.Vcpus)),
-				"disk":              llx.IntData(int64(d.Disk)),
-				"region":            llx.StringData(regionSlug),
-				"size":              llx.StringData(sizeSlug),
-				"status":            llx.StringData(d.Status),
-				"locked":            llx.BoolData(d.Locked),
-				"createdAt":         llx.TimeDataPtr(parseDoTime(d.Created)),
-				"publicIpv4":        llx.StringData(publicIPv4),
-				"privateIpv4":       llx.StringData(privateIPv4),
-				"publicIpv6":        llx.StringData(publicIPv6),
-				"tags":              llx.ArrayData(tags, "\x02"),
-				"vpcUuid":           llx.StringData(d.VPCUUID),
-				"features":          llx.ArrayData(features, "\x02"),
-				"backupsEnabled":    llx.BoolData(backupsEnabled),
-				"monitoringEnabled": llx.BoolData(monitoringEnabled),
-				"image":             llx.DictData(imageDict),
+				"id":                    llx.IntData(int64(d.ID)),
+				"name":                  llx.StringData(d.Name),
+				"memory":                llx.IntData(int64(d.Memory)),
+				"vcpus":                 llx.IntData(int64(d.Vcpus)),
+				"disk":                  llx.IntData(int64(d.Disk)),
+				"region":                llx.StringData(regionSlug),
+				"size":                  llx.StringData(sizeSlug),
+				"status":                llx.StringData(d.Status),
+				"locked":                llx.BoolData(d.Locked),
+				"createdAt":             llx.TimeDataPtr(parseDoTime(d.Created)),
+				"publicIpv4":            llx.StringData(publicIPv4),
+				"privateIpv4":           llx.StringData(privateIPv4),
+				"publicIpv6":            llx.StringData(publicIPv6),
+				"tags":                  llx.ArrayData(tags, "\x02"),
+				"vpcUuid":               llx.StringData(d.VPCUUID),
+				"features":              llx.ArrayData(features, "\x02"),
+				"backupsEnabled":        llx.BoolData(backupsEnabled),
+				"monitoringEnabled":     llx.BoolData(monitoringEnabled),
+				"image":                 llx.DictData(imageDict),
+				"kernel":                llx.DictData(kernelDict),
+				"nextBackupWindowStart": llx.TimeDataPtr(nextBackupStart),
+				"nextBackupWindowEnd":   llx.TimeDataPtr(nextBackupEnd),
 			})
 			if err != nil {
 				return nil, err
 			}
-			// Cache the droplet's image for the typed baseImage() accessor.
-			res.(*mqlDigitaloceanDroplet).image = d.Image
+			// Cache the godo image for the typed baseImage() accessor, plus the
+			// volume / snapshot / backup image IDs for the typed volumes(),
+			// snapshots(), and backups() accessors — all without a refetch.
+			mqlDroplet := res.(*mqlDigitaloceanDroplet)
+			mqlDroplet.image = d.Image
+			mqlDroplet.cacheVolumeIDs = d.VolumeIDs
+			mqlDroplet.cacheSnapshotIDs = d.SnapshotIDs
+			mqlDroplet.cacheBackupIDs = d.BackupIDs
 			all = append(all, res)
 		}
 		if resp.Links == nil || resp.Links.IsLastPage() {
@@ -219,56 +265,7 @@ func (r *mqlDigitalocean) firewalls() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, fw := range firewalls {
-			inbound := make([]interface{}, len(fw.InboundRules))
-			for i, rule := range fw.InboundRules {
-				m := map[string]interface{}{
-					"protocol": rule.Protocol,
-					"ports":    rule.PortRange,
-				}
-				if rule.Sources != nil {
-					m["sourceAddresses"] = toStringSlice(rule.Sources.Addresses)
-					m["sourceDropletIds"] = toIntSlice(rule.Sources.DropletIDs)
-					m["sourceLoadBalancerUids"] = toStringSlice(rule.Sources.LoadBalancerUIDs)
-					m["sourceKubernetesIds"] = toStringSlice(rule.Sources.KubernetesIDs)
-					m["sourceTags"] = toStringSlice(rule.Sources.Tags)
-				}
-				inbound[i] = m
-			}
-			outbound := make([]interface{}, len(fw.OutboundRules))
-			for i, rule := range fw.OutboundRules {
-				m := map[string]interface{}{
-					"protocol": rule.Protocol,
-					"ports":    rule.PortRange,
-				}
-				if rule.Destinations != nil {
-					m["destinationAddresses"] = toStringSlice(rule.Destinations.Addresses)
-					m["destinationDropletIds"] = toIntSlice(rule.Destinations.DropletIDs)
-					m["destinationLoadBalancerUids"] = toStringSlice(rule.Destinations.LoadBalancerUIDs)
-					m["destinationKubernetesIds"] = toStringSlice(rule.Destinations.KubernetesIDs)
-					m["destinationTags"] = toStringSlice(rule.Destinations.Tags)
-				}
-				outbound[i] = m
-			}
-
-			dropletIds := make([]interface{}, len(fw.DropletIDs))
-			for i, id := range fw.DropletIDs {
-				dropletIds[i] = int64(id)
-			}
-			tags := make([]interface{}, len(fw.Tags))
-			for i, t := range fw.Tags {
-				tags[i] = t
-			}
-
-			res, err := CreateResource(r.MqlRuntime, "digitalocean.firewall", map[string]*llx.RawData{
-				"id":            llx.StringData(fw.ID),
-				"name":          llx.StringData(fw.Name),
-				"status":        llx.StringData(fw.Status),
-				"createdAt":     llx.TimeDataPtr(parseDoTime(fw.Created)),
-				"inboundRules":  llx.ArrayData(inbound, "\x13"),
-				"outboundRules": llx.ArrayData(outbound, "\x13"),
-				"dropletIds":    llx.ArrayData(dropletIds, "\x05"),
-				"tags":          llx.ArrayData(tags, "\x02"),
-			})
+			res, err := CreateResource(r.MqlRuntime, "digitalocean.firewall", firewallArgs(&fw))
 			if err != nil {
 				return nil, err
 			}
@@ -302,60 +299,7 @@ func (r *mqlDigitalocean) databases() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, db := range dbs {
-			tags := make([]interface{}, len(db.Tags))
-			for i, t := range db.Tags {
-				tags[i] = t
-			}
-
-			mw := map[string]interface{}{}
-			if db.MaintenanceWindow != nil {
-				mw["day"] = db.MaintenanceWindow.Day
-				mw["hour"] = db.MaintenanceWindow.Hour
-				mw["pending"] = db.MaintenanceWindow.Pending
-			}
-
-			// The DigitalOcean API returns connection URIs that embed the admin
-			// password, so we deliberately do not surface them on the resource.
-			// Host/port are exposed separately for connectivity checks.
-			connHost := ""
-			connPort := int64(0)
-			if db.Connection != nil {
-				connHost = db.Connection.Host
-				connPort = int64(db.Connection.Port)
-			}
-			privConnHost := ""
-			privConnPort := int64(0)
-			if db.PrivateConnection != nil {
-				privConnHost = db.PrivateConnection.Host
-				privConnPort = int64(db.PrivateConnection.Port)
-			}
-
-			dbNames := make([]interface{}, len(db.DBNames))
-			for i, n := range db.DBNames {
-				dbNames[i] = n
-			}
-
-			res, err := CreateResource(r.MqlRuntime, "digitalocean.database", map[string]*llx.RawData{
-				"id":                    llx.StringData(db.ID),
-				"name":                  llx.StringData(db.Name),
-				"engine":                llx.StringData(db.EngineSlug),
-				"version":               llx.StringData(db.VersionSlug),
-				"numNodes":              llx.IntData(int64(db.NumNodes)),
-				"size":                  llx.StringData(db.SizeSlug),
-				"region":                llx.StringData(db.RegionSlug),
-				"status":                llx.StringData(db.Status),
-				"storageSizeMib":        llx.IntData(int64(db.StorageSizeMib)),
-				"dbNames":               llx.ArrayData(dbNames, "\x02"),
-				"createdAt":             llx.TimeData(db.CreatedAt),
-				"projectId":             llx.StringData(db.ProjectID),
-				"privateNetworkUuid":    llx.StringData(db.PrivateNetworkUUID),
-				"tags":                  llx.ArrayData(tags, "\x02"),
-				"maintenanceWindow":     llx.DictData(mw),
-				"connectionHost":        llx.StringData(connHost),
-				"connectionPort":        llx.IntData(connPort),
-				"privateConnectionHost": llx.StringData(privConnHost),
-				"privateConnectionPort": llx.IntData(privConnPort),
-			})
+			res, err := CreateResource(r.MqlRuntime, "digitalocean.database", databaseArgs(&db))
 			if err != nil {
 				return nil, err
 			}
@@ -550,71 +494,11 @@ func (r *mqlDigitalocean) loadBalancers() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, lb := range lbs {
-			dropletIds := make([]interface{}, len(lb.DropletIDs))
-			for i, id := range lb.DropletIDs {
-				dropletIds[i] = int64(id)
-			}
-			tags := make([]interface{}, len(lb.Tags))
-			for i, t := range lb.Tags {
-				tags[i] = t
-			}
-
-			fwdRules := make([]interface{}, len(lb.ForwardingRules))
-			for i, rule := range lb.ForwardingRules {
-				fwdRules[i] = map[string]interface{}{
-					"entryProtocol":  rule.EntryProtocol,
-					"entryPort":      float64(rule.EntryPort),
-					"targetProtocol": rule.TargetProtocol,
-					"targetPort":     float64(rule.TargetPort),
-					"certificateId":  rule.CertificateID,
-					"tlsPassthrough": rule.TlsPassthrough,
-				}
-			}
-
-			hc := map[string]interface{}{}
-			if lb.HealthCheck != nil {
-				hc["protocol"] = lb.HealthCheck.Protocol
-				hc["port"] = float64(lb.HealthCheck.Port)
-				hc["path"] = lb.HealthCheck.Path
-				hc["checkIntervalSeconds"] = float64(lb.HealthCheck.CheckIntervalSeconds)
-				hc["responseTimeoutSeconds"] = float64(lb.HealthCheck.ResponseTimeoutSeconds)
-				hc["unhealthyThreshold"] = float64(lb.HealthCheck.UnhealthyThreshold)
-				hc["healthyThreshold"] = float64(lb.HealthCheck.HealthyThreshold)
-			}
-
-			ss := map[string]interface{}{}
-			if lb.StickySessions != nil {
-				ss["type"] = lb.StickySessions.Type
-				ss["cookieName"] = lb.StickySessions.CookieName
-				ss["cookieTtlSeconds"] = float64(lb.StickySessions.CookieTtlSeconds)
-			}
-
-			lbRegion := ""
-			if lb.Region != nil {
-				lbRegion = lb.Region.Slug
-			}
-			res, err := CreateResource(r.MqlRuntime, "digitalocean.loadBalancer", map[string]*llx.RawData{
-				"id":                           llx.StringData(lb.ID),
-				"name":                         llx.StringData(lb.Name),
-				"ip":                           llx.StringData(lb.IP),
-				"status":                       llx.StringData(lb.Status),
-				"region":                       llx.StringData(lbRegion),
-				"createdAt":                    llx.TimeDataPtr(parseDoTime(lb.Created)),
-				"algorithm":                    llx.StringData(lb.Algorithm),
-				"redirectHttpToHttps":          llx.BoolData(lb.RedirectHttpToHttps),
-				"enableProxyProtocol":          llx.BoolData(lb.EnableProxyProtocol),
-				"enableBackendKeepalive":       llx.BoolData(lb.EnableBackendKeepalive),
-				"vpcUuid":                      llx.StringData(lb.VPCUUID),
-				"dropletIds":                   llx.ArrayData(dropletIds, "\x05"),
-				"tags":                         llx.ArrayData(tags, "\x02"),
-				"forwardingRules":              llx.ArrayData(fwdRules, "\x13"),
-				"healthCheck":                  llx.DictData(hc),
-				"stickySessions":               llx.DictData(ss),
-				"disableLetsEncryptDnsRecords": llx.BoolDataPtr(lb.DisableLetsEncryptDNSRecords),
-			})
+			res, err := CreateResource(r.MqlRuntime, "digitalocean.loadBalancer", loadBalancerArgs(&lb))
 			if err != nil {
 				return nil, err
 			}
+			res.(*mqlDigitaloceanLoadBalancer).cacheTargetLoadBalancerIDs = lb.TargetLoadBalancerIDs
 			all = append(all, res)
 		}
 		if resp.Links == nil || resp.Links.IsLastPage() {
@@ -627,6 +511,13 @@ func (r *mqlDigitalocean) loadBalancers() ([]interface{}, error) {
 		opt.Page = page + 1
 	}
 	return all, nil
+}
+
+type mqlDigitaloceanLoadBalancerInternal struct {
+	// cacheTargetLoadBalancerIDs holds the regional load balancer IDs a global
+	// load balancer fans out to, so targetLoadBalancers() can resolve them
+	// without a refetch.
+	cacheTargetLoadBalancerIDs []string
 }
 
 func (r *mqlDigitaloceanLoadBalancer) id() (string, error) {
@@ -687,52 +578,7 @@ func (r *mqlDigitalocean) kubernetesClusters() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, c := range clusters {
-			tags := make([]interface{}, len(c.Tags))
-			for i, t := range c.Tags {
-				tags[i] = t
-			}
-
-			mp := map[string]interface{}{}
-			if c.MaintenancePolicy != nil {
-				mp["startTime"] = c.MaintenancePolicy.StartTime
-				mp["day"] = float64(c.MaintenancePolicy.Day)
-			}
-
-			status := ""
-			if c.Status != nil {
-				status = string(c.Status.State)
-			}
-
-			var ssoEnabled, ssoRequired bool
-			var ssoIssuerURL, ssoClientID string
-			if c.SSO != nil {
-				ssoEnabled = c.SSO.Enabled
-				ssoRequired = c.SSO.Required
-				ssoIssuerURL = c.SSO.IssuerURL
-				ssoClientID = c.SSO.ClientID
-			}
-
-			res, err := CreateResource(r.MqlRuntime, "digitalocean.kubernetes.cluster", map[string]*llx.RawData{
-				"id":                llx.StringData(c.ID),
-				"name":              llx.StringData(c.Name),
-				"version":           llx.StringData(c.VersionSlug),
-				"region":            llx.StringData(c.RegionSlug),
-				"status":            llx.StringData(status),
-				"createdAt":         llx.TimeData(c.CreatedAt),
-				"updatedAt":         llx.TimeData(c.UpdatedAt),
-				"clusterSubnet":     llx.StringData(c.ClusterSubnet),
-				"serviceSubnet":     llx.StringData(c.ServiceSubnet),
-				"vpcUuid":           llx.StringData(c.VPCUUID),
-				"autoUpgrade":       llx.BoolData(c.AutoUpgrade),
-				"surgeUpgrade":      llx.BoolData(c.SurgeUpgrade),
-				"ha":                llx.BoolData(c.HA),
-				"ssoEnabled":        llx.BoolData(ssoEnabled),
-				"ssoRequired":       llx.BoolData(ssoRequired),
-				"ssoIssuerUrl":      llx.StringData(ssoIssuerURL),
-				"ssoClientId":       llx.StringData(ssoClientID),
-				"tags":              llx.ArrayData(tags, "\x02"),
-				"maintenancePolicy": llx.DictData(mp),
-			})
+			res, err := CreateResource(r.MqlRuntime, "digitalocean.kubernetes.cluster", kubernetesClusterArgs(c))
 			if err != nil {
 				return nil, err
 			}

@@ -515,6 +515,13 @@ func compileArrayMap(c *compiler, typ types.Type, ref uint64, id string, call *p
 	}
 	mappedType := c.Result.CodeV2.DereferencedBlockType(block)
 
+	// The map body's entrypoint is the value this map collects, not something
+	// that gets rendered on its own. Mark the block so postCompile won't
+	// display-expand a resource(-list) entrypoint into an anonymous `{}` block,
+	// which would otherwise make the mapped elements lose their resource type.
+	// See https://github.com/mondoohq/mql/issues/8474
+	c.valueBodyBlocks[refs.block] = struct{}{}
+
 	args := []*llx.Primitive{
 		llx.RefPrimitiveV2(ref),
 		argExpectation,

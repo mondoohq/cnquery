@@ -124,6 +124,9 @@ func NewGithubConnection(id uint32, asset *inventory.Asset) (*GithubConnection, 
 
 	// store the hash of the config options used to generate this client
 	hash, err := hashstructure.Hash(connectionOpts, hashstructure.FormatV2, nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return &GithubConnection{
 		Connection:  plugin.NewConnection(id, asset),

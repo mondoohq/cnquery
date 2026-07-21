@@ -1,0 +1,85 @@
+# Copyright Mondoo, Inc. 2024, 2026
+# SPDX-License-Identifier: BUSL-1.1
+#
+# Fixture for external (non-pod) endpoint detection: selectorless services whose
+# EndpointSlices point at off-cluster IPs, versus an ordinary pod-backed service.
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: prod
+---
+# Selectorless service whose endpoints point at a public external IP.
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-db
+  namespace: prod
+spec:
+  ports:
+    - port: 5432
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: external-db-1
+  namespace: prod
+  labels:
+    kubernetes.io/service-name: external-db
+addressType: IPv4
+endpoints:
+  - addresses: ["8.8.8.8"]
+ports:
+  - port: 5432
+---
+# Selectorless service whose endpoints point at a private off-cluster IP.
+apiVersion: v1
+kind: Service
+metadata:
+  name: private-ext
+  namespace: prod
+spec:
+  ports:
+    - port: 80
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: private-ext-1
+  namespace: prod
+  labels:
+    kubernetes.io/service-name: private-ext
+addressType: IPv4
+endpoints:
+  - addresses: ["10.1.2.3"]
+ports:
+  - port: 80
+---
+# Ordinary selector-backed service: endpoints are pods, nothing external.
+apiVersion: v1
+kind: Service
+metadata:
+  name: internal-app
+  namespace: prod
+spec:
+  selector:
+    app: internal
+  ports:
+    - port: 80
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: internal-app-1
+  namespace: prod
+  labels:
+    kubernetes.io/service-name: internal-app
+addressType: IPv4
+endpoints:
+  - addresses: ["10.0.0.5"]
+    targetRef:
+      kind: Pod
+      name: backend-1
+      namespace: prod
+ports:
+  - port: 80

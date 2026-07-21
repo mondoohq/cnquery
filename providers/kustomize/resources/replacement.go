@@ -68,7 +68,13 @@ func (r *mqlKustomizeReplacement) targets() ([]any, error) {
 			name = t.Select.Name
 		}
 
-		for j, fp := range t.FieldPaths {
+		// A target may specify a Select but omit fieldPaths; emit one target
+		// row with an empty fieldPath rather than dropping the target entirely.
+		fieldPaths := t.FieldPaths
+		if len(fieldPaths) == 0 {
+			fieldPaths = []string{""}
+		}
+		for j, fp := range fieldPaths {
 			id := "kustomize.replacementTarget:" + r.kustPath + ":" + strconv.Itoa(i) + ":" + kind + ":" + name + ":" + strconv.Itoa(j) + ":" + fp
 
 			res, err := CreateResource(r.MqlRuntime, "kustomize.replacementTarget", map[string]*llx.RawData{

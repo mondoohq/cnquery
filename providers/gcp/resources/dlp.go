@@ -100,7 +100,7 @@ func (g *mqlGcpProjectDlpService) inspectTemplates() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := dlp.NewClient(ctx, option.WithCredentials(creds))
+	client, err := dlp.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +171,7 @@ func (g *mqlGcpProjectDlpService) deidentifyTemplates() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := dlp.NewClient(ctx, option.WithCredentials(creds))
+	client, err := dlp.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -242,7 +242,7 @@ func (g *mqlGcpProjectDlpService) jobTriggers() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := dlp.NewClient(ctx, option.WithCredentials(creds))
+	client, err := dlp.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -334,7 +334,7 @@ func (g *mqlGcpProjectDlpService) storedInfoTypes() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := dlp.NewClient(ctx, option.WithCredentials(creds))
+	client, err := dlp.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -458,7 +458,7 @@ func (g *mqlGcpProjectDlpService) dlpJobs() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := dlp.NewClient(ctx, option.WithCredentials(creds))
+	client, err := dlp.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -545,7 +545,7 @@ func (g *mqlGcpProjectDlpService) discoveryConfigs() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := dlp.NewClient(ctx, option.WithCredentials(creds))
+	client, err := dlp.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -638,7 +638,7 @@ func (g *mqlGcpProjectDlpService) connections() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := dlp.NewClient(ctx, option.WithCredentials(creds))
+	client, err := dlp.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -713,7 +713,7 @@ func (g *mqlGcpProjectDlpService) projectDataProfiles() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := dlp.NewClient(ctx, option.WithCredentials(creds))
+	client, err := dlp.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -784,7 +784,7 @@ func (g *mqlGcpProjectDlpService) tableDataProfiles() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := dlp.NewClient(ctx, option.WithCredentials(creds))
+	client, err := dlp.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -907,7 +907,7 @@ func (g *mqlGcpProjectDlpService) columnDataProfiles() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := dlp.NewClient(ctx, option.WithCredentials(creds))
+	client, err := dlp.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -1015,7 +1015,7 @@ func (g *mqlGcpProjectDlpService) fileStoreDataProfiles() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := dlp.NewClient(ctx, option.WithCredentials(creds))
+	client, err := dlp.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -1141,7 +1141,7 @@ func (g *mqlGcpProjectStorageServiceBucket) dlpDataProfile() (*mqlGcpProjectDlpS
 	if err != nil {
 		return nil, err
 	}
-	client, err := dlp.NewClient(ctx, option.WithCredentials(creds))
+	client, err := dlp.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -1193,7 +1193,7 @@ func (g *mqlGcpProjectBigqueryServiceTable) dlpDataProfile() (*mqlGcpProjectDlpS
 	if err != nil {
 		return nil, err
 	}
-	client, err := dlp.NewClient(ctx, option.WithCredentials(creds))
+	client, err := dlp.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}

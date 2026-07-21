@@ -66,7 +66,7 @@ func (g *mqlGcpProjectAlloydbService) clusters() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := alloydb.NewAlloyDBAdminClient(ctx, option.WithCredentials(creds))
+	client, err := alloydb.NewAlloyDBAdminClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -230,7 +230,7 @@ func (g *mqlGcpProjectAlloydbServiceCluster) users() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := alloydb.NewAlloyDBAdminClient(ctx, option.WithCredentials(creds))
+	client, err := alloydb.NewAlloyDBAdminClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -366,7 +366,7 @@ func (g *mqlGcpProjectAlloydbServiceCluster) instances() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := alloydb.NewAlloyDBAdminClient(ctx, option.WithCredentials(creds))
+	client, err := alloydb.NewAlloyDBAdminClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -517,7 +517,7 @@ func (g *mqlGcpProjectAlloydbServiceCluster) backups() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := alloydb.NewAlloyDBAdminClient(ctx, option.WithCredentials(creds))
+	client, err := alloydb.NewAlloyDBAdminClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}

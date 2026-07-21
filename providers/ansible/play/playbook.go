@@ -6,6 +6,7 @@ package play
 import (
 	"maps"
 	"sort"
+	"strconv"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -52,9 +53,13 @@ type Play struct {
 	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_strategies.html
 	Strategy string `yaml:"strategy,omitempty"`
 
-	// MaxFailPercentage sets a maximum failure percentage
+	// MaxFailPercentage sets a maximum failure percentage. Ansible types this
+	// field as a percent, so beyond a plain integer it also accepts a float
+	// (33.3) or a percent-suffixed string ("30%"). Decode it as any and
+	// normalize with MaxFailPercentageValue so one of those forms can't fail
+	// the whole playbook decode.
 	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#maximum-failure-percentage
-	MaxFailPercentage int `yaml:"max_fail_percentage,omitempty"`
+	MaxFailPercentage any `yaml:"max_fail_percentage,omitempty"`
 
 	// IgnoreUnreachable sets to true to ignore unreachable hosts
 	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#ignore-unreachable
@@ -111,6 +116,32 @@ type Play struct {
 	Handlers []*Handler `yaml:"handlers,omitempty"`
 
 	GatherFacts string `yaml:"gather_facts,omitempty"`
+}
+
+// MaxFailPercentageValue normalizes the play's max_fail_percentage into an
+// integer percentage. Ansible types the field as a percent, so it may arrive
+// from YAML as an int, a float (33.3), or a string with an optional trailing
+// "%" ("30%"). Unrecognized or absent values yield 0, Ansible's default.
+func (p *Play) MaxFailPercentageValue() int64 {
+	switch v := p.MaxFailPercentage.(type) {
+	case int:
+		return int64(v)
+	case int64:
+		return v
+	case float64:
+		return int64(v)
+	case string:
+		s := strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(v), "%"))
+		if s == "" {
+			return 0
+		}
+		if f, err := strconv.ParseFloat(s, 64); err == nil {
+			return int64(f)
+		}
+		return 0
+	default:
+		return 0
+	}
 }
 
 // Tasks is a list of tasks to be executed

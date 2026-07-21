@@ -125,7 +125,7 @@ func newMqlDiscoveryEngineDataStore(runtime *plugin.Runtime, ds *discoveryengine
 
 func (g *mqlGcpProjectDiscoveryEngineService) listDataStoresInLocation(ctx context.Context, creds *googleoauth.Credentials, projectId, location string) ([]any, error) {
 	client, err := discoveryengine.NewDataStoreClient(ctx,
-		option.WithCredentials(creds),
+		option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 		option.WithEndpoint(discoveryEngineEndpoint(location)),
 	)
 	if err != nil {
@@ -195,7 +195,7 @@ func (a *mqlGcpProjectDiscoveryEngineServiceDataStore) kmsKey() (*mqlGcpProjectK
 
 func (g *mqlGcpProjectDiscoveryEngineService) listEnginesInLocation(ctx context.Context, creds *googleoauth.Credentials, projectId, location string) ([]any, error) {
 	client, err := discoveryengine.NewEngineClient(ctx,
-		option.WithCredentials(creds),
+		option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 		option.WithEndpoint(discoveryEngineEndpoint(location)),
 	)
 	if err != nil {
@@ -296,7 +296,7 @@ func (g *mqlGcpProjectDiscoveryEngineServiceEngine) dataStores() ([]any, error) 
 
 	ctx := context.Background()
 	client, err := discoveryengine.NewDataStoreClient(ctx,
-		option.WithCredentials(creds),
+		option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 		option.WithEndpoint(discoveryEngineEndpoint(location)),
 	)
 	if err != nil {

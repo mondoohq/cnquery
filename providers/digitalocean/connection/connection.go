@@ -30,6 +30,24 @@ type DigitaloceanConnection struct {
 	spacesRegion    string // optional — when set, restricts bucket listing to one region
 	spacesClients   map[string]*s3.Client
 	spacesClientsMu sync.Mutex
+
+	accountUUID     string
+	accountUUIDOnce sync.Once
+}
+
+// AccountUUID returns the owning account's UUID, fetching it once and
+// caching the result. It anchors both the account platform id and the
+// discovered child platform ids, so detect() and Discover() share a
+// single Account.Get round-trip. Returns "" when the token can't read
+// the account.
+func (c *DigitaloceanConnection) AccountUUID() string {
+	c.accountUUIDOnce.Do(func() {
+		acct, _, err := c.client.Account.Get(context.Background())
+		if err == nil && acct != nil {
+			c.accountUUID = acct.UUID
+		}
+	})
+	return c.accountUUID
 }
 
 func NewDigitaloceanConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*DigitaloceanConnection, error) {

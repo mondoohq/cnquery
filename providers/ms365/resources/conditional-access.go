@@ -239,7 +239,7 @@ func (a *mqlMicrosoftConditionalAccess) createPolicyResource(policy models.Condi
 			"displayName":      llx.StringDataPtr(policy.GetDisplayName()),
 			"createdDateTime":  llx.TimeDataPtr(policy.GetCreatedDateTime()),
 			"modifiedDateTime": llx.TimeDataPtr(policy.GetModifiedDateTime()),
-			"state":            llx.StringData(policy.GetState().String()),
+			"state":            llx.StringDataPtr(enumPtrString(policy.GetState())),
 			"sessionControls":  llx.ResourceData(sessionControls, "microsoft.conditionalAccess.policy.sessionControls"),
 			"conditions":       llx.ResourceData(conditions, "microsoft.conditionalAccess.policy.conditions"),
 			"grantControls":    llx.ResourceData(grantControls, "microsoft.conditionalAccess.policy.grantControls"),
@@ -269,7 +269,7 @@ func (a *mqlMicrosoftConditionalAccess) createConditionsResource(
 		authenticationFlows := conditions.GetAuthenticationFlows()
 		usersData := map[string]*llx.RawData{
 			"__id":            llx.StringData(policyId + "_conditions_authflows"),
-			"transferMethods": llx.StringData(authenticationFlows.GetTransferMethods().String()),
+			"transferMethods": llx.StringDataPtr(enumPtrString(authenticationFlows.GetTransferMethods())),
 		}
 
 		mqlAuthenticationFlows, err = CreateResource(a.MqlRuntime, "microsoft.conditionalAccess.policy.conditions.authenticationFlows", usersData)
@@ -406,8 +406,8 @@ func (a *mqlMicrosoftConditionalAccess) createGrantControlsResource(
 			"id":                    llx.StringDataPtr(authStrength.GetId()),
 			"displayName":           llx.StringDataPtr(authStrength.GetDisplayName()),
 			"description":           llx.StringDataPtr(authStrength.GetDescription()),
-			"policyType":            llx.StringData(authStrength.GetPolicyType().String()),
-			"requirementsSatisfied": llx.StringData(authStrength.GetRequirementsSatisfied().String()),
+			"policyType":            llx.StringDataPtr(enumPtrString(authStrength.GetPolicyType())),
+			"requirementsSatisfied": llx.StringDataPtr(enumPtrString(authStrength.GetRequirementsSatisfied())),
 			"allowedCombinations":   llx.ArrayData(convert.SliceAnyToInterface(convertEnumCollectionToStrings(authStrength.GetAllowedCombinations())), types.String),
 			"createdDateTime":       llx.TimeDataPtr(authStrength.GetCreatedDateTime()),
 			"modifiedDateTime":      llx.TimeDataPtr(authStrength.GetModifiedDateTime()),
@@ -458,8 +458,8 @@ func (a *mqlMicrosoftConditionalAccess) createSessionControlsResource(
 		}
 		signInFreqData := map[string]*llx.RawData{
 			"__id":               llx.StringData(policyId + "_session_signInFrequency"),
-			"authenticationType": llx.StringData(signInFreq.GetAuthenticationType().String()),
-			"frequencyInterval":  llx.StringData(signInFreq.GetFrequencyInterval().String()),
+			"authenticationType": llx.StringDataPtr(enumPtrString(signInFreq.GetAuthenticationType())),
+			"frequencyInterval":  llx.StringDataPtr(enumPtrString(signInFreq.GetFrequencyInterval())),
 			"isEnabled":          llx.BoolDataPtr(signInFreq.GetIsEnabled()),
 			"type":               llx.StringDataPtr(freqType),
 			"value":              llx.IntDataPtr(signInFreq.GetValue()),
@@ -476,7 +476,7 @@ func (a *mqlMicrosoftConditionalAccess) createSessionControlsResource(
 		cloudAppSecurity := sessionControls.GetCloudAppSecurity()
 		cloudAppSecurityData := map[string]*llx.RawData{
 			"__id":                 llx.StringData(policyId + "_session_cloudAppSecurity"),
-			"cloudAppSecurityType": llx.StringData(cloudAppSecurity.GetCloudAppSecurityType().String()),
+			"cloudAppSecurityType": llx.StringDataPtr(enumPtrString(cloudAppSecurity.GetCloudAppSecurityType())),
 			"isEnabled":            llx.BoolDataPtr(cloudAppSecurity.GetIsEnabled()),
 		}
 		var err error
@@ -491,7 +491,7 @@ func (a *mqlMicrosoftConditionalAccess) createSessionControlsResource(
 		persistentBrowser := sessionControls.GetPersistentBrowser()
 		persistentBrowserData := map[string]*llx.RawData{
 			"__id":      llx.StringData(policyId + "_session_persistentBrowser"),
-			"mode":      llx.StringData(persistentBrowser.GetMode().String()),
+			"mode":      llx.StringDataPtr(enumPtrString(persistentBrowser.GetMode())),
 			"isEnabled": llx.BoolDataPtr(persistentBrowser.GetIsEnabled()),
 		}
 		var err error
@@ -640,7 +640,7 @@ func newMqlAuthenticationMethodConfiguration(runtime *plugin.Runtime, config mod
 	resource, err := CreateResource(runtime, "microsoft.conditionalAccess.authenticationMethodConfiguration", map[string]*llx.RawData{
 		"__id":  llx.StringDataPtr(config.GetId()),
 		"id":    llx.StringDataPtr(config.GetId()),
-		"state": llx.StringData(config.GetState().String()),
+		"state": llx.StringDataPtr(enumPtrString(config.GetState())),
 	})
 	if err != nil {
 		return nil, err

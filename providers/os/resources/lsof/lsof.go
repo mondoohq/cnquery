@@ -165,9 +165,9 @@ func (f *FileDescriptor) NetworkFile() (string, int64, string, int64, error) {
 var lsofTcpStateMapping = map[string]int64{
 	"ESTABLISHED": 1,  // "established"
 	"SYN_SENT":    2,  //  "syn sent"
-	"SYN_RCDV":    3,  //  "syn recv"
+	"SYN_RCVD":    3,  //  "syn recv"
 	"FIN_WAIT1":   4,  //  "fin wait1"
-	"FIN_WAIT_2":  5,  //   "fin wait2",
+	"FIN_WAIT2":   5,  //   "fin wait2",
 	"TIME_WAIT":   6,  //  "time wait",
 	"CLOSED":      7,  // "close"
 	"CLOSE_WAIT":  8,  //   "close wait"
@@ -210,6 +210,11 @@ func (f *FileDescriptor) parseField(s string) error {
 		// TCP/TPI information
 		// we need to parse it separately
 		keyPair := tcpInfoRegex.FindStringSubmatch(value)
+		// A T-field that lacks `key=value` form yields no submatches; skip it
+		// rather than indexing out of range.
+		if len(keyPair) < 3 {
+			return nil
+		}
 		switch keyPair[1] {
 		case "QR":
 			f.TcpReadQueueSize = keyPair[2]

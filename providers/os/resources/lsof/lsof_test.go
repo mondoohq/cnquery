@@ -111,6 +111,36 @@ TQS=0
 	assert.Equal(t, "10.184.10.188:64645->76.76.21.241:443", fd.Name)
 }
 
+func TestParseLsofTcpStateKeys(t *testing.T) {
+	// lsof spells these states SYN_RCVD and FIN_WAIT2 (no underscore before the
+	// digit); the mapping keys must match exactly or TcpState falls back to 0.
+	cases := map[string]int64{
+		"ESTABLISHED": 1,
+		"SYN_RCVD":    3,
+		"FIN_WAIT1":   4,
+		"FIN_WAIT2":   5,
+		"LISTEN":      10,
+	}
+	for state, want := range cases {
+		s := "p1\ncFoo\nu0\nf3\nPTCP\nn1.2.3.4:1->5.6.7.8:2\nTST=" + state + "\n"
+		processes, err := Parse(strings.NewReader(s))
+		require.NoError(t, err)
+		require.Len(t, processes, 1)
+		require.Len(t, processes[0].FileDescriptors, 1)
+		assert.Equal(t, want, processes[0].FileDescriptors[0].TcpState(), "state %q", state)
+	}
+}
+
+func TestParseLsofMalformedTcpField(t *testing.T) {
+	// A T-field without `key=value` form must be skipped, not panic.
+	s := "p1\ncFoo\nu0\nf3\nPTCP\nnname\nTmalformed\n"
+	require.NotPanics(t, func() {
+		processes, err := Parse(strings.NewReader(s))
+		require.NoError(t, err)
+		require.Len(t, processes, 1)
+	})
+}
+
 func TestParseEmpty(t *testing.T) {
 	processes, err := Parse(strings.NewReader(""))
 	if err != nil {

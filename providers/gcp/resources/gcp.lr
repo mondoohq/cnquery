@@ -1383,6 +1383,11 @@ gcp.project.computeService.instance @defaults("name id") {
   networkStackTypes []string
   // Whether the instance has at least one external IP attached via a network interface accessConfig
   hasPublicIp() bool
+  // Internet-exposure breakdown
+  //
+  // Explains whether the instance is reachable from the internet by combining
+  // external-IP presence with the VPC firewall ingress rules that apply to it.
+  exposure() gcp.project.computeService.instance.exposure
   // Whether the instance runs as the default Compute Engine service account (<projectNumber>-compute@developer.gserviceaccount.com)
   usesDefaultServiceAccount() bool
   // Whether any attached service account has the broad cloud-platform OAuth scope
@@ -1477,6 +1482,23 @@ gcp.project.computeService.instance @defaults("name id") {
   inventory() gcp.project.computeService.instance.osInventory
   // VM Manager vulnerability report for the instance
   vulnerabilityReport() gcp.project.computeService.instance.vulnerabilityReport
+}
+
+// Compute instance internet-exposure breakdown
+//
+// Explains whether a Compute Engine instance is reachable from the internet:
+// whether it has an external IP and whether a VPC firewall rule that applies to
+// it (same network, matching target tags or service accounts) admits ingress
+// from any address.
+private gcp.project.computeService.instance.exposure @defaults("internetReachable hasPublicIp") {
+  // Whether the instance is reachable from the internet (an external IP and an applicable firewall rule that admits any address)
+  internetReachable bool
+  // Whether the instance has an external IP
+  hasPublicIp bool
+  // Whether a firewall rule that applies to the instance admits inbound traffic from any address (0.0.0.0/0 or ::/0)
+  firewallAllowsIngress bool
+  // Firewall rules that apply to the instance and admit ingress from any address
+  openIngressFirewalls []gcp.project.computeService.firewall
 }
 
 // VM Manager OS inventory for a Compute Engine instance
@@ -2671,6 +2693,8 @@ private gcp.project.sqlService.instance @defaults("name") {
   settings gcp.project.sqlService.instance.settings
   // Whether the instance is reachable on a public IP — flat hoist of settings.ipConfiguration.ipv4Enabled
   publicIpEnabled() bool
+  // Whether the instance is reachable from the internet (a public IP and an authorized network open to 0.0.0.0/0)
+  internetReachable() bool
   // Whether IAM database authentication is enabled — true when the cloudsql.iam_authentication database flag is on
   iamAuthenticationEnabled() bool
   // Whether automated backups are enabled — flat hoist of settings.backupConfiguration.enabled
@@ -3866,6 +3890,14 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   // or legacy). When false, the control plane is reachable from any source
   // permitted by the endpoint configuration.
   masterAuthorizedNetworksAllowed bool
+  // Whether the control plane (Kubernetes API server) is reachable from the public internet
+  //
+  // True when the control plane has a public IP endpoint enabled AND either
+  // master authorized networks is not enforced (any source may reach it) or
+  // the authorized-networks allowlist contains an open CIDR (0.0.0.0/0 or
+  // ::/0). False means the API server is private or restricted to specific
+  // source ranges. Derived from cached cluster fields; no extra API calls.
+  controlPlaneInternetReachable() bool
   // Logging components enabled on the control plane
   //
   // The members of `loggingConfig.componentConfig.enableComponents` —

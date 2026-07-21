@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	"go.mondoo.com/mql/v13/providers/os/resources/users"
 	"go.mondoo.com/mql/v13/utils/multierr"
@@ -100,6 +101,25 @@ func (u *mqlUser) authorizedkeys(home string) (*mqlAuthorizedkeys, error) {
 	return ak.(*mqlAuthorizedkeys), nil
 }
 
+// ntuserDat resolves the on-disk per-user registry hive at <home>\NTUSER.DAT for
+// Windows accounts, so resources like registrykey can read a user's HKCU even
+// when the user is not logged in. Empty on non-Windows platforms or when the home
+// directory is unknown.
+func (u *mqlUser) ntuserDat(home string) (string, error) {
+	conn, ok := u.MqlRuntime.Connection.(shared.Connection)
+	if !ok {
+		return "", nil
+	}
+	pf := conn.Asset().Platform
+	if pf == nil || !pf.IsFamily("windows") {
+		return "", nil
+	}
+	if home == "" {
+		return "", nil
+	}
+	return strings.TrimRight(home, `\`) + `\NTUSER.DAT`, nil
+}
+
 type mqlUsersInternal struct {
 	lock        sync.Mutex
 	usersByID   map[int64]*mqlUser
@@ -181,7 +201,7 @@ func (x *mqlUsers) findID(id int64) (*mqlUser, error) {
 
 	res, ok := x.usersByID[id]
 	if !ok {
-		return nil, errors.New("cannot find user for uid " + strconv.Itoa(int(id)))
+		return nil, resources.NotFoundError{Resource: "user", ID: strconv.Itoa(int(id))}
 	}
 	return res, nil
 }

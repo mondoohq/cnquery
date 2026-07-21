@@ -22,6 +22,7 @@ func (r *mqlWindowsRdp) id() (string, error) {
 // documented Windows default applies.
 const (
 	rdpPolicyPath         = `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services`
+	rdpPolicyClientPath   = `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services\Client`
 	rdpWinStationsPath    = `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp`
 	rdpTerminalServerPath = `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server`
 )
@@ -41,10 +42,11 @@ type mqlWindowsRdpInternal struct {
 	lock   sync.Mutex
 	loaded bool
 	// each map is name (lower-cased) -> DWORD value for one registry key
-	policy  map[string]int64
-	winSta  map[string]int64
-	tsRoot  map[string]int64
-	loadErr error
+	policy       map[string]int64
+	policyClient map[string]int64
+	winSta       map[string]int64
+	tsRoot       map[string]int64
+	loadErr      error
 }
 
 // readRdpKey reads a single registry key and returns its numeric values keyed
@@ -92,6 +94,11 @@ func (r *mqlWindowsRdp) load() error {
 		r.loadErr = err
 		return err
 	}
+	policyClient, err := r.readRdpKey(rdpPolicyClientPath)
+	if err != nil {
+		r.loadErr = err
+		return err
+	}
 	winSta, err := r.readRdpKey(rdpWinStationsPath)
 	if err != nil {
 		r.loadErr = err
@@ -104,6 +111,7 @@ func (r *mqlWindowsRdp) load() error {
 	}
 
 	r.policy = policy
+	r.policyClient = policyClient
 	r.winSta = winSta
 	r.tsRoot = tsRoot
 	r.loaded = true
@@ -205,4 +213,65 @@ func (r *mqlWindowsRdp) maxIdleTimeMs() (int64, error) {
 func (r *mqlWindowsRdp) maxDisconnectionTimeMs() (int64, error) {
 	// 0 == disconnected sessions are never ended
 	return r.resolve("MaxDisconnectionTime", rdpWinStations, 0)
+}
+
+func (r *mqlWindowsRdp) connectionsDenied() (bool, error) {
+	// Remote Desktop is denied by default until an administrator enables it
+	return r.resolveBool("fDenyTSConnections", rdpTerminalServer, 1)
+}
+
+func (r *mqlWindowsRdp) singleSessionPerUser() (bool, error) {
+	// each user is restricted to a single session by default
+	return r.resolveBool("fSingleSessionPerUser", rdpTerminalServer, 1)
+}
+
+func (r *mqlWindowsRdp) perSessionTempDirsUsed() (bool, error) {
+	// per-session temporary folders are used by default
+	return r.resolveBool("PerSessionTempDir", rdpTerminalServer, 1)
+}
+
+func (r *mqlWindowsRdp) solicitedRemoteAssistanceAllowed() (bool, error) {
+	// Remote Assistance is a policy-only setting; off when not configured
+	return r.resolveBool("fAllowToGetHelp", rdpWinStations, 0)
+}
+
+func (r *mqlWindowsRdp) offerRemoteAssistanceAllowed() (bool, error) {
+	// offering unsolicited Remote Assistance is off when not configured
+	return r.resolveBool("fAllowUnsolicited", rdpWinStations, 0)
+}
+
+func (r *mqlWindowsRdp) webAuthnRedirectionDisabled() (bool, error) {
+	// WebAuthn redirection is allowed (not disabled) when not configured
+	return r.resolveBool("fDisableWebAuthn", rdpWinStations, 0)
+}
+
+func (r *mqlWindowsRdp) locationRedirectionDisabled() (bool, error) {
+	// location redirection is allowed (not disabled) when not configured
+	return r.resolveBool("fDisableLocationRedir", rdpWinStations, 0)
+}
+
+func (r *mqlWindowsRdp) uiAutomationRedirectionEnabled() (bool, error) {
+	// UI Automation redirection is off when not configured
+	return r.resolveBool("EnableUiaRedirection", rdpWinStations, 0)
+}
+
+func (r *mqlWindowsRdp) clipboardServerToClientLevel() (int64, error) {
+	// 3 == unrestricted server-to-client clipboard, the behavior when the
+	// "Restrict clipboard transfer from server to client" policy is not set
+	return r.resolve("SCClipLevel", rdpWinStations, 3)
+}
+
+func (r *mqlWindowsRdp) endSessionWhenTimeLimitReached() (bool, error) {
+	// when not configured, a session that hits a time limit is disconnected
+	// rather than ended, so the setting defaults to off
+	return r.resolveBool("fResetBroken", rdpWinStations, 0)
+}
+
+func (r *mqlWindowsRdp) cloudClipboardIntegrationDisabled() (bool, error) {
+	if err := r.load(); err != nil {
+		return false, err
+	}
+	// Group Policy-only setting under the Terminal Services\Client subkey; cloud
+	// clipboard integration is enabled (not disabled) when it is not configured
+	return resolveRdpValue(r.policyClient, nil, "DisableCloudClipboardIntegration", 0) == 1, nil
 }

@@ -114,7 +114,11 @@ func (a *mqlMicrosoftSecurity) latestSecureScores() (*mqlMicrosoftSecuritySecuri
 	latest := secureScores.Data[0].(*mqlMicrosoftSecuritySecurityscore)
 	for _, s := range secureScores.Data {
 		mqlS := s.(*mqlMicrosoftSecuritySecurityscore)
-		if mqlS.CreatedDateTime.Data.After(*latest.CreatedDateTime.Data) {
+		// createdDateTime is nilable; guard before dereferencing to avoid a panic.
+		if mqlS.CreatedDateTime.Data == nil {
+			continue
+		}
+		if latest.CreatedDateTime.Data == nil || mqlS.CreatedDateTime.Data.After(*latest.CreatedDateTime.Data) {
 			latest = mqlS
 		}
 	}

@@ -36,3 +36,16 @@ func TestParseAtlassianTime(t *testing.T) {
 		assert.True(t, got.Equal(time.Date(2026, 4, 27, 20, 0, 0, 0, time.UTC)))
 	})
 }
+
+// TestExtractAtlassianCursor verifies we extract the raw cursor value from a
+// page's Links.Next URL — the SDK list methods re-encode it as ?cursor=, so the
+// full Next URL must not be passed back verbatim (which would break paging and
+// silently truncate managed users / policies / domains to the first page).
+func TestExtractAtlassianCursor(t *testing.T) {
+	assert.Equal(t, "abc123",
+		extractAtlassianCursor("https://api.atlassian.com/admin/v1/orgs/org-1/users?cursor=abc123"))
+	assert.Equal(t, "x=y/z+w",
+		extractAtlassianCursor("https://api.atlassian.com/admin/v1/orgs/org-1/domains?cursor=x%3Dy%2Fz%2Bw"))
+	assert.Equal(t, "", extractAtlassianCursor(""))
+	assert.Equal(t, "", extractAtlassianCursor("https://api.atlassian.com/admin/v1/orgs/org-1/policies"))
+}

@@ -14,7 +14,6 @@ import (
 	"crypto/x509/pkix"
 	"encoding/binary"
 	"encoding/hex"
-	"errors"
 	"math/big"
 	"testing"
 	"time"
@@ -156,57 +155,4 @@ func generateTestCert(t *testing.T, sigAlgo x509.SignatureAlgorithm) *x509.Certi
 	cert, err := x509.ParseCertificate(der)
 	require.NoError(t, err)
 	return cert
-}
-
-// TestEnrichKerberosBindError verifies the AD GSSAPI bind failures surface
-// actionable guidance about channel binding / signing.
-func TestEnrichKerberosBindError(t *testing.T) {
-	spn := "ldap/dc01.corp.local"
-	tests := []struct {
-		name     string
-		rawErr   string
-		overTLS  bool
-		contains []string
-	}{
-		{
-			name:     "bad bindings over plaintext points at TLS",
-			rawErr:   `LDAP Result Code 49 "Invalid Credentials": 80090346: ... data 80090346`,
-			overTLS:  false,
-			contains: []string{"channel binding", "LDAPS", "starttls"},
-		},
-		{
-			name:     "bad bindings over TLS points at cert/proxy",
-			rawErr:   `LDAP Result Code 49 "Invalid Credentials": 80090346: ... data 80090346`,
-			overTLS:  true,
-			contains: []string{"channel binding token", "load balancer"},
-		},
-		{
-			name:     "data 57 over plaintext mentions signing and channel binding",
-			rawErr:   `LDAP Result Code 49 "Invalid Credentials": 80090308: ... data 57`,
-			overTLS:  false,
-			contains: []string{"LDAP signing", "channel binding", "simple bind"},
-		},
-		{
-			name:     "data 57 over TLS suggests simple bind fallback",
-			rawErr:   `LDAP Result Code 49 "Invalid Credentials": 80090308: ... data 57`,
-			overTLS:  true,
-			contains: []string{"simple bind", "LDAPS"},
-		},
-		{
-			name:     "unknown error is wrapped verbatim",
-			rawErr:   "some other failure",
-			overTLS:  true,
-			contains: []string{"GSSAPI bind to " + spn + " failed", "some other failure"},
-		},
-	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			got := enrichKerberosBindError(errors.New(tc.rawErr), spn, tc.overTLS)
-			require.Error(t, got)
-			for _, want := range tc.contains {
-				assert.Contains(t, got.Error(), want)
-			}
-			assert.ErrorContains(t, got, tc.rawErr, "original error must be preserved")
-		})
-	}
 }

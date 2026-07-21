@@ -223,8 +223,8 @@ func (k *mqlKustomizeKustomization) images() ([]any, error) {
 		return nil, err
 	}
 	var mqlImages []any
-	for _, img := range kust.Images {
-		mqlImg, err := newMqlKustomizeImage(k.MqlRuntime, kustPath, img)
+	for i, img := range kust.Images {
+		mqlImg, err := newMqlKustomizeImage(k.MqlRuntime, kustPath, i, img)
 		if err != nil {
 			return nil, err
 		}

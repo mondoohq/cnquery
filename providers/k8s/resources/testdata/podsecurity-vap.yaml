@@ -1,0 +1,44 @@
+# Copyright Mondoo, Inc. 2024, 2026
+# SPDX-License-Identifier: BUSL-1.1
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: secured
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: v1.30
+    pod-security.kubernetes.io/warn: baseline
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: demo-policy
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: ["apps"]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["deployments"]
+  validations:
+    - expression: "object.spec.replicas <= 5"
+      message: "too many replicas"
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: demo-binding
+spec:
+  policyName: demo-policy
+  validationActions: ["Deny", "Audit"]
+---
+# A ConfigMap in a namespace with no Namespace object of its own. The parser
+# synthesizes a minimal "guarded-workloads" namespace (no PSA labels) for it.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: guarded-workloads
+data:
+  key: value

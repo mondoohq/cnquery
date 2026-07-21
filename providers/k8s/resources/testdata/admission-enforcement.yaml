@@ -1,0 +1,68 @@
+# Copyright Mondoo, Inc. 2024, 2026
+# SPDX-License-Identifier: BUSL-1.1
+#
+# Exercises namespace PSA enforcement and webhook fail-open detection.
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: enforced-ns
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: audit-only-ns
+  labels:
+    pod-security.kubernetes.io/audit: restricted
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: unenforced-ns
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: vwc-failopen
+webhooks:
+  - name: v.example.com
+    failurePolicy: Ignore
+    clientConfig:
+      service:
+        name: svc
+        namespace: default
+        path: /validate
+    admissionReviewVersions: ["v1"]
+    sideEffects: None
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: vwc-failclosed
+webhooks:
+  - name: v.example.com
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        name: svc
+        namespace: default
+        path: /validate
+    admissionReviewVersions: ["v1"]
+    sideEffects: None
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: mwc-failopen
+webhooks:
+  - name: m.example.com
+    failurePolicy: Ignore
+    clientConfig:
+      service:
+        name: svc
+        namespace: default
+        path: /mutate
+    admissionReviewVersions: ["v1"]
+    sideEffects: None

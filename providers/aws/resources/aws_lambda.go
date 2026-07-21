@@ -574,31 +574,7 @@ func (a *mqlAwsLambdaFunction) allowsPublicAccess() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	for _, raw := range stmts {
-		stmt := raw.(*mqlAwsIamPolicyStatement)
-		effect := stmt.GetEffect()
-		if effect.Error != nil {
-			return false, effect.Error
-		}
-		if !strings.EqualFold(effect.Data, "Allow") {
-			continue
-		}
-		principals := stmt.GetPrincipals()
-		if principals.Error != nil {
-			return false, principals.Error
-		}
-		if !hasWildcardPrincipal(principals.Data) {
-			continue
-		}
-		conditions := stmt.GetConditions()
-		if conditions.Error != nil {
-			return false, conditions.Error
-		}
-		if !hasSourceScopingCondition(conditions.Data) {
-			return true, nil
-		}
-	}
-	return false, nil
+	return statementsAllowPublic(stmts)
 }
 
 // hasWildcardPrincipal reports whether a parsed policy-statement principal map

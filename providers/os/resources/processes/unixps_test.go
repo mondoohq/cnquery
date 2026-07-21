@@ -137,6 +137,18 @@ func TestAixPSProcessParser(t *testing.T) {
 	assert.Equal(t, int64(0), found.Uid, "process uid detected")
 }
 
+func TestAixPSProcessParser_NonNumericUid(t *testing.T) {
+	// A row whose uid column is non-numeric hits the uid-parse-error branch.
+	// That branch previously referenced m[9] — out of range for the 8-group
+	// AIX regex — and panicked; it must now skip the row cleanly.
+	input := " 1234 0.1 0.2 4096 pts/0 00:00:01 root /usr/sbin/sshd\n"
+	require.NotPanics(t, func() {
+		procs, err := processes.ParseAixPsResult(strings.NewReader(input))
+		require.NoError(t, err)
+		require.Empty(t, procs)
+	})
+}
+
 func TestParseFindSocketLine(t *testing.T) {
 	fi, err := os.Open("./testdata/find_printf_nginx_container.txt")
 	require.NoError(t, err)

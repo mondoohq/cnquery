@@ -63,36 +63,53 @@ func (t *ManifestParser) Namespace(name string) (*v1.Namespace, error) {
 	return nil, fmt.Errorf("namespace %s not found", name)
 }
 
-// Namespaces iterates over all file-based manifests and extracts all namespaces used
+// Namespaces iterates over all file-based manifests and extracts all namespaces.
+//
+// Standalone Namespace objects present in the manifest are returned with their
+// full metadata (labels, annotations, UID, etc.) so that namespace-level audits
+// — for example Pod Security admission labels — work against manifest scans.
+// Namespaces that are only referenced by another object's metadata.namespace
+// (and have no Namespace object of their own) are synthesized as minimal
+// Namespace objects carrying just the name.
 func (t *ManifestParser) Namespaces() ([]v1.Namespace, error) {
-	namespaceMap := map[string]struct{}{}
+	namespaces := map[string]v1.Namespace{}
+
+	// First pass: collect standalone Namespace objects, which carry full metadata.
 	for i := range t.Objects {
-		res := t.Objects[i]
-		o, err := meta.Accessor(res)
-		if err == nil {
-			ns := o.GetNamespace()
-			if ns == "" {
-				continue
-			}
-			// There are types of resources that do not have meta data. Instead of erroring
-			// skip them.
-			namespaceMap[ns] = struct{}{}
+		ns, ok := t.Objects[i].(*v1.Namespace)
+		if !ok {
+			continue
+		}
+		// The universal deserializer strips TypeMeta, so set the Kind explicitly.
+		ns.Kind = "Namespace"
+		namespaces[ns.Name] = *ns
+	}
+
+	// Second pass: add namespaces that are only referenced by other objects'
+	// metadata and don't have a Namespace object of their own.
+	for i := range t.Objects {
+		o, err := meta.Accessor(t.Objects[i])
+		if err != nil {
+			// There are types of resources that do not have meta data. Instead of
+			// erroring skip them.
+			continue
+		}
+		ns := o.GetNamespace()
+		if ns == "" {
+			continue
+		}
+		if _, ok := namespaces[ns]; ok {
+			continue
+		}
+		namespaces[ns] = v1.Namespace{
+			TypeMeta:   metav1.TypeMeta{Kind: "Namespace"},
+			ObjectMeta: metav1.ObjectMeta{Name: ns},
 		}
 	}
 
-	var nss []v1.Namespace
-
-	// NOTE: this only does the minimal required for our current implementation
-	// going forward we may need a bit more information
-	for k := range namespaceMap {
-		nss = append(nss, v1.Namespace{
-			TypeMeta: metav1.TypeMeta{
-				Kind: "Namespace",
-			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name: k,
-			},
-		})
+	nss := make([]v1.Namespace, 0, len(namespaces))
+	for _, ns := range namespaces {
+		nss = append(nss, ns)
 	}
 
 	return nss, nil

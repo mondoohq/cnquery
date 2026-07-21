@@ -72,6 +72,36 @@ func TestMqlSimple(t *testing.T) {
 	}
 }
 
+// Regression test for https://github.com/mondoohq/mql/issues/1174: a case whose
+// condition is a constant boolean (`case true:` / `case false:`) used to compile
+// to the same Bool primitive the compiler emits for `default`, so the runtime
+// misidentified it as the default case and fell through to the last default-looking
+// arg. These must now match by their actual truthiness.
+func TestMqlSwitch(t *testing.T) {
+	tests := []struct {
+		query     string
+		assertion any
+	}{
+		{"switch { case true: 1; case false: 2; }", int64(1)},
+		{"switch { case false: 1; case true: 2; }", int64(2)},
+		{"switch { case true: 1; default: 2; }", int64(1)},
+		{"switch { case false: 1; default: 2; }", int64(2)},
+		{"switch { case false: 1; case false: 2; default: 3; }", int64(3)},
+		{`switch(1) { case _ > 0: "pos"; default: "neg" }`, "pos"},
+		{`switch(1) { case _ < 0: "neg"; default: "other" }`, "other"},
+	}
+
+	for i := range tests {
+		one := tests[i]
+		t.Run(one.query, func(t *testing.T) {
+			res, err := exec.Exec(one.query, runtime(), testutils.Features, nil)
+			require.NoError(t, err)
+			require.NoError(t, res.Error)
+			assert.Equal(t, one.assertion, res.Value)
+		})
+	}
+}
+
 func TestCustomData(t *testing.T) {
 	query := "{ \"a\": \"valuea\", \"b\": \"valueb\"}"
 

@@ -78,7 +78,7 @@ func (g *mqlGcpProjectCertificateAuthorityService) caPools() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := privateca.NewCertificateAuthorityClient(ctx, option.WithCredentials(creds))
+	client, err := privateca.NewCertificateAuthorityClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -178,7 +178,7 @@ func (g *mqlGcpProjectCertificateAuthorityServiceCaPool) certificateAuthorities(
 	}
 
 	ctx := context.Background()
-	client, err := privateca.NewCertificateAuthorityClient(ctx, option.WithCredentials(creds))
+	client, err := privateca.NewCertificateAuthorityClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -307,7 +307,7 @@ func (g *mqlGcpProjectCertificateAuthorityServiceCaPool) certificates() ([]any, 
 	}
 
 	ctx := context.Background()
-	client, err := privateca.NewCertificateAuthorityClient(ctx, option.WithCredentials(creds))
+	client, err := privateca.NewCertificateAuthorityClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}

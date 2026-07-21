@@ -148,7 +148,7 @@ func (g *mqlGcpProjectMonitoringService) alertPolicies() ([]any, error) {
 
 	ctx := context.Background()
 
-	c, err := monitoring.NewAlertPolicyClient(ctx, option.WithCredentials(creds))
+	c, err := monitoring.NewAlertPolicyClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -387,7 +387,7 @@ func (g *mqlGcpProjectMonitoringService) notificationChannels() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	c, err := monitoring.NewNotificationChannelClient(ctx, option.WithCredentials(creds))
+	c, err := monitoring.NewNotificationChannelClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -445,7 +445,7 @@ func (g *mqlGcpProjectMonitoringService) groups() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	c, err := monitoring.NewGroupClient(ctx, option.WithCredentials(creds))
+	c, err := monitoring.NewGroupClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -492,7 +492,7 @@ func (g *mqlGcpProjectMonitoringService) dashboards() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := dashboard.NewDashboardsClient(ctx, option.WithCredentials(creds))
+	client, err := dashboard.NewDashboardsClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -567,7 +567,7 @@ func (g *mqlGcpProjectMonitoringService) services() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := monitoring.NewServiceMonitoringClient(ctx, option.WithCredentials(creds))
+	client, err := monitoring.NewServiceMonitoringClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -644,7 +644,7 @@ func (g *mqlGcpProjectMonitoringServiceService) slos() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := monitoring.NewServiceMonitoringClient(ctx, option.WithCredentials(creds))
+	client, err := monitoring.NewServiceMonitoringClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}

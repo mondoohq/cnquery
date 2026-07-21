@@ -35,7 +35,7 @@ func newACMClient(conn *connection.GcpConnection) (*accesscontextmanager.Client,
 	if err != nil {
 		return nil, err
 	}
-	return accesscontextmanager.NewClient(context.Background(), option.WithCredentials(creds))
+	return accesscontextmanager.NewClient(context.Background(), option.WithCredentials(creds), connection.GRPCClientTraceOption())
 }
 
 func (g *mqlGcpOrganization) accessPolicies() ([]any, error) {

@@ -405,21 +405,14 @@ func (p *mqlGitlabProject) projectMembers() ([]any, error) {
 	for _, member := range allMembers {
 		role := mapAccessLevelToRole(int(member.AccessLevel))
 
-		mqlUser, err := CreateResource(p.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
-			"id":               llx.IntData(int64(member.ID)),
-			"username":         llx.StringData(member.Username),
-			"name":             llx.StringData(member.Name),
-			"state":            llx.StringData(member.State),
-			"email":            llx.StringData(member.Email),
-			"webURL":           llx.StringData(member.WebURL),
-			"avatarURL":        llx.StringData(member.AvatarURL),
-			"createdAt":        llx.TimeDataPtr(member.CreatedAt),
-			"jobTitle":         llx.StringData(""),
-			"organization":     llx.StringData(""),
-			"location":         llx.StringData(""),
-			"locked":           llx.BoolData(false),
-			"bot":              llx.BoolData(false),
-			"twoFactorEnabled": llx.BoolData(false),
+		// Seed only the id and let initGitlabUser lazily fetch the full record.
+		// Hardcoding zero values for fields the member payload doesn't carry
+		// (twoFactorEnabled, locked, bot, jobTitle, organization, location)
+		// would poison the runtime cache for any later gitlab.user lookup on
+		// the same id — e.g. reporting twoFactorEnabled=false for a user who
+		// actually has it enabled.
+		mqlUser, err := NewResource(p.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
+			"id": llx.IntData(int64(member.ID)),
 		})
 		if err != nil {
 			return nil, err

@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -155,6 +156,9 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Options["repository"] = string(flags["repository"].Value)
 		conf.Runtime = "gcp-gcr"
 	case "snapshot":
+		if err := validateSnapshotTarget(projectId); err != nil {
+			return nil, err
+		}
 		conf.Options["snapshot-name"] = req.Args[1]
 		conf.Options["project-id"] = projectId
 		conf.Options["zone"] = zone
@@ -162,6 +166,9 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Type = string(gcpinstancesnapshot.SnapshotConnectionType)
 		conf.Discover = nil
 	case "instance":
+		if err := validateInstanceTarget(projectId, zone); err != nil {
+			return nil, err
+		}
 		conf.Options["instance-name"] = req.Args[1]
 		conf.Options["type"] = "instance"
 		conf.Options["project-id"] = projectId
@@ -176,6 +183,31 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	return &plugin.ParseCLIRes{Asset: &asset}, nil
+}
+
+// validateInstanceTarget ensures the required flags for instance scanning are
+// present. Both project-id and zone are needed to locate the instance.
+func validateInstanceTarget(projectId, zone string) error {
+	var missing []string
+	if projectId == "" {
+		missing = append(missing, "--project-id")
+	}
+	if zone == "" {
+		missing = append(missing, "--zone")
+	}
+	if len(missing) > 0 {
+		return status.Errorf(codes.InvalidArgument, "the %s flag(s) are required for gcp instance scanning", strings.Join(missing, " and "))
+	}
+	return nil
+}
+
+// validateSnapshotTarget ensures the required flags for snapshot scanning are
+// present. The project-id is needed to locate the snapshot.
+func validateSnapshotTarget(projectId string) error {
+	if projectId == "" {
+		return status.Error(codes.InvalidArgument, "the --project-id flag is required for gcp snapshot scanning")
+	}
+	return nil
 }
 
 func (s *Service) MockConnect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*plugin.ConnectRes, error) {

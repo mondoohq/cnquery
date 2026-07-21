@@ -124,7 +124,7 @@ func (g *mqlGcpOrganization) fetchIamPolicy() (string, *cloudresourcemanager.Pol
 		}
 
 		name := "organizations/" + orgId
-		g.iamPolicyCache, g.iamPolicyErr = svc.Organizations.GetIamPolicy(name, &cloudresourcemanager.GetIamPolicyRequest{}).Do()
+		g.iamPolicyCache, g.iamPolicyErr = svc.Organizations.GetIamPolicy(name, &cloudresourcemanager.GetIamPolicyRequest{Options: &cloudresourcemanager.GetPolicyOptions{RequestedPolicyVersion: 3}}).Do()
 	})
 	if g.iamPolicyErr != nil {
 		return "", nil, g.iamPolicyErr

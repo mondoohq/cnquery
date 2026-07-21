@@ -234,8 +234,9 @@ func (a *mqlMicrosoftUser) microsoftParent() (*mqlMicrosoft, error) {
 
 func newMqlMicrosoftUser(runtime *plugin.Runtime, u models.Userable) (*mqlMicrosoftUser, error) {
 	identities := []any{}
+	uid := convert.ToValue(u.GetId())
 	for idx, userId := range u.GetIdentities() {
-		id := fmt.Sprintf("%s-%d", *u.GetId(), idx)
+		id := fmt.Sprintf("%s-%d", uid, idx)
 		identity, err := CreateResource(runtime, "microsoft.user.identity", map[string]*llx.RawData{
 			"signInType":       llx.StringDataPtr(userId.GetSignInType()),
 			"issuer":           llx.StringDataPtr(userId.GetIssuer()),
@@ -252,9 +253,10 @@ func newMqlMicrosoftUser(runtime *plugin.Runtime, u models.Userable) (*mqlMicros
 
 	if u.GetAssignedLicenses() != nil {
 		for _, license := range u.GetAssignedLicenses() {
-			if license == nil {
+			if license == nil || license.GetSkuId() == nil {
 				continue
 			}
+			skuId := license.GetSkuId().String()
 
 			var disabledPlanStrings []string
 			if license.GetDisabledPlans() != nil {
@@ -265,9 +267,9 @@ func newMqlMicrosoftUser(runtime *plugin.Runtime, u models.Userable) (*mqlMicros
 
 			mqlAssignedLicenses, err := CreateResource(runtime, "microsoft.user.assignedLicense",
 				map[string]*llx.RawData{
-					"__id":          llx.StringData(license.GetSkuId().String()),
+					"__id":          llx.StringData(skuId),
 					"disabledPlans": llx.ArrayData(convert.SliceAnyToInterface(disabledPlanStrings), types.String),
-					"skuId":         llx.StringData(license.GetSkuId().String()),
+					"skuId":         llx.StringData(skuId),
 				})
 			if err != nil {
 				return nil, err
@@ -1260,7 +1262,7 @@ func newMqlMicrosoftUserLicenseDetail(runtime *plugin.Runtime, d models.LicenseD
 				"__id":               llx.StringData(planId),
 				"appliesTo":          llx.StringDataPtr(sp.GetAppliesTo()),
 				"provisioningStatus": llx.StringDataPtr(sp.GetProvisioningStatus()),
-				"servicePlanId":      llx.StringData(sp.GetServicePlanId().String()),
+				"servicePlanId":      llx.StringDataPtr(newUuidString(sp.GetServicePlanId())),
 				"servicePlanName":    llx.StringDataPtr(sp.GetServicePlanName()),
 			})
 		if err != nil {

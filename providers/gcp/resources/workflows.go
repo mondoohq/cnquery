@@ -36,6 +36,9 @@ func (g *mqlGcpProject) workflows() (*mqlGcpProjectWorkflowsService, error) {
 	if err != nil {
 		return nil, err
 	}
+	if !serviceEnabled {
+		log.Debug().Str("service", service_workflows).Msg("gcp service is not enabled, skipping")
+	}
 
 	res, err := CreateResource(g.MqlRuntime, "gcp.project.workflowsService", map[string]*llx.RawData{
 		"projectId": llx.StringData(projectId),

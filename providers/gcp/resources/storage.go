@@ -482,7 +482,10 @@ func (g *mqlGcpProjectStorageServiceBucket) iamPolicy() ([]any, error) {
 		return nil, err
 	}
 
-	policy, err := storeSvc.Buckets.GetIamPolicy(bucketName).Do()
+	// Request policy schema v3 so conditional bindings are returned; the
+	// default v1 omits any binding carrying an IAM condition, which would hide
+	// conditional grants (including conditional public-access bindings).
+	policy, err := storeSvc.Buckets.GetIamPolicy(bucketName).OptionsRequestedPolicyVersion(3).Do()
 	if err != nil {
 		return nil, err
 	}

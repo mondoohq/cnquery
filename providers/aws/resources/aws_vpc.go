@@ -1877,6 +1877,18 @@ func (a *mqlAwsVpcSubnet) flowLogs() ([]any, error) {
 	return flowLogs, nil
 }
 
+func (a *mqlAwsVpcSubnet) networkInterfaces() ([]any, error) {
+	return networkInterfacesByFilter(a.MqlRuntime, a.Region.Data, "subnet-id", a.Id.Data)
+}
+
+func (a *mqlAwsVpcSubnet) instances() ([]any, error) {
+	nis := a.GetNetworkInterfaces()
+	if nis.Error != nil {
+		return nil, nis.Error
+	}
+	return instancesFromNetworkInterfaces(nis.Data)
+}
+
 // VPN Gateway methods (#40)
 
 type mqlAwsVpcVpnGatewayInternal struct {
@@ -1905,4 +1917,20 @@ func (a *mqlAwsVpcVpnGateway) vpnConnections() ([]any, error) {
 		vpnConns = append(vpnConns, mqlVpnConn)
 	}
 	return vpnConns, nil
+}
+
+func (a *mqlAwsVpc) cloudformationStack() (*mqlAwsCloudformationStack, error) {
+	stack, err := cloudformationStackForTags(a.MqlRuntime, a.Region.Data, a.Tags.Data)
+	if err != nil {
+		return nil, err
+	}
+	if stack == nil {
+		a.CloudformationStack.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return stack, nil
+}
+
+func (a *mqlAwsVpc) managedBy() (string, error) {
+	return managedByFromTags(a.Tags.Data), nil
 }
