@@ -557,8 +557,16 @@ func (a *mqlAzureSubscriptionMonitorService) metricAlerts() ([]any, error) {
 	ctx := context.Background()
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
+	// The armmonitor SDK pins the metricAlerts client to an api-version
+	// (2026-01-01) that the Microsoft.Insights/metricAlerts resource type does
+	// not serve, so ListBySubscription 404s with InvalidResourceType. Override
+	// it to the newest api-version the service actually supports for this
+	// resource type. Scoped to this client only, so sibling Monitor clients
+	// (action groups, scheduled query rules) keep their own versions.
+	metricAlertOpts := conn.ClientOptions()
+	metricAlertOpts.APIVersion = "2024-03-01-preview"
 	client, err := monitor.NewMetricAlertsClient(subId, token, &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
+		ClientOptions: metricAlertOpts,
 	})
 	if err != nil {
 		return nil, err

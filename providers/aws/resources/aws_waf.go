@@ -62,7 +62,11 @@ func wafTagsForArn(runtime *plugin.Runtime, scope, arn string) (map[string]any, 
 				}
 			}
 		}
-		if resp.NextMarker == nil {
+		// WAFv2 signals the end of pagination with an empty-but-non-nil
+		// NextMarker. Passing that empty string back to ListTagsForResource
+		// fails validation ("Member must have length greater than or equal to
+		// 1"), so treat empty the same as nil.
+		if resp.NextMarker == nil || *resp.NextMarker == "" {
 			break
 		}
 		nextMarker = resp.NextMarker
