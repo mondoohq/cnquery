@@ -2,7 +2,7 @@ module go.mondoo.com/mql/v13/providers/gcp
 
 replace go.mondoo.com/mql/v13 => ../..
 
-go 1.26.4
+go 1.26.5
 
 require (
 	cloud.google.com/go/accessapproval v1.13.0
@@ -18,12 +18,12 @@ require (
 	cloud.google.com/go/certificatemanager v1.15.0
 	cloud.google.com/go/cloudbuild v1.32.0
 	cloud.google.com/go/cloudtasks v1.18.0
-	cloud.google.com/go/compute v1.64.0
+	cloud.google.com/go/compute v1.65.0
 	cloud.google.com/go/container v1.53.0
 	cloud.google.com/go/containeranalysis v0.19.0
 	cloud.google.com/go/datastream v1.21.0
 	cloud.google.com/go/deploy v1.33.0
-	cloud.google.com/go/discoveryengine v1.31.0
+	cloud.google.com/go/discoveryengine v1.32.0
 	cloud.google.com/go/dlp v1.36.0
 	cloud.google.com/go/documentai v1.49.0
 	cloud.google.com/go/eventarc v1.25.0
@@ -38,7 +38,7 @@ require (
 	cloud.google.com/go/logging v1.19.0
 	cloud.google.com/go/longrunning v1.2.0
 	cloud.google.com/go/memcache v1.17.0
-	cloud.google.com/go/memorystore v1.1.0
+	cloud.google.com/go/memorystore v1.2.0
 	cloud.google.com/go/modelarmor v1.2.0
 	cloud.google.com/go/monitoring v1.30.0
 	cloud.google.com/go/orgpolicy v1.20.0
@@ -48,7 +48,7 @@ require (
 	cloud.google.com/go/run v1.22.0
 	cloud.google.com/go/scheduler v1.16.0
 	cloud.google.com/go/security v1.26.0
-	cloud.google.com/go/securitycenter v1.45.0
+	cloud.google.com/go/securitycenter v1.46.0
 	cloud.google.com/go/serviceusage v1.15.0
 	cloud.google.com/go/spanner v1.93.0
 	github.com/aws/smithy-go v1.27.4
@@ -62,7 +62,7 @@ require (
 	go.mondoo.com/ranger-rpc v0.8.1
 	golang.org/x/oauth2 v0.36.0
 	google.golang.org/api v0.289.0
-	google.golang.org/genproto v0.0.0-20260715232425-e75dac1f907d
+	google.golang.org/genproto v0.0.0-20260720211330-0afa2a65878a
 	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af
 )
 
@@ -117,10 +117,10 @@ require (
 	github.com/pandatix/go-cvss v0.6.2 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
-	github.com/prometheus/client_golang v1.23.2 // indirect
+	github.com/prometheus/client_golang v1.24.0 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
-	github.com/prometheus/common v0.67.5 // indirect
-	github.com/prometheus/procfs v0.20.1 // indirect
+	github.com/prometheus/common v0.70.0 // indirect
+	github.com/prometheus/procfs v0.21.1 // indirect
 	github.com/protobom/protobom v0.5.8 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/shurcooL/graphql v0.0.0-20240915155400-7ee5256398cf // indirect
@@ -130,7 +130,7 @@ require (
 	github.com/tailscale/hujson v0.0.0-20260718110524-10d7940d4c87 // indirect
 	github.com/tonistiigi/go-csvvalue v0.0.0-20240814133006-030d3b2625d0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
-	go.mondoo.com/mondoo-go v0.0.0-20260717002435-4e398d86923b // indirect
+	go.mondoo.com/mondoo-go v0.0.0-20260721015005-2710328e18d1 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/detectors/gcp v1.44.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.44.0 // indirect
@@ -162,7 +162,7 @@ require (
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/binaryauthorization v1.16.0
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
-	cloud.google.com/go/secretmanager v1.20.0
+	cloud.google.com/go/secretmanager v1.21.0
 	dario.cat/mergo v1.0.2 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.22.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.14.0 // indirect
@@ -211,7 +211,7 @@ require (
 	github.com/go-git/go-git/v5 v5.19.1 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.5 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
-	github.com/go-logr/logr v1.4.3 // indirect
+	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
@@ -234,7 +234,7 @@ require (
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/kevinburke/ssh_config v1.6.0 // indirect
-	github.com/klauspost/compress v1.19.0 // indirect
+	github.com/klauspost/compress v1.19.1 // indirect
 	github.com/klauspost/cpuid/v2 v2.4.0 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
@@ -284,8 +284,8 @@ require (
 	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/tools v0.48.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260715232425-e75dac1f907d // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260715232425-e75dac1f907d // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260720211330-0afa2a65878a // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260720211330-0afa2a65878a // indirect
 	google.golang.org/grpc v1.82.1
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

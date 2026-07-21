@@ -2,7 +2,7 @@ module go.mondoo.com/mql/v13/providers/alicloud
 
 replace go.mondoo.com/mql/v13 => ../..
 
-go 1.26.4
+go 1.26.5
 
 require (
 	github.com/alibabacloud-go/actiontrail-20200706/v3 v3.4.0
@@ -14,7 +14,7 @@ require (
 	github.com/alibabacloud-go/ddoscoo-20200101/v5 v5.0.2
 	github.com/alibabacloud-go/dds-20151201/v9 v9.2.0
 	github.com/alibabacloud-go/ecs-20140526/v6 v6.1.0
-	github.com/alibabacloud-go/fc-20230330/v4 v4.7.8
+	github.com/alibabacloud-go/fc-20230330/v4 v4.7.9
 	github.com/alibabacloud-go/kms-20160120/v4 v4.0.0
 	github.com/alibabacloud-go/nas-20170626/v4 v4.6.0
 	github.com/alibabacloud-go/nlb-20220430/v4 v4.1.3
@@ -26,14 +26,14 @@ require (
 	github.com/alibabacloud-go/slb-20140515/v4 v4.0.14
 	github.com/alibabacloud-go/sls-20201230/v6 v6.13.0
 	github.com/alibabacloud-go/sts-20150401/v2 v2.1.0
-	github.com/alibabacloud-go/tea v1.5.2
+	github.com/alibabacloud-go/tea v1.5.3
 	github.com/alibabacloud-go/vpc-20160428/v6 v6.16.0
 	github.com/alibabacloud-go/waf-openapi-20211001/v7 v7.8.2
 	github.com/aliyun/alibabacloud-oss-go-sdk-v2 v1.5.3
 	github.com/aliyun/credentials-go v1.4.12
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
-	go.mondoo.com/mql/v13 v13.29.2
+	go.mondoo.com/mql/v13 v13.30.0
 )
 
 require (
@@ -84,7 +84,7 @@ require (
 	github.com/go-git/go-billy/v5 v5.9.0 // indirect
 	github.com/go-git/go-git/v5 v5.19.1 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.5 // indirect
-	github.com/go-logr/logr v1.4.3 // indirect
+	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -100,7 +100,7 @@ require (
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kevinburke/ssh_config v1.6.0 // indirect
-	github.com/klauspost/compress v1.18.6 // indirect
+	github.com/klauspost/compress v1.19.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.4.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
@@ -143,7 +143,7 @@ require (
 	golang.org/x/text v0.40.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/tools v0.48.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260715232425-e75dac1f907d // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260720211330-0afa2a65878a // indirect
 	google.golang.org/grpc v1.82.1 // indirect
 	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af // indirect
 	gopkg.in/ini.v1 v1.67.3 // indirect
