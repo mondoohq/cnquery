@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.32.0",
-  "generated_at": "2026-07-21T11:53:06-07:00",
+  "generated_at": "2026-07-21T12:01:18-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -117,6 +117,7 @@
     "Microsoft.Eventgrid/topics/read",
     "Microsoft.HybridCompute/machines/extensions/read",
     "Microsoft.HybridCompute/machines/read",
+    "Microsoft.Insights/actionGroups/read",
     "Microsoft.Insights/activityLogAlerts/read",
     "Microsoft.Insights/activityLogs/read",
     "Microsoft.Insights/components/read",
@@ -991,6 +992,12 @@
       "service": "Microsoft.HybridCompute",
       "action": "NewListBySubscriptionPager",
       "source_file": "hybridcompute.go"
+    },
+    {
+      "permission": "Microsoft.Insights/actionGroups/read",
+      "service": "Microsoft.Insights",
+      "action": "NewListBySubscriptionIDPager",
+      "source_file": "monitor.go"
     },
     {
       "permission": "Microsoft.Insights/activityLogAlerts/read",

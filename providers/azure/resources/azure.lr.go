@@ -261,6 +261,7 @@ const (
 	ResourceAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties                string = "azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties"
 	ResourceAzureSubscriptionKeyVaultServiceSecret                                                    string = "azure.subscription.keyVaultService.secret"
 	ResourceAzureSubscriptionMonitorService                                                           string = "azure.subscription.monitorService"
+	ResourceAzureSubscriptionMonitorServiceActionGroup                                                string = "azure.subscription.monitorService.actionGroup"
 	ResourceAzureSubscriptionMonitorServiceActivityLog                                                string = "azure.subscription.monitorService.activityLog"
 	ResourceAzureSubscriptionMonitorServiceApplicationInsight                                         string = "azure.subscription.monitorService.applicationInsight"
 	ResourceAzureSubscriptionMonitorServiceActivityLogAlert                                           string = "azure.subscription.monitorService.activityLog.alert"
@@ -1470,6 +1471,10 @@ func init() {
 		"azure.subscription.monitorService": {
 			Init:   initAzureSubscriptionMonitorService,
 			Create: createAzureSubscriptionMonitorService,
+		},
+		"azure.subscription.monitorService.actionGroup": {
+			// to override args, implement: initAzureSubscriptionMonitorServiceActionGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionMonitorServiceActionGroup,
 		},
 		"azure.subscription.monitorService.activityLog": {
 			Init:   initAzureSubscriptionMonitorServiceActivityLog,
@@ -11500,6 +11505,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.monitorService.queryPacks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorService).GetQueryPacks()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.queryPack")))
+	},
+	"azure.subscription.monitorService.actionGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorService).GetActionGroups()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.actionGroup")))
+	},
+	"azure.subscription.monitorService.actionGroup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceActionGroup).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.actionGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceActionGroup).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.actionGroup.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceActionGroup).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.actionGroup.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceActionGroup).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.monitorService.actionGroup.groupShortName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceActionGroup).GetGroupShortName()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.actionGroup.emailReceivers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceActionGroup).GetEmailReceivers()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.monitorService.actionGroup.smsReceivers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceActionGroup).GetSmsReceivers()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.monitorService.actionGroup.voiceReceivers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceActionGroup).GetVoiceReceivers()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.monitorService.actionGroup.webhookReceivers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceActionGroup).GetWebhookReceivers()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.monitorService.actionGroup.armRoleReceivers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceActionGroup).GetArmRoleReceivers()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.monitorService.actionGroup.azureFunctionReceivers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceActionGroup).GetAzureFunctionReceivers()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.monitorService.actionGroup.logicAppReceivers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceActionGroup).GetLogicAppReceivers()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.monitorService.actionGroup.automationRunbookReceivers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceActionGroup).GetAutomationRunbookReceivers()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.monitorService.actionGroup.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceActionGroup).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
 	"azure.subscription.monitorService.activityLog.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorServiceActivityLog).GetSubscriptionId()).ToDataRes(types.String)
@@ -31862,6 +31912,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.monitorService.queryPacks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionMonitorService).QueryPacks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.actionGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorService).ActionGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.actionGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceActionGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.monitorService.actionGroup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceActionGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.actionGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceActionGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.actionGroup.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceActionGroup).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.actionGroup.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceActionGroup).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.actionGroup.groupShortName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceActionGroup).GroupShortName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.actionGroup.emailReceivers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceActionGroup).EmailReceivers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.actionGroup.smsReceivers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceActionGroup).SmsReceivers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.actionGroup.voiceReceivers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceActionGroup).VoiceReceivers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.actionGroup.webhookReceivers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceActionGroup).WebhookReceivers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.actionGroup.armRoleReceivers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceActionGroup).ArmRoleReceivers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.actionGroup.azureFunctionReceivers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceActionGroup).AzureFunctionReceivers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.actionGroup.logicAppReceivers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceActionGroup).LogicAppReceivers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.actionGroup.automationRunbookReceivers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceActionGroup).AutomationRunbookReceivers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.actionGroup.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceActionGroup).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.monitorService.activityLog.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -74067,6 +74181,7 @@ type mqlAzureSubscriptionMonitorService struct {
 	ActivityLog         plugin.TValue[*mqlAzureSubscriptionMonitorServiceActivityLog]
 	Workspaces          plugin.TValue[[]any]
 	QueryPacks          plugin.TValue[[]any]
+	ActionGroups        plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionMonitorService creates a new instance of this resource
@@ -74203,6 +74318,148 @@ func (c *mqlAzureSubscriptionMonitorService) GetQueryPacks() *plugin.TValue[[]an
 		}
 
 		return c.queryPacks()
+	})
+}
+
+func (c *mqlAzureSubscriptionMonitorService) GetActionGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ActionGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.monitorService", c.__id, "actionGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.actionGroups()
+	})
+}
+
+// mqlAzureSubscriptionMonitorServiceActionGroup for the azure.subscription.monitorService.actionGroup resource
+type mqlAzureSubscriptionMonitorServiceActionGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionMonitorServiceActionGroupInternal
+	Id                         plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	Location                   plugin.TValue[string]
+	Enabled                    plugin.TValue[bool]
+	GroupShortName             plugin.TValue[string]
+	EmailReceivers             plugin.TValue[[]any]
+	SmsReceivers               plugin.TValue[[]any]
+	VoiceReceivers             plugin.TValue[[]any]
+	WebhookReceivers           plugin.TValue[[]any]
+	ArmRoleReceivers           plugin.TValue[[]any]
+	AzureFunctionReceivers     plugin.TValue[[]any]
+	LogicAppReceivers          plugin.TValue[[]any]
+	AutomationRunbookReceivers plugin.TValue[[]any]
+	SystemMetadata             plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionMonitorServiceActionGroup creates a new instance of this resource
+func createAzureSubscriptionMonitorServiceActionGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionMonitorServiceActionGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.monitorService.actionGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceActionGroup) MqlName() string {
+	return "azure.subscription.monitorService.actionGroup"
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceActionGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceActionGroup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceActionGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceActionGroup) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceActionGroup) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceActionGroup) GetGroupShortName() *plugin.TValue[string] {
+	return &c.GroupShortName
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceActionGroup) GetEmailReceivers() *plugin.TValue[[]any] {
+	return &c.EmailReceivers
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceActionGroup) GetSmsReceivers() *plugin.TValue[[]any] {
+	return &c.SmsReceivers
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceActionGroup) GetVoiceReceivers() *plugin.TValue[[]any] {
+	return &c.VoiceReceivers
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceActionGroup) GetWebhookReceivers() *plugin.TValue[[]any] {
+	return &c.WebhookReceivers
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceActionGroup) GetArmRoleReceivers() *plugin.TValue[[]any] {
+	return &c.ArmRoleReceivers
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceActionGroup) GetAzureFunctionReceivers() *plugin.TValue[[]any] {
+	return &c.AzureFunctionReceivers
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceActionGroup) GetLogicAppReceivers() *plugin.TValue[[]any] {
+	return &c.LogicAppReceivers
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceActionGroup) GetAutomationRunbookReceivers() *plugin.TValue[[]any] {
+	return &c.AutomationRunbookReceivers
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceActionGroup) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.monitorService.actionGroup", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
 	})
 }
 

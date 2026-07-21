@@ -393,6 +393,109 @@ func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]any, error) 
 	return res, nil
 }
 
+type mqlAzureSubscriptionMonitorServiceActionGroupInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionMonitorServiceActionGroup) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionMonitorServiceActionGroup) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionMonitorService) actionGroups() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+	client, err := monitor.NewActionGroupsClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListBySubscriptionIDPager(&monitor.ActionGroupsClientListBySubscriptionIDOptions{})
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, ag := range page.Value {
+			if ag == nil {
+				continue
+			}
+			var groupShortName string
+			var enabled *bool
+			emailReceivers := []any{}
+			smsReceivers := []any{}
+			voiceReceivers := []any{}
+			webhookReceivers := []any{}
+			armRoleReceivers := []any{}
+			azureFunctionReceivers := []any{}
+			logicAppReceivers := []any{}
+			automationRunbookReceivers := []any{}
+			if p := ag.Properties; p != nil {
+				groupShortName = convert.ToValue(p.GroupShortName)
+				enabled = p.Enabled
+				if emailReceivers, err = convert.JsonToDictSlice(p.EmailReceivers); err != nil {
+					return nil, err
+				}
+				if smsReceivers, err = convert.JsonToDictSlice(p.SmsReceivers); err != nil {
+					return nil, err
+				}
+				if voiceReceivers, err = convert.JsonToDictSlice(p.VoiceReceivers); err != nil {
+					return nil, err
+				}
+				if webhookReceivers, err = convert.JsonToDictSlice(p.WebhookReceivers); err != nil {
+					return nil, err
+				}
+				if armRoleReceivers, err = convert.JsonToDictSlice(p.ArmRoleReceivers); err != nil {
+					return nil, err
+				}
+				if azureFunctionReceivers, err = convert.JsonToDictSlice(p.AzureFunctionReceivers); err != nil {
+					return nil, err
+				}
+				if logicAppReceivers, err = convert.JsonToDictSlice(p.LogicAppReceivers); err != nil {
+					return nil, err
+				}
+				if automationRunbookReceivers, err = convert.JsonToDictSlice(p.AutomationRunbookReceivers); err != nil {
+					return nil, err
+				}
+			}
+			mqlAg, err := CreateResource(a.MqlRuntime, "azure.subscription.monitorService.actionGroup",
+				map[string]*llx.RawData{
+					"id":                         llx.StringDataPtr(ag.ID),
+					"name":                       llx.StringDataPtr(ag.Name),
+					"location":                   llx.StringDataPtr(ag.Location),
+					"enabled":                    llx.BoolDataPtr(enabled),
+					"groupShortName":             llx.StringData(groupShortName),
+					"emailReceivers":             llx.ArrayData(emailReceivers, types.Dict),
+					"smsReceivers":               llx.ArrayData(smsReceivers, types.Dict),
+					"voiceReceivers":             llx.ArrayData(voiceReceivers, types.Dict),
+					"webhookReceivers":           llx.ArrayData(webhookReceivers, types.Dict),
+					"armRoleReceivers":           llx.ArrayData(armRoleReceivers, types.Dict),
+					"azureFunctionReceivers":     llx.ArrayData(azureFunctionReceivers, types.Dict),
+					"logicAppReceivers":          llx.ArrayData(logicAppReceivers, types.Dict),
+					"automationRunbookReceivers": llx.ArrayData(automationRunbookReceivers, types.Dict),
+				})
+			if err != nil {
+				return nil, err
+			}
+			sysData, err := convert.JsonToDict(ag.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlAg.(*mqlAzureSubscriptionMonitorServiceActionGroup).cacheSystemData = sysData
+			res = append(res, mqlAg)
+		}
+	}
+	return res, nil
+}
+
 type mqlAzureSubscriptionMonitorServiceLogprofileInternal struct {
 	cacheSystemData any
 }

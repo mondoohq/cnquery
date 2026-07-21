@@ -8405,6 +8405,63 @@ private azure.subscription.monitorService {
   workspaces() []azure.subscription.monitorService.workspace
   // Log Analytics QueryPacks (saved KQL query collections)
   queryPacks() []azure.subscription.monitorService.queryPack
+  // Action groups (notification and automation targets referenced by alert rules)
+  actionGroups() []azure.subscription.monitorService.actionGroup
+}
+
+// Azure Monitor action group
+//
+// A named set of notification and automation targets that alert rules
+// fire when they trigger: emails, SMS messages, voice calls, webhooks,
+// Azure Functions, Logic Apps, automation runbooks, and ITSM
+// connectors. Surfaces whether the group is enabled and each configured
+// receiver, so audits can confirm that critical alerts actually reach a
+// responder. Select by the action group's Azure resource ID.
+private azure.subscription.monitorService.actionGroup @defaults("name groupShortName enabled") {
+  // ARM resource ID
+  id string
+  // Action group name
+  name string
+  // Location
+  location string
+  // Whether the action group is enabled; a disabled group receives no notifications
+  enabled bool
+  // Short name shown as the source of SMS and other length-limited notifications
+  groupShortName string
+  // Email receivers
+  //
+  // Each entry has keys `name`, `emailAddress`, `useCommonAlertSchema`, and `status`.
+  emailReceivers []dict
+  // SMS receivers
+  //
+  // Each entry has keys `name`, `countryCode`, `phoneNumber`, and `status`.
+  smsReceivers []dict
+  // Voice-call receivers
+  //
+  // Each entry has keys `name`, `countryCode`, and `phoneNumber`.
+  voiceReceivers []dict
+  // Webhook receivers
+  //
+  // Each entry has keys `name`, `serviceUri`, `useCommonAlertSchema`, and the Entra auth settings when secured.
+  webhookReceivers []dict
+  // Entra role receivers (notify all principals holding a role at the scope)
+  //
+  // Each entry has keys `name`, `roleId`, and `useCommonAlertSchema`.
+  armRoleReceivers []dict
+  // Azure Function receivers
+  //
+  // Each entry has keys `name`, `functionAppResourceId`, `functionName`, `httpTriggerUrl`, and `useCommonAlertSchema`.
+  azureFunctionReceivers []dict
+  // Logic Apps receivers
+  //
+  // Each entry has keys `name`, `resourceId`, `callbackUrl`, and `useCommonAlertSchema`.
+  logicAppReceivers []dict
+  // Automation runbook receivers
+  //
+  // Each entry has keys `automationAccountId`, `runbookName`, `webhookResourceId`, `isGlobalRunbook`, `name`, and `useCommonAlertSchema`.
+  automationRunbookReceivers []dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Monitor activity log
