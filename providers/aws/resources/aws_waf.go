@@ -90,8 +90,7 @@ func (a *mqlAwsWafAcl) defaultAction() (string, error) {
 	if a.cachedACL != nil && a.cachedACL.DefaultAction != nil {
 		if a.cachedACL.DefaultAction.Allow != nil {
 			action = "allow"
-		}
-		if a.cachedACL.DefaultAction.Block != nil {
+		} else if a.cachedACL.DefaultAction.Block != nil {
 			action = "block"
 		}
 	}
