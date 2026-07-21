@@ -182,8 +182,11 @@ func accessRules(in []any) []any {
 // listing and the per-application policies() accessor. fallbackKey supplies a
 // unique cache key for inline app-attached policies, which historically arrive
 // with an empty id — without it, every such policy would collide on the empty
-// __id and alias to the first one. A policy with a real id keys on that id so
-// the same reusable policy dedups across the two access paths.
+// __id and alias to the first one. A policy with a real id keys on that id, so
+// the same reusable policy dedups across the two access paths regardless of
+// which path built it. An inline policy (empty id) keys on fallbackKey and is
+// intentionally per-app: it has no id to dedup on and only ever exists inline,
+// so it never needs to match an account-level entry.
 func newAccessPolicyResource(runtime *plugin.Runtime, fallbackKey string, p accessPolicy) (plugin.Resource, error) {
 	idKey := p.ID
 	if idKey == "" {
@@ -206,8 +209,13 @@ func newAccessPolicyResource(runtime *plugin.Runtime, fallbackKey string, p acce
 func (c *mqlCloudflareOneApp) policies() ([]any, error) {
 	result := make([]any, 0, len(c.appPolicies))
 	for i := range c.appPolicies {
-		fallback := fmt.Sprintf("%s/policy/%d", c.Id.Data, i)
-		res, err := newAccessPolicyResource(c.MqlRuntime, fallback, c.appPolicies[i])
+		p := c.appPolicies[i]
+		// Content-derived fallback for inline policies without an id: name +
+		// decision + precedence is stable across list reordering (precedence is
+		// unique per app), unlike the loop index, which would shift the __id if
+		// the API returned the policies in a different order on a later scan.
+		fallback := fmt.Sprintf("%s/policy/%s/%s/%d", c.Id.Data, p.Name, p.Decision, p.Precedence)
+		res, err := newAccessPolicyResource(c.MqlRuntime, fallback, p)
 		if err != nil {
 			return nil, err
 		}
