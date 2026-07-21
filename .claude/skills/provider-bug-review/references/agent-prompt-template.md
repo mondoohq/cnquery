@@ -25,6 +25,12 @@ Read <REPO>/.claude/skills/provider-bug-review/references/bug-taxonomy.md first
 inline if the agent can't read it.]
 
 Focus on these classes (see the taxonomy for fingerprints and correct patterns):
+0. STUB / FABRICATED DATA (top severity) — an accessor or field that returns
+   empty/hardcoded/zero data with no real API call or parse: a body that is just
+   `return nil, nil` / `return []any{}, nil` / `return "", nil`, a field pinned
+   to a literal ""/false/0/{} the API actually populates, or a `.lr`-declared
+   field with no real Go population. Confirm every declared field/accessor
+   actually fetches or parses real data. All data must be real.
 1. Pagination truncation — a List over a paginated endpoint that doesn't loop
    the next-page signal (silent data loss); hand-rolled HTTP fetches that skip
    the Link:next header; hardcoded small limits.

@@ -104,7 +104,7 @@ the file list per group. Key requirements to put in every agent prompt:
 - "Rank by severity; report what you verified as clean too."
 
 Also run a fast mechanical sweep yourself while agents work — these grep
-patterns catch two whole classes cheaply:
+patterns catch whole classes cheaply:
 
 ```bash
 # range-variable pointer capture (bug): &v inside `for _, v := range`
@@ -114,6 +114,13 @@ grep -rn "for.*:= range" providers/<name>/resources/*.go | grep -v _test
 # bare single-result type assertions on runtime data (panic risk): x := v.(T)
 grep -rnE "[a-zA-Z0-9_]+ := [a-zA-Z0-9_.]+\.\([a-zA-Z]" providers/<name>/resources/*.go \
   | grep -v ", ok" | grep -v _test
+
+# STUB DATA (taxonomy class 0, top severity): accessors that return empty/zero
+# with no real fetch, and "not implemented" markers. Open each hit and confirm
+# the body actually calls the client / parses source — a `.lr`-declared field
+# that returns a stubbed zero value is silent data loss.
+grep -rnE "return nil, nil|return \[\]any\{\}, nil|return \"\", nil" providers/<name>/resources/*.go | grep -v _test
+grep -rniE "TODO|not implemented|placeholder|stub|for now" providers/<name>/resources/*.go | grep -v _test
 ```
 
 ### 4. Verify every candidate against source
@@ -137,6 +144,16 @@ correctness (wrong or inconsistent data) > robustness (error propagation) >
 performance > cosmetic.** For each finding give `file:line`, the bug class, the
 concrete failure scenario, and the fix. State plainly what you checked that was
 clean — a review that only lists problems hides its own coverage.
+
+**Always include a test-coverage section.** A review isn't complete until it
+calls out gaps in unit-test coverage of the provider's **pure-Go logic** — the
+pagination loops, parsers, splitters, id/cache-key builders, null/zero
+converters, and degrade/error-classification helpers where wrong-data bugs
+actually live and where a compiler + passing integration suite won't catch a
+regression. Name that logic, say which parts have direct unit tests and which
+don't, and treat a missing test on non-trivial pure-Go logic as a reportable
+gap (roughly robustness-tier). When you go on to fix findings, add unit tests
+for the pure-Go logic you touch.
 
 Then stop and let the user decide what to fix. **Do not open a fix PR
 unprompted** — a review's job is to report; fixing is a separate, explicit

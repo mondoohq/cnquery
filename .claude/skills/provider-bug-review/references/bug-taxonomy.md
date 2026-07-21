@@ -7,8 +7,52 @@ analysis agents work from and the reference you verify against.
 
 A theme runs through the worst of these: the bug produces *wrong data with no
 error*. A panic at least announces itself. A pagination loop that returns one
-page, or a field that resolves differently through two code paths, hands the
-user a confident wrong answer. Weight those highest.
+page, a field that resolves differently through two code paths, or a **stub that
+invents an authoritative-looking absence** hands the user a confident wrong
+answer. Weight those highest.
+
+---
+
+## 0. Stub / placeholder / fabricated data (silent data loss — RANK AT THE TOP)
+
+**What:** an accessor or field that returns fabricated, hardcoded, or empty data
+instead of the real value — code that never actually fetches or parses what it
+claims to expose. **All data a resource surfaces must be real.** This is the
+single worst class: other bugs mangle data that's at least present, but a stub
+invents an authoritative-looking *absence* ("this account has zero Pages
+projects"), so a security audit over it passes *vacuously* — nothing to fail on.
+
+**Fingerprints:**
+- An accessor whose whole body is `return nil, nil` / `return []any{}, nil` /
+  `return "", nil` with **no API call or parse** — a not-yet-implemented stub
+  shipping empty. Real Cloudflare example: `workers.pages()` was `return nil, nil`,
+  so every account looked like it had no Pages projects.
+- A field hardcoded to a literal `""`, `false`, `0`, or `{}` in `CreateResource`
+  where the SDK/API actually returns a value (distinct from a value the API
+  genuinely omits — see the caveat).
+- `// TODO`, `// not implemented`, `// placeholder`, `// stub`, `// for now`
+  comments near a resource method or field.
+- A `.lr`-declared field or accessor with no corresponding real population in Go.
+
+**Why it matters:** it compiles, returns no error, and looks valid. A user or
+policy concludes "there's nothing here" when there is — the most dangerous
+possible answer in a security-inventory tool.
+
+**Correct pattern:** every declared field/accessor is populated from real
+fetched/parsed data. If it can't be implemented yet, **remove the field** rather
+than ship a stub that returns empty. When you find one, rank it with
+silent-data-loss/panic at the top of the report; when fixing, implement it
+against the real endpoint (or delete it), never leave the empty stub.
+
+**Verify by:** reading the accessor body — does it actually call the client /
+parse the source, or just return a zero value? Cross-check every `.lr` field has
+a real Go population path. Route to `provider-verification` to confirm the real
+endpoint returns data if you can't tell statically.
+
+**Caveat:** a genuinely absent value the API doesn't return (a deprecated SDK
+field, a field the list endpoint omits) is *not* a stub — that's correct
+null/empty handling. The stub bug is claiming to expose data and then not
+fetching it.
 
 ---
 
