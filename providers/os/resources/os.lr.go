@@ -46,6 +46,13 @@ const (
 	ResourceCommand                                       string = "command"
 	ResourcePowershell                                    string = "powershell"
 	ResourceFile                                          string = "file"
+	ResourceFileSignature                                 string = "file.signature"
+	ResourceNetworkHosts                                  string = "networkHosts"
+	ResourceNetworkHostsEntry                             string = "networkHosts.entry"
+	ResourceNetworkProtocols                              string = "networkProtocols"
+	ResourceNetworkProtocolsEntry                         string = "networkProtocols.entry"
+	ResourceNetworkServices                               string = "networkServices"
+	ResourceNetworkServicesEntry                          string = "networkServices.entry"
 	ResourceFileContext                                   string = "file.context"
 	ResourceFilePermissions                               string = "file.permissions"
 	ResourceFiles                                         string = "files"
@@ -58,6 +65,9 @@ const (
 	ResourceParseCertificates                             string = "parse.certificates"
 	ResourceParseOpenpgp                                  string = "parse.openpgp"
 	ResourceUser                                          string = "user"
+	ResourceKnownhosts                                    string = "knownhosts"
+	ResourceKnownhostsEntry                               string = "knownhosts.entry"
+	ResourceShellHistoryCommand                           string = "shellHistory.command"
 	ResourcePrivatekey                                    string = "privatekey"
 	ResourceUsers                                         string = "users"
 	ResourceAuthorizedkeys                                string = "authorizedkeys"
@@ -388,6 +398,7 @@ const (
 	ResourceLuaPackages                                   string = "lua.packages"
 	ResourceLuaPackage                                    string = "lua.package"
 	ResourceMacos                                         string = "macos"
+	ResourceMacosScreenlock                               string = "macos.screenlock"
 	ResourceMacosHardware                                 string = "macos.hardware"
 	ResourceMacosAlf                                      string = "macos.alf"
 	ResourceMacosFirewall                                 string = "macos.firewall"
@@ -407,6 +418,7 @@ const (
 	ResourceMacosSystemsetup                              string = "macos.systemsetup"
 	ResourceOpenBSMAudit                                  string = "openBSMAudit"
 	ResourceWindows                                       string = "windows"
+	ResourceWindowsDriver                                 string = "windows.driver"
 	ResourceWindowsExploitProtection                      string = "windows.exploitProtection"
 	ResourceWindowsExploitProtectionDep                   string = "windows.exploitProtection.dep"
 	ResourceWindowsExploitProtectionAslr                  string = "windows.exploitProtection.aslr"
@@ -753,6 +765,34 @@ func init() {
 			// to override args, implement: initFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createFile,
 		},
+		"file.signature": {
+			// to override args, implement: initFileSignature(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFileSignature,
+		},
+		"networkHosts": {
+			Init:   initNetworkHosts,
+			Create: createNetworkHosts,
+		},
+		"networkHosts.entry": {
+			// to override args, implement: initNetworkHostsEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNetworkHostsEntry,
+		},
+		"networkProtocols": {
+			Init:   initNetworkProtocols,
+			Create: createNetworkProtocols,
+		},
+		"networkProtocols.entry": {
+			// to override args, implement: initNetworkProtocolsEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNetworkProtocolsEntry,
+		},
+		"networkServices": {
+			Init:   initNetworkServices,
+			Create: createNetworkServices,
+		},
+		"networkServices.entry": {
+			// to override args, implement: initNetworkServicesEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNetworkServicesEntry,
+		},
 		"file.context": {
 			// to override args, implement: initFileContext(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createFileContext,
@@ -800,6 +840,18 @@ func init() {
 		"user": {
 			Init:   initUser,
 			Create: createUser,
+		},
+		"knownhosts": {
+			Init:   initKnownhosts,
+			Create: createKnownhosts,
+		},
+		"knownhosts.entry": {
+			// to override args, implement: initKnownhostsEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createKnownhostsEntry,
+		},
+		"shellHistory.command": {
+			// to override args, implement: initShellHistoryCommand(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createShellHistoryCommand,
 		},
 		"privatekey": {
 			Init:   initPrivatekey,
@@ -2121,6 +2173,10 @@ func init() {
 			// to override args, implement: initMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMacos,
 		},
+		"macos.screenlock": {
+			// to override args, implement: initMacosScreenlock(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMacosScreenlock,
+		},
 		"macos.hardware": {
 			Init:   initMacosHardware,
 			Create: createMacosHardware,
@@ -2196,6 +2252,10 @@ func init() {
 		"windows": {
 			// to override args, implement: initWindows(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindows,
+		},
+		"windows.driver": {
+			// to override args, implement: initWindowsDriver(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDriver,
 		},
 		"windows.exploitProtection": {
 			// to override args, implement: initWindowsExploitProtection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3562,8 +3622,122 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"file.empty": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFile).GetEmpty()).ToDataRes(types.Bool)
 	},
+	"file.md5": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFile).GetMd5()).ToDataRes(types.String)
+	},
+	"file.sha1": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFile).GetSha1()).ToDataRes(types.String)
+	},
+	"file.sha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFile).GetSha256()).ToDataRes(types.String)
+	},
+	"file.signature": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFile).GetSignature()).ToDataRes(types.Resource("file.signature"))
+	},
 	"file.acl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFile).GetAcl()).ToDataRes(types.Resource("windows.acl"))
+	},
+	"file.signature.signed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFileSignature).GetSigned()).ToDataRes(types.Bool)
+	},
+	"file.signature.verified": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFileSignature).GetVerified()).ToDataRes(types.Bool)
+	},
+	"file.signature.authority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFileSignature).GetAuthority()).ToDataRes(types.String)
+	},
+	"file.signature.teamId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFileSignature).GetTeamId()).ToDataRes(types.String)
+	},
+	"file.signature.issuer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFileSignature).GetIssuer()).ToDataRes(types.String)
+	},
+	"file.signature.timestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFileSignature).GetTimestamp()).ToDataRes(types.Time)
+	},
+	"file.signature.format": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFileSignature).GetFormat()).ToDataRes(types.String)
+	},
+	"networkHosts.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkHosts).GetPath()).ToDataRes(types.String)
+	},
+	"networkHosts.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkHosts).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"networkHosts.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkHosts).GetContent()).ToDataRes(types.String)
+	},
+	"networkHosts.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkHosts).GetList()).ToDataRes(types.Array(types.Resource("networkHosts.entry")))
+	},
+	"networkHosts.entry.line": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkHostsEntry).GetLine()).ToDataRes(types.Int)
+	},
+	"networkHosts.entry.ip": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkHostsEntry).GetIp()).ToDataRes(types.String)
+	},
+	"networkHosts.entry.hostnames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkHostsEntry).GetHostnames()).ToDataRes(types.Array(types.String))
+	},
+	"networkHosts.entry.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkHostsEntry).GetComment()).ToDataRes(types.String)
+	},
+	"networkProtocols.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkProtocols).GetPath()).ToDataRes(types.String)
+	},
+	"networkProtocols.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkProtocols).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"networkProtocols.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkProtocols).GetContent()).ToDataRes(types.String)
+	},
+	"networkProtocols.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkProtocols).GetList()).ToDataRes(types.Array(types.Resource("networkProtocols.entry")))
+	},
+	"networkProtocols.entry.line": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkProtocolsEntry).GetLine()).ToDataRes(types.Int)
+	},
+	"networkProtocols.entry.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkProtocolsEntry).GetName()).ToDataRes(types.String)
+	},
+	"networkProtocols.entry.number": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkProtocolsEntry).GetNumber()).ToDataRes(types.Int)
+	},
+	"networkProtocols.entry.aliases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkProtocolsEntry).GetAliases()).ToDataRes(types.Array(types.String))
+	},
+	"networkProtocols.entry.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkProtocolsEntry).GetComment()).ToDataRes(types.String)
+	},
+	"networkServices.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkServices).GetPath()).ToDataRes(types.String)
+	},
+	"networkServices.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkServices).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"networkServices.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkServices).GetContent()).ToDataRes(types.String)
+	},
+	"networkServices.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkServices).GetList()).ToDataRes(types.Array(types.Resource("networkServices.entry")))
+	},
+	"networkServices.entry.line": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkServicesEntry).GetLine()).ToDataRes(types.Int)
+	},
+	"networkServices.entry.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkServicesEntry).GetName()).ToDataRes(types.String)
+	},
+	"networkServices.entry.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkServicesEntry).GetPort()).ToDataRes(types.Int)
+	},
+	"networkServices.entry.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkServicesEntry).GetProtocol()).ToDataRes(types.String)
+	},
+	"networkServices.entry.aliases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkServicesEntry).GetAliases()).ToDataRes(types.Array(types.String))
+	},
+	"networkServices.entry.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkServicesEntry).GetComment()).ToDataRes(types.String)
 	},
 	"file.context.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFileContext).GetFile()).ToDataRes(types.Resource("file"))
@@ -3759,6 +3933,54 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"user.ntuserDat": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUser).GetNtuserDat()).ToDataRes(types.String)
+	},
+	"user.knownHosts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUser).GetKnownHosts()).ToDataRes(types.Resource("knownhosts"))
+	},
+	"user.shellHistory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUser).GetShellHistory()).ToDataRes(types.Array(types.Resource("shellHistory.command")))
+	},
+	"knownhosts.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKnownhosts).GetPath()).ToDataRes(types.String)
+	},
+	"knownhosts.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKnownhosts).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"knownhosts.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKnownhosts).GetContent()).ToDataRes(types.String)
+	},
+	"knownhosts.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKnownhosts).GetList()).ToDataRes(types.Array(types.Resource("knownhosts.entry")))
+	},
+	"knownhosts.entry.line": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKnownhostsEntry).GetLine()).ToDataRes(types.Int)
+	},
+	"knownhosts.entry.host": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKnownhostsEntry).GetHost()).ToDataRes(types.String)
+	},
+	"knownhosts.entry.isHashed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKnownhostsEntry).GetIsHashed()).ToDataRes(types.Bool)
+	},
+	"knownhosts.entry.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKnownhostsEntry).GetType()).ToDataRes(types.String)
+	},
+	"knownhosts.entry.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKnownhostsEntry).GetKey()).ToDataRes(types.String)
+	},
+	"shellHistory.command.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShellHistoryCommand).GetUser()).ToDataRes(types.String)
+	},
+	"shellHistory.command.line": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShellHistoryCommand).GetLine()).ToDataRes(types.Int)
+	},
+	"shellHistory.command.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShellHistoryCommand).GetCommand()).ToDataRes(types.String)
+	},
+	"shellHistory.command.time": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShellHistoryCommand).GetTime()).ToDataRes(types.Time)
+	},
+	"shellHistory.command.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShellHistoryCommand).GetFile()).ToDataRes(types.String)
 	},
 	"privatekey.pem": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPrivatekey).GetPem()).ToDataRes(types.String)
@@ -11359,6 +11581,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"macos.systemExtensions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacos).GetSystemExtensions()).ToDataRes(types.Array(types.Resource("macos.systemExtension")))
 	},
+	"macos.screenlock.askForPassword": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosScreenlock).GetAskForPassword()).ToDataRes(types.Bool)
+	},
+	"macos.screenlock.askForPasswordDelay": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosScreenlock).GetAskForPasswordDelay()).ToDataRes(types.Int)
+	},
 	"macos.hardware.activationLockStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacosHardware).GetActivationLockStatus()).ToDataRes(types.String)
 	},
@@ -11769,6 +11997,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.smartScreen": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindows).GetSmartScreen()).ToDataRes(types.Resource("windows.smartScreen"))
+	},
+	"windows.drivers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindows).GetDrivers()).ToDataRes(types.Array(types.Resource("windows.driver")))
+	},
+	"windows.driver.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDriver).GetName()).ToDataRes(types.String)
+	},
+	"windows.driver.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDriver).GetDisplayName()).ToDataRes(types.String)
+	},
+	"windows.driver.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDriver).GetDescription()).ToDataRes(types.String)
+	},
+	"windows.driver.class": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDriver).GetClass()).ToDataRes(types.String)
+	},
+	"windows.driver.provider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDriver).GetProvider()).ToDataRes(types.String)
+	},
+	"windows.driver.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDriver).GetVersion()).ToDataRes(types.String)
+	},
+	"windows.driver.date": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDriver).GetDate()).ToDataRes(types.Time)
+	},
+	"windows.driver.signed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDriver).GetSigned()).ToDataRes(types.Bool)
+	},
+	"windows.driver.signer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDriver).GetSigner()).ToDataRes(types.String)
+	},
+	"windows.driver.inf": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDriver).GetInf()).ToDataRes(types.String)
+	},
+	"windows.driver.deviceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDriver).GetDeviceId()).ToDataRes(types.String)
 	},
 	"windows.exploitProtection.available": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsExploitProtection).GetAvailable()).ToDataRes(types.Bool)
@@ -14526,6 +14790,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"network.neighbors": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetwork).GetNeighbors()).ToDataRes(types.Array(types.Resource("networkNeighbor")))
+	},
+	"network.hosts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetwork).GetHosts()).ToDataRes(types.Resource("networkHosts"))
+	},
+	"network.protocols": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetwork).GetProtocols()).ToDataRes(types.Resource("networkProtocols"))
+	},
+	"network.services": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetwork).GetServices()).ToDataRes(types.Resource("networkServices"))
 	},
 	"networkNeighbor.ip": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetworkNeighbor).GetIp()).ToDataRes(types.IP)
@@ -17542,8 +17815,188 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlFile).Empty, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"file.md5": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFile).Md5, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"file.sha1": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFile).Sha1, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"file.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFile).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"file.signature": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFile).Signature, ok = plugin.RawToTValue[*mqlFileSignature](v.Value, v.Error)
+		return
+	},
 	"file.acl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFile).Acl, ok = plugin.RawToTValue[*mqlWindowsAcl](v.Value, v.Error)
+		return
+	},
+	"file.signature.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFileSignature).__id, ok = v.Value.(string)
+		return
+	},
+	"file.signature.signed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFileSignature).Signed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"file.signature.verified": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFileSignature).Verified, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"file.signature.authority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFileSignature).Authority, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"file.signature.teamId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFileSignature).TeamId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"file.signature.issuer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFileSignature).Issuer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"file.signature.timestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFileSignature).Timestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"file.signature.format": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFileSignature).Format, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"networkHosts.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkHosts).__id, ok = v.Value.(string)
+		return
+	},
+	"networkHosts.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkHosts).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"networkHosts.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkHosts).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"networkHosts.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkHosts).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"networkHosts.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkHosts).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"networkHosts.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkHostsEntry).__id, ok = v.Value.(string)
+		return
+	},
+	"networkHosts.entry.line": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkHostsEntry).Line, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"networkHosts.entry.ip": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkHostsEntry).Ip, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"networkHosts.entry.hostnames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkHostsEntry).Hostnames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"networkHosts.entry.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkHostsEntry).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"networkProtocols.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkProtocols).__id, ok = v.Value.(string)
+		return
+	},
+	"networkProtocols.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkProtocols).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"networkProtocols.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkProtocols).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"networkProtocols.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkProtocols).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"networkProtocols.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkProtocols).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"networkProtocols.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkProtocolsEntry).__id, ok = v.Value.(string)
+		return
+	},
+	"networkProtocols.entry.line": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkProtocolsEntry).Line, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"networkProtocols.entry.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkProtocolsEntry).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"networkProtocols.entry.number": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkProtocolsEntry).Number, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"networkProtocols.entry.aliases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkProtocolsEntry).Aliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"networkProtocols.entry.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkProtocolsEntry).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"networkServices.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkServices).__id, ok = v.Value.(string)
+		return
+	},
+	"networkServices.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkServices).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"networkServices.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkServices).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"networkServices.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkServices).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"networkServices.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkServices).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"networkServices.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkServicesEntry).__id, ok = v.Value.(string)
+		return
+	},
+	"networkServices.entry.line": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkServicesEntry).Line, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"networkServices.entry.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkServicesEntry).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"networkServices.entry.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkServicesEntry).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"networkServices.entry.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkServicesEntry).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"networkServices.entry.aliases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkServicesEntry).Aliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"networkServices.entry.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkServicesEntry).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"file.context.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17852,6 +18305,82 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"user.ntuserDat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlUser).NtuserDat, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"user.knownHosts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUser).KnownHosts, ok = plugin.RawToTValue[*mqlKnownhosts](v.Value, v.Error)
+		return
+	},
+	"user.shellHistory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUser).ShellHistory, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"knownhosts.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKnownhosts).__id, ok = v.Value.(string)
+		return
+	},
+	"knownhosts.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKnownhosts).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"knownhosts.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKnownhosts).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"knownhosts.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKnownhosts).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"knownhosts.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKnownhosts).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"knownhosts.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKnownhostsEntry).__id, ok = v.Value.(string)
+		return
+	},
+	"knownhosts.entry.line": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKnownhostsEntry).Line, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"knownhosts.entry.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKnownhostsEntry).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"knownhosts.entry.isHashed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKnownhostsEntry).IsHashed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"knownhosts.entry.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKnownhostsEntry).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"knownhosts.entry.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKnownhostsEntry).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shellHistory.command.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShellHistoryCommand).__id, ok = v.Value.(string)
+		return
+	},
+	"shellHistory.command.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShellHistoryCommand).User, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shellHistory.command.line": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShellHistoryCommand).Line, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"shellHistory.command.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShellHistoryCommand).Command, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shellHistory.command.time": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShellHistoryCommand).Time, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"shellHistory.command.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShellHistoryCommand).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"privatekey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -29306,6 +29835,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMacos).SystemExtensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"macos.screenlock.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosScreenlock).__id, ok = v.Value.(string)
+		return
+	},
+	"macos.screenlock.askForPassword": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosScreenlock).AskForPassword, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.screenlock.askForPasswordDelay": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosScreenlock).AskForPasswordDelay, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"macos.hardware.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMacosHardware).__id, ok = v.Value.(string)
 		return
@@ -29928,6 +30469,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.smartScreen": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindows).SmartScreen, ok = plugin.RawToTValue[*mqlWindowsSmartScreen](v.Value, v.Error)
+		return
+	},
+	"windows.drivers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindows).Drivers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.driver.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDriver).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.driver.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDriver).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.driver.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDriver).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.driver.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDriver).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.driver.class": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDriver).Class, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.driver.provider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDriver).Provider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.driver.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDriver).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.driver.date": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDriver).Date, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"windows.driver.signed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDriver).Signed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.driver.signer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDriver).Signer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.driver.inf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDriver).Inf, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.driver.deviceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDriver).DeviceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"windows.exploitProtection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -34032,6 +34625,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"network.neighbors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNetwork).Neighbors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"network.hosts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetwork).Hosts, ok = plugin.RawToTValue[*mqlNetworkHosts](v.Value, v.Error)
+		return
+	},
+	"network.protocols": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetwork).Protocols, ok = plugin.RawToTValue[*mqlNetworkProtocols](v.Value, v.Error)
+		return
+	},
+	"network.services": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetwork).Services, ok = plugin.RawToTValue[*mqlNetworkServices](v.Value, v.Error)
 		return
 	},
 	"networkNeighbor.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -39878,6 +40483,10 @@ type mqlFile struct {
 	User        plugin.TValue[*mqlUser]
 	Group       plugin.TValue[*mqlGroup]
 	Empty       plugin.TValue[bool]
+	Md5         plugin.TValue[string]
+	Sha1        plugin.TValue[string]
+	Sha256      plugin.TValue[string]
+	Signature   plugin.TValue[*mqlFileSignature]
 	Acl         plugin.TValue[*mqlWindowsAcl]
 }
 
@@ -40046,6 +40655,60 @@ func (c *mqlFile) GetEmpty() *plugin.TValue[bool] {
 	})
 }
 
+func (c *mqlFile) GetMd5() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Md5, func() (string, error) {
+		vargPath := c.GetPath()
+		if vargPath.Error != nil {
+			return "", vargPath.Error
+		}
+
+		return c.md5(vargPath.Data)
+	})
+}
+
+func (c *mqlFile) GetSha1() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Sha1, func() (string, error) {
+		vargPath := c.GetPath()
+		if vargPath.Error != nil {
+			return "", vargPath.Error
+		}
+
+		return c.sha1(vargPath.Data)
+	})
+}
+
+func (c *mqlFile) GetSha256() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
+		vargPath := c.GetPath()
+		if vargPath.Error != nil {
+			return "", vargPath.Error
+		}
+
+		return c.sha256(vargPath.Data)
+	})
+}
+
+func (c *mqlFile) GetSignature() *plugin.TValue[*mqlFileSignature] {
+	return plugin.GetOrCompute[*mqlFileSignature](&c.Signature, func() (*mqlFileSignature, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("file", c.__id, "signature")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFileSignature), nil
+			}
+		}
+
+		vargPath := c.GetPath()
+		if vargPath.Error != nil {
+			return nil, vargPath.Error
+		}
+
+		return c.signature(vargPath.Data)
+	})
+}
+
 func (c *mqlFile) GetAcl() *plugin.TValue[*mqlWindowsAcl] {
 	return plugin.GetOrCompute[*mqlWindowsAcl](&c.Acl, func() (*mqlWindowsAcl, error) {
 		if c.MqlRuntime.HasRecording {
@@ -40065,6 +40728,562 @@ func (c *mqlFile) GetAcl() *plugin.TValue[*mqlWindowsAcl] {
 
 		return c.acl(vargPath.Data)
 	})
+}
+
+// mqlFileSignature for the file.signature resource
+type mqlFileSignature struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlFileSignatureInternal it will be used here
+	Signed    plugin.TValue[bool]
+	Verified  plugin.TValue[bool]
+	Authority plugin.TValue[string]
+	TeamId    plugin.TValue[string]
+	Issuer    plugin.TValue[string]
+	Timestamp plugin.TValue[*time.Time]
+	Format    plugin.TValue[string]
+}
+
+// createFileSignature creates a new instance of this resource
+func createFileSignature(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFileSignature{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("file.signature", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFileSignature) MqlName() string {
+	return "file.signature"
+}
+
+func (c *mqlFileSignature) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFileSignature) GetSigned() *plugin.TValue[bool] {
+	return &c.Signed
+}
+
+func (c *mqlFileSignature) GetVerified() *plugin.TValue[bool] {
+	return &c.Verified
+}
+
+func (c *mqlFileSignature) GetAuthority() *plugin.TValue[string] {
+	return &c.Authority
+}
+
+func (c *mqlFileSignature) GetTeamId() *plugin.TValue[string] {
+	return &c.TeamId
+}
+
+func (c *mqlFileSignature) GetIssuer() *plugin.TValue[string] {
+	return &c.Issuer
+}
+
+func (c *mqlFileSignature) GetTimestamp() *plugin.TValue[*time.Time] {
+	return &c.Timestamp
+}
+
+func (c *mqlFileSignature) GetFormat() *plugin.TValue[string] {
+	return &c.Format
+}
+
+// mqlNetworkHosts for the networkHosts resource
+type mqlNetworkHosts struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNetworkHostsInternal it will be used here
+	Path    plugin.TValue[string]
+	File    plugin.TValue[*mqlFile]
+	Content plugin.TValue[string]
+	List    plugin.TValue[[]any]
+}
+
+// createNetworkHosts creates a new instance of this resource
+func createNetworkHosts(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNetworkHosts{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("networkHosts", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNetworkHosts) MqlName() string {
+	return "networkHosts"
+}
+
+func (c *mqlNetworkHosts) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNetworkHosts) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlNetworkHosts) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("networkHosts", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlNetworkHosts) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		return c.content()
+	})
+}
+
+func (c *mqlNetworkHosts) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("networkHosts", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlNetworkHostsEntry for the networkHosts.entry resource
+type mqlNetworkHostsEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNetworkHostsEntryInternal it will be used here
+	Line      plugin.TValue[int64]
+	Ip        plugin.TValue[string]
+	Hostnames plugin.TValue[[]any]
+	Comment   plugin.TValue[string]
+}
+
+// createNetworkHostsEntry creates a new instance of this resource
+func createNetworkHostsEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNetworkHostsEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("networkHosts.entry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNetworkHostsEntry) MqlName() string {
+	return "networkHosts.entry"
+}
+
+func (c *mqlNetworkHostsEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNetworkHostsEntry) GetLine() *plugin.TValue[int64] {
+	return &c.Line
+}
+
+func (c *mqlNetworkHostsEntry) GetIp() *plugin.TValue[string] {
+	return &c.Ip
+}
+
+func (c *mqlNetworkHostsEntry) GetHostnames() *plugin.TValue[[]any] {
+	return &c.Hostnames
+}
+
+func (c *mqlNetworkHostsEntry) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+// mqlNetworkProtocols for the networkProtocols resource
+type mqlNetworkProtocols struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNetworkProtocolsInternal it will be used here
+	Path    plugin.TValue[string]
+	File    plugin.TValue[*mqlFile]
+	Content plugin.TValue[string]
+	List    plugin.TValue[[]any]
+}
+
+// createNetworkProtocols creates a new instance of this resource
+func createNetworkProtocols(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNetworkProtocols{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("networkProtocols", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNetworkProtocols) MqlName() string {
+	return "networkProtocols"
+}
+
+func (c *mqlNetworkProtocols) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNetworkProtocols) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlNetworkProtocols) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("networkProtocols", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlNetworkProtocols) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		return c.content()
+	})
+}
+
+func (c *mqlNetworkProtocols) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("networkProtocols", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlNetworkProtocolsEntry for the networkProtocols.entry resource
+type mqlNetworkProtocolsEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNetworkProtocolsEntryInternal it will be used here
+	Line    plugin.TValue[int64]
+	Name    plugin.TValue[string]
+	Number  plugin.TValue[int64]
+	Aliases plugin.TValue[[]any]
+	Comment plugin.TValue[string]
+}
+
+// createNetworkProtocolsEntry creates a new instance of this resource
+func createNetworkProtocolsEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNetworkProtocolsEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("networkProtocols.entry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNetworkProtocolsEntry) MqlName() string {
+	return "networkProtocols.entry"
+}
+
+func (c *mqlNetworkProtocolsEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNetworkProtocolsEntry) GetLine() *plugin.TValue[int64] {
+	return &c.Line
+}
+
+func (c *mqlNetworkProtocolsEntry) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlNetworkProtocolsEntry) GetNumber() *plugin.TValue[int64] {
+	return &c.Number
+}
+
+func (c *mqlNetworkProtocolsEntry) GetAliases() *plugin.TValue[[]any] {
+	return &c.Aliases
+}
+
+func (c *mqlNetworkProtocolsEntry) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+// mqlNetworkServices for the networkServices resource
+type mqlNetworkServices struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNetworkServicesInternal it will be used here
+	Path    plugin.TValue[string]
+	File    plugin.TValue[*mqlFile]
+	Content plugin.TValue[string]
+	List    plugin.TValue[[]any]
+}
+
+// createNetworkServices creates a new instance of this resource
+func createNetworkServices(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNetworkServices{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("networkServices", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNetworkServices) MqlName() string {
+	return "networkServices"
+}
+
+func (c *mqlNetworkServices) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNetworkServices) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlNetworkServices) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("networkServices", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlNetworkServices) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		return c.content()
+	})
+}
+
+func (c *mqlNetworkServices) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("networkServices", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlNetworkServicesEntry for the networkServices.entry resource
+type mqlNetworkServicesEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNetworkServicesEntryInternal it will be used here
+	Line     plugin.TValue[int64]
+	Name     plugin.TValue[string]
+	Port     plugin.TValue[int64]
+	Protocol plugin.TValue[string]
+	Aliases  plugin.TValue[[]any]
+	Comment  plugin.TValue[string]
+}
+
+// createNetworkServicesEntry creates a new instance of this resource
+func createNetworkServicesEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNetworkServicesEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("networkServices.entry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNetworkServicesEntry) MqlName() string {
+	return "networkServices.entry"
+}
+
+func (c *mqlNetworkServicesEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNetworkServicesEntry) GetLine() *plugin.TValue[int64] {
+	return &c.Line
+}
+
+func (c *mqlNetworkServicesEntry) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlNetworkServicesEntry) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlNetworkServicesEntry) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlNetworkServicesEntry) GetAliases() *plugin.TValue[[]any] {
+	return &c.Aliases
+}
+
+func (c *mqlNetworkServicesEntry) GetComment() *plugin.TValue[string] {
+	return &c.Comment
 }
 
 // mqlFileContext for the file.context resource
@@ -41008,6 +42227,8 @@ type mqlUser struct {
 	Group          plugin.TValue[*mqlGroup]
 	LoggedIn       plugin.TValue[bool]
 	NtuserDat      plugin.TValue[string]
+	KnownHosts     plugin.TValue[*mqlKnownhosts]
+	ShellHistory   plugin.TValue[[]any]
 }
 
 // createUser creates a new instance of this resource
@@ -41148,6 +42369,276 @@ func (c *mqlUser) GetNtuserDat() *plugin.TValue[string] {
 
 		return c.ntuserDat(vargHome.Data)
 	})
+}
+
+func (c *mqlUser) GetKnownHosts() *plugin.TValue[*mqlKnownhosts] {
+	return plugin.GetOrCompute[*mqlKnownhosts](&c.KnownHosts, func() (*mqlKnownhosts, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("user", c.__id, "knownHosts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlKnownhosts), nil
+			}
+		}
+
+		vargHome := c.GetHome()
+		if vargHome.Error != nil {
+			return nil, vargHome.Error
+		}
+
+		return c.knownHosts(vargHome.Data)
+	})
+}
+
+func (c *mqlUser) GetShellHistory() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ShellHistory, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("user", c.__id, "shellHistory")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargHome := c.GetHome()
+		if vargHome.Error != nil {
+			return nil, vargHome.Error
+		}
+
+		return c.shellHistory(vargHome.Data)
+	})
+}
+
+// mqlKnownhosts for the knownhosts resource
+type mqlKnownhosts struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlKnownhostsInternal it will be used here
+	Path    plugin.TValue[string]
+	File    plugin.TValue[*mqlFile]
+	Content plugin.TValue[string]
+	List    plugin.TValue[[]any]
+}
+
+// createKnownhosts creates a new instance of this resource
+func createKnownhosts(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlKnownhosts{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("knownhosts", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlKnownhosts) MqlName() string {
+	return "knownhosts"
+}
+
+func (c *mqlKnownhosts) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlKnownhosts) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlKnownhosts) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("knownhosts", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlKnownhosts) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		return c.content()
+	})
+}
+
+func (c *mqlKnownhosts) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("knownhosts", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlKnownhostsEntry for the knownhosts.entry resource
+type mqlKnownhostsEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlKnownhostsEntryInternal it will be used here
+	Line     plugin.TValue[int64]
+	Host     plugin.TValue[string]
+	IsHashed plugin.TValue[bool]
+	Type     plugin.TValue[string]
+	Key      plugin.TValue[string]
+}
+
+// createKnownhostsEntry creates a new instance of this resource
+func createKnownhostsEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlKnownhostsEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("knownhosts.entry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlKnownhostsEntry) MqlName() string {
+	return "knownhosts.entry"
+}
+
+func (c *mqlKnownhostsEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlKnownhostsEntry) GetLine() *plugin.TValue[int64] {
+	return &c.Line
+}
+
+func (c *mqlKnownhostsEntry) GetHost() *plugin.TValue[string] {
+	return &c.Host
+}
+
+func (c *mqlKnownhostsEntry) GetIsHashed() *plugin.TValue[bool] {
+	return &c.IsHashed
+}
+
+func (c *mqlKnownhostsEntry) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlKnownhostsEntry) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+// mqlShellHistoryCommand for the shellHistory.command resource
+type mqlShellHistoryCommand struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlShellHistoryCommandInternal it will be used here
+	User    plugin.TValue[string]
+	Line    plugin.TValue[int64]
+	Command plugin.TValue[string]
+	Time    plugin.TValue[*time.Time]
+	File    plugin.TValue[string]
+}
+
+// createShellHistoryCommand creates a new instance of this resource
+func createShellHistoryCommand(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlShellHistoryCommand{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("shellHistory.command", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlShellHistoryCommand) MqlName() string {
+	return "shellHistory.command"
+}
+
+func (c *mqlShellHistoryCommand) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlShellHistoryCommand) GetUser() *plugin.TValue[string] {
+	return &c.User
+}
+
+func (c *mqlShellHistoryCommand) GetLine() *plugin.TValue[int64] {
+	return &c.Line
+}
+
+func (c *mqlShellHistoryCommand) GetCommand() *plugin.TValue[string] {
+	return &c.Command
+}
+
+func (c *mqlShellHistoryCommand) GetTime() *plugin.TValue[*time.Time] {
+	return &c.Time
+}
+
+func (c *mqlShellHistoryCommand) GetFile() *plugin.TValue[string] {
+	return &c.File
 }
 
 // mqlPrivatekey for the privatekey resource
@@ -75441,6 +76932,59 @@ func (c *mqlMacos) GetSystemExtensions() *plugin.TValue[[]any] {
 	})
 }
 
+// mqlMacosScreenlock for the macos.screenlock resource
+type mqlMacosScreenlock struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlMacosScreenlockInternal
+	AskForPassword      plugin.TValue[bool]
+	AskForPasswordDelay plugin.TValue[int64]
+}
+
+// createMacosScreenlock creates a new instance of this resource
+func createMacosScreenlock(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMacosScreenlock{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("macos.screenlock", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMacosScreenlock) MqlName() string {
+	return "macos.screenlock"
+}
+
+func (c *mqlMacosScreenlock) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMacosScreenlock) GetAskForPassword() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AskForPassword, func() (bool, error) {
+		return c.askForPassword()
+	})
+}
+
+func (c *mqlMacosScreenlock) GetAskForPasswordDelay() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.AskForPasswordDelay, func() (int64, error) {
+		return c.askForPasswordDelay()
+	})
+}
+
 // mqlMacosHardware for the macos.hardware resource
 type mqlMacosHardware struct {
 	MqlRuntime *plugin.Runtime
@@ -77120,6 +78664,7 @@ type mqlWindows struct {
 	DeviceGuard       plugin.TValue[*mqlWindowsDeviceGuard]
 	ExploitProtection plugin.TValue[*mqlWindowsExploitProtection]
 	SmartScreen       plugin.TValue[*mqlWindowsSmartScreen]
+	Drivers           plugin.TValue[[]any]
 }
 
 // createWindows creates a new instance of this resource
@@ -77270,6 +78815,121 @@ func (c *mqlWindows) GetSmartScreen() *plugin.TValue[*mqlWindowsSmartScreen] {
 
 		return c.smartScreen()
 	})
+}
+
+func (c *mqlWindows) GetDrivers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Drivers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows", c.__id, "drivers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.drivers()
+	})
+}
+
+// mqlWindowsDriver for the windows.driver resource
+type mqlWindowsDriver struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDriverInternal it will be used here
+	Name        plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Description plugin.TValue[string]
+	Class       plugin.TValue[string]
+	Provider    plugin.TValue[string]
+	Version     plugin.TValue[string]
+	Date        plugin.TValue[*time.Time]
+	Signed      plugin.TValue[bool]
+	Signer      plugin.TValue[string]
+	Inf         plugin.TValue[string]
+	DeviceId    plugin.TValue[string]
+}
+
+// createWindowsDriver creates a new instance of this resource
+func createWindowsDriver(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDriver{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.driver", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDriver) MqlName() string {
+	return "windows.driver"
+}
+
+func (c *mqlWindowsDriver) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDriver) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindowsDriver) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlWindowsDriver) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlWindowsDriver) GetClass() *plugin.TValue[string] {
+	return &c.Class
+}
+
+func (c *mqlWindowsDriver) GetProvider() *plugin.TValue[string] {
+	return &c.Provider
+}
+
+func (c *mqlWindowsDriver) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlWindowsDriver) GetDate() *plugin.TValue[*time.Time] {
+	return &c.Date
+}
+
+func (c *mqlWindowsDriver) GetSigned() *plugin.TValue[bool] {
+	return &c.Signed
+}
+
+func (c *mqlWindowsDriver) GetSigner() *plugin.TValue[string] {
+	return &c.Signer
+}
+
+func (c *mqlWindowsDriver) GetInf() *plugin.TValue[string] {
+	return &c.Inf
+}
+
+func (c *mqlWindowsDriver) GetDeviceId() *plugin.TValue[string] {
+	return &c.DeviceId
 }
 
 // mqlWindowsExploitProtection for the windows.exploitProtection resource
@@ -87448,6 +89108,9 @@ type mqlNetwork struct {
 	PrimaryIPv4 plugin.TValue[llx.RawIP]
 	PrimaryIPv6 plugin.TValue[llx.RawIP]
 	Neighbors   plugin.TValue[[]any]
+	Hosts       plugin.TValue[*mqlNetworkHosts]
+	Protocols   plugin.TValue[*mqlNetworkProtocols]
+	Services    plugin.TValue[*mqlNetworkServices]
 }
 
 // createNetwork creates a new instance of this resource
@@ -87551,6 +89214,54 @@ func (c *mqlNetwork) GetNeighbors() *plugin.TValue[[]any] {
 		}
 
 		return c.neighbors()
+	})
+}
+
+func (c *mqlNetwork) GetHosts() *plugin.TValue[*mqlNetworkHosts] {
+	return plugin.GetOrCompute[*mqlNetworkHosts](&c.Hosts, func() (*mqlNetworkHosts, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("network", c.__id, "hosts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNetworkHosts), nil
+			}
+		}
+
+		return c.hosts()
+	})
+}
+
+func (c *mqlNetwork) GetProtocols() *plugin.TValue[*mqlNetworkProtocols] {
+	return plugin.GetOrCompute[*mqlNetworkProtocols](&c.Protocols, func() (*mqlNetworkProtocols, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("network", c.__id, "protocols")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNetworkProtocols), nil
+			}
+		}
+
+		return c.protocols()
+	})
+}
+
+func (c *mqlNetwork) GetServices() *plugin.TValue[*mqlNetworkServices] {
+	return plugin.GetOrCompute[*mqlNetworkServices](&c.Services, func() (*mqlNetworkServices, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("network", c.__id, "services")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNetworkServices), nil
+			}
+		}
+
+		return c.services()
 	})
 }
 

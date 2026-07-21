@@ -562,6 +562,14 @@ file @defaults("path size permissions.string") {
   group() group
   // Whether the path is empty
   empty(path) bool
+  // MD5 hash of the file contents
+  md5(path) string
+  // SHA1 hash of the file contents
+  sha1(path) string
+  // SHA256 hash of the file contents
+  sha256(path) string
+  // Code signature of the file (macOS codesign / Windows Authenticode; null on Linux)
+  signature(path) file.signature
   // Windows access control list for this file
   //
   // Null on systems that do not use Windows security descriptors. Use it
@@ -569,6 +577,113 @@ file @defaults("path size permissions.string") {
   // example `files.find(from: "C:\\inetpub", type: "directory") { acl { ... } }`.
   // On POSIX systems read `permissions` instead.
   acl(path) windows.acl
+}
+
+// Code-signing information for a file
+//
+// Unifies macOS codesign and Windows Authenticode. Populated only on macOS and Windows.
+private file.signature @defaults("signed verified authority") {
+  // Whether a code signature is present on the file
+  signed bool
+  // Whether the signature passes the platform's trust verification
+  verified bool
+  // Leaf signer identity (macOS Authority / Windows subject common name)
+  authority string
+  // Apple Developer Team Identifier (macOS only; empty otherwise)
+  teamId string
+  // Issuer of the signing certificate (Windows only; empty otherwise)
+  issuer string
+  // Signing / countersignature timestamp, if present
+  timestamp time
+  // Signature backend: "codesign" (macOS) or "authenticode" (Windows)
+  format string
+}
+
+// Hosts file
+//
+// Parsed static hostname-to-IP mappings from the hosts file: /etc/hosts on
+// Unix, %SystemRoot%\System32\drivers\etc\hosts on Windows.
+networkHosts {
+  []networkHosts.entry
+  init(path string)
+  // Path to the hosts file
+  path string
+  // The underlying file
+  file() file
+  // Raw file content
+  content() string
+}
+
+// A single entry in the hosts file
+networkHosts.entry @defaults("ip hostnames") {
+  // Line number in the file
+  line int
+  // IP address the entry maps to
+  ip string
+  // Hostnames and aliases mapped to the IP
+  hostnames []string
+  // Trailing comment, if any
+  comment string
+}
+
+// Protocols file
+//
+// Parsed IP protocol registry from the protocols file: /etc/protocols on
+// Unix, %SystemRoot%\System32\drivers\etc\protocol on Windows.
+networkProtocols {
+  []networkProtocols.entry
+  init(path string)
+  // Path to the protocols file
+  path string
+  // The underlying file
+  file() file
+  // Raw file content
+  content() string
+}
+
+// A single entry in the protocols file
+networkProtocols.entry @defaults("name number") {
+  // Line number in the file
+  line int
+  // Protocol name (e.g., tcp, udp, icmp)
+  name string
+  // IP protocol number
+  number int
+  // Alternate names for the protocol
+  aliases []string
+  // Trailing comment, if any
+  comment string
+}
+
+// Services file
+//
+// Parsed network service/port registry from the services file: /etc/services
+// on Unix, %SystemRoot%\System32\drivers\etc\services on Windows.
+networkServices {
+  []networkServices.entry
+  init(path string)
+  // Path to the services file
+  path string
+  // The underlying file
+  file() file
+  // Raw file content
+  content() string
+}
+
+// A single entry in the services file
+networkServices.entry @defaults("name port protocol") {
+  // Line number in the file
+  line int
+  // Service name (e.g., ssh, http)
+  name string
+  // Port number
+  port int
+  // Transport protocol (tcp, udp, ...)
+  protocol string
+  // Alternate names for the service
+  aliases []string
+  // Trailing comment, if any
+  comment string
 }
 
 // File context is a range of lines/columns in a file
@@ -824,6 +939,52 @@ user @defaults("name uid gid") {
   // SYSTEM scan running with no interactive session. Empty on non-Windows
   // platforms or when the home directory is unknown.
   ntuserDat(home) string
+  // Parsed ~/.ssh/known_hosts for this user
+  knownHosts(home) knownhosts
+  // Shell command history for this user
+  shellHistory(home) []shellHistory.command
+}
+
+// SSH known_hosts
+//
+// Parsed known_hosts file listing the host keys trusted for SSH connections.
+knownhosts {
+  []knownhosts.entry
+  init(path string)
+  // Path to the known_hosts file
+  path string
+  // The underlying file
+  file() file
+  // Raw file content
+  content() string
+}
+
+// A single entry in a known_hosts file
+knownhosts.entry @defaults("host type") {
+  // Line number in the file
+  line int
+  // Host pattern the entry applies to (may be hashed)
+  host string
+  // Whether the host field is hashed (HashKnownHosts)
+  isHashed bool
+  // Key type (e.g., ssh-ed25519, ecdsa-sha2-nistp256)
+  type string
+  // Base64-encoded host key material
+  key string
+}
+
+// A single shell history command
+shellHistory.command @defaults("command") {
+  // User the command belongs to
+  user string
+  // Position of the command in its history file (1-based)
+  line int
+  // The command line
+  command string
+  // Timestamp when recorded by the shell (zsh EXTENDED_HISTORY / fish); zero otherwise
+  time time
+  // History file the command came from
+  file string
 }
 
 // Private key on disk
@@ -10251,6 +10412,18 @@ macos {
   systemExtensions() []macos.systemExtension
 }
 
+// macOS screen lock settings
+//
+// Screen-saver / display-sleep password requirement for the primary console
+// user, read from the com.apple.screensaver ByHost preference domain. Values
+// enforced by an MDM configuration profile may differ; consult macos.profiles.
+macos.screenlock @defaults("askForPassword askForPasswordDelay") {
+  // Whether a password is required after the screen saver begins or the display sleeps
+  askForPassword() bool
+  // Seconds after the screen saver starts before a password is required
+  askForPasswordDelay() int
+}
+
 // macOS hardware overview
 //
 // Hardware and firmware details reported by `system_profiler`: chip
@@ -10757,6 +10930,35 @@ windows {
 
   // Microsoft Defender SmartScreen policy
   smartScreen() windows.smartScreen
+
+  // Installed device drivers
+  drivers() []windows.driver
+}
+
+// A Windows device driver
+private windows.driver @defaults("name version signed") {
+  // Device/driver name
+  name string
+  // Friendly display name
+  displayName string
+  // Driver description
+  description string
+  // Device class (e.g., Net, Display, System)
+  class string
+  // Driver provider/vendor
+  provider string
+  // Driver version
+  version string
+  // Driver date
+  date time
+  // Whether the driver is digitally signed
+  signed bool
+  // Signer of the driver, when signed
+  signer string
+  // INF file the driver was installed from
+  inf string
+  // PnP device identifier
+  deviceId string
 }
 
 // Windows Exploit Protection
@@ -14713,6 +14915,13 @@ network {
 
   // ARP (IPv4) / NDP (IPv6) neighbor cache entries
   neighbors() []networkNeighbor
+
+  // Static hostname-to-IP mappings (the hosts file)
+  hosts() networkHosts
+  // IP protocol registry (the protocols file)
+  protocols() networkProtocols
+  // Network service/port registry (the services file)
+  services() networkServices
 }
 
 // Network neighbor (ARP / NDP cache entry)
