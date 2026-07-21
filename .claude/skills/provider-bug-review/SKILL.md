@@ -87,8 +87,25 @@ recognize yet:
 
 ### 3. Fan out analysis agents by file-group
 
-Split the resource files into groups of ~5-7 (put the newest/riskiest together)
-and dispatch one analysis agent per group **in parallel, in a single message**.
+**First decide whether to fan out at all — match the machinery to the size.**
+The parallel fan-out earns its cost (each agent is ~100k+ tokens and minutes of
+wall time) only when the provider is too large to hold and reason about in one
+context. Gate it on the hand-written surface:
+
+- **Small (≲6–8 hand-written resource files / ≲2k LOC):** skip the fan-out. Read
+  every file yourself, run the mechanical greps below, and use **at most one**
+  verification agent (or none). A single focused agent on a 2-file provider
+  mostly re-confirms your own read — spend the tokens on the SDK verification in
+  step 4 instead. (Most non-cloud/IaC providers land here: cloudformation was 2
+  files, ansible/bicep a handful.)
+- **Large (many files, or a hand-rolled `resources/sdk/` client — aws/gcp/azure/
+  cloudflare-scale):** fan out. This is where parallel agents pay off; cloudflare
+  (28 files) is where the fan-out surfaced a HIGH `__id` bug a single pass would
+  likely have missed.
+
+When you do fan out: split the resource files into groups of ~5-7 (put the
+newest/riskiest together) and dispatch one analysis agent per group **in
+parallel, in a single message**.
 Give each agent the bug taxonomy and the exact reporting contract. A proven
 prompt template is in `references/agent-prompt-template.md` — read it and adapt
 the file list per group. Key requirements to put in every agent prompt:
@@ -128,14 +145,35 @@ grep -rniE "TODO|not implemented|placeholder|stub|for now" providers/<name>/reso
 This is the step that makes the review trustworthy. For each finding an agent
 reports, open the actual file and confirm the bug is real: the line still says
 what the agent quoted, the SDK type is what the agent assumed, the failure
-scenario actually holds. Check the SDK's model struct for pointer-ness and JSON
-tags. Discard anything you can't confirm, and downgrade severity for anything
-that "could" happen but realistically won't. Agent reports are leads, not
-verdicts.
+scenario actually holds. Agent reports are leads, not verdicts.
+
+**Reading the SDK / generated source is the spine of this step, not an
+"if unsure" fallback.** In practice nearly every confirm-vs-refute decision
+turns on a fact you can only get from source: a field's pointer-ness and JSON
+tags, whether a `List` returns a real paginator or a single-page type, how the
+generated `createXxx` computes `__id` (see the caching class in the taxonomy),
+what `IntDataPtr(nil)`/`ToDataRes` do with a null. So: **a finding whose severity
+depends on a type, pointer-ness, pagination shape, or generated-code behavior is
+NOT confirmed until you have read and can cite that source.** This is cheap (SDK
+reads are small) and it is what kills both hallucinated findings *and*
+false-clean dismissals — e.g. the same reads refuted a nullable-int "bug" and
+confirmed a real `__id` collision in the same review.
+
+**Re-rank severity, don't just confirm existence.** An agent's severity is a
+lead too. On verification, upgrade findings whose trigger is more common than the
+agent thought and downgrade ones that "could" happen but realistically won't. Two
+real examples from this skill's own use: an agent flagged a scalar-value parse
+bug as a rare malformed-input case, but verifying the caller showed it fires on a
+*valid, common* input (metadata with a scalar member) → upgraded; and an agent
+called a Stream list "truncating past one page" MEDIUM, but the SDK modeled it as
+a single-page type → downgraded to a live-verification item, not asserted.
 
 When a finding hinges on runtime data you can't see statically ("does the list
 endpoint really omit this field?"), say so explicitly and route it to
-`provider-verification` for live confirmation rather than asserting it.
+`provider-verification` for live confirmation rather than asserting it. Before
+offering or running live verification, check the target account/infra actually
+contains instances of the resources under review — proving a fix against an empty
+account verifies nothing.
 
 ### 5. Report
 

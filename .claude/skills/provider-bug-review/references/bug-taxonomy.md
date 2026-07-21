@@ -194,6 +194,25 @@ GCP resource name, a composite `<parent>/<leaf>`. Hide synthetic composite ids
 (pass `"__id"` directly, no public `id` field); expose `id` only when it carries
 user-meaningful, queryable information.
 
+**How the `__id` is actually set (read this before judging any `__id` finding).**
+The generated `createXxx` does `SetAllData(res, args)` then, *only when the
+result is still empty*, falls back to the `id()` method:
+```go
+SetAllData(res, args)          // sets res.__id from an explicit "__id" arg, if passed
+if res.__id == "" {            // otherwise, and ONLY otherwise:
+    res.__id, err = res.id()   // ...call the id() method
+}
+```
+Consequences to reason from:
+- An explicit `"__id"` arg **wins** over `id()`. So an `id()` that depends on an
+  Internal-struct field set *after* `NewResource` returns (e.g. `zoneID` assigned
+  post-construction) is silently bypassed if you also pass `"__id"` — and is
+  *wrong* (empty field) if you rely on it. Fix by passing `"__id"` explicitly.
+- A resource with **neither** an `id()` method **nor** an `"__id"` arg gets the
+  empty key and every instance collides (the classic silent aliasing bug).
+- To confirm any `__id` finding, open the generated `createXxx` in `*.lr.go` and
+  check which of these paths the resource takes.
+
 ---
 
 ## 6. `null && null == true` — unset booleans pass assertions
