@@ -4,6 +4,10 @@
 package resources
 
 import (
+	"errors"
+	"net"
+	"net/url"
+	"syscall"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -11,6 +15,36 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
+
+type timeoutErr struct{}
+
+func (timeoutErr) Error() string   { return "i/o timeout" }
+func (timeoutErr) Timeout() bool   { return true }
+func (timeoutErr) Temporary() bool { return true }
+
+func TestHttpNotReachable(t *testing.T) {
+	tests := []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{"nil", nil, false},
+		// Connection-level failures against a target that does not speak HTTP:
+		// these resolve http.get.header to null so policies skip instead of error.
+		{"connection refused", &url.Error{Op: "Get", Err: &net.OpError{Op: "dial", Err: syscall.ECONNREFUSED}}, true},
+		{"connection reset", &net.OpError{Op: "read", Err: syscall.ECONNRESET}, true},
+		{"dns not found", &url.Error{Op: "Get", Err: &net.DNSError{Err: "no such host", IsNotFound: true}}, true},
+		{"dial timeout", &url.Error{Op: "Get", Err: timeoutErr{}}, true},
+		// Genuine errors stay errors (not "no HTTP here").
+		{"redirect loop", &url.Error{Op: "Get", Err: errors.New("stopped after 10 redirects")}, false},
+		{"generic", errors.New("boom"), false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, httpNotReachable(tt.err))
+		})
+	}
+}
 
 func TestHttpHeaderServer(t *testing.T) {
 	t.Run("returns the Server header value", func(t *testing.T) {
