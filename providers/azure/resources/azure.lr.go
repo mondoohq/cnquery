@@ -323,6 +323,7 @@ const (
 	ResourceAzureSubscriptionAdvisorServiceTimeSeries                                                 string = "azure.subscription.advisorService.timeSeries"
 	ResourceAzureSubscriptionAdvisorServiceSecurityScore                                              string = "azure.subscription.advisorService.securityScore"
 	ResourceAzureSubscriptionPolicy                                                                   string = "azure.subscription.policy"
+	ResourceAzureSubscriptionPolicyState                                                              string = "azure.subscription.policy.state"
 	ResourceAzureSubscriptionPolicyAssignment                                                         string = "azure.subscription.policy.assignment"
 	ResourceAzureSubscriptionPolicyDefinition                                                         string = "azure.subscription.policy.definition"
 	ResourceAzureSubscriptionPolicySetDefinition                                                      string = "azure.subscription.policy.setDefinition"
@@ -1721,6 +1722,10 @@ func init() {
 		"azure.subscription.policy": {
 			Init:   initAzureSubscriptionPolicy,
 			Create: createAzureSubscriptionPolicy,
+		},
+		"azure.subscription.policy.state": {
+			// to override args, implement: initAzureSubscriptionPolicyState(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionPolicyState,
 		},
 		"azure.subscription.policy.assignment": {
 			Init:   initAzureSubscriptionPolicyAssignment,
@@ -13639,6 +13644,57 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.policy.complianceSummary": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionPolicy).GetComplianceSummary()).ToDataRes(types.Resource("azure.subscription.policy.complianceSummary"))
+	},
+	"azure.subscription.policy.states": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicy).GetStates()).ToDataRes(types.Array(types.Resource("azure.subscription.policy.state")))
+	},
+	"azure.subscription.policy.state.complianceState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyState).GetComplianceState()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.state.resourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyState).GetResourceId()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.state.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyState).GetResourceType()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.state.resourceGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyState).GetResourceGroup()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.state.resourceLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyState).GetResourceLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.state.policyAssignmentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyState).GetPolicyAssignmentId()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.state.policyAssignmentName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyState).GetPolicyAssignmentName()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.state.policyAssignmentScope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyState).GetPolicyAssignmentScope()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.state.policyDefinitionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyState).GetPolicyDefinitionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.state.policyDefinitionName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyState).GetPolicyDefinitionName()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.state.policyDefinitionReferenceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyState).GetPolicyDefinitionReferenceId()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.state.policyDefinitionAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyState).GetPolicyDefinitionAction()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.state.policyDefinitionCategory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyState).GetPolicyDefinitionCategory()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.state.policySetDefinitionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyState).GetPolicySetDefinitionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.state.policySetDefinitionName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyState).GetPolicySetDefinitionName()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.state.timestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyState).GetTimestamp()).ToDataRes(types.Time)
 	},
 	"azure.subscription.policy.assignment.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionPolicyAssignment).GetId()).ToDataRes(types.String)
@@ -35098,6 +35154,78 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.policy.complianceSummary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionPolicy).ComplianceSummary, ok = plugin.RawToTValue[*mqlAzureSubscriptionPolicyComplianceSummary](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.states": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicy).States, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.state.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyState).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.policy.state.complianceState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyState).ComplianceState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.state.resourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyState).ResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.state.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyState).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.state.resourceGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyState).ResourceGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.state.resourceLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyState).ResourceLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.state.policyAssignmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyState).PolicyAssignmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.state.policyAssignmentName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyState).PolicyAssignmentName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.state.policyAssignmentScope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyState).PolicyAssignmentScope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.state.policyDefinitionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyState).PolicyDefinitionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.state.policyDefinitionName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyState).PolicyDefinitionName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.state.policyDefinitionReferenceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyState).PolicyDefinitionReferenceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.state.policyDefinitionAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyState).PolicyDefinitionAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.state.policyDefinitionCategory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyState).PolicyDefinitionCategory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.state.policySetDefinitionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyState).PolicySetDefinitionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.state.policySetDefinitionName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyState).PolicySetDefinitionName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.state.timestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyState).Timestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.policy.assignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -81717,6 +81845,7 @@ type mqlAzureSubscriptionPolicy struct {
 	SetDefinitions    plugin.TValue[[]any]
 	Exemptions        plugin.TValue[[]any]
 	ComplianceSummary plugin.TValue[*mqlAzureSubscriptionPolicyComplianceSummary]
+	States            plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionPolicy creates a new instance of this resource
@@ -81833,6 +81962,141 @@ func (c *mqlAzureSubscriptionPolicy) GetComplianceSummary() *plugin.TValue[*mqlA
 
 		return c.complianceSummary()
 	})
+}
+
+func (c *mqlAzureSubscriptionPolicy) GetStates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.States, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.policy", c.__id, "states")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.states()
+	})
+}
+
+// mqlAzureSubscriptionPolicyState for the azure.subscription.policy.state resource
+type mqlAzureSubscriptionPolicyState struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionPolicyStateInternal it will be used here
+	ComplianceState             plugin.TValue[string]
+	ResourceId                  plugin.TValue[string]
+	ResourceType                plugin.TValue[string]
+	ResourceGroup               plugin.TValue[string]
+	ResourceLocation            plugin.TValue[string]
+	PolicyAssignmentId          plugin.TValue[string]
+	PolicyAssignmentName        plugin.TValue[string]
+	PolicyAssignmentScope       plugin.TValue[string]
+	PolicyDefinitionId          plugin.TValue[string]
+	PolicyDefinitionName        plugin.TValue[string]
+	PolicyDefinitionReferenceId plugin.TValue[string]
+	PolicyDefinitionAction      plugin.TValue[string]
+	PolicyDefinitionCategory    plugin.TValue[string]
+	PolicySetDefinitionId       plugin.TValue[string]
+	PolicySetDefinitionName     plugin.TValue[string]
+	Timestamp                   plugin.TValue[*time.Time]
+}
+
+// createAzureSubscriptionPolicyState creates a new instance of this resource
+func createAzureSubscriptionPolicyState(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionPolicyState{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.policy.state", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionPolicyState) MqlName() string {
+	return "azure.subscription.policy.state"
+}
+
+func (c *mqlAzureSubscriptionPolicyState) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionPolicyState) GetComplianceState() *plugin.TValue[string] {
+	return &c.ComplianceState
+}
+
+func (c *mqlAzureSubscriptionPolicyState) GetResourceId() *plugin.TValue[string] {
+	return &c.ResourceId
+}
+
+func (c *mqlAzureSubscriptionPolicyState) GetResourceType() *plugin.TValue[string] {
+	return &c.ResourceType
+}
+
+func (c *mqlAzureSubscriptionPolicyState) GetResourceGroup() *plugin.TValue[string] {
+	return &c.ResourceGroup
+}
+
+func (c *mqlAzureSubscriptionPolicyState) GetResourceLocation() *plugin.TValue[string] {
+	return &c.ResourceLocation
+}
+
+func (c *mqlAzureSubscriptionPolicyState) GetPolicyAssignmentId() *plugin.TValue[string] {
+	return &c.PolicyAssignmentId
+}
+
+func (c *mqlAzureSubscriptionPolicyState) GetPolicyAssignmentName() *plugin.TValue[string] {
+	return &c.PolicyAssignmentName
+}
+
+func (c *mqlAzureSubscriptionPolicyState) GetPolicyAssignmentScope() *plugin.TValue[string] {
+	return &c.PolicyAssignmentScope
+}
+
+func (c *mqlAzureSubscriptionPolicyState) GetPolicyDefinitionId() *plugin.TValue[string] {
+	return &c.PolicyDefinitionId
+}
+
+func (c *mqlAzureSubscriptionPolicyState) GetPolicyDefinitionName() *plugin.TValue[string] {
+	return &c.PolicyDefinitionName
+}
+
+func (c *mqlAzureSubscriptionPolicyState) GetPolicyDefinitionReferenceId() *plugin.TValue[string] {
+	return &c.PolicyDefinitionReferenceId
+}
+
+func (c *mqlAzureSubscriptionPolicyState) GetPolicyDefinitionAction() *plugin.TValue[string] {
+	return &c.PolicyDefinitionAction
+}
+
+func (c *mqlAzureSubscriptionPolicyState) GetPolicyDefinitionCategory() *plugin.TValue[string] {
+	return &c.PolicyDefinitionCategory
+}
+
+func (c *mqlAzureSubscriptionPolicyState) GetPolicySetDefinitionId() *plugin.TValue[string] {
+	return &c.PolicySetDefinitionId
+}
+
+func (c *mqlAzureSubscriptionPolicyState) GetPolicySetDefinitionName() *plugin.TValue[string] {
+	return &c.PolicySetDefinitionName
+}
+
+func (c *mqlAzureSubscriptionPolicyState) GetTimestamp() *plugin.TValue[*time.Time] {
+	return &c.Timestamp
 }
 
 // mqlAzureSubscriptionPolicyAssignment for the azure.subscription.policy.assignment resource

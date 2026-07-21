@@ -476,6 +476,62 @@ func (a *mqlAzureSubscriptionPolicyComplianceSummary) id() (string, error) {
 	return "azure.subscription.policy.complianceSummary/" + a.SubscriptionId.Data, nil
 }
 
+func (a *mqlAzureSubscriptionPolicy) states() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	client, err := armpolicyinsights.NewPolicyStatesClient(conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListQueryResultsForSubscriptionPager(armpolicyinsights.PolicyStatesResourceLatest, a.SubscriptionId.Data, nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, ps := range page.Value {
+			if ps == nil {
+				continue
+			}
+			resourceId := convert.ToValue(ps.ResourceID)
+			policyAssignmentId := convert.ToValue(ps.PolicyAssignmentID)
+			policyDefinitionReferenceId := convert.ToValue(ps.PolicyDefinitionReferenceID)
+			// A compliance state is unique per (resource, assignment, definition
+			// reference); there is no single stable ID the API returns, so key on
+			// the composite.
+			stateId := resourceId + "/" + policyAssignmentId + "/" + policyDefinitionReferenceId
+			mqlState, err := CreateResource(a.MqlRuntime, "azure.subscription.policy.state", map[string]*llx.RawData{
+				"__id":                        llx.StringData(stateId),
+				"complianceState":             llx.StringData(convert.ToValue(ps.ComplianceState)),
+				"resourceId":                  llx.StringData(resourceId),
+				"resourceType":                llx.StringData(convert.ToValue(ps.ResourceType)),
+				"resourceGroup":               llx.StringData(convert.ToValue(ps.ResourceGroup)),
+				"resourceLocation":            llx.StringData(convert.ToValue(ps.ResourceLocation)),
+				"policyAssignmentId":          llx.StringData(policyAssignmentId),
+				"policyAssignmentName":        llx.StringData(convert.ToValue(ps.PolicyAssignmentName)),
+				"policyAssignmentScope":       llx.StringData(convert.ToValue(ps.PolicyAssignmentScope)),
+				"policyDefinitionId":          llx.StringData(convert.ToValue(ps.PolicyDefinitionID)),
+				"policyDefinitionName":        llx.StringData(convert.ToValue(ps.PolicyDefinitionName)),
+				"policyDefinitionReferenceId": llx.StringData(policyDefinitionReferenceId),
+				"policyDefinitionAction":      llx.StringData(convert.ToValue(ps.PolicyDefinitionAction)),
+				"policyDefinitionCategory":    llx.StringData(convert.ToValue(ps.PolicyDefinitionCategory)),
+				"policySetDefinitionId":       llx.StringData(convert.ToValue(ps.PolicySetDefinitionID)),
+				"policySetDefinitionName":     llx.StringData(convert.ToValue(ps.PolicySetDefinitionName)),
+				"timestamp":                   llx.TimeDataPtr(ps.Timestamp),
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlState)
+		}
+	}
+	return res, nil
+}
+
 func (a *mqlAzureSubscriptionPolicy) complianceSummary() (*mqlAzureSubscriptionPolicyComplianceSummary, error) {
 	res, err := NewResource(a.MqlRuntime, "azure.subscription.policy.complianceSummary", map[string]*llx.RawData{
 		"subscriptionId": llx.StringData(a.SubscriptionId.Data),

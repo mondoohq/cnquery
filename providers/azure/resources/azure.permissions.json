@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.32.0",
-  "generated_at": "2026-07-21T12:09:08-07:00",
+  "generated_at": "2026-07-21T12:20:42-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -215,6 +215,7 @@
     "Microsoft.OperationalInsights/workspaces/read",
     "Microsoft.OperationalInsights/workspaces/savedSearches/read",
     "Microsoft.OperationalInsights/workspaces/tables/read",
+    "Microsoft.Policyinsights/policyStates/read",
     "Microsoft.Purview/accounts/read",
     "Microsoft.RecoveryServices/Vaults/backupPolicies/read",
     "Microsoft.RecoveryServices/Vaults/backupProtectedItems/read",
@@ -1630,6 +1631,12 @@
       "service": "Microsoft.OperationalInsights",
       "action": "NewListByWorkspacePager",
       "source_file": "loganalytics.go"
+    },
+    {
+      "permission": "Microsoft.Policyinsights/policyStates/read",
+      "service": "Microsoft.Policyinsights",
+      "action": "NewListQueryResultsForSubscriptionPager",
+      "source_file": "policy.go"
     },
     {
       "permission": "Microsoft.Purview/accounts/read",

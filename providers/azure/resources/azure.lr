@@ -10435,6 +10435,52 @@ private azure.subscription.policy @defaults("subscriptionId") {
   exemptions() []azure.subscription.policy.exemption
   // Aggregate policy compliance summary for the subscription
   complianceSummary() azure.subscription.policy.complianceSummary
+  // Per-resource policy compliance states in the subscription
+  states() []azure.subscription.policy.state
+}
+
+// Azure Policy compliance state
+//
+// The latest compliance evaluation of a single resource against a
+// single policy: whether the resource is compliant, the effect the
+// policy applies, and the assignment and definition responsible. Where
+// the aggregate compliance summary reports counts, these records name
+// the specific non-compliant resources, so audits can enumerate exactly
+// what fails which control. Filter by `complianceState` to isolate
+// non-compliant resources.
+private azure.subscription.policy.state @defaults("complianceState resourceType policyDefinitionName") {
+  // Compliance state ("Compliant", "NonCompliant", "Conflict", "Exempt")
+  complianceState string
+  // ARM resource ID of the evaluated resource
+  resourceId string
+  // Resource type of the evaluated resource
+  resourceType string
+  // Resource group of the evaluated resource
+  resourceGroup string
+  // Location of the evaluated resource
+  resourceLocation string
+  // Resource ID of the policy assignment that produced this state
+  policyAssignmentId string
+  // Name of the policy assignment
+  policyAssignmentName string
+  // Scope of the policy assignment
+  policyAssignmentScope string
+  // Resource ID of the policy definition evaluated
+  policyDefinitionId string
+  // Name of the policy definition
+  policyDefinitionName string
+  // Reference ID of the definition within an initiative (set definition), if applicable
+  policyDefinitionReferenceId string
+  // Effect the policy definition applies (e.g. "deny", "audit", "deployIfNotExists", "append")
+  policyDefinitionAction string
+  // Category of the policy definition (e.g. "Security Center", "Storage")
+  policyDefinitionCategory string
+  // Resource ID of the initiative (set definition), if the assignment is an initiative
+  policySetDefinitionId string
+  // Name of the initiative (set definition), if applicable
+  policySetDefinitionName string
+  // When the evaluation was recorded
+  timestamp time
 }
 
 // Azure Policy assignment
