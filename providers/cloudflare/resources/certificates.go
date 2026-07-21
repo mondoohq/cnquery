@@ -46,9 +46,9 @@ func (c *mqlCloudflareZone) customCertificates() ([]any, error) {
 			"signature":    llx.StringData(cert.Signature),
 			"status":       llx.StringData(string(cert.Status)),
 			"bundleMethod": llx.StringData(string(cert.BundleMethod)),
-			"expiresAt":    llx.TimeData(cert.ExpiresOn),
-			"uploadedAt":   llx.TimeData(cert.UploadedOn),
-			"modifiedAt":   llx.TimeData(cert.ModifiedOn),
+			"expiresAt":    timeOrNil(cert.ExpiresOn),
+			"uploadedAt":   timeOrNil(cert.UploadedOn),
+			"modifiedAt":   timeOrNil(cert.ModifiedOn),
 			"priority":     llx.IntData(int64(cert.Priority)),
 		})
 		if err != nil {
@@ -83,7 +83,7 @@ func (c *mqlCloudflareZone) certificatePacks() ([]any, error) {
 
 	packs, err := cfGetPaged[certificatePack](conn, fmt.Sprintf("zones/%s/ssl/certificate_packs?status=all", c.Id.Data))
 	if err != nil {
-		return nil, err
+		return degradedList(err)
 	}
 
 	var result []any

@@ -58,7 +58,7 @@ func (c *mqlCloudflareOne) gatewayRules() ([]any, error) {
 		result = append(result, res)
 	}
 	if err := iter.Err(); err != nil {
-		return nil, err
+		return degradedList(err)
 	}
 
 	return result, nil
@@ -97,7 +97,7 @@ func (c *mqlCloudflareOne) lists() ([]any, error) {
 		result = append(result, res)
 	}
 	if err := iter.Err(); err != nil {
-		return nil, err
+		return degradedList(err)
 	}
 
 	return result, nil
@@ -130,7 +130,7 @@ func (c *mqlCloudflareOne) locations() ([]any, error) {
 
 	records, err := cfGetPaged[gatewayLocation](conn, fmt.Sprintf("accounts/%s/gateway/locations", c.AccountID))
 	if err != nil {
-		return nil, err
+		return degradedList(err)
 	}
 
 	var result []any
@@ -192,7 +192,7 @@ func (c *mqlCloudflareOne) dlpProfiles() ([]any, error) {
 		result = append(result, res)
 	}
 	if err := iter.Err(); err != nil {
-		return nil, err
+		return degradedList(err)
 	}
 
 	return result, nil

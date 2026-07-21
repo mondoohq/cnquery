@@ -41,7 +41,7 @@ func (c *mqlCloudflareAccount) members() ([]any, error) {
 
 	members, err := cfGetPaged[accountMember](conn, fmt.Sprintf("accounts/%s/members", c.Id.Data))
 	if err != nil {
-		return nil, err
+		return degradedList(err)
 	}
 
 	results := []any{}

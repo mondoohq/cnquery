@@ -54,7 +54,7 @@ func (c *mqlCloudflareAccount) auditLogs() ([]any, error) {
 
 	entries, err := cfGetPaged[auditLogEntry](conn, fmt.Sprintf("accounts/%s/audit_logs?direction=desc", c.Id.Data))
 	if err != nil {
-		return nil, err
+		return degradedList(err)
 	}
 
 	results := []any{}

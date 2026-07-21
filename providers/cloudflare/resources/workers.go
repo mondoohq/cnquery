@@ -9,7 +9,9 @@ import (
 	"time"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 func (c *mqlCloudflareZone) workers() (*mqlCloudflareWorkers, error) {
@@ -93,6 +95,10 @@ func (c *mqlCloudflareWorkers) workers() ([]any, error) {
 		w := workerList[i]
 
 		res, err := NewResource(c.MqlRuntime, "cloudflare.workers.worker", map[string]*llx.RawData{
+			// This resource has no id() method, so without an explicit __id every
+			// worker would share the empty cache key and alias to the first
+			// script. Scope by account so cross-account scans don't collide.
+			"__id":             llx.StringData("cloudflare.workers.worker@" + c.AccountID + "/" + w.ID),
 			"id":               llx.StringData(w.ID),
 			"etag":             llx.StringData(w.ETag),
 			"size":             llx.IntData(w.Size),
@@ -113,8 +119,46 @@ func (c *mqlCloudflareWorkers) workers() ([]any, error) {
 	return result, nil
 }
 
+// pages lists Cloudflare Pages projects, surfacing each project's canonical
+// (production) deployment. The projects endpoint embeds that deployment, so a
+// single paged call covers it; preview/historical deployments are out of scope
+// here. Degrades to empty when Pages isn't available to the token.
 func (c *mqlCloudflareWorkers) pages() ([]any, error) {
-	return nil, nil
+	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
+
+	projects, err := cfGetPaged[pagesProject](conn, fmt.Sprintf("accounts/%s/pages/projects", c.AccountID))
+	if err != nil {
+		if isUnavailable(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+
+	var result []any
+	for i := range projects {
+		p := projects[i]
+		d := p.CanonicalDeployment
+		if d == nil {
+			// No production deployment yet — nothing to describe for this project.
+			continue
+		}
+		res, err := CreateResource(c.MqlRuntime, "cloudflare.workers.page", map[string]*llx.RawData{
+			"__id":             llx.StringData("cloudflare.workers.page@" + c.AccountID + "/" + p.Name + "/" + d.ID),
+			"id":               llx.StringData(d.ID),
+			"shortId":          llx.StringData(d.ShortID),
+			"projectId":        llx.StringData(d.ProjectID),
+			"projectName":      llx.StringData(p.Name),
+			"environment":      llx.StringData(d.Environment),
+			"url":              llx.StringData(d.URL),
+			"aliases":          llx.ArrayData(convert.SliceAnyToInterface(d.Aliases), types.String),
+			"productionBranch": llx.StringData(p.ProductionBranch),
+		})
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, res)
+	}
+	return result, nil
 }
 
 func (c *mqlCloudflareWorkersSecret) id() (string, error) {
@@ -159,7 +203,7 @@ func (c *mqlCloudflareWorkers) secrets() ([]any, error) {
 		for j := range env.Result {
 			s := env.Result[j]
 			res, err := CreateResource(c.MqlRuntime, "cloudflare.workers.secret", map[string]*llx.RawData{
-				"__id":       llx.StringData("cloudflare.workers.secret@" + w.ID + "/" + s.Name),
+				"__id":       llx.StringData("cloudflare.workers.secret@" + c.AccountID + "/" + w.ID + "/" + s.Name),
 				"scriptName": llx.StringData(w.ID),
 				"name":       llx.StringData(s.Name),
 				"secretType": llx.StringData(s.Type),
@@ -180,9 +224,24 @@ type pagesDeployConfig struct {
 	} `json:"env_vars"`
 }
 
+// pagesDeployment is the deployment object embedded in a Pages project (the
+// canonical/production deployment), decoded via the client's generic Get.
+type pagesDeployment struct {
+	ID          string   `json:"id"`
+	ShortID     string   `json:"short_id"`
+	ProjectID   string   `json:"project_id"`
+	ProjectName string   `json:"project_name"`
+	Environment string   `json:"environment"`
+	URL         string   `json:"url"`
+	Aliases     []string `json:"aliases"`
+}
+
 type pagesProject struct {
-	Name              string `json:"name"`
-	DeploymentConfigs struct {
+	ID                  string           `json:"id"`
+	Name                string           `json:"name"`
+	ProductionBranch    string           `json:"production_branch"`
+	CanonicalDeployment *pagesDeployment `json:"canonical_deployment"`
+	DeploymentConfigs   struct {
 		Preview    pagesDeployConfig `json:"preview"`
 		Production pagesDeployConfig `json:"production"`
 	} `json:"deployment_configs"`
@@ -210,7 +269,7 @@ func (c *mqlCloudflareWorkers) pageEnvVars() ([]any, error) {
 				varType = v.Type
 			}
 			res, err := CreateResource(c.MqlRuntime, "cloudflare.pages.envVar", map[string]*llx.RawData{
-				"__id":        llx.StringData("cloudflare.pages.envVar@" + projectName + "/" + env + "/" + name),
+				"__id":        llx.StringData("cloudflare.pages.envVar@" + c.AccountID + "/" + projectName + "/" + env + "/" + name),
 				"projectName": llx.StringData(projectName),
 				"environment": llx.StringData(env),
 				"name":        llx.StringData(name),

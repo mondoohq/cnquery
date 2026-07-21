@@ -82,7 +82,9 @@ func (c *mqlCloudflareZone) firewallRules() ([]any, error) {
 			result = append(result, res)
 		}
 
-		if env.ResultInfo.TotalPages == 0 || env.ResultInfo.Page >= env.ResultInfo.TotalPages {
+		// Terminate on the local page counter, not the server-echoed
+		// ResultInfo.Page, so a page:0 echo with total_pages>0 can't loop forever.
+		if env.ResultInfo.TotalPages == 0 || page >= env.ResultInfo.TotalPages {
 			break
 		}
 		page++

@@ -60,7 +60,7 @@ func (c *mqlCloudflareDns) records() ([]any, error) {
 
 	records, err := cfGetPaged[dnsRecord](conn, fmt.Sprintf("zones/%s/dns_records", c.ZoneID))
 	if err != nil {
-		return nil, err
+		return degradedList(err)
 	}
 
 	var result []any
@@ -80,8 +80,8 @@ func (c *mqlCloudflareDns) records() ([]any, error) {
 			"ttl":      llx.IntData(rec.TTL),
 			"priority": llx.IntData(int64(rec.Priority)),
 
-			"createdOn":  llx.TimeData(rec.CreatedOn),
-			"modifiedOn": llx.TimeData(rec.ModifiedOn),
+			"createdOn":  timeOrNil(rec.CreatedOn),
+			"modifiedOn": timeOrNil(rec.ModifiedOn),
 		})
 		if err != nil {
 			return nil, err

@@ -71,7 +71,7 @@ func (c *mqlCloudflareZone) tunnels() ([]any, error) {
 		result = append(result, res)
 	}
 	if err := iter.Err(); err != nil {
-		return nil, err
+		return degradedList(err)
 	}
 
 	return result, nil
@@ -112,7 +112,7 @@ func (c *mqlCloudflareZone) tunnelConnections(conn *connection.CloudflareConnect
 		}
 	}
 	if err := iter.Err(); err != nil {
-		return nil, err
+		return degradedList(err)
 	}
 
 	return connections, nil
@@ -180,7 +180,7 @@ func (c *mqlCloudflareZone) tunnelRoutes() ([]any, error) {
 		}
 		uri := fmt.Sprintf("accounts/%s/teamnet/routes?per_page=%d&page=%d", accountID, perPage, page)
 		if err := conn.Cf.Get(context.TODO(), uri, nil, &env); err != nil {
-			return nil, err
+			return degradedList(err)
 		}
 
 		for i := range env.Result {
@@ -249,7 +249,7 @@ func (c *mqlCloudflareZone) tunnelVirtualNetworks() ([]any, error) {
 		result = append(result, res)
 	}
 	if err := iter.Err(); err != nil {
-		return nil, err
+		return degradedList(err)
 	}
 
 	return result, nil
