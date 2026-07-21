@@ -16,8 +16,6 @@ import (
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"go.mondoo.com/mql/v13/types"
 
-	"cloud.google.com/go/logging/logadmin"
-	"google.golang.org/api/iterator"
 	"google.golang.org/api/logging/v2"
 	"google.golang.org/api/option"
 )
@@ -193,37 +191,35 @@ func (g *mqlGcpProjectLoggingservice) metrics() ([]any, error) {
 	}
 	projectId := g.ProjectId.Data
 
-	creds, err := conn.Credentials(logging.CloudPlatformReadOnlyScope, logging.LoggingReadScope)
+	client, err := conn.Client(logging.CloudPlatformReadOnlyScope, logging.LoggingReadScope)
 	if err != nil {
 		return nil, err
 	}
-
 	ctx := context.Background()
-	logadminClient, err := logadmin.NewClient(ctx, projectId, option.WithCredentials(creds), connection.GRPCClientTraceOption())
+	loggingSvc, err := logging.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
 		return nil, err
 	}
 
 	var metrics []any
-	it := logadminClient.Metrics(ctx)
-	for {
-		m, err := it.Next()
-		if err == iterator.Done {
-			break
+	req := loggingSvc.Projects.Metrics.List(fmt.Sprintf("projects/%s", projectId))
+	if err := req.Pages(ctx, func(page *logging.ListLogMetricsResponse) error {
+		for _, m := range page.Metrics {
+			metric, err := CreateResource(g.MqlRuntime, "gcp.project.loggingservice.metric", map[string]*llx.RawData{
+				"id":          llx.StringData(m.Name),
+				"projectId":   llx.StringData(projectId),
+				"description": llx.StringData(m.Description),
+				"filter":      llx.StringData(m.Filter),
+				"disabled":    llx.BoolData(m.Disabled),
+			})
+			if err != nil {
+				return err
+			}
+			metrics = append(metrics, metric)
 		}
-		if err != nil {
-			return nil, err
-		}
-		metric, err := CreateResource(g.MqlRuntime, "gcp.project.loggingservice.metric", map[string]*llx.RawData{
-			"id":          llx.StringData(m.ID),
-			"projectId":   llx.StringData(projectId),
-			"description": llx.StringData(m.Description),
-			"filter":      llx.StringData(m.Filter),
-		})
-		if err != nil {
-			return nil, err
-		}
-		metrics = append(metrics, metric)
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 	return metrics, nil
 }
@@ -314,44 +310,52 @@ func (g *mqlGcpProjectLoggingservice) sinks() ([]any, error) {
 	}
 	projectId := g.ProjectId.Data
 
-	creds, err := conn.Credentials(logging.CloudPlatformReadOnlyScope, logging.LoggingReadScope)
+	client, err := conn.Client(logging.CloudPlatformReadOnlyScope, logging.LoggingReadScope)
 	if err != nil {
 		return nil, err
 	}
-
 	ctx := context.Background()
-	logadminClient, err := logadmin.NewClient(ctx, projectId, option.WithCredentials(creds), connection.GRPCClientTraceOption())
+	loggingSvc, err := logging.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
 		return nil, err
 	}
 
 	var sinks []any
-	it := logadminClient.Sinks(ctx)
-	for {
-		s, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			return nil, err
-		}
-		args := map[string]*llx.RawData{
-			"id":              llx.StringData(s.ID),
-			"projectId":       llx.StringData(projectId),
-			"destination":     llx.StringData(s.Destination),
-			"filter":          llx.StringData(s.Filter),
-			"writerIdentity":  llx.StringData(s.WriterIdentity),
-			"includeChildren": llx.BoolData(s.IncludeChildren),
-		}
-		if !strings.HasPrefix(s.Destination, "storage.googleapis.com/") {
-			args["storageBucket"] = llx.NilData
-		}
-		sink, err := CreateResource(g.MqlRuntime, "gcp.project.loggingservice.sink", args)
-		if err != nil {
-			return nil, err
-		}
+	req := loggingSvc.Projects.Sinks.List(fmt.Sprintf("projects/%s", projectId))
+	if err := req.Pages(ctx, func(page *logging.ListSinksResponse) error {
+		for _, s := range page.Sinks {
+			exclusions := []any{}
+			for _, e := range s.Exclusions {
+				exclusions = append(exclusions, map[string]any{
+					"name":        e.Name,
+					"description": e.Description,
+					"filter":      e.Filter,
+					"disabled":    e.Disabled,
+				})
+			}
 
-		sinks = append(sinks, sink)
+			args := map[string]*llx.RawData{
+				"id":              llx.StringData(s.Name),
+				"projectId":       llx.StringData(projectId),
+				"destination":     llx.StringData(s.Destination),
+				"filter":          llx.StringData(s.Filter),
+				"writerIdentity":  llx.StringData(s.WriterIdentity),
+				"includeChildren": llx.BoolData(s.IncludeChildren),
+				"disabled":        llx.BoolData(s.Disabled),
+				"exclusions":      llx.ArrayData(exclusions, types.Dict),
+			}
+			if !strings.HasPrefix(s.Destination, "storage.googleapis.com/") {
+				args["storageBucket"] = llx.NilData
+			}
+			sink, err := CreateResource(g.MqlRuntime, "gcp.project.loggingservice.sink", args)
+			if err != nil {
+				return err
+			}
+			sinks = append(sinks, sink)
+		}
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 	return sinks, nil
 }

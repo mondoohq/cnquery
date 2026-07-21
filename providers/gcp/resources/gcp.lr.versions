@@ -3904,6 +3904,7 @@ gcp.project.loggingservice.exclusions 13.6.1
 gcp.project.loggingservice.metric 9.0.0
 gcp.project.loggingservice.metric.alertPolicies 9.0.0
 gcp.project.loggingservice.metric.description 9.0.0
+gcp.project.loggingservice.metric.disabled 13.32.1
 gcp.project.loggingservice.metric.filter 9.0.0
 gcp.project.loggingservice.metric.filtersAuditConfigChanges 13.12.2
 gcp.project.loggingservice.metric.filtersCustomRoleChanges 13.21.2
@@ -3921,6 +3922,8 @@ gcp.project.loggingservice.projectId 9.0.0
 gcp.project.loggingservice.sink 9.0.0
 gcp.project.loggingservice.sink.capturesAllLogs 13.18.1
 gcp.project.loggingservice.sink.destination 9.0.0
+gcp.project.loggingservice.sink.disabled 13.32.1
+gcp.project.loggingservice.sink.exclusions 13.32.1
 gcp.project.loggingservice.sink.filter 9.0.0
 gcp.project.loggingservice.sink.id 9.0.0
 gcp.project.loggingservice.sink.includeChildren 9.0.0

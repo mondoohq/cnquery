@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.32.0",
-  "generated_at": "2026-07-21T08:12:38-07:00",
+  "generated_at": "2026-07-21T12:20:42-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.batchPredictionJobs.list",
@@ -202,6 +202,7 @@
     "ids.endpoints.list",
     "logging.buckets.list",
     "logging.exclusions.list",
+    "logging.logMetrics.list",
     "logging.settings.get",
     "logging.sinks.list",
     "logging.views.list",
@@ -1524,6 +1525,12 @@
       "permission": "logging.exclusions.list",
       "service": "logging",
       "action": "Exclusions.List",
+      "source_file": "logging.go"
+    },
+    {
+      "permission": "logging.logMetrics.list",
+      "service": "logging",
+      "action": "Metrics.List",
       "source_file": "logging.go"
     },
     {

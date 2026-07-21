@@ -5914,6 +5914,8 @@ private gcp.project.loggingservice.metric @defaults("description filter") {
   description string
   // Advanced log filter
   filter string
+  // Whether the metric is disabled. A disabled metric stops matching new log entries.
+  disabled bool
   // Whether the filter matches IAM policy mutations (SetIamPolicy)
   filtersIamChanges() bool
   // Whether the filter matches audit-config mutations (auditConfigDelta on SetIamPolicy)
@@ -5962,6 +5964,15 @@ private gcp.project.loggingservice.sink @defaults("destination") {
   //
   // When true, the sink also receives log entries (recursively) from any contained folders, billing accounts, or projects.
   includeChildren bool
+  // Whether the sink is disabled. A disabled sink stops exporting log entries.
+  disabled bool
+  // Per-sink exclusion filters
+  //
+  // Each entry drops matching log entries from this sink's export before they
+  // reach the destination, with keys `name` (the exclusion identifier),
+  // `description`, `filter` (the advanced log filter selecting entries to
+  // drop), and `disabled` (whether the exclusion is currently inactive).
+  exclusions []dict
   // Whether the sink exports every log entry because its filter is empty
   capturesAllLogs() bool
 }

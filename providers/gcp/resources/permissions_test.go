@@ -241,6 +241,7 @@ var validatedGCPPermissions = []string{
 	"ids.endpoints.list",
 	"logging.buckets.list",
 	"logging.exclusions.list",
+	"logging.logMetrics.list",
 	"logging.settings.get",
 	"logging.sinks.list",
 	"logging.views.list",

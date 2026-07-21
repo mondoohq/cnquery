@@ -1355,6 +1355,10 @@ var gcpPermissionOverrides = map[string]map[string]string{
 		// logging.cmekSettings.get permission (verified against GCP testable
 		// permissions at project and organization scope).
 		"Projects.GetCmekSettings": "logging.settings.get",
+		// Log-based metrics list under the "logMetrics" resource; the generic
+		// derivation from Projects.Metrics.List yields the non-existent
+		// "logging.metrics.list".
+		"Metrics.List": "logging.logMetrics.list",
 	},
 	"resourcemanager": {
 		// Listing liens has no dedicated permission; it requires

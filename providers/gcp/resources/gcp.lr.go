@@ -7905,6 +7905,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.loggingservice.metric.filter": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectLoggingserviceMetric).GetFilter()).ToDataRes(types.String)
 	},
+	"gcp.project.loggingservice.metric.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectLoggingserviceMetric).GetDisabled()).ToDataRes(types.Bool)
+	},
 	"gcp.project.loggingservice.metric.filtersIamChanges": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectLoggingserviceMetric).GetFiltersIamChanges()).ToDataRes(types.Bool)
 	},
@@ -7955,6 +7958,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.loggingservice.sink.includeChildren": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectLoggingserviceSink).GetIncludeChildren()).ToDataRes(types.Bool)
+	},
+	"gcp.project.loggingservice.sink.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectLoggingserviceSink).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.loggingservice.sink.exclusions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectLoggingserviceSink).GetExclusions()).ToDataRes(types.Array(types.Dict))
 	},
 	"gcp.project.loggingservice.sink.capturesAllLogs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectLoggingserviceSink).GetCapturesAllLogs()).ToDataRes(types.Bool)
@@ -25932,6 +25941,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectLoggingserviceMetric).Filter, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.loggingservice.metric.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingserviceMetric).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gcp.project.loggingservice.metric.filtersIamChanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectLoggingserviceMetric).FiltersIamChanges, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -26002,6 +26015,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.loggingservice.sink.includeChildren": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectLoggingserviceSink).IncludeChildren, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.loggingservice.sink.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingserviceSink).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.loggingservice.sink.exclusions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingserviceSink).Exclusions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.loggingservice.sink.capturesAllLogs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -59922,6 +59943,7 @@ type mqlGcpProjectLoggingserviceMetric struct {
 	ProjectId                      plugin.TValue[string]
 	Description                    plugin.TValue[string]
 	Filter                         plugin.TValue[string]
+	Disabled                       plugin.TValue[bool]
 	FiltersIamChanges              plugin.TValue[bool]
 	FiltersAuditConfigChanges      plugin.TValue[bool]
 	FiltersRouteChanges            plugin.TValue[bool]
@@ -59985,6 +60007,10 @@ func (c *mqlGcpProjectLoggingserviceMetric) GetDescription() *plugin.TValue[stri
 
 func (c *mqlGcpProjectLoggingserviceMetric) GetFilter() *plugin.TValue[string] {
 	return &c.Filter
+}
+
+func (c *mqlGcpProjectLoggingserviceMetric) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
 }
 
 func (c *mqlGcpProjectLoggingserviceMetric) GetFiltersIamChanges() *plugin.TValue[bool] {
@@ -60069,6 +60095,8 @@ type mqlGcpProjectLoggingserviceSink struct {
 	Filter          plugin.TValue[string]
 	WriterIdentity  plugin.TValue[string]
 	IncludeChildren plugin.TValue[bool]
+	Disabled        plugin.TValue[bool]
+	Exclusions      plugin.TValue[[]any]
 	CapturesAllLogs plugin.TValue[bool]
 }
 
@@ -60147,6 +60175,14 @@ func (c *mqlGcpProjectLoggingserviceSink) GetWriterIdentity() *plugin.TValue[str
 
 func (c *mqlGcpProjectLoggingserviceSink) GetIncludeChildren() *plugin.TValue[bool] {
 	return &c.IncludeChildren
+}
+
+func (c *mqlGcpProjectLoggingserviceSink) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+func (c *mqlGcpProjectLoggingserviceSink) GetExclusions() *plugin.TValue[[]any] {
+	return &c.Exclusions
 }
 
 func (c *mqlGcpProjectLoggingserviceSink) GetCapturesAllLogs() *plugin.TValue[bool] {
