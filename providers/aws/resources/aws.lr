@@ -804,6 +804,8 @@ private aws.waf.acl @defaults("name") {
   // CloudFront distributions) and for regional web ACLs with no load balancer
   // association.
   associatedLoadBalancers() []aws.elb.loadbalancer
+  // Tags on the web ACL
+  tags() map[string]string
 }
 
 // Amazon WAF v2 RuleGroup
@@ -824,6 +826,8 @@ private aws.waf.rulegroup @defaults("name") {
   rules() []aws.waf.rule
   // Scope either REGIONAL or CLOUDFRONT
   scope string
+  // Tags on the rule group
+  tags() map[string]string
 }
 
 // Amazon WAF rule
@@ -1253,6 +1257,8 @@ private aws.waf.ipset @defaults("name") {
   addressType() string
   // List of IP address ranges in CIDR notation
   addresses() dict
+  // Tags on the IP set
+  tags() map[string]string
 }
 
 // Amazon WAF regex pattern set
@@ -1273,6 +1279,8 @@ private aws.waf.regexPatternSet @defaults("name") {
   description string
   // List of regular expression patterns
   regularExpressions []string
+  // Tags on the regex pattern set
+  tags() map[string]string
 }
 
 // Amazon WAF ACL logging configuration

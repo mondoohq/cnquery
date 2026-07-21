@@ -34,6 +34,58 @@ func (a *mqlAwsWaf) id() (string, error) {
 	return "aws.waf", nil
 }
 
+// wafTagsForArn lists the tags on a WAF resource, resolving the WAF endpoint
+// from the resource's scope. Returns nil on access-denied so a missing
+// wafv2:ListTagsForResource permission degrades gracefully.
+func wafTagsForArn(runtime *plugin.Runtime, scope, arn string) (map[string]any, error) {
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Wafv2(wafRegionForScope(scope))
+	ctx := context.Background()
+
+	tags := map[string]any{}
+	var nextMarker *string
+	for {
+		resp, err := svc.ListTagsForResource(ctx, &wafv2.ListTagsForResourceInput{
+			ResourceARN: &arn,
+			NextMarker:  nextMarker,
+		})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return nil, nil
+			}
+			return nil, err
+		}
+		if resp.TagInfoForResource != nil {
+			for _, t := range resp.TagInfoForResource.TagList {
+				if t.Key != nil {
+					tags[*t.Key] = convert.ToValue(t.Value)
+				}
+			}
+		}
+		if resp.NextMarker == nil {
+			break
+		}
+		nextMarker = resp.NextMarker
+	}
+	return tags, nil
+}
+
+func (a *mqlAwsWafAcl) tags() (map[string]any, error) {
+	return wafTagsForArn(a.MqlRuntime, a.Scope.Data, a.Arn.Data)
+}
+
+func (a *mqlAwsWafRulegroup) tags() (map[string]any, error) {
+	return wafTagsForArn(a.MqlRuntime, a.Scope.Data, a.Arn.Data)
+}
+
+func (a *mqlAwsWafIpset) tags() (map[string]any, error) {
+	return wafTagsForArn(a.MqlRuntime, a.Scope.Data, a.Arn.Data)
+}
+
+func (a *mqlAwsWafRegexPatternSet) tags() (map[string]any, error) {
+	return wafTagsForArn(a.MqlRuntime, a.Scope.Data, a.Arn.Data)
+}
+
 func (a *mqlAwsWafAcl) id() (string, error) {
 	return a.Arn.Data, nil
 }

@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.49.0",
-  "generated_at": "2026-07-21T12:54:57-07:00",
+  "generated_at": "2026-07-21T13:17:48-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindings",
@@ -943,6 +943,7 @@
     "wafv2:ListRegexPatternSets",
     "wafv2:ListResourcesForWebACL",
     "wafv2:ListRuleGroups",
+    "wafv2:ListTagsForResource",
     "wafv2:ListWebACLs",
     "workdocs:DescribeFolderContents",
     "workdocs:DescribeUsers",
@@ -6801,6 +6802,12 @@
       "permission": "wafv2:ListRuleGroups",
       "service": "wafv2",
       "action": "ListRuleGroups",
+      "source_file": "aws_waf.go"
+    },
+    {
+      "permission": "wafv2:ListTagsForResource",
+      "service": "wafv2",
+      "action": "ListTagsForResource",
       "source_file": "aws_waf.go"
     },
     {

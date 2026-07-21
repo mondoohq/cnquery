@@ -10512,6 +10512,7 @@ aws.waf.acl.managedByFirewallManager 11.15.2
 aws.waf.acl.name 11.15.2
 aws.waf.acl.rules 11.15.2
 aws.waf.acl.scope 11.15.2
+aws.waf.acl.tags 13.49.1
 aws.waf.acl.tokenDomains 13.49.1
 aws.waf.acl.visibilityConfig 13.49.1
 aws.waf.acls 11.15.2
@@ -10524,6 +10525,7 @@ aws.waf.ipset.description 11.15.2
 aws.waf.ipset.id 11.15.2
 aws.waf.ipset.name 11.15.2
 aws.waf.ipset.scope 11.15.2
+aws.waf.ipset.tags 13.49.1
 aws.waf.regexPatternSet 11.16.1
 aws.waf.regexPatternSet.arn 11.16.1
 aws.waf.regexPatternSet.description 11.16.1
@@ -10531,6 +10533,7 @@ aws.waf.regexPatternSet.id 11.16.1
 aws.waf.regexPatternSet.name 11.16.1
 aws.waf.regexPatternSet.regularExpressions 11.16.1
 aws.waf.regexPatternSet.scope 11.16.1
+aws.waf.regexPatternSet.tags 13.49.1
 aws.waf.regexPatternSets 11.16.1
 aws.waf.rule 11.15.2
 aws.waf.rule.action 11.15.2
@@ -10705,6 +10708,7 @@ aws.waf.rulegroup.id 11.15.2
 aws.waf.rulegroup.name 11.15.2
 aws.waf.rulegroup.rules 11.15.2
 aws.waf.rulegroup.scope 11.15.2
+aws.waf.rulegroup.tags 13.49.1
 aws.waf.scope 11.15.2
 aws.workdocs 11.15.5
 aws.workdocs.document 13.21.4
