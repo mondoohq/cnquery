@@ -8869,6 +8869,45 @@ private azure.subscription.cloudDefenderService @defaults("defenderForServers.en
   alertSuppressionRules() []azure.subscription.cloudDefenderService.alertSuppressionRule
   // Workspace settings (where the subscription's security data is stored)
   workspaceSettings() []azure.subscription.cloudDefenderService.workspaceSetting
+  // API collections onboarded to Microsoft Defender for APIs
+  apiCollections() []azure.subscription.cloudDefenderService.apiCollection
+}
+
+// Microsoft Defender for APIs collection
+//
+// An API collection (typically an Azure API Management API) onboarded to
+// Microsoft Defender for APIs. Surfaces the endpoint-exposure counts
+// Defender computes for the collection: how many endpoints are
+// unauthenticated, reachable from outside the organization, or expose
+// sensitive data, alongside the total and inactive endpoint counts and
+// the assigned sensitivity label. Audit these to find internet-facing or
+// unauthenticated API surface carrying sensitive data. Select by the
+// collection's Azure resource ID.
+private azure.subscription.cloudDefenderService.apiCollection @defaults("displayName numberOfUnauthenticatedApiEndpoints numberOfApiEndpointsWithSensitiveDataExposed") {
+  // ARM resource ID
+  id string
+  // Collection resource name
+  name string
+  // Display name of the API collection
+  displayName string
+  // Base URL of the API collection
+  baseUrl string
+  // Sensitivity label assigned to the collection
+  sensitivityLabel string
+  // Total number of API endpoints in the collection
+  numberOfApiEndpoints int
+  // Number of endpoints that do not require authentication
+  numberOfUnauthenticatedApiEndpoints int
+  // Number of endpoints reachable from outside the organization
+  numberOfExternalApiEndpoints int
+  // Number of endpoints that expose sensitive data
+  numberOfApiEndpointsWithSensitiveDataExposed int
+  // Number of endpoints that have received no traffic in the last 30 days
+  numberOfInactiveApiEndpoints int
+  // API Management service the collection was discovered through
+  apiManagement() azure.subscription.apiManagementService.service
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Microsoft Defender for Cloud alert suppression rule

@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.32.0",
-  "generated_at": "2026-07-21T12:20:42-07:00",
+  "generated_at": "2026-07-21T12:54:57-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -229,6 +229,7 @@
     "Microsoft.Search/searchServices/read",
     "Microsoft.Security/alerts/read",
     "Microsoft.Security/alertsSuppressionRules/read",
+    "Microsoft.Security/apiCollections/read",
     "Microsoft.Security/assessments/read",
     "Microsoft.Security/autoProvisioningSettings/read",
     "Microsoft.Security/contacts/read",
@@ -1732,6 +1733,12 @@
       "permission": "Microsoft.Security/alertsSuppressionRules/read",
       "service": "Microsoft.Security",
       "action": "NewListPager",
+      "source_file": "cloud_defender.go"
+    },
+    {
+      "permission": "Microsoft.Security/apiCollections/read",
+      "service": "Microsoft.Security",
+      "action": "NewListBySubscriptionPager",
       "source_file": "cloud_defender.go"
     },
     {

@@ -272,6 +272,7 @@ const (
 	ResourceAzureSubscriptionMonitorServiceDiagnosticsetting                                          string = "azure.subscription.monitorService.diagnosticsetting"
 	ResourceAzureSubscriptionMonitorServiceDiagnosticSettingsCategory                                 string = "azure.subscription.monitorService.diagnosticSettingsCategory"
 	ResourceAzureSubscriptionCloudDefenderService                                                     string = "azure.subscription.cloudDefenderService"
+	ResourceAzureSubscriptionCloudDefenderServiceApiCollection                                        string = "azure.subscription.cloudDefenderService.apiCollection"
 	ResourceAzureSubscriptionCloudDefenderServiceAlertSuppressionRule                                 string = "azure.subscription.cloudDefenderService.alertSuppressionRule"
 	ResourceAzureSubscriptionCloudDefenderServiceWorkspaceSetting                                     string = "azure.subscription.cloudDefenderService.workspaceSetting"
 	ResourceAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy                               string = "azure.subscription.cloudDefenderService.jitNetworkAccessPolicy"
@@ -1518,6 +1519,10 @@ func init() {
 		"azure.subscription.cloudDefenderService": {
 			Init:   initAzureSubscriptionCloudDefenderService,
 			Create: createAzureSubscriptionCloudDefenderService,
+		},
+		"azure.subscription.cloudDefenderService.apiCollection": {
+			// to override args, implement: initAzureSubscriptionCloudDefenderServiceApiCollection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCloudDefenderServiceApiCollection,
 		},
 		"azure.subscription.cloudDefenderService.alertSuppressionRule": {
 			// to override args, implement: initAzureSubscriptionCloudDefenderServiceAlertSuppressionRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -11985,6 +11990,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cloudDefenderService.workspaceSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetWorkspaceSettings()).ToDataRes(types.Array(types.Resource("azure.subscription.cloudDefenderService.workspaceSetting")))
+	},
+	"azure.subscription.cloudDefenderService.apiCollections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetApiCollections()).ToDataRes(types.Array(types.Resource("azure.subscription.cloudDefenderService.apiCollection")))
+	},
+	"azure.subscription.cloudDefenderService.apiCollection.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceApiCollection).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.apiCollection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceApiCollection).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.apiCollection.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceApiCollection).GetDisplayName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.apiCollection.baseUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceApiCollection).GetBaseUrl()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.apiCollection.sensitivityLabel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceApiCollection).GetSensitivityLabel()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.apiCollection.numberOfApiEndpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceApiCollection).GetNumberOfApiEndpoints()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cloudDefenderService.apiCollection.numberOfUnauthenticatedApiEndpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceApiCollection).GetNumberOfUnauthenticatedApiEndpoints()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cloudDefenderService.apiCollection.numberOfExternalApiEndpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceApiCollection).GetNumberOfExternalApiEndpoints()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cloudDefenderService.apiCollection.numberOfApiEndpointsWithSensitiveDataExposed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceApiCollection).GetNumberOfApiEndpointsWithSensitiveDataExposed()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cloudDefenderService.apiCollection.numberOfInactiveApiEndpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceApiCollection).GetNumberOfInactiveApiEndpoints()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cloudDefenderService.apiCollection.apiManagement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceApiCollection).GetApiManagement()).ToDataRes(types.Resource("azure.subscription.apiManagementService.service"))
+	},
+	"azure.subscription.cloudDefenderService.apiCollection.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceApiCollection).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
 	"azure.subscription.cloudDefenderService.alertSuppressionRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule).GetId()).ToDataRes(types.String)
@@ -32738,6 +32782,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cloudDefenderService.workspaceSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCloudDefenderService).WorkspaceSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.apiCollections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderService).ApiCollections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.apiCollection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceApiCollection).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cloudDefenderService.apiCollection.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceApiCollection).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.apiCollection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceApiCollection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.apiCollection.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceApiCollection).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.apiCollection.baseUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceApiCollection).BaseUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.apiCollection.sensitivityLabel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceApiCollection).SensitivityLabel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.apiCollection.numberOfApiEndpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceApiCollection).NumberOfApiEndpoints, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.apiCollection.numberOfUnauthenticatedApiEndpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceApiCollection).NumberOfUnauthenticatedApiEndpoints, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.apiCollection.numberOfExternalApiEndpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceApiCollection).NumberOfExternalApiEndpoints, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.apiCollection.numberOfApiEndpointsWithSensitiveDataExposed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceApiCollection).NumberOfApiEndpointsWithSensitiveDataExposed, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.apiCollection.numberOfInactiveApiEndpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceApiCollection).NumberOfInactiveApiEndpoints, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.apiCollection.apiManagement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceApiCollection).ApiManagement, ok = plugin.RawToTValue[*mqlAzureSubscriptionApiManagementServiceService](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.apiCollection.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceApiCollection).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cloudDefenderService.alertSuppressionRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -75941,6 +76041,7 @@ type mqlAzureSubscriptionCloudDefenderService struct {
 	JitNetworkAccessPolicies        plugin.TValue[[]any]
 	AlertSuppressionRules           plugin.TValue[[]any]
 	WorkspaceSettings               plugin.TValue[[]any]
+	ApiCollections                  plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionCloudDefenderService creates a new instance of this resource
@@ -76431,6 +76532,150 @@ func (c *mqlAzureSubscriptionCloudDefenderService) GetWorkspaceSettings() *plugi
 		}
 
 		return c.workspaceSettings()
+	})
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderService) GetApiCollections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ApiCollections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService", c.__id, "apiCollections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.apiCollections()
+	})
+}
+
+// mqlAzureSubscriptionCloudDefenderServiceApiCollection for the azure.subscription.cloudDefenderService.apiCollection resource
+type mqlAzureSubscriptionCloudDefenderServiceApiCollection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionCloudDefenderServiceApiCollectionInternal
+	Id                                           plugin.TValue[string]
+	Name                                         plugin.TValue[string]
+	DisplayName                                  plugin.TValue[string]
+	BaseUrl                                      plugin.TValue[string]
+	SensitivityLabel                             plugin.TValue[string]
+	NumberOfApiEndpoints                         plugin.TValue[int64]
+	NumberOfUnauthenticatedApiEndpoints          plugin.TValue[int64]
+	NumberOfExternalApiEndpoints                 plugin.TValue[int64]
+	NumberOfApiEndpointsWithSensitiveDataExposed plugin.TValue[int64]
+	NumberOfInactiveApiEndpoints                 plugin.TValue[int64]
+	ApiManagement                                plugin.TValue[*mqlAzureSubscriptionApiManagementServiceService]
+	SystemMetadata                               plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionCloudDefenderServiceApiCollection creates a new instance of this resource
+func createAzureSubscriptionCloudDefenderServiceApiCollection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCloudDefenderServiceApiCollection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cloudDefenderService.apiCollection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceApiCollection) MqlName() string {
+	return "azure.subscription.cloudDefenderService.apiCollection"
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceApiCollection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceApiCollection) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceApiCollection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceApiCollection) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceApiCollection) GetBaseUrl() *plugin.TValue[string] {
+	return &c.BaseUrl
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceApiCollection) GetSensitivityLabel() *plugin.TValue[string] {
+	return &c.SensitivityLabel
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceApiCollection) GetNumberOfApiEndpoints() *plugin.TValue[int64] {
+	return &c.NumberOfApiEndpoints
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceApiCollection) GetNumberOfUnauthenticatedApiEndpoints() *plugin.TValue[int64] {
+	return &c.NumberOfUnauthenticatedApiEndpoints
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceApiCollection) GetNumberOfExternalApiEndpoints() *plugin.TValue[int64] {
+	return &c.NumberOfExternalApiEndpoints
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceApiCollection) GetNumberOfApiEndpointsWithSensitiveDataExposed() *plugin.TValue[int64] {
+	return &c.NumberOfApiEndpointsWithSensitiveDataExposed
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceApiCollection) GetNumberOfInactiveApiEndpoints() *plugin.TValue[int64] {
+	return &c.NumberOfInactiveApiEndpoints
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceApiCollection) GetApiManagement() *plugin.TValue[*mqlAzureSubscriptionApiManagementServiceService] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionApiManagementServiceService](&c.ApiManagement, func() (*mqlAzureSubscriptionApiManagementServiceService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService.apiCollection", c.__id, "apiManagement")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionApiManagementServiceService), nil
+			}
+		}
+
+		return c.apiManagement()
+	})
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceApiCollection) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService.apiCollection", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
 	})
 }
 

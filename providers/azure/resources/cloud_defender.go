@@ -2024,3 +2024,115 @@ func (a *mqlAzureSubscriptionCloudDefenderServiceWorkspaceSetting) workspace() (
 	}
 	return r.(*mqlAzureSubscriptionMonitorServiceWorkspace), nil
 }
+
+type mqlAzureSubscriptionCloudDefenderServiceApiCollectionInternal struct {
+	cacheSystemData any
+	subscriptionId  string
+	discoveredViaId string
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceApiCollection) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceApiCollection) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderService) apiCollections() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	client, err := armsecurity.NewAPICollectionsClient(a.SubscriptionId.Data, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListBySubscriptionPager(nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			// Defender for APIs may not be enabled on the subscription, which
+			// surfaces as a 4xx; treat that as no collections rather than failing.
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode >= 400 && respErr.StatusCode < 500 {
+				log.Warn().Err(err).Msg("could not list Defender for APIs collections")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, c := range page.Value {
+			if c == nil {
+				continue
+			}
+			var displayName, baseUrl, sensitivityLabel, discoveredViaId string
+			var numEndpoints, numUnauth, numExternal, numSensitive, numInactive int64
+			if p := c.Properties; p != nil {
+				displayName = convert.ToValue(p.DisplayName)
+				baseUrl = convert.ToValue(p.BaseURL)
+				sensitivityLabel = convert.ToValue(p.SensitivityLabel)
+				discoveredViaId = convert.ToValue(p.DiscoveredVia)
+				numEndpoints = convert.ToValue(p.NumberOfAPIEndpoints)
+				numUnauth = convert.ToValue(p.NumberOfUnauthenticatedAPIEndpoints)
+				numExternal = convert.ToValue(p.NumberOfExternalAPIEndpoints)
+				numSensitive = convert.ToValue(p.NumberOfAPIEndpointsWithSensitiveDataExposed)
+				numInactive = convert.ToValue(p.NumberOfInactiveAPIEndpoints)
+			}
+			mqlColl, err := CreateResource(a.MqlRuntime, "azure.subscription.cloudDefenderService.apiCollection", map[string]*llx.RawData{
+				"id":                                  llx.StringDataPtr(c.ID),
+				"name":                                llx.StringDataPtr(c.Name),
+				"displayName":                         llx.StringData(displayName),
+				"baseUrl":                             llx.StringData(baseUrl),
+				"sensitivityLabel":                    llx.StringData(sensitivityLabel),
+				"numberOfApiEndpoints":                llx.IntData(numEndpoints),
+				"numberOfUnauthenticatedApiEndpoints": llx.IntData(numUnauth),
+				"numberOfExternalApiEndpoints":        llx.IntData(numExternal),
+				"numberOfApiEndpointsWithSensitiveDataExposed": llx.IntData(numSensitive),
+				"numberOfInactiveApiEndpoints":                 llx.IntData(numInactive),
+			})
+			if err != nil {
+				return nil, err
+			}
+			coll := mqlColl.(*mqlAzureSubscriptionCloudDefenderServiceApiCollection)
+			coll.subscriptionId = a.SubscriptionId.Data
+			coll.discoveredViaId = discoveredViaId
+			sysData, err := convert.JsonToDict(c.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			coll.cacheSystemData = sysData
+			res = append(res, mqlColl)
+		}
+	}
+	return res, nil
+}
+
+// apiManagement resolves the APIM service the collection was discovered through
+// by filtering the subscription's API Management services. Returns null when the
+// collection was not discovered via a listable APIM service.
+func (a *mqlAzureSubscriptionCloudDefenderServiceApiCollection) apiManagement() (*mqlAzureSubscriptionApiManagementServiceService, error) {
+	if a.discoveredViaId == "" {
+		a.ApiManagement.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	ns, err := CreateResource(a.MqlRuntime, "azure.subscription.apiManagementService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.subscriptionId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	list := ns.(*mqlAzureSubscriptionApiManagementService).GetServices()
+	if list.Error != nil {
+		return nil, list.Error
+	}
+	for _, x := range list.Data {
+		svc, ok := x.(*mqlAzureSubscriptionApiManagementServiceService)
+		if ok && strings.EqualFold(svc.Id.Data, a.discoveredViaId) {
+			return svc, nil
+		}
+	}
+	a.ApiManagement.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
+}

@@ -2074,6 +2074,8 @@ var azurePermissionOverrides = map[string]string{
 
 	// Security: Defender for Storage settings use the longer resource type name.
 	"Microsoft.Security/defenderForStorage/read": "Microsoft.Security/defenderForStorageSettings/read",
+	// Security: the APICollections client name lowercases to an odd acronym casing.
+	"Microsoft.Security/aPICollections/read": "Microsoft.Security/apiCollections/read",
 
 	// Sql: server- and database-scoped sub-resources need their parent paths.
 	"Microsoft.Sql/dataMaskingPolicies/read":                  "Microsoft.Sql/servers/databases/dataMaskingPolicies/read",
