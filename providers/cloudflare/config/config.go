@@ -26,7 +26,7 @@ Examples:
   cnspec scan cloudflare --token <access_token>
 
 Notes:
-  If you set the CLOUDFLARE_API_TOKEN environment variable, you can omit the token flag.
+  If you set the CLOUDFLARE_TOKEN environment variable, you can omit the token flag.
 `,
 			Discovery: []string{
 				connection.DiscoveryAll,

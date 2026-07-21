@@ -17,7 +17,13 @@ cloudflare {
 	// List available accounts
 	accounts() []cloudflare.account
 
-	// API tokens visible to the calling user (user-scoped tokens)
+	// API tokens visible to the calling user
+	//
+	// Cloudflare API tokens are user-scoped, so this reads the tokens of
+	// the user the connecting token authenticates as. It requires a
+	// token with user-level access (the User API Tokens Read permission);
+	// an account-scoped token cannot list them and this returns empty.
+	// Account-owned tokens (Enterprise) are not exposed here.
 	apiTokens() []cloudflare.apiToken
 }
 
