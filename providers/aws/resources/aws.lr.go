@@ -21998,6 +21998,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ssm.instance.isLatestVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmInstance).GetIsLatestVersion()).ToDataRes(types.Bool)
 	},
+	"aws.ssm.instance.associationStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmInstance).GetAssociationStatus()).ToDataRes(types.String)
+	},
+	"aws.ssm.instance.lastAssociationExecutedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmInstance).GetLastAssociationExecutedAt()).ToDataRes(types.Time)
+	},
+	"aws.ssm.instance.lastSuccessfulAssociationExecutedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmInstance).GetLastSuccessfulAssociationExecutedAt()).ToDataRes(types.Time)
+	},
+	"aws.ssm.instance.defaultInstanceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmInstance).GetDefaultInstanceName()).ToDataRes(types.String)
+	},
+	"aws.ssm.instance.sourceLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmInstance).GetSourceLocation()).ToDataRes(types.String)
+	},
 	"aws.ec2.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
 	},
@@ -31535,6 +31550,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ssm.patchBaseline.modifiedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmPatchBaseline).GetModifiedAt()).ToDataRes(types.Time)
 	},
+	"aws.ssm.patchBaseline.approvedPatchesEnableNonSecurity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmPatchBaseline).GetApprovedPatchesEnableNonSecurity()).ToDataRes(types.Bool)
+	},
+	"aws.ssm.patchBaseline.availableSecurityUpdatesComplianceStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmPatchBaseline).GetAvailableSecurityUpdatesComplianceStatus()).ToDataRes(types.String)
+	},
 	"aws.ssm.patchBaseline.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmPatchBaseline).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -31711,6 +31732,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ssm.association.applyOnlyAtCronInterval": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmAssociation).GetApplyOnlyAtCronInterval()).ToDataRes(types.Bool)
+	},
+	"aws.ssm.association.maxConcurrency": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmAssociation).GetMaxConcurrency()).ToDataRes(types.String)
+	},
+	"aws.ssm.association.maxErrors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmAssociation).GetMaxErrors()).ToDataRes(types.String)
+	},
+	"aws.ssm.association.lastUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmAssociation).GetLastUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.ssm.association.calendarNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmAssociation).GetCalendarNames()).ToDataRes(types.Array(types.String))
+	},
+	"aws.ssm.association.automationTargetParameterName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmAssociation).GetAutomationTargetParameterName()).ToDataRes(types.String)
 	},
 	"aws.ssm.complianceSummary.complianceType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmComplianceSummary).GetComplianceType()).ToDataRes(types.String)
@@ -59924,6 +59960,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSsmInstance).IsLatestVersion, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"aws.ssm.instance.associationStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmInstance).AssociationStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.instance.lastAssociationExecutedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmInstance).LastAssociationExecutedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.instance.lastSuccessfulAssociationExecutedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmInstance).LastSuccessfulAssociationExecutedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.instance.defaultInstanceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmInstance).DefaultInstanceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.instance.sourceLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmInstance).SourceLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2).__id, ok = v.Value.(string)
 		return
@@ -73736,6 +73792,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSsmPatchBaseline).ModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"aws.ssm.patchBaseline.approvedPatchesEnableNonSecurity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmPatchBaseline).ApprovedPatchesEnableNonSecurity, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.patchBaseline.availableSecurityUpdatesComplianceStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmPatchBaseline).AvailableSecurityUpdatesComplianceStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.ssm.patchBaseline.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSsmPatchBaseline).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -73986,6 +74050,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ssm.association.applyOnlyAtCronInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSsmAssociation).ApplyOnlyAtCronInterval, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.association.maxConcurrency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmAssociation).MaxConcurrency, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.association.maxErrors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmAssociation).MaxErrors, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.association.lastUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmAssociation).LastUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.association.calendarNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmAssociation).CalendarNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.association.automationTargetParameterName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmAssociation).AutomationTargetParameterName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ssm.complianceSummary.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -144151,28 +144235,33 @@ type mqlAwsSsmInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsSsmInstanceInternal
-	InstanceId          plugin.TValue[string]
-	PingStatus          plugin.TValue[string]
-	IpAddress           plugin.TValue[string]
-	PlatformName        plugin.TValue[string]
-	PlatformType        plugin.TValue[string]
-	PlatformVersion     plugin.TValue[string]
-	Region              plugin.TValue[string]
-	Arn                 plugin.TValue[string]
-	Tags                plugin.TValue[map[string]any]
-	CloudformationStack plugin.TValue[*mqlAwsCloudformationStack]
-	ManagedBy           plugin.TValue[string]
-	AgentVersion        plugin.TValue[string]
-	LastPingedAt        plugin.TValue[*time.Time]
-	ComputerName        plugin.TValue[string]
-	IamRole             plugin.TValue[*mqlAwsIamRole]
-	SourceType          plugin.TValue[string]
-	SourceId            plugin.TValue[string]
-	ActivationId        plugin.TValue[string]
-	ResourceType        plugin.TValue[string]
-	Ec2Instance         plugin.TValue[*mqlAwsEc2Instance]
-	RegisteredAt        plugin.TValue[*time.Time]
-	IsLatestVersion     plugin.TValue[bool]
+	InstanceId                          plugin.TValue[string]
+	PingStatus                          plugin.TValue[string]
+	IpAddress                           plugin.TValue[string]
+	PlatformName                        plugin.TValue[string]
+	PlatformType                        plugin.TValue[string]
+	PlatformVersion                     plugin.TValue[string]
+	Region                              plugin.TValue[string]
+	Arn                                 plugin.TValue[string]
+	Tags                                plugin.TValue[map[string]any]
+	CloudformationStack                 plugin.TValue[*mqlAwsCloudformationStack]
+	ManagedBy                           plugin.TValue[string]
+	AgentVersion                        plugin.TValue[string]
+	LastPingedAt                        plugin.TValue[*time.Time]
+	ComputerName                        plugin.TValue[string]
+	IamRole                             plugin.TValue[*mqlAwsIamRole]
+	SourceType                          plugin.TValue[string]
+	SourceId                            plugin.TValue[string]
+	ActivationId                        plugin.TValue[string]
+	ResourceType                        plugin.TValue[string]
+	Ec2Instance                         plugin.TValue[*mqlAwsEc2Instance]
+	RegisteredAt                        plugin.TValue[*time.Time]
+	IsLatestVersion                     plugin.TValue[bool]
+	AssociationStatus                   plugin.TValue[string]
+	LastAssociationExecutedAt           plugin.TValue[*time.Time]
+	LastSuccessfulAssociationExecutedAt plugin.TValue[*time.Time]
+	DefaultInstanceName                 plugin.TValue[string]
+	SourceLocation                      plugin.TValue[string]
 }
 
 // createAwsSsmInstance creates a new instance of this resource
@@ -144338,6 +144427,26 @@ func (c *mqlAwsSsmInstance) GetRegisteredAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlAwsSsmInstance) GetIsLatestVersion() *plugin.TValue[bool] {
 	return &c.IsLatestVersion
+}
+
+func (c *mqlAwsSsmInstance) GetAssociationStatus() *plugin.TValue[string] {
+	return &c.AssociationStatus
+}
+
+func (c *mqlAwsSsmInstance) GetLastAssociationExecutedAt() *plugin.TValue[*time.Time] {
+	return &c.LastAssociationExecutedAt
+}
+
+func (c *mqlAwsSsmInstance) GetLastSuccessfulAssociationExecutedAt() *plugin.TValue[*time.Time] {
+	return &c.LastSuccessfulAssociationExecutedAt
+}
+
+func (c *mqlAwsSsmInstance) GetDefaultInstanceName() *plugin.TValue[string] {
+	return &c.DefaultInstanceName
+}
+
+func (c *mqlAwsSsmInstance) GetSourceLocation() *plugin.TValue[string] {
+	return &c.SourceLocation
 }
 
 // mqlAwsEc2 for the aws.ec2 resource
@@ -178741,23 +178850,25 @@ type mqlAwsSsmPatchBaseline struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsSsmPatchBaselineInternal
-	Id                             plugin.TValue[string]
-	Arn                            plugin.TValue[string]
-	Name                           plugin.TValue[string]
-	Region                         plugin.TValue[string]
-	Description                    plugin.TValue[string]
-	OperatingSystem                plugin.TValue[string]
-	IsDefault                      plugin.TValue[bool]
-	ApprovalRules                  plugin.TValue[[]any]
-	ApprovedPatches                plugin.TValue[[]any]
-	ApprovedPatchesComplianceLevel plugin.TValue[string]
-	RejectedPatches                plugin.TValue[[]any]
-	RejectedPatchesAction          plugin.TValue[string]
-	GlobalFilters                  plugin.TValue[[]any]
-	Sources                        plugin.TValue[[]any]
-	CreatedAt                      plugin.TValue[*time.Time]
-	ModifiedAt                     plugin.TValue[*time.Time]
-	Tags                           plugin.TValue[map[string]any]
+	Id                                       plugin.TValue[string]
+	Arn                                      plugin.TValue[string]
+	Name                                     plugin.TValue[string]
+	Region                                   plugin.TValue[string]
+	Description                              plugin.TValue[string]
+	OperatingSystem                          plugin.TValue[string]
+	IsDefault                                plugin.TValue[bool]
+	ApprovalRules                            plugin.TValue[[]any]
+	ApprovedPatches                          plugin.TValue[[]any]
+	ApprovedPatchesComplianceLevel           plugin.TValue[string]
+	RejectedPatches                          plugin.TValue[[]any]
+	RejectedPatchesAction                    plugin.TValue[string]
+	GlobalFilters                            plugin.TValue[[]any]
+	Sources                                  plugin.TValue[[]any]
+	CreatedAt                                plugin.TValue[*time.Time]
+	ModifiedAt                               plugin.TValue[*time.Time]
+	ApprovedPatchesEnableNonSecurity         plugin.TValue[bool]
+	AvailableSecurityUpdatesComplianceStatus plugin.TValue[string]
+	Tags                                     plugin.TValue[map[string]any]
 }
 
 // createAwsSsmPatchBaseline creates a new instance of this resource
@@ -178859,6 +178970,18 @@ func (c *mqlAwsSsmPatchBaseline) GetCreatedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlAwsSsmPatchBaseline) GetModifiedAt() *plugin.TValue[*time.Time] {
 	return &c.ModifiedAt
+}
+
+func (c *mqlAwsSsmPatchBaseline) GetApprovedPatchesEnableNonSecurity() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ApprovedPatchesEnableNonSecurity, func() (bool, error) {
+		return c.approvedPatchesEnableNonSecurity()
+	})
+}
+
+func (c *mqlAwsSsmPatchBaseline) GetAvailableSecurityUpdatesComplianceStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AvailableSecurityUpdatesComplianceStatus, func() (string, error) {
+		return c.availableSecurityUpdatesComplianceStatus()
+	})
 }
 
 func (c *mqlAwsSsmPatchBaseline) GetTags() *plugin.TValue[map[string]any] {
@@ -179258,22 +179381,27 @@ type mqlAwsSsmAssociation struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsSsmAssociationInternal
-	AssociationId               plugin.TValue[string]
-	Name                        plugin.TValue[string]
-	AssociationName             plugin.TValue[string]
-	Region                      plugin.TValue[string]
-	DocumentVersion             plugin.TValue[string]
-	InstanceId                  plugin.TValue[string]
-	Targets                     plugin.TValue[[]any]
-	Schedule                    plugin.TValue[string]
-	Status                      plugin.TValue[any]
-	CreatedDate                 plugin.TValue[*time.Time]
-	LastExecutionDate           plugin.TValue[*time.Time]
-	LastSuccessfulExecutionDate plugin.TValue[*time.Time]
-	Overview                    plugin.TValue[any]
-	ComplianceSeverity          plugin.TValue[string]
-	SyncCompliance              plugin.TValue[string]
-	ApplyOnlyAtCronInterval     plugin.TValue[bool]
+	AssociationId                 plugin.TValue[string]
+	Name                          plugin.TValue[string]
+	AssociationName               plugin.TValue[string]
+	Region                        plugin.TValue[string]
+	DocumentVersion               plugin.TValue[string]
+	InstanceId                    plugin.TValue[string]
+	Targets                       plugin.TValue[[]any]
+	Schedule                      plugin.TValue[string]
+	Status                        plugin.TValue[any]
+	CreatedDate                   plugin.TValue[*time.Time]
+	LastExecutionDate             plugin.TValue[*time.Time]
+	LastSuccessfulExecutionDate   plugin.TValue[*time.Time]
+	Overview                      plugin.TValue[any]
+	ComplianceSeverity            plugin.TValue[string]
+	SyncCompliance                plugin.TValue[string]
+	ApplyOnlyAtCronInterval       plugin.TValue[bool]
+	MaxConcurrency                plugin.TValue[string]
+	MaxErrors                     plugin.TValue[string]
+	LastUpdatedAt                 plugin.TValue[*time.Time]
+	CalendarNames                 plugin.TValue[[]any]
+	AutomationTargetParameterName plugin.TValue[string]
 }
 
 // createAwsSsmAssociation creates a new instance of this resource
@@ -179386,6 +179514,36 @@ func (c *mqlAwsSsmAssociation) GetSyncCompliance() *plugin.TValue[string] {
 func (c *mqlAwsSsmAssociation) GetApplyOnlyAtCronInterval() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.ApplyOnlyAtCronInterval, func() (bool, error) {
 		return c.applyOnlyAtCronInterval()
+	})
+}
+
+func (c *mqlAwsSsmAssociation) GetMaxConcurrency() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MaxConcurrency, func() (string, error) {
+		return c.maxConcurrency()
+	})
+}
+
+func (c *mqlAwsSsmAssociation) GetMaxErrors() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MaxErrors, func() (string, error) {
+		return c.maxErrors()
+	})
+}
+
+func (c *mqlAwsSsmAssociation) GetLastUpdatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LastUpdatedAt, func() (*time.Time, error) {
+		return c.lastUpdatedAt()
+	})
+}
+
+func (c *mqlAwsSsmAssociation) GetCalendarNames() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CalendarNames, func() ([]any, error) {
+		return c.calendarNames()
+	})
+}
+
+func (c *mqlAwsSsmAssociation) GetAutomationTargetParameterName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AutomationTargetParameterName, func() (string, error) {
+		return c.automationTargetParameterName()
 	})
 }
 

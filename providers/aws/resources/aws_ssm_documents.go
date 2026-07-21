@@ -390,6 +390,8 @@ func (a *mqlAwsSsmPatchBaseline) fetchDetails() error {
 	a.Sources = plugin.TValue[[]any]{Data: sources, State: plugin.StateIsSet}
 	a.CreatedAt = plugin.TValue[*time.Time]{Data: resp.CreatedDate, State: plugin.StateIsSet}
 	a.ModifiedAt = plugin.TValue[*time.Time]{Data: resp.ModifiedDate, State: plugin.StateIsSet}
+	a.ApprovedPatchesEnableNonSecurity = plugin.TValue[bool]{Data: convert.ToValue(resp.ApprovedPatchesEnableNonSecurity), State: plugin.StateIsSet}
+	a.AvailableSecurityUpdatesComplianceStatus = plugin.TValue[string]{Data: string(resp.AvailableSecurityUpdatesComplianceStatus), State: plugin.StateIsSet}
 
 	a.fetched = true
 	return nil
@@ -429,6 +431,14 @@ func (a *mqlAwsSsmPatchBaseline) createdAt() (*time.Time, error) {
 
 func (a *mqlAwsSsmPatchBaseline) modifiedAt() (*time.Time, error) {
 	return nil, a.fetchDetails()
+}
+
+func (a *mqlAwsSsmPatchBaseline) approvedPatchesEnableNonSecurity() (bool, error) {
+	return false, a.fetchDetails()
+}
+
+func (a *mqlAwsSsmPatchBaseline) availableSecurityUpdatesComplianceStatus() (string, error) {
+	return "", a.fetchDetails()
 }
 
 func (a *mqlAwsSsmPatchBaseline) tags() (map[string]any, error) {

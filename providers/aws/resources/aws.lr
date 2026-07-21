@@ -16846,6 +16846,21 @@ private aws.ssm.instance @defaults("instanceId region platformName platformVersi
   registeredAt time
   // Whether the instance is running the latest version of the SSM Agent
   isLatestVersion bool
+  // Status of the State Manager association applied to the node
+  //
+  // One of `Pending`, `Success`, or `Failed`. Empty when no association targets the node.
+  associationStatus string
+  // Time an association was last run on the node
+  lastAssociationExecutedAt time
+  // Time an association last ran successfully on the node
+  lastSuccessfulAssociationExecutedAt time
+  // Default instance name assigned at hybrid/on-premises activation
+  //
+  // Distinct from `computerName`; set via the `DefaultInstanceName` of the activation
+  // used to register the node, or from the `Name` tag on an EC2-backed node.
+  defaultInstanceName string
+  // Location of the source resource in a third-party cloud, for cross-cloud managed nodes
+  sourceLocation string
 }
 
 // Amazon Elastic Compute Cloud (EC2)
@@ -25816,6 +25831,12 @@ private aws.ssm.patchBaseline @defaults("id name operatingSystem") {
   createdAt time
   // Last modified date
   modifiedAt time
+  // Whether approved patches include non-security updates (Linux baselines)
+  approvedPatchesEnableNonSecurity() bool
+  // Compliance status reported when security patches are available but not yet approved
+  //
+  // One of `COMPLIANT` or `NON_COMPLIANT`. Applies to Windows baselines.
+  availableSecurityUpdatesComplianceStatus() string
   // Tags on the patch baseline
   tags() map[string]string
 }
@@ -25985,6 +26006,20 @@ private aws.ssm.association @defaults("associationId name") {
   syncCompliance() string
   // Whether the association skips the immediate post-create run and waits for the next cron tick
   applyOnlyAtCronInterval() bool
+  // Maximum number of targets the association runs on at once
+  //
+  // Expressed as an absolute number (for example `10`) or a percentage (for example `10%`).
+  maxConcurrency() string
+  // Number of errors allowed before the association stops running on further targets
+  //
+  // Expressed as an absolute number (for example `10`) or a percentage (for example `10%`).
+  maxErrors() string
+  // Time the association was last updated
+  lastUpdatedAt() time
+  // Change Calendar documents that gate when the association can run
+  calendarNames() []string
+  // Parameter used as the rate-control target when the association runs an Automation runbook
+  automationTargetParameterName() string
 }
 
 // Amazon SSM compliance summary per resource

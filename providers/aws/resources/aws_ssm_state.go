@@ -342,6 +342,11 @@ func (a *mqlAwsSsmAssociation) fetchDetail() error {
 	a.ComplianceSeverity = plugin.TValue[string]{Data: string(desc.ComplianceSeverity), State: plugin.StateIsSet}
 	a.SyncCompliance = plugin.TValue[string]{Data: string(desc.SyncCompliance), State: plugin.StateIsSet}
 	a.ApplyOnlyAtCronInterval = plugin.TValue[bool]{Data: desc.ApplyOnlyAtCronInterval, State: plugin.StateIsSet}
+	a.MaxConcurrency = plugin.TValue[string]{Data: convert.ToValue(desc.MaxConcurrency), State: plugin.StateIsSet}
+	a.MaxErrors = plugin.TValue[string]{Data: convert.ToValue(desc.MaxErrors), State: plugin.StateIsSet}
+	a.LastUpdatedAt = plugin.TValue[*time.Time]{Data: desc.LastUpdateAssociationDate, State: plugin.StateIsSet}
+	a.CalendarNames = plugin.TValue[[]any]{Data: convert.SliceAnyToInterface(desc.CalendarNames), State: plugin.StateIsSet}
+	a.AutomationTargetParameterName = plugin.TValue[string]{Data: convert.ToValue(desc.AutomationTargetParameterName), State: plugin.StateIsSet}
 
 	a.fetched = true
 	return nil
@@ -354,6 +359,11 @@ func (a *mqlAwsSsmAssociation) populateEmptyDetail() {
 	a.ComplianceSeverity = plugin.TValue[string]{Data: "", State: plugin.StateIsSet | plugin.StateIsNull}
 	a.SyncCompliance = plugin.TValue[string]{Data: "", State: plugin.StateIsSet | plugin.StateIsNull}
 	a.ApplyOnlyAtCronInterval = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet | plugin.StateIsNull}
+	a.MaxConcurrency = plugin.TValue[string]{Data: "", State: plugin.StateIsSet | plugin.StateIsNull}
+	a.MaxErrors = plugin.TValue[string]{Data: "", State: plugin.StateIsSet | plugin.StateIsNull}
+	a.LastUpdatedAt = plugin.TValue[*time.Time]{Data: nil, State: plugin.StateIsSet | plugin.StateIsNull}
+	a.CalendarNames = plugin.TValue[[]any]{Data: nil, State: plugin.StateIsSet | plugin.StateIsNull}
+	a.AutomationTargetParameterName = plugin.TValue[string]{Data: "", State: plugin.StateIsSet | plugin.StateIsNull}
 }
 
 func (a *mqlAwsSsmAssociation) status() (any, error) {
@@ -378,6 +388,26 @@ func (a *mqlAwsSsmAssociation) syncCompliance() (string, error) {
 
 func (a *mqlAwsSsmAssociation) applyOnlyAtCronInterval() (bool, error) {
 	return false, a.fetchDetail()
+}
+
+func (a *mqlAwsSsmAssociation) maxConcurrency() (string, error) {
+	return "", a.fetchDetail()
+}
+
+func (a *mqlAwsSsmAssociation) maxErrors() (string, error) {
+	return "", a.fetchDetail()
+}
+
+func (a *mqlAwsSsmAssociation) lastUpdatedAt() (*time.Time, error) {
+	return nil, a.fetchDetail()
+}
+
+func (a *mqlAwsSsmAssociation) calendarNames() ([]any, error) {
+	return nil, a.fetchDetail()
+}
+
+func (a *mqlAwsSsmAssociation) automationTargetParameterName() (string, error) {
+	return "", a.fetchDetail()
 }
 
 // ---------------- Service settings ----------------
