@@ -6675,6 +6675,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.gkeService.cluster.securityPostureConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceCluster).GetSecurityPostureConfig()).ToDataRes(types.Resource("gcp.project.gkeService.cluster.securityPostureConfig"))
 	},
+	"gcp.project.gkeService.cluster.authenticatorGroupsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetAuthenticatorGroupsEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.gkeService.cluster.authenticatorGroupsSecurityGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetAuthenticatorGroupsSecurityGroup()).ToDataRes(types.String)
+	},
+	"gcp.project.gkeService.cluster.compliancePostureMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetCompliancePostureMode()).ToDataRes(types.String)
+	},
+	"gcp.project.gkeService.cluster.complianceStandards": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetComplianceStandards()).ToDataRes(types.Array(types.String))
+	},
 	"gcp.project.gkeService.cluster.maintenancePolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceCluster).GetMaintenancePolicy()).ToDataRes(types.Resource("gcp.project.gkeService.cluster.maintenancePolicy"))
 	},
@@ -8538,6 +8550,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.cloudFunctionV2.serviceConfig.ingressSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).GetIngressSettings()).ToDataRes(types.String)
 	},
+	"gcp.project.cloudFunctionV2.serviceConfig.securityLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).GetSecurityLevel()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.binaryAuthorizationPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).GetBinaryAuthorizationPolicy()).ToDataRes(types.String)
+	},
 	"gcp.project.cloudFunctionV2.serviceConfig.serviceAccountEmail": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).GetServiceAccountEmail()).ToDataRes(types.String)
 	},
@@ -9251,6 +9269,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.cloudRunService.service.ingress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudRunServiceService).GetIngress()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudRunService.service.invokerIamDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudRunServiceService).GetInvokerIamDisabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.cloudRunService.service.iapEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudRunServiceService).GetIapEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.cloudRunService.service.threatDetectionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudRunServiceService).GetThreatDetectionEnabled()).ToDataRes(types.Bool)
 	},
 	"gcp.project.cloudRunService.service.launchStage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudRunServiceService).GetLaunchStage()).ToDataRes(types.String)
@@ -24053,6 +24080,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectGkeServiceCluster).SecurityPostureConfig, ok = plugin.RawToTValue[*mqlGcpProjectGkeServiceClusterSecurityPostureConfig](v.Value, v.Error)
 		return
 	},
+	"gcp.project.gkeService.cluster.authenticatorGroupsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).AuthenticatorGroupsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.authenticatorGroupsSecurityGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).AuthenticatorGroupsSecurityGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.compliancePostureMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).CompliancePostureMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.complianceStandards": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).ComplianceStandards, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.gkeService.cluster.maintenancePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceCluster).MaintenancePolicy, ok = plugin.RawToTValue[*mqlGcpProjectGkeServiceClusterMaintenancePolicy](v.Value, v.Error)
 		return
@@ -26809,6 +26852,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).IngressSettings, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.cloudFunctionV2.serviceConfig.securityLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).SecurityLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.binaryAuthorizationPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).BinaryAuthorizationPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.cloudFunctionV2.serviceConfig.serviceAccountEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).ServiceAccountEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -27855,6 +27906,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.cloudRunService.service.ingress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudRunServiceService).Ingress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudRunService.service.invokerIamDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudRunServiceService).InvokerIamDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudRunService.service.iapEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudRunServiceService).IapEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudRunService.service.threatDetectionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudRunServiceService).ThreatDetectionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.cloudRunService.service.launchStage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -54642,6 +54705,10 @@ type mqlGcpProjectGkeServiceCluster struct {
 	EnableTpu                                plugin.TValue[bool]
 	CurrentNodeCount                         plugin.TValue[int64]
 	SecurityPostureConfig                    plugin.TValue[*mqlGcpProjectGkeServiceClusterSecurityPostureConfig]
+	AuthenticatorGroupsEnabled               plugin.TValue[bool]
+	AuthenticatorGroupsSecurityGroup         plugin.TValue[string]
+	CompliancePostureMode                    plugin.TValue[string]
+	ComplianceStandards                      plugin.TValue[[]any]
 	MaintenancePolicy                        plugin.TValue[*mqlGcpProjectGkeServiceClusterMaintenancePolicy]
 	MeshCertificates                         plugin.TValue[any]
 	NotificationConfig                       plugin.TValue[*mqlGcpProjectGkeServiceClusterNotificationConfig]
@@ -55054,6 +55121,22 @@ func (c *mqlGcpProjectGkeServiceCluster) GetCurrentNodeCount() *plugin.TValue[in
 
 func (c *mqlGcpProjectGkeServiceCluster) GetSecurityPostureConfig() *plugin.TValue[*mqlGcpProjectGkeServiceClusterSecurityPostureConfig] {
 	return &c.SecurityPostureConfig
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetAuthenticatorGroupsEnabled() *plugin.TValue[bool] {
+	return &c.AuthenticatorGroupsEnabled
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetAuthenticatorGroupsSecurityGroup() *plugin.TValue[string] {
+	return &c.AuthenticatorGroupsSecurityGroup
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetCompliancePostureMode() *plugin.TValue[string] {
+	return &c.CompliancePostureMode
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetComplianceStandards() *plugin.TValue[[]any] {
+	return &c.ComplianceStandards
 }
 
 func (c *mqlGcpProjectGkeServiceCluster) GetMaintenancePolicy() *plugin.TValue[*mqlGcpProjectGkeServiceClusterMaintenancePolicy] {
@@ -61864,6 +61947,8 @@ type mqlGcpProjectCloudFunctionV2ServiceConfig struct {
 	VpcConnector               plugin.TValue[string]
 	VpcConnectorEgressSettings plugin.TValue[string]
 	IngressSettings            plugin.TValue[string]
+	SecurityLevel              plugin.TValue[string]
+	BinaryAuthorizationPolicy  plugin.TValue[string]
 	ServiceAccountEmail        plugin.TValue[string]
 	IamServiceAccount          plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
 	AllTrafficOnLatestRevision plugin.TValue[bool]
@@ -61966,6 +62051,14 @@ func (c *mqlGcpProjectCloudFunctionV2ServiceConfig) GetVpcConnectorEgressSetting
 
 func (c *mqlGcpProjectCloudFunctionV2ServiceConfig) GetIngressSettings() *plugin.TValue[string] {
 	return &c.IngressSettings
+}
+
+func (c *mqlGcpProjectCloudFunctionV2ServiceConfig) GetSecurityLevel() *plugin.TValue[string] {
+	return &c.SecurityLevel
+}
+
+func (c *mqlGcpProjectCloudFunctionV2ServiceConfig) GetBinaryAuthorizationPolicy() *plugin.TValue[string] {
+	return &c.BinaryAuthorizationPolicy
 }
 
 func (c *mqlGcpProjectCloudFunctionV2ServiceConfig) GetServiceAccountEmail() *plugin.TValue[string] {
@@ -64386,6 +64479,9 @@ type mqlGcpProjectCloudRunServiceService struct {
 	Creator                                    plugin.TValue[string]
 	LastModifier                               plugin.TValue[string]
 	Ingress                                    plugin.TValue[string]
+	InvokerIamDisabled                         plugin.TValue[bool]
+	IapEnabled                                 plugin.TValue[bool]
+	ThreatDetectionEnabled                     plugin.TValue[bool]
 	LaunchStage                                plugin.TValue[string]
 	Template                                   plugin.TValue[*mqlGcpProjectCloudRunServiceServiceRevisionTemplate]
 	Traffic                                    plugin.TValue[[]any]
@@ -64508,6 +64604,18 @@ func (c *mqlGcpProjectCloudRunServiceService) GetLastModifier() *plugin.TValue[s
 
 func (c *mqlGcpProjectCloudRunServiceService) GetIngress() *plugin.TValue[string] {
 	return &c.Ingress
+}
+
+func (c *mqlGcpProjectCloudRunServiceService) GetInvokerIamDisabled() *plugin.TValue[bool] {
+	return &c.InvokerIamDisabled
+}
+
+func (c *mqlGcpProjectCloudRunServiceService) GetIapEnabled() *plugin.TValue[bool] {
+	return &c.IapEnabled
+}
+
+func (c *mqlGcpProjectCloudRunServiceService) GetThreatDetectionEnabled() *plugin.TValue[bool] {
+	return &c.ThreatDetectionEnabled
 }
 
 func (c *mqlGcpProjectCloudRunServiceService) GetLaunchStage() *plugin.TValue[string] {

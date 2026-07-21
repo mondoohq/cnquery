@@ -852,6 +852,24 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			return nil, err
 		}
 
+		var authenticatorGroupsEnabled bool
+		authenticatorGroupsSecurityGroup := ""
+		if c.AuthenticatorGroupsConfig != nil {
+			authenticatorGroupsEnabled = c.AuthenticatorGroupsConfig.Enabled
+			authenticatorGroupsSecurityGroup = c.AuthenticatorGroupsConfig.SecurityGroup
+		}
+
+		compliancePostureMode := ""
+		complianceStandards := []any{}
+		if c.CompliancePostureConfig != nil {
+			compliancePostureMode = c.CompliancePostureConfig.GetMode().String()
+			for _, s := range c.CompliancePostureConfig.ComplianceStandards {
+				if std := s.GetStandard(); std != "" {
+					complianceStandards = append(complianceStandards, std)
+				}
+			}
+		}
+
 		clusterArgs := map[string]*llx.RawData{
 			"projectId":                                llx.StringData(projectId),
 			"id":                                       llx.StringData(c.Id),
@@ -911,6 +929,10 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			"enableTpu":                                llx.BoolData(c.EnableTpu),
 			"currentNodeCount":                         llx.IntData(int64(c.CurrentNodeCount)),
 			"securityPostureConfig":                    llx.ResourceData(secPostureConfig, "gcp.project.gkeService.cluster.securityPostureConfig"),
+			"authenticatorGroupsEnabled":               llx.BoolData(authenticatorGroupsEnabled),
+			"authenticatorGroupsSecurityGroup":         llx.StringData(authenticatorGroupsSecurityGroup),
+			"compliancePostureMode":                    llx.StringData(compliancePostureMode),
+			"complianceStandards":                      llx.ArrayData(complianceStandards, types.String),
 			"maintenancePolicy":                        llx.ResourceData(maintenancePolicy, "gcp.project.gkeService.cluster.maintenancePolicy"),
 			"etag":                                     llx.StringData(c.Etag),
 			"initialNodeCount":                         llx.IntData(int64(c.InitialNodeCount)),

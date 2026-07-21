@@ -801,7 +801,7 @@ private gcp.projects {
 // and parent organization or folder, along with the IAM policy and
 // audit-log configuration. The `hasPublicIamBinding`,
 // `primitiveRoleBindings`, and `dataAccessLoggingEnabled` predicates
-// drive CIS controls 1.x and 2.1. Also surfaces enabled `services`,
+// surface IAM and audit-logging posture. Also surfaces enabled `services`,
 // `recommendations`, the project's `essentialContacts` and `apiKeys`,
 // and the access-approval settings. Service-specific entry points hang
 // off the project as accessors (`compute`, `gke`, `storage`, `sql`,
@@ -836,11 +836,11 @@ gcp.project @defaults("name number") {
   iamPolicy() []gcp.resourcemanager.binding
   // Whether the project's IAM policy grants any role to allUsers or allAuthenticatedUsers
   hasPublicIamBinding() bool
-  // IAM bindings using primitive roles (roles/owner, roles/editor, roles/viewer); CIS recommends using predefined or custom roles instead
+  // IAM bindings using primitive roles (roles/owner, roles/editor, roles/viewer); prefer predefined or custom roles instead
   primitiveRoleBindings() []gcp.resourcemanager.binding
   // Audit logging configuration
   auditConfig() []gcp.resourcemanager.auditConfig
-  // Whether DATA_READ and DATA_WRITE audit logging is enabled for allServices with no exempted members (CIS 2.1)
+  // Whether DATA_READ and DATA_WRITE audit logging is enabled for allServices with no exempted members
   dataAccessLoggingEnabled() bool
   // Organization policies
   orgPolicies() []gcp.orgPolicy
@@ -1517,7 +1517,7 @@ private gcp.project.computeService.machineType @defaults("name") {
 // the `serviceAccounts` bound to the instance, the
 // `shieldedInstanceConfig` (Secure Boot, vTPM, integrity monitoring),
 // the `confidentialInstanceConfig`, OS Config patch posture, and the
-// scheduling and reservation affinity settings. The CIS-aligned
+// scheduling and reservation affinity settings. The security
 // predicates (`hasPublicIp`, `usesDefaultServiceAccount`,
 // `hasFullCloudPlatformScope`, `blockProjectSshKeysEnabled`,
 // `osLoginEnabled`, `serialPortEnabled`) collapse common posture
@@ -4298,14 +4298,14 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   //
   // True when the cluster issues a client certificate (MasterAuth client
   // certificate config) or an output client certificate is present. Static
-  // client certificates cannot be rotated or revoked, so CIS recommends
-  // disabling this in favor of short-lived credentials.
+  // client certificates cannot be rotated or revoked, so short-lived
+  // credentials should be used instead.
   clientCertificateEnabled bool
   // Whether HTTP basic authentication to the control plane is enabled
   //
   // True when a static MasterAuth username is set. Basic authentication is
-  // deprecated and removed in modern GKE versions; a non-empty value is a CIS
-  // benchmark finding. Reads the deprecated MasterAuth.Username field purely
+  // deprecated and removed in modern GKE versions; a non-empty value is a
+  // security finding. Reads the deprecated MasterAuth.Username field purely
   // for the audit signal.
   basicAuthEnabled bool
   // Legacy master authorized networks configuration
@@ -4502,6 +4502,24 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   currentNodeCount int
   // Security posture configuration
   securityPostureConfig gcp.project.gkeService.cluster.securityPostureConfig
+  // Whether RBAC authorization uses security groups from Google Groups for GKE
+  //
+  // When true, the cluster resolves user group membership from a Google Group
+  // so RBAC bindings can grant access to groups rather than individual users.
+  authenticatorGroupsEnabled bool
+  // Google Group backing RBAC group bindings
+  //
+  // The security group (in the gke-security-groups@yourdomain form) whose
+  // membership the cluster resolves for RBAC group bindings. Empty when group
+  // authentication is not configured.
+  authenticatorGroupsSecurityGroup string
+  // Compliance posture mode for the cluster
+  //
+  // One of MODE_UNSPECIFIED, DISABLED, or ENABLED. When ENABLED the cluster
+  // evaluates the standards listed in `complianceStandards`.
+  compliancePostureMode string
+  // Compliance standards the cluster's compliance posture evaluates against. Empty when compliance posture is not enabled.
+  complianceStandards []string
   // Maintenance policy for the cluster
   maintenancePolicy gcp.project.gkeService.cluster.maintenancePolicy
   // Service mesh certificate configuration
@@ -4570,8 +4588,8 @@ private gcp.project.gkeService.cluster.securityPostureConfig {
 //
 // Whether a Kubernetes network policy provider (such as Calico) is enabled on
 // the cluster. An `enabled: false` result means pod-to-pod traffic is
-// unrestricted by Kubernetes NetworkPolicy objects, a common CIS benchmark
-// finding.
+// unrestricted by Kubernetes NetworkPolicy objects, a common
+// network-segmentation gap.
 private gcp.project.gkeService.cluster.networkPolicy @defaults("enabled provider") {
   // Internal ID
   id string
@@ -4807,7 +4825,7 @@ private gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig 
 // carries the broad cloud-platform OAuth scope), image type, workload
 // metadata mode, Kubernetes labels and taints, shielded instance settings,
 // sandbox type (gVisor), confidential nodes, and accelerator configuration.
-// This resource is the primary surface for CIS GKE node-security benchmarks.
+// This resource is the primary surface for GKE node-security posture.
 private gcp.project.gkeService.cluster.nodepool.config @defaults("machineType diskSizeGb") {
   // Internal ID for this resource
   id string
@@ -4948,7 +4966,7 @@ private gcp.project.gkeService.cluster.nodepool.config.sandboxConfig @defaults("
 // Google Kubernetes Engine (GKE) node pool shielded instance configuration
 //
 // Whether Secure Boot and integrity monitoring are enabled for nodes in the
-// pool. Both settings are CIS GKE benchmark controls: Secure Boot ensures
+// pool. Both settings are node-security controls: Secure Boot ensures
 // only signed OS components run, and integrity monitoring detects runtime
 // changes to the boot sequence.
 private gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig @defaults("enableSecureBoot enableIntegrityMonitoring") {
@@ -5673,7 +5691,7 @@ private gcp.essentialContact @defaults("email notificationCategories") {
 // creation and deletion timestamps, the encrypted key string, and the
 // restrictions that limit which applications, IP addresses, or API targets
 // may use it. The `restrictions` sub-resource exposes the `unrestricted`
-// flag used by CIS benchmarks to detect keys that have no app, IP, or
+// flag that detects keys that have no app, IP, or
 // referrer restrictions configured.
 private gcp.project.apiKey @defaults("name") {
   // The ID of the key
@@ -5721,8 +5739,8 @@ private gcp.project.apiKey @defaults("name") {
 // Access restrictions applied to a GCP API key: Android app restrictions,
 // iOS app restrictions, HTTP referrer restrictions, server IP restrictions,
 // and specific API target restrictions. The `unrestricted` derived field is
-// `true` when none of these restriction types are configured, which CIS
-// benchmarks flag as a finding.
+// `true` when none of these restriction types are configured, which is
+// flagged as a security finding.
 private gcp.project.apiKey.restrictions {
   // Parent resource path
   parentResourcePath string
@@ -5752,7 +5770,7 @@ private gcp.project.apiKey.restrictions {
   // Dict with `allowedIps`, a list of IPv4 or IPv6 addresses or CIDR ranges
   // permitted to use the key.
   serverKeyRestrictions dict
-  // Whether the API key has no restrictions configured (no app/IP/referrer/API target restriction). CIS flags unrestricted keys.
+  // Whether the API key has no restrictions configured (no app/IP/referrer/API target restriction). Unrestricted keys are higher risk.
   unrestricted() bool
   // Names of the restriction categories actually set on the key
   //
@@ -5771,8 +5789,8 @@ private gcp.project.apiKey.restrictions {
 // metrics for alerting on security events), `sinks` (export
 // configurations to Cloud Storage, BigQuery, or Pub/Sub), and
 // `exclusions` (filters that drop matching log entries before
-// ingestion). Together these are the primary surface for CIS logging
-// benchmark controls.
+// ingestion). Together these are the primary surface for logging
+// posture controls.
 private gcp.project.loggingservice {
   // Project ID
   projectId string
@@ -5885,8 +5903,8 @@ private gcp.project.loggingservice.bucket.indexConfig @defaults("id") {
 // monitor it. The derived fields `filtersIamChanges`,
 // `filtersAuditConfigChanges`, `filtersRouteChanges`, and
 // `filtersFirewallChanges` indicate whether the metric covers the
-// specific mutation categories required by CIS GCP benchmark logging
-// controls.
+// specific mutation categories commonly monitored for security
+// event alerting.
 private gcp.project.loggingservice.metric @defaults("description filter") {
   // Metric ID
   id string
@@ -6086,7 +6104,7 @@ private gcp.project.iamService.serviceAccount @defaults("displayName name") {
 // (`SYSTEM_MANAGED` or `USER_MANAGED`), validity window
 // (`validAfterTime`, `validBeforeTime`), and disabled status. The
 // `userManaged` derived field is `true` when the key was created by a
-// user rather than Google, making it the primary field for CIS
+// user rather than Google, making it the primary field for
 // service-account-key rotation audits.
 private gcp.project.iamService.serviceAccount.key @defaults("name") {
   // Service account key name
@@ -6107,7 +6125,7 @@ private gcp.project.iamService.serviceAccount.key @defaults("name") {
   disabled bool
   // Timestamp when the key was last used to authenticate (from Policy Intelligence)
   lastAuthenticatedTime() time
-  // Age of the key in whole days, computed from `validAfterTime` to now (the field CIS key-rotation audits compare against a 90-day threshold)
+  // Age of the key in whole days, computed from `validAfterTime` to now (useful for key-rotation audits, e.g. a 90-day threshold)
   ageInDays() int
 }
 
@@ -6604,6 +6622,13 @@ private gcp.project.cloudFunctionV2.serviceConfig @defaults("service timeoutSeco
   vpcConnectorEgressSettings string
   // Ingress settings (ALLOW_ALL, ALLOW_INTERNAL_ONLY, ALLOW_INTERNAL_AND_GCLB)
   ingressSettings string
+  // Security (HTTPS) enforcement for the function's endpoint
+  //
+  // One of SECURITY_LEVEL_UNSPECIFIED, SECURE_ALWAYS (HTTP requests are
+  // redirected to HTTPS), or SECURE_OPTIONAL (both HTTP and HTTPS are served).
+  securityLevel string
+  // Binary Authorization policy resource name enforced on the function's image. Empty when Binary Authorization is not configured.
+  binaryAuthorizationPolicy string
   // Email of the function's service account
   serviceAccountEmail string
   // IAM service account for the function
@@ -7427,6 +7452,16 @@ private gcp.project.cloudRunService.service @defaults("name") {
   lastModifier string
   // Ingress settings
   ingress string
+  // Whether the IAM permission check is disabled for the service's default URL
+  //
+  // When true, callers of the service's `run.app` URL are not subject to the
+  // run.routes.invoke IAM check, so the service is reachable without an
+  // invoker binding (public unless another control blocks it).
+  invokerIamDisabled bool
+  // Whether Identity-Aware Proxy is enabled in front of the service
+  iapEnabled bool
+  // Whether Cloud Run threat detection is enabled for the service
+  threatDetectionEnabled bool
   // Launch stage
   launchStage string
   // Template used to create revisions for the service

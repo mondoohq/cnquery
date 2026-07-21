@@ -1285,6 +1285,7 @@ gcp.project.cloudFunctionV2.serviceConfig 13.7.2
 gcp.project.cloudFunctionV2.serviceConfig.allTrafficOnLatestRevision 13.7.2
 gcp.project.cloudFunctionV2.serviceConfig.availableCpu 13.7.2
 gcp.project.cloudFunctionV2.serviceConfig.availableMemory 13.7.2
+gcp.project.cloudFunctionV2.serviceConfig.binaryAuthorizationPolicy 13.32.1
 gcp.project.cloudFunctionV2.serviceConfig.environmentVariables 13.7.2
 gcp.project.cloudFunctionV2.serviceConfig.iamServiceAccount 13.7.2
 gcp.project.cloudFunctionV2.serviceConfig.id 13.7.2
@@ -1293,6 +1294,7 @@ gcp.project.cloudFunctionV2.serviceConfig.maxInstanceCount 13.7.2
 gcp.project.cloudFunctionV2.serviceConfig.minInstanceCount 13.7.2
 gcp.project.cloudFunctionV2.serviceConfig.secretEnvironmentVariables 13.7.2
 gcp.project.cloudFunctionV2.serviceConfig.secretVolumes 13.7.2
+gcp.project.cloudFunctionV2.serviceConfig.securityLevel 13.32.1
 gcp.project.cloudFunctionV2.serviceConfig.service 13.7.2
 gcp.project.cloudFunctionV2.serviceConfig.serviceAccountEmail 13.7.2
 gcp.project.cloudFunctionV2.serviceConfig.serviceRef 13.27.2
@@ -1411,8 +1413,10 @@ gcp.project.cloudRunService.service.etag 13.1.2
 gcp.project.cloudRunService.service.expired 9.0.0
 gcp.project.cloudRunService.service.generation 9.0.0
 gcp.project.cloudRunService.service.iamPolicy 13.9.1
+gcp.project.cloudRunService.service.iapEnabled 13.32.1
 gcp.project.cloudRunService.service.id 9.0.0
 gcp.project.cloudRunService.service.ingress 9.0.0
+gcp.project.cloudRunService.service.invokerIamDisabled 13.32.1
 gcp.project.cloudRunService.service.labels 9.0.0
 gcp.project.cloudRunService.service.lastModifier 9.0.0
 gcp.project.cloudRunService.service.latestCreatedRevision 9.0.0
@@ -1445,6 +1449,7 @@ gcp.project.cloudRunService.service.revisionTemplate.vpcAccessConfig 13.16.3
 gcp.project.cloudRunService.service.satisfiesPzs 13.1.2
 gcp.project.cloudRunService.service.template 9.0.0
 gcp.project.cloudRunService.service.terminalCondition 9.0.0
+gcp.project.cloudRunService.service.threatDetectionEnabled 13.32.1
 gcp.project.cloudRunService.service.traffic 9.0.0
 gcp.project.cloudRunService.service.trafficStatuses 9.0.0
 gcp.project.cloudRunService.service.uid 13.1.2
@@ -3293,6 +3298,8 @@ gcp.project.gkeService.cluster.addonsConfig.kubernetesDashboard 9.0.0
 gcp.project.gkeService.cluster.addonsConfig.networkPolicyConfig 9.0.0
 gcp.project.gkeService.cluster.addonsConfig.statefulHaConfig 9.0.0
 gcp.project.gkeService.cluster.anonymousAuthenticationConfig 13.16.3
+gcp.project.gkeService.cluster.authenticatorGroupsEnabled 13.32.1
+gcp.project.gkeService.cluster.authenticatorGroupsSecurityGroup 13.32.1
 gcp.project.gkeService.cluster.autopilotEnabled 9.0.0
 gcp.project.gkeService.cluster.autopilotWorkloadPolicyAllowNetAdmin 13.21.2
 gcp.project.gkeService.cluster.basicAuthEnabled 13.18.1
@@ -3301,6 +3308,8 @@ gcp.project.gkeService.cluster.binaryAuthorizationEnabled 13.12.2
 gcp.project.gkeService.cluster.binaryAuthorizationEvaluationMode 13.16.3
 gcp.project.gkeService.cluster.clientCertificateEnabled 13.18.1
 gcp.project.gkeService.cluster.clusterIpv4Cidr 9.0.0
+gcp.project.gkeService.cluster.compliancePostureMode 13.32.1
+gcp.project.gkeService.cluster.complianceStandards 13.32.1
 gcp.project.gkeService.cluster.conditions 13.16.3
 gcp.project.gkeService.cluster.confidentialNodesConfig 9.0.0
 gcp.project.gkeService.cluster.confidentialNodesEnabled 13.18.1

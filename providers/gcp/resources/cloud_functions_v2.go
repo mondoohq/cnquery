@@ -336,6 +336,8 @@ func fnV2ServiceConfig(runtime *plugin.Runtime, parentName string, projectId str
 		"vpcConnector":               llx.StringData(cfg.VpcConnector),
 		"vpcConnectorEgressSettings": llx.StringData(cfg.VpcConnectorEgressSettings.String()),
 		"ingressSettings":            llx.StringData(cfg.IngressSettings.String()),
+		"securityLevel":              llx.StringData(cfg.SecurityLevel.String()),
+		"binaryAuthorizationPolicy":  llx.StringData(cfg.BinaryAuthorizationPolicy),
 		"serviceAccountEmail":        llx.StringData(cfg.ServiceAccountEmail),
 		"allTrafficOnLatestRevision": llx.BoolData(cfg.AllTrafficOnLatestRevision),
 		"secretEnvironmentVariables": llx.ArrayData(secretEnvVars, types.Dict),
