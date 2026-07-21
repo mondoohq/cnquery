@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.32.0",
-  "generated_at": "2026-07-21T11:36:08-07:00",
+  "generated_at": "2026-07-21T11:53:06-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -239,8 +239,10 @@
     "Microsoft.Security/subAssessments/read",
     "Microsoft.Security/workspaceSettings/read",
     "Microsoft.Securityinsights/alertRules/read",
+    "Microsoft.Securityinsights/automationRules/read",
     "Microsoft.Securityinsights/dataConnectors/read",
     "Microsoft.Securityinsights/incidents/read",
+    "Microsoft.Securityinsights/watchlists/read",
     "Microsoft.ServiceBus/namespaces/queues/read",
     "Microsoft.ServiceBus/namespaces/read",
     "Microsoft.ServiceBus/namespaces/topics/read",
@@ -1789,6 +1791,12 @@
       "source_file": "sentinel.go"
     },
     {
+      "permission": "Microsoft.Securityinsights/automationRules/read",
+      "service": "Microsoft.Securityinsights",
+      "action": "NewListPager",
+      "source_file": "sentinel.go"
+    },
+    {
       "permission": "Microsoft.Securityinsights/dataConnectors/read",
       "service": "Microsoft.Securityinsights",
       "action": "NewListPager",
@@ -1796,6 +1804,12 @@
     },
     {
       "permission": "Microsoft.Securityinsights/incidents/read",
+      "service": "Microsoft.Securityinsights",
+      "action": "NewListPager",
+      "source_file": "sentinel.go"
+    },
+    {
+      "permission": "Microsoft.Securityinsights/watchlists/read",
       "service": "Microsoft.Securityinsights",
       "action": "NewListPager",
       "source_file": "sentinel.go"

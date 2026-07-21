@@ -460,6 +460,239 @@ func sentinelIncidentToMql(runtime *plugin.Runtime, inc *armsecurityinsights.Inc
 	return res.(*mqlAzureSubscriptionSentinelServiceIncident), nil
 }
 
+type mqlAzureSubscriptionSentinelServiceWatchlistInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionSentinelServiceWatchlist) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionSentinelServiceWatchlist) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionSentinelServiceWorkspace) watchlists() ([]any, error) {
+	conn, ok := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+
+	client, err := armsecurityinsights.NewWatchlistsClient(a.SubscriptionId.Data, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	pager := client.NewListPager(a.ResourceGroup.Data, a.Name.Data, nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list Sentinel watchlists due to access denied")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, wl := range page.Value {
+			if wl == nil {
+				continue
+			}
+			var watchlistAlias, displayName, provider, source, itemsSearchKey string
+			var contentType, defaultDuration, description, uploadStatus, tenantId string
+			var created, updated *time.Time
+			var createdBy, updatedBy any
+			labels := []any{}
+			if p := wl.Properties; p != nil {
+				watchlistAlias = convert.ToValue(p.WatchlistAlias)
+				displayName = convert.ToValue(p.DisplayName)
+				provider = convert.ToValue(p.Provider)
+				if p.Source != nil {
+					source = string(*p.Source)
+				}
+				itemsSearchKey = convert.ToValue(p.ItemsSearchKey)
+				contentType = convert.ToValue(p.ContentType)
+				defaultDuration = convert.ToValue(p.DefaultDuration)
+				description = convert.ToValue(p.Description)
+				uploadStatus = convert.ToValue(p.UploadStatus)
+				tenantId = convert.ToValue(p.TenantID)
+				created = p.Created
+				updated = p.Updated
+				for _, l := range p.Labels {
+					if l != nil {
+						labels = append(labels, *l)
+					}
+				}
+				if p.CreatedBy != nil {
+					createdBy, err = convert.JsonToDict(p.CreatedBy)
+					if err != nil {
+						return nil, err
+					}
+				}
+				if p.UpdatedBy != nil {
+					updatedBy, err = convert.JsonToDict(p.UpdatedBy)
+					if err != nil {
+						return nil, err
+					}
+				}
+			}
+			mqlWl, err := CreateResource(a.MqlRuntime, "azure.subscription.sentinelService.watchlist", map[string]*llx.RawData{
+				"id":              llx.StringDataPtr(wl.ID),
+				"name":            llx.StringDataPtr(wl.Name),
+				"watchlistAlias":  llx.StringData(watchlistAlias),
+				"displayName":     llx.StringData(displayName),
+				"provider":        llx.StringData(provider),
+				"source":          llx.StringData(source),
+				"itemsSearchKey":  llx.StringData(itemsSearchKey),
+				"contentType":     llx.StringData(contentType),
+				"defaultDuration": llx.StringData(defaultDuration),
+				"description":     llx.StringData(description),
+				"labels":          llx.ArrayData(labels, types.String),
+				"uploadStatus":    llx.StringData(uploadStatus),
+				"tenantId":        llx.StringData(tenantId),
+				"created":         llx.TimeDataPtr(created),
+				"updated":         llx.TimeDataPtr(updated),
+				"createdBy":       llx.DictData(createdBy),
+				"updatedBy":       llx.DictData(updatedBy),
+			})
+			if err != nil {
+				return nil, err
+			}
+			sysData, err := convert.JsonToDict(wl.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlWl.(*mqlAzureSubscriptionSentinelServiceWatchlist).cacheSystemData = sysData
+			res = append(res, mqlWl)
+		}
+	}
+	return res, nil
+}
+
+type mqlAzureSubscriptionSentinelServiceAutomationRuleInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionSentinelServiceAutomationRule) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionSentinelServiceAutomationRule) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionSentinelServiceWorkspace) automationRules() ([]any, error) {
+	conn, ok := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+
+	client, err := armsecurityinsights.NewAutomationRulesClient(a.SubscriptionId.Data, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	pager := client.NewListPager(a.ResourceGroup.Data, a.Name.Data, nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list Sentinel automation rules due to access denied")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, ar := range page.Value {
+			if ar == nil {
+				continue
+			}
+			var displayName, triggersOn, triggersWhen string
+			var order int64
+			var isEnabled *bool
+			var createdTime, lastModifiedTime *time.Time
+			var triggeringLogic, createdBy, lastModifiedBy any
+			actions := []any{}
+			if p := ar.Properties; p != nil {
+				displayName = convert.ToValue(p.DisplayName)
+				if p.Order != nil {
+					order = int64(*p.Order)
+				}
+				createdTime = p.CreatedTimeUTC
+				lastModifiedTime = p.LastModifiedTimeUTC
+				if tl := p.TriggeringLogic; tl != nil {
+					isEnabled = tl.IsEnabled
+					if tl.TriggersOn != nil {
+						triggersOn = string(*tl.TriggersOn)
+					}
+					if tl.TriggersWhen != nil {
+						triggersWhen = string(*tl.TriggersWhen)
+					}
+					triggeringLogic, err = convert.JsonToDict(tl)
+					if err != nil {
+						return nil, err
+					}
+				}
+				for _, action := range p.Actions {
+					if action == nil {
+						continue
+					}
+					d, err := convert.JsonToDict(action)
+					if err != nil {
+						return nil, err
+					}
+					actions = append(actions, d)
+				}
+				if p.CreatedBy != nil {
+					createdBy, err = convert.JsonToDict(p.CreatedBy)
+					if err != nil {
+						return nil, err
+					}
+				}
+				if p.LastModifiedBy != nil {
+					lastModifiedBy, err = convert.JsonToDict(p.LastModifiedBy)
+					if err != nil {
+						return nil, err
+					}
+				}
+			}
+			mqlAr, err := CreateResource(a.MqlRuntime, "azure.subscription.sentinelService.automationRule", map[string]*llx.RawData{
+				"id":               llx.StringDataPtr(ar.ID),
+				"name":             llx.StringDataPtr(ar.Name),
+				"displayName":      llx.StringData(displayName),
+				"order":            llx.IntData(order),
+				"isEnabled":        llx.BoolDataPtr(isEnabled),
+				"triggersOn":       llx.StringData(triggersOn),
+				"triggersWhen":     llx.StringData(triggersWhen),
+				"triggeringLogic":  llx.DictData(triggeringLogic),
+				"actions":          llx.ArrayData(actions, types.Dict),
+				"createdTime":      llx.TimeDataPtr(createdTime),
+				"lastModifiedTime": llx.TimeDataPtr(lastModifiedTime),
+				"createdBy":        llx.DictData(createdBy),
+				"lastModifiedBy":   llx.DictData(lastModifiedBy),
+			})
+			if err != nil {
+				return nil, err
+			}
+			sysData, err := convert.JsonToDict(ar.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlAr.(*mqlAzureSubscriptionSentinelServiceAutomationRule).cacheSystemData = sysData
+			res = append(res, mqlAr)
+		}
+	}
+	return res, nil
+}
+
 func (a *mqlAzureSubscriptionSentinelServiceWorkspace) dataConnectors() ([]any, error) {
 	conn, ok := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	if !ok {

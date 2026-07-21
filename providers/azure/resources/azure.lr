@@ -14840,6 +14840,10 @@ private azure.subscription.sentinelService.workspace @defaults("name resourceGro
   alertRules() []azure.subscription.sentinelService.alertRule
   // Security incidents raised in the workspace
   incidents() []azure.subscription.sentinelService.incident
+  // Watchlists (reference lists used by detections and hunting) in the workspace
+  watchlists() []azure.subscription.sentinelService.watchlist
+  // Automation rules (incident-triage and response automation) in the workspace
+  automationRules() []azure.subscription.sentinelService.automationRule
   // Data connectors ingesting telemetry into the workspace
   //
   // Each entry is a kind-specific dict with `name`, `kind`, and `properties` describing the connector configuration. Kinds include `OfficeATP`, `AzureActiveDirectory`, `AzureSecurityCenter`, `MicrosoftDefenderAdvancedThreatProtection`, and many others.
@@ -14933,6 +14937,107 @@ private azure.subscription.sentinelService.incident @defaults("incidentNumber ti
   firstActivityTime time
   // Time of the last activity in the incident
   lastActivityTime time
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Microsoft Sentinel watchlist
+//
+// A reference list of items (IP ranges, user accounts, asset
+// inventories, allow or deny lists) that Sentinel detections, hunting
+// queries, and automation reference by name. Surfaces the alias used
+// to reference it, the source and provider, the search key, and the
+// creation and update provenance. Select by the watchlist's Azure
+// resource ID. Audit these to govern which reference lists shape
+// detection logic.
+private azure.subscription.sentinelService.watchlist @defaults("watchlistAlias displayName provider") {
+  // ARM resource ID
+  id string
+  // Watchlist resource name (a GUID)
+  name string
+  // Alias used to reference the watchlist from queries and automation
+  watchlistAlias string
+  // Display name
+  displayName string
+  // Provider of the watchlist (e.g. "Microsoft")
+  provider string
+  // Source of the watchlist ("Local file" or "Remote storage")
+  source string
+  // Column used as the search key for lookups
+  itemsSearchKey string
+  // Content type of the raw content (e.g. "text/csv")
+  contentType string
+  // Default retention duration for items (ISO 8601 duration)
+  defaultDuration string
+  // Description
+  description string
+  // Labels applied to the watchlist
+  labels []string
+  // Upload status of the watchlist content
+  uploadStatus string
+  // Tenant that owns the watchlist
+  tenantId string
+  // When the watchlist was created
+  created time
+  // When the watchlist was last updated
+  updated time
+  // Principal that created the watchlist
+  //
+  // Keys: `objectId`, `email`, and `name`.
+  createdBy dict
+  // Principal that last updated the watchlist
+  //
+  // Keys: `objectId`, `email`, and `name`.
+  updatedBy dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Microsoft Sentinel automation rule
+//
+// A rule that automatically triages and responds to incidents or
+// alerts in a Sentinel workspace: it runs actions (change status or
+// severity, assign an owner, add tags, run a Logic Apps playbook) when
+// its trigger and conditions match. Surfaces whether the rule is
+// enabled, what it triggers on, its evaluation order, and its actions.
+// Select by the rule's Azure resource ID. Audit these to confirm
+// incidents are automatically handled and to review which playbooks run
+// on security events.
+private azure.subscription.sentinelService.automationRule @defaults("displayName order isEnabled") {
+  // ARM resource ID
+  id string
+  // Automation rule resource name (a GUID)
+  name string
+  // Display name
+  displayName string
+  // Evaluation order relative to other automation rules
+  order int
+  // Whether the rule is enabled
+  isEnabled bool
+  // What the rule triggers on ("Incidents" or "Alerts")
+  triggersOn string
+  // When the rule triggers ("Created" or "Updated")
+  triggersWhen string
+  // Full triggering logic
+  //
+  // Keys: `isEnabled`, `triggersOn`, `triggersWhen`, `expirationTimeUtc`, and `conditions`.
+  triggeringLogic dict
+  // Actions run when the rule matches
+  //
+  // Each entry describes an action by `actionType` (e.g. ModifyProperties, RunPlaybook), its `order`, and the action-specific configuration.
+  actions []dict
+  // When the rule was created
+  createdTime time
+  // When the rule was last modified
+  lastModifiedTime time
+  // Principal that created the rule
+  //
+  // Keys: `objectId`, `email`, `name`, and `userPrincipalName`.
+  createdBy dict
+  // Principal that last modified the rule
+  //
+  // Keys: `objectId`, `email`, `name`, and `userPrincipalName`.
+  lastModifiedBy dict
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }

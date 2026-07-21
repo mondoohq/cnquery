@@ -463,6 +463,8 @@ const (
 	ResourceAzureSubscriptionSentinelServiceWorkspace                                                 string = "azure.subscription.sentinelService.workspace"
 	ResourceAzureSubscriptionSentinelServiceAlertRule                                                 string = "azure.subscription.sentinelService.alertRule"
 	ResourceAzureSubscriptionSentinelServiceIncident                                                  string = "azure.subscription.sentinelService.incident"
+	ResourceAzureSubscriptionSentinelServiceWatchlist                                                 string = "azure.subscription.sentinelService.watchlist"
+	ResourceAzureSubscriptionSentinelServiceAutomationRule                                            string = "azure.subscription.sentinelService.automationRule"
 	ResourceAzureSubscriptionSignalRService                                                           string = "azure.subscription.signalRService"
 	ResourceAzureSubscriptionSignalRServiceSignalR                                                    string = "azure.subscription.signalRService.signalR"
 	ResourceAzureSubscriptionWebPubSubService                                                         string = "azure.subscription.webPubSubService"
@@ -2276,6 +2278,14 @@ func init() {
 		"azure.subscription.sentinelService.incident": {
 			// to override args, implement: initAzureSubscriptionSentinelServiceIncident(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionSentinelServiceIncident,
+		},
+		"azure.subscription.sentinelService.watchlist": {
+			// to override args, implement: initAzureSubscriptionSentinelServiceWatchlist(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionSentinelServiceWatchlist,
+		},
+		"azure.subscription.sentinelService.automationRule": {
+			// to override args, implement: initAzureSubscriptionSentinelServiceAutomationRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionSentinelServiceAutomationRule,
 		},
 		"azure.subscription.signalRService": {
 			Init:   initAzureSubscriptionSignalRService,
@@ -17968,6 +17978,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.sentinelService.workspace.incidents": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSentinelServiceWorkspace).GetIncidents()).ToDataRes(types.Array(types.Resource("azure.subscription.sentinelService.incident")))
 	},
+	"azure.subscription.sentinelService.workspace.watchlists": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceWorkspace).GetWatchlists()).ToDataRes(types.Array(types.Resource("azure.subscription.sentinelService.watchlist")))
+	},
+	"azure.subscription.sentinelService.workspace.automationRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceWorkspace).GetAutomationRules()).ToDataRes(types.Array(types.Resource("azure.subscription.sentinelService.automationRule")))
+	},
 	"azure.subscription.sentinelService.workspace.dataConnectors": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSentinelServiceWorkspace).GetDataConnectors()).ToDataRes(types.Array(types.Dict))
 	},
@@ -18069,6 +18085,102 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.sentinelService.incident.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSentinelServiceIncident).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.sentinelService.watchlist.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceWatchlist).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.sentinelService.watchlist.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceWatchlist).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.sentinelService.watchlist.watchlistAlias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceWatchlist).GetWatchlistAlias()).ToDataRes(types.String)
+	},
+	"azure.subscription.sentinelService.watchlist.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceWatchlist).GetDisplayName()).ToDataRes(types.String)
+	},
+	"azure.subscription.sentinelService.watchlist.provider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceWatchlist).GetProvider()).ToDataRes(types.String)
+	},
+	"azure.subscription.sentinelService.watchlist.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceWatchlist).GetSource()).ToDataRes(types.String)
+	},
+	"azure.subscription.sentinelService.watchlist.itemsSearchKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceWatchlist).GetItemsSearchKey()).ToDataRes(types.String)
+	},
+	"azure.subscription.sentinelService.watchlist.contentType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceWatchlist).GetContentType()).ToDataRes(types.String)
+	},
+	"azure.subscription.sentinelService.watchlist.defaultDuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceWatchlist).GetDefaultDuration()).ToDataRes(types.String)
+	},
+	"azure.subscription.sentinelService.watchlist.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceWatchlist).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.sentinelService.watchlist.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceWatchlist).GetLabels()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.sentinelService.watchlist.uploadStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceWatchlist).GetUploadStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.sentinelService.watchlist.tenantId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceWatchlist).GetTenantId()).ToDataRes(types.String)
+	},
+	"azure.subscription.sentinelService.watchlist.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceWatchlist).GetCreated()).ToDataRes(types.Time)
+	},
+	"azure.subscription.sentinelService.watchlist.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceWatchlist).GetUpdated()).ToDataRes(types.Time)
+	},
+	"azure.subscription.sentinelService.watchlist.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceWatchlist).GetCreatedBy()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.sentinelService.watchlist.updatedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceWatchlist).GetUpdatedBy()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.sentinelService.watchlist.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceWatchlist).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.sentinelService.automationRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceAutomationRule).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.sentinelService.automationRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceAutomationRule).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.sentinelService.automationRule.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceAutomationRule).GetDisplayName()).ToDataRes(types.String)
+	},
+	"azure.subscription.sentinelService.automationRule.order": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceAutomationRule).GetOrder()).ToDataRes(types.Int)
+	},
+	"azure.subscription.sentinelService.automationRule.isEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceAutomationRule).GetIsEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.sentinelService.automationRule.triggersOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceAutomationRule).GetTriggersOn()).ToDataRes(types.String)
+	},
+	"azure.subscription.sentinelService.automationRule.triggersWhen": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceAutomationRule).GetTriggersWhen()).ToDataRes(types.String)
+	},
+	"azure.subscription.sentinelService.automationRule.triggeringLogic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceAutomationRule).GetTriggeringLogic()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.sentinelService.automationRule.actions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceAutomationRule).GetActions()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.sentinelService.automationRule.createdTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceAutomationRule).GetCreatedTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.sentinelService.automationRule.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceAutomationRule).GetLastModifiedTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.sentinelService.automationRule.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceAutomationRule).GetCreatedBy()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.sentinelService.automationRule.lastModifiedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceAutomationRule).GetLastModifiedBy()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.sentinelService.automationRule.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceAutomationRule).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
 	"azure.subscription.signalRService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSignalRService).GetSubscriptionId()).ToDataRes(types.String)
@@ -41188,6 +41300,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionSentinelServiceWorkspace).Incidents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.sentinelService.workspace.watchlists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceWorkspace).Watchlists, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.workspace.automationRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceWorkspace).AutomationRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.sentinelService.workspace.dataConnectors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionSentinelServiceWorkspace).DataConnectors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -41330,6 +41450,142 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.sentinelService.incident.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionSentinelServiceIncident).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.watchlist.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceWatchlist).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.sentinelService.watchlist.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceWatchlist).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.watchlist.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceWatchlist).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.watchlist.watchlistAlias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceWatchlist).WatchlistAlias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.watchlist.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceWatchlist).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.watchlist.provider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceWatchlist).Provider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.watchlist.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceWatchlist).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.watchlist.itemsSearchKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceWatchlist).ItemsSearchKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.watchlist.contentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceWatchlist).ContentType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.watchlist.defaultDuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceWatchlist).DefaultDuration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.watchlist.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceWatchlist).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.watchlist.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceWatchlist).Labels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.watchlist.uploadStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceWatchlist).UploadStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.watchlist.tenantId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceWatchlist).TenantId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.watchlist.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceWatchlist).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.watchlist.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceWatchlist).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.watchlist.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceWatchlist).CreatedBy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.watchlist.updatedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceWatchlist).UpdatedBy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.watchlist.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceWatchlist).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.automationRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceAutomationRule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.sentinelService.automationRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceAutomationRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.automationRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceAutomationRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.automationRule.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceAutomationRule).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.automationRule.order": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceAutomationRule).Order, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.automationRule.isEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceAutomationRule).IsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.automationRule.triggersOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceAutomationRule).TriggersOn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.automationRule.triggersWhen": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceAutomationRule).TriggersWhen, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.automationRule.triggeringLogic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceAutomationRule).TriggeringLogic, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.automationRule.actions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceAutomationRule).Actions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.automationRule.createdTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceAutomationRule).CreatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.automationRule.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceAutomationRule).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.automationRule.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceAutomationRule).CreatedBy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.automationRule.lastModifiedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceAutomationRule).LastModifiedBy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.automationRule.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceAutomationRule).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.signalRService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -97282,15 +97538,17 @@ type mqlAzureSubscriptionSentinelServiceWorkspace struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAzureSubscriptionSentinelServiceWorkspaceInternal
-	Id             plugin.TValue[string]
-	Name           plugin.TValue[string]
-	ResourceGroup  plugin.TValue[string]
-	SubscriptionId plugin.TValue[string]
-	Workspace      plugin.TValue[*mqlAzureSubscriptionMonitorServiceWorkspace]
-	AlertRules     plugin.TValue[[]any]
-	Incidents      plugin.TValue[[]any]
-	DataConnectors plugin.TValue[[]any]
-	SystemMetadata plugin.TValue[*mqlAzureSubscriptionSystemData]
+	Id              plugin.TValue[string]
+	Name            plugin.TValue[string]
+	ResourceGroup   plugin.TValue[string]
+	SubscriptionId  plugin.TValue[string]
+	Workspace       plugin.TValue[*mqlAzureSubscriptionMonitorServiceWorkspace]
+	AlertRules      plugin.TValue[[]any]
+	Incidents       plugin.TValue[[]any]
+	Watchlists      plugin.TValue[[]any]
+	AutomationRules plugin.TValue[[]any]
+	DataConnectors  plugin.TValue[[]any]
+	SystemMetadata  plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
 // createAzureSubscriptionSentinelServiceWorkspace creates a new instance of this resource
@@ -97391,6 +97649,38 @@ func (c *mqlAzureSubscriptionSentinelServiceWorkspace) GetIncidents() *plugin.TV
 		}
 
 		return c.incidents()
+	})
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWorkspace) GetWatchlists() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Watchlists, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.sentinelService.workspace", c.__id, "watchlists")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.watchlists()
+	})
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWorkspace) GetAutomationRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AutomationRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.sentinelService.workspace", c.__id, "automationRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.automationRules()
 	})
 }
 
@@ -97676,6 +97966,278 @@ func (c *mqlAzureSubscriptionSentinelServiceIncident) GetSystemMetadata() *plugi
 	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.sentinelService.incident", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionSentinelServiceWatchlist for the azure.subscription.sentinelService.watchlist resource
+type mqlAzureSubscriptionSentinelServiceWatchlist struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionSentinelServiceWatchlistInternal
+	Id              plugin.TValue[string]
+	Name            plugin.TValue[string]
+	WatchlistAlias  plugin.TValue[string]
+	DisplayName     plugin.TValue[string]
+	Provider        plugin.TValue[string]
+	Source          plugin.TValue[string]
+	ItemsSearchKey  plugin.TValue[string]
+	ContentType     plugin.TValue[string]
+	DefaultDuration plugin.TValue[string]
+	Description     plugin.TValue[string]
+	Labels          plugin.TValue[[]any]
+	UploadStatus    plugin.TValue[string]
+	TenantId        plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Updated         plugin.TValue[*time.Time]
+	CreatedBy       plugin.TValue[any]
+	UpdatedBy       plugin.TValue[any]
+	SystemMetadata  plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionSentinelServiceWatchlist creates a new instance of this resource
+func createAzureSubscriptionSentinelServiceWatchlist(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionSentinelServiceWatchlist{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.sentinelService.watchlist", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWatchlist) MqlName() string {
+	return "azure.subscription.sentinelService.watchlist"
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWatchlist) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWatchlist) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWatchlist) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWatchlist) GetWatchlistAlias() *plugin.TValue[string] {
+	return &c.WatchlistAlias
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWatchlist) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWatchlist) GetProvider() *plugin.TValue[string] {
+	return &c.Provider
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWatchlist) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWatchlist) GetItemsSearchKey() *plugin.TValue[string] {
+	return &c.ItemsSearchKey
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWatchlist) GetContentType() *plugin.TValue[string] {
+	return &c.ContentType
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWatchlist) GetDefaultDuration() *plugin.TValue[string] {
+	return &c.DefaultDuration
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWatchlist) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWatchlist) GetLabels() *plugin.TValue[[]any] {
+	return &c.Labels
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWatchlist) GetUploadStatus() *plugin.TValue[string] {
+	return &c.UploadStatus
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWatchlist) GetTenantId() *plugin.TValue[string] {
+	return &c.TenantId
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWatchlist) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWatchlist) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWatchlist) GetCreatedBy() *plugin.TValue[any] {
+	return &c.CreatedBy
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWatchlist) GetUpdatedBy() *plugin.TValue[any] {
+	return &c.UpdatedBy
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWatchlist) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.sentinelService.watchlist", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionSentinelServiceAutomationRule for the azure.subscription.sentinelService.automationRule resource
+type mqlAzureSubscriptionSentinelServiceAutomationRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionSentinelServiceAutomationRuleInternal
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	DisplayName      plugin.TValue[string]
+	Order            plugin.TValue[int64]
+	IsEnabled        plugin.TValue[bool]
+	TriggersOn       plugin.TValue[string]
+	TriggersWhen     plugin.TValue[string]
+	TriggeringLogic  plugin.TValue[any]
+	Actions          plugin.TValue[[]any]
+	CreatedTime      plugin.TValue[*time.Time]
+	LastModifiedTime plugin.TValue[*time.Time]
+	CreatedBy        plugin.TValue[any]
+	LastModifiedBy   plugin.TValue[any]
+	SystemMetadata   plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionSentinelServiceAutomationRule creates a new instance of this resource
+func createAzureSubscriptionSentinelServiceAutomationRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionSentinelServiceAutomationRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.sentinelService.automationRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceAutomationRule) MqlName() string {
+	return "azure.subscription.sentinelService.automationRule"
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceAutomationRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceAutomationRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceAutomationRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceAutomationRule) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceAutomationRule) GetOrder() *plugin.TValue[int64] {
+	return &c.Order
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceAutomationRule) GetIsEnabled() *plugin.TValue[bool] {
+	return &c.IsEnabled
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceAutomationRule) GetTriggersOn() *plugin.TValue[string] {
+	return &c.TriggersOn
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceAutomationRule) GetTriggersWhen() *plugin.TValue[string] {
+	return &c.TriggersWhen
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceAutomationRule) GetTriggeringLogic() *plugin.TValue[any] {
+	return &c.TriggeringLogic
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceAutomationRule) GetActions() *plugin.TValue[[]any] {
+	return &c.Actions
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceAutomationRule) GetCreatedTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedTime
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceAutomationRule) GetLastModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedTime
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceAutomationRule) GetCreatedBy() *plugin.TValue[any] {
+	return &c.CreatedBy
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceAutomationRule) GetLastModifiedBy() *plugin.TValue[any] {
+	return &c.LastModifiedBy
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceAutomationRule) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.sentinelService.automationRule", c.__id, "systemMetadata")
 			if err != nil {
 				return nil, err
 			}
