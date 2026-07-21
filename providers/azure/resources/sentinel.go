@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -321,6 +322,142 @@ type mqlAzureSubscriptionSentinelServiceAlertRuleInternal struct {
 
 func (a *mqlAzureSubscriptionSentinelServiceAlertRule) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
 	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+type mqlAzureSubscriptionSentinelServiceIncidentInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionSentinelServiceIncident) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionSentinelServiceIncident) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionSentinelServiceWorkspace) incidents() ([]any, error) {
+	conn, ok := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+
+	client, err := armsecurityinsights.NewIncidentsClient(a.SubscriptionId.Data, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	pager := client.NewListPager(a.ResourceGroup.Data, a.Name.Data, nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list Sentinel incidents due to access denied")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, inc := range page.Value {
+			if inc == nil {
+				continue
+			}
+			mqlInc, err := sentinelIncidentToMql(a.MqlRuntime, inc)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlInc)
+		}
+	}
+	return res, nil
+}
+
+func sentinelIncidentToMql(runtime *plugin.Runtime, inc *armsecurityinsights.Incident) (*mqlAzureSubscriptionSentinelServiceIncident, error) {
+	var title, severity, status, classification, classificationReason, classificationComment, description, incidentUrl string
+	var ownerAssignedTo, ownerObjectId, ownerUpn, ownerEmail string
+	var incidentNumber int64
+	var createdTime, lastModifiedTime, firstActivityTime, lastActivityTime *time.Time
+	labels := []any{}
+	relatedRuleIds := []any{}
+
+	if p := inc.Properties; p != nil {
+		title = convert.ToValue(p.Title)
+		if p.Severity != nil {
+			severity = string(*p.Severity)
+		}
+		if p.Status != nil {
+			status = string(*p.Status)
+		}
+		if p.Classification != nil {
+			classification = string(*p.Classification)
+		}
+		if p.ClassificationReason != nil {
+			classificationReason = string(*p.ClassificationReason)
+		}
+		classificationComment = convert.ToValue(p.ClassificationComment)
+		description = convert.ToValue(p.Description)
+		incidentUrl = convert.ToValue(p.IncidentURL)
+		if p.IncidentNumber != nil {
+			incidentNumber = int64(*p.IncidentNumber)
+		}
+		createdTime = p.CreatedTimeUTC
+		lastModifiedTime = p.LastModifiedTimeUTC
+		firstActivityTime = p.FirstActivityTimeUTC
+		lastActivityTime = p.LastActivityTimeUTC
+		if o := p.Owner; o != nil {
+			ownerAssignedTo = convert.ToValue(o.AssignedTo)
+			ownerObjectId = convert.ToValue(o.ObjectID)
+			ownerUpn = convert.ToValue(o.UserPrincipalName)
+			ownerEmail = convert.ToValue(o.Email)
+		}
+		for _, l := range p.Labels {
+			if l != nil && l.LabelName != nil {
+				labels = append(labels, *l.LabelName)
+			}
+		}
+		for _, rid := range p.RelatedAnalyticRuleIDs {
+			if rid != nil {
+				relatedRuleIds = append(relatedRuleIds, *rid)
+			}
+		}
+	}
+
+	res, err := CreateResource(runtime, "azure.subscription.sentinelService.incident", map[string]*llx.RawData{
+		"id":                     llx.StringDataPtr(inc.ID),
+		"name":                   llx.StringDataPtr(inc.Name),
+		"title":                  llx.StringData(title),
+		"severity":               llx.StringData(severity),
+		"status":                 llx.StringData(status),
+		"incidentNumber":         llx.IntData(incidentNumber),
+		"incidentUrl":            llx.StringData(incidentUrl),
+		"classification":         llx.StringData(classification),
+		"classificationReason":   llx.StringData(classificationReason),
+		"classificationComment":  llx.StringData(classificationComment),
+		"description":            llx.StringData(description),
+		"labels":                 llx.ArrayData(labels, types.String),
+		"ownerAssignedTo":        llx.StringData(ownerAssignedTo),
+		"ownerObjectId":          llx.StringData(ownerObjectId),
+		"ownerUserPrincipalName": llx.StringData(ownerUpn),
+		"ownerEmail":             llx.StringData(ownerEmail),
+		"relatedAnalyticRuleIds": llx.ArrayData(relatedRuleIds, types.String),
+		"createdTime":            llx.TimeDataPtr(createdTime),
+		"lastModifiedTime":       llx.TimeDataPtr(lastModifiedTime),
+		"firstActivityTime":      llx.TimeDataPtr(firstActivityTime),
+		"lastActivityTime":       llx.TimeDataPtr(lastActivityTime),
+	})
+	if err != nil {
+		return nil, err
+	}
+	sysData, err := convert.JsonToDict(inc.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlAzureSubscriptionSentinelServiceIncident).cacheSystemData = sysData
+	return res.(*mqlAzureSubscriptionSentinelServiceIncident), nil
 }
 
 func (a *mqlAzureSubscriptionSentinelServiceWorkspace) dataConnectors() ([]any, error) {

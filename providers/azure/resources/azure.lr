@@ -14745,6 +14745,8 @@ private azure.subscription.sentinelService.workspace @defaults("name resourceGro
   workspace() azure.subscription.monitorService.workspace
   // Sentinel analytics rules configured on the workspace
   alertRules() []azure.subscription.sentinelService.alertRule
+  // Security incidents raised in the workspace
+  incidents() []azure.subscription.sentinelService.incident
   // Data connectors ingesting telemetry into the workspace
   //
   // Each entry is a kind-specific dict with `name`, `kind`, and `properties` describing the connector configuration. Kinds include `OfficeATP`, `AzureActiveDirectory`, `AzureSecurityCenter`, `MicrosoftDefenderAdvancedThreatProtection`, and many others.
@@ -14781,6 +14783,63 @@ private azure.subscription.sentinelService.alertRule @defaults("name kind enable
   description string
   // Kind-specific properties (e.g., for Scheduled rules: query, queryFrequency, queryPeriod, triggerThreshold)
   properties dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Microsoft Sentinel incident
+//
+// A security incident raised in a Sentinel workspace: a case grouping
+// related alerts for investigation and response. Surfaces the title,
+// severity, and status, the classification recorded when an incident is
+// closed, the assigned owner, the labels applied to it, the activity
+// and lifecycle timestamps, and the analytics rules that contributed to
+// it. Audit these to find open, unassigned, or high-severity incidents
+// and to measure how long incidents stay unresolved. Select by the
+// incident's Azure resource ID.
+private azure.subscription.sentinelService.incident @defaults("incidentNumber title severity status") {
+  // ARM resource ID
+  id string
+  // Incident resource name (a GUID)
+  name string
+  // Incident title
+  title string
+  // Severity ("High", "Medium", "Low", "Informational")
+  severity string
+  // Status ("New", "Active", "Closed")
+  status string
+  // Sequential incident number shown in the portal
+  incidentNumber int
+  // Deep-link URL to the incident in the Azure portal
+  incidentUrl string
+  // Classification recorded when the incident was closed ("TruePositive", "BenignPositive", "FalsePositive", "Undetermined"); empty while open
+  classification string
+  // Classification reason ("SuspiciousActivity", "SuspiciousButExpected", "IncorrectAlertLogic", "InaccurateData"); empty while open
+  classificationReason string
+  // Free-text comment recorded with the classification
+  classificationComment string
+  // Incident description
+  description string
+  // Labels applied to the incident
+  labels []string
+  // Display name of the user the incident is assigned to; empty when unassigned
+  ownerAssignedTo string
+  // Entra object ID of the assigned owner; empty when unassigned
+  ownerObjectId string
+  // User principal name of the assigned owner; empty when unassigned
+  ownerUserPrincipalName string
+  // Email of the assigned owner; empty when unassigned
+  ownerEmail string
+  // ARM resource IDs of the analytics rules related to the incident
+  relatedAnalyticRuleIds []string
+  // When the incident was created
+  createdTime time
+  // When the incident was last modified
+  lastModifiedTime time
+  // Time of the first activity in the incident
+  firstActivityTime time
+  // Time of the last activity in the incident
+  lastActivityTime time
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }

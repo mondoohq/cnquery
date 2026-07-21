@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.32.0",
-  "generated_at": "2026-07-21T08:12:38-07:00",
+  "generated_at": "2026-07-21T11:36:08-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -239,6 +239,7 @@
     "Microsoft.Security/workspaceSettings/read",
     "Microsoft.Securityinsights/alertRules/read",
     "Microsoft.Securityinsights/dataConnectors/read",
+    "Microsoft.Securityinsights/incidents/read",
     "Microsoft.ServiceBus/namespaces/queues/read",
     "Microsoft.ServiceBus/namespaces/read",
     "Microsoft.ServiceBus/namespaces/topics/read",
@@ -1782,6 +1783,12 @@
     },
     {
       "permission": "Microsoft.Securityinsights/dataConnectors/read",
+      "service": "Microsoft.Securityinsights",
+      "action": "NewListPager",
+      "source_file": "sentinel.go"
+    },
+    {
+      "permission": "Microsoft.Securityinsights/incidents/read",
       "service": "Microsoft.Securityinsights",
       "action": "NewListPager",
       "source_file": "sentinel.go"
