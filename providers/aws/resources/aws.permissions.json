@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.49.0",
-  "generated_at": "2026-07-21T11:25:56-07:00",
+  "generated_at": "2026-07-21T11:56:46-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindings",
@@ -857,6 +857,7 @@
     "securityhub:ListMembers",
     "securityhub:ListSecurityControlDefinitions",
     "securitylake:ListSubscribers",
+    "ses:GetAccount",
     "ses:GetConfigurationSet",
     "ses:GetEmailIdentity",
     "ses:ListConfigurationSets",
@@ -6252,6 +6253,12 @@
       "service": "securitylake",
       "action": "ListSubscribers",
       "source_file": "aws_securitylake.go"
+    },
+    {
+      "permission": "ses:GetAccount",
+      "service": "ses",
+      "action": "GetAccount",
+      "source_file": "aws_ses.go"
     },
     {
       "permission": "ses:GetConfigurationSet",

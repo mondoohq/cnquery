@@ -9613,6 +9613,8 @@ aws.ses.identity.region 13.28.1
 aws.ses.identity.tags 13.28.1
 aws.ses.identity.verificationStatus 13.28.1
 aws.ses.identity.verifiedForSending 13.28.1
+aws.ses.nextPricingPlan 13.49.1
+aws.ses.pricingPlan 13.49.1
 aws.sfn 13.6.3
 aws.sfn.activities 13.6.3
 aws.sfn.activity 13.6.3

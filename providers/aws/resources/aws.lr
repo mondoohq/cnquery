@@ -5266,6 +5266,18 @@ aws.ses {
   identities() []aws.ses.identity
   // List of SES configuration sets
   configurationSets() []aws.ses.configurationSet
+  // Currently active account pricing plan
+  //
+  // The Amazon SES pricing plan active on the account. One of NONE,
+  // ESSENTIALS, PRO, or ENTERPRISE. Empty when the account predates pricing
+  // plans or the value is unavailable.
+  pricingPlan() string
+  // Account pricing plan scheduled for the next billing cycle
+  //
+  // The Amazon SES pricing plan that becomes active at the start of the next
+  // billing cycle when a scheduled change is pending. One of NONE, ESSENTIALS,
+  // PRO, or ENTERPRISE. Empty when no change is scheduled.
+  nextPricingPlan() string
 }
 
 // SES email identity

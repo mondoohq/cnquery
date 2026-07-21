@@ -18,8 +18,57 @@ import (
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 )
 
+type mqlAwsSesInternal struct {
+	accountOnce sync.Once
+	account     *sesv2.GetAccountOutput
+	accountErr  error
+}
+
 func (a *mqlAwsSes) id() (string, error) {
 	return "aws.ses", nil
+}
+
+// getAccount fetches account-level SES settings once. The pricing plan is
+// account-global, so a single GetAccount call against the connection's default
+// region serves every pricing field. Access-denied leaves the cached result
+// nil so the pricing fields resolve to an empty string rather than erroring.
+func (a *mqlAwsSes) getAccount() (*sesv2.GetAccountOutput, error) {
+	a.accountOnce.Do(func() {
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		svc := conn.Sesv2(conn.Region())
+		out, err := svc.GetAccount(context.Background(), &sesv2.GetAccountInput{})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return
+			}
+			a.accountErr = err
+			return
+		}
+		a.account = out
+	})
+	return a.account, a.accountErr
+}
+
+func (a *mqlAwsSes) pricingPlan() (string, error) {
+	acct, err := a.getAccount()
+	if err != nil {
+		return "", err
+	}
+	if acct == nil || acct.PricingAttributes == nil {
+		return "", nil
+	}
+	return string(acct.PricingAttributes.CurrentPlan), nil
+}
+
+func (a *mqlAwsSes) nextPricingPlan() (string, error) {
+	acct, err := a.getAccount()
+	if err != nil {
+		return "", err
+	}
+	if acct == nil || acct.PricingAttributes == nil {
+		return "", nil
+	}
+	return string(acct.PricingAttributes.NextPlan), nil
 }
 
 func sesTagsToMap(tags []sesv2_types.Tag) map[string]any {

@@ -10403,6 +10403,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ses.configurationSets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSes).GetConfigurationSets()).ToDataRes(types.Array(types.Resource("aws.ses.configurationSet")))
 	},
+	"aws.ses.pricingPlan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSes).GetPricingPlan()).ToDataRes(types.String)
+	},
+	"aws.ses.nextPricingPlan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSes).GetNextPricingPlan()).ToDataRes(types.String)
+	},
 	"aws.ses.identity.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSesIdentity).GetArn()).ToDataRes(types.String)
 	},
@@ -43102,6 +43108,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ses.configurationSets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSes).ConfigurationSets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ses.pricingPlan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSes).PricingPlan, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.nextPricingPlan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSes).NextPricingPlan, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ses.identity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -101560,9 +101574,11 @@ func (c *mqlAwsSagemakerLineageGroup) GetTags() *plugin.TValue[map[string]any] {
 type mqlAwsSes struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsSesInternal it will be used here
+	mqlAwsSesInternal
 	Identities        plugin.TValue[[]any]
 	ConfigurationSets plugin.TValue[[]any]
+	PricingPlan       plugin.TValue[string]
+	NextPricingPlan   plugin.TValue[string]
 }
 
 // createAwsSes creates a new instance of this resource
@@ -101631,6 +101647,18 @@ func (c *mqlAwsSes) GetConfigurationSets() *plugin.TValue[[]any] {
 		}
 
 		return c.configurationSets()
+	})
+}
+
+func (c *mqlAwsSes) GetPricingPlan() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PricingPlan, func() (string, error) {
+		return c.pricingPlan()
+	})
+}
+
+func (c *mqlAwsSes) GetNextPricingPlan() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.NextPricingPlan, func() (string, error) {
+		return c.nextPricingPlan()
 	})
 }
 
