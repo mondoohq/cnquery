@@ -25,7 +25,7 @@ func TestCommandProviderLinux(t *testing.T) {
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
 
-	metadata := commandInstanceMetadata{conn, platform}
+	metadata := commandInstanceMetadata{conn: conn, platform: platform}
 	ident, err := metadata.Identify()
 
 	assert.Nil(t, err)
@@ -48,7 +48,7 @@ func TestCommandProviderWindows(t *testing.T) {
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
 
-	metadata := commandInstanceMetadata{conn, platform}
+	metadata := commandInstanceMetadata{conn: conn, platform: platform}
 	ident, err := metadata.Identify()
 
 	assert.Nil(t, err)
@@ -71,7 +71,7 @@ func TestCommandProviderLinuxNoLoadbalancerInformation(t *testing.T) {
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
 
-	metadata := commandInstanceMetadata{conn, platform}
+	metadata := commandInstanceMetadata{conn: conn, platform: platform}
 	ident, err := metadata.Identify()
 
 	assert.Nil(t, err)
@@ -271,16 +271,33 @@ func TestLocalHTTPMetadata(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	old := imdsBaseURL
-	imdsBaseURL = srv.URL
-	defer func() { imdsBaseURL = old }()
-
 	conn := local.NewConnection(0, &inventory.Config{}, &inventory.Asset{})
 	require.Equal(t, "local", string(conn.Type()))
 
-	md := commandInstanceMetadata{conn, &inventory.Platform{Name: "windows", Family: []string{"windows"}}}
+	md := commandInstanceMetadata{
+		conn:        conn,
+		platform:    &inventory.Platform{Name: "windows", Family: []string{"windows"}},
+		imdsBaseURL: srv.URL,
+	}
 	ident, err := md.Identify()
 	require.NoError(t, err)
 	assert.Equal(t, "//platformid.api.mondoo.app/runtime/azure/subscriptions/sub-123/resourcegroups/rg/providers/microsoft.compute/virtualmachines/vm", ident.InstanceID)
 	assert.Equal(t, "//platformid.api.mondoo.app/runtime/azure/subscriptions/sub-123", ident.AccountID)
+}
+
+func TestLocalHTTPMetadataErrorStatus(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte("boom"))
+	}))
+	defer srv.Close()
+
+	md := commandInstanceMetadata{
+		conn:        local.NewConnection(0, &inventory.Config{}, &inventory.Asset{}),
+		platform:    &inventory.Platform{Name: "windows", Family: []string{"windows"}},
+		imdsBaseURL: srv.URL,
+	}
+	_, err := md.Identify()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "HTTP 500")
 }

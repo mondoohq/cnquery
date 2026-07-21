@@ -45,8 +45,8 @@ func nativeWindowsSmbios() (out smbiosWindows, err error) {
 		SerialNumber      string
 	}
 	var bios []win32Bios
-	if err := wmi.Query("SELECT Manufacturer, SMBIOSBIOSVersion, ReleaseDate, SerialNumber FROM Win32_Bios", &bios); err != nil {
-		return out, err
+	if qErr := wmi.Query("SELECT Manufacturer, SMBIOSBIOSVersion, ReleaseDate, SerialNumber FROM Win32_Bios", &bios); qErr != nil {
+		return out, qErr
 	}
 	if len(bios) > 0 {
 		out.Bios = smbiosWinBios{
@@ -66,8 +66,8 @@ func nativeWindowsSmbios() (out smbiosWindows, err error) {
 		SerialNumber string
 	}
 	var baseboard []win32BaseBoard
-	if err := wmi.Query("SELECT Manufacturer, Product, Version, SerialNumber FROM Win32_BaseBoard", &baseboard); err != nil {
-		return out, err
+	if qErr := wmi.Query("SELECT Manufacturer, Product, Version, SerialNumber FROM Win32_BaseBoard", &baseboard); qErr != nil {
+		return out, qErr
 	}
 	if len(baseboard) > 0 {
 		out.BaseBoard = smbiosBaseBoard(baseboard[0])
@@ -84,8 +84,8 @@ func nativeWindowsSmbios() (out smbiosWindows, err error) {
 		SMBIOSAssetTag string
 	}
 	var chassis []win32SystemEnclosure
-	if err := wmi.Query("SELECT Manufacturer, Model, ChassisTypes, Version, SerialNumber, SMBIOSAssetTag FROM Win32_SystemEnclosure", &chassis); err != nil {
-		return out, err
+	if qErr := wmi.Query("SELECT Manufacturer, Model, ChassisTypes, Version, SerialNumber, SMBIOSAssetTag FROM Win32_SystemEnclosure", &chassis); qErr != nil {
+		return out, qErr
 	}
 	for _, ch := range chassis {
 		types := make([]string, 0, len(ch.ChassisTypes))
@@ -111,8 +111,8 @@ func nativeWindowsSmbios() (out smbiosWindows, err error) {
 		IdentifyingNumber string
 	}
 	var product []win32ComputerSystemProduct
-	if err := wmi.Query("SELECT Vendor, Name, Version, SKUNumber, UUID, IdentifyingNumber FROM Win32_ComputerSystemProduct", &product); err != nil {
-		return out, err
+	if qErr := wmi.Query("SELECT Vendor, Name, Version, SKUNumber, UUID, IdentifyingNumber FROM Win32_ComputerSystemProduct", &product); qErr != nil {
+		return out, qErr
 	}
 	if len(product) > 0 {
 		out.SystemProduct = smbiosSystemProduct(product[0])
