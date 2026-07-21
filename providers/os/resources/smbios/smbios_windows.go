@@ -7,6 +7,7 @@
 package smbios
 
 import (
+	"fmt"
 	"runtime"
 	"strconv"
 	"time"
@@ -28,8 +29,14 @@ func fetchWindowsSmbios(conn shared.Connection) (smbiosWindows, error) {
 	return fetchWindowsSmbiosPowershell(conn)
 }
 
-func nativeWindowsSmbios() (smbiosWindows, error) {
-	var out smbiosWindows
+func nativeWindowsSmbios() (out smbiosWindows, err error) {
+	// the wmi lib can panic on unexpected COM variant types; recover so we
+	// fall back to PowerShell instead of crashing the scan
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("panic querying smbios via WMI: %v", r)
+		}
+	}()
 
 	type win32Bios struct {
 		Manufacturer      string
@@ -67,9 +74,11 @@ func nativeWindowsSmbios() (smbiosWindows, error) {
 	}
 
 	type win32SystemEnclosure struct {
-		Manufacturer   string
-		Model          *string
-		ChassisTypes   []uint16
+		Manufacturer string
+		Model        *string
+		// int32, not uint16: the COM SAFEARRAY returns VT_I4 elements and the
+		// wmi lib panics calling reflect.Value.Uint on them.
+		ChassisTypes   []int32
 		Version        string
 		SerialNumber   string
 		SMBIOSAssetTag string
