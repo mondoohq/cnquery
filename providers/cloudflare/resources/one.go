@@ -135,24 +135,51 @@ func isSAMLIdpType(t string) bool {
 	return false
 }
 
-func (c *mqlCloudflareZone) one() (*mqlCloudflareOne, error) {
-	res, err := CreateResource(c.MqlRuntime, "cloudflare.one", map[string]*llx.RawData{
-		"__id": llx.StringData("cloudflare.one@" + c.Id.Data),
+func newOne(runtime *plugin.Runtime, accountID, zoneID string) (*mqlCloudflareOne, error) {
+	// Cloudflare One is account-scoped; the __id keys on the account. A
+	// zone-scoped access is retained for backward compatibility and keys on
+	// the zone so its zone-pathed apps/identityProviders stay distinct.
+	key := "account@" + accountID
+	if zoneID != "" {
+		key = "zone@" + zoneID
+	}
+	res, err := CreateResource(runtime, "cloudflare.one", map[string]*llx.RawData{
+		"__id": llx.StringData("cloudflare.one@" + key),
 	})
 	if err != nil {
 		return nil, err
 	}
 
 	one := res.(*mqlCloudflareOne)
-	one.ZoneID = c.Id.Data
-
-	acc := c.GetAccount()
-	if acc.Error != nil {
-		return nil, acc.Error
-	}
-	one.AccountID = acc.Data.GetId().Data
+	one.AccountID = accountID
+	one.ZoneID = zoneID
 
 	return one, nil
+}
+
+// accessScope returns the API path prefix for Access endpoints that exist at
+// both account and zone scope (apps, identity providers). A zone-scoped One
+// keeps querying the zone; an account-scoped One queries the account.
+func (c *mqlCloudflareOne) accessScope() string {
+	if c.ZoneID != "" {
+		return "zones/" + c.ZoneID
+	}
+	return "accounts/" + c.AccountID
+}
+
+func (c *mqlCloudflareAccount) one() (*mqlCloudflareOne, error) {
+	return newOne(c.MqlRuntime, c.Id.Data, "")
+}
+
+// Deprecated: Zero Trust is account-scoped. Use cloudflare.account.one.
+// Retained so existing queries keep working; resolves the parent account and
+// delegates, keeping the zone id so apps/identityProviders stay zone-scoped.
+func (c *mqlCloudflareZone) one() (*mqlCloudflareOne, error) {
+	accountID, err := c.zoneAccountID()
+	if err != nil {
+		return nil, err
+	}
+	return newOne(c.MqlRuntime, accountID, c.Id.Data)
 }
 
 type mqlCloudflareOneAppInternal struct {
@@ -227,7 +254,7 @@ func (c *mqlCloudflareOneApp) policies() ([]any, error) {
 func (c *mqlCloudflareOne) apps() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	records, err := cfGetPaged[accessApp](conn, fmt.Sprintf("zones/%s/access/apps", c.ZoneID))
+	records, err := cfGetPaged[accessApp](conn, fmt.Sprintf("%s/access/apps", c.accessScope()))
 	if err != nil {
 		return degradedList(err)
 	}
@@ -446,7 +473,7 @@ func (c *mqlCloudflareOneIdp) id() (string, error) {
 func (c *mqlCloudflareOne) identityProviders() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	records, err := cfGetPaged[accessIdp](conn, fmt.Sprintf("zones/%s/access/identity_providers", c.ZoneID))
+	records, err := cfGetPaged[accessIdp](conn, fmt.Sprintf("%s/access/identity_providers", c.accessScope()))
 	if err != nil {
 		return degradedList(err)
 	}

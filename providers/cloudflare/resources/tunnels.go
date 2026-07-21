@@ -28,13 +28,23 @@ func (c *mqlCloudflareTunnelConnection) id() (string, error) {
 	return c.Id.Data, nil
 }
 
+func (c *mqlCloudflareAccount) tunnels() ([]any, error) {
+	return fetchTunnels(c.MqlRuntime, c.Id.Data)
+}
+
+// Deprecated: tunnels are account-scoped. Use cloudflare.account.tunnels.
+// Retained so existing queries keep working; resolves the parent account and
+// delegates.
 func (c *mqlCloudflareZone) tunnels() ([]any, error) {
-	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
-	acc := c.GetAccount()
-	if acc.Error != nil {
-		return nil, acc.Error
+	accountID, err := c.zoneAccountID()
+	if err != nil {
+		return nil, err
 	}
-	accountID := acc.Data.GetId().Data
+	return fetchTunnels(c.MqlRuntime, accountID)
+}
+
+func fetchTunnels(runtime *plugin.Runtime, accountID string) ([]any, error) {
+	conn := runtime.Connection.(*connection.CloudflareConnection)
 
 	var result []any
 	iter := conn.Cf.ZeroTrust.Tunnels.Cloudflared.ListAutoPaging(context.TODO(), zero_trust.TunnelCloudflaredListParams{
@@ -46,12 +56,12 @@ func (c *mqlCloudflareZone) tunnels() ([]any, error) {
 		// The inline connections field on the list response is deprecated in
 		// cloudflare-go v6 in favor of the dedicated per-tunnel connections
 		// endpoint, so fetch connection details from there instead.
-		connections, err := c.tunnelConnections(conn, accountID, rec.ID, string(rec.TunType))
+		connections, err := tunnelConnections(runtime, conn, accountID, rec.ID, string(rec.TunType))
 		if err != nil {
 			return nil, err
 		}
 
-		res, err := NewResource(c.MqlRuntime, "cloudflare.tunnel", map[string]*llx.RawData{
+		res, err := NewResource(runtime, "cloudflare.tunnel", map[string]*llx.RawData{
 			"id":         llx.StringData(rec.ID),
 			"name":       llx.StringData(rec.Name),
 			"tunnelType": llx.StringData(string(rec.TunType)),
@@ -81,7 +91,7 @@ func (c *mqlCloudflareZone) tunnels() ([]any, error) {
 // dedicated connections endpoint. This endpoint only serves cloudflared
 // ("cfd_tunnel") tunnels; other tunnel types (e.g. warp_connector) have no
 // connections here, so we return an empty list for them.
-func (c *mqlCloudflareZone) tunnelConnections(conn *connection.CloudflareConnection, accountID, tunnelID, tunType string) ([]any, error) {
+func tunnelConnections(runtime *plugin.Runtime, conn *connection.CloudflareConnection, accountID, tunnelID, tunType string) ([]any, error) {
 	connections := []any{}
 	if tunType != "cfd_tunnel" {
 		return connections, nil
@@ -95,7 +105,7 @@ func (c *mqlCloudflareZone) tunnelConnections(conn *connection.CloudflareConnect
 		for j := range client.Conns {
 			tc := client.Conns[j]
 
-			connRes, err := NewResource(c.MqlRuntime, "cloudflare.tunnel.connection", map[string]*llx.RawData{
+			connRes, err := NewResource(runtime, "cloudflare.tunnel.connection", map[string]*llx.RawData{
 				"__id":               llx.StringData(fmt.Sprintf("tunnelConn@%s@%s", tunnelID, tc.ID)),
 				"id":                 llx.StringData(tc.ID),
 				"coloName":           llx.StringData(tc.ColoName),
@@ -163,13 +173,22 @@ type tunnelRouteRecord struct {
 	DeletedAt        time.Time `json:"deleted_at"`
 }
 
+func (c *mqlCloudflareAccount) tunnelRoutes() ([]any, error) {
+	return fetchTunnelRoutes(c.MqlRuntime, c.Id.Data)
+}
+
+// Deprecated: tunnel routes are account-scoped. Use
+// cloudflare.account.tunnelRoutes. Retained so existing queries keep working.
 func (c *mqlCloudflareZone) tunnelRoutes() ([]any, error) {
-	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
-	acc := c.GetAccount()
-	if acc.Error != nil {
-		return nil, acc.Error
+	accountID, err := c.zoneAccountID()
+	if err != nil {
+		return nil, err
 	}
-	accountID := acc.Data.GetId().Data
+	return fetchTunnelRoutes(c.MqlRuntime, accountID)
+}
+
+func fetchTunnelRoutes(runtime *plugin.Runtime, accountID string) ([]any, error) {
+	conn := runtime.Connection.(*connection.CloudflareConnection)
 
 	const perPage = 50
 	var result []any
@@ -186,7 +205,7 @@ func (c *mqlCloudflareZone) tunnelRoutes() ([]any, error) {
 		for i := range env.Result {
 			rec := env.Result[i]
 
-			res, err := CreateResource(c.MqlRuntime, "cloudflare.tunnel.route", map[string]*llx.RawData{
+			res, err := CreateResource(runtime, "cloudflare.tunnel.route", map[string]*llx.RawData{
 				"__id":       llx.StringData(tunnelRouteID(rec.Network, rec.TunnelID, rec.VirtualNetworkID)),
 				"network":    llx.StringData(rec.Network),
 				"tunnelId":   llx.StringData(rec.TunnelID),
@@ -219,13 +238,22 @@ func (c *mqlCloudflareTunnelVirtualNetwork) id() (string, error) {
 	return c.Id.Data, nil
 }
 
+func (c *mqlCloudflareAccount) tunnelVirtualNetworks() ([]any, error) {
+	return fetchTunnelVirtualNetworks(c.MqlRuntime, c.Id.Data)
+}
+
+// Deprecated: tunnel virtual networks are account-scoped. Use
+// cloudflare.account.tunnelVirtualNetworks. Retained for existing queries.
 func (c *mqlCloudflareZone) tunnelVirtualNetworks() ([]any, error) {
-	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
-	acc := c.GetAccount()
-	if acc.Error != nil {
-		return nil, acc.Error
+	accountID, err := c.zoneAccountID()
+	if err != nil {
+		return nil, err
 	}
-	accountID := acc.Data.GetId().Data
+	return fetchTunnelVirtualNetworks(c.MqlRuntime, accountID)
+}
+
+func fetchTunnelVirtualNetworks(runtime *plugin.Runtime, accountID string) ([]any, error) {
+	conn := runtime.Connection.(*connection.CloudflareConnection)
 
 	var result []any
 	iter := conn.Cf.ZeroTrust.Networks.VirtualNetworks.ListAutoPaging(context.TODO(), zero_trust.NetworkVirtualNetworkListParams{
@@ -234,7 +262,7 @@ func (c *mqlCloudflareZone) tunnelVirtualNetworks() ([]any, error) {
 	for iter.Next() {
 		rec := iter.Current()
 
-		res, err := NewResource(c.MqlRuntime, "cloudflare.tunnel.virtualNetwork", map[string]*llx.RawData{
+		res, err := NewResource(runtime, "cloudflare.tunnel.virtualNetwork", map[string]*llx.RawData{
 			"id":               llx.StringData(rec.ID),
 			"name":             llx.StringData(rec.Name),
 			"comment":          llx.StringData(rec.Comment),

@@ -75,27 +75,55 @@ private cloudflare.zone @defaults("name account.name") {
 	// DNS records associated with the zone
 	dns() cloudflare.dns
 
-	// Live inputs
-	liveInputs() []cloudflare.streams.liveInput
+	// Stream live inputs
+	//
+	// Deprecated in favor of cloudflare.account.liveInputs. Stream is
+	// account-scoped, so a zone returned the same account-wide live inputs
+	// regardless of which zone it was read from.
+	liveInputs() @maturity("deprecated") []cloudflare.streams.liveInput
 
-	// Stream video assets uploaded or streamed through Cloudflare
-	videos() []cloudflare.streams.video
+	// Stream video assets
+	//
+	// Deprecated in favor of cloudflare.account.videos. Stream is
+	// account-scoped, so a zone returned the same account-wide videos
+	// regardless of which zone it was read from.
+	videos() @maturity("deprecated") []cloudflare.streams.video
 
-	// Cloudflare R2 storage (account-scoped, exposed on zone for consistency)
-	r2() cloudflare.r2
+	// Cloudflare R2 storage
+	//
+	// Deprecated in favor of cloudflare.account.r2. R2 is account-scoped,
+	// so a zone returned the same account-wide buckets regardless of which
+	// zone it was read from.
+	r2() @maturity("deprecated") cloudflare.r2
 
-  // Cloudflare Workers configuration and deployments
-	workers() cloudflare.workers
+	// Cloudflare Workers configuration and deployments
+	//
+	// Deprecated in favor of cloudflare.account.workers. Workers are
+	// account-scoped, so a zone returned the same account-wide scripts
+	// regardless of which zone it was read from.
+	workers() @maturity("deprecated") cloudflare.workers
 
 	// Cloudflare One (Zero Trust)
-	one() cloudflare.one
+	//
+	// Deprecated in favor of cloudflare.account.one. Zero Trust is
+	// account-scoped, so a zone returned the same account-wide
+	// configuration regardless of which zone it was read from.
+	one() @maturity("deprecated") cloudflare.one
 
-	// Cloudflare tunnels (account-scoped, exposed on zone for consistency with workers/r2)
-	tunnels() []cloudflare.tunnel
-	// Tunnel routes (account-scoped)
-	tunnelRoutes() []cloudflare.tunnel.route
-	// Tunnel virtual networks (account-scoped)
-	tunnelVirtualNetworks() []cloudflare.tunnel.virtualNetwork
+	// Cloudflare tunnels
+	//
+	// Deprecated in favor of cloudflare.account.tunnels. Tunnels are
+	// account-scoped, so a zone returned the same account-wide tunnels
+	// regardless of which zone it was read from.
+	tunnels() @maturity("deprecated") []cloudflare.tunnel
+	// Tunnel routes
+	//
+	// Deprecated in favor of cloudflare.account.tunnelRoutes.
+	tunnelRoutes() @maturity("deprecated") []cloudflare.tunnel.route
+	// Tunnel virtual networks
+	//
+	// Deprecated in favor of cloudflare.account.tunnelVirtualNetworks.
+	tunnelVirtualNetworks() @maturity("deprecated") []cloudflare.tunnel.virtualNetwork
 
 	// Firewall rules (legacy)
 	firewallRules() []cloudflare.zone.firewallRule
@@ -317,36 +345,63 @@ private cloudflare.dns.record @defaults("type content name") {
 
 // Cloudflare Account
 //
-// Cloudflare account and its sub-resources. Query `settings` for
-// account-level preferences such as two-factor enforcement, `roles` for the
-// set of named roles defined in the account, and `liveInputs` and `videos`
-// for Stream assets scoped to the account.
+// Cloudflare account and its account-scoped services. Query `settings` for
+// account-level preferences such as two-factor enforcement, `roles` and
+// `members` for the account's access model, `one` for Zero Trust, `r2` for
+// object storage, `workers` for deployed scripts, `tunnels` for Cloudflare
+// Tunnel connectivity, and `liveInputs` and `videos` for Stream assets.
 private cloudflare.account @defaults("name") {
-	// Cloudflare account identifier
+	// Account identifier
+	//
+	// The 32-character account ID (the account "tag") that scopes every
+	// account-level API call. It selects an account from the `accounts`
+	// list and correlates a discovered asset with its owning account.
 	id string
 
 	// Account name
 	name string
 
 	// Account type
+	//
+	// The account's plan class, for example `standard` or `enterprise`.
 	type string
 
 	// Account-level configuration and preferences
+	//
+	// Account-wide settings, including whether membership requires
+	// two-factor authentication (`enforceTwoFactor`).
 	settings cloudflare.account.settings
 
 	// Time the account was created
 	createdOn time
 
-	// Live inputs
+	// Stream live inputs
+	//
+	// Live streaming ingest endpoints defined for the account. Each entry
+	// carries its `uid`, recording retention (`deleteRecordingAfterDays`),
+	// and name, covering the account's live-video ingestion surface.
 	liveInputs() []cloudflare.streams.liveInput
 
-	// Stream video assets uploaded or streamed through Cloudflare
+	// Stream video assets
+	//
+	// On-demand videos uploaded to or recorded through Cloudflare Stream.
+	// Query `requireSignedUrls` to audit token-gated playback, alongside
+	// duration, size, playback URLs, and readiness for each asset.
 	videos() []cloudflare.streams.video
 
 	// Account roles
+	//
+	// The catalog of named roles the account can assign to members, each
+	// with an `id`, `name`, and `description`. Cross-reference with
+	// `members` to review which privileges a user holds.
 	roles() []cloudflare.account.role
 
-	// Members (users) of the account, with their assigned roles and 2FA status
+	// Account members
+	//
+	// Users belonging to the account, with their invitation `status`,
+	// assigned `roles`, and whether each has two-factor authentication
+	// enabled (`twoFactorAuthenticationEnabled`), for access and MFA
+	// reviews.
 	members() []cloudflare.account.member
 
 	// Recent audit log entries for the account (most recent first; first page only)
@@ -354,8 +409,55 @@ private cloudflare.account @defaults("name") {
 	// Returns the first page of account audit log entries. The Cloudflare API caps a page at 100 entries; for older history, narrow with a `.where(when > ...)` filter or paginate at the API level outside MQL. Use this to verify a change actor, spot unauthorized configuration changes, or feed an access review.
 	auditLogs() []cloudflare.account.auditLog
 
-	// Notification policies (alert subscriptions) configured for the account
+	// Notification policies configured for the account
+	//
+	// Alert subscriptions that route Cloudflare notifications to email,
+	// PagerDuty, or webhooks. Each policy exposes its `alertType`, whether
+	// it is `enabled`, and its delivery `mechanisms`.
 	notificationPolicies() []cloudflare.notificationPolicy
+
+	// Cloudflare Zero Trust (Cloudflare One)
+	//
+	// Account-wide Zero Trust configuration: Access applications and their
+	// policies, Access groups, service tokens, identity providers, the
+	// Access organization, Gateway rules, enrolled devices, device-posture
+	// rules and integrations, DLP profiles, and network lists and locations.
+	one() cloudflare.one
+
+	// Cloudflare R2 object storage
+	//
+	// The account's R2 storage, whose `buckets` list each bucket with its
+	// name, location, creation time, and public-access exposure. Requires
+	// R2 to be enabled on the account.
+	r2() cloudflare.r2
+
+	// Cloudflare Workers
+	//
+	// The account's Workers platform: deployed `workers` (scripts) with
+	// their size, deployment metadata, and logpush setting, plus Pages
+	// projects. Covers the serverless code running on the account.
+	workers() cloudflare.workers
+
+	// Cloudflare Tunnels
+	//
+	// Cloudflared tunnels defined for the account, each with its status,
+	// tunnel type, and active `connections`, for auditing outbound
+	// connectivity into private networks.
+	tunnels() []cloudflare.tunnel
+
+	// Tunnel routes
+	//
+	// Private-network routes (CIDRs) advertised through the account's
+	// tunnels, each naming its target `tunnelId` and optional virtual
+	// network.
+	tunnelRoutes() []cloudflare.tunnel.route
+
+	// Tunnel virtual networks
+	//
+	// Virtual networks that segment overlapping private IP ranges across
+	// the account's tunnel routes, each with its name and whether it is the
+	// default network.
+	tunnelVirtualNetworks() []cloudflare.tunnel.virtualNetwork
 }
 
 // Cloudflare API Token

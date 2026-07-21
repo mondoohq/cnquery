@@ -33,6 +33,8 @@ cloudflare.account.member.userId 13.4.1
 cloudflare.account.members 13.4.1
 cloudflare.account.name 11.0.0
 cloudflare.account.notificationPolicies 13.4.1
+cloudflare.account.one 13.6.5
+cloudflare.account.r2 13.6.5
 cloudflare.account.role 13.1.0
 cloudflare.account.role.description 13.1.0
 cloudflare.account.role.id 13.1.0
@@ -40,8 +42,12 @@ cloudflare.account.role.name 13.1.0
 cloudflare.account.roles 13.1.0
 cloudflare.account.settings 11.0.0
 cloudflare.account.settings.enforceTwoFactor 11.0.0
+cloudflare.account.tunnelRoutes 13.6.5
+cloudflare.account.tunnelVirtualNetworks 13.6.5
+cloudflare.account.tunnels 13.6.5
 cloudflare.account.type 11.0.0
 cloudflare.account.videos 11.0.0
+cloudflare.account.workers 13.6.5
 cloudflare.accounts 11.0.0
 cloudflare.apiToken 13.1.1
 cloudflare.apiToken.expiresOn 13.1.1

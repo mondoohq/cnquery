@@ -9,17 +9,14 @@ import (
 	"time"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
 	"go.mondoo.com/mql/v13/types"
 )
 
-func (c *mqlCloudflareZone) workers() (*mqlCloudflareWorkers, error) {
-	accountID, err := c.zoneAccountID()
-	if err != nil {
-		return nil, err
-	}
-	res, err := CreateResource(c.MqlRuntime, "cloudflare.workers", map[string]*llx.RawData{
+func newWorkers(runtime *plugin.Runtime, accountID string) (*mqlCloudflareWorkers, error) {
+	res, err := CreateResource(runtime, "cloudflare.workers", map[string]*llx.RawData{
 		"__id": llx.StringData("cloudflare.workers@" + accountID),
 	})
 	if err != nil {
@@ -30,6 +27,21 @@ func (c *mqlCloudflareZone) workers() (*mqlCloudflareWorkers, error) {
 	workers.AccountID = accountID
 
 	return workers, nil
+}
+
+func (c *mqlCloudflareAccount) workers() (*mqlCloudflareWorkers, error) {
+	return newWorkers(c.MqlRuntime, c.Id.Data)
+}
+
+// Deprecated: Workers are account-scoped. Use cloudflare.account.workers.
+// Retained so existing queries keep working; resolves the parent account and
+// delegates.
+func (c *mqlCloudflareZone) workers() (*mqlCloudflareWorkers, error) {
+	accountID, err := c.zoneAccountID()
+	if err != nil {
+		return nil, err
+	}
+	return newWorkers(c.MqlRuntime, accountID)
 }
 
 // workerScript mirrors the account workers-scripts list entry. We decode it via

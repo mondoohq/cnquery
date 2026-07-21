@@ -747,6 +747,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudflare.account.notificationPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareAccount).GetNotificationPolicies()).ToDataRes(types.Array(types.Resource("cloudflare.notificationPolicy")))
 	},
+	"cloudflare.account.one": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccount).GetOne()).ToDataRes(types.Resource("cloudflare.one"))
+	},
+	"cloudflare.account.r2": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccount).GetR2()).ToDataRes(types.Resource("cloudflare.r2"))
+	},
+	"cloudflare.account.workers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccount).GetWorkers()).ToDataRes(types.Resource("cloudflare.workers"))
+	},
+	"cloudflare.account.tunnels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccount).GetTunnels()).ToDataRes(types.Array(types.Resource("cloudflare.tunnel")))
+	},
+	"cloudflare.account.tunnelRoutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccount).GetTunnelRoutes()).ToDataRes(types.Array(types.Resource("cloudflare.tunnel.route")))
+	},
+	"cloudflare.account.tunnelVirtualNetworks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccount).GetTunnelVirtualNetworks()).ToDataRes(types.Array(types.Resource("cloudflare.tunnel.virtualNetwork")))
+	},
 	"cloudflare.apiToken.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareApiToken).GetId()).ToDataRes(types.String)
 	},
@@ -2527,6 +2545,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"cloudflare.account.notificationPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareAccount).NotificationPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.one": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccount).One, ok = plugin.RawToTValue[*mqlCloudflareOne](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.r2": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccount).R2, ok = plugin.RawToTValue[*mqlCloudflareR2](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.workers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccount).Workers, ok = plugin.RawToTValue[*mqlCloudflareWorkers](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.tunnels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccount).Tunnels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.tunnelRoutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccount).TunnelRoutes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.tunnelVirtualNetworks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccount).TunnelVirtualNetworks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"cloudflare.apiToken.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5739,17 +5781,23 @@ type mqlCloudflareAccount struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlCloudflareAccountInternal it will be used here
-	Id                   plugin.TValue[string]
-	Name                 plugin.TValue[string]
-	Type                 plugin.TValue[string]
-	Settings             plugin.TValue[*mqlCloudflareAccountSettings]
-	CreatedOn            plugin.TValue[*time.Time]
-	LiveInputs           plugin.TValue[[]any]
-	Videos               plugin.TValue[[]any]
-	Roles                plugin.TValue[[]any]
-	Members              plugin.TValue[[]any]
-	AuditLogs            plugin.TValue[[]any]
-	NotificationPolicies plugin.TValue[[]any]
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Type                  plugin.TValue[string]
+	Settings              plugin.TValue[*mqlCloudflareAccountSettings]
+	CreatedOn             plugin.TValue[*time.Time]
+	LiveInputs            plugin.TValue[[]any]
+	Videos                plugin.TValue[[]any]
+	Roles                 plugin.TValue[[]any]
+	Members               plugin.TValue[[]any]
+	AuditLogs             plugin.TValue[[]any]
+	NotificationPolicies  plugin.TValue[[]any]
+	One                   plugin.TValue[*mqlCloudflareOne]
+	R2                    plugin.TValue[*mqlCloudflareR2]
+	Workers               plugin.TValue[*mqlCloudflareWorkers]
+	Tunnels               plugin.TValue[[]any]
+	TunnelRoutes          plugin.TValue[[]any]
+	TunnelVirtualNetworks plugin.TValue[[]any]
 }
 
 // createCloudflareAccount creates a new instance of this resource
@@ -5902,6 +5950,102 @@ func (c *mqlCloudflareAccount) GetNotificationPolicies() *plugin.TValue[[]any] {
 		}
 
 		return c.notificationPolicies()
+	})
+}
+
+func (c *mqlCloudflareAccount) GetOne() *plugin.TValue[*mqlCloudflareOne] {
+	return plugin.GetOrCompute[*mqlCloudflareOne](&c.One, func() (*mqlCloudflareOne, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.account", c.__id, "one")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlCloudflareOne), nil
+			}
+		}
+
+		return c.one()
+	})
+}
+
+func (c *mqlCloudflareAccount) GetR2() *plugin.TValue[*mqlCloudflareR2] {
+	return plugin.GetOrCompute[*mqlCloudflareR2](&c.R2, func() (*mqlCloudflareR2, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.account", c.__id, "r2")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlCloudflareR2), nil
+			}
+		}
+
+		return c.r2()
+	})
+}
+
+func (c *mqlCloudflareAccount) GetWorkers() *plugin.TValue[*mqlCloudflareWorkers] {
+	return plugin.GetOrCompute[*mqlCloudflareWorkers](&c.Workers, func() (*mqlCloudflareWorkers, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.account", c.__id, "workers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlCloudflareWorkers), nil
+			}
+		}
+
+		return c.workers()
+	})
+}
+
+func (c *mqlCloudflareAccount) GetTunnels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tunnels, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.account", c.__id, "tunnels")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tunnels()
+	})
+}
+
+func (c *mqlCloudflareAccount) GetTunnelRoutes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TunnelRoutes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.account", c.__id, "tunnelRoutes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tunnelRoutes()
+	})
+}
+
+func (c *mqlCloudflareAccount) GetTunnelVirtualNetworks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TunnelVirtualNetworks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.account", c.__id, "tunnelVirtualNetworks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tunnelVirtualNetworks()
 	})
 }
 
