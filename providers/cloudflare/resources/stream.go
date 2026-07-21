@@ -79,7 +79,10 @@ func fetchLiveInputs(runtime *plugin.Runtime, accountID string) ([]any, error) {
 	}
 	uri := fmt.Sprintf("accounts/%s/stream/live_inputs", accountID)
 	if err := conn.Cf.Get(context.TODO(), uri, nil, &env); err != nil {
-		return nil, err
+		// Stream is a gated add-on; an account without it returns 403
+		// ("Cloudflare Stream not enabled"). Degrade to empty like the
+		// other add-on-gated list accessors rather than failing the query.
+		return degradedList(err)
 	}
 
 	var res []any
@@ -122,7 +125,10 @@ func fetchVideos(runtime *plugin.Runtime, accountID string) ([]any, error) {
 	}
 	uri := fmt.Sprintf("accounts/%s/stream", accountID)
 	if err := conn.Cf.Get(context.TODO(), uri, nil, &env); err != nil {
-		return nil, err
+		// Stream is a gated add-on; an account without it returns 403
+		// ("Cloudflare Stream not enabled"). Degrade to empty like the
+		// other add-on-gated list accessors rather than failing the query.
+		return degradedList(err)
 	}
 
 	var result []any
