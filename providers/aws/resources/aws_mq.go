@@ -693,9 +693,8 @@ func initAwsMqBroker(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		return args, nil, nil
 	}
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["arn"] = llx.StringData(ids.arn)
-			args["name"] = llx.StringData(ids.name)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 	if args["arn"] == nil && args["name"] == nil {
@@ -730,12 +729,12 @@ func initAwsMqBroker(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	if args["arn"] == nil {
 		return nil, nil, errors.New("arn required to fetch aws mq broker that is not in the brokers list")
 	}
-	// __id must equal arn so the runtime cache can match against brokers already
-	// listed by `aws.mq.brokers`. Without this, every NewResource("aws.mq.broker",
-	// {arn:…}) creates a fresh resource with no region/cacheBrokerId set, and
-	// every lazy-loaded field would call DescribeBroker with an empty broker ID.
-	args["__id"] = args["arn"]
-	return args, nil, nil
+	// The broker was not found in `aws.mq.brokers`, so region and cacheBrokerId
+	// are unknown and the resource's scalar fields would stay unset. Returning
+	// (args, nil, nil) here would let the runtime create a resource whose fields
+	// are all unset, which surfaces as malformed nil data when those fields are
+	// queried.
+	return nil, nil, fmt.Errorf("aws.mq.broker with arn %q not found", args["arn"].Value)
 }
 
 func (a *mqlAwsMqConfiguration) id() (string, error) {

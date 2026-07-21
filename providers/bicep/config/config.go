@@ -13,9 +13,10 @@ import (
 var Config = plugin.Provider{
 	Name:            "bicep",
 	ID:              "go.mondoo.com/mql/v13/providers/bicep",
-	Version:         "13.3.2",
+	Version:         "13.4.5",
 	Maturity:        resources.MaturityExperimental,
 	ConnectionTypes: []string{provider.DefaultConnectionType},
+	Platforms:       provider.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "bicep",

@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"io"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -220,6 +221,80 @@ func TestScanBinaryForTagNginx(t *testing.T) {
 		data := append(prefix, []byte("nginx/1.25.3\x00")...)
 		afs := writeBinary(t, data)
 		assert.Equal(t, "1.25.3", scanBinaryForTag(afs, "/usr/sbin/nginx", tag))
+	})
+
+	t.Run("version literal at exact chunkSize+overlap boundary", func(t *testing.T) {
+		// Position the version so its numeric run reaches exactly the end of
+		// the first full buffer read (chunkSize+overlap) while more file data
+		// remains. The trailing digit ("2") lands in the next chunk. Without
+		// the fix the scanner returns a truncated "1.25.6" instead of the
+		// full "1.25.62".
+		const chunkSize = 64 * 1024
+		overlap := len(tag) + 20
+		bufLen := chunkSize + overlap
+		head := append([]byte("nginx/"), []byte("1.25.6")...) // ends at bufLen
+		prefix := make([]byte, bufLen-len(head))
+		data := append(prefix, head...)
+		data = append(data, []byte("2\x00trailing")...)
+		afs := writeBinary(t, data)
+		assert.Equal(t, "1.25.62", scanBinaryForTag(afs, "/usr/sbin/nginx", tag))
+	})
+}
+
+// chunkReader returns at most max bytes per Read, letting tests exercise the
+// short-read paths of scanReaderForTag (a tag or version literal split across
+// multiple Reads).
+type chunkReader struct {
+	data []byte
+	pos  int
+	max  int
+}
+
+func (c *chunkReader) Read(p []byte) (int, error) {
+	if c.pos >= len(c.data) {
+		return 0, io.EOF
+	}
+	n := len(c.data) - c.pos
+	if n > c.max {
+		n = c.max
+	}
+	if n > len(p) {
+		n = len(p)
+	}
+	copy(p, c.data[c.pos:c.pos+n])
+	c.pos += n
+	return n, nil
+}
+
+func TestScanReaderForTagShortReads(t *testing.T) {
+	tag := []byte("nginx/")
+	overlap := len(tag) + 20
+
+	t.Run("tag split across two short reads", func(t *testing.T) {
+		// Three bytes per Read forces the "nginx/" tag itself to span
+		// several reads. The pre-fix short-read handling discarded the
+		// unmatched tail (carry = 0), missing the tag entirely.
+		data := []byte("\x00\x00nginx/1.25.3\x00")
+		r := &chunkReader{data: data, max: 3}
+		assert.Equal(t, "1.25.3", scanReaderForTag(r, tag, overlap, isApacheVersionByte))
+	})
+
+	t.Run("version literal split across short reads", func(t *testing.T) {
+		// Small reads make the numeric run reach the buffer end mid-version
+		// while more data remains. The pre-fix return-on-boundary truncated
+		// this to "1.25.6".
+		data := []byte("nginx/1.25.62\x00")
+		r := &chunkReader{data: data, max: 4}
+		assert.Equal(t, "1.25.62", scanReaderForTag(r, tag, overlap, isApacheVersionByte))
+	})
+
+	t.Run("version ends exactly at final EOF read", func(t *testing.T) {
+		// The version literal runs to the very end of the data with no
+		// trailing terminator, so the final bytes arrive on the read that
+		// also reports io.EOF.
+		data := []byte("nginx/1.25.62")
+		r := &chunkReader{data: data, max: 4}
+		assert.Equal(t, "1.25.62", scanReaderForTag(r, tag, overlap, isApacheVersionByte))
 	})
 }
 

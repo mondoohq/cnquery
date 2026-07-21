@@ -196,5 +196,19 @@ func purviewAccountToMql(runtime *plugin.Runtime, account *armpurview.Account) (
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionPurviewServiceAccount), nil
+	mqlAccount := res.(*mqlAzureSubscriptionPurviewServiceAccount)
+	sysData, err := convert.JsonToDict(account.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlAccount.cacheSystemData = sysData
+	return mqlAccount, nil
+}
+
+type mqlAzureSubscriptionPurviewServiceAccountInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionPurviewServiceAccount) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }

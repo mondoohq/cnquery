@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	redshifttypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
@@ -101,49 +102,110 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 						}
 					}
 
+					// Restore-from-snapshot lineage
+					var restoreStatus string
+					if cluster.RestoreStatus != nil {
+						restoreStatus = convert.ToValue(cluster.RestoreStatus.Status)
+					}
+
+					// Cross-region snapshot copy configuration
+					var snapshotCopyDestinationRegion, snapshotCopyGrantName string
+					var snapshotCopyRetentionPeriod, snapshotCopyManualRetentionPeriod *int64
+					if scs := cluster.ClusterSnapshotCopyStatus; scs != nil {
+						snapshotCopyDestinationRegion = convert.ToValue(scs.DestinationRegion)
+						snapshotCopyGrantName = convert.ToValue(scs.SnapshotCopyGrantName)
+						snapshotCopyRetentionPeriod = scs.RetentionPeriod
+						if scs.ManualSnapshotRetentionPeriod != nil {
+							v := int64(*scs.ManualSnapshotRetentionPeriod)
+							snapshotCopyManualRetentionPeriod = &v
+						}
+					}
+
+					var elasticIp string
+					if cluster.ElasticIpStatus != nil {
+						elasticIp = convert.ToValue(cluster.ElasticIpStatus.ElasticIp)
+					}
+
+					// VPC security group IDs assembled into ARNs for typed resolution
+					sgArns := make([]string, 0, len(cluster.VpcSecurityGroups))
+					for _, sg := range cluster.VpcSecurityGroups {
+						if sg.VpcSecurityGroupId != nil && *sg.VpcSecurityGroupId != "" {
+							sgArns = append(sgArns, fmt.Sprintf(securityGroupArnPattern, region, conn.AccountId(), *sg.VpcSecurityGroupId))
+						}
+					}
+
 					mqlDBInstance, err := CreateResource(a.MqlRuntime, ResourceAwsRedshiftCluster,
 						map[string]*llx.RawData{
-							"allowVersionUpgrade":              llx.BoolDataPtr(cluster.AllowVersionUpgrade),
-							"arn":                              llx.StringData(fmt.Sprintf(redshiftClusterArnPattern, region, conn.AccountId(), convert.ToValue(cluster.ClusterIdentifier))),
-							"automatedSnapshotRetentionPeriod": llx.IntDataDefault(cluster.AutomatedSnapshotRetentionPeriod, 0),
-							"availabilityZone":                 llx.StringDataPtr(cluster.AvailabilityZone),
-							"clusterParameterGroupNames":       llx.ArrayData(names, types.String),
-							"clusterRevisionNumber":            llx.StringDataPtr(cluster.ClusterRevisionNumber),
-							"clusterStatus":                    llx.StringDataPtr(cluster.ClusterStatus),
-							"clusterSubnetGroupName":           llx.StringDataPtr(cluster.ClusterSubnetGroupName),
-							"clusterVersion":                   llx.StringDataPtr(cluster.ClusterVersion),
-							"createdAt":                        llx.TimeDataPtr(cluster.ClusterCreateTime),
-							"dbName":                           llx.StringDataPtr(cluster.DBName),
-							"encrypted":                        llx.BoolDataPtr(cluster.Encrypted),
-							"enhancedVpcRouting":               llx.BoolDataPtr(cluster.EnhancedVpcRouting),
-							"masterUsername":                   llx.StringDataPtr(cluster.MasterUsername),
-							"name":                             llx.StringDataPtr(cluster.ClusterIdentifier),
-							"nextMaintenanceWindowStartTime":   llx.TimeDataPtr(cluster.NextMaintenanceWindowStartTime),
-							"nodeType":                         llx.StringDataPtr(cluster.NodeType),
-							"numberOfNodes":                    llx.IntDataDefault(cluster.NumberOfNodes, 0),
-							"preferredMaintenanceWindow":       llx.StringDataPtr(cluster.PreferredMaintenanceWindow),
-							"publiclyAccessible":               llx.BoolDataPtr(cluster.PubliclyAccessible),
-							"endpointAddress":                  llx.StringData(endpointAddress),
-							"endpointPort":                     llx.IntData(endpointPort),
-							"endpointVpcEndpoints":             llx.ArrayData(endpointVpcEndpoints, types.Dict),
-							"region":                           llx.StringData(region),
-							"tags":                             llx.MapData(redshiftTagsToMap(cluster.Tags), types.String),
-							"vpcId":                            llx.StringDataPtr(cluster.VpcId),
-							"clusterAvailabilityStatus":        llx.StringDataPtr(cluster.ClusterAvailabilityStatus),
-							"totalStorageCapacityInMegaBytes":  llx.IntDataDefault(cluster.TotalStorageCapacityInMegaBytes, 0),
-							"multiAZ":                          llx.BoolData(convert.ToValue(cluster.MultiAZ) == "enabled"),
-							"manualSnapshotRetentionPeriod":    llx.IntDataDefault(cluster.ManualSnapshotRetentionPeriod, 0),
-							"ipAddressType":                    llx.StringDataPtr(cluster.IpAddressType),
-							"maintenanceTrackName":             llx.StringDataPtr(cluster.MaintenanceTrackName),
-							"hsmStatus":                        llx.DictData(redshiftHsmStatusToDict(cluster.HsmStatus)),
-							"modifyStatus":                     llx.StringDataPtr(cluster.ModifyStatus),
+							"restoredFromSnapshot":               llx.BoolData(cluster.RestoreStatus != nil),
+							"restoreStatus":                      llx.StringData(restoreStatus),
+							"restoreProgressPercent":             llx.FloatData(redshiftRestoreProgressPercent(cluster.RestoreStatus)),
+							"clusterNamespaceArn":                llx.StringDataPtr(cluster.ClusterNamespaceArn),
+							"crossRegionSnapshotCopyEnabled":     llx.BoolData(cluster.ClusterSnapshotCopyStatus != nil),
+							"snapshotCopyDestinationRegion":      llx.StringData(snapshotCopyDestinationRegion),
+							"snapshotCopyRetentionPeriod":        llx.IntDataDefault(snapshotCopyRetentionPeriod, 0),
+							"snapshotCopyManualRetentionPeriod":  llx.IntDataDefault(snapshotCopyManualRetentionPeriod, 0),
+							"snapshotCopyGrantName":              llx.StringData(snapshotCopyGrantName),
+							"expectedNextSnapshotScheduleAt":     llx.TimeDataPtr(cluster.ExpectedNextSnapshotScheduleTime),
+							"expectedNextSnapshotScheduleStatus": llx.StringDataPtr(cluster.ExpectedNextSnapshotScheduleTimeStatus),
+							"snapshotScheduleState":              llx.StringData(string(cluster.SnapshotScheduleState)),
+							"customDomainName":                   llx.StringDataPtr(cluster.CustomDomainName),
+							"customDomainCertificateExpiresAt":   llx.TimeDataPtr(cluster.CustomDomainCertificateExpiryDate),
+							"availabilityZoneRelocationStatus":   llx.StringDataPtr(cluster.AvailabilityZoneRelocationStatus),
+							"elasticIp":                          llx.StringData(elasticIp),
+							"allowVersionUpgrade":                llx.BoolDataPtr(cluster.AllowVersionUpgrade),
+							"arn":                                llx.StringData(fmt.Sprintf(redshiftClusterArnPattern, region, conn.AccountId(), convert.ToValue(cluster.ClusterIdentifier))),
+							"automatedSnapshotRetentionPeriod":   llx.IntDataDefault(cluster.AutomatedSnapshotRetentionPeriod, 0),
+							"availabilityZone":                   llx.StringDataPtr(cluster.AvailabilityZone),
+							"clusterParameterGroupNames":         llx.ArrayData(names, types.String),
+							"clusterRevisionNumber":              llx.StringDataPtr(cluster.ClusterRevisionNumber),
+							"clusterStatus":                      llx.StringDataPtr(cluster.ClusterStatus),
+							"clusterSubnetGroupName":             llx.StringDataPtr(cluster.ClusterSubnetGroupName),
+							"clusterVersion":                     llx.StringDataPtr(cluster.ClusterVersion),
+							"createdAt":                          llx.TimeDataPtr(cluster.ClusterCreateTime),
+							"dbName":                             llx.StringDataPtr(cluster.DBName),
+							"encrypted":                          llx.BoolDataPtr(cluster.Encrypted),
+							"enhancedVpcRouting":                 llx.BoolDataPtr(cluster.EnhancedVpcRouting),
+							"masterUsername":                     llx.StringDataPtr(cluster.MasterUsername),
+							"name":                               llx.StringDataPtr(cluster.ClusterIdentifier),
+							"nextMaintenanceWindowStartTime":     llx.TimeDataPtr(cluster.NextMaintenanceWindowStartTime),
+							"nodeType":                           llx.StringDataPtr(cluster.NodeType),
+							"numberOfNodes":                      llx.IntDataDefault(cluster.NumberOfNodes, 0),
+							"preferredMaintenanceWindow":         llx.StringDataPtr(cluster.PreferredMaintenanceWindow),
+							"publiclyAccessible":                 llx.BoolDataPtr(cluster.PubliclyAccessible),
+							"endpointAddress":                    llx.StringData(endpointAddress),
+							"endpointPort":                       llx.IntData(endpointPort),
+							"endpointVpcEndpoints":               llx.ArrayData(endpointVpcEndpoints, types.Dict),
+							"region":                             llx.StringData(region),
+							"tags":                               llx.MapData(redshiftTagsToMap(cluster.Tags), types.String),
+							"vpcId":                              llx.StringDataPtr(cluster.VpcId),
+							"clusterAvailabilityStatus":          llx.StringDataPtr(cluster.ClusterAvailabilityStatus),
+							"totalStorageCapacityInMegaBytes":    llx.IntDataDefault(cluster.TotalStorageCapacityInMegaBytes, 0),
+							"multiAZ":                            llx.BoolData(strings.EqualFold(convert.ToValue(cluster.MultiAZ), "enabled")),
+							"manualSnapshotRetentionPeriod":      llx.IntDataDefault(cluster.ManualSnapshotRetentionPeriod, 0),
+							"ipAddressType":                      llx.StringDataPtr(cluster.IpAddressType),
+							"maintenanceTrackName":               llx.StringDataPtr(cluster.MaintenanceTrackName),
+							"hsmStatus":                          llx.DictData(redshiftHsmStatusToDict(cluster.HsmStatus)),
+							"modifyStatus":                       llx.StringDataPtr(cluster.ModifyStatus),
+							"snapshotScheduleIdentifier":         llx.StringDataPtr(cluster.SnapshotScheduleIdentifier),
 						})
 					if err != nil {
 						return nil, err
 					}
-					mqlDBInstance.(*mqlAwsRedshiftCluster).cacheKmsKeyId = cluster.KmsKeyId
-					mqlDBInstance.(*mqlAwsRedshiftCluster).cacheMasterPasswordSecretKmsKey = cluster.MasterPasswordSecretKmsKeyId
-					res = append(res, mqlDBInstance)
+					mqlCluster := mqlDBInstance.(*mqlAwsRedshiftCluster)
+					mqlCluster.cacheKmsKeyId = cluster.KmsKeyId
+					mqlCluster.cacheMasterPasswordSecretKmsKey = cluster.MasterPasswordSecretKmsKeyId
+					mqlCluster.cacheDefaultIamRoleArn = cluster.DefaultIamRoleArn
+					mqlCluster.cacheMasterPasswordSecretArn = cluster.MasterPasswordSecretArn
+					mqlCluster.cacheCustomDomainCertificateArn = cluster.CustomDomainCertificateArn
+					iamRoleArns := make([]string, 0, len(cluster.IamRoles))
+					for _, role := range cluster.IamRoles {
+						if role.IamRoleArn != nil && *role.IamRoleArn != "" {
+							iamRoleArns = append(iamRoleArns, *role.IamRoleArn)
+						}
+					}
+					mqlCluster.cacheIamRoleArns = iamRoleArns
+					mqlCluster.setSecurityGroupArns(sgArns)
+					res = append(res, mqlCluster)
 				}
 			}
 			return jobpool.JobResult(res), nil
@@ -165,16 +227,27 @@ func redshiftHsmStatusToDict(hsm *redshifttypes.HsmStatus) map[string]any {
 }
 
 func redshiftTagsToMap(tags []redshifttypes.Tag) map[string]any {
-	tagsMap := make(map[string]any)
-	for _, tag := range tags {
-		tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
-	}
-	return tagsMap
+	return tagsToMap(tags, func(t redshifttypes.Tag) *string { return t.Key }, func(t redshifttypes.Tag) *string { return t.Value })
 }
 
 type mqlAwsRedshiftClusterInternal struct {
+	securityGroupIdHandler
 	cacheKmsKeyId                   *string
 	cacheMasterPasswordSecretKmsKey *string
+	cacheIamRoleArns                []string
+	cacheDefaultIamRoleArn          *string
+	cacheMasterPasswordSecretArn    *string
+	cacheCustomDomainCertificateArn *string
+}
+
+// redshiftRestoreProgressPercent computes how far a restore-from-snapshot has
+// progressed, or 0 when the cluster wasn't restored or the snapshot size is
+// unknown.
+func redshiftRestoreProgressPercent(rs *redshifttypes.RestoreStatus) float64 {
+	if rs == nil || rs.SnapshotSizeInMegaBytes == nil || *rs.SnapshotSizeInMegaBytes <= 0 {
+		return 0
+	}
+	return float64(convert.ToValue(rs.ProgressInMegaBytes)) / float64(*rs.SnapshotSizeInMegaBytes) * 100
 }
 
 func (a *mqlAwsRedshiftCluster) id() (string, error) {
@@ -227,15 +300,86 @@ func (a *mqlAwsRedshiftCluster) masterPasswordSecretKmsKey() (*mqlAwsKmsKey, err
 	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
+func (a *mqlAwsRedshiftCluster) iamRoles() ([]any, error) {
+	res := make([]any, 0, len(a.cacheIamRoleArns))
+	for _, roleArn := range a.cacheIamRoleArns {
+		mqlRole, err := NewResource(a.MqlRuntime, ResourceAwsIamRole,
+			map[string]*llx.RawData{"arn": llx.StringData(roleArn)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlRole)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsRedshiftCluster) defaultIamRole() (*mqlAwsIamRole, error) {
+	if a.cacheDefaultIamRoleArn == nil || *a.cacheDefaultIamRoleArn == "" {
+		a.DefaultIamRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlRole, err := NewResource(a.MqlRuntime, ResourceAwsIamRole,
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheDefaultIamRoleArn)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlRole.(*mqlAwsIamRole), nil
+}
+
+func (a *mqlAwsRedshiftCluster) masterPasswordSecret() (*mqlAwsSecretsmanagerSecret, error) {
+	if a.cacheMasterPasswordSecretArn == nil || *a.cacheMasterPasswordSecretArn == "" {
+		a.MasterPasswordSecret.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.secretsmanager.secret",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheMasterPasswordSecretArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsSecretsmanagerSecret), nil
+}
+
+func (a *mqlAwsRedshiftCluster) securityGroups() ([]any, error) {
+	return a.newSecurityGroupResources(a.MqlRuntime)
+}
+
+func (a *mqlAwsRedshiftCluster) customDomainCertificate() (*mqlAwsAcmCertificate, error) {
+	if a.cacheCustomDomainCertificateArn == nil || *a.cacheCustomDomainCertificateArn == "" {
+		a.CustomDomainCertificate.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.acm.certificate",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheCustomDomainCertificateArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsAcmCertificate), nil
+}
+
+func (a *mqlAwsRedshiftCluster) managedBy() (string, error) {
+	return managedByFromTags(a.Tags.Data), nil
+}
+
+func (a *mqlAwsRedshiftCluster) cloudformationStack() (*mqlAwsCloudformationStack, error) {
+	stack, err := cloudformationStackForTags(a.MqlRuntime, a.Region.Data, a.Tags.Data)
+	if err != nil {
+		return nil, err
+	}
+	if stack == nil {
+		a.CloudformationStack.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return stack, nil
+}
+
 func initAwsRedshiftCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["name"] = llx.StringData(ids.name)
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 
@@ -342,6 +486,8 @@ func newMqlAwsRedshiftSnapshot(runtime *plugin.Runtime, region string, snapshot 
 			"arn":                           llx.StringDataPtr(snapshot.SnapshotArn),
 			"id":                            llx.StringDataPtr(snapshot.SnapshotIdentifier),
 			"clusterIdentifier":             llx.StringDataPtr(snapshot.ClusterIdentifier),
+			"ownerAccount":                  llx.StringDataPtr(snapshot.OwnerAccount),
+			"accountsWithRestoreAccess":     llx.ArrayData(redshiftRestoreAccessToDicts(snapshot.AccountsWithRestoreAccess), types.Dict),
 			"region":                        llx.StringData(region),
 			"snapshotType":                  llx.StringDataPtr(snapshot.SnapshotType),
 			"sourceRegion":                  llx.StringDataPtr(snapshot.SourceRegion),
@@ -371,6 +517,38 @@ func newMqlAwsRedshiftSnapshot(runtime *plugin.Runtime, region string, snapshot 
 
 type mqlAwsRedshiftSnapshotInternal struct {
 	cacheKmsKeyId *string
+}
+
+// redshiftRestoreAccessToDicts converts the accounts authorized to restore a
+// snapshot into a slice of dicts, each carrying the account id and optional
+// account alias.
+func redshiftRestoreAccessToDicts(accounts []redshifttypes.AccountWithRestoreAccess) []any {
+	res := make([]any, 0, len(accounts))
+	for _, acc := range accounts {
+		res = append(res, map[string]any{
+			"accountId":    convert.ToValue(acc.AccountId),
+			"accountAlias": convert.ToValue(acc.AccountAlias),
+		})
+	}
+	return res
+}
+
+// cluster resolves the source cluster the snapshot was taken from, when it is
+// still present in this account.
+func (a *mqlAwsRedshiftSnapshot) cluster() (*mqlAwsRedshiftCluster, error) {
+	if !a.ClusterIdentifier.IsSet() || a.ClusterIdentifier.Data == "" {
+		a.Cluster.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arnVal := fmt.Sprintf(redshiftClusterArnPattern, a.Region.Data, conn.AccountId(), a.ClusterIdentifier.Data)
+	res, err := NewResource(a.MqlRuntime, "aws.redshift.cluster",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		a.Cluster.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return res.(*mqlAwsRedshiftCluster), nil
 }
 
 func (a *mqlAwsRedshiftSnapshot) kmsKey() (*mqlAwsKmsKey, error) {
@@ -470,6 +648,16 @@ func (a *mqlAwsRedshiftSubnetGroup) id() (string, error) {
 	return a.__id, nil
 }
 
+const (
+	redshiftSubnetGroupArnPattern       = "arn:aws:redshift:%s:%s:subnetgroup:%s"
+	redshiftEventSubscriptionArnPattern = "arn:aws:redshift:%s:%s:eventsubscription:%s"
+)
+
+func (a *mqlAwsRedshiftSubnetGroup) arn() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return fmt.Sprintf(redshiftSubnetGroupArnPattern, a.Region.Data, conn.AccountId(), a.Name.Data), nil
+}
+
 func (a *mqlAwsRedshiftSubnetGroup) vpc() (*mqlAwsVpc, error) {
 	if a.cacheVpcId == nil || *a.cacheVpcId == "" {
 		a.Vpc.State = plugin.StateIsNull | plugin.StateIsSet
@@ -563,6 +751,11 @@ func (a *mqlAwsRedshift) getEventSubscriptions(conn *connection.AwsConnection) [
 
 func (a *mqlAwsRedshiftEventSubscription) id() (string, error) {
 	return a.__id, nil
+}
+
+func (a *mqlAwsRedshiftEventSubscription) arn() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return fmt.Sprintf(redshiftEventSubscriptionArnPattern, a.Region.Data, conn.AccountId(), a.Name.Data), nil
 }
 
 func (a *mqlAwsRedshiftEventSubscription) snsTopic() (*mqlAwsSnsTopic, error) {

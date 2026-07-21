@@ -7,8 +7,10 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"google.golang.org/api/cloudresourcemanager/v3"
@@ -79,4 +81,35 @@ func (g *mqlGcpProjectComputeServiceInstanceTemplate) id() (string, error) {
 	}
 	id := g.Id.Data
 	return fmt.Sprintf("gcp.project.computeService.instanceTemplate/%s", id), nil
+}
+
+func (g *mqlGcpProjectComputeServiceInstanceTemplate) sourceInstanceRef() (*mqlGcpProjectComputeServiceInstance, error) {
+	if g.SourceInstance.Error != nil {
+		return nil, g.SourceInstance.Error
+	}
+	url := g.SourceInstance.Data
+	if url == "" {
+		g.SourceInstanceRef.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	// URL format: https://www.googleapis.com/compute/v1/projects/{project}/zones/{zone}/instances/{name}
+	params := strings.TrimPrefix(url, "https://www.googleapis.com/compute/v1/")
+	params = strings.TrimPrefix(params, "https://compute.googleapis.com/compute/v1/")
+	parts := strings.Split(params, "/")
+	if len(parts) < 6 || parts[0] != "projects" || parts[2] != "zones" || parts[4] != "instances" {
+		g.SourceInstanceRef.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	project, zone, name := parts[1], parts[3], parts[5]
+
+	res, err := NewResource(g.MqlRuntime, "gcp.project.computeService.instance", map[string]*llx.RawData{
+		"name":      llx.StringData(name),
+		"region":    llx.StringData(zone),
+		"projectId": llx.StringData(project),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectComputeServiceInstance), nil
 }

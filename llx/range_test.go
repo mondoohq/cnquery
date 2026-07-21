@@ -38,6 +38,41 @@ func TestRange(t *testing.T) {
 	})
 }
 
+func TestRangeBounds(t *testing.T) {
+	t.Run("empty range", func(t *testing.T) {
+		_, _, _, _, _, ok := NewRange().Bounds()
+		assert.False(t, ok)
+	})
+
+	t.Run("single line", func(t *testing.T) {
+		sl, sc, el, ec, hasCols, ok := NewRange().AddLine(12).Bounds()
+		assert.True(t, ok)
+		assert.False(t, hasCols)
+		assert.Equal(t, []uint32{12, 0, 12, 0}, []uint32{sl, sc, el, ec})
+	})
+
+	t.Run("line range", func(t *testing.T) {
+		sl, sc, el, ec, hasCols, ok := NewRange().AddLineRange(12, 18).Bounds()
+		assert.True(t, ok)
+		assert.False(t, hasCols)
+		assert.Equal(t, []uint32{12, 0, 18, 0}, []uint32{sl, sc, el, ec})
+	})
+
+	t.Run("single line with column range", func(t *testing.T) {
+		sl, sc, el, ec, hasCols, ok := NewRange().AddColumnRange(12, 1, 28).Bounds()
+		assert.True(t, ok)
+		assert.True(t, hasCols)
+		assert.Equal(t, []uint32{12, 1, 12, 28}, []uint32{sl, sc, el, ec})
+	})
+
+	t.Run("line and column range", func(t *testing.T) {
+		sl, sc, el, ec, hasCols, ok := NewRange().AddLineColumnRange(12, 18, 3, 7).Bounds()
+		assert.True(t, ok)
+		assert.True(t, hasCols)
+		assert.Equal(t, []uint32{12, 3, 18, 7}, []uint32{sl, sc, el, ec})
+	})
+}
+
 var test3lines = `Line 1
 Line 2, Col 14
 Line 3, Col....17`

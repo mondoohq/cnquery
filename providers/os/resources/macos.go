@@ -168,7 +168,7 @@ func (m *mqlMacosSystemsetup) displaySleep() (string, error) {
 }
 
 func (m *mqlMacosSystemsetup) harddiskSleep() (string, error) {
-	data, err := m.runCmd("systemsetup -getdisplaysleep")
+	data, err := m.runCmd("systemsetup -getharddisksleep")
 	return macos.SystemSetupCmdOutput{}.ParseHardDiskSleep(data), err
 }
 

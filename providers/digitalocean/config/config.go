@@ -12,8 +12,9 @@ import (
 var Config = plugin.Provider{
 	Name:            "digitalocean",
 	ID:              "go.mondoo.com/mql/providers/digitalocean",
-	Version:         "13.8.0",
+	Version:         "13.14.0",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
+	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "digitalocean",
@@ -38,6 +39,7 @@ Notes:
 				connection.DiscoveryLoadBalancers,
 				connection.DiscoveryFirewalls,
 				connection.DiscoverySpacesBuckets,
+				connection.DiscoveryGradientaiAgents,
 			},
 			Flags: []plugin.Flag{
 				{

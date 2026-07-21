@@ -56,6 +56,11 @@ func (c *mqlCloudflareZone) logpushJobs() ([]any, error) {
 		rec := env.Result[i]
 
 		res, err := NewResource(c.MqlRuntime, "cloudflare.zone.logpushJob", map[string]*llx.RawData{
+			// Pass __id explicitly: id() derives it from zoneID, but zoneID is
+			// set on the Internal struct only AFTER NewResource returns, so
+			// relying on id() would key every job as `logpush@@<id>` (empty
+			// zone). An explicit __id is honored ahead of id().
+			"__id":            llx.StringData(fmt.Sprintf("logpush@%s@%d", c.Id.Data, rec.ID)),
 			"id":              llx.IntData(rec.ID),
 			"name":            llx.StringData(rec.Name),
 			"dataset":         llx.StringData(rec.Dataset),

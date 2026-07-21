@@ -91,7 +91,7 @@ func kustoClusterToMql(runtime *plugin.Runtime, cluster *armkusto.Cluster) (*mql
 
 	var uri, dataIngestionURI, state, provisioningState string
 	var publicNetworkAccess, publicIPType, restrictOutbound string
-	var cmkKeyName, cmkKeyVaultURI, cmkKeyVersion string
+	var cmkKeyName, cmkKeyVaultURI, cmkKeyVersion, cmkFederatedIdentityClientID string
 	var enableDiskEncryption, enableDoubleEncryption, enableStreamingIngest, enablePurge bool
 	allowedIPRangeList := []any{}
 	allowedFqdnList := []any{}
@@ -128,6 +128,7 @@ func kustoClusterToMql(runtime *plugin.Runtime, cluster *armkusto.Cluster) (*mql
 			cmkKeyName = convert.ToValue(kv.KeyName)
 			cmkKeyVaultURI = convert.ToValue(kv.KeyVaultURI)
 			cmkKeyVersion = convert.ToValue(kv.KeyVersion)
+			cmkFederatedIdentityClientID = convert.ToValue(kv.FederatedIdentityClientID)
 		}
 	}
 
@@ -156,6 +157,7 @@ func kustoClusterToMql(runtime *plugin.Runtime, cluster *armkusto.Cluster) (*mql
 			"cmkKeyName":                    llx.StringData(cmkKeyName),
 			"cmkKeyVaultUri":                llx.StringData(cmkKeyVaultURI),
 			"cmkKeyVersion":                 llx.StringData(cmkKeyVersion),
+			"cmkFederatedIdentityClientId":  llx.StringData(cmkFederatedIdentityClientID),
 		})
 	if err != nil {
 		return nil, err
@@ -220,10 +222,52 @@ func (a *mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection) id() (st
 
 type mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnectionInternal struct {
 	cachePrivateEndpointID string
+	cacheSystemData        any
+}
+
+type mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpointInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+type mqlAzureSubscriptionKustoServiceClusterDatabaseInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionKustoServiceClusterDatabase) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+type mqlAzureSubscriptionKustoServiceClusterPrincipalAssignmentInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+type mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignmentInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 type mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnectionInternal struct {
 	cacheManagedIdentityID string
+	cacheSystemData        any
+}
+
+func (a *mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 // initAzureSubscriptionKustoServiceCluster resolves a Data Explorer cluster
@@ -390,6 +434,11 @@ func (a *mqlAzureSubscriptionKustoServiceCluster) databases() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(db.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlDb.(*mqlAzureSubscriptionKustoServiceClusterDatabase).cacheSystemData = sysData
 			res = append(res, mqlDb)
 		}
 	}
@@ -450,6 +499,11 @@ func (a *mqlAzureSubscriptionKustoServiceCluster) principalAssignments() ([]any,
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(pa.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlPa.(*mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment).cacheSystemData = sysData
 			res = append(res, mqlPa)
 		}
 	}
@@ -562,6 +616,11 @@ func (a *mqlAzureSubscriptionKustoServiceCluster) privateEndpointConnections() (
 				return nil, err
 			}
 			mqlPec.(*mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection).cachePrivateEndpointID = privateEndpointID
+			sysData, err := convert.JsonToDict(pec.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlPec.(*mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection).cacheSystemData = sysData
 			res = append(res, mqlPec)
 		}
 	}
@@ -620,6 +679,11 @@ func (a *mqlAzureSubscriptionKustoServiceCluster) managedPrivateEndpoints() ([]a
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(mpe.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlMpe.(*mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint).cacheSystemData = sysData
 			res = append(res, mqlMpe)
 		}
 	}
@@ -699,6 +763,11 @@ func (a *mqlAzureSubscriptionKustoServiceClusterDatabase) principalAssignments()
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(pa.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlPa.(*mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment).cacheSystemData = sysData
 			res = append(res, mqlPa)
 		}
 	}
@@ -780,6 +849,28 @@ func (a *mqlAzureSubscriptionKustoServiceClusterDatabase) dataConnections() ([]a
 					managedIdentityResourceID = convert.ToValue(p.ManagedIdentityResourceID)
 					provisioningState = string(convert.ToValue(p.ProvisioningState))
 				}
+			case *armkusto.EventHubDataConnectionWithManagedIdentity:
+				if p := d.Properties; p != nil {
+					tableName = convert.ToValue(p.TableName)
+					dataFormat = string(convert.ToValue(p.DataFormat))
+					mappingRuleName = convert.ToValue(p.MappingRuleName)
+					consumerGroup = convert.ToValue(p.ConsumerGroup)
+					databaseRouting = string(convert.ToValue(p.DatabaseRouting))
+					sourceResourceID = convert.ToValue(p.EventHubResourceIDForManagedIdentity)
+					managedIdentityResourceID = convert.ToValue(p.ManagedIdentityResourceID)
+					provisioningState = string(convert.ToValue(p.ProvisioningState))
+				}
+			case *armkusto.EventGridDataConnectionWithManagedIdentity:
+				if p := d.Properties; p != nil {
+					tableName = convert.ToValue(p.TableName)
+					dataFormat = string(convert.ToValue(p.DataFormat))
+					mappingRuleName = convert.ToValue(p.MappingRuleName)
+					consumerGroup = convert.ToValue(p.ConsumerGroup)
+					databaseRouting = string(convert.ToValue(p.DatabaseRouting))
+					sourceResourceID = convert.ToValue(p.StorageAccountResourceIDForManagedIdentity)
+					managedIdentityResourceID = convert.ToValue(p.ManagedIdentityResourceID)
+					provisioningState = string(convert.ToValue(p.ProvisioningState))
+				}
 			}
 			mqlDc, err := CreateResource(a.MqlRuntime, "azure.subscription.kustoService.cluster.database.dataConnection",
 				map[string]*llx.RawData{
@@ -799,6 +890,11 @@ func (a *mqlAzureSubscriptionKustoServiceClusterDatabase) dataConnections() ([]a
 				return nil, err
 			}
 			mqlDc.(*mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection).cacheManagedIdentityID = managedIdentityResourceID
+			sysData, err := convert.JsonToDict(dc.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlDc.(*mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection).cacheSystemData = sysData
 			res = append(res, mqlDc)
 		}
 	}

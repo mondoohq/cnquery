@@ -202,6 +202,10 @@ func getPlatformName(awsObject awsObject) string {
 			return "aws-sagemaker-processingjob"
 		case "trainingjob":
 			return "aws-sagemaker-trainingjob"
+		case "domain":
+			return "aws-sagemaker-domain"
+		case "model":
+			return "aws-sagemaker-model"
 		}
 	case "secretsmanager":
 		if awsObject.objectType == "secret" {
@@ -243,8 +247,11 @@ func getPlatformName(awsObject awsObject) string {
 			return "aws-emr-cluster"
 		}
 	case "documentdb":
-		if awsObject.objectType == "cluster" {
+		switch awsObject.objectType {
+		case "cluster":
 			return "aws-documentdb-cluster"
+		case "instance":
+			return "aws-documentdb-instance"
 		}
 	case "msk":
 		if awsObject.objectType == "cluster" {
@@ -257,6 +264,42 @@ func getPlatformName(awsObject awsObject) string {
 	case "route53":
 		if awsObject.objectType == "hostedzone" {
 			return "aws-route53-hostedzone"
+		}
+	case "memorydb":
+		if awsObject.objectType == "cluster" {
+			return "aws-memorydb-cluster"
+		}
+	case "codebuild":
+		if awsObject.objectType == "project" {
+			return "aws-codebuild-project"
+		}
+	case "cognito":
+		if awsObject.objectType == "userpool" {
+			return "aws-cognito-userpool"
+		}
+	case "transfer":
+		if awsObject.objectType == "server" {
+			return "aws-transfer-server"
+		}
+	case "apigatewayv2":
+		if awsObject.objectType == "api" {
+			return "aws-apigatewayv2-api"
+		}
+	case "athena":
+		if awsObject.objectType == "workgroup" {
+			return "aws-athena-workgroup"
+		}
+	case "appstream":
+		if awsObject.objectType == "fleet" {
+			return "aws-appstream-fleet"
+		}
+	case "batch":
+		if awsObject.objectType == "jobdefinition" {
+			return "aws-batch-jobdefinition"
+		}
+	case "ds":
+		if awsObject.objectType == "directory" {
+			return "aws-directoryservice-directory"
 		}
 	}
 	return ""

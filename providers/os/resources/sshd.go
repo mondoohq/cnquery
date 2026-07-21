@@ -111,6 +111,15 @@ func matchBlocks2Resources(m sshd.MatchBlocks, runtime *plugin.Runtime, ownerID 
 var reGlob = regexp.MustCompile(`.*\*.*`)
 
 func (s *mqlSshdConfig) expandGlob(glob string) ([]string, error) {
+	conn := s.MqlRuntime.Connection.(shared.Connection)
+	afs := &afero.Afero{Fs: conn.FileSystem()}
+	return expandSshdGlob(afs, glob)
+}
+
+// expandSshdGlob expands an sshd_config Include glob against afs. Relative
+// patterns are resolved from /etc/ssh, matching sshd_config(5):
+// https://man7.org/linux/man-pages/man5/sshd_config.5.html
+func expandSshdGlob(afs *afero.Afero, glob string) ([]string, error) {
 	if !reGlob.MatchString(glob) {
 		if !filepath.IsAbs(glob) {
 			glob = filepath.Join("/etc/ssh", glob)
@@ -121,17 +130,21 @@ func (s *mqlSshdConfig) expandGlob(glob string) ([]string, error) {
 	var paths []string
 	segments := strings.Split(glob, "/")
 	if segments[0] == "" {
+		// Absolute pattern: the leading segment is the empty string before the
+		// root "/", so start at root and consume the remaining segments.
 		paths = []string{"/"}
+		segments = segments[1:]
 	} else {
-		// https://man7.org/linux/man-pages/man5/sshd_config.5.html
-		// Relative files are always expanded from `/ssh`
+		// Relative pattern: sshd expands it from /etc/ssh. Every segment is a
+		// real path component here, so all of them must be consumed below.
 		paths = []string{"/etc/ssh"}
 	}
 
-	conn := s.MqlRuntime.Connection.(shared.Connection)
-	afs := &afero.Afero{Fs: conn.FileSystem()}
+	for _, segment := range segments {
+		if segment == "" {
+			continue
+		}
 
-	for _, segment := range segments[1:] {
 		if !reGlob.MatchString(segment) {
 			for i := range paths {
 				paths[i] = filepath.Join(paths[i], segment)

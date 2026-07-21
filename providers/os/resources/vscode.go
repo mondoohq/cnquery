@@ -10,12 +10,29 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/package-url/packageurl-go"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	"go.mondoo.com/mql/v13/types"
 )
+
+// newVscodeExtensionPurl builds a vscode-extension PURL per the purl-spec
+// definition at:
+//
+//	https://github.com/package-url/purl-spec/blob/main/types-doc/vscode-extension-definition.md
+//
+// Format: pkg:vscode-extension/<publisher>/<name>@<version>
+// Empty publisher / name / version yields an empty string — callers that
+// pass incomplete extension metadata get no PURL rather than a malformed one.
+func newVscodeExtensionPurl(publisher, name, version string) string {
+	if publisher == "" || name == "" {
+		return ""
+	}
+	return packageurl.NewPackageURL("vscode-extension", publisher, name, version, nil, "").String()
+}
 
 // vsCodeEditor represents a VS Code-based editor with its extension directory
 type vsCodeEditor struct {
@@ -49,13 +66,17 @@ var validHomePrefixes = []string{
 
 // isSystemHomeDir returns true if home looks like a system-account directory.
 // It uses an allowlist approach: only paths under known user-home prefixes
-// (e.g. /Users/, /home/, /root) are considered real users.
+// (e.g. /Users/, /home/, /root) are considered real users. Comparison is
+// case- and separator-insensitive so Windows homes match regardless of drive
+// case or slash direction (C:\Users\, c:\users\, C:/Users/).
 func isSystemHomeDir(home string) bool {
 	if home == "" {
 		return true
 	}
+	norm := strings.ToLower(strings.ReplaceAll(home, "\\", "/"))
 	for _, p := range validHomePrefixes {
-		if strings.HasPrefix(home, p) || home == strings.TrimSuffix(p, "/") {
+		pp := strings.ToLower(strings.ReplaceAll(p, "\\", "/"))
+		if strings.HasPrefix(norm, pp) || norm == strings.TrimSuffix(pp, "/") {
 			return false
 		}
 	}
@@ -83,26 +104,16 @@ func (c *mqlVscode) paths() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(shared.Connection)
 	afs := &afero.Afero{Fs: conn.FileSystem()}
 
-	// Get all users to find home directories
-	usersResource, err := CreateResource(c.MqlRuntime, "users", map[string]*llx.RawData{})
+	// Enumerate all users so extension paths are found for every account.
+	users, err := targetUserHomes(c.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
 
-	userList := usersResource.(*mqlUsers).GetList()
-	if userList.Error != nil {
-		return nil, userList.Error
-	}
-
 	var paths []string
 
-	for _, u := range userList.Data {
-		user := u.(*mqlUser)
-		homeDir := user.GetHome().Data
-
-		if isSystemHomeDir(homeDir) {
-			continue
-		}
+	for _, u := range users {
+		homeDir := u.home
 
 		for _, editor := range vsCodeEditors {
 			extensionsDir := filepath.Join(homeDir, editor.dir)
@@ -128,27 +139,17 @@ func (c *mqlVscode) extensions() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(shared.Connection)
 	afs := &afero.Afero{Fs: conn.FileSystem()}
 
-	// Get all users to find home directories
-	usersResource, err := CreateResource(c.MqlRuntime, "users", map[string]*llx.RawData{})
+	// Enumerate all users so extensions are discovered for every account.
+	users, err := targetUserHomes(c.MqlRuntime)
 	if err != nil {
 		return nil, err
-	}
-
-	userList := usersResource.(*mqlUsers).GetList()
-	if userList.Error != nil {
-		return nil, userList.Error
 	}
 
 	var extensions []any
 	seen := make(map[string]bool)
 
-	for _, u := range userList.Data {
-		user := u.(*mqlUser)
-		homeDir := user.GetHome().Data
-
-		if isSystemHomeDir(homeDir) {
-			continue
-		}
+	for _, u := range users {
+		homeDir := u.home
 
 		for _, editor := range vsCodeEditors {
 			extensionsDir := filepath.Join(homeDir, editor.dir)
@@ -218,6 +219,7 @@ func (c *mqlVscode) extensions() ([]any, error) {
 					"path":          llx.StringData(extPath),
 					"vscodeVersion": llx.StringData(pkgJSON.Engines.VSCode),
 					"categories":    llx.ArrayData(categories, types.String),
+					"purl":          llx.StringData(newVscodeExtensionPurl(pkgJSON.Publisher, pkgJSON.Name, pkgJSON.Version)),
 				})
 				if err != nil {
 					log.Debug().Err(err).Str("extension", identifier).Msg("failed to create VS Code extension resource")
@@ -233,6 +235,16 @@ func (c *mqlVscode) extensions() ([]any, error) {
 
 func (e *mqlVscodeExtension) id() (string, error) {
 	return e.Identifier.Data + "|" + e.Path.Data, nil
+}
+
+// purl is populated eagerly in the vscode.extensions() enumerator from
+// the extension's package.json publisher/name/version. The stub satisfies
+// the generated lazy-init contract; if for any reason a caller constructs
+// a vscode.extension without going through the enumerator (e.g. tests),
+// returning the empty string keeps the field non-nil rather than panicking.
+func (e *mqlVscodeExtension) purl() (string, error) {
+	e.Purl = plugin.TValue[string]{State: plugin.StateIsSet, Data: newVscodeExtensionPurl(e.Publisher.Data, e.Name.Data, e.Version.Data)}
+	return e.Purl.Data, nil
 }
 
 // readVSCodePackageJSON reads and parses a VS Code extension package.json file

@@ -6,14 +6,16 @@ package config
 import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/okta/connection"
 	"go.mondoo.com/mql/v13/providers/okta/provider"
 )
 
 var Config = plugin.Provider{
 	Name:            "okta",
 	ID:              "go.mondoo.com/cnquery/v9/providers/okta",
-	Version:         "13.3.1",
+	Version:         "13.4.0",
 	ConnectionTypes: []string{provider.ConnectionType},
+	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "okta",
@@ -21,7 +23,7 @@ var Config = plugin.Provider{
 			Short: "an Okta organization",
 			Long: `Use the okta provider to query resources in an Okta organization.
 
-To query an Okta organization, you need the organization's domain and an API token to access that domain. To learn how, read https://mondoo.com/docs/cnspec/saas/okta/.
+To query an Okta organization, you need the organization's domain and an API token to access that domain. To learn how, read https://mondoo.com/docs/cnspec/identity/okta.
 
 Examples:
   cnspec shell okta -organization <okta-domain> -token <api-token>

@@ -75,7 +75,7 @@ func (c *mqlCloudflareAccount) notificationPolicies() ([]any, error) {
 			"enabled":     llx.BoolData(p.Enabled),
 			"alertType":   llx.StringData(p.AlertType),
 			"mechanisms":  llx.DictData(mechanisms),
-			"conditions":  llx.DictData(anyMap(p.Conditions)),
+			"conditions":  llx.DictData(dictValue(p.Conditions)),
 			"filters":     llx.DictData(filters),
 			"created":     llx.TimeData(p.Created),
 			"modified":    llx.TimeData(p.Modified),

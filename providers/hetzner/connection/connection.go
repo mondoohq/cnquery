@@ -81,14 +81,11 @@ func (c *HetznerConnection) Name() string            { return "hetzner" }
 func (c *HetznerConnection) Client() *hcloud.Client  { return c.client }
 
 func (c *HetznerConnection) PlatformInfo() *inventory.Platform {
-	return &inventory.Platform{
-		Name:                  "hetzner-project",
-		Title:                 "Hetzner Cloud",
-		Family:                []string{"hetzner"},
-		Kind:                  "api",
-		Runtime:               "hetzner",
+	p := &inventory.Platform{
 		TechnologyUrlSegments: []string{"cloud", "hetzner", "project"},
 	}
+	PlatformByName("hetzner-project").Apply(p)
+	return p
 }
 
 // Identifier returns a stable platform ID for the project. Hetzner Cloud has

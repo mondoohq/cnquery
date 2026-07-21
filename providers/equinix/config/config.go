@@ -5,14 +5,18 @@ package config
 
 import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/v13/providers/equinix/connection"
 	"go.mondoo.com/mql/v13/providers/equinix/provider"
 )
 
 var Config = plugin.Provider{
 	Name:            "equinix",
 	ID:              "go.mondoo.com/cnquery/v9/providers/equinix",
-	Version:         "13.0.16",
+	Version:         "13.0.23",
+	Maturity:        resources.MaturityDeprecated,
 	ConnectionTypes: []string{provider.ConnectionType},
+	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "equinix",

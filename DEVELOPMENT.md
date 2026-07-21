@@ -198,6 +198,7 @@ go 1.25
 use (
    ./mql
    ./mql/providers/activedirectory
+   ./mql/providers/alicloud
    ./mql/providers/ansible
    ./mql/providers/arista
    ./mql/providers/atlassian
@@ -206,6 +207,7 @@ use (
    ./mql/providers/claude
    ./mql/providers/cloudflare
    ./mql/providers/cloudformation
+   ./mql/providers/databricks
    ./mql/providers/datadog
    ./mql/providers/depsdev
    ./mql/providers/digitalocean
@@ -220,9 +222,11 @@ use (
    ./mql/providers/ipinfo
    ./mql/providers/ipmi
    ./mql/providers/k8s
+   ./mql/providers/mikrotik
    ./mql/providers/mistral
    ./mql/providers/mondoo
    ./mql/providers/ms365
+   ./mql/providers/nextdns
    ./mql/providers/nmap
    ./mql/providers/nutanix
    ./mql/providers/oci
@@ -231,7 +235,9 @@ use (
    ./mql/providers/opcua
    ./mql/providers/openai
    ./mql/providers/openstack
+   ./mql/providers/portainer
    ./mql/providers/proxmox
+   ./mql/providers/redfish
    ./mql/providers/shodan
    ./mql/providers/slack
    ./mql/providers/snowflake
@@ -239,6 +245,7 @@ use (
    ./mql/providers/tailscale
    ./mql/providers/terraform
    ./mql/providers/vcd
+   ./mql/providers/vercel
    ./mql/providers/vllm
    ./mql/providers/vsphere
    ./cnspec

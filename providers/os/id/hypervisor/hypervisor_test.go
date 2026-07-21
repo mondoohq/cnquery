@@ -51,8 +51,8 @@ func TestHypervisorDarwinSystemProfiler(t *testing.T) {
 	assert.Equal(t, "VirtualBox", hypervisor)
 }
 
-func TestHypervisorWindowsWin32Manufacturer(t *testing.T) {
-	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/windows_ciminstance_win32_computersystem_manufacturer.toml"))
+func TestHypervisorWindowsVMware(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/windows_vmware.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -63,8 +63,8 @@ func TestHypervisorWindowsWin32Manufacturer(t *testing.T) {
 	assert.Equal(t, "VMware", hypervisor)
 }
 
-func TestHypervisorWindowsWmicGetModel(t *testing.T) {
-	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/windows_wmic_computersystem_get_model.toml"))
+func TestHypervisorWindowsVirtualBox(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/windows_virtualbox.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -76,7 +76,7 @@ func TestHypervisorWindowsWmicGetModel(t *testing.T) {
 }
 
 func TestHypervisorWindowsServer2022SMBIOSBIOSVersion(t *testing.T) {
-	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/windows_serer_2022_running_hyper_v.toml"))
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/windows_hyper_v_smbios.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)

@@ -291,6 +291,20 @@ func initGcpProjectDatastreamServiceConnectionProfile(runtime *plugin.Runtime, a
 	if len(args) > 1 {
 		return args, nil, nil
 	}
+	if args == nil {
+		args = make(map[string]*llx.RawData)
+	}
+
+	// Resolve from the asset identifier when accessed as a discovered
+	// gcp-datastream-connectionprofile asset (no explicit name arg).
+	if len(args) == 0 {
+		ids := getAssetIdentifier(runtime)
+		if ids == nil {
+			return nil, nil, errors.New("no asset identifier found")
+		}
+		args["name"] = llx.StringData(fmt.Sprintf("projects/%s/locations/%s/connectionProfiles/%s", ids.project, ids.region, ids.name))
+	}
+
 	nameRaw := args["name"]
 	if nameRaw == nil {
 		return args, nil, nil

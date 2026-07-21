@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"strings"
 	"sync"
@@ -166,4 +167,40 @@ func parseSnowflakeBool(value string) bool {
 		return false
 	}
 	return b
+}
+
+// initSnowflakeSecurityIntegration resolves a security integration by name so
+// typed references (such as snowflake.authenticationPolicy.securityIntegrationRefs)
+// can hydrate a full integration from just its name.
+func initSnowflakeSecurityIntegration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	nameRaw, ok := args["name"]
+	if !ok {
+		return args, nil, nil
+	}
+	name, _ := nameRaw.Value.(string)
+	if name == "" {
+		return nil, nil, fmt.Errorf("snowflake.securityIntegration requires a non-empty name")
+	}
+
+	conn := runtime.Connection.(*connection.SnowflakeConnection)
+	client := conn.Client()
+	ctx := context.Background()
+
+	integrations, err := client.SecurityIntegrations.Show(ctx, sdk.NewShowSecurityIntegrationRequest().WithLike(sdk.Like{Pattern: sdk.String(name)}))
+	if err != nil {
+		return nil, nil, err
+	}
+	for i := range integrations {
+		if integrations[i].Name == name {
+			res, err := newMqlSnowflakeSecurityIntegration(runtime, integrations[i])
+			if err != nil {
+				return nil, nil, err
+			}
+			return nil, res, nil
+		}
+	}
+	return nil, nil, fmt.Errorf("snowflake.securityIntegration %q not found", name)
 }

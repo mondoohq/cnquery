@@ -200,6 +200,7 @@ providers/mqlr/install: providers/mqlr
 # core is excluded: it has no install target and is always built as a dependency of providers/build.
 PROVIDERS := \
 	activedirectory \
+	alicloud \
 	ansible \
 	arista \
 	atlassian \
@@ -209,6 +210,7 @@ PROVIDERS := \
 	claude \
 	cloudflare \
 	cloudformation \
+	databricks \
 	datadog \
 	depsdev \
 	digitalocean \
@@ -226,10 +228,13 @@ PROVIDERS := \
 	jamf \
 	k8s \
 	kustomize \
+	mikrotik \
 	mistral \
 	mondoo \
+	mongodbatlas \
 	ms365 \
 	network \
+	nextdns \
 	nmap \
 	nutanix \
 	oci \
@@ -239,7 +244,9 @@ PROVIDERS := \
 	openai \
 	openstack \
 	os \
+	portainer \
 	proxmox \
+	redfish \
 	shodan \
 	slack \
 	snowflake \
@@ -248,6 +255,7 @@ PROVIDERS := \
 	terraform \
 	together \
 	vcd \
+	vercel \
 	vllm \
 	vsphere
 
@@ -323,6 +331,19 @@ providers/test:
 	@$(call testGoModProvider, providers/vllm)
 	@$(call testGoModProvider, providers/vsphere)
 
+# Test a single provider by name, e.g. `make providers/test/aws`. The provider
+# is (re)built first so its generated resources.json exists (some tests read it),
+# then tested. Auto-detects whether the provider ships its own go.mod, mirroring
+# the testProvider / testGoModProvider split that `providers/test` uses.
+providers/test/%: providers/build/%
+	@if [ -f "providers/$*/go.mod" ]; then \
+		echo "--> test $* (module) in providers/$*"; \
+		cd providers/$* && gotestsum --junitfile ../../report_$*.xml --format pkgname -- -vet=off -cover $$(go list ./...); \
+	else \
+		echo "--> test $* in providers/$*"; \
+		gotestsum --junitfile ./report_$*.xml --format pkgname -- -vet=off -cover $$(go list ./providers/$*/...); \
+	fi
+
 lr/test:
 	go test ./providers-sdk/v1/mqlr/...
 
@@ -393,6 +414,8 @@ shared/generate:
 	go generate ./providers-sdk/v1/upstream/mvd/cvss
 	go generate ./providers-sdk/v1/upstream/mvd
 	go generate ./providers-sdk/v1/upstream/etl
+	go generate ./providers-sdk/v1/upstream/sbomscan
+	go generate ./providers-sdk/v1/upstream/sbomupload
 
 #   ⛹🏽‍ Testing   #
 
@@ -411,7 +434,11 @@ test/go: mql/generate test/generate test/go/plain
 test/go/plain:
 	go test -cover $(shell go list ./... | grep -v '/providers/' | grep -v '/test/')
 
-test/go/plain-ci: prep/tools test/generate providers/build
+# Core (non-provider) tests. The core scope imports no individual provider;
+# testutils only needs mock/core/os/network built, so we no longer build every
+# provider here. Provider packages are tested separately via `providers/test`
+# (all) or `providers/test/<name>` (one), in the go-test-providers CI job.
+test/go/plain-ci: prep/tools test/generate providers/build/mock providers/build/core providers/build/os providers/build/network
 	gotestsum --junitfile report.xml --format pkgname -- -cover $(shell go list ./... | grep -v '/vendor/' | grep -v '/providers/' | grep -v '/test/')
 
 test/integration:

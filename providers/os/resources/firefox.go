@@ -131,7 +131,7 @@ func (f *mqlFirefox) addons() ([]any, error) {
 		return nil, nil
 	}
 
-	platformKey := getFirefoxPlatformKey(pf)
+	platformKey := getPlatformKey(pf)
 	if platformKey == "" {
 		log.Debug().Str("platform", pf.Name).Msg("unsupported platform for Firefox addon detection")
 		return []any{}, nil
@@ -142,16 +142,10 @@ func (f *mqlFirefox) addons() ([]any, error) {
 		return []any{}, nil
 	}
 
-	// Get list of users to find their home directories
-	usersResource, err := CreateResource(f.MqlRuntime, "users", map[string]*llx.RawData{})
+	// Enumerate all users so addons are discovered for every account.
+	users, err := targetUserHomes(f.MqlRuntime)
 	if err != nil {
-		log.Debug().Err(err).Msg("could not get users list")
-		return []any{}, nil
-	}
-	users := usersResource.(*mqlUsers)
-	userList := users.GetList()
-	if userList.Error != nil {
-		log.Debug().Err(userList.Error).Msg("could not retrieve users list")
+		log.Debug().Err(err).Msg("could not retrieve users list")
 		return []any{}, nil
 	}
 
@@ -161,31 +155,26 @@ func (f *mqlFirefox) addons() ([]any, error) {
 	fs := conn.FileSystem()
 	afs := &afero.Afero{Fs: fs}
 
-	log.Debug().Str("platform", platformKey).Int("userCount", len(userList.Data)).Msg("searching for Firefox addons")
+	log.Debug().Str("platform", platformKey).Int("userCount", len(users)).Msg("searching for Firefox addons")
 
 	// Iterate through each user's home directory
-	for _, u := range userList.Data {
-		user := u.(*mqlUser)
-		home := user.GetHome()
-		if home.Error != nil || home.Data == "" {
-			continue
-		}
-
-		// Skip system users (no valid home or special paths)
-		homeDir := home.Data
-		if !isValidFirefoxUserHome(homeDir, platformKey) {
-			continue
-		}
-
-		// Default to -1 to avoid false association with root (uid 0)
-		uid := int64(-1)
-		if uidVal := user.GetUid(); uidVal.Error == nil {
-			uid = uidVal.Data
-		}
+	for _, u := range users {
+		homeDir := u.home
+		uid := u.uid
 
 		// Check each browser for this user
 		for _, browserCfg := range configs {
 			browserDir := filepath.Join(homeDir, browserCfg.relPath)
+
+			// Skip browsers this user doesn't have installed. A recursive search
+			// is expensive on Windows, where files.find has no native backend and
+			// each call spawns a PowerShell process, so the vast majority of
+			// (user x browser) combinations would pay a process start-up just to
+			// learn the directory is absent.
+			// See https://github.com/mondoohq/mql/issues/9104
+			if !firefoxBrowserDirExists(afs, browserDir) {
+				continue
+			}
 
 			// Use files.find to efficiently search for extensions.json files
 			// Standard Firefox: BrowserDir/Profiles/profile_name/extensions.json (depth 3)
@@ -241,12 +230,7 @@ func (f *mqlFirefox) addons() ([]any, error) {
 					}
 
 					// Create unique key including user and browser to avoid deduplication across users
-					userName := user.GetName()
-					userNameStr := ""
-					if userName.Error == nil {
-						userNameStr = userName.Data
-					}
-					uniqueKey := userNameStr + "|" + browserCfg.name + "|" + profileName + "|" + addon.ID
+					uniqueKey := u.name + "|" + browserCfg.name + "|" + profileName + "|" + addon.ID
 					if seen[uniqueKey] {
 						continue
 					}
@@ -326,6 +310,18 @@ func (f *mqlFirefox) addons() ([]any, error) {
 	return addons, nil
 }
 
+// firefoxBrowserDirExists reports whether a browser's profile directory is
+// present, treating an unreadable path or a non-directory as absent so the
+// caller skips the search rather than failing the whole resource.
+func firefoxBrowserDirExists(afs *afero.Afero, dir string) bool {
+	exists, err := afs.DirExists(dir)
+	if err != nil {
+		log.Debug().Err(err).Str("path", dir).Msg("could not check browser directory")
+		return false
+	}
+	return exists
+}
+
 // readFirefoxExtensionsJSON reads and parses a Firefox extensions.json file
 func readFirefoxExtensionsJSON(afs *afero.Afero, path string) (*firefoxExtensionsJSON, error) {
 	data, err := afs.ReadFile(path)
@@ -357,52 +353,6 @@ func isFirefoxSystemAddon(addon firefoxAddonEntry) bool {
 	}
 
 	return false
-}
-
-// getFirefoxPlatformKey returns the platform key for Firefox browser configs lookup
-func getFirefoxPlatformKey(pf interface{ IsFamily(string) bool }) string {
-	switch {
-	case pf.IsFamily("linux"):
-		return "linux"
-	case pf.IsFamily("darwin"):
-		return "darwin"
-	case pf.IsFamily("windows"):
-		return "windows"
-	default:
-		return ""
-	}
-}
-
-// isValidFirefoxUserHome checks if a home directory is a valid user home (not a system account)
-func isValidFirefoxUserHome(homeDir string, platform string) bool {
-	if homeDir == "" {
-		return false
-	}
-
-	switch platform {
-	case "linux":
-		// Valid homes: /home/*, /root
-		return strings.HasPrefix(homeDir, "/home/") || homeDir == "/root"
-	case "darwin":
-		// Valid homes: /Users/* (excluding /Users/Shared)
-		return strings.HasPrefix(homeDir, "/Users/") && homeDir != "/Users/Shared"
-	case "windows":
-		// Valid homes: C:\Users\* (excluding system accounts)
-		lowerHome := strings.ToLower(homeDir)
-		if !strings.HasPrefix(lowerHome, "c:\\users\\") && !strings.HasPrefix(lowerHome, "c:/users/") {
-			return false
-		}
-		// Exclude known system accounts
-		excludedUsers := []string{"default", "public", "all users", "default user"}
-		for _, excluded := range excludedUsers {
-			if strings.Contains(lowerHome, "\\"+excluded) || strings.Contains(lowerHome, "/"+excluded) {
-				return false
-			}
-		}
-		return true
-	default:
-		return false
-	}
 }
 
 // firefoxMergeStringSlices merges two string slices, skipping empty ones

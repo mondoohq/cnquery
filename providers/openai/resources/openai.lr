@@ -6,10 +6,14 @@ option go_package = "go.mondoo.com/mql/v13/providers/openai/resources"
 
 // OpenAI account
 //
-// Use the `openai` resource to examine an OpenAI account, including
-// available models, uploaded files, fine-tuning jobs, vector stores,
-// and projects. This resource provides the online API inventory for
-// AI Bill of Materials (AIBOM) generation.
+// Online API inventory for an OpenAI account, spanning available
+// models, uploaded files, fine-tuning jobs, vector stores, projects,
+// organization users, pending invites, and audit logs. This inventory
+// supports AI Bill of Materials (AIBOM) generation and lets you audit
+// model lineage, organization membership, and security-relevant
+// activity across the organization. Several collections (users,
+// invites, audit logs, project keys, and service accounts) require an
+// admin API key.
 openai @defaults("organization") @maturity("preview") {
   // Organization ID associated with the API key
   organization() string
@@ -35,13 +39,13 @@ openai @defaults("organization") @maturity("preview") {
 
 // OpenAI model
 //
-// Examine an AI model available in the OpenAI account. Models include
-// both base models owned by OpenAI (such as gpt-4o or o3) and
-// fine-tuned models owned by the organization. The `id` field is the
-// model identifier used in API calls. For fine-tuned models the
-// structured ID encodes the base model, organization, and suffix
-// which are extracted into `baseModel` and `isFineTuned` for AIBOM
-// lineage tracking.
+// AI model available in the OpenAI account, including both base models
+// owned by OpenAI (such as gpt-4o or o3) and fine-tuned models owned by
+// the organization. The `id` field is the model identifier used in API
+// calls and selects the model, for example openai.model(id: "gpt-4o").
+// For fine-tuned models the structured ID encodes the base model,
+// organization, and suffix, surfaced through `baseModel` and
+// `isFineTuned` for AIBOM lineage tracking.
 openai.model @defaults("id ownedBy") @maturity("preview") {
   // Model identifier used in API calls (e.g., "gpt-4o", "ft:gpt-4o-mini:my-org:custom:abc123")
   id string
@@ -62,10 +66,11 @@ openai.model @defaults("id ownedBy") @maturity("preview") {
 
 // OpenAI file
 //
-// Examine a file uploaded to the OpenAI platform. Files are used for
-// fine-tuning training data, batch input/output, assistant knowledge
-// retrieval, and vision inputs. The `purpose` field indicates the
-// intended use of the file.
+// File uploaded to the OpenAI platform, used for fine-tuning training
+// data, batch input/output, assistant knowledge retrieval, and vision
+// inputs. The `purpose` field indicates the file's intended use, and
+// `status` reports whether it has finished processing. Audit these to
+// track what data was uploaded to the organization and for what use.
 openai.file @defaults("id filename purpose") @maturity("preview") {
   // File identifier
   id string
@@ -87,12 +92,12 @@ openai.file @defaults("id filename purpose") @maturity("preview") {
 
 // OpenAI fine-tuning job
 //
-// Examine a fine-tuning job that customizes a base model on
-// organization-provided training data. Tracks the training status,
-// hyperparameters, token usage, and the resulting fine-tuned model
-// identifier. Use this resource to audit model lineage: which base
-// model was fine-tuned, with what training data, and what model was
-// produced.
+// Fine-tuning job that customizes a base model on organization-provided
+// training data. Records the training status, hyperparameters, token
+// usage, and the resulting fine-tuned model identifier, so you can audit
+// model lineage: which base model was fine-tuned, with what training and
+// validation data, and what model was produced. A job is selected by its
+// identifier, for example openai.fineTuningJob(id: "ftjob-abc123").
 openai.fineTuningJob @defaults("id model status") @maturity("preview") {
   // Job identifier
   id string
@@ -119,17 +124,26 @@ openai.fineTuningJob @defaults("id model status") @maturity("preview") {
   // Organization that owns this job
   organizationId string
   // Training hyperparameters
+  //
+  // Keyed by hyperparameter name. Contains `n_epochs`, the number of
+  // passes over the training data, given as an integer or the string
+  // "auto" when OpenAI selects the value.
   hyperparameters dict
   // Error information if the job failed
+  //
+  // Null unless the job failed. When present, `code` is the machine-readable
+  // failure code, `message` is the human-readable explanation, and `param`
+  // is the parameter that caused the failure (empty when not parameter-specific).
   error dict
 }
 
 // OpenAI vector store
 //
-// Examine a vector store used for knowledge retrieval in the
-// Assistants API. Vector stores hold file embeddings for semantic
-// search and are identified by name. The `fileCounts` field reports
-// the number of files in each processing state.
+// Vector store used for knowledge retrieval in the Assistants API.
+// Vector stores hold file embeddings for semantic search over uploaded
+// files. The `fileCounts` field reports how many files are in each
+// processing state, and `expiresAfter` describes any automatic
+// expiration policy attached to the store.
 openai.vectorStore @defaults("id name status") @maturity("preview") {
   // Vector store identifier
   id string
@@ -146,8 +160,16 @@ openai.vectorStore @defaults("id name status") @maturity("preview") {
   // Last active timestamp
   lastActiveAt time
   // File counts by processing state
+  //
+  // Number of files in the store keyed by processing state: in_progress,
+  // completed, failed, and cancelled, plus total for the overall count.
   fileCounts dict
   // Expiration policy
+  //
+  // Automatic expiration policy, or null when none is set. The anchor key
+  // holds the reference timestamp the countdown starts from (for example
+  // last_active_at) and days holds the number of days after the anchor at
+  // which the store expires.
   expiresAfter dict
   // Expiration timestamp (null if no expiration policy)
   expiresAt time
@@ -157,9 +179,11 @@ openai.vectorStore @defaults("id name status") @maturity("preview") {
 
 // OpenAI project
 //
-// Examine an organization project in the OpenAI platform. Projects
-// provide isolation for API keys, usage limits, and team access.
-// Requires an admin API key.
+// Organization project in the OpenAI platform. Projects provide
+// isolation for API keys, usage limits, and team access. Query by
+// project id to audit which keys and service accounts belong to a
+// project, and whether it is active or archived. Requires an admin
+// API key.
 openai.project @defaults("id name status") @maturity("preview") {
   // Project identifier
   id string
@@ -181,10 +205,10 @@ openai.project @defaults("id name status") @maturity("preview") {
 
 // OpenAI project API key
 //
-// Examine an API key within an organization project. Each key has an
-// owner (user or service account) and a redacted value for
-// identification. Use this resource to audit key age, last usage, and
-// ownership for security reviews.
+// API key within an organization project. Each key has an owner
+// (user or service account) and a redacted value for identification.
+// Audit key age, last usage, and ownership to spot stale or
+// over-privileged credentials during security reviews.
 openai.project.apiKey @defaults("id name") @maturity("preview") {
   // API key identifier
   id string
@@ -208,9 +232,10 @@ openai.project.apiKey @defaults("id name") @maturity("preview") {
 
 // OpenAI project service account
 //
-// Examine a service account within an organization project. Service
-// accounts are non-human identities used for API automation. Use this
-// resource to audit service account roles and creation dates.
+// Service account within an organization project. Service accounts
+// are non-human identities used for API automation, each assigned an
+// owner or member role. Audit service account roles and creation
+// dates to keep automation credentials scoped and accounted for.
 openai.project.serviceAccount @defaults("id name role") @maturity("preview") {
   // Service account identifier
   id string
@@ -226,10 +251,13 @@ openai.project.serviceAccount @defaults("id name role") @maturity("preview") {
 
 // OpenAI organization user
 //
-// Examine a user in the OpenAI organization. Users have roles, email
-// addresses, and API key usage tracking. Use this resource to audit
-// organization membership, privilege levels, and identify inactive
-// accounts by checking API key last usage timestamps.
+// Member of an OpenAI organization, with the role that grants their
+// privilege level (owner or reader), email address, and account
+// provenance flags. The `role` field surfaces who holds owner-level
+// control, and the `apiKeyLastUsedAt` timestamp helps identify
+// inactive accounts. Flags like `isScimManaged`, `isServiceAccount`,
+// and `isDefault` distinguish directory-synced members, machine
+// identities, and the default organization owner.
 openai.organizationUser @defaults("id email role") @maturity("preview") {
   // User identifier
   id string
@@ -257,10 +285,11 @@ openai.organizationUser @defaults("id email role") @maturity("preview") {
 
 // OpenAI organization invite
 //
-// Examine a pending invitation to the OpenAI organization. Invites
-// track the email, assigned role, and acceptance status. Use this
-// resource to audit outstanding invitations and ensure timely
-// expiration of unclaimed invites.
+// Pending invitation to join the OpenAI organization, tracking the
+// invited email, the role that will be granted on acceptance, and the
+// current acceptance status. Query this resource to audit outstanding
+// invitations, surface unclaimed or expired invites, and confirm that
+// invitees are granted only the intended level of access.
 openai.invite @defaults("id email status") @maturity("preview") {
   // Invite identifier
   id string
@@ -284,11 +313,13 @@ openai.invite @defaults("id email status") @maturity("preview") {
 
 // OpenAI audit log entry
 //
-// Examine an audit log entry from the OpenAI organization. Audit logs
-// record user actions and configuration changes such as API key
-// creation, project updates, login events, and role changes. Use this
-// resource to monitor security-relevant activity and support compliance
-// requirements.
+// Record of a single user action or configuration change in the OpenAI
+// organization, such as API key creation, project updates, login events,
+// and role changes. Query these entries to monitor security-relevant
+// activity, detect unauthorized changes, and support compliance
+// requirements. The `type` field identifies the recorded event and
+// `actorType` distinguishes whether a user session or an API key
+// performed it.
 openai.auditLog @defaults("id type effectiveAt") @maturity("preview") {
   // Log entry identifier
   id string

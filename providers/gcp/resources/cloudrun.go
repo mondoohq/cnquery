@@ -146,6 +146,18 @@ func initGcpProjectCloudRunServiceService(runtime *plugin.Runtime, args map[stri
 	return nil, nil, fmt.Errorf("cloud run service %q not found", nameVal)
 }
 
+type mqlGcpProjectCloudRunServiceServiceInternal struct {
+	cacheEncryptionKey string
+}
+
+func (g *mqlGcpProjectCloudRunServiceService) encryptionKeyRef() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	return newKmsCryptoKeyRef(g.MqlRuntime, &g.EncryptionKeyRef, g.cacheEncryptionKey)
+}
+
+func (g *mqlGcpProjectCloudRunServiceService) managedBy() (string, error) {
+	return managedByFromLabels(g.GetLabels(), g.GetAnnotations())
+}
+
 func (g *mqlGcpProjectCloudRunServiceJob) id() (string, error) {
 	if g.Id.Error != nil {
 		return "", g.Id.Error
@@ -199,12 +211,39 @@ func initGcpProjectCloudRunServiceJob(runtime *plugin.Runtime, args map[string]*
 	return nil, nil, fmt.Errorf("cloud run job %q not found", nameVal)
 }
 
+type mqlGcpProjectCloudRunServiceJobInternal struct {
+	cacheEncryptionKey string
+}
+
+func (g *mqlGcpProjectCloudRunServiceJob) encryptionKeyRef() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	return newKmsCryptoKeyRef(g.MqlRuntime, &g.EncryptionKeyRef, g.cacheEncryptionKey)
+}
+
+func (g *mqlGcpProjectCloudRunServiceJob) managedBy() (string, error) {
+	return managedByFromLabels(g.GetLabels(), g.GetAnnotations())
+}
+
 func (g *mqlGcpProjectCloudRunServiceServiceRevisionTemplate) id() (string, error) {
 	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectCloudRunServiceContainer) id() (string, error) {
 	return g.Id.Data, g.Id.Error
+}
+
+func (g *mqlGcpProjectCloudRunServiceContainer) imageRepository() (*mqlGcpProjectArtifactRegistryServiceRepository, error) {
+	if g.Image.Error != nil {
+		return nil, g.Image.Error
+	}
+	project, location, repo := artifactRegistryRepoFromImage(g.Image.Data)
+	ref, err := resolveArtifactRegistryRepoRef(g.MqlRuntime, project, location, repo)
+	if err != nil {
+		return nil, err
+	}
+	if ref == nil {
+		g.ImageRepository.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return ref, nil
 }
 
 func (g *mqlGcpProjectCloudRunServiceContainerProbe) id() (string, error) {
@@ -520,13 +559,17 @@ func (g *mqlGcpProjectCloudRunService) services() ([]any, error) {
 					"satisfiesPzs":                  llx.BoolData(s.SatisfiesPzs),
 					"uid":                           llx.StringData(s.Uid),
 					"etag":                          llx.StringData(s.Etag),
+					"client":                        llx.StringData(s.Client),
+					"clientVersion":                 llx.StringData(s.ClientVersion),
 					"binaryAuthorization":           llx.DictData(baDict),
 					"binaryAuthorizationUseDefault": llx.BoolData(baUseDefault),
 					"binaryAuthorizationBreakglassJustification": llx.StringData(baBreakglass),
 				})
 				if err != nil {
 					log.Error().Err(err).Send()
+					continue
 				}
+				mqlS.(*mqlGcpProjectCloudRunServiceService).cacheEncryptionKey = s.GetTemplate().GetEncryptionKey()
 				mux.Lock()
 				services = append(services, mqlS)
 				mux.Unlock()
@@ -832,6 +875,7 @@ func (g *mqlGcpProjectCloudRunService) jobs() ([]any, error) {
 					log.Error().Err(err).Send()
 					return
 				}
+				mqlJob.(*mqlGcpProjectCloudRunServiceJob).cacheEncryptionKey = j.GetTemplate().GetTemplate().GetEncryptionKey()
 				mux.Lock()
 				jobs = append(jobs, mqlJob)
 				mux.Unlock()
@@ -842,7 +886,7 @@ func (g *mqlGcpProjectCloudRunService) jobs() ([]any, error) {
 	return jobs, nil
 }
 
-func mqlContainerProbe(runtime *plugin.Runtime, probe *runpb.Probe, containerId string) (plugin.Resource, error) {
+func mqlContainerProbe(runtime *plugin.Runtime, probe *runpb.Probe, containerId string, probeName string) (plugin.Resource, error) {
 	if probe == nil {
 		return nil, nil
 	}
@@ -869,7 +913,7 @@ func mqlContainerProbe(runtime *plugin.Runtime, probe *runpb.Probe, containerId 
 	}
 
 	return CreateResource(runtime, "gcp.project.cloudRunService.container.probe", map[string]*llx.RawData{
-		"id":                  llx.StringData(fmt.Sprintf("%s/livenessProbe", containerId)),
+		"id":                  llx.StringData(fmt.Sprintf("%s/%s", containerId, probeName)),
 		"initialDelaySeconds": llx.IntData(int64(probe.InitialDelaySeconds)),
 		"timeoutSeconds":      llx.IntData(int64(probe.TimeoutSeconds)),
 		"periodSeconds":       llx.IntData(int64(probe.PeriodSeconds)),
@@ -982,12 +1026,12 @@ func mqlContainers(runtime *plugin.Runtime, containers []*runpb.Container, templ
 		}
 
 		containerId := fmt.Sprintf("%s/container/%s", templateId, c.Name)
-		mqlLivenessProbe, err := mqlContainerProbe(runtime, c.LivenessProbe, containerId)
+		mqlLivenessProbe, err := mqlContainerProbe(runtime, c.LivenessProbe, containerId, "livenessProbe")
 		if err != nil {
 			return nil, err
 		}
 
-		mqlStartupProbe, err := mqlContainerProbe(runtime, c.StartupProbe, containerId)
+		mqlStartupProbe, err := mqlContainerProbe(runtime, c.StartupProbe, containerId, "startupProbe")
 		if err != nil {
 			return nil, err
 		}

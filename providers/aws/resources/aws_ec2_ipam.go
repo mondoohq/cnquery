@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -169,12 +170,12 @@ func initAwsEc2Ipam(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	resp, err := svc.DescribeIpams(ctx, &ec2.DescribeIpamsInput{IpamIds: []string{id}})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
-			return args, nil, nil
+			return nil, nil, fmt.Errorf("access denied fetching aws.ec2.ipam with id %q in region %s", id, region)
 		}
 		return nil, nil, err
 	}
 	if len(resp.Ipams) == 0 {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("aws.ec2.ipam with id %q not found", id)
 	}
 
 	mqlIpam, err := newMqlAwsEc2Ipam(runtime, region, &resp.Ipams[0])

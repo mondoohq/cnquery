@@ -105,52 +105,8 @@ func (r *mqlGithubCopilot) mcpServers() ([]interface{}, error) {
 }
 
 func (r *mqlGithubCopilot) skills() ([]interface{}, error) {
-	afs := connectionAfs(r.MqlRuntime)
-	// Copilot skills live at ~/.copilot/skills/ (separate from config dir)
-	home, err := targetHomeDir(r.MqlRuntime)
-	if err != nil {
-		return nil, nil
-	}
-	skillsDir := filepath.Join(home, ".copilot", "skills")
-
-	subdirs, err := listSubdirsAfero(afs, skillsDir)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	var result []interface{}
-	for _, dir := range subdirs {
-		skillPath := filepath.Join(dir.path, "SKILL.md")
-		data, err := afs.ReadFile(skillPath)
-		if err != nil {
-			continue
-		}
-
-		skill := parseSkillMd(dir.name, skillPath, string(data))
-
-		allowedToolsAny := make([]interface{}, len(skill.allowedTools))
-		for i, t := range skill.allowedTools {
-			allowedToolsAny[i] = t
-		}
-
-		res, err := NewResource(r.MqlRuntime, "github.copilot.skill", map[string]*llx.RawData{
-			"__id":         llx.StringData("github.copilot.skill/" + dir.name),
-			"name":         llx.StringData(skill.name),
-			"description":  llx.StringData(skill.description),
-			"allowedTools": llx.ArrayData(allowedToolsAny, types.String),
-			"argumentHint": llx.StringData(skill.argumentHint),
-			"source":       llx.StringData(skill.source),
-			"content":      llx.StringData(skill.content),
-		})
-		if err != nil {
-			return nil, err
-		}
-		result = append(result, res)
-	}
-	return result, nil
+	// Copilot skills live at ~/.copilot/skills/, independent of the config dir.
+	return skillsAllUsers(r.MqlRuntime, filepath.Join(".copilot", "skills"), "github.copilot.skill")
 }
 
 // Child resource ID methods
@@ -164,7 +120,7 @@ func (r *mqlGithubCopilotMcpServer) id() (string, error) {
 }
 
 func (r *mqlGithubCopilotSkill) id() (string, error) {
-	return "github.copilot.skill/" + r.Name.Data, nil
+	return "github.copilot.skill/" + r.Source.Data, nil
 }
 
 func (r *mqlGithubCopilotSkill) sha256() (string, error) {

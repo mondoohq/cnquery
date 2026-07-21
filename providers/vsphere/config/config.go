@@ -6,6 +6,7 @@ package config
 import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/vsphere/connection"
 	"go.mondoo.com/mql/v13/providers/vsphere/provider"
 	"go.mondoo.com/mql/v13/providers/vsphere/resources"
 )
@@ -13,8 +14,9 @@ import (
 var Config = plugin.Provider{
 	Name:            "vsphere",
 	ID:              "go.mondoo.com/cnquery/v9/providers/vsphere",
-	Version:         "13.5.1",
+	Version:         "13.7.2",
 	ConnectionTypes: []string{provider.ConnectionType},
+	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "vsphere",

@@ -12,8 +12,12 @@ import (
 	"go.mondoo.com/mql/v13/providers/azure/connection"
 	"go.mondoo.com/mql/v13/types"
 
-	azureres "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v3"
+	azureres "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v4"
 )
+
+type mqlAzureSubscriptionResourceInternal struct {
+	cacheSystemData any
+}
 
 func (a *mqlAzureSubscription) resources() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
@@ -56,6 +60,11 @@ func (a *mqlAzureSubscription) resources() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+
+			sysData, err := convert.JsonToDict(resource.SystemData)
+			if err != nil {
+				return nil, err
+			}
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.resource",
 				map[string]*llx.RawData{
 					"id":                llx.StringDataPtr(resource.ID),
@@ -75,6 +84,7 @@ func (a *mqlAzureSubscription) resources() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			mqlAzure.(*mqlAzureSubscriptionResource).cacheSystemData = sysData
 			res = append(res, mqlAzure)
 		}
 	}

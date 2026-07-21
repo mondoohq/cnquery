@@ -128,6 +128,7 @@ func (o *mqlOciContainerInstances) getContainerInstances(conn *connection.OciCon
 					"timeUpdated":                      llx.TimeDataPtr(timeUpdated),
 					"freeformTags":                     llx.MapData(freeformTags, types.String),
 					"definedTags":                      llx.MapData(definedTags, types.Any),
+					"systemTags":                       llx.MapData(definedTagsToAny(ci.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err
@@ -221,6 +222,7 @@ func (o *mqlOciContainerInstancesInstance) containers() ([]any, error) {
 			"timeUpdated":                 llx.TimeDataPtr(timeUpdated),
 			"freeformTags":                llx.MapData(freeformTags, types.String),
 			"definedTags":                 llx.MapData(definedTags, types.Any),
+			"systemTags":                  llx.MapData(definedTagsToAny(c.SystemTags), types.Dict),
 		})
 		if err != nil {
 			return nil, err

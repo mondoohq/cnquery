@@ -130,7 +130,29 @@ func signalRToMql(runtime *plugin.Runtime, sr *armsignalr.ResourceInfo) (*mqlAzu
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionSignalRServiceSignalR), nil
+	sysData, err := convert.JsonToDict(sr.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlSr := res.(*mqlAzureSubscriptionSignalRServiceSignalR)
+	mqlSr.cacheSystemData = sysData
+	if sr.Properties != nil {
+		mqlSr.cachePrivateEndpointConnections = sr.Properties.PrivateEndpointConnections
+	}
+	return mqlSr, nil
+}
+
+type mqlAzureSubscriptionSignalRServiceSignalRInternal struct {
+	cacheSystemData                 any
+	cachePrivateEndpointConnections []*armsignalr.PrivateEndpointConnection
+}
+
+func (a *mqlAzureSubscriptionSignalRServiceSignalR) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionSignalRServiceSignalR) privateEndpointConnections() ([]any, error) {
+	return azurePrivateEndpointConnectionsToMql(a.MqlRuntime, a.cachePrivateEndpointConnections)
 }
 
 func initAzureSubscriptionWebPubSubService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -242,5 +264,27 @@ func webPubSubToMql(runtime *plugin.Runtime, wps *armwebpubsub.ResourceInfo) (*m
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionWebPubSubServiceWebPubSub), nil
+	sysData, err := convert.JsonToDict(wps.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlWps := res.(*mqlAzureSubscriptionWebPubSubServiceWebPubSub)
+	mqlWps.cacheSystemData = sysData
+	if wps.Properties != nil {
+		mqlWps.cachePrivateEndpointConnections = wps.Properties.PrivateEndpointConnections
+	}
+	return mqlWps, nil
+}
+
+type mqlAzureSubscriptionWebPubSubServiceWebPubSubInternal struct {
+	cacheSystemData                 any
+	cachePrivateEndpointConnections []*armwebpubsub.PrivateEndpointConnection
+}
+
+func (a *mqlAzureSubscriptionWebPubSubServiceWebPubSub) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionWebPubSubServiceWebPubSub) privateEndpointConnections() ([]any, error) {
+	return azurePrivateEndpointConnectionsToMql(a.MqlRuntime, a.cachePrivateEndpointConnections)
 }

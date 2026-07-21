@@ -54,12 +54,28 @@ func cfGetPaged[T any](conn *connection.CloudflareConnection, uriBase string) ([
 			return nil, err
 		}
 		all = append(all, env.Result...)
-		if env.ResultInfo.TotalPages == 0 || env.ResultInfo.Page >= env.ResultInfo.TotalPages {
+		// Terminate on the local page counter, not the server-echoed
+		// ResultInfo.Page: if the API ever returned page:0 with total_pages>0
+		// the echoed-page comparison would never satisfy and the loop would
+		// spin forever appending empty pages.
+		if env.ResultInfo.TotalPages == 0 || page >= env.ResultInfo.TotalPages {
 			break
 		}
 		page++
 	}
 	return all, nil
+}
+
+// degradedList maps an unavailable-resource error (401/403/404, via
+// isUnavailable) to an empty list, so a gated add-on or permission-limited
+// collection endpoint reads as "nothing here" instead of failing the whole
+// query. Other errors propagate unchanged. Callers use it as the error branch
+// of a list accessor: `if err != nil { return degradedList(err) }`.
+func degradedList(err error) ([]any, error) {
+	if isUnavailable(err) {
+		return []any{}, nil
+	}
+	return nil, err
 }
 
 // isUnavailable reports whether err is a 401, 403, or 404 from the Cloudflare

@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/checksums"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -561,7 +562,11 @@ func (s *mqlPamConf) entries(files []any) (map[string]any, error) {
 
 			entry, err := pam.ParseLine(line)
 			if err != nil {
-				return nil, err
+				// A single malformed line must not abort parsing of the whole
+				// PAM configuration. Log it and continue with the rest, like
+				// the other config parsers in this package do.
+				log.Warn().Err(err).Str("path", filePath).Int("line", i+1).Msg("skipping malformed PAM line")
+				continue
 			}
 
 			// empty lines parse as empty object

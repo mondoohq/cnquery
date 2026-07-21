@@ -495,10 +495,17 @@ func (v *mqlVsphereDatacenter) distributedSwitches() ([]any, error) {
 			return nil, err
 		}
 
+		var createDate *time.Time
+		if config.Config != nil {
+			t := config.Config.GetDVSConfigInfo().CreateTime
+			createDate = &t
+		}
+
 		mqlVswitch, err := CreateResource(v.MqlRuntime, "vsphere.vswitch.dvs", map[string]*llx.RawData{
 			"moid":       llx.StringData(s.Reference().Encode()),
 			"name":       llx.StringData(s.Name()),
 			"properties": llx.DictData(configMap),
+			"createDate": llx.TimeDataPtr(createDate),
 		})
 		if err != nil {
 			return nil, err

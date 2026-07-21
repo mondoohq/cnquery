@@ -12,6 +12,7 @@ import (
 
 	aiplatform "cloud.google.com/go/aiplatform/apiv1"
 	"cloud.google.com/go/aiplatform/apiv1/aiplatformpb"
+	iampb "cloud.google.com/go/iam/apiv1/iampb"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -259,6 +260,10 @@ func newMqlVertexaiModel(runtime *plugin.Runtime, model *aiplatformpb.Model) (*m
 	if err != nil {
 		return nil, err
 	}
+	baseModelSource, err := protoToDict(model.BaseModelSource)
+	if err != nil {
+		return nil, err
+	}
 	containerSpec, err := protoToDict(model.ContainerSpec)
 	if err != nil {
 		return nil, err
@@ -281,6 +286,9 @@ func newMqlVertexaiModel(runtime *plugin.Runtime, model *aiplatformpb.Model) (*m
 		"versionAliases":                    llx.ArrayData(convert.SliceAnyToInterface(model.VersionAliases), types.String),
 		"versionDescription":                llx.StringData(model.VersionDescription),
 		"modelSourceInfo":                   llx.DictData(modelSourceInfo),
+		"baseModelSource":                   llx.DictData(baseModelSource),
+		"satisfiesPzs":                      llx.BoolData(model.SatisfiesPzs),
+		"satisfiesPzi":                      llx.BoolData(model.SatisfiesPzi),
 		"containerSpec":                     llx.DictData(containerSpec),
 		"supportedDeploymentResourcesTypes": llx.ArrayData(deploymentTypes, types.String),
 		"supportedInputStorageFormats":      llx.ArrayData(convert.SliceAnyToInterface(model.SupportedInputStorageFormats), types.String),
@@ -298,6 +306,8 @@ func newMqlVertexaiModel(runtime *plugin.Runtime, model *aiplatformpb.Model) (*m
 	}
 	res := mqlModel.(*mqlGcpProjectVertexaiServiceModel)
 	res.cacheKmsKeyName = model.GetEncryptionSpec().GetKmsKeyName()
+	res.cacheOriginalModelName = model.GetOriginalModelInfo().GetModel()
+	res.cachePipelineJobName = model.PipelineJob
 	return res, nil
 }
 
@@ -367,15 +377,27 @@ func newMqlVertexaiEndpoint(runtime *plugin.Runtime, projectId string, ep *aipla
 		}
 		deployedModels = append(deployedModels, d)
 
+		var privSA, predictUri, explainUri, healthUri string
+		if pe := dm.PrivateEndpoints; pe != nil {
+			privSA = pe.ServiceAttachment
+			predictUri = pe.PredictHttpUri
+			explainUri = pe.ExplainHttpUri
+			healthUri = pe.HealthHttpUri
+		}
+
 		mqlDeployment, err := CreateResource(runtime, "gcp.project.vertexaiService.endpoint.deployment", map[string]*llx.RawData{
-			"__id":                    llx.StringData(fmt.Sprintf("%s/deployment/%s", ep.Name, dm.Id)),
-			"id":                      llx.StringData(dm.Id),
-			"displayName":             llx.StringData(dm.DisplayName),
-			"modelVersionId":          llx.StringData(dm.ModelVersionId),
-			"serviceAccountEmail":     llx.StringData(dm.ServiceAccount),
-			"disableContainerLogging": llx.BoolData(dm.DisableContainerLogging),
-			"enableAccessLogging":     llx.BoolData(dm.EnableAccessLogging),
-			"createdAt":               llx.TimeDataPtr(timestampAsTimePtr(dm.CreateTime)),
+			"__id":                     llx.StringData(fmt.Sprintf("%s/deployment/%s", ep.Name, dm.Id)),
+			"id":                       llx.StringData(dm.Id),
+			"displayName":              llx.StringData(dm.DisplayName),
+			"modelVersionId":           llx.StringData(dm.ModelVersionId),
+			"serviceAccountEmail":      llx.StringData(dm.ServiceAccount),
+			"disableContainerLogging":  llx.BoolData(dm.DisableContainerLogging),
+			"enableAccessLogging":      llx.BoolData(dm.EnableAccessLogging),
+			"privateServiceAttachment": llx.StringData(privSA),
+			"predictHttpUri":           llx.StringData(predictUri),
+			"explainHttpUri":           llx.StringData(explainUri),
+			"healthHttpUri":            llx.StringData(healthUri),
+			"createdAt":                llx.TimeDataPtr(timestampAsTimePtr(dm.CreateTime)),
 		})
 		if err != nil {
 			return nil, err
@@ -395,20 +417,50 @@ func newMqlVertexaiEndpoint(runtime *plugin.Runtime, projectId string, ep *aipla
 		trafficSplit[k] = int64(v)
 	}
 
+	pscProjectAllowlist := []any{}
+	var pscServiceAttachment string
+	if psc := ep.PrivateServiceConnectConfig; psc != nil {
+		pscServiceAttachment = psc.ServiceAttachment
+		for _, p := range psc.ProjectAllowlist {
+			pscProjectAllowlist = append(pscProjectAllowlist, p)
+		}
+	}
+
+	var predictionLoggingEnabled bool
+	var predictionLoggingSamplingRate float64
+	var predictionLoggingBQ string
+	if pl := ep.PredictRequestResponseLoggingConfig; pl != nil {
+		predictionLoggingEnabled = pl.Enabled
+		predictionLoggingSamplingRate = pl.SamplingRate
+		if pl.BigqueryDestination != nil {
+			predictionLoggingBQ = pl.BigqueryDestination.OutputUri
+		}
+	}
+
 	mqlEndpoint, err := CreateResource(runtime, "gcp.project.vertexaiService.endpoint", map[string]*llx.RawData{
-		"name":                        llx.StringData(ep.Name),
-		"displayName":                 llx.StringData(ep.DisplayName),
-		"description":                 llx.StringData(ep.Description),
-		"deployedModels":              llx.ArrayData(deployedModels, types.Dict),
-		"deployments":                 llx.ArrayData(deployments, types.Resource("gcp.project.vertexaiService.endpoint.deployment")),
-		"encryptionSpec":              llx.DictData(encryptionSpec),
-		"network":                     llx.StringData(ep.Network),
-		"enablePrivateServiceConnect": llx.BoolData(ep.EnablePrivateServiceConnect),
-		"trafficSplit":                llx.MapData(trafficSplit, types.Int),
-		"labels":                      llx.MapData(convert.MapToInterfaceMap(ep.Labels), types.String),
-		"etag":                        llx.StringData(ep.Etag),
-		"createdAt":                   llx.TimeDataPtr(timestampAsTimePtr(ep.CreateTime)),
-		"updatedAt":                   llx.TimeDataPtr(timestampAsTimePtr(ep.UpdateTime)),
+		"name":                                 llx.StringData(ep.Name),
+		"displayName":                          llx.StringData(ep.DisplayName),
+		"description":                          llx.StringData(ep.Description),
+		"deployedModels":                       llx.ArrayData(deployedModels, types.Dict),
+		"deployments":                          llx.ArrayData(deployments, types.Resource("gcp.project.vertexaiService.endpoint.deployment")),
+		"encryptionSpec":                       llx.DictData(encryptionSpec),
+		"network":                              llx.StringData(ep.Network),
+		"enablePrivateServiceConnect":          llx.BoolData(ep.EnablePrivateServiceConnect),
+		"pscProjectAllowlist":                  llx.ArrayData(pscProjectAllowlist, types.String),
+		"pscServiceAttachment":                 llx.StringData(pscServiceAttachment),
+		"predictionLoggingEnabled":             llx.BoolData(predictionLoggingEnabled),
+		"predictionLoggingSamplingRate":        llx.FloatData(predictionLoggingSamplingRate),
+		"predictionLoggingBigqueryDestination": llx.StringData(predictionLoggingBQ),
+		"dedicatedEndpointEnabled":             llx.BoolData(ep.DedicatedEndpointEnabled),
+		"dedicatedEndpointDns":                 llx.StringData(ep.DedicatedEndpointDns),
+		"privateModelServerEnabled":            llx.BoolData(ep.PrivateModelServerEnabled),
+		"satisfiesPzs":                         llx.BoolData(ep.SatisfiesPzs),
+		"satisfiesPzi":                         llx.BoolData(ep.SatisfiesPzi),
+		"trafficSplit":                         llx.MapData(trafficSplit, types.Int),
+		"labels":                               llx.MapData(convert.MapToInterfaceMap(ep.Labels), types.String),
+		"etag":                                 llx.StringData(ep.Etag),
+		"createdAt":                            llx.TimeDataPtr(timestampAsTimePtr(ep.CreateTime)),
+		"updatedAt":                            llx.TimeDataPtr(timestampAsTimePtr(ep.UpdateTime)),
 	})
 	if err != nil {
 		return nil, err
@@ -608,48 +660,72 @@ func (g *mqlGcpProjectVertexaiService) pipelineJobs() ([]any, error) {
 				return nil, false, err
 			}
 
-			pipelineSpec, err := protoToDict(job.PipelineSpec)
+			mqlJob, err := newMqlVertexaiPipelineJob(g.MqlRuntime, job)
 			if err != nil {
 				return nil, false, err
 			}
-			runtimeConfig, err := protoToDict(job.RuntimeConfig)
-			if err != nil {
-				return nil, false, err
-			}
-			encryptionSpec, err := protoToDict(job.EncryptionSpec)
-			if err != nil {
-				return nil, false, err
-			}
-			templateMetadata, err := protoToDict(job.TemplateMetadata)
-			if err != nil {
-				return nil, false, err
-			}
-
-			mqlJob, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.pipelineJob", map[string]*llx.RawData{
-				"name":             llx.StringData(job.Name),
-				"displayName":      llx.StringData(job.DisplayName),
-				"state":            llx.StringData(job.State.String()),
-				"pipelineSpec":     llx.DictData(pipelineSpec),
-				"runtimeConfig":    llx.DictData(runtimeConfig),
-				"serviceAccount":   llx.StringData(job.ServiceAccount),
-				"network":          llx.StringData(job.Network),
-				"encryptionSpec":   llx.DictData(encryptionSpec),
-				"templateUri":      llx.StringData(job.TemplateUri),
-				"templateMetadata": llx.DictData(templateMetadata),
-				"labels":           llx.MapData(convert.MapToInterfaceMap(job.Labels), types.String),
-				"createdAt":        llx.TimeDataPtr(timestampAsTimePtr(job.CreateTime)),
-				"updatedAt":        llx.TimeDataPtr(timestampAsTimePtr(job.UpdateTime)),
-				"startTime":        llx.TimeDataPtr(timestampAsTimePtr(job.StartTime)),
-				"endTime":          llx.TimeDataPtr(timestampAsTimePtr(job.EndTime)),
-			})
-			if err != nil {
-				return nil, false, err
-			}
-			mqlJob.(*mqlGcpProjectVertexaiServicePipelineJob).cacheKmsKeyName = job.GetEncryptionSpec().GetKmsKeyName()
 			items = append(items, mqlJob)
 		}
 		return items, false, nil
 	})
+}
+
+// newMqlVertexaiPipelineJob maps a Vertex AI PipelineJob proto into an MQL
+// resource. It is shared by the pipelineJobs() lister and the
+// initGcpProjectVertexaiServicePipelineJob single-instance resolver.
+func newMqlVertexaiPipelineJob(runtime *plugin.Runtime, job *aiplatformpb.PipelineJob) (*mqlGcpProjectVertexaiServicePipelineJob, error) {
+	pipelineSpec, err := protoToDict(job.PipelineSpec)
+	if err != nil {
+		return nil, err
+	}
+	runtimeConfig, err := protoToDict(job.RuntimeConfig)
+	if err != nil {
+		return nil, err
+	}
+	encryptionSpec, err := protoToDict(job.EncryptionSpec)
+	if err != nil {
+		return nil, err
+	}
+	templateMetadata, err := protoToDict(job.TemplateMetadata)
+	if err != nil {
+		return nil, err
+	}
+	errDict, err := protoToDict(job.Error)
+	if err != nil {
+		return nil, err
+	}
+
+	reservedIpRanges := make([]any, 0, len(job.ReservedIpRanges))
+	for _, r := range job.ReservedIpRanges {
+		reservedIpRanges = append(reservedIpRanges, r)
+	}
+
+	mqlJob, err := CreateResource(runtime, "gcp.project.vertexaiService.pipelineJob", map[string]*llx.RawData{
+		"name":             llx.StringData(job.Name),
+		"displayName":      llx.StringData(job.DisplayName),
+		"state":            llx.StringData(job.State.String()),
+		"pipelineSpec":     llx.DictData(pipelineSpec),
+		"runtimeConfig":    llx.DictData(runtimeConfig),
+		"serviceAccount":   llx.StringData(job.ServiceAccount),
+		"network":          llx.StringData(job.Network),
+		"encryptionSpec":   llx.DictData(encryptionSpec),
+		"templateUri":      llx.StringData(job.TemplateUri),
+		"templateMetadata": llx.DictData(templateMetadata),
+		"error":            llx.DictData(errDict),
+		"reservedIpRanges": llx.ArrayData(reservedIpRanges, types.String),
+		"labels":           llx.MapData(convert.MapToInterfaceMap(job.Labels), types.String),
+		"createdAt":        llx.TimeDataPtr(timestampAsTimePtr(job.CreateTime)),
+		"updatedAt":        llx.TimeDataPtr(timestampAsTimePtr(job.UpdateTime)),
+		"startTime":        llx.TimeDataPtr(timestampAsTimePtr(job.StartTime)),
+		"endTime":          llx.TimeDataPtr(timestampAsTimePtr(job.EndTime)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	res := mqlJob.(*mqlGcpProjectVertexaiServicePipelineJob)
+	res.cacheKmsKeyName = job.GetEncryptionSpec().GetKmsKeyName()
+	res.cacheScheduleName = job.ScheduleName
+	return res, nil
 }
 
 func (g *mqlGcpProjectVertexaiServicePipelineJob) id() (string, error) {
@@ -1056,6 +1132,186 @@ func initGcpProjectVertexaiServiceCustomJob(runtime *plugin.Runtime, args map[st
 		return nil, nil, err
 	}
 	delete(args, "location")
+	return args, res, nil
+}
+
+// initGcpProjectVertexaiServiceEndpoint resolves a single Vertex AI endpoint.
+// When accessed as a discovered asset (no args) it reconstructs the full
+// resource name from the asset identifier, then fetches it directly with
+// GetEndpoint so the resource is fully populated instead of an empty husk.
+func initGcpProjectVertexaiServiceEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	if args == nil {
+		args = make(map[string]*llx.RawData)
+	}
+	if len(args) == 0 {
+		ids := getAssetIdentifier(runtime)
+		if ids == nil {
+			return nil, nil, errors.New("no asset identifier found")
+		}
+		args["name"] = llx.StringData(fmt.Sprintf("projects/%s/locations/%s/endpoints/%s", ids.project, ids.region, ids.name))
+	}
+
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return args, nil, nil
+	}
+	name := nameRaw.Value.(string)
+
+	region := vertexaiRegionFromName(name)
+	if region == "" {
+		return nil, nil, errors.New("vertexai endpoint init: could not determine region from name " + name)
+	}
+
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
+	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, nil, err
+	}
+	ctx := context.Background()
+	client, err := aiplatform.NewEndpointClient(ctx,
+		option.WithCredentials(creds), connection.GRPCClientTraceOption(),
+		option.WithEndpoint(vertexaiEndpoint(region)),
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer client.Close()
+
+	ep, err := client.GetEndpoint(ctx, &aiplatformpb.GetEndpointRequest{Name: name})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	res, err := newMqlVertexaiEndpoint(runtime, vertexaiProjectFromName(name), ep)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, res, nil
+}
+
+// initGcpProjectVertexaiServicePipelineJob resolves a single Vertex AI pipeline
+// job. Like the endpoint init, it reconstructs the full resource name from the
+// asset identifier when accessed as a discovered asset and fetches it with
+// GetPipelineJob.
+func initGcpProjectVertexaiServicePipelineJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	if args == nil {
+		args = make(map[string]*llx.RawData)
+	}
+	if len(args) == 0 {
+		ids := getAssetIdentifier(runtime)
+		if ids == nil {
+			return nil, nil, errors.New("no asset identifier found")
+		}
+		args["name"] = llx.StringData(fmt.Sprintf("projects/%s/locations/%s/pipelineJobs/%s", ids.project, ids.region, ids.name))
+	}
+
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return args, nil, nil
+	}
+	name := nameRaw.Value.(string)
+
+	region := vertexaiRegionFromName(name)
+	if region == "" {
+		return nil, nil, errors.New("vertexai pipeline job init: could not determine region from name " + name)
+	}
+
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
+	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, nil, err
+	}
+	ctx := context.Background()
+	client, err := aiplatform.NewPipelineClient(ctx,
+		option.WithCredentials(creds), connection.GRPCClientTraceOption(),
+		option.WithEndpoint(vertexaiEndpoint(region)),
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer client.Close()
+
+	job, err := client.GetPipelineJob(ctx, &aiplatformpb.GetPipelineJobRequest{Name: name})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	res, err := newMqlVertexaiPipelineJob(runtime, job)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, res, nil
+}
+
+// initGcpProjectVertexaiServiceNotebookRuntimeTemplate resolves a single Vertex
+// AI notebook runtime template. Like the endpoint init, it reconstructs the
+// full resource name from the asset identifier when accessed as a discovered
+// asset and fetches it with GetNotebookRuntimeTemplate.
+func initGcpProjectVertexaiServiceNotebookRuntimeTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	if args == nil {
+		args = make(map[string]*llx.RawData)
+	}
+	if len(args) == 0 {
+		ids := getAssetIdentifier(runtime)
+		if ids == nil {
+			return nil, nil, errors.New("no asset identifier found")
+		}
+		args["name"] = llx.StringData(fmt.Sprintf("projects/%s/locations/%s/notebookRuntimeTemplates/%s", ids.project, ids.region, ids.name))
+	}
+
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return args, nil, nil
+	}
+	name := nameRaw.Value.(string)
+
+	region := vertexaiRegionFromName(name)
+	if region == "" {
+		return nil, nil, errors.New("vertexai notebook runtime template init: could not determine region from name " + name)
+	}
+
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
+	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, nil, err
+	}
+	ctx := context.Background()
+	client, err := aiplatform.NewNotebookClient(ctx,
+		option.WithCredentials(creds), connection.GRPCClientTraceOption(),
+		option.WithEndpoint(vertexaiEndpoint(region)),
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer client.Close()
+
+	tmpl, err := client.GetNotebookRuntimeTemplate(ctx, &aiplatformpb.GetNotebookRuntimeTemplateRequest{Name: name})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	res, err := newMqlVertexaiNotebookRuntimeTemplate(runtime, tmpl)
+	if err != nil {
+		return nil, nil, err
+	}
 	return args, res, nil
 }
 
@@ -1479,28 +1735,32 @@ func (g *mqlGcpProjectVertexaiService) notebookRuntimes() ([]any, error) {
 			}
 
 			mqlRt, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.notebookRuntime", map[string]*llx.RawData{
-				"name":                llx.StringData(rt.Name),
-				"displayName":         llx.StringData(rt.DisplayName),
-				"description":         llx.StringData(rt.Description),
-				"runtimeUser":         llx.StringData(rt.RuntimeUser),
-				"proxyUri":            llx.StringData(rt.ProxyUri),
-				"healthState":         llx.StringData(rt.HealthState.String()),
-				"runtimeState":        llx.StringData(rt.RuntimeState.String()),
-				"notebookRuntimeType": llx.StringData(rt.NotebookRuntimeType.String()),
-				"isUpgradable":        llx.BoolData(rt.IsUpgradable),
-				"version":             llx.StringData(rt.Version),
-				"networkTags":         llx.ArrayData(convert.SliceAnyToInterface(rt.NetworkTags), types.String),
-				"machineSpec":         llx.DictData(machineSpec),
-				"networkSpec":         llx.DictData(networkSpec),
-				"idleShutdownConfig":  llx.DictData(idleShutdownConfig),
-				"eucConfig":           llx.DictData(eucConfig),
-				"shieldedVmConfig":    llx.DictData(shieldedVmConfig),
-				"softwareConfig":      llx.DictData(softwareConfig),
-				"labels":              llx.MapData(convert.MapToInterfaceMap(rt.Labels), types.String),
-				"encryptionSpec":      llx.DictData(encryptionSpec),
-				"createdAt":           llx.TimeDataPtr(timestampAsTimePtr(rt.CreateTime)),
-				"updatedAt":           llx.TimeDataPtr(timestampAsTimePtr(rt.UpdateTime)),
-				"expirationTime":      llx.TimeDataPtr(timestampAsTimePtr(rt.ExpirationTime)),
+				"name":                 llx.StringData(rt.Name),
+				"displayName":          llx.StringData(rt.DisplayName),
+				"description":          llx.StringData(rt.Description),
+				"runtimeUser":          llx.StringData(rt.RuntimeUser),
+				"proxyUri":             llx.StringData(rt.ProxyUri),
+				"healthState":          llx.StringData(rt.HealthState.String()),
+				"runtimeState":         llx.StringData(rt.RuntimeState.String()),
+				"notebookRuntimeType":  llx.StringData(rt.NotebookRuntimeType.String()),
+				"isUpgradable":         llx.BoolData(rt.IsUpgradable),
+				"version":              llx.StringData(rt.Version),
+				"networkTags":          llx.ArrayData(convert.SliceAnyToInterface(rt.NetworkTags), types.String),
+				"machineSpec":          llx.DictData(machineSpec),
+				"networkSpec":          llx.DictData(networkSpec),
+				"enableInternetAccess": llx.BoolData(rt.GetNetworkSpec().GetEnableInternetAccess()),
+				"idleShutdownConfig":   llx.DictData(idleShutdownConfig),
+				"eucConfig":            llx.DictData(eucConfig),
+				"eucDisabled":          llx.BoolData(rt.GetEucConfig().GetEucDisabled()),
+				"bypassActasCheck":     llx.BoolData(rt.GetEucConfig().GetBypassActasCheck()),
+				"shieldedVmConfig":     llx.DictData(shieldedVmConfig),
+				"enableSecureBoot":     llx.BoolData(rt.GetShieldedVmConfig().GetEnableSecureBoot()),
+				"softwareConfig":       llx.DictData(softwareConfig),
+				"labels":               llx.MapData(convert.MapToInterfaceMap(rt.Labels), types.String),
+				"encryptionSpec":       llx.DictData(encryptionSpec),
+				"createdAt":            llx.TimeDataPtr(timestampAsTimePtr(rt.CreateTime)),
+				"updatedAt":            llx.TimeDataPtr(timestampAsTimePtr(rt.UpdateTime)),
+				"expirationTime":       llx.TimeDataPtr(timestampAsTimePtr(rt.ExpirationTime)),
 			})
 			if err != nil {
 				return nil, false, err
@@ -1509,6 +1769,8 @@ func (g *mqlGcpProjectVertexaiService) notebookRuntimes() ([]any, error) {
 			mqlRtTyped.cacheKmsKeyName = rt.GetEncryptionSpec().GetKmsKeyName()
 			mqlRtTyped.cacheServiceAccountEmail = rt.ServiceAccount
 			mqlRtTyped.cacheProjectId = projectId
+			mqlRtTyped.cacheNetwork = rt.GetNetworkSpec().GetNetwork()
+			mqlRtTyped.cacheSubnetwork = rt.GetNetworkSpec().GetSubnetwork()
 			items = append(items, mqlRt)
 		}
 		return items, false, nil
@@ -1558,62 +1820,83 @@ func (g *mqlGcpProjectVertexaiService) notebookRuntimeTemplates() ([]any, error)
 				return nil, false, err
 			}
 
-			machineSpec, err := protoToDict(tmpl.MachineSpec)
+			mqlTmpl, err := newMqlVertexaiNotebookRuntimeTemplate(g.MqlRuntime, tmpl)
 			if err != nil {
 				return nil, false, err
 			}
-			networkSpec, err := protoToDict(tmpl.NetworkSpec)
-			if err != nil {
-				return nil, false, err
-			}
-			idleShutdownConfig, err := protoToDict(tmpl.IdleShutdownConfig)
-			if err != nil {
-				return nil, false, err
-			}
-			eucConfig, err := protoToDict(tmpl.EucConfig)
-			if err != nil {
-				return nil, false, err
-			}
-			shieldedVmConfig, err := protoToDict(tmpl.ShieldedVmConfig)
-			if err != nil {
-				return nil, false, err
-			}
-			softwareConfig, err := protoToDict(tmpl.SoftwareConfig)
-			if err != nil {
-				return nil, false, err
-			}
-			encryptionSpec, err := protoToDict(tmpl.EncryptionSpec)
-			if err != nil {
-				return nil, false, err
-			}
-
-			mqlTmpl, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.notebookRuntimeTemplate", map[string]*llx.RawData{
-				"name":                llx.StringData(tmpl.Name),
-				"displayName":         llx.StringData(tmpl.DisplayName),
-				"description":         llx.StringData(tmpl.Description),
-				"isDefault":           llx.BoolData(tmpl.IsDefault),
-				"notebookRuntimeType": llx.StringData(tmpl.NotebookRuntimeType.String()),
-				"networkTags":         llx.ArrayData(convert.SliceAnyToInterface(tmpl.NetworkTags), types.String),
-				"machineSpec":         llx.DictData(machineSpec),
-				"networkSpec":         llx.DictData(networkSpec),
-				"idleShutdownConfig":  llx.DictData(idleShutdownConfig),
-				"eucConfig":           llx.DictData(eucConfig),
-				"shieldedVmConfig":    llx.DictData(shieldedVmConfig),
-				"softwareConfig":      llx.DictData(softwareConfig),
-				"etag":                llx.StringData(tmpl.Etag),
-				"labels":              llx.MapData(convert.MapToInterfaceMap(tmpl.Labels), types.String),
-				"encryptionSpec":      llx.DictData(encryptionSpec),
-				"createdAt":           llx.TimeDataPtr(timestampAsTimePtr(tmpl.CreateTime)),
-				"updatedAt":           llx.TimeDataPtr(timestampAsTimePtr(tmpl.UpdateTime)),
-			})
-			if err != nil {
-				return nil, false, err
-			}
-			mqlTmpl.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).cacheKmsKeyName = tmpl.GetEncryptionSpec().GetKmsKeyName()
 			items = append(items, mqlTmpl)
 		}
 		return items, false, nil
 	})
+}
+
+// newMqlVertexaiNotebookRuntimeTemplate maps a Vertex AI
+// NotebookRuntimeTemplate proto into an MQL resource. It is shared by the
+// notebookRuntimeTemplates() lister and the
+// initGcpProjectVertexaiServiceNotebookRuntimeTemplate single-instance resolver.
+func newMqlVertexaiNotebookRuntimeTemplate(runtime *plugin.Runtime, tmpl *aiplatformpb.NotebookRuntimeTemplate) (*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate, error) {
+	machineSpec, err := protoToDict(tmpl.MachineSpec)
+	if err != nil {
+		return nil, err
+	}
+	networkSpec, err := protoToDict(tmpl.NetworkSpec)
+	if err != nil {
+		return nil, err
+	}
+	idleShutdownConfig, err := protoToDict(tmpl.IdleShutdownConfig)
+	if err != nil {
+		return nil, err
+	}
+	eucConfig, err := protoToDict(tmpl.EucConfig)
+	if err != nil {
+		return nil, err
+	}
+	shieldedVmConfig, err := protoToDict(tmpl.ShieldedVmConfig)
+	if err != nil {
+		return nil, err
+	}
+	softwareConfig, err := protoToDict(tmpl.SoftwareConfig)
+	if err != nil {
+		return nil, err
+	}
+	encryptionSpec, err := protoToDict(tmpl.EncryptionSpec)
+	if err != nil {
+		return nil, err
+	}
+
+	mqlTmpl, err := CreateResource(runtime, "gcp.project.vertexaiService.notebookRuntimeTemplate", map[string]*llx.RawData{
+		"name":                 llx.StringData(tmpl.Name),
+		"displayName":          llx.StringData(tmpl.DisplayName),
+		"description":          llx.StringData(tmpl.Description),
+		"isDefault":            llx.BoolData(tmpl.IsDefault),
+		"notebookRuntimeType":  llx.StringData(tmpl.NotebookRuntimeType.String()),
+		"networkTags":          llx.ArrayData(convert.SliceAnyToInterface(tmpl.NetworkTags), types.String),
+		"machineSpec":          llx.DictData(machineSpec),
+		"networkSpec":          llx.DictData(networkSpec),
+		"enableInternetAccess": llx.BoolData(tmpl.GetNetworkSpec().GetEnableInternetAccess()),
+		"idleShutdownConfig":   llx.DictData(idleShutdownConfig),
+		"eucConfig":            llx.DictData(eucConfig),
+		"eucDisabled":          llx.BoolData(tmpl.GetEucConfig().GetEucDisabled()),
+		"bypassActasCheck":     llx.BoolData(tmpl.GetEucConfig().GetBypassActasCheck()),
+		"shieldedVmConfig":     llx.DictData(shieldedVmConfig),
+		"enableSecureBoot":     llx.BoolData(tmpl.GetShieldedVmConfig().GetEnableSecureBoot()),
+		"softwareConfig":       llx.DictData(softwareConfig),
+		"etag":                 llx.StringData(tmpl.Etag),
+		"labels":               llx.MapData(convert.MapToInterfaceMap(tmpl.Labels), types.String),
+		"encryptionSpec":       llx.DictData(encryptionSpec),
+		"createdAt":            llx.TimeDataPtr(timestampAsTimePtr(tmpl.CreateTime)),
+		"updatedAt":            llx.TimeDataPtr(timestampAsTimePtr(tmpl.UpdateTime)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	res := mqlTmpl.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate)
+	res.cacheKmsKeyName = tmpl.GetEncryptionSpec().GetKmsKeyName()
+	res.cacheServiceAccountEmail = tmpl.ServiceAccount
+	res.cacheProjectId = vertexaiProjectFromName(tmpl.Name)
+	res.cacheNetwork = tmpl.GetNetworkSpec().GetNetwork()
+	res.cacheSubnetwork = tmpl.GetNetworkSpec().GetSubnetwork()
+	return res, nil
 }
 
 func (g *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) id() (string, error) {
@@ -1674,6 +1957,7 @@ func (g *mqlGcpProjectVertexaiService) notebookExecutionJobs() ([]any, error) {
 				"displayName":             llx.StringData(job.DisplayName),
 				"jobState":                llx.StringData(job.JobState.String()),
 				"kernelName":              llx.StringData(job.KernelName),
+				"executionUser":           llx.StringData(job.GetExecutionUser()),
 				"scheduleResourceName":    llx.StringData(job.ScheduleResourceName),
 				"executionTimeoutSeconds": llx.IntData(timeoutSeconds),
 				"labels":                  llx.MapData(convert.MapToInterfaceMap(job.Labels), types.String),
@@ -1684,7 +1968,11 @@ func (g *mqlGcpProjectVertexaiService) notebookExecutionJobs() ([]any, error) {
 			if err != nil {
 				return nil, false, err
 			}
-			mqlJob.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).cacheKmsKeyName = job.GetEncryptionSpec().GetKmsKeyName()
+			mqlNotebookJob := mqlJob.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob)
+			mqlNotebookJob.cacheKmsKeyName = job.GetEncryptionSpec().GetKmsKeyName()
+			mqlNotebookJob.cacheServiceAccountEmail = job.GetServiceAccount()
+			mqlNotebookJob.cacheProjectId = vertexaiProjectFromName(job.Name)
+			mqlNotebookJob.cacheNotebookRuntimeTemplateName = job.GetNotebookRuntimeTemplateResourceName()
 			items = append(items, mqlJob)
 		}
 		return items, false, nil
@@ -2387,6 +2675,7 @@ func (g *mqlGcpProjectVertexaiService) tuningJobs() ([]any, error) {
 			mqlTuningJob.cacheKmsKeyName = job.GetEncryptionSpec().GetKmsKeyName()
 			mqlTuningJob.cacheServiceAccountEmail = job.ServiceAccount
 			mqlTuningJob.cacheProjectId = projectId
+			mqlTuningJob.cacheTunedModelName = job.GetTunedModel().GetModel()
 			items = append(items, mqlJob)
 		}
 		return items, false, nil
@@ -2548,7 +2837,13 @@ func (g *mqlGcpProjectVertexaiService) hyperparameterTuningJobs() ([]any, error)
 			if err != nil {
 				return nil, false, err
 			}
-			mqlJob.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).cacheKmsKeyName = job.GetEncryptionSpec().GetKmsKeyName()
+			mqlHyperJob := mqlJob.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob)
+			mqlHyperJob.cacheKmsKeyName = job.GetEncryptionSpec().GetKmsKeyName()
+			if job.TrialJobSpec != nil {
+				mqlHyperJob.cacheServiceAccountEmail = job.TrialJobSpec.GetServiceAccount()
+				mqlHyperJob.cacheNetwork = job.TrialJobSpec.GetNetwork()
+			}
+			mqlHyperJob.cacheProjectId = vertexaiProjectFromName(job.Name)
 			items = append(items, mqlJob)
 		}
 		return items, false, nil
@@ -2636,11 +2931,67 @@ func (g *mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob) id() (string,
 // ---------------------------------------------------------------
 
 type mqlGcpProjectVertexaiServiceModelInternal struct {
-	cacheKmsKeyName string
+	cacheKmsKeyName        string
+	cacheOriginalModelName string
+	cachePipelineJobName   string
 }
 
 func (a *mqlGcpProjectVertexaiServiceModel) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
 	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+func (a *mqlGcpProjectVertexaiServiceModel) iamPolicy() ([]any, error) {
+	if a.Name.Error != nil {
+		return nil, a.Name.Error
+	}
+	name := a.Name.Data
+
+	conn := a.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+	client, err := aiplatform.NewModelClient(ctx,
+		option.WithCredentials(creds), connection.GRPCClientTraceOption(),
+		option.WithEndpoint(vertexaiEndpoint(vertexaiRegionFromName(name))),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	policy, err := client.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
+		Resource: name,
+		Options:  &iampb.GetPolicyOptions{RequestedPolicyVersion: 3},
+	})
+	return vertexaiIamPolicyBindings(a.MqlRuntime, name, policy, err)
+}
+
+func (a *mqlGcpProjectVertexaiServiceModel) public() (bool, error) {
+	bindings := a.GetIamPolicy()
+	if bindings.Error != nil {
+		return false, bindings.Error
+	}
+	return iamPolicyHasPublicMember(bindings.Data)
+}
+
+func (a *mqlGcpProjectVertexaiServiceModel) originalModel() (*mqlGcpProjectVertexaiServiceModel, error) {
+	return resolveVertexaiModelRef(a.MqlRuntime, &a.OriginalModel, a.cacheOriginalModelName)
+}
+
+func (a *mqlGcpProjectVertexaiServiceModel) pipelineJob() (*mqlGcpProjectVertexaiServicePipelineJob, error) {
+	if a.cachePipelineJobName == "" {
+		a.PipelineJob.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "gcp.project.vertexaiService.pipelineJob", map[string]*llx.RawData{
+		"name": llx.StringData(a.cachePipelineJobName),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectVertexaiServicePipelineJob), nil
 }
 
 type mqlGcpProjectVertexaiServiceEndpointInternal struct {
@@ -2652,11 +3003,30 @@ func (a *mqlGcpProjectVertexaiServiceEndpoint) kmsKey() (*mqlGcpProjectKmsServic
 }
 
 type mqlGcpProjectVertexaiServicePipelineJobInternal struct {
-	cacheKmsKeyName string
+	cacheKmsKeyName   string
+	cacheScheduleName string
 }
 
 func (a *mqlGcpProjectVertexaiServicePipelineJob) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
 	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+func (a *mqlGcpProjectVertexaiServicePipelineJob) scheduleRef() (*mqlGcpProjectVertexaiServiceSchedule, error) {
+	if a.cacheScheduleName == "" {
+		a.ScheduleRef.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "gcp.project.vertexaiService.schedule", map[string]*llx.RawData{
+		"name": llx.StringData(a.cacheScheduleName),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectVertexaiServiceSchedule), nil
+}
+
+func (a *mqlGcpProjectVertexaiServicePipelineJob) managedBy() (string, error) {
+	return managedByFromLabels(a.GetLabels())
 }
 
 type mqlGcpProjectVertexaiServiceDatasetInternal struct {
@@ -2689,6 +3059,10 @@ type mqlGcpProjectVertexaiServiceCustomJobInternal struct {
 
 func (a *mqlGcpProjectVertexaiServiceCustomJob) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
 	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+func (a *mqlGcpProjectVertexaiServiceCustomJob) managedBy() (string, error) {
+	return managedByFromLabels(a.GetLabels())
 }
 
 type mqlGcpProjectVertexaiServiceIndexInternal struct {
@@ -2737,6 +3111,8 @@ type mqlGcpProjectVertexaiServiceNotebookRuntimeInternal struct {
 	cacheKmsKeyName          string
 	cacheServiceAccountEmail string
 	cacheProjectId           string
+	cacheNetwork             string
+	cacheSubnetwork          string
 }
 
 func (a *mqlGcpProjectVertexaiServiceNotebookRuntime) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
@@ -2747,20 +3123,172 @@ func (a *mqlGcpProjectVertexaiServiceNotebookRuntime) serviceAccount() (*mqlGcpP
 	return vertexaiServiceAccountRef(a.MqlRuntime, &a.ServiceAccount, a.cacheProjectId, a.cacheServiceAccountEmail)
 }
 
+func (a *mqlGcpProjectVertexaiServiceNotebookRuntime) network() (*mqlGcpProjectComputeServiceNetwork, error) {
+	return vertexaiNetworkRef(a.MqlRuntime, &a.Network, a.cacheNetwork)
+}
+
+func (a *mqlGcpProjectVertexaiServiceNotebookRuntime) subnetwork() (*mqlGcpProjectComputeServiceSubnetwork, error) {
+	return vertexaiSubnetworkRef(a.MqlRuntime, &a.Subnetwork, a.cacheSubnetwork)
+}
+
 type mqlGcpProjectVertexaiServiceNotebookRuntimeTemplateInternal struct {
-	cacheKmsKeyName string
+	cacheKmsKeyName          string
+	cacheServiceAccountEmail string
+	cacheProjectId           string
+	cacheNetwork             string
+	cacheSubnetwork          string
 }
 
 func (a *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
 	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
 }
 
+func (a *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) iamPolicy() ([]any, error) {
+	if a.Name.Error != nil {
+		return nil, a.Name.Error
+	}
+	name := a.Name.Data
+
+	conn := a.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+	client, err := aiplatform.NewNotebookClient(ctx,
+		option.WithCredentials(creds), connection.GRPCClientTraceOption(),
+		option.WithEndpoint(vertexaiEndpoint(vertexaiRegionFromName(name))),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	policy, err := client.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
+		Resource: name,
+		Options:  &iampb.GetPolicyOptions{RequestedPolicyVersion: 3},
+	})
+	return vertexaiIamPolicyBindings(a.MqlRuntime, name, policy, err)
+}
+
+func (a *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) public() (bool, error) {
+	bindings := a.GetIamPolicy()
+	if bindings.Error != nil {
+		return false, bindings.Error
+	}
+	return iamPolicyHasPublicMember(bindings.Data)
+}
+
+// vertexaiIamPolicyBindings maps a fetched resource-level IAM policy to
+// gcp.resourcemanager.binding resources. It handles the GetIamPolicy error
+// (the Model and Notebook clients share the google.iam.v1 mixin), returning nil
+// on access-denied so a scan without getIamPolicy permission degrades
+// gracefully rather than erroring.
+func vertexaiIamPolicyBindings(runtime *plugin.Runtime, name string, policy *iampb.Policy, err error) ([]any, error) {
+	if err != nil {
+		if s, ok := status.FromError(err); ok && s.Code() == codes.PermissionDenied {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return iampbBindingsToMql(runtime, name, policy.Bindings)
+}
+
+func (a *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) serviceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	return vertexaiServiceAccountRef(a.MqlRuntime, &a.ServiceAccount, a.cacheProjectId, a.cacheServiceAccountEmail)
+}
+
+func (a *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) network() (*mqlGcpProjectComputeServiceNetwork, error) {
+	return vertexaiNetworkRef(a.MqlRuntime, &a.Network, a.cacheNetwork)
+}
+
+func (a *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) subnetwork() (*mqlGcpProjectComputeServiceSubnetwork, error) {
+	return vertexaiSubnetworkRef(a.MqlRuntime, &a.Subnetwork, a.cacheSubnetwork)
+}
+
+// vertexaiNetworkRef resolves a cached VPC network URL/name to the typed
+// compute network, marking the field null when empty or unresolvable.
+func vertexaiNetworkRef(runtime *plugin.Runtime, field *plugin.TValue[*mqlGcpProjectComputeServiceNetwork], networkUrl string) (*mqlGcpProjectComputeServiceNetwork, error) {
+	if networkUrl == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	n, err := getNetworkByUrl(networkUrl, runtime)
+	if err != nil {
+		return nil, err
+	}
+	if n == nil {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return n, nil
+}
+
+// vertexaiSubnetworkRef resolves a cached subnetwork URL/name to the typed
+// compute subnetwork, marking the field null when empty or unresolvable.
+func vertexaiSubnetworkRef(runtime *plugin.Runtime, field *plugin.TValue[*mqlGcpProjectComputeServiceSubnetwork], subnetUrl string) (*mqlGcpProjectComputeServiceSubnetwork, error) {
+	if subnetUrl == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	n, err := getSubnetworkByUrl(subnetUrl, runtime)
+	if err != nil {
+		return nil, err
+	}
+	if n == nil {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return n, nil
+}
+
 type mqlGcpProjectVertexaiServiceNotebookExecutionJobInternal struct {
-	cacheKmsKeyName string
+	cacheKmsKeyName                  string
+	cacheServiceAccountEmail         string
+	cacheProjectId                   string
+	cacheNotebookRuntimeTemplateName string
 }
 
 func (a *mqlGcpProjectVertexaiServiceNotebookExecutionJob) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
 	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+func (a *mqlGcpProjectVertexaiServiceNotebookExecutionJob) serviceAccountRef() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	return vertexaiServiceAccountRef(a.MqlRuntime, &a.ServiceAccountRef, a.cacheProjectId, a.cacheServiceAccountEmail)
+}
+
+func (a *mqlGcpProjectVertexaiServiceNotebookExecutionJob) notebookRuntimeTemplateRef() (*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate, error) {
+	if a.cacheNotebookRuntimeTemplateName == "" {
+		a.NotebookRuntimeTemplateRef.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "gcp.project.vertexaiService.notebookRuntimeTemplate", map[string]*llx.RawData{
+		"name": llx.StringData(a.cacheNotebookRuntimeTemplateName),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate), nil
+}
+
+func (a *mqlGcpProjectVertexaiServiceNotebookExecutionJob) scheduleRef() (*mqlGcpProjectVertexaiServiceSchedule, error) {
+	if a.ScheduleResourceName.Error != nil {
+		return nil, a.ScheduleResourceName.Error
+	}
+	name := a.ScheduleResourceName.Data
+	if name == "" {
+		a.ScheduleRef.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "gcp.project.vertexaiService.schedule", map[string]*llx.RawData{
+		"name": llx.StringData(name),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectVertexaiServiceSchedule), nil
+}
+
+func (a *mqlGcpProjectVertexaiServiceNotebookExecutionJob) managedBy() (string, error) {
+	return managedByFromLabels(a.GetLabels())
 }
 
 type mqlGcpProjectVertexaiServiceReasoningEngineInternal struct {
@@ -2850,10 +3378,15 @@ func (a *mqlGcpProjectVertexaiServiceBatchPredictionJob) model() (*mqlGcpProject
 	return resolveVertexaiModelRef(a.MqlRuntime, &a.Model, a.cacheModelName)
 }
 
+func (a *mqlGcpProjectVertexaiServiceBatchPredictionJob) managedBy() (string, error) {
+	return managedByFromLabels(a.GetLabels())
+}
+
 type mqlGcpProjectVertexaiServiceTuningJobInternal struct {
 	cacheKmsKeyName          string
 	cacheServiceAccountEmail string
 	cacheProjectId           string
+	cacheTunedModelName      string
 }
 
 func (a *mqlGcpProjectVertexaiServiceTuningJob) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
@@ -2862,6 +3395,14 @@ func (a *mqlGcpProjectVertexaiServiceTuningJob) kmsKey() (*mqlGcpProjectKmsServi
 
 func (a *mqlGcpProjectVertexaiServiceTuningJob) serviceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
 	return vertexaiServiceAccountRef(a.MqlRuntime, &a.ServiceAccount, a.cacheProjectId, a.cacheServiceAccountEmail)
+}
+
+func (a *mqlGcpProjectVertexaiServiceTuningJob) tunedModelRef() (*mqlGcpProjectVertexaiServiceModel, error) {
+	return resolveVertexaiModelRef(a.MqlRuntime, &a.TunedModelRef, a.cacheTunedModelName)
+}
+
+func (a *mqlGcpProjectVertexaiServiceTuningJob) managedBy() (string, error) {
+	return managedByFromLabels(a.GetLabels())
 }
 
 type mqlGcpProjectVertexaiServiceTrainingPipelineInternal struct {
@@ -2883,11 +3424,37 @@ func (a *mqlGcpProjectVertexaiServiceTrainingPipeline) kmsKey() (*mqlGcpProjectK
 }
 
 type mqlGcpProjectVertexaiServiceHyperparameterTuningJobInternal struct {
-	cacheKmsKeyName string
+	cacheKmsKeyName          string
+	cacheServiceAccountEmail string
+	cacheNetwork             string
+	cacheProjectId           string
 }
 
 func (a *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
 	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+func (a *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) serviceAccountRef() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	return vertexaiServiceAccountRef(a.MqlRuntime, &a.ServiceAccountRef, a.cacheProjectId, a.cacheServiceAccountEmail)
+}
+
+func (a *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) networkRef() (*mqlGcpProjectComputeServiceNetwork, error) {
+	if a.cacheNetwork == "" {
+		a.NetworkRef.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	n, err := getNetworkByUrl(a.cacheNetwork, a.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if n == nil {
+		a.NetworkRef.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return n, nil
+}
+
+func (a *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) managedBy() (string, error) {
+	return managedByFromLabels(a.GetLabels())
 }
 
 type mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJobInternal struct {
@@ -2897,6 +3464,10 @@ type mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJobInternal struct {
 
 func (a *mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
 	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+func (a *mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob) managedBy() (string, error) {
+	return managedByFromLabels(a.GetLabels())
 }
 
 func (a *mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob) endpoint() (*mqlGcpProjectVertexaiServiceEndpoint, error) {

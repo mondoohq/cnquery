@@ -128,6 +128,9 @@ func (o *mqlOpenstack) loadBalancers() ([]any, error) {
 	c := conn(o.MqlRuntime)
 	client, err := c.LoadBalancerClient()
 	if err != nil {
+		if serviceMissing(err) {
+			return []any{}, nil
+		}
 		return nil, err
 	}
 	pages, err := loadbalancers.List(client, loadbalancers.ListOpts{}).AllPages(ctx())
@@ -298,6 +301,9 @@ func (o *mqlOpenstack) listeners() ([]any, error) {
 	c := conn(o.MqlRuntime)
 	client, err := c.LoadBalancerClient()
 	if err != nil {
+		if serviceMissing(err) {
+			return []any{}, nil
+		}
 		return nil, err
 	}
 	pages, err := listeners.List(client, listeners.ListOpts{}).AllPages(ctx())
@@ -508,6 +514,9 @@ func (o *mqlOpenstack) pools() ([]any, error) {
 	c := conn(o.MqlRuntime)
 	client, err := c.LoadBalancerClient()
 	if err != nil {
+		if serviceMissing(err) {
+			return []any{}, nil
+		}
 		return nil, err
 	}
 	pages, err := pools.List(client, pools.ListOpts{}).AllPages(ctx())
@@ -793,6 +802,9 @@ func (o *mqlOpenstack) healthMonitors() ([]any, error) {
 	c := conn(o.MqlRuntime)
 	client, err := c.LoadBalancerClient()
 	if err != nil {
+		if serviceMissing(err) {
+			return []any{}, nil
+		}
 		return nil, err
 	}
 	pages, err := monitors.List(client, monitors.ListOpts{}).AllPages(ctx())
@@ -910,6 +922,9 @@ func (o *mqlOpenstack) l7Policies() ([]any, error) {
 	c := conn(o.MqlRuntime)
 	client, err := c.LoadBalancerClient()
 	if err != nil {
+		if serviceMissing(err) {
+			return []any{}, nil
+		}
 		return nil, err
 	}
 	pages, err := l7policies.List(client, l7policies.ListOpts{}).AllPages(ctx())

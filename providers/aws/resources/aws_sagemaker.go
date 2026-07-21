@@ -16,6 +16,7 @@ import (
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	sagemakerTypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
+	"github.com/aws/smithy-go"
 	"github.com/aws/smithy-go/transport/http"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -117,17 +118,62 @@ func (a *mqlAwsSagemaker) getEndpoints(conn *connection.AwsConnection) []*jobpoo
 }
 
 func (a *mqlAwsSagemakerEndpoint) config() (map[string]any, error) {
-	name := a.Name.Data
+	// The endpoint config has its own name, distinct from the endpoint name;
+	// resolve it via DescribeEndpoint rather than assuming they're equal.
+	details, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+
 	region := a.Region.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Sagemaker(region)
 	ctx := context.Background()
-	config, err := svc.DescribeEndpointConfig(ctx, &sagemaker.DescribeEndpointConfigInput{EndpointConfigName: &name})
+	config, err := svc.DescribeEndpointConfig(ctx, &sagemaker.DescribeEndpointConfigInput{EndpointConfigName: details.EndpointConfigName})
 	if err != nil {
 		return nil, err
 	}
 	return convert.JsonToDict(config)
+}
+
+// endpointConfig resolves the endpoint's configuration as a typed
+// aws.sagemaker.endpointConfig resource, priming its detail cache so downstream
+// accessors (production variants, KMS, network isolation, VPC) reuse the
+// DescribeEndpointConfig response fetched here.
+func (a *mqlAwsSagemakerEndpoint) endpointConfig() (*mqlAwsSagemakerEndpointConfig, error) {
+	details, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	if details.EndpointConfigName == nil || *details.EndpointConfigName == "" {
+		a.EndpointConfig.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	region := a.Region.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Sagemaker(region)
+	ctx := context.Background()
+	cfg, err := svc.DescribeEndpointConfig(ctx, &sagemaker.DescribeEndpointConfigInput{EndpointConfigName: details.EndpointConfigName})
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerEndpointConfig,
+		map[string]*llx.RawData{
+			"arn":       llx.StringDataPtr(cfg.EndpointConfigArn),
+			"name":      llx.StringDataPtr(cfg.EndpointConfigName),
+			"region":    llx.StringData(region),
+			"createdAt": llx.TimeDataPtr(cfg.CreationTime),
+		})
+	if err != nil {
+		return nil, err
+	}
+	ec := res.(*mqlAwsSagemakerEndpointConfig)
+	ec.cacheDescribe = cfg
+	ec.fetched = true
+	return ec, nil
 }
 
 func (a *mqlAwsSagemaker) notebookInstances() ([]any, error) {
@@ -231,9 +277,8 @@ func initAwsSagemakerNotebookinstance(runtime *plugin.Runtime, args map[string]*
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["name"] = llx.StringData(ids.name)
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 
@@ -827,8 +872,10 @@ type mqlAwsSagemakerModelInternal struct {
 	cacheRoleArn                *string
 	cacheEnableNetworkIsolation bool
 	cachePrimaryContainer       any
+	cachePrimaryContainerDef    *sagemakerTypes.ContainerDefinition
 	cacheVpcConfig              any
 	cacheVpcSubnetIds           []string
+	cacheVpcSecurityGroupIds    []string
 	cacheContainers             []sagemakerTypes.ContainerDefinition
 	cacheInferExecConfig        any
 }
@@ -866,14 +913,42 @@ func (a *mqlAwsSagemakerModel) fetchDetails() error {
 		a.cacheEnableNetworkIsolation = *resp.EnableNetworkIsolation
 	}
 	a.cachePrimaryContainer, _ = convert.JsonToDict(resp.PrimaryContainer)
+	a.cachePrimaryContainerDef = resp.PrimaryContainer
 	a.cacheVpcConfig, _ = convert.JsonToDict(resp.VpcConfig)
 	if resp.VpcConfig != nil {
 		a.cacheVpcSubnetIds = resp.VpcConfig.Subnets
+		a.cacheVpcSecurityGroupIds = resp.VpcConfig.SecurityGroupIds
 	}
 	a.cacheContainers = resp.Containers
 	a.cacheInferExecConfig, _ = convert.JsonToDict(resp.InferenceExecutionConfig)
 	a.detailsFetched = true
 	return nil
+}
+
+// buildContainer maps a SageMaker ContainerDefinition to the typed
+// aws.sagemaker.model.container resource. Shared by containers() (inference
+// pipeline) and primaryContainerRef() (the primary serving container).
+func (a *mqlAwsSagemakerModel) buildContainer(c sagemakerTypes.ContainerDefinition) (*mqlAwsSagemakerModelContainer, error) {
+	env := make(map[string]any, len(c.Environment))
+	for k, v := range c.Environment {
+		env[k] = v
+	}
+	mqlC, err := CreateResource(a.MqlRuntime, "aws.sagemaker.model.container",
+		map[string]*llx.RawData{
+			"containerHostname": llx.StringDataPtr(c.ContainerHostname),
+			"image":             llx.StringDataPtr(c.Image),
+			"modelDataUrl":      llx.StringDataPtr(c.ModelDataUrl),
+			"mode":              llx.StringData(string(c.Mode)),
+			"environment":       llx.MapData(env, types.String),
+		})
+	if err != nil {
+		return nil, err
+	}
+	container := mqlC.(*mqlAwsSagemakerModelContainer)
+	container.cacheModelArn = a.Arn.Data
+	container.cacheImageConfig = c.ImageConfig
+	container.cacheMultiModelConfig = c.MultiModelConfig
+	return container, nil
 }
 
 func (a *mqlAwsSagemakerModel) containers() ([]any, error) {
@@ -882,28 +957,31 @@ func (a *mqlAwsSagemakerModel) containers() ([]any, error) {
 	}
 	res := make([]any, 0, len(a.cacheContainers))
 	for _, c := range a.cacheContainers {
-		env := make(map[string]any, len(c.Environment))
-		for k, v := range c.Environment {
-			env[k] = v
-		}
-		mqlC, err := CreateResource(a.MqlRuntime, "aws.sagemaker.model.container",
-			map[string]*llx.RawData{
-				"containerHostname": llx.StringDataPtr(c.ContainerHostname),
-				"image":             llx.StringDataPtr(c.Image),
-				"modelDataUrl":      llx.StringDataPtr(c.ModelDataUrl),
-				"mode":              llx.StringData(string(c.Mode)),
-				"environment":       llx.MapData(env, types.String),
-			})
+		container, err := a.buildContainer(c)
 		if err != nil {
 			return nil, err
 		}
-		container := mqlC.(*mqlAwsSagemakerModelContainer)
-		container.cacheModelArn = a.Arn.Data
-		container.cacheImageConfig = c.ImageConfig
-		container.cacheMultiModelConfig = c.MultiModelConfig
-		res = append(res, mqlC)
+		res = append(res, container)
 	}
 	return res, nil
+}
+
+func (a *mqlAwsSagemakerModel) primaryContainerRef() (*mqlAwsSagemakerModelContainer, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	if a.cachePrimaryContainerDef == nil {
+		a.PrimaryContainerRef.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return a.buildContainer(*a.cachePrimaryContainerDef)
+}
+
+func (a *mqlAwsSagemakerModel) securityGroups() ([]any, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	return sagemakerSecurityGroups(a.MqlRuntime, a.Region.Data, a.cacheVpcSecurityGroupIds)
 }
 
 func (a *mqlAwsSagemakerModel) inferenceExecutionConfig() (map[string]any, error) {
@@ -1099,6 +1177,12 @@ type mqlAwsSagemakerTrainingjobInternal struct {
 	cacheFinalMetrics                []sagemakerTypes.MetricData
 	cacheCheckpointConfig            any
 	cacheWallClockTime               int64
+	cacheInputDataConfig             []sagemakerTypes.Channel
+	cacheModelArtifactsUrl           string
+	cacheTuningJobArn                string
+	cacheAutoMLJobArn                string
+	cacheLabelingJobArn              string
+	cacheTrainingStartTime           *time.Time
 }
 
 func (a *mqlAwsSagemakerTrainingjob) id() (string, error) {
@@ -1155,8 +1239,89 @@ func (a *mqlAwsSagemakerTrainingjob) fetchDetails() error {
 	if resp.TrainingTimeInSeconds != nil {
 		a.cacheWallClockTime = int64(*resp.TrainingTimeInSeconds)
 	}
+	a.cacheInputDataConfig = resp.InputDataConfig
+	if resp.ModelArtifacts != nil {
+		a.cacheModelArtifactsUrl = convert.ToValue(resp.ModelArtifacts.S3ModelArtifacts)
+	}
+	a.cacheTuningJobArn = convert.ToValue(resp.TuningJobArn)
+	a.cacheAutoMLJobArn = convert.ToValue(resp.AutoMLJobArn)
+	a.cacheLabelingJobArn = convert.ToValue(resp.LabelingJobArn)
+	a.cacheTrainingStartTime = resp.TrainingStartTime
 	a.detailsFetched = true
 	return nil
+}
+
+func (a *mqlAwsSagemakerTrainingjob) inputDataConfig() ([]any, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	res := make([]any, 0, len(a.cacheInputDataConfig))
+	for _, ch := range a.cacheInputDataConfig {
+		var s3Uri, s3DataType, s3Dist, fsId string
+		if ch.DataSource != nil {
+			if ch.DataSource.S3DataSource != nil {
+				s3Uri = convert.ToValue(ch.DataSource.S3DataSource.S3Uri)
+				s3DataType = string(ch.DataSource.S3DataSource.S3DataType)
+				s3Dist = string(ch.DataSource.S3DataSource.S3DataDistributionType)
+			}
+			if ch.DataSource.FileSystemDataSource != nil {
+				fsId = convert.ToValue(ch.DataSource.FileSystemDataSource.FileSystemId)
+			}
+		}
+		mqlCh, err := CreateResource(a.MqlRuntime, "aws.sagemaker.trainingjob.channel",
+			map[string]*llx.RawData{
+				"__id":                   llx.StringData(a.Arn.Data + "/channel/" + convert.ToValue(ch.ChannelName)),
+				"channelName":            llx.StringDataPtr(ch.ChannelName),
+				"s3Uri":                  llx.StringData(s3Uri),
+				"s3DataType":             llx.StringData(s3DataType),
+				"s3DataDistributionType": llx.StringData(s3Dist),
+				"fileSystemId":           llx.StringData(fsId),
+				"contentType":            llx.StringDataPtr(ch.ContentType),
+				"compressionType":        llx.StringData(string(ch.CompressionType)),
+				"recordWrapperType":      llx.StringData(string(ch.RecordWrapperType)),
+				"inputMode":              llx.StringData(string(ch.InputMode)),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlCh)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsSagemakerTrainingjob) modelArtifactsUrl() (string, error) {
+	if err := a.fetchDetails(); err != nil {
+		return "", err
+	}
+	return a.cacheModelArtifactsUrl, nil
+}
+
+func (a *mqlAwsSagemakerTrainingjob) tuningJobArn() (string, error) {
+	if err := a.fetchDetails(); err != nil {
+		return "", err
+	}
+	return a.cacheTuningJobArn, nil
+}
+
+func (a *mqlAwsSagemakerTrainingjob) autoMLJobArn() (string, error) {
+	if err := a.fetchDetails(); err != nil {
+		return "", err
+	}
+	return a.cacheAutoMLJobArn, nil
+}
+
+func (a *mqlAwsSagemakerTrainingjob) labelingJobArn() (string, error) {
+	if err := a.fetchDetails(); err != nil {
+		return "", err
+	}
+	return a.cacheLabelingJobArn, nil
+}
+
+func (a *mqlAwsSagemakerTrainingjob) trainingStartTime() (*time.Time, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	return a.cacheTrainingStartTime, nil
 }
 
 func (a *mqlAwsSagemakerTrainingjob) secondaryStatusTransitions() ([]any, error) {
@@ -1454,6 +1619,12 @@ type mqlAwsSagemakerProcessingjobInternal struct {
 	cacheVpcSubnetIds                []string
 	cacheProcessingResources         any
 	cacheEnvironment                 map[string]string
+	cacheProcessingInputs            []any
+	cacheImageUri                    string
+	cacheTrainingJobArn              string
+	cacheAutoMLJobArn                string
+	cacheMonitoringScheduleArn       string
+	cacheProcessingStartTime         *time.Time
 }
 
 func (a *mqlAwsSagemakerProcessingjob) id() (string, error) {
@@ -1499,8 +1670,77 @@ func (a *mqlAwsSagemakerProcessingjob) fetchDetails() error {
 	}
 	a.cacheProcessingResources, _ = convert.JsonToDict(resp.ProcessingResources)
 	a.cacheEnvironment = resp.Environment
+	a.cacheProcessingInputs, _ = convert.JsonToDictSlice(resp.ProcessingInputs)
+	if resp.AppSpecification != nil {
+		a.cacheImageUri = convert.ToValue(resp.AppSpecification.ImageUri)
+	}
+	a.cacheTrainingJobArn = convert.ToValue(resp.TrainingJobArn)
+	a.cacheAutoMLJobArn = convert.ToValue(resp.AutoMLJobArn)
+	a.cacheMonitoringScheduleArn = convert.ToValue(resp.MonitoringScheduleArn)
+	a.cacheProcessingStartTime = resp.ProcessingStartTime
 	a.detailsFetched = true
 	return nil
+}
+
+func (a *mqlAwsSagemakerProcessingjob) processingInputs() ([]any, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	return a.cacheProcessingInputs, nil
+}
+
+func (a *mqlAwsSagemakerProcessingjob) imageUri() (string, error) {
+	if err := a.fetchDetails(); err != nil {
+		return "", err
+	}
+	return a.cacheImageUri, nil
+}
+
+func (a *mqlAwsSagemakerProcessingjob) trainingJob() (*mqlAwsSagemakerTrainingjob, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	if a.cacheTrainingJobArn == "" {
+		a.TrainingJob.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.sagemaker.trainingjob",
+		map[string]*llx.RawData{"arn": llx.StringData(a.cacheTrainingJobArn)})
+	if err != nil {
+		// The source training job is commonly deleted while the processing job
+		// remains (not-found), or unreadable due to permissions. Treat only
+		// those as a null reference; propagate anything else (transient network
+		// errors, throttling) so genuine failures aren't hidden.
+		var notFound *sagemakerTypes.ResourceNotFound
+		if errors.As(err, &notFound) || Is400AccessDeniedError(err) {
+			log.Warn().Err(err).Str("trainingJobArn", a.cacheTrainingJobArn).Msg("could not resolve source training job for processing job")
+			a.TrainingJob.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
+		return nil, err
+	}
+	return res.(*mqlAwsSagemakerTrainingjob), nil
+}
+
+func (a *mqlAwsSagemakerProcessingjob) autoMLJobArn() (string, error) {
+	if err := a.fetchDetails(); err != nil {
+		return "", err
+	}
+	return a.cacheAutoMLJobArn, nil
+}
+
+func (a *mqlAwsSagemakerProcessingjob) monitoringScheduleArn() (string, error) {
+	if err := a.fetchDetails(); err != nil {
+		return "", err
+	}
+	return a.cacheMonitoringScheduleArn, nil
+}
+
+func (a *mqlAwsSagemakerProcessingjob) processingStartTime() (*time.Time, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	return a.cacheProcessingStartTime, nil
 }
 
 func (a *mqlAwsSagemakerProcessingjob) iamRole() (*mqlAwsIamRole, error) {
@@ -1842,6 +2082,12 @@ func initAwsSagemakerDomain(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return args, nil, nil
 	}
 
+	if len(args) == 0 {
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
+		}
+	}
+
 	if args["arn"] == nil {
 		return nil, nil, errors.New("arn required to fetch sagemaker domain")
 	}
@@ -1865,13 +2111,10 @@ func initAwsSagemakerDomain(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		}
 	}
 
-	// Fallback: parse domainId from ARN (arn:aws:sagemaker:region:account:domain/domainId)
-	parts := strings.Split(arnVal, "/")
-	if len(parts) >= 2 {
-		domainId := parts[len(parts)-1]
-		args["domainId"] = llx.StringData(domainId)
-	}
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.sagemaker.domain with arn %q not found", arnVal)
 }
 
 type mqlAwsSagemakerDomainInternal struct {
@@ -1892,6 +2135,19 @@ type mqlAwsSagemakerDomainInternal struct {
 	cacheSSOAppArn            *string
 	cacheFailureReason        *string
 	cacheSubnetIds            []string
+
+	cacheDockerAccessEnabled       bool
+	cacheRootlessDocker            bool
+	cacheDockerVpcOnlyTrusted      []string
+	cacheExecRoleIdentityConfig    string
+	cacheDomainSecurityGroups      []string
+	cacheRStudioExecRole           *string
+	cacheAmazonQStatus             string
+	cacheAmazonQProfileArn         *string
+	cacheDefaultUserSecurityGroups []string
+	cacheDefaultUserSharedKms      *string
+	cacheDefaultSpaceExecRole      *string
+	cacheDefaultSpaceSecurityGrps  []string
 }
 
 func (a *mqlAwsSagemakerDomain) id() (string, error) {
@@ -1942,6 +2198,34 @@ func (a *mqlAwsSagemakerDomain) fetchDetails() error {
 	a.cacheSSOAppArn = resp.SingleSignOnApplicationArn
 	a.cacheFailureReason = resp.FailureReason
 	a.cacheSubnetIds = resp.SubnetIds
+
+	if ds := resp.DomainSettings; ds != nil {
+		if ds.DockerSettings != nil {
+			a.cacheDockerAccessEnabled = ds.DockerSettings.EnableDockerAccess == sagemakerTypes.FeatureStatusEnabled
+			a.cacheRootlessDocker = ds.DockerSettings.RootlessDocker == sagemakerTypes.FeatureStatusEnabled
+			a.cacheDockerVpcOnlyTrusted = ds.DockerSettings.VpcOnlyTrustedAccounts
+		}
+		a.cacheExecRoleIdentityConfig = string(ds.ExecutionRoleIdentityConfig)
+		a.cacheDomainSecurityGroups = ds.SecurityGroupIds
+		if ds.RStudioServerProDomainSettings != nil {
+			a.cacheRStudioExecRole = ds.RStudioServerProDomainSettings.DomainExecutionRoleArn
+		}
+		if ds.AmazonQSettings != nil {
+			a.cacheAmazonQStatus = string(ds.AmazonQSettings.Status)
+			a.cacheAmazonQProfileArn = ds.AmazonQSettings.QProfileArn
+		}
+	}
+	if us := resp.DefaultUserSettings; us != nil {
+		a.cacheDefaultUserSecurityGroups = us.SecurityGroups
+		if us.SharingSettings != nil {
+			a.cacheDefaultUserSharedKms = us.SharingSettings.S3KmsKeyId
+		}
+	}
+	if ss := resp.DefaultSpaceSettings; ss != nil {
+		a.cacheDefaultSpaceExecRole = ss.ExecutionRole
+		a.cacheDefaultSpaceSecurityGrps = ss.SecurityGroups
+	}
+
 	a.detailsFetched = true
 	return nil
 }
@@ -2097,6 +2381,90 @@ func (a *mqlAwsSagemakerDomain) defaultExecutionRole() (*mqlAwsIamRole, error) {
 		return nil, err
 	}
 	return res.(*mqlAwsIamRole), nil
+}
+
+func (a *mqlAwsSagemakerDomain) dockerAccessEnabled() (bool, error) {
+	if err := a.fetchDetails(); err != nil {
+		return false, err
+	}
+	return a.cacheDockerAccessEnabled, nil
+}
+
+func (a *mqlAwsSagemakerDomain) rootlessDocker() (bool, error) {
+	if err := a.fetchDetails(); err != nil {
+		return false, err
+	}
+	return a.cacheRootlessDocker, nil
+}
+
+func (a *mqlAwsSagemakerDomain) dockerVpcOnlyTrustedAccounts() ([]any, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	return convert.SliceAnyToInterface(a.cacheDockerVpcOnlyTrusted), nil
+}
+
+func (a *mqlAwsSagemakerDomain) executionRoleIdentityConfig() (string, error) {
+	if err := a.fetchDetails(); err != nil {
+		return "", err
+	}
+	return a.cacheExecRoleIdentityConfig, nil
+}
+
+func (a *mqlAwsSagemakerDomain) domainSecurityGroups() ([]any, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	return sagemakerSecurityGroups(a.MqlRuntime, a.Region.Data, a.cacheDomainSecurityGroups)
+}
+
+func (a *mqlAwsSagemakerDomain) rstudioDomainExecutionRole() (*mqlAwsIamRole, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	return sagemakerIamRole(a.MqlRuntime, &a.RstudioDomainExecutionRole, a.cacheRStudioExecRole)
+}
+
+func (a *mqlAwsSagemakerDomain) amazonQStatus() (string, error) {
+	if err := a.fetchDetails(); err != nil {
+		return "", err
+	}
+	return a.cacheAmazonQStatus, nil
+}
+
+func (a *mqlAwsSagemakerDomain) amazonQProfileArn() (string, error) {
+	if err := a.fetchDetails(); err != nil {
+		return "", err
+	}
+	return convert.ToValue(a.cacheAmazonQProfileArn), nil
+}
+
+func (a *mqlAwsSagemakerDomain) defaultUserSecurityGroups() ([]any, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	return sagemakerSecurityGroups(a.MqlRuntime, a.Region.Data, a.cacheDefaultUserSecurityGroups)
+}
+
+func (a *mqlAwsSagemakerDomain) defaultUserSharedNotebookKmsKey() (*mqlAwsKmsKey, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	return sagemakerKmsKey(a.MqlRuntime, &a.DefaultUserSharedNotebookKmsKey, a.cacheDefaultUserSharedKms)
+}
+
+func (a *mqlAwsSagemakerDomain) defaultSpaceExecutionRole() (*mqlAwsIamRole, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	return sagemakerIamRole(a.MqlRuntime, &a.DefaultSpaceExecutionRole, a.cacheDefaultSpaceExecRole)
+}
+
+func (a *mqlAwsSagemakerDomain) defaultSpaceSecurityGroups() ([]any, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	return sagemakerSecurityGroups(a.MqlRuntime, a.Region.Data, a.cacheDefaultSpaceSecurityGrps)
 }
 
 // ---- Inference Components ----
@@ -3397,18 +3765,10 @@ func initAwsSagemakerModelPackageGroup(runtime *plugin.Runtime, args map[string]
 		}
 	}
 
-	// Fallback: parse group name from ARN (arn:aws:sagemaker:region:account:model-package-group/name)
-	parts := strings.Split(arnVal, "/")
-	if len(parts) >= 2 {
-		groupName := parts[len(parts)-1]
-		args["name"] = llx.StringData(groupName)
-		// Extract region from ARN (arn:partition:service:region:account:resource)
-		arnParts := strings.Split(arnVal, ":")
-		if len(arnParts) >= 5 {
-			args["region"] = llx.StringData(arnParts[3])
-		}
-	}
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.sagemaker.modelPackageGroup with arn %q not found", arnVal)
 }
 
 type mqlAwsSagemakerModelPackageGroupInternal struct {
@@ -3458,6 +3818,48 @@ func (a *mqlAwsSagemakerModelPackageGroup) description() (string, error) {
 		return "", err
 	}
 	return convert.ToValue(a.cacheDescription), nil
+}
+
+func (a *mqlAwsSagemakerModelPackageGroup) resourcePolicy() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Sagemaker(a.Region.Data)
+	name := a.Name.Data
+	resp, err := svc.GetModelPackageGroupPolicy(context.Background(), &sagemaker.GetModelPackageGroupPolicyInput{ModelPackageGroupName: &name})
+	if err != nil {
+		// A group with no resource policy attached returns a validation error;
+		// treat that (and access-denied) as "no policy" rather than failing.
+		if Is400AccessDeniedError(err) || isSagemakerNoPolicyError(err) {
+			return "", nil
+		}
+		return "", err
+	}
+	return convert.ToValue(resp.ResourcePolicy), nil
+}
+
+func (a *mqlAwsSagemakerModelPackageGroup) policyStatements() ([]any, error) {
+	policy := a.GetResourcePolicy()
+	if policy.Error != nil {
+		return nil, policy.Error
+	}
+	return newPolicyStatementResources(a.MqlRuntime, a.Arn.Data, policy.Data)
+}
+
+func (a *mqlAwsSagemakerModelPackageGroup) isPublic() (bool, error) {
+	return resourceIsPublic(a.GetPolicyStatements())
+}
+
+// isSagemakerNoPolicyError reports whether a GetModelPackageGroupPolicy error
+// indicates the group simply has no resource policy attached rather than a real
+// failure. SageMaker returns a ValidationException in that case; matching the
+// error code (like isCodeArtifactValidation) is resilient to SDK message
+// wording changes. The group name always comes from a prior list call, so a
+// ValidationException here reliably means "no policy" rather than a bad name.
+func isSagemakerNoPolicyError(err error) bool {
+	var apiErr smithy.APIError
+	if errors.As(err, &apiErr) {
+		return apiErr.ErrorCode() == "ValidationException"
+	}
+	return false
 }
 
 // ---- Model Cards ----
@@ -4031,6 +4433,58 @@ func sagemakerResolveVpc(runtime *plugin.Runtime, region string, subnetIds []str
 	return res.(*mqlAwsVpc), nil
 }
 
+// sagemakerSecurityGroups resolves a list of security-group IDs to typed
+// aws.ec2.securitygroup resources. Returns nil (empty list) when there are no
+// IDs. Shared by the model, domain, and endpoint-config accessors.
+func sagemakerSecurityGroups(runtime *plugin.Runtime, region string, sgIds []string) ([]any, error) {
+	if len(sgIds) == 0 {
+		return nil, nil
+	}
+	conn := runtime.Connection.(*connection.AwsConnection)
+	res := make([]any, 0, len(sgIds))
+	for _, sgId := range sgIds {
+		sgArn := NewSecurityGroupArn(region, conn.AccountId(), sgId)
+		mqlSg, err := NewResource(runtime, "aws.ec2.securitygroup",
+			map[string]*llx.RawData{"arn": llx.StringData(sgArn)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSg)
+	}
+	return res, nil
+}
+
+// sagemakerIamRole resolves a role ARN to a typed aws.iam.role, marking the
+// field null when the ARN is empty. field is the resource's role TValue so the
+// runtime learns the field is set even when null.
+func sagemakerIamRole(runtime *plugin.Runtime, field *plugin.TValue[*mqlAwsIamRole], roleArn *string) (*mqlAwsIamRole, error) {
+	if roleArn == nil || *roleArn == "" {
+		field.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(roleArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
+}
+
+// sagemakerKmsKey resolves a KMS key ID/ARN to a typed aws.kms.key, marking the
+// field null when the key is empty.
+func sagemakerKmsKey(runtime *plugin.Runtime, field *plugin.TValue[*mqlAwsKmsKey], keyId *string) (*mqlAwsKmsKey, error) {
+	if keyId == nil || *keyId == "" {
+		field.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "aws.kms.key",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(keyId)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsKmsKey), nil
+}
+
 func getSagemakerTags(ctx context.Context, svc *sagemaker.Client, arn *string) (map[string]any, error) {
 	tags := make(map[string]any)
 	paginator := sagemaker.NewListTagsPaginator(svc, &sagemaker.ListTagsInput{ResourceArn: arn})
@@ -4060,9 +4514,8 @@ func initAwsSagemakerTrainingjob(runtime *plugin.Runtime, args map[string]*llx.R
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["name"] = llx.StringData(ids.name)
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 
@@ -4103,9 +4556,8 @@ func initAwsSagemakerProcessingjob(runtime *plugin.Runtime, args map[string]*llx
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["name"] = llx.StringData(ids.name)
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 

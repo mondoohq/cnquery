@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -26,6 +27,35 @@ func timeOrNil(t time.Time, ok bool) *time.Time {
 		return nil
 	}
 	return &t
+}
+
+// parseRFC3339 turns an RFC3339 timestamp string into the *time.Time form
+// llx.TimeDataPtr wants, or nil if the string is empty or malformed. Several
+// STACKIT services return timestamps as strings rather than time.Time.
+func parseRFC3339(s string) *time.Time {
+	if s == "" {
+		return nil
+	}
+	t, err := time.Parse(time.RFC3339, s)
+	if err != nil {
+		return nil
+	}
+	return &t
+}
+
+// parseKeyBitSize extracts the numeric key length from STACKIT's human-readable
+// key-strength string (for example "RSA 2048" -> 2048). It returns nil for
+// elliptic-curve keys, whose strength is expressed as a curve name rather than
+// a bit count (for example "ECDSA P-256" or "Ed25519"); only a whitespace-
+// delimited all-digit token counts, so the "256" in "P-256" is not mistaken
+// for a bit size.
+func parseKeyBitSize(s string) *int64 {
+	for _, tok := range strings.Fields(s) {
+		if n, err := strconv.ParseInt(tok, 10, 64); err == nil {
+			return &n
+		}
+	}
+	return nil
 }
 
 // strSlice converts a []string into the any-typed slice MQL expects.
@@ -185,4 +215,54 @@ func idArg(args map[string]*llx.RawData, key string) (string, bool) {
 // collection getters).
 func makeNamespace(runtime *plugin.Runtime, name string) (plugin.Resource, error) {
 	return CreateResource(runtime, name, map[string]*llx.RawData{})
+}
+
+// serverRef resolves a stackit.server by its UUID, marking the given field
+// null when the ID is empty. Shared by the server-scoped sub-resources
+// (backups, schedules, updates) that carry a back-reference to their server.
+func serverRef(runtime *plugin.Runtime, id string, field *plugin.TValue[*mqlStackitServer]) (*mqlStackitServer, error) {
+	if id == "" {
+		return markNull[mqlStackitServer](field)
+	}
+	res, err := NewResource(runtime, "stackit.server", map[string]*llx.RawData{
+		"id": llx.StringData(id),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlStackitServer), nil
+}
+
+// volumeRef resolves a single stackit.volume by its UUID, marking the given
+// field null when the ID is empty.
+func volumeRef(runtime *plugin.Runtime, id string, field *plugin.TValue[*mqlStackitVolume]) (*mqlStackitVolume, error) {
+	if id == "" {
+		return markNull[mqlStackitVolume](field)
+	}
+	res, err := NewResource(runtime, "stackit.volume", map[string]*llx.RawData{
+		"id": llx.StringData(id),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlStackitVolume), nil
+}
+
+// volumeRefs resolves a list of stackit.volume resources from their UUIDs,
+// skipping empty IDs.
+func volumeRefs(runtime *plugin.Runtime, ids []string) ([]any, error) {
+	out := make([]any, 0, len(ids))
+	for _, id := range ids {
+		if id == "" {
+			continue
+		}
+		v, err := NewResource(runtime, "stackit.volume", map[string]*llx.RawData{
+			"id": llx.StringData(id),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, v)
+	}
+	return out, nil
 }

@@ -54,9 +54,10 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	// Discovery expands the account into specific child assets
-	// (databases, Kubernetes clusters, load balancers, firewalls, and
-	// Spaces buckets). Default to "auto" so a plain `digitalocean` scan
-	// surfaces per-resource assets alongside the account.
+	// (databases, Kubernetes clusters, load balancers, firewalls,
+	// Spaces buckets, and GradientAI agents). Default to "auto" so a
+	// plain `digitalocean` scan surfaces per-resource assets alongside
+	// the account.
 	discoverTargets := []string{connection.DiscoveryAuto}
 	if x, ok := flags["discover"]; ok && len(x.Array) != 0 {
 		discoverTargets = discoverTargets[:0]

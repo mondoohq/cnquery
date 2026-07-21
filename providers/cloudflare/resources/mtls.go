@@ -4,6 +4,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 
 	cloudflare "github.com/cloudflare/cloudflare-go/v6"
 	"github.com/cloudflare/cloudflare-go/v6/mtls_certificates"
@@ -24,6 +25,9 @@ func (c *mqlCloudflareZone) mtlsCertificates() ([]any, error) {
 	acc := c.GetAccount()
 	if acc.Error != nil {
 		return nil, acc.Error
+	}
+	if acc.Data == nil {
+		return nil, errors.New("cloudflare zone has no associated account")
 	}
 	accountID := acc.Data.GetId().Data
 

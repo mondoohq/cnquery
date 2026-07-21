@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -118,7 +119,20 @@ func dedicatedHostGroupToMql(runtime *plugin.Runtime, hg compute.DedicatedHostGr
 	if err != nil {
 		return nil, err
 	}
+	sysData, err := convert.JsonToDict(hg.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlAzureSubscriptionComputeServiceDedicatedHostGroup).cacheSystemData = sysData
 	return res.(*mqlAzureSubscriptionComputeServiceDedicatedHostGroup), nil
+}
+
+type mqlAzureSubscriptionComputeServiceDedicatedHostGroupInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionComputeServiceDedicatedHostGroup) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionComputeServiceDedicatedHostGroup) hosts() ([]any, error) {
@@ -212,7 +226,20 @@ func dedicatedHostToMql(runtime *plugin.Runtime, host compute.DedicatedHost) (*m
 	if err != nil {
 		return nil, err
 	}
+	sysData, err := convert.JsonToDict(host.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlAzureSubscriptionComputeServiceDedicatedHost).cacheSystemData = sysData
 	return res.(*mqlAzureSubscriptionComputeServiceDedicatedHost), nil
+}
+
+type mqlAzureSubscriptionComputeServiceDedicatedHostInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionComputeServiceDedicatedHost) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 // ----- Proximity Placement Groups -----
@@ -305,7 +332,20 @@ func proximityPlacementGroupToMql(runtime *plugin.Runtime, ppg compute.Proximity
 	if err != nil {
 		return nil, err
 	}
+	sysData, err := convert.JsonToDict(ppg.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlAzureSubscriptionComputeServiceProximityPlacementGroup).cacheSystemData = sysData
 	return res.(*mqlAzureSubscriptionComputeServiceProximityPlacementGroup), nil
+}
+
+type mqlAzureSubscriptionComputeServiceProximityPlacementGroupInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionComputeServiceProximityPlacementGroup) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 // colocSubResourceIDs flattens a slice of *SubResourceWithColocationStatus
@@ -405,7 +445,35 @@ func imageToMql(runtime *plugin.Runtime, img compute.Image) (*mqlAzureSubscripti
 	if err != nil {
 		return nil, err
 	}
+	sysData, err := convert.JsonToDict(img.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlAzureSubscriptionComputeServiceImage).cacheSystemData = sysData
 	return res.(*mqlAzureSubscriptionComputeServiceImage), nil
+}
+
+type mqlAzureSubscriptionComputeServiceImageInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionComputeServiceImage) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionComputeServiceImage) sourceVirtualMachine() (*mqlAzureSubscriptionComputeServiceVm, error) {
+	id := a.SourceVirtualMachineId.Data
+	if id == "" {
+		a.SourceVirtualMachine.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.computeService.vm", map[string]*llx.RawData{
+		"id": llx.StringData(strings.ToLower(id)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionComputeServiceVm), nil
 }
 
 // ----- Compute Galleries (Shared Image Gallery) -----
@@ -515,7 +583,20 @@ func galleryToMql(runtime *plugin.Runtime, g compute.Gallery) (*mqlAzureSubscrip
 	if err != nil {
 		return nil, err
 	}
+	sysData, err := convert.JsonToDict(g.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlAzureSubscriptionComputeServiceGallery).cacheSystemData = sysData
 	return res.(*mqlAzureSubscriptionComputeServiceGallery), nil
+}
+
+type mqlAzureSubscriptionComputeServiceGalleryInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionComputeServiceGallery) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionComputeServiceGallery) images() ([]any, error) {
@@ -647,7 +728,20 @@ func galleryImageToMql(runtime *plugin.Runtime, img compute.GalleryImage) (*mqlA
 	if err != nil {
 		return nil, err
 	}
+	sysData, err := convert.JsonToDict(img.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlAzureSubscriptionComputeServiceGalleryImage).cacheSystemData = sysData
 	return res.(*mqlAzureSubscriptionComputeServiceGalleryImage), nil
+}
+
+type mqlAzureSubscriptionComputeServiceGalleryImageInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionComputeServiceGalleryImage) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionComputeServiceGalleryImage) versions() ([]any, error) {
@@ -764,5 +858,18 @@ func galleryImageVersionToMql(runtime *plugin.Runtime, v compute.GalleryImageVer
 	if err != nil {
 		return nil, err
 	}
+	sysData, err := convert.JsonToDict(v.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlAzureSubscriptionComputeServiceGalleryImageVersion).cacheSystemData = sysData
 	return res.(*mqlAzureSubscriptionComputeServiceGalleryImageVersion), nil
+}
+
+type mqlAzureSubscriptionComputeServiceGalleryImageVersionInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionComputeServiceGalleryImageVersion) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }

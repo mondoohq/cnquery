@@ -6,12 +6,15 @@ option go_package = "go.mondoo.com/mql/v13/providers/together/resources"
 
 // Together AI account
 //
-// Examine a Together AI account including available models, fine-tuning
-// jobs, dedicated endpoint deployments, container deployments, uploaded
-// files, GPU clusters, secrets, batch jobs, evaluation jobs, and
-// persistent volumes.
+// Together AI account scoped to a single project, the entry point for
+// auditing an account's inference and training footprint. Reachable
+// through it are the available models catalog, fine-tuning jobs,
+// dedicated endpoint deployments, container deployments, uploaded
+// files, GPU compute clusters, managed secrets, batch inference jobs,
+// evaluation jobs, and persistent volumes. The project the account is
+// scoped to is reported by the organization field.
 together @defaults("organization") @maturity("preview") {
-  // Project identifier passed via --project flag
+  // Project identifier the account connection is scoped to
   organization() string
   // Available models in the Together AI catalog
   models() []together.model
@@ -37,7 +40,7 @@ together @defaults("organization") @maturity("preview") {
 
 // Together AI model
 //
-// Examine an available model in the Together AI catalog including its
+// Model available in the Together AI catalog, including its
 // type, creator organization, license, context window length, and
 // pricing. Models span chat, language, code, image, embedding,
 // moderation, and rerank types. Use `together.models.where(type == "chat")`
@@ -78,8 +81,11 @@ together.model @defaults("id type organization contextLength") @maturity("previe
 
 // Together AI fine-tuning job
 //
-// Examine a fine-tuning job including its status, base model, output model
-// name, training configuration, and cost. Use
+// Fine-tuning job that adapts a base model on your own training data,
+// including its lifecycle status, the base model, the resulting output
+// model name, training hyperparameters, token count, and billed cost.
+// Auditing these surfaces which custom models exist, how they were
+// trained, and their spend. Use
 // `together.fineTunes.where(status == "running")` to find active jobs.
 together.fineTune @defaults("id status model") @maturity("preview") {
   // Job identifier
@@ -114,10 +120,11 @@ together.fineTune @defaults("id status model") @maturity("preview") {
 
 // Together AI dedicated endpoint
 //
-// Examine a dedicated endpoint deployment including its state, hardware
-// allocation, autoscaling configuration, owner, and model served. Use
+// Dedicated endpoint deployment that serves a model, including its
+// runtime state, endpoint type, owner, and creation time. Use
 // `together.endpoints.where(state == "STARTED")` to find active
-// endpoints.
+// endpoints, or filter by `owner` to audit who provisioned dedicated
+// compute.
 together.endpoint @defaults("name state model") @maturity("preview") {
   // Endpoint identifier
   id string
@@ -141,9 +148,13 @@ together.endpoint @defaults("name state model") @maturity("preview") {
 
 // Together AI uploaded file
 //
-// Examine an uploaded file used for fine-tuning, evaluation, or batch
-// processing. Inspect `purpose` and `filename` to audit what training
-// data has been uploaded to the account.
+// File uploaded to a Together AI account for fine-tuning, evaluation,
+// or batch processing. The `purpose` field records what the file is
+// used for and `filename` preserves the original name, so together
+// they let you audit exactly what training and evaluation data has
+// been sent to the account. `fileType` and `bytes` describe the
+// stored payload, and `processed` reports whether ingestion has
+// completed.
 together.file @defaults("id filename purpose") @maturity("preview") {
   // File identifier
   id string
@@ -167,9 +178,9 @@ together.file @defaults("id filename purpose") @maturity("preview") {
 
 // Together AI GPU compute cluster
 //
-// Examine a GPU compute cluster including its GPU type, node count,
-// region, billing type, and OIDC configuration. Use
-// `together.clusters.where(status == "RUNNING")` to find active
+// GPU compute cluster provisioned through Together AI, covering its
+// GPU type, node count, region, billing type, and OIDC configuration.
+// Use `together.clusters.where(status == "Ready")` to find active
 // clusters or inspect `oidcIssuer` for identity federation auditing.
 together.cluster @defaults("name gpuType numGpus region status") @maturity("preview") {
   // Cluster identifier
@@ -189,6 +200,11 @@ together.cluster @defaults("name gpuType numGpus region status") @maturity("prev
   // Cluster region
   region string
   // Cluster status
+  //
+  // One of WaitingForControlPlaneNodes, WaitingForDataPlaneNodes,
+  // WaitingForSubnet, WaitingForSharedVolume, InstallingDrivers,
+  // RunningAcceptanceTests, Paused, OnDemandComputePaused, Ready,
+  // Degraded, or Deleting.
   status string
   // Billing type
   //
@@ -218,9 +234,10 @@ together.cluster @defaults("name gpuType numGpus region status") @maturity("prev
 
 // Together AI managed secret
 //
-// Examine a managed secret used in deployments. Secrets can be
-// referenced by environment variables in deployment configurations.
-// Inspect `name` and `createdBy` to audit secret ownership.
+// Managed secret used in deployments, referenced by environment
+// variables in deployment configurations. The `name` and `createdBy`
+// fields let you audit secret ownership, and `lastUpdatedBy` together
+// with `updatedAt` reveals who last changed the secret and when.
 together.secret @defaults("id name") @maturity("preview") {
   // Secret identifier
   id string
@@ -240,8 +257,12 @@ together.secret @defaults("id name") @maturity("preview") {
 
 // Together AI cluster storage volume
 //
-// Examine a persistent storage volume attached to a GPU cluster. Inspect
-// `sizeTib` for capacity auditing and `status` for availability.
+// Persistent storage volume attached to a Together AI GPU cluster.
+// Volumes back model checkpoints, datasets, and scratch space for
+// cluster workloads, so tracking their capacity and lifecycle state
+// matters for both cost and availability. The `sizeTib` field reports
+// provisioned capacity in TiB, and `status` reports where the volume
+// sits in its provisioning and binding lifecycle.
 private together.clusterStorageVolume @defaults("volumeName sizeTib status") @maturity("preview") {
   // Volume identifier
   volumeId string
@@ -257,11 +278,11 @@ private together.clusterStorageVolume @defaults("volumeName sizeTib status") @ma
 
 // Together AI container deployment
 //
-// Examine a container deployment (Jig) including its image, GPU allocation,
-// autoscaling configuration, environment variable names, and health check
-// settings. Deployments are full container workloads that can run custom
-// images with GPU acceleration. Use
-// `together.deployments.where(status == "Ready")` to find active deployments
+// Container deployment (Jig) that runs a custom image as a full container
+// workload with GPU acceleration, covering the container image, GPU
+// allocation, autoscaling bounds, configured environment variable names, and
+// health check settings. Query
+// `together.deployments.where(status == "Ready")` to find active deployments,
 // or inspect `image` for container supply chain auditing.
 together.deployment @defaults("name status image gpuType") @maturity("preview") {
   // Deployment identifier
@@ -310,10 +331,10 @@ together.deployment @defaults("name status image gpuType") @maturity("preview") 
 
 // Together AI batch inference job
 //
-// Examine a batch inference job including its status, model, progress, and
-// associated input/output files. Use
-// `together.batches.where(status == "IN_PROGRESS")` to find running jobs or
-// inspect `modelId` to audit which models are being used for batch inference.
+// Batch inference job including its status, model, progress, and associated
+// input/output files. Use `together.batches.where(status == "IN_PROGRESS")`
+// to find running jobs or inspect `modelId` to audit which models are being
+// used for batch inference.
 together.batch @defaults("id status modelId") @maturity("preview") {
   // Job identifier
   id string
@@ -347,9 +368,11 @@ together.batch @defaults("id status modelId") @maturity("preview") {
 
 // Together AI evaluation job
 //
-// Examine an evaluation job including its type, status, and owner. Use
-// `together.evals.where(status == "running")` to find active evaluations or
-// inspect `type` to see what kind of evaluation was performed.
+// Evaluation job run against a model, covering the evaluation `type`
+// (classify, score, or compare), its lifecycle `status`, the owning
+// account, and creation/update timestamps. Query these to audit which
+// evaluations ran, who launched them, and whether any are still active,
+// for example `together.evals.where(status == "running")`.
 together.eval @defaults("workflowId type status") @maturity("preview") {
   // Evaluation workflow identifier
   workflowId string
@@ -371,9 +394,10 @@ together.eval @defaults("workflowId type status") @maturity("preview") {
 
 // Together AI persistent volume
 //
-// Examine a persistent volume used by container deployments. Volumes provide
-// file storage that persists across deployment restarts. Inspect `mountedBy`
-// to see which deployments use a volume or `type` for access mode auditing.
+// Persistent volume that container deployments mount for file storage that
+// survives deployment restarts. The `mountedBy` field lists the deployments
+// currently attached to the volume, and `type` reports its access mode for
+// auditing.
 together.volume @defaults("id name type") @maturity("preview") {
   // Volume identifier
   id string

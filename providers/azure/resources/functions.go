@@ -162,7 +162,7 @@ func functionAppSiteToMql(runtime *plugin.Runtime, site *web.Site) (plugin.Resou
 	}
 
 	var state, defaultHostName, clientCertMode, managedServiceIdentityId string
-	var keyVaultReferenceIdentity string
+	var keyVaultReferenceIdentity, virtualNetworkSubnetId string
 	var httpsOnly, clientCertEnabled bool
 	publicNetworkAccess := functionAppPublicNetworkAccess(site.Properties)
 	if site.Properties != nil {
@@ -184,12 +184,21 @@ func functionAppSiteToMql(runtime *plugin.Runtime, site *web.Site) (plugin.Resou
 		if site.Properties.KeyVaultReferenceIdentity != nil {
 			keyVaultReferenceIdentity = *site.Properties.KeyVaultReferenceIdentity
 		}
+		if site.Properties.VirtualNetworkSubnetID != nil {
+			virtualNetworkSubnetId = *site.Properties.VirtualNetworkSubnetID
+		}
 	}
-	if site.Identity != nil && site.Identity.PrincipalID != nil {
-		managedServiceIdentityId = *site.Identity.PrincipalID
+	var principalId *string
+	var userAssignedIdentityIds []string
+	if site.Identity != nil {
+		principalId = site.Identity.PrincipalID
+		if principalId != nil {
+			managedServiceIdentityId = *principalId
+		}
+		userAssignedIdentityIds = sortedUserAssignedIdentityIDs(site.Identity.UserAssignedIdentities)
 	}
 
-	return CreateResource(runtime, "azure.subscription.functionsService.functionApp", map[string]*llx.RawData{
+	res, err := CreateResource(runtime, "azure.subscription.functionsService.functionApp", map[string]*llx.RawData{
 		"id":                        llx.StringDataPtr(site.ID),
 		"name":                      llx.StringDataPtr(site.Name),
 		"location":                  llx.StringDataPtr(site.Location),
@@ -201,10 +210,65 @@ func functionAppSiteToMql(runtime *plugin.Runtime, site *web.Site) (plugin.Resou
 		"clientCertEnabled":         llx.BoolData(clientCertEnabled),
 		"clientCertMode":            llx.StringData(clientCertMode),
 		"managedServiceIdentityId":  llx.StringData(managedServiceIdentityId),
+		"principalId":               llx.StringDataPtr(principalId),
 		"keyVaultReferenceIdentity": llx.StringData(keyVaultReferenceIdentity),
 		"publicNetworkAccess":       llx.StringData(publicNetworkAccess),
+		"virtualNetworkSubnetId":    llx.StringData(virtualNetworkSubnetId),
 		"properties":                llx.DictData(properties),
 	})
+	if err != nil {
+		return nil, err
+	}
+	sysData, err := convert.JsonToDict(site.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlApp := res.(*mqlAzureSubscriptionFunctionsServiceFunctionApp)
+	mqlApp.cacheSystemData = sysData
+	mqlApp.cacheUserAssignedIdentityIds = userAssignedIdentityIds
+	return res, nil
+}
+
+type mqlAzureSubscriptionFunctionsServiceFunctionAppInternal struct {
+	cacheSystemData              any
+	cacheUserAssignedIdentityIds []string
+}
+
+func (a *mqlAzureSubscriptionFunctionsServiceFunctionApp) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
+}
+
+func (a *mqlAzureSubscriptionFunctionsServiceFunctionApp) systemAssignedIdentity() (*mqlAzureSubscriptionManagedIdentity, error) {
+	// Unlike the other resources, the function app has no identity dict (it models
+	// identity as managedServiceIdentityId), so no tenant ID is available here;
+	// tenantID is cosmetic on the synthesized identity anyway, as role assignments
+	// resolve by principal ID.
+	return newSystemAssignedManagedIdentity(a.MqlRuntime, a.Id.Data, a.PrincipalId.Data, "", &a.SystemAssignedIdentity)
+}
+
+func (a *mqlAzureSubscriptionFunctionsServiceFunctionApp) virtualNetworkSubnet() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+	if a.VirtualNetworkSubnetId.Data == "" {
+		a.VirtualNetworkSubnet.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.subnet",
+		map[string]*llx.RawData{"id": llx.StringData(a.VirtualNetworkSubnetId.Data)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
+}
+
+type mqlAzureSubscriptionFunctionsServiceFunctionAppFunctionInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionFunctionsServiceFunctionApp) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionFunctionsServiceFunctionAppFunction) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionFunctionsServiceFunctionApp) functions() ([]any, error) {
@@ -266,6 +330,11 @@ func (a *mqlAzureSubscriptionFunctionsServiceFunctionApp) functions() ([]any, er
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(fn.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlFn.(*mqlAzureSubscriptionFunctionsServiceFunctionAppFunction).cacheSystemData = sysData
 			res = append(res, mqlFn)
 		}
 	}

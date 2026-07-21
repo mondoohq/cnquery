@@ -4,6 +4,7 @@
 package cmd
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -30,6 +31,8 @@ func init() {
 	rootCmd.AddCommand(ProvidersCmd)
 	ProvidersCmd.AddCommand(listProvidersCmd)
 	ProvidersCmd.AddCommand(installProviderCmd)
+	ProvidersCmd.AddCommand(updateProviderCmd)
+	ProvidersCmd.AddCommand(deleteProviderCmd)
 	ProvidersCmd.AddCommand(infoProviderCmd)
 	ProvidersCmd.AddCommand(resourcesProviderCmd)
 
@@ -39,6 +42,7 @@ func init() {
 	resourcesProviderCmd.Flags().Bool("json", false, "Output in JSON format")
 	installProviderCmd.Flags().StringP("file", "f", "", "Install a provider via a file")
 	installProviderCmd.Flags().String("url", "", "Install a provider via a URL")
+	deleteProviderCmd.Flags().Bool("yes", false, "Confirm removal of all providers when using the 'all' target")
 }
 
 var ProvidersCmd = &cobra.Command{
@@ -87,6 +91,63 @@ var installProviderCmd = &cobra.Command{
 
 		// if no url or file is specified, we default to installing by name from the default upstream
 		installProviderByName(args[0])
+	},
+}
+
+var updateProviderCmd = &cobra.Command{
+	Use:   "update [<NAME>...]",
+	Short: "Update installed providers to their latest versions",
+	Long: `Update installed providers to their latest versions.
+
+With no arguments, every installed provider is updated. Pass one or more
+provider names to update just those. Providers already on the latest version
+are skipped, and naming a provider that isn't installed is reported and skipped
+rather than treated as an error.
+
+Examples:
+  mql providers update              # update every installed provider
+  mql providers update aws          # update just the aws provider
+  mql providers update aws gcp      # update the aws and gcp providers`,
+	Args:   cobra.ArbitraryArgs,
+	PreRun: func(cmd *cobra.Command, args []string) {},
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return updateProviders(cmd.Root().Name(), args)
+	},
+}
+
+var deleteProviderCmd = &cobra.Command{
+	Use:   "delete <NAME>",
+	Short: "Remove an installed provider from disk",
+	Long: `Remove an installed provider plugin from disk. The provider is
+re-downloaded automatically the next time it's needed.
+
+Use the special target "all" to remove every installed provider at once. Because
+that wipes your whole provider footprint, it requires the --yes flag to confirm.
+
+Examples:
+  mql providers delete aws          # remove the aws provider
+  mql providers delete all --yes    # remove every installed provider`,
+	Args:   cobra.ExactArgs(1),
+	PreRun: func(cmd *cobra.Command, args []string) {},
+	RunE: func(cmd *cobra.Command, args []string) error {
+		name := args[0]
+		if name == "all" {
+			yes, _ := cmd.Flags().GetBool("yes")
+			if !yes {
+				return fmt.Errorf("removing all providers wipes your entire provider footprint; re-run with --yes to confirm")
+			}
+			if err := providers.DeleteAll(); err != nil {
+				return err
+			}
+			log.Info().Msg("removed all installed providers")
+			return nil
+		}
+
+		if err := providers.Delete(name); err != nil {
+			return err
+		}
+		log.Info().Str("provider", name).Msg("removed installed provider")
+		return nil
 	},
 }
 
@@ -522,6 +583,97 @@ func showResource(cmd *cobra.Command, providerName string, resourceName string) 
 			f.Type, mandatory, title)
 	}
 	fmt.Println()
+	return nil
+}
+
+// --- providers update ---
+
+// selectProvidersToUpdate resolves which installed providers an update run
+// should act on. With no names it returns every installed provider (sorted);
+// with names it returns the matching installed providers and reports any names
+// that aren't installed so the caller can note them without treating them as an
+// error. Builtin providers (Path == "") are compiled into the binary and can't
+// be updated independently, so they are never selected.
+func selectProvidersToUpdate(all []*providers.Provider, names []string) (toUpdate []*providers.Provider, notInstalled []string) {
+	installed := map[string]*providers.Provider{}
+	ordered := make([]*providers.Provider, 0, len(all))
+	for _, p := range all {
+		if p.Path == "" {
+			continue // builtin, not independently updatable
+		}
+		installed[p.Name] = p
+		ordered = append(ordered, p)
+	}
+
+	if len(names) == 0 {
+		sort.Slice(ordered, func(i, j int) bool { return ordered[i].Name < ordered[j].Name })
+		return ordered, nil
+	}
+
+	for _, name := range names {
+		if p, ok := installed[name]; ok {
+			toUpdate = append(toUpdate, p)
+		} else {
+			notInstalled = append(notInstalled, name)
+		}
+	}
+	return toUpdate, notInstalled
+}
+
+// updateProviders updates the named installed providers (or all of them when no
+// names are given) to their latest versions. Providers already on the latest
+// version are skipped so they aren't re-downloaded, and naming a provider that
+// isn't installed is reported and skipped rather than treated as an error.
+func updateProviders(binary string, names []string) error {
+	if binary == "" {
+		binary = "mql"
+	}
+
+	all, err := providers.ListAll()
+	if err != nil {
+		return fmt.Errorf("failed to list providers: %w", err)
+	}
+
+	toUpdate, notInstalled := selectProvidersToUpdate(all, names)
+	for _, name := range notInstalled {
+		// Not an error: there's nothing to update for a provider that isn't
+		// installed. Point the user at install if they meant to add it.
+		log.Info().Str("provider", name).
+			Msg("not installed, skipping (run '" + binary + " providers install " + name + "' to add it)")
+	}
+
+	ctx := context.Background()
+	var updated []*providers.Provider
+	var current, failed int
+	for _, p := range toUpdate {
+		latest, err := providers.LatestVersion(ctx, p.Name)
+		if err != nil {
+			log.Warn().Err(err).Str("provider", p.Name).Msg("failed to check for updates")
+			failed++
+			continue
+		}
+		if latest == p.Version {
+			current++
+			continue
+		}
+
+		installed, err := providers.Install(p.Name, latest)
+		if err != nil {
+			log.Warn().Err(err).Str("provider", p.Name).Msg("failed to update provider")
+			failed++
+			continue
+		}
+		updated = append(updated, installed)
+	}
+
+	if len(updated) > 0 {
+		providers.PrintInstallResults(updated)
+	}
+	log.Info().Msgf("%d updated · %d already current · %d failed", len(updated), current, failed)
+
+	if failed > 0 {
+		return fmt.Errorf("%d provider(s) failed to update", failed)
+	}
 	return nil
 }
 

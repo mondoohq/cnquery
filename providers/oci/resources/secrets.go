@@ -124,6 +124,7 @@ func (o *mqlOciVault) getSecrets(conn *connection.OciConnection, regions []any) 
 					"created":                 llx.TimeDataPtr(created),
 					"freeformTags":            llx.MapData(freeformTags, types.String),
 					"definedTags":             llx.MapData(definedTags, types.Any),
+					"systemTags":              llx.MapData(definedTagsToAny(s.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err

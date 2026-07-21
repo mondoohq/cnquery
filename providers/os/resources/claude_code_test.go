@@ -247,6 +247,9 @@ func TestIsSystemHomeDir(t *testing.T) {
 	assert.False(t, isSystemHomeDir("/root/.config"))
 	assert.False(t, isSystemHomeDir("/usr/home/freebsd"))
 	assert.False(t, isSystemHomeDir(`C:\Users\chris`))
+	// Windows homes match regardless of drive case or slash direction
+	assert.False(t, isSystemHomeDir(`c:\users\chris`))
+	assert.False(t, isSystemHomeDir("C:/Users/chris"))
 }
 
 func TestClaudeConfigIntegration(t *testing.T) {

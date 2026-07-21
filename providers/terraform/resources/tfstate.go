@@ -72,7 +72,11 @@ func (t *mqlTerraformState) rootModule() (*mqlTerraformStateModule, error) {
 		return nil, err
 	}
 
-	if state.Values == nil {
+	// A state with `values` present but no `root_module` (e.g. outputs-only or
+	// a trimmed state) decodes to a non-nil Values with a nil RootModule;
+	// guard both so we don't dereference nil.
+	if state.Values == nil || state.Values.RootModule == nil {
+		t.RootModule.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 
@@ -90,8 +94,8 @@ func (t *mqlTerraformState) modules() ([]any, error) {
 		return nil, err
 	}
 
-	if state.Values == nil {
-		return nil, nil
+	if state.Values == nil || state.Values.RootModule == nil {
+		return []any{}, nil
 	}
 
 	// resolve all tfstate modules
@@ -121,8 +125,8 @@ func (t *mqlTerraformState) resources() ([]any, error) {
 		return nil, err
 	}
 
-	if providerState.Values == nil {
-		return nil, nil
+	if providerState.Values == nil || providerState.Values.RootModule == nil {
+		return []any{}, nil
 	}
 
 	// resolve all tfstate resources, to achieve this we need to walk all modules

@@ -201,10 +201,17 @@ func (a *mqlAwsSsm) getInstances(conn *connection.AwsConnection) []*jobpool.Job 
 						"agentVersion":    llx.StringDataPtr(instance.AgentVersion),
 						"lastPingedAt":    llx.TimeDataPtr(instance.LastPingDateTime),
 						"computerName":    llx.StringDataPtr(instance.ComputerName),
+						"sourceType":      llx.StringData(string(instance.SourceType)),
+						"sourceId":        llx.StringDataPtr(instance.SourceId),
+						"activationId":    llx.StringDataPtr(instance.ActivationId),
+						"resourceType":    llx.StringData(string(instance.ResourceType)),
+						"registeredAt":    llx.TimeDataPtr(instance.RegistrationDate),
+						"isLatestVersion": llx.BoolDataPtr(instance.IsLatestVersion),
 					})
 				if err != nil {
 					return nil, err
 				}
+				mqlInstance.(*mqlAwsSsmInstance).iamRoleName = convert.ToValue(instance.IamRole)
 				res = append(res, mqlInstance)
 			}
 			return jobpool.JobResult(res), nil
@@ -226,6 +233,45 @@ func (a *mqlAwsSsmInstance) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+func (a *mqlAwsSsmInstance) ec2Instance() (*mqlAwsEc2Instance, error) {
+	// Only EC2-registered managed nodes map to an EC2 instance; hybrid and
+	// on-premises nodes (ManagedInstance) have no EC2 instance.
+	if a.ResourceType.Data != "EC2Instance" || a.InstanceId.Data == "" {
+		a.Ec2Instance.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arnVal := fmt.Sprintf(ec2InstanceArnPattern, a.Region.Data, conn.AccountId(), a.InstanceId.Data)
+	res, err := NewResource(a.MqlRuntime, "aws.ec2.instance",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		a.Ec2Instance.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return res.(*mqlAwsEc2Instance), nil
+}
+
+type mqlAwsSsmInstanceInternal struct {
+	iamRoleName string
+}
+
+// iamRole resolves the IAM role assigned to the managed instance for Systems
+// Manager. It is set for hybrid and on-premises activations; standard EC2
+// instances report an empty role here (their profile is on the EC2 instance).
+func (a *mqlAwsSsmInstance) iamRole() (*mqlAwsIamRole, error) {
+	if a.iamRoleName == "" {
+		a.IamRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"name": llx.StringData(a.iamRoleName)})
+	if err != nil {
+		a.IamRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return res.(*mqlAwsIamRole), nil
+}
+
 const ssmInstanceArnPattern = "arn:aws:ssm:%s:%s:instance/%s"
 
 func initAwsSsmInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -234,8 +280,8 @@ func initAwsSsmInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 
@@ -287,14 +333,5 @@ func (a *mqlAwsSsmInstance) tags() (map[string]any, error) {
 }
 
 func Ec2SSMTagsToMap(tags []ec2types.TagDescription) map[string]any {
-	tagsMap := make(map[string]any)
-
-	if len(tags) > 0 {
-		for i := range tags {
-			tag := tags[i]
-			tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
-		}
-	}
-
-	return tagsMap
+	return tagsToMap(tags, func(t ec2types.TagDescription) *string { return t.Key }, func(t ec2types.TagDescription) *string { return t.Value })
 }

@@ -17,6 +17,8 @@ type Theme struct {
 	Disabled  termenv.Color
 	Error     termenv.Color
 	Success   termenv.Color
+	Warn      termenv.Color
+	Command   termenv.Color
 
 	// severity
 	Critical termenv.Color

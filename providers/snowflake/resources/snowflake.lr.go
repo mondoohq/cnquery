@@ -16,31 +16,44 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceSnowflake                     string = "snowflake"
-	ResourceSnowflakeAccount              string = "snowflake.account"
-	ResourceSnowflakeUser                 string = "snowflake.user"
-	ResourceSnowflakeRole                 string = "snowflake.role"
-	ResourceSnowflakeSecurityIntegration  string = "snowflake.securityIntegration"
-	ResourceSnowflakePasswordPolicy       string = "snowflake.passwordPolicy"
-	ResourceSnowflakeNetworkPolicy        string = "snowflake.networkPolicy"
-	ResourceSnowflakeProcedure            string = "snowflake.procedure"
-	ResourceSnowflakeParameter            string = "snowflake.parameter"
-	ResourceSnowflakeStage                string = "snowflake.stage"
-	ResourceSnowflakeDatabase             string = "snowflake.database"
-	ResourceSnowflakeWarehouse            string = "snowflake.warehouse"
-	ResourceSnowflakeGrant                string = "snowflake.grant"
-	ResourceSnowflakeSessionPolicy        string = "snowflake.sessionPolicy"
-	ResourceSnowflakeShare                string = "snowflake.share"
-	ResourceSnowflakeApiIntegration       string = "snowflake.apiIntegration"
-	ResourceSnowflakeTag                  string = "snowflake.tag"
-	ResourceSnowflakeFailoverGroup        string = "snowflake.failoverGroup"
-	ResourceSnowflakeDatabaseRole         string = "snowflake.databaseRole"
-	ResourceSnowflakeView                 string = "snowflake.view"
-	ResourceSnowflakeResourceMonitor      string = "snowflake.resourceMonitor"
-	ResourceSnowflakeAuthenticationPolicy string = "snowflake.authenticationPolicy"
-	ResourceSnowflakeMaskingPolicy        string = "snowflake.maskingPolicy"
-	ResourceSnowflakePolicyReference      string = "snowflake.policyReference"
-	ResourceSnowflakeSecret               string = "snowflake.secret"
+	ResourceSnowflake                          string = "snowflake"
+	ResourceSnowflakeAccount                   string = "snowflake.account"
+	ResourceSnowflakeUser                      string = "snowflake.user"
+	ResourceSnowflakeRole                      string = "snowflake.role"
+	ResourceSnowflakeSecurityIntegration       string = "snowflake.securityIntegration"
+	ResourceSnowflakePasswordPolicy            string = "snowflake.passwordPolicy"
+	ResourceSnowflakeNetworkPolicy             string = "snowflake.networkPolicy"
+	ResourceSnowflakeProcedure                 string = "snowflake.procedure"
+	ResourceSnowflakeParameter                 string = "snowflake.parameter"
+	ResourceSnowflakeStage                     string = "snowflake.stage"
+	ResourceSnowflakeDatabase                  string = "snowflake.database"
+	ResourceSnowflakeWarehouse                 string = "snowflake.warehouse"
+	ResourceSnowflakeGrant                     string = "snowflake.grant"
+	ResourceSnowflakeSessionPolicy             string = "snowflake.sessionPolicy"
+	ResourceSnowflakeShare                     string = "snowflake.share"
+	ResourceSnowflakeApiIntegration            string = "snowflake.apiIntegration"
+	ResourceSnowflakeTag                       string = "snowflake.tag"
+	ResourceSnowflakeFailoverGroup             string = "snowflake.failoverGroup"
+	ResourceSnowflakeDatabaseRole              string = "snowflake.databaseRole"
+	ResourceSnowflakeView                      string = "snowflake.view"
+	ResourceSnowflakeResourceMonitor           string = "snowflake.resourceMonitor"
+	ResourceSnowflakeAuthenticationPolicy      string = "snowflake.authenticationPolicy"
+	ResourceSnowflakeMaskingPolicy             string = "snowflake.maskingPolicy"
+	ResourceSnowflakePolicyReference           string = "snowflake.policyReference"
+	ResourceSnowflakeSecret                    string = "snowflake.secret"
+	ResourceSnowflakeRowAccessPolicy           string = "snowflake.rowAccessPolicy"
+	ResourceSnowflakeNetworkRule               string = "snowflake.networkRule"
+	ResourceSnowflakeStorageIntegration        string = "snowflake.storageIntegration"
+	ResourceSnowflakeNotificationIntegration   string = "snowflake.notificationIntegration"
+	ResourceSnowflakeSchema                    string = "snowflake.schema"
+	ResourceSnowflakeManagedAccount            string = "snowflake.managedAccount"
+	ResourceSnowflakeConnection                string = "snowflake.connection"
+	ResourceSnowflakeTask                      string = "snowflake.task"
+	ResourceSnowflakeFunction                  string = "snowflake.function"
+	ResourceSnowflakeApplication               string = "snowflake.application"
+	ResourceSnowflakeApplicationPackage        string = "snowflake.applicationPackage"
+	ResourceSnowflakeExternalAccessIntegration string = "snowflake.externalAccessIntegration"
+	ResourceSnowflakeCortexSearchService       string = "snowflake.cortexSearchService"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -60,11 +73,11 @@ func init() {
 			Create: createSnowflakeUser,
 		},
 		"snowflake.role": {
-			// to override args, implement: initSnowflakeRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initSnowflakeRole,
 			Create: createSnowflakeRole,
 		},
 		"snowflake.securityIntegration": {
-			// to override args, implement: initSnowflakeSecurityIntegration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initSnowflakeSecurityIntegration,
 			Create: createSnowflakeSecurityIntegration,
 		},
 		"snowflake.passwordPolicy": {
@@ -88,11 +101,11 @@ func init() {
 			Create: createSnowflakeStage,
 		},
 		"snowflake.database": {
-			// to override args, implement: initSnowflakeDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initSnowflakeDatabase,
 			Create: createSnowflakeDatabase,
 		},
 		"snowflake.warehouse": {
-			// to override args, implement: initSnowflakeWarehouse(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initSnowflakeWarehouse,
 			Create: createSnowflakeWarehouse,
 		},
 		"snowflake.grant": {
@@ -128,7 +141,7 @@ func init() {
 			Create: createSnowflakeView,
 		},
 		"snowflake.resourceMonitor": {
-			// to override args, implement: initSnowflakeResourceMonitor(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initSnowflakeResourceMonitor,
 			Create: createSnowflakeResourceMonitor,
 		},
 		"snowflake.authenticationPolicy": {
@@ -144,8 +157,60 @@ func init() {
 			Create: createSnowflakePolicyReference,
 		},
 		"snowflake.secret": {
-			// to override args, implement: initSnowflakeSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initSnowflakeSecret,
 			Create: createSnowflakeSecret,
+		},
+		"snowflake.rowAccessPolicy": {
+			// to override args, implement: initSnowflakeRowAccessPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSnowflakeRowAccessPolicy,
+		},
+		"snowflake.networkRule": {
+			// to override args, implement: initSnowflakeNetworkRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSnowflakeNetworkRule,
+		},
+		"snowflake.storageIntegration": {
+			Init:   initSnowflakeStorageIntegration,
+			Create: createSnowflakeStorageIntegration,
+		},
+		"snowflake.notificationIntegration": {
+			// to override args, implement: initSnowflakeNotificationIntegration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSnowflakeNotificationIntegration,
+		},
+		"snowflake.schema": {
+			Init:   initSnowflakeSchema,
+			Create: createSnowflakeSchema,
+		},
+		"snowflake.managedAccount": {
+			// to override args, implement: initSnowflakeManagedAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSnowflakeManagedAccount,
+		},
+		"snowflake.connection": {
+			// to override args, implement: initSnowflakeConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSnowflakeConnection,
+		},
+		"snowflake.task": {
+			Init:   initSnowflakeTask,
+			Create: createSnowflakeTask,
+		},
+		"snowflake.function": {
+			// to override args, implement: initSnowflakeFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSnowflakeFunction,
+		},
+		"snowflake.application": {
+			// to override args, implement: initSnowflakeApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSnowflakeApplication,
+		},
+		"snowflake.applicationPackage": {
+			// to override args, implement: initSnowflakeApplicationPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSnowflakeApplicationPackage,
+		},
+		"snowflake.externalAccessIntegration": {
+			Init:   initSnowflakeExternalAccessIntegration,
+			Create: createSnowflakeExternalAccessIntegration,
+		},
+		"snowflake.cortexSearchService": {
+			// to override args, implement: initSnowflakeCortexSearchService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSnowflakeCortexSearchService,
 		},
 	}
 }
@@ -296,6 +361,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"snowflake.account.resourceMonitors": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeAccount).GetResourceMonitors()).ToDataRes(types.Array(types.Resource("snowflake.resourceMonitor")))
 	},
+	"snowflake.account.rowAccessPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeAccount).GetRowAccessPolicies()).ToDataRes(types.Array(types.Resource("snowflake.rowAccessPolicy")))
+	},
+	"snowflake.account.networkRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeAccount).GetNetworkRules()).ToDataRes(types.Array(types.Resource("snowflake.networkRule")))
+	},
+	"snowflake.account.storageIntegrations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeAccount).GetStorageIntegrations()).ToDataRes(types.Array(types.Resource("snowflake.storageIntegration")))
+	},
+	"snowflake.account.notificationIntegrations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeAccount).GetNotificationIntegrations()).ToDataRes(types.Array(types.Resource("snowflake.notificationIntegration")))
+	},
+	"snowflake.account.schemas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeAccount).GetSchemas()).ToDataRes(types.Array(types.Resource("snowflake.schema")))
+	},
+	"snowflake.account.managedAccounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeAccount).GetManagedAccounts()).ToDataRes(types.Array(types.Resource("snowflake.managedAccount")))
+	},
+	"snowflake.account.connections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeAccount).GetConnections()).ToDataRes(types.Array(types.Resource("snowflake.connection")))
+	},
+	"snowflake.account.views": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeAccount).GetViews()).ToDataRes(types.Array(types.Resource("snowflake.view")))
+	},
+	"snowflake.account.tasks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeAccount).GetTasks()).ToDataRes(types.Array(types.Resource("snowflake.task")))
+	},
+	"snowflake.account.functions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeAccount).GetFunctions()).ToDataRes(types.Array(types.Resource("snowflake.function")))
+	},
+	"snowflake.account.applications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeAccount).GetApplications()).ToDataRes(types.Array(types.Resource("snowflake.application")))
+	},
+	"snowflake.account.applicationPackages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeAccount).GetApplicationPackages()).ToDataRes(types.Array(types.Resource("snowflake.applicationPackage")))
+	},
+	"snowflake.account.externalAccessIntegrations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeAccount).GetExternalAccessIntegrations()).ToDataRes(types.Array(types.Resource("snowflake.externalAccessIntegration")))
+	},
+	"snowflake.account.cortexSearchServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeAccount).GetCortexSearchServices()).ToDataRes(types.Array(types.Resource("snowflake.cortexSearchService")))
+	},
+	"snowflake.account.cortexEnabledCrossRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeAccount).GetCortexEnabledCrossRegion()).ToDataRes(types.String)
+	},
 	"snowflake.user.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeUser).GetName()).ToDataRes(types.String)
 	},
@@ -320,11 +430,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"snowflake.user.defaultWarehouse": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeUser).GetDefaultWarehouse()).ToDataRes(types.String)
 	},
+	"snowflake.user.defaultWarehouseRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeUser).GetDefaultWarehouseRef()).ToDataRes(types.Resource("snowflake.warehouse"))
+	},
 	"snowflake.user.defaultNamespace": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeUser).GetDefaultNamespace()).ToDataRes(types.String)
 	},
 	"snowflake.user.defaultRole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeUser).GetDefaultRole()).ToDataRes(types.String)
+	},
+	"snowflake.user.defaultRoleRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeUser).GetDefaultRoleRef()).ToDataRes(types.Resource("snowflake.role"))
 	},
 	"snowflake.user.disabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeUser).GetDisabled()).ToDataRes(types.Bool)
@@ -355,6 +471,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"snowflake.user.extAuthnUid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeUser).GetExtAuthnUid()).ToDataRes(types.String)
+	},
+	"snowflake.user.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeUser).GetType()).ToDataRes(types.String)
+	},
+	"snowflake.user.hasMfa": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeUser).GetHasMfa()).ToDataRes(types.Bool)
+	},
+	"snowflake.user.snowflakeLock": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeUser).GetSnowflakeLock()).ToDataRes(types.Bool)
+	},
+	"snowflake.user.defaultSecondaryRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeUser).GetDefaultSecondaryRoles()).ToDataRes(types.Array(types.String))
+	},
+	"snowflake.user.minsToBypassMfa": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeUser).GetMinsToBypassMfa()).ToDataRes(types.String)
+	},
+	"snowflake.user.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeUser).GetOwner()).ToDataRes(types.Resource("snowflake.role"))
 	},
 	"snowflake.user.parameters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeUser).GetParameters()).ToDataRes(types.Array(types.Resource("snowflake.parameter")))
@@ -388,6 +522,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"snowflake.role.owner": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeRole).GetOwner()).ToDataRes(types.String)
+	},
+	"snowflake.role.ownerRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeRole).GetOwnerRole()).ToDataRes(types.Resource("snowflake.role"))
 	},
 	"snowflake.role.comment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeRole).GetComment()).ToDataRes(types.String)
@@ -451,6 +588,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"snowflake.passwordPolicy.owner": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakePasswordPolicy).GetOwner()).ToDataRes(types.String)
+	},
+	"snowflake.passwordPolicy.ownerRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakePasswordPolicy).GetOwnerRole()).ToDataRes(types.Resource("snowflake.role"))
 	},
 	"snowflake.passwordPolicy.comment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakePasswordPolicy).GetComment()).ToDataRes(types.String)
@@ -614,6 +754,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"snowflake.stage.storeIntegration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeStage).GetStoreIntegration()).ToDataRes(types.String)
 	},
+	"snowflake.stage.storageIntegration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStage).GetStorageIntegration()).ToDataRes(types.Resource("snowflake.storageIntegration"))
+	},
 	"snowflake.stage.endpoint": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeStage).GetEndpoint()).ToDataRes(types.String)
 	},
@@ -638,6 +781,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"snowflake.database.owner": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeDatabase).GetOwner()).ToDataRes(types.String)
 	},
+	"snowflake.database.ownerRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeDatabase).GetOwnerRole()).ToDataRes(types.Resource("snowflake.role"))
+	},
 	"snowflake.database.comment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeDatabase).GetComment()).ToDataRes(types.String)
 	},
@@ -661,6 +807,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"snowflake.database.roles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeDatabase).GetRoles()).ToDataRes(types.Array(types.Resource("snowflake.databaseRole")))
+	},
+	"snowflake.database.schemas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeDatabase).GetSchemas()).ToDataRes(types.Array(types.Resource("snowflake.schema")))
+	},
+	"snowflake.database.maskingPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeDatabase).GetMaskingPolicies()).ToDataRes(types.Array(types.Resource("snowflake.maskingPolicy")))
+	},
+	"snowflake.database.rowAccessPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeDatabase).GetRowAccessPolicies()).ToDataRes(types.Array(types.Resource("snowflake.rowAccessPolicy")))
+	},
+	"snowflake.database.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeDatabase).GetTags()).ToDataRes(types.Array(types.Resource("snowflake.tag")))
+	},
+	"snowflake.database.secrets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeDatabase).GetSecrets()).ToDataRes(types.Array(types.Resource("snowflake.secret")))
 	},
 	"snowflake.warehouse.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeWarehouse).GetName()).ToDataRes(types.String)
@@ -727,6 +888,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"snowflake.warehouse.resourceMonitor": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeWarehouse).GetResourceMonitor()).ToDataRes(types.String)
+	},
+	"snowflake.warehouse.resourceMonitorRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeWarehouse).GetResourceMonitorRef()).ToDataRes(types.Resource("snowflake.resourceMonitor"))
 	},
 	"snowflake.warehouse.scalingPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeWarehouse).GetScalingPolicy()).ToDataRes(types.String)
@@ -806,11 +970,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"snowflake.share.databaseName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeShare).GetDatabaseName()).ToDataRes(types.String)
 	},
+	"snowflake.share.database": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeShare).GetDatabase()).ToDataRes(types.Resource("snowflake.database"))
+	},
 	"snowflake.share.to": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeShare).GetTo()).ToDataRes(types.Array(types.String))
 	},
 	"snowflake.share.owner": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeShare).GetOwner()).ToDataRes(types.String)
+	},
+	"snowflake.share.ownerRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeShare).GetOwnerRole()).ToDataRes(types.Resource("snowflake.role"))
 	},
 	"snowflake.share.comment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeShare).GetComment()).ToDataRes(types.String)
@@ -920,6 +1090,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"snowflake.failoverGroup.owner": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeFailoverGroup).GetOwner()).ToDataRes(types.String)
 	},
+	"snowflake.failoverGroup.ownerRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeFailoverGroup).GetOwnerRole()).ToDataRes(types.Resource("snowflake.role"))
+	},
 	"snowflake.failoverGroup.comment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeFailoverGroup).GetComment()).ToDataRes(types.String)
 	},
@@ -1028,6 +1201,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"snowflake.resourceMonitor.owner": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeResourceMonitor).GetOwner()).ToDataRes(types.String)
 	},
+	"snowflake.resourceMonitor.ownerRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeResourceMonitor).GetOwnerRole()).ToDataRes(types.Resource("snowflake.role"))
+	},
 	"snowflake.resourceMonitor.comment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeResourceMonitor).GetComment()).ToDataRes(types.String)
 	},
@@ -1084,6 +1260,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"snowflake.authenticationPolicy.securityIntegrations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeAuthenticationPolicy).GetSecurityIntegrations()).ToDataRes(types.Array(types.String))
+	},
+	"snowflake.authenticationPolicy.securityIntegrationRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeAuthenticationPolicy).GetSecurityIntegrationRefs()).ToDataRes(types.Array(types.Resource("snowflake.securityIntegration")))
 	},
 	"snowflake.maskingPolicy.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeMaskingPolicy).GetName()).ToDataRes(types.String)
@@ -1204,6 +1383,456 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"snowflake.secret.oauthRefreshTokenExpiryTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeSecret).GetOauthRefreshTokenExpiryTime()).ToDataRes(types.Time)
+	},
+	"snowflake.rowAccessPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeRowAccessPolicy).GetName()).ToDataRes(types.String)
+	},
+	"snowflake.rowAccessPolicy.databaseName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeRowAccessPolicy).GetDatabaseName()).ToDataRes(types.String)
+	},
+	"snowflake.rowAccessPolicy.schemaName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeRowAccessPolicy).GetSchemaName()).ToDataRes(types.String)
+	},
+	"snowflake.rowAccessPolicy.database": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeRowAccessPolicy).GetDatabase()).ToDataRes(types.Resource("snowflake.database"))
+	},
+	"snowflake.rowAccessPolicy.schema": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeRowAccessPolicy).GetSchema()).ToDataRes(types.Resource("snowflake.schema"))
+	},
+	"snowflake.rowAccessPolicy.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeRowAccessPolicy).GetKind()).ToDataRes(types.String)
+	},
+	"snowflake.rowAccessPolicy.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeRowAccessPolicy).GetOwner()).ToDataRes(types.String)
+	},
+	"snowflake.rowAccessPolicy.ownerRoleType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeRowAccessPolicy).GetOwnerRoleType()).ToDataRes(types.String)
+	},
+	"snowflake.rowAccessPolicy.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeRowAccessPolicy).GetComment()).ToDataRes(types.String)
+	},
+	"snowflake.rowAccessPolicy.options": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeRowAccessPolicy).GetOptions()).ToDataRes(types.String)
+	},
+	"snowflake.rowAccessPolicy.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeRowAccessPolicy).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"snowflake.rowAccessPolicy.signature": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeRowAccessPolicy).GetSignature()).ToDataRes(types.Array(types.String))
+	},
+	"snowflake.rowAccessPolicy.returnType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeRowAccessPolicy).GetReturnType()).ToDataRes(types.String)
+	},
+	"snowflake.rowAccessPolicy.body": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeRowAccessPolicy).GetBody()).ToDataRes(types.String)
+	},
+	"snowflake.rowAccessPolicy.references": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeRowAccessPolicy).GetReferences()).ToDataRes(types.Array(types.Resource("snowflake.policyReference")))
+	},
+	"snowflake.networkRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNetworkRule).GetName()).ToDataRes(types.String)
+	},
+	"snowflake.networkRule.databaseName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNetworkRule).GetDatabaseName()).ToDataRes(types.String)
+	},
+	"snowflake.networkRule.schemaName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNetworkRule).GetSchemaName()).ToDataRes(types.String)
+	},
+	"snowflake.networkRule.database": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNetworkRule).GetDatabase()).ToDataRes(types.Resource("snowflake.database"))
+	},
+	"snowflake.networkRule.schema": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNetworkRule).GetSchema()).ToDataRes(types.Resource("snowflake.schema"))
+	},
+	"snowflake.networkRule.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNetworkRule).GetOwner()).ToDataRes(types.String)
+	},
+	"snowflake.networkRule.ownerRoleType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNetworkRule).GetOwnerRoleType()).ToDataRes(types.String)
+	},
+	"snowflake.networkRule.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNetworkRule).GetComment()).ToDataRes(types.String)
+	},
+	"snowflake.networkRule.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNetworkRule).GetType()).ToDataRes(types.String)
+	},
+	"snowflake.networkRule.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNetworkRule).GetMode()).ToDataRes(types.String)
+	},
+	"snowflake.networkRule.entriesInValueList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNetworkRule).GetEntriesInValueList()).ToDataRes(types.Int)
+	},
+	"snowflake.networkRule.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNetworkRule).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"snowflake.networkRule.valueList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNetworkRule).GetValueList()).ToDataRes(types.Array(types.String))
+	},
+	"snowflake.storageIntegration.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStorageIntegration).GetName()).ToDataRes(types.String)
+	},
+	"snowflake.storageIntegration.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStorageIntegration).GetType()).ToDataRes(types.String)
+	},
+	"snowflake.storageIntegration.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStorageIntegration).GetCategory()).ToDataRes(types.String)
+	},
+	"snowflake.storageIntegration.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStorageIntegration).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"snowflake.storageIntegration.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStorageIntegration).GetComment()).ToDataRes(types.String)
+	},
+	"snowflake.storageIntegration.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStorageIntegration).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"snowflake.storageIntegration.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStorageIntegration).GetProperties()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"snowflake.storageIntegration.storageProvider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStorageIntegration).GetStorageProvider()).ToDataRes(types.String)
+	},
+	"snowflake.storageIntegration.storageAllowedLocations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStorageIntegration).GetStorageAllowedLocations()).ToDataRes(types.Array(types.String))
+	},
+	"snowflake.storageIntegration.storageBlockedLocations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStorageIntegration).GetStorageBlockedLocations()).ToDataRes(types.Array(types.String))
+	},
+	"snowflake.storageIntegration.storageAwsRoleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStorageIntegration).GetStorageAwsRoleArn()).ToDataRes(types.String)
+	},
+	"snowflake.storageIntegration.storageAwsIamUserArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStorageIntegration).GetStorageAwsIamUserArn()).ToDataRes(types.String)
+	},
+	"snowflake.storageIntegration.storageAwsExternalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStorageIntegration).GetStorageAwsExternalId()).ToDataRes(types.String)
+	},
+	"snowflake.storageIntegration.storageGcpServiceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStorageIntegration).GetStorageGcpServiceAccount()).ToDataRes(types.String)
+	},
+	"snowflake.storageIntegration.azureTenantId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStorageIntegration).GetAzureTenantId()).ToDataRes(types.String)
+	},
+	"snowflake.storageIntegration.azureConsentUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStorageIntegration).GetAzureConsentUrl()).ToDataRes(types.String)
+	},
+	"snowflake.storageIntegration.azureMultiTenantAppName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStorageIntegration).GetAzureMultiTenantAppName()).ToDataRes(types.String)
+	},
+	"snowflake.notificationIntegration.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNotificationIntegration).GetName()).ToDataRes(types.String)
+	},
+	"snowflake.notificationIntegration.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNotificationIntegration).GetType()).ToDataRes(types.String)
+	},
+	"snowflake.notificationIntegration.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNotificationIntegration).GetCategory()).ToDataRes(types.String)
+	},
+	"snowflake.notificationIntegration.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNotificationIntegration).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"snowflake.notificationIntegration.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNotificationIntegration).GetComment()).ToDataRes(types.String)
+	},
+	"snowflake.notificationIntegration.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNotificationIntegration).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"snowflake.notificationIntegration.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNotificationIntegration).GetProperties()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"snowflake.notificationIntegration.direction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNotificationIntegration).GetDirection()).ToDataRes(types.String)
+	},
+	"snowflake.notificationIntegration.notificationProvider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNotificationIntegration).GetNotificationProvider()).ToDataRes(types.String)
+	},
+	"snowflake.notificationIntegration.awsSnsTopicArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNotificationIntegration).GetAwsSnsTopicArn()).ToDataRes(types.String)
+	},
+	"snowflake.notificationIntegration.awsSnsRoleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNotificationIntegration).GetAwsSnsRoleArn()).ToDataRes(types.String)
+	},
+	"snowflake.notificationIntegration.gcpPubsubSubscriptionName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNotificationIntegration).GetGcpPubsubSubscriptionName()).ToDataRes(types.String)
+	},
+	"snowflake.notificationIntegration.gcpPubsubTopicName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNotificationIntegration).GetGcpPubsubTopicName()).ToDataRes(types.String)
+	},
+	"snowflake.notificationIntegration.azureStorageQueuePrimaryUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNotificationIntegration).GetAzureStorageQueuePrimaryUri()).ToDataRes(types.String)
+	},
+	"snowflake.notificationIntegration.azureEventGridTopicEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNotificationIntegration).GetAzureEventGridTopicEndpoint()).ToDataRes(types.String)
+	},
+	"snowflake.notificationIntegration.azureTenantId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeNotificationIntegration).GetAzureTenantId()).ToDataRes(types.String)
+	},
+	"snowflake.schema.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeSchema).GetName()).ToDataRes(types.String)
+	},
+	"snowflake.schema.databaseName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeSchema).GetDatabaseName()).ToDataRes(types.String)
+	},
+	"snowflake.schema.database": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeSchema).GetDatabase()).ToDataRes(types.Resource("snowflake.database"))
+	},
+	"snowflake.schema.isDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeSchema).GetIsDefault()).ToDataRes(types.Bool)
+	},
+	"snowflake.schema.isCurrent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeSchema).GetIsCurrent()).ToDataRes(types.Bool)
+	},
+	"snowflake.schema.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeSchema).GetOwner()).ToDataRes(types.String)
+	},
+	"snowflake.schema.ownerRoleType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeSchema).GetOwnerRoleType()).ToDataRes(types.String)
+	},
+	"snowflake.schema.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeSchema).GetComment()).ToDataRes(types.String)
+	},
+	"snowflake.schema.options": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeSchema).GetOptions()).ToDataRes(types.String)
+	},
+	"snowflake.schema.retentionTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeSchema).GetRetentionTime()).ToDataRes(types.String)
+	},
+	"snowflake.schema.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeSchema).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"snowflake.schema.droppedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeSchema).GetDroppedAt()).ToDataRes(types.Time)
+	},
+	"snowflake.managedAccount.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeManagedAccount).GetName()).ToDataRes(types.String)
+	},
+	"snowflake.managedAccount.cloud": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeManagedAccount).GetCloud()).ToDataRes(types.String)
+	},
+	"snowflake.managedAccount.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeManagedAccount).GetRegion()).ToDataRes(types.String)
+	},
+	"snowflake.managedAccount.locator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeManagedAccount).GetLocator()).ToDataRes(types.String)
+	},
+	"snowflake.managedAccount.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeManagedAccount).GetUrl()).ToDataRes(types.String)
+	},
+	"snowflake.managedAccount.accountLocatorUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeManagedAccount).GetAccountLocatorUrl()).ToDataRes(types.String)
+	},
+	"snowflake.managedAccount.isReader": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeManagedAccount).GetIsReader()).ToDataRes(types.Bool)
+	},
+	"snowflake.managedAccount.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeManagedAccount).GetComment()).ToDataRes(types.String)
+	},
+	"snowflake.managedAccount.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeManagedAccount).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"snowflake.connection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeConnection).GetName()).ToDataRes(types.String)
+	},
+	"snowflake.connection.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeConnection).GetComment()).ToDataRes(types.String)
+	},
+	"snowflake.connection.isPrimary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeConnection).GetIsPrimary()).ToDataRes(types.Bool)
+	},
+	"snowflake.connection.primary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeConnection).GetPrimary()).ToDataRes(types.String)
+	},
+	"snowflake.connection.failoverAllowedToAccounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeConnection).GetFailoverAllowedToAccounts()).ToDataRes(types.Array(types.String))
+	},
+	"snowflake.connection.snowflakeRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeConnection).GetSnowflakeRegion()).ToDataRes(types.String)
+	},
+	"snowflake.connection.regionGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeConnection).GetRegionGroup()).ToDataRes(types.String)
+	},
+	"snowflake.connection.accountName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeConnection).GetAccountName()).ToDataRes(types.String)
+	},
+	"snowflake.connection.accountLocator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeConnection).GetAccountLocator()).ToDataRes(types.String)
+	},
+	"snowflake.connection.organizationName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeConnection).GetOrganizationName()).ToDataRes(types.String)
+	},
+	"snowflake.connection.connectionUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeConnection).GetConnectionUrl()).ToDataRes(types.String)
+	},
+	"snowflake.connection.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeConnection).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"snowflake.task.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeTask).GetName()).ToDataRes(types.String)
+	},
+	"snowflake.task.databaseName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeTask).GetDatabaseName()).ToDataRes(types.String)
+	},
+	"snowflake.task.schemaName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeTask).GetSchemaName()).ToDataRes(types.String)
+	},
+	"snowflake.task.warehouse": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeTask).GetWarehouse()).ToDataRes(types.Resource("snowflake.warehouse"))
+	},
+	"snowflake.task.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeTask).GetOwner()).ToDataRes(types.Resource("snowflake.role"))
+	},
+	"snowflake.task.ownerRoleType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeTask).GetOwnerRoleType()).ToDataRes(types.String)
+	},
+	"snowflake.task.schedule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeTask).GetSchedule()).ToDataRes(types.String)
+	},
+	"snowflake.task.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeTask).GetState()).ToDataRes(types.String)
+	},
+	"snowflake.task.definition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeTask).GetDefinition()).ToDataRes(types.String)
+	},
+	"snowflake.task.condition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeTask).GetCondition()).ToDataRes(types.String)
+	},
+	"snowflake.task.allowOverlappingExecution": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeTask).GetAllowOverlappingExecution()).ToDataRes(types.Bool)
+	},
+	"snowflake.task.predecessors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeTask).GetPredecessors()).ToDataRes(types.Array(types.Resource("snowflake.task")))
+	},
+	"snowflake.task.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeTask).GetComment()).ToDataRes(types.String)
+	},
+	"snowflake.function.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeFunction).GetName()).ToDataRes(types.String)
+	},
+	"snowflake.function.databaseName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeFunction).GetDatabaseName()).ToDataRes(types.String)
+	},
+	"snowflake.function.schemaName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeFunction).GetSchemaName()).ToDataRes(types.String)
+	},
+	"snowflake.function.language": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeFunction).GetLanguage()).ToDataRes(types.String)
+	},
+	"snowflake.function.isSecure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeFunction).GetIsSecure()).ToDataRes(types.Bool)
+	},
+	"snowflake.function.isExternalFunction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeFunction).GetIsExternalFunction()).ToDataRes(types.Bool)
+	},
+	"snowflake.function.isBuiltin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeFunction).GetIsBuiltin()).ToDataRes(types.Bool)
+	},
+	"snowflake.function.isAggregate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeFunction).GetIsAggregate()).ToDataRes(types.Bool)
+	},
+	"snowflake.function.isTableFunction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeFunction).GetIsTableFunction()).ToDataRes(types.Bool)
+	},
+	"snowflake.function.isMemoizable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeFunction).GetIsMemoizable()).ToDataRes(types.Bool)
+	},
+	"snowflake.function.isDataMetric": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeFunction).GetIsDataMetric()).ToDataRes(types.Bool)
+	},
+	"snowflake.function.arguments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeFunction).GetArguments()).ToDataRes(types.String)
+	},
+	"snowflake.function.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeFunction).GetDescription()).ToDataRes(types.String)
+	},
+	"snowflake.function.externalAccessIntegrations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeFunction).GetExternalAccessIntegrations()).ToDataRes(types.Array(types.Resource("snowflake.externalAccessIntegration")))
+	},
+	"snowflake.function.secrets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeFunction).GetSecrets()).ToDataRes(types.Array(types.Resource("snowflake.secret")))
+	},
+	"snowflake.application.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeApplication).GetName()).ToDataRes(types.String)
+	},
+	"snowflake.application.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeApplication).GetOwner()).ToDataRes(types.Resource("snowflake.role"))
+	},
+	"snowflake.application.sourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeApplication).GetSourceType()).ToDataRes(types.String)
+	},
+	"snowflake.application.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeApplication).GetSource()).ToDataRes(types.String)
+	},
+	"snowflake.application.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeApplication).GetVersion()).ToDataRes(types.String)
+	},
+	"snowflake.application.label": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeApplication).GetLabel()).ToDataRes(types.String)
+	},
+	"snowflake.application.patch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeApplication).GetPatch()).ToDataRes(types.Int)
+	},
+	"snowflake.application.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeApplication).GetComment()).ToDataRes(types.String)
+	},
+	"snowflake.applicationPackage.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeApplicationPackage).GetName()).ToDataRes(types.String)
+	},
+	"snowflake.applicationPackage.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeApplicationPackage).GetOwner()).ToDataRes(types.Resource("snowflake.role"))
+	},
+	"snowflake.applicationPackage.distribution": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeApplicationPackage).GetDistribution()).ToDataRes(types.String)
+	},
+	"snowflake.applicationPackage.applicationClass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeApplicationPackage).GetApplicationClass()).ToDataRes(types.String)
+	},
+	"snowflake.applicationPackage.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeApplicationPackage).GetComment()).ToDataRes(types.String)
+	},
+	"snowflake.externalAccessIntegration.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeExternalAccessIntegration).GetName()).ToDataRes(types.String)
+	},
+	"snowflake.externalAccessIntegration.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeExternalAccessIntegration).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"snowflake.externalAccessIntegration.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeExternalAccessIntegration).GetComment()).ToDataRes(types.String)
+	},
+	"snowflake.externalAccessIntegration.allowedNetworkRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeExternalAccessIntegration).GetAllowedNetworkRules()).ToDataRes(types.Array(types.String))
+	},
+	"snowflake.externalAccessIntegration.allowedAuthenticationSecrets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeExternalAccessIntegration).GetAllowedAuthenticationSecrets()).ToDataRes(types.Array(types.String))
+	},
+	"snowflake.externalAccessIntegration.allowedApiAuthenticationIntegrations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeExternalAccessIntegration).GetAllowedApiAuthenticationIntegrations()).ToDataRes(types.Array(types.String))
+	},
+	"snowflake.cortexSearchService.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeCortexSearchService).GetName()).ToDataRes(types.String)
+	},
+	"snowflake.cortexSearchService.databaseName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeCortexSearchService).GetDatabaseName()).ToDataRes(types.String)
+	},
+	"snowflake.cortexSearchService.schemaName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeCortexSearchService).GetSchemaName()).ToDataRes(types.String)
+	},
+	"snowflake.cortexSearchService.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeCortexSearchService).GetComment()).ToDataRes(types.String)
+	},
+	"snowflake.cortexSearchService.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeCortexSearchService).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"snowflake.cortexSearchService.warehouse": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeCortexSearchService).GetWarehouse()).ToDataRes(types.Resource("snowflake.warehouse"))
+	},
+	"snowflake.cortexSearchService.targetLag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeCortexSearchService).GetTargetLag()).ToDataRes(types.String)
+	},
+	"snowflake.cortexSearchService.definition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeCortexSearchService).GetDefinition()).ToDataRes(types.String)
+	},
+	"snowflake.cortexSearchService.serviceQueryUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeCortexSearchService).GetServiceQueryUrl()).ToDataRes(types.String)
 	},
 }
 
@@ -1329,6 +1958,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlSnowflakeAccount).ResourceMonitors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"snowflake.account.rowAccessPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeAccount).RowAccessPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.account.networkRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeAccount).NetworkRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.account.storageIntegrations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeAccount).StorageIntegrations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.account.notificationIntegrations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeAccount).NotificationIntegrations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.account.schemas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeAccount).Schemas, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.account.managedAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeAccount).ManagedAccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.account.connections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeAccount).Connections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.account.views": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeAccount).Views, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.account.tasks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeAccount).Tasks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.account.functions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeAccount).Functions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.account.applications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeAccount).Applications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.account.applicationPackages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeAccount).ApplicationPackages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.account.externalAccessIntegrations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeAccount).ExternalAccessIntegrations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.account.cortexSearchServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeAccount).CortexSearchServices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.account.cortexEnabledCrossRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeAccount).CortexEnabledCrossRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"snowflake.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeUser).__id, ok = v.Value.(string)
 		return
@@ -1365,12 +2054,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlSnowflakeUser).DefaultWarehouse, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"snowflake.user.defaultWarehouseRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeUser).DefaultWarehouseRef, ok = plugin.RawToTValue[*mqlSnowflakeWarehouse](v.Value, v.Error)
+		return
+	},
 	"snowflake.user.defaultNamespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeUser).DefaultNamespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"snowflake.user.defaultRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeUser).DefaultRole, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.user.defaultRoleRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeUser).DefaultRoleRef, ok = plugin.RawToTValue[*mqlSnowflakeRole](v.Value, v.Error)
 		return
 	},
 	"snowflake.user.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1411,6 +2108,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"snowflake.user.extAuthnUid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeUser).ExtAuthnUid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.user.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeUser).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.user.hasMfa": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeUser).HasMfa, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"snowflake.user.snowflakeLock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeUser).SnowflakeLock, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"snowflake.user.defaultSecondaryRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeUser).DefaultSecondaryRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.user.minsToBypassMfa": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeUser).MinsToBypassMfa, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.user.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeUser).Owner, ok = plugin.RawToTValue[*mqlSnowflakeRole](v.Value, v.Error)
 		return
 	},
 	"snowflake.user.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1459,6 +2180,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"snowflake.role.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeRole).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.role.ownerRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeRole).OwnerRole, ok = plugin.RawToTValue[*mqlSnowflakeRole](v.Value, v.Error)
 		return
 	},
 	"snowflake.role.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1551,6 +2276,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"snowflake.passwordPolicy.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakePasswordPolicy).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.passwordPolicy.ownerRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakePasswordPolicy).OwnerRole, ok = plugin.RawToTValue[*mqlSnowflakeRole](v.Value, v.Error)
 		return
 	},
 	"snowflake.passwordPolicy.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1785,6 +2514,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlSnowflakeStage).StoreIntegration, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"snowflake.stage.storageIntegration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStage).StorageIntegration, ok = plugin.RawToTValue[*mqlSnowflakeStorageIntegration](v.Value, v.Error)
+		return
+	},
 	"snowflake.stage.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeStage).Endpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1821,6 +2554,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlSnowflakeDatabase).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"snowflake.database.ownerRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeDatabase).OwnerRole, ok = plugin.RawToTValue[*mqlSnowflakeRole](v.Value, v.Error)
+		return
+	},
 	"snowflake.database.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeDatabase).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1851,6 +2588,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"snowflake.database.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeDatabase).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.database.schemas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeDatabase).Schemas, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.database.maskingPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeDatabase).MaskingPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.database.rowAccessPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeDatabase).RowAccessPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.database.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeDatabase).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.database.secrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeDatabase).Secrets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.warehouse.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1943,6 +2700,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"snowflake.warehouse.resourceMonitor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeWarehouse).ResourceMonitor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.warehouse.resourceMonitorRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeWarehouse).ResourceMonitorRef, ok = plugin.RawToTValue[*mqlSnowflakeResourceMonitor](v.Value, v.Error)
 		return
 	},
 	"snowflake.warehouse.scalingPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2061,12 +2822,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlSnowflakeShare).DatabaseName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"snowflake.share.database": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeShare).Database, ok = plugin.RawToTValue[*mqlSnowflakeDatabase](v.Value, v.Error)
+		return
+	},
 	"snowflake.share.to": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeShare).To, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.share.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeShare).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.share.ownerRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeShare).OwnerRole, ok = plugin.RawToTValue[*mqlSnowflakeRole](v.Value, v.Error)
 		return
 	},
 	"snowflake.share.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2225,6 +2994,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlSnowflakeFailoverGroup).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"snowflake.failoverGroup.ownerRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeFailoverGroup).OwnerRole, ok = plugin.RawToTValue[*mqlSnowflakeRole](v.Value, v.Error)
+		return
+	},
 	"snowflake.failoverGroup.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeFailoverGroup).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2381,6 +3154,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlSnowflakeResourceMonitor).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"snowflake.resourceMonitor.ownerRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeResourceMonitor).OwnerRole, ok = plugin.RawToTValue[*mqlSnowflakeRole](v.Value, v.Error)
+		return
+	},
 	"snowflake.resourceMonitor.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeResourceMonitor).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2459,6 +3236,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"snowflake.authenticationPolicy.securityIntegrations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeAuthenticationPolicy).SecurityIntegrations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.authenticationPolicy.securityIntegrationRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeAuthenticationPolicy).SecurityIntegrationRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.maskingPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2633,6 +3414,658 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlSnowflakeSecret).OauthRefreshTokenExpiryTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"snowflake.rowAccessPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeRowAccessPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"snowflake.rowAccessPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeRowAccessPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.rowAccessPolicy.databaseName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeRowAccessPolicy).DatabaseName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.rowAccessPolicy.schemaName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeRowAccessPolicy).SchemaName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.rowAccessPolicy.database": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeRowAccessPolicy).Database, ok = plugin.RawToTValue[*mqlSnowflakeDatabase](v.Value, v.Error)
+		return
+	},
+	"snowflake.rowAccessPolicy.schema": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeRowAccessPolicy).Schema, ok = plugin.RawToTValue[*mqlSnowflakeSchema](v.Value, v.Error)
+		return
+	},
+	"snowflake.rowAccessPolicy.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeRowAccessPolicy).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.rowAccessPolicy.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeRowAccessPolicy).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.rowAccessPolicy.ownerRoleType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeRowAccessPolicy).OwnerRoleType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.rowAccessPolicy.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeRowAccessPolicy).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.rowAccessPolicy.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeRowAccessPolicy).Options, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.rowAccessPolicy.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeRowAccessPolicy).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"snowflake.rowAccessPolicy.signature": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeRowAccessPolicy).Signature, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.rowAccessPolicy.returnType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeRowAccessPolicy).ReturnType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.rowAccessPolicy.body": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeRowAccessPolicy).Body, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.rowAccessPolicy.references": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeRowAccessPolicy).References, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.networkRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNetworkRule).__id, ok = v.Value.(string)
+		return
+	},
+	"snowflake.networkRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNetworkRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.networkRule.databaseName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNetworkRule).DatabaseName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.networkRule.schemaName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNetworkRule).SchemaName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.networkRule.database": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNetworkRule).Database, ok = plugin.RawToTValue[*mqlSnowflakeDatabase](v.Value, v.Error)
+		return
+	},
+	"snowflake.networkRule.schema": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNetworkRule).Schema, ok = plugin.RawToTValue[*mqlSnowflakeSchema](v.Value, v.Error)
+		return
+	},
+	"snowflake.networkRule.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNetworkRule).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.networkRule.ownerRoleType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNetworkRule).OwnerRoleType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.networkRule.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNetworkRule).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.networkRule.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNetworkRule).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.networkRule.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNetworkRule).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.networkRule.entriesInValueList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNetworkRule).EntriesInValueList, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"snowflake.networkRule.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNetworkRule).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"snowflake.networkRule.valueList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNetworkRule).ValueList, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.storageIntegration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStorageIntegration).__id, ok = v.Value.(string)
+		return
+	},
+	"snowflake.storageIntegration.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStorageIntegration).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.storageIntegration.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStorageIntegration).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.storageIntegration.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStorageIntegration).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.storageIntegration.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStorageIntegration).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"snowflake.storageIntegration.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStorageIntegration).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.storageIntegration.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStorageIntegration).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"snowflake.storageIntegration.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStorageIntegration).Properties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.storageIntegration.storageProvider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStorageIntegration).StorageProvider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.storageIntegration.storageAllowedLocations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStorageIntegration).StorageAllowedLocations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.storageIntegration.storageBlockedLocations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStorageIntegration).StorageBlockedLocations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.storageIntegration.storageAwsRoleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStorageIntegration).StorageAwsRoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.storageIntegration.storageAwsIamUserArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStorageIntegration).StorageAwsIamUserArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.storageIntegration.storageAwsExternalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStorageIntegration).StorageAwsExternalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.storageIntegration.storageGcpServiceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStorageIntegration).StorageGcpServiceAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.storageIntegration.azureTenantId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStorageIntegration).AzureTenantId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.storageIntegration.azureConsentUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStorageIntegration).AzureConsentUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.storageIntegration.azureMultiTenantAppName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStorageIntegration).AzureMultiTenantAppName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.notificationIntegration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNotificationIntegration).__id, ok = v.Value.(string)
+		return
+	},
+	"snowflake.notificationIntegration.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNotificationIntegration).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.notificationIntegration.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNotificationIntegration).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.notificationIntegration.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNotificationIntegration).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.notificationIntegration.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNotificationIntegration).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"snowflake.notificationIntegration.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNotificationIntegration).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.notificationIntegration.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNotificationIntegration).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"snowflake.notificationIntegration.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNotificationIntegration).Properties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.notificationIntegration.direction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNotificationIntegration).Direction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.notificationIntegration.notificationProvider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNotificationIntegration).NotificationProvider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.notificationIntegration.awsSnsTopicArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNotificationIntegration).AwsSnsTopicArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.notificationIntegration.awsSnsRoleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNotificationIntegration).AwsSnsRoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.notificationIntegration.gcpPubsubSubscriptionName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNotificationIntegration).GcpPubsubSubscriptionName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.notificationIntegration.gcpPubsubTopicName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNotificationIntegration).GcpPubsubTopicName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.notificationIntegration.azureStorageQueuePrimaryUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNotificationIntegration).AzureStorageQueuePrimaryUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.notificationIntegration.azureEventGridTopicEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNotificationIntegration).AzureEventGridTopicEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.notificationIntegration.azureTenantId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeNotificationIntegration).AzureTenantId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.schema.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeSchema).__id, ok = v.Value.(string)
+		return
+	},
+	"snowflake.schema.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeSchema).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.schema.databaseName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeSchema).DatabaseName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.schema.database": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeSchema).Database, ok = plugin.RawToTValue[*mqlSnowflakeDatabase](v.Value, v.Error)
+		return
+	},
+	"snowflake.schema.isDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeSchema).IsDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"snowflake.schema.isCurrent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeSchema).IsCurrent, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"snowflake.schema.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeSchema).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.schema.ownerRoleType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeSchema).OwnerRoleType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.schema.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeSchema).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.schema.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeSchema).Options, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.schema.retentionTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeSchema).RetentionTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.schema.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeSchema).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"snowflake.schema.droppedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeSchema).DroppedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"snowflake.managedAccount.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeManagedAccount).__id, ok = v.Value.(string)
+		return
+	},
+	"snowflake.managedAccount.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeManagedAccount).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.managedAccount.cloud": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeManagedAccount).Cloud, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.managedAccount.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeManagedAccount).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.managedAccount.locator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeManagedAccount).Locator, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.managedAccount.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeManagedAccount).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.managedAccount.accountLocatorUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeManagedAccount).AccountLocatorUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.managedAccount.isReader": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeManagedAccount).IsReader, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"snowflake.managedAccount.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeManagedAccount).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.managedAccount.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeManagedAccount).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"snowflake.connection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"snowflake.connection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeConnection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.connection.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeConnection).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.connection.isPrimary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeConnection).IsPrimary, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"snowflake.connection.primary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeConnection).Primary, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.connection.failoverAllowedToAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeConnection).FailoverAllowedToAccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.connection.snowflakeRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeConnection).SnowflakeRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.connection.regionGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeConnection).RegionGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.connection.accountName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeConnection).AccountName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.connection.accountLocator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeConnection).AccountLocator, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.connection.organizationName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeConnection).OrganizationName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.connection.connectionUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeConnection).ConnectionUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.connection.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeConnection).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"snowflake.task.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeTask).__id, ok = v.Value.(string)
+		return
+	},
+	"snowflake.task.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeTask).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.task.databaseName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeTask).DatabaseName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.task.schemaName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeTask).SchemaName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.task.warehouse": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeTask).Warehouse, ok = plugin.RawToTValue[*mqlSnowflakeWarehouse](v.Value, v.Error)
+		return
+	},
+	"snowflake.task.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeTask).Owner, ok = plugin.RawToTValue[*mqlSnowflakeRole](v.Value, v.Error)
+		return
+	},
+	"snowflake.task.ownerRoleType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeTask).OwnerRoleType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.task.schedule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeTask).Schedule, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.task.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeTask).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.task.definition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeTask).Definition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.task.condition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeTask).Condition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.task.allowOverlappingExecution": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeTask).AllowOverlappingExecution, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"snowflake.task.predecessors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeTask).Predecessors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.task.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeTask).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.function.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeFunction).__id, ok = v.Value.(string)
+		return
+	},
+	"snowflake.function.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeFunction).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.function.databaseName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeFunction).DatabaseName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.function.schemaName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeFunction).SchemaName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.function.language": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeFunction).Language, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.function.isSecure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeFunction).IsSecure, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"snowflake.function.isExternalFunction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeFunction).IsExternalFunction, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"snowflake.function.isBuiltin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeFunction).IsBuiltin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"snowflake.function.isAggregate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeFunction).IsAggregate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"snowflake.function.isTableFunction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeFunction).IsTableFunction, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"snowflake.function.isMemoizable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeFunction).IsMemoizable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"snowflake.function.isDataMetric": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeFunction).IsDataMetric, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"snowflake.function.arguments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeFunction).Arguments, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.function.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeFunction).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.function.externalAccessIntegrations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeFunction).ExternalAccessIntegrations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.function.secrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeFunction).Secrets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.application.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeApplication).__id, ok = v.Value.(string)
+		return
+	},
+	"snowflake.application.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeApplication).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.application.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeApplication).Owner, ok = plugin.RawToTValue[*mqlSnowflakeRole](v.Value, v.Error)
+		return
+	},
+	"snowflake.application.sourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeApplication).SourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.application.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeApplication).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.application.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeApplication).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.application.label": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeApplication).Label, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.application.patch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeApplication).Patch, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"snowflake.application.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeApplication).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.applicationPackage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeApplicationPackage).__id, ok = v.Value.(string)
+		return
+	},
+	"snowflake.applicationPackage.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeApplicationPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.applicationPackage.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeApplicationPackage).Owner, ok = plugin.RawToTValue[*mqlSnowflakeRole](v.Value, v.Error)
+		return
+	},
+	"snowflake.applicationPackage.distribution": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeApplicationPackage).Distribution, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.applicationPackage.applicationClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeApplicationPackage).ApplicationClass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.applicationPackage.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeApplicationPackage).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.externalAccessIntegration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeExternalAccessIntegration).__id, ok = v.Value.(string)
+		return
+	},
+	"snowflake.externalAccessIntegration.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeExternalAccessIntegration).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.externalAccessIntegration.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeExternalAccessIntegration).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"snowflake.externalAccessIntegration.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeExternalAccessIntegration).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.externalAccessIntegration.allowedNetworkRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeExternalAccessIntegration).AllowedNetworkRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.externalAccessIntegration.allowedAuthenticationSecrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeExternalAccessIntegration).AllowedAuthenticationSecrets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.externalAccessIntegration.allowedApiAuthenticationIntegrations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeExternalAccessIntegration).AllowedApiAuthenticationIntegrations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.cortexSearchService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortexSearchService).__id, ok = v.Value.(string)
+		return
+	},
+	"snowflake.cortexSearchService.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortexSearchService).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.cortexSearchService.databaseName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortexSearchService).DatabaseName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.cortexSearchService.schemaName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortexSearchService).SchemaName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.cortexSearchService.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortexSearchService).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.cortexSearchService.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortexSearchService).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"snowflake.cortexSearchService.warehouse": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortexSearchService).Warehouse, ok = plugin.RawToTValue[*mqlSnowflakeWarehouse](v.Value, v.Error)
+		return
+	},
+	"snowflake.cortexSearchService.targetLag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortexSearchService).TargetLag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.cortexSearchService.definition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortexSearchService).Definition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.cortexSearchService.serviceQueryUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortexSearchService).ServiceQueryUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -2713,31 +4146,46 @@ type mqlSnowflakeAccount struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlSnowflakeAccountInternal
-	AccountId              plugin.TValue[string]
-	Region                 plugin.TValue[string]
-	Url                    plugin.TValue[string]
-	Users                  plugin.TValue[[]any]
-	Roles                  plugin.TValue[[]any]
-	SecurityIntegrations   plugin.TValue[[]any]
-	PasswordPolicies       plugin.TValue[[]any]
-	NetworkPolicies        plugin.TValue[[]any]
-	Procedures             plugin.TValue[[]any]
-	Parameters             plugin.TValue[[]any]
-	NetworkPolicy          plugin.TValue[string]
-	Stages                 plugin.TValue[[]any]
-	Databases              plugin.TValue[[]any]
-	Warehouses             plugin.TValue[[]any]
-	SessionPolicies        plugin.TValue[[]any]
-	Shares                 plugin.TValue[[]any]
-	ApiIntegrations        plugin.TValue[[]any]
-	Grants                 plugin.TValue[[]any]
-	AccountAdmins          plugin.TValue[[]any]
-	Tags                   plugin.TValue[[]any]
-	FailoverGroups         plugin.TValue[[]any]
-	AuthenticationPolicies plugin.TValue[[]any]
-	MaskingPolicies        plugin.TValue[[]any]
-	Secrets                plugin.TValue[[]any]
-	ResourceMonitors       plugin.TValue[[]any]
+	AccountId                  plugin.TValue[string]
+	Region                     plugin.TValue[string]
+	Url                        plugin.TValue[string]
+	Users                      plugin.TValue[[]any]
+	Roles                      plugin.TValue[[]any]
+	SecurityIntegrations       plugin.TValue[[]any]
+	PasswordPolicies           plugin.TValue[[]any]
+	NetworkPolicies            plugin.TValue[[]any]
+	Procedures                 plugin.TValue[[]any]
+	Parameters                 plugin.TValue[[]any]
+	NetworkPolicy              plugin.TValue[string]
+	Stages                     plugin.TValue[[]any]
+	Databases                  plugin.TValue[[]any]
+	Warehouses                 plugin.TValue[[]any]
+	SessionPolicies            plugin.TValue[[]any]
+	Shares                     plugin.TValue[[]any]
+	ApiIntegrations            plugin.TValue[[]any]
+	Grants                     plugin.TValue[[]any]
+	AccountAdmins              plugin.TValue[[]any]
+	Tags                       plugin.TValue[[]any]
+	FailoverGroups             plugin.TValue[[]any]
+	AuthenticationPolicies     plugin.TValue[[]any]
+	MaskingPolicies            plugin.TValue[[]any]
+	Secrets                    plugin.TValue[[]any]
+	ResourceMonitors           plugin.TValue[[]any]
+	RowAccessPolicies          plugin.TValue[[]any]
+	NetworkRules               plugin.TValue[[]any]
+	StorageIntegrations        plugin.TValue[[]any]
+	NotificationIntegrations   plugin.TValue[[]any]
+	Schemas                    plugin.TValue[[]any]
+	ManagedAccounts            plugin.TValue[[]any]
+	Connections                plugin.TValue[[]any]
+	Views                      plugin.TValue[[]any]
+	Tasks                      plugin.TValue[[]any]
+	Functions                  plugin.TValue[[]any]
+	Applications               plugin.TValue[[]any]
+	ApplicationPackages        plugin.TValue[[]any]
+	ExternalAccessIntegrations plugin.TValue[[]any]
+	CortexSearchServices       plugin.TValue[[]any]
+	CortexEnabledCrossRegion   plugin.TValue[string]
 }
 
 // createSnowflakeAccount creates a new instance of this resource
@@ -3137,34 +4585,272 @@ func (c *mqlSnowflakeAccount) GetResourceMonitors() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlSnowflakeAccount) GetRowAccessPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RowAccessPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "rowAccessPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rowAccessPolicies()
+	})
+}
+
+func (c *mqlSnowflakeAccount) GetNetworkRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NetworkRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "networkRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.networkRules()
+	})
+}
+
+func (c *mqlSnowflakeAccount) GetStorageIntegrations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.StorageIntegrations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "storageIntegrations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.storageIntegrations()
+	})
+}
+
+func (c *mqlSnowflakeAccount) GetNotificationIntegrations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NotificationIntegrations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "notificationIntegrations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.notificationIntegrations()
+	})
+}
+
+func (c *mqlSnowflakeAccount) GetSchemas() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Schemas, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "schemas")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.schemas()
+	})
+}
+
+func (c *mqlSnowflakeAccount) GetManagedAccounts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedAccounts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "managedAccounts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedAccounts()
+	})
+}
+
+func (c *mqlSnowflakeAccount) GetConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Connections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "connections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.connections()
+	})
+}
+
+func (c *mqlSnowflakeAccount) GetViews() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Views, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "views")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.views()
+	})
+}
+
+func (c *mqlSnowflakeAccount) GetTasks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tasks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "tasks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tasks()
+	})
+}
+
+func (c *mqlSnowflakeAccount) GetFunctions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Functions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "functions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.functions()
+	})
+}
+
+func (c *mqlSnowflakeAccount) GetApplications() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Applications, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "applications")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.applications()
+	})
+}
+
+func (c *mqlSnowflakeAccount) GetApplicationPackages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ApplicationPackages, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "applicationPackages")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.applicationPackages()
+	})
+}
+
+func (c *mqlSnowflakeAccount) GetExternalAccessIntegrations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ExternalAccessIntegrations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "externalAccessIntegrations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.externalAccessIntegrations()
+	})
+}
+
+func (c *mqlSnowflakeAccount) GetCortexSearchServices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CortexSearchServices, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "cortexSearchServices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.cortexSearchServices()
+	})
+}
+
+func (c *mqlSnowflakeAccount) GetCortexEnabledCrossRegion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CortexEnabledCrossRegion, func() (string, error) {
+		return c.cortexEnabledCrossRegion()
+	})
+}
+
 // mqlSnowflakeUser for the snowflake.user resource
 type mqlSnowflakeUser struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSnowflakeUserInternal it will be used here
-	Name               plugin.TValue[string]
-	Login              plugin.TValue[string]
-	DisplayName        plugin.TValue[string]
-	FirstName          plugin.TValue[string]
-	LastName           plugin.TValue[string]
-	Email              plugin.TValue[string]
-	Comment            plugin.TValue[string]
-	DefaultWarehouse   plugin.TValue[string]
-	DefaultNamespace   plugin.TValue[string]
-	DefaultRole        plugin.TValue[string]
-	Disabled           plugin.TValue[bool]
-	HasPassword        plugin.TValue[bool]
-	HasRsaPublicKey    plugin.TValue[bool]
-	MustChangePassword plugin.TValue[bool]
-	LastSuccessLogin   plugin.TValue[*time.Time]
-	LockedUntil        plugin.TValue[*time.Time]
-	CreatedAt          plugin.TValue[*time.Time]
-	ExpiresAt          plugin.TValue[*time.Time]
-	ExtAuthnDuo        plugin.TValue[bool]
-	ExtAuthnUid        plugin.TValue[string]
-	Parameters         plugin.TValue[[]any]
-	DaysSinceLastLogin plugin.TValue[int64]
-	Grants             plugin.TValue[[]any]
+	mqlSnowflakeUserInternal
+	Name                  plugin.TValue[string]
+	Login                 plugin.TValue[string]
+	DisplayName           plugin.TValue[string]
+	FirstName             plugin.TValue[string]
+	LastName              plugin.TValue[string]
+	Email                 plugin.TValue[string]
+	Comment               plugin.TValue[string]
+	DefaultWarehouse      plugin.TValue[string]
+	DefaultWarehouseRef   plugin.TValue[*mqlSnowflakeWarehouse]
+	DefaultNamespace      plugin.TValue[string]
+	DefaultRole           plugin.TValue[string]
+	DefaultRoleRef        plugin.TValue[*mqlSnowflakeRole]
+	Disabled              plugin.TValue[bool]
+	HasPassword           plugin.TValue[bool]
+	HasRsaPublicKey       plugin.TValue[bool]
+	MustChangePassword    plugin.TValue[bool]
+	LastSuccessLogin      plugin.TValue[*time.Time]
+	LockedUntil           plugin.TValue[*time.Time]
+	CreatedAt             plugin.TValue[*time.Time]
+	ExpiresAt             plugin.TValue[*time.Time]
+	ExtAuthnDuo           plugin.TValue[bool]
+	ExtAuthnUid           plugin.TValue[string]
+	Type                  plugin.TValue[string]
+	HasMfa                plugin.TValue[bool]
+	SnowflakeLock         plugin.TValue[bool]
+	DefaultSecondaryRoles plugin.TValue[[]any]
+	MinsToBypassMfa       plugin.TValue[string]
+	Owner                 plugin.TValue[*mqlSnowflakeRole]
+	Parameters            plugin.TValue[[]any]
+	DaysSinceLastLogin    plugin.TValue[int64]
+	Grants                plugin.TValue[[]any]
 }
 
 // createSnowflakeUser creates a new instance of this resource
@@ -3231,12 +4917,44 @@ func (c *mqlSnowflakeUser) GetDefaultWarehouse() *plugin.TValue[string] {
 	return &c.DefaultWarehouse
 }
 
+func (c *mqlSnowflakeUser) GetDefaultWarehouseRef() *plugin.TValue[*mqlSnowflakeWarehouse] {
+	return plugin.GetOrCompute[*mqlSnowflakeWarehouse](&c.DefaultWarehouseRef, func() (*mqlSnowflakeWarehouse, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.user", c.__id, "defaultWarehouseRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeWarehouse), nil
+			}
+		}
+
+		return c.defaultWarehouseRef()
+	})
+}
+
 func (c *mqlSnowflakeUser) GetDefaultNamespace() *plugin.TValue[string] {
 	return &c.DefaultNamespace
 }
 
 func (c *mqlSnowflakeUser) GetDefaultRole() *plugin.TValue[string] {
 	return &c.DefaultRole
+}
+
+func (c *mqlSnowflakeUser) GetDefaultRoleRef() *plugin.TValue[*mqlSnowflakeRole] {
+	return plugin.GetOrCompute[*mqlSnowflakeRole](&c.DefaultRoleRef, func() (*mqlSnowflakeRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.user", c.__id, "defaultRoleRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeRole), nil
+			}
+		}
+
+		return c.defaultRoleRef()
+	})
 }
 
 func (c *mqlSnowflakeUser) GetDisabled() *plugin.TValue[bool] {
@@ -3277,6 +4995,42 @@ func (c *mqlSnowflakeUser) GetExtAuthnDuo() *plugin.TValue[bool] {
 
 func (c *mqlSnowflakeUser) GetExtAuthnUid() *plugin.TValue[string] {
 	return &c.ExtAuthnUid
+}
+
+func (c *mqlSnowflakeUser) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlSnowflakeUser) GetHasMfa() *plugin.TValue[bool] {
+	return &c.HasMfa
+}
+
+func (c *mqlSnowflakeUser) GetSnowflakeLock() *plugin.TValue[bool] {
+	return &c.SnowflakeLock
+}
+
+func (c *mqlSnowflakeUser) GetDefaultSecondaryRoles() *plugin.TValue[[]any] {
+	return &c.DefaultSecondaryRoles
+}
+
+func (c *mqlSnowflakeUser) GetMinsToBypassMfa() *plugin.TValue[string] {
+	return &c.MinsToBypassMfa
+}
+
+func (c *mqlSnowflakeUser) GetOwner() *plugin.TValue[*mqlSnowflakeRole] {
+	return plugin.GetOrCompute[*mqlSnowflakeRole](&c.Owner, func() (*mqlSnowflakeRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.user", c.__id, "owner")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeRole), nil
+			}
+		}
+
+		return c.owner()
+	})
 }
 
 func (c *mqlSnowflakeUser) GetParameters() *plugin.TValue[[]any] {
@@ -3330,6 +5084,7 @@ type mqlSnowflakeRole struct {
 	GrantedToRoles  plugin.TValue[int64]
 	GrantedRoles    plugin.TValue[int64]
 	Owner           plugin.TValue[string]
+	OwnerRole       plugin.TValue[*mqlSnowflakeRole]
 	Comment         plugin.TValue[string]
 	Grants          plugin.TValue[[]any]
 	Grantees        plugin.TValue[[]any]
@@ -3397,6 +5152,22 @@ func (c *mqlSnowflakeRole) GetGrantedRoles() *plugin.TValue[int64] {
 
 func (c *mqlSnowflakeRole) GetOwner() *plugin.TValue[string] {
 	return &c.Owner
+}
+
+func (c *mqlSnowflakeRole) GetOwnerRole() *plugin.TValue[*mqlSnowflakeRole] {
+	return plugin.GetOrCompute[*mqlSnowflakeRole](&c.OwnerRole, func() (*mqlSnowflakeRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.role", c.__id, "ownerRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeRole), nil
+			}
+		}
+
+		return c.ownerRole()
+	})
 }
 
 func (c *mqlSnowflakeRole) GetComment() *plugin.TValue[string] {
@@ -3563,6 +5334,7 @@ type mqlSnowflakePasswordPolicy struct {
 	SchemaName                plugin.TValue[string]
 	Kind                      plugin.TValue[string]
 	Owner                     plugin.TValue[string]
+	OwnerRole                 plugin.TValue[*mqlSnowflakeRole]
 	Comment                   plugin.TValue[string]
 	CreatedAt                 plugin.TValue[*time.Time]
 	PasswordMinLength         plugin.TValue[int64]
@@ -3628,6 +5400,22 @@ func (c *mqlSnowflakePasswordPolicy) GetKind() *plugin.TValue[string] {
 
 func (c *mqlSnowflakePasswordPolicy) GetOwner() *plugin.TValue[string] {
 	return &c.Owner
+}
+
+func (c *mqlSnowflakePasswordPolicy) GetOwnerRole() *plugin.TValue[*mqlSnowflakeRole] {
+	return plugin.GetOrCompute[*mqlSnowflakeRole](&c.OwnerRole, func() (*mqlSnowflakeRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.passwordPolicy", c.__id, "ownerRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeRole), nil
+			}
+		}
+
+		return c.ownerRole()
+	})
 }
 
 func (c *mqlSnowflakePasswordPolicy) GetComment() *plugin.TValue[string] {
@@ -3979,21 +5767,22 @@ type mqlSnowflakeStage struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlSnowflakeStageInternal it will be used here
-	Name             plugin.TValue[string]
-	DatabaseName     plugin.TValue[string]
-	SchemaName       plugin.TValue[string]
-	Owner            plugin.TValue[string]
-	Comment          plugin.TValue[string]
-	CreatedAt        plugin.TValue[*time.Time]
-	HasCredentials   plugin.TValue[bool]
-	HasEncryptionKey plugin.TValue[bool]
-	Url              plugin.TValue[string]
-	Type             plugin.TValue[string]
-	Cloud            plugin.TValue[string]
-	StoreIntegration plugin.TValue[string]
-	Endpoint         plugin.TValue[string]
-	OwnerRoleType    plugin.TValue[string]
-	DirectoryEnabled plugin.TValue[bool]
+	Name               plugin.TValue[string]
+	DatabaseName       plugin.TValue[string]
+	SchemaName         plugin.TValue[string]
+	Owner              plugin.TValue[string]
+	Comment            plugin.TValue[string]
+	CreatedAt          plugin.TValue[*time.Time]
+	HasCredentials     plugin.TValue[bool]
+	HasEncryptionKey   plugin.TValue[bool]
+	Url                plugin.TValue[string]
+	Type               plugin.TValue[string]
+	Cloud              plugin.TValue[string]
+	StoreIntegration   plugin.TValue[string]
+	StorageIntegration plugin.TValue[*mqlSnowflakeStorageIntegration]
+	Endpoint           plugin.TValue[string]
+	OwnerRoleType      plugin.TValue[string]
+	DirectoryEnabled   plugin.TValue[bool]
 }
 
 // createSnowflakeStage creates a new instance of this resource
@@ -4076,6 +5865,22 @@ func (c *mqlSnowflakeStage) GetStoreIntegration() *plugin.TValue[string] {
 	return &c.StoreIntegration
 }
 
+func (c *mqlSnowflakeStage) GetStorageIntegration() *plugin.TValue[*mqlSnowflakeStorageIntegration] {
+	return plugin.GetOrCompute[*mqlSnowflakeStorageIntegration](&c.StorageIntegration, func() (*mqlSnowflakeStorageIntegration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.stage", c.__id, "storageIntegration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeStorageIntegration), nil
+			}
+		}
+
+		return c.storageIntegration()
+	})
+}
+
 func (c *mqlSnowflakeStage) GetEndpoint() *plugin.TValue[string] {
 	return &c.Endpoint
 }
@@ -4093,19 +5898,25 @@ type mqlSnowflakeDatabase struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlSnowflakeDatabaseInternal it will be used here
-	Name          plugin.TValue[string]
-	IsDefault     plugin.TValue[bool]
-	IsCurrent     plugin.TValue[bool]
-	Origin        plugin.TValue[string]
-	Owner         plugin.TValue[string]
-	Comment       plugin.TValue[string]
-	Options       plugin.TValue[string]
-	RetentionTime plugin.TValue[int64]
-	ResourceGroup plugin.TValue[string]
-	Transient     plugin.TValue[bool]
-	CreatedAt     plugin.TValue[*time.Time]
-	DroppedAt     plugin.TValue[*time.Time]
-	Roles         plugin.TValue[[]any]
+	Name              plugin.TValue[string]
+	IsDefault         plugin.TValue[bool]
+	IsCurrent         plugin.TValue[bool]
+	Origin            plugin.TValue[string]
+	Owner             plugin.TValue[string]
+	OwnerRole         plugin.TValue[*mqlSnowflakeRole]
+	Comment           plugin.TValue[string]
+	Options           plugin.TValue[string]
+	RetentionTime     plugin.TValue[int64]
+	ResourceGroup     plugin.TValue[string]
+	Transient         plugin.TValue[bool]
+	CreatedAt         plugin.TValue[*time.Time]
+	DroppedAt         plugin.TValue[*time.Time]
+	Roles             plugin.TValue[[]any]
+	Schemas           plugin.TValue[[]any]
+	MaskingPolicies   plugin.TValue[[]any]
+	RowAccessPolicies plugin.TValue[[]any]
+	Tags              plugin.TValue[[]any]
+	Secrets           plugin.TValue[[]any]
 }
 
 // createSnowflakeDatabase creates a new instance of this resource
@@ -4160,6 +5971,22 @@ func (c *mqlSnowflakeDatabase) GetOwner() *plugin.TValue[string] {
 	return &c.Owner
 }
 
+func (c *mqlSnowflakeDatabase) GetOwnerRole() *plugin.TValue[*mqlSnowflakeRole] {
+	return plugin.GetOrCompute[*mqlSnowflakeRole](&c.OwnerRole, func() (*mqlSnowflakeRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.database", c.__id, "ownerRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeRole), nil
+			}
+		}
+
+		return c.ownerRole()
+	})
+}
+
 func (c *mqlSnowflakeDatabase) GetComment() *plugin.TValue[string] {
 	return &c.Comment
 }
@@ -4204,6 +6031,86 @@ func (c *mqlSnowflakeDatabase) GetRoles() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlSnowflakeDatabase) GetSchemas() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Schemas, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.database", c.__id, "schemas")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.schemas()
+	})
+}
+
+func (c *mqlSnowflakeDatabase) GetMaskingPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MaskingPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.database", c.__id, "maskingPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.maskingPolicies()
+	})
+}
+
+func (c *mqlSnowflakeDatabase) GetRowAccessPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RowAccessPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.database", c.__id, "rowAccessPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rowAccessPolicies()
+	})
+}
+
+func (c *mqlSnowflakeDatabase) GetTags() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tags, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.database", c.__id, "tags")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tags()
+	})
+}
+
+func (c *mqlSnowflakeDatabase) GetSecrets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Secrets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.database", c.__id, "secrets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.secrets()
+	})
+}
+
 // mqlSnowflakeWarehouse for the snowflake.warehouse resource
 type mqlSnowflakeWarehouse struct {
 	MqlRuntime *plugin.Runtime
@@ -4231,6 +6138,7 @@ type mqlSnowflakeWarehouse struct {
 	EnableQueryAcceleration         plugin.TValue[bool]
 	QueryAccelerationMaxScaleFactor plugin.TValue[int64]
 	ResourceMonitor                 plugin.TValue[string]
+	ResourceMonitorRef              plugin.TValue[*mqlSnowflakeResourceMonitor]
 	ScalingPolicy                   plugin.TValue[string]
 	OwnerRoleType                   plugin.TValue[string]
 	CreatedAt                       plugin.TValue[*time.Time]
@@ -4356,6 +6264,22 @@ func (c *mqlSnowflakeWarehouse) GetQueryAccelerationMaxScaleFactor() *plugin.TVa
 
 func (c *mqlSnowflakeWarehouse) GetResourceMonitor() *plugin.TValue[string] {
 	return &c.ResourceMonitor
+}
+
+func (c *mqlSnowflakeWarehouse) GetResourceMonitorRef() *plugin.TValue[*mqlSnowflakeResourceMonitor] {
+	return plugin.GetOrCompute[*mqlSnowflakeResourceMonitor](&c.ResourceMonitorRef, func() (*mqlSnowflakeResourceMonitor, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.warehouse", c.__id, "resourceMonitorRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeResourceMonitor), nil
+			}
+		}
+
+		return c.resourceMonitorRef()
+	})
 }
 
 func (c *mqlSnowflakeWarehouse) GetScalingPolicy() *plugin.TValue[string] {
@@ -4558,8 +6482,10 @@ type mqlSnowflakeShare struct {
 	Name         plugin.TValue[string]
 	Kind         plugin.TValue[string]
 	DatabaseName plugin.TValue[string]
+	Database     plugin.TValue[*mqlSnowflakeDatabase]
 	To           plugin.TValue[[]any]
 	Owner        plugin.TValue[string]
+	OwnerRole    plugin.TValue[*mqlSnowflakeRole]
 	Comment      plugin.TValue[string]
 	CreatedAt    plugin.TValue[*time.Time]
 }
@@ -4608,12 +6534,44 @@ func (c *mqlSnowflakeShare) GetDatabaseName() *plugin.TValue[string] {
 	return &c.DatabaseName
 }
 
+func (c *mqlSnowflakeShare) GetDatabase() *plugin.TValue[*mqlSnowflakeDatabase] {
+	return plugin.GetOrCompute[*mqlSnowflakeDatabase](&c.Database, func() (*mqlSnowflakeDatabase, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.share", c.__id, "database")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeDatabase), nil
+			}
+		}
+
+		return c.database()
+	})
+}
+
 func (c *mqlSnowflakeShare) GetTo() *plugin.TValue[[]any] {
 	return &c.To
 }
 
 func (c *mqlSnowflakeShare) GetOwner() *plugin.TValue[string] {
 	return &c.Owner
+}
+
+func (c *mqlSnowflakeShare) GetOwnerRole() *plugin.TValue[*mqlSnowflakeRole] {
+	return plugin.GetOrCompute[*mqlSnowflakeRole](&c.OwnerRole, func() (*mqlSnowflakeRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.share", c.__id, "ownerRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeRole), nil
+			}
+		}
+
+		return c.ownerRole()
+	})
 }
 
 func (c *mqlSnowflakeShare) GetComment() *plugin.TValue[string] {
@@ -4839,6 +6797,7 @@ type mqlSnowflakeFailoverGroup struct {
 	RegionGroup             plugin.TValue[string]
 	SnowflakeRegion         plugin.TValue[string]
 	Owner                   plugin.TValue[string]
+	OwnerRole               plugin.TValue[*mqlSnowflakeRole]
 	Comment                 plugin.TValue[string]
 	CreatedAt               plugin.TValue[*time.Time]
 	Databases               plugin.TValue[[]any]
@@ -4927,6 +6886,22 @@ func (c *mqlSnowflakeFailoverGroup) GetSnowflakeRegion() *plugin.TValue[string] 
 
 func (c *mqlSnowflakeFailoverGroup) GetOwner() *plugin.TValue[string] {
 	return &c.Owner
+}
+
+func (c *mqlSnowflakeFailoverGroup) GetOwnerRole() *plugin.TValue[*mqlSnowflakeRole] {
+	return plugin.GetOrCompute[*mqlSnowflakeRole](&c.OwnerRole, func() (*mqlSnowflakeRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.failoverGroup", c.__id, "ownerRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeRole), nil
+			}
+		}
+
+		return c.ownerRole()
+	})
 }
 
 func (c *mqlSnowflakeFailoverGroup) GetComment() *plugin.TValue[string] {
@@ -5156,6 +7131,7 @@ type mqlSnowflakeResourceMonitor struct {
 	StartTime          plugin.TValue[string]
 	EndTime            plugin.TValue[string]
 	Owner              plugin.TValue[string]
+	OwnerRole          plugin.TValue[*mqlSnowflakeRole]
 	Comment            plugin.TValue[string]
 	NotifyAt           plugin.TValue[[]any]
 	SuspendAt          plugin.TValue[int64]
@@ -5232,6 +7208,22 @@ func (c *mqlSnowflakeResourceMonitor) GetOwner() *plugin.TValue[string] {
 	return &c.Owner
 }
 
+func (c *mqlSnowflakeResourceMonitor) GetOwnerRole() *plugin.TValue[*mqlSnowflakeRole] {
+	return plugin.GetOrCompute[*mqlSnowflakeRole](&c.OwnerRole, func() (*mqlSnowflakeRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.resourceMonitor", c.__id, "ownerRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeRole), nil
+			}
+		}
+
+		return c.ownerRole()
+	})
+}
+
 func (c *mqlSnowflakeResourceMonitor) GetComment() *plugin.TValue[string] {
 	return &c.Comment
 }
@@ -5278,6 +7270,7 @@ type mqlSnowflakeAuthenticationPolicy struct {
 	MfaEnrollment            plugin.TValue[string]
 	ClientTypes              plugin.TValue[[]any]
 	SecurityIntegrations     plugin.TValue[[]any]
+	SecurityIntegrationRefs  plugin.TValue[[]any]
 }
 
 // createSnowflakeAuthenticationPolicy creates a new instance of this resource
@@ -5371,6 +7364,22 @@ func (c *mqlSnowflakeAuthenticationPolicy) GetClientTypes() *plugin.TValue[[]any
 func (c *mqlSnowflakeAuthenticationPolicy) GetSecurityIntegrations() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.SecurityIntegrations, func() ([]any, error) {
 		return c.securityIntegrations()
+	})
+}
+
+func (c *mqlSnowflakeAuthenticationPolicy) GetSecurityIntegrationRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityIntegrationRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.authenticationPolicy", c.__id, "securityIntegrationRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityIntegrationRefs()
 	})
 }
 
@@ -5714,5 +7723,1492 @@ func (c *mqlSnowflakeSecret) GetOauthAccessTokenExpiryTime() *plugin.TValue[*tim
 func (c *mqlSnowflakeSecret) GetOauthRefreshTokenExpiryTime() *plugin.TValue[*time.Time] {
 	return plugin.GetOrCompute[*time.Time](&c.OauthRefreshTokenExpiryTime, func() (*time.Time, error) {
 		return c.oauthRefreshTokenExpiryTime()
+	})
+}
+
+// mqlSnowflakeRowAccessPolicy for the snowflake.rowAccessPolicy resource
+type mqlSnowflakeRowAccessPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlSnowflakeRowAccessPolicyInternal
+	Name          plugin.TValue[string]
+	DatabaseName  plugin.TValue[string]
+	SchemaName    plugin.TValue[string]
+	Database      plugin.TValue[*mqlSnowflakeDatabase]
+	Schema        plugin.TValue[*mqlSnowflakeSchema]
+	Kind          plugin.TValue[string]
+	Owner         plugin.TValue[string]
+	OwnerRoleType plugin.TValue[string]
+	Comment       plugin.TValue[string]
+	Options       plugin.TValue[string]
+	CreatedAt     plugin.TValue[*time.Time]
+	Signature     plugin.TValue[[]any]
+	ReturnType    plugin.TValue[string]
+	Body          plugin.TValue[string]
+	References    plugin.TValue[[]any]
+}
+
+// createSnowflakeRowAccessPolicy creates a new instance of this resource
+func createSnowflakeRowAccessPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSnowflakeRowAccessPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("snowflake.rowAccessPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSnowflakeRowAccessPolicy) MqlName() string {
+	return "snowflake.rowAccessPolicy"
+}
+
+func (c *mqlSnowflakeRowAccessPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSnowflakeRowAccessPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSnowflakeRowAccessPolicy) GetDatabaseName() *plugin.TValue[string] {
+	return &c.DatabaseName
+}
+
+func (c *mqlSnowflakeRowAccessPolicy) GetSchemaName() *plugin.TValue[string] {
+	return &c.SchemaName
+}
+
+func (c *mqlSnowflakeRowAccessPolicy) GetDatabase() *plugin.TValue[*mqlSnowflakeDatabase] {
+	return plugin.GetOrCompute[*mqlSnowflakeDatabase](&c.Database, func() (*mqlSnowflakeDatabase, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.rowAccessPolicy", c.__id, "database")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeDatabase), nil
+			}
+		}
+
+		return c.database()
+	})
+}
+
+func (c *mqlSnowflakeRowAccessPolicy) GetSchema() *plugin.TValue[*mqlSnowflakeSchema] {
+	return plugin.GetOrCompute[*mqlSnowflakeSchema](&c.Schema, func() (*mqlSnowflakeSchema, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.rowAccessPolicy", c.__id, "schema")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeSchema), nil
+			}
+		}
+
+		return c.schema()
+	})
+}
+
+func (c *mqlSnowflakeRowAccessPolicy) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlSnowflakeRowAccessPolicy) GetOwner() *plugin.TValue[string] {
+	return &c.Owner
+}
+
+func (c *mqlSnowflakeRowAccessPolicy) GetOwnerRoleType() *plugin.TValue[string] {
+	return &c.OwnerRoleType
+}
+
+func (c *mqlSnowflakeRowAccessPolicy) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlSnowflakeRowAccessPolicy) GetOptions() *plugin.TValue[string] {
+	return &c.Options
+}
+
+func (c *mqlSnowflakeRowAccessPolicy) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlSnowflakeRowAccessPolicy) GetSignature() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Signature, func() ([]any, error) {
+		return c.signature()
+	})
+}
+
+func (c *mqlSnowflakeRowAccessPolicy) GetReturnType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ReturnType, func() (string, error) {
+		return c.returnType()
+	})
+}
+
+func (c *mqlSnowflakeRowAccessPolicy) GetBody() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Body, func() (string, error) {
+		return c.body()
+	})
+}
+
+func (c *mqlSnowflakeRowAccessPolicy) GetReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.References, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.rowAccessPolicy", c.__id, "references")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.references()
+	})
+}
+
+// mqlSnowflakeNetworkRule for the snowflake.networkRule resource
+type mqlSnowflakeNetworkRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlSnowflakeNetworkRuleInternal
+	Name               plugin.TValue[string]
+	DatabaseName       plugin.TValue[string]
+	SchemaName         plugin.TValue[string]
+	Database           plugin.TValue[*mqlSnowflakeDatabase]
+	Schema             plugin.TValue[*mqlSnowflakeSchema]
+	Owner              plugin.TValue[string]
+	OwnerRoleType      plugin.TValue[string]
+	Comment            plugin.TValue[string]
+	Type               plugin.TValue[string]
+	Mode               plugin.TValue[string]
+	EntriesInValueList plugin.TValue[int64]
+	CreatedAt          plugin.TValue[*time.Time]
+	ValueList          plugin.TValue[[]any]
+}
+
+// createSnowflakeNetworkRule creates a new instance of this resource
+func createSnowflakeNetworkRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSnowflakeNetworkRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("snowflake.networkRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSnowflakeNetworkRule) MqlName() string {
+	return "snowflake.networkRule"
+}
+
+func (c *mqlSnowflakeNetworkRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSnowflakeNetworkRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSnowflakeNetworkRule) GetDatabaseName() *plugin.TValue[string] {
+	return &c.DatabaseName
+}
+
+func (c *mqlSnowflakeNetworkRule) GetSchemaName() *plugin.TValue[string] {
+	return &c.SchemaName
+}
+
+func (c *mqlSnowflakeNetworkRule) GetDatabase() *plugin.TValue[*mqlSnowflakeDatabase] {
+	return plugin.GetOrCompute[*mqlSnowflakeDatabase](&c.Database, func() (*mqlSnowflakeDatabase, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.networkRule", c.__id, "database")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeDatabase), nil
+			}
+		}
+
+		return c.database()
+	})
+}
+
+func (c *mqlSnowflakeNetworkRule) GetSchema() *plugin.TValue[*mqlSnowflakeSchema] {
+	return plugin.GetOrCompute[*mqlSnowflakeSchema](&c.Schema, func() (*mqlSnowflakeSchema, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.networkRule", c.__id, "schema")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeSchema), nil
+			}
+		}
+
+		return c.schema()
+	})
+}
+
+func (c *mqlSnowflakeNetworkRule) GetOwner() *plugin.TValue[string] {
+	return &c.Owner
+}
+
+func (c *mqlSnowflakeNetworkRule) GetOwnerRoleType() *plugin.TValue[string] {
+	return &c.OwnerRoleType
+}
+
+func (c *mqlSnowflakeNetworkRule) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlSnowflakeNetworkRule) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlSnowflakeNetworkRule) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlSnowflakeNetworkRule) GetEntriesInValueList() *plugin.TValue[int64] {
+	return &c.EntriesInValueList
+}
+
+func (c *mqlSnowflakeNetworkRule) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlSnowflakeNetworkRule) GetValueList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ValueList, func() ([]any, error) {
+		return c.valueList()
+	})
+}
+
+// mqlSnowflakeStorageIntegration for the snowflake.storageIntegration resource
+type mqlSnowflakeStorageIntegration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlSnowflakeStorageIntegrationInternal
+	Name                     plugin.TValue[string]
+	Type                     plugin.TValue[string]
+	Category                 plugin.TValue[string]
+	Enabled                  plugin.TValue[bool]
+	Comment                  plugin.TValue[string]
+	CreatedAt                plugin.TValue[*time.Time]
+	Properties               plugin.TValue[map[string]any]
+	StorageProvider          plugin.TValue[string]
+	StorageAllowedLocations  plugin.TValue[[]any]
+	StorageBlockedLocations  plugin.TValue[[]any]
+	StorageAwsRoleArn        plugin.TValue[string]
+	StorageAwsIamUserArn     plugin.TValue[string]
+	StorageAwsExternalId     plugin.TValue[string]
+	StorageGcpServiceAccount plugin.TValue[string]
+	AzureTenantId            plugin.TValue[string]
+	AzureConsentUrl          plugin.TValue[string]
+	AzureMultiTenantAppName  plugin.TValue[string]
+}
+
+// createSnowflakeStorageIntegration creates a new instance of this resource
+func createSnowflakeStorageIntegration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSnowflakeStorageIntegration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("snowflake.storageIntegration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSnowflakeStorageIntegration) MqlName() string {
+	return "snowflake.storageIntegration"
+}
+
+func (c *mqlSnowflakeStorageIntegration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSnowflakeStorageIntegration) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSnowflakeStorageIntegration) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlSnowflakeStorageIntegration) GetCategory() *plugin.TValue[string] {
+	return &c.Category
+}
+
+func (c *mqlSnowflakeStorageIntegration) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlSnowflakeStorageIntegration) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlSnowflakeStorageIntegration) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlSnowflakeStorageIntegration) GetProperties() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Properties, func() (map[string]any, error) {
+		return c.properties()
+	})
+}
+
+func (c *mqlSnowflakeStorageIntegration) GetStorageProvider() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.StorageProvider, func() (string, error) {
+		return c.storageProvider()
+	})
+}
+
+func (c *mqlSnowflakeStorageIntegration) GetStorageAllowedLocations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.StorageAllowedLocations, func() ([]any, error) {
+		return c.storageAllowedLocations()
+	})
+}
+
+func (c *mqlSnowflakeStorageIntegration) GetStorageBlockedLocations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.StorageBlockedLocations, func() ([]any, error) {
+		return c.storageBlockedLocations()
+	})
+}
+
+func (c *mqlSnowflakeStorageIntegration) GetStorageAwsRoleArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.StorageAwsRoleArn, func() (string, error) {
+		return c.storageAwsRoleArn()
+	})
+}
+
+func (c *mqlSnowflakeStorageIntegration) GetStorageAwsIamUserArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.StorageAwsIamUserArn, func() (string, error) {
+		return c.storageAwsIamUserArn()
+	})
+}
+
+func (c *mqlSnowflakeStorageIntegration) GetStorageAwsExternalId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.StorageAwsExternalId, func() (string, error) {
+		return c.storageAwsExternalId()
+	})
+}
+
+func (c *mqlSnowflakeStorageIntegration) GetStorageGcpServiceAccount() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.StorageGcpServiceAccount, func() (string, error) {
+		return c.storageGcpServiceAccount()
+	})
+}
+
+func (c *mqlSnowflakeStorageIntegration) GetAzureTenantId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AzureTenantId, func() (string, error) {
+		return c.azureTenantId()
+	})
+}
+
+func (c *mqlSnowflakeStorageIntegration) GetAzureConsentUrl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AzureConsentUrl, func() (string, error) {
+		return c.azureConsentUrl()
+	})
+}
+
+func (c *mqlSnowflakeStorageIntegration) GetAzureMultiTenantAppName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AzureMultiTenantAppName, func() (string, error) {
+		return c.azureMultiTenantAppName()
+	})
+}
+
+// mqlSnowflakeNotificationIntegration for the snowflake.notificationIntegration resource
+type mqlSnowflakeNotificationIntegration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlSnowflakeNotificationIntegrationInternal
+	Name                        plugin.TValue[string]
+	Type                        plugin.TValue[string]
+	Category                    plugin.TValue[string]
+	Enabled                     plugin.TValue[bool]
+	Comment                     plugin.TValue[string]
+	CreatedAt                   plugin.TValue[*time.Time]
+	Properties                  plugin.TValue[map[string]any]
+	Direction                   plugin.TValue[string]
+	NotificationProvider        plugin.TValue[string]
+	AwsSnsTopicArn              plugin.TValue[string]
+	AwsSnsRoleArn               plugin.TValue[string]
+	GcpPubsubSubscriptionName   plugin.TValue[string]
+	GcpPubsubTopicName          plugin.TValue[string]
+	AzureStorageQueuePrimaryUri plugin.TValue[string]
+	AzureEventGridTopicEndpoint plugin.TValue[string]
+	AzureTenantId               plugin.TValue[string]
+}
+
+// createSnowflakeNotificationIntegration creates a new instance of this resource
+func createSnowflakeNotificationIntegration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSnowflakeNotificationIntegration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("snowflake.notificationIntegration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSnowflakeNotificationIntegration) MqlName() string {
+	return "snowflake.notificationIntegration"
+}
+
+func (c *mqlSnowflakeNotificationIntegration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSnowflakeNotificationIntegration) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSnowflakeNotificationIntegration) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlSnowflakeNotificationIntegration) GetCategory() *plugin.TValue[string] {
+	return &c.Category
+}
+
+func (c *mqlSnowflakeNotificationIntegration) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlSnowflakeNotificationIntegration) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlSnowflakeNotificationIntegration) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlSnowflakeNotificationIntegration) GetProperties() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Properties, func() (map[string]any, error) {
+		return c.properties()
+	})
+}
+
+func (c *mqlSnowflakeNotificationIntegration) GetDirection() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Direction, func() (string, error) {
+		return c.direction()
+	})
+}
+
+func (c *mqlSnowflakeNotificationIntegration) GetNotificationProvider() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.NotificationProvider, func() (string, error) {
+		return c.notificationProvider()
+	})
+}
+
+func (c *mqlSnowflakeNotificationIntegration) GetAwsSnsTopicArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AwsSnsTopicArn, func() (string, error) {
+		return c.awsSnsTopicArn()
+	})
+}
+
+func (c *mqlSnowflakeNotificationIntegration) GetAwsSnsRoleArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AwsSnsRoleArn, func() (string, error) {
+		return c.awsSnsRoleArn()
+	})
+}
+
+func (c *mqlSnowflakeNotificationIntegration) GetGcpPubsubSubscriptionName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.GcpPubsubSubscriptionName, func() (string, error) {
+		return c.gcpPubsubSubscriptionName()
+	})
+}
+
+func (c *mqlSnowflakeNotificationIntegration) GetGcpPubsubTopicName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.GcpPubsubTopicName, func() (string, error) {
+		return c.gcpPubsubTopicName()
+	})
+}
+
+func (c *mqlSnowflakeNotificationIntegration) GetAzureStorageQueuePrimaryUri() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AzureStorageQueuePrimaryUri, func() (string, error) {
+		return c.azureStorageQueuePrimaryUri()
+	})
+}
+
+func (c *mqlSnowflakeNotificationIntegration) GetAzureEventGridTopicEndpoint() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AzureEventGridTopicEndpoint, func() (string, error) {
+		return c.azureEventGridTopicEndpoint()
+	})
+}
+
+func (c *mqlSnowflakeNotificationIntegration) GetAzureTenantId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AzureTenantId, func() (string, error) {
+		return c.azureTenantId()
+	})
+}
+
+// mqlSnowflakeSchema for the snowflake.schema resource
+type mqlSnowflakeSchema struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSnowflakeSchemaInternal it will be used here
+	Name          plugin.TValue[string]
+	DatabaseName  plugin.TValue[string]
+	Database      plugin.TValue[*mqlSnowflakeDatabase]
+	IsDefault     plugin.TValue[bool]
+	IsCurrent     plugin.TValue[bool]
+	Owner         plugin.TValue[string]
+	OwnerRoleType plugin.TValue[string]
+	Comment       plugin.TValue[string]
+	Options       plugin.TValue[string]
+	RetentionTime plugin.TValue[string]
+	CreatedAt     plugin.TValue[*time.Time]
+	DroppedAt     plugin.TValue[*time.Time]
+}
+
+// createSnowflakeSchema creates a new instance of this resource
+func createSnowflakeSchema(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSnowflakeSchema{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("snowflake.schema", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSnowflakeSchema) MqlName() string {
+	return "snowflake.schema"
+}
+
+func (c *mqlSnowflakeSchema) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSnowflakeSchema) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSnowflakeSchema) GetDatabaseName() *plugin.TValue[string] {
+	return &c.DatabaseName
+}
+
+func (c *mqlSnowflakeSchema) GetDatabase() *plugin.TValue[*mqlSnowflakeDatabase] {
+	return plugin.GetOrCompute[*mqlSnowflakeDatabase](&c.Database, func() (*mqlSnowflakeDatabase, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.schema", c.__id, "database")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeDatabase), nil
+			}
+		}
+
+		return c.database()
+	})
+}
+
+func (c *mqlSnowflakeSchema) GetIsDefault() *plugin.TValue[bool] {
+	return &c.IsDefault
+}
+
+func (c *mqlSnowflakeSchema) GetIsCurrent() *plugin.TValue[bool] {
+	return &c.IsCurrent
+}
+
+func (c *mqlSnowflakeSchema) GetOwner() *plugin.TValue[string] {
+	return &c.Owner
+}
+
+func (c *mqlSnowflakeSchema) GetOwnerRoleType() *plugin.TValue[string] {
+	return &c.OwnerRoleType
+}
+
+func (c *mqlSnowflakeSchema) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlSnowflakeSchema) GetOptions() *plugin.TValue[string] {
+	return &c.Options
+}
+
+func (c *mqlSnowflakeSchema) GetRetentionTime() *plugin.TValue[string] {
+	return &c.RetentionTime
+}
+
+func (c *mqlSnowflakeSchema) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlSnowflakeSchema) GetDroppedAt() *plugin.TValue[*time.Time] {
+	return &c.DroppedAt
+}
+
+// mqlSnowflakeManagedAccount for the snowflake.managedAccount resource
+type mqlSnowflakeManagedAccount struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSnowflakeManagedAccountInternal it will be used here
+	Name              plugin.TValue[string]
+	Cloud             plugin.TValue[string]
+	Region            plugin.TValue[string]
+	Locator           plugin.TValue[string]
+	Url               plugin.TValue[string]
+	AccountLocatorUrl plugin.TValue[string]
+	IsReader          plugin.TValue[bool]
+	Comment           plugin.TValue[string]
+	CreatedAt         plugin.TValue[*time.Time]
+}
+
+// createSnowflakeManagedAccount creates a new instance of this resource
+func createSnowflakeManagedAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSnowflakeManagedAccount{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("snowflake.managedAccount", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSnowflakeManagedAccount) MqlName() string {
+	return "snowflake.managedAccount"
+}
+
+func (c *mqlSnowflakeManagedAccount) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSnowflakeManagedAccount) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSnowflakeManagedAccount) GetCloud() *plugin.TValue[string] {
+	return &c.Cloud
+}
+
+func (c *mqlSnowflakeManagedAccount) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlSnowflakeManagedAccount) GetLocator() *plugin.TValue[string] {
+	return &c.Locator
+}
+
+func (c *mqlSnowflakeManagedAccount) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlSnowflakeManagedAccount) GetAccountLocatorUrl() *plugin.TValue[string] {
+	return &c.AccountLocatorUrl
+}
+
+func (c *mqlSnowflakeManagedAccount) GetIsReader() *plugin.TValue[bool] {
+	return &c.IsReader
+}
+
+func (c *mqlSnowflakeManagedAccount) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlSnowflakeManagedAccount) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+// mqlSnowflakeConnection for the snowflake.connection resource
+type mqlSnowflakeConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSnowflakeConnectionInternal it will be used here
+	Name                      plugin.TValue[string]
+	Comment                   plugin.TValue[string]
+	IsPrimary                 plugin.TValue[bool]
+	Primary                   plugin.TValue[string]
+	FailoverAllowedToAccounts plugin.TValue[[]any]
+	SnowflakeRegion           plugin.TValue[string]
+	RegionGroup               plugin.TValue[string]
+	AccountName               plugin.TValue[string]
+	AccountLocator            plugin.TValue[string]
+	OrganizationName          plugin.TValue[string]
+	ConnectionUrl             plugin.TValue[string]
+	CreatedAt                 plugin.TValue[*time.Time]
+}
+
+// createSnowflakeConnection creates a new instance of this resource
+func createSnowflakeConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSnowflakeConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("snowflake.connection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSnowflakeConnection) MqlName() string {
+	return "snowflake.connection"
+}
+
+func (c *mqlSnowflakeConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSnowflakeConnection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSnowflakeConnection) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlSnowflakeConnection) GetIsPrimary() *plugin.TValue[bool] {
+	return &c.IsPrimary
+}
+
+func (c *mqlSnowflakeConnection) GetPrimary() *plugin.TValue[string] {
+	return &c.Primary
+}
+
+func (c *mqlSnowflakeConnection) GetFailoverAllowedToAccounts() *plugin.TValue[[]any] {
+	return &c.FailoverAllowedToAccounts
+}
+
+func (c *mqlSnowflakeConnection) GetSnowflakeRegion() *plugin.TValue[string] {
+	return &c.SnowflakeRegion
+}
+
+func (c *mqlSnowflakeConnection) GetRegionGroup() *plugin.TValue[string] {
+	return &c.RegionGroup
+}
+
+func (c *mqlSnowflakeConnection) GetAccountName() *plugin.TValue[string] {
+	return &c.AccountName
+}
+
+func (c *mqlSnowflakeConnection) GetAccountLocator() *plugin.TValue[string] {
+	return &c.AccountLocator
+}
+
+func (c *mqlSnowflakeConnection) GetOrganizationName() *plugin.TValue[string] {
+	return &c.OrganizationName
+}
+
+func (c *mqlSnowflakeConnection) GetConnectionUrl() *plugin.TValue[string] {
+	return &c.ConnectionUrl
+}
+
+func (c *mqlSnowflakeConnection) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+// mqlSnowflakeTask for the snowflake.task resource
+type mqlSnowflakeTask struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlSnowflakeTaskInternal
+	Name                      plugin.TValue[string]
+	DatabaseName              plugin.TValue[string]
+	SchemaName                plugin.TValue[string]
+	Warehouse                 plugin.TValue[*mqlSnowflakeWarehouse]
+	Owner                     plugin.TValue[*mqlSnowflakeRole]
+	OwnerRoleType             plugin.TValue[string]
+	Schedule                  plugin.TValue[string]
+	State                     plugin.TValue[string]
+	Definition                plugin.TValue[string]
+	Condition                 plugin.TValue[string]
+	AllowOverlappingExecution plugin.TValue[bool]
+	Predecessors              plugin.TValue[[]any]
+	Comment                   plugin.TValue[string]
+}
+
+// createSnowflakeTask creates a new instance of this resource
+func createSnowflakeTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSnowflakeTask{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("snowflake.task", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSnowflakeTask) MqlName() string {
+	return "snowflake.task"
+}
+
+func (c *mqlSnowflakeTask) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSnowflakeTask) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSnowflakeTask) GetDatabaseName() *plugin.TValue[string] {
+	return &c.DatabaseName
+}
+
+func (c *mqlSnowflakeTask) GetSchemaName() *plugin.TValue[string] {
+	return &c.SchemaName
+}
+
+func (c *mqlSnowflakeTask) GetWarehouse() *plugin.TValue[*mqlSnowflakeWarehouse] {
+	return plugin.GetOrCompute[*mqlSnowflakeWarehouse](&c.Warehouse, func() (*mqlSnowflakeWarehouse, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.task", c.__id, "warehouse")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeWarehouse), nil
+			}
+		}
+
+		return c.warehouse()
+	})
+}
+
+func (c *mqlSnowflakeTask) GetOwner() *plugin.TValue[*mqlSnowflakeRole] {
+	return plugin.GetOrCompute[*mqlSnowflakeRole](&c.Owner, func() (*mqlSnowflakeRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.task", c.__id, "owner")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeRole), nil
+			}
+		}
+
+		return c.owner()
+	})
+}
+
+func (c *mqlSnowflakeTask) GetOwnerRoleType() *plugin.TValue[string] {
+	return &c.OwnerRoleType
+}
+
+func (c *mqlSnowflakeTask) GetSchedule() *plugin.TValue[string] {
+	return &c.Schedule
+}
+
+func (c *mqlSnowflakeTask) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlSnowflakeTask) GetDefinition() *plugin.TValue[string] {
+	return &c.Definition
+}
+
+func (c *mqlSnowflakeTask) GetCondition() *plugin.TValue[string] {
+	return &c.Condition
+}
+
+func (c *mqlSnowflakeTask) GetAllowOverlappingExecution() *plugin.TValue[bool] {
+	return &c.AllowOverlappingExecution
+}
+
+func (c *mqlSnowflakeTask) GetPredecessors() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Predecessors, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.task", c.__id, "predecessors")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.predecessors()
+	})
+}
+
+func (c *mqlSnowflakeTask) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+// mqlSnowflakeFunction for the snowflake.function resource
+type mqlSnowflakeFunction struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlSnowflakeFunctionInternal
+	Name                       plugin.TValue[string]
+	DatabaseName               plugin.TValue[string]
+	SchemaName                 plugin.TValue[string]
+	Language                   plugin.TValue[string]
+	IsSecure                   plugin.TValue[bool]
+	IsExternalFunction         plugin.TValue[bool]
+	IsBuiltin                  plugin.TValue[bool]
+	IsAggregate                plugin.TValue[bool]
+	IsTableFunction            plugin.TValue[bool]
+	IsMemoizable               plugin.TValue[bool]
+	IsDataMetric               plugin.TValue[bool]
+	Arguments                  plugin.TValue[string]
+	Description                plugin.TValue[string]
+	ExternalAccessIntegrations plugin.TValue[[]any]
+	Secrets                    plugin.TValue[[]any]
+}
+
+// createSnowflakeFunction creates a new instance of this resource
+func createSnowflakeFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSnowflakeFunction{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("snowflake.function", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSnowflakeFunction) MqlName() string {
+	return "snowflake.function"
+}
+
+func (c *mqlSnowflakeFunction) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSnowflakeFunction) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSnowflakeFunction) GetDatabaseName() *plugin.TValue[string] {
+	return &c.DatabaseName
+}
+
+func (c *mqlSnowflakeFunction) GetSchemaName() *plugin.TValue[string] {
+	return &c.SchemaName
+}
+
+func (c *mqlSnowflakeFunction) GetLanguage() *plugin.TValue[string] {
+	return &c.Language
+}
+
+func (c *mqlSnowflakeFunction) GetIsSecure() *plugin.TValue[bool] {
+	return &c.IsSecure
+}
+
+func (c *mqlSnowflakeFunction) GetIsExternalFunction() *plugin.TValue[bool] {
+	return &c.IsExternalFunction
+}
+
+func (c *mqlSnowflakeFunction) GetIsBuiltin() *plugin.TValue[bool] {
+	return &c.IsBuiltin
+}
+
+func (c *mqlSnowflakeFunction) GetIsAggregate() *plugin.TValue[bool] {
+	return &c.IsAggregate
+}
+
+func (c *mqlSnowflakeFunction) GetIsTableFunction() *plugin.TValue[bool] {
+	return &c.IsTableFunction
+}
+
+func (c *mqlSnowflakeFunction) GetIsMemoizable() *plugin.TValue[bool] {
+	return &c.IsMemoizable
+}
+
+func (c *mqlSnowflakeFunction) GetIsDataMetric() *plugin.TValue[bool] {
+	return &c.IsDataMetric
+}
+
+func (c *mqlSnowflakeFunction) GetArguments() *plugin.TValue[string] {
+	return &c.Arguments
+}
+
+func (c *mqlSnowflakeFunction) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlSnowflakeFunction) GetExternalAccessIntegrations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ExternalAccessIntegrations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.function", c.__id, "externalAccessIntegrations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.externalAccessIntegrations()
+	})
+}
+
+func (c *mqlSnowflakeFunction) GetSecrets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Secrets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.function", c.__id, "secrets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.secrets()
+	})
+}
+
+// mqlSnowflakeApplication for the snowflake.application resource
+type mqlSnowflakeApplication struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlSnowflakeApplicationInternal
+	Name       plugin.TValue[string]
+	Owner      plugin.TValue[*mqlSnowflakeRole]
+	SourceType plugin.TValue[string]
+	Source     plugin.TValue[string]
+	Version    plugin.TValue[string]
+	Label      plugin.TValue[string]
+	Patch      plugin.TValue[int64]
+	Comment    plugin.TValue[string]
+}
+
+// createSnowflakeApplication creates a new instance of this resource
+func createSnowflakeApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSnowflakeApplication{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("snowflake.application", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSnowflakeApplication) MqlName() string {
+	return "snowflake.application"
+}
+
+func (c *mqlSnowflakeApplication) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSnowflakeApplication) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSnowflakeApplication) GetOwner() *plugin.TValue[*mqlSnowflakeRole] {
+	return plugin.GetOrCompute[*mqlSnowflakeRole](&c.Owner, func() (*mqlSnowflakeRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.application", c.__id, "owner")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeRole), nil
+			}
+		}
+
+		return c.owner()
+	})
+}
+
+func (c *mqlSnowflakeApplication) GetSourceType() *plugin.TValue[string] {
+	return &c.SourceType
+}
+
+func (c *mqlSnowflakeApplication) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlSnowflakeApplication) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlSnowflakeApplication) GetLabel() *plugin.TValue[string] {
+	return &c.Label
+}
+
+func (c *mqlSnowflakeApplication) GetPatch() *plugin.TValue[int64] {
+	return &c.Patch
+}
+
+func (c *mqlSnowflakeApplication) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+// mqlSnowflakeApplicationPackage for the snowflake.applicationPackage resource
+type mqlSnowflakeApplicationPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlSnowflakeApplicationPackageInternal
+	Name             plugin.TValue[string]
+	Owner            plugin.TValue[*mqlSnowflakeRole]
+	Distribution     plugin.TValue[string]
+	ApplicationClass plugin.TValue[string]
+	Comment          plugin.TValue[string]
+}
+
+// createSnowflakeApplicationPackage creates a new instance of this resource
+func createSnowflakeApplicationPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSnowflakeApplicationPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("snowflake.applicationPackage", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSnowflakeApplicationPackage) MqlName() string {
+	return "snowflake.applicationPackage"
+}
+
+func (c *mqlSnowflakeApplicationPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSnowflakeApplicationPackage) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSnowflakeApplicationPackage) GetOwner() *plugin.TValue[*mqlSnowflakeRole] {
+	return plugin.GetOrCompute[*mqlSnowflakeRole](&c.Owner, func() (*mqlSnowflakeRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.applicationPackage", c.__id, "owner")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeRole), nil
+			}
+		}
+
+		return c.owner()
+	})
+}
+
+func (c *mqlSnowflakeApplicationPackage) GetDistribution() *plugin.TValue[string] {
+	return &c.Distribution
+}
+
+func (c *mqlSnowflakeApplicationPackage) GetApplicationClass() *plugin.TValue[string] {
+	return &c.ApplicationClass
+}
+
+func (c *mqlSnowflakeApplicationPackage) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+// mqlSnowflakeExternalAccessIntegration for the snowflake.externalAccessIntegration resource
+type mqlSnowflakeExternalAccessIntegration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlSnowflakeExternalAccessIntegrationInternal
+	Name                                 plugin.TValue[string]
+	Enabled                              plugin.TValue[bool]
+	Comment                              plugin.TValue[string]
+	AllowedNetworkRules                  plugin.TValue[[]any]
+	AllowedAuthenticationSecrets         plugin.TValue[[]any]
+	AllowedApiAuthenticationIntegrations plugin.TValue[[]any]
+}
+
+// createSnowflakeExternalAccessIntegration creates a new instance of this resource
+func createSnowflakeExternalAccessIntegration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSnowflakeExternalAccessIntegration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("snowflake.externalAccessIntegration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSnowflakeExternalAccessIntegration) MqlName() string {
+	return "snowflake.externalAccessIntegration"
+}
+
+func (c *mqlSnowflakeExternalAccessIntegration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSnowflakeExternalAccessIntegration) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSnowflakeExternalAccessIntegration) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlSnowflakeExternalAccessIntegration) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlSnowflakeExternalAccessIntegration) GetAllowedNetworkRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AllowedNetworkRules, func() ([]any, error) {
+		return c.allowedNetworkRules()
+	})
+}
+
+func (c *mqlSnowflakeExternalAccessIntegration) GetAllowedAuthenticationSecrets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AllowedAuthenticationSecrets, func() ([]any, error) {
+		return c.allowedAuthenticationSecrets()
+	})
+}
+
+func (c *mqlSnowflakeExternalAccessIntegration) GetAllowedApiAuthenticationIntegrations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AllowedApiAuthenticationIntegrations, func() ([]any, error) {
+		return c.allowedApiAuthenticationIntegrations()
+	})
+}
+
+// mqlSnowflakeCortexSearchService for the snowflake.cortexSearchService resource
+type mqlSnowflakeCortexSearchService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlSnowflakeCortexSearchServiceInternal
+	Name            plugin.TValue[string]
+	DatabaseName    plugin.TValue[string]
+	SchemaName      plugin.TValue[string]
+	Comment         plugin.TValue[string]
+	CreatedAt       plugin.TValue[*time.Time]
+	Warehouse       plugin.TValue[*mqlSnowflakeWarehouse]
+	TargetLag       plugin.TValue[string]
+	Definition      plugin.TValue[string]
+	ServiceQueryUrl plugin.TValue[string]
+}
+
+// createSnowflakeCortexSearchService creates a new instance of this resource
+func createSnowflakeCortexSearchService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSnowflakeCortexSearchService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("snowflake.cortexSearchService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSnowflakeCortexSearchService) MqlName() string {
+	return "snowflake.cortexSearchService"
+}
+
+func (c *mqlSnowflakeCortexSearchService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSnowflakeCortexSearchService) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSnowflakeCortexSearchService) GetDatabaseName() *plugin.TValue[string] {
+	return &c.DatabaseName
+}
+
+func (c *mqlSnowflakeCortexSearchService) GetSchemaName() *plugin.TValue[string] {
+	return &c.SchemaName
+}
+
+func (c *mqlSnowflakeCortexSearchService) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlSnowflakeCortexSearchService) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlSnowflakeCortexSearchService) GetWarehouse() *plugin.TValue[*mqlSnowflakeWarehouse] {
+	return plugin.GetOrCompute[*mqlSnowflakeWarehouse](&c.Warehouse, func() (*mqlSnowflakeWarehouse, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.cortexSearchService", c.__id, "warehouse")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeWarehouse), nil
+			}
+		}
+
+		return c.warehouse()
+	})
+}
+
+func (c *mqlSnowflakeCortexSearchService) GetTargetLag() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TargetLag, func() (string, error) {
+		return c.targetLag()
+	})
+}
+
+func (c *mqlSnowflakeCortexSearchService) GetDefinition() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Definition, func() (string, error) {
+		return c.definition()
+	})
+}
+
+func (c *mqlSnowflakeCortexSearchService) GetServiceQueryUrl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ServiceQueryUrl, func() (string, error) {
+		return c.serviceQueryUrl()
 	})
 }

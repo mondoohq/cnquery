@@ -15,3 +15,55 @@ func TestPowershellEncoding(t *testing.T) {
 	cmd := string("dir \"c:\\program files\" ")
 	assert.Equal(t, expected, powershell.Encode(cmd))
 }
+
+func TestSplitInvocation(t *testing.T) {
+	tests := []struct {
+		name     string
+		cmd      string
+		wantArgv []string
+		wantOK   bool
+	}{
+		{
+			name:     "Encode output round-trips to direct argv",
+			cmd:      powershell.Encode("Get-CimInstance -ClassName Win32_Bios"),
+			wantArgv: []string{"powershell.exe", "-NoProfile", "-EncodedCommand", powershell.Encode("Get-CimInstance -ClassName Win32_Bios")[len("powershell.exe -NoProfile -EncodedCommand "):]},
+			wantOK:   true,
+		},
+		{
+			name:     "EncodeUnix output round-trips to direct argv",
+			cmd:      powershell.EncodeUnix("hostname"),
+			wantArgv: []string{"pwsh", "-NoProfile", "-EncodedCommand", powershell.EncodeUnix("hostname")[len("pwsh -NoProfile -EncodedCommand "):]},
+			wantOK:   true,
+		},
+		{
+			name:     "Wrap output unwraps to a single -c script",
+			cmd:      powershell.Wrap("Get-NetAdapter | ConvertTo-Json"),
+			wantArgv: []string{"powershell", "-c", "Get-NetAdapter | ConvertTo-Json"},
+			wantOK:   true,
+		},
+		{
+			name:   "plain command is not a powershell invocation",
+			cmd:    "hostname",
+			wantOK: false,
+		},
+		{
+			name:   "non-powershell binary is left alone",
+			cmd:    "cmd /c echo hi",
+			wantOK: false,
+		},
+		{
+			name:   "empty encoded payload is rejected",
+			cmd:    "powershell.exe -NoProfile -EncodedCommand ",
+			wantOK: false,
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			argv, ok := powershell.SplitInvocation(tc.cmd)
+			assert.Equal(t, tc.wantOK, ok)
+			if tc.wantOK {
+				assert.Equal(t, tc.wantArgv, argv)
+			}
+		})
+	}
+}

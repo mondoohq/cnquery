@@ -92,14 +92,11 @@ func (j *JamfConnection) Asset() *inventory.Asset {
 }
 
 func (j *JamfConnection) PlatformInfo() (*inventory.Platform, error) {
-	return &inventory.Platform{
-		Name:                  "jamf",
-		Title:                 "Jamf Pro",
-		Family:                []string{"jamf"},
-		Kind:                  "api",
-		Runtime:               "jamf",
+	p := &inventory.Platform{
 		TechnologyUrlSegments: []string{"api", "jamf"},
-	}, nil
+	}
+	PlatformByName("jamf").Apply(p)
+	return p, nil
 }
 
 func (j *JamfConnection) Identifier() string {

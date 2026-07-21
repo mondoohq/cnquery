@@ -124,9 +124,24 @@ func (a *mqlAzureSubscriptionPolicy) assignments() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		sysData, err := convert.JsonToDict(assignment.SystemData)
+		if err != nil {
+			return nil, err
+		}
+		mqlAssignment.(*mqlAzureSubscriptionPolicyAssignment).cacheSystemData = sysData
+
 		res = append(res, mqlAssignment)
 	}
 	return res, nil
+}
+
+type mqlAzureSubscriptionPolicyAssignmentInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionPolicyAssignment) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 // policyAssignmentArgs maps a single policy assignment to the resource fields.
@@ -201,7 +216,7 @@ func newMqlPolicyDefinition(runtime *plugin.Runtime, def *armpolicy.Definition) 
 		return nil, err
 	}
 
-	return CreateResource(runtime, "azure.subscription.policy.definition", map[string]*llx.RawData{
+	res, err := CreateResource(runtime, "azure.subscription.policy.definition", map[string]*llx.RawData{
 		"__id":        llx.StringDataPtr(def.ID),
 		"id":          llx.StringDataPtr(def.ID),
 		"name":        llx.StringDataPtr(def.Name),
@@ -214,6 +229,25 @@ func newMqlPolicyDefinition(runtime *plugin.Runtime, def *armpolicy.Definition) 
 		"metadata":    llx.DictData(metadata),
 		"version":     llx.StringDataPtr(props.Version),
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	sysData, err := convert.JsonToDict(def.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlAzureSubscriptionPolicyDefinition).cacheSystemData = sysData
+
+	return res, nil
+}
+
+type mqlAzureSubscriptionPolicyDefinitionInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionPolicyDefinition) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionPolicy) setDefinitions() ([]any, error) {
@@ -266,10 +300,25 @@ func (a *mqlAzureSubscriptionPolicy) setDefinitions() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+
+			sysData, err := convert.JsonToDict(setDef.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlSetDef.(*mqlAzureSubscriptionPolicySetDefinition).cacheSystemData = sysData
+
 			res = append(res, mqlSetDef)
 		}
 	}
 	return res, nil
+}
+
+type mqlAzureSubscriptionPolicySetDefinitionInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionPolicySetDefinition) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 // azurePolicyExemption mirrors the Microsoft.Authorization/policyExemptions REST

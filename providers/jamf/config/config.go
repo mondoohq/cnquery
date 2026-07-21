@@ -6,14 +6,16 @@ package config
 import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/jamf/connection"
 	"go.mondoo.com/mql/v13/providers/jamf/provider"
 )
 
 var Config = plugin.Provider{
 	Name:            "jamf",
-	ID:              "go.mondoo.com/mql/providers/jamf",
-	Version:         "13.1.3",
+	ID:              "go.mondoo.com/mql/v13/providers/jamf",
+	Version:         "13.1.9",
 	ConnectionTypes: []string{provider.ConnectionType},
+	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "jamf",

@@ -222,11 +222,7 @@ func (a *mqlAwsSsmDocument) permissions() ([]any, error) {
 }
 
 func ssmTagsToMap(tags []types.Tag) map[string]string {
-	m := make(map[string]string, len(tags))
-	for _, t := range tags {
-		m[convert.ToValue(t.Key)] = convert.ToValue(t.Value)
-	}
-	return m
+	return tagsToStringMap(tags, func(t types.Tag) *string { return t.Key }, func(t types.Tag) *string { return t.Value })
 }
 
 func (a *mqlAwsSsm) patchBaselines() ([]any, error) {

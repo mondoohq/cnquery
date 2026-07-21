@@ -7,13 +7,14 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/detector"
 	"go.mondoo.com/mql/v13/providers/os/resources/discovery/docker_engine"
 )
 
 var Config = plugin.Provider{
 	Name:    "os",
 	ID:      "go.mondoo.com/cnquery/v9/providers/os",
-	Version: "13.29.1",
+	Version: "13.35.4",
 	ConnectionTypes: []string{
 		shared.Type_Local.String(),
 		shared.Type_SSH.String(),
@@ -419,4 +420,5 @@ Examples:
 			PathSegments: []string{"technology=iac", "category=dockerfile"},
 		},
 	},
+	Platforms: detector.CatalogPlatforms(),
 }

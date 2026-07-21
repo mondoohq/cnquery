@@ -205,13 +205,13 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.HostConnection
 	} else {
 		asset.Name = conn.Conf.Host
 	}
-	asset.Platform = &inventory.Platform{
-		Name:                  "host",
-		Family:                []string{"network"},
-		Kind:                  "network",
-		Title:                 "Network Host",
+	platform := &inventory.Platform{
 		TechnologyUrlSegments: []string{"network", "host"},
 	}
+	if pi, ok := PlatformByName("host"); ok {
+		pi.Apply(platform)
+	}
+	asset.Platform = platform
 
 	asset.Fqdn = conn.FQDN()
 	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/network/host/" + conn.Conf.Runtime + conn.Conf.Host}

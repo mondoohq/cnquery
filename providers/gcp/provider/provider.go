@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
@@ -143,6 +144,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	} else {
 		conf.Discover.Targets = []string{resources.DiscoveryAuto}
 	}
+	conf.Discover.Filter = parseFlagsToFiltersOpts(flags)
 
 	switch req.Args[0] {
 	case "org", "organization":
@@ -183,6 +185,33 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	return &plugin.ParseCLIRes{Asset: &asset}, nil
+}
+
+// parseFlagsToFiltersOpts extracts the known discovery filter keys from the
+// --filters key/value flag. Only recognized prefixes are passed through so that
+// unknown keys don't silently leak into the discovery config.
+func parseFlagsToFiltersOpts(m map[string]*llx.Primitive) map[string]string {
+	o := map[string]string{}
+
+	x, ok := m["filters"]
+	if !ok || len(x.Map) == 0 {
+		return o
+	}
+
+	knownKeys := []string{
+		// storage filters
+		"storage:bucket-names",
+		"storage:exclude:bucket-names",
+		// project-level filters
+		"propagate-project-labels",
+	}
+	for k, v := range x.Map {
+		if slices.Contains(knownKeys, k) {
+			o[k] = string(v.Value)
+		}
+	}
+
+	return o
 }
 
 // validateInstanceTarget ensures the required flags for instance scanning are

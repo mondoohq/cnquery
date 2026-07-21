@@ -52,11 +52,13 @@ func initAzureSubscriptionStorageService(runtime *plugin.Runtime, args map[strin
 }
 
 type mqlAzureSubscriptionStorageServiceAccountInternal struct {
-	cacheSystemData            any
-	cacheEncryptionKeySource   string
-	cacheEncryptionKeyVaultURI string
-	cacheEncryptionKeyName     string
-	cacheEncryptionKeyVersion  string
+	cacheSystemData              any
+	cacheEncryptionKeySource     string
+	cacheEncryptionKeyVaultURI   string
+	cacheEncryptionKeyName       string
+	cacheEncryptionKeyVersion    string
+	cacheUserAssignedIdentityIds []string
+	cacheEncryptionIdentityId    string
 
 	fetchBlobSvcOnce sync.Once
 	fetchBlobSvcResp *storage.BlobServicesClientGetServicePropertiesResponse
@@ -102,6 +104,14 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) id() (string, error) {
 
 func (a *mqlAzureSubscriptionStorageServiceAccountContainer) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+type mqlAzureSubscriptionStorageServiceAccountContainerInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccountContainer) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionStorageServiceAccountDataProtection) id() (string, error) {
@@ -356,6 +366,11 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) containers() ([]any, error) 
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(container.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlAzure.(*mqlAzureSubscriptionStorageServiceAccountContainer).cacheSystemData = sysData
 			res = append(res, mqlAzure)
 		}
 	}
@@ -939,6 +954,13 @@ func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mq
 	if err != nil {
 		return nil, err
 	}
+	var accountPrincipalId, accountTenantId *string
+	var userAssignedIdentityIds []string
+	if account.Identity != nil {
+		accountPrincipalId = account.Identity.PrincipalID
+		accountTenantId = account.Identity.TenantID
+		userAssignedIdentityIds = sortedUserAssignedIdentityIDs(account.Identity.UserAssignedIdentities)
+	}
 
 	sku, err := convert.JsonToDict(account.SKU)
 	if err != nil {
@@ -958,6 +980,8 @@ func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mq
 			"type":                               llx.StringDataPtr(account.Type),
 			"properties":                         llx.DictData(properties),
 			"identity":                           llx.DictData(identity),
+			"principalId":                        llx.StringDataPtr(accountPrincipalId),
+			"tenantId":                           llx.StringDataPtr(accountTenantId),
 			"sku":                                llx.DictData(sku),
 			"kind":                               llx.StringData(kind),
 			"minimumTlsVersion":                  llx.StringDataPtr(minimumTlsVersion),
@@ -1002,6 +1026,7 @@ func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mq
 		return nil, err
 	}
 	mqlRes := res.(*mqlAzureSubscriptionStorageServiceAccount)
+	mqlRes.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 	sysData, err := convert.JsonToDict(account.SystemData)
 	if err != nil {
 		return nil, err
@@ -1009,6 +1034,9 @@ func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mq
 	mqlRes.cacheSystemData = sysData
 	if account.Properties != nil && account.Properties.Encryption != nil {
 		enc := account.Properties.Encryption
+		if enc.EncryptionIdentity != nil && enc.EncryptionIdentity.EncryptionUserAssignedIdentity != nil {
+			mqlRes.cacheEncryptionIdentityId = *enc.EncryptionIdentity.EncryptionUserAssignedIdentity
+		}
 		if enc.KeySource != nil {
 			mqlRes.cacheEncryptionKeySource = string(*enc.KeySource)
 		}
@@ -1025,6 +1053,23 @@ func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mq
 		}
 	}
 	return mqlRes, nil
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccount) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccount) encryptionIdentity() (*mqlAzureSubscriptionManagedIdentity, error) {
+	if a.cacheEncryptionIdentityId == "" {
+		a.EncryptionIdentity.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.managedIdentity",
+		map[string]*llx.RawData{"__id": llx.StringData(a.cacheEncryptionIdentityId)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionManagedIdentity), nil
 }
 
 func (a *mqlAzureSubscriptionStorageServiceAccount) encryptionKeySource() (string, error) {
@@ -1164,8 +1209,24 @@ func (a *mqlAzureSubscriptionStorageServiceAccountEncryptionScope) id() (string,
 	return a.Id.Data, nil
 }
 
+type mqlAzureSubscriptionStorageServiceAccountEncryptionScopeInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccountEncryptionScope) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
 func (a *mqlAzureSubscriptionStorageServiceAccountManagementPolicy) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+type mqlAzureSubscriptionStorageServiceAccountManagementPolicyInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccountManagementPolicy) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule) id() (string, error) {
@@ -1252,6 +1313,11 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) encryptionScopes() ([]any, e
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(scope.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlScope.(*mqlAzureSubscriptionStorageServiceAccountEncryptionScope).cacheSystemData = sysData
 			res = append(res, mqlScope)
 		}
 	}
@@ -1386,11 +1452,24 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) managementPolicy() (*mqlAzur
 	if err != nil {
 		return nil, err
 	}
+	sysData, err := convert.JsonToDict(policy.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicy).cacheSystemData = sysData
 	return res.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicy), nil
 }
 
 func (a *mqlAzureSubscriptionStorageServiceAccountLocalUser) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+type mqlAzureSubscriptionStorageServiceAccountLocalUserInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccountLocalUser) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 // localUsers fetches local SFTP/SSH user accounts on the storage account.
@@ -1496,6 +1575,11 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) localUsers() ([]any, error) 
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(lu.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlLu.(*mqlAzureSubscriptionStorageServiceAccountLocalUser).cacheSystemData = sysData
 			res = append(res, mqlLu)
 		}
 	}

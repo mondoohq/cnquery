@@ -50,6 +50,9 @@ func ipSubnetToString(s *netconfig.IPSubnet) string {
 // ---------------------------------------------------------------------------
 
 func newMqlVpc(runtime *plugin.Runtime, v *netconfig.Vpc) (*mqlNutanixNetworkVpc, error) {
+	if v.ExtId == nil {
+		return nil, nil
+	}
 	vpcType := ""
 	if v.VpcType != nil {
 		vpcType = v.VpcType.GetName()
@@ -62,20 +65,64 @@ func newMqlVpc(runtime *plugin.Runtime, v *netconfig.Vpc) (*mqlNutanixNetworkVpc
 	for i := range v.SnatIps {
 		snatIps = append(snatIps, netIPToString(&v.SnatIps[i]))
 	}
+	projectName, ownerId, projectId := metadataProvenance(v.Metadata)
+
 	res, err := CreateResource(runtime, "nutanix.network.vpc", map[string]*llx.RawData{
 		"__id":                           llx.StringDataPtr(v.ExtId),
 		"id":                             llx.StringDataPtr(v.ExtId),
+		"tenantId":                       llx.StringDataPtr(v.TenantId),
 		"name":                           llx.StringDataPtr(v.Name),
 		"description":                    llx.StringDataPtr(v.Description),
 		"vpcType":                        llx.StringData(vpcType),
 		"externallyRoutablePrefixes":     llx.ArrayData(prefixes, types.String),
 		"snatIps":                        llx.ArrayData(snatIps, types.String),
 		"externalRoutingDomainReference": llx.StringDataPtr(v.ExternalRoutingDomainReference),
+		"projectId":                      llx.StringData(projectId),
+		"projectName":                    llx.StringData(projectName),
 	})
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlNutanixNetworkVpc), nil
+	mqlVpc := res.(*mqlNutanixNetworkVpc)
+	mqlVpc.cacheOwnerId = ownerId
+	return mqlVpc, nil
+}
+
+type mqlNutanixNetworkVpcInternal struct {
+	cacheOwnerId string
+}
+
+func (a *mqlNutanixNetworkVpc) owner() (*mqlNutanixIamUser, error) {
+	if a.cacheOwnerId == "" {
+		a.Owner.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := userByID(a.MqlRuntime, a.cacheOwnerId)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		a.Owner.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return res, nil
+}
+
+// metadataProvenance extracts the project name, owner external UUID, and
+// project external UUID from a networking resource's metadata.
+func metadataProvenance(m *netcommon.Metadata) (projectName, ownerId, projectId string) {
+	if m == nil {
+		return "", "", ""
+	}
+	if m.ProjectName != nil {
+		projectName = *m.ProjectName
+	}
+	if m.OwnerReferenceId != nil {
+		ownerId = *m.OwnerReferenceId
+	}
+	if m.ProjectReferenceId != nil {
+		projectId = *m.ProjectReferenceId
+	}
+	return projectName, ownerId, projectId
 }
 
 func (a *mqlNutanix) vpcs() ([]any, error) {
@@ -103,6 +150,9 @@ func (a *mqlNutanix) vpcs() ([]any, error) {
 			mqlVpc, err := newMqlVpc(a.MqlRuntime, &items[i])
 			if err != nil {
 				return nil, err
+			}
+			if mqlVpc == nil {
+				continue
 			}
 			res = append(res, mqlVpc)
 		}
@@ -141,6 +191,9 @@ func vpcByID(runtime *plugin.Runtime, vpcID string) (*mqlNutanixNetworkVpc, erro
 // ---------------------------------------------------------------------------
 
 func newMqlSubnet(runtime *plugin.Runtime, s *netconfig.Subnet) (*mqlNutanixNetworkSubnet, error) {
+	if s.ExtId == nil {
+		return nil, nil
+	}
 	subnetType := ""
 	if s.SubnetType != nil {
 		subnetType = s.SubnetType.GetName()
@@ -155,9 +208,12 @@ func newMqlSubnet(runtime *plugin.Runtime, s *netconfig.Subnet) (*mqlNutanixNetw
 	for i := range s.ReservedIpAddresses {
 		reserved = append(reserved, netIPToString(&s.ReservedIpAddresses[i]))
 	}
+	projectName, ownerId, projectId := metadataProvenance(s.Metadata)
+
 	res, err := CreateResource(runtime, "nutanix.network.subnet", map[string]*llx.RawData{
 		"__id":                 llx.StringDataPtr(s.ExtId),
 		"id":                   llx.StringDataPtr(s.ExtId),
+		"tenantId":             llx.StringDataPtr(s.TenantId),
 		"name":                 llx.StringDataPtr(s.Name),
 		"description":          llx.StringDataPtr(s.Description),
 		"subnetType":           llx.StringData(subnetType),
@@ -171,6 +227,8 @@ func newMqlSubnet(runtime *plugin.Runtime, s *netconfig.Subnet) (*mqlNutanixNetw
 		"numAssignedIps":       llx.IntData(numAssignedIps),
 		"numFreeIps":           llx.IntData(numFreeIps),
 		"reservedIpAddresses":  llx.ArrayData(reserved, types.String),
+		"projectId":            llx.StringData(projectId),
+		"projectName":          llx.StringData(projectName),
 	})
 	if err != nil {
 		return nil, err
@@ -182,6 +240,7 @@ func newMqlSubnet(runtime *plugin.Runtime, s *netconfig.Subnet) (*mqlNutanixNetw
 	if s.VpcReference != nil {
 		mqlSubnet.cacheVpcId = *s.VpcReference
 	}
+	mqlSubnet.cacheOwnerId = ownerId
 	return mqlSubnet, nil
 }
 
@@ -216,6 +275,9 @@ func (a *mqlNutanix) subnets() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			if mqlSubnet == nil {
+				continue
+			}
 			res = append(res, mqlSubnet)
 		}
 		if len(items) < limit {
@@ -228,6 +290,22 @@ func (a *mqlNutanix) subnets() ([]any, error) {
 type mqlNutanixNetworkSubnetInternal struct {
 	cacheClusterId string
 	cacheVpcId     string
+	cacheOwnerId   string
+}
+
+func (a *mqlNutanixNetworkSubnet) owner() (*mqlNutanixIamUser, error) {
+	if a.cacheOwnerId == "" {
+		a.Owner.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := userByID(a.MqlRuntime, a.cacheOwnerId)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		a.Owner.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return res, nil
 }
 
 func (a *mqlNutanixNetworkSubnet) cluster() (*mqlNutanixCluster, error) {
@@ -310,13 +388,18 @@ func (a *mqlNutanix) floatingIps() ([]any, error) {
 		}
 		for i := range items {
 			f := items[i]
+			if f.ExtId == nil {
+				continue
+			}
 			associationStatus := ""
 			if f.AssociationStatus != nil {
-				associationStatus = f.AssociationStatus.GetName()
+				associationStatus = *f.AssociationStatus
 			}
+			projectName, ownerId, projectId := metadataProvenance(f.Metadata)
 			mqlFip, err := CreateResource(a.MqlRuntime, "nutanix.network.floatingIp", map[string]*llx.RawData{
 				"__id":                         llx.StringDataPtr(f.ExtId),
 				"id":                           llx.StringDataPtr(f.ExtId),
+				"tenantId":                     llx.StringDataPtr(f.TenantId),
 				"name":                         llx.StringDataPtr(f.Name),
 				"description":                  llx.StringDataPtr(f.Description),
 				"floatingIpValue":              llx.StringDataPtr(f.FloatingIpValue),
@@ -324,6 +407,8 @@ func (a *mqlNutanix) floatingIps() ([]any, error) {
 				"associationStatus":            llx.StringData(associationStatus),
 				"vmNicReference":               llx.StringDataPtr(f.VmNicReference),
 				"loadBalancerSessionReference": llx.StringDataPtr(f.LoadBalancerSessionReference),
+				"projectId":                    llx.StringData(projectId),
+				"projectName":                  llx.StringData(projectName),
 			})
 			if err != nil {
 				return nil, err
@@ -335,6 +420,7 @@ func (a *mqlNutanix) floatingIps() ([]any, error) {
 			if f.ExternalSubnetReference != nil {
 				mf.cacheSubnetId = *f.ExternalSubnetReference
 			}
+			mf.cacheOwnerId = ownerId
 			res = append(res, mf)
 		}
 		if len(items) < limit {
@@ -347,6 +433,22 @@ func (a *mqlNutanix) floatingIps() ([]any, error) {
 type mqlNutanixNetworkFloatingIpInternal struct {
 	cacheVpcId    string
 	cacheSubnetId string
+	cacheOwnerId  string
+}
+
+func (a *mqlNutanixNetworkFloatingIp) owner() (*mqlNutanixIamUser, error) {
+	if a.cacheOwnerId == "" {
+		a.Owner.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := userByID(a.MqlRuntime, a.cacheOwnerId)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		a.Owner.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return res, nil
 }
 
 func (a *mqlNutanixNetworkFloatingIp) vpc() (*mqlNutanixNetworkVpc, error) {

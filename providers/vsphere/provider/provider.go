@@ -51,7 +51,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 			target = "scheme://" + target
 		}
 
-		// eg. used to parse users from `cnquery shell vsphere chris@vsphere.local@hostname`
+		// eg. used to parse users from `mql shell vsphere chris@vsphere.local@hostname`
 		x, err := url.Parse(target)
 		if err != nil {
 			return nil, errors.New("incorrect format of target, please use user@host:port")
@@ -177,15 +177,12 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.VsphereConnect
 
 	vSphereInfo := conn.Info()
 	asset.Platform = &inventory.Platform{
-		Name:                  connection.VspherePlatform,
-		Family:                []string{connection.Family},
 		Title:                 "VMware vSphere " + vSphereInfo.Version,
 		Version:               vSphereInfo.Version,
 		Build:                 vSphereInfo.Build,
-		Kind:                  "api",
-		Runtime:               "vsphere",
 		TechnologyUrlSegments: []string{"vmware", "vsphere", vSphereInfo.Version + "-" + vSphereInfo.Build},
 	}
+	connection.PlatformByName(connection.VspherePlatform).Apply(asset.Platform)
 
 	id, err := conn.Identifier()
 	if err != nil {

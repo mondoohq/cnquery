@@ -52,6 +52,12 @@ func (g *mqlGcpProject) cloudFunctionsV2() ([]any, error) {
 			break
 		}
 		if err != nil {
+			// Gracefully skip when the Cloud Functions API is disabled or access
+			// is denied (matches the gRPC-based sibling resources), instead of
+			// failing the whole query with a hard error.
+			if isGRPCSkippable(err) {
+				break
+			}
 			return nil, err
 		}
 
@@ -78,7 +84,7 @@ func (g *mqlGcpProject) cloudFunctionsV2() ([]any, error) {
 			return nil, err
 		}
 
-		serviceConfig, err := fnV2ServiceConfig(g.MqlRuntime, fn.Name, fn.ServiceConfig)
+		serviceConfig, err := fnV2ServiceConfig(g.MqlRuntime, fn.Name, projectId, fn.ServiceConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -152,12 +158,16 @@ func (g *mqlGcpProjectCloudFunctionV2) kmsKey() (*mqlGcpProjectKmsServiceKeyring
 		return nil, nil
 	}
 	res, err := NewResource(g.MqlRuntime, "gcp.project.kmsService.keyring.cryptokey", map[string]*llx.RawData{
-		"resourceName": llx.StringData(keyName),
+		"resourcePath": llx.StringData(keyName),
 	})
 	if err != nil {
 		return nil, err
 	}
 	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+}
+
+func (g *mqlGcpProjectCloudFunctionV2) managedBy() (string, error) {
+	return managedByFromLabels(g.GetLabels())
 }
 
 func (g *mqlGcpProjectCloudFunctionV2) iamPolicy() ([]any, error) {
@@ -211,6 +221,16 @@ func fnV2BuildConfig(runtime *plugin.Runtime, parentName string, cfg *functionsp
 		return nil, err
 	}
 
+	sourceProvenanceDict, err := protoToDict(cfg.GetSourceProvenance())
+	if err != nil {
+		return nil, err
+	}
+
+	var gitUri string
+	if cfg.GetSourceProvenance() != nil {
+		gitUri = cfg.GetSourceProvenance().GetGitUri()
+	}
+
 	var envVars map[string]any
 	if len(cfg.EnvironmentVariables) > 0 {
 		envVars = make(map[string]any, len(cfg.EnvironmentVariables))
@@ -228,6 +248,9 @@ func fnV2BuildConfig(runtime *plugin.Runtime, parentName string, cfg *functionsp
 		"environmentVariables": llx.MapData(envVars, types.String),
 		"dockerRepository":     llx.StringData(cfg.DockerRepository),
 		"serviceAccount":       llx.StringData(cfg.ServiceAccount),
+		"build":                llx.StringData(cfg.Build),
+		"sourceProvenance":     llx.DictData(sourceProvenanceDict),
+		"gitUri":               llx.StringData(gitUri),
 	})
 	if err != nil {
 		return nil, err
@@ -255,7 +278,22 @@ func (g *mqlGcpProjectCloudFunctionV2BuildConfig) id() (string, error) {
 	return g.Id.Data, g.Id.Error
 }
 
-func fnV2ServiceConfig(runtime *plugin.Runtime, parentName string, cfg *functionspb.ServiceConfig) (*mqlGcpProjectCloudFunctionV2ServiceConfig, error) {
+func (g *mqlGcpProjectCloudFunctionV2BuildConfig) dockerRepositoryRef() (*mqlGcpProjectArtifactRegistryServiceRepository, error) {
+	if g.DockerRepository.Error != nil {
+		return nil, g.DockerRepository.Error
+	}
+	project, location, repo := artifactRegistryRepoFromPath(g.DockerRepository.Data)
+	ref, err := resolveArtifactRegistryRepoRef(g.MqlRuntime, project, location, repo)
+	if err != nil {
+		return nil, err
+	}
+	if ref == nil {
+		g.DockerRepositoryRef.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return ref, nil
+}
+
+func fnV2ServiceConfig(runtime *plugin.Runtime, parentName string, projectId string, cfg *functionspb.ServiceConfig) (*mqlGcpProjectCloudFunctionV2ServiceConfig, error) {
 	if cfg == nil {
 		return nil, nil
 	}
@@ -310,6 +348,7 @@ func fnV2ServiceConfig(runtime *plugin.Runtime, parentName string, cfg *function
 	// Populate Internal struct for cross-reference
 	sc := res.(*mqlGcpProjectCloudFunctionV2ServiceConfig)
 	sc.cacheServiceAccountEmail = cfg.ServiceAccountEmail
+	sc.cacheProjectId = projectId
 
 	return sc, nil
 }
@@ -318,8 +357,33 @@ func (g *mqlGcpProjectCloudFunctionV2ServiceConfig) id() (string, error) {
 	return g.Id.Data, g.Id.Error
 }
 
+func (g *mqlGcpProjectCloudFunctionV2ServiceConfig) serviceRef() (*mqlGcpProjectCloudRunServiceService, error) {
+	if g.Service.Error != nil {
+		return nil, g.Service.Error
+	}
+	service := g.Service.Data
+	if service == "" {
+		g.ServiceRef.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	projectId := parseProjectFromPath(service)
+	if projectId == "" {
+		projectId = g.cacheProjectId
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.cloudRunService.service", map[string]*llx.RawData{
+		"name":      llx.StringData(parseResourceName(service)),
+		"region":    llx.StringData(parseLocationFromPath(service)),
+		"projectId": llx.StringData(projectId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectCloudRunServiceService), nil
+}
+
 type mqlGcpProjectCloudFunctionV2ServiceConfigInternal struct {
 	cacheServiceAccountEmail string
+	cacheProjectId           string
 }
 
 func (g *mqlGcpProjectCloudFunctionV2ServiceConfig) iamServiceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
@@ -329,7 +393,8 @@ func (g *mqlGcpProjectCloudFunctionV2ServiceConfig) iamServiceAccount() (*mqlGcp
 		return nil, nil
 	}
 	res, err := NewResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
-		"email": llx.StringData(email),
+		"email":     llx.StringData(email),
+		"projectId": llx.StringData(g.cacheProjectId),
 	})
 	if err != nil {
 		return nil, err
@@ -404,16 +469,12 @@ func (g *mqlGcpProjectCloudFunctionV2EventTrigger) serviceAccount() (*mqlGcpProj
 }
 
 func (g *mqlGcpProjectCloudFunctionV2EventTrigger) topic() (*mqlGcpProjectPubsubServiceTopic, error) {
-	topicName := g.cachePubsubTopic
-	if topicName == "" {
-		g.Topic.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
-	}
-	res, err := NewResource(g.MqlRuntime, "gcp.project.pubsubService.topic", map[string]*llx.RawData{
-		"name": llx.StringData(topicName),
-	})
+	ref, err := resolvePubsubTopicRef(g.MqlRuntime, g.cachePubsubTopic, "")
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGcpProjectPubsubServiceTopic), nil
+	if ref == nil {
+		g.Topic.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return ref, nil
 }

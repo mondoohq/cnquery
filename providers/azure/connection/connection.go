@@ -5,6 +5,7 @@ package connection
 
 import (
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -19,11 +20,12 @@ import (
 )
 
 const (
-	OptionTenantID         = "tenant-id"
-	OptionClientID         = "client-id"
-	OptionDataReport       = "mondoo-ms365-datareport"
-	OptionSubscriptionID   = "subscription-id"
-	OptionPlatformOverride = "platform-override"
+	OptionTenantID           = "tenant-id"
+	OptionClientID           = "client-id"
+	OptionDataReport         = "mondoo-ms365-datareport"
+	OptionSubscriptionID     = "subscription-id"
+	OptionPlatformOverride   = "platform-override"
+	OptionFederatedTokenFile = "azure-federated-token-file"
 )
 
 type AzureConnection struct {
@@ -34,19 +36,39 @@ type AzureConnection struct {
 	// note: in the future, we might make this optional if we have a tenant-level asset.
 	subscriptionId string
 	clientOptions  policy.ClientOptions
+	// Filters holds the parsed discovery filters (from inventory.Discovery.Filter).
+	Filters DiscoveryFilters
 }
 
-func NewAzureConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*AzureConnection, error) {
+// selectAzureCredential chooses the appropriate Azure token credential based on
+// the connection configuration. When a federated token file is provided (via
+// option or env var) and no explicit vault credential is present, it returns a
+// WorkloadIdentityCredential for keyless auth. Otherwise it falls through to
+// the standard cert/secret/default-chain path.
+func selectAzureCredential(conf *inventory.Config) (azcore.TokenCredential, error) {
 	tenantId := conf.Options[OptionTenantID]
 	clientId := conf.Options[OptionClientID]
-	subId := conf.Options[OptionSubscriptionID]
 
 	var cred *vault.Credential
 	if len(conf.Credentials) != 0 {
 		cred = conf.Credentials[0]
 	}
 
-	token, err := azauth.GetTokenFromCredential(cred, tenantId, clientId)
+	federatedTokenFile := conf.Options[OptionFederatedTokenFile]
+	if federatedTokenFile == "" {
+		federatedTokenFile = os.Getenv("AZURE_FEDERATED_TOKEN_FILE")
+	}
+
+	if cred == nil && federatedTokenFile != "" {
+		return azauth.GetWorkloadIdentityToken(tenantId, clientId, federatedTokenFile)
+	}
+	return azauth.GetTokenFromCredential(cred, tenantId, clientId)
+}
+
+func NewAzureConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*AzureConnection, error) {
+	subId := conf.Options[OptionSubscriptionID]
+
+	token, err := selectAzureCredential(conf)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot fetch credentials for microsoft provider")
 	}
@@ -59,6 +81,7 @@ func NewAzureConnection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 		clientOptions: policy.ClientOptions{
 			PerCallPolicies: []policy.Policy{&apiTracePolicy{}},
 		},
+		Filters: DiscoveryFiltersFromOpts(conf.GetDiscover().GetFilter()),
 	}, nil
 }
 

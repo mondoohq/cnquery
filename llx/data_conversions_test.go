@@ -75,3 +75,91 @@ func TestResultRawConversions(t *testing.T) {
 		})
 	}
 }
+
+// TestEmptyTypePrimitiveConvertsToNil ensures a malformed (no-type) primitive is
+// coerced to a Nil value instead of returning an error (loud-and-narrow: it is
+// also logged). A no-type primitive only appears via an upstream bug (compiler
+// value-field binding, or an unset provider field); erroring here used to abort
+// conversion of the whole surrounding array/map (see
+// TestEmptyTypePrimitiveKeepsCollection).
+func TestEmptyTypePrimitiveConvertsToNil(t *testing.T) {
+	rd := (&llx.Primitive{}).RawData()
+	require.NoError(t, rd.Error)
+	assert.Equal(t, types.Nil, rd.Type)
+	assert.Nil(t, rd.Value)
+}
+
+// TestEmptyTypePrimitiveKeepsCollection is a regression test for empty
+// assessments: a single untyped nested field (e.g. an unset sub-field of a
+// resource's @context block) must not discard the entire surrounding array.
+// Previously RawData() errored on the untyped field and primitive2array /
+// primitive2rawdataMapV2 propagated that error, returning an empty slice — so
+// `list.all(...)` over @context resources rendered no failing resources at all.
+func TestEmptyTypePrimitiveKeepsCollection(t *testing.T) {
+	// A resource block whose nested context block carries an unset (untyped) field.
+	contextBlock := &llx.Primitive{
+		Type: string(types.Block),
+		Map: map[string]*llx.Primitive{
+			"path":  llx.StringPrimitive("main.tf"),
+			"range": {}, // untyped/null sub-field — the trigger
+		},
+	}
+	element := &llx.Primitive{
+		Type: string(types.Block),
+		Map: map[string]*llx.Primitive{
+			"name":    llx.StringPrimitive("resource"),
+			"context": contextBlock,
+		},
+	}
+	arr := llx.ArrayPrimitive([]*llx.Primitive{element, element, element}, types.Block)
+
+	rd := arr.RawData()
+	require.NoError(t, rd.Error)
+	got, ok := rd.Value.([]any)
+	require.True(t, ok, "expected the array to survive conversion")
+	assert.Len(t, got, 3, "the whole collection must be preserved, not emptied")
+}
+
+// TestMalformedElementKeepsCollection covers the converter-hardening half of
+// loud-and-narrow: during late value extraction, an element whose RawData()
+// genuinely errors (here an unregistered type) must not discard the surrounding
+// array or map. The bad element is nulled out (and logged); its siblings
+// survive. types.Any has no primitive converter, so it errors at conversion.
+func TestMalformedElementKeepsCollection(t *testing.T) {
+	bad := &llx.Primitive{Type: string(types.Any), Value: []byte{0x1}}
+	// sanity: the element really does error on its own
+	require.Error(t, bad.RawData().Error)
+
+	t.Run("array", func(t *testing.T) {
+		arr := llx.ArrayPrimitive([]*llx.Primitive{
+			llx.StringPrimitive("ok"), bad, llx.StringPrimitive("also-ok"),
+		}, types.String)
+
+		rd := arr.RawData()
+		require.NoError(t, rd.Error, "one bad element must not error the array")
+		got, ok := rd.Value.([]any)
+		require.True(t, ok)
+		require.Len(t, got, 3, "the whole collection must be preserved")
+		assert.Equal(t, "ok", got[0])
+		assert.Nil(t, got[1], "the malformed element is nulled out")
+		assert.Equal(t, "also-ok", got[2])
+	})
+
+	t.Run("map", func(t *testing.T) {
+		m := &llx.Primitive{
+			Type: string(types.MapLike),
+			Map: map[string]*llx.Primitive{
+				"good": llx.StringPrimitive("ok"),
+				"bad":  bad,
+			},
+		}
+
+		rd := m.RawData()
+		require.NoError(t, rd.Error, "one bad element must not error the map")
+		got, ok := rd.Value.(map[string]any)
+		require.True(t, ok)
+		require.Len(t, got, 2, "the whole map must be preserved")
+		assert.Equal(t, "ok", got["good"])
+		assert.Nil(t, got["bad"], "the malformed element is nulled out")
+	})
+}

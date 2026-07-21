@@ -421,6 +421,36 @@ func (o *mqlOciObjectStorageBucket) definedTags() (map[string]interface{}, error
 	return tags, nil
 }
 
+func (o *mqlOciObjectStorageBucket) createdBy() (string, error) {
+	bucketInfo, err := o.getBucketDetails()
+	if err != nil {
+		return "", err
+	}
+	if bucketInfo.CreatedBy == nil {
+		return "", nil
+	}
+	return *bucketInfo.CreatedBy, nil
+}
+
+func (o *mqlOciObjectStorageBucket) createdByUser() (*mqlOciIdentityUser, error) {
+	bucketInfo, err := o.getBucketDetails()
+	if err != nil {
+		return nil, err
+	}
+	createdBy := stringValue(bucketInfo.CreatedBy)
+	if !strings.HasPrefix(createdBy, "ocid1.user.") {
+		o.CreatedByUser.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(o.MqlRuntime, "oci.identity.user", map[string]*llx.RawData{
+		"id": llx.StringData(createdBy),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciIdentityUser), nil
+}
+
 func (o *mqlOciObjectStorageBucket) retentionRules() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 

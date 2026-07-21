@@ -138,6 +138,17 @@ func (a *mqlAwsWorkspacesDirectory) id() (string, error) {
 	return "aws.workspaces.directory/" + a.Region.Data + "/" + a.DirectoryId.Data, nil
 }
 
+const (
+	workspacesWorkspaceArnPattern = "arn:aws:workspaces:%s:%s:workspace/%s"
+	workspacesDirectoryArnPattern = "arn:aws:workspaces:%s:%s:directory/%s"
+	workspacesIpGroupArnPattern   = "arn:aws:workspaces:%s:%s:workspaceipgroup/%s"
+)
+
+func (a *mqlAwsWorkspacesDirectory) arn() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return fmt.Sprintf(workspacesDirectoryArnPattern, a.Region.Data, conn.AccountId(), a.DirectoryId.Data), nil
+}
+
 func (a *mqlAwsWorkspacesDirectory) tags() (map[string]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.Workspaces(a.Region.Data)
@@ -257,6 +268,11 @@ type mqlAwsWorkspacesWorkspaceInternal struct {
 
 func (a *mqlAwsWorkspacesWorkspace) id() (string, error) {
 	return "aws.workspaces.workspace/" + a.Region.Data + "/" + a.WorkspaceId.Data, nil
+}
+
+func (a *mqlAwsWorkspacesWorkspace) arn() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return fmt.Sprintf(workspacesWorkspaceArnPattern, a.Region.Data, conn.AccountId(), a.WorkspaceId.Data), nil
 }
 
 func (a *mqlAwsWorkspacesWorkspace) tags() (map[string]any, error) {
@@ -676,6 +692,11 @@ func newMqlAwsWorkspacesIpGroup(runtime *plugin.Runtime, region string, group wo
 
 func (a *mqlAwsWorkspacesIpGroup) id() (string, error) {
 	return "aws.workspaces.ipGroup/" + a.Region.Data + "/" + a.GroupId.Data, nil
+}
+
+func (a *mqlAwsWorkspacesIpGroup) arn() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return fmt.Sprintf(workspacesIpGroupArnPattern, a.Region.Data, conn.AccountId(), a.GroupId.Data), nil
 }
 
 func (a *mqlAwsWorkspacesDirectory) subnets() ([]any, error) {

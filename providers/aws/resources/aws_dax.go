@@ -83,6 +83,7 @@ func (a *mqlAwsDynamodb) getDaxClusters(conn *connection.AwsConnection) []*jobpo
 							"activeNodes":                   llx.IntDataDefault(cluster.ActiveNodes, 0),
 							"region":                        llx.StringData(region),
 							"sseStatus":                     llx.StringData(sseStatus),
+							"encrypted":                     llx.BoolData(sseStatus == "ENABLED"),
 							"clusterEndpointEncryptionType": llx.StringData(string(cluster.ClusterEndpointEncryptionType)),
 						})
 					if err != nil {

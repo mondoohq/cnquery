@@ -33,40 +33,45 @@ const (
 	DiscoveryProjects     = "projects"
 
 	// resources
-	DiscoverCloudDNSZones           = "cloud-dns-zones"
-	DiscoverCloudKMSKeyrings        = "cloud-kms-keyrings"
-	DiscoverMemorystoreRedis        = "memorystore-redis"
-	DiscoverMemorystoreRedisCluster = "memorystore-rediscluster"
-	DiscoverCloudSQLMySQL           = "cloud-sql-mysql"
-	DiscoverCloudSQLPostgreSQL      = "cloud-sql-postgresql"
-	DiscoverCloudSQLSQLServer       = "cloud-sql-sqlserver"
-	DiscoveryBigQueryDatasets       = "bigquery-datasets"
-	DiscoveryComputeFirewalls       = "compute-firewalls"
-	DiscoveryComputeImages          = "compute-images"
-	DiscoveryComputeNetworks        = "compute-networks"
-	DiscoveryComputeSubnetworks     = "compute-subnetworks"
-	DiscoveryGkeClusters            = "gke-clusters"
-	DiscoveryComputeInstances       = "instances"
-	DiscoveryStorageBuckets         = "storage-buckets"
-	DiscoverSecretManager           = "secretmanager-secrets"
-	DiscoverPubSubTopics            = "pubsub-topics"
-	DiscoverPubSubSubscriptions     = "pubsub-subscriptions"
-	DiscoverPubSubSnapshots         = "pubsub-snapshots"
-	DiscoverCloudRunServices        = "cloudrun-services"
-	DiscoverCloudRunJobs            = "cloudrun-jobs"
-	DiscoverCloudFunctions          = "cloud-functions"
-	DiscoverDataprocClusters        = "dataproc-clusters"
-	DiscoverLoggingBuckets          = "logging-buckets"
-	DiscoverApiKeys                 = "apikeys"
-	DiscoverIamServiceAccounts      = "iam-service-accounts"
-	DiscoverAlloyDBClusters         = "alloydb-clusters"
-	DiscoverSpannerInstances        = "spanner-instances"
-	DiscoverFirestoreDatabases      = "firestore-databases"
-	DiscoverBigtableInstances       = "bigtable-instances"
-	DiscoverMemorystoreInstances    = "memorystore-instances"
-	DiscoverArtifactRegistryRepos   = "artifactregistry-repositories"
-	DiscoverMemcacheInstances       = "memcache-instances"
-	DiscoverVertexAIJobs            = "vertexai-jobs"
+	DiscoverCloudDNSZones                    = "cloud-dns-zones"
+	DiscoverCloudKMSKeyrings                 = "cloud-kms-keyrings"
+	DiscoverMemorystoreRedis                 = "memorystore-redis"
+	DiscoverMemorystoreRedisCluster          = "memorystore-rediscluster"
+	DiscoverCloudSQLMySQL                    = "cloud-sql-mysql"
+	DiscoverCloudSQLPostgreSQL               = "cloud-sql-postgresql"
+	DiscoverCloudSQLSQLServer                = "cloud-sql-sqlserver"
+	DiscoveryBigQueryDatasets                = "bigquery-datasets"
+	DiscoveryComputeFirewalls                = "compute-firewalls"
+	DiscoveryComputeImages                   = "compute-images"
+	DiscoveryComputeNetworks                 = "compute-networks"
+	DiscoveryComputeSubnetworks              = "compute-subnetworks"
+	DiscoveryGkeClusters                     = "gke-clusters"
+	DiscoveryComputeInstances                = "instances"
+	DiscoveryStorageBuckets                  = "storage-buckets"
+	DiscoverSecretManager                    = "secretmanager-secrets"
+	DiscoverPubSubTopics                     = "pubsub-topics"
+	DiscoverPubSubSubscriptions              = "pubsub-subscriptions"
+	DiscoverPubSubSnapshots                  = "pubsub-snapshots"
+	DiscoverCloudRunServices                 = "cloudrun-services"
+	DiscoverCloudRunJobs                     = "cloudrun-jobs"
+	DiscoverCloudFunctions                   = "cloud-functions"
+	DiscoverDataprocClusters                 = "dataproc-clusters"
+	DiscoverLoggingBuckets                   = "logging-buckets"
+	DiscoverApiKeys                          = "apikeys"
+	DiscoverIamServiceAccounts               = "iam-service-accounts"
+	DiscoverAlloyDBClusters                  = "alloydb-clusters"
+	DiscoverSpannerInstances                 = "spanner-instances"
+	DiscoverFirestoreDatabases               = "firestore-databases"
+	DiscoverBigtableInstances                = "bigtable-instances"
+	DiscoverMemorystoreInstances             = "memorystore-instances"
+	DiscoverArtifactRegistryRepos            = "artifactregistry-repositories"
+	DiscoverMemcacheInstances                = "memcache-instances"
+	DiscoverVertexAIJobs                     = "vertexai-jobs"
+	DiscoverVertexAIEndpoints                = "vertexai-endpoints"
+	DiscoverVertexAIPipelineJobs             = "vertexai-pipelinejobs"
+	DiscoverVertexAINotebookRuntimeTemplates = "vertexai-notebookruntimetemplates"
+	DiscoverModelArmorTemplates              = "modelarmor-templates"
+	DiscoverDatastreamProfiles               = "datastream-connectionprofiles"
 )
 
 // All includes every discovery target: Auto covers all of them for GCP.
@@ -110,6 +115,11 @@ var Auto = []string{
 	DiscoverArtifactRegistryRepos,
 	DiscoverMemcacheInstances,
 	DiscoverVertexAIJobs,
+	DiscoverVertexAIEndpoints,
+	DiscoverVertexAIPipelineJobs,
+	DiscoverVertexAINotebookRuntimeTemplates,
+	DiscoverModelArmorTemplates,
+	DiscoverDatastreamProfiles,
 }
 
 var AllAPIResources = []string{
@@ -147,6 +157,11 @@ var AllAPIResources = []string{
 	DiscoverArtifactRegistryRepos,
 	DiscoverMemcacheInstances,
 	DiscoverVertexAIJobs,
+	DiscoverVertexAIEndpoints,
+	DiscoverVertexAIPipelineJobs,
+	DiscoverVertexAINotebookRuntimeTemplates,
+	DiscoverModelArmorTemplates,
+	DiscoverDatastreamProfiles,
 }
 
 // List of all CloudSQL types, this will be used during discovery
@@ -302,7 +317,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 					Family:                []string{"google"},
 					TechnologyUrlSegments: []string{"gcp", gcpProject.Id.Data, "project"},
 				},
-				Labels:      map[string]string{},
+				Labels:      mapStrInterfaceToMapStrStr(gcpProject.GetLabels().Data),
 				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
 			})
 		}
@@ -932,6 +947,123 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 			return nil, err
 		}
 	}
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoverVertexAIEndpoints) {
+		if err := runDiscoveryStep(DiscoverVertexAIEndpoints, func() error {
+			vertexaiService := gcpProject.GetVertexai()
+			if vertexaiService.Error != nil {
+				return vertexaiService.Error
+			}
+			endpoints := vertexaiService.Data.GetEndpoints()
+			if endpoints.Error != nil {
+				return endpoints.Error
+			}
+			for i := range endpoints.Data {
+				endpoint := endpoints.Data[i].(*mqlGcpProjectVertexaiServiceEndpoint)
+				// Endpoint name is the full resource path:
+				// projects/{project}/locations/{location}/endpoints/{endpoint}
+				endpointName := parseResourceName(endpoint.Name.Data)
+				location := parseLocationFromPath(endpoint.Name.Data)
+
+				assetList = append(assetList, &inventory.Asset{
+					PlatformIds: []string{
+						connection.NewResourcePlatformID("vertexai", gcpProject.Id.Data, location, "endpoint", endpointName),
+					},
+					Name: fmt.Sprintf("%s/%s", location, endpointName),
+					Platform: &inventory.Platform{
+						Name:                  "gcp-vertexai-endpoint",
+						Title:                 connection.GetTitleForPlatformName("gcp-vertexai-endpoint"),
+						Runtime:               "gcp",
+						Kind:                  "gcp-object",
+						Family:                []string{"google"},
+						TechnologyUrlSegments: connection.ResourceTechnologyUrl("vertexai", gcpProject.Id.Data, location, "endpoint", endpointName),
+					},
+					Labels:      mapStrInterfaceToMapStrStr(endpoint.GetLabels().Data),
+					Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
+				})
+			}
+			return nil
+		}); err != nil {
+			return nil, err
+		}
+	}
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoverVertexAIPipelineJobs) {
+		if err := runDiscoveryStep(DiscoverVertexAIPipelineJobs, func() error {
+			vertexaiService := gcpProject.GetVertexai()
+			if vertexaiService.Error != nil {
+				return vertexaiService.Error
+			}
+			pipelineJobs := vertexaiService.Data.GetPipelineJobs()
+			if pipelineJobs.Error != nil {
+				return pipelineJobs.Error
+			}
+			for i := range pipelineJobs.Data {
+				job := pipelineJobs.Data[i].(*mqlGcpProjectVertexaiServicePipelineJob)
+				// Pipeline job name is the full resource path:
+				// projects/{project}/locations/{location}/pipelineJobs/{job}
+				jobName := parseResourceName(job.Name.Data)
+				location := parseLocationFromPath(job.Name.Data)
+
+				assetList = append(assetList, &inventory.Asset{
+					PlatformIds: []string{
+						connection.NewResourcePlatformID("vertexai", gcpProject.Id.Data, location, "pipelinejob", jobName),
+					},
+					Name: fmt.Sprintf("%s/%s", location, jobName),
+					Platform: &inventory.Platform{
+						Name:                  "gcp-vertexai-pipelinejob",
+						Title:                 connection.GetTitleForPlatformName("gcp-vertexai-pipelinejob"),
+						Runtime:               "gcp",
+						Kind:                  "gcp-object",
+						Family:                []string{"google"},
+						TechnologyUrlSegments: connection.ResourceTechnologyUrl("vertexai", gcpProject.Id.Data, location, "pipelinejob", jobName),
+					},
+					Labels:      mapStrInterfaceToMapStrStr(job.GetLabels().Data),
+					Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
+				})
+			}
+			return nil
+		}); err != nil {
+			return nil, err
+		}
+	}
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoverVertexAINotebookRuntimeTemplates) {
+		if err := runDiscoveryStep(DiscoverVertexAINotebookRuntimeTemplates, func() error {
+			vertexaiService := gcpProject.GetVertexai()
+			if vertexaiService.Error != nil {
+				return vertexaiService.Error
+			}
+			templates := vertexaiService.Data.GetNotebookRuntimeTemplates()
+			if templates.Error != nil {
+				return templates.Error
+			}
+			for i := range templates.Data {
+				tmpl := templates.Data[i].(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate)
+				// Template name is the full resource path:
+				// projects/{project}/locations/{location}/notebookRuntimeTemplates/{tmpl}
+				tmplName := parseResourceName(tmpl.Name.Data)
+				location := parseLocationFromPath(tmpl.Name.Data)
+
+				assetList = append(assetList, &inventory.Asset{
+					PlatformIds: []string{
+						connection.NewResourcePlatformID("vertexai", gcpProject.Id.Data, location, "notebookruntimetemplate", tmplName),
+					},
+					Name: fmt.Sprintf("%s/%s", location, tmplName),
+					Platform: &inventory.Platform{
+						Name:                  "gcp-vertexai-notebookruntimetemplate",
+						Title:                 connection.GetTitleForPlatformName("gcp-vertexai-notebookruntimetemplate"),
+						Runtime:               "gcp",
+						Kind:                  "gcp-object",
+						Family:                []string{"google"},
+						TechnologyUrlSegments: connection.ResourceTechnologyUrl("vertexai", gcpProject.Id.Data, location, "notebookruntimetemplate", tmplName),
+					},
+					Labels:      mapStrInterfaceToMapStrStr(tmpl.GetLabels().Data),
+					Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
+				})
+			}
+			return nil
+		}); err != nil {
+			return nil, err
+		}
+	}
 	if stringx.ContainsAnyOf(discoveryTargets, DiscoveryComputeNetworks) {
 		if err := runDiscoveryStep(DiscoveryComputeNetworks, func() error {
 			compute := gcpProject.GetCompute()
@@ -1166,6 +1298,80 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 						TechnologyUrlSegments: connection.ResourceTechnologyUrl("secretmanager", gcpProject.Id.Data, "global", "secret", secret.Name.Data),
 					},
 					Labels:      mapStrInterfaceToMapStrStr(secret.GetLabels().Data),
+					Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
+				})
+			}
+			return nil
+		}); err != nil {
+			return nil, err
+		}
+	}
+
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoverModelArmorTemplates) {
+		if err := runDiscoveryStep(DiscoverModelArmorTemplates, func() error {
+			modelArmorService := gcpProject.GetModelArmor()
+			if modelArmorService.Error != nil {
+				return modelArmorService.Error
+			}
+			templates := modelArmorService.Data.GetTemplates()
+			if templates.Error != nil {
+				return templates.Error
+			}
+			for i := range templates.Data {
+				template := templates.Data[i].(*mqlGcpProjectModelArmorServiceTemplate)
+				location := parseLocationFromPath(template.Name.Data)
+				shortName := parseResourceName(template.Name.Data)
+				assetList = append(assetList, &inventory.Asset{
+					PlatformIds: []string{
+						connection.NewResourcePlatformID("modelarmor", gcpProject.Id.Data, location, "template", shortName),
+					},
+					Name: shortName,
+					Platform: &inventory.Platform{
+						Name:                  "gcp-modelarmor-template",
+						Title:                 connection.GetTitleForPlatformName("gcp-modelarmor-template"),
+						Runtime:               "gcp",
+						Kind:                  "gcp-object",
+						Family:                []string{"google"},
+						TechnologyUrlSegments: connection.ResourceTechnologyUrl("modelarmor", gcpProject.Id.Data, location, "template", shortName),
+					},
+					Labels:      mapStrInterfaceToMapStrStr(template.GetLabels().Data),
+					Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
+				})
+			}
+			return nil
+		}); err != nil {
+			return nil, err
+		}
+	}
+
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoverDatastreamProfiles) {
+		if err := runDiscoveryStep(DiscoverDatastreamProfiles, func() error {
+			datastreamService := gcpProject.GetDatastream()
+			if datastreamService.Error != nil {
+				return datastreamService.Error
+			}
+			profiles := datastreamService.Data.GetConnectionProfiles()
+			if profiles.Error != nil {
+				return profiles.Error
+			}
+			for i := range profiles.Data {
+				profile := profiles.Data[i].(*mqlGcpProjectDatastreamServiceConnectionProfile)
+				location := parseLocationFromPath(profile.Name.Data)
+				shortName := parseResourceName(profile.Name.Data)
+				assetList = append(assetList, &inventory.Asset{
+					PlatformIds: []string{
+						connection.NewResourcePlatformID("datastream", gcpProject.Id.Data, location, "connectionprofile", shortName),
+					},
+					Name: shortName,
+					Platform: &inventory.Platform{
+						Name:                  "gcp-datastream-connectionprofile",
+						Title:                 connection.GetTitleForPlatformName("gcp-datastream-connectionprofile"),
+						Runtime:               "gcp",
+						Kind:                  "gcp-object",
+						Family:                []string{"google"},
+						TechnologyUrlSegments: connection.ResourceTechnologyUrl("datastream", gcpProject.Id.Data, location, "connectionprofile", shortName),
+					},
+					Labels:      mapStrInterfaceToMapStrStr(profile.GetLabels().Data),
 					Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
 				})
 			}
@@ -1682,11 +1888,38 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 		}
 	}
 
+	if conn.Filters.PropagateProjectLabels {
+		projectLabels := mapStrInterfaceToMapStrStr(gcpProject.GetLabels().Data)
+		propagateProjectLabelsToAssets(assetList, projectLabels)
+	}
+
 	log.Debug().
 		Str("project", gcpProject.Id.Data).
 		Int("assets", len(assetList)).
 		Msg("gcp.discovery> project discovery complete")
 	return assetList, nil
+}
+
+// propagateProjectLabelsToAssets merges the project's labels into every asset
+// discovered under that project. An asset's own labels take precedence, so
+// project labels only fill in keys the asset doesn't already define.
+func propagateProjectLabelsToAssets(assets []*inventory.Asset, projectLabels map[string]string) {
+	if len(projectLabels) == 0 {
+		return
+	}
+	for _, a := range assets {
+		if a == nil {
+			continue
+		}
+		if a.Labels == nil {
+			a.Labels = map[string]string{}
+		}
+		for k, v := range projectLabels {
+			if _, exists := a.Labels[k]; !exists {
+				a.Labels[k] = v
+			}
+		}
+	}
 }
 
 func resolveGcr(ctx context.Context, conf *inventory.Config) ([]*inventory.Asset, error) {

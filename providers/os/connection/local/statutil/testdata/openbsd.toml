@@ -4,5 +4,5 @@ stdout = "amd64"
 [commands."uname -s"]
 stdout = "OpenBSD"
 
-[commands."stat -L -f '%z:%p:%u:%g:%a:%m' /etc/ssh/sshd_config"]
-stdout = "2259:100644:0:0:1592996018:1591446696"
+[commands."sh -c 'SL=0; test -L \"$1\" && SL=1; test -e \"$1\" -o $SL -eq 1 || exit 1; stat -L -f \"$SL:%z:%p:%u:%g:%a:%m\" \"$1\" 2>/dev/null || stat -f \"$SL:%z:%p:%u:%g:%a:%m\" \"$1\"' _ /etc/ssh/sshd_config"]
+stdout = "0:2259:100644:0:0:1592996018:1591446696"

@@ -4,12 +4,17 @@
 package shadow
 
 import (
-	"encoding/csv"
+	"bufio"
+	"fmt"
 	"io"
 	"strconv"
 	"strings"
 	"time"
 )
+
+// shadowFieldCount is the number of colon-separated fields in an /etc/shadow
+// entry: name:password:lastchange:min:max:warn:inactive:expire:reserved.
+const shadowFieldCount = 9
 
 type ShadowEntry struct {
 	User         string
@@ -26,16 +31,24 @@ type ShadowEntry struct {
 func ParseShadow(r io.Reader) ([]ShadowEntry, error) {
 	res := []ShadowEntry{}
 
-	csvReader := csv.NewReader(r)
-	csvReader.Comma = ':'
-	for {
-		record, err := csvReader.Read()
-		if err == io.EOF {
-			break
+	// /etc/shadow is a simple line-oriented, colon-separated file. We split on
+	// ':' directly rather than using encoding/csv: csv treats `"` as a quote
+	// character (corrupting password hashes that contain one) and locks the
+	// field count to the first record (erroring the whole file on any skew).
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" {
+			continue
 		}
-		if err != nil {
-			return nil, err
+
+		// At most shadowFieldCount fields so an unexpected ':' in the final
+		// reserved field stays attached to it rather than overflowing.
+		record := strings.SplitN(line, ":", shadowFieldCount)
+		if len(record) < shadowFieldCount {
+			return nil, fmt.Errorf("invalid shadow entry, expected %d fields but got %d", shadowFieldCount, len(record))
 		}
+
 		// the /etc/shadow file gives the count of days since jan 1, 1970
 		start := time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
 		var lastChangedTime *time.Time
@@ -61,6 +74,9 @@ func ParseShadow(r io.Reader) ([]ShadowEntry, error) {
 			ExpiryDates:  strings.TrimSpace(record[7]),
 			Reserved:     strings.TrimSpace(record[8]),
 		})
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
 	}
 
 	return res, nil

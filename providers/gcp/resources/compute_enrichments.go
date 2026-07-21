@@ -125,17 +125,17 @@ func (g *mqlGcpProjectComputeService) urlMaps() ([]any, error) {
 				tests, _ := convert.JsonToDictSlice(um.Tests)
 
 				mqlUM, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.urlMap", map[string]*llx.RawData{
-					"id":             llx.StringData(strconv.FormatUint(um.Id, 10)),
-					"projectId":      llx.StringData(projectId),
-					"name":           llx.StringData(um.Name),
-					"description":    llx.StringData(um.Description),
-					"defaultService": llx.StringData(um.DefaultService),
-					"hostRules":      llx.ArrayData(hostRules, types.Dict),
-					"pathMatchers":   llx.ArrayData(pathMatchers, types.Dict),
-					"tests":          llx.ArrayData(tests, types.Dict),
-					"created":        llx.TimeDataPtr(parseTime(um.CreationTimestamp)),
-					"selfLink":       llx.StringData(um.SelfLink),
-					"regionUrl":      llx.StringData(um.Region),
+					"id":                llx.StringData(strconv.FormatUint(um.Id, 10)),
+					"projectId":         llx.StringData(projectId),
+					"name":              llx.StringData(um.Name),
+					"description":       llx.StringData(um.Description),
+					"defaultServiceUrl": llx.StringData(um.DefaultService),
+					"hostRules":         llx.ArrayData(hostRules, types.Dict),
+					"pathMatchers":      llx.ArrayData(pathMatchers, types.Dict),
+					"tests":             llx.ArrayData(tests, types.Dict),
+					"created":           llx.TimeDataPtr(parseTime(um.CreationTimestamp)),
+					"selfLink":          llx.StringData(um.SelfLink),
+					"regionUrl":         llx.StringData(um.Region),
 				})
 				if err != nil {
 					return err
@@ -316,7 +316,14 @@ func (g *mqlGcpProjectComputeServiceTargetHttpsProxy) sslPolicy() (*mqlGcpProjec
 		g.SslPolicy.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	return getSslPolicyByUrl(url, g.MqlRuntime)
+	policy, err := getSslPolicyByUrl(url, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if policy == nil {
+		g.SslPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return policy, nil
 }
 
 func (g *mqlGcpProjectComputeServiceTargetHttpsProxy) sslCertificates() ([]any, error) {

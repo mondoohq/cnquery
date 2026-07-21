@@ -57,6 +57,11 @@ func TestAllResolvedResources(t *testing.T) {
 		DiscoverArtifactRegistryRepos,
 		DiscoverMemcacheInstances,
 		DiscoverVertexAIJobs,
+		DiscoverVertexAIEndpoints,
+		DiscoverVertexAIPipelineJobs,
+		DiscoverVertexAINotebookRuntimeTemplates,
+		DiscoverModelArmorTemplates,
+		DiscoverDatastreamProfiles,
 	}
 	require.ElementsMatch(t, expected, All)
 }
@@ -100,6 +105,11 @@ func TestAutoResolvedResources(t *testing.T) {
 		DiscoverArtifactRegistryRepos,
 		DiscoverMemcacheInstances,
 		DiscoverVertexAIJobs,
+		DiscoverVertexAIEndpoints,
+		DiscoverVertexAIPipelineJobs,
+		DiscoverVertexAINotebookRuntimeTemplates,
+		DiscoverModelArmorTemplates,
+		DiscoverDatastreamProfiles,
 	}
 	require.ElementsMatch(t, expected, Auto)
 }
@@ -291,4 +301,28 @@ func TestGCPAPIServiceRe(t *testing.T) {
 			require.Equal(t, tc.want, m[1])
 		})
 	}
+}
+
+func TestPropagateProjectLabelsToAssets(t *testing.T) {
+	t.Run("fills missing keys and preserves asset labels on collision", func(t *testing.T) {
+		assets := []*inventoryv1.Asset{
+			{Labels: map[string]string{"env": "prod"}}, // "env" must win over project label
+			{Labels: map[string]string{}},              // empty map gets all project labels
+			nil,                                        // nil asset is skipped safely
+			{Labels: nil},                              // nil map gets initialized + filled
+		}
+		projectLabels := map[string]string{"env": "shared", "team": "platform"}
+
+		propagateProjectLabelsToAssets(assets, projectLabels)
+
+		require.Equal(t, map[string]string{"env": "prod", "team": "platform"}, assets[0].Labels)
+		require.Equal(t, map[string]string{"env": "shared", "team": "platform"}, assets[1].Labels)
+		require.Equal(t, map[string]string{"env": "shared", "team": "platform"}, assets[3].Labels)
+	})
+
+	t.Run("no project labels leaves assets untouched", func(t *testing.T) {
+		assets := []*inventoryv1.Asset{{Labels: map[string]string{"env": "prod"}}}
+		propagateProjectLabelsToAssets(assets, map[string]string{})
+		require.Equal(t, map[string]string{"env": "prod"}, assets[0].Labels)
+	})
 }

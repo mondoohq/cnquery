@@ -577,23 +577,32 @@ func (g *mqlGcpProjectPubsubServiceSubscription) config() (*mqlGcpProjectPubsubS
 	}
 
 	var bigqueryConfigDict, cloudStorageConfigDict, bigtableConfigDict map[string]any
+	var bigqueryTable, cloudStorageBucket, bigtableServiceAccount string
 	if bq := cfg.GetBigqueryConfig(); bq != nil {
 		bigqueryConfigDict, err = protoToDict(bq)
 		if err != nil {
 			return nil, err
 		}
+		bigqueryTable = bq.GetTable()
 	}
 	if cs := cfg.GetCloudStorageConfig(); cs != nil {
 		cloudStorageConfigDict, err = protoToDict(cs)
 		if err != nil {
 			return nil, err
 		}
+		cloudStorageBucket = cs.GetBucket()
 	}
 	if bt := cfg.GetBigtableConfig(); bt != nil {
 		bigtableConfigDict, err = protoToDict(bt)
 		if err != nil {
 			return nil, err
 		}
+		bigtableServiceAccount = bt.GetServiceAccountEmail()
+	}
+
+	deadLetterTopic := ""
+	if cfg.DeadLetterPolicy != nil {
+		deadLetterTopic = cfg.DeadLetterPolicy.DeadLetterTopic
 	}
 
 	res, err := CreateResource(g.MqlRuntime, "gcp.project.pubsubService.subscription.config", map[string]*llx.RawData{
@@ -621,7 +630,13 @@ func (g *mqlGcpProjectPubsubServiceSubscription) config() (*mqlGcpProjectPubsubS
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGcpProjectPubsubServiceSubscriptionConfig), nil
+	cfgRes := res.(*mqlGcpProjectPubsubServiceSubscriptionConfig)
+	cfgRes.cacheDeadLetterTopic = deadLetterTopic
+	cfgRes.cacheOidcServiceAccount = oidcServiceAccountEmail
+	cfgRes.cacheBigqueryTable = bigqueryTable
+	cfgRes.cacheCloudStorageBucket = cloudStorageBucket
+	cfgRes.cacheBigtableServiceAccount = bigtableServiceAccount
+	return cfgRes, nil
 }
 
 func (g *mqlGcpProjectPubsubService) snapshots() ([]any, error) {
@@ -1070,6 +1085,108 @@ func (g *mqlGcpProjectPubsubServiceSubscription) public() (bool, error) {
 		return false, bindings.Error
 	}
 	return iamPolicyHasPublicMember(bindings.Data)
+}
+
+func (g *mqlGcpProjectPubsubServiceTopicConfig) managedBy() (string, error) {
+	return managedByFromLabels(&g.Labels)
+}
+
+type mqlGcpProjectPubsubServiceSubscriptionConfigInternal struct {
+	cacheDeadLetterTopic        string
+	cacheOidcServiceAccount     string
+	cacheBigqueryTable          string
+	cacheCloudStorageBucket     string
+	cacheBigtableServiceAccount string
+}
+
+func (g *mqlGcpProjectPubsubServiceSubscriptionConfig) managedBy() (string, error) {
+	return managedByFromLabels(&g.Labels)
+}
+
+func (g *mqlGcpProjectPubsubServiceSubscriptionConfig) deadLetterTopic() (*mqlGcpProjectPubsubServiceTopic, error) {
+	if g.cacheDeadLetterTopic == "" {
+		g.DeadLetterTopic.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	projectId := projectFromResourceName(g.cacheDeadLetterTopic)
+	if projectId == "" && g.ProjectId.Error == nil {
+		projectId = g.ProjectId.Data
+	}
+	res, err := CreateResource(g.MqlRuntime, "gcp.project.pubsubService.topic", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+		"name":      llx.StringData(lastPathSegment(g.cacheDeadLetterTopic)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectPubsubServiceTopic), nil
+}
+
+func (g *mqlGcpProjectPubsubServiceSubscriptionConfig) oidcTokenServiceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	projectId := ""
+	if g.ProjectId.Error == nil {
+		projectId = g.ProjectId.Data
+	}
+	sa, err := resolveServiceAccountRef(g.MqlRuntime, g.cacheOidcServiceAccount, projectId)
+	if err != nil {
+		return nil, err
+	}
+	if sa == nil {
+		g.OidcTokenServiceAccount.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return sa, nil
+}
+
+func (g *mqlGcpProjectPubsubServiceSubscriptionConfig) bigtableServiceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	projectId := ""
+	if g.ProjectId.Error == nil {
+		projectId = g.ProjectId.Data
+	}
+	sa, err := resolveServiceAccountRef(g.MqlRuntime, g.cacheBigtableServiceAccount, projectId)
+	if err != nil {
+		return nil, err
+	}
+	if sa == nil {
+		g.BigtableServiceAccount.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return sa, nil
+}
+
+func (g *mqlGcpProjectPubsubServiceSubscriptionConfig) bigqueryTable() (*mqlGcpProjectBigqueryServiceTable, error) {
+	// Pub/Sub carries the destination as "{projectId}.{datasetId}.{tableId}".
+	parts := strings.SplitN(g.cacheBigqueryTable, ".", 3)
+	if g.cacheBigqueryTable == "" || len(parts) != 3 {
+		g.BigqueryTable.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.bigqueryService.table", map[string]*llx.RawData{
+		"id":        llx.StringData(parts[2]),
+		"projectId": llx.StringData(parts[0]),
+		"datasetId": llx.StringData(parts[1]),
+		"name":      llx.StringData(parts[2]),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectBigqueryServiceTable), nil
+}
+
+func (g *mqlGcpProjectPubsubServiceSubscriptionConfig) cloudStorageBucket() (*mqlGcpProjectStorageServiceBucket, error) {
+	if g.cacheCloudStorageBucket == "" {
+		g.CloudStorageBucket.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.storageService.bucket", map[string]*llx.RawData{
+		"name": llx.StringData(g.cacheCloudStorageBucket),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectStorageServiceBucket), nil
+}
+
+func (g *mqlGcpProjectPubsubServiceSnapshot) managedBy() (string, error) {
+	return managedByFromLabels(&g.Labels)
 }
 
 func (g *mqlGcpProjectPubsubServiceTopicConfig) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {

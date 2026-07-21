@@ -23,18 +23,7 @@ func (a *mqlAwsSes) id() (string, error) {
 }
 
 func sesTagsToMap(tags []sesv2_types.Tag) map[string]any {
-	res := map[string]any{}
-	for _, t := range tags {
-		if t.Key == nil {
-			continue
-		}
-		val := ""
-		if t.Value != nil {
-			val = *t.Value
-		}
-		res[*t.Key] = val
-	}
-	return res
+	return tagsToMap(tags, func(t sesv2_types.Tag) *string { return t.Key }, func(t sesv2_types.Tag) *string { return t.Value })
 }
 
 // ---- aws.ses.identity ----
@@ -349,8 +338,11 @@ func initAwsSesIdentity(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	if args["arn"] == nil {
 		return nil, nil, errors.New("arn required to fetch aws ses identity that is not in the identities list")
 	}
-	args["__id"] = args["arn"]
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	arnStr, _ := args["arn"].Value.(string)
+	return nil, nil, fmt.Errorf("aws.ses.identity with arn %q not found", arnStr)
 }
 
 // ---- aws.ses.configurationSet ----
@@ -637,6 +629,9 @@ func initAwsSesConfigurationSet(runtime *plugin.Runtime, args map[string]*llx.Ra
 	if args["arn"] == nil {
 		return nil, nil, errors.New("arn required to fetch aws ses configuration set that is not in the configuration sets list")
 	}
-	args["__id"] = args["arn"]
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	arnStr, _ := args["arn"].Value.(string)
+	return nil, nil, fmt.Errorf("aws.ses.configurationSet with arn %q not found", arnStr)
 }

@@ -20,7 +20,9 @@ import (
 func (r *mqlOpenstackSecurityGroupRule) includesPublicSource() (bool, error) {
 	prefix := r.RemoteIpPrefix.Data
 	if prefix == "" {
-		return r.cacheRemoteGroupID == "", nil
+		// A rule with no IP prefix is "any source" only when it is also not
+		// scoped to a remote security group or remote address group.
+		return r.cacheRemoteGroupID == "" && r.cacheRemoteAddressGroupID == "", nil
 	}
 	return cidrIsPublic(prefix), nil
 }

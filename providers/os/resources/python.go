@@ -36,6 +36,9 @@ var defaultPythonPaths = []string{
 	"/usr/lib64/python*",
 	// Windows
 	"C:\\Python*\\Lib",
+	"C:\\Program Files\\Python*\\Lib",
+	// per-user installs across all profiles
+	"C:\\Users\\*\\AppData\\Local\\Programs\\Python\\Python*\\Lib",
 	// macOS
 	"/opt/homebrew/lib/python*",
 	"/System/Library/Frameworks/Python.framework/Versions/*/lib/python*",
@@ -146,7 +149,7 @@ func pythonPackageDetailsWithDependenciesToResource(
 	newPyPkgDetails python.PackageDetails,
 	pythonPackageResourceMap map[string]plugin.Resource,
 ) (any, error) {
-	res := pythonPackageResourceMap[newPyPkgDetails.Name]
+	res := pythonPackageResourceMap[newPyPkgDetails.File]
 	if res != nil {
 		// already created the pythonPackage resource
 		return res, nil

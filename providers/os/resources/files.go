@@ -142,7 +142,11 @@ func (l *mqlFilesFind) unixFilesFindCmd() ([]string, error) {
 		depth = &l.Depth.Data
 	}
 
-	callCmd := filesfind.BuildFilesFindCmd(l.From.Data, l.Xdev.Data, l.Type.Data, l.Regex.Data, l.Permissions.Data, l.Name.Data, depth)
+	conn := l.MqlRuntime.Connection.(shared.Connection)
+	pf := conn.Asset().Platform
+	hasGNUFind := pf != nil && pf.IsFamily("linux")
+
+	callCmd := filesfind.BuildFilesFindCmd(l.From.Data, l.Xdev.Data, l.Type.Data, l.Regex.Data, l.Permissions.Data, l.Name.Data, depth, hasGNUFind)
 	rawCmd, err := CreateResource(l.MqlRuntime, "command", map[string]*llx.RawData{
 		"command": llx.StringData(callCmd),
 	})

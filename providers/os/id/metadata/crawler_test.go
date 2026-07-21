@@ -54,6 +54,22 @@ func TestCrawl_Mock(t *testing.T) {
 	assert.Equal(t, "line1\nline2\nline3", result)
 }
 
+// TestCrawl_ValueList verifies that a newline-separated *value list* (e.g. an
+// interface's "security-group-ids" with more than one group) is returned as a
+// []string instead of an empty map. IMDS returns the values directly, so the
+// per-value sub-path lookups 404; the crawler must not treat that as an empty
+// directory (which previously dropped the data and broke MacDetails parsing).
+func TestCrawl_ValueList(t *testing.T) {
+	m := new(mockRecursive)
+	m.On("GetMetadataValue", "sgs").Return("sg-aaaaaaaa\nsg-bbbbbbbb", nil)
+	m.On("GetMetadataValue", "sgssg-aaaaaaaa").Return("", errors.New("404"))
+	m.On("GetMetadataValue", "sgssg-bbbbbbbb").Return("", errors.New("404"))
+
+	result, err := subject.Crawl(m, "sgs")
+	assert.NoError(t, err)
+	assert.Equal(t, []string{"sg-aaaaaaaa", "sg-bbbbbbbb"}, result)
+}
+
 // Mock is an alternative way to implementation of the recursive interface via map
 type mockRecursiveMap struct {
 	data map[string]string

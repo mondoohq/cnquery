@@ -12,23 +12,28 @@ import (
 func TestNewGithubOrgPlatform(t *testing.T) {
 	pf := NewGithubOrgPlatform("mondoohq")
 	assert.NotNil(t, pf)
+	assert.Equal(t, "github-org", pf.Name)
+	assert.Equal(t, "GitHub Organization", pf.Title)
+	assert.Equal(t, "api", pf.Kind)
+	assert.Equal(t, "github", pf.Runtime)
+	assert.Equal(t, []string{"github"}, pf.Family)
 	assert.Equal(t, []string{"saas", "github", "organization", "mondoohq", "organization"}, pf.TechnologyUrlSegments)
-	// the helper must not mutate the package-level template
-	assert.Nil(t, GithubOrgPlatform.TechnologyUrlSegments)
 }
 
 func TestNewGithubUserPlatform(t *testing.T) {
 	pf := NewGithubUserPlatform("octocat")
 	assert.NotNil(t, pf)
+	assert.Equal(t, "github-user", pf.Name)
+	assert.Equal(t, "api", pf.Kind)
 	assert.Equal(t, []string{"saas", "github", "user"}, pf.TechnologyUrlSegments)
-	assert.Nil(t, GithubUserPlatform.TechnologyUrlSegments)
 }
 
 func TestNewGitHubRepoPlatform(t *testing.T) {
 	pf := NewGitHubRepoPlatform("mondoohq", "cnquery")
 	assert.NotNil(t, pf)
+	assert.Equal(t, "github-repo", pf.Name)
+	assert.Equal(t, "api", pf.Kind)
 	assert.Equal(t, []string{"saas", "github", "organization", "mondoohq", "repository"}, pf.TechnologyUrlSegments)
-	assert.Nil(t, GithubRepoPlatform.TechnologyUrlSegments)
 }
 
 func TestNewGithubOrgIdentifier(t *testing.T) {

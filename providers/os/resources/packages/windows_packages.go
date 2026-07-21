@@ -26,8 +26,6 @@ import (
 	"go.mondoo.com/mql/v13/providers/os/resources/cpe"
 	"go.mondoo.com/mql/v13/providers/os/resources/powershell"
 	"go.mondoo.com/mql/v13/providers/os/resources/purl"
-	"go.mondoo.com/ranger-rpc/codes"
-	"go.mondoo.com/ranger-rpc/status"
 )
 
 // ProcessorArchitecture Enum
@@ -114,6 +112,33 @@ const dotNetClrVersionScript = `
 ((Get-Item "%sclr.dll").VersionInfo).ProductVersion
 `
 
+// dotNetClr2VersionScript resolves the servicing build of the CLR 2.0 runtime
+// that backs .NET Framework 3.5. CLR 2.0 has no clr.dll; its assemblies live
+// under %WINDIR%\Microsoft.NET\Framework[64]\v2.0.50727. Some files there stay
+// pinned to older builds for side-by-side compatibility, so we take the highest
+// 2.0.50727.<build> across every assembly in that directory to reflect the
+// actual patch level.
+const dotNetClr2VersionScript = `
+$paths = @(
+  "$env:WINDIR\Microsoft.NET\Framework64\v2.0.50727",
+  "$env:WINDIR\Microsoft.NET\Framework\v2.0.50727"
+)
+$best = ''
+$bestBuild = -1
+foreach ($p in $paths) {
+  if (Test-Path $p) {
+    Get-ChildItem -Path $p -Filter *.dll -ErrorAction SilentlyContinue | ForEach-Object {
+      $pv = $_.VersionInfo.ProductVersion
+      if ($pv -match '^2\.0\.50727\.(\d+)') {
+        $b = [int]$Matches[1]
+        if ($b -gt $bestBuild) { $bestBuild = $b; $best = ($pv -split '\s+')[0] }
+      }
+    }
+  }
+}
+$best
+`
+
 var (
 	WINDOWS_QUERY_HOTFIXES      = `Get-HotFix | Select-Object -Property Status, Description, HotFixId, Caption, InstalledOn, InstalledBy | ConvertTo-Json`
 	WINDOWS_QUERY_APPX_PACKAGES = `Get-AppxPackage -AllUsers | Select Name, PackageFullName, Architecture, Version, Publisher, InstallLocation | ConvertTo-Json`
@@ -164,12 +189,12 @@ func ParseWindowsAppxPackages(platform *inventory.Platform, input io.Reader) ([]
 		return nil, err
 	}
 
-	pkgs := make([]Package, len(appxPackages))
-	for i, p := range appxPackages {
+	pkgs := make([]Package, 0, len(appxPackages))
+	for _, p := range appxPackages {
 		if p.Name == "" {
 			continue
 		}
-		pkgs[i] = p.toPackage(platform)
+		pkgs = append(pkgs, p.toPackage(platform))
 	}
 	return pkgs, nil
 }
@@ -277,70 +302,162 @@ func (w *WinPkgManager) getLocalInstalledApps() ([]Package, error) {
 	return packages, nil
 }
 
-// getDotNetFramework returns the .NET Framework package
+// getDotNetFramework returns the installed .NET Framework runtime packages.
+//
+// .NET Framework 3.5 (CLR 2.0) and 4.x (CLR 4.0) install side-by-side, so we
+// probe both registry keys independently and emit a package for each runtime
+// that is present, rather than letting the highest version hide the other.
+//
+// Registry and version probes run over the active connection via PowerShell, so
+// this works for remote connections (e.g. SSH) as well as a local Windows host.
+//
+// This is called from exactly one enumeration path per connection type
+// (getLocalInstalledApps for a local Windows host, getInstalledApps for remote
+// connections), so the returned packages are not duplicated.
 func (w *WinPkgManager) getDotNetFramework() ([]Package, error) {
-	// https://learn.microsoft.com/en-us/dotnet/framework/install/how-to-determine-which-versions-are-installed#net-framework-45-and-later-versions
-	dotNet45plus := "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full"
-	// https://learn.microsoft.com/en-us/dotnet/framework/install/how-to-determine-which-versions-are-installed#use-registry-editor-older-framework-versions
-	dotNet35 := "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v3.5"
+	packages := []Package{}
 
-	items, err := registry.GetNativeRegistryKeyItems(dotNet45plus)
-	if err != nil && status.Code(err) != codes.NotFound {
-		return nil, err
+	if pkg, err := w.getDotNetFramework4x(); err != nil {
+		log.Debug().Err(err).Msg("could not get .NET Framework 4.x runtime")
+	} else if pkg != nil {
+		packages = append(packages, *pkg)
 	}
 
-	if len(items) == 0 {
-		items, err = registry.GetNativeRegistryKeyItems(dotNet35)
-		if err != nil && status.Code(err) != codes.NotFound {
-			return nil, err
-		}
+	if pkg, err := w.getDotNetFramework35(); err != nil {
+		log.Debug().Err(err).Msg("could not get .NET Framework 3.5 runtime")
+	} else if pkg != nil {
+		packages = append(packages, *pkg)
 	}
 
-	if len(items) == 0 {
+	if len(packages) == 0 {
 		return nil, nil
+	}
+	return packages, nil
+}
+
+// getDotNetFramework4x reports the installed .NET Framework 4.x runtime, sourcing
+// its build from clr.dll (the CLR 4.x runtime) under the registered install path.
+func (w *WinPkgManager) getDotNetFramework4x() (*Package, error) {
+	// https://learn.microsoft.com/en-us/dotnet/framework/install/how-to-determine-which-versions-are-installed#net-framework-45-and-later-versions
+	const dotNet45plus = "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full"
+
+	items, err := w.readRegistryItems(dotNet45plus)
+	if err != nil {
+		return nil, fmt.Errorf("could not read registry key %q: %w", dotNet45plus, err)
 	}
 
 	installLocation := ""
 	for _, i := range items {
-		switch i.Key {
-		case "InstallPath":
+		if i.Key == "InstallPath" {
 			installLocation = i.Value.String
 		}
 	}
-
 	if installLocation == "" {
 		return nil, nil
 	}
 
 	dotNetRuntimeScript := fmt.Sprintf(dotNetClrVersionScript, installLocation)
-	cmd, err := w.conn.RunCommand(powershell.Encode(dotNetRuntimeScript))
+	version, err := w.runPwshVersion(dotNetRuntimeScript)
 	if err != nil {
-		return nil, fmt.Errorf("could not read app package list")
+		return nil, err
+	}
+	if version == "" {
+		return nil, nil
+	}
+
+	return createPackage("Microsoft .NET Framework", version, "windows/app", w.platform.Arch, "Microsoft", installLocation, w.platform), nil
+}
+
+// getDotNetFramework35 reports the installed .NET Framework 3.5 runtime. It is
+// detected independently of 4.x (they run side-by-side) via the NDP\v3.5 key,
+// and its build is sourced from the CLR 2.0 assemblies rather than clr.dll,
+// which does not exist for CLR 2.0.
+func (w *WinPkgManager) getDotNetFramework35() (*Package, error) {
+	// https://learn.microsoft.com/en-us/dotnet/framework/install/how-to-determine-which-versions-are-installed#use-registry-editor-older-framework-versions
+	const dotNet35 = "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v3.5"
+
+	items, err := w.readRegistryItems(dotNet35)
+	if err != nil {
+		return nil, fmt.Errorf("could not read registry key %q: %w", dotNet35, err)
+	}
+
+	installed := false
+	installLocation := ""
+	for _, i := range items {
+		switch i.Key {
+		case "Install":
+			installed = i.Value.Number == 1
+		case "InstallPath":
+			installLocation = i.Value.String
+		}
+	}
+	if !installed {
+		return nil, nil
+	}
+
+	version, err := w.runPwshVersion(dotNetClr2VersionScript)
+	if err != nil {
+		return nil, err
+	}
+	if version == "" {
+		return nil, nil
+	}
+
+	return createPackage("Microsoft .NET Framework", version, "windows/app", w.platform.Arch, "Microsoft", installLocation, w.platform), nil
+}
+
+// runPwshVersion runs a PowerShell script that emits a single version string and
+// returns its trimmed, single-line result.
+func (w *WinPkgManager) runPwshVersion(script string) (string, error) {
+	cmd, err := w.conn.RunCommand(powershell.Encode(script))
+	if err != nil {
+		return "", fmt.Errorf("could not run powershell command")
 	}
 
 	if cmd.ExitStatus != 0 {
 		stderr, err := io.ReadAll(cmd.Stderr)
 		if err != nil {
-			return nil, err
+			return "", err
 		}
-		return nil, errors.New("failed to retrieve installed apps: " + string(stderr))
+		return "", errors.New("failed to retrieve .NET Framework version: " + string(stderr))
 	}
 
 	data, err := io.ReadAll(cmd.Stdout)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	// for empty result set do not get the '{}', therefore lets abort here
 	if len(data) == 0 {
-		return nil, nil
+		return "", nil
 	}
 	version := strings.TrimSpace(string(data))
 	version = strings.ReplaceAll(version, "\n", "")
+	version = strings.ReplaceAll(version, "\r", "")
+	return version, nil
+}
 
-	pkg := createPackage("Microsoft .NET Framework", version, "windows/app", w.platform.Arch, "Microsoft", installLocation, w.platform)
-
-	return []Package{*pkg}, nil
+// readRegistryItems reads the values of a single registry key over the active
+// connection. It probes via PowerShell (rather than the Windows-only native
+// registry API) so it works for remote connections such as SSH as well as a
+// local Windows host. A missing key makes the probe exit non-zero, which is
+// reported as an empty result rather than an error.
+func (w *WinPkgManager) readRegistryItems(path string) ([]registry.RegistryKeyItem, error) {
+	cmd, err := w.conn.RunCommand(powershell.Encode(registry.GetRegistryKeyItemScript(path)))
+	if err != nil {
+		return nil, err
+	}
+	if cmd.ExitStatus != 0 {
+		return nil, nil
+	}
+	data, err := io.ReadAll(cmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+	if strings.TrimSpace(string(data)) == "" {
+		return nil, nil
+	}
+	return registry.ParsePowershellRegistryKeyItems(strings.NewReader(string(data)))
 }
 
 func (w *WinPkgManager) getInstalledApps() ([]Package, error) {
@@ -365,7 +482,22 @@ func (w *WinPkgManager) getInstalledApps() ([]Package, error) {
 		return nil, errors.New("failed to retrieve installed apps: " + string(stderr))
 	}
 
-	return ParseWindowsAppPackages(w.platform, cmd.Stdout)
+	packages, err := ParseWindowsAppPackages(w.platform, cmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+
+	// The .NET Framework runtimes don't appear in the Uninstall registry keys,
+	// so we discover them separately here as well (the local path does the same
+	// in getLocalInstalledApps).
+	dotNetFramework, err := w.getDotNetFramework()
+	if err != nil {
+		log.Debug().Err(err).Msg("could not get .NET Framework packages from registry")
+	} else {
+		packages = append(packages, dotNetFramework...)
+	}
+
+	return packages, nil
 }
 
 func (w *WinPkgManager) getAppxPackages() ([]Package, error) {
@@ -547,7 +679,7 @@ func getPackageFromRegistryKeyItems(children []registry.RegistryKeyItem, platfor
 
 	// TODO: We need to figure out why we have empty displayNames.
 	// this is common in windows but we need to verify it is a windows
-	// issue and not a cnquery issue.
+	// issue and not an mql issue.
 	if displayName == "" {
 		log.Debug().Msg("ignored package since display name is missing")
 		return nil
@@ -680,7 +812,7 @@ func ParseWindowsAppPackages(platform *inventory.Platform, input io.Reader) ([]P
 
 		// TODO: We need to figure out why we have empty displayNames.
 		// this is common in windows but we need to verify it is a windows
-		// issue and not a cnquery issue.
+		// issue and not an mql issue.
 		if entry.DisplayName == "" {
 			continue
 		}
@@ -762,6 +894,15 @@ func updateMsSqlPackages(pkgs []Package, latestMsSqlUpdate Package) []Package {
 			break
 		}
 	}
+	// Without the Database Engine Services package there is no anchor version to
+	// match the other SQL Server packages against, so there is nothing to stamp.
+	// Bailing here also avoids a footgun below: strings.Replace with an empty
+	// `old` prepends `new` to the string, which would corrupt the PURL of any
+	// "SQL Server" product bundle entry that carries an empty DisplayVersion
+	// (e.g. "16.0.1150.1pkg:windows/windows/Microsoft%20SQL%20Server%202022...").
+	if currentVersion == "" {
+		return pkgs
+	}
 	// MSI registers SP-era SQL Server hotfix DisplayVersions with the SP level
 	// baked into the minor component (13.3.x for SP3, etc.). Microsoft's
 	// canonical product version uses .0 in the minor and encodes the SP in the
@@ -776,7 +917,9 @@ func updateMsSqlPackages(pkgs []Package, latestMsSqlUpdate Package) []Package {
 		if strings.Contains(pkg.Name, "SQL Server") && pkg.Version == currentVersion {
 			pkgs[i].Version = normalizedVersion
 			log.Debug().Str("package", pkg.Name).Str("version", normalizedVersion).Msg("Updated SQL Server package")
-			pkgs[i].PUrl = strings.Replace(pkgs[i].PUrl, currentVersion, normalizedVersion, 1)
+			// Replace only the version component (`@<version>`) so we never
+			// rewrite a matching substring elsewhere in the PURL (name, arch).
+			pkgs[i].PUrl = strings.Replace(pkgs[i].PUrl, "@"+currentVersion, "@"+normalizedVersion, 1)
 		}
 	}
 	return pkgs
@@ -902,9 +1045,17 @@ func updateExchangePackage(pkgs []Package, latestExchangeCU Package) []Package {
 	for i, pkg := range pkgs {
 		if pkg.Name == "Microsoft Exchange Server" {
 			currentVersion := pkgs[i].Version
+			// Without a current version there is no `@<version>` to swap in the
+			// PURL; replacing the empty-anchored `"@"` would target the first `@`
+			// and corrupt the PURL, so skip the rewrite entirely.
+			if currentVersion == "" {
+				continue
+			}
 			pkgs[i].Version = latestExchangeCU.Version
 			log.Debug().Str("package", pkg.Name).Str("version", latestExchangeCU.Version).Msg("Updated Exchange package")
-			pkgs[i].PUrl = strings.Replace(pkgs[i].PUrl, currentVersion, latestExchangeCU.Version, 1)
+			// Anchor on `@<version>` so we don't rewrite a substring match
+			// elsewhere in the PURL.
+			pkgs[i].PUrl = strings.Replace(pkgs[i].PUrl, "@"+currentVersion, "@"+latestExchangeCU.Version, 1)
 		}
 	}
 	return pkgs

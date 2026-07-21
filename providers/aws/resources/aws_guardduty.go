@@ -55,6 +55,13 @@ func (a *mqlAwsGuarddutyDetector) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+const guarddutyDetectorArnPattern = "arn:aws:guardduty:%s:%s:detector/%s"
+
+func (a *mqlAwsGuarddutyDetector) arn() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return fmt.Sprintf(guarddutyDetectorArnPattern, a.Region.Data, conn.AccountId(), a.Id.Data), nil
+}
+
 func (a *mqlAwsGuardduty) getDetectors(conn *connection.AwsConnection) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := conn.Regions()

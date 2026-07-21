@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	armresources "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v3"
-	subscriptions "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
+	armresources "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v4"
+	subscriptions "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions/v2"
 	"github.com/rs/zerolog/log"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -48,6 +48,8 @@ const (
 	DiscoveryStorageAccounts         = "storage-accounts"
 	DiscoveryStorageContainers       = "storage-containers"
 	DiscoveryKeyVaults               = "keyvaults-vaults"
+	DiscoveryManagedHsms             = "keyvaults-managed-hsms"
+	DiscoveryIotHubs                 = "iot-hubs"
 	DiscoverySecurityGroups          = "security-groups"
 	DiscoveryCosmosDb                = "cosmosdb"
 	DiscoveryVirtualNetworks         = "virtual-networks"
@@ -59,6 +61,7 @@ const (
 	DiscoveryApplicationGateways     = "application-gateways"
 	DiscoveryFirewalls               = "firewalls"
 	DiscoveryContainerApps           = "container-apps"
+	DiscoveryCognitiveServices       = "cognitiveservices-accounts"
 )
 
 // Auto includes all API resources except storage containers (which require
@@ -93,6 +96,8 @@ var AllAPIResources = []string{
 	DiscoveryStorageAccounts,
 	DiscoveryStorageContainers,
 	DiscoveryKeyVaults,
+	DiscoveryManagedHsms,
+	DiscoveryIotHubs,
 	DiscoverySecurityGroups,
 	DiscoveryCosmosDb,
 	DiscoveryVirtualNetworks,
@@ -104,6 +109,7 @@ var AllAPIResources = []string{
 	DiscoveryApplicationGateways,
 	DiscoveryFirewalls,
 	DiscoveryContainerApps,
+	DiscoveryCognitiveServices,
 }
 
 // genericDiscoverySpec maps an ARM resource type to the discovery metadata
@@ -155,6 +161,8 @@ var genericDiscoverySpecs = []genericDiscoverySpec{
 	{armType: "Microsoft.Network/applicationGateways", discoveryTarget: DiscoveryApplicationGateways, service: "network", objectType: "application-gateway", includeObjectTypeInUrl: true},
 	{armType: "Microsoft.Network/azureFirewalls", discoveryTarget: DiscoveryFirewalls, service: "network", objectType: "firewall", includeObjectTypeInUrl: true},
 	{armType: "Microsoft.KeyVault/vaults", discoveryTarget: DiscoveryKeyVaults, service: "keyvault", objectType: "vault"},
+	{armType: "Microsoft.KeyVault/managedHSMs", discoveryTarget: DiscoveryManagedHsms, service: "keyvault", objectType: "managed-hsm"},
+	{armType: "Microsoft.Devices/IotHubs", discoveryTarget: DiscoveryIotHubs, service: "iot", objectType: "iothub"},
 	{armType: "Microsoft.DocumentDB/databaseAccounts", discoveryTarget: DiscoveryCosmosDb, service: "cosmosdb", objectType: "account"},
 	{armType: "Microsoft.Network/virtualNetworks", discoveryTarget: DiscoveryVirtualNetworks, service: "network", objectType: "virtual-network", includeObjectTypeInUrl: true},
 	{armType: "Microsoft.ContainerRegistry/registries", discoveryTarget: DiscoveryContainerRegistries, service: "containerregistry", objectType: "registry"},
@@ -162,6 +170,7 @@ var genericDiscoverySpecs = []genericDiscoverySpec{
 	{armType: "Microsoft.Synapse/workspaces", discoveryTarget: DiscoverySynapseWorkspaces, service: "synapse", objectType: "workspace"},
 	{armType: "Microsoft.DataFactory/factories", discoveryTarget: DiscoveryDataFactories, service: "datafactory", objectType: "factory"},
 	{armType: "Microsoft.App/containerApps", discoveryTarget: DiscoveryContainerApps, service: "containerapps", objectType: "app"},
+	{armType: "Microsoft.CognitiveServices/accounts", discoveryTarget: DiscoveryCognitiveServices, service: "cognitiveservices", objectType: "account"},
 }
 
 type azureObject struct {
@@ -219,15 +228,7 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 		return nil, errors.New("invalid connection provided, it is not an Azure connection")
 	}
 	assets := []*inventory.Asset{}
-	subsToInclude := rootConf.Options["subscriptions"]
-	subsToExclude := rootConf.Options["subscriptions-exclude"]
-	filter := connection.SubscriptionsFilter{}
-	if len(subsToInclude) > 0 {
-		filter.Include = strings.Split(subsToInclude, ",")
-	}
-	if len(subsToExclude) > 0 {
-		filter.Exclude = strings.Split(subsToExclude, ",")
-	}
+	filter := conn.Filters.Subscriptions
 	// note: we always need the subscriptions, either to return them as assets or discover resources inside the subs
 	subs, err := discoverSubscriptions(conn, filter)
 	if err != nil {
@@ -284,6 +285,10 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 		return nil, err
 	}
 	assets = append(assets, genericAssets...)
+
+	if conn.Filters.PropagateSubscriptionTags {
+		applySubscriptionTags(conn.Filters.SubscriptionTags, subsWithConfigs, assets)
+	}
 
 	log.Debug().Int("assets", len(assets)).Msg("azure.discovery> discovery complete")
 	return &inventory.Inventory{
@@ -625,18 +630,74 @@ func subToAsset(subWithConfig subWithConfig) *inventory.Asset {
 	if sub.TenantID != nil {
 		tenantId = *sub.TenantID
 	}
+	platform := &inventory.Platform{
+		TechnologyUrlSegments: []string{"azure", tenantId, *sub.SubscriptionID, "account"},
+	}
+	PlatformByName("azure").Apply(platform)
 	return &inventory.Asset{
-		Id: platformId,
-		Platform: &inventory.Platform{
-			Title:                 "Azure Subscription",
-			Name:                  "azure",
-			Runtime:               "azure",
-			Kind:                  "api",
-			TechnologyUrlSegments: []string{"azure", tenantId, *sub.SubscriptionID, "account"},
-		},
+		Id:          platformId,
+		Platform:    platform,
 		Name:        fmt.Sprintf("Azure subscription %s", *sub.DisplayName),
 		Connections: []*inventory.Config{copyConf},
 		PlatformIds: []string{platformId},
+		Labels:      map[string]string{SubscriptionLabel: *sub.SubscriptionID},
+	}
+}
+
+// propagateSubscriptionTagsToAssets merges subscriptionTags into every asset in
+// the slice. An asset's own labels take precedence, so subscription tags only
+// fill in keys the asset doesn't already define. Mirrors GCP's
+// propagateProjectLabelsToAssets.
+func propagateSubscriptionTagsToAssets(assets []*inventory.Asset, subscriptionTags map[string]string) {
+	if len(subscriptionTags) == 0 {
+		return
+	}
+	for _, a := range assets {
+		if a == nil {
+			continue
+		}
+		if a.Labels == nil {
+			a.Labels = map[string]string{}
+		}
+		for k, v := range subscriptionTags {
+			if _, exists := a.Labels[k]; !exists {
+				a.Labels[k] = v
+			}
+		}
+	}
+}
+
+// assetsForSubscription returns the assets whose SubscriptionLabel matches subID.
+func assetsForSubscription(assets []*inventory.Asset, subID string) []*inventory.Asset {
+	res := []*inventory.Asset{}
+	for _, a := range assets {
+		if a != nil && a.Labels[SubscriptionLabel] == subID {
+			res = append(res, a)
+		}
+	}
+	return res
+}
+
+// applySubscriptionTags merges each subscription's tags into the assets
+// discovered within it. Tags come from the injected override when provided,
+// otherwise from the subscription record returned by the list pager — which
+// already includes the tags, so no per-subscription API call is needed.
+func applySubscriptionTags(override map[string]string, subs []subWithConfig, assets []*inventory.Asset) {
+	for _, s := range subs {
+		if s.sub.SubscriptionID == nil {
+			continue
+		}
+		subID := *s.sub.SubscriptionID
+
+		tags := override
+		if len(tags) == 0 {
+			tags = convert.PtrMapStrToStr(s.sub.Tags)
+		}
+		if len(tags) == 0 {
+			continue
+		}
+
+		propagateSubscriptionTagsToAssets(assetsForSubscription(assets, subID), tags)
 	}
 }
 
@@ -729,6 +790,13 @@ func getTitleFamily(azureObject azureObject) (azureObjectPlatformInfo, error) {
 		if azureObject.objectType == "vault" {
 			return azureObjectPlatformInfo{title: "Azure Key Vault", platform: "azure-keyvault-vault"}, nil
 		}
+		if azureObject.objectType == "managed-hsm" {
+			return azureObjectPlatformInfo{title: "Azure Key Vault Managed HSM", platform: "azure-keyvault-managedhsm"}, nil
+		}
+	case "iot":
+		if azureObject.objectType == "iothub" {
+			return azureObjectPlatformInfo{title: "Azure IoT Hub", platform: "azure-iot-iothub"}, nil
+		}
 	case "cosmosdb":
 		if azureObject.objectType == "account" {
 			return azureObjectPlatformInfo{title: "Azure Cosmos DB Account", platform: "azure-cosmosdb"}, nil
@@ -748,6 +816,10 @@ func getTitleFamily(azureObject azureObject) (azureObjectPlatformInfo, error) {
 	case "datafactory":
 		if azureObject.objectType == "factory" {
 			return azureObjectPlatformInfo{title: "Azure Data Factory", platform: "azure-datafactory"}, nil
+		}
+	case "cognitiveservices":
+		if azureObject.objectType == "account" {
+			return azureObjectPlatformInfo{title: "Azure AI Services Account", platform: "azure-cognitiveservices-account"}, nil
 		}
 	}
 	return azureObjectPlatformInfo{}, fmt.Errorf("missing runtime info for azure object service %s type %s", azureObject.service, azureObject.objectType)
@@ -777,16 +849,14 @@ func mqlObjectToAsset(mqlObject mqlObject, parentConf *inventory.Config, include
 	if includeObjectTypeInUrl {
 		assetUrl = append(assetUrl, mqlObject.azureObject.objectType)
 	}
+	platform := &inventory.Platform{
+		TechnologyUrlSegments: assetUrl,
+	}
+	PlatformByName(info.platform).Apply(platform)
 	return &inventory.Asset{
 		PlatformIds: []string{platformid, mqlObject.azureObject.id},
 		Name:        mqlObject.name,
-		Platform: &inventory.Platform{
-			Name:                  info.platform,
-			Title:                 info.title,
-			Kind:                  "azure-object",
-			Runtime:               "azure",
-			TechnologyUrlSegments: assetUrl,
-		},
+		Platform:    platform,
 		State:       inventory.State_STATE_ONLINE,
 		Labels:      addInformationalLabels(mqlObject.labels, mqlObject),
 		Connections: []*inventory.Config{cfg},

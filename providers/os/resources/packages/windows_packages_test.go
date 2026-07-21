@@ -5,6 +5,7 @@ package packages
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/url"
 	"os"
 	"strings"
@@ -76,6 +77,25 @@ func TestWindowsAppPackagesParserWithPSPath(t *testing.T) {
 
 	x86Pkg := findPkg(pkgs, "Microsoft .NET Runtime - 8.0.7 (x86)")
 	assert.Equal(t, "x86", x86Pkg.Arch, "Wow6432Node path package should have x86 arch")
+}
+
+func TestWindowsAppxPackagesParserSkipsEmptyNames(t *testing.T) {
+	pf := &inventory.Platform{Name: "windows", Arch: "x86", Family: []string{"windows"}}
+
+	// the middle entry has an empty Name and must be omitted entirely,
+	// not turned into a zero-value Package hole
+	const data = `[
+		{"Name":"Microsoft.WindowsCalculator","Version":"1.0.0.0","Architecture":0,"Publisher":"CN=Microsoft"},
+		{"Name":"","Version":"","Architecture":0,"Publisher":""},
+		{"Name":"Microsoft.WindowsStore","Version":"2.0.0.0","Architecture":0,"Publisher":"CN=Microsoft"}
+	]`
+
+	pkgs, err := ParseWindowsAppxPackages(pf, strings.NewReader(data))
+	require.NoError(t, err)
+	require.Equal(t, 2, len(pkgs), "empty-name entry should be skipped, no holes")
+	for _, p := range pkgs {
+		assert.NotEmpty(t, p.Name, "no empty/zero-value package should be present")
+	}
 }
 
 func TestWindowsAppxPackagesParser(t *testing.T) {
@@ -488,6 +508,33 @@ func TestFindAndUpdateMsSqlGDR_de_special_characters(t *testing.T) {
 	require.NotNil(t, pkg, "Not a hotfix package should exist")
 	require.Equal(t, "1.0.0", pkg.Version, "expected non-SQL Server package to remain unchanged")
 	assert.Equal(t, "pkg:windows/windows/Not%20a%20hotfix@1.0.0?arch=x86", pkg.PUrl)
+}
+
+// TestUpdateMsSqlPackages_NoEngineServicesPackage guards against corrupting the
+// PURL of a "SQL Server" product bundle entry that carries an empty
+// DisplayVersion when no "Database Engine Services" package is present (so the
+// anchor version is empty). The buggy behavior prepended the update version to
+// the PURL (e.g. "16.0.1150.1pkg:windows/windows/Microsoft%20SQL%20Server...").
+func TestUpdateMsSqlPackages_NoEngineServicesPackage(t *testing.T) {
+	packages := []Package{
+		// Product bundle entry from the registry Uninstall key with an empty
+		// DisplayVersion. The PURL has no version component.
+		{Name: "Microsoft SQL Server 2022 (64-bit)", Version: "", PUrl: "pkg:windows/windows/Microsoft%20SQL%20Server%202022%20%2864-bit%29?arch=AMD64"},
+		{Name: "GDR 1150 for SQL Server 2022 (KB5042215) (64-bit)", Version: "16.0.1150.1", PUrl: "pkg:windows/windows/GDR%201150%20for%20SQL%20Server%202022%20%28KB5042215%29%20%2864-bit%29@16.0.1150.1?arch=AMD64"},
+	}
+
+	gdrUpdates := findMsSqlGdrUpdates(packages)
+	require.Len(t, gdrUpdates, 1, "expected 1 update")
+
+	updated := updateMsSqlPackages(packages, gdrUpdates[len(gdrUpdates)-1])
+
+	// Without a Database Engine Services anchor package, the bundle entry must be
+	// left untouched: its PURL must stay valid and not gain a prepended version.
+	pkg := findPkgByName(updated, "Microsoft SQL Server 2022 (64-bit)")
+	require.NotNil(t, pkg, "Microsoft SQL Server 2022 (64-bit) package should exist")
+	assert.Equal(t, "", pkg.Version, "expected bundle entry version to remain empty")
+	assert.Equal(t, "pkg:windows/windows/Microsoft%20SQL%20Server%202022%20%2864-bit%29?arch=AMD64", pkg.PUrl)
+	assert.True(t, strings.HasPrefix(pkg.PUrl, "pkg:"), "PURL must start with pkg:, not a version")
 }
 
 func TestNormalizeMsSqlVersion(t *testing.T) {
@@ -1093,4 +1140,146 @@ func TestWindowsAppPackagesParserInstallDate(t *testing.T) {
 	withoutDate := findPkg(pkgs, "App Without Date")
 	require.NotNil(t, withoutDate)
 	assert.True(t, withoutDate.InstallDate.IsZero(), "missing InstallDate registry value yields zero time")
+}
+
+// regWireValue / regWireItem mirror the JSON shape emitted by the PowerShell
+// registry probe (registry.GetRegistryKeyItemScript), so tests can feed
+// getDotNetFramework's readRegistryItems realistic payloads.
+type regWireValue struct {
+	Kind int `json:"kind"`
+	Data any `json:"data"`
+}
+
+type regWireItem struct {
+	Key   string       `json:"key"`
+	Value regWireValue `json:"value"`
+}
+
+func regItemsJSON(t *testing.T, items ...regWireItem) string {
+	t.Helper()
+	b, err := json.Marshal(items)
+	require.NoError(t, err)
+	return string(b)
+}
+
+func szItem(key, value string) regWireItem {
+	return regWireItem{Key: key, Value: regWireValue{Kind: registry.SZ, Data: value}}
+}
+
+func dwordItem(key string, value int) regWireItem {
+	return regWireItem{Key: key, Value: regWireValue{Kind: registry.DWORD, Data: value}}
+}
+
+func TestGetDotNetFramework(t *testing.T) {
+	const (
+		v4Key   = "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full"
+		v35Key  = "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v3.5"
+		v4Path  = "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\"
+		v35Path = "C:\\Windows\\Microsoft.NET\\Framework64\\v3.5\\"
+	)
+
+	// Command keys exactly as getDotNetFramework issues them over the connection.
+	v4RegCmd := powershell.Encode(registry.GetRegistryKeyItemScript(v4Key))
+	v35RegCmd := powershell.Encode(registry.GetRegistryKeyItemScript(v35Key))
+	v4VerCmd := powershell.Encode(fmt.Sprintf(dotNetClrVersionScript, v4Path))
+	v35VerCmd := powershell.Encode(dotNetClr2VersionScript)
+
+	v4RegItems := regItemsJSON(t, szItem("InstallPath", v4Path), dwordItem("Release", 528449))
+	v4RegNoPath := regItemsJSON(t, dwordItem("Release", 528449))
+	v35Installed := regItemsJSON(t, dwordItem("Install", 1), szItem("InstallPath", v35Path))
+	v35NotInstalled := regItemsJSON(t, dwordItem("Install", 0), szItem("InstallPath", v35Path))
+
+	// Trailing CRLF verifies runPwshVersion trims the raw stdout.
+	v4Ver := snapCommandResult{stdout: "4.8.4795.0\r\n"}
+	v35Ver := snapCommandResult{stdout: "2.0.50727.9182\r\n"}
+
+	type wantPkg struct {
+		name    string
+		version string
+	}
+	tests := []struct {
+		name     string
+		commands map[string]snapCommandResult
+		want     []wantPkg
+	}{
+		{
+			name: "both 3.5 and 4.x present, reported side by side",
+			commands: map[string]snapCommandResult{
+				v4RegCmd:  {stdout: v4RegItems},
+				v4VerCmd:  v4Ver,
+				v35RegCmd: {stdout: v35Installed},
+				v35VerCmd: v35Ver,
+			},
+			want: []wantPkg{
+				{"Microsoft .NET Framework", "4.8.4795.0"},
+				{"Microsoft .NET Framework", "2.0.50727.9182"},
+			},
+		},
+		{
+			name: "only 4.x present (v3.5 key missing)",
+			commands: map[string]snapCommandResult{
+				v4RegCmd: {stdout: v4RegItems},
+				v4VerCmd: v4Ver,
+			},
+			want: []wantPkg{{"Microsoft .NET Framework", "4.8.4795.0"}},
+		},
+		{
+			name: "only 3.5 present (v4 key missing), sourced from CLR 2.0 build",
+			commands: map[string]snapCommandResult{
+				v35RegCmd: {stdout: v35Installed},
+				v35VerCmd: v35Ver,
+			},
+			want: []wantPkg{{"Microsoft .NET Framework", "2.0.50727.9182"}},
+		},
+		{
+			name: "3.5 key present but Install=0 is not reported",
+			commands: map[string]snapCommandResult{
+				v4RegCmd:  {stdout: v4RegItems},
+				v4VerCmd:  v4Ver,
+				v35RegCmd: {stdout: v35NotInstalled},
+				v35VerCmd: v35Ver,
+			},
+			want: []wantPkg{{"Microsoft .NET Framework", "4.8.4795.0"}},
+		},
+		{
+			name: "4.x key present without InstallPath is skipped",
+			commands: map[string]snapCommandResult{
+				v4RegCmd: {stdout: v4RegNoPath},
+				v4VerCmd: v4Ver,
+			},
+			want: nil,
+		},
+		{
+			name: "4.x present but clr.dll version blank is skipped",
+			commands: map[string]snapCommandResult{
+				v4RegCmd: {stdout: v4RegItems},
+				v4VerCmd: {stdout: "\r\n"},
+			},
+			want: nil,
+		},
+		{
+			name:     "neither runtime present",
+			commands: map[string]snapCommandResult{},
+			want:     nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := &WinPkgManager{
+				conn:     &snapTestConnection{commands: tt.commands},
+				platform: &inventory.Platform{Name: "windows", Arch: "amd64", Family: []string{"windows"}},
+			}
+
+			pkgs, err := w.getDotNetFramework()
+			require.NoError(t, err)
+			require.Len(t, pkgs, len(tt.want))
+			for i, exp := range tt.want {
+				assert.Equal(t, exp.name, pkgs[i].Name, "package %d name", i)
+				assert.Equal(t, exp.version, pkgs[i].Version, "package %d version", i)
+				assert.Equal(t, "windows/app", pkgs[i].Format, "package %d format", i)
+				assert.Equal(t, "amd64", pkgs[i].Arch, "package %d arch", i)
+			}
+		})
+	}
 }

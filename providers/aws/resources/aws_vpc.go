@@ -28,6 +28,99 @@ func (a *mqlAwsVpc) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+func (a *mqlAwsVpc) encryptionControl() (*mqlAwsVpcEncryptionControl, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Ec2(a.Region.Data)
+	ctx := context.Background()
+
+	resp, err := svc.DescribeVpcEncryptionControls(ctx, &ec2.DescribeVpcEncryptionControlsInput{
+		VpcIds: []string{a.Id.Data},
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			a.EncryptionControl.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+	if resp == nil || len(resp.VpcEncryptionControls) == 0 {
+		a.EncryptionControl.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	return newMqlAwsVpcEncryptionControl(a.MqlRuntime, resp.VpcEncryptionControls[0])
+}
+
+func newMqlAwsVpcEncryptionControl(runtime *plugin.Runtime, ec vpctypes.VpcEncryptionControl) (*mqlAwsVpcEncryptionControl, error) {
+	res, err := CreateResource(runtime, ResourceAwsVpcEncryptionControl,
+		map[string]*llx.RawData{
+			"__id":               llx.StringData(convert.ToValue(ec.VpcEncryptionControlId)),
+			"id":                 llx.StringDataPtr(ec.VpcEncryptionControlId),
+			"mode":               llx.StringData(string(ec.Mode)),
+			"state":              llx.StringData(string(ec.State)),
+			"stateMessage":       llx.StringDataPtr(ec.StateMessage),
+			"resourceExclusions": llx.MapData(vpcEncryptionControlExclusionsToMap(ec.ResourceExclusions), types.String),
+			"tags":               llx.MapData(toInterfaceMap(ec2TagsToMap(ec.Tags)), types.String),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsVpcEncryptionControl), nil
+}
+
+// vpcEncryptionControlExclusionsToMap flattens the per-traffic-type exclusion
+// configuration into a map of traffic type to exclusion state. Traffic types
+// that carry no exclusion configuration are omitted.
+func vpcEncryptionControlExclusionsToMap(ex *vpctypes.VpcEncryptionControlExclusions) map[string]any {
+	m := map[string]any{}
+	if ex == nil {
+		return m
+	}
+	add := func(key string, e *vpctypes.VpcEncryptionControlExclusion) {
+		if e != nil {
+			m[key] = string(e.State)
+		}
+	}
+	add("internetGateway", ex.InternetGateway)
+	add("egressOnlyInternetGateway", ex.EgressOnlyInternetGateway)
+	add("natGateway", ex.NatGateway)
+	add("lambda", ex.Lambda)
+	add("elasticFileSystem", ex.ElasticFileSystem)
+	add("virtualPrivateGateway", ex.VirtualPrivateGateway)
+	add("vpcLattice", ex.VpcLattice)
+	add("vpcPeering", ex.VpcPeering)
+	return m
+}
+
+func buildVpcResource(runtime *plugin.Runtime, region, accountID string, vpc vpctypes.Vpc) (*mqlAwsVpc, error) {
+	tagsMap := ec2TagsToMap(vpc.Tags)
+	name := tagsMap["Name"]
+	mqlVpc, err := CreateResource(runtime, ResourceAwsVpc,
+		map[string]*llx.RawData{
+			"arn":             llx.StringData(fmt.Sprintf(vpcArnPattern, region, accountID, convert.ToValue(vpc.VpcId))),
+			"cidrBlock":       llx.StringDataPtr(vpc.CidrBlock),
+			"dhcpOptionsId":   llx.StringDataPtr(vpc.DhcpOptionsId),
+			"id":              llx.StringDataPtr(vpc.VpcId),
+			"instanceTenancy": llx.StringData(string(vpc.InstanceTenancy)),
+			"isDefault":       llx.BoolData(convert.ToValue(vpc.IsDefault)),
+			"name":            llx.StringData(name),
+			"ownerId":         llx.StringDataPtr(vpc.OwnerId),
+			"region":          llx.StringData(region),
+			"state":           llx.StringData(string(vpc.State)),
+			"tags":            llx.MapData(toInterfaceMap(tagsMap), types.String),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlVpcRes := mqlVpc.(*mqlAwsVpc)
+	if vpc.BlockPublicAccessStates != nil {
+		mqlVpcRes.InternetGatewayBlockMode = plugin.TValue[string]{Data: string(vpc.BlockPublicAccessStates.InternetGatewayBlockMode), State: plugin.StateIsSet}
+	}
+	mqlVpcRes.cacheCidrBlockAssociations = vpc.CidrBlockAssociationSet
+	mqlVpcRes.cacheIpv6CidrBlockAssociations = vpc.Ipv6CidrBlockAssociationSet
+	return mqlVpcRes, nil
+}
+
 func (a *mqlAws) vpcs() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []any{}
@@ -81,30 +174,11 @@ func (a *mqlAws) getVpcs(conn *connection.AwsConnection) []*jobpool.Job {
 						continue
 					}
 
-					name := tagsMap["Name"]
-					mqlVpc, err := CreateResource(a.MqlRuntime, ResourceAwsVpc,
-						map[string]*llx.RawData{
-							"arn":             llx.StringData(fmt.Sprintf(vpcArnPattern, region, conn.AccountId(), convert.ToValue(vpc.VpcId))),
-							"cidrBlock":       llx.StringDataPtr(vpc.CidrBlock),
-							"dhcpOptionsId":   llx.StringDataPtr(vpc.DhcpOptionsId),
-							"id":              llx.StringDataPtr(vpc.VpcId),
-							"instanceTenancy": llx.StringData(string(vpc.InstanceTenancy)),
-							"isDefault":       llx.BoolData(convert.ToValue(vpc.IsDefault)),
-							"name":            llx.StringData(name),
-							"region":          llx.StringData(region),
-							"state":           llx.StringData(string(vpc.State)),
-							"tags":            llx.MapData(toInterfaceMap(ec2TagsToMap(vpc.Tags)), types.String),
-						})
+					mqlVpc, err := buildVpcResource(a.MqlRuntime, region, conn.AccountId(), vpc)
 					if err != nil {
 						log.Error().Msg(err.Error())
 						continue
 					}
-					if vpc.BlockPublicAccessStates != nil {
-						mqlVpc.(*mqlAwsVpc).InternetGatewayBlockMode = plugin.TValue[string]{Data: string(vpc.BlockPublicAccessStates.InternetGatewayBlockMode), State: plugin.StateIsSet}
-					}
-					mqlVpcRes := mqlVpc.(*mqlAwsVpc)
-					mqlVpcRes.cacheCidrBlockAssociations = vpc.CidrBlockAssociationSet
-					mqlVpcRes.cacheIpv6CidrBlockAssociations = vpc.Ipv6CidrBlockAssociationSet
 					res = append(res, mqlVpc)
 				}
 			}
@@ -144,12 +218,25 @@ func (a *mqlAwsVpc) ipv6CidrBlockAssociations() ([]any, error) {
 	return res, nil
 }
 
+// natgatewayAddressCacheKey builds a stable, unique cache key for a NAT gateway
+// address. Private NAT gateways have no AllocationId, so the allocation ID alone
+// collapses every private address onto the same key; the ENI plus private IP are
+// always present and uniquely identify the address.
+func natgatewayAddressCacheKey(networkInterfaceId, privateIp string) string {
+	return networkInterfaceId + "/" + privateIp
+}
+
 func (a *mqlAwsVpcNatgatewayAddress) id() (string, error) {
-	return a.AllocationId.Data, nil
+	return natgatewayAddressCacheKey(a.NetworkInterfaceId.Data, a.PrivateIp.Data), nil
 }
 
 func (a *mqlAwsVpcNatgateway) id() (string, error) {
 	return a.NatGatewayId.Data, nil
+}
+
+func (a *mqlAwsVpcNatgateway) arn() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return fmt.Sprintf(natGatewayArnPattern, a.region, conn.AccountId(), a.NatGatewayId.Data), nil
 }
 
 type mqlAwsVpcNatgatewayInternal struct {
@@ -200,6 +287,20 @@ func (a *mqlAwsVpcNatgatewayAddress) publicIp() (*mqlAwsEc2Eip, error) {
 	return nil, nil
 }
 
+func (a *mqlAwsVpcNatgatewayAddress) networkInterface() (*mqlAwsEc2Networkinterface, error) {
+	eniId := a.NetworkInterfaceId.Data
+	if eniId == "" {
+		a.NetworkInterface.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAwsEc2Networkinterface,
+		map[string]*llx.RawData{"id": llx.StringData(eniId), "region": llx.StringData(a.region)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEc2Networkinterface), nil
+}
+
 func (a *mqlAwsVpc) natGateways() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	vpcId := a.Id.Data
@@ -225,53 +326,111 @@ func (a *mqlAwsVpc) natGateways() ([]any, error) {
 				continue
 			}
 
-			addresses := []any{}
-			for _, address := range gw.NatGatewayAddresses {
-				mqlNatGatewayAddress, err := CreateResource(a.MqlRuntime, ResourceAwsVpcNatgatewayAddress,
-					map[string]*llx.RawData{
-						"allocationId":       llx.StringDataPtr(address.AllocationId),
-						"networkInterfaceId": llx.StringDataPtr(address.NetworkInterfaceId),
-						"privateIp":          llx.StringDataPtr(address.PrivateIp),
-						"isPrimary":          llx.BoolDataPtr(address.IsPrimary),
-					})
-				if err == nil {
-					mqlNatGatewayAddress.(*mqlAwsVpcNatgatewayAddress).natGatewayAddressCache = address
-					mqlNatGatewayAddress.(*mqlAwsVpcNatgatewayAddress).region = a.Region.Data
-					addresses = append(addresses, mqlNatGatewayAddress)
-				} else {
-					log.Error().Err(err).Msg("cannot create vpc natgateway address resource")
-				}
-			}
-
-			args := map[string]*llx.RawData{
-				"createdAt":    llx.TimeDataPtr(gw.CreateTime),
-				"natGatewayId": llx.StringDataPtr(gw.NatGatewayId),
-				"state":        llx.StringData(string(gw.State)),
-				"tags":         llx.MapData(toInterfaceMap(ec2TagsToMap(gw.Tags)), types.String),
-				"addresses":    llx.ArrayData(addresses, types.Type(ResourceAwsVpcNatgatewayAddress)),
-			}
-
-			mqlNatGat, err := CreateResource(a.MqlRuntime, ResourceAwsVpcNatgateway, args)
+			mqlNatGat, err := newMqlAwsVpcNatgateway(a.MqlRuntime, a.Region.Data, gw)
 			if err != nil {
 				return nil, err
 			}
-			mqlNatGat.(*mqlAwsVpcNatgateway).natGatewayCache = gw
-			mqlNatGat.(*mqlAwsVpcNatgateway).region = a.Region.Data
-
 			endpoints = append(endpoints, mqlNatGat)
 		}
 	}
 	return endpoints, nil
 }
 
+// newMqlAwsVpcNatgateway builds an aws.vpc.natgateway resource (and its
+// address sub-resources) from a DescribeNatGateways result.
+func newMqlAwsVpcNatgateway(runtime *plugin.Runtime, region string, gw vpctypes.NatGateway) (*mqlAwsVpcNatgateway, error) {
+	addresses := []any{}
+	for _, address := range gw.NatGatewayAddresses {
+		mqlAddr, err := CreateResource(runtime, ResourceAwsVpcNatgatewayAddress,
+			map[string]*llx.RawData{
+				"allocationId":       llx.StringDataPtr(address.AllocationId),
+				"networkInterfaceId": llx.StringDataPtr(address.NetworkInterfaceId),
+				"privateIp":          llx.StringDataPtr(address.PrivateIp),
+				"isPrimary":          llx.BoolDataPtr(address.IsPrimary),
+			})
+		if err != nil {
+			log.Error().Err(err).Msg("cannot create vpc natgateway address resource")
+			continue
+		}
+		mqlAddr.(*mqlAwsVpcNatgatewayAddress).natGatewayAddressCache = address
+		mqlAddr.(*mqlAwsVpcNatgatewayAddress).region = region
+		addresses = append(addresses, mqlAddr)
+	}
+
+	mqlNat, err := CreateResource(runtime, ResourceAwsVpcNatgateway,
+		map[string]*llx.RawData{
+			"createdAt":    llx.TimeDataPtr(gw.CreateTime),
+			"natGatewayId": llx.StringDataPtr(gw.NatGatewayId),
+			"state":        llx.StringData(string(gw.State)),
+			"tags":         llx.MapData(toInterfaceMap(ec2TagsToMap(gw.Tags)), types.String),
+			"addresses":    llx.ArrayData(addresses, types.Type(ResourceAwsVpcNatgatewayAddress)),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlNat.(*mqlAwsVpcNatgateway).natGatewayCache = gw
+	mqlNat.(*mqlAwsVpcNatgateway).region = region
+	return mqlNat.(*mqlAwsVpcNatgateway), nil
+}
+
+func initAwsVpcNatgateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// region is a lookup hint, not a schema field on aws.vpc.natgateway. Pull it
+	// out of args before any fallthrough so SetAllData never tries to apply it.
+	var region string
+	if r := args["region"]; r != nil {
+		region, _ = r.Value.(string)
+		delete(args, "region")
+	}
+
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	// A targeted lookup needs both the NAT gateway id and its region (the id
+	// does not encode a region). Without them, hand back a bare resource.
+	if args["natGatewayId"] == nil || region == "" {
+		return args, nil, nil
+	}
+	natID, _ := args["natGatewayId"].Value.(string)
+	if natID == "" {
+		return args, nil, nil
+	}
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Ec2(region)
+	resp, err := svc.DescribeNatGateways(context.Background(), &ec2.DescribeNatGatewaysInput{
+		NatGatewayIds: []string{natID},
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(resp.NatGateways) == 0 {
+		return nil, nil, fmt.Errorf("aws.vpc.natgateway with id %q not found", natID)
+	}
+	mqlNat, err := newMqlAwsVpcNatgateway(runtime, region, resp.NatGateways[0])
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, mqlNat, nil
+}
+
 func (a *mqlAwsVpcEndpoint) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+func (a *mqlAwsVpcEndpoint) arn() (string, error) {
+	account := a.OwnerId.Data
+	if account == "" {
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		account = conn.AccountId()
+	}
+	return fmt.Sprintf(vpcEndpointArnPattern, a.Region.Data, account, a.cacheEndpointId), nil
 }
 
 type mqlAwsVpcEndpointInternal struct {
 	securityGroupIdHandler
 	cacheRouteTableIds       []string
 	cacheNetworkInterfaceIds []string
+	cacheEndpointId          string
 	region                   string
 	accountID                string
 }
@@ -339,6 +498,7 @@ func (a *mqlAwsVpc) endpoints() ([]any, error) {
 			ep := mqlEndpoint.(*mqlAwsVpcEndpoint)
 			ep.region = a.Region.Data
 			ep.accountID = conn.AccountId()
+			ep.cacheEndpointId = convert.ToValue(endpoint.VpcEndpointId)
 
 			// Cache security group ARNs
 			sgArns := make([]string, len(endpoint.Groups))
@@ -540,45 +700,10 @@ func (a *mqlAwsVpc) peeringConnections() ([]any, error) {
 				}
 				seen[id] = struct{}{}
 
-				status := ""
-				if peerconn.Status != nil {
-					status = convert.ToValue(peerconn.Status.Message)
-				}
-				// Determine DNS resolution status from peering options
-				dnsResolution := false
-				if peerconn.RequesterVpcInfo != nil && peerconn.RequesterVpcInfo.PeeringOptions != nil &&
-					peerconn.RequesterVpcInfo.PeeringOptions.AllowDnsResolutionFromRemoteVpc != nil {
-					dnsResolution = *peerconn.RequesterVpcInfo.PeeringOptions.AllowDnsResolutionFromRemoteVpc
-				}
-				if !dnsResolution && peerconn.AccepterVpcInfo != nil && peerconn.AccepterVpcInfo.PeeringOptions != nil &&
-					peerconn.AccepterVpcInfo.PeeringOptions.AllowDnsResolutionFromRemoteVpc != nil {
-					dnsResolution = *peerconn.AccepterVpcInfo.PeeringOptions.AllowDnsResolutionFromRemoteVpc
-				}
-
-				var requesterAccountId, accepterAccountId string
-				if peerconn.RequesterVpcInfo != nil {
-					requesterAccountId = convert.ToValue(peerconn.RequesterVpcInfo.OwnerId)
-				}
-				if peerconn.AccepterVpcInfo != nil {
-					accepterAccountId = convert.ToValue(peerconn.AccepterVpcInfo.OwnerId)
-				}
-
-				mqlPeerConn, err := CreateResource(a.MqlRuntime, ResourceAwsVpcPeeringConnection,
-					map[string]*llx.RawData{
-						"expirationTime":       llx.TimeDataPtr(peerconn.ExpirationTime),
-						"id":                   llx.StringDataPtr(peerconn.VpcPeeringConnectionId),
-						"status":               llx.StringData(status),
-						"tags":                 llx.MapData(toInterfaceMap(ec2TagsToMap(peerconn.Tags)), types.String),
-						"requesterAccountId":   llx.StringData(requesterAccountId),
-						"accepterAccountId":    llx.StringData(accepterAccountId),
-						"dnsResolutionEnabled": llx.BoolData(dnsResolution),
-					},
-				)
+				mqlPeerConn, err := newMqlAwsVpcPeeringConnection(a.MqlRuntime, a.Region.Data, peerconn)
 				if err != nil {
 					return nil, err
 				}
-				mqlPeerConn.(*mqlAwsVpcPeeringConnection).peeringConnectionCache = peerconn
-				mqlPeerConn.(*mqlAwsVpcPeeringConnection).region = a.Region.Data
 				pcs = append(pcs, mqlPeerConn)
 			}
 		}
@@ -593,6 +718,99 @@ func (a *mqlAwsVpcPeeringConnectionPeeringVpc) id() (string, error) {
 type mqlAwsVpcPeeringConnectionInternal struct {
 	peeringConnectionCache vpctypes.VpcPeeringConnection
 	region                 string
+}
+
+// newMqlAwsVpcPeeringConnection builds an aws.vpc.peeringConnection from an SDK
+// VpcPeeringConnection. Shared by the per-VPC list and the by-id init. The
+// acceptor/requestor VPC sub-resources are resolved lazily from the cached SDK
+// struct by their own accessors, so only the scalar fields are set here.
+func newMqlAwsVpcPeeringConnection(runtime *plugin.Runtime, region string, peerconn vpctypes.VpcPeeringConnection) (plugin.Resource, error) {
+	status := ""
+	if peerconn.Status != nil {
+		status = convert.ToValue(peerconn.Status.Message)
+	}
+	// Determine DNS resolution status from peering options
+	dnsResolution := false
+	if peerconn.RequesterVpcInfo != nil && peerconn.RequesterVpcInfo.PeeringOptions != nil &&
+		peerconn.RequesterVpcInfo.PeeringOptions.AllowDnsResolutionFromRemoteVpc != nil {
+		dnsResolution = *peerconn.RequesterVpcInfo.PeeringOptions.AllowDnsResolutionFromRemoteVpc
+	}
+	if !dnsResolution && peerconn.AccepterVpcInfo != nil && peerconn.AccepterVpcInfo.PeeringOptions != nil &&
+		peerconn.AccepterVpcInfo.PeeringOptions.AllowDnsResolutionFromRemoteVpc != nil {
+		dnsResolution = *peerconn.AccepterVpcInfo.PeeringOptions.AllowDnsResolutionFromRemoteVpc
+	}
+
+	var requesterAccountId, accepterAccountId string
+	if peerconn.RequesterVpcInfo != nil {
+		requesterAccountId = convert.ToValue(peerconn.RequesterVpcInfo.OwnerId)
+	}
+	if peerconn.AccepterVpcInfo != nil {
+		accepterAccountId = convert.ToValue(peerconn.AccepterVpcInfo.OwnerId)
+	}
+
+	mqlPeerConn, err := CreateResource(runtime, ResourceAwsVpcPeeringConnection,
+		map[string]*llx.RawData{
+			"expirationTime":       llx.TimeDataPtr(peerconn.ExpirationTime),
+			"id":                   llx.StringDataPtr(peerconn.VpcPeeringConnectionId),
+			"status":               llx.StringData(status),
+			"tags":                 llx.MapData(toInterfaceMap(ec2TagsToMap(peerconn.Tags)), types.String),
+			"requesterAccountId":   llx.StringData(requesterAccountId),
+			"accepterAccountId":    llx.StringData(accepterAccountId),
+			"dnsResolutionEnabled": llx.BoolData(dnsResolution),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	mqlPeerConn.(*mqlAwsVpcPeeringConnection).peeringConnectionCache = peerconn
+	mqlPeerConn.(*mqlAwsVpcPeeringConnection).region = region
+	return mqlPeerConn, nil
+}
+
+func initAwsVpcPeeringConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// region is a lookup hint, not a schema field on aws.vpc.peeringConnection.
+	var region string
+	if r := args["region"]; r != nil {
+		region, _ = r.Value.(string)
+		delete(args, "region")
+	}
+
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	if args["id"] == nil || region == "" {
+		return args, nil, nil
+	}
+	pcxID, _ := args["id"].Value.(string)
+	if pcxID == "" {
+		return args, nil, nil
+	}
+
+	// Reuse a peering connection already listed before spending an API call.
+	cacheID := ResourceAwsVpcPeeringConnection + "\x00" + pcxID
+	if cached, ok := runtime.Resources.Get(cacheID); ok {
+		return args, cached, nil
+	}
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Ec2(region)
+	resp, err := svc.DescribeVpcPeeringConnections(context.Background(), &ec2.DescribeVpcPeeringConnectionsInput{
+		VpcPeeringConnectionIds: []string{pcxID},
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return nil, nil, fmt.Errorf("access denied fetching aws.vpc.peeringConnection with id %q in region %s", pcxID, region)
+		}
+		return nil, nil, err
+	}
+	if len(resp.VpcPeeringConnections) == 0 {
+		return nil, nil, fmt.Errorf("aws.vpc.peeringConnection with id %q not found", pcxID)
+	}
+	res, err := newMqlAwsVpcPeeringConnection(runtime, region, resp.VpcPeeringConnections[0])
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, res, nil
 }
 
 func (a *mqlAwsVpcPeeringConnection) acceptorVpc() (*mqlAwsVpcPeeringConnectionPeeringVpc, error) {
@@ -778,8 +996,142 @@ type mqlAwsVpcRoutetableInternal struct {
 	cacheRoutes       []vpctypes.Route
 }
 
+type mqlAwsVpcRoutetableRouteInternal struct {
+	region string
+}
+
 func (a *mqlAwsVpcRoutetableRoute) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+func (a *mqlAwsVpcRoutetableRoute) networkInterface() (*mqlAwsEc2Networkinterface, error) {
+	eniId := a.NetworkInterfaceId.Data
+	if eniId == "" {
+		a.NetworkInterface.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAwsEc2Networkinterface,
+		map[string]*llx.RawData{"id": llx.StringData(eniId), "region": llx.StringData(a.region)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEc2Networkinterface), nil
+}
+
+func (a *mqlAwsVpcRoutetableRoute) natGateway() (*mqlAwsVpcNatgateway, error) {
+	natID := a.NatGatewayId.Data
+	if natID == "" {
+		a.NatGateway.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAwsVpcNatgateway,
+		map[string]*llx.RawData{"natGatewayId": llx.StringData(natID), "region": llx.StringData(a.region)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsVpcNatgateway), nil
+}
+
+func (a *mqlAwsVpcRoutetableRoute) instance() (*mqlAwsEc2Instance, error) {
+	instanceID := a.InstanceId.Data
+	if instanceID == "" {
+		a.Instance.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arnStr := fmt.Sprintf(ec2InstanceArnPattern, a.region, conn.AccountId(), instanceID)
+	res, err := NewResource(a.MqlRuntime, ResourceAwsEc2Instance,
+		map[string]*llx.RawData{"arn": llx.StringData(arnStr)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEc2Instance), nil
+}
+
+func (a *mqlAwsVpcRoutetableRoute) internetGateway() (*mqlAwsEc2Internetgateway, error) {
+	gwID := a.GatewayId.Data
+	if !strings.HasPrefix(gwID, "igw-") {
+		a.InternetGateway.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAwsEc2Internetgateway,
+		map[string]*llx.RawData{"id": llx.StringData(gwID), "region": llx.StringData(a.region)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEc2Internetgateway), nil
+}
+
+func (a *mqlAwsVpcRoutetableRoute) vpnGateway() (*mqlAwsVpcVpnGateway, error) {
+	gwID := a.GatewayId.Data
+	if !strings.HasPrefix(gwID, "vgw-") {
+		a.VpnGateway.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAwsVpcVpnGateway,
+		map[string]*llx.RawData{"id": llx.StringData(gwID), "region": llx.StringData(a.region)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsVpcVpnGateway), nil
+}
+
+func (a *mqlAwsVpcRoutetableRoute) transitGateway() (*mqlAwsEc2Transitgateway, error) {
+	tgwID := a.TransitGatewayId.Data
+	if tgwID == "" {
+		a.TransitGateway.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAwsEc2Transitgateway,
+		map[string]*llx.RawData{"id": llx.StringData(tgwID), "region": llx.StringData(a.region)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEc2Transitgateway), nil
+}
+
+func (a *mqlAwsVpcRoutetableRoute) peeringConnection() (*mqlAwsVpcPeeringConnection, error) {
+	pcxID := a.VpcPeeringConnectionId.Data
+	if pcxID == "" {
+		a.PeeringConnection.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAwsVpcPeeringConnection,
+		map[string]*llx.RawData{"id": llx.StringData(pcxID), "region": llx.StringData(a.region)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsVpcPeeringConnection), nil
+}
+
+func (a *mqlAwsVpcRoutetableRoute) egressOnlyInternetGateway() (*mqlAwsEc2EgressOnlyInternetGateway, error) {
+	eigwID := a.EgressOnlyInternetGatewayId.Data
+	if eigwID == "" {
+		a.EgressOnlyInternetGateway.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAwsEc2EgressOnlyInternetGateway,
+		map[string]*llx.RawData{"id": llx.StringData(eigwID), "region": llx.StringData(a.region)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEc2EgressOnlyInternetGateway), nil
+}
+
+func (a *mqlAwsVpcRoutetableRoute) managedPrefixList() (*mqlAwsEc2ManagedPrefixList, error) {
+	plID := a.DestinationPrefixListId.Data
+	if plID == "" {
+		a.ManagedPrefixList.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arnStr := fmt.Sprintf(prefixListArnPattern, a.region, conn.AccountId(), plID)
+	res, err := NewResource(a.MqlRuntime, ResourceAwsEc2ManagedPrefixList,
+		map[string]*llx.RawData{"arn": llx.StringData(arnStr)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEc2ManagedPrefixList), nil
 }
 
 func (a *mqlAwsVpcRoutetable) routeEntries() ([]any, error) {
@@ -827,6 +1179,7 @@ func (a *mqlAwsVpcRoutetable) routeEntries() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlRoute.(*mqlAwsVpcRoutetableRoute).region = a.Region.Data
 		res = append(res, mqlRoute)
 	}
 	return res, nil
@@ -1014,6 +1367,7 @@ func (a *mqlAwsVpc) subnets() ([]any, error) {
 					"ipv6CidrBlock":               llx.StringData(ipv6CidrBlock),
 					"mapPublicIpOnLaunch":         llx.BoolDataPtr(subnet.MapPublicIpOnLaunch),
 					"name":                        llx.StringData(tagsMap["Name"]),
+					"ownerId":                     llx.StringDataPtr(subnet.OwnerId),
 					"region":                      llx.StringData(a.Region.Data),
 					"state":                       llx.StringData(string(subnet.State)),
 					"tags":                        llx.MapData(toInterfaceMap(tagsMap), types.String),
@@ -1094,6 +1448,7 @@ func initAwsVpcSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 		}
 		args["mapPublicIpOnLaunch"] = llx.BoolDataPtr(subnet.MapPublicIpOnLaunch)
 		args["name"] = llx.StringData(tagsMap["Name"])
+		args["ownerId"] = llx.StringDataPtr(subnet.OwnerId)
 		args["region"] = llx.StringData(region)
 		args["state"] = llx.StringData(string(subnet.State))
 		args["tags"] = llx.MapData(toInterfaceMap(tagsMap), types.String)
@@ -1109,25 +1464,73 @@ func initAwsVpcSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 	return nil, nil, errors.New("subnet not found")
 }
 
+// deriveVpcTarget resolves the region and VPC id to look up. It pulls the ARN
+// from the asset identifier when args are empty, then derives the id from the
+// ARN's resource segment or an explicit "id" arg — never from the asset name
+// (which may be a "Name" tag, not the vpc-id), keeping asset-name-vs-id
+// resolution correct. It may populate args["arn"] from the asset identifier.
+func deriveVpcTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (region, vpcId string) {
+	if len(args) == 0 {
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
+		}
+	}
+	if args["arn"] != nil {
+		arnVal := args["arn"].Value.(string)
+		// The VPC ARN uses a custom shape, vpcArnPattern =
+		// "arn:aws:vpc:<region>:<acct>:id/<vpc-id>", so the id lives behind an
+		// "id/" prefix (not the standard "vpc/").
+		if parsed, err := arn.Parse(arnVal); err == nil && strings.HasPrefix(parsed.Resource, "id/") {
+			region = parsed.Region
+			vpcId = strings.TrimPrefix(parsed.Resource, "id/")
+		}
+	}
+	if args["id"] != nil && vpcId == "" {
+		vpcId = args["id"].Value.(string)
+	}
+	if args["region"] != nil {
+		if r, ok := args["region"].Value.(string); ok && r != "" {
+			region = r
+		}
+	}
+	return region, vpcId
+}
+
 func initAwsVpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			// Only use the ARN from asset identifiers. The asset name may be
-			// the VPC's "Name" tag (e.g. "my-vpc") rather than the VPC ID
-			// (e.g. "vpc-0abc123"), so it cannot be used as the "id" arg.
-			args["arn"] = llx.StringData(ids.arn)
-		}
-	}
+	// Derive region + vpcId for a single targeted DescribeVpcs call instead of
+	// listing every VPC in every region. This also pulls the ARN from the asset
+	// identifier when args are empty.
+	region, vpcId := deriveVpcTarget(runtime, args)
 
 	if args["arn"] == nil && args["id"] == nil {
 		return nil, nil, errors.New("arn or id required to fetch aws vpc")
 	}
 
-	// load all vpcs
+	if region != "" && vpcId != "" {
+		conn := runtime.Connection.(*connection.AwsConnection)
+		svc := conn.Ec2(region)
+		resp, err := svc.DescribeVpcs(context.Background(), &ec2.DescribeVpcsInput{
+			VpcIds: []string{vpcId},
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+		if len(resp.Vpcs) > 0 {
+			vpc, err := buildVpcResource(runtime, region, conn.AccountId(), resp.Vpcs[0])
+			if err != nil {
+				return nil, nil, err
+			}
+			return args, vpc, nil
+		}
+		return nil, nil, errors.New("vpc does not exist")
+	}
+
+	// Fallback: scan the cached list (e.g. when called with just an opaque id
+	// and no region hint).
 	obj, err := CreateResource(runtime, "aws", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
@@ -1604,6 +2007,11 @@ func (a *mqlAwsEc2DhcpOptions) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+func (a *mqlAwsEc2DhcpOptions) arn() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return fmt.Sprintf(dhcpOptionsArnPattern, a.Region.Data, conn.AccountId(), a.Id.Data), nil
+}
+
 func (a *mqlAwsVpc) dhcpOptions() (*mqlAwsEc2DhcpOptions, error) {
 	dhcpOptionsId := a.DhcpOptionsId.Data
 	if dhcpOptionsId == "" {
@@ -1687,6 +2095,11 @@ type mqlAwsVpcFlowlogInternal struct {
 	cacheLogDestination           *string
 	cacheLogDestinationType       string
 	region                        string
+}
+
+func (a *mqlAwsVpcFlowlog) arn() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return fmt.Sprintf(vpcFlowLogArnPattern, a.Region.Data, conn.AccountId(), a.Id.Data), nil
 }
 
 func (a *mqlAwsVpcFlowlog) iamRole() (*mqlAwsIamRole, error) {
@@ -1795,35 +2208,7 @@ func (a *mqlAwsVpcSubnet) natGateway() (*mqlAwsVpcNatgateway, error) {
 	// Find an active NAT gateway
 	for _, gw := range resp.NatGateways {
 		if gw.State == vpctypes.NatGatewayStateAvailable || gw.State == vpctypes.NatGatewayStatePending {
-			addresses := []any{}
-			for _, address := range gw.NatGatewayAddresses {
-				mqlAddr, err := CreateResource(a.MqlRuntime, ResourceAwsVpcNatgatewayAddress,
-					map[string]*llx.RawData{
-						"allocationId":       llx.StringDataPtr(address.AllocationId),
-						"networkInterfaceId": llx.StringDataPtr(address.NetworkInterfaceId),
-						"privateIp":          llx.StringDataPtr(address.PrivateIp),
-						"isPrimary":          llx.BoolDataPtr(address.IsPrimary),
-					})
-				if err == nil {
-					mqlAddr.(*mqlAwsVpcNatgatewayAddress).natGatewayAddressCache = address
-					mqlAddr.(*mqlAwsVpcNatgatewayAddress).region = a.Region.Data
-					addresses = append(addresses, mqlAddr)
-				}
-			}
-			mqlNatGw, err := CreateResource(a.MqlRuntime, ResourceAwsVpcNatgateway,
-				map[string]*llx.RawData{
-					"createdAt":    llx.TimeDataPtr(gw.CreateTime),
-					"natGatewayId": llx.StringDataPtr(gw.NatGatewayId),
-					"state":        llx.StringData(string(gw.State)),
-					"tags":         llx.MapData(toInterfaceMap(ec2TagsToMap(gw.Tags)), types.String),
-					"addresses":    llx.ArrayData(addresses, types.Type(ResourceAwsVpcNatgatewayAddress)),
-				})
-			if err != nil {
-				return nil, err
-			}
-			mqlNatGw.(*mqlAwsVpcNatgateway).natGatewayCache = gw
-			mqlNatGw.(*mqlAwsVpcNatgateway).region = a.Region.Data
-			return mqlNatGw.(*mqlAwsVpcNatgateway), nil
+			return newMqlAwsVpcNatgateway(a.MqlRuntime, a.Region.Data, gw)
 		}
 	}
 	a.NatGateway.State = plugin.StateIsNull | plugin.StateIsSet

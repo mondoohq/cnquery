@@ -740,7 +740,7 @@
         },
         {
           "Resource": "files.find",
-          "ID": "/etc/rsyslog.d -xdev type=file name=^[^/]*\\.conf$ depth=1 permissions=0",
+          "ID": "/etc/rsyslog.d -xdev type=file depth=1 permissions=0",
           "Fields": {
             "list": {
               "type": "\u0019\u001bfile",

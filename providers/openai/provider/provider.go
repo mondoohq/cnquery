@@ -140,13 +140,9 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.OpenaiConnecti
 	identifier := conn.Identifier()
 	asset.Name = name
 	asset.Platform = &inventory.Platform{
-		Name:                  "openai",
-		Title:                 "OpenAI",
-		Family:                []string{"openai"},
-		Kind:                  "api",
-		Runtime:               "openai",
 		TechnologyUrlSegments: []string{"ai", "openai", identifier},
 	}
+	connection.PlatformByName("openai").Apply(asset.Platform)
 
 	asset.PlatformIds = []string{conn.PlatformId()}
 

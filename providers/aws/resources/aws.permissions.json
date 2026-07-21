@@ -1,7 +1,7 @@
 {
   "provider": "aws",
-  "version": "13.37.0",
-  "generated_at": "2026-06-18T22:07:05-06:00",
+  "version": "13.48.1",
+  "generated_at": "2026-07-18T10:34:00-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindings",
@@ -14,6 +14,9 @@
     "acm:ListCertificates",
     "acm:ListTagsForCertificate",
     "apigateway:GET",
+    "appflow:DescribeConnectorProfiles",
+    "appflow:DescribeFlow",
+    "appflow:ListFlows",
     "application-autoscaling:DescribeScalableTargets",
     "application-autoscaling:DescribeScalingPolicies",
     "application-autoscaling:DescribeScheduledActions",
@@ -53,8 +56,11 @@
     "athena:BatchGetNamedQuery",
     "athena:GetDataCatalog",
     "athena:GetWorkGroup",
+    "athena:ListCapacityReservations",
     "athena:ListDataCatalogs",
+    "athena:ListDatabases",
     "athena:ListNamedQueries",
+    "athena:ListTableMetadata",
     "athena:ListTagsForResource",
     "athena:ListWorkGroups",
     "autoscaling:DescribeAutoScalingGroups",
@@ -96,6 +102,7 @@
     "bedrock:GetKnowledgeBase",
     "bedrock:GetModelImportJob",
     "bedrock:GetModelInvocationLoggingConfiguration",
+    "bedrock:GetResourcePolicy",
     "bedrock:ListAgentActionGroups",
     "bedrock:ListAgentAliases",
     "bedrock:ListAgentKnowledgeBases",
@@ -147,6 +154,7 @@
     "cloudtrail:GetEventDataStore",
     "cloudtrail:GetEventSelectors",
     "cloudtrail:GetInsightSelectors",
+    "cloudtrail:GetTrail",
     "cloudtrail:GetTrailStatus",
     "cloudtrail:ListChannels",
     "cloudtrail:ListEventDataStores",
@@ -194,6 +202,7 @@
     "config:DescribeComplianceByConfigRule",
     "config:DescribeConfigRules",
     "config:DescribeConfigurationAggregators",
+    "config:DescribeConfigurationRecorderStatus",
     "config:DescribeConfigurationRecorders",
     "config:DescribeConformancePackCompliance",
     "config:DescribeConformancePacks",
@@ -204,6 +213,11 @@
     "config:GetConformancePackComplianceSummary",
     "controltower:ListEnabledBaselines",
     "controltower:ListLandingZones",
+    "datasync:DescribeAgent",
+    "datasync:DescribeTask",
+    "datasync:ListAgents",
+    "datasync:ListLocations",
+    "datasync:ListTasks",
     "dax:DescribeClusters",
     "dax:ListTags",
     "detective:ListDatasourcePackages",
@@ -252,6 +266,7 @@
     "ec2:DescribeInstanceAttribute",
     "ec2:DescribeInstanceConnectEndpoints",
     "ec2:DescribeInstanceStatus",
+    "ec2:DescribeInstanceTypes",
     "ec2:DescribeInstances",
     "ec2:DescribeInternetGateways",
     "ec2:DescribeIpamPools",
@@ -265,6 +280,7 @@
     "ec2:DescribeNetworkAcls",
     "ec2:DescribeNetworkInterfaces",
     "ec2:DescribePlacementGroups",
+    "ec2:DescribeRegions",
     "ec2:DescribeRouteTables",
     "ec2:DescribeSecurityGroups",
     "ec2:DescribeSnapshotAttribute",
@@ -283,6 +299,7 @@
     "ec2:DescribeVolumes",
     "ec2:DescribeVpcAttribute",
     "ec2:DescribeVpcBlockPublicAccessOptions",
+    "ec2:DescribeVpcEncryptionControls",
     "ec2:DescribeVpcEndpointConnections",
     "ec2:DescribeVpcEndpointServiceConfigurations",
     "ec2:DescribeVpcEndpointServicePermissions",
@@ -369,6 +386,7 @@
     "elasticloadbalancing:DescribeTags",
     "elasticloadbalancing:DescribeTargetGroupAttributes",
     "elasticloadbalancing:DescribeTargetGroups",
+    "elasticloadbalancing:DescribeTargetHealth",
     "elasticmapreduce:DescribeCluster",
     "elasticmapreduce:DescribeSecurityConfiguration",
     "elasticmapreduce:DescribeStep",
@@ -438,6 +456,7 @@
     "guardduty:GetCoverageStatistics",
     "guardduty:GetDetector",
     "guardduty:GetFilter",
+    "guardduty:GetFindings",
     "guardduty:GetIPSet",
     "guardduty:GetThreatIntelSet",
     "guardduty:ListDetectors",
@@ -484,6 +503,8 @@
     "iam:ListVirtualMFADevices",
     "identitystore:ListGroups",
     "identitystore:ListUsers",
+    "inspector2:BatchGetAccountStatus",
+    "inspector2:GetConfiguration",
     "inspector2:ListCoverage",
     "inspector2:ListFindings",
     "kafka:DescribeClusterV2",
@@ -521,6 +542,7 @@
     "lambda:GetFunction",
     "lambda:GetFunctionCodeSigningConfig",
     "lambda:GetFunctionConcurrency",
+    "lambda:GetFunctionConfiguration",
     "lambda:GetFunctionEventInvokeConfig",
     "lambda:GetFunctionRecursionConfig",
     "lambda:GetFunctionUrlConfig",
@@ -559,6 +581,7 @@
     "macie2:GetBucketStatistics",
     "macie2:GetClassificationExportConfiguration",
     "macie2:GetCustomDataIdentifier",
+    "macie2:GetFindings",
     "macie2:GetFindingsFilter",
     "macie2:GetMacieSession",
     "macie2:ListAllowLists",
@@ -600,6 +623,22 @@
     "organizations:ListPoliciesForTarget",
     "organizations:ListRoots",
     "organizations:ListTagsForResource",
+    "personalize:DescribeCampaign",
+    "personalize:DescribeDataset",
+    "personalize:DescribeDatasetGroup",
+    "personalize:DescribeEventTracker",
+    "personalize:DescribeFilter",
+    "personalize:DescribeRecommender",
+    "personalize:DescribeSchema",
+    "personalize:DescribeSolution",
+    "personalize:ListCampaigns",
+    "personalize:ListDatasetGroups",
+    "personalize:ListDatasets",
+    "personalize:ListEventTrackers",
+    "personalize:ListFilters",
+    "personalize:ListRecommenders",
+    "personalize:ListSchemas",
+    "personalize:ListSolutions",
     "pipes:DescribePipe",
     "pipes:ListPipes",
     "qbusiness:GetApplication",
@@ -654,6 +693,7 @@
     "route53:ListQueryLoggingConfigs",
     "route53:ListResourceRecordSets",
     "route53:ListTagsForResource",
+    "route53:ListTagsForResources",
     "route53:ListTrafficPolicies",
     "route53:ListTrafficPolicyInstances",
     "route53domains:GetDomainDetail",
@@ -684,6 +724,7 @@
     "s3:GetBucketObjectLockConfiguration",
     "s3:GetBucketOwnershipControls",
     "s3:GetBucketPolicy",
+    "s3:GetBucketPolicyStatus",
     "s3:GetBucketPublicAccessBlock",
     "s3:GetBucketRequestPayment",
     "s3:GetBucketTagging",
@@ -744,6 +785,7 @@
     "sagemaker:DescribeTrial",
     "sagemaker:DescribeTrialComponent",
     "sagemaker:DescribeUserProfile",
+    "sagemaker:GetModelPackageGroupPolicy",
     "sagemaker:ListActions",
     "sagemaker:ListAlgorithms",
     "sagemaker:ListAppImageConfigs",
@@ -830,6 +872,7 @@
     "sns:GetSubscriptionAttributes",
     "sns:GetTopicAttributes",
     "sns:ListSubscriptionsByTopic",
+    "sns:ListTagsForResource",
     "sns:ListTopics",
     "sqs:GetQueueAttributes",
     "sqs:ListQueueTags",
@@ -891,6 +934,7 @@
     "wafv2:GetRegexPatternSet",
     "wafv2:GetRuleGroup",
     "wafv2:GetWebACL",
+    "wafv2:GetWebACLForResource",
     "wafv2:ListIPSets",
     "wafv2:ListRegexPatternSets",
     "wafv2:ListResourcesForWebACL",
@@ -990,10 +1034,34 @@
       "source_file": "aws_apigatewayv2.go"
     },
     {
+      "permission": "appflow:DescribeConnectorProfiles",
+      "service": "appflow",
+      "action": "DescribeConnectorProfiles",
+      "source_file": "aws_appflow.go"
+    },
+    {
+      "permission": "appflow:DescribeFlow",
+      "service": "appflow",
+      "action": "DescribeFlow",
+      "source_file": "aws_appflow.go"
+    },
+    {
+      "permission": "appflow:ListFlows",
+      "service": "appflow",
+      "action": "ListFlows",
+      "source_file": "aws_appflow.go"
+    },
+    {
       "permission": "application-autoscaling:DescribeScalableTargets",
       "service": "application-autoscaling",
       "action": "DescribeScalableTargets",
       "source_file": "aws_applicationautoscaling.go"
+    },
+    {
+      "permission": "application-autoscaling:DescribeScalableTargets",
+      "service": "application-autoscaling",
+      "action": "DescribeScalableTargets",
+      "source_file": "aws_dynamodb.go"
     },
     {
       "permission": "application-autoscaling:DescribeScalingPolicies",
@@ -1224,15 +1292,33 @@
       "source_file": "aws_athena.go"
     },
     {
+      "permission": "athena:ListCapacityReservations",
+      "service": "athena",
+      "action": "ListCapacityReservations",
+      "source_file": "aws_athena.go"
+    },
+    {
       "permission": "athena:ListDataCatalogs",
       "service": "athena",
       "action": "ListDataCatalogs",
       "source_file": "aws_athena.go"
     },
     {
+      "permission": "athena:ListDatabases",
+      "service": "athena",
+      "action": "ListDatabases",
+      "source_file": "aws_athena.go"
+    },
+    {
       "permission": "athena:ListNamedQueries",
       "service": "athena",
       "action": "ListNamedQueries",
+      "source_file": "aws_athena.go"
+    },
+    {
+      "permission": "athena:ListTableMetadata",
+      "service": "athena",
+      "action": "ListTableMetadata",
       "source_file": "aws_athena.go"
     },
     {
@@ -1479,6 +1565,12 @@
       "permission": "bedrock:GetModelInvocationLoggingConfiguration",
       "service": "bedrock",
       "action": "GetModelInvocationLoggingConfiguration",
+      "source_file": "aws_bedrock.go"
+    },
+    {
+      "permission": "bedrock:GetResourcePolicy",
+      "service": "bedrock",
+      "action": "GetResourcePolicy",
       "source_file": "aws_bedrock.go"
     },
     {
@@ -1788,6 +1880,12 @@
       "source_file": "aws_cloudtrail.go"
     },
     {
+      "permission": "cloudtrail:GetTrail",
+      "service": "cloudtrail",
+      "action": "GetTrail",
+      "source_file": "aws_cloudtrail.go"
+    },
+    {
       "permission": "cloudtrail:GetTrailStatus",
       "service": "cloudtrail",
       "action": "GetTrailStatus",
@@ -2070,6 +2168,12 @@
       "source_file": "aws_config.go"
     },
     {
+      "permission": "config:DescribeConfigurationRecorderStatus",
+      "service": "config",
+      "action": "DescribeConfigurationRecorderStatus",
+      "source_file": "aws_config.go"
+    },
+    {
       "permission": "config:DescribeConfigurationRecorders",
       "service": "config",
       "action": "DescribeConfigurationRecorders",
@@ -2128,6 +2232,36 @@
       "service": "controltower",
       "action": "ListLandingZones",
       "source_file": "aws_controltower.go"
+    },
+    {
+      "permission": "datasync:DescribeAgent",
+      "service": "datasync",
+      "action": "DescribeAgent",
+      "source_file": "aws_datasync.go"
+    },
+    {
+      "permission": "datasync:DescribeTask",
+      "service": "datasync",
+      "action": "DescribeTask",
+      "source_file": "aws_datasync.go"
+    },
+    {
+      "permission": "datasync:ListAgents",
+      "service": "datasync",
+      "action": "ListAgents",
+      "source_file": "aws_datasync.go"
+    },
+    {
+      "permission": "datasync:ListLocations",
+      "service": "datasync",
+      "action": "ListLocations",
+      "source_file": "aws_datasync.go"
+    },
+    {
+      "permission": "datasync:ListTasks",
+      "service": "datasync",
+      "action": "ListTasks",
+      "source_file": "aws_datasync.go"
     },
     {
       "permission": "dax:DescribeClusters",
@@ -2418,6 +2552,12 @@
       "source_file": "aws_ec2.go"
     },
     {
+      "permission": "ec2:DescribeInstanceTypes",
+      "service": "ec2",
+      "action": "DescribeInstanceTypes",
+      "source_file": "aws_ec2.go"
+    },
+    {
       "permission": "ec2:DescribeInstances",
       "service": "ec2",
       "action": "DescribeInstances",
@@ -2520,6 +2660,12 @@
       "source_file": "aws_ec2_placement.go"
     },
     {
+      "permission": "ec2:DescribeRegions",
+      "service": "ec2",
+      "action": "DescribeRegions",
+      "source_file": "connection.go"
+    },
+    {
       "permission": "ec2:DescribeRouteTables",
       "service": "ec2",
       "action": "DescribeRouteTables",
@@ -2548,6 +2694,12 @@
       "service": "ec2",
       "action": "DescribeSnapshots",
       "source_file": "aws_ec2.go"
+    },
+    {
+      "permission": "ec2:DescribeSnapshots",
+      "service": "ec2",
+      "action": "DescribeSnapshots",
+      "source_file": "setup.go"
     },
     {
       "permission": "ec2:DescribeSubnets",
@@ -2637,6 +2789,12 @@
       "permission": "ec2:DescribeVpcBlockPublicAccessOptions",
       "service": "ec2",
       "action": "DescribeVpcBlockPublicAccessOptions",
+      "source_file": "aws_vpc.go"
+    },
+    {
+      "permission": "ec2:DescribeVpcEncryptionControls",
+      "service": "ec2",
+      "action": "DescribeVpcEncryptionControls",
       "source_file": "aws_vpc.go"
     },
     {
@@ -3162,6 +3320,12 @@
       "source_file": "aws_elb.go"
     },
     {
+      "permission": "elasticloadbalancing:DescribeTargetHealth",
+      "service": "elasticloadbalancing",
+      "action": "DescribeTargetHealth",
+      "source_file": "aws_elb.go"
+    },
+    {
       "permission": "elasticmapreduce:DescribeCluster",
       "service": "elasticmapreduce",
       "action": "DescribeCluster",
@@ -3268,6 +3432,12 @@
       "service": "es",
       "action": "ListDomainNames",
       "source_file": "aws_opensearch.go"
+    },
+    {
+      "permission": "es:ListTags",
+      "service": "es",
+      "action": "ListTags",
+      "source_file": "aws_es.go"
     },
     {
       "permission": "es:ListTags",
@@ -3582,6 +3752,12 @@
       "source_file": "aws_guardduty.go"
     },
     {
+      "permission": "guardduty:GetFindings",
+      "service": "guardduty",
+      "action": "GetFindings",
+      "source_file": "aws_guardduty.go"
+    },
+    {
       "permission": "guardduty:GetIPSet",
       "service": "guardduty",
       "action": "GetIPSet",
@@ -3864,6 +4040,18 @@
       "source_file": "aws_identitycenter.go"
     },
     {
+      "permission": "inspector2:BatchGetAccountStatus",
+      "service": "inspector2",
+      "action": "BatchGetAccountStatus",
+      "source_file": "aws_inspector.go"
+    },
+    {
+      "permission": "inspector2:GetConfiguration",
+      "service": "inspector2",
+      "action": "GetConfiguration",
+      "source_file": "aws_inspector.go"
+    },
+    {
       "permission": "inspector2:ListCoverage",
       "service": "inspector2",
       "action": "ListCoverage",
@@ -4092,6 +4280,12 @@
       "source_file": "aws_lambda.go"
     },
     {
+      "permission": "lambda:GetFunctionConfiguration",
+      "service": "lambda",
+      "action": "GetFunctionConfiguration",
+      "source_file": "aws_lambda.go"
+    },
+    {
       "permission": "lambda:GetFunctionEventInvokeConfig",
       "service": "lambda",
       "action": "GetFunctionEventInvokeConfig",
@@ -4317,6 +4511,12 @@
       "permission": "macie2:GetCustomDataIdentifier",
       "service": "macie2",
       "action": "GetCustomDataIdentifier",
+      "source_file": "aws_macie.go"
+    },
+    {
+      "permission": "macie2:GetFindings",
+      "service": "macie2",
+      "action": "GetFindings",
       "source_file": "aws_macie.go"
     },
     {
@@ -4564,6 +4764,102 @@
       "service": "organizations",
       "action": "ListTagsForResource",
       "source_file": "aws_account.go"
+    },
+    {
+      "permission": "personalize:DescribeCampaign",
+      "service": "personalize",
+      "action": "DescribeCampaign",
+      "source_file": "aws_personalize.go"
+    },
+    {
+      "permission": "personalize:DescribeDataset",
+      "service": "personalize",
+      "action": "DescribeDataset",
+      "source_file": "aws_personalize.go"
+    },
+    {
+      "permission": "personalize:DescribeDatasetGroup",
+      "service": "personalize",
+      "action": "DescribeDatasetGroup",
+      "source_file": "aws_personalize.go"
+    },
+    {
+      "permission": "personalize:DescribeEventTracker",
+      "service": "personalize",
+      "action": "DescribeEventTracker",
+      "source_file": "aws_personalize.go"
+    },
+    {
+      "permission": "personalize:DescribeFilter",
+      "service": "personalize",
+      "action": "DescribeFilter",
+      "source_file": "aws_personalize.go"
+    },
+    {
+      "permission": "personalize:DescribeRecommender",
+      "service": "personalize",
+      "action": "DescribeRecommender",
+      "source_file": "aws_personalize.go"
+    },
+    {
+      "permission": "personalize:DescribeSchema",
+      "service": "personalize",
+      "action": "DescribeSchema",
+      "source_file": "aws_personalize.go"
+    },
+    {
+      "permission": "personalize:DescribeSolution",
+      "service": "personalize",
+      "action": "DescribeSolution",
+      "source_file": "aws_personalize.go"
+    },
+    {
+      "permission": "personalize:ListCampaigns",
+      "service": "personalize",
+      "action": "ListCampaigns",
+      "source_file": "aws_personalize.go"
+    },
+    {
+      "permission": "personalize:ListDatasetGroups",
+      "service": "personalize",
+      "action": "ListDatasetGroups",
+      "source_file": "aws_personalize.go"
+    },
+    {
+      "permission": "personalize:ListDatasets",
+      "service": "personalize",
+      "action": "ListDatasets",
+      "source_file": "aws_personalize.go"
+    },
+    {
+      "permission": "personalize:ListEventTrackers",
+      "service": "personalize",
+      "action": "ListEventTrackers",
+      "source_file": "aws_personalize.go"
+    },
+    {
+      "permission": "personalize:ListFilters",
+      "service": "personalize",
+      "action": "ListFilters",
+      "source_file": "aws_personalize.go"
+    },
+    {
+      "permission": "personalize:ListRecommenders",
+      "service": "personalize",
+      "action": "ListRecommenders",
+      "source_file": "aws_personalize.go"
+    },
+    {
+      "permission": "personalize:ListSchemas",
+      "service": "personalize",
+      "action": "ListSchemas",
+      "source_file": "aws_personalize.go"
+    },
+    {
+      "permission": "personalize:ListSolutions",
+      "service": "personalize",
+      "action": "ListSolutions",
+      "source_file": "aws_personalize.go"
     },
     {
       "permission": "pipes:DescribePipe",
@@ -4833,6 +5129,12 @@
       "permission": "rds:ListTagsForResource",
       "service": "rds",
       "action": "ListTagsForResource",
+      "source_file": "aws_neptune.go"
+    },
+    {
+      "permission": "rds:ListTagsForResource",
+      "service": "rds",
+      "action": "ListTagsForResource",
       "source_file": "aws_rds.go"
     },
     {
@@ -4959,6 +5261,12 @@
       "permission": "route53:ListTagsForResource",
       "service": "route53",
       "action": "ListTagsForResource",
+      "source_file": "aws_route53.go"
+    },
+    {
+      "permission": "route53:ListTagsForResources",
+      "service": "route53",
+      "action": "ListTagsForResources",
       "source_file": "aws_route53.go"
     },
     {
@@ -5139,6 +5447,12 @@
       "permission": "s3:GetBucketPolicy",
       "service": "s3",
       "action": "GetBucketPolicy",
+      "source_file": "aws_s3.go"
+    },
+    {
+      "permission": "s3:GetBucketPolicyStatus",
+      "service": "s3",
+      "action": "GetBucketPolicyStatus",
       "source_file": "aws_s3.go"
     },
     {
@@ -5505,6 +5819,12 @@
       "permission": "sagemaker:DescribeUserProfile",
       "service": "sagemaker",
       "action": "DescribeUserProfile",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:GetModelPackageGroupPolicy",
+      "service": "sagemaker",
+      "action": "GetModelPackageGroupPolicy",
       "source_file": "aws_sagemaker.go"
     },
     {
@@ -6024,6 +6344,12 @@
       "source_file": "aws_sns.go"
     },
     {
+      "permission": "sns:ListTagsForResource",
+      "service": "sns",
+      "action": "ListTagsForResource",
+      "source_file": "aws_sns.go"
+    },
+    {
       "permission": "sns:ListTopics",
       "service": "sns",
       "action": "ListTopics",
@@ -6417,6 +6743,12 @@
       "permission": "wafv2:GetWebACL",
       "service": "wafv2",
       "action": "GetWebACL",
+      "source_file": "aws_waf.go"
+    },
+    {
+      "permission": "wafv2:GetWebACLForResource",
+      "service": "wafv2",
+      "action": "GetWebACLForResource",
       "source_file": "aws_waf.go"
     },
     {

@@ -416,12 +416,7 @@ func (a *mqlAwsCodepipelineWebhook) targetPipeline() (*mqlAwsCodepipelinePipelin
 // ===== helpers =====
 
 func cpTagsToMap(tags []cptypes.Tag) map[string]any {
-	tagsMap := make(map[string]any)
-	for i := range tags {
-		t := tags[i]
-		tagsMap[convert.ToValue(t.Key)] = convert.ToValue(t.Value)
-	}
-	return tagsMap
+	return tagsToMap(tags, func(t cptypes.Tag) *string { return t.Key }, func(t cptypes.Tag) *string { return t.Value })
 }
 
 func cpStagesToDicts(stages []cptypes.StageDeclaration) ([]any, error) {

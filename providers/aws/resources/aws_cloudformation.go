@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -41,18 +42,7 @@ func (a *mqlAwsCloudformation) stacks() ([]any, error) {
 }
 
 func cfnTagsToMap(in []cf_types.Tag) map[string]any {
-	tags := make(map[string]any, len(in))
-	for _, t := range in {
-		if t.Key == nil {
-			continue
-		}
-		val := ""
-		if t.Value != nil {
-			val = *t.Value
-		}
-		tags[*t.Key] = val
-	}
-	return tags
+	return tagsToMap(in, func(t cf_types.Tag) *string { return t.Key }, func(t cf_types.Tag) *string { return t.Value })
 }
 
 // stackParameterToDict converts an SDK Parameter to a dict with lowercase
@@ -148,41 +138,10 @@ func (a *mqlAwsCloudformation) getStacks(conn *connection.AwsConnection) []*jobp
 				}
 
 				for _, stack := range resp.Stacks {
-					capabilities := make([]any, len(stack.Capabilities))
-					for j, c := range stack.Capabilities {
-						capabilities[j] = string(c)
-					}
-
-					driftStatus := ""
-					if stack.DriftInformation != nil {
-						driftStatus = string(stack.DriftInformation.StackDriftStatus)
-					}
-
-					mqlStack, err := CreateResource(a.MqlRuntime, "aws.cloudformation.stack",
-						map[string]*llx.RawData{
-							"__id":                        llx.StringDataPtr(stack.StackId),
-							"stackId":                     llx.StringDataPtr(stack.StackId),
-							"name":                        llx.StringDataPtr(stack.StackName),
-							"region":                      llx.StringData(region),
-							"status":                      llx.StringData(string(stack.StackStatus)),
-							"statusReason":                llx.StringDataPtr(stack.StackStatusReason),
-							"description":                 llx.StringDataPtr(stack.Description),
-							"enableTerminationProtection": llx.BoolDataPtr(stack.EnableTerminationProtection),
-							"capabilities":                llx.ArrayData(capabilities, types.String),
-							"driftStatus":                 llx.StringData(normalizeDriftStatus(driftStatus)),
-							"roleArn":                     llx.StringData(aws.ToString(stack.RoleARN)),
-							"tags":                        llx.MapData(cfnTagsToMap(stack.Tags), types.String),
-							"createdAt":                   llx.TimeDataPtr(stack.CreationTime),
-							"updatedAt":                   llx.TimeDataPtr(stack.LastUpdatedTime),
-						})
+					mqlStackRes, err := buildCloudformationStackResource(a.MqlRuntime, region, stack)
 					if err != nil {
 						return nil, err
 					}
-					mqlStackRes := mqlStack.(*mqlAwsCloudformationStack)
-					mqlStackRes.cacheRoleArn = stack.RoleARN
-					mqlStackRes.cacheParameters = stack.Parameters
-					mqlStackRes.cacheOutputs = stack.Outputs
-					mqlStackRes.cacheNotificationArns = stack.NotificationARNs
 					res = append(res, mqlStackRes)
 				}
 
@@ -203,6 +162,60 @@ type mqlAwsCloudformationStackInternal struct {
 	cacheParameters       []cf_types.Parameter
 	cacheOutputs          []cf_types.Output
 	cacheNotificationArns []string
+	cacheParentId         *string
+	cacheRootId           *string
+}
+
+// resolveStackById issues a targeted DescribeStacks for a single stack id in
+// the given region and builds the resource. Returns (nil, nil) when the stack
+// is empty/missing; callers set the field's null state before returning.
+func resolveStackById(runtime *plugin.Runtime, region string, stackID *string) (*mqlAwsCloudformationStack, error) {
+	if stackID == nil || *stackID == "" {
+		return nil, nil
+	}
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.CloudFormation(region)
+	resp, err := svc.DescribeStacks(context.Background(), &cloudformation.DescribeStacksInput{
+		StackName: stackID,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
+			return nil, nil
+		}
+		var oe interface{ ErrorCode() string }
+		if errors.As(err, &oe) && oe.ErrorCode() == "ValidationError" {
+			return nil, nil
+		}
+		return nil, err
+	}
+	if len(resp.Stacks) == 0 {
+		return nil, nil
+	}
+	return buildCloudformationStackResource(runtime, region, resp.Stacks[0])
+}
+
+func (a *mqlAwsCloudformationStack) parentStack() (*mqlAwsCloudformationStack, error) {
+	stack, err := resolveStackById(a.MqlRuntime, a.Region.Data, a.cacheParentId)
+	if err != nil {
+		return nil, err
+	}
+	if stack == nil {
+		a.ParentStack.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return stack, nil
+}
+
+func (a *mqlAwsCloudformationStack) rootStack() (*mqlAwsCloudformationStack, error) {
+	stack, err := resolveStackById(a.MqlRuntime, a.Region.Data, a.cacheRootId)
+	if err != nil {
+		return nil, err
+	}
+	if stack == nil {
+		a.RootStack.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return stack, nil
 }
 
 func (a *mqlAwsCloudformationStack) iamRole() (*mqlAwsIamRole, error) {
@@ -535,11 +548,58 @@ func managedByFromTags(tags map[string]any) string {
 	return ""
 }
 
+// buildCloudformationStackResource maps a single CloudFormation stack from the
+// API into an aws.cloudformation.stack resource, caching the fields that back
+// lazy-loaded accessors. Shared by the cross-region stack listing and the
+// targeted single-stack lookup.
+func buildCloudformationStackResource(runtime *plugin.Runtime, region string, stack cf_types.Stack) (*mqlAwsCloudformationStack, error) {
+	capabilities := make([]any, len(stack.Capabilities))
+	for j, c := range stack.Capabilities {
+		capabilities[j] = string(c)
+	}
+
+	driftStatus := ""
+	if stack.DriftInformation != nil {
+		driftStatus = string(stack.DriftInformation.StackDriftStatus)
+	}
+
+	mqlStack, err := CreateResource(runtime, "aws.cloudformation.stack",
+		map[string]*llx.RawData{
+			"__id":                        llx.StringDataPtr(stack.StackId),
+			"stackId":                     llx.StringDataPtr(stack.StackId),
+			"name":                        llx.StringDataPtr(stack.StackName),
+			"region":                      llx.StringData(region),
+			"status":                      llx.StringData(string(stack.StackStatus)),
+			"statusReason":                llx.StringDataPtr(stack.StackStatusReason),
+			"description":                 llx.StringDataPtr(stack.Description),
+			"enableTerminationProtection": llx.BoolDataPtr(stack.EnableTerminationProtection),
+			"capabilities":                llx.ArrayData(capabilities, types.String),
+			"driftStatus":                 llx.StringData(normalizeDriftStatus(driftStatus)),
+			"roleArn":                     llx.StringData(aws.ToString(stack.RoleARN)),
+			"tags":                        llx.MapData(cfnTagsToMap(stack.Tags), types.String),
+			"createdAt":                   llx.TimeDataPtr(stack.CreationTime),
+			"updatedAt":                   llx.TimeDataPtr(stack.LastUpdatedTime),
+			"changeSetId":                 llx.StringDataPtr(stack.ChangeSetId),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlStackRes := mqlStack.(*mqlAwsCloudformationStack)
+	mqlStackRes.cacheRoleArn = stack.RoleARN
+	mqlStackRes.cacheParameters = stack.Parameters
+	mqlStackRes.cacheOutputs = stack.Outputs
+	mqlStackRes.cacheNotificationArns = stack.NotificationARNs
+	mqlStackRes.cacheParentId = stack.ParentId
+	mqlStackRes.cacheRootId = stack.RootId
+	return mqlStackRes, nil
+}
+
 // cloudformationStackForTags resolves the CloudFormation stack that manages a
-// resource from the AWS-injected `aws:cloudformation:stack-name` tag. It scans
-// the account's stacks (a cross-region list cached after first use) and matches
-// on stack name and region. Returns (nil, nil) when the resource is not part of
-// a stack; callers set the field's null state before returning.
+// resource from the AWS-injected `aws:cloudformation:stack-name` tag. It issues
+// a targeted DescribeStacks for that one stack in the resource's region instead
+// of listing every stack across the account. Returns (nil, nil) when the
+// resource is not part of a stack; callers set the field's null state before
+// returning.
 func cloudformationStackForTags(runtime *plugin.Runtime, region string, tags map[string]any) (*mqlAwsCloudformationStack, error) {
 	raw, ok := tags["aws:cloudformation:stack-name"]
 	if !ok {
@@ -550,22 +610,27 @@ func cloudformationStackForTags(runtime *plugin.Runtime, region string, tags map
 		return nil, nil
 	}
 
-	obj, err := CreateResource(runtime, ResourceAwsCloudformation, map[string]*llx.RawData{})
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.CloudFormation(region)
+	resp, err := svc.DescribeStacks(context.Background(), &cloudformation.DescribeStacksInput{
+		StackName: &name,
+	})
 	if err != nil {
+		// A stale tag can reference a deleted stack; DescribeStacks returns a
+		// ValidationError ("Stack with id <name> does not exist") in that case.
+		// Treat any access/lookup failure as "no stack" rather than failing the
+		// whole scan.
+		if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
+			return nil, nil
+		}
+		var oe interface{ ErrorCode() string }
+		if errors.As(err, &oe) && oe.ErrorCode() == "ValidationError" {
+			return nil, nil
+		}
 		return nil, err
 	}
-	stacks := obj.(*mqlAwsCloudformation).GetStacks()
-	if stacks.Error != nil {
-		return nil, stacks.Error
+	if len(resp.Stacks) == 0 {
+		return nil, nil
 	}
-	for _, s := range stacks.Data {
-		st, ok := s.(*mqlAwsCloudformationStack)
-		if !ok {
-			continue
-		}
-		if st.Name.Data == name && st.Region.Data == region {
-			return st, nil
-		}
-	}
-	return nil, nil
+	return buildCloudformationStackResource(runtime, region, resp.Stacks[0])
 }

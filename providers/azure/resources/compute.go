@@ -15,11 +15,12 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	compute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v8"
-	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
+	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v10"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/sshutil"
 	"go.mondoo.com/mql/v13/providers/azure/connection"
 	"go.mondoo.com/mql/v13/types"
 	"golang.org/x/sync/errgroup"
@@ -190,6 +191,9 @@ func vmToMql(runtime *plugin.Runtime, vm compute.VirtualMachine) (*mqlAzureSubsc
 						}
 						if k.KeyData != nil {
 							entry["keyData"] = *k.KeyData
+							algorithm, bits := sshutil.ParsePublicKey(*k.KeyData)
+							entry["algorithm"] = algorithm
+							entry["bits"] = bits
 						}
 						sshPublicKeys = append(sshPublicKeys, entry)
 					}
@@ -229,6 +233,17 @@ func vmToMql(runtime *plugin.Runtime, vm compute.VirtualMachine) (*mqlAzureSubsc
 		if vm.Properties.UserData != nil {
 			userData = *vm.Properties.UserData
 		}
+	}
+
+	identityDict, err := convert.JsonToDict(vm.Identity)
+	if err != nil {
+		return nil, err
+	}
+	var principalId *string
+	var userAssignedIdentityIds []string
+	if vm.Identity != nil {
+		principalId = vm.Identity.PrincipalID
+		userAssignedIdentityIds = sortedUserAssignedIdentityIDs(vm.Identity.UserAssignedIdentities)
 	}
 
 	vmIDStr := ""
@@ -280,11 +295,23 @@ func vmToMql(runtime *plugin.Runtime, vm compute.VirtualMachine) (*mqlAzureSubsc
 			"bootDiagnosticsEnabled":        llx.BoolData(bootDiagnosticsEnabled),
 			"bootDiagnosticsStorageUri":     llx.StringData(bootDiagnosticsStorageUri),
 			"userData":                      llx.StringData(userData),
+			"identity":                      llx.DictData(identityDict),
+			"principalId":                   llx.StringDataPtr(principalId),
 		})
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionComputeServiceVm), nil
+	mqlVm := res.(*mqlAzureSubscriptionComputeServiceVm)
+	mqlVm.cacheUserAssignedIdentityIds = userAssignedIdentityIds
+	return mqlVm, nil
+}
+
+func (a *mqlAzureSubscriptionComputeServiceVm) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
+}
+
+func (a *mqlAzureSubscriptionComputeServiceVm) systemAssignedIdentity() (*mqlAzureSubscriptionManagedIdentity, error) {
+	return newSystemAssignedManagedIdentity(a.MqlRuntime, a.Id.Data, a.PrincipalId.Data, tenantIDFromIdentityDict(a.Identity), &a.SystemAssignedIdentity)
 }
 
 func (a *mqlAzureSubscriptionComputeServiceVm) state() (string, error) {
@@ -330,9 +357,10 @@ func (a *mqlAzureSubscriptionComputeServiceVm) isRunning() (bool, error) {
 }
 
 type mqlAzureSubscriptionComputeServiceVmInternal struct {
-	extensionsOnce  sync.Once
-	extensionsList  []*compute.VirtualMachineExtension
-	extensionsError error
+	extensionsOnce               sync.Once
+	extensionsList               []*compute.VirtualMachineExtension
+	extensionsError              error
+	cacheUserAssignedIdentityIds []string
 }
 
 func (a *mqlAzureSubscriptionComputeServiceVm) fetchExtensions() ([]*compute.VirtualMachineExtension, error) {
@@ -1107,11 +1135,29 @@ func diskEncryptionSetToMql(runtime *plugin.Runtime, des compute.DiskEncryptionS
 	if err != nil {
 		return nil, err
 	}
+	sysData, err := convert.JsonToDict(des.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).cacheSystemData = sysData
 	return res.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet), nil
+}
+
+type mqlAzureSubscriptionComputeServiceDiskEncryptionSetInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionComputeServiceDiskEncryptionSet) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 type mqlAzureSubscriptionComputeServiceDiskAccessInternal struct {
 	cachePrivateEndpointConnections []*compute.PrivateEndpointConnection
+	cacheSystemData                 any
+}
+
+func (a *mqlAzureSubscriptionComputeServiceDiskAccess) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionComputeService) diskAccesses() ([]any, error) {
@@ -1173,6 +1219,12 @@ func (a *mqlAzureSubscriptionComputeService) diskAccesses() ([]any, error) {
 			// Cache private endpoint connections for lazy loading
 			mqlDaTyped := mqlDa.(*mqlAzureSubscriptionComputeServiceDiskAccess)
 			mqlDaTyped.cachePrivateEndpointConnections = privateEndpointConns
+
+			sysData, err := convert.JsonToDict(da.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlDaTyped.cacheSystemData = sysData
 
 			res = append(res, mqlDa)
 		}
@@ -1458,6 +1510,28 @@ func snapshotToMql(runtime *plugin.Runtime, snap compute.Snapshot) (*mqlAzureSub
 			cacheSourceDiskId = props.CreationData.SourceResourceID
 			args["instantAccessDurationMinutes"] = llx.IntDataPtr(props.CreationData.InstantAccessDurationMinutes)
 		}
+
+		// Always set the immutability policy fields so they resolve to null
+		// (not their Go zero value) when no policy is applied. Leaving them
+		// absent from args would make immutabilityPolicyExpired default to
+		// false, wrongly passing audits like `!immutabilityPolicyExpired`
+		// for snapshots that have no immutability protection at all.
+		var ipType *compute.ImmutabilityPolicyType
+		var ipDurationDays *int32
+		var ipExpired *bool
+		var ipStartTime, ipExpirationTime *time.Time
+		if ip := props.ImmutabilityPolicy; ip != nil {
+			ipType = ip.Type
+			ipDurationDays = ip.ImmutabilityDurationDays
+			ipExpired = ip.IsPolicyExpired
+			ipStartTime = ip.PolicyStartTime
+			ipExpirationTime = ip.PolicyExpirationTime
+		}
+		args["immutabilityPolicyType"] = llx.StringDataPtr(stringEnumPtr(ipType))
+		args["immutabilityPolicyDurationDays"] = llx.IntDataPtr(ipDurationDays)
+		args["immutabilityPolicyExpired"] = llx.BoolDataPtr(ipExpired)
+		args["immutabilityPolicyStartTime"] = llx.TimeDataPtr(ipStartTime)
+		args["immutabilityPolicyExpirationTime"] = llx.TimeDataPtr(ipExpirationTime)
 	}
 
 	res, err := CreateResource(runtime, "azure.subscription.computeService.snapshot", args)

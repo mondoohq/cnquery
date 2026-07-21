@@ -373,9 +373,10 @@ func (g *mqlGcpProjectDlpService) storedInfoTypes() ([]any, error) {
 		}
 
 		mqlSit, err := CreateResource(g.MqlRuntime, "gcp.project.dlpService.storedInfoType", map[string]*llx.RawData{
-			"name":            llx.StringData(sit.Name),
-			"currentVersion":  llx.DictData(currentVersion),
-			"pendingVersions": llx.ArrayData(pendingVersions, types.Dict),
+			"name":                     llx.StringData(sit.Name),
+			"currentVersion":           llx.DictData(currentVersion),
+			"pendingVersions":          llx.ArrayData(pendingVersions, types.Dict),
+			"currentVersionCreateTime": llx.TimeDataPtr(timestampAsTimePtr(sit.GetCurrentVersion().GetCreateTime())),
 		})
 		if err != nil {
 			return nil, err

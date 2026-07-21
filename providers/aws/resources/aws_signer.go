@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/signer"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
@@ -103,4 +104,18 @@ func (a *mqlAwsSigner) getSigningProfiles(conn *connection.AwsConnection) []*job
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func (a *mqlAwsSignerSigningProfile) signingMaterialCertificate() (*mqlAwsAcmCertificate, error) {
+	arnVal := a.SigningMaterialCertificateArn.Data
+	if arnVal == "" {
+		a.SigningMaterialCertificate.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAwsAcmCertificate,
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsAcmCertificate), nil
 }

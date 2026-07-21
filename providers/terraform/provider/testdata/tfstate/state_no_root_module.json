@@ -1,0 +1,9 @@
+{
+  "format_version": "1.0",
+  "terraform_version": "1.6.0",
+  "values": {
+    "outputs": {
+      "example": { "sensitive": false, "value": "hello", "type": "string" }
+    }
+  }
+}

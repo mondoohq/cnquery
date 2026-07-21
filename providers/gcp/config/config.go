@@ -6,6 +6,7 @@ package config
 import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"go.mondoo.com/mql/v13/providers/gcp/connection/gcpinstancesnapshot"
 	"go.mondoo.com/mql/v13/providers/gcp/provider"
 	"go.mondoo.com/mql/v13/providers/gcp/resources"
@@ -14,7 +15,7 @@ import (
 var Config = plugin.Provider{
 	Name:    "gcp",
 	ID:      "go.mondoo.com/cnquery/v9/providers/gcp",
-	Version: "13.24.0",
+	Version: "13.32.0",
 	ConnectionTypes: []string{
 		provider.ConnectionType,
 		string(gcpinstancesnapshot.SnapshotConnectionType),
@@ -31,7 +32,7 @@ Examples without logging into and configuring GCP:
   cnspec scan gcp project <PROJECT-ID> --credentials-path <PATH-TO-YOUR-SERVICE-ACCT>
 
 Note:
-  If you log into GCP and configure the project you want to query or scan, you can omit credentials. To learn how, read https://mondoo.com/docs/cnspec/cloud/gcp/.
+  If you log into GCP and configure the project you want to query or scan, you can omit credentials. To learn how, read https://mondoo.com/docs/cnspec/cloud/gcp.
 
 Examples with the GCP project configured:
   cnspec scan gcp folder <FOLDER-ID>
@@ -72,6 +73,11 @@ Examples with the GCP project configured:
 				resources.DiscoverSpannerInstances,
 				resources.DiscoverFirestoreDatabases,
 				resources.DiscoverBigtableInstances,
+				resources.DiscoverVertexAIEndpoints,
+				resources.DiscoverVertexAIPipelineJobs,
+				resources.DiscoverVertexAINotebookRuntimeTemplates,
+				resources.DiscoverModelArmorTemplates,
+				resources.DiscoverDatastreamProfiles,
 			},
 			Flags: []plugin.Flag{
 				{
@@ -103,6 +109,12 @@ Examples with the GCP project configured:
 					Type:    plugin.FlagType_Bool,
 					Default: "false",
 					Desc:    "[gcp snapshot, gcp instance] create a new snapshot instead of using the latest available snapshot (only used for instance)",
+				},
+				{
+					Long:    "filters",
+					Type:    plugin.FlagType_KeyValue,
+					Default: "",
+					Desc:    "Filter discovered resources, e.g., --filters storage:bucket-names=my-bucket --filters storage:exclude:bucket-names=noisy-bucket --filters propagate-project-labels=true",
 				},
 			},
 		},
@@ -175,4 +187,5 @@ Examples with the GCP project configured:
 			},
 		},
 	},
+	Platforms: connection.Platforms,
 }

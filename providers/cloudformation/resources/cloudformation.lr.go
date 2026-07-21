@@ -19,6 +19,7 @@ const (
 	ResourceCloudformationResource  string = "cloudformation.resource"
 	ResourceCloudformationOutput    string = "cloudformation.output"
 	ResourceCloudformationParameter string = "cloudformation.parameter"
+	ResourceCloudformationContext   string = "cloudformation.context"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -40,6 +41,10 @@ func init() {
 		"cloudformation.parameter": {
 			// to override args, implement: initCloudformationParameter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createCloudformationParameter,
+		},
+		"cloudformation.context": {
+			// to override args, implement: initCloudformationContext(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudformationContext,
 		},
 	}
 }
@@ -187,6 +192,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudformation.resource.resourceMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudformationResource).GetResourceMetadata()).ToDataRes(types.Dict)
 	},
+	"cloudformation.resource.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudformationResource).GetContext()).ToDataRes(types.Resource("cloudformation.context"))
+	},
 	"cloudformation.output.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudformationOutput).GetName()).ToDataRes(types.String)
 	},
@@ -204,6 +212,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"cloudformation.output.condition": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudformationOutput).GetCondition()).ToDataRes(types.String)
+	},
+	"cloudformation.output.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudformationOutput).GetContext()).ToDataRes(types.Resource("cloudformation.context"))
 	},
 	"cloudformation.parameter.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudformationParameter).GetName()).ToDataRes(types.String)
@@ -240,6 +251,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"cloudformation.parameter.constraintDescription": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudformationParameter).GetConstraintDescription()).ToDataRes(types.String)
+	},
+	"cloudformation.parameter.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudformationParameter).GetContext()).ToDataRes(types.Resource("cloudformation.context"))
+	},
+	"cloudformation.context.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudformationContext).GetPath()).ToDataRes(types.String)
+	},
+	"cloudformation.context.range": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudformationContext).GetRange()).ToDataRes(types.Range)
+	},
+	"cloudformation.context.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudformationContext).GetContent()).ToDataRes(types.String)
 	},
 }
 
@@ -361,6 +384,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlCloudformationResource).ResourceMetadata, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"cloudformation.resource.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudformationResource).Context, ok = plugin.RawToTValue[*mqlCloudformationContext](v.Value, v.Error)
+		return
+	},
 	"cloudformation.output.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudformationOutput).__id, ok = v.Value.(string)
 		return
@@ -387,6 +414,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"cloudformation.output.condition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudformationOutput).Condition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudformation.output.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudformationOutput).Context, ok = plugin.RawToTValue[*mqlCloudformationContext](v.Value, v.Error)
 		return
 	},
 	"cloudformation.parameter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -439,6 +470,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"cloudformation.parameter.constraintDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudformationParameter).ConstraintDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudformation.parameter.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudformationParameter).Context, ok = plugin.RawToTValue[*mqlCloudformationContext](v.Value, v.Error)
+		return
+	},
+	"cloudformation.context.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudformationContext).__id, ok = v.Value.(string)
+		return
+	},
+	"cloudformation.context.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudformationContext).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudformation.context.range": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudformationContext).Range, ok = plugin.RawToTValue[llx.Range](v.Value, v.Error)
+		return
+	},
+	"cloudformation.context.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudformationContext).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -641,6 +692,7 @@ type mqlCloudformationResource struct {
 	CreationPolicy      plugin.TValue[any]
 	UpdatePolicy        plugin.TValue[any]
 	ResourceMetadata    plugin.TValue[any]
+	Context             plugin.TValue[*mqlCloudformationContext]
 }
 
 // createCloudformationResource creates a new instance of this resource
@@ -728,6 +780,22 @@ func (c *mqlCloudformationResource) GetResourceMetadata() *plugin.TValue[any] {
 	return &c.ResourceMetadata
 }
 
+func (c *mqlCloudformationResource) GetContext() *plugin.TValue[*mqlCloudformationContext] {
+	return plugin.GetOrCompute[*mqlCloudformationContext](&c.Context, func() (*mqlCloudformationContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudformation.resource", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlCloudformationContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlCloudformationOutput for the cloudformation.output resource
 type mqlCloudformationOutput struct {
 	MqlRuntime *plugin.Runtime
@@ -739,6 +807,7 @@ type mqlCloudformationOutput struct {
 	Description plugin.TValue[string]
 	ExportName  plugin.TValue[string]
 	Condition   plugin.TValue[string]
+	Context     plugin.TValue[*mqlCloudformationContext]
 }
 
 // createCloudformationOutput creates a new instance of this resource
@@ -802,6 +871,22 @@ func (c *mqlCloudformationOutput) GetCondition() *plugin.TValue[string] {
 	return &c.Condition
 }
 
+func (c *mqlCloudformationOutput) GetContext() *plugin.TValue[*mqlCloudformationContext] {
+	return plugin.GetOrCompute[*mqlCloudformationContext](&c.Context, func() (*mqlCloudformationContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudformation.output", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlCloudformationContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlCloudformationParameter for the cloudformation.parameter resource
 type mqlCloudformationParameter struct {
 	MqlRuntime *plugin.Runtime
@@ -819,6 +904,7 @@ type mqlCloudformationParameter struct {
 	MinValue              plugin.TValue[int64]
 	MaxValue              plugin.TValue[int64]
 	ConstraintDescription plugin.TValue[string]
+	Context               plugin.TValue[*mqlCloudformationContext]
 }
 
 // createCloudformationParameter creates a new instance of this resource
@@ -904,4 +990,91 @@ func (c *mqlCloudformationParameter) GetMaxValue() *plugin.TValue[int64] {
 
 func (c *mqlCloudformationParameter) GetConstraintDescription() *plugin.TValue[string] {
 	return &c.ConstraintDescription
+}
+
+func (c *mqlCloudformationParameter) GetContext() *plugin.TValue[*mqlCloudformationContext] {
+	return plugin.GetOrCompute[*mqlCloudformationContext](&c.Context, func() (*mqlCloudformationContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudformation.parameter", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlCloudformationContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
+// mqlCloudformationContext for the cloudformation.context resource
+type mqlCloudformationContext struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCloudformationContextInternal it will be used here
+	Path    plugin.TValue[string]
+	Range   plugin.TValue[llx.Range]
+	Content plugin.TValue[string]
+}
+
+// createCloudformationContext creates a new instance of this resource
+func createCloudformationContext(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudformationContext{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudformation.context", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudformationContext) MqlName() string {
+	return "cloudformation.context"
+}
+
+func (c *mqlCloudformationContext) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudformationContext) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlCloudformationContext) GetRange() *plugin.TValue[llx.Range] {
+	return &c.Range
+}
+
+func (c *mqlCloudformationContext) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		vargPath := c.GetPath()
+		if vargPath.Error != nil {
+			return "", vargPath.Error
+		}
+
+		vargRange := c.GetRange()
+		if vargRange.Error != nil {
+			return "", vargRange.Error
+		}
+
+		return c.content(vargPath.Data, vargRange.Data)
+	})
 }

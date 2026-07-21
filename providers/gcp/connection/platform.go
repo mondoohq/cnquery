@@ -51,48 +51,41 @@ func (c *GcpConnection) ResourceID() string {
 func (c *GcpConnection) PlatformInfo() (*inventory.Platform, error) {
 	// TODO: this is a hack and we need to find a better way to do this
 	if c.opts.platformOverride != "" && c.opts.platformOverride != "gcp" {
-		return &inventory.Platform{
-			Name:    c.opts.platformOverride,
-			Title:   GetTitleForPlatformName(c.opts.platformOverride),
-			Family:  []string{"google"},
-			Kind:    "gcp-object",
-			Runtime: "gcp",
-		}, nil
+		return newGcpPlatform(c.opts.platformOverride), nil
 	}
 
 	switch c.ResourceType() {
 	case Organization:
-		return &inventory.Platform{
-			Name:    "gcp-org",
-			Title:   "GCP Organization",
-			Family:  []string{"google"},
-			Kind:    "gcp-object",
-			Runtime: "gcp",
-		}, nil
+		return newGcpPlatform("gcp-org"), nil
 	case Project:
-		return &inventory.Platform{
-			Name:    "gcp-project",
-			Title:   "GCP Project",
-			Family:  []string{"google"},
-			Kind:    "gcp-object",
-			Runtime: "gcp",
-		}, nil
+		return newGcpPlatform("gcp-project"), nil
 	case Folder:
-		return &inventory.Platform{
-			Name:    "gcp-folder",
-			Title:   "GCP Folder",
-			Family:  []string{"google"},
-			Kind:    "gcp-object",
-			Runtime: "gcp",
-		}, nil
+		return newGcpPlatform("gcp-folder"), nil
 	}
 
 	return nil, errors.New("unsupported resource type")
 }
 
+// newGcpPlatform builds a runtime platform from the static catalog. Names not
+// in the catalog fall back to a generic GCP object so new object types keep
+// working before they are added to Platforms.
+func newGcpPlatform(name string) *inventory.Platform {
+	pf := &inventory.Platform{}
+	if pi := PlatformByName(name); pi != nil {
+		pi.Apply(pf)
+		return pf
+	}
+	pf.Name = name
+	pf.Title = GetTitleForPlatformName(name)
+	pf.Family = []string{"google"}
+	pf.Kind = "gcp-object"
+	pf.Runtime = "gcp"
+	return pf
+}
+
 func GetTitleForPlatformName(name string) string {
 	switch name {
-	case "gcp-organization":
+	case "gcp-org":
 		return "GCP Organization"
 	case "gcp-folder":
 		return "GCP Folder"
@@ -134,6 +127,12 @@ func GetTitleForPlatformName(name string) string {
 		return "GCP Memorystore for Memcached Instance"
 	case "gcp-vertexai-job":
 		return "GCP Vertex AI Custom Job"
+	case "gcp-vertexai-endpoint":
+		return "GCP Vertex AI Endpoint"
+	case "gcp-vertexai-pipelinejob":
+		return "GCP Vertex AI Pipeline Job"
+	case "gcp-vertexai-notebookruntimetemplate":
+		return "GCP Vertex AI Notebook Runtime Template"
 	case "gcp-secretmanager-secret":
 		return "GCP Secret Manager Secret"
 	case "gcp-compute-instance":
@@ -166,6 +165,10 @@ func GetTitleForPlatformName(name string) string {
 		return "GCP API Key"
 	case "gcp-iam-service-account":
 		return "GCP IAM Service Account"
+	case "gcp-modelarmor-template":
+		return "GCP Model Armor Template"
+	case "gcp-datastream-connectionprofile":
+		return "GCP Datastream Connection Profile"
 	}
 	return "Google Cloud Platform"
 }
@@ -252,8 +255,8 @@ func ResourceTechnologyUrl(service, project, region, objectType, name string) []
 		}
 	case "vertexai":
 		switch objectType {
-		case "job":
-			return []string{"gcp", project, "vertexai", region, "job"}
+		case "job", "endpoint", "pipelinejob", "notebookruntimetemplate":
+			return []string{"gcp", project, "vertexai", region, objectType}
 		default:
 			return []string{"gcp", project, "vertexai", region, "other"}
 		}
@@ -340,6 +343,20 @@ func ResourceTechnologyUrl(service, project, region, objectType, name string) []
 			return []string{"gcp", project, "iam", region, "service-account"}
 		default:
 			return []string{"gcp", project, "iam", region, "other"}
+		}
+	case "modelarmor":
+		switch objectType {
+		case "template":
+			return []string{"gcp", project, "modelarmor", region, "template"}
+		default:
+			return []string{"gcp", project, "modelarmor", region, "other"}
+		}
+	case "datastream":
+		switch objectType {
+		case "connectionprofile":
+			return []string{"gcp", project, "datastream", region, "connectionprofile"}
+		default:
+			return []string{"gcp", project, "datastream", region, "other"}
 		}
 	default:
 		return []string{"gcp", project, "other"}

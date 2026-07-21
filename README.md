@@ -20,7 +20,7 @@ mql shell aws
 > aws.ec2.instances{*}
 ```
 
-[:books: To learn more, read the MQL docs.](https://mondoo.com/docs/mql/home/)
+[:books: To learn more, read the MQL docs.](https://mondoo.com/docs/mql)
 
 ## Installation
 
@@ -91,7 +91,7 @@ To more easily explore your infrastructure, sign up for a Mondoo Platform accoun
 
 To get started, [contact us](https://mondoo.com/contact).
 
-To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.com/docs/platform/home/) or visit [mondoo.com](https://mondoo.com).
+To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.com/docs) or visit [mondoo.com](https://mondoo.com).
 
 ## Supported targets
 
@@ -99,6 +99,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | ----------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | Active Directory              | `activedirectory`          | `mql shell activedirectory --dc DC_HOST --user admin@corp.local --password PASSWORD`                                                            |
 | AI/MCP servers                | `mcp`                      | `mql shell mcp http http://localhost:8080/mcp`                                                                                                  |
+| Alibaba Cloud accounts        | `alicloud`                 | `mql shell alicloud --access-key-id ID --access-key-secret SECRET`                                                                              |
 | Claude AI platform            | `claude`                   | `mql shell claude --token YOUR_API_KEY`                                                                                                         |
 | Ansible playbooks             | `ansible`                  | `mql shell ansible YOUR_PLAYBOOK.yml`                                                                                                           |
 | Arista network devices        | `arista`                   | `mql shell arista DEVICE_PUBLIC_IP --ask-pass`                                                                                                  |
@@ -115,8 +116,11 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Confluence users              | `atlassian`                | `mql shell atlassian --host YOUR_HOST_URL --admin-token YOUR_TOKEN`                                                                             |
 | Container images              | `container`, `docker`      | `mql shell container ubuntu:latest`                                                                                                             |
 | Container registries          | `container registry`       | `mql shell container registry index.docker.io/library/rockylinux:8`                                                                             |
+| Databricks account            | `databricks`               | `mql shell databricks --account-id ACCOUNT_ID --client-id CLIENT_ID --client-secret CLIENT_SECRET`                                              |
+| Datadog organization          | `datadog`                  | `mql shell datadog --api-key API_KEY --app-key APP_KEY`                                                                                         |
 | Dockerfiles                   | `docker`                   | `mql shell docker file FILENAME`                                                                                                                |
 | DNS records                   | `host`                     | `mql shell host mondoo.com`                                                                                                                     |
+| Equinix Metal project         | `equinix`                  | `mql shell equinix project PROJECT_ID --token API_TOKEN`                                                                                        |
 | F5 BIG-IP load balancers      | `bigip`                    | `mql shell bigip --hostname HOST --user USER --password PASSWORD`                                                                               |
 | Fortinet FortiOS devices      | `fortios`                  | `mql shell fortios --hostname HOSTNAME --token TOKEN`                                                                                           |
 | GitHub organizations          | `github org`               | `mql shell github org mondoohq`                                                                                                                 |
@@ -138,32 +142,38 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Kubernetes workloads          | `k8s`                      | `mql shell k8s --discover pods,deployments`                                                                                                     |
 | Linux hosts                   | `local`, `ssh`             | `mql shell local` or<br></br>`mql shell ssh user@host`                                                                                          |
 | macOS hosts                   | `local`, `ssh`             | `mql shell local` or<br></br>`mql shell ssh user@IP_ADDRESS`                                                                                    |
+| MikroTik RouterOS devices     | `mikrotik`                 | `mql shell mikrotik admin@192.168.88.1 --password SECRET`                                                                                       |
 | Mistral AI accounts           | `mistral`                  | `mql shell mistral --token API_KEY`                                                                                                             |
 | Microsoft 365 tenants         | `ms365`                    | `mql shell ms365 --tenant-id TENANT_ID --client-id CLIENT_ID --certificate-path PFX_FILE`                                                       |
 | Microsoft Azure instances     | `ssh`                      | `mql shell ssh user@host`                                                                                                                       |
 | Microsoft Azure subscriptions | `azure`                    | `mql shell azure --subscription SUBSCRIPTION_ID`                                                                                                |
+| MongoDB Atlas organization    | `mongodbatlas`             | `mql shell mongodbatlas --org-id ORG_ID --public-key PUBLIC_KEY --private-key PRIVATE_KEY`                                                       |
 | Network scanning              | `nmap`                     | `mql shell nmap --networks 192.168.1.0/24`                                                                                                      |
+| NextDNS accounts              | `nextdns`                  | `mql shell nextdns --api-key API_KEY`                                                                                                           |
 | Nutanix cluster               | `nutanix`                  | `mql shell nutanix --endpoint ENDPOINT --user USER --password PASSWORD`                                                                         |
 | Okta org                      | `okta`                     | `mql shell okta --token TOKEN --organization ORGANIZATION`                                                                                      |
 | Ollama instance               | `ollama`                   | `mql shell ollama` or `mql shell ollama --host HOST --token TOKEN`                                                                              |
 | OpenAI account                | `openai`                   | `mql shell openai --token TOKEN`                                                                                                                |
 | Oracle Cloud Interface (OCI)  | `oci`                      | `mql shell oci`                                                                                                                                 |
 | OpenStack project             | `openstack`                | `mql shell openstack --cloud CLOUD_NAME` or<br></br>`mql shell openstack --auth-url AUTH_URL --username USER --password PASSWORD --project-name PROJECT` |
+| Portainer server              | `portainer`                | `mql shell portainer HOST --access-token TOKEN`                                                                                                 |
 | Proxmox VE                    | `proxmox`                  | `mql shell proxmox --host HOST --token TOKEN`                                                                                                   |
 | Palo Alto Networks PAN-OS     | `panos`                    | `mql shell panos --hostname DEVICE_IP --username admin --password PASSWORD`                                                                     |
 | Running containers            | `docker`                   | `mql shell docker CONTAINER_ID`                                                                                                                 |
-| Shodan search engine          | `shodan`                   | `mql shell shodan`                                                                                                                              |
+| Redfish controller (BMC)      | `redfish`                  | `mql shell redfish USER@HOST --ask-pass --insecure`                                                                                            |
+| Shodan organization           | `shodan`                   | `mql shell shodan`                                                                                                                              |
 | Slack team                    | `slack`                    | `mql shell slack --token TOKEN`                                                                                                                 |
-| Snowflake data warehouse      | `snowflake`                | `mql shell snowflake --account ACCOUNT_ID --region REGION --user USER --role ROLE --ask-pass`                                                   |
+| Snowflake account             | `snowflake`                | `mql shell snowflake --account ACCOUNT_ID --region REGION --user USER --role ROLE --ask-pass`                                                   |
 | SSL certificates on websites  | `host`                     | `mql shell host mondoo.com`                                                                                                                     |
 | STACKIT projects              | `stackit`                  | `mql shell stackit --project-id PROJECT_ID --service-account-key-path KEY_FILE`                                                                |
-| Tailscale network             | `tailscale`                | `mql shell tailscale --token ACCESS_TOKEN`                                                                                                      |
+| Tailscale organization        | `tailscale`                | `mql shell tailscale --token ACCESS_TOKEN`                                                                                                      |
 | Terraform HCL                 | `terraform`                | `mql shell terraform HCL_FILE_OR_PATH`                                                                                                          |
 | Terraform plan                | `terraform plan`           | `mql shell terraform plan plan.json`                                                                                                            |
 | Terraform state               | `terraform state`          | `mql shell terraform state state.json`                                                                                                          |
 | Together AI                   | `together`                 | `mql shell together --token TOKEN`                                                                                                              |
 | UniFi network controllers     | `unifi`                    | `mql shell unifi --hostname HOST --api-key YOUR_API_KEY`                                                                                        |
 | Vagrant virtual machines      | `vagrant`                  | `mql shell vagrant HOST`                                                                                                                        |
+| Vercel teams and projects     | `vercel`                   | `mql shell vercel --token TOKEN`                                                                                                                |
 | vLLM inference servers        | `vllm`                     | `mql shell vllm http://localhost:8000`                                                                                                          |
 | VMware Cloud Director         | `vcd`                      | `mql shell vcd user@domain@host --ask-pass`                                                                                                     |
 | VMware vSphere                | `vsphere`                  | `mql shell vsphere user@domain@host --ask-pass`                                                                                                 |
@@ -176,9 +186,9 @@ There are so many things MQL can do! Gather information about your infrastructur
 
 Explore:
 
-- [MQL docs](https://mondoo.com/docs/mql/home/)
+- [MQL docs](https://mondoo.com/docs/mql)
 - [MQL introduction](https://mondoohq.github.io/mql-intro/index.html)
-- [MQL language reference](https://mondoo.com/docs/mql/resources/)
+- [MQL language reference](https://mondoo.com/docs/mql/resources)
 - [cnspec](https://github.com/mondoohq/cnspec), our open source, cloud-native security scanner
 
 ## Join the community!

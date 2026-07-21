@@ -350,6 +350,11 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) onlineEndpoints() 
 			}
 			mqlEp := mqlRes.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint)
 			mqlEp.cacheComputeId = computeId
+			sysData, err := convert.JsonToDict(ep.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlEp.cacheSystemData = sysData
 			res = append(res, mqlEp)
 		}
 	}
@@ -357,7 +362,12 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) onlineEndpoints() 
 }
 
 type mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpointInternal struct {
-	cacheComputeId string
+	cacheComputeId  string
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 // compute resolves the endpoint's serving compute by matching the cached ARM resource ID
@@ -494,6 +504,11 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint) depl
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(dep.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlDep.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpointDeployment).cacheSystemData = sysData
 			res = append(res, mqlDep)
 		}
 	}
@@ -580,6 +595,11 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) serverlessEndpoint
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(ep.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlEp.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceServerlessEndpoint).cacheSystemData = sysData
 			res = append(res, mqlEp)
 		}
 	}
@@ -674,6 +694,11 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) computes() ([]any,
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(c.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlCompute.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceCompute).cacheSystemData = sysData
 			res = append(res, mqlCompute)
 		}
 	}
@@ -749,8 +774,45 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) models() ([]any, e
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(m.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlModel.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceModel).cacheSystemData = sysData
 			res = append(res, mqlModel)
 		}
 	}
 	return res, nil
+}
+
+type mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpointDeploymentInternal struct {
+	cacheSystemData any
+}
+
+type mqlAzureSubscriptionMachineLearningServiceWorkspaceServerlessEndpointInternal struct {
+	cacheSystemData any
+}
+
+type mqlAzureSubscriptionMachineLearningServiceWorkspaceComputeInternal struct {
+	cacheSystemData any
+}
+
+type mqlAzureSubscriptionMachineLearningServiceWorkspaceModelInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpointDeployment) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionMachineLearningServiceWorkspaceServerlessEndpoint) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionMachineLearningServiceWorkspaceCompute) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionMachineLearningServiceWorkspaceModel) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }

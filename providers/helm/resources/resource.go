@@ -50,6 +50,9 @@ func parseK8sResources(runtime *plugin.Runtime, templateKey string, content stri
 
 		var obj map[string]any
 		if err := yaml.Unmarshal([]byte(doc), &obj); err != nil {
+			// A document that fails to parse would silently vanish from the
+			// audit (a policy could then pass vacuously); surface it.
+			log.Warn().Err(err).Str("templateKey", templateKey).Msg("helm: skipping rendered document that failed to parse")
 			continue
 		}
 
@@ -91,6 +94,7 @@ func parseK8sResources(runtime *plugin.Runtime, templateKey string, content stri
 
 		manifest, err := convert.JsonToDict(obj)
 		if err != nil {
+			log.Warn().Err(err).Str("templateKey", templateKey).Str("kind", kind).Msg("helm: skipping rendered resource that failed to convert")
 			continue
 		}
 

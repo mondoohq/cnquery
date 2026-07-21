@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"sort"
+	"strconv"
 	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -112,42 +114,275 @@ func aksApiServerInternetReachable(enablePrivateCluster bool, publicNetworkAcces
 
 // --- Resolvers ---
 
-// effectiveRuleAllowsInternetIngress reports whether a single Azure
-// effective-security-rule object (the raw dict returned by a NIC's
-// effectiveSecurityRules) is an inbound Allow rule open to any internet source.
-// It reads the camelCase keys of the Azure effective-NSG payload and reuses
-// securityRuleAllowsInternetIngress for the direction/access/source matching.
-func effectiveRuleAllowsInternetIngress(rule map[string]any) bool {
-	direction, _ := rule["direction"].(string)
-	access, _ := rule["access"].(string)
-	sourcePrefix, _ := rule["sourceAddressPrefix"].(string)
-	sourcePrefixes := []string{}
-	// The effective rule lists sources both as the configured prefixes and the
-	// expanded set (service tags resolved to CIDRs); check both.
+// ruleSourceIsInternet reports whether an Azure effective-security-rule object
+// has a source that covers the public internet. It reads the source both as the
+// configured prefix(es) and as the expanded set (service tags resolved to
+// CIDRs), matching any internet-open source.
+func ruleSourceIsInternet(rule map[string]any) bool {
+	if sp, ok := rule["sourceAddressPrefix"].(string); ok && isInternetOpenSourcePrefix(sp) {
+		return true
+	}
 	for _, key := range []string{"sourceAddressPrefixes", "expandedSourceAddressPrefix"} {
 		if arr, ok := rule[key].([]any); ok {
 			for _, p := range arr {
-				if s, ok := p.(string); ok {
-					sourcePrefixes = append(sourcePrefixes, s)
+				if s, ok := p.(string); ok && isInternetOpenSourcePrefix(s) {
+					return true
 				}
 			}
 		}
 	}
-	return securityRuleAllowsInternetIngress(direction, access, sourcePrefix, sourcePrefixes)
+	return false
+}
+
+// effectiveRuleAllowsInternetIngress reports whether a single Azure
+// effective-security-rule object (the raw dict returned by a NIC's
+// effectiveSecurityRules) is an inbound Allow rule open to any internet source.
+func effectiveRuleAllowsInternetIngress(rule map[string]any) bool {
+	direction, _ := rule["direction"].(string)
+	if !strings.EqualFold(strings.TrimSpace(direction), "Inbound") {
+		return false
+	}
+	access, _ := rule["access"].(string)
+	if !strings.EqualFold(strings.TrimSpace(access), "Allow") {
+		return false
+	}
+	return ruleSourceIsInternet(rule)
+}
+
+// ruleInt extracts an integer field from an effective-rule dict. JSON numbers
+// decode as float64 through encoding/json, so both float64 and integer forms
+// are accepted.
+func ruleInt(rule map[string]any, key string) (int, bool) {
+	switch v := rule[key].(type) {
+	case float64:
+		return int(v), true
+	case int:
+		return v, true
+	case int64:
+		return int(v), true
+	}
+	return 0, false
+}
+
+// portInterval is an inclusive [lo, hi] port range.
+type portInterval struct{ lo, hi int }
+
+// rulePortIntervals reads a rule's destination port range(s) into intervals.
+// "*", an empty value, or an absent value means all ports (0-65535). Both the
+// single destinationPortRange and the destinationPortRanges list are read.
+func rulePortIntervals(rule map[string]any) []portInterval {
+	var out []portInterval
+	add := func(s string) {
+		s = strings.TrimSpace(s)
+		if s == "" || s == "*" {
+			out = append(out, portInterval{0, 65535})
+			return
+		}
+		if i := strings.IndexByte(s, '-'); i >= 0 {
+			lo, err1 := strconv.Atoi(strings.TrimSpace(s[:i]))
+			hi, err2 := strconv.Atoi(strings.TrimSpace(s[i+1:]))
+			if err1 == nil && err2 == nil {
+				out = append(out, portInterval{lo, hi})
+			}
+			return
+		}
+		if n, err := strconv.Atoi(s); err == nil {
+			out = append(out, portInterval{n, n})
+		}
+	}
+	if sp, ok := rule["destinationPortRange"].(string); ok {
+		add(sp)
+	}
+	if arr, ok := rule["destinationPortRanges"].([]any); ok {
+		for _, p := range arr {
+			if s, ok := p.(string); ok {
+				add(s)
+			}
+		}
+	}
+	if len(out) == 0 {
+		out = append(out, portInterval{0, 65535})
+	}
+	return out
+}
+
+// portsCover reports whether the deny intervals fully contain every allow
+// interval (each allow interval must fall within a single deny interval).
+func portsCover(deny, allow []portInterval) bool {
+	for _, a := range allow {
+		covered := false
+		for _, d := range deny {
+			if d.lo <= a.lo && a.hi <= d.hi {
+				covered = true
+				break
+			}
+		}
+		if !covered {
+			return false
+		}
+	}
+	return true
+}
+
+// protocolCovers reports whether a deny rule's protocol covers an allow rule's
+// protocol. "*"/"Any"/empty on the deny side covers every protocol.
+func protocolCovers(deny, allow string) bool {
+	deny = strings.TrimSpace(deny)
+	if deny == "" || deny == "*" || strings.EqualFold(deny, "Any") {
+		return true
+	}
+	return strings.EqualFold(deny, strings.TrimSpace(allow))
+}
+
+// destAddressIsBroad reports whether a destination prefix covers all addresses.
+func destAddressIsBroad(s string) bool {
+	s = strings.ToLower(strings.TrimSpace(s))
+	return s == "*" || s == "0.0.0.0/0" || s == "::/0"
+}
+
+// ruleDestPrefixes reads a rule's destination address prefix(es), reading both
+// the single destinationAddressPrefix and the destinationAddressPrefixes list.
+// An absent/empty destination means all addresses, represented as "*".
+func ruleDestPrefixes(rule map[string]any) []string {
+	var out []string
+	if s, ok := rule["destinationAddressPrefix"].(string); ok && strings.TrimSpace(s) != "" {
+		out = append(out, s)
+	}
+	if arr, ok := rule["destinationAddressPrefixes"].([]any); ok {
+		for _, p := range arr {
+			if s, ok := p.(string); ok && strings.TrimSpace(s) != "" {
+				out = append(out, s)
+			}
+		}
+	}
+	if len(out) == 0 {
+		out = []string{"*"}
+	}
+	return out
+}
+
+// destCovers reports whether a deny rule's destination covers an allow rule's
+// destination: every one of the allow rule's destinations must be an
+// all-addresses prefix on the deny side or equal to one of the deny rule's
+// destinations. Both the single and plural forms are read on each side. When a
+// destination is not covered we conservatively report false, leaving the allow
+// rule un-shadowed (a security audit should err toward reporting exposure
+// rather than hiding it).
+func destCovers(deny, allow map[string]any) bool {
+	denyDests := ruleDestPrefixes(deny)
+	covers := func(target string) bool {
+		for _, d := range denyDests {
+			if destAddressIsBroad(d) || strings.EqualFold(d, target) {
+				return true
+			}
+		}
+		return false
+	}
+	for _, a := range ruleDestPrefixes(allow) {
+		if !covers(a) {
+			return false
+		}
+	}
+	return true
+}
+
+// denyDominatesAllow reports whether a higher-priority Deny rule fully shadows
+// an Allow rule for internet ingress: it must cover the Allow's protocol,
+// destination ports, and destination address.
+func denyDominatesAllow(deny, allow map[string]any) bool {
+	dproto, _ := deny["protocol"].(string)
+	aproto, _ := allow["protocol"].(string)
+	if !protocolCovers(dproto, aproto) {
+		return false
+	}
+	if !portsCover(rulePortIntervals(deny), rulePortIntervals(allow)) {
+		return false
+	}
+	return destCovers(deny, allow)
+}
+
+// nsgAllowsInternetIngress reports whether a single NSG's effective rules admit
+// inbound traffic from the internet, honoring rule priority, and returns the
+// surviving internet-open Allow rules. An inbound internet Allow rule survives
+// when no higher-priority (lower-numbered) inbound internet Deny rule dominates
+// it (same protocol, destination ports, and destination). When no internet
+// source rule allows ingress the group admits nothing (Azure's default
+// DenyAllInbound applies).
+//
+// Only rules whose source covers the internet are considered — for both Allow
+// and Deny. A Deny whose source is a non-internet tag (VirtualNetwork,
+// AzureLoadBalancer, a private CIDR) does not block internet-sourced traffic,
+// so it correctly never shadows an internet Allow here.
+func nsgAllowsInternetIngress(rules []map[string]any) (bool, []map[string]any) {
+	type prioritized struct {
+		rule  map[string]any
+		prio  int
+		allow bool
+	}
+	var internetRules []prioritized
+	for _, r := range rules {
+		dir, _ := r["direction"].(string)
+		if !strings.EqualFold(strings.TrimSpace(dir), "Inbound") {
+			continue
+		}
+		if !ruleSourceIsInternet(r) {
+			continue
+		}
+		prio, ok := ruleInt(r, "priority")
+		if !ok {
+			prio = int(^uint(0) >> 1) // unknown priority sorts last
+		}
+		access, _ := r["access"].(string)
+		internetRules = append(internetRules, prioritized{
+			rule:  r,
+			prio:  prio,
+			allow: strings.EqualFold(strings.TrimSpace(access), "Allow"),
+		})
+	}
+	sort.SliceStable(internetRules, func(i, j int) bool {
+		return internetRules[i].prio < internetRules[j].prio
+	})
+
+	var open []map[string]any
+	for i, a := range internetRules {
+		if !a.allow {
+			continue
+		}
+		shadowed := false
+		for j := 0; j < i; j++ {
+			d := internetRules[j]
+			if d.allow {
+				continue
+			}
+			if denyDominatesAllow(d.rule, a.rule) {
+				shadowed = true
+				break
+			}
+		}
+		if !shadowed {
+			open = append(open, a.rule)
+		}
+	}
+	return len(open) > 0, open
 }
 
 // exposure builds the network-exposure summary for a VM from its already-cached
-// public IPs and the effective security rules of its NICs. The effective rules
-// (via the NIC's effectiveSecurityRules accessor) merge the NSG attached to the
-// NIC, the NSG attached to its subnet, and application security group rules, so
-// a subnet-level NSG that opens the VM is accounted for. Resolving effective
-// rules is a live Azure call per NIC; it is only paid when exposure is queried.
+// public IPs and the effective security rules of its NICs.
 //
-// Limitation: NSG rule priorities are not evaluated. Azure applies rules in
-// priority order (lowest number wins), so a higher-priority Deny rule can
-// shadow a lower-priority Allow-from-internet rule. This breakdown flags any
-// matching Allow rule as opening ingress, so securityGroupAllowsIngress may
-// report true even when a higher-priority Deny actually blocks the traffic.
+// Inbound internet traffic must be admitted by every NSG in a NIC's effective
+// chain (the subnet-level NSG and the NIC-level NSG are evaluated in sequence),
+// so each NIC is evaluated per-NSG: the NIC admits internet ingress only when
+// all of its effective NSGs do. The VM is exposed when any NIC admits it. NICs
+// with no effective NSG (stopped/detached, or the API could not compute rules)
+// contribute nothing. Resolving effective rules is a live Azure call per NIC;
+// it is only paid when exposure is queried.
+//
+// Rule priority is honored: within an NSG a higher-priority (lower-numbered)
+// Deny rule shadows a lower-priority Allow-from-internet rule when it covers the
+// same protocol, destination ports, and destination (see nsgAllowsInternetIngress).
+//
+// Limitation: AVNM security-admin rules, which override NSGs tenant-wide, are
+// not folded into this evaluation.
 func (a *mqlAzureSubscriptionComputeServiceVm) exposure() (*mqlAzureSubscriptionNetworkServiceExposure, error) {
 	publicIps := a.GetPublicIpAddresses()
 	if publicIps.Error != nil {
@@ -155,36 +390,43 @@ func (a *mqlAzureSubscriptionComputeServiceVm) exposure() (*mqlAzureSubscription
 	}
 	hasPublicIp := len(publicIps.Data) > 0
 
-	openRules := []any{}
 	nics := a.GetNetworkInterfaces()
 	if nics.Error != nil {
 		return nil, nics.Error
 	}
+
+	securityGroupAllowsIngress := false
+	openRules := []any{}
 	for _, n := range nics.Data {
 		nic, ok := n.(*mqlAzureSubscriptionNetworkServiceInterface)
 		if !ok {
 			continue
 		}
-		// effectiveSecurityRules merges NIC-level NSG, subnet-level NSG, and ASG
-		// rules. It propagates real errors but returns an empty set for
-		// stopped/detached NICs (the Azure API can't compute effective rules
-		// there), so those simply contribute no open rules.
-		eff := nic.GetEffectiveSecurityRules()
-		if eff.Error != nil {
-			return nil, eff.Error
+		groups, err := nic.effectiveNsgGroupsCached()
+		if err != nil {
+			return nil, err
 		}
-		for _, r := range eff.Data {
-			rule, ok := r.(map[string]any)
-			if !ok {
-				continue
+		if len(groups) == 0 {
+			continue
+		}
+		nicAdmits := true
+		var nicRules []map[string]any
+		for _, g := range groups {
+			allows, surviving := nsgAllowsInternetIngress(g.rules)
+			if !allows {
+				nicAdmits = false
+				break
 			}
-			if effectiveRuleAllowsInternetIngress(rule) {
-				openRules = append(openRules, rule)
+			nicRules = append(nicRules, surviving...)
+		}
+		if nicAdmits {
+			securityGroupAllowsIngress = true
+			for _, r := range nicRules {
+				openRules = append(openRules, r)
 			}
 		}
 	}
 
-	securityGroupAllowsIngress := len(openRules) > 0
 	internetReachable := hasPublicIp && securityGroupAllowsIngress
 
 	res, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.exposure", map[string]*llx.RawData{

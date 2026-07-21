@@ -14,8 +14,9 @@ import (
 var Config = plugin.Provider{
 	Name:            "hetzner",
 	ID:              "go.mondoo.com/mql/providers/hetzner",
-	Version:         "13.4.0",
+	Version:         "13.7.1",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
+	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "hetzner",

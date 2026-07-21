@@ -7,12 +7,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"os"
 	"sync"
 
 	"github.com/rs/zerolog/log"
 	"github.com/stackitcloud/stackit-sdk-go/core/config"
 	"github.com/stackitcloud/stackit-sdk-go/services/alb"
+	albwaf "github.com/stackitcloud/stackit-sdk-go/services/albwaf/v1betaapi"
 	"github.com/stackitcloud/stackit-sdk-go/services/authorization"
 	"github.com/stackitcloud/stackit-sdk-go/services/certificates"
 	"github.com/stackitcloud/stackit-sdk-go/services/dns"
@@ -31,12 +33,15 @@ import (
 	"github.com/stackitcloud/stackit-sdk-go/services/redis"
 	"github.com/stackitcloud/stackit-sdk-go/services/resourcemanager"
 	"github.com/stackitcloud/stackit-sdk-go/services/secretsmanager"
+	"github.com/stackitcloud/stackit-sdk-go/services/serverbackup"
+	"github.com/stackitcloud/stackit-sdk-go/services/serverupdate"
 	"github.com/stackitcloud/stackit-sdk-go/services/serviceaccount"
 	"github.com/stackitcloud/stackit-sdk-go/services/sfs"
 	"github.com/stackitcloud/stackit-sdk-go/services/ske"
-	"github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex"
+	sqlserverflex "github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex/v2api"
 	telemetrylink "github.com/stackitcloud/stackit-sdk-go/services/telemetrylink/v1betaapi"
 	telemetryrouter "github.com/stackitcloud/stackit-sdk-go/services/telemetryrouter/v1betaapi"
+	vpn "github.com/stackitcloud/stackit-sdk-go/services/vpn/v1api"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
@@ -53,6 +58,13 @@ type StackitConnection struct {
 
 	projectID string
 	region    string
+
+	// project metadata captured during Verify so the provider can enrich the
+	// detected asset (real name + labels + parent) the way the gcp and aws
+	// providers do, without issuing a second resource-manager call.
+	projectName   string
+	projectParent string
+	projectLabels map[string]string
 
 	// configOpts includes WithRegion(region) — use for region-scoped services
 	// (iaas, ske, objectstorage, loadbalancer, postgres-flex, mongodb-flex).
@@ -128,6 +140,9 @@ type StackitConnection struct {
 	albOnce              sync.Once
 	albClient            *alb.APIClient
 	albErr               error
+	albWafOnce           sync.Once
+	albWafClient         *albwaf.APIClient
+	albWafErr            error
 	certificatesOnce     sync.Once
 	certificatesClient   *certificates.APIClient
 	certificatesErr      error
@@ -137,6 +152,15 @@ type StackitConnection struct {
 	authorizationOnce    sync.Once
 	authorizationClient  *authorization.APIClient
 	authorizationErr     error
+	serverBackupOnce     sync.Once
+	serverBackupClient   *serverbackup.APIClient
+	serverBackupErr      error
+	serverUpdateOnce     sync.Once
+	serverUpdateClient   *serverupdate.APIClient
+	serverUpdateErr      error
+	vpnOnce              sync.Once
+	vpnClient            *vpn.APIClient
+	vpnErr               error
 }
 
 func NewStackitConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*StackitConnection, error) {
@@ -221,19 +245,48 @@ func getOptionValueFrom(options map[string]string, envVar, option string) (strin
 	return value, value != ""
 }
 
-func (c *StackitConnection) ProjectID() string { return c.projectID }
-func (c *StackitConnection) Region() string    { return c.region }
+func (c *StackitConnection) ProjectID() string     { return c.projectID }
+func (c *StackitConnection) Region() string        { return c.region }
+func (c *StackitConnection) ProjectName() string   { return c.projectName }
+func (c *StackitConnection) ProjectParent() string { return c.projectParent }
+
+// ProjectLabels returns the labels attached to the STACKIT project, captured
+// during Verify. The returned map must not be mutated by callers.
+func (c *StackitConnection) ProjectLabels() map[string]string { return c.projectLabels }
 
 func (c *StackitConnection) Verify(ctx context.Context) error {
 	client, err := c.ResourceManager()
 	if err != nil {
 		return err
 	}
-	if _, err := client.GetProjectExecute(ctx, c.projectID); err != nil {
+	resp, err := client.GetProjectExecute(ctx, c.projectID)
+	if err != nil {
 		log.Warn().Err(err).Msg("stackit> verify project lookup failed")
 		return fmt.Errorf("failed to verify STACKIT connection for project %s: %w", c.projectID, err)
 	}
+	c.captureProjectMetadata(resp)
 	return nil
+}
+
+// captureProjectMetadata records the human-readable project name, parent
+// container, and labels from the resource-manager response so detect() can
+// enrich the asset without a second API call.
+func (c *StackitConnection) captureProjectMetadata(resp *resourcemanager.GetProjectResponse) {
+	if resp == nil {
+		return
+	}
+	c.projectName = resp.GetName()
+	if labels, ok := resp.GetLabelsOk(); ok && labels != nil {
+		// Snapshot the map so a later SDK mutation of its internal copy cannot
+		// change our captured labels, honoring the ProjectLabels() contract.
+		c.projectLabels = maps.Clone(labels)
+	}
+	if parent, ok := resp.GetParentOk(); ok {
+		c.projectParent = parent.GetContainerId()
+		if c.projectParent == "" {
+			c.projectParent = parent.GetId()
+		}
+	}
 }
 
 func (c *StackitConnection) IaaS() (*iaas.APIClient, error) {
@@ -399,6 +452,15 @@ func (c *StackitConnection) ALB() (*alb.APIClient, error) {
 	return c.albClient, c.albErr
 }
 
+func (c *StackitConnection) AlbWaf() (*albwaf.APIClient, error) {
+	c.albWafOnce.Do(func() {
+		// Mirrors ALB (same product family): the WAF API is region-scoped via
+		// the client config and also accepts the region as a per-call param.
+		c.albWafClient, c.albWafErr = albwaf.NewAPIClient(c.configOpts...)
+	})
+	return c.albWafClient, c.albWafErr
+}
+
 func (c *StackitConnection) Certificates() (*certificates.APIClient, error) {
 	c.certificatesOnce.Do(func() {
 		c.certificatesClient, c.certificatesErr = certificates.NewAPIClient(c.configOpts...)
@@ -420,18 +482,48 @@ func (c *StackitConnection) Authorization() (*authorization.APIClient, error) {
 	return c.authorizationClient, c.authorizationErr
 }
 
+func (c *StackitConnection) ServerBackup() (*serverbackup.APIClient, error) {
+	c.serverBackupOnce.Do(func() {
+		// Server Backup rejects WithRegion in the client config; every method
+		// passes the region as a per-call function parameter.
+		c.serverBackupClient, c.serverBackupErr = serverbackup.NewAPIClient(c.configOptsGlobal...)
+	})
+	return c.serverBackupClient, c.serverBackupErr
+}
+
+func (c *StackitConnection) ServerUpdate() (*serverupdate.APIClient, error) {
+	c.serverUpdateOnce.Do(func() {
+		// Server Update rejects WithRegion in the client config; every method
+		// passes the region as a per-call function parameter.
+		c.serverUpdateClient, c.serverUpdateErr = serverupdate.NewAPIClient(c.configOptsGlobal...)
+	})
+	return c.serverUpdateClient, c.serverUpdateErr
+}
+
+func (c *StackitConnection) Vpn() (*vpn.APIClient, error) {
+	c.vpnOnce.Do(func() {
+		// VPN rejects WithRegion in the client config; every method passes the
+		// region as a per-call function parameter.
+		c.vpnClient, c.vpnErr = vpn.NewAPIClient(c.configOptsGlobal...)
+	})
+	return c.vpnClient, c.vpnErr
+}
+
 func (c *StackitConnection) Asset() *inventory.Asset { return c.asset }
 func (c *StackitConnection) Name() string            { return "stackit" }
 
 func (c *StackitConnection) PlatformInfo() *inventory.Platform {
-	return &inventory.Platform{
-		Name:                  "stackit-project",
-		Title:                 "STACKIT",
-		Family:                []string{"stackit"},
-		Kind:                  "api",
-		Runtime:               "stackit",
-		TechnologyUrlSegments: []string{"cloud", "stackit", "project"},
+	p := &inventory.Platform{
+		// Matches the provider's AssetUrlTrees (technology=stackit -> project),
+		// mirroring how gcp emits {"gcp", projectID, ...} and aws emits
+		// {"aws", accountID, ...}.
+		TechnologyUrlSegments: []string{"stackit", c.projectID},
 	}
+	PlatformByName("stackit-project").Apply(p)
+	if c.projectName != "" {
+		p.Title = "STACKIT Project " + c.projectName
+	}
+	return p
 }
 
 func (c *StackitConnection) Identifier() string {

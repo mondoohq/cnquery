@@ -1260,3 +1260,85 @@ func TestQubesOSDetector(t *testing.T) {
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
 }
+
+// os-release does not require an ID field, and vendor firmware such as FRITZ!OS
+// ships without one. The name is derived from NAME so the platform does not end
+// up reported as "unknown".
+func TestOSReleaseWithoutIDDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-fritzos.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "fritzos", di.Name, "os name should be derived from NAME")
+	assert.Equal(t, "FRITZ!OS 8.03", di.Title, "os title should be identified")
+	assert.Equal(t, "8.03", di.Version, "os version should be identified")
+	assert.Equal(t, "aarch64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
+}
+
+// a linux system that carries no lsb or os-release information at all falls back
+// to the generic-linux resolver name
+func TestGenericLinuxDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-generic-linux.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "generic-linux", di.Name, "os name should fall back to the generic name")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
+}
+
+// PRETTY_NAME is not used to derive a name, since it carries the version and
+// would mint a new platform name for every release. Without an ID or a NAME the
+// system falls back to generic-linux, keeping PRETTY_NAME as the title only.
+func TestOSReleaseWithPrettyNameOnlyDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-linux-prettyname-only.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "generic-linux", di.Name, "os name should not be derived from PRETTY_NAME")
+	assert.Equal(t, "Some Vendor Linux 1.2.3", di.Title, "os title should be identified")
+	assert.Equal(t, "1.2.3", di.Version, "os version should be identified")
+	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
+}
+
+func TestSlugifyPlatformName(t *testing.T) {
+	test := []struct {
+		Val      string
+		Expected string
+	}{
+		{Val: "FRITZ!OS", Expected: "fritzos"},
+		{Val: "Buildroot", Expected: "buildroot"},
+		{Val: "Generic Vendor Linux", Expected: "generic-vendor-linux"},
+		{Val: "Debian GNU/Linux", Expected: "debian-gnulinux"},
+		{Val: "", Expected: ""},
+	}
+
+	for i := range test {
+		assert.Equal(t, test[i].Expected, slugifyPlatformName(test[i].Val), test[i].Val)
+	}
+}
+
+// container images we cannot identify are reported as "scratch". The check keys
+// off the resolver that matched, not the platform name, because a resolver does
+// not always emit the name it is registered under.
+func TestIsUnidentifiedPlatform(t *testing.T) {
+	test := []struct {
+		Name     string
+		Leaf     *PlatformResolver
+		Expected bool
+	}{
+		{Name: "", Leaf: nil, Expected: true},
+		{Name: "generic-linux", Leaf: defaultLinux, Expected: true},
+		// a name derived from os-release NAME still means we could not identify
+		// the distribution, so container images stay "scratch"
+		{Name: "fritzos", Leaf: defaultLinux, Expected: true},
+		{Name: "ubuntu", Leaf: ubuntu, Expected: false},
+		// the oracle resolver emits "oraclelinux", a name it is not registered
+		// under. It must not be mistaken for an unidentified platform.
+		{Name: "oraclelinux", Leaf: oracle, Expected: false},
+		{Name: "alpine", Leaf: alpine, Expected: false},
+	}
+
+	for i := range test {
+		pf := &inventory.Platform{Name: test[i].Name}
+		assert.Equal(t, test[i].Expected, isUnidentifiedPlatform(pf, test[i].Leaf), test[i].Name)
+	}
+}

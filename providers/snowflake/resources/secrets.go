@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -25,21 +26,66 @@ type mqlSnowflakeSecretInternal struct {
 	descRefreshExp  *time.Time
 }
 
-func (r *mqlSnowflakeAccount) secrets() ([]any, error) {
-	conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
-	client := conn.Client()
-	ctx := context.Background()
+// initSnowflakeSecret resolves a single secret by its database, schema, and
+// name so typed references (such as snowflake.function.secrets) can hydrate a
+// full secret from just its identity.
+func initSnowflakeSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 3 {
+		return args, nil, nil
+	}
+	dbRaw, ok1 := args["databaseName"]
+	schemaRaw, ok2 := args["schemaName"]
+	nameRaw, ok3 := args["name"]
+	if !ok1 || !ok2 || !ok3 {
+		return args, nil, nil
+	}
+	databaseName, _ := dbRaw.Value.(string)
+	schemaName, _ := schemaRaw.Value.(string)
+	name, _ := nameRaw.Value.(string)
+	if databaseName == "" || schemaName == "" || name == "" {
+		return nil, nil, fmt.Errorf("snowflake.secret requires a non-empty databaseName, schemaName, and name")
+	}
 
-	secrets, err := client.Secrets.Show(ctx,
-		sdk.NewShowSecretRequest().WithIn(sdk.ExtendedIn{In: sdk.In{Account: sdk.Bool(true)}}),
-	)
+	conn := runtime.Connection.(*connection.SnowflakeConnection)
+	secrets, err := conn.Client().Secrets.Show(context.Background(), sdk.NewShowSecretRequest().
+		WithLike(sdk.Like{Pattern: sdk.String(name)}).
+		WithIn(sdk.ExtendedIn{In: sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)}}))
+	if err != nil {
+		return nil, nil, err
+	}
+	for i := range secrets {
+		if secrets[i].Name == name && secrets[i].SchemaName == schemaName && secrets[i].DatabaseName == databaseName {
+			res, err := newMqlSnowflakeSecret(runtime, secrets[i])
+			if err != nil {
+				return nil, nil, err
+			}
+			return nil, res, nil
+		}
+	}
+	return nil, nil, fmt.Errorf("snowflake.secret %q not found in %s.%s", name, databaseName, schemaName)
+}
+
+func (r *mqlSnowflakeAccount) secrets() ([]any, error) {
+	return listSnowflakeSecrets(r.MqlRuntime, sdk.ExtendedIn{In: sdk.In{Account: sdk.Bool(true)}})
+}
+
+func (r *mqlSnowflakeDatabase) secrets() ([]any, error) {
+	return listSnowflakeSecrets(r.MqlRuntime, sdk.ExtendedIn{In: sdk.In{Database: sdk.NewAccountObjectIdentifier(r.Name.Data)}})
+}
+
+// listSnowflakeSecrets fetches secrets within the given scope (account-wide or a
+// single database) and maps them to resources.
+func listSnowflakeSecrets(runtime *plugin.Runtime, in sdk.ExtendedIn) ([]any, error) {
+	conn := runtime.Connection.(*connection.SnowflakeConnection)
+	secrets, err := conn.Client().Secrets.Show(context.Background(),
+		sdk.NewShowSecretRequest().WithIn(in))
 	if err != nil {
 		return nil, err
 	}
 
 	list := make([]any, 0, len(secrets))
 	for i := range secrets {
-		mqlSecret, err := newMqlSnowflakeSecret(r.MqlRuntime, secrets[i])
+		mqlSecret, err := newMqlSnowflakeSecret(runtime, secrets[i])
 		if err != nil {
 			return nil, err
 		}

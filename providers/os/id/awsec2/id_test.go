@@ -27,6 +27,21 @@ func TestParseInstanceId(t *testing.T) {
 	assert.Error(t, err, "invalid aws ec2 instance id")
 }
 
+func TestParseSnapshotId(t *testing.T) {
+	path := "//platformid.api.mondoo.app/runtime/aws/ec2/v1/accounts/185972265011/regions/us-east-1/snapshots/snap-07f67838ada5879af"
+	id, err := ParseMondooSnapshotID(path)
+	require.NoError(t, err)
+	assert.Equal(t, "185972265011", id.Account)
+	assert.Equal(t, "us-east-1", id.Region)
+	assert.Equal(t, "snap-07f67838ada5879af", id.Id)
+
+	// an instance id must NOT validate as a snapshot id
+	instancePath := "//platformid.api.mondoo.app/runtime/aws/ec2/v1/accounts/185972265011/regions/us-east-1/instances/i-07f67838ada5879af"
+	assert.False(t, IsValidMondooSnapshotId(instancePath))
+	_, err = ParseMondooSnapshotID(instancePath)
+	assert.Error(t, err)
+}
+
 func TestParseAccountId(t *testing.T) {
 	path := "//platformid.api.mondoo.app/runtime/aws/accounts/185972265011"
 	accountID, err := ParseMondooAccountID(path)

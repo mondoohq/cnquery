@@ -163,6 +163,7 @@ func (o *mqlOciCloudGuard) targets() ([]any, error) {
 			"state":              llx.StringData(string(target.LifecycleState)),
 			"recipeCount":        llx.IntDataPtr(target.RecipeCount),
 			"created":            llx.TimeDataPtr(created),
+			"systemTags":         llx.MapData(definedTagsToAny(target.SystemTags), types.Dict),
 		})
 		if err != nil {
 			return nil, err
@@ -216,13 +217,15 @@ func (o *mqlOciCloudGuard) detectorRecipes() ([]any, error) {
 		}
 
 		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.cloudGuard.detectorRecipe", map[string]*llx.RawData{
-			"id":           llx.StringDataPtr(recipe.Id),
-			"name":         llx.StringDataPtr(recipe.DisplayName),
-			"description":  llx.StringDataPtr(recipe.Description),
-			"owner":        llx.StringData(string(recipe.Owner)),
-			"detectorType": llx.StringData(string(recipe.Detector)),
-			"state":        llx.StringData(string(recipe.LifecycleState)),
-			"created":      llx.TimeDataPtr(created),
+			"id":            llx.StringDataPtr(recipe.Id),
+			"name":          llx.StringDataPtr(recipe.DisplayName),
+			"description":   llx.StringDataPtr(recipe.Description),
+			"compartmentID": llx.StringDataPtr(recipe.CompartmentId),
+			"owner":         llx.StringData(string(recipe.Owner)),
+			"detectorType":  llx.StringData(string(recipe.Detector)),
+			"state":         llx.StringData(string(recipe.LifecycleState)),
+			"created":       llx.TimeDataPtr(created),
+			"systemTags":    llx.MapData(definedTagsToAny(recipe.SystemTags), types.Dict),
 		})
 		if err != nil {
 			return nil, err
@@ -283,6 +286,7 @@ func (o *mqlOciCloudGuard) securityZones() ([]any, error) {
 			"isInheritanceAfterDeleteEnabled": llx.BoolDataPtr(zone.IsInheritanceAfterDeleteEnabled),
 			"state":                           llx.StringData(string(zone.LifecycleState)),
 			"created":                         llx.TimeDataPtr(created),
+			"systemTags":                      llx.MapData(definedTagsToAny(zone.SystemTags), types.Dict),
 		})
 		if err != nil {
 			return nil, err
@@ -345,6 +349,7 @@ func (o *mqlOciCloudGuard) securityZoneRecipes() ([]any, error) {
 			"owner":         llx.StringData(string(recipe.Owner)),
 			"state":         llx.StringData(string(recipe.LifecycleState)),
 			"created":       llx.TimeDataPtr(created),
+			"systemTags":    llx.MapData(definedTagsToAny(recipe.SystemTags), types.Dict),
 		})
 		if err != nil {
 			return nil, err
@@ -415,6 +420,7 @@ func (o *mqlOciCloudGuard) securityPolicies() ([]any, error) {
 			"services":      llx.ArrayData(services, types.String),
 			"state":         llx.StringData(string(policy.LifecycleState)),
 			"created":       llx.TimeDataPtr(created),
+			"systemTags":    llx.MapData(definedTagsToAny(policy.SystemTags), types.Dict),
 		})
 		if err != nil {
 			return nil, err

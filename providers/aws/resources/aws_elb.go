@@ -29,6 +29,68 @@ func (a *mqlAwsElb) id() (string, error) {
 	return ResourceAwsElb, nil
 }
 
+type mqlAwsElbInternal struct {
+	dnsIndexMu    sync.Mutex
+	dnsIndexBuilt bool
+	dnsIndex      map[string]*mqlAwsElbLoadbalancer
+}
+
+// loadBalancerByDNSName returns the load balancer whose DNS name matches the
+// given already-normalized DNS name, or nil when none matches. It builds a
+// normalized-DNS-name index across all load balancers on first call and reuses
+// it afterwards. The index lives on the aws.elb list resource, which the runtime
+// caches, so many callers (for example every Route 53 alias record resolving its
+// target) share one index instead of each rescanning every load balancer.
+func (a *mqlAwsElb) loadBalancerByDNSName(normalized string) (*mqlAwsElbLoadbalancer, error) {
+	a.dnsIndexMu.Lock()
+	defer a.dnsIndexMu.Unlock()
+
+	if !a.dnsIndexBuilt {
+		// Index both v2 (application/network/gateway) and classic load balancers:
+		// a Route 53 alias record can point at either, and each carries its own
+		// DNS name.
+		lbs := a.GetLoadBalancers()
+		if lbs.Error != nil {
+			return nil, lbs.Error
+		}
+		classic := a.GetClassicLoadBalancers()
+		if classic.Error != nil {
+			return nil, classic.Error
+		}
+		idx, err := buildLoadBalancerDNSIndex(lbs.Data, classic.Data)
+		if err != nil {
+			return nil, err
+		}
+		a.dnsIndex = idx
+		a.dnsIndexBuilt = true
+	}
+	return a.dnsIndex[normalized], nil
+}
+
+// buildLoadBalancerDNSIndex maps each load balancer's normalized DNS name to the
+// load balancer, across every provided list (v2 and classic). DNS names are
+// unique across load balancer types, so the lists share one index without
+// collision.
+func buildLoadBalancerDNSIndex(lbLists ...[]any) (map[string]*mqlAwsElbLoadbalancer, error) {
+	idx := map[string]*mqlAwsElbLoadbalancer{}
+	for _, lbs := range lbLists {
+		for _, l := range lbs {
+			lb, ok := l.(*mqlAwsElbLoadbalancer)
+			if !ok {
+				continue
+			}
+			dnsName := lb.GetDnsName()
+			if dnsName.Error != nil {
+				return nil, dnsName.Error
+			}
+			if dnsName.Data != "" {
+				idx[normalizeAliasDNSName(dnsName.Data)] = lb
+			}
+		}
+	}
+	return idx, nil
+}
+
 func (a *mqlAwsElb) classicLoadBalancers() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
@@ -73,72 +135,13 @@ func (a *mqlAwsElb) getClassicLoadBalancers(conn *connection.AwsConnection) []*j
 				}
 
 				for _, lb := range lbs.LoadBalancerDescriptions {
-					jsonListeners, err := convert.JsonToDictSlice(lb.ListenerDescriptions)
-					if err != nil {
-						return nil, err
-					}
-					healthCheck, err := convert.JsonToDict(lb.HealthCheck)
-					if err != nil {
-						return nil, err
-					}
-					lbName := convert.ToValue(lb.LoadBalancerName)
-
-					availabilityZones := []any{}
-					for _, zone := range lb.AvailabilityZones {
-						availabilityZones = append(availabilityZones, zone)
-					}
-
-					sgs := []any{}
-					for _, sg := range lb.SecurityGroups {
-						mqlSg, err := NewResource(a.MqlRuntime, ResourceAwsEc2Securitygroup,
-							map[string]*llx.RawData{
-								"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, region, conn.AccountId(), sg)),
-							})
-						if err != nil {
-							// When tag filters are active, the security group may not be in the
-							// filtered list. Log and continue rather than failing the entire LB.
-							log.Debug().Str("sg", sg).Err(err).Msg("could not resolve security group for classic ELB")
-							continue
-						}
-						sgs = append(sgs, mqlSg)
-					}
-
-					args := map[string]*llx.RawData{
-						"arn":                  llx.StringData(fmt.Sprintf(elbv1LbArnPattern, region, conn.AccountId(), lbName)),
-						"availabilityZones":    llx.ArrayData(availabilityZones, types.String),
-						"createdAt":            llx.TimeDataPtr(lb.CreatedTime),
-						"dnsName":              llx.StringDataPtr(lb.DNSName),
-						"elbType":              llx.StringData("classic"),
-						"hostedZoneId":         llx.StringDataPtr(lb.CanonicalHostedZoneNameID),
-						"healthCheck":          llx.DictData(healthCheck),
-						"listenerDescriptions": llx.AnyData(jsonListeners),
-						"name":                 llx.StringDataPtr(lb.LoadBalancerName),
-						"region":               llx.StringData(region),
-						"scheme":               llx.StringDataPtr(lb.Scheme),
-						"securityGroups":       llx.ArrayData(sgs, types.Resource(ResourceAwsEc2Securitygroup)),
-						"vpc":                  llx.NilData,
-					}
-
-					if lb.VPCId != nil {
-						mqlVpc, err := NewResource(a.MqlRuntime, ResourceAwsVpc,
-							map[string]*llx.RawData{
-								"arn": llx.StringData(fmt.Sprintf(vpcArnPattern, region, conn.AccountId(), convert.ToValue(lb.VPCId))),
-							})
-						if err != nil {
-							// When tag filters are active, the VPC may not be in the filtered list.
-							log.Debug().Str("vpcId", convert.ToValue(lb.VPCId)).Err(err).Msg("could not resolve VPC for classic ELB")
-						} else {
-							args["vpc"] = llx.ResourceData(mqlVpc, mqlVpc.MqlName())
-						}
-					}
-
-					mqlLb, err := CreateResource(a.MqlRuntime, ResourceAwsElbLoadbalancer, args)
+					mqlLb, err := buildElbClassicLoadBalancerResource(a.MqlRuntime, region, conn.AccountId(), lb)
 					if err != nil {
 						return nil, err
 					}
 					// keeps the tags lazy unless the filters need to be evaluated
 					if conn.Filters.General.HasTags() {
-						tags, err := mqlLb.(*mqlAwsElbLoadbalancer).tags()
+						tags, err := mqlLb.tags()
 						if err != nil {
 							return nil, err
 						}
@@ -157,11 +160,107 @@ func (a *mqlAwsElb) getClassicLoadBalancers(conn *connection.AwsConnection) []*j
 	return tasks
 }
 
+func buildElbClassicLoadBalancerResource(runtime *plugin.Runtime, region, accountID string, lb elbv1types.LoadBalancerDescription) (*mqlAwsElbLoadbalancer, error) {
+	jsonListeners, err := convert.JsonToDictSlice(lb.ListenerDescriptions)
+	if err != nil {
+		return nil, err
+	}
+	healthCheck, err := convert.JsonToDict(lb.HealthCheck)
+	if err != nil {
+		return nil, err
+	}
+	lbName := convert.ToValue(lb.LoadBalancerName)
+
+	availabilityZones := []any{}
+	for _, zone := range lb.AvailabilityZones {
+		availabilityZones = append(availabilityZones, zone)
+	}
+
+	sgs := []any{}
+	for _, sg := range lb.SecurityGroups {
+		mqlSg, err := NewResource(runtime, ResourceAwsEc2Securitygroup,
+			map[string]*llx.RawData{
+				"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, region, accountID, sg)),
+			})
+		if err != nil {
+			// When tag filters are active, the security group may not be in the
+			// filtered list. Log and continue rather than failing the entire LB.
+			log.Debug().Str("sg", sg).Err(err).Msg("could not resolve security group for classic ELB")
+			continue
+		}
+		sgs = append(sgs, mqlSg)
+	}
+
+	args := map[string]*llx.RawData{
+		"arn":                  llx.StringData(fmt.Sprintf(elbv1LbArnPattern, region, accountID, lbName)),
+		"availabilityZones":    llx.ArrayData(availabilityZones, types.String),
+		"createdAt":            llx.TimeDataPtr(lb.CreatedTime),
+		"dnsName":              llx.StringDataPtr(lb.DNSName),
+		"elbType":              llx.StringData("classic"),
+		"hostedZoneId":         llx.StringDataPtr(lb.CanonicalHostedZoneNameID),
+		"healthCheck":          llx.DictData(healthCheck),
+		"listenerDescriptions": llx.AnyData(jsonListeners),
+		"name":                 llx.StringDataPtr(lb.LoadBalancerName),
+		"region":               llx.StringData(region),
+		"scheme":               llx.StringDataPtr(lb.Scheme),
+		"securityGroups":       llx.ArrayData(sgs, types.Resource(ResourceAwsEc2Securitygroup)),
+		"state":                llx.NilData, // classic load balancers have no provisioning state
+		"vpc":                  llx.NilData,
+	}
+
+	if lb.VPCId != nil {
+		mqlVpc, err := NewResource(runtime, ResourceAwsVpc,
+			map[string]*llx.RawData{
+				"arn": llx.StringData(fmt.Sprintf(vpcArnPattern, region, accountID, convert.ToValue(lb.VPCId))),
+			})
+		if err != nil {
+			// When tag filters are active, the VPC may not be in the filtered list.
+			log.Debug().Str("vpcId", convert.ToValue(lb.VPCId)).Err(err).Msg("could not resolve VPC for classic ELB")
+		} else {
+			args["vpc"] = llx.ResourceData(mqlVpc, mqlVpc.MqlName())
+		}
+	}
+
+	mqlLb, err := CreateResource(runtime, ResourceAwsElbLoadbalancer, args)
+	if err != nil {
+		return nil, err
+	}
+	res := mqlLb.(*mqlAwsElbLoadbalancer)
+	res.cacheSubnetIds = lb.Subnets
+	return res, nil
+}
+
 func (a *mqlAwsElbLoadbalancer) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+func (a *mqlAwsElbLoadbalancer) subnets() ([]any, error) {
+	if len(a.cacheSubnetIds) == 0 {
+		return []any{}, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	res := []any{}
+	for _, subnetId := range a.cacheSubnetIds {
+		mqlSubnet, err := NewResource(a.MqlRuntime, ResourceAwsVpcSubnet,
+			map[string]*llx.RawData{
+				"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, region, conn.AccountId(), subnetId)),
+			})
+		if err != nil {
+			// When tag filters are active, the subnet may not be in the filtered
+			// list. Log and continue rather than failing the entire LB.
+			log.Debug().Str("subnet", subnetId).Err(err).Msg("could not resolve subnet for ELB")
+			continue
+		}
+		res = append(res, mqlSubnet)
+	}
+	return res, nil
+}
+
 type mqlAwsElbLoadbalancerInternal struct {
+	// Subnet IDs the load balancer is attached to, resolved lazily by subnets().
+	cacheSubnetIds []string
+
 	// Cached v2 DescribeLoadBalancerAttributes response, shared between attributes() and attribute().
 	cachedV2Attrs  []elbtypes.LoadBalancerAttribute
 	v2AttrsFetched bool
@@ -250,63 +349,13 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 				}
 
 				for _, lb := range lbs.LoadBalancers {
-					availabilityZones := []any{}
-					for _, zone := range lb.AvailabilityZones {
-						availabilityZones = append(availabilityZones, convert.ToValue(zone.ZoneName))
-					}
-
-					sgs := []any{}
-					for _, sg := range lb.SecurityGroups {
-						mqlSg, err := NewResource(a.MqlRuntime, ResourceAwsEc2Securitygroup,
-							map[string]*llx.RawData{
-								"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, region, conn.AccountId(), sg)),
-							})
-						if err != nil {
-							// When tag filters are active, the security group may not be in the
-							// filtered list. Log and continue rather than failing the entire LB.
-							log.Debug().Str("sg", sg).Err(err).Msg("could not resolve security group for ELB")
-							continue
-						}
-						sgs = append(sgs, mqlSg)
-					}
-
-					args := map[string]*llx.RawData{
-						"arn":               llx.StringDataPtr(lb.LoadBalancerArn),
-						"availabilityZones": llx.ArrayData(availabilityZones, types.String),
-						"createdAt":         llx.TimeDataPtr(lb.CreatedTime),
-						"dnsName":           llx.StringDataPtr(lb.DNSName),
-						"hostedZoneId":      llx.StringDataPtr(lb.CanonicalHostedZoneId),
-						"name":              llx.StringDataPtr(lb.LoadBalancerName),
-						"scheme":            llx.StringData(string(lb.Scheme)),
-						"securityGroups":    llx.ArrayData(sgs, types.Resource(ResourceAwsEc2Securitygroup)),
-						"elbType":           llx.StringData(string(lb.Type)),
-						"ipAddressType":     llx.StringData(string(lb.IpAddressType)),
-						"region":            llx.StringData(region),
-						"vpc":               llx.NilData, // set vpc to nil as default, if vpc is not set
-						"healthCheck":       llx.NilData, // classic ELB only; ALB/NLB have no LB-level health check
-					}
-
-					if lb.VpcId != nil {
-						mqlVpc, err := NewResource(a.MqlRuntime, ResourceAwsVpc,
-							map[string]*llx.RawData{
-								"arn": llx.StringData(fmt.Sprintf(vpcArnPattern, region, conn.AccountId(), convert.ToValue(lb.VpcId))),
-							})
-						if err != nil {
-							// When tag filters are active, the VPC may not be in the filtered list.
-							log.Debug().Str("vpcId", convert.ToValue(lb.VpcId)).Err(err).Msg("could not resolve VPC for ELB")
-						} else {
-							// update the vpc setting
-							args["vpc"] = llx.ResourceData(mqlVpc, mqlVpc.MqlName())
-						}
-					}
-
-					mqlLb, err := CreateResource(a.MqlRuntime, ResourceAwsElbLoadbalancer, args)
+					mqlLb, err := buildElbV2LoadBalancerResource(a.MqlRuntime, region, conn.AccountId(), lb)
 					if err != nil {
 						return nil, err
 					}
 					// keeps the tags lazy unless the filters need to be evaluated
 					if conn.Filters.General.HasTags() {
-						tags, err := mqlLb.(*mqlAwsElbLoadbalancer).tags()
+						tags, err := mqlLb.tags()
 						if err != nil {
 							return nil, err
 						}
@@ -325,15 +374,84 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 	return tasks
 }
 
+func buildElbV2LoadBalancerResource(runtime *plugin.Runtime, region, accountID string, lb elbtypes.LoadBalancer) (*mqlAwsElbLoadbalancer, error) {
+	availabilityZones := []any{}
+	subnetIds := []string{}
+	for _, zone := range lb.AvailabilityZones {
+		availabilityZones = append(availabilityZones, convert.ToValue(zone.ZoneName))
+		if zone.SubnetId != nil {
+			subnetIds = append(subnetIds, *zone.SubnetId)
+		}
+	}
+
+	state := ""
+	if lb.State != nil {
+		state = string(lb.State.Code)
+	}
+
+	sgs := []any{}
+	for _, sg := range lb.SecurityGroups {
+		mqlSg, err := NewResource(runtime, ResourceAwsEc2Securitygroup,
+			map[string]*llx.RawData{
+				"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, region, accountID, sg)),
+			})
+		if err != nil {
+			// When tag filters are active, the security group may not be in the
+			// filtered list. Log and continue rather than failing the entire LB.
+			log.Debug().Str("sg", sg).Err(err).Msg("could not resolve security group for ELB")
+			continue
+		}
+		sgs = append(sgs, mqlSg)
+	}
+
+	args := map[string]*llx.RawData{
+		"arn":               llx.StringDataPtr(lb.LoadBalancerArn),
+		"availabilityZones": llx.ArrayData(availabilityZones, types.String),
+		"createdAt":         llx.TimeDataPtr(lb.CreatedTime),
+		"dnsName":           llx.StringDataPtr(lb.DNSName),
+		"hostedZoneId":      llx.StringDataPtr(lb.CanonicalHostedZoneId),
+		"name":              llx.StringDataPtr(lb.LoadBalancerName),
+		"scheme":            llx.StringData(string(lb.Scheme)),
+		"securityGroups":    llx.ArrayData(sgs, types.Resource(ResourceAwsEc2Securitygroup)),
+		"state":             llx.StringData(state),
+		"elbType":           llx.StringData(string(lb.Type)),
+		"ipAddressType":     llx.StringData(string(lb.IpAddressType)),
+		"region":            llx.StringData(region),
+		"vpc":               llx.NilData, // set vpc to nil as default, if vpc is not set
+		"healthCheck":       llx.NilData, // classic ELB only; ALB/NLB have no LB-level health check
+	}
+
+	if lb.VpcId != nil {
+		mqlVpc, err := NewResource(runtime, ResourceAwsVpc,
+			map[string]*llx.RawData{
+				"arn": llx.StringData(fmt.Sprintf(vpcArnPattern, region, accountID, convert.ToValue(lb.VpcId))),
+			})
+		if err != nil {
+			// When tag filters are active, the VPC may not be in the filtered list.
+			log.Debug().Str("vpcId", convert.ToValue(lb.VpcId)).Err(err).Msg("could not resolve VPC for ELB")
+		} else {
+			// update the vpc setting
+			args["vpc"] = llx.ResourceData(mqlVpc, mqlVpc.MqlName())
+		}
+	}
+
+	mqlLb, err := CreateResource(runtime, ResourceAwsElbLoadbalancer, args)
+	if err != nil {
+		return nil, err
+	}
+	res := mqlLb.(*mqlAwsElbLoadbalancer)
+	res.cacheSubnetIds = subnetIds
+	return res, nil
+}
+
 func initAwsElbLoadbalancer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["name"] = llx.StringData(ids.name)
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 
@@ -350,6 +468,68 @@ func initAwsElbLoadbalancer(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return nil, nil, errors.New("elb load balancer does not exist")
 	}
 
+	// Issue a single targeted Describe against the ARN's region instead of
+	// listing every load balancer in every region. ELBv2 (app/net/gateway) and
+	// classic ELB live in different APIs; discriminate by the ARN form.
+	region, err := GetRegionFromArn(arnVal)
+	if err == nil && region != "" {
+		conn := runtime.Connection.(*connection.AwsConnection)
+		if isV1LoadBalancerArn(arnVal) {
+			// Classic ELB: the synthetic ARN encodes the name as
+			// loadbalancer/classic/<name>.
+			name := ""
+			if args["name"] != nil {
+				if n, ok := args["name"].Value.(string); ok {
+					name = n
+				}
+			}
+			if name == "" {
+				if parsed, perr := arn.Parse(arnVal); perr == nil {
+					name = strings.TrimPrefix(parsed.Resource, "loadbalancer/classic/")
+				}
+			}
+			if name != "" {
+				svc := conn.Elb(region)
+				resp, err := svc.DescribeLoadBalancers(context.Background(), &elasticloadbalancing.DescribeLoadBalancersInput{
+					LoadBalancerNames: []string{name},
+				})
+				if err != nil {
+					// Surface unexpected errors; on access-denied or a stale ARN
+					// (deleted LB) fall through to the list-scan fallback below.
+					if !Is400AccessDeniedError(err) && !isResourceNotFoundError(err) {
+						return nil, nil, err
+					}
+				} else if len(resp.LoadBalancerDescriptions) > 0 {
+					lb, err := buildElbClassicLoadBalancerResource(runtime, region, conn.AccountId(), resp.LoadBalancerDescriptions[0])
+					if err != nil {
+						return nil, nil, err
+					}
+					return args, lb, nil
+				}
+			}
+		} else {
+			svc := conn.Elbv2(region)
+			resp, err := svc.DescribeLoadBalancers(context.Background(), &elasticloadbalancingv2.DescribeLoadBalancersInput{
+				LoadBalancerArns: []string{arnVal},
+			})
+			if err != nil {
+				// Surface unexpected errors; on access-denied or a stale ARN
+				// (deleted LB) fall through to the list-scan fallback below.
+				if !Is400AccessDeniedError(err) && !isResourceNotFoundError(err) {
+					return nil, nil, err
+				}
+			} else if len(resp.LoadBalancers) > 0 {
+				lb, err := buildElbV2LoadBalancerResource(runtime, region, conn.AccountId(), resp.LoadBalancers[0])
+				if err != nil {
+					return nil, nil, err
+				}
+				return args, lb, nil
+			}
+		}
+	}
+
+	// Fallback: no region hint (or the targeted lookup was denied/not found),
+	// scan the cached lists.
 	obj, err := CreateResource(runtime, ResourceAwsElb, map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
@@ -499,7 +679,61 @@ func (a *mqlAwsElbLoadbalancer) listeners() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			mqlListener.(*mqlAwsElbListener).defaultActionsCache = l.DefaultActions
 			res = append(res, mqlListener)
+		}
+	}
+	return res, nil
+}
+
+type mqlAwsElbListenerInternal struct {
+	defaultActionsCache []elbtypes.Action
+}
+
+// forwardTargetGroups resolves the target groups named by the listener's default
+// forward action to typed resources, matched against the parent load balancer's
+// target groups. It completes the internet -> load balancer -> listener ->
+// target group hop of the ingress path.
+func (a *mqlAwsElbListener) forwardTargetGroups() ([]any, error) {
+	// Collect the target group ARNs referenced by forward actions, both the
+	// single-target shorthand and the weighted ForwardConfig form.
+	wanted := map[string]struct{}{}
+	for _, act := range a.defaultActionsCache {
+		if act.TargetGroupArn != nil && *act.TargetGroupArn != "" {
+			wanted[*act.TargetGroupArn] = struct{}{}
+		}
+		if act.ForwardConfig != nil {
+			for _, tg := range act.ForwardConfig.TargetGroups {
+				if tg.TargetGroupArn != nil && *tg.TargetGroupArn != "" {
+					wanted[*tg.TargetGroupArn] = struct{}{}
+				}
+			}
+		}
+	}
+	if len(wanted) == 0 {
+		return []any{}, nil
+	}
+
+	lb := a.GetLoadBalancer()
+	if lb.Error != nil {
+		return nil, lb.Error
+	}
+	if lb.Data == nil {
+		return []any{}, nil
+	}
+	tgs := lb.Data.GetTargetGroups()
+	if tgs.Error != nil {
+		return nil, tgs.Error
+	}
+
+	res := []any{}
+	for _, t := range tgs.Data {
+		tg, ok := t.(*mqlAwsElbTargetgroup)
+		if !ok {
+			continue
+		}
+		if _, found := wanted[tg.Arn.Data]; found {
+			res = append(res, tg)
 		}
 	}
 	return res, nil
@@ -517,19 +751,11 @@ func isV1LoadBalancerArn(a string) bool {
 }
 
 func elbv2TagsToMap(tags []elbtypes.Tag) map[string]any {
-	tagsMap := make(map[string]any)
-	for _, tag := range tags {
-		tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
-	}
-	return tagsMap
+	return tagsToMap(tags, func(t elbtypes.Tag) *string { return t.Key }, func(t elbtypes.Tag) *string { return t.Value })
 }
 
 func elbv1TagsToMap(tags []elbv1types.Tag) map[string]any {
-	tagsMap := make(map[string]any)
-	for _, tag := range tags {
-		tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
-	}
-	return tagsMap
+	return tagsToMap(tags, func(t elbv1types.Tag) *string { return t.Key }, func(t elbv1types.Tag) *string { return t.Value })
 }
 
 func (a *mqlAwsElbLoadbalancer) tags() (map[string]any, error) {
@@ -837,13 +1063,113 @@ func (a *mqlAwsElbLoadbalancer) instances() ([]any, error) {
 }
 
 func (a *mqlAwsElbTargetgroup) ec2Targets() ([]any, error) {
-	// TODO
-	return nil, nil
+	// Only instance-type target groups register EC2 instances; ip and lambda
+	// target groups resolve to other resource kinds, so there is nothing to do.
+	if a.targetGroup.TargetType != "" && a.targetGroup.TargetType != elbtypes.TargetTypeEnumInstance {
+		return []any{}, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	region := a.region
+	svc := conn.Elbv2(region)
+	ctx := context.Background()
+
+	resp, err := svc.DescribeTargetHealth(ctx, &elasticloadbalancingv2.DescribeTargetHealthInput{
+		TargetGroupArn: aws.String(a.Arn.Data),
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+
+	res := []any{}
+	for _, desc := range resp.TargetHealthDescriptions {
+		if desc.Target == nil || desc.Target.Id == nil {
+			continue
+		}
+		// instance-type targets register the instance ID (i-...); ip-type
+		// targets register an IP address, which is not an EC2 instance.
+		instanceID := *desc.Target.Id
+		if !strings.HasPrefix(instanceID, "i-") {
+			continue
+		}
+		mqlInst, err := NewResource(a.MqlRuntime, ResourceAwsEc2Instance,
+			map[string]*llx.RawData{
+				"arn": llx.StringData(fmt.Sprintf(ec2InstanceArnPattern, region, conn.AccountId(), instanceID)),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlInst)
+	}
+	return res, nil
 }
 
 func (a *mqlAwsElbTargetgroup) lambdaTargets() ([]any, error) {
-	// TODO
-	return nil, nil
+	// Only lambda-type target groups register Lambda functions.
+	if a.targetGroup.TargetType != elbtypes.TargetTypeEnumLambda {
+		return []any{}, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Elbv2(a.region)
+	resp, err := svc.DescribeTargetHealth(context.Background(), &elasticloadbalancingv2.DescribeTargetHealthInput{
+		TargetGroupArn: aws.String(a.Arn.Data),
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+
+	res := []any{}
+	for _, desc := range resp.TargetHealthDescriptions {
+		if desc.Target == nil || desc.Target.Id == nil {
+			continue
+		}
+		// lambda-type targets register the function ARN as the target id.
+		mqlFn, err := NewResource(a.MqlRuntime, ResourceAwsLambdaFunction,
+			map[string]*llx.RawData{"arn": llx.StringData(*desc.Target.Id)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlFn)
+	}
+	return res, nil
+}
+
+// ipTargets returns the IP addresses registered with an ip-type target group.
+// These backends (containers, Kubernetes pods, on-premises hosts) are not EC2
+// instances, so they do not appear in ec2Targets.
+func (a *mqlAwsElbTargetgroup) ipTargets() ([]any, error) {
+	if a.targetGroup.TargetType != elbtypes.TargetTypeEnumIp {
+		return []any{}, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Elbv2(a.region)
+	resp, err := svc.DescribeTargetHealth(context.Background(), &elasticloadbalancingv2.DescribeTargetHealthInput{
+		TargetGroupArn: aws.String(a.Arn.Data),
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+
+	res := []any{}
+	for _, desc := range resp.TargetHealthDescriptions {
+		if desc.Target == nil || desc.Target.Id == nil {
+			continue
+		}
+		res = append(res, *desc.Target.Id)
+	}
+	return res, nil
 }
 
 // enforcesTls reports whether every listener terminates an encrypted protocol —

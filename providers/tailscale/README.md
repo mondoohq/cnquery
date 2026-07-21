@@ -6,13 +6,13 @@ known as a `tailnet`.
 To authenticate using an API access token:
 
 ```
-cnquery shell tailscale --token <access-token>
+mql shell tailscale --token <access-token>
 ```
 
 To authenticate using an OAuth client:
 
 ```
-cnquery shell tailscale --client-id <id> --client-secret <secret>
+mql shell tailscale --client-id <id> --client-secret <secret>
 ```
 
 You can also use the default environment variables `TAILSCALE_OAUTH_CLIENT_ID`, `TAILSCALE_OAUTH_CLIENT_SECRET`,
@@ -25,13 +25,13 @@ If you are using an API access token instead of an OAuth client, use the `TAILSC
 **List all devices in a tailnet**
 
 ```shell
-cnquery> tailscale.devices()
+mql> tailscale.devices()
 ```
 
 **Get information on a single device**
 
 ```shell
-cnquery> tailscale.device(id: "55161288425123456") {*}
+mql> tailscale.device(id: "55161288425123456") {*}
 tailscale.device: {
   id: "55161288425123456"
   isExternal: false
@@ -61,13 +61,13 @@ tailscale.device: {
 **List all users in a tailnet**
 
 ```shell
-cnquery> tailscale.users()
+mql> tailscale.users()
 ```
 
 **Get information on a single user**
 
 ```shell
-cnquery> tailscale.user(id: "uiR4AD141DAA") {*}
+mql> tailscale.user(id: "uiR4AD141DAA") {*}
 tailscale.user: {
   id: "uiR4AD141DAA"
   type: "member"
@@ -88,5 +88,5 @@ tailscale.user: {
 **Discover all devices (any computer or mobile device) that join the tailnet `example.com`**
 
 ```shell
-cnquery shell tailscale example.com --discover devices
+mql shell tailscale example.com --discover devices
 ```

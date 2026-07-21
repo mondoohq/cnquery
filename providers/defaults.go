@@ -42,6 +42,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"alicloud": {
+		Provider: &plugin.Provider{
+			Name:            "alicloud",
+			ID:              "go.mondoo.com/mql/providers/alicloud",
+			ConnectionTypes: []string{"alicloud"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "alicloud",
+					Use:   "alicloud",
+					Short: "an Alibaba Cloud account",
+				},
+			},
+		},
+	},
+
 	"ansible": {
 		Provider: &plugin.Provider{
 			Name:            "ansible",
@@ -147,6 +162,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"checkpoint": {
+		Provider: &plugin.Provider{
+			Name:            "checkpoint",
+			ID:              "go.mondoo.com/cnquery/providers/checkpoint",
+			ConnectionTypes: []string{"checkpoint"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "checkpoint",
+					Use:   "checkpoint",
+					Short: "a Check Point Security Management server",
+				},
+			},
+		},
+	},
+
 	"claude": {
 		Provider: &plugin.Provider{
 			Name:            "claude",
@@ -211,6 +241,21 @@ var DefaultProviders Providers = map[string]*Provider{
 					Name:  "depsdev",
 					Use:   "depsdev [path-to-go.mod]",
 					Short: "deps.dev dependency analysis",
+				},
+			},
+		},
+	},
+
+	"databricks": {
+		Provider: &plugin.Provider{
+			Name:            "databricks",
+			ID:              "go.mondoo.com/mql/providers/databricks",
+			ConnectionTypes: []string{"databricks"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "databricks",
+					Use:   "databricks",
+					Short: "a Databricks account or workspace",
 				},
 			},
 		},
@@ -414,7 +459,7 @@ var DefaultProviders Providers = map[string]*Provider{
 	"jamf": {
 		Provider: &plugin.Provider{
 			Name:            "jamf",
-			ID:              "go.mondoo.com/mql/providers/jamf",
+			ID:              "go.mondoo.com/mql/v13/providers/jamf",
 			ConnectionTypes: []string{"jamf"},
 			Connectors: []plugin.Connector{
 				{
@@ -486,6 +531,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"mikrotik": {
+		Provider: &plugin.Provider{
+			Name:            "mikrotik",
+			ID:              "go.mondoo.com/mql/providers/mikrotik",
+			ConnectionTypes: []string{"mikrotik"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "mikrotik",
+					Use:   "mikrotik [user@host] [flags]",
+					Short: "a MikroTik RouterOS device",
+				},
+			},
+		},
+	},
+
 	"mistral": {
 		Provider: &plugin.Provider{
 			Name:            "mistral",
@@ -496,6 +556,21 @@ var DefaultProviders Providers = map[string]*Provider{
 					Name:  "mistral",
 					Use:   "mistral",
 					Short: "a Mistral AI account",
+				},
+			},
+		},
+	},
+
+	"mongodbatlas": {
+		Provider: &plugin.Provider{
+			Name:            "mongodbatlas",
+			ID:              "go.mondoo.com/mql/providers/mongodbatlas",
+			ConnectionTypes: []string{"mongodbatlas"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "mongodbatlas",
+					Use:   "mongodbatlas",
+					Short: "a MongoDB Atlas organization or project",
 				},
 			},
 		},
@@ -526,6 +601,21 @@ var DefaultProviders Providers = map[string]*Provider{
 					Name:  "host",
 					Use:   "host HOST",
 					Short: "a remote HTTP or HTTPS host",
+				},
+			},
+		},
+	},
+
+	"nextdns": {
+		Provider: &plugin.Provider{
+			Name:            "nextdns",
+			ID:              "go.mondoo.com/mql/providers/nextdns",
+			ConnectionTypes: []string{"nextdns"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "nextdns",
+					Use:   "nextdns",
+					Short: "a NextDNS account",
 				},
 			},
 		},
@@ -708,6 +798,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"portainer": {
+		Provider: &plugin.Provider{
+			Name:            "portainer",
+			ID:              "go.mondoo.com/mql/providers/portainer",
+			ConnectionTypes: []string{"portainer"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "portainer",
+					Use:   "portainer",
+					Short: "a Portainer server",
+				},
+			},
+		},
+	},
+
 	"proxmox": {
 		Provider: &plugin.Provider{
 			Name:            "proxmox",
@@ -718,6 +823,21 @@ var DefaultProviders Providers = map[string]*Provider{
 					Name:  "proxmox",
 					Use:   "proxmox",
 					Short: "a Proxmox VE hypervisor",
+				},
+			},
+		},
+	},
+
+	"redfish": {
+		Provider: &plugin.Provider{
+			Name:            "redfish",
+			ID:              "go.mondoo.com/mql/providers/redfish",
+			ConnectionTypes: []string{"redfish"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "redfish",
+					Use:   "redfish USER@HOST",
+					Short: "a Redfish management controller (BMC)",
 				},
 			},
 		},
@@ -853,6 +973,21 @@ var DefaultProviders Providers = map[string]*Provider{
 					Name:  "vcd",
 					Use:   "vcd [--user <user>] [--host <host>] [--organization <organization>] [--ask-pass] [--password <password>]",
 					Short: "a VMware Cloud Director installation",
+				},
+			},
+		},
+	},
+
+	"vercel": {
+		Provider: &plugin.Provider{
+			Name:            "vercel",
+			ID:              "go.mondoo.com/mql/providers/vercel",
+			ConnectionTypes: []string{"vercel"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "vercel",
+					Use:   "vercel",
+					Short: "a Vercel account",
 				},
 			},
 		},

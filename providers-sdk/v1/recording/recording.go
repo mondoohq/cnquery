@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"os"
 
 	"github.com/rs/zerolog/log"
@@ -367,12 +368,18 @@ func (r *recording) EnsureAsset(asset *inventory.Asset, providerID string, conne
 	}
 
 	if conf.Id > 0 {
-		recordingAsset.connections[fmt.Sprintf("%d", conf.Id)] = &connection{
-			Url:        conf.ToUrl(),
-			ProviderID: providerID,
-			Connector:  conf.Type,
-			Id:         conf.Id,
-		}
+		// Scope the lock to just the map write via a closure: resyncAsset below
+		// also takes recordingAsset.mu, so a function-level defer would deadlock.
+		func() {
+			recordingAsset.mu.Lock()
+			defer recordingAsset.mu.Unlock()
+			recordingAsset.connections[fmt.Sprintf("%d", conf.Id)] = &connection{
+				Url:        conf.ToUrl(),
+				ProviderID: providerID,
+				Connector:  conf.Type,
+				Id:         conf.Id,
+			}
+		}()
 	}
 
 	r.resyncAsset(recordingAsset)
@@ -386,6 +393,8 @@ func (r *recording) resyncAsset(recordingAsset *Asset) {
 		r.assets.Set(platformIdKey(pid), recordingAsset)
 	}
 	// Index by connection IDs from the runtime connections (added via EnsureAsset)
+	recordingAsset.mu.Lock()
+	defer recordingAsset.mu.Unlock()
 	for _, conn := range recordingAsset.connections {
 		if conn.Id > 0 {
 			r.assets.Set(connIdKey(conn.Id), recordingAsset)
@@ -398,6 +407,9 @@ func (r *recording) AddData(req llx.AddDataReq) {
 	if !ok {
 		return
 	}
+
+	asset.mu.Lock()
+	defer asset.mu.Unlock()
 
 	if asset.IdsLookup == nil {
 		asset.IdsLookup = map[string]string{}
@@ -422,11 +434,17 @@ func (r *recording) AddData(req llx.AddDataReq) {
 	}
 }
 
-func (r *recording) resolveResource(lookup llx.AssetRecordingLookup, resource string, id string) (*Resource, string, bool) {
+// resolveResource looks up a recorded resource. It returns the owning *Asset so
+// that callers can hold asset.mu while reading the resolved resource's Fields
+// map, which AddData mutates concurrently.
+func (r *recording) resolveResource(lookup llx.AssetRecordingLookup, resource string, id string) (*Resource, *Asset, string, bool) {
 	asset, ok := r.resolveAsset(lookup)
 	if !ok {
-		return nil, "", false
+		return nil, nil, "", false
 	}
+
+	asset.mu.Lock()
+	defer asset.mu.Unlock()
 
 	// overwrite resourceId if there exists a lookup entry
 	if lookupId, ok := asset.IdsLookup[resource+keySep+id]; ok {
@@ -437,15 +455,15 @@ func (r *recording) resolveResource(lookup llx.AssetRecordingLookup, resource st
 	// since that provides the most detailed information about the asset
 	if resource == "asset" {
 		assetResource := createResourceAsset(asset.Asset, id)
-		return assetResource, id, true
+		return assetResource, asset, id, true
 	}
 
 	obj, exist := asset.resources[resource+keySep+id]
 	if !exist {
-		return nil, "", false
+		return nil, nil, "", false
 	}
 
-	return obj, id, true
+	return obj, asset, id, true
 }
 
 func createResourceAsset(asset *inventory.Asset, id string) *Resource {
@@ -486,7 +504,7 @@ func CreateAssetResourceArgs(asset *inventory.Asset) map[string]*llx.RawData {
 }
 
 func (r *recording) GetData(lookup llx.AssetRecordingLookup, resource string, id string, field string) (*llx.RawData, bool) {
-	obj, resolvedID, ok := r.resolveResource(lookup, resource, id)
+	obj, asset, resolvedID, ok := r.resolveResource(lookup, resource, id)
 	if !ok {
 		return nil, false
 	}
@@ -495,18 +513,27 @@ func (r *recording) GetData(lookup llx.AssetRecordingLookup, resource string, id
 		return &llx.RawData{Type: types.Resource(resource), Value: resolvedID}, true
 	}
 
+	// AddData mutates obj.Fields under asset.mu, so we must hold it while reading.
+	asset.mu.Lock()
+	defer asset.mu.Unlock()
 	data, ok := obj.Fields[field]
 
 	return data, ok
 }
 
 func (r *recording) GetResource(lookup llx.AssetRecordingLookup, resource string, id string) (map[string]*llx.RawData, bool) {
-	obj, _, ok := r.resolveResource(lookup, resource, id)
+	obj, asset, _, ok := r.resolveResource(lookup, resource, id)
 	if !ok {
 		return nil, false
 	}
 
-	return obj.Fields, true
+	// Return a snapshot of the fields: the caller iterates the map after we
+	// return, while AddData may still be inserting into obj.Fields under asset.mu.
+	asset.mu.Lock()
+	defer asset.mu.Unlock()
+	fields := make(map[string]*llx.RawData, len(obj.Fields))
+	maps.Copy(fields, obj.Fields)
+	return fields, true
 }
 
 func (r *recording) GetAssetData(assetMrn string) (map[string]*llx.ResourceRecording, bool) {
@@ -514,6 +541,9 @@ func (r *recording) GetAssetData(assetMrn string) (map[string]*llx.ResourceRecor
 	if !ok {
 		return nil, false
 	}
+
+	cur.mu.Lock()
+	defer cur.mu.Unlock()
 
 	ensureAssetMetadata(cur.resources, cur.Asset)
 

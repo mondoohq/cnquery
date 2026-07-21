@@ -64,6 +64,7 @@ func buildDnsZone(runtime *plugin.Runtime, z *dns.Zone) (plugin.Resource, error)
 		"acl":                llx.StringData(z.GetAcl()),
 		"primaries":          strSliceData(z.GetPrimaries()),
 		"isReverseZone":      llx.BoolData(z.GetIsReverseZone()),
+		"creationStartedAt":  llx.TimeDataPtr(parseDnsTime(z.GetCreationStarted())),
 		"creationFinishedAt": llx.TimeDataPtr(created),
 		"labels":             stringMapData(dnsLabels(z.GetLabels())),
 	}
@@ -158,6 +159,7 @@ func (r *mqlStackitDnsZone) recordSets() ([]any, error) {
 				"comment":            llx.StringData(rs.GetComment()),
 				"records":            strSliceData(records),
 				"active":             llx.BoolData(rs.GetActive()),
+				"creationStartedAt":  llx.TimeDataPtr(parseDnsTime(rs.GetCreationStarted())),
 				"creationFinishedAt": llx.TimeDataPtr(parseDnsTime(rs.GetCreationFinished())),
 				"updateFinishedAt":   llx.TimeDataPtr(parseDnsTime(rs.GetUpdateFinished())),
 			}
@@ -176,4 +178,17 @@ func (r *mqlStackitDnsZone) recordSets() ([]any, error) {
 
 func (r *mqlStackitDnsRecordSet) id() (string, error) {
 	return "stackit.dns.recordSet/" + r.ZoneId.Data + "/" + r.Id.Data, nil
+}
+
+func (r *mqlStackitDnsRecordSet) zone() (*mqlStackitDnsZone, error) {
+	if r.ZoneId.Data == "" {
+		return markNull[mqlStackitDnsZone](&r.Zone)
+	}
+	res, err := NewResource(r.MqlRuntime, "stackit.dns.zone", map[string]*llx.RawData{
+		"id": llx.StringData(r.ZoneId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlStackitDnsZone), nil
 }

@@ -89,11 +89,74 @@ func getGitlabProjectArgs(prj *gitlab.Project) map[string]*llx.RawData {
 		"forksCount":                                llx.IntData(prj.ForksCount),
 		"starCount":                                 llx.IntData(prj.StarCount),
 		"lastActivityAt":                            llx.TimeDataPtr(prj.LastActivityAt),
+		"emailsEnabled":                             llx.BoolData(prj.EmailsEnabled),
+		"issuesAccessLevel":                         llx.StringData(string(prj.IssuesAccessLevel)),
+		"mergeRequestsAccessLevel":                  llx.StringData(string(prj.MergeRequestsAccessLevel)),
+		"wikiAccessLevel":                           llx.StringData(string(prj.WikiAccessLevel)),
+		"snippetsAccessLevel":                       llx.StringData(string(prj.SnippetsAccessLevel)),
+		"containerRegistryAccessLevel":              llx.StringData(string(prj.ContainerRegistryAccessLevel)),
+		"buildsAccessLevel":                         llx.StringData(string(prj.BuildsAccessLevel)),
+		"repositoryAccessLevel":                     llx.StringData(string(prj.RepositoryAccessLevel)),
+		"forkingAccessLevel":                        llx.StringData(string(prj.ForkingAccessLevel)),
+		"securityAndComplianceAccessLevel":          llx.StringData(string(prj.SecurityAndComplianceAccessLevel)),
+		"securityAndComplianceEnabled":              llx.BoolData(prj.SecurityAndComplianceEnabled),
+		"ciJobTokenScopeEnabled":                    llx.BoolData(prj.CIJobTokenScopeEnabled),
+		"publicJobs":                                llx.BoolData(prj.PublicJobs),
+		"preReceiveSecretDetectionEnabled":          llx.BoolData(prj.PreReceiveSecretDetectionEnabled),
+		"complianceFrameworks":                      llx.ArrayData(convert.SliceAnyToInterface(prj.ComplianceFrameworks), types.String),
+		"sharedWithGroups":                          llx.ArrayData(projectSharedGroupsToDicts(prj.SharedWithGroups), types.Dict),
+		"mirrorTriggerBuilds":                       llx.BoolData(prj.MirrorTriggerBuilds),
+		"onlyMirrorProtectedBranches":               llx.BoolData(prj.OnlyMirrorProtectedBranches),
+		"autoDuoCodeReviewEnabled":                  llx.BoolData(prj.AutoDuoCodeReviewEnabled),
+		"modelExperimentsAccessLevel":               llx.StringData(string(prj.ModelExperimentsAccessLevel)),
+		"modelRegistryAccessLevel":                  llx.StringData(string(prj.ModelRegistryAccessLevel)),
 	}
+}
+
+// projectSharedGroupsToDicts flattens the groups a project is shared with into
+// queryable dicts (group identity + the access level granted to that group).
+func projectSharedGroupsToDicts(groups []gitlab.ProjectSharedWithGroup) []any {
+	out := make([]any, 0, len(groups))
+	for _, g := range groups {
+		out = append(out, map[string]any{
+			"groupId":          int64(g.GroupID),
+			"groupName":        g.GroupName,
+			"groupFullPath":    g.GroupFullPath,
+			"groupAccessLevel": int64(g.GroupAccessLevel),
+		})
+	}
+	return out
 }
 
 func (g *mqlGitlabProject) id() (string, error) {
 	return "gitlab.project/" + strconv.FormatInt(g.Id.Data, 10), nil
+}
+
+// forkedFromProject returns the project this project was forked from, or null
+// when it is not a fork. The fork parent is read from the full project payload
+// (shared via projectDetails); access-denied/missing yields null rather than
+// failing the resource graph.
+func (p *mqlGitlabProject) forkedFromProject() (*mqlGitlabProject, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+	details, err := p.projectDetails(conn)
+	if err != nil {
+		if p.detailsStatusCode == 403 || p.detailsStatusCode == 404 {
+			p.ForkedFromProject.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+	if details == nil || details.ForkedFromProject == nil || details.ForkedFromProject.ID <= 0 {
+		p.ForkedFromProject.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(p.MqlRuntime, "gitlab.project", map[string]*llx.RawData{
+		"id": llx.IntData(details.ForkedFromProject.ID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabProject), nil
 }
 
 // init initializes the gitlab project with the arguments
@@ -140,6 +203,34 @@ func (p *mqlGitlabProject) approvalSettings() (*mqlGitlabProjectApprovalSetting,
 		return nil, err
 	}
 
+	approverUsers := make([]any, 0, len(approvalConfig.Approvers))
+	for _, a := range approvalConfig.Approvers {
+		if a == nil || a.User == nil {
+			continue
+		}
+		u, err := NewResource(p.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
+			"id": llx.IntData(a.User.ID),
+		})
+		if err != nil {
+			return nil, err
+		}
+		approverUsers = append(approverUsers, u)
+	}
+
+	approverGroups := make([]any, 0, len(approvalConfig.ApproverGroups))
+	for _, g := range approvalConfig.ApproverGroups {
+		if g == nil {
+			continue
+		}
+		grp, err := NewResource(p.MqlRuntime, "gitlab.group", map[string]*llx.RawData{
+			"id": llx.IntData(g.Group.ID),
+		})
+		if err != nil {
+			return nil, err
+		}
+		approverGroups = append(approverGroups, grp)
+	}
+
 	approvalSettings := map[string]*llx.RawData{
 		"approvalsBeforeMerge":                      llx.IntData(int64(approvalConfig.ApprovalsBeforeMerge)),
 		"resetApprovalsOnPush":                      llx.BoolData(approvalConfig.ResetApprovalsOnPush),
@@ -148,6 +239,8 @@ func (p *mqlGitlabProject) approvalSettings() (*mqlGitlabProjectApprovalSetting,
 		"mergeRequestsDisableCommittersApproval":    llx.BoolData(approvalConfig.MergeRequestsDisableCommittersApproval),
 		"requirePasswordToApprove":                  llx.BoolData(approvalConfig.RequirePasswordToApprove),
 		"selectiveCodeOwnerRemovals":                llx.BoolData(approvalConfig.SelectiveCodeOwnerRemovals),
+		"approvers":                                 llx.ArrayData(approverUsers, types.Resource("gitlab.user")),
+		"approverGroups":                            llx.ArrayData(approverGroups, types.Resource("gitlab.group")),
 	}
 
 	mqlApprovalSettings, err := CreateResource(p.MqlRuntime, "gitlab.project.approvalSetting", approvalSettings)
@@ -354,11 +447,28 @@ func (p *mqlGitlabProject) protectedBranches() ([]any, error) {
 	for _, branch := range protectedBranches {
 		isDefaultBranch := branch.Name == defaultBranch
 
+		prefix := "gitlab.project.protectedBranch/" + branch.Name
+		push, err := projectBranchAccessLevels(p.MqlRuntime, prefix+"/push", branch.PushAccessLevels)
+		if err != nil {
+			return nil, err
+		}
+		merge, err := projectBranchAccessLevels(p.MqlRuntime, prefix+"/merge", branch.MergeAccessLevels)
+		if err != nil {
+			return nil, err
+		}
+		unprotect, err := projectBranchAccessLevels(p.MqlRuntime, prefix+"/unprotect", branch.UnprotectAccessLevels)
+		if err != nil {
+			return nil, err
+		}
+
 		branchSettings := map[string]*llx.RawData{
-			"name":              llx.StringData(branch.Name),
-			"allowForcePush":    llx.BoolData(branch.AllowForcePush),
-			"defaultBranch":     llx.BoolData(isDefaultBranch),
-			"codeOwnerApproval": llx.BoolData(branch.CodeOwnerApprovalRequired),
+			"name":                  llx.StringData(branch.Name),
+			"allowForcePush":        llx.BoolData(branch.AllowForcePush),
+			"defaultBranch":         llx.BoolData(isDefaultBranch),
+			"codeOwnerApproval":     llx.BoolData(branch.CodeOwnerApprovalRequired),
+			"pushAccessLevels":      llx.ArrayData(push, types.Resource("gitlab.protectedBranch.accessLevel")),
+			"mergeAccessLevels":     llx.ArrayData(merge, types.Resource("gitlab.protectedBranch.accessLevel")),
+			"unprotectAccessLevels": llx.ArrayData(unprotect, types.Resource("gitlab.protectedBranch.accessLevel")),
 		}
 
 		mqlProtectedBranch, err := CreateResource(p.MqlRuntime, "gitlab.project.protectedBranch", branchSettings)
@@ -370,6 +480,354 @@ func (p *mqlGitlabProject) protectedBranches() ([]any, error) {
 	}
 
 	return mqlProtectedBranches, nil
+}
+
+// mqlGitlabProtectedBranchAccessLevelInternal caches the user/group id so the
+// typed user()/group() accessors resolve lazily. Exactly one of accessLevel,
+// user, group, or deployKeyId is meaningful per row.
+type mqlGitlabProtectedBranchAccessLevelInternal struct {
+	cacheUserID  int64
+	cacheGroupID int64
+}
+
+func (a *mqlGitlabProtectedBranchAccessLevel) user() (*mqlGitlabUser, error) {
+	if a.cacheUserID <= 0 {
+		a.User.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
+		"id": llx.IntData(a.cacheUserID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabUser), nil
+}
+
+func (a *mqlGitlabProtectedBranchAccessLevel) group() (*mqlGitlabGroup, error) {
+	if a.cacheGroupID <= 0 {
+		a.Group.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "gitlab.group", map[string]*llx.RawData{
+		"id": llx.IntData(a.cacheGroupID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabGroup), nil
+}
+
+// newMqlProtectedBranchAccessLevel builds one access-level row. idPrefix
+// (parent protected-branch + action) namespaces the synthetic __id so rows
+// from different branches or scopes don't collide in the resource cache.
+func newMqlProtectedBranchAccessLevel(runtime *plugin.Runtime, idPrefix string, id, accessLevel, userID, groupID, deployKeyID int64, desc string) (*mqlGitlabProtectedBranchAccessLevel, error) {
+	res, err := CreateResource(runtime, "gitlab.protectedBranch.accessLevel", map[string]*llx.RawData{
+		"__id":                   llx.StringData(fmt.Sprintf("%s/%d", idPrefix, id)),
+		"accessLevel":            llx.IntData(accessLevel),
+		"accessLevelDescription": llx.StringData(desc),
+		"deployKeyId":            llx.IntData(deployKeyID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	al := res.(*mqlGitlabProtectedBranchAccessLevel)
+	al.cacheUserID = userID
+	al.cacheGroupID = groupID
+	return al, nil
+}
+
+func projectBranchAccessLevels(runtime *plugin.Runtime, idPrefix string, descs []*gitlab.BranchAccessDescription) ([]any, error) {
+	out := make([]any, 0, len(descs))
+	for _, d := range descs {
+		if d == nil {
+			continue
+		}
+		al, err := newMqlProtectedBranchAccessLevel(runtime, idPrefix, d.ID, int64(d.AccessLevel), d.UserID, d.GroupID, d.DeployKeyID, d.AccessLevelDescription)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, al)
+	}
+	return out, nil
+}
+
+// projectTagAccessLevels reuses the shared protectedBranch.accessLevel row for
+// protected-tag create-access grants (TagAccessDescription is structurally
+// identical to BranchAccessDescription).
+func projectTagAccessLevels(runtime *plugin.Runtime, idPrefix string, descs []*gitlab.TagAccessDescription) ([]any, error) {
+	out := make([]any, 0, len(descs))
+	for _, d := range descs {
+		if d == nil {
+			continue
+		}
+		al, err := newMqlProtectedBranchAccessLevel(runtime, idPrefix, d.ID, int64(d.AccessLevel), d.UserID, d.GroupID, d.DeployKeyID, d.AccessLevelDescription)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, al)
+	}
+	return out, nil
+}
+
+func (i *mqlGitlabProjectIntegration) id() (string, error) {
+	return "gitlab.project.integration/" + strconv.FormatInt(i.Id.Data, 10), nil
+}
+
+// integrations lists the project's active external integrations (services).
+// ListServices returns the full set of active integrations (a bounded,
+// non-paginated collection), so there is no page loop.
+func (p *mqlGitlabProject) integrations() ([]any, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+	services, resp, err := conn.Client().Services.ListServices(int(p.Id.Data))
+	if err != nil {
+		if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	out := make([]any, 0, len(services))
+	for _, s := range services {
+		if s == nil {
+			continue
+		}
+		res, err := CreateResource(p.MqlRuntime, "gitlab.project.integration", map[string]*llx.RawData{
+			"id":                       llx.IntData(s.ID),
+			"title":                    llx.StringData(s.Title),
+			"slug":                     llx.StringData(s.Slug),
+			"active":                   llx.BoolData(s.Active),
+			"inherited":                llx.BoolData(s.Inherited),
+			"createdAt":                llx.TimeDataPtr(s.CreatedAt),
+			"updatedAt":                llx.TimeDataPtr(s.UpdatedAt),
+			"commentOnEventEnabled":    llx.BoolData(s.CommentOnEventEnabled),
+			"pushEvents":               llx.BoolData(s.PushEvents),
+			"issuesEvents":             llx.BoolData(s.IssuesEvents),
+			"confidentialIssuesEvents": llx.BoolData(s.ConfidentialIssuesEvents),
+			"mergeRequestsEvents":      llx.BoolData(s.MergeRequestsEvents),
+			"noteEvents":               llx.BoolData(s.NoteEvents),
+			"confidentialNoteEvents":   llx.BoolData(s.ConfidentialNoteEvents),
+			"pipelineEvents":           llx.BoolData(s.PipelineEvents),
+			"tagPushEvents":            llx.BoolData(s.TagPushEvents),
+			"jobEvents":                llx.BoolData(s.JobEvents),
+			"deploymentEvents":         llx.BoolData(s.DeploymentEvents),
+			"wikiPageEvents":           llx.BoolData(s.WikiPageEvents),
+			"commitEvents":             llx.BoolData(s.CommitEvents),
+			"alertEvents":              llx.BoolData(s.AlertEvents),
+			"incidentEvents":           llx.BoolData(s.IncidentEvents),
+			"vulnerabilityEvents":      llx.BoolData(s.VulnerabilityEvents),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+// protectedEnvironments lists the project's protected deployment environments
+// and their deploy/approval gates.
+func (p *mqlGitlabProject) protectedEnvironments() ([]any, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+	projectID := int(p.Id.Data)
+
+	perPage := int64(50)
+	page := int64(1)
+	var all []*gitlab.ProtectedEnvironment
+	for {
+		envs, resp, err := conn.Client().ProtectedEnvironments.ListProtectedEnvironments(projectID, &gitlab.ListProtectedEnvironmentsOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
+		if err != nil {
+			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
+				return []any{}, nil
+			}
+			return nil, err
+		}
+		all = append(all, envs...)
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
+	}
+
+	out := make([]any, 0, len(all))
+	for _, env := range all {
+		res, err := CreateResource(p.MqlRuntime, "gitlab.project.protectedEnvironment", map[string]*llx.RawData{
+			"__id":                  llx.StringData(fmt.Sprintf("gitlab.project.protectedEnvironment/%d/%s", p.Id.Data, env.Name)),
+			"name":                  llx.StringData(env.Name),
+			"requiredApprovalCount": llx.IntData(env.RequiredApprovalCount),
+			"deployAccessLevels":    llx.ArrayData(envDeployAccessLevelsToDicts(env.DeployAccessLevels), types.Dict),
+			"approvalRules":         llx.ArrayData(envApprovalRulesToDicts(env.ApprovalRules), types.Dict),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+func envDeployAccessLevelsToDicts(descs []*gitlab.EnvironmentAccessDescription) []any {
+	out := make([]any, 0, len(descs))
+	for _, d := range descs {
+		if d == nil {
+			continue
+		}
+		out = append(out, map[string]any{
+			"accessLevel":            int64(d.AccessLevel),
+			"accessLevelDescription": d.AccessLevelDescription,
+			"userId":                 int64(d.UserID),
+			"groupId":                int64(d.GroupID),
+			"groupInheritanceType":   int64(d.GroupInheritanceType),
+		})
+	}
+	return out
+}
+
+func envApprovalRulesToDicts(rules []*gitlab.EnvironmentApprovalRule) []any {
+	out := make([]any, 0, len(rules))
+	for _, r := range rules {
+		if r == nil {
+			continue
+		}
+		out = append(out, map[string]any{
+			"id":                     int64(r.ID),
+			"accessLevel":            int64(r.AccessLevel),
+			"accessLevelDescription": r.AccessLevelDescription,
+			"userId":                 int64(r.UserID),
+			"groupId":                int64(r.GroupID),
+			"requiredApprovalCount":  int64(r.RequiredApprovalCount),
+			"groupInheritanceType":   int64(r.GroupInheritanceType),
+		})
+	}
+	return out
+}
+
+// protectedTags lists the project's protected tags and who may create them.
+func (p *mqlGitlabProject) protectedTags() ([]any, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+	projectID := int(p.Id.Data)
+
+	perPage := int64(50)
+	page := int64(1)
+	var all []*gitlab.ProtectedTag
+	for {
+		tags, resp, err := conn.Client().ProtectedTags.ListProtectedTags(projectID, &gitlab.ListProtectedTagsOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, tags...)
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
+	}
+
+	out := make([]any, 0, len(all))
+	for _, tag := range all {
+		prefix := fmt.Sprintf("gitlab.project.protectedTag/%d/%s", p.Id.Data, tag.Name)
+		levels, err := projectTagAccessLevels(p.MqlRuntime, prefix+"/create", tag.CreateAccessLevels)
+		if err != nil {
+			return nil, err
+		}
+		res, err := CreateResource(p.MqlRuntime, "gitlab.project.protectedTag", map[string]*llx.RawData{
+			"__id":               llx.StringData(prefix),
+			"name":               llx.StringData(tag.Name),
+			"createAccessLevels": llx.ArrayData(levels, types.Resource("gitlab.protectedBranch.accessLevel")),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+// mqlGitlabProjectJobTokenScopeInternal caches the project id so the lazy
+// allowlist accessors can page their respective endpoints.
+type mqlGitlabProjectJobTokenScopeInternal struct {
+	projectID int64
+}
+
+// jobTokenScope returns the project's CI/CD job-token access scope, or null
+// when the setting is unavailable (permissions/tier).
+func (p *mqlGitlabProject) jobTokenScope() (*mqlGitlabProjectJobTokenScope, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+	settings, resp, err := conn.Client().JobTokenScope.GetProjectJobTokenAccessSettings(int(p.Id.Data))
+	if err != nil {
+		if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
+			p.JobTokenScope.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+	res, err := CreateResource(p.MqlRuntime, "gitlab.project.jobTokenScope", map[string]*llx.RawData{
+		"__id":           llx.StringData(fmt.Sprintf("gitlab.project.jobTokenScope/%d", p.Id.Data)),
+		"inboundEnabled": llx.BoolData(settings.InboundEnabled),
+	})
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlGitlabProjectJobTokenScope).projectID = p.Id.Data
+	return res.(*mqlGitlabProjectJobTokenScope), nil
+}
+
+func (j *mqlGitlabProjectJobTokenScope) inboundAllowlistProjects() ([]any, error) {
+	conn := j.MqlRuntime.Connection.(*connection.GitLabConnection)
+	pid := int(j.projectID)
+
+	perPage := int64(50)
+	page := int64(1)
+	var out []any
+	for {
+		projects, resp, err := conn.Client().JobTokenScope.GetProjectJobTokenInboundAllowList(pid, &gitlab.GetJobTokenInboundAllowListOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
+		if err != nil {
+			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
+				return []any{}, nil
+			}
+			return nil, err
+		}
+		for _, pr := range projects {
+			mqlPr, err := NewResource(j.MqlRuntime, "gitlab.project", map[string]*llx.RawData{"id": llx.IntData(int64(pr.ID))})
+			if err != nil {
+				return nil, err
+			}
+			out = append(out, mqlPr)
+		}
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
+	}
+	return out, nil
+}
+
+func (j *mqlGitlabProjectJobTokenScope) allowlistGroups() ([]any, error) {
+	conn := j.MqlRuntime.Connection.(*connection.GitLabConnection)
+	pid := int(j.projectID)
+
+	perPage := int64(50)
+	page := int64(1)
+	var out []any
+	for {
+		groups, resp, err := conn.Client().JobTokenScope.GetJobTokenAllowlistGroups(pid, &gitlab.GetJobTokenAllowlistGroupsOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
+		if err != nil {
+			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
+				return []any{}, nil
+			}
+			return nil, err
+		}
+		for _, g := range groups {
+			mqlGrp, err := NewResource(j.MqlRuntime, "gitlab.group", map[string]*llx.RawData{"id": llx.IntData(int64(g.ID))})
+			if err != nil {
+				return nil, err
+			}
+			out = append(out, mqlGrp)
+		}
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
+	}
+	return out, nil
 }
 
 // projectMembers fetches the list of members in the project with their roles
@@ -418,16 +876,32 @@ func (p *mqlGitlabProject) projectMembers() ([]any, error) {
 			return nil, err
 		}
 
+		var expiresAt *time.Time
+		if member.ExpiresAt != nil {
+			t := time.Time(*member.ExpiresAt)
+			expiresAt = &t
+		}
+
 		memberInfo := map[string]*llx.RawData{
-			"id":   llx.IntData(int64(member.ID)),
-			"user": llx.ResourceData(mqlUser, "gitlab.user"),
-			"role": llx.StringData(role),
+			"id":          llx.IntData(int64(member.ID)),
+			"user":        llx.ResourceData(mqlUser, "gitlab.user"),
+			"role":        llx.StringData(role),
+			"accessLevel": llx.IntData(int64(member.AccessLevel)),
+			"state":       llx.StringData(member.State),
+			"expiresAt":   llx.TimeDataPtr(expiresAt),
+			"createdAt":   llx.TimeDataPtr(member.CreatedAt),
+			"isUsingSeat": llx.BoolData(member.IsUsingSeat),
 		}
 
 		mqlMember, err := CreateResource(p.MqlRuntime, "gitlab.member", memberInfo)
 		if err != nil {
 			return nil, err
 		}
+		mm := mqlMember.(*mqlGitlabMember)
+		if member.CreatedBy != nil {
+			mm.cacheCreatedByID = member.CreatedBy.ID
+		}
+		mm.cacheMemberRole = member.MemberRole
 
 		mqlMembers = append(mqlMembers, mqlMember)
 	}
@@ -595,6 +1069,18 @@ func (p *mqlGitlabProject) webhooks() ([]any, error) {
 
 	var mqlWebhooks []any
 	for _, hook := range allHooks {
+		customHeaders := map[string]any{}
+		for _, h := range hook.CustomHeaders {
+			if h == nil {
+				continue
+			}
+			customHeaders[h.Key] = h.Value
+		}
+		urlVariables := map[string]any{}
+		for _, v := range hook.URLVariables {
+			urlVariables[v.Key] = v.Value
+		}
+
 		hookInfo := map[string]*llx.RawData{
 			"id":                        llx.IntData(hook.ID),
 			"url":                       llx.StringData(hook.URL),
@@ -622,6 +1108,8 @@ func (p *mqlGitlabProject) webhooks() ([]any, error) {
 			"repositoryUpdateEvents":    llx.BoolData(hook.RepositoryUpdateEvents),
 			"branchFilterStrategy":      llx.StringData(hook.BranchFilterStrategy),
 			"customWebhookTemplate":     llx.StringData(hook.CustomWebhookTemplate),
+			"customHeaders":             llx.MapData(customHeaders, types.String),
+			"urlVariables":              llx.MapData(urlVariables, types.String),
 			"createdAt":                 llx.TimeDataPtr(hook.CreatedAt),
 			"disabledUntil":             llx.TimeDataPtr(hook.DisabledUntil),
 			"alertStatus":               llx.StringData(hook.AlertStatus),
@@ -734,21 +1222,45 @@ func (p *mqlGitlabProject) mergeRequests() ([]any, error) {
 			authorName = mr.Author.Username
 		}
 
+		reviewers, err := basicUsersToMqlUsers(p.MqlRuntime, mr.Reviewers)
+		if err != nil {
+			return nil, err
+		}
+		assignees, err := basicUsersToMqlUsers(p.MqlRuntime, mr.Assignees)
+		if err != nil {
+			return nil, err
+		}
+
 		mrInfo := map[string]*llx.RawData{
-			"id":           llx.IntData(int64(mr.ID)),
-			"internalId":   llx.IntData(int64(mr.IID)),
-			"title":        llx.StringData(mr.Title),
-			"state":        llx.StringData(mr.State),
-			"description":  llx.StringData(mr.Description),
-			"sourceBranch": llx.StringData(mr.SourceBranch),
-			"targetBranch": llx.StringData(mr.TargetBranch),
-			"author":       llx.StringData(authorName),
-			"createdAt":    llx.TimeDataPtr(mr.CreatedAt),
-			"updatedAt":    llx.TimeDataPtr(mr.UpdatedAt),
-			"mergedAt":     llx.TimeDataPtr(mr.MergedAt),
-			"draft":        llx.BoolData(mr.Draft),
-			"webURL":       llx.StringData(mr.WebURL),
-			"labels":       llx.ArrayData(convert.SliceAnyToInterface([]string(mr.Labels)), types.String),
+			"id":                          llx.IntData(int64(mr.ID)),
+			"internalId":                  llx.IntData(int64(mr.IID)),
+			"title":                       llx.StringData(mr.Title),
+			"state":                       llx.StringData(mr.State),
+			"description":                 llx.StringData(mr.Description),
+			"sourceBranch":                llx.StringData(mr.SourceBranch),
+			"targetBranch":                llx.StringData(mr.TargetBranch),
+			"author":                      llx.StringData(authorName),
+			"createdAt":                   llx.TimeDataPtr(mr.CreatedAt),
+			"updatedAt":                   llx.TimeDataPtr(mr.UpdatedAt),
+			"mergedAt":                    llx.TimeDataPtr(mr.MergedAt),
+			"closedAt":                    llx.TimeDataPtr(mr.ClosedAt),
+			"draft":                       llx.BoolData(mr.Draft),
+			"webURL":                      llx.StringData(mr.WebURL),
+			"labels":                      llx.ArrayData(convert.SliceAnyToInterface([]string(mr.Labels)), types.String),
+			"reviewers":                   llx.ArrayData(reviewers, types.Resource("gitlab.user")),
+			"assignees":                   llx.ArrayData(assignees, types.Resource("gitlab.user")),
+			"detailedMergeStatus":         llx.StringData(mr.DetailedMergeStatus),
+			"sha":                         llx.StringData(mr.SHA),
+			"mergeCommitSha":              llx.StringData(mr.MergeCommitSHA),
+			"squashCommitSha":             llx.StringData(mr.SquashCommitSHA),
+			"hasConflicts":                llx.BoolData(mr.HasConflicts),
+			"blockingDiscussionsResolved": llx.BoolData(mr.BlockingDiscussionsResolved),
+			"mergeWhenPipelineSucceeds":   llx.BoolData(mr.MergeWhenPipelineSucceeds),
+			"forceRemoveSourceBranch":     llx.BoolData(mr.ForceRemoveSourceBranch),
+			"allowMaintainerToPush":       llx.BoolData(mr.AllowMaintainerToPush),
+			"discussionLocked":            llx.BoolData(mr.DiscussionLocked),
+			"upvotes":                     llx.IntData(mr.Upvotes),
+			"downvotes":                   llx.IntData(mr.Downvotes),
 		}
 
 		// Add milestone if present
@@ -766,6 +1278,16 @@ func (p *mqlGitlabProject) mergeRequests() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mm := mqlMR.(*mqlGitlabProjectMergeRequest)
+		if mr.Author != nil {
+			mm.cacheAuthorID = mr.Author.ID
+		}
+		if mr.MergeUser != nil {
+			mm.cacheMergeUserID = mr.MergeUser.ID
+		}
+		if mr.ClosedBy != nil {
+			mm.cacheClosedByID = mr.ClosedBy.ID
+		}
 
 		mqlMergeRequests = append(mqlMergeRequests, mqlMR)
 	}
@@ -773,9 +1295,87 @@ func (p *mqlGitlabProject) mergeRequests() ([]any, error) {
 	return mqlMergeRequests, nil
 }
 
+// mqlGitlabProjectMergeRequestInternal caches the merge/close actor ids so the
+// typed mergeUser()/closedBy() accessors resolve lazily.
+type mqlGitlabProjectMergeRequestInternal struct {
+	cacheAuthorID    int64
+	cacheMergeUserID int64
+	cacheClosedByID  int64
+}
+
+// authorUser returns the user who opened the merge request, or null when the
+// author cannot be resolved.
+func (m *mqlGitlabProjectMergeRequest) authorUser() (*mqlGitlabUser, error) {
+	if m.cacheAuthorID <= 0 {
+		m.AuthorUser.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(m.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
+		"id": llx.IntData(m.cacheAuthorID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabUser), nil
+}
+
+// mergeUser returns the user who merged the request, or null when it was not
+// merged (or GitLab does not report the actor).
+func (m *mqlGitlabProjectMergeRequest) mergeUser() (*mqlGitlabUser, error) {
+	if m.cacheMergeUserID <= 0 {
+		m.MergeUser.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(m.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
+		"id": llx.IntData(m.cacheMergeUserID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabUser), nil
+}
+
+// closedBy returns the user who closed the request, or null when it was not
+// closed.
+func (m *mqlGitlabProjectMergeRequest) closedBy() (*mqlGitlabUser, error) {
+	if m.cacheClosedByID <= 0 {
+		m.ClosedBy.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(m.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
+		"id": llx.IntData(m.cacheClosedByID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabUser), nil
+}
+
 // id function for gitlab.project.issue
 func (i *mqlGitlabProjectIssue) id() (string, error) {
 	return strconv.FormatInt(i.Id.Data, 10), nil
+}
+
+// mqlGitlabProjectIssueInternal caches the issue author id so the typed
+// authorUser() accessor resolves lazily.
+type mqlGitlabProjectIssueInternal struct {
+	cacheAuthorID int64
+}
+
+// authorUser returns the user who opened the issue, or null when the author
+// cannot be resolved.
+func (i *mqlGitlabProjectIssue) authorUser() (*mqlGitlabUser, error) {
+	if i.cacheAuthorID <= 0 {
+		i.AuthorUser.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(i.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
+		"id": llx.IntData(i.cacheAuthorID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabUser), nil
 }
 
 // milestone fetches the milestone for an issue. The milestone is populated
@@ -860,6 +1460,9 @@ func (p *mqlGitlabProject) issues() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		if issue.Author != nil {
+			mqlIssue.(*mqlGitlabProjectIssue).cacheAuthorID = int64(issue.Author.ID)
+		}
 
 		mqlIssues = append(mqlIssues, mqlIssue)
 	}
@@ -905,23 +1508,106 @@ func (p *mqlGitlabProject) releases() ([]any, error) {
 	var mqlReleases []any
 	for _, release := range allReleases {
 		releaseInfo := map[string]*llx.RawData{
-			"tagName":     llx.StringData(release.TagName),
-			"name":        llx.StringData(release.Name),
-			"description": llx.StringData(release.Description),
-			"createdAt":   llx.TimeDataPtr(release.CreatedAt),
-			"releasedAt":  llx.TimeDataPtr(release.ReleasedAt),
-			"author":      llx.StringData(release.Author.Username),
+			"tagName":         llx.StringData(release.TagName),
+			"name":            llx.StringData(release.Name),
+			"description":     llx.StringData(release.Description),
+			"createdAt":       llx.TimeDataPtr(release.CreatedAt),
+			"releasedAt":      llx.TimeDataPtr(release.ReleasedAt),
+			"author":          llx.StringData(release.Author.Username),
+			"upcomingRelease": llx.BoolData(release.UpcomingRelease),
+			"commit":          llx.DictData(releaseCommitToDict(release.Commit)),
+			"evidences":       llx.ArrayData(releaseEvidencesToDicts(release.Evidences), types.Dict),
+			"assets":          llx.DictData(releaseAssetsToDict(release.Assets)),
 		}
 
 		mqlRelease, err := CreateResource(p.MqlRuntime, "gitlab.project.release", releaseInfo)
 		if err != nil {
 			return nil, err
 		}
+		mqlRelease.(*mqlGitlabProjectRelease).cacheAuthorID = release.Author.ID
 
 		mqlReleases = append(mqlReleases, mqlRelease)
 	}
 
 	return mqlReleases, nil
+}
+
+// mqlGitlabProjectReleaseInternal caches the release author id so the typed
+// authorUser() accessor resolves lazily.
+type mqlGitlabProjectReleaseInternal struct {
+	cacheAuthorID int64
+}
+
+func (r *mqlGitlabProjectRelease) authorUser() (*mqlGitlabUser, error) {
+	if r.cacheAuthorID <= 0 {
+		r.AuthorUser.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
+		"id": llx.IntData(r.cacheAuthorID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabUser), nil
+}
+
+func releaseCommitToDict(c gitlab.Commit) any {
+	if c.ID == "" {
+		return nil
+	}
+	return map[string]any{
+		"id":            c.ID,
+		"shortId":       c.ShortID,
+		"title":         c.Title,
+		"authorName":    c.AuthorName,
+		"authoredDate":  c.AuthoredDate,
+		"committedDate": c.CommittedDate,
+		"webUrl":        c.WebURL,
+	}
+}
+
+func releaseEvidencesToDicts(evidences []*gitlab.ReleaseEvidence) []any {
+	out := make([]any, 0, len(evidences))
+	for _, e := range evidences {
+		if e == nil {
+			continue
+		}
+		out = append(out, map[string]any{
+			"sha":         e.SHA,
+			"filepath":    e.Filepath,
+			"collectedAt": e.CollectedAt,
+		})
+	}
+	return out
+}
+
+func releaseAssetsToDict(a gitlab.ReleaseAssets) any {
+	sources := make([]any, 0, len(a.Sources))
+	for _, s := range a.Sources {
+		sources = append(sources, map[string]any{
+			"format": s.Format,
+			"url":    s.URL,
+		})
+	}
+	links := make([]any, 0, len(a.Links))
+	for _, l := range a.Links {
+		if l == nil {
+			continue
+		}
+		links = append(links, map[string]any{
+			"id":       l.ID,
+			"name":     l.Name,
+			"url":      l.URL,
+			"linkType": string(l.LinkType),
+			"external": l.External,
+		})
+	}
+	return map[string]any{
+		"count":   a.Count,
+		"sources": sources,
+		"links":   links,
+	}
 }
 
 // id function for gitlab.project.variable
@@ -981,6 +1667,22 @@ func (p *mqlGitlabProject) variables() ([]any, error) {
 	}
 
 	return mqlVariables, nil
+}
+
+// project returns the project a milestone belongs to, resolved from the
+// milestone's cached projectId. Returns null when the project id is unknown.
+func (m *mqlGitlabProjectMilestone) project() (*mqlGitlabProject, error) {
+	if m.ProjectId.Data <= 0 {
+		m.Project.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(m.MqlRuntime, "gitlab.project", map[string]*llx.RawData{
+		"id": llx.IntData(m.ProjectId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabProject), nil
 }
 
 // id function for gitlab.project.milestone
@@ -1186,6 +1888,161 @@ func (p *mqlGitlabProject) pipelines() ([]any, error) {
 	return mqlPipelines, nil
 }
 
+// mqlGitlabProjectPipelineInternal caches the full pipeline payload from
+// GetPipeline. The list endpoint (ListProjectPipelines) only returns a subset
+// of fields; richer provenance (triggering user, timing, coverage, detailed
+// status) needs a per-pipeline fetch shared across accessors, mirroring the
+// runner-details pattern.
+type mqlGitlabProjectPipelineInternal struct {
+	detailsOnce sync.Once
+	details     *gitlab.Pipeline
+	detailsErr  error
+}
+
+func (p *mqlGitlabProjectPipeline) loadDetails() (*gitlab.Pipeline, error) {
+	p.detailsOnce.Do(func() {
+		conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+		pipeline, _, err := conn.Client().Pipelines.GetPipeline(int(p.ProjectId.Data), p.Id.Data)
+		p.details = pipeline
+		p.detailsErr = err
+	})
+	return p.details, p.detailsErr
+}
+
+func (p *mqlGitlabProjectPipeline) beforeSha() (string, error) {
+	d, err := p.loadDetails()
+	if err != nil || d == nil {
+		return "", err
+	}
+	return d.BeforeSHA, nil
+}
+
+func (p *mqlGitlabProjectPipeline) tag() (bool, error) {
+	d, err := p.loadDetails()
+	if err != nil || d == nil {
+		return false, err
+	}
+	return d.Tag, nil
+}
+
+func (p *mqlGitlabProjectPipeline) yamlErrors() (string, error) {
+	d, err := p.loadDetails()
+	if err != nil || d == nil {
+		return "", err
+	}
+	return d.YamlErrors, nil
+}
+
+func (p *mqlGitlabProjectPipeline) user() (*mqlGitlabUser, error) {
+	d, err := p.loadDetails()
+	if err != nil {
+		return nil, err
+	}
+	if d == nil || d.User == nil {
+		p.User.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(p.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
+		"id": llx.IntData(d.User.ID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabUser), nil
+}
+
+func (p *mqlGitlabProjectPipeline) detailedStatus() (interface{}, error) {
+	d, err := p.loadDetails()
+	if err != nil || d == nil || d.DetailedStatus == nil {
+		return nil, err
+	}
+	s := d.DetailedStatus
+	return map[string]interface{}{
+		"icon":    s.Icon,
+		"text":    s.Text,
+		"label":   s.Label,
+		"group":   s.Group,
+		"tooltip": s.Tooltip,
+	}, nil
+}
+
+func (p *mqlGitlabProjectPipeline) startedAt() (*time.Time, error) {
+	d, err := p.loadDetails()
+	if err != nil || d == nil {
+		return nil, err
+	}
+	return d.StartedAt, nil
+}
+
+func (p *mqlGitlabProjectPipeline) finishedAt() (*time.Time, error) {
+	d, err := p.loadDetails()
+	if err != nil || d == nil {
+		return nil, err
+	}
+	return d.FinishedAt, nil
+}
+
+func (p *mqlGitlabProjectPipeline) committedAt() (*time.Time, error) {
+	d, err := p.loadDetails()
+	if err != nil || d == nil {
+		return nil, err
+	}
+	return d.CommittedAt, nil
+}
+
+func (p *mqlGitlabProjectPipeline) duration() (int64, error) {
+	d, err := p.loadDetails()
+	if err != nil || d == nil {
+		return 0, err
+	}
+	return d.Duration, nil
+}
+
+func (p *mqlGitlabProjectPipeline) queuedDuration() (int64, error) {
+	d, err := p.loadDetails()
+	if err != nil || d == nil {
+		return 0, err
+	}
+	return d.QueuedDuration, nil
+}
+
+func (p *mqlGitlabProjectPipeline) coverage() (string, error) {
+	d, err := p.loadDetails()
+	if err != nil || d == nil {
+		return "", err
+	}
+	return d.Coverage, nil
+}
+
+// newMqlGitlabPipelineFromDetail builds a gitlab.project.pipeline from a full
+// SDK Pipeline (as embedded in e.g. package files). Eager fields are seeded
+// from the detail payload; lazy accessors re-fetch via GetPipeline if used.
+func newMqlGitlabPipelineFromDetail(runtime *plugin.Runtime, pl *gitlab.Pipeline) (*mqlGitlabProjectPipeline, error) {
+	res, err := CreateResource(runtime, "gitlab.project.pipeline", map[string]*llx.RawData{
+		"id":         llx.IntData(pl.ID),
+		"internalId": llx.IntData(pl.IID),
+		"projectId":  llx.IntData(pl.ProjectID),
+		"status":     llx.StringData(pl.Status),
+		"source":     llx.StringData(string(pl.Source)),
+		"ref":        llx.StringData(pl.Ref),
+		"sha":        llx.StringData(pl.SHA),
+		"name":       llx.StringData(pl.Name),
+		"webURL":     llx.StringData(pl.WebURL),
+		"createdAt":  llx.TimeDataPtr(pl.CreatedAt),
+		"updatedAt":  llx.TimeDataPtr(pl.UpdatedAt),
+	})
+	if err != nil {
+		return nil, err
+	}
+	pipeline := res.(*mqlGitlabProjectPipeline)
+	// We already hold the full detail payload, so seed the cache and mark it
+	// resolved. This spares the lazy accessors (user(), duration(), …) a
+	// redundant GetPipeline when they're read off a package-file pipeline.
+	pipeline.details = pl
+	pipeline.detailsOnce.Do(func() {})
+	return pipeline, nil
+}
+
 // id function for gitlab.project.runner
 func (r *mqlGitlabProjectRunner) id() (string, error) {
 	return strconv.FormatInt(r.Id.Data, 10), nil
@@ -1224,14 +2081,15 @@ func (p *mqlGitlabProject) runners() ([]any, error) {
 	var mqlRunners []any
 	for _, runner := range allRunners {
 		runnerInfo := map[string]*llx.RawData{
-			"id":          llx.IntData(runner.ID),
-			"description": llx.StringData(runner.Description),
-			"name":        llx.StringData(runner.Name),
-			"runnerType":  llx.StringData(runner.RunnerType),
-			"paused":      llx.BoolData(runner.Paused),
-			"isShared":    llx.BoolData(runner.IsShared),
-			"online":      llx.BoolData(runner.Online),
-			"status":      llx.StringData(runner.Status),
+			"id":             llx.IntData(runner.ID),
+			"description":    llx.StringData(runner.Description),
+			"name":           llx.StringData(runner.Name),
+			"runnerType":     llx.StringData(runner.RunnerType),
+			"paused":         llx.BoolData(runner.Paused),
+			"isShared":       llx.BoolData(runner.IsShared),
+			"online":         llx.BoolData(runner.Online),
+			"status":         llx.StringData(runner.Status),
+			"tokenExpiresAt": llx.TimeDataPtr(runner.TokenExpiresAt),
 		}
 
 		mqlRunner, err := CreateResource(p.MqlRuntime, "gitlab.project.runner", runnerInfo)
@@ -1352,11 +2210,35 @@ func (p *mqlGitlabProject) accessTokens() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlToken.(*mqlGitlabProjectAccessToken).cacheUserID = token.UserID
 
 		mqlTokens = append(mqlTokens, mqlToken)
 	}
 
 	return mqlTokens, nil
+}
+
+// mqlGitlabProjectAccessTokenInternal caches the bot user id so the typed
+// user() accessor can resolve it lazily.
+type mqlGitlabProjectAccessTokenInternal struct {
+	cacheUserID int64
+}
+
+// user returns the bot user the token authenticates as. Access-token bot users
+// are not always resolvable via the users API; initGitlabUser degrades to a
+// bare resource on 403/404, and this returns null when there is no user id.
+func (t *mqlGitlabProjectAccessToken) user() (*mqlGitlabUser, error) {
+	if t.cacheUserID <= 0 {
+		t.User.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(t.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
+		"id": llx.IntData(t.cacheUserID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabUser), nil
 }
 
 // id function for gitlab.project.deployKey
@@ -1539,4 +2421,138 @@ func (p *mqlGitlabProject) securitySettings() (*mqlGitlabProjectSecuritySetting,
 	}
 
 	return mqlSetting.(*mqlGitlabProjectSecuritySetting), nil
+}
+
+// id function for gitlab.project.auditEvent
+func (a *mqlGitlabProjectAuditEvent) id() (string, error) {
+	return "gitlab.project.auditEvent/" + strconv.FormatInt(a.Id.Data, 10), nil
+}
+
+// author returns a typed reference to the user who performed the action.
+// Returns null when authorId is unknown (e.g. system-generated events).
+func (a *mqlGitlabProjectAuditEvent) author() (*mqlGitlabUser, error) {
+	if a.AuthorId.Data <= 0 {
+		a.Author.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
+		"id": llx.IntData(a.AuthorId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabUser), nil
+}
+
+// entityUser returns a typed user reference when entityType is "User", null otherwise.
+func (a *mqlGitlabProjectAuditEvent) entityUser() (*mqlGitlabUser, error) {
+	if a.EntityType.Data != "User" || a.EntityId.Data <= 0 {
+		a.EntityUser.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
+		"id": llx.IntData(a.EntityId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabUser), nil
+}
+
+// entityGroup returns a typed group reference when entityType is "Group", null otherwise.
+func (a *mqlGitlabProjectAuditEvent) entityGroup() (*mqlGitlabGroup, error) {
+	if a.EntityType.Data != "Group" || a.EntityId.Data <= 0 {
+		a.EntityGroup.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "gitlab.group", map[string]*llx.RawData{
+		"id": llx.IntData(a.EntityId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabGroup), nil
+}
+
+// entityProject returns a typed project reference when entityType is "Project", null otherwise.
+func (a *mqlGitlabProjectAuditEvent) entityProject() (*mqlGitlabProject, error) {
+	if a.EntityType.Data != "Project" || a.EntityId.Data <= 0 {
+		a.EntityProject.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "gitlab.project", map[string]*llx.RawData{
+		"id": llx.IntData(a.EntityId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabProject), nil
+}
+
+// auditEvents fetches audit events for the project.
+//
+// Project audit events are a Premium/Ultimate feature. On lower tiers the API
+// returns 403/404, in which case we return an empty list rather than failing
+// the whole resource graph.
+//
+// see https://docs.gitlab.com/api/audit_events/#project-audit-events
+func (p *mqlGitlabProject) auditEvents() ([]any, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	projectID := int(p.Id.Data)
+
+	perPage := int64(50)
+	page := int64(1)
+	var allEvents []*gitlab.AuditEvent
+
+	for {
+		events, resp, err := conn.Client().AuditEvents.ListProjectAuditEvents(projectID, &gitlab.ListAuditEventsOptions{
+			ListOptions: gitlab.ListOptions{
+				Page:    page,
+				PerPage: perPage,
+			},
+		})
+		if err != nil {
+			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
+				return []any{}, nil // not available on this GitLab tier
+			}
+			return nil, err
+		}
+
+		allEvents = append(allEvents, events...)
+
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
+	}
+
+	var mqlEvents []any
+	for _, event := range allEvents {
+		eventInfo := map[string]*llx.RawData{
+			"id":            llx.IntData(event.ID),
+			"authorId":      llx.IntData(event.AuthorID),
+			"entityId":      llx.IntData(event.EntityID),
+			"entityType":    llx.StringData(event.EntityType),
+			"eventName":     llx.StringData(event.EventName),
+			"eventType":     llx.StringData(event.EventType),
+			"createdAt":     llx.TimeDataPtr(event.CreatedAt),
+			"authorName":    llx.StringData(event.Details.AuthorName),
+			"authorEmail":   llx.StringData(event.Details.AuthorEmail),
+			"authorClass":   llx.StringData(event.Details.AuthorClass),
+			"customMessage": llx.StringData(event.Details.CustomMessage),
+			"targetType":    llx.StringData(event.Details.TargetType),
+			"targetDetails": llx.StringData(event.Details.TargetDetails),
+			"ipAddress":     llx.StringData(event.Details.IPAddress),
+			"entityPath":    llx.StringData(event.Details.EntityPath),
+			"failedLogin":   llx.StringData(event.Details.FailedLogin),
+		}
+		mqlEvent, err := CreateResource(p.MqlRuntime, "gitlab.project.auditEvent", eventInfo)
+		if err != nil {
+			return nil, err
+		}
+		mqlEvents = append(mqlEvents, mqlEvent)
+	}
+
+	return mqlEvents, nil
 }

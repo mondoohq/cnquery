@@ -9,7 +9,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dns/armdns"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns/v2"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -235,11 +235,24 @@ func (a *mqlAzureSubscriptionDnsService) privateZones() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(zone.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlZone.(*mqlAzureSubscriptionDnsServicePrivateZone).cacheSystemData = sysData
 			res = append(res, mqlZone)
 		}
 	}
 
 	return res, nil
+}
+
+type mqlAzureSubscriptionDnsServicePrivateZoneInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionDnsServicePrivateZone) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionDnsServicePrivateZone) virtualNetworkLinks() ([]any, error) {
@@ -297,9 +310,22 @@ func (a *mqlAzureSubscriptionDnsServicePrivateZone) virtualNetworkLinks() ([]any
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(link.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlLink.(*mqlAzureSubscriptionDnsServicePrivateZoneVirtualNetworkLink).cacheSystemData = sysData
 			res = append(res, mqlLink)
 		}
 	}
 
 	return res, nil
+}
+
+type mqlAzureSubscriptionDnsServicePrivateZoneVirtualNetworkLinkInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionDnsServicePrivateZoneVirtualNetworkLink) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }

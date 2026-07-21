@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -46,4 +48,39 @@ func TestReplacementTargetsWithoutFieldPaths(t *testing.T) {
 	targets, err := r.targets()
 	require.NoError(t, err)
 	assert.Len(t, targets, 3, "target with no fieldPaths must still emit one row")
+}
+
+// TestNewMqlKustomizePatchReadsFile ensures a patch that references a JSON6902
+// file (relative to the kustomization dir) is actually read and classified —
+// not silently misclassified as an empty strategic-merge patch — while a path
+// that escapes the directory is refused.
+func TestNewMqlKustomizePatchReadsFile(t *testing.T) {
+	dir := t.TempDir()
+	patchBody := "- op: replace\n  path: /spec/replicas\n  value: 3\n"
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "patch.yaml"), []byte(patchBody), 0o600))
+
+	t.Run("reads a contained patch file", func(t *testing.T) {
+		p, err := newMqlKustomizePatch(newTestRuntime(), dir, 0, &kustomizeTypes.Patch{Path: "patch.yaml"}, hintNone)
+		require.NoError(t, err)
+		assert.Equal(t, patchFormatJSON6902, p.format)
+
+		ops, err := p.operations()
+		require.NoError(t, err)
+		require.Len(t, ops, 1)
+	})
+
+	t.Run("refuses a path escaping the kustomization dir", func(t *testing.T) {
+		// Write a would-be patch outside the kustomization directory.
+		outside := filepath.Join(filepath.Dir(dir), "escape.yaml")
+		require.NoError(t, os.WriteFile(outside, []byte(patchBody), 0o600))
+		defer os.Remove(outside)
+
+		p, err := newMqlKustomizePatch(newTestRuntime(), dir, 0, &kustomizeTypes.Patch{Path: "../escape.yaml"}, hintNone)
+		require.NoError(t, err)
+		// Not read -> falls back to an empty strategic-merge patch.
+		assert.Equal(t, patchFormatStrategicMerge, p.format)
+		ops, err := p.operations()
+		require.NoError(t, err)
+		assert.Empty(t, ops)
+	})
 }

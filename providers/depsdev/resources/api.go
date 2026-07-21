@@ -43,9 +43,20 @@ type depsDevVersionResponse struct {
 		Name    string `json:"name"`
 		Version string `json:"version"`
 	} `json:"versionKey"`
-	IsDefault       bool      `json:"isDefault"`
-	PublishedAt     time.Time `json:"publishedAt"`
-	Licenses        []string  `json:"licenses"`
+	IsDefault   bool      `json:"isDefault"`
+	PublishedAt time.Time `json:"publishedAt"`
+	Licenses    []string  `json:"licenses"`
+	Links       []struct {
+		Label string `json:"label"`
+		URL   string `json:"url"`
+	} `json:"links"`
+	Registries      []string `json:"registries"`
+	SlsaProvenances []struct {
+		SourceRepository string `json:"sourceRepository"`
+		Commit           string `json:"commit"`
+		URL              string `json:"url"`
+		Verified         bool   `json:"verified"`
+	} `json:"slsaProvenances"`
 	RelatedProjects []struct {
 		ProjectKey struct {
 			ID string `json:"id"`

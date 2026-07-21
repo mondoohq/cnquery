@@ -61,6 +61,14 @@ func (a *mqlAzureSubscriptionCloudDefenderServiceSecurityContact) id() (string, 
 	return a.Id.Data, nil
 }
 
+type mqlAzureSubscriptionCloudDefenderServiceSecurityContactInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceSecurityContact) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
 // commonPricingArgs extracts common pricing fields from an Azure PricingProperties response
 // into a map suitable for CreateResource.
 func commonPricingArgs(props *security.PricingProperties, mqlResourceName, subId string) map[string]*llx.RawData {
@@ -741,6 +749,11 @@ func (a *mqlAzureSubscriptionCloudDefenderService) securityContacts() ([]any, er
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(contact.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlSecurityContact.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).cacheSystemData = sysData
 			res = append(res, mqlSecurityContact)
 		}
 	}
@@ -1279,8 +1292,24 @@ func (a *mqlAzureSubscriptionCloudDefenderServiceAssessment) id() (string, error
 	return a.__id, nil
 }
 
+type mqlAzureSubscriptionCloudDefenderServiceAssessmentInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceAssessment) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
 func (a *mqlAzureSubscriptionCloudDefenderServiceAlert) id() (string, error) {
 	return a.__id, nil
+}
+
+type mqlAzureSubscriptionCloudDefenderServiceAlertInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceAlert) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 // assessmentMetadata holds the catalog metadata for a single assessment
@@ -1432,6 +1461,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) assessments() ([]any, error) 
 		}
 		for _, item := range page.Value {
 			var displayName, status, statusCause, statusDescription string
+			var firstEvaluationDate, statusChangeDate *time.Time
 			additionalData := map[string]any{}
 
 			var riskLevel string
@@ -1454,6 +1484,8 @@ func (a *mqlAzureSubscriptionCloudDefenderService) assessments() ([]any, error) 
 					if props.Status.Description != nil {
 						statusDescription = *props.Status.Description
 					}
+					firstEvaluationDate = props.Status.FirstEvaluationDate
+					statusChangeDate = props.Status.StatusChangeDate
 				}
 				for k, v := range props.AdditionalData {
 					if v != nil {
@@ -1493,6 +1525,8 @@ func (a *mqlAzureSubscriptionCloudDefenderService) assessments() ([]any, error) 
 					"status":                   llx.StringData(status),
 					"statusCause":              llx.StringData(statusCause),
 					"statusDescription":        llx.StringData(statusDescription),
+					"firstEvaluationDate":      llx.TimeDataPtr(firstEvaluationDate),
+					"statusChangeDate":         llx.TimeDataPtr(statusChangeDate),
 					"severity":                 llx.StringData(meta.severity),
 					"resourceId":               llx.StringData(resourceId),
 					"additionalData":           llx.DictData(additionalData),
@@ -1515,6 +1549,11 @@ func (a *mqlAzureSubscriptionCloudDefenderService) assessments() ([]any, error) 
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(item.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlResource.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).cacheSystemData = sysData
 			res = append(res, mqlResource)
 		}
 	}
@@ -1619,8 +1658,369 @@ func (a *mqlAzureSubscriptionCloudDefenderService) alerts() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(item.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlResource.(*mqlAzureSubscriptionCloudDefenderServiceAlert).cacheSystemData = sysData
 			res = append(res, mqlResource)
 		}
 	}
 	return res, nil
+}
+
+// subAssessments resolves the detailed findings underlying a security
+// assessment (per-CVE, per-misconfiguration). Sub-assessments are keyed by the
+// assessed resource scope plus the assessment name, both of which the parent
+// assessment already carries.
+func (a *mqlAzureSubscriptionCloudDefenderServiceAssessment) subAssessments() ([]any, error) {
+	scope := a.ResourceId.Data
+	assessmentName := a.Name.Data
+	if scope == "" || assessmentName == "" {
+		return []any{}, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	clientFactory, err := armsecurity.NewClientFactory(conn.SubId(), conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	client := clientFactory.NewSubAssessmentsClient()
+	pager := client.NewListPager(scope, assessmentName, nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, sub := range page.Value {
+			if sub == nil {
+				continue
+			}
+			var displayName, vulnerabilityId, status, severity, statusCause, statusDescription string
+			var category, description, impact, remediation string
+			var timeGenerated *time.Time
+			resourceDetails := map[string]any{}
+			additionalData := map[string]any{}
+			if p := sub.Properties; p != nil {
+				displayName = convert.ToValue(p.DisplayName)
+				vulnerabilityId = convert.ToValue(p.ID)
+				category = convert.ToValue(p.Category)
+				description = convert.ToValue(p.Description)
+				impact = convert.ToValue(p.Impact)
+				remediation = convert.ToValue(p.Remediation)
+				timeGenerated = p.TimeGenerated
+				if s := p.Status; s != nil {
+					if s.Code != nil {
+						status = string(*s.Code)
+					}
+					if s.Severity != nil {
+						severity = string(*s.Severity)
+					}
+					statusCause = convert.ToValue(s.Cause)
+					statusDescription = convert.ToValue(s.Description)
+				}
+				if rd, err := convert.JsonToDict(p.ResourceDetails); err == nil {
+					resourceDetails = rd
+				}
+				if ad, err := convert.JsonToDict(p.AdditionalData); err == nil {
+					additionalData = ad
+				}
+			}
+			mqlSub, err := CreateResource(a.MqlRuntime, "azure.subscription.cloudDefenderService.assessment.subAssessment",
+				map[string]*llx.RawData{
+					"id":                llx.StringDataPtr(sub.ID),
+					"name":              llx.StringDataPtr(sub.Name),
+					"displayName":       llx.StringData(displayName),
+					"vulnerabilityId":   llx.StringData(vulnerabilityId),
+					"status":            llx.StringData(status),
+					"severity":          llx.StringData(severity),
+					"statusCause":       llx.StringData(statusCause),
+					"statusDescription": llx.StringData(statusDescription),
+					"category":          llx.StringData(category),
+					"description":       llx.StringData(description),
+					"impact":            llx.StringData(impact),
+					"remediation":       llx.StringData(remediation),
+					"timeGenerated":     llx.TimeDataPtr(timeGenerated),
+					"resourceDetails":   llx.DictData(resourceDetails),
+					"additionalData":    llx.DictData(additionalData),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlSub)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceAssessmentSubAssessment) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+type mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyInternal struct {
+	cacheVirtualMachines []*armsecurity.JitNetworkAccessPolicyVirtualMachine
+	cacheSystemData      any
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+// jitNetworkAccessPolicies lists the subscription's just-in-time VM access
+// policies — the on-demand, time-bound alternative to leaving management ports
+// open.
+func (a *mqlAzureSubscriptionCloudDefenderService) jitNetworkAccessPolicies() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	clientFactory, err := armsecurity.NewClientFactory(conn.SubId(), conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	client := clientFactory.NewJitNetworkAccessPoliciesClient()
+	pager := client.NewListPager(nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list JIT network access policies due to access denied")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, pol := range page.Value {
+			if pol == nil {
+				continue
+			}
+			var provisioningState string
+			if p := pol.Properties; p != nil {
+				provisioningState = convert.ToValue(p.ProvisioningState)
+			}
+			mqlPol, err := CreateResource(a.MqlRuntime, "azure.subscription.cloudDefenderService.jitNetworkAccessPolicy",
+				map[string]*llx.RawData{
+					"id":                llx.StringDataPtr(pol.ID),
+					"name":              llx.StringDataPtr(pol.Name),
+					"location":          llx.StringDataPtr(pol.Location),
+					"kind":              llx.StringDataPtr(pol.Kind),
+					"type":              llx.StringDataPtr(pol.Type),
+					"provisioningState": llx.StringData(provisioningState),
+				})
+			if err != nil {
+				return nil, err
+			}
+			if p := pol.Properties; p != nil {
+				mqlPol.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy).cacheVirtualMachines = p.VirtualMachines
+			}
+			sysData, err := convert.JsonToDict(pol.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlPol.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy).cacheSystemData = sysData
+			res = append(res, mqlPol)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy) virtualMachines() ([]any, error) {
+	res := []any{}
+	for _, vm := range a.cacheVirtualMachines {
+		if vm == nil {
+			continue
+		}
+		vmId := convert.ToValue(vm.ID)
+		ports, err := convert.JsonToDictSlice(vm.Ports)
+		if err != nil {
+			return nil, err
+		}
+		mqlVM, err := CreateResource(a.MqlRuntime, "azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine",
+			map[string]*llx.RawData{
+				// synthetic cache key: a VM can appear in only one policy, but
+				// key by policy+VM so it stays unique across policies.
+				"__id":            llx.StringData(a.Id.Data + "/" + vmId),
+				"publicIpAddress": llx.StringData(convert.ToValue(vm.PublicIPAddress)),
+				"ports":           llx.ArrayData(ports, types.Dict),
+			})
+		if err != nil {
+			return nil, err
+		}
+		mqlVM.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine).cacheVmId = vmId
+		res = append(res, mqlVM)
+	}
+	return res, nil
+}
+
+type mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachineInternal struct {
+	cacheVmId string
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine) vm() (*mqlAzureSubscriptionComputeServiceVm, error) {
+	if a.cacheVmId == "" {
+		a.Vm.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	r, err := NewResource(a.MqlRuntime, "azure.subscription.computeService.vm", map[string]*llx.RawData{
+		"id": llx.StringData(a.cacheVmId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlAzureSubscriptionComputeServiceVm), nil
+}
+
+// alertSuppressionRules lists the subscription's alert suppression rules — the
+// rules that auto-dismiss matching security alerts. A broad or non-expiring
+// rule is a detection blind spot worth auditing.
+func (a *mqlAzureSubscriptionCloudDefenderService) alertSuppressionRules() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	client, err := security.NewAlertsSuppressionRulesClient(a.SubscriptionId.Data, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	pager := client.NewListPager(nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list alert suppression rules due to access denied")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, rule := range page.Value {
+			if rule == nil {
+				continue
+			}
+			var alertType, state, reason, comment string
+			var expirationDate, lastModified *time.Time
+			suppressionScope := []any{}
+			if p := rule.Properties; p != nil {
+				alertType = convert.ToValue(p.AlertType)
+				reason = convert.ToValue(p.Reason)
+				comment = convert.ToValue(p.Comment)
+				if p.State != nil {
+					state = string(*p.State)
+				}
+				expirationDate = p.ExpirationDateUTC
+				lastModified = p.LastModifiedUTC
+				if p.SuppressionAlertsScope != nil {
+					scope, err := convert.JsonToDictSlice(p.SuppressionAlertsScope.AllOf)
+					if err != nil {
+						return nil, err
+					}
+					suppressionScope = scope
+				}
+			}
+			mqlRule, err := CreateResource(a.MqlRuntime, "azure.subscription.cloudDefenderService.alertSuppressionRule",
+				map[string]*llx.RawData{
+					"id":               llx.StringDataPtr(rule.ID),
+					"name":             llx.StringDataPtr(rule.Name),
+					"alertType":        llx.StringData(alertType),
+					"state":            llx.StringData(state),
+					"reason":           llx.StringData(reason),
+					"comment":          llx.StringData(comment),
+					"expirationDate":   llx.TimeDataPtr(expirationDate),
+					"lastModified":     llx.TimeDataPtr(lastModified),
+					"suppressionScope": llx.ArrayData(suppressionScope, types.Dict),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlRule)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+type mqlAzureSubscriptionCloudDefenderServiceWorkspaceSettingInternal struct {
+	cacheWorkspaceId string
+}
+
+// workspaceSettings lists the subscription's Defender workspace settings — the
+// Log Analytics workspace each scope's security data is routed to.
+func (a *mqlAzureSubscriptionCloudDefenderService) workspaceSettings() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	client, err := security.NewWorkspaceSettingsClient(a.SubscriptionId.Data, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	pager := client.NewListPager(nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list workspace settings due to access denied")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, ws := range page.Value {
+			if ws == nil {
+				continue
+			}
+			var scope, workspaceId string
+			if p := ws.Properties; p != nil {
+				scope = convert.ToValue(p.Scope)
+				workspaceId = convert.ToValue(p.WorkspaceID)
+			}
+			mqlWs, err := CreateResource(a.MqlRuntime, "azure.subscription.cloudDefenderService.workspaceSetting",
+				map[string]*llx.RawData{
+					"id":    llx.StringDataPtr(ws.ID),
+					"name":  llx.StringDataPtr(ws.Name),
+					"scope": llx.StringData(scope),
+				})
+			if err != nil {
+				return nil, err
+			}
+			mqlWs.(*mqlAzureSubscriptionCloudDefenderServiceWorkspaceSetting).cacheWorkspaceId = workspaceId
+			res = append(res, mqlWs)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceWorkspaceSetting) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceWorkspaceSetting) workspace() (*mqlAzureSubscriptionMonitorServiceWorkspace, error) {
+	if a.cacheWorkspaceId == "" {
+		a.Workspace.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	r, err := NewResource(a.MqlRuntime, "azure.subscription.monitorService.workspace", map[string]*llx.RawData{
+		"id": llx.StringData(a.cacheWorkspaceId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlAzureSubscriptionMonitorServiceWorkspace), nil
 }

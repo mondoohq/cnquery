@@ -128,6 +128,7 @@ func (o *mqlOciDatabase) getDbSystems(conn *connection.OciConnection, regions []
 					"created":              llx.TimeDataPtr(created),
 					"freeformTags":         llx.MapData(freeformTags, types.String),
 					"definedTags":          llx.MapData(definedTags, types.Any),
+					"systemTags":           llx.MapData(definedTagsToAny(s.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err
@@ -135,6 +136,7 @@ func (o *mqlOciDatabase) getDbSystems(conn *connection.OciConnection, regions []
 				mqlDb := mqlInstance.(*mqlOciDatabaseDbSystem)
 				mqlDb.cacheKmsKeyId = stringValue(s.KmsKeyId)
 				mqlDb.cacheSubnetId = stringValue(s.SubnetId)
+				mqlDb.cacheSourceDbSystemId = stringValue(s.SourceDbSystemId)
 				res = append(res, mqlDb)
 			}
 
@@ -146,8 +148,9 @@ func (o *mqlOciDatabase) getDbSystems(conn *connection.OciConnection, regions []
 }
 
 type mqlOciDatabaseDbSystemInternal struct {
-	cacheKmsKeyId string
-	cacheSubnetId string
+	cacheKmsKeyId         string
+	cacheSubnetId         string
+	cacheSourceDbSystemId string
 }
 
 func (o *mqlOciDatabaseDbSystem) id() (string, error) {
@@ -285,6 +288,7 @@ func (o *mqlOciDatabase) getAutonomousDatabases(conn *connection.OciConnection, 
 					"name":                        llx.StringDataPtr(a.DisplayName),
 					"compartmentID":               llx.StringDataPtr(a.CompartmentId),
 					"dbName":                      llx.StringDataPtr(a.DbName),
+					"isRefreshableClone":          llx.BoolDataPtr(a.IsRefreshableClone),
 					"dbVersion":                   llx.StringDataPtr(a.DbVersion),
 					"dbWorkload":                  llx.StringData(string(a.DbWorkload)),
 					"isDedicated":                 llx.BoolDataPtr(a.IsDedicated),
@@ -314,6 +318,7 @@ func (o *mqlOciDatabase) getAutonomousDatabases(conn *connection.OciConnection, 
 					"created":                     llx.TimeDataPtr(created),
 					"freeformTags":                llx.MapData(freeformTags, types.String),
 					"definedTags":                 llx.MapData(definedTags, types.Any),
+					"systemTags":                  llx.MapData(definedTagsToAny(a.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err
@@ -322,6 +327,7 @@ func (o *mqlOciDatabase) getAutonomousDatabases(conn *connection.OciConnection, 
 				mqlAdb.cacheKmsKeyId = stringValue(a.KmsKeyId)
 				mqlAdb.cacheVaultId = stringValue(a.VaultId)
 				mqlAdb.cacheSubnetId = stringValue(a.SubnetId)
+				mqlAdb.cacheSourceId = stringValue(a.SourceId)
 				res = append(res, mqlAdb)
 			}
 
@@ -336,6 +342,7 @@ type mqlOciDatabaseAutonomousDatabaseInternal struct {
 	cacheKmsKeyId string
 	cacheVaultId  string
 	cacheSubnetId string
+	cacheSourceId string
 }
 
 func (o *mqlOciDatabaseAutonomousDatabase) id() (string, error) {

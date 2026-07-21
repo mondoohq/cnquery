@@ -11,8 +11,9 @@ import (
 var Config = plugin.Provider{
 	Name:            "cloudflare",
 	ID:              "go.mondoo.com/mql/v13/providers/cloudflare",
-	Version:         "13.5.4",
+	Version:         "13.6.4",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
+	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "cloudflare",
@@ -25,7 +26,7 @@ Examples:
   cnspec scan cloudflare --token <access_token>
 
 Notes:
-  If you set the CLOUDFLARE_API_TOKEN environment variable, you can omit the token flag.
+  If you set the CLOUDFLARE_TOKEN environment variable, you can omit the token flag.
 `,
 			Discovery: []string{
 				connection.DiscoveryAll,

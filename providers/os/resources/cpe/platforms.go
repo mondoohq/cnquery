@@ -23,7 +23,7 @@ var platformCPES = []platformCPEEntry{
 	{
 		Platform: "macos",
 		CPEBuilder: func(platform, version string, workstation bool) (string, error) {
-			// cnquery uses 10.14 instead of 10.14.0, so we need to add the .0
+			// mql uses 10.14 instead of 10.14.0, so we need to add the .0
 			v := version + ".0"
 			return cpeVersionPatternFunc(
 				"cpe:2.3:o:apple:mac_os_x:{{.Version}}:*:*:*:*:*:*:*",

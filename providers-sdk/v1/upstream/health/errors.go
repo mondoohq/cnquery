@@ -124,8 +124,24 @@ func ReportPanicWithTags(product, version, build string, tagsFn PanicTagsFn, rep
 	}
 }
 
+// ReportRecoveredPanic reports an already-recovered panic without
+// re-panicking. Use it when the caller recovers a panic itself and converts
+// it into an error instead of crashing the process. The caller supplies the
+// stacktrace (it typically needs one for its own logging anyway) — capture
+// it via debug.Stack() inside the deferred function that recovered, so it
+// still points at the panic site.
+func ReportRecoveredPanic(product, version, build string, r any, stacktrace []byte, tags map[string]string, reporters ...PanicReportFn) {
+	if build == "" {
+		return // avoid reporting panics from environments that don't set this variable
+	}
+	handlePanicWithStack(product, version, build, r, stacktrace, tags, reporters)
+}
+
 func handlePanic(product, version, build string, r any, tags map[string]string, reporters []PanicReportFn) {
-	stack := debug.Stack()
+	handlePanicWithStack(product, version, build, r, debug.Stack(), tags, reporters)
+}
+
+func handlePanicWithStack(product, version, build string, r any, stack []byte, tags map[string]string, reporters []PanicReportFn) {
 	sendPanic(product, version, build, r, stack, tags)
 
 	// call additional reporters

@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	smithy "github.com/aws/smithy-go"
 	"github.com/aws/smithy-go/transport/http"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -52,6 +53,16 @@ const (
 	apiUsagePlanArnPattern        = "arn:aws:apigateway:%s:%s::/usageplans/%s"
 	apiVpcLinkArnPattern          = "arn:aws:apigateway:%s:%s::/vpclinks/%s"
 	transitGatewayArnPattern      = "arn:aws:ec2:%s:%s:transit-gateway/%s"
+	efsFilesystemArnPattern       = "arn:aws:elasticfilesystem:%s:%s:file-system/%s"
+	fsxFilesystemArnPattern       = "arn:aws:fsx:%s:%s:file-system/%s"
+	prefixListArnPattern          = "arn:aws:ec2:%s:%s:prefix-list/%s"
+	vpcEndpointArnPattern         = "arn:aws:ec2:%s:%s:vpc-endpoint/%s"
+	vpcFlowLogArnPattern          = "arn:aws:ec2:%s:%s:vpc-flow-log/%s"
+	natGatewayArnPattern          = "arn:aws:ec2:%s:%s:natgateway/%s"
+	networkInterfaceArnPattern    = "arn:aws:ec2:%s:%s:network-interface/%s"
+	dhcpOptionsArnPattern         = "arn:aws:ec2:%s:%s:dhcp-options/%s"
+	tgwAttachmentArnPattern       = "arn:aws:ec2:%s:%s:transit-gateway-attachment/%s"
+	tgwRouteTableArnPattern       = "arn:aws:ec2:%s:%s:transit-gateway-route-table/%s"
 )
 
 func NewSecurityGroupArn(region, accountID, sgID string) string {
@@ -76,6 +87,36 @@ func Is400AccessDeniedError(err error) bool {
 			strings.Contains(respErr.Error(), "UnauthorizedOperation") ||
 			strings.Contains(respErr.Error(), "AuthorizationError")
 		return statusCodeMatches && errorMessageMatches
+	}
+	return false
+}
+
+// isResourceNotFoundError reports whether err is an AWS "not found" API error
+// (e.g. LoadBalancerNotFound, RepositoryNotFoundException). Targeted single-
+// resource init lookups use it to fall through to their list-scan fallback for
+// stale ARNs instead of hard-failing the resolution.
+func isResourceNotFoundError(err error) bool {
+	var ae smithy.APIError
+	if errors.As(err, &ae) {
+		code := ae.ErrorCode()
+		// Most services use a "*NotFound*" code (e.g. RepositoryNotFoundException,
+		// LoadBalancerNotFound, ResourceNotFoundException); a few use a "NoSuch*"
+		// code instead (e.g. NoSuchEntity, NoSuchBucket).
+		return strings.Contains(code, "NotFound") || strings.HasPrefix(code, "NoSuch")
+	}
+	return false
+}
+
+// isOperationNotSupportedError reports whether err is an AWS ValidationException
+// meaning the operation is not valid for the target resource - e.g. Bedrock
+// GetResourcePolicy on a system-defined inference profile returns "The requested
+// operation is not recognized by the service". Such a resource has no
+// resource-based policy to report, so callers degrade to an empty policy.
+func isOperationNotSupportedError(err error) bool {
+	var ae smithy.APIError
+	if errors.As(err, &ae) {
+		return ae.ErrorCode() == "ValidationException" &&
+			strings.Contains(ae.ErrorMessage(), "not recognized by the service")
 	}
 	return false
 }
@@ -249,18 +290,20 @@ const (
 	CertificateBlockType = "CERTIFICATE"
 )
 
-type assetIdentifier struct {
-	name string
-	arn  string
-}
-
-func getAssetIdentifier(runtime *plugin.Runtime) *assetIdentifier {
+// getAssetIdentifier returns the asset's validated resource ARN from its
+// platform IDs, or "" when the asset carries no parseable arn:aws: ID (e.g.
+// an account asset). Discovered resource assets always store their own ARN in
+// PlatformIds, so ARN matching is sufficient for init lookups; the asset name
+// is a display name (possibly a Name tag), never a resource key, and must not
+// be used for resolution. Callers must only inject a non-empty result into
+// init args — an empty args["arn"] defeats `args["arn"] == nil` guards.
+func getAssetIdentifier(runtime *plugin.Runtime) string {
 	var a *inventory.Asset
 	if conn, ok := runtime.Connection.(*connection.AwsConnection); ok {
 		a = conn.Asset()
 	}
 	if a == nil {
-		return nil
+		return ""
 	}
 
 	arnStr := ""
@@ -274,7 +317,23 @@ func getAssetIdentifier(runtime *plugin.Runtime) *assetIdentifier {
 		}
 	}
 
-	return &assetIdentifier{name: a.Name, arn: arnStr}
+	return arnStr
+}
+
+// getAssetName returns the discovered asset's name, or "" when the connection
+// has no asset. Use it only for resources whose lookup API is name-driven
+// (e.g. IAM GetUser/GetGroup) and whose discovery sets the asset name to the
+// resource's own name; for everything else resolve by ARN via
+// getAssetIdentifier — the asset name is a display name, not a resource key.
+func getAssetName(runtime *plugin.Runtime) string {
+	var a *inventory.Asset
+	if conn, ok := runtime.Connection.(*connection.AwsConnection); ok {
+		a = conn.Asset()
+	}
+	if a == nil {
+		return ""
+	}
+	return a.Name
 }
 
 func mapStringInterfaceToStringString(m map[string]any) map[string]string {

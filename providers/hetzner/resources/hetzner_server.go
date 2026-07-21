@@ -5,12 +5,22 @@ package resources
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/hetznercloud/hcloud-go/v2/hcloud"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/types"
 )
+
+type mqlHetznerInternal struct {
+	// serversOnce guards a single project-wide Server.List so the servers()
+	// field and the location/datacenter server rollups share one API round-trip
+	// instead of each firing its own list call.
+	serversOnce sync.Once
+	serversList []*hcloud.Server
+	serversErr  error
+}
 
 type mqlHetznerServerInternal struct {
 	cacheServerType     *hcloud.ServerType
@@ -32,17 +42,66 @@ func (r *mqlHetznerServer) id() (string, error) {
 	return fmt.Sprintf("hetzner.server/%d", r.Id.Data), nil
 }
 
-func (h *mqlHetzner) servers() ([]any, error) {
-	c := conn(h.MqlRuntime)
-	items, err := paginate(func(opts hcloud.ListOpts) ([]*hcloud.Server, *hcloud.Response, error) {
-		return c.Client().Server.List(ctx(), hcloud.ServerListOpts{ListOpts: opts})
+// allServers lists every project server exactly once and caches the raw
+// result on the hetzner namespace resource. The servers() field and the
+// location/datacenter server rollups all resolve through here, so a bulk query
+// like `hetzner.locations { servers }` costs a single Server.List rather than
+// one per location.
+func (h *mqlHetzner) allServers() ([]*hcloud.Server, error) {
+	h.serversOnce.Do(func() {
+		c := conn(h.MqlRuntime)
+		h.serversList, h.serversErr = paginate(func(opts hcloud.ListOpts) ([]*hcloud.Server, *hcloud.Response, error) {
+			return c.Client().Server.List(ctx(), hcloud.ServerListOpts{ListOpts: opts})
+		})
 	})
+	return h.serversList, h.serversErr
+}
+
+func (h *mqlHetzner) servers() ([]any, error) {
+	items, err := h.allServers()
 	if err != nil {
 		return nil, err
 	}
 	out := make([]any, 0, len(items))
 	for _, s := range items {
 		res, err := newMqlHetznerServer(h.MqlRuntime, s)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+// hetznerNamespace resolves the singleton hetzner namespace resource so shared
+// caches (e.g. the server list) can be reached from other resources.
+func hetznerNamespace(runtime *plugin.Runtime) (*mqlHetzner, error) {
+	res, err := NewResource(runtime, "hetzner", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlHetzner), nil
+}
+
+// serversMatching returns full server resources for the servers the match
+// predicate selects, filtering the once-cached project server list in memory.
+// Reverse edges (location.servers, datacenter.servers) use it so repeated
+// calls across a bulk query share a single Server.List round-trip.
+func serversMatching(runtime *plugin.Runtime, match func(*hcloud.Server) bool) ([]any, error) {
+	h, err := hetznerNamespace(runtime)
+	if err != nil {
+		return nil, err
+	}
+	items, err := h.allServers()
+	if err != nil {
+		return nil, err
+	}
+	out := []any{}
+	for _, s := range items {
+		if !match(s) {
+			continue
+		}
+		res, err := newMqlHetznerServer(runtime, s)
 		if err != nil {
 			return nil, err
 		}
@@ -64,6 +123,7 @@ func newMqlHetznerServer(runtime *plugin.Runtime, s *hcloud.Server) (*mqlHetzner
 		"name":              llx.StringData(s.Name),
 		"status":            llx.StringData(string(s.Status)),
 		"created":           llx.TimeDataPtr(timePtr(s.Created)),
+		"primaryDiskSize":   llx.IntData(int64(s.PrimaryDiskSize)),
 		"publicIpv4":        llx.StringData(ipString(s.PublicNet.IPv4.IP)),
 		"publicIpv4Blocked": llx.BoolData(s.PublicNet.IPv4.Blocked),
 		"publicIpv4DnsPtr":  llx.StringData(s.PublicNet.IPv4.DNSPtr),
@@ -71,6 +131,7 @@ func newMqlHetznerServer(runtime *plugin.Runtime, s *hcloud.Server) (*mqlHetzner
 		"publicIpv6Blocked": llx.BoolData(s.PublicNet.IPv6.Blocked),
 		"publicIpv6DnsPtr":  dictArrayData(dnsPtrSliceFromMap(s.PublicNet.IPv6.DNSPtr)),
 		"backupWindow":      llx.StringData(s.BackupWindow),
+		"backupsEnabled":    llx.BoolData(s.BackupWindow != ""),
 		"rescueEnabled":     llx.BoolData(s.RescueEnabled),
 		"locked":            llx.BoolData(s.Locked),
 		"includedTraffic":   llx.IntData(int64(s.IncludedTraffic)),

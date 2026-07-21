@@ -185,7 +185,10 @@ func DisplayUsedConfig() {
 	} else if Source == configSourceBase64 {
 		log.Info().Msg("loaded configuration from environment using source " + Source)
 	} else {
-		log.Info().Msg("no Mondoo configuration file provided, using defaults")
+		// Running without a config file is a normal, common case (e.g. `mql
+		// status` with no credentials), so this is debug-only noise rather than
+		// something worth printing on every run.
+		log.Debug().Msg("no Mondoo configuration file provided, using defaults")
 	}
 }
 

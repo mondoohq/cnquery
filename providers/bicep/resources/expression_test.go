@@ -4,11 +4,28 @@
 package resources
 
 import (
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestNormalizeIndex(t *testing.T) {
+	// A single quoted literal is unquoted so foo['bar'] == foo.bar.
+	assert.Equal(t, "bar", normalizeIndex("'bar'"))
+	assert.Equal(t, "bar", normalizeIndex(`"bar"`))
+	assert.Equal(t, "", normalizeIndex("''"))
+	// Numeric and bare indices pass through.
+	assert.Equal(t, "0", normalizeIndex("0"))
+	assert.Equal(t, "foo", normalizeIndex("foo"))
+	// A concatenation that merely starts and ends with a quote is NOT a single
+	// literal and must be left intact (the regression this guards).
+	assert.Equal(t, "'a' + suffix + 'b'", normalizeIndex("'a' + suffix + 'b'"))
+	// Two adjacent literals are likewise not a single literal.
+	assert.Equal(t, "'a''b'", normalizeIndex("'a''b'"))
+}
 
 func TestParseExpressionLiteral(t *testing.T) {
 	tests := []struct {
@@ -235,4 +252,31 @@ func TestParseExpressionRawAlwaysPopulated(t *testing.T) {
 	node := parseExpression("   resourceGroup().location   ")
 	assert.Equal(t, "resourceGroup().location", node.raw)
 	assert.Equal(t, exprKindPropertyAccess, node.kind)
+}
+
+// TestParseExpressionDeepNestingTerminates ensures deeply nested input is
+// bounded by the recursion-depth guard: it must return promptly (not hang on
+// super-linear rescans) and degrade to an unknown node rather than panicking
+// or stack-overflowing. Regression test for the quadratic-blowup DoS.
+func TestParseExpressionDeepNestingTerminates(t *testing.T) {
+	cases := map[string]string{
+		"nested parens":        strings.Repeat("(", 100000) + "1" + strings.Repeat(")", 100000),
+		"nested arrays":        strings.Repeat("[", 100000) + strings.Repeat("]", 100000),
+		"nested interpolation": strings.Repeat("'${", 50000) + "x" + strings.Repeat("}'", 50000),
+	}
+	for name, raw := range cases {
+		t.Run(name, func(t *testing.T) {
+			done := make(chan *exprNode, 1)
+			go func() { done <- parseExpression(raw) }()
+			select {
+			case node := <-done:
+				// The guarantee is prompt termination (no super-linear rescans);
+				// the node is non-nil and the over-deep portion degraded to
+				// unknown rather than panicking or hanging.
+				require.NotNil(t, node)
+			case <-time.After(5 * time.Second):
+				t.Fatal("parseExpression did not terminate within 5s on deeply nested input")
+			}
+		})
+	}
 }

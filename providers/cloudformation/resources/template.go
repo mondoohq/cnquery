@@ -4,7 +4,11 @@
 package resources
 
 import (
+	"errors"
+	"strings"
+
 	"github.com/aws-cloudformation/rain/cft"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -14,6 +18,18 @@ import (
 	"go.mondoo.com/ranger-rpc/status"
 	"gopkg.in/yaml.v3"
 )
+
+// parseCfnBool interprets the boolean spellings CloudFormation accepts.
+// CloudFormation parses templates as YAML 1.1, so `yes`/`on`/`1` are true in
+// addition to `true` (any case). Anything else is false. This matters for
+// NoEcho: a `NoEcho: yes` credential parameter must not read as unmasked.
+func parseCfnBool(s string) bool {
+	switch strings.ToLower(strings.TrimSpace(s)) {
+	case "true", "yes", "on", "1":
+		return true
+	}
+	return false
+}
 
 // isEvenMappingNode reports whether n is a YAML mapping with an even number of
 // content nodes — i.e. safe to iterate two-at-a-time (key, value). A template
@@ -52,12 +68,23 @@ func initCloudformationTemplate(runtime *plugin.Runtime, args map[string]*llx.Ra
 	}
 
 	transform, err := template.GetSection(cft.Transform)
-	if err == nil && len(transform.Content) > 0 {
+	if err == nil && transform != nil {
+		// Transform is commonly a single scalar (the canonical SAM header
+		// `Transform: AWS::Serverless-2016-10-31`), but may also be a list.
+		// A scalar YAML node has no Content, so handle both shapes.
 		var entries []string
-		for _, entry := range transform.Content {
-			entries = append(entries, entry.Value)
+		if transform.Kind == yaml.ScalarNode {
+			if transform.Value != "" {
+				entries = append(entries, transform.Value)
+			}
+		} else {
+			for _, entry := range transform.Content {
+				entries = append(entries, entry.Value)
+			}
 		}
-		args["transform"] = llx.ArrayData(convert.SliceAnyToInterface(entries), types.String)
+		if len(entries) > 0 {
+			args["transform"] = llx.ArrayData(convert.SliceAnyToInterface(entries), types.String)
+		}
 	}
 
 	return args, nil, nil
@@ -91,12 +118,16 @@ func (r *mqlCloudformationTemplate) extractDict(section cft.Section) (map[string
 		keyNode := parameters.Content[i]
 		valueNode := parameters.Content[i+1]
 
-		dict, err := convertYamlToDict(valueNode)
+		// A section member's value need not be a mapping — a Metadata entry
+		// like `License: Apache-2.0` is a scalar, and Metadata is free-form.
+		// convertYamlNodeToValue accepts scalars, sequences, and mappings, so
+		// one scalar member no longer fails the whole section.
+		val, err := convertYamlNodeToValue(valueNode)
 		if err != nil {
 			return nil, err
 		}
 
-		result[keyNode.Value] = dict
+		result[keyNode.Value] = val
 	}
 
 	return result, nil
@@ -172,21 +203,24 @@ func (r *mqlCloudformationTemplate) resources() ([]any, error) {
 			resourceDocumentation = val.Value
 		}
 
+		// Attributes/Properties are objects in valid CloudFormation. A
+		// malformed (scalar/sequence) body shouldn't sink every other resource
+		// in the template — leave the field empty and keep going.
 		attrs := make(map[string](any))
-		_, val, err = gatherMapValue(valueNode, "Attributes")
-		if err == nil {
-			attrs, err = convertYamlToDict(val)
-			if err != nil {
-				return nil, err
+		if _, val, gerr := gatherMapValue(valueNode, "Attributes"); gerr == nil {
+			if converted, cerr := convertYamlToDict(val); cerr == nil {
+				attrs = converted
+			} else {
+				log.Warn().Err(cerr).Str("resource", keyNode.Value).Msg("cloudformation: Attributes is not an object; leaving empty")
 			}
 		}
 
 		props := make(map[string](any))
-		_, val, err = gatherMapValue(valueNode, "Properties")
-		if err == nil {
-			props, err = convertYamlToDict(val)
-			if err != nil {
-				return nil, err
+		if _, val, gerr := gatherMapValue(valueNode, "Properties"); gerr == nil {
+			if converted, cerr := convertYamlToDict(val); cerr == nil {
+				props = converted
+			} else {
+				log.Warn().Err(cerr).Str("resource", keyNode.Value).Msg("cloudformation: Properties is not an object; leaving empty")
 			}
 		}
 
@@ -228,6 +262,11 @@ func (r *mqlCloudformationTemplate) resources() ([]any, error) {
 			return nil, err
 		}
 
+		ctx, err := r.nodeContext(keyNode, valueNode)
+		if err != nil {
+			return nil, err
+		}
+
 		pkg, err := CreateResource(r.MqlRuntime, "cloudformation.resource", map[string]*llx.RawData{
 			"name":                llx.StringData(keyNode.Value),
 			"type":                llx.StringData(resourceType),
@@ -241,6 +280,7 @@ func (r *mqlCloudformationTemplate) resources() ([]any, error) {
 			"creationPolicy":      llx.DictData(creationPolicy),
 			"updatePolicy":        llx.DictData(updatePolicy),
 			"resourceMetadata":    llx.DictData(resourceMetadata),
+			"context":             llx.ResourceData(ctx, "cloudformation.context"),
 		})
 		if err != nil {
 			return nil, err
@@ -259,6 +299,77 @@ func (x *mqlCloudformationOutput) id() (string, error) {
 
 func (x *mqlCloudformationParameter) id() (string, error) {
 	return x.Name.Data, nil
+}
+
+// nodeEndLine returns the last source line spanned by a YAML node, computed as
+// the maximum start line over the node and all of its descendants. yaml.v3
+// records only the start position of each node, so this approximates the end
+// of a multi-line block from its deepest child.
+func nodeEndLine(n *yaml.Node) int {
+	if n == nil {
+		return 0
+	}
+	end := n.Line
+	for _, c := range n.Content {
+		if e := nodeEndLine(c); e > end {
+			end = e
+		}
+	}
+	return end
+}
+
+// nodeContext builds a cloudformation.context spanning the source lines a
+// template block occupies. keyNode is the block's logical-name key (its start
+// line); valueNode is the block body (its end line is the deepest child).
+func (r *mqlCloudformationTemplate) nodeContext(keyNode, valueNode *yaml.Node) (*mqlCloudformationContext, error) {
+	conn := r.MqlRuntime.Connection.(*connection.CloudformationConnection)
+
+	start := uint32(keyNode.Line)
+	end := uint32(nodeEndLine(valueNode))
+	if end < start {
+		end = start
+	}
+	rnge := llx.NewRange().AddLineRange(start, end)
+	content := rnge.ExtractString(conn.Content(), llx.DefaultExtractConfig)
+
+	cobj, err := CreateResource(r.MqlRuntime, "cloudformation.context", map[string]*llx.RawData{
+		"path":    llx.StringData(conn.Path()),
+		"range":   llx.RangeData(rnge),
+		"content": llx.StringData(content),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return cobj.(*mqlCloudformationContext), nil
+}
+
+func (r *mqlCloudformationContext) id() (string, error) {
+	if r.Path.Data == "" {
+		return "", errors.New("need path to exist for cloudformation.context ID")
+	}
+	return r.Path.Data + ":" + r.Range.Data.String(), nil
+}
+
+func (r *mqlCloudformationContext) content(path string, rnge llx.Range) (string, error) {
+	if path == "" {
+		return "", errors.New("no path information for cloudformation.context")
+	}
+	conn := r.MqlRuntime.Connection.(*connection.CloudformationConnection)
+	return rnge.ExtractString(conn.Content(), llx.DefaultExtractConfig), nil
+}
+
+// context is populated at creation for each block, so these fallback resolvers
+// only run if a resource was built without one.
+func (x *mqlCloudformationResource) context() (*mqlCloudformationContext, error) {
+	return nil, errors.New("context was not provided for cloudformation.resource")
+}
+
+func (x *mqlCloudformationOutput) context() (*mqlCloudformationContext, error) {
+	return nil, errors.New("context was not provided for cloudformation.output")
+}
+
+func (x *mqlCloudformationParameter) context() (*mqlCloudformationContext, error) {
+	return nil, errors.New("context was not provided for cloudformation.parameter")
 }
 
 func (r *mqlCloudformationTemplate) outputs() ([]any, error) {
@@ -283,9 +394,13 @@ func (r *mqlCloudformationTemplate) outputs() ([]any, error) {
 		keyNode := outputs.Content[i]
 		valueNode := outputs.Content[i+1]
 
-		dict, err := convertYamlToDict(valueNode)
-		if err != nil {
-			return nil, err
+		// An output body is an object in valid CloudFormation; degrade rather
+		// than fail every output if one is malformed.
+		dict := map[string]any{}
+		if converted, cerr := convertYamlToDict(valueNode); cerr == nil {
+			dict = converted
+		} else {
+			log.Warn().Err(cerr).Str("output", keyNode.Value).Msg("cloudformation: output body is not an object; leaving empty")
 		}
 
 		value, err := nodeToDict(valueNode, "Value")
@@ -310,6 +425,11 @@ func (r *mqlCloudformationTemplate) outputs() ([]any, error) {
 			}
 		}
 
+		ctx, err := r.nodeContext(keyNode, valueNode)
+		if err != nil {
+			return nil, err
+		}
+
 		pkg, err := CreateResource(r.MqlRuntime, "cloudformation.output", map[string]*llx.RawData{
 			"name":        llx.StringData(keyNode.Value),
 			"properties":  llx.DictData(dict),
@@ -317,6 +437,7 @@ func (r *mqlCloudformationTemplate) outputs() ([]any, error) {
 			"description": llx.StringData(description),
 			"exportName":  llx.StringData(exportName),
 			"condition":   llx.StringData(condition),
+			"context":     llx.ResourceData(ctx, "cloudformation.context"),
 		})
 		if err != nil {
 			return nil, err
@@ -373,7 +494,7 @@ func (r *mqlCloudformationTemplate) parameterList() ([]any, error) {
 
 		noEcho := false
 		if _, n, err := gatherMapValue(valueNode, "NoEcho"); err == nil {
-			noEcho = n.Value == "true" || n.Value == "True" || n.Value == "TRUE"
+			noEcho = parseCfnBool(n.Value)
 		}
 
 		minLength, err := nodeToInt(valueNode, "MinLength")
@@ -403,6 +524,11 @@ func (r *mqlCloudformationTemplate) parameterList() ([]any, error) {
 			return nil, err
 		}
 
+		ctx, err := r.nodeContext(keyNode, valueNode)
+		if err != nil {
+			return nil, err
+		}
+
 		pkg, err := CreateResource(r.MqlRuntime, "cloudformation.parameter", map[string]*llx.RawData{
 			"__id":                  llx.StringData(keyNode.Value),
 			"name":                  llx.StringData(keyNode.Value),
@@ -412,11 +538,12 @@ func (r *mqlCloudformationTemplate) parameterList() ([]any, error) {
 			"allowedValues":         llx.ArrayData(allowedValues, types.Dict),
 			"allowedPattern":        llx.StringData(allowedPattern),
 			"noEcho":                llx.BoolData(noEcho),
-			"minLength":             llx.IntData(minLength),
-			"maxLength":             llx.IntData(maxLength),
-			"minValue":              llx.IntData(minValue),
-			"maxValue":              llx.IntData(maxValue),
+			"minLength":             llx.IntDataPtr(minLength),
+			"maxLength":             llx.IntDataPtr(maxLength),
+			"minValue":              llx.IntDataPtr(minValue),
+			"maxValue":              llx.IntDataPtr(maxValue),
 			"constraintDescription": llx.StringData(constraintDescription),
+			"context":               llx.ResourceData(ctx, "cloudformation.context"),
 		})
 		if err != nil {
 			return nil, err

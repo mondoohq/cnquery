@@ -104,3 +104,98 @@ func (a *mqlAwsElbLoadbalancer) exposure() (*mqlAwsNetworkExposure, error) {
 	}
 	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", scheme.Data == "internet-facing", a.GetSecurityGroups())
 }
+
+func (a *mqlAwsRdsDbcluster) exposure() (*mqlAwsNetworkExposure, error) {
+	arn := a.GetArn()
+	if arn.Error != nil {
+		return nil, arn.Error
+	}
+	publiclyAccessible := a.GetPubliclyAccessible()
+	if publiclyAccessible.Error != nil {
+		return nil, publiclyAccessible.Error
+	}
+	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", publiclyAccessible.Data, a.GetSecurityGroups())
+}
+
+func (a *mqlAwsRedshiftCluster) exposure() (*mqlAwsNetworkExposure, error) {
+	arn := a.GetArn()
+	if arn.Error != nil {
+		return nil, arn.Error
+	}
+	publiclyAccessible := a.GetPubliclyAccessible()
+	if publiclyAccessible.Error != nil {
+		return nil, publiclyAccessible.Error
+	}
+	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", publiclyAccessible.Data, a.GetSecurityGroups())
+}
+
+func (a *mqlAwsMqBroker) exposure() (*mqlAwsNetworkExposure, error) {
+	arn := a.GetArn()
+	if arn.Error != nil {
+		return nil, arn.Error
+	}
+	publiclyAccessible := a.GetPubliclyAccessible()
+	if publiclyAccessible.Error != nil {
+		return nil, publiclyAccessible.Error
+	}
+	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", publiclyAccessible.Data, a.GetSecurityGroups())
+}
+
+func (a *mqlAwsDmsReplicationInstance) exposure() (*mqlAwsNetworkExposure, error) {
+	arn := a.GetArn()
+	if arn.Error != nil {
+		return nil, arn.Error
+	}
+	publiclyAccessible := a.GetPubliclyAccessible()
+	if publiclyAccessible.Error != nil {
+		return nil, publiclyAccessible.Error
+	}
+	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", publiclyAccessible.Data, a.GetSecurityGroups())
+}
+
+func (a *mqlAwsMskCluster) exposure() (*mqlAwsNetworkExposure, error) {
+	arn := a.GetArn()
+	if arn.Error != nil {
+		return nil, arn.Error
+	}
+	publicAccess := a.GetPublicAccess()
+	if publicAccess.Error != nil {
+		return nil, publicAccess.Error
+	}
+	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", publicAccess.Data, a.GetSecurityGroups())
+}
+
+// buildVpcOnlyExposure builds a network exposure for a service that has no
+// public endpoint (it is only reachable inside its VPC). publiclyAccessible and
+// internetReachable are therefore always false; the value is in surfacing any
+// attached security group that opens the resource to a public source.
+func buildVpcOnlyExposure(a interface {
+	GetArn() *plugin.TValue[string]
+	GetSecurityGroups() *plugin.TValue[[]any]
+}, runtime *plugin.Runtime) (*mqlAwsNetworkExposure, error) {
+	arn := a.GetArn()
+	if arn.Error != nil {
+		return nil, arn.Error
+	}
+	return buildNetworkExposure(runtime, arn.Data+"/exposure", false, a.GetSecurityGroups())
+}
+
+func (a *mqlAwsDocumentdbCluster) exposure() (*mqlAwsNetworkExposure, error) {
+	return buildVpcOnlyExposure(a, a.MqlRuntime)
+}
+
+func (a *mqlAwsElasticacheCluster) exposure() (*mqlAwsNetworkExposure, error) {
+	return buildVpcOnlyExposure(a, a.MqlRuntime)
+}
+
+func (a *mqlAwsElasticacheServerlessCache) exposure() (*mqlAwsNetworkExposure, error) {
+	return buildVpcOnlyExposure(a, a.MqlRuntime)
+}
+
+func (a *mqlAwsMemorydbCluster) exposure() (*mqlAwsNetworkExposure, error) {
+	return buildVpcOnlyExposure(a, a.MqlRuntime)
+}
+
+func (a *mqlAwsNeptuneCluster) exposure() (*mqlAwsNetworkExposure, error) {
+	return buildVpcOnlyExposure(a, a.MqlRuntime)
+}

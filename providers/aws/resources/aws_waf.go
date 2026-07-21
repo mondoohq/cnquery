@@ -691,6 +691,9 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 				"statement":   llx.ResourceData(notStatementMqlStatement, "aws.waf.rule.statement.notstatement"),
 				"ruleName":    llx.StringDataPtr(ruleName),
 			})
+			if err != nil {
+				return nil, err
+			}
 		}
 		if statement.OrStatement != nil {
 			kind = "OrStatement"
@@ -707,6 +710,9 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 				"statements":  llx.ArrayData(statements, types.ResourceLike),
 				"ruleName":    llx.StringDataPtr(ruleName),
 			})
+			if err != nil {
+				return nil, err
+			}
 		}
 		if statement.RateBasedStatement != nil {
 			kind = "RateBasedStatement"
@@ -1121,4 +1127,90 @@ func (a *mqlAwsWafAcl) associatedResources() ([]any, error) {
 	}
 
 	return allArns, nil
+}
+
+// associatedLoadBalancers resolves the Application Load Balancers this regional
+// web ACL protects to typed resources. CloudFront-scoped ACLs attach through
+// distributions rather than this API and so return an empty list.
+func (a *mqlAwsWafAcl) associatedLoadBalancers() ([]any, error) {
+	if a.Scope.Data == "CLOUDFRONT" {
+		return []any{}, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Wafv2(wafRegionForScope(a.Scope.Data))
+	arnVal := a.Arn.Data
+
+	resp, err := svc.ListResourcesForWebACL(context.Background(), &wafv2.ListResourcesForWebACLInput{
+		WebACLArn:    &arnVal,
+		ResourceType: waftypes.ResourceTypeApplicationLoadBalancer,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+
+	res := []any{}
+	for _, lbArn := range resp.ResourceArns {
+		mqlLb, err := NewResource(a.MqlRuntime, ResourceAwsElbLoadbalancer,
+			map[string]*llx.RawData{"arn": llx.StringData(lbArn)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlLb)
+	}
+	return res, nil
+}
+
+// webAcl resolves the WAFv2 web ACL protecting an Application Load Balancer.
+// Only Application Load Balancers can carry a WAFv2 web ACL, so other load
+// balancer types short-circuit to null.
+func (a *mqlAwsElbLoadbalancer) webAcl() (*mqlAwsWafAcl, error) {
+	elbType := a.GetElbType()
+	if elbType.Error != nil {
+		return nil, elbType.Error
+	}
+	if elbType.Data != "application" {
+		a.WebAcl.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	arnVal := a.Arn.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Wafv2(a.Region.Data)
+	resp, err := svc.GetWebACLForResource(context.Background(), &wafv2.GetWebACLForResourceInput{
+		ResourceArn: &arnVal,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			a.WebAcl.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
+		return nil, err
+	}
+	if resp.WebACL == nil || resp.WebACL.ARN == nil {
+		a.WebAcl.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	// Build the typed web ACL directly from the association response. An ALB's
+	// associated web ACL is always REGIONAL scope; setting scope here (rather
+	// than resolving through the account-wide aws.waf listing) both avoids a
+	// scopeless ListWebACLs call that fails validation and gives the returned
+	// ACL the scope its own accessors (associatedLoadBalancers, rules) need.
+	acl := resp.WebACL
+	mqlAcl, err := CreateResource(a.MqlRuntime, "aws.waf.acl", map[string]*llx.RawData{
+		"__id":        llx.StringDataPtr(acl.ARN),
+		"id":          llx.StringDataPtr(acl.Id),
+		"scope":       llx.StringData(string(waftypes.ScopeRegional)),
+		"arn":         llx.StringDataPtr(acl.ARN),
+		"name":        llx.StringDataPtr(acl.Name),
+		"description": llx.StringDataPtr(acl.Description),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return mqlAcl.(*mqlAwsWafAcl), nil
 }

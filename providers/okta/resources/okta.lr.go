@@ -28,6 +28,9 @@ const (
 	ResourceOktaGroupRule                     string = "okta.groupRule"
 	ResourceOktaApplication                   string = "okta.application"
 	ResourceOktaApplicationKey                string = "okta.application.key"
+	ResourceOktaApplicationUser               string = "okta.application.user"
+	ResourceOktaApplicationGroupAssignment    string = "okta.application.groupAssignment"
+	ResourceOktaApplicationScopeConsentGrant  string = "okta.application.scopeConsentGrant"
 	ResourceOktaDomain                        string = "okta.domain"
 	ResourceOktaPolicy                        string = "okta.policy"
 	ResourceOktaPolicyRule                    string = "okta.policyRule"
@@ -35,6 +38,9 @@ const (
 	ResourceOktaNetwork                       string = "okta.network"
 	ResourceOktaThreatsConfiguration          string = "okta.threatsConfiguration"
 	ResourceOktaCustomRole                    string = "okta.customRole"
+	ResourceOktaResourceSet                   string = "okta.resourceSet"
+	ResourceOktaResourceSetResource           string = "okta.resourceSet.resource"
+	ResourceOktaResourceSetBinding            string = "okta.resourceSet.binding"
 	ResourceOktaIdentityProvider              string = "okta.identityProvider"
 	ResourceOktaIdentityProviderKey           string = "okta.identityProvider.key"
 	ResourceOktaAuthorizationServer           string = "okta.authorizationServer"
@@ -43,6 +49,17 @@ const (
 	ResourceOktaAuthorizationServerScope      string = "okta.authorizationServer.scope"
 	ResourceOktaAuthorizationServerClaim      string = "okta.authorizationServer.claim"
 	ResourceOktaAuthorizationServerKey        string = "okta.authorizationServer.key"
+	ResourceOktaEventHook                     string = "okta.eventHook"
+	ResourceOktaInlineHook                    string = "okta.inlineHook"
+	ResourceOktaHookKey                       string = "okta.hookKey"
+	ResourceOktaLogStream                     string = "okta.logStream"
+	ResourceOktaApiServiceIntegration         string = "okta.apiServiceIntegration"
+	ResourceOktaAttackProtection              string = "okta.attackProtection"
+	ResourceOktaBehaviorRule                  string = "okta.behaviorRule"
+	ResourceOktaRiskProvider                  string = "okta.riskProvider"
+	ResourceOktaDevice                        string = "okta.device"
+	ResourceOktaDeviceAssurancePolicy         string = "okta.deviceAssurancePolicy"
+	ResourceOktaSecurityEventsProvider        string = "okta.securityEventsProvider"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -82,7 +99,7 @@ func init() {
 			Create: createOktaRole,
 		},
 		"okta.group": {
-			// to override args, implement: initOktaGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOktaGroup,
 			Create: createOktaGroup,
 		},
 		"okta.groupRule": {
@@ -90,12 +107,24 @@ func init() {
 			Create: createOktaGroupRule,
 		},
 		"okta.application": {
-			// to override args, implement: initOktaApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOktaApplication,
 			Create: createOktaApplication,
 		},
 		"okta.application.key": {
 			// to override args, implement: initOktaApplicationKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOktaApplicationKey,
+		},
+		"okta.application.user": {
+			// to override args, implement: initOktaApplicationUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOktaApplicationUser,
+		},
+		"okta.application.groupAssignment": {
+			// to override args, implement: initOktaApplicationGroupAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOktaApplicationGroupAssignment,
+		},
+		"okta.application.scopeConsentGrant": {
+			// to override args, implement: initOktaApplicationScopeConsentGrant(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOktaApplicationScopeConsentGrant,
 		},
 		"okta.domain": {
 			// to override args, implement: initOktaDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -122,8 +151,20 @@ func init() {
 			Create: createOktaThreatsConfiguration,
 		},
 		"okta.customRole": {
-			// to override args, implement: initOktaCustomRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOktaCustomRole,
 			Create: createOktaCustomRole,
+		},
+		"okta.resourceSet": {
+			Init:   initOktaResourceSet,
+			Create: createOktaResourceSet,
+		},
+		"okta.resourceSet.resource": {
+			// to override args, implement: initOktaResourceSetResource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOktaResourceSetResource,
+		},
+		"okta.resourceSet.binding": {
+			// to override args, implement: initOktaResourceSetBinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOktaResourceSetBinding,
 		},
 		"okta.identityProvider": {
 			// to override args, implement: initOktaIdentityProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -156,6 +197,50 @@ func init() {
 		"okta.authorizationServer.key": {
 			// to override args, implement: initOktaAuthorizationServerKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOktaAuthorizationServerKey,
+		},
+		"okta.eventHook": {
+			// to override args, implement: initOktaEventHook(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOktaEventHook,
+		},
+		"okta.inlineHook": {
+			// to override args, implement: initOktaInlineHook(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOktaInlineHook,
+		},
+		"okta.hookKey": {
+			// to override args, implement: initOktaHookKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOktaHookKey,
+		},
+		"okta.logStream": {
+			// to override args, implement: initOktaLogStream(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOktaLogStream,
+		},
+		"okta.apiServiceIntegration": {
+			// to override args, implement: initOktaApiServiceIntegration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOktaApiServiceIntegration,
+		},
+		"okta.attackProtection": {
+			Init:   initOktaAttackProtection,
+			Create: createOktaAttackProtection,
+		},
+		"okta.behaviorRule": {
+			// to override args, implement: initOktaBehaviorRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOktaBehaviorRule,
+		},
+		"okta.riskProvider": {
+			// to override args, implement: initOktaRiskProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOktaRiskProvider,
+		},
+		"okta.device": {
+			// to override args, implement: initOktaDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOktaDevice,
+		},
+		"okta.deviceAssurancePolicy": {
+			// to override args, implement: initOktaDeviceAssurancePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOktaDeviceAssurancePolicy,
+		},
+		"okta.securityEventsProvider": {
+			// to override args, implement: initOktaSecurityEventsProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOktaSecurityEventsProvider,
 		},
 	}
 }
@@ -263,6 +348,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"okta.authorizationServers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOkta).GetAuthorizationServers()).ToDataRes(types.Array(types.Resource("okta.authorizationServer")))
+	},
+	"okta.resourceSets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOkta).GetResourceSets()).ToDataRes(types.Array(types.Resource("okta.resourceSet")))
+	},
+	"okta.eventHooks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOkta).GetEventHooks()).ToDataRes(types.Array(types.Resource("okta.eventHook")))
+	},
+	"okta.inlineHooks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOkta).GetInlineHooks()).ToDataRes(types.Array(types.Resource("okta.inlineHook")))
+	},
+	"okta.hookKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOkta).GetHookKeys()).ToDataRes(types.Array(types.Resource("okta.hookKey")))
+	},
+	"okta.logStreams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOkta).GetLogStreams()).ToDataRes(types.Array(types.Resource("okta.logStream")))
+	},
+	"okta.apiServiceIntegrations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOkta).GetApiServiceIntegrations()).ToDataRes(types.Array(types.Resource("okta.apiServiceIntegration")))
+	},
+	"okta.behaviorRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOkta).GetBehaviorRules()).ToDataRes(types.Array(types.Resource("okta.behaviorRule")))
+	},
+	"okta.riskProviders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOkta).GetRiskProviders()).ToDataRes(types.Array(types.Resource("okta.riskProvider")))
+	},
+	"okta.devices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOkta).GetDevices()).ToDataRes(types.Array(types.Resource("okta.device")))
+	},
+	"okta.deviceAssurancePolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOkta).GetDeviceAssurancePolicies()).ToDataRes(types.Array(types.Resource("okta.deviceAssurancePolicy")))
+	},
+	"okta.securityEventsProviders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOkta).GetSecurityEventsProviders()).ToDataRes(types.Array(types.Resource("okta.securityEventsProvider")))
 	},
 	"okta.organization.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaOrganization).GetId()).ToDataRes(types.String)
@@ -519,6 +637,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"okta.role.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaRole).GetType()).ToDataRes(types.String)
 	},
+	"okta.role.customRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaRole).GetCustomRole()).ToDataRes(types.Resource("okta.customRole"))
+	},
+	"okta.role.resourceSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaRole).GetResourceSet()).ToDataRes(types.Resource("okta.resourceSet"))
+	},
+	"okta.role.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaRole).GetUser()).ToDataRes(types.Resource("okta.user"))
+	},
+	"okta.role.group": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaRole).GetGroup()).ToDataRes(types.Resource("okta.group"))
+	},
 	"okta.group.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaGroup).GetId()).ToDataRes(types.String)
 	},
@@ -603,6 +733,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"okta.application.signingKeys": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaApplication).GetSigningKeys()).ToDataRes(types.Array(types.Resource("okta.application.key")))
 	},
+	"okta.application.assignedUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplication).GetAssignedUsers()).ToDataRes(types.Array(types.Resource("okta.application.user")))
+	},
+	"okta.application.assignedGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplication).GetAssignedGroups()).ToDataRes(types.Array(types.Resource("okta.application.groupAssignment")))
+	},
+	"okta.application.scopeConsentGrants": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplication).GetScopeConsentGrants()).ToDataRes(types.Array(types.Resource("okta.application.scopeConsentGrant")))
+	},
+	"okta.application.adminRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplication).GetAdminRoles()).ToDataRes(types.Array(types.Resource("okta.role")))
+	},
 	"okta.application.key.applicationId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaApplicationKey).GetApplicationId()).ToDataRes(types.String)
 	},
@@ -647,6 +789,75 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"okta.application.key.e": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaApplicationKey).GetE()).ToDataRes(types.String)
+	},
+	"okta.application.user.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplicationUser).GetId()).ToDataRes(types.String)
+	},
+	"okta.application.user.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplicationUser).GetScope()).ToDataRes(types.String)
+	},
+	"okta.application.user.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplicationUser).GetStatus()).ToDataRes(types.String)
+	},
+	"okta.application.user.syncState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplicationUser).GetSyncState()).ToDataRes(types.String)
+	},
+	"okta.application.user.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplicationUser).GetCreated()).ToDataRes(types.Time)
+	},
+	"okta.application.user.lastUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplicationUser).GetLastUpdated()).ToDataRes(types.Time)
+	},
+	"okta.application.user.lastSync": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplicationUser).GetLastSync()).ToDataRes(types.Time)
+	},
+	"okta.application.user.credentials": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplicationUser).GetCredentials()).ToDataRes(types.Dict)
+	},
+	"okta.application.user.profile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplicationUser).GetProfile()).ToDataRes(types.Dict)
+	},
+	"okta.application.user.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplicationUser).GetUser()).ToDataRes(types.Resource("okta.user"))
+	},
+	"okta.application.groupAssignment.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplicationGroupAssignment).GetId()).ToDataRes(types.String)
+	},
+	"okta.application.groupAssignment.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplicationGroupAssignment).GetPriority()).ToDataRes(types.Int)
+	},
+	"okta.application.groupAssignment.profile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplicationGroupAssignment).GetProfile()).ToDataRes(types.Dict)
+	},
+	"okta.application.groupAssignment.lastUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplicationGroupAssignment).GetLastUpdated()).ToDataRes(types.Time)
+	},
+	"okta.application.groupAssignment.group": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplicationGroupAssignment).GetGroup()).ToDataRes(types.Resource("okta.group"))
+	},
+	"okta.application.scopeConsentGrant.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplicationScopeConsentGrant).GetId()).ToDataRes(types.String)
+	},
+	"okta.application.scopeConsentGrant.scopeId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplicationScopeConsentGrant).GetScopeId()).ToDataRes(types.String)
+	},
+	"okta.application.scopeConsentGrant.issuer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplicationScopeConsentGrant).GetIssuer()).ToDataRes(types.String)
+	},
+	"okta.application.scopeConsentGrant.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplicationScopeConsentGrant).GetStatus()).ToDataRes(types.String)
+	},
+	"okta.application.scopeConsentGrant.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplicationScopeConsentGrant).GetSource()).ToDataRes(types.String)
+	},
+	"okta.application.scopeConsentGrant.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplicationScopeConsentGrant).GetCreated()).ToDataRes(types.Time)
+	},
+	"okta.application.scopeConsentGrant.lastUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplicationScopeConsentGrant).GetLastUpdated()).ToDataRes(types.Time)
+	},
+	"okta.application.scopeConsentGrant.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplicationScopeConsentGrant).GetUser()).ToDataRes(types.Resource("okta.user"))
 	},
 	"okta.domain.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaDomain).GetId()).ToDataRes(types.String)
@@ -818,6 +1029,60 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"okta.customRole.permissions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaCustomRole).GetPermissions()).ToDataRes(types.Array(types.String))
+	},
+	"okta.resourceSet.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaResourceSet).GetId()).ToDataRes(types.String)
+	},
+	"okta.resourceSet.label": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaResourceSet).GetLabel()).ToDataRes(types.String)
+	},
+	"okta.resourceSet.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaResourceSet).GetDescription()).ToDataRes(types.String)
+	},
+	"okta.resourceSet.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaResourceSet).GetCreated()).ToDataRes(types.Time)
+	},
+	"okta.resourceSet.lastUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaResourceSet).GetLastUpdated()).ToDataRes(types.Time)
+	},
+	"okta.resourceSet.resources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaResourceSet).GetResources()).ToDataRes(types.Array(types.Resource("okta.resourceSet.resource")))
+	},
+	"okta.resourceSet.bindings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaResourceSet).GetBindings()).ToDataRes(types.Array(types.Resource("okta.resourceSet.binding")))
+	},
+	"okta.resourceSet.resource.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaResourceSetResource).GetId()).ToDataRes(types.String)
+	},
+	"okta.resourceSet.resource.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaResourceSetResource).GetDescription()).ToDataRes(types.String)
+	},
+	"okta.resourceSet.resource.href": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaResourceSetResource).GetHref()).ToDataRes(types.String)
+	},
+	"okta.resourceSet.resource.orn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaResourceSetResource).GetOrn()).ToDataRes(types.String)
+	},
+	"okta.resourceSet.resource.group": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaResourceSetResource).GetGroup()).ToDataRes(types.Resource("okta.group"))
+	},
+	"okta.resourceSet.resource.application": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaResourceSetResource).GetApplication()).ToDataRes(types.Resource("okta.application"))
+	},
+	"okta.resourceSet.resource.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaResourceSetResource).GetUser()).ToDataRes(types.Resource("okta.user"))
+	},
+	"okta.resourceSet.binding.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaResourceSetBinding).GetId()).ToDataRes(types.String)
+	},
+	"okta.resourceSet.binding.customRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaResourceSetBinding).GetCustomRole()).ToDataRes(types.Resource("okta.customRole"))
+	},
+	"okta.resourceSet.binding.users": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaResourceSetBinding).GetUsers()).ToDataRes(types.Array(types.Resource("okta.user")))
+	},
+	"okta.resourceSet.binding.groups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaResourceSetBinding).GetGroups()).ToDataRes(types.Array(types.Resource("okta.group")))
 	},
 	"okta.identityProvider.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaIdentityProvider).GetId()).ToDataRes(types.String)
@@ -1128,6 +1393,237 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"okta.authorizationServer.key.e": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaAuthorizationServerKey).GetE()).ToDataRes(types.String)
 	},
+	"okta.eventHook.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaEventHook).GetId()).ToDataRes(types.String)
+	},
+	"okta.eventHook.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaEventHook).GetName()).ToDataRes(types.String)
+	},
+	"okta.eventHook.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaEventHook).GetDescription()).ToDataRes(types.String)
+	},
+	"okta.eventHook.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaEventHook).GetStatus()).ToDataRes(types.String)
+	},
+	"okta.eventHook.verificationStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaEventHook).GetVerificationStatus()).ToDataRes(types.String)
+	},
+	"okta.eventHook.events": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaEventHook).GetEvents()).ToDataRes(types.Array(types.String))
+	},
+	"okta.eventHook.channelType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaEventHook).GetChannelType()).ToDataRes(types.String)
+	},
+	"okta.eventHook.channelUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaEventHook).GetChannelUri()).ToDataRes(types.String)
+	},
+	"okta.eventHook.channelAuthScheme": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaEventHook).GetChannelAuthScheme()).ToDataRes(types.Dict)
+	},
+	"okta.eventHook.headers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaEventHook).GetHeaders()).ToDataRes(types.Array(types.Dict))
+	},
+	"okta.eventHook.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaEventHook).GetCreated()).ToDataRes(types.Time)
+	},
+	"okta.eventHook.lastUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaEventHook).GetLastUpdated()).ToDataRes(types.Time)
+	},
+	"okta.inlineHook.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaInlineHook).GetId()).ToDataRes(types.String)
+	},
+	"okta.inlineHook.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaInlineHook).GetName()).ToDataRes(types.String)
+	},
+	"okta.inlineHook.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaInlineHook).GetType()).ToDataRes(types.String)
+	},
+	"okta.inlineHook.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaInlineHook).GetStatus()).ToDataRes(types.String)
+	},
+	"okta.inlineHook.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaInlineHook).GetVersion()).ToDataRes(types.String)
+	},
+	"okta.inlineHook.channelType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaInlineHook).GetChannelType()).ToDataRes(types.String)
+	},
+	"okta.inlineHook.channelUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaInlineHook).GetChannelUri()).ToDataRes(types.String)
+	},
+	"okta.inlineHook.channelAuthScheme": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaInlineHook).GetChannelAuthScheme()).ToDataRes(types.Dict)
+	},
+	"okta.inlineHook.metadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaInlineHook).GetMetadata()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"okta.inlineHook.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaInlineHook).GetCreated()).ToDataRes(types.Time)
+	},
+	"okta.inlineHook.lastUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaInlineHook).GetLastUpdated()).ToDataRes(types.Time)
+	},
+	"okta.hookKey.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaHookKey).GetId()).ToDataRes(types.String)
+	},
+	"okta.hookKey.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaHookKey).GetName()).ToDataRes(types.String)
+	},
+	"okta.hookKey.keyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaHookKey).GetKeyId()).ToDataRes(types.String)
+	},
+	"okta.hookKey.isUsed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaHookKey).GetIsUsed()).ToDataRes(types.Bool)
+	},
+	"okta.hookKey.publicKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaHookKey).GetPublicKey()).ToDataRes(types.Dict)
+	},
+	"okta.hookKey.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaHookKey).GetCreated()).ToDataRes(types.Time)
+	},
+	"okta.hookKey.lastUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaHookKey).GetLastUpdated()).ToDataRes(types.Time)
+	},
+	"okta.logStream.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaLogStream).GetId()).ToDataRes(types.String)
+	},
+	"okta.logStream.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaLogStream).GetName()).ToDataRes(types.String)
+	},
+	"okta.logStream.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaLogStream).GetType()).ToDataRes(types.String)
+	},
+	"okta.logStream.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaLogStream).GetStatus()).ToDataRes(types.String)
+	},
+	"okta.logStream.settings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaLogStream).GetSettings()).ToDataRes(types.Dict)
+	},
+	"okta.logStream.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaLogStream).GetCreated()).ToDataRes(types.Time)
+	},
+	"okta.logStream.lastUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaLogStream).GetLastUpdated()).ToDataRes(types.Time)
+	},
+	"okta.apiServiceIntegration.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApiServiceIntegration).GetId()).ToDataRes(types.String)
+	},
+	"okta.apiServiceIntegration.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApiServiceIntegration).GetName()).ToDataRes(types.String)
+	},
+	"okta.apiServiceIntegration.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApiServiceIntegration).GetType()).ToDataRes(types.String)
+	},
+	"okta.apiServiceIntegration.grantedScopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApiServiceIntegration).GetGrantedScopes()).ToDataRes(types.Array(types.String))
+	},
+	"okta.apiServiceIntegration.configGuideUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApiServiceIntegration).GetConfigGuideUrl()).ToDataRes(types.String)
+	},
+	"okta.apiServiceIntegration.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApiServiceIntegration).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"okta.apiServiceIntegration.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApiServiceIntegration).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"okta.attackProtection.preventBruteForceLockoutFromUnknownDevices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaAttackProtection).GetPreventBruteForceLockoutFromUnknownDevices()).ToDataRes(types.Bool)
+	},
+	"okta.attackProtection.verifyKnowledgeSecondWhen2faRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaAttackProtection).GetVerifyKnowledgeSecondWhen2faRequired()).ToDataRes(types.Bool)
+	},
+	"okta.behaviorRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaBehaviorRule).GetId()).ToDataRes(types.String)
+	},
+	"okta.behaviorRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaBehaviorRule).GetName()).ToDataRes(types.String)
+	},
+	"okta.behaviorRule.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaBehaviorRule).GetType()).ToDataRes(types.String)
+	},
+	"okta.behaviorRule.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaBehaviorRule).GetStatus()).ToDataRes(types.String)
+	},
+	"okta.behaviorRule.settings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaBehaviorRule).GetSettings()).ToDataRes(types.Dict)
+	},
+	"okta.behaviorRule.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaBehaviorRule).GetCreated()).ToDataRes(types.Time)
+	},
+	"okta.behaviorRule.lastUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaBehaviorRule).GetLastUpdated()).ToDataRes(types.Time)
+	},
+	"okta.riskProvider.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaRiskProvider).GetId()).ToDataRes(types.String)
+	},
+	"okta.riskProvider.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaRiskProvider).GetName()).ToDataRes(types.String)
+	},
+	"okta.riskProvider.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaRiskProvider).GetAction()).ToDataRes(types.String)
+	},
+	"okta.riskProvider.clientId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaRiskProvider).GetClientId()).ToDataRes(types.String)
+	},
+	"okta.riskProvider.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaRiskProvider).GetCreated()).ToDataRes(types.Time)
+	},
+	"okta.riskProvider.lastUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaRiskProvider).GetLastUpdated()).ToDataRes(types.Time)
+	},
+	"okta.device.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaDevice).GetId()).ToDataRes(types.String)
+	},
+	"okta.device.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaDevice).GetStatus()).ToDataRes(types.String)
+	},
+	"okta.device.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaDevice).GetResourceType()).ToDataRes(types.String)
+	},
+	"okta.device.profile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaDevice).GetProfile()).ToDataRes(types.Dict)
+	},
+	"okta.device.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaDevice).GetCreated()).ToDataRes(types.Time)
+	},
+	"okta.device.lastUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaDevice).GetLastUpdated()).ToDataRes(types.Time)
+	},
+	"okta.device.users": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaDevice).GetUsers()).ToDataRes(types.Array(types.Resource("okta.user")))
+	},
+	"okta.deviceAssurancePolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaDeviceAssurancePolicy).GetId()).ToDataRes(types.String)
+	},
+	"okta.deviceAssurancePolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaDeviceAssurancePolicy).GetName()).ToDataRes(types.String)
+	},
+	"okta.deviceAssurancePolicy.platform": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaDeviceAssurancePolicy).GetPlatform()).ToDataRes(types.String)
+	},
+	"okta.deviceAssurancePolicy.settings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaDeviceAssurancePolicy).GetSettings()).ToDataRes(types.Dict)
+	},
+	"okta.deviceAssurancePolicy.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaDeviceAssurancePolicy).GetCreated()).ToDataRes(types.Time)
+	},
+	"okta.deviceAssurancePolicy.lastUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaDeviceAssurancePolicy).GetLastUpdated()).ToDataRes(types.Time)
+	},
+	"okta.securityEventsProvider.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaSecurityEventsProvider).GetId()).ToDataRes(types.String)
+	},
+	"okta.securityEventsProvider.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaSecurityEventsProvider).GetName()).ToDataRes(types.String)
+	},
+	"okta.securityEventsProvider.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaSecurityEventsProvider).GetType()).ToDataRes(types.String)
+	},
+	"okta.securityEventsProvider.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaSecurityEventsProvider).GetStatus()).ToDataRes(types.String)
+	},
+	"okta.securityEventsProvider.settings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaSecurityEventsProvider).GetSettings()).ToDataRes(types.Dict)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1190,6 +1686,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"okta.authorizationServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOkta).AuthorizationServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.resourceSets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOkta).ResourceSets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.eventHooks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOkta).EventHooks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.inlineHooks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOkta).InlineHooks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.hookKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOkta).HookKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.logStreams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOkta).LogStreams, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.apiServiceIntegrations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOkta).ApiServiceIntegrations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.behaviorRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOkta).BehaviorRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.riskProviders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOkta).RiskProviders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.devices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOkta).Devices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.deviceAssurancePolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOkta).DeviceAssurancePolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.securityEventsProviders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOkta).SecurityEventsProviders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.organization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1560,6 +2100,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOktaRole).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"okta.role.customRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaRole).CustomRole, ok = plugin.RawToTValue[*mqlOktaCustomRole](v.Value, v.Error)
+		return
+	},
+	"okta.role.resourceSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaRole).ResourceSet, ok = plugin.RawToTValue[*mqlOktaResourceSet](v.Value, v.Error)
+		return
+	},
+	"okta.role.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaRole).User, ok = plugin.RawToTValue[*mqlOktaUser](v.Value, v.Error)
+		return
+	},
+	"okta.role.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaRole).Group, ok = plugin.RawToTValue[*mqlOktaGroup](v.Value, v.Error)
+		return
+	},
 	"okta.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaGroup).__id, ok = v.Value.(string)
 		return
@@ -1684,6 +2240,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOktaApplication).SigningKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"okta.application.assignedUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplication).AssignedUsers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.application.assignedGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplication).AssignedGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.application.scopeConsentGrants": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplication).ScopeConsentGrants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.application.adminRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplication).AdminRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"okta.application.key.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaApplicationKey).__id, ok = v.Value.(string)
 		return
@@ -1746,6 +2318,110 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"okta.application.key.e": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaApplicationKey).E, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.application.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplicationUser).__id, ok = v.Value.(string)
+		return
+	},
+	"okta.application.user.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplicationUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.application.user.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplicationUser).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.application.user.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplicationUser).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.application.user.syncState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplicationUser).SyncState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.application.user.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplicationUser).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.application.user.lastUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplicationUser).LastUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.application.user.lastSync": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplicationUser).LastSync, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.application.user.credentials": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplicationUser).Credentials, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"okta.application.user.profile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplicationUser).Profile, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"okta.application.user.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplicationUser).User, ok = plugin.RawToTValue[*mqlOktaUser](v.Value, v.Error)
+		return
+	},
+	"okta.application.groupAssignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplicationGroupAssignment).__id, ok = v.Value.(string)
+		return
+	},
+	"okta.application.groupAssignment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplicationGroupAssignment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.application.groupAssignment.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplicationGroupAssignment).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"okta.application.groupAssignment.profile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplicationGroupAssignment).Profile, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"okta.application.groupAssignment.lastUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplicationGroupAssignment).LastUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.application.groupAssignment.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplicationGroupAssignment).Group, ok = plugin.RawToTValue[*mqlOktaGroup](v.Value, v.Error)
+		return
+	},
+	"okta.application.scopeConsentGrant.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplicationScopeConsentGrant).__id, ok = v.Value.(string)
+		return
+	},
+	"okta.application.scopeConsentGrant.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplicationScopeConsentGrant).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.application.scopeConsentGrant.scopeId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplicationScopeConsentGrant).ScopeId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.application.scopeConsentGrant.issuer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplicationScopeConsentGrant).Issuer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.application.scopeConsentGrant.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplicationScopeConsentGrant).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.application.scopeConsentGrant.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplicationScopeConsentGrant).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.application.scopeConsentGrant.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplicationScopeConsentGrant).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.application.scopeConsentGrant.lastUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplicationScopeConsentGrant).LastUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.application.scopeConsentGrant.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplicationScopeConsentGrant).User, ok = plugin.RawToTValue[*mqlOktaUser](v.Value, v.Error)
 		return
 	},
 	"okta.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2002,6 +2678,90 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"okta.customRole.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaCustomRole).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.resourceSet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaResourceSet).__id, ok = v.Value.(string)
+		return
+	},
+	"okta.resourceSet.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaResourceSet).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.resourceSet.label": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaResourceSet).Label, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.resourceSet.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaResourceSet).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.resourceSet.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaResourceSet).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.resourceSet.lastUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaResourceSet).LastUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.resourceSet.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaResourceSet).Resources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.resourceSet.bindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaResourceSet).Bindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.resourceSet.resource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaResourceSetResource).__id, ok = v.Value.(string)
+		return
+	},
+	"okta.resourceSet.resource.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaResourceSetResource).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.resourceSet.resource.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaResourceSetResource).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.resourceSet.resource.href": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaResourceSetResource).Href, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.resourceSet.resource.orn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaResourceSetResource).Orn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.resourceSet.resource.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaResourceSetResource).Group, ok = plugin.RawToTValue[*mqlOktaGroup](v.Value, v.Error)
+		return
+	},
+	"okta.resourceSet.resource.application": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaResourceSetResource).Application, ok = plugin.RawToTValue[*mqlOktaApplication](v.Value, v.Error)
+		return
+	},
+	"okta.resourceSet.resource.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaResourceSetResource).User, ok = plugin.RawToTValue[*mqlOktaUser](v.Value, v.Error)
+		return
+	},
+	"okta.resourceSet.binding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaResourceSetBinding).__id, ok = v.Value.(string)
+		return
+	},
+	"okta.resourceSet.binding.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaResourceSetBinding).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.resourceSet.binding.customRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaResourceSetBinding).CustomRole, ok = plugin.RawToTValue[*mqlOktaCustomRole](v.Value, v.Error)
+		return
+	},
+	"okta.resourceSet.binding.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaResourceSetBinding).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.resourceSet.binding.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaResourceSetBinding).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.identityProvider.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2448,6 +3208,358 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOktaAuthorizationServerKey).E, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"okta.eventHook.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaEventHook).__id, ok = v.Value.(string)
+		return
+	},
+	"okta.eventHook.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaEventHook).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.eventHook.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaEventHook).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.eventHook.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaEventHook).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.eventHook.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaEventHook).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.eventHook.verificationStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaEventHook).VerificationStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.eventHook.events": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaEventHook).Events, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.eventHook.channelType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaEventHook).ChannelType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.eventHook.channelUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaEventHook).ChannelUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.eventHook.channelAuthScheme": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaEventHook).ChannelAuthScheme, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"okta.eventHook.headers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaEventHook).Headers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.eventHook.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaEventHook).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.eventHook.lastUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaEventHook).LastUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.inlineHook.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaInlineHook).__id, ok = v.Value.(string)
+		return
+	},
+	"okta.inlineHook.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaInlineHook).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.inlineHook.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaInlineHook).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.inlineHook.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaInlineHook).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.inlineHook.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaInlineHook).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.inlineHook.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaInlineHook).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.inlineHook.channelType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaInlineHook).ChannelType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.inlineHook.channelUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaInlineHook).ChannelUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.inlineHook.channelAuthScheme": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaInlineHook).ChannelAuthScheme, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"okta.inlineHook.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaInlineHook).Metadata, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"okta.inlineHook.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaInlineHook).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.inlineHook.lastUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaInlineHook).LastUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.hookKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaHookKey).__id, ok = v.Value.(string)
+		return
+	},
+	"okta.hookKey.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaHookKey).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.hookKey.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaHookKey).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.hookKey.keyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaHookKey).KeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.hookKey.isUsed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaHookKey).IsUsed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"okta.hookKey.publicKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaHookKey).PublicKey, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"okta.hookKey.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaHookKey).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.hookKey.lastUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaHookKey).LastUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.logStream.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaLogStream).__id, ok = v.Value.(string)
+		return
+	},
+	"okta.logStream.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaLogStream).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.logStream.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaLogStream).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.logStream.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaLogStream).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.logStream.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaLogStream).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.logStream.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaLogStream).Settings, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"okta.logStream.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaLogStream).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.logStream.lastUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaLogStream).LastUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.apiServiceIntegration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApiServiceIntegration).__id, ok = v.Value.(string)
+		return
+	},
+	"okta.apiServiceIntegration.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApiServiceIntegration).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.apiServiceIntegration.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApiServiceIntegration).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.apiServiceIntegration.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApiServiceIntegration).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.apiServiceIntegration.grantedScopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApiServiceIntegration).GrantedScopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.apiServiceIntegration.configGuideUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApiServiceIntegration).ConfigGuideUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.apiServiceIntegration.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApiServiceIntegration).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.apiServiceIntegration.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApiServiceIntegration).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.attackProtection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaAttackProtection).__id, ok = v.Value.(string)
+		return
+	},
+	"okta.attackProtection.preventBruteForceLockoutFromUnknownDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaAttackProtection).PreventBruteForceLockoutFromUnknownDevices, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"okta.attackProtection.verifyKnowledgeSecondWhen2faRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaAttackProtection).VerifyKnowledgeSecondWhen2faRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"okta.behaviorRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaBehaviorRule).__id, ok = v.Value.(string)
+		return
+	},
+	"okta.behaviorRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaBehaviorRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.behaviorRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaBehaviorRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.behaviorRule.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaBehaviorRule).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.behaviorRule.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaBehaviorRule).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.behaviorRule.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaBehaviorRule).Settings, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"okta.behaviorRule.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaBehaviorRule).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.behaviorRule.lastUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaBehaviorRule).LastUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.riskProvider.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaRiskProvider).__id, ok = v.Value.(string)
+		return
+	},
+	"okta.riskProvider.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaRiskProvider).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.riskProvider.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaRiskProvider).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.riskProvider.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaRiskProvider).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.riskProvider.clientId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaRiskProvider).ClientId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.riskProvider.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaRiskProvider).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.riskProvider.lastUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaRiskProvider).LastUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.device.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaDevice).__id, ok = v.Value.(string)
+		return
+	},
+	"okta.device.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaDevice).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.device.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaDevice).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.device.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaDevice).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.device.profile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaDevice).Profile, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"okta.device.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaDevice).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.device.lastUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaDevice).LastUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.device.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaDevice).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.deviceAssurancePolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaDeviceAssurancePolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"okta.deviceAssurancePolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaDeviceAssurancePolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.deviceAssurancePolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaDeviceAssurancePolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.deviceAssurancePolicy.platform": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaDeviceAssurancePolicy).Platform, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.deviceAssurancePolicy.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaDeviceAssurancePolicy).Settings, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"okta.deviceAssurancePolicy.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaDeviceAssurancePolicy).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.deviceAssurancePolicy.lastUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaDeviceAssurancePolicy).LastUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.securityEventsProvider.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaSecurityEventsProvider).__id, ok = v.Value.(string)
+		return
+	},
+	"okta.securityEventsProvider.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaSecurityEventsProvider).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.securityEventsProvider.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaSecurityEventsProvider).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.securityEventsProvider.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaSecurityEventsProvider).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.securityEventsProvider.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaSecurityEventsProvider).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.securityEventsProvider.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaSecurityEventsProvider).Settings, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -2477,18 +3589,29 @@ type mqlOkta struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlOktaInternal it will be used here
-	Users                plugin.TValue[[]any]
-	Groups               plugin.TValue[[]any]
-	GroupRules           plugin.TValue[[]any]
-	Domains              plugin.TValue[[]any]
-	Applications         plugin.TValue[[]any]
-	TrustedOrigins       plugin.TValue[[]any]
-	Networks             plugin.TValue[[]any]
-	CustomRoles          plugin.TValue[[]any]
-	Authenticators       plugin.TValue[[]any]
-	ApiTokens            plugin.TValue[[]any]
-	IdentityProviders    plugin.TValue[[]any]
-	AuthorizationServers plugin.TValue[[]any]
+	Users                   plugin.TValue[[]any]
+	Groups                  plugin.TValue[[]any]
+	GroupRules              plugin.TValue[[]any]
+	Domains                 plugin.TValue[[]any]
+	Applications            plugin.TValue[[]any]
+	TrustedOrigins          plugin.TValue[[]any]
+	Networks                plugin.TValue[[]any]
+	CustomRoles             plugin.TValue[[]any]
+	Authenticators          plugin.TValue[[]any]
+	ApiTokens               plugin.TValue[[]any]
+	IdentityProviders       plugin.TValue[[]any]
+	AuthorizationServers    plugin.TValue[[]any]
+	ResourceSets            plugin.TValue[[]any]
+	EventHooks              plugin.TValue[[]any]
+	InlineHooks             plugin.TValue[[]any]
+	HookKeys                plugin.TValue[[]any]
+	LogStreams              plugin.TValue[[]any]
+	ApiServiceIntegrations  plugin.TValue[[]any]
+	BehaviorRules           plugin.TValue[[]any]
+	RiskProviders           plugin.TValue[[]any]
+	Devices                 plugin.TValue[[]any]
+	DeviceAssurancePolicies plugin.TValue[[]any]
+	SecurityEventsProviders plugin.TValue[[]any]
 }
 
 // createOkta creates a new instance of this resource
@@ -2717,6 +3840,182 @@ func (c *mqlOkta) GetAuthorizationServers() *plugin.TValue[[]any] {
 		}
 
 		return c.authorizationServers()
+	})
+}
+
+func (c *mqlOkta) GetResourceSets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ResourceSets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta", c.__id, "resourceSets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.resourceSets()
+	})
+}
+
+func (c *mqlOkta) GetEventHooks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EventHooks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta", c.__id, "eventHooks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.eventHooks()
+	})
+}
+
+func (c *mqlOkta) GetInlineHooks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InlineHooks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta", c.__id, "inlineHooks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.inlineHooks()
+	})
+}
+
+func (c *mqlOkta) GetHookKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.HookKeys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta", c.__id, "hookKeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.hookKeys()
+	})
+}
+
+func (c *mqlOkta) GetLogStreams() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LogStreams, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta", c.__id, "logStreams")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.logStreams()
+	})
+}
+
+func (c *mqlOkta) GetApiServiceIntegrations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ApiServiceIntegrations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta", c.__id, "apiServiceIntegrations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.apiServiceIntegrations()
+	})
+}
+
+func (c *mqlOkta) GetBehaviorRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BehaviorRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta", c.__id, "behaviorRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.behaviorRules()
+	})
+}
+
+func (c *mqlOkta) GetRiskProviders() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RiskProviders, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta", c.__id, "riskProviders")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.riskProviders()
+	})
+}
+
+func (c *mqlOkta) GetDevices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Devices, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta", c.__id, "devices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.devices()
+	})
+}
+
+func (c *mqlOkta) GetDeviceAssurancePolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DeviceAssurancePolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta", c.__id, "deviceAssurancePolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.deviceAssurancePolicies()
+	})
+}
+
+func (c *mqlOkta) GetSecurityEventsProviders() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityEventsProviders, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta", c.__id, "securityEventsProviders")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityEventsProviders()
 	})
 }
 
@@ -3570,7 +4869,7 @@ func (c *mqlOktaApiToken) GetUser() *plugin.TValue[*mqlOktaUser] {
 type mqlOktaRole struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOktaRoleInternal it will be used here
+	mqlOktaRoleInternal
 	Id             plugin.TValue[string]
 	AssignmentType plugin.TValue[string]
 	Created        plugin.TValue[*time.Time]
@@ -3578,6 +4877,10 @@ type mqlOktaRole struct {
 	LastUpdated    plugin.TValue[*time.Time]
 	Status         plugin.TValue[string]
 	Type           plugin.TValue[string]
+	CustomRole     plugin.TValue[*mqlOktaCustomRole]
+	ResourceSet    plugin.TValue[*mqlOktaResourceSet]
+	User           plugin.TValue[*mqlOktaUser]
+	Group          plugin.TValue[*mqlOktaGroup]
 }
 
 // createOktaRole creates a new instance of this resource
@@ -3643,6 +4946,70 @@ func (c *mqlOktaRole) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlOktaRole) GetType() *plugin.TValue[string] {
 	return &c.Type
+}
+
+func (c *mqlOktaRole) GetCustomRole() *plugin.TValue[*mqlOktaCustomRole] {
+	return plugin.GetOrCompute[*mqlOktaCustomRole](&c.CustomRole, func() (*mqlOktaCustomRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.role", c.__id, "customRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOktaCustomRole), nil
+			}
+		}
+
+		return c.customRole()
+	})
+}
+
+func (c *mqlOktaRole) GetResourceSet() *plugin.TValue[*mqlOktaResourceSet] {
+	return plugin.GetOrCompute[*mqlOktaResourceSet](&c.ResourceSet, func() (*mqlOktaResourceSet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.role", c.__id, "resourceSet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOktaResourceSet), nil
+			}
+		}
+
+		return c.resourceSet()
+	})
+}
+
+func (c *mqlOktaRole) GetUser() *plugin.TValue[*mqlOktaUser] {
+	return plugin.GetOrCompute[*mqlOktaUser](&c.User, func() (*mqlOktaUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.role", c.__id, "user")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOktaUser), nil
+			}
+		}
+
+		return c.user()
+	})
+}
+
+func (c *mqlOktaRole) GetGroup() *plugin.TValue[*mqlOktaGroup] {
+	return plugin.GetOrCompute[*mqlOktaGroup](&c.Group, func() (*mqlOktaGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.role", c.__id, "group")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOktaGroup), nil
+			}
+		}
+
+		return c.group()
+	})
 }
 
 // mqlOktaGroup for the okta.group resource
@@ -3827,20 +5194,24 @@ type mqlOktaApplication struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlOktaApplicationInternal it will be used here
-	Id          plugin.TValue[string]
-	Name        plugin.TValue[string]
-	Label       plugin.TValue[string]
-	Created     plugin.TValue[*time.Time]
-	LastUpdated plugin.TValue[*time.Time]
-	Credentials plugin.TValue[any]
-	Features    plugin.TValue[[]any]
-	Licensing   plugin.TValue[any]
-	Profile     plugin.TValue[any]
-	Settings    plugin.TValue[any]
-	SignOnMode  plugin.TValue[string]
-	Status      plugin.TValue[string]
-	Visibility  plugin.TValue[any]
-	SigningKeys plugin.TValue[[]any]
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Label              plugin.TValue[string]
+	Created            plugin.TValue[*time.Time]
+	LastUpdated        plugin.TValue[*time.Time]
+	Credentials        plugin.TValue[any]
+	Features           plugin.TValue[[]any]
+	Licensing          plugin.TValue[any]
+	Profile            plugin.TValue[any]
+	Settings           plugin.TValue[any]
+	SignOnMode         plugin.TValue[string]
+	Status             plugin.TValue[string]
+	Visibility         plugin.TValue[any]
+	SigningKeys        plugin.TValue[[]any]
+	AssignedUsers      plugin.TValue[[]any]
+	AssignedGroups     plugin.TValue[[]any]
+	ScopeConsentGrants plugin.TValue[[]any]
+	AdminRoles         plugin.TValue[[]any]
 }
 
 // createOktaApplication creates a new instance of this resource
@@ -3945,6 +5316,70 @@ func (c *mqlOktaApplication) GetSigningKeys() *plugin.TValue[[]any] {
 		}
 
 		return c.signingKeys()
+	})
+}
+
+func (c *mqlOktaApplication) GetAssignedUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AssignedUsers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.application", c.__id, "assignedUsers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.assignedUsers()
+	})
+}
+
+func (c *mqlOktaApplication) GetAssignedGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AssignedGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.application", c.__id, "assignedGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.assignedGroups()
+	})
+}
+
+func (c *mqlOktaApplication) GetScopeConsentGrants() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ScopeConsentGrants, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.application", c.__id, "scopeConsentGrants")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.scopeConsentGrants()
+	})
+}
+
+func (c *mqlOktaApplication) GetAdminRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AdminRoles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.application", c.__id, "adminRoles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.adminRoles()
 	})
 }
 
@@ -4065,6 +5500,274 @@ func (c *mqlOktaApplicationKey) GetN() *plugin.TValue[string] {
 
 func (c *mqlOktaApplicationKey) GetE() *plugin.TValue[string] {
 	return &c.E
+}
+
+// mqlOktaApplicationUser for the okta.application.user resource
+type mqlOktaApplicationUser struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOktaApplicationUserInternal it will be used here
+	Id          plugin.TValue[string]
+	Scope       plugin.TValue[string]
+	Status      plugin.TValue[string]
+	SyncState   plugin.TValue[string]
+	Created     plugin.TValue[*time.Time]
+	LastUpdated plugin.TValue[*time.Time]
+	LastSync    plugin.TValue[*time.Time]
+	Credentials plugin.TValue[any]
+	Profile     plugin.TValue[any]
+	User        plugin.TValue[*mqlOktaUser]
+}
+
+// createOktaApplicationUser creates a new instance of this resource
+func createOktaApplicationUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOktaApplicationUser{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("okta.application.user", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOktaApplicationUser) MqlName() string {
+	return "okta.application.user"
+}
+
+func (c *mqlOktaApplicationUser) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOktaApplicationUser) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOktaApplicationUser) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+func (c *mqlOktaApplicationUser) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlOktaApplicationUser) GetSyncState() *plugin.TValue[string] {
+	return &c.SyncState
+}
+
+func (c *mqlOktaApplicationUser) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOktaApplicationUser) GetLastUpdated() *plugin.TValue[*time.Time] {
+	return &c.LastUpdated
+}
+
+func (c *mqlOktaApplicationUser) GetLastSync() *plugin.TValue[*time.Time] {
+	return &c.LastSync
+}
+
+func (c *mqlOktaApplicationUser) GetCredentials() *plugin.TValue[any] {
+	return &c.Credentials
+}
+
+func (c *mqlOktaApplicationUser) GetProfile() *plugin.TValue[any] {
+	return &c.Profile
+}
+
+func (c *mqlOktaApplicationUser) GetUser() *plugin.TValue[*mqlOktaUser] {
+	return plugin.GetOrCompute[*mqlOktaUser](&c.User, func() (*mqlOktaUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.application.user", c.__id, "user")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOktaUser), nil
+			}
+		}
+
+		return c.user()
+	})
+}
+
+// mqlOktaApplicationGroupAssignment for the okta.application.groupAssignment resource
+type mqlOktaApplicationGroupAssignment struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOktaApplicationGroupAssignmentInternal it will be used here
+	Id          plugin.TValue[string]
+	Priority    plugin.TValue[int64]
+	Profile     plugin.TValue[any]
+	LastUpdated plugin.TValue[*time.Time]
+	Group       plugin.TValue[*mqlOktaGroup]
+}
+
+// createOktaApplicationGroupAssignment creates a new instance of this resource
+func createOktaApplicationGroupAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOktaApplicationGroupAssignment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("okta.application.groupAssignment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOktaApplicationGroupAssignment) MqlName() string {
+	return "okta.application.groupAssignment"
+}
+
+func (c *mqlOktaApplicationGroupAssignment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOktaApplicationGroupAssignment) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOktaApplicationGroupAssignment) GetPriority() *plugin.TValue[int64] {
+	return &c.Priority
+}
+
+func (c *mqlOktaApplicationGroupAssignment) GetProfile() *plugin.TValue[any] {
+	return &c.Profile
+}
+
+func (c *mqlOktaApplicationGroupAssignment) GetLastUpdated() *plugin.TValue[*time.Time] {
+	return &c.LastUpdated
+}
+
+func (c *mqlOktaApplicationGroupAssignment) GetGroup() *plugin.TValue[*mqlOktaGroup] {
+	return plugin.GetOrCompute[*mqlOktaGroup](&c.Group, func() (*mqlOktaGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.application.groupAssignment", c.__id, "group")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOktaGroup), nil
+			}
+		}
+
+		return c.group()
+	})
+}
+
+// mqlOktaApplicationScopeConsentGrant for the okta.application.scopeConsentGrant resource
+type mqlOktaApplicationScopeConsentGrant struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOktaApplicationScopeConsentGrantInternal
+	Id          plugin.TValue[string]
+	ScopeId     plugin.TValue[string]
+	Issuer      plugin.TValue[string]
+	Status      plugin.TValue[string]
+	Source      plugin.TValue[string]
+	Created     plugin.TValue[*time.Time]
+	LastUpdated plugin.TValue[*time.Time]
+	User        plugin.TValue[*mqlOktaUser]
+}
+
+// createOktaApplicationScopeConsentGrant creates a new instance of this resource
+func createOktaApplicationScopeConsentGrant(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOktaApplicationScopeConsentGrant{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("okta.application.scopeConsentGrant", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOktaApplicationScopeConsentGrant) MqlName() string {
+	return "okta.application.scopeConsentGrant"
+}
+
+func (c *mqlOktaApplicationScopeConsentGrant) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOktaApplicationScopeConsentGrant) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOktaApplicationScopeConsentGrant) GetScopeId() *plugin.TValue[string] {
+	return &c.ScopeId
+}
+
+func (c *mqlOktaApplicationScopeConsentGrant) GetIssuer() *plugin.TValue[string] {
+	return &c.Issuer
+}
+
+func (c *mqlOktaApplicationScopeConsentGrant) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlOktaApplicationScopeConsentGrant) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlOktaApplicationScopeConsentGrant) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOktaApplicationScopeConsentGrant) GetLastUpdated() *plugin.TValue[*time.Time] {
+	return &c.LastUpdated
+}
+
+func (c *mqlOktaApplicationScopeConsentGrant) GetUser() *plugin.TValue[*mqlOktaUser] {
+	return plugin.GetOrCompute[*mqlOktaUser](&c.User, func() (*mqlOktaUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.application.scopeConsentGrant", c.__id, "user")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOktaUser), nil
+			}
+		}
+
+		return c.user()
+	})
 }
 
 // mqlOktaDomain for the okta.domain resource
@@ -4630,7 +6333,12 @@ func createOktaCustomRole(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("okta.customRole", res.__id)
@@ -4664,7 +6372,317 @@ func (c *mqlOktaCustomRole) GetDescription() *plugin.TValue[string] {
 }
 
 func (c *mqlOktaCustomRole) GetPermissions() *plugin.TValue[[]any] {
-	return &c.Permissions
+	return plugin.GetOrCompute[[]any](&c.Permissions, func() ([]any, error) {
+		return c.permissions()
+	})
+}
+
+// mqlOktaResourceSet for the okta.resourceSet resource
+type mqlOktaResourceSet struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOktaResourceSetInternal it will be used here
+	Id          plugin.TValue[string]
+	Label       plugin.TValue[string]
+	Description plugin.TValue[string]
+	Created     plugin.TValue[*time.Time]
+	LastUpdated plugin.TValue[*time.Time]
+	Resources   plugin.TValue[[]any]
+	Bindings    plugin.TValue[[]any]
+}
+
+// createOktaResourceSet creates a new instance of this resource
+func createOktaResourceSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOktaResourceSet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("okta.resourceSet", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOktaResourceSet) MqlName() string {
+	return "okta.resourceSet"
+}
+
+func (c *mqlOktaResourceSet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOktaResourceSet) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOktaResourceSet) GetLabel() *plugin.TValue[string] {
+	return &c.Label
+}
+
+func (c *mqlOktaResourceSet) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOktaResourceSet) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOktaResourceSet) GetLastUpdated() *plugin.TValue[*time.Time] {
+	return &c.LastUpdated
+}
+
+func (c *mqlOktaResourceSet) GetResources() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Resources, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.resourceSet", c.__id, "resources")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.resources()
+	})
+}
+
+func (c *mqlOktaResourceSet) GetBindings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Bindings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.resourceSet", c.__id, "bindings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.bindings()
+	})
+}
+
+// mqlOktaResourceSetResource for the okta.resourceSet.resource resource
+type mqlOktaResourceSetResource struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOktaResourceSetResourceInternal
+	Id          plugin.TValue[string]
+	Description plugin.TValue[string]
+	Href        plugin.TValue[string]
+	Orn         plugin.TValue[string]
+	Group       plugin.TValue[*mqlOktaGroup]
+	Application plugin.TValue[*mqlOktaApplication]
+	User        plugin.TValue[*mqlOktaUser]
+}
+
+// createOktaResourceSetResource creates a new instance of this resource
+func createOktaResourceSetResource(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOktaResourceSetResource{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("okta.resourceSet.resource", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOktaResourceSetResource) MqlName() string {
+	return "okta.resourceSet.resource"
+}
+
+func (c *mqlOktaResourceSetResource) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOktaResourceSetResource) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOktaResourceSetResource) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOktaResourceSetResource) GetHref() *plugin.TValue[string] {
+	return &c.Href
+}
+
+func (c *mqlOktaResourceSetResource) GetOrn() *plugin.TValue[string] {
+	return &c.Orn
+}
+
+func (c *mqlOktaResourceSetResource) GetGroup() *plugin.TValue[*mqlOktaGroup] {
+	return plugin.GetOrCompute[*mqlOktaGroup](&c.Group, func() (*mqlOktaGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.resourceSet.resource", c.__id, "group")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOktaGroup), nil
+			}
+		}
+
+		return c.group()
+	})
+}
+
+func (c *mqlOktaResourceSetResource) GetApplication() *plugin.TValue[*mqlOktaApplication] {
+	return plugin.GetOrCompute[*mqlOktaApplication](&c.Application, func() (*mqlOktaApplication, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.resourceSet.resource", c.__id, "application")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOktaApplication), nil
+			}
+		}
+
+		return c.application()
+	})
+}
+
+func (c *mqlOktaResourceSetResource) GetUser() *plugin.TValue[*mqlOktaUser] {
+	return plugin.GetOrCompute[*mqlOktaUser](&c.User, func() (*mqlOktaUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.resourceSet.resource", c.__id, "user")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOktaUser), nil
+			}
+		}
+
+		return c.user()
+	})
+}
+
+// mqlOktaResourceSetBinding for the okta.resourceSet.binding resource
+type mqlOktaResourceSetBinding struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOktaResourceSetBindingInternal
+	Id         plugin.TValue[string]
+	CustomRole plugin.TValue[*mqlOktaCustomRole]
+	Users      plugin.TValue[[]any]
+	Groups     plugin.TValue[[]any]
+}
+
+// createOktaResourceSetBinding creates a new instance of this resource
+func createOktaResourceSetBinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOktaResourceSetBinding{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("okta.resourceSet.binding", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOktaResourceSetBinding) MqlName() string {
+	return "okta.resourceSet.binding"
+}
+
+func (c *mqlOktaResourceSetBinding) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOktaResourceSetBinding) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOktaResourceSetBinding) GetCustomRole() *plugin.TValue[*mqlOktaCustomRole] {
+	return plugin.GetOrCompute[*mqlOktaCustomRole](&c.CustomRole, func() (*mqlOktaCustomRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.resourceSet.binding", c.__id, "customRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOktaCustomRole), nil
+			}
+		}
+
+		return c.customRole()
+	})
+}
+
+func (c *mqlOktaResourceSetBinding) GetUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.resourceSet.binding", c.__id, "users")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.users()
+	})
+}
+
+func (c *mqlOktaResourceSetBinding) GetGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Groups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.resourceSet.binding", c.__id, "groups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.groups()
+	})
 }
 
 // mqlOktaIdentityProvider for the okta.identityProvider resource
@@ -5604,4 +7622,880 @@ func (c *mqlOktaAuthorizationServerKey) GetN() *plugin.TValue[string] {
 
 func (c *mqlOktaAuthorizationServerKey) GetE() *plugin.TValue[string] {
 	return &c.E
+}
+
+// mqlOktaEventHook for the okta.eventHook resource
+type mqlOktaEventHook struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOktaEventHookInternal it will be used here
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Description        plugin.TValue[string]
+	Status             plugin.TValue[string]
+	VerificationStatus plugin.TValue[string]
+	Events             plugin.TValue[[]any]
+	ChannelType        plugin.TValue[string]
+	ChannelUri         plugin.TValue[string]
+	ChannelAuthScheme  plugin.TValue[any]
+	Headers            plugin.TValue[[]any]
+	Created            plugin.TValue[*time.Time]
+	LastUpdated        plugin.TValue[*time.Time]
+}
+
+// createOktaEventHook creates a new instance of this resource
+func createOktaEventHook(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOktaEventHook{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("okta.eventHook", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOktaEventHook) MqlName() string {
+	return "okta.eventHook"
+}
+
+func (c *mqlOktaEventHook) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOktaEventHook) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOktaEventHook) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOktaEventHook) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOktaEventHook) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlOktaEventHook) GetVerificationStatus() *plugin.TValue[string] {
+	return &c.VerificationStatus
+}
+
+func (c *mqlOktaEventHook) GetEvents() *plugin.TValue[[]any] {
+	return &c.Events
+}
+
+func (c *mqlOktaEventHook) GetChannelType() *plugin.TValue[string] {
+	return &c.ChannelType
+}
+
+func (c *mqlOktaEventHook) GetChannelUri() *plugin.TValue[string] {
+	return &c.ChannelUri
+}
+
+func (c *mqlOktaEventHook) GetChannelAuthScheme() *plugin.TValue[any] {
+	return &c.ChannelAuthScheme
+}
+
+func (c *mqlOktaEventHook) GetHeaders() *plugin.TValue[[]any] {
+	return &c.Headers
+}
+
+func (c *mqlOktaEventHook) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOktaEventHook) GetLastUpdated() *plugin.TValue[*time.Time] {
+	return &c.LastUpdated
+}
+
+// mqlOktaInlineHook for the okta.inlineHook resource
+type mqlOktaInlineHook struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOktaInlineHookInternal it will be used here
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Type              plugin.TValue[string]
+	Status            plugin.TValue[string]
+	Version           plugin.TValue[string]
+	ChannelType       plugin.TValue[string]
+	ChannelUri        plugin.TValue[string]
+	ChannelAuthScheme plugin.TValue[any]
+	Metadata          plugin.TValue[map[string]any]
+	Created           plugin.TValue[*time.Time]
+	LastUpdated       plugin.TValue[*time.Time]
+}
+
+// createOktaInlineHook creates a new instance of this resource
+func createOktaInlineHook(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOktaInlineHook{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("okta.inlineHook", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOktaInlineHook) MqlName() string {
+	return "okta.inlineHook"
+}
+
+func (c *mqlOktaInlineHook) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOktaInlineHook) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOktaInlineHook) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOktaInlineHook) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlOktaInlineHook) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlOktaInlineHook) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlOktaInlineHook) GetChannelType() *plugin.TValue[string] {
+	return &c.ChannelType
+}
+
+func (c *mqlOktaInlineHook) GetChannelUri() *plugin.TValue[string] {
+	return &c.ChannelUri
+}
+
+func (c *mqlOktaInlineHook) GetChannelAuthScheme() *plugin.TValue[any] {
+	return &c.ChannelAuthScheme
+}
+
+func (c *mqlOktaInlineHook) GetMetadata() *plugin.TValue[map[string]any] {
+	return &c.Metadata
+}
+
+func (c *mqlOktaInlineHook) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOktaInlineHook) GetLastUpdated() *plugin.TValue[*time.Time] {
+	return &c.LastUpdated
+}
+
+// mqlOktaHookKey for the okta.hookKey resource
+type mqlOktaHookKey struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOktaHookKeyInternal it will be used here
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	KeyId       plugin.TValue[string]
+	IsUsed      plugin.TValue[bool]
+	PublicKey   plugin.TValue[any]
+	Created     plugin.TValue[*time.Time]
+	LastUpdated plugin.TValue[*time.Time]
+}
+
+// createOktaHookKey creates a new instance of this resource
+func createOktaHookKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOktaHookKey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("okta.hookKey", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOktaHookKey) MqlName() string {
+	return "okta.hookKey"
+}
+
+func (c *mqlOktaHookKey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOktaHookKey) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOktaHookKey) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOktaHookKey) GetKeyId() *plugin.TValue[string] {
+	return &c.KeyId
+}
+
+func (c *mqlOktaHookKey) GetIsUsed() *plugin.TValue[bool] {
+	return &c.IsUsed
+}
+
+func (c *mqlOktaHookKey) GetPublicKey() *plugin.TValue[any] {
+	return &c.PublicKey
+}
+
+func (c *mqlOktaHookKey) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOktaHookKey) GetLastUpdated() *plugin.TValue[*time.Time] {
+	return &c.LastUpdated
+}
+
+// mqlOktaLogStream for the okta.logStream resource
+type mqlOktaLogStream struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOktaLogStreamInternal it will be used here
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Type        plugin.TValue[string]
+	Status      plugin.TValue[string]
+	Settings    plugin.TValue[any]
+	Created     plugin.TValue[*time.Time]
+	LastUpdated plugin.TValue[*time.Time]
+}
+
+// createOktaLogStream creates a new instance of this resource
+func createOktaLogStream(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOktaLogStream{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("okta.logStream", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOktaLogStream) MqlName() string {
+	return "okta.logStream"
+}
+
+func (c *mqlOktaLogStream) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOktaLogStream) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOktaLogStream) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOktaLogStream) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlOktaLogStream) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlOktaLogStream) GetSettings() *plugin.TValue[any] {
+	return &c.Settings
+}
+
+func (c *mqlOktaLogStream) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOktaLogStream) GetLastUpdated() *plugin.TValue[*time.Time] {
+	return &c.LastUpdated
+}
+
+// mqlOktaApiServiceIntegration for the okta.apiServiceIntegration resource
+type mqlOktaApiServiceIntegration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOktaApiServiceIntegrationInternal it will be used here
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Type           plugin.TValue[string]
+	GrantedScopes  plugin.TValue[[]any]
+	ConfigGuideUrl plugin.TValue[string]
+	CreatedBy      plugin.TValue[string]
+	CreatedAt      plugin.TValue[*time.Time]
+}
+
+// createOktaApiServiceIntegration creates a new instance of this resource
+func createOktaApiServiceIntegration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOktaApiServiceIntegration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("okta.apiServiceIntegration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOktaApiServiceIntegration) MqlName() string {
+	return "okta.apiServiceIntegration"
+}
+
+func (c *mqlOktaApiServiceIntegration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOktaApiServiceIntegration) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOktaApiServiceIntegration) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOktaApiServiceIntegration) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlOktaApiServiceIntegration) GetGrantedScopes() *plugin.TValue[[]any] {
+	return &c.GrantedScopes
+}
+
+func (c *mqlOktaApiServiceIntegration) GetConfigGuideUrl() *plugin.TValue[string] {
+	return &c.ConfigGuideUrl
+}
+
+func (c *mqlOktaApiServiceIntegration) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlOktaApiServiceIntegration) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+// mqlOktaAttackProtection for the okta.attackProtection resource
+type mqlOktaAttackProtection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOktaAttackProtectionInternal it will be used here
+	PreventBruteForceLockoutFromUnknownDevices plugin.TValue[bool]
+	VerifyKnowledgeSecondWhen2faRequired       plugin.TValue[bool]
+}
+
+// createOktaAttackProtection creates a new instance of this resource
+func createOktaAttackProtection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOktaAttackProtection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("okta.attackProtection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOktaAttackProtection) MqlName() string {
+	return "okta.attackProtection"
+}
+
+func (c *mqlOktaAttackProtection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOktaAttackProtection) GetPreventBruteForceLockoutFromUnknownDevices() *plugin.TValue[bool] {
+	return &c.PreventBruteForceLockoutFromUnknownDevices
+}
+
+func (c *mqlOktaAttackProtection) GetVerifyKnowledgeSecondWhen2faRequired() *plugin.TValue[bool] {
+	return &c.VerifyKnowledgeSecondWhen2faRequired
+}
+
+// mqlOktaBehaviorRule for the okta.behaviorRule resource
+type mqlOktaBehaviorRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOktaBehaviorRuleInternal it will be used here
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Type        plugin.TValue[string]
+	Status      plugin.TValue[string]
+	Settings    plugin.TValue[any]
+	Created     plugin.TValue[*time.Time]
+	LastUpdated plugin.TValue[*time.Time]
+}
+
+// createOktaBehaviorRule creates a new instance of this resource
+func createOktaBehaviorRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOktaBehaviorRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("okta.behaviorRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOktaBehaviorRule) MqlName() string {
+	return "okta.behaviorRule"
+}
+
+func (c *mqlOktaBehaviorRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOktaBehaviorRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOktaBehaviorRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOktaBehaviorRule) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlOktaBehaviorRule) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlOktaBehaviorRule) GetSettings() *plugin.TValue[any] {
+	return &c.Settings
+}
+
+func (c *mqlOktaBehaviorRule) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOktaBehaviorRule) GetLastUpdated() *plugin.TValue[*time.Time] {
+	return &c.LastUpdated
+}
+
+// mqlOktaRiskProvider for the okta.riskProvider resource
+type mqlOktaRiskProvider struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOktaRiskProviderInternal it will be used here
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Action      plugin.TValue[string]
+	ClientId    plugin.TValue[string]
+	Created     plugin.TValue[*time.Time]
+	LastUpdated plugin.TValue[*time.Time]
+}
+
+// createOktaRiskProvider creates a new instance of this resource
+func createOktaRiskProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOktaRiskProvider{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("okta.riskProvider", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOktaRiskProvider) MqlName() string {
+	return "okta.riskProvider"
+}
+
+func (c *mqlOktaRiskProvider) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOktaRiskProvider) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOktaRiskProvider) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOktaRiskProvider) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlOktaRiskProvider) GetClientId() *plugin.TValue[string] {
+	return &c.ClientId
+}
+
+func (c *mqlOktaRiskProvider) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOktaRiskProvider) GetLastUpdated() *plugin.TValue[*time.Time] {
+	return &c.LastUpdated
+}
+
+// mqlOktaDevice for the okta.device resource
+type mqlOktaDevice struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOktaDeviceInternal it will be used here
+	Id           plugin.TValue[string]
+	Status       plugin.TValue[string]
+	ResourceType plugin.TValue[string]
+	Profile      plugin.TValue[any]
+	Created      plugin.TValue[*time.Time]
+	LastUpdated  plugin.TValue[*time.Time]
+	Users        plugin.TValue[[]any]
+}
+
+// createOktaDevice creates a new instance of this resource
+func createOktaDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOktaDevice{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("okta.device", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOktaDevice) MqlName() string {
+	return "okta.device"
+}
+
+func (c *mqlOktaDevice) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOktaDevice) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOktaDevice) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlOktaDevice) GetResourceType() *plugin.TValue[string] {
+	return &c.ResourceType
+}
+
+func (c *mqlOktaDevice) GetProfile() *plugin.TValue[any] {
+	return &c.Profile
+}
+
+func (c *mqlOktaDevice) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOktaDevice) GetLastUpdated() *plugin.TValue[*time.Time] {
+	return &c.LastUpdated
+}
+
+func (c *mqlOktaDevice) GetUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.device", c.__id, "users")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.users()
+	})
+}
+
+// mqlOktaDeviceAssurancePolicy for the okta.deviceAssurancePolicy resource
+type mqlOktaDeviceAssurancePolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOktaDeviceAssurancePolicyInternal it will be used here
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Platform    plugin.TValue[string]
+	Settings    plugin.TValue[any]
+	Created     plugin.TValue[*time.Time]
+	LastUpdated plugin.TValue[*time.Time]
+}
+
+// createOktaDeviceAssurancePolicy creates a new instance of this resource
+func createOktaDeviceAssurancePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOktaDeviceAssurancePolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("okta.deviceAssurancePolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOktaDeviceAssurancePolicy) MqlName() string {
+	return "okta.deviceAssurancePolicy"
+}
+
+func (c *mqlOktaDeviceAssurancePolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOktaDeviceAssurancePolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOktaDeviceAssurancePolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOktaDeviceAssurancePolicy) GetPlatform() *plugin.TValue[string] {
+	return &c.Platform
+}
+
+func (c *mqlOktaDeviceAssurancePolicy) GetSettings() *plugin.TValue[any] {
+	return &c.Settings
+}
+
+func (c *mqlOktaDeviceAssurancePolicy) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOktaDeviceAssurancePolicy) GetLastUpdated() *plugin.TValue[*time.Time] {
+	return &c.LastUpdated
+}
+
+// mqlOktaSecurityEventsProvider for the okta.securityEventsProvider resource
+type mqlOktaSecurityEventsProvider struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOktaSecurityEventsProviderInternal it will be used here
+	Id       plugin.TValue[string]
+	Name     plugin.TValue[string]
+	Type     plugin.TValue[string]
+	Status   plugin.TValue[string]
+	Settings plugin.TValue[any]
+}
+
+// createOktaSecurityEventsProvider creates a new instance of this resource
+func createOktaSecurityEventsProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOktaSecurityEventsProvider{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("okta.securityEventsProvider", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOktaSecurityEventsProvider) MqlName() string {
+	return "okta.securityEventsProvider"
+}
+
+func (c *mqlOktaSecurityEventsProvider) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOktaSecurityEventsProvider) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOktaSecurityEventsProvider) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOktaSecurityEventsProvider) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlOktaSecurityEventsProvider) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlOktaSecurityEventsProvider) GetSettings() *plugin.TValue[any] {
+	return &c.Settings
 }

@@ -429,6 +429,20 @@ func (a *mqlAwsVerifiedaccessEndpoint) id() (string, error) {
 	return "aws.verifiedaccess.endpoint/" + a.Region.Data + "/" + a.VerifiedAccessEndpointId.Data, nil
 }
 
+func (a *mqlAwsVerifiedaccessEndpoint) domainCertificate() (*mqlAwsAcmCertificate, error) {
+	arnVal := a.DomainCertificateArn.Data
+	if arnVal == "" {
+		a.DomainCertificate.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAwsAcmCertificate,
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsAcmCertificate), nil
+}
+
 func (a *mqlAwsVerifiedaccessEndpoint) securityGroups() ([]any, error) {
 	return a.securityGroupIdHandler.newSecurityGroupResources(a.MqlRuntime)
 }

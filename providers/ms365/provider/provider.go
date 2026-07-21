@@ -148,15 +148,22 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	return runtime.Connection.(*connection.Ms365Connection), nil
 }
 
-func (s *Service) detect(asset *inventory.Asset, conn *connection.Ms365Connection) error {
-	asset.Platform = &inventory.Platform{
-		Name:                  "ms365",
-		Runtime:               "ms365",
-		Family:                []string{""},
+// ms365Platform returns the platform descriptor reported for a Microsoft 365
+// asset. Both the directly-connected asset (detect) and the discovered tenant
+// asset (discover) use this so the reported platform name stays consistent
+// regardless of whether discovery ran.
+func ms365Platform() *inventory.Platform {
+	return &inventory.Platform{
+		Name:                  "microsoft365",
+		Runtime:               "ms-graph",
 		Kind:                  "api",
 		Title:                 "Microsoft 365",
 		TechnologyUrlSegments: []string{"saas", "ms365"},
 	}
+}
+
+func (s *Service) detect(asset *inventory.Asset, conn *connection.Ms365Connection) error {
+	asset.Platform = ms365Platform()
 
 	return nil
 }
@@ -175,13 +182,7 @@ func (s *Service) discover(conn *connection.Ms365Connection, conf *inventory.Con
 	tenantAsset := &inventory.Asset{
 		PlatformIds: []string{identifier},
 		Name:        "Microsoft 365 tenant " + conn.TenantId(),
-		Platform: &inventory.Platform{
-			Name:                  "microsoft365",
-			Title:                 "Microsoft 365",
-			Runtime:               "ms-graph",
-			Kind:                  "api",
-			TechnologyUrlSegments: []string{"saas", "ms365"},
-		},
+		Platform:    ms365Platform(),
 		Connections: []*inventory.Config{conf.Clone()}, // pass-in the current config
 		Labels: map[string]string{
 			"azure.com/tenant": conn.TenantId(),

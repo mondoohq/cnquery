@@ -84,6 +84,7 @@ func (o *mqlOpenstack) databaseInstances() ([]any, error) {
 			"datastoreType":    llx.StringData(inst.Datastore.Type),
 			"datastoreVersion": llx.StringData(inst.Datastore.Version),
 			"volumeSize":       llx.IntData(int64(inst.Volume.Size)),
+			"created":          llx.TimeDataPtr(timePtr(inst.Created)),
 			"addresses":        dictSliceData(addresses),
 		})
 		if err != nil {

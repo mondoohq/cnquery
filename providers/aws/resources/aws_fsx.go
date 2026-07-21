@@ -126,9 +126,8 @@ func initAwsFsxFilesystem(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["id"] = llx.StringData(ids.name)
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 
@@ -292,6 +291,7 @@ func (a *mqlAwsFsx) getCaches(conn *connection.AwsConnection) []*jobpool.Job {
 						"id":                         llx.StringDataPtr(cache.FileCacheId),
 						"arn":                        llx.StringDataPtr(cache.ResourceARN),
 						"lifecycle":                  llx.StringData(string(cache.Lifecycle)),
+						"createdAt":                  llx.TimeDataPtr(cache.CreationTime),
 						"storageCapacity":            llx.IntDataDefault(cache.StorageCapacity, 0),
 						"vpcId":                      llx.StringDataPtr(cache.VpcId),
 						"subnetIds":                  llx.ArrayData(convert.SliceAnyToInterface(cache.SubnetIds), types.String),
@@ -320,9 +320,8 @@ func initAwsFsxCache(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["id"] = llx.StringData(ids.name)
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 
@@ -498,9 +497,8 @@ func initAwsFsxBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["backupId"] = llx.StringData(ids.name)
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 
@@ -545,12 +543,44 @@ func (a *mqlAwsFsxBackup) kmsKey() (*mqlAwsKmsKey, error) {
 	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
+func (a *mqlAwsFsxBackup) fileSystem() (*mqlAwsFsxFilesystem, error) {
+	fsID := a.FileSystemId.Data
+	if fsID == "" {
+		a.FileSystem.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arnStr := fmt.Sprintf(fsxFilesystemArnPattern, a.Region.Data, conn.AccountId(), fsID)
+	res, err := NewResource(a.MqlRuntime, "aws.fsx.filesystem",
+		map[string]*llx.RawData{"arn": llx.StringData(arnStr)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsFsxFilesystem), nil
+}
+
 // ========================
 // aws.fsx.volume
 // ========================
 
 func (a *mqlAwsFsxVolume) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsFsxVolume) fileSystem() (*mqlAwsFsxFilesystem, error) {
+	fsID := a.FileSystemId.Data
+	if fsID == "" {
+		a.FileSystem.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arnStr := fmt.Sprintf(fsxFilesystemArnPattern, a.Region.Data, conn.AccountId(), fsID)
+	res, err := NewResource(a.MqlRuntime, "aws.fsx.filesystem",
+		map[string]*llx.RawData{"arn": llx.StringData(arnStr)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsFsxFilesystem), nil
 }
 
 func (a *mqlAwsFsx) volumes() ([]any, error) {
@@ -723,11 +753,5 @@ func (a *mqlAwsFsx) getVolumes(conn *connection.AwsConnection) []*jobpool.Job {
 // ========================
 
 func fsxTagsToMap(tags []fsxtypes.Tag) map[string]any {
-	tagsMap := make(map[string]any)
-	for _, tag := range tags {
-		if tag.Key != nil && tag.Value != nil {
-			tagsMap[*tag.Key] = *tag.Value
-		}
-	}
-	return tagsMap
+	return tagsToMap(tags, func(t fsxtypes.Tag) *string { return t.Key }, func(t fsxtypes.Tag) *string { return t.Value })
 }

@@ -141,13 +141,8 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.TogetherConnec
 		asset.Name = "Together AI (" + project + ")"
 	}
 
-	asset.Platform = &inventory.Platform{
-		Name:    "together",
-		Family:  []string{"together"},
-		Kind:    "api",
-		Runtime: "together",
-		Title:   "Together AI",
-	}
+	asset.Platform = &inventory.Platform{}
+	PlatformByName("together").Apply(asset.Platform)
 
 	platformID := "//platformid.api.mondoo.app/runtime/together"
 	if project != "" {

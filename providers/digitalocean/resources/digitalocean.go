@@ -13,6 +13,7 @@ import (
 	"github.com/digitalocean/godo"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/sshutil"
 	"go.mondoo.com/mql/v13/providers/digitalocean/connection"
 )
 
@@ -102,6 +103,9 @@ type mqlDigitaloceanDropletInternal struct {
 	// image caches the godo image embedded in the droplet list response so the
 	// typed baseImage() accessor can build a digitalocean.image without a refetch.
 	image *godo.Image
+	// size caches the godo size embedded in the droplet list response so the
+	// typed dropletSize() accessor can build a digitalocean.size without a refetch.
+	size *godo.Size
 	// cacheVolumeIDs holds the block-storage volume IDs attached to the droplet so
 	// the typed volumes() accessor can resolve them without a refetch.
 	cacheVolumeIDs []string
@@ -232,6 +236,7 @@ func (r *mqlDigitalocean) droplets() ([]interface{}, error) {
 			// snapshots(), and backups() accessors — all without a refetch.
 			mqlDroplet := res.(*mqlDigitaloceanDroplet)
 			mqlDroplet.image = d.Image
+			mqlDroplet.size = d.Size
 			mqlDroplet.cacheVolumeIDs = d.VolumeIDs
 			mqlDroplet.cacheSnapshotIDs = d.SnapshotIDs
 			mqlDroplet.cacheBackupIDs = d.BackupIDs
@@ -242,7 +247,7 @@ func (r *mqlDigitalocean) droplets() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -276,7 +281,7 @@ func (r *mqlDigitalocean) firewalls() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -310,7 +315,7 @@ func (r *mqlDigitalocean) databases() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -369,7 +374,7 @@ func (r *mqlDigitalocean) domains() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -413,7 +418,7 @@ func (r *mqlDigitaloceanDomain) records() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -471,7 +476,7 @@ func (r *mqlDigitalocean) volumes() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.ListOptions.Page = page + 1
 	}
@@ -506,7 +511,7 @@ func (r *mqlDigitalocean) loadBalancers() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -544,6 +549,7 @@ func (r *mqlDigitalocean) vpcs() ([]interface{}, error) {
 				"region":      llx.StringData(v.RegionSlug),
 				"createdAt":   llx.TimeData(v.CreatedAt),
 				"default":     llx.BoolData(v.Default),
+				"urn":         llx.StringData(v.URN),
 			})
 			if err != nil {
 				return nil, err
@@ -555,7 +561,7 @@ func (r *mqlDigitalocean) vpcs() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -589,7 +595,7 @@ func (r *mqlDigitalocean) kubernetesClusters() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -621,6 +627,7 @@ func (r *mqlDigitalocean) projects() ([]interface{}, error) {
 				"createdAt":   llx.TimeDataPtr(parseDoTime(p.CreatedAt)),
 				"updatedAt":   llx.TimeDataPtr(parseDoTime(p.UpdatedAt)),
 				"isDefault":   llx.BoolData(p.IsDefault),
+				"ownerUuid":   llx.StringData(p.OwnerUUID),
 			})
 			if err != nil {
 				return nil, err
@@ -632,7 +639,7 @@ func (r *mqlDigitalocean) projects() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -655,11 +662,14 @@ func (r *mqlDigitalocean) sshKeys() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, k := range keys {
+			algorithm, bits := sshutil.ParsePublicKey(k.PublicKey)
 			res, err := CreateResource(r.MqlRuntime, "digitalocean.sshKey", map[string]*llx.RawData{
 				"id":          llx.IntData(int64(k.ID)),
 				"name":        llx.StringData(k.Name),
 				"fingerprint": llx.StringData(k.Fingerprint),
 				"publicKey":   llx.StringData(k.PublicKey),
+				"algorithm":   llx.StringData(algorithm),
+				"bits":        llx.IntData(bits),
 			})
 			if err != nil {
 				return nil, err
@@ -671,7 +681,7 @@ func (r *mqlDigitalocean) sshKeys() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -719,7 +729,7 @@ func (r *mqlDigitalocean) certificates() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}

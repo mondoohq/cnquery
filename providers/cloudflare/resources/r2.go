@@ -37,12 +37,8 @@ type mqlCloudflareR2Internal struct {
 	AccountID string
 }
 
-func (c *mqlCloudflareZone) r2() (*mqlCloudflareR2, error) {
-	accountID, err := c.zoneAccountID()
-	if err != nil {
-		return nil, err
-	}
-	res, err := CreateResource(c.MqlRuntime, "cloudflare.r2", map[string]*llx.RawData{
+func newR2(runtime *plugin.Runtime, accountID string) (*mqlCloudflareR2, error) {
+	res, err := CreateResource(runtime, "cloudflare.r2", map[string]*llx.RawData{
 		"__id": llx.StringData("cloudflare.r2@" + accountID),
 	})
 	if err != nil {
@@ -53,6 +49,20 @@ func (c *mqlCloudflareZone) r2() (*mqlCloudflareR2, error) {
 	r2.AccountID = accountID
 
 	return r2, nil
+}
+
+func (c *mqlCloudflareAccount) r2() (*mqlCloudflareR2, error) {
+	return newR2(c.MqlRuntime, c.Id.Data)
+}
+
+// Deprecated: R2 is account-scoped. Use cloudflare.account.r2. Retained so
+// existing queries keep working; resolves the parent account and delegates.
+func (c *mqlCloudflareZone) r2() (*mqlCloudflareR2, error) {
+	accountID, err := c.zoneAccountID()
+	if err != nil {
+		return nil, err
+	}
+	return newR2(c.MqlRuntime, accountID)
 }
 
 type mqlCloudflareR2BucketInternal struct {
@@ -105,7 +115,10 @@ func (c *mqlCloudflareR2) buckets() ([]any, error) {
 			} `json:"result_info"`
 		}
 		if err := conn.Cf.Get(context.TODO(), uri, nil, &env); err != nil {
-			return nil, err
+			// R2 is a gated add-on; an account without it returns 403
+			// ("Please enable R2 through the Cloudflare Dashboard"). Degrade
+			// to empty like the other add-on-gated list accessors.
+			return degradedList(err)
 		}
 
 		for i := range env.Result.Buckets {

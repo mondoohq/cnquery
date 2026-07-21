@@ -5,12 +5,72 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/snowflake/connection"
 )
+
+// initSnowflakeRole resolves a single role by name so typed references (such as
+// snowflake.user.owner) can hydrate a full role from just its name. A caller
+// that already supplied more than the name is left untouched.
+func initSnowflakeRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	nameRaw, ok := args["name"]
+	if !ok {
+		return args, nil, nil
+	}
+	name, _ := nameRaw.Value.(string)
+	if name == "" {
+		return nil, nil, fmt.Errorf("snowflake.role requires a non-empty name")
+	}
+
+	conn := runtime.Connection.(*connection.SnowflakeConnection)
+	client := conn.Client()
+	ctx := context.Background()
+
+	roles, err := client.Roles.Show(ctx, sdk.NewShowRoleRequest().WithLike(sdk.NewLikeRequest(name)))
+	if err != nil {
+		return nil, nil, err
+	}
+	for i := range roles {
+		if roles[i].Name == name {
+			res, err := newMqlSnowflakeRole(runtime, roles[i])
+			if err != nil {
+				return nil, nil, err
+			}
+			return nil, res, nil
+		}
+	}
+	return nil, nil, fmt.Errorf("snowflake.role %q not found", name)
+}
+
+// snowflakeRoleByName resolves an account role by name, returning nil (not an
+// error) when the name is not a listable account role. Object owners are not
+// always account roles: they can be an application, a database role, or a role
+// the caller cannot see. Callers treat a nil result as a null typed reference
+// rather than failing the query, so this looks the role up directly instead of
+// through NewResource (whose init returns a not-found error for direct queries).
+func snowflakeRoleByName(runtime *plugin.Runtime, name string) (*mqlSnowflakeRole, error) {
+	if name == "" {
+		return nil, nil
+	}
+	conn := runtime.Connection.(*connection.SnowflakeConnection)
+	roles, err := conn.Client().Roles.Show(context.Background(), sdk.NewShowRoleRequest().WithLike(sdk.NewLikeRequest(name)))
+	if err != nil {
+		return nil, err
+	}
+	for i := range roles {
+		if roles[i].Name == name {
+			return newMqlSnowflakeRole(runtime, roles[i])
+		}
+	}
+	return nil, nil
+}
 
 func (r *mqlSnowflakeAccount) roles() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
@@ -52,4 +112,29 @@ func newMqlSnowflakeRole(runtime *plugin.Runtime, role sdk.Role) (*mqlSnowflakeR
 	}
 	mqlResource := r.(*mqlSnowflakeRole)
 	return mqlResource, nil
+}
+
+// resolveOwnerRole resolves an account role name to a typed snowflake.role,
+// hydrated through the role's init. It sets the field's null state when the
+// owner name is empty (an unowned object) so the runtime records the null.
+func resolveOwnerRole(runtime *plugin.Runtime, name string, field *plugin.TValue[*mqlSnowflakeRole]) (*mqlSnowflakeRole, error) {
+	if name == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	role, err := snowflakeRoleByName(runtime, name)
+	if err != nil {
+		return nil, err
+	}
+	if role == nil {
+		// The owner is not a listable account role (an application, database
+		// role, or one the caller cannot see); report the ref as null.
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return role, nil
+}
+
+func (r *mqlSnowflakeRole) ownerRole() (*mqlSnowflakeRole, error) {
+	return resolveOwnerRole(r.MqlRuntime, r.Owner.Data, &r.OwnerRole)
 }

@@ -215,7 +215,56 @@ type mqlGcpProjectBigqueryServiceDatasetInternal struct {
 }
 
 type mqlGcpProjectBigqueryServiceTableInternal struct {
-	cacheKmsKeyName string
+	cacheKmsKeyName        string
+	cacheSnapshotBaseTable *bigquery.Table
+	cacheCloneBaseTable    *bigquery.Table
+}
+
+// resolveBaseTable builds the typed table that a snapshot or clone derives from.
+// The BigQuery base-table reference carries only project/dataset/table IDs, so
+// the table's location is inherited from the owning table (a base table lives in
+// the same location as its snapshots and clones).
+func (g *mqlGcpProjectBigqueryServiceTable) resolveBaseTable(ref *bigquery.Table) (*mqlGcpProjectBigqueryServiceTable, error) {
+	if ref == nil {
+		return nil, nil
+	}
+	location := ""
+	if g.Location.Error == nil {
+		location = g.Location.Data
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.bigqueryService.table", map[string]*llx.RawData{
+		"id":        llx.StringData(ref.TableID),
+		"projectId": llx.StringData(ref.ProjectID),
+		"datasetId": llx.StringData(ref.DatasetID),
+		"name":      llx.StringData(ref.TableID),
+		"location":  llx.StringData(location),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectBigqueryServiceTable), nil
+}
+
+func (g *mqlGcpProjectBigqueryServiceTable) snapshotBaseTable() (*mqlGcpProjectBigqueryServiceTable, error) {
+	t, err := g.resolveBaseTable(g.cacheSnapshotBaseTable)
+	if err != nil {
+		return nil, err
+	}
+	if t == nil {
+		g.SnapshotBaseTable.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return t, nil
+}
+
+func (g *mqlGcpProjectBigqueryServiceTable) cloneBaseTable() (*mqlGcpProjectBigqueryServiceTable, error) {
+	t, err := g.resolveBaseTable(g.cacheCloneBaseTable)
+	if err != nil {
+		return nil, err
+	}
+	if t == nil {
+		g.CloneBaseTable.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return t, nil
 }
 
 type mqlGcpProjectBigqueryServiceModelInternal struct {
@@ -246,6 +295,10 @@ func (g *mqlGcpProjectBigqueryServiceDataset) kmsKey() (*mqlGcpProjectKmsService
 		return nil, err
 	}
 	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+}
+
+func (g *mqlGcpProjectBigqueryServiceDataset) managedBy() (string, error) {
+	return managedByFromLabels(&g.Labels)
 }
 
 func (g *mqlGcpProjectBigqueryServiceTable) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
@@ -494,6 +547,11 @@ func (g *mqlGcpProjectBigqueryServiceDataset) tables() ([]any, error) {
 			snapshotTime = &metadata.SnapshotDefinition.SnapshotTime
 		}
 
+		var cloneTime *time.Time
+		if metadata.CloneDefinition != nil {
+			cloneTime = &metadata.CloneDefinition.CloneTime
+		}
+
 		mqlInstance, err := CreateResource(g.MqlRuntime, "gcp.project.bigqueryService.table", map[string]*llx.RawData{
 			"id":                     llx.StringData(table.TableID),
 			"projectId":              llx.StringData(table.ProjectID),
@@ -513,6 +571,7 @@ func (g *mqlGcpProjectBigqueryServiceDataset) tables() ([]any, error) {
 			"expirationTime":         llx.TimeData(metadata.ExpirationTime),
 			"kmsName":                llx.StringData(kmsName),
 			"snapshotTime":           llx.TimeDataPtr(snapshotTime),
+			"cloneTime":              llx.TimeDataPtr(cloneTime),
 			"viewQuery":              llx.StringData(metadata.ViewQuery),
 			"clusteringFields":       llx.DictData(clusteringFields),
 			"externalDataConfig":     llx.DictData(externalDataConfig),
@@ -524,7 +583,14 @@ func (g *mqlGcpProjectBigqueryServiceDataset) tables() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		mqlInstance.(*mqlGcpProjectBigqueryServiceTable).cacheKmsKeyName = kmsName
+		mqlTable := mqlInstance.(*mqlGcpProjectBigqueryServiceTable)
+		mqlTable.cacheKmsKeyName = kmsName
+		if metadata.SnapshotDefinition != nil {
+			mqlTable.cacheSnapshotBaseTable = metadata.SnapshotDefinition.BaseTableReference
+		}
+		if metadata.CloneDefinition != nil {
+			mqlTable.cacheCloneBaseTable = metadata.CloneDefinition.BaseTableReference
+		}
 		res = append(res, mqlInstance)
 
 	}
@@ -682,11 +748,18 @@ func (g *mqlGcpProjectBigqueryServiceDataset) routines() ([]any, error) {
 }
 
 func (g *mqlGcpProjectBigqueryServiceRoutine) id() (string, error) {
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
+	}
+	if g.DatasetId.Error != nil {
+		return "", g.DatasetId.Error
+	}
 	if g.Id.Error != nil {
 		return "", g.Id.Error
 	}
-	name := g.Id.Data
-	return "gcp.project.bigqueryService.routine/" + name, nil
+	// Routine IDs are unique only within a dataset, so qualify with
+	// project + dataset (matches the model/table ids).
+	return fmt.Sprintf("gcp.project.bigqueryService.routine/%s/%s/%s", g.ProjectId.Data, g.DatasetId.Data, g.Id.Data), nil
 }
 
 func entityTypeToString(entityType bigquery.EntityType) string {

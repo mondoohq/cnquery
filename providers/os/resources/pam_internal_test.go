@@ -99,7 +99,7 @@ func TestPamConfPrefersPamDirOverPamConf(t *testing.T) {
 	// When /etc/pam.d exists, Linux-PAM ignores /etc/pam.conf entirely. Our
 	// parsing must do the same: only the pam.d files are read, and a service
 	// defined only in /etc/pam.conf must not appear.
-	findCmd := filesfind.BuildFilesFindCmd(defaultPamDir, false, "file", "", 0, "", nil)
+	findCmd := filesfind.BuildFilesFindCmd(defaultPamDir, false, "file", "", 0, "", nil, true)
 	conn, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{Name: "arch", Family: []string{"arch", "linux", "unix"}},
 	}, mock.WithData(&mock.TomlData{
@@ -219,6 +219,34 @@ func TestPamConfSingleFile(t *testing.T) {
 	assert.True(t, wheel.Enabled.Data)
 	assert.Equal(t, "sugroup", wheel.Params.Data["group"])
 	assert.Equal(t, "", wheel.Params.Data["use_uid"])
+}
+
+func TestPamConfSkipsMalformedLine(t *testing.T) {
+	// A single malformed line (too few fields for pam.ParseLine to accept)
+	// must not abort parsing of the whole configuration. The bad line is
+	// skipped and the valid entries around it are still returned, matching how
+	// the other config parsers in this package (modprobe, rsyslog) behave.
+	content := strings.Join([]string{
+		"su auth required pam_env.so",
+		"su auth required", // malformed: only two fields after the service column
+		"su account required pam_permit.so",
+		"",
+	}, "\n")
+	rt := newPamRuntimeWithFiles(t, map[string]string{"/etc/pam.conf": content})
+
+	pam := &mqlPamConf{MqlRuntime: rt}
+	entries := pam.GetEntries()
+	require.NoError(t, entries.Error, "malformed line must not fail the whole parse")
+
+	suList, ok := entries.Data["su"].([]any)
+	require.True(t, ok, "expected entries for service 'su'")
+	require.Len(t, suList, 2, "the two valid lines survive; the malformed one is skipped")
+
+	modules := []string{
+		suList[0].(*mqlPamConfServiceEntry).Module.Data,
+		suList[1].(*mqlPamConfServiceEntry).Module.Data,
+	}
+	assert.ElementsMatch(t, []string{"pam_env.so", "pam_permit.so"}, modules)
 }
 
 func TestPamConfServiceEntryParams(t *testing.T) {

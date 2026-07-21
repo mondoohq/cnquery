@@ -8,6 +8,7 @@ import (
 
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/external"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/floatingips"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/portforwarding"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/routers"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/mtu"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/portsecurity"
@@ -801,6 +802,71 @@ func (r *mqlOpenstackFloatingIp) project() (*mqlOpenstackProject, error) {
 	return resolveProject(r.MqlRuntime, r.cacheProjectID, &r.Project)
 }
 
+// ---- openstack.floatingIp.portForwarding ----
+
+type mqlOpenstackFloatingIpPortForwardingInternal struct {
+	cacheInternalPortID string
+}
+
+func (r *mqlOpenstackFloatingIpPortForwarding) id() (string, error) {
+	return "openstack.floatingIp.portForwarding/" + r.Id.Data, nil
+}
+
+func (r *mqlOpenstackFloatingIp) portForwardings() ([]any, error) {
+	client, err := conn(r.MqlRuntime).NetworkClient()
+	if err != nil {
+		return nil, err
+	}
+	pages, err := portforwarding.List(client, portforwarding.ListOpts{}, r.Id.Data).AllPages(ctx())
+	if err != nil {
+		if translateOpenstackError(err) == nil {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, err := portforwarding.ExtractPortForwardings(pages)
+	if err != nil {
+		return nil, err
+	}
+
+	out := make([]any, 0, len(items))
+	for i := range items {
+		pf := &items[i]
+		res, err := CreateResource(r.MqlRuntime, "openstack.floatingIp.portForwarding", map[string]*llx.RawData{
+			"__id":              llx.StringData("openstack.floatingIp.portForwarding/" + pf.ID),
+			"id":                llx.StringData(pf.ID),
+			"protocol":          llx.StringData(pf.Protocol),
+			"externalPort":      llx.IntData(int64(pf.ExternalPort)),
+			"externalPortRange": llx.StringData(pf.ExternalPortRange),
+			"internalPort":      llx.IntData(int64(pf.InternalPort)),
+			"internalPortRange": llx.StringData(pf.InternalPortRange),
+			"internalIpAddress": llx.StringData(pf.InternalIPAddress),
+			"description":       llx.StringData(pf.Description),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlPf := res.(*mqlOpenstackFloatingIpPortForwarding)
+		mqlPf.cacheInternalPortID = pf.InternalPortID
+		out = append(out, mqlPf)
+	}
+	return out, nil
+}
+
+func (r *mqlOpenstackFloatingIpPortForwarding) port() (*mqlOpenstackPort, error) {
+	if r.cacheInternalPortID == "" {
+		r.Port.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.port", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheInternalPortID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackPort), nil
+}
+
 // ---- openstack.securityGroup ----
 
 type mqlOpenstackSecurityGroupInternal struct {
@@ -981,9 +1047,10 @@ func (r *mqlOpenstackSecurityGroup) project() (*mqlOpenstackProject, error) {
 // ---- openstack.securityGroup.rule ----
 
 type mqlOpenstackSecurityGroupRuleInternal struct {
-	cacheSecurityGroupID string
-	cacheRemoteGroupID   string
-	cacheProjectID       string
+	cacheSecurityGroupID      string
+	cacheRemoteGroupID        string
+	cacheRemoteAddressGroupID string
+	cacheProjectID            string
 }
 
 func (r *mqlOpenstackSecurityGroupRule) id() (string, error) {
@@ -995,17 +1062,18 @@ func buildSecurityGroupRules(runtime *plugin.Runtime, sg *groups.SecGroup) ([]an
 	for i := range sg.Rules {
 		rule := &sg.Rules[i]
 		res, err := CreateResource(runtime, "openstack.securityGroup.rule", map[string]*llx.RawData{
-			"__id":           llx.StringData("openstack.securityGroup.rule/" + rule.ID),
-			"id":             llx.StringData(rule.ID),
-			"direction":      llx.StringData(rule.Direction),
-			"ethertype":      llx.StringData(rule.EtherType),
-			"protocol":       llx.StringData(rule.Protocol),
-			"portRangeMin":   llx.IntData(int64(rule.PortRangeMin)),
-			"portRangeMax":   llx.IntData(int64(rule.PortRangeMax)),
-			"remoteIpPrefix": llx.StringData(rule.RemoteIPPrefix),
-			"description":    llx.StringData(rule.Description),
-			"createdAt":      llx.TimeDataPtr(timePtr(rule.CreatedAt)),
-			"updatedAt":      llx.TimeDataPtr(timePtr(rule.UpdatedAt)),
+			"__id":                 llx.StringData("openstack.securityGroup.rule/" + rule.ID),
+			"id":                   llx.StringData(rule.ID),
+			"direction":            llx.StringData(rule.Direction),
+			"ethertype":            llx.StringData(rule.EtherType),
+			"protocol":             llx.StringData(rule.Protocol),
+			"portRangeMin":         llx.IntData(int64(rule.PortRangeMin)),
+			"portRangeMax":         llx.IntData(int64(rule.PortRangeMax)),
+			"remoteIpPrefix":       llx.StringData(rule.RemoteIPPrefix),
+			"remoteAddressGroupId": llx.StringData(rule.RemoteAddressGroupID),
+			"description":          llx.StringData(rule.Description),
+			"createdAt":            llx.TimeDataPtr(timePtr(rule.CreatedAt)),
+			"updatedAt":            llx.TimeDataPtr(timePtr(rule.UpdatedAt)),
 		})
 		if err != nil {
 			return nil, err
@@ -1013,6 +1081,7 @@ func buildSecurityGroupRules(runtime *plugin.Runtime, sg *groups.SecGroup) ([]an
 		mqlRule := res.(*mqlOpenstackSecurityGroupRule)
 		mqlRule.cacheSecurityGroupID = rule.SecGroupID
 		mqlRule.cacheRemoteGroupID = rule.RemoteGroupID
+		mqlRule.cacheRemoteAddressGroupID = rule.RemoteAddressGroupID
 		mqlRule.cacheProjectID = rule.ProjectID
 		out = append(out, mqlRule)
 	}

@@ -65,6 +65,20 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		}
 	}
 
+	// Discovery flags. With no --discover flag we default to "auto" so a plain
+	// `cnspec scan stackit` brings in the project's sub-assets (databases, SKE
+	// clusters, buckets, …) the way the aws/gcp providers do.
+	discoverTargets := []string{}
+	if x, ok := flags["discover"]; ok && len(x.Array) != 0 {
+		for i := range x.Array {
+			discoverTargets = append(discoverTargets, string(x.Array[i].Value))
+		}
+	}
+	if len(discoverTargets) == 0 {
+		discoverTargets = []string{resources.DiscoveryAuto}
+	}
+	conf.Discover = &inventory.Discovery{Targets: discoverTargets}
+
 	asset := &inventory.Asset{
 		Name:        "STACKIT",
 		Connections: []*inventory.Config{conf},
@@ -89,12 +103,40 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		}
 	}
 
+	// Start the returned inventory with the connected root asset, then append any
+	// discovered sub-assets. Discovered sub-assets carry WithoutDiscovery, so
+	// re-connecting to one yields no targets and does not re-expand.
+	inv := &inventory.Inventory{
+		Spec: &inventory.InventorySpec{Assets: []*inventory.Asset{req.Asset}},
+	}
+	discovered, err := s.discover(conn)
+	if err != nil {
+		return nil, err
+	}
+	if discovered != nil {
+		inv.Spec.Assets = append(inv.Spec.Assets, discovered.Spec.Assets...)
+	}
+
 	return &plugin.ConnectRes{
 		Id:        conn.ID(),
 		Name:      conn.Name(),
 		Asset:     req.Asset,
-		Inventory: nil,
+		Inventory: inv,
 	}, nil
+}
+
+// discover enumerates STACKIT sub-assets for the connection's discovery targets.
+// Returns nil when discovery is not requested (e.g. when re-connecting to a
+// discovered sub-asset, whose cloned config carries no targets).
+func (s *Service) discover(conn *connection.StackitConnection) (*inventory.Inventory, error) {
+	if conn.Conf == nil || len(conn.Conf.GetDiscover().GetTargets()) == 0 {
+		return nil, nil
+	}
+	runtime, err := s.GetRuntime(conn.ID())
+	if err != nil {
+		return nil, err
+	}
+	return resources.Discover(runtime)
 }
 
 func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*connection.StackitConnection, error) {
@@ -146,9 +188,31 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.StackitConnect
 	asset.Id = conn.Identifier()
 	asset.Platform = conn.PlatformInfo()
 	asset.PlatformIds = []string{conn.Identifier()}
+
+	// Prefer the human-readable project name resolved from the resource-manager
+	// API (captured during Verify), the way gcp uses project.Name and aws uses
+	// the account/host. Fall back to the project ID when it is unavailable.
 	if asset.Name == "" || asset.Name == "STACKIT" {
-		asset.Name = "STACKIT project " + conn.ProjectID()
+		if name := conn.ProjectName(); name != "" {
+			asset.Name = name
+		} else {
+			asset.Name = "STACKIT project " + conn.ProjectID()
+		}
 	}
+
+	// Attach the project's labels plus stackit-specific metadata so discovered
+	// and directly-connected assets carry the same context as gcp/aws assets.
+	if asset.Labels == nil {
+		asset.Labels = map[string]string{}
+	}
+	for k, v := range conn.ProjectLabels() {
+		asset.Labels[k] = v
+	}
+	asset.Labels["mondoo.com/region"] = conn.Region()
+	if parent := conn.ProjectParent(); parent != "" {
+		asset.Labels["mondoo.com/parent-id"] = parent
+	}
+
 	return nil
 }
 

@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
@@ -209,6 +210,178 @@ func (a *mqlAwsInspectorCoverage) lambda() (*mqlAwsLambdaFunction, error) {
 	}
 	a.Lambda.State = plugin.StateIsSet | plugin.StateIsNull
 	return nil, nil
+}
+
+// ============================================================
+// Inspector Account Status & Configuration
+// ============================================================
+
+func (a *mqlAwsInspectorAccountStatus) id() (string, error) {
+	return a.AccountId.Data + "/" + a.Region.Data, nil
+}
+
+func (a *mqlAwsInspectorConfiguration) id() (string, error) {
+	return "aws.inspector.configuration/" + a.Region.Data, nil
+}
+
+func inspectorStateStatus(s *types.State) string {
+	if s == nil {
+		return ""
+	}
+	return string(s.Status)
+}
+
+func (a *mqlAwsInspector) accountStatuses() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getAccountStatuses(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsInspector) getAccountStatuses(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.Inspector(region)
+			ctx := context.Background()
+			res := []any{}
+
+			// with no account IDs, BatchGetAccountStatus returns the status of
+			// the requesting account
+			resp, err := svc.BatchGetAccountStatus(ctx, &inspector2.BatchGetAccountStatusInput{})
+			if err != nil {
+				if Is400AccessDeniedError(err) {
+					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+					return res, nil
+				}
+				return nil, err
+			}
+			for i := range resp.Accounts {
+				acct := resp.Accounts[i]
+				rs := acct.ResourceState
+				if rs == nil {
+					rs = &types.ResourceState{}
+				}
+				// AccountId is a required field on the API response, but fall
+				// back to the connection account so the __id stays unique even
+				// if it ever comes back empty
+				accountID := convert.ToValue(acct.AccountId)
+				if accountID == "" {
+					accountID = conn.AccountId()
+				}
+				mqlStatus, err := CreateResource(a.MqlRuntime, "aws.inspector.accountStatus",
+					map[string]*llx.RawData{
+						"accountId":            llx.StringData(accountID),
+						"status":               llx.StringData(inspectorStateStatus(acct.State)),
+						"ec2Status":            llx.StringData(inspectorStateStatus(rs.Ec2)),
+						"ecrStatus":            llx.StringData(inspectorStateStatus(rs.Ecr)),
+						"lambdaStatus":         llx.StringData(inspectorStateStatus(rs.Lambda)),
+						"lambdaCodeStatus":     llx.StringData(inspectorStateStatus(rs.LambdaCode)),
+						"codeRepositoryStatus": llx.StringData(inspectorStateStatus(rs.CodeRepository)),
+						"region":               llx.StringData(region),
+					})
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlStatus)
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (a *mqlAwsInspector) configurations() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getConfigurations(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsInspector) getConfigurations(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.Inspector(region)
+			ctx := context.Background()
+			res := []any{}
+
+			resp, err := svc.GetConfiguration(ctx, &inspector2.GetConfigurationInput{})
+			if err != nil {
+				// GetConfiguration returns ResourceNotFoundException ("No
+				// CustomerRecord exists") in regions where Inspector was never
+				// enabled; treat that as no configuration rather than an error
+				var notFound *types.ResourceNotFoundException
+				if errors.As(err, &notFound) {
+					return res, nil
+				}
+				if Is400AccessDeniedError(err) {
+					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+					return res, nil
+				}
+				return nil, err
+			}
+
+			args := map[string]*llx.RawData{
+				"region":                    llx.StringData(region),
+				"ecrRescanDuration":         llx.StringData(""),
+				"ecrPullDateRescanDuration": llx.StringData(""),
+				"ecrPullDateRescanMode":     llx.StringData(""),
+				"ecrRescanDurationStatus":   llx.StringData(""),
+				"ecrRescanUpdatedAt":        llx.TimeDataPtr(nil),
+				"ec2ScanMode":               llx.StringData(""),
+				"ec2ScanModeStatus":         llx.StringData(""),
+			}
+			if resp.EcrConfiguration != nil && resp.EcrConfiguration.RescanDurationState != nil {
+				rds := resp.EcrConfiguration.RescanDurationState
+				args["ecrRescanDuration"] = llx.StringData(string(rds.RescanDuration))
+				args["ecrPullDateRescanDuration"] = llx.StringData(string(rds.PullDateRescanDuration))
+				args["ecrPullDateRescanMode"] = llx.StringData(string(rds.PullDateRescanMode))
+				args["ecrRescanDurationStatus"] = llx.StringData(string(rds.Status))
+				args["ecrRescanUpdatedAt"] = llx.TimeDataPtr(rds.UpdatedAt)
+			}
+			if resp.Ec2Configuration != nil && resp.Ec2Configuration.ScanModeState != nil {
+				sms := resp.Ec2Configuration.ScanModeState
+				args["ec2ScanMode"] = llx.StringData(string(sms.ScanMode))
+				args["ec2ScanModeStatus"] = llx.StringData(string(sms.ScanModeStatus))
+			}
+			mqlConfig, err := CreateResource(a.MqlRuntime, "aws.inspector.configuration", args)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlConfig)
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
 }
 
 // ============================================================

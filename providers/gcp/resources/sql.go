@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -94,6 +95,125 @@ func initGcpProjectSqlServiceInstance(runtime *plugin.Runtime, args map[string]*
 	}
 
 	return nil, nil, errors.New("SQL instance not found")
+}
+
+// getSqlInstanceByName resolves a sibling Cloud SQL instance by its name within
+// the same project. MasterInstanceName / ReplicaNames carry bare instance names
+// (sometimes prefixed with "project:"), so the lookup lists the project's
+// instances and matches by name rather than going through the region-keyed init.
+// Returns nil when no instance with that name exists in the project (for example
+// a cross-project replication pair).
+func getSqlInstanceByName(runtime *plugin.Runtime, projectId, name string) (*mqlGcpProjectSqlServiceInstance, error) {
+	if name == "" {
+		return nil, nil
+	}
+	if i := strings.LastIndex(name, ":"); i >= 0 {
+		name = name[i+1:]
+	}
+
+	obj, err := CreateResource(runtime, "gcp.project.sqlService", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	sqlSvc := obj.(*mqlGcpProjectSqlService)
+	instances := sqlSvc.GetInstances()
+	if instances.Error != nil {
+		return nil, instances.Error
+	}
+
+	for _, inst := range instances.Data {
+		instance := inst.(*mqlGcpProjectSqlServiceInstance)
+		n := instance.GetName()
+		if n.Error != nil {
+			return nil, n.Error
+		}
+		if n.Data == name {
+			return instance, nil
+		}
+	}
+	return nil, nil
+}
+
+func (g *mqlGcpProjectSqlServiceInstance) master() (*mqlGcpProjectSqlServiceInstance, error) {
+	if g.MasterInstanceName.Error != nil {
+		return nil, g.MasterInstanceName.Error
+	}
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	master, err := getSqlInstanceByName(g.MqlRuntime, g.ProjectId.Data, g.MasterInstanceName.Data)
+	if err != nil {
+		return nil, err
+	}
+	if master == nil {
+		g.Master.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return master, nil
+}
+
+func (g *mqlGcpProjectSqlServiceInstance) replicas() ([]any, error) {
+	if g.ReplicaNames.Error != nil {
+		return nil, g.ReplicaNames.Error
+	}
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	res := []any{}
+	for _, raw := range g.ReplicaNames.Data {
+		name, ok := raw.(string)
+		if !ok {
+			continue
+		}
+		replica, err := getSqlInstanceByName(g.MqlRuntime, g.ProjectId.Data, name)
+		if err != nil {
+			return nil, err
+		}
+		if replica != nil {
+			res = append(res, replica)
+		}
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectSqlServiceInstance) failoverReplicaRef() (*mqlGcpProjectSqlServiceInstance, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	replica, err := getSqlInstanceByName(g.MqlRuntime, g.ProjectId.Data, g.cacheFailoverReplicaName)
+	if err != nil {
+		return nil, err
+	}
+	if replica == nil {
+		g.FailoverReplicaRef.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return replica, nil
+}
+
+func (g *mqlGcpProjectSqlServiceInstance) drReplica() (*mqlGcpProjectSqlServiceInstance, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	replica, err := getSqlInstanceByName(g.MqlRuntime, g.ProjectId.Data, g.cacheDrReplicaName)
+	if err != nil {
+		return nil, err
+	}
+	if replica == nil {
+		g.DrReplica.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return replica, nil
+}
+
+func (g *mqlGcpProjectSqlServiceInstance) managedBy() (string, error) {
+	settings := g.GetSettings()
+	if settings.Error != nil {
+		return "", settings.Error
+	}
+	if settings.Data == nil {
+		return "", nil
+	}
+	return managedByFromLabels(settings.Data.GetUserLabels())
 }
 
 // sqlIPMappingID returns a cache-stable identifier for a Cloud SQL instance
@@ -666,6 +786,12 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 			if instance.DiskEncryptionConfiguration != nil {
 				mqlSqlInstance.cacheKmsKeyName = instance.DiskEncryptionConfiguration.KmsKeyName
 			}
+			if instance.FailoverReplica != nil {
+				mqlSqlInstance.cacheFailoverReplicaName = instance.FailoverReplica.Name
+			}
+			if instance.ReplicationCluster != nil {
+				mqlSqlInstance.cacheDrReplicaName = instance.ReplicationCluster.FailoverDrReplicaName
+			}
 			res = append(res, mqlInstance)
 		}
 		return nil
@@ -740,8 +866,10 @@ func (g *mqlGcpProjectSqlServiceInstance) databases() ([]any, error) {
 }
 
 type mqlGcpProjectSqlServiceInstanceInternal struct {
-	cacheSecondaryGceZone string
-	cacheKmsKeyName       string
+	cacheSecondaryGceZone    string
+	cacheKmsKeyName          string
+	cacheFailoverReplicaName string
+	cacheDrReplicaName       string
 }
 
 func (g *mqlGcpProjectSqlServiceInstance) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {

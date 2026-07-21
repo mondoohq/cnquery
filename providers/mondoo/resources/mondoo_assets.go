@@ -57,6 +57,7 @@ func initMondooAsset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	args["name"] = llx.StringData(asset.Name)
 	args["mrn"] = llx.StringData(asset.Mrn)
 	args["platform"] = llx.StringData(asset.AssetType)
+	args["state"] = llx.StringData(asset.State)
 	args["annotations"] = llx.MapData(keyvals2map(asset.Annotations), types.Map(types.String, types.String))
 	args["labels"] = llx.MapData(keyvals2map(asset.Labels), types.Map(types.String, types.String))
 	args["updatedAt"] = llx.TimeDataPtr(string2time(asset.UpdatedAt))

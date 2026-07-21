@@ -11,8 +11,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/client"
+	"github.com/moby/moby/client"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 )
 
@@ -27,10 +26,9 @@ func (c *Command) Exec(command string) (*shared.Command, error) {
 	c.Stats.Start = time.Now()
 
 	ctx := context.Background()
-	res, err := c.Client.ContainerExecCreate(ctx, c.Container, container.ExecOptions{
+	res, err := c.Client.ExecCreate(ctx, c.Container, client.ExecCreateOptions{
 		Cmd:          []string{"/bin/sh", "-c", c.Command.Command},
-		Detach:       true,
-		Tty:          false,
+		TTY:          false,
 		AttachStdin:  false,
 		AttachStderr: true,
 		AttachStdout: true,
@@ -39,9 +37,8 @@ func (c *Command) Exec(command string) (*shared.Command, error) {
 		return nil, err
 	}
 
-	resp, err := c.Client.ContainerExecAttach(ctx, res.ID, container.ExecStartOptions{
-		Detach: false,
-		Tty:    false,
+	resp, err := c.Client.ExecAttach(ctx, res.ID, client.ExecAttachOptions{
+		TTY: false,
 	})
 	if err != nil {
 		return nil, err
@@ -71,7 +68,7 @@ func (c *Command) Exec(command string) (*shared.Command, error) {
 
 	c.Stats.Duration = time.Since(c.Stats.Start)
 
-	info, err := c.Client.ContainerExecInspect(ctx, res.ID)
+	info, err := c.Client.ExecInspect(ctx, res.ID, client.ExecInspectOptions{})
 	if err != nil {
 		return nil, err
 	}

@@ -122,11 +122,13 @@ func (o *mqlOciLoadBalancer) getLoadBalancers(conn *connection.OciConnection, re
 					"shape":                     llx.StringDataPtr(lb.ShapeName),
 					"isPrivate":                 llx.BoolDataPtr(lb.IsPrivate),
 					"ipAddresses":               llx.ArrayData(ipAddresses, types.Dict),
+					"nsgIds":                    llx.ArrayData(convert.SliceAnyToInterface(lb.NetworkSecurityGroupIds), types.String),
 					"isDeleteProtectionEnabled": llx.BoolDataPtr(lb.IsDeleteProtectionEnabled),
 					"state":                     llx.StringData(string(lb.LifecycleState)),
 					"created":                   llx.TimeDataPtr(created),
 					"freeformTags":              llx.MapData(freeformTags, types.String),
 					"definedTags":               llx.MapData(definedTags, types.Any),
+					"systemTags":                llx.MapData(definedTagsToAny(lb.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err
@@ -135,6 +137,7 @@ func (o *mqlOciLoadBalancer) getLoadBalancers(conn *connection.OciConnection, re
 				mqlLb.cacheListeners = lb.Listeners
 				mqlLb.cacheBackendSets = lb.BackendSets
 				mqlLb.cacheRegion = regionResource.Id.Data
+				mqlLb.cacheSubnetIDs = lb.SubnetIds
 				res = append(res, mqlLb)
 			}
 
@@ -149,6 +152,7 @@ type mqlOciLoadBalancerLoadBalancerInternal struct {
 	cacheListeners   map[string]loadbalancer.Listener
 	cacheBackendSets map[string]loadbalancer.BackendSet
 	cacheRegion      string
+	cacheSubnetIDs   []string
 }
 
 func initOciLoadBalancerLoadBalancer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

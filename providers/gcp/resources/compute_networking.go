@@ -1237,18 +1237,18 @@ func (g *mqlGcpProjectComputeService) targetPools() ([]any, error) {
 		for _, scopedList := range page.Items {
 			for _, tp := range scopedList.TargetPools {
 				mqlTP, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.targetPool", map[string]*llx.RawData{
-					"id":              llx.StringData(fmt.Sprintf("%d", tp.Id)),
-					"name":            llx.StringData(tp.Name),
-					"description":     llx.StringData(tp.Description),
-					"sessionAffinity": llx.StringData(tp.SessionAffinity),
-					"failoverRatio":   llx.FloatData(tp.FailoverRatio),
-					"backupPool":      llx.StringData(tp.BackupPool),
-					"healthCheckUrls": llx.ArrayData(convert.SliceAnyToInterface(tp.HealthChecks), types.String),
-					"instanceUrls":    llx.ArrayData(convert.SliceAnyToInterface(tp.Instances), types.String),
-					"securityPolicy":  llx.StringData(tp.SecurityPolicy),
-					"regionUrl":       llx.StringData(tp.Region),
-					"selfLink":        llx.StringData(tp.SelfLink),
-					"created":         llx.TimeDataPtr(parseTime(tp.CreationTimestamp)),
+					"id":                llx.StringData(fmt.Sprintf("%d", tp.Id)),
+					"name":              llx.StringData(tp.Name),
+					"description":       llx.StringData(tp.Description),
+					"sessionAffinity":   llx.StringData(tp.SessionAffinity),
+					"failoverRatio":     llx.FloatData(tp.FailoverRatio),
+					"backupPoolUrl":     llx.StringData(tp.BackupPool),
+					"healthCheckUrls":   llx.ArrayData(convert.SliceAnyToInterface(tp.HealthChecks), types.String),
+					"instanceUrls":      llx.ArrayData(convert.SliceAnyToInterface(tp.Instances), types.String),
+					"securityPolicyUrl": llx.StringData(tp.SecurityPolicy),
+					"regionUrl":         llx.StringData(tp.Region),
+					"selfLink":          llx.StringData(tp.SelfLink),
+					"created":           llx.TimeDataPtr(parseTime(tp.CreationTimestamp)),
 				})
 				if err != nil {
 					return err

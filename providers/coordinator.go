@@ -209,29 +209,30 @@ func (c *coordinator) RemoveRuntime(runtime *Runtime) {
 		}
 	}
 
-	// Shutdown any providers that are not being used anymore.
-	// We have runtimes that are used for initialising a scan, but are not
-	// used for the actual scan. They reference no providers, so shouldn't affect
-	// the shutdown of providers.
-	uprocessedRuntimeWithProviders := false
-	for _, rt := range c.unprocessedRuntimes {
-		if rt.Provider != nil {
-			uprocessedRuntimeWithProviders = true
+	// Shut down providers that are no longer referenced by any runtime.
+	// Build a set of provider IDs still in use.
+	usedProviders := map[string]bool{}
+	for _, rt := range c.runtimes {
+		for _, id := range rt.ConnectedProviderIDs() {
+			usedProviders[id] = true
 		}
 	}
-	if len(c.runtimes) == 0 && !uprocessedRuntimeWithProviders {
-		for _, p := range c.runningByID {
-			log.Debug().Msg("shutting down unused provider " + p.Name)
+	for _, rt := range c.unprocessedRuntimes {
+		for _, id := range rt.ConnectedProviderIDs() {
+			usedProviders[id] = true
+		}
+	}
+
+	for _, p := range c.runningByID {
+		if p.isCloseOrShutdown() {
+			log.Warn().Str("provider", p.Name).Msg("removing closed provider")
+			delete(c.runningByID, p.ID)
+			continue
+		}
+		if !usedProviders[p.ID] {
+			log.Debug().Msg("shutting down idle provider " + p.Name)
 			if err := c.stop(p); err != nil {
 				log.Warn().Err(err).Str("provider", p.Name).Msg("failed to shut down provider")
-			}
-		}
-	} else {
-		// Check for killed/crashed providers and remove them from the list of running providers
-		for _, p := range c.runningByID {
-			if p.isCloseOrShutdown() {
-				log.Warn().Str("provider", p.Name).Msg("removing closed provider")
-				delete(c.runningByID, p.ID)
 			}
 		}
 	}
@@ -323,6 +324,11 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 	// restarts triggered by RestartableProvider.Reconnect().
 	crashLog := newCrashLogBuffer(logger.LogOutputWriter, defaultCrashLogLines)
 
+	// procTracker follows the current plugin subprocess (across restarts) so
+	// crash diagnostics can report how it died: exit code vs. signal
+	// (SIGKILL with empty stderr ≈ OOM killer) and peak RSS.
+	procTracker := &processTracker{}
+
 	connectFunc := func() (pp.ProviderPlugin, *plugin.Client, error) {
 		pluginCmd := exec.Command(provider.binPath(), []string{"run_as_plugin", "--log-level", zerolog.GlobalLevel().String()}...)
 
@@ -356,6 +362,12 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 			return nil, nil, errors.Wrap(err, "failed to call "+pluginName+" plugin")
 		}
 
+		// Track only after the handshake succeeds: a failed reconnect
+		// attempt must not re-point the tracker away from the previous
+		// (crashed) subprocess, whose exit disposition is what crash
+		// diagnostics still need to report.
+		procTracker.track(client, pluginCmd)
+
 		return raw.(pp.ProviderPlugin), client, nil
 	}
 
@@ -372,6 +384,7 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 	}
 	res.Version = provider.Version
 	res.crashLog = crashLog
+	res.proc = procTracker
 	c.runningByID[res.ID] = res
 
 	return res, nil

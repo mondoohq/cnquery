@@ -158,8 +158,8 @@ func initAwsEcsCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 
@@ -315,7 +315,7 @@ func (a *mqlAwsEcsCluster) containerInstances() ([]any, error) {
 		nextToken = containerInstances.NextToken
 	}
 	if len(allContainerInstanceArns) > 0 {
-		containerInstancesDetail, err := svc.DescribeContainerInstances(ctx, &ecsservice.DescribeContainerInstancesInput{Cluster: &clustera, ContainerInstances: allContainerInstanceArns})
+		containerInstancesDetail, err := svc.DescribeContainerInstances(ctx, &ecsservice.DescribeContainerInstancesInput{Cluster: &clustera, ContainerInstances: allContainerInstanceArns, Include: []ecstypes.ContainerInstanceField{ecstypes.ContainerInstanceFieldTags}})
 		if err == nil {
 			for _, ci := range containerInstancesDetail.ContainerInstances {
 				versionInfo, err := convert.JsonToDict(ci.VersionInfo)
@@ -345,6 +345,8 @@ func (a *mqlAwsEcsCluster) containerInstances() ([]any, error) {
 					"registeredAt":      llx.TimeDataPtr(ci.RegisteredAt),
 					"versionInfo":       llx.DictData(versionInfo),
 					"attributes":        llx.ArrayData(attributes, types.Dict),
+					"tags":              llx.MapData(ecsTagsToMap(ci.Tags), types.String),
+					"version":           llx.IntData(ci.Version),
 				}
 				if strings.HasPrefix(convert.ToValue(ci.Ec2InstanceId), "i-") {
 					mqlInstanceResource, err := CreateResource(a.MqlRuntime, "aws.ec2.instance",
@@ -427,8 +429,8 @@ func initAwsEcsTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 
@@ -475,9 +477,11 @@ func initAwsEcsTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	args["launchType"] = llx.StringData(string(t.LaunchType))
 	args["capacityProviderName"] = llx.StringData(convert.ToValue(t.CapacityProviderName))
 	args["group"] = llx.StringData(convert.ToValue(t.Group))
+	args["startedBy"] = llx.StringData(convert.ToValue(t.StartedBy))
 	args["enableExecuteCommand"] = llx.BoolData(t.EnableExecuteCommand)
 	args["stopCode"] = llx.StringData(string(t.StopCode))
 	args["stoppedReason"] = llx.StringData(convert.ToValue(t.StoppedReason))
+	args["createdAt"] = llx.TimeDataPtr(t.CreatedAt)
 	args["startedAt"] = llx.TimeDataPtr(t.StartedAt)
 	args["stoppedAt"] = llx.TimeDataPtr(t.StoppedAt)
 
@@ -566,6 +570,7 @@ func (t *mqlAwsEcsTask) containers() ([]any, error) {
 	containerCommandMap := make(map[string][]string)
 	containerUserMap := make(map[string]string)
 	containerInitProcessMap := make(map[string]bool)
+	containerRepoCredsMap := make(map[string]string)
 
 	for i := range definition.TaskDefinition.ContainerDefinitions {
 		cd := definition.TaskDefinition.ContainerDefinitions[i]
@@ -579,6 +584,9 @@ func (t *mqlAwsEcsTask) containers() ([]any, error) {
 			containerUserMap[*cd.Name] = convert.ToValue(cd.User)
 			if cd.LinuxParameters != nil {
 				containerInitProcessMap[*cd.Name] = convert.ToValue(cd.LinuxParameters.InitProcessEnabled)
+			}
+			if cd.RepositoryCredentials != nil {
+				containerRepoCredsMap[*cd.Name] = convert.ToValue(cd.RepositoryCredentials.CredentialsParameter)
 			}
 		}
 	}
@@ -621,7 +629,7 @@ func (t *mqlAwsEcsTask) containers() ([]any, error) {
 				"runtimeId":          llx.StringDataPtr(c.RuntimeId),
 				"status":             llx.StringDataPtr(c.LastStatus),
 				"taskArn":            llx.StringData(t.Arn.Data),
-				"taskDefinitionArn":  llx.StringData(t.Arn.Data),
+				"taskDefinitionArn":  llx.StringDataPtr(t.taskDefArn),
 				"memorySoftLimit":    llx.StringDataPtr(c.MemoryReservation),
 				"memoryHardLimit":    llx.StringDataPtr(c.Memory),
 				"reason":             llx.StringDataPtr(c.Reason),
@@ -631,9 +639,73 @@ func (t *mqlAwsEcsTask) containers() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlContainer.(*mqlAwsEcsContainer).cacheRepositoryCredentialsArn = containerRepoCredsMap[convert.ToValue(c.Name)]
 		containers = append(containers, mqlContainer)
 	}
 	return containers, nil
+}
+
+type mqlAwsEcsContainerInternal struct {
+	cacheRepositoryCredentialsArn string
+}
+
+// ecrImage resolves the ECR image the container is running, when the image is
+// hosted in Elastic Container Registry in this account. The image is frequently
+// pulled from Docker Hub, a public registry, or a cross-account ECR repository,
+// in which case there is no matching aws.ecr.image and the reference is null.
+func (a *mqlAwsEcsContainer) ecrImage() (*mqlAwsEcrImage, error) {
+	image := a.Image.Data
+	digest := a.ImageDigest.Data
+	if digest == "" || !strings.Contains(image, ".dkr.ecr.") {
+		a.EcrImage.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	// <registryId>.dkr.ecr.<region>.amazonaws.com/<repoName>[:tag][@digest]
+	host, path, ok := strings.Cut(image, "/")
+	if !ok {
+		a.EcrImage.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	hostParts := strings.Split(host, ".")
+	if len(hostParts) < 4 {
+		a.EcrImage.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	repoName := path
+	if i := strings.IndexByte(repoName, '@'); i >= 0 {
+		repoName = repoName[:i]
+	}
+	if i := strings.IndexByte(repoName, ':'); i >= 0 {
+		repoName = repoName[:i]
+	}
+	arnVal := ecrImageArn(ImageInfo{Region: hostParts[3], RegistryId: hostParts[0], RepoName: repoName, Digest: digest})
+	res, err := NewResource(a.MqlRuntime, "aws.ecr.image",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		// The image is commonly absent (deleted, or in another account), which
+		// surfaces here as an error; log it so genuine API/permission failures
+		// are still visible, but leave the reference null rather than failing.
+		log.Warn().Err(err).Str("arn", arnVal).Msg("could not resolve ECR image for ECS container")
+		a.EcrImage.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return res.(*mqlAwsEcrImage), nil
+}
+
+// repositoryCredentialsSecret resolves the Secrets Manager secret holding the
+// private registry credentials used to pull the image. Only set when the task
+// definition configures repositoryCredentials.
+func (a *mqlAwsEcsContainer) repositoryCredentialsSecret() (*mqlAwsSecretsmanagerSecret, error) {
+	if a.cacheRepositoryCredentialsArn == "" {
+		a.RepositoryCredentialsSecret.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.secretsmanager.secret",
+		map[string]*llx.RawData{"arn": llx.StringData(a.cacheRepositoryCredentialsArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsSecretsmanagerSecret), nil
 }
 
 func getContainerIP(eniPublicIPs map[string]string, attachments []ecstypes.Attachment, c ecstypes.Container) string {
@@ -694,13 +766,7 @@ func (s *mqlAwsEcsContainer) id() (string, error) {
 }
 
 func ecsTagsToMap(tags []ecstypes.Tag) map[string]any {
-	res := map[string]any{}
-	for _, tag := range tags {
-		if tag.Key != nil && tag.Value != nil {
-			res[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
-		}
-	}
-	return res
+	return tagsToMap(tags, func(t ecstypes.Tag) *string { return t.Key }, func(t ecstypes.Tag) *string { return t.Value })
 }
 
 // validateAndParseARN validates that the given string is a valid ECS ARN
@@ -850,7 +916,7 @@ func createTaskDefinitionResource(runtime *plugin.Runtime, region string, td *ec
 	// Create volumes
 	volumes := []any{}
 	for i := range td.Volumes {
-		mqlVolume, err := createVolumeResource(runtime, &td.Volumes[i])
+		mqlVolume, err := createVolumeResource(runtime, region, &td.Volumes[i])
 		if err != nil {
 			return nil, err
 		}
@@ -1146,7 +1212,7 @@ func createContainerDefinitionResource(runtime *plugin.Runtime, taskDefArn strin
 		})
 }
 
-func createVolumeResource(runtime *plugin.Runtime, vol *ecstypes.Volume) (any, error) {
+func createVolumeResource(runtime *plugin.Runtime, region string, vol *ecstypes.Volume) (any, error) {
 	volName := ""
 	if vol.Name != nil {
 		volName = *vol.Name
@@ -1219,6 +1285,7 @@ func createVolumeResource(runtime *plugin.Runtime, vol *ecstypes.Volume) (any, e
 		if err != nil {
 			return nil, err
 		}
+		mqlEfsConfig.(*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration).region = region
 		efsVolConfig = mqlEfsConfig
 	} else {
 		// Create empty EFS config
@@ -1488,9 +1555,17 @@ func (a *mqlAwsEcsTaskDefinition) fetchDetail() error {
 	} else {
 		a.RegisteredAt = plugin.TValue[*time.Time]{Data: &llx.NeverFutureTime, State: plugin.StateIsSet}
 	}
+	a.RegisteredBy = plugin.TValue[string]{Data: convert.ToValue(td.RegisteredBy), State: plugin.StateIsSet}
 
 	a.fetched = true
 	return nil
+}
+
+func (a *mqlAwsEcsTaskDefinition) registeredBy() (string, error) {
+	if err := a.fetchDetail(); err != nil {
+		return "", err
+	}
+	return a.RegisteredBy.Data, nil
 }
 
 func (a *mqlAwsEcsTaskDefinition) family() (string, error) {
@@ -1701,7 +1776,7 @@ func (a *mqlAwsEcsTaskDefinition) volumes() ([]any, error) {
 	}
 	volumes := []any{}
 	for i := range td.Volumes {
-		mqlVolume, err := createVolumeResource(a.MqlRuntime, &td.Volumes[i])
+		mqlVolume, err := createVolumeResource(a.MqlRuntime, a.Region.Data, &td.Volumes[i])
 		if err != nil {
 			return nil, err
 		}
@@ -1856,8 +1931,28 @@ func (a *mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration) authorizationConfi
 	return a.AuthorizationConfig.Data, nil
 }
 
+type mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationInternal struct {
+	region string
+}
+
 func (a *mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration) id() (string, error) {
 	return a.__id, nil
+}
+
+func (a *mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration) fileSystem() (*mqlAwsEfsFilesystem, error) {
+	fsID := a.FileSystemId.Data
+	if fsID == "" {
+		a.FileSystem.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arnStr := fmt.Sprintf(efsFilesystemArnPattern, a.region, conn.AccountId(), fsID)
+	res, err := NewResource(a.MqlRuntime, "aws.efs.filesystem",
+		map[string]*llx.RawData{"arn": llx.StringData(arnStr)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEfsFilesystem), nil
 }
 
 func (a *mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationAuthorizationConfig) id() (string, error) {
@@ -1991,8 +2086,8 @@ func initAwsEcsService(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 
@@ -2436,6 +2531,24 @@ func (a *mqlAwsEcsContainer) task() (*mqlAwsEcsTask, error) {
 	return res.(*mqlAwsEcsTask), nil
 }
 
+func (a *mqlAwsEcsService) taskDefinitionRef() (*mqlAwsEcsTaskDefinition, error) {
+	arnVal := a.TaskDefinition.Data
+	if arnVal == "" {
+		a.TaskDefinitionRef.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	region, err := GetRegionFromArn(arnVal)
+	if err != nil {
+		return nil, err
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.ecs.taskDefinition",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal), "region": llx.StringData(region)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEcsTaskDefinition), nil
+}
+
 func (a *mqlAwsEcsService) cluster() (*mqlAwsEcsCluster, error) {
 	arnVal := a.ClusterArn.Data
 	if arnVal == "" {
@@ -2484,8 +2597,8 @@ func initAwsEcsTaskDefinition(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 

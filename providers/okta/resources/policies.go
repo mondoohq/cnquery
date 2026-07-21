@@ -6,11 +6,7 @@ package resources
 import (
 	"context"
 	"encoding/json"
-	"errors"
-	"fmt"
-	"io"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 
@@ -260,30 +256,19 @@ func (o *mqlOktaPolicyRule) id() (string, error) {
 // see https://github.com/okta/okta-sdk-golang/issues/286 for context. okta's sdk doesn't let you fetch
 // type-specific rules which differ between the different policies. as such, we fetch those manually.
 func fetchAccessPolicyRules(ctx context.Context, policyid, host, token string) ([]oktaPolicyRuleRaw, error) {
-	urlPath := fmt.Sprintf("https://%s/api/v1/policies/%s/rules?limit=50", host, url.PathEscape(policyid))
-	client := http.Client{}
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, urlPath, nil)
+	apiSupplement := &sdk.ApiExtension{Host: host, Token: token}
+	raws, err := apiSupplement.ListPolicyRules(ctx, policyid, queryLimit)
 	if err != nil {
 		return nil, err
-	}
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("SSWS %s", token))
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, errors.New("failed to fetch access policy rules from " + urlPath + ": " + resp.Status)
 	}
 
-	raw, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
+	result := make([]oktaPolicyRuleRaw, 0, len(raws))
+	for _, raw := range raws {
+		var entry oktaPolicyRuleRaw
+		if err := json.Unmarshal(raw, &entry); err != nil {
+			return nil, err
+		}
+		result = append(result, entry)
 	}
-	result := []oktaPolicyRuleRaw{}
-	err = json.Unmarshal(raw, &result)
-	return result, err
+	return result, nil
 }

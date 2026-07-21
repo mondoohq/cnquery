@@ -121,7 +121,10 @@ func initAwsAutoscalingGroup(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		populateAutoscalingGroupInternals(mqlGroup.(*mqlAwsAutoscalingGroup), group, region, conn.AccountId())
 		return args, mqlGroup, nil
 	}
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.autoscaling.group with name %q not found", name)
 }
 
 // autoscalingGroupArgs builds the lr-field arg map from an SDK AutoScalingGroup.
@@ -312,16 +315,7 @@ func (a *mqlAwsAutoscaling) getGroups(conn *connection.AwsConnection) []*jobpool
 }
 
 func autoscalingTagsToMap(tags []ec2types.TagDescription) map[string]any {
-	tagsMap := make(map[string]any)
-
-	if len(tags) > 0 {
-		for i := range tags {
-			tag := tags[i]
-			tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
-		}
-	}
-
-	return tagsMap
+	return tagsToMap(tags, func(t ec2types.TagDescription) *string { return t.Key }, func(t ec2types.TagDescription) *string { return t.Value })
 }
 
 func createTagSpecifications(runtime *plugin.Runtime, tags []ec2types.TagDescription, groupArn string) ([]any, error) {

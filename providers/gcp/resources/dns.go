@@ -50,19 +50,21 @@ func initGcpProjectDnsServiceManagedzone(runtime *plugin.Runtime, args map[strin
 		return nil, nil, managedzones.Error
 	}
 
-	// Find the matching managed zone
+	// Find the matching managed zone. The asset identifier / lookup key is the
+	// zone name (getAssetIdentifier stores it in args["name"]), not the numeric
+	// zone id — so match on the name field.
 	for _, mz := range managedzones.Data {
 		managedzone := mz.(*mqlGcpProjectDnsServiceManagedzone)
-		id := managedzone.GetId()
-		if id.Error != nil {
-			return nil, nil, id.Error
+		name := managedzone.GetName()
+		if name.Error != nil {
+			return nil, nil, name.Error
 		}
 		projectId := managedzone.GetProjectId()
 		if projectId.Error != nil {
 			return nil, nil, projectId.Error
 		}
 
-		if id.Data == args["name"].Value && projectId.Data == args["projectId"].Value {
+		if name.Data == args["name"].Value && projectId.Data == args["projectId"].Value {
 			return args, managedzone, nil
 		}
 	}
@@ -134,6 +136,28 @@ func initGcpProjectDnsService(runtime *plugin.Runtime, args map[string]*llx.RawD
 	args["projectId"] = llx.StringData(projectId)
 
 	return args, nil, nil
+}
+
+type mqlGcpProjectDnsServiceManagedzoneInternal struct {
+	cacheAuthorizedNetworkUrls []string
+}
+
+func (g *mqlGcpProjectDnsServiceManagedzone) authorizedNetworks() ([]any, error) {
+	res := make([]any, 0, len(g.cacheAuthorizedNetworkUrls))
+	for _, url := range g.cacheAuthorizedNetworkUrls {
+		n, err := getNetworkByUrl(url, g.MqlRuntime)
+		if err != nil {
+			return nil, err
+		}
+		if n != nil {
+			res = append(res, n)
+		}
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectDnsServiceManagedzone) managedBy() (string, error) {
+	return managedByFromLabels(&g.Labels)
 }
 
 func (g *mqlGcpProjectDnsServiceManagedzone) peeringNetworkRef() (*mqlGcpProjectComputeServiceNetwork, error) {
@@ -220,12 +244,16 @@ func (g *mqlGcpProjectDnsService) managedZones() ([]any, error) {
 			}
 
 			var mqlPrivateVisibilityCfg map[string]any
+			authorizedNetworkUrls := []string{}
 			if managedZone.PrivateVisibilityConfig != nil {
 				networks := make([]any, 0, len(managedZone.PrivateVisibilityConfig.Networks))
 				for _, n := range managedZone.PrivateVisibilityConfig.Networks {
 					networks = append(networks, map[string]any{
 						"networkUrl": n.NetworkUrl,
 					})
+					if n.NetworkUrl != "" {
+						authorizedNetworkUrls = append(authorizedNetworkUrls, n.NetworkUrl)
+					}
 				}
 				gkeClusters := make([]any, 0, len(managedZone.PrivateVisibilityConfig.GkeClusters))
 				for _, c := range managedZone.PrivateVisibilityConfig.GkeClusters {
@@ -276,6 +304,7 @@ func (g *mqlGcpProjectDnsService) managedZones() ([]any, error) {
 			if err != nil {
 				return err
 			}
+			mqlManagedZone.(*mqlGcpProjectDnsServiceManagedzone).cacheAuthorizedNetworkUrls = authorizedNetworkUrls
 			res = append(res, mqlManagedZone)
 		}
 		return nil
@@ -529,8 +558,14 @@ func (g *mqlGcpProjectDnsServiceRecordset) id() (string, error) {
 	if g.Name.Error != nil {
 		return "", g.Name.Error
 	}
-	id := g.Name.Data
-	return "gcp.project.dnsService.recordset/" + projectId + "/" + id, nil
+	if g.Type.Error != nil {
+		return "", g.Type.Error
+	}
+	// A managed zone can hold several record sets that share a name but
+	// differ by type (e.g. an A and an MX record for the same domain), so
+	// the type must be part of the key. The authoritative cache key set at
+	// creation also includes the managed zone for cross-zone uniqueness.
+	return "gcp.project.dnsService.recordset/" + projectId + "/" + g.Name.Data + "/" + g.Type.Data, nil
 }
 
 func (g *mqlGcpProjectDnsServiceManagedzone) dnsSecAlgorithmWeak() (bool, error) {
@@ -656,6 +691,9 @@ func (g *mqlGcpProjectDnsServiceManagedzone) recordSets() ([]any, error) {
 			rSet := page.Rrsets[i]
 
 			mqlDnsPolicy, err := CreateResource(g.MqlRuntime, "gcp.project.dnsService.recordset", map[string]*llx.RawData{
+				// Record sets are keyed by (zone, name, type); include all
+				// three so records that share a name don't alias in the cache.
+				"__id":             llx.StringData("gcp.project.dnsService.recordset/" + projectId + "/" + managedZone + "/" + rSet.Name + "/" + rSet.Type),
 				"projectId":        llx.StringData(projectId),
 				"name":             llx.StringData(rSet.Name),
 				"rrdatas":          llx.ArrayData(convert.SliceAnyToInterface(rSet.Rrdatas), types.String),

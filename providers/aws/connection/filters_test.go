@@ -227,6 +227,50 @@ func TestEcrMatchesExcludeTags(t *testing.T) {
 	})
 }
 
+func TestS3IsFilteredOut(t *testing.T) {
+	t.Run("no filters keeps every bucket", func(t *testing.T) {
+		filters := S3DiscoveryFilters{}
+		require.False(t, filters.IsFilteredOut("my-bucket"))
+	})
+
+	t.Run("include list keeps matching bucket", func(t *testing.T) {
+		filters := S3DiscoveryFilters{
+			BucketNames: []string{"my-bucket", "other-bucket"},
+		}
+		require.False(t, filters.IsFilteredOut("my-bucket"))
+	})
+
+	t.Run("include list drops non-matching bucket", func(t *testing.T) {
+		filters := S3DiscoveryFilters{
+			BucketNames: []string{"my-bucket"},
+		}
+		require.True(t, filters.IsFilteredOut("other-bucket"))
+	})
+
+	t.Run("exclude list drops matching bucket", func(t *testing.T) {
+		filters := S3DiscoveryFilters{
+			ExcludeBucketNames: []string{"my-bucket"},
+		}
+		require.True(t, filters.IsFilteredOut("my-bucket"))
+	})
+
+	t.Run("exclude list keeps non-matching bucket", func(t *testing.T) {
+		filters := S3DiscoveryFilters{
+			ExcludeBucketNames: []string{"my-bucket"},
+		}
+		require.False(t, filters.IsFilteredOut("other-bucket"))
+	})
+
+	t.Run("exclude wins when bucket is in both include and exclude lists", func(t *testing.T) {
+		filters := S3DiscoveryFilters{
+			BucketNames:        []string{"my-bucket", "other-bucket"},
+			ExcludeBucketNames: []string{"my-bucket"},
+		}
+		require.True(t, filters.IsFilteredOut("my-bucket"))
+		require.False(t, filters.IsFilteredOut("other-bucket"))
+	})
+}
+
 func TestDiscoveryFiltersFromOpts(t *testing.T) {
 	t.Run("all opts are mapped to discovery filters correctly", func(t *testing.T) {
 		opts := map[string]string{
@@ -254,6 +298,10 @@ func TestDiscoveryFiltersFromOpts(t *testing.T) {
 			"ecr:public-repository-names": "pub1,pub2",
 			// EcrDiscoveryFilters.Scope
 			"ecr:scope": "private",
+			// S3DiscoveryFilters.BucketNames
+			"s3:bucket-names": "bucket1,bucket2",
+			// S3DiscoveryFilters.ExcludeBucketNames
+			"s3:exclude:bucket-names": "bucket3,bucket4",
 			// EcsDiscoveryFilters
 			"ecs:only-running-containers": "true",
 			"ecs:discover-images":         "T",
@@ -292,6 +340,10 @@ func TestDiscoveryFiltersFromOpts(t *testing.T) {
 				PublicRepositoryNames:  []string{"pub1", "pub2"},
 				Scope:                  EcrScopePrivate,
 			},
+			S3: S3DiscoveryFilters{
+				BucketNames:        []string{"bucket1", "bucket2"},
+				ExcludeBucketNames: []string{"bucket3", "bucket4"},
+			},
 			PropagateAccountTags: true,
 			AccountTags: map[string]string{
 				"Owner":      "team-a",
@@ -321,6 +373,10 @@ func TestDiscoveryFiltersFromOpts(t *testing.T) {
 				PrivateRepositoryNames: []string{},
 				PublicRepositoryNames:  []string{},
 			},
+			S3: S3DiscoveryFilters{
+				BucketNames:        []string{},
+				ExcludeBucketNames: []string{},
+			},
 			Ecs:         EcsDiscoveryFilters{},
 			AccountTags: map[string]string{},
 		}
@@ -345,6 +401,10 @@ func TestDiscoveryFiltersFromOpts(t *testing.T) {
 				ExcludeTags:            []string{},
 				PrivateRepositoryNames: []string{},
 				PublicRepositoryNames:  []string{},
+			},
+			S3: S3DiscoveryFilters{
+				BucketNames:        []string{},
+				ExcludeBucketNames: []string{},
 			},
 			Ecs:         EcsDiscoveryFilters{},
 			AccountTags: map[string]string{},
@@ -384,59 +444,6 @@ func TestParseMapOpt(t *testing.T) {
 		result := parseMapOpt(opts, "tag:")
 		expected := map[string]string{}
 		require.Equal(t, expected, result)
-	})
-}
-
-func TestParseCsvSliceOpt(t *testing.T) {
-	t.Run("parses comma-separated values correctly", func(t *testing.T) {
-		opts := map[string]string{
-			"key": "value1,value2,value3",
-		}
-		result := parseCsvSliceOpt(opts, "key")
-		expected := []string{"value1", "value2", "value3"}
-		require.Equal(t, expected, result)
-	})
-
-	t.Run("returns empty slice for missing key", func(t *testing.T) {
-		opts := map[string]string{}
-		result := parseCsvSliceOpt(opts, "key")
-		expected := []string{}
-		require.Equal(t, expected, result)
-	})
-
-	t.Run("returns empty slice for empty value", func(t *testing.T) {
-		opts := map[string]string{
-			"key": "",
-		}
-		result := parseCsvSliceOpt(opts, "key")
-		expected := []string{}
-		require.Equal(t, expected, result)
-	})
-}
-
-func TestParseBoolOpt(t *testing.T) {
-	t.Run("parses true values correctly", func(t *testing.T) {
-		trueValues := []string{"true", "TRUE", "t", "T", "1"}
-		for _, val := range trueValues {
-			result := parseBoolOpt(map[string]string{"key": val}, "key", false)
-			require.True(t, result)
-		}
-	})
-
-	t.Run("parses false values correctly", func(t *testing.T) {
-		falseValues := []string{"false", "FALSE", "f", "F", "0"}
-		for _, val := range falseValues {
-			result := parseBoolOpt(map[string]string{"key": val}, "key", true)
-			require.False(t, result)
-		}
-	})
-
-	t.Run("returns default for missing key", func(t *testing.T) {
-		result := parseBoolOpt(map[string]string{}, "key", true)
-		require.True(t, result)
-
-		result = parseBoolOpt(map[string]string{}, "key", false)
-		require.False(t, result)
 	})
 }
 

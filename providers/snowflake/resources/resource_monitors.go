@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"go.mondoo.com/mql/v13/llx"
@@ -99,4 +100,60 @@ func (r *mqlSnowflakeResourceMonitor) suspendAt() (int64, error) {
 
 func (r *mqlSnowflakeResourceMonitor) suspendImmediateAt() (int64, error) {
 	return 0, nil
+}
+
+// initSnowflakeResourceMonitor resolves a resource monitor by name so typed
+// references (such as snowflake.warehouse.resourceMonitorRef) can hydrate a full
+// monitor from just its name.
+func initSnowflakeResourceMonitor(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	nameRaw, ok := args["name"]
+	if !ok {
+		return args, nil, nil
+	}
+	name, _ := nameRaw.Value.(string)
+	if name == "" {
+		return nil, nil, fmt.Errorf("snowflake.resourceMonitor requires a non-empty name")
+	}
+
+	conn := runtime.Connection.(*connection.SnowflakeConnection)
+	client := conn.Client()
+	ctx := context.Background()
+
+	monitors, err := client.ResourceMonitors.Show(ctx, &sdk.ShowResourceMonitorOptions{Like: &sdk.Like{Pattern: sdk.String(name)}})
+	if err != nil {
+		return nil, nil, err
+	}
+	for i := range monitors {
+		if monitors[i].Name == name {
+			res, err := newMqlSnowflakeResourceMonitor(runtime, monitors[i])
+			if err != nil {
+				return nil, nil, err
+			}
+			return nil, res, nil
+		}
+	}
+	return nil, nil, fmt.Errorf("snowflake.resourceMonitor %q not found", name)
+}
+
+// snowflakeResourceMonitorByName resolves a monitor name to a typed
+// snowflake.resourceMonitor, or a null resource when the name is empty.
+func snowflakeResourceMonitorByName(runtime *plugin.Runtime, name string, field *plugin.TValue[*mqlSnowflakeResourceMonitor]) (*mqlSnowflakeResourceMonitor, error) {
+	if name == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "snowflake.resourceMonitor", map[string]*llx.RawData{
+		"name": llx.StringData(name),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlSnowflakeResourceMonitor), nil
+}
+
+func (r *mqlSnowflakeResourceMonitor) ownerRole() (*mqlSnowflakeRole, error) {
+	return resolveOwnerRole(r.MqlRuntime, r.Owner.Data, &r.OwnerRole)
 }

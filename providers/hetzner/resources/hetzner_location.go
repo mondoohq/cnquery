@@ -52,6 +52,13 @@ func newMqlHetznerLocation(runtime *plugin.Runtime, loc *hcloud.Location) (*mqlH
 	return res.(*mqlHetznerLocation), nil
 }
 
+func (m *mqlHetznerLocation) servers() ([]any, error) {
+	locID := m.Id.Data
+	return serversMatching(m.MqlRuntime, func(s *hcloud.Server) bool {
+		return s.Location != nil && s.Location.ID == locID
+	})
+}
+
 func initHetznerLocation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
 	if !ok {

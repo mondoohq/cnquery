@@ -20,13 +20,25 @@ type PlatformResolver struct {
 	Detect   detect
 }
 
+// isUnidentifiedPlatform reports whether detection could not pin down which
+// system this actually is: either nothing named it at all, or the generic
+// fallback resolver was the one that claimed it. Container images in that state
+// are reported as "scratch" instead of by a derived or generic name.
+//
+// This deliberately keys off the resolver that matched rather than the platform
+// name, because a resolver does not always emit the name it is registered under
+// (the "oracle" resolver emits "oraclelinux", for example).
+func isUnidentifiedPlatform(pf *inventory.Platform, leaf *PlatformResolver) bool {
+	return pf.Name == "" || leaf == defaultLinux
+}
+
 func (r *PlatformResolver) Resolve(conn shared.Connection) (*inventory.Platform, bool) {
 	// prepare detect info object
 	platform := &inventory.Platform{}
 	platform.Family = make([]string, 0)
 
 	// start recursive platform resolution
-	pi, resolved := r.resolvePlatform(platform, conn)
+	pi, leaf, resolved := r.resolvePlatform(platform, conn)
 
 	// if we have a container image use the architecture specified in the transport as it is resolved
 	// using the container image properties
@@ -36,8 +48,8 @@ func (r *PlatformResolver) Resolve(conn shared.Connection) (*inventory.Platform,
 		platform.Runtime = "docker-image"
 		platform.Kind = "container-image"
 
-		// if the platform name is not set, we should fallback to the scratch operating system
-		if len(pi.Name) == 0 {
+		// if we could not identify the system, we should fallback to the scratch operating system
+		if isUnidentifiedPlatform(pi, leaf) {
 			platform.Name = "scratch"
 			platform.Arch = tarConn.PlatformArchitecture
 			return platform, true
@@ -50,11 +62,20 @@ func (r *PlatformResolver) Resolve(conn shared.Connection) (*inventory.Platform,
 		platform.Runtime = string(containerConn.Type())
 		platform.Kind = "container"
 
-		// if the platform name is not set, we should fallback to the scratch operating system
-		if len(pi.Name) == 0 {
+		// if we could not identify the system, we should fallback to the scratch operating system
+		if isUnidentifiedPlatform(pi, leaf) {
 			platform.Name = "scratch"
 			platform.Arch = pi.Arch
 			return platform, true
+		}
+	}
+
+	// If architecture could not be determined via command-based detection
+	// (e.g. a filesystem-only scan with no command capability), fall back to
+	// inspecting the ELF header of a well-known binary on the target.
+	if resolved && pi.Arch == "" {
+		if arch := archFromELF(conn.FileSystem()); arch != "" {
+			pi.Arch = arch
 		}
 	}
 
@@ -64,22 +85,24 @@ func (r *PlatformResolver) Resolve(conn shared.Connection) (*inventory.Platform,
 
 // Resolve tries to find recursively all
 // platforms until a leaf (operating systems) detect
-// mechanism is returning true
-func (r *PlatformResolver) resolvePlatform(pf *inventory.Platform, conn shared.Connection) (*inventory.Platform, bool) {
+// mechanism is returning true. It also returns the leaf resolver that claimed
+// the platform, so callers can tell an identified system apart from one that
+// only matched a generic fallback.
+func (r *PlatformResolver) resolvePlatform(pf *inventory.Platform, conn shared.Connection) (*inventory.Platform, *PlatformResolver, bool) {
 	detected, err := r.Detect(r, pf, conn)
 	if err != nil {
-		return pf, false
+		return pf, nil, false
 	}
 
 	// if detection is true but we have a family
 	if detected && r.IsFamily {
 		// we are a family and we may have children to try
 		for _, c := range r.Children {
-			detected, resolved := c.resolvePlatform(pf, conn)
+			detected, leaf, resolved := c.resolvePlatform(pf, conn)
 			if resolved {
 				// add family hierarchy
 				detected.Family = append(pf.Family, r.Name)
-				return detected, resolved
+				return detected, leaf, resolved
 			}
 		}
 
@@ -91,9 +114,9 @@ func (r *PlatformResolver) resolvePlatform(pf *inventory.Platform, conn shared.C
 
 	// return if the detect is true and we have a leaf
 	if detected && !r.IsFamily {
-		return pf, true
+		return pf, r, true
 	}
 
 	// could not find it
-	return pf, false
+	return pf, nil, false
 }

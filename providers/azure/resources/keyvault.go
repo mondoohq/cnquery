@@ -30,7 +30,18 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azsecrets"
 )
 
-var keyvaultidRegex = regexp.MustCompile(`^(https:\/\/([^\/]*)\.vault\.azure\.net)\/(certificates|secrets|keys)\/([^\/]*)(?:\/([^\/]*)){0,1}$`)
+var keyvaultidRegex = regexp.MustCompile(`^(https:\/\/([^\/]*)\.(?:vault|managedhsm)\.azure\.net)\/(certificates|secrets|keys)\/([^\/]*)(?:\/([^\/]*)){0,1}$`)
+
+// isKeyRotateAction reports whether a key rotation policy lifetime action is a
+// "Rotate" action. Both the action wrapper and its inner Type are nullable
+// pointers, so both are guarded to avoid a nil dereference. Per the Key Vault
+// SDK the action value is compared case-insensitively.
+func isKeyRotateAction(action *azkeys.LifetimeActionType) bool {
+	if action == nil || action.Type == nil {
+		return false
+	}
+	return strings.EqualFold(string(*action.Type), string(azkeys.KeyRotationPolicyActionRotate))
+}
 
 type keyvaultid struct {
 	BaseUrl string
@@ -427,7 +438,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) autorotation() ([]any, error)
 					return nil
 				}
 				for _, action := range policyResp.LifetimeActions {
-					if action.Action != nil && string(*action.Action.Type) == "Rotate" {
+					if isKeyRotateAction(action.Action) {
 						mu.Lock()
 						enabledByKid[kid] = true
 						mu.Unlock()
@@ -547,6 +558,11 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) certificates() ([]any, error)
 func (a *mqlAzureSubscriptionKeyVaultServiceVault) diagnosticSettings() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	return getDiagnosticSettings(a.Id.Data, a.MqlRuntime, conn)
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) diagnosticSettingsCategories() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	return getDiagnosticSettingsCategories(a.Id.Data, a.MqlRuntime, conn)
 }
 
 func (a *mqlAzureSubscriptionKeyVaultServiceVault) privateEndpointConnections() ([]any, error) {
@@ -990,7 +1006,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceKey) rotationPolicy() (*mqlAzureSubs
 			}
 			lifetimeActions = append(lifetimeActions, actionDict)
 
-			if action.Action != nil && string(*action.Action.Type) == "Rotate" {
+			if isKeyRotateAction(action.Action) {
 				rotationEnabled = true
 			}
 		}
@@ -1591,8 +1607,127 @@ func (a *mqlAzureSubscriptionKeyVaultServiceManagedHsm) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+// initAzureSubscriptionKeyVaultServiceManagedHsm resolves a single managed HSM.
+// When called without arguments it falls back to the discovered asset's
+// platform id (see getAssetIdentifier), so an azure-keyvault-managedhsm asset
+// resolves to its backing HSM instead of an empty husk.
+func initAzureSubscriptionKeyVaultServiceManagedHsm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["id"] = llx.StringData(ids.id)
+		}
+	}
+
+	if args["id"] == nil {
+		return nil, nil, errors.New("id required to fetch azure managed hsm")
+	}
+
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+
+	res, err := NewResource(runtime, "azure.subscription.keyVaultService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(conn.SubId()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	kvSvc := res.(*mqlAzureSubscriptionKeyVaultService)
+	hsms := kvSvc.GetManagedHsms()
+	if hsms.Error != nil {
+		return nil, nil, hsms.Error
+	}
+	id := args["id"].Value.(string)
+	for _, entry := range hsms.Data {
+		hsm := entry.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm)
+		if hsm.Id.Data == id {
+			return args, hsm, nil
+		}
+	}
+
+	return nil, nil, errors.New("azure managed hsm does not exist")
+}
+
 type mqlAzureSubscriptionKeyVaultServiceManagedHsmInternal struct {
 	cachePrivateEndpointConnections []*keyvault.MHSMPrivateEndpointConnectionItem
+	cacheSystemData                 any
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceManagedHsm) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+// keys enumerates the cryptographic keys held in the Managed HSM pool. Reading
+// keys requires data-plane access to the HSM (a Managed HSM local RBAC role),
+// which is distinct from the management-plane permission that lists the pool;
+// when that access is missing the HSM returns 401/403 and this gracefully
+// degrades to the keys resolved so far.
+func (a *mqlAzureSubscriptionKeyVaultServiceManagedHsm) keys() ([]any, error) {
+	res := []any{}
+	hsmUri := a.GetHsmUri()
+	if hsmUri.Error != nil {
+		return nil, hsmUri.Error
+	}
+	if hsmUri.Data == "" {
+		return res, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	client, err := azkeys.NewClient(hsmUri.Data, token, &azkeys.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	pager := client.NewListKeyPropertiesPager(&azkeys.ListKeyPropertiesOptions{})
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && (respErr.StatusCode == http.StatusUnauthorized || respErr.StatusCode == http.StatusForbidden) {
+				log.Warn().Err(err).Str("hsm", hsmUri.Data).Msg("azure> no data-plane access to list managed HSM keys, returning partial results")
+				return res, nil
+			}
+			return nil, err
+		}
+
+		for _, entry := range page.Value {
+			fields := map[string]*llx.RawData{
+				"kid":           llx.StringDataPtr((*string)(entry.KID)),
+				"managed":       llx.BoolDataPtr(entry.Managed),
+				"tags":          llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
+				"enabled":       llx.BoolDataPtr(nil),
+				"created":       llx.TimeDataPtr(nil),
+				"updated":       llx.TimeDataPtr(nil),
+				"expires":       llx.TimeDataPtr(nil),
+				"notBefore":     llx.TimeDataPtr(nil),
+				"recoveryLevel": llx.StringDataPtr(nil),
+			}
+			// Attributes is optional on the list response; guard against a
+			// nil pointer so a sparse key summary can't panic the scan.
+			if attrs := entry.Attributes; attrs != nil {
+				fields["enabled"] = llx.BoolDataPtr(attrs.Enabled)
+				fields["created"] = llx.TimeDataPtr(attrs.Created)
+				fields["updated"] = llx.TimeDataPtr(attrs.Updated)
+				fields["expires"] = llx.TimeDataPtr(attrs.Expires)
+				fields["notBefore"] = llx.TimeDataPtr(attrs.NotBefore)
+				fields["recoveryLevel"] = llx.StringDataPtr((*string)(attrs.RecoveryLevel))
+			}
+			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.key", fields)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAzure)
+		}
+	}
+
+	return res, nil
 }
 
 func (a *mqlAzureSubscriptionKeyVaultService) managedHsms() ([]any, error) {
@@ -1694,6 +1829,12 @@ func (a *mqlAzureSubscriptionKeyVaultService) managedHsms() ([]any, error) {
 			// Cache private endpoint connections for lazy loading
 			mqlHsmTyped := mqlHsm.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm)
 			mqlHsmTyped.cachePrivateEndpointConnections = privateEndpointConns
+
+			sysData, err := convert.JsonToDict(hsm.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlHsmTyped.cacheSystemData = sysData
 
 			res = append(res, mqlHsm)
 		}

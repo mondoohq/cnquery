@@ -41,9 +41,11 @@ func databaseArgs(db *godo.Database) map[string]*llx.RawData {
 	// Host/port are exposed separately for connectivity checks.
 	connHost := ""
 	connPort := int64(0)
+	connSslEnabled := false
 	if db.Connection != nil {
 		connHost = db.Connection.Host
 		connPort = int64(db.Connection.Port)
+		connSslEnabled = db.Connection.SSL
 	}
 	privConnHost := ""
 	privConnPort := int64(0)
@@ -115,6 +117,7 @@ func databaseArgs(db *godo.Database) map[string]*llx.RawData {
 		"maintenanceWindow":                llx.DictData(mw),
 		"connectionHost":                   llx.StringData(connHost),
 		"connectionPort":                   llx.IntData(connPort),
+		"connectionSslEnabled":             llx.BoolData(connSslEnabled),
 		"privateConnectionHost":            llx.StringData(privConnHost),
 		"privateConnectionPort":            llx.IntData(privConnPort),
 		"storageAutoscaleEnabled":          llx.BoolData(storageAutoscaleEnabled),
@@ -391,7 +394,10 @@ func kubernetesClusterArgs(c *godo.KubernetesCluster) map[string]*llx.RawData {
 	}
 
 	var routingAgentEnabled, amdGpuEnabled, amdGpuMetricsEnabled *bool
-	var nvidiaGpuEnabled, rdmaEnabled, corednsAutoscalerEnabled *bool
+	var nvidiaGpuEnabled, rdmaEnabled, corednsAutoscalerEnabled, p2pOciRegistryEnabled *bool
+	if c.P2pOciRegistryPlugin != nil {
+		p2pOciRegistryEnabled = c.P2pOciRegistryPlugin.Enabled
+	}
 	if c.RoutingAgent != nil {
 		routingAgentEnabled = c.RoutingAgent.Enabled
 	}
@@ -409,6 +415,20 @@ func kubernetesClusterArgs(c *godo.KubernetesCluster) map[string]*llx.RawData {
 	}
 	if c.CorednsAutoscaler != nil {
 		corednsAutoscalerEnabled = c.CorednsAutoscaler.Enabled
+	}
+
+	autoscaler := map[string]interface{}{}
+	if c.ClusterAutoscalerConfiguration != nil {
+		ca := c.ClusterAutoscalerConfiguration
+		if ca.ScaleDownUtilizationThreshold != nil {
+			autoscaler["scaleDownUtilizationThreshold"] = *ca.ScaleDownUtilizationThreshold
+		}
+		if ca.ScaleDownUnneededTime != nil {
+			autoscaler["scaleDownUnneededTime"] = *ca.ScaleDownUnneededTime
+		}
+		if len(ca.Expanders) > 0 {
+			autoscaler["expanders"] = toStringSlice(ca.Expanders)
+		}
 	}
 
 	return map[string]*llx.RawData{
@@ -443,7 +463,32 @@ func kubernetesClusterArgs(c *godo.KubernetesCluster) map[string]*llx.RawData {
 		"nvidiaGpuDevicePluginEnabled":             llx.BoolDataPtr(nvidiaGpuEnabled),
 		"rdmaSharedDevicePluginEnabled":            llx.BoolDataPtr(rdmaEnabled),
 		"corednsAutoscalerEnabled":                 llx.BoolDataPtr(corednsAutoscalerEnabled),
+		"p2pOciRegistryEnabled":                    llx.BoolDataPtr(p2pOciRegistryEnabled),
+		"workerSubnetUuid":                         llx.StringData(c.WorkerSubnetUUID),
+		"clusterAutoscaler":                        llx.DictData(autoscaler),
 	}
+}
+
+// availableUpgradeVersions lists the Kubernetes versions the cluster can
+// currently upgrade to. An empty list means the cluster is already on the
+// newest version DigitalOcean offers for it.
+func (r *mqlDigitaloceanKubernetesCluster) availableUpgradeVersions() ([]interface{}, error) {
+	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
+	upgrades, _, err := conn.Client().Kubernetes.GetUpgrades(context.Background(), r.Id.Data)
+	if err != nil {
+		if isDoNotFound(err) {
+			return []interface{}{}, nil
+		}
+		return nil, err
+	}
+	out := make([]interface{}, 0, len(upgrades))
+	for _, u := range upgrades {
+		if u == nil {
+			continue
+		}
+		out = append(out, u.Slug)
+	}
+	return out, nil
 }
 
 func initDigitaloceanKubernetesCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

@@ -13,8 +13,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/client"
+	"github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/client"
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/providers/os/connection/ssh/cat"
 	"go.mondoo.com/mql/v13/providers/os/fsutil"
@@ -132,15 +132,37 @@ func (f *File) WriteString(s string) (ret int, err error) {
 	return 0, errors.New("not implemented")
 }
 
-func (f *File) getFileDockerReader(path string) (io.ReadCloser, container.PathStat, error) {
-	r, stat, err := f.dockerClient.CopyFromContainer(context.Background(), f.container, path)
+// maxSymlinkDepth caps how many symlinks we follow before giving up,
+// mirroring the Linux kernel's limit. It guards against symlink cycles
+// (e.g. A->B->A) that would otherwise recurse forever, overflow the
+// stack, and leak a reader on every frame.
+const maxSymlinkDepth = 40
 
-	// follow symlink if stat.LinkTarget is set
-	if len(stat.LinkTarget) > 0 {
-		return f.getFileDockerReader(stat.LinkTarget)
+func (f *File) getFileDockerReader(path string) (io.ReadCloser, container.PathStat, error) {
+	return f.getFileDockerReaderFollow(path, 0)
+}
+
+func (f *File) getFileDockerReaderFollow(path string, depth int) (io.ReadCloser, container.PathStat, error) {
+	if depth > maxSymlinkDepth {
+		return nil, container.PathStat{}, fmt.Errorf("too many levels of symbolic links: %s", path)
 	}
 
-	return r, stat, err
+	res, err := f.dockerClient.CopyFromContainer(context.Background(), f.container, client.CopyFromContainerOptions{SourcePath: path})
+	if err != nil {
+		return res.Content, res.Stat, err
+	}
+
+	// follow symlink if stat.LinkTarget is set
+	if len(res.Stat.LinkTarget) > 0 {
+		// close the reader we just opened before following the link,
+		// otherwise each symlink hop leaks the tar stream / connection
+		if res.Content != nil {
+			res.Content.Close()
+		}
+		return f.getFileDockerReaderFollow(res.Stat.LinkTarget, depth+1)
+	}
+
+	return res.Content, res.Stat, err
 }
 
 // returns a TarReader stream the caller is responsible for closing the stream

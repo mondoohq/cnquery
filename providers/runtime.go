@@ -571,6 +571,23 @@ func (r *Runtime) watchAndUpdate(resource string, resourceID string, field strin
 	if data.Error != "" {
 		raw = &llx.RawData{Error: errors.New(data.Error)}
 	} else {
+		if data.Data == nil {
+			// The provider answered with neither data nor an error. This
+			// happens when the requested field's TValue was never set on the
+			// resource (e.g. a resource created from partial init args, or an
+			// accessor returning nil without marking the field null) —
+			// TValue.ToDataRes encodes an unset field as an empty DataRes.
+			// Log-only: the conversion below still receives the nil primitive
+			// and coerces it to null exactly as before; this line just adds
+			// the provider/resource/field attribution that the anonymous
+			// "primitive with no type information" error lacks.
+			log.Error().
+				Str("provider", provider.Instance.Name).
+				Str("resource", resource).
+				Str("id", resourceID).
+				Str("field", field).
+				Msg("provider returned no data and no error for a field; the field was never set on the resource (provider bug)")
+		}
 		raw = data.Data.RawData()
 	}
 
@@ -635,9 +652,10 @@ func (r *Runtime) handlePluginError(err error, provider *ConnectedProvider, reso
 
 // buildCrashDiagnostics returns a multi-line suffix to append to a crash error
 // with whatever extra context we have about the dead/dying provider:
-// version, uptime, whether the subprocess actually exited, whether the
-// shutdown was triggered by a heartbeat probe, and the most recent stderr
-// (panic/fatal trace if one was captured).
+// version, uptime, whether the subprocess actually exited (and if so, its
+// exit code or killing signal plus peak RSS), whether the shutdown was
+// triggered by a heartbeat probe, and the most recent stderr (panic/fatal
+// trace if one was captured).
 //
 // Returns "" when there's nothing useful to report, so the message stays
 // compact for cases where the optional context is unavailable (mostly tests
@@ -654,8 +672,17 @@ func buildCrashDiagnostics(p *RunningProvider) string {
 	if up := p.uptime(); up > 0 {
 		meta = append(meta, "uptime="+up.Round(time.Millisecond).String())
 	}
-	if p.hasExited() {
+	if exited, ps := p.awaitExit(2 * time.Second); exited {
 		meta = append(meta, "subprocess=exited")
+		// Exit disposition separates the silent-death causes: a SIGKILL with
+		// empty stderr and no trigger= flag is near-certainly the OOM
+		// killer, a regular exit code points at the plugin terminating
+		// itself. Peak RSS (bytes) corroborates the OOM classification
+		// without host access.
+		meta = append(meta, "exit="+formatExitStatus(ps))
+		if rss := maxRSSBytes(ps); rss > 0 {
+			meta = append(meta, "max_rss="+strconv.FormatInt(rss, 10))
+		}
 	} else if p.startedAt.IsZero() {
 		// builtin/in-process — no subprocess to report on
 	} else {
@@ -663,6 +690,10 @@ func buildCrashDiagnostics(p *RunningProvider) string {
 	}
 	if p.hadHeartbeatFailure() {
 		meta = append(meta, "trigger=heartbeat-timeout")
+	} else if p.wasKilledLocally() {
+		// We sent the kill signal ourselves (shutdown race) — without this
+		// flag, our own SIGKILL would wear the OOM killer's fingerprint.
+		meta = append(meta, "trigger=local-kill")
 	}
 
 	var sb strings.Builder

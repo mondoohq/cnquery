@@ -13,8 +13,9 @@ import (
 var Config = plugin.Provider{
 	Name:            "oci",
 	ID:              "go.mondoo.com/cnquery/v9/providers/oci",
-	Version:         "13.11.2",
+	Version:         "13.16.1",
 	ConnectionTypes: []string{provider.ConnectionType},
+	Platforms:       resources.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "oci",
@@ -39,6 +40,7 @@ Examples:
 				resources.DiscoveryRedisClusters,
 				resources.DiscoveryVaultSecrets,
 				resources.DiscoveryOkeClusters,
+				resources.DiscoveryGenerativeAiEndpoints,
 			},
 			Flags: []plugin.Flag{
 				{

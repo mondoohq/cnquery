@@ -205,6 +205,10 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 
 	stageID := p.locationID(stage.Location)
 
+	fromCtx, err := p.locationContext(stage.Location)
+	if err != nil {
+		return nil, err
+	}
 	rawFrom, err := CreateResource(p.MqlRuntime, ResourceDockerFileFrom, map[string]*llx.RawData{
 		"__id":     llx.StringData(stageID),
 		"platform": llx.StringData(stage.Platform),
@@ -212,6 +216,7 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 		"tag":      llx.StringData(tag),
 		"digest":   llx.StringData(digest),
 		"name":     llx.StringData(stage.Name),
+		"context":  llx.ResourceData(fromCtx, "file.context"),
 	})
 	if err != nil {
 		return nil, err
@@ -237,11 +242,16 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 	for i := range stage.Commands {
 		switch v := stage.Commands[i].(type) {
 		case *instructions.EnvCommand:
+			ctx, err := p.locationContext(v.Location())
+			if err != nil {
+				return nil, err
+			}
 			for _, kv := range v.Env {
 				envResource, err := CreateResource(p.MqlRuntime, ResourceDockerFileEnv, map[string]*llx.RawData{
-					"__id":  llx.StringData(p.locationID(v.Location())),
-					"name":  llx.StringData(kv.Key),
-					"value": llx.StringData(kv.Value),
+					"__id":    llx.StringData(p.locationID(v.Location())),
+					"name":    llx.StringData(kv.Key),
+					"value":   llx.StringData(kv.Value),
+					"context": llx.ResourceData(ctx, "file.context"),
 				})
 				if err != nil {
 					return nil, err
@@ -249,11 +259,16 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 				env = append(env, envResource)
 			}
 		case *instructions.ArgCommand:
+			ctx, err := p.locationContext(v.Location())
+			if err != nil {
+				return nil, err
+			}
 			for _, kv := range v.Args {
 				argResource, err := CreateResource(p.MqlRuntime, ResourceDockerFileArg, map[string]*llx.RawData{
 					"__id":    llx.StringData(p.locationID(v.Location())),
 					"name":    llx.StringData(kv.Key),
 					"default": llx.StringDataPtr(kv.Value),
+					"context": llx.ResourceData(ctx, "file.context"),
 				})
 				if err != nil {
 					return nil, err
@@ -278,6 +293,10 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 			if err != nil {
 				return nil, err
 			}
+			ctx, err := p.locationContext(v.Location())
+			if err != nil {
+				return nil, err
+			}
 			runResource, err := CreateResource(p.MqlRuntime, ResourceDockerFileRun, map[string]*llx.RawData{
 				"__id":         llx.StringData(p.locationID(v.Location())),
 				"script":       llx.StringData(script),
@@ -289,6 +308,7 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 				"mountsSecret": llx.BoolData(mountsSecret),
 				"mountsSsh":    llx.BoolData(mountsSsh),
 				"commands":     llx.ArrayData(commands, types.Resource(ResourceDockerFileRunCommand)),
+				"context":      llx.ResourceData(ctx, "file.context"),
 			})
 			if err != nil {
 				return nil, err
@@ -307,6 +327,10 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 				src[i] = v.SourcePaths[i]
 			}
 			excludes := stringsToAny(v.ExcludePatterns)
+			ctx, err := p.locationContext(v.Location())
+			if err != nil {
+				return nil, err
+			}
 			resource, err := CreateResource(p.MqlRuntime, ResourceDockerFileCopy, map[string]*llx.RawData{
 				"__id":     llx.StringData(p.locationID(v.Location())),
 				"src":      llx.ArrayData(src, types.String),
@@ -317,6 +341,7 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 				"link":     llx.BoolData(v.Link),
 				"excludes": llx.ArrayData(excludes, types.String),
 				"parents":  llx.BoolData(v.Parents),
+				"context":  llx.ResourceData(ctx, "file.context"),
 			})
 			if err != nil {
 				return nil, err
@@ -329,6 +354,10 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 				src[i] = v.SourcePaths[i]
 			}
 			excludes := stringsToAny(v.ExcludePatterns)
+			ctx, err := p.locationContext(v.Location())
+			if err != nil {
+				return nil, err
+			}
 			resource, err := CreateResource(p.MqlRuntime, ResourceDockerFileAdd, map[string]*llx.RawData{
 				"__id":     llx.StringData(p.locationID(v.Location())),
 				"src":      llx.ArrayData(src, types.String),
@@ -338,6 +367,7 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 				"link":     llx.BoolData(v.Link),
 				"checksum": llx.StringData(v.Checksum),
 				"excludes": llx.ArrayData(excludes, types.String),
+				"context":  llx.ResourceData(ctx, "file.context"),
 			})
 			if err != nil {
 				return nil, err
@@ -345,6 +375,10 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 			add = append(add, resource)
 
 		case *instructions.ExposeCommand:
+			ctx, err := p.locationContext(v.Location())
+			if err != nil {
+				return nil, err
+			}
 			for _, port := range v.Ports {
 				arr := strings.Split(port, "/")
 				var protocol string
@@ -360,6 +394,7 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 					"__id":     llx.StringData(id),
 					"port":     llx.IntData(portNum),
 					"protocol": llx.StringData(protocol),
+					"context":  llx.ResourceData(ctx, "file.context"),
 				})
 				if err != nil {
 					return nil, err
@@ -372,10 +407,15 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 			healthcheckRaw = v
 
 		case *instructions.VolumeCommand:
+			ctx, err := p.locationContext(v.Location())
+			if err != nil {
+				return nil, err
+			}
 			for _, vol := range v.Volumes {
 				resource, err := CreateResource(p.MqlRuntime, ResourceDockerFileVolume, map[string]*llx.RawData{
-					"__id": llx.StringData(p.locationID(v.Location()) + ":" + vol),
-					"path": llx.StringData(vol),
+					"__id":    llx.StringData(p.locationID(v.Location()) + ":" + vol),
+					"path":    llx.StringData(vol),
+					"context": llx.ResourceData(ctx, "file.context"),
 				})
 				if err != nil {
 					return nil, err
@@ -387,9 +427,14 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 			shellRaw = v
 
 		case *instructions.WorkdirCommand:
+			ctx, err := p.locationContext(v.Location())
+			if err != nil {
+				return nil, err
+			}
 			resource, err := CreateResource(p.MqlRuntime, ResourceDockerFileWorkdir, map[string]*llx.RawData{
-				"__id": llx.StringData(p.locationID(v.Location())),
-				"path": llx.StringData(v.Path),
+				"__id":    llx.StringData(p.locationID(v.Location())),
+				"path":    llx.StringData(v.Path),
+				"context": llx.ResourceData(ctx, "file.context"),
 			})
 			if err != nil {
 				return nil, err
@@ -400,9 +445,14 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 			stopsignalRaw = v
 
 		case *instructions.OnbuildCommand:
+			ctx, err := p.locationContext(v.Location())
+			if err != nil {
+				return nil, err
+			}
 			resource, err := CreateResource(p.MqlRuntime, ResourceDockerFileOnbuild, map[string]*llx.RawData{
 				"__id":       llx.StringData(p.locationID(v.Location())),
 				"expression": llx.StringData(v.Expression),
+				"context":    llx.ResourceData(ctx, "file.context"),
 			})
 			if err != nil {
 				return nil, err
@@ -451,9 +501,14 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 	}
 
 	if stopsignalRaw != nil {
+		ctx, err := p.locationContext(stopsignalRaw.Location())
+		if err != nil {
+			return nil, err
+		}
 		stopResource, err := CreateResource(p.MqlRuntime, ResourceDockerFileStopsignal, map[string]*llx.RawData{
-			"__id":   llx.StringData(p.locationID(stopsignalRaw.Location())),
-			"signal": llx.StringData(stopsignalRaw.Signal),
+			"__id":    llx.StringData(p.locationID(stopsignalRaw.Location())),
+			"signal":  llx.StringData(stopsignalRaw.Signal),
+			"context": llx.ResourceData(ctx, "file.context"),
 		})
 		if err != nil {
 			return nil, err
@@ -469,6 +524,10 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 		if err != nil {
 			return nil, err
 		}
+		ctx, err := p.locationContext(entrypointRaw.Location())
+		if err != nil {
+			return nil, err
+		}
 		runResource, err := CreateResource(p.MqlRuntime, ResourceDockerFileRun, map[string]*llx.RawData{
 			"__id":         llx.StringData(p.locationID(entrypointRaw.Location())),
 			"script":       llx.StringData(script),
@@ -480,6 +539,7 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 			"mountsSecret": llx.BoolData(false),
 			"mountsSsh":    llx.BoolData(false),
 			"commands":     llx.ArrayData(commands, types.Resource(ResourceDockerFileRunCommand)),
+			"context":      llx.ResourceData(ctx, "file.context"),
 		})
 		if err != nil {
 			return nil, err
@@ -495,6 +555,10 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 		if err != nil {
 			return nil, err
 		}
+		ctx, err := p.locationContext(cmdRaw.Location())
+		if err != nil {
+			return nil, err
+		}
 		cmdResource, err := CreateResource(p.MqlRuntime, ResourceDockerFileRun, map[string]*llx.RawData{
 			"__id":         llx.StringData(p.locationID(cmdRaw.Location())),
 			"script":       llx.StringData(script),
@@ -506,6 +570,7 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 			"mountsSecret": llx.BoolData(false),
 			"mountsSsh":    llx.BoolData(false),
 			"commands":     llx.ArrayData(commands, types.Resource(ResourceDockerFileRunCommand)),
+			"context":      llx.ResourceData(ctx, "file.context"),
 		})
 		if err != nil {
 			return nil, err
@@ -516,11 +581,16 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 	}
 
 	if userRaw != nil {
+		ctx, err := p.locationContext(userRaw.Location())
+		if err != nil {
+			return nil, err
+		}
 		userResource, err := CreateResource(p.MqlRuntime, ResourceDockerFileUser, map[string]*llx.RawData{
-			"__id":   llx.StringData(p.locationID(userRaw.Location())),
-			"user":   llx.StringData(userValue),
-			"group":  llx.StringData(groupValue),
-			"isRoot": llx.BoolData(isRootUser(userValue)),
+			"__id":    llx.StringData(p.locationID(userRaw.Location())),
+			"user":    llx.StringData(userValue),
+			"group":   llx.StringData(groupValue),
+			"isRoot":  llx.BoolData(isRootUser(userValue)),
+			"context": llx.ResourceData(ctx, "file.context"),
 		})
 		if err != nil {
 			return nil, err
@@ -537,6 +607,10 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 		for i, t := range h.Test {
 			test[i] = t
 		}
+		ctx, err := p.locationContext(healthcheckRaw.Location())
+		if err != nil {
+			return nil, err
+		}
 		hcResource, err := CreateResource(p.MqlRuntime, ResourceDockerFileHealthcheck, map[string]*llx.RawData{
 			"__id":          llx.StringData(p.locationID(healthcheckRaw.Location())),
 			"test":          llx.ArrayData(test, types.String),
@@ -546,6 +620,7 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 			"startInterval": llx.IntData(int64(h.StartInterval)),
 			"retries":       llx.IntData(int64(h.Retries)),
 			"none":          llx.BoolData(isNone),
+			"context":       llx.ResourceData(ctx, "file.context"),
 		})
 		if err != nil {
 			return nil, err
@@ -560,9 +635,14 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 		for i, s := range shellRaw.Shell {
 			shell[i] = s
 		}
+		ctx, err := p.locationContext(shellRaw.Location())
+		if err != nil {
+			return nil, err
+		}
 		shellResource, err := CreateResource(p.MqlRuntime, ResourceDockerFileShell, map[string]*llx.RawData{
 			"__id":    llx.StringData(p.locationID(shellRaw.Location())),
 			"command": llx.ArrayData(shell, types.String),
+			"context": llx.ResourceData(ctx, "file.context"),
 		})
 		if err != nil {
 			return nil, err
@@ -648,6 +728,28 @@ func (p *mqlDockerFile) locationID(location []parser.Range) string {
 		char = location[0].Start.Character
 	}
 	return "dockerfile/" + p.File.Data.Path.Data + "/" + strconv.FormatInt(int64(line), 10) + ":" + strconv.FormatInt(int64(char), 10)
+}
+
+// locationContext builds a file.context pointing at the source lines an
+// instruction spans in the Dockerfile. The buildkit parser records line
+// numbers only (no columns), so the range covers whole lines from the first
+// to the last range reported for the instruction.
+func (p *mqlDockerFile) locationContext(location []parser.Range) (*mqlFileContext, error) {
+	rnge := llx.NewRange()
+	if len(location) != 0 {
+		start := uint32(location[0].Start.Line)
+		end := uint32(location[len(location)-1].End.Line)
+		rnge = rnge.AddLineRange(start, end)
+	}
+
+	cobj, err := CreateResource(p.MqlRuntime, "file.context", map[string]*llx.RawData{
+		"file":  llx.ResourceData(p.File.Data, "file"),
+		"range": llx.RangeData(rnge),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return cobj.(*mqlFileContext), nil
 }
 
 func (p *mqlDockerFile) instructions(file *mqlFile) (any, error) {
@@ -821,4 +923,63 @@ func (p *mqlDockerFile) mountResources(cmd *instructions.RunCommand) ([]any, err
 		out = append(out, resource)
 	}
 	return out, nil
+}
+
+// The context field is populated when each instruction resource is created in
+// stage2resource, so these fallback resolvers only run if a resource was built
+// without one (e.g. loaded from a recording that predates the field).
+func (p *mqlDockerFileFrom) context() (*mqlFileContext, error) {
+	return nil, errors.New("context was not provided for docker.file.from")
+}
+
+func (p *mqlDockerFileEnv) context() (*mqlFileContext, error) {
+	return nil, errors.New("context was not provided for docker.file.env")
+}
+
+func (p *mqlDockerFileArg) context() (*mqlFileContext, error) {
+	return nil, errors.New("context was not provided for docker.file.arg")
+}
+
+func (p *mqlDockerFileRun) context() (*mqlFileContext, error) {
+	return nil, errors.New("context was not provided for docker.file.run")
+}
+
+func (p *mqlDockerFileCopy) context() (*mqlFileContext, error) {
+	return nil, errors.New("context was not provided for docker.file.copy")
+}
+
+func (p *mqlDockerFileAdd) context() (*mqlFileContext, error) {
+	return nil, errors.New("context was not provided for docker.file.add")
+}
+
+func (p *mqlDockerFileExpose) context() (*mqlFileContext, error) {
+	return nil, errors.New("context was not provided for docker.file.expose")
+}
+
+func (p *mqlDockerFileVolume) context() (*mqlFileContext, error) {
+	return nil, errors.New("context was not provided for docker.file.volume")
+}
+
+func (p *mqlDockerFileWorkdir) context() (*mqlFileContext, error) {
+	return nil, errors.New("context was not provided for docker.file.workdir")
+}
+
+func (p *mqlDockerFileOnbuild) context() (*mqlFileContext, error) {
+	return nil, errors.New("context was not provided for docker.file.onbuild")
+}
+
+func (p *mqlDockerFileUser) context() (*mqlFileContext, error) {
+	return nil, errors.New("context was not provided for docker.file.user")
+}
+
+func (p *mqlDockerFileHealthcheck) context() (*mqlFileContext, error) {
+	return nil, errors.New("context was not provided for docker.file.healthcheck")
+}
+
+func (p *mqlDockerFileShell) context() (*mqlFileContext, error) {
+	return nil, errors.New("context was not provided for docker.file.shell")
+}
+
+func (p *mqlDockerFileStopsignal) context() (*mqlFileContext, error) {
+	return nil, errors.New("context was not provided for docker.file.stopsignal")
 }

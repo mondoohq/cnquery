@@ -121,12 +121,16 @@ func (a *mqlAzureSubscriptionBatchService) accounts() ([]any, error) {
 
 func createBatchAccountRawData(account *armbatch.Account) (map[string]*llx.RawData, error) {
 	identityData := llx.NilData
+	principalId := llx.StringData("")
 	if account.Identity != nil {
 		identity, err := convert.JsonToDict(account.Identity)
 		if err != nil {
 			return nil, err
 		}
 		identityData = llx.DictData(identity)
+		if account.Identity.PrincipalID != nil {
+			principalId = llx.StringData(*account.Identity.PrincipalID)
+		}
 	}
 
 	propertiesData := llx.NilData
@@ -268,6 +272,7 @@ func createBatchAccountRawData(account *armbatch.Account) (map[string]*llx.RawDa
 		"tags":                                  llx.MapData(convert.PtrMapStrToInterface(account.Tags), types.String),
 		"type":                                  llx.StringDataPtr(account.Type),
 		"identity":                              identityData,
+		"principalId":                           principalId,
 		"properties":                            propertiesData,
 		"accountEndpoint":                       accountEndpoint,
 		"provisioningState":                     provisioningState,
@@ -300,7 +305,80 @@ func batchAccountToMql(runtime *plugin.Runtime, account *armbatch.Account) (*mql
 		return nil, err
 	}
 
-	return res.(*mqlAzureSubscriptionBatchServiceAccount), nil
+	sysData, err := convert.JsonToDict(account.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlAccount := res.(*mqlAzureSubscriptionBatchServiceAccount)
+	mqlAccount.cacheSystemData = sysData
+
+	if account.Identity != nil {
+		mqlAccount.cacheUserAssignedIdentityIds = sortedUserAssignedIdentityIDs(account.Identity.UserAssignedIdentities)
+	}
+	if account.Properties != nil {
+		props := account.Properties
+		if props.KeyVaultReference != nil && props.KeyVaultReference.ID != nil {
+			mqlAccount.cacheKeyVaultId = *props.KeyVaultReference.ID
+		}
+		if props.AutoStorage != nil && props.AutoStorage.StorageAccountID != nil {
+			mqlAccount.cacheAutoStorageAccountId = *props.AutoStorage.StorageAccountID
+		}
+		if props.Encryption != nil && props.Encryption.KeyVaultProperties != nil && props.Encryption.KeyVaultProperties.KeyIdentifier != nil {
+			mqlAccount.cacheEncryptionKeyId = *props.Encryption.KeyVaultProperties.KeyIdentifier
+		}
+	}
+
+	return mqlAccount, nil
+}
+
+type mqlAzureSubscriptionBatchServiceAccountInternal struct {
+	cacheSystemData              any
+	cacheKeyVaultId              string
+	cacheEncryptionKeyId         string
+	cacheAutoStorageAccountId    string
+	cacheUserAssignedIdentityIds []string
+}
+
+func (a *mqlAzureSubscriptionBatchServiceAccount) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
+}
+
+func (a *mqlAzureSubscriptionBatchServiceAccount) keyVault() (*mqlAzureSubscriptionKeyVaultServiceVault, error) {
+	if a.cacheKeyVaultId == "" {
+		a.KeyVault.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.keyVaultService.vault",
+		map[string]*llx.RawData{"id": llx.StringData(a.cacheKeyVaultId)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionKeyVaultServiceVault), nil
+}
+
+func (a *mqlAzureSubscriptionBatchServiceAccount) encryptionKey() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
+	if a.cacheEncryptionKeyId == "" {
+		a.EncryptionKey.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return newKeyVaultKeyResource(a.MqlRuntime, a.cacheEncryptionKeyId)
+}
+
+func (a *mqlAzureSubscriptionBatchServiceAccount) autoStorageAccount() (*mqlAzureSubscriptionStorageServiceAccount, error) {
+	if a.cacheAutoStorageAccountId == "" {
+		a.AutoStorageAccount.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.storageService.account",
+		map[string]*llx.RawData{"id": llx.StringData(a.cacheAutoStorageAccountId)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionStorageServiceAccount), nil
+}
+
+func (a *mqlAzureSubscriptionBatchServiceAccount) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionBatchServiceAccount) pools() ([]any, error) {
@@ -361,6 +439,11 @@ func (a *mqlAzureSubscriptionBatchServiceAccount) diagnosticSettings() ([]any, e
 	return getDiagnosticSettings(a.Id.Data, a.MqlRuntime, conn)
 }
 
+func (a *mqlAzureSubscriptionBatchServiceAccount) diagnosticSettingsCategories() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	return getDiagnosticSettingsCategories(a.Id.Data, a.MqlRuntime, conn)
+}
+
 func createBatchPoolRawData(pool *armbatch.Pool) (map[string]*llx.RawData, error) {
 	identityData := llx.NilData
 	if pool.Identity != nil {
@@ -382,9 +465,13 @@ func createBatchPoolRawData(pool *armbatch.Pool) (map[string]*llx.RawData, error
 		hostEndpointProtectionMode      = llx.NilData
 		proxyAgentEnabled               = llx.NilData
 		securityEncryptionType          = llx.NilData
+		creationTimeData                = llx.NilData
 	)
 
 	if pool.Properties != nil {
+		if pool.Properties.CreationTime != nil {
+			creationTimeData = llx.TimeDataPtr(pool.Properties.CreationTime)
+		}
 		if dict, err := convert.JsonToDict(pool.Properties); err != nil {
 			return nil, err
 		} else if dict != nil {
@@ -473,6 +560,7 @@ func createBatchPoolRawData(pool *armbatch.Pool) (map[string]*llx.RawData, error
 		"hostEndpointProtectionMode":    hostEndpointProtectionMode,
 		"proxyAgentEnabled":             proxyAgentEnabled,
 		"securityEncryptionType":        securityEncryptionType,
+		"creationTime":                  creationTimeData,
 	}, nil
 }
 
@@ -487,5 +575,19 @@ func batchPoolToMql(runtime *plugin.Runtime, pool *armbatch.Pool) (*mqlAzureSubs
 		return nil, err
 	}
 
+	sysData, err := convert.JsonToDict(pool.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	resource.(*mqlAzureSubscriptionBatchServiceAccountPool).cacheSystemData = sysData
+
 	return resource.(*mqlAzureSubscriptionBatchServiceAccountPool), nil
+}
+
+type mqlAzureSubscriptionBatchServiceAccountPoolInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionBatchServiceAccountPool) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }

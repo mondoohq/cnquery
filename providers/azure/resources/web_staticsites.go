@@ -14,8 +14,16 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
+type mqlAzureSubscriptionWebServiceStaticSiteInternal struct {
+	cacheSystemData any
+}
+
 func (a *mqlAzureSubscriptionWebServiceStaticSite) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionWebServiceStaticSite) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionWebService) staticSites() ([]any, error) {
@@ -140,6 +148,11 @@ func (a *mqlAzureSubscriptionWebService) staticSites() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(site.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlSite.(*mqlAzureSubscriptionWebServiceStaticSite).cacheSystemData = sysData
 			res = append(res, mqlSite)
 		}
 	}

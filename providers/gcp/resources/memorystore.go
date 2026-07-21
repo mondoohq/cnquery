@@ -68,6 +68,10 @@ type mqlGcpProjectMemorystoreServiceInstanceInternal struct {
 	cacheBackupCollection string
 }
 
+func (g *mqlGcpProjectMemorystoreServiceInstance) managedBy() (string, error) {
+	return managedByFromLabels(&g.Labels)
+}
+
 func (g *mqlGcpProjectMemorystoreServiceInstance) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
 	if g.cacheKmsKey == "" {
 		g.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet

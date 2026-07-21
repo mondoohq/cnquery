@@ -115,6 +115,7 @@ func newMqlOpenstackComputeServer(runtime *plugin.Runtime, s *servers.Server) (*
 		"configDrive":        llx.BoolData(s.ConfigDrive),
 		"host":               llx.StringData(s.Host),
 		"hypervisorHostname": llx.StringData(s.HypervisorHostname),
+		"instanceName":       llx.StringData(s.InstanceName),
 		"userData":           llx.StringDataPtr(s.Userdata),
 		"addresses":          llx.DictData(toDict(s.Addresses)),
 		"metadata":           stringMapData(s.Metadata),

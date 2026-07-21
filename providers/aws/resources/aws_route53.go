@@ -98,6 +98,7 @@ func (a *mqlAwsRoute53) hostedZones() ([]any, error) {
 				"comment":                llx.StringData(comment),
 				"tags":                   llx.MapData(tags, types.String),
 				"config":                 llx.DictData(config),
+				"callerReference":        llx.StringData(convert.ToValue(hz.CallerReference)),
 			})
 		if err != nil {
 			return nil, err
@@ -195,9 +196,8 @@ func initAwsRoute53HostedZone(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["name"] = llx.StringData(ids.name)
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 
@@ -490,6 +490,20 @@ type mqlAwsRoute53RecordInternal struct {
 
 func (a *mqlAwsRoute53Record) id() (string, error) {
 	return fmt.Sprintf("%s//%s//%s//%s", a.HostedZoneId.Data, a.Name.Data, a.Type.Data, a.SetIdentifier.Data), nil
+}
+
+func (a *mqlAwsRoute53Record) hostedZone() (*mqlAwsRoute53HostedZone, error) {
+	zoneId := a.HostedZoneId.Data
+	if zoneId == "" {
+		a.HostedZone.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.route53.hostedZone",
+		map[string]*llx.RawData{"id": llx.StringData(zoneId)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsRoute53HostedZone), nil
 }
 
 func (a *mqlAwsRoute53Record) resourceRecords() ([]any, error) {

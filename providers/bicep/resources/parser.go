@@ -35,6 +35,8 @@ type parsedParameter struct {
 	minValue     *int64
 	maxValue     *int64
 	decorators   []string
+	startLine    int
+	endLine      int
 }
 
 type parsedVariable struct {
@@ -42,6 +44,8 @@ type parsedVariable struct {
 	expression  string
 	description string
 	loop        loopInfo
+	startLine   int
+	endLine     int
 }
 
 type parsedResource struct {
@@ -60,6 +64,8 @@ type parsedResource struct {
 	decorators   []string
 	loop         loopInfo
 	nested       []parsedResource
+	startLine    int
+	endLine      int
 }
 
 type parsedModule struct {
@@ -73,6 +79,8 @@ type parsedModule struct {
 	isTemplateSpec bool
 	decorators     []string
 	loop           loopInfo
+	startLine      int
+	endLine        int
 }
 
 type parsedOutput struct {
@@ -81,6 +89,8 @@ type parsedOutput struct {
 	expression  string
 	description string
 	loop        loopInfo
+	startLine   int
+	endLine     int
 }
 
 // loopInfo captures a Bicep `for`-loop on a declaration. Bicep iterates
@@ -249,18 +259,34 @@ func parseBicep(content string) *parsedBicepFile {
 		stmtLines := strings.Split(stmt.text, "\n")
 		firstLine := strings.TrimSpace(stmtLines[0])
 
+		// startLine/endLine bound the statement's source span (1-based); the
+		// tokenizer records the start and stmt.text carries every line, so the
+		// end is the start plus the additional lines.
+		startLine := stmt.startLine
+		endLine := stmt.startLine + len(stmtLines) - 1
+
 		switch stmt.keyword {
 		case "param":
-			result.parameters = append(result.parameters, parseParameter(firstLine, stmt.decorators))
+			// Reassemble multi-line param statements (an object/array default
+			// spans lines) into a single line so paramRe's `(.*)$` sees the
+			// whole default instead of just the opening `{`/`[`. Inline
+			// comments are stripped string-aware so a trailing `// ...` doesn't
+			// leak into the default value.
+			p := parseParameter(reassembleParamStatement(stmtLines), stmt.decorators)
+			p.startLine, p.endLine = startLine, endLine
+			result.parameters = append(result.parameters, p)
 		case "var":
 			v, _ := parseVariableDecl(stmtLines, 0, stmt.decorators)
+			v.startLine, v.endLine = startLine, endLine
 			result.variables = append(result.variables, v)
 		case "resource":
 			if res, _ := parseResourceDecl(stmtLines, 0, stmt.decorators); res != nil {
+				res.startLine, res.endLine = startLine, endLine
 				result.resources = append(result.resources, *res)
 			}
 		case "module":
 			if mod, _ := parseModuleDecl(stmtLines, 0, stmt.decorators); mod != nil {
+				mod.startLine, mod.endLine = startLine, endLine
 				result.modules = append(result.modules, *mod)
 			}
 		case "output":
@@ -271,7 +297,9 @@ func parseBicep(content string) *parsedBicepFile {
 			if len(stmtLines) > 1 {
 				outLine = strings.Join(strings.Fields(strings.Join(stmtLines, " ")), " ")
 			}
-			result.outputs = append(result.outputs, parseOutput(outLine, stmt.decorators))
+			o := parseOutput(outLine, stmt.decorators)
+			o.startLine, o.endLine = startLine, endLine
+			result.outputs = append(result.outputs, o)
 		case "type":
 			if t, ok := parseTypeDecl(stmt.text, stmt.decorators); ok {
 				result.types = append(result.types, t)
@@ -299,6 +327,37 @@ func parseBicep(content string) *parsedBicepFile {
 	}
 
 	return result
+}
+
+// reassembleParamStatement collapses a (possibly multi-line) param statement
+// into the single line parseParameter expects. Each source line has its inline
+// `// ...` comment stripped string-aware (so a `//` inside a quoted value such
+// as a URL is preserved) and is then joined with a single space. Lines are not
+// whitespace-collapsed internally, so a string default like 'hello  world'
+// keeps its spacing. A shared scanState is carried across lines so a comment
+// marker inside a multi-line triple-quoted string is not stripped.
+func reassembleParamStatement(lines []string) string {
+	st := scanState{}
+	parts := make([]string, 0, len(lines))
+	for _, l := range lines {
+		parts = append(parts, strings.TrimSpace(stripInlineComment(l, &st)))
+	}
+	return strings.Join(parts, " ")
+}
+
+// stripInlineComment returns s truncated at a trailing `// ...` line comment,
+// honoring string literals via the shared scanState so a `//` inside a string
+// (e.g. 'http://example.com') is left intact. st is advanced through s so the
+// caller can carry string/multi-line state across successive lines.
+func stripInlineComment(s string, st *scanState) string {
+	i := 0
+	for i < len(s) {
+		if st.inStr == 0 && !st.inMulti && s[i] == '/' && i+1 < len(s) && s[i+1] == '/' {
+			return s[:i]
+		}
+		i = st.stepAt(s, i)
+	}
+	return s
 }
 
 func parseParameter(line string, decorators []string) parsedParameter {
@@ -1349,9 +1408,24 @@ func parseBicepObject(body string) map[string]any {
 		if !ok {
 			continue
 		}
-		out[strings.TrimSpace(key)] = parseBicepValue(strings.TrimSpace(value))
+		out[unquoteBicepKey(strings.TrimSpace(key))] = parseBicepValue(strings.TrimSpace(value))
 	}
 	return out
+}
+
+// unquoteBicepKey strips the surrounding quotes from a Bicep object key. Keys
+// that aren't valid bare identifiers must be quoted in Bicep source, so dotted
+// keys such as the API Management `customProperties` entries
+// (`'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls10'`)
+// arrive with their quotes attached. Left in place, the quotes become part of
+// the map key and an index lookup written without them
+// (`properties["customProperties"]["Microsoft...Tls10"]`) misses and returns
+// null. Bare-identifier keys carry no quotes and are returned unchanged.
+func unquoteBicepKey(k string) string {
+	if len(k) >= 2 && (k[0] == '\'' || k[0] == '"') && k[len(k)-1] == k[0] {
+		return k[1 : len(k)-1]
+	}
+	return k
 }
 
 func parseBicepValue(v string) any {

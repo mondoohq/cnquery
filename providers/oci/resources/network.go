@@ -575,6 +575,7 @@ func (o *mqlOciNetwork) getSubnets(conn *connection.OciConnection, regions []any
 				mqlSub := mqlInstance.(*mqlOciNetworkSubnet)
 				mqlSub.cacheVcnId = stringValue(subnet.VcnId)
 				mqlSub.cacheRouteTableId = stringValue(subnet.RouteTableId)
+				mqlSub.cacheSecurityListIds = subnet.SecurityListIds
 				res = append(res, mqlSub)
 			}
 
@@ -586,8 +587,9 @@ func (o *mqlOciNetwork) getSubnets(conn *connection.OciConnection, regions []any
 }
 
 type mqlOciNetworkSubnetInternal struct {
-	cacheVcnId        string
-	cacheRouteTableId string
+	cacheVcnId           string
+	cacheRouteTableId    string
+	cacheSecurityListIds []string
 }
 
 func initOciNetworkSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -766,6 +768,84 @@ type mqlOciNetworkNetworkSecurityGroupInternal struct {
 
 func (o *mqlOciNetworkNetworkSecurityGroup) id() (string, error) {
 	return "oci.network.networkSecurityGroup/" + o.Id.Data, nil
+}
+
+// initOciNetworkNetworkSecurityGroup populates a network security group that was
+// referenced only by OCID — the shape produced by the typed securityGroups()
+// accessors (load balancer, compute VNIC, database) and by the exposure()
+// analysis. Without this, such a resource carried only its id: every other
+// field reported "no type information", and fetchSecurityRules built its client
+// with an empty region (region is only set on the enumerated path), producing a
+// malformed "iaas..oraclecloud.com" endpoint. The region is recovered from the
+// OCID so the group can be fetched regardless of the compartment it lives in.
+func initOciNetworkNetworkSecurityGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// Already populated (a caller passed the full field set) — nothing to
+	// fetch. `name` is always set alongside `id` on the populated path, so its
+	// presence distinguishes a fully-built group from a bare id reference.
+	if args["name"] != nil {
+		return args, nil, nil
+	}
+	if args["id"] == nil {
+		return nil, nil, errors.New("id required to fetch oci.network.networkSecurityGroup")
+	}
+	id, ok := args["id"].Value.(string)
+	if !ok || id == "" {
+		return nil, nil, errors.New("id required to fetch oci.network.networkSecurityGroup")
+	}
+
+	region := ociRegionFromOCID(id)
+	if region == "" {
+		return nil, nil, errors.New("could not determine region from network security group ocid: " + id)
+	}
+
+	conn, ok := runtime.Connection.(*connection.OciConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid oci connection")
+	}
+	svc, err := conn.NetworkClient(region)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	resp, err := svc.GetNetworkSecurityGroup(context.Background(), core.GetNetworkSecurityGroupRequest{
+		NetworkSecurityGroupId: common.String(id),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	nsg := resp.NetworkSecurityGroup
+
+	var created *time.Time
+	if nsg.TimeCreated != nil {
+		created = &nsg.TimeCreated.Time
+	}
+
+	freeformTags := make(map[string]interface{})
+	for k, v := range nsg.FreeformTags {
+		freeformTags[k] = v
+	}
+
+	definedTags := make(map[string]interface{})
+	for k, v := range nsg.DefinedTags {
+		definedTags[k] = v
+	}
+
+	mqlInstance, err := CreateResource(runtime, "oci.network.networkSecurityGroup", map[string]*llx.RawData{
+		"id":            llx.StringDataPtr(nsg.Id),
+		"name":          llx.StringDataPtr(nsg.DisplayName),
+		"compartmentID": llx.StringDataPtr(nsg.CompartmentId),
+		"state":         llx.StringData(string(nsg.LifecycleState)),
+		"created":       llx.TimeDataPtr(created),
+		"freeformTags":  llx.MapData(freeformTags, types.String),
+		"definedTags":   llx.MapData(definedTags, types.Any),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	mqlNsg := mqlInstance.(*mqlOciNetworkNetworkSecurityGroup)
+	mqlNsg.region = region
+	mqlNsg.cacheVcnId = stringValue(nsg.VcnId)
+	return args, mqlNsg, nil
 }
 
 func (o *mqlOciNetworkNetworkSecurityGroup) vcn() (*mqlOciNetworkVcn, error) {

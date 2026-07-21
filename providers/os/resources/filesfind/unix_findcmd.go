@@ -22,9 +22,35 @@ func Octal2string(o int64) string {
 	return fmt.Sprintf("%o", o)
 }
 
-func BuildFilesFindCmd(from string, xdev bool, fileType string, regex string, permission int64, search string, depth *int64) string {
+// shellSingleQuote wraps s in single quotes so the shell passes it to the
+// command verbatim, with no glob, variable, or command-substitution expansion.
+// Any single quote in s is escaped by closing, inserting an escaped quote, then reopening.
+func shellSingleQuote(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
+}
+
+func BuildFilesFindCmd(from string, xdev bool, fileType string, regex string, permission int64, search string, depth *int64, hasGNUFind bool) string {
 	var call strings.Builder
-	call.WriteString("find -L ")
+
+	isLinkSearch := false
+	if fileType != "" {
+		if t, ok := findTypes[fileType]; ok && t == "l" {
+			isLinkSearch = true
+		}
+	}
+
+	// GNU find: -L -xtype l follows all symlinks AND finds symlinks.
+	// BSD find: -xtype is absent; fall back to -H -type l which
+	// follows only the start path but still detects symlinks.
+	// hasGNUFind is approximated via platform family ("linux"). This
+	// misses FreeBSD with GNU findutils and BusyBox find on Linux,
+	// but both are rare in mql's target environments; the -H fallback
+	// still finds symlinks, just without following symlink-dirs.
+	if isLinkSearch && !hasGNUFind {
+		call.WriteString("find -H ")
+	} else {
+		call.WriteString("find -L ")
+	}
 	call.WriteString(strconv.Quote(from))
 
 	if !xdev {
@@ -34,15 +60,17 @@ func BuildFilesFindCmd(from string, xdev bool, fileType string, regex string, pe
 	if fileType != "" {
 		t, ok := findTypes[fileType]
 		if ok {
-			call.WriteString(" -type " + t)
+			if t == "l" && hasGNUFind {
+				call.WriteString(" -xtype " + t)
+			} else {
+				call.WriteString(" -type " + t)
+			}
 		}
 	}
 
 	if regex != "" {
-		// TODO: we need to escape regex here
-		call.WriteString(" -regex '")
-		call.WriteString(regex)
-		call.WriteString("'")
+		call.WriteString(" -regex ")
+		call.WriteString(shellSingleQuote(regex))
 	}
 
 	if permission != 0o777 {
@@ -52,7 +80,9 @@ func BuildFilesFindCmd(from string, xdev bool, fileType string, regex string, pe
 
 	if search != "" {
 		call.WriteString(" -name ")
-		call.WriteString(search)
+		// Single-quote the pattern so the shell passes it to find verbatim,
+		// with no glob, variable, or command-substitution expansion.
+		call.WriteString(shellSingleQuote(search))
 	}
 
 	if depth != nil {

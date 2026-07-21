@@ -35,7 +35,7 @@ func TestPropertyExpressions(t *testing.T) {
 	saResource := findResource(parsed, "sa")
 	require.Equal(t, "sa", saResource.symbolicName)
 
-	sa, err := newMqlBicepResource(runtime, "bicep.resource:testdata/propexpr.bicep:sa", saResource, resolver)
+	sa, err := newMqlBicepResource(runtime, "bicep.resource:testdata/propexpr.bicep:sa", saResource, resolver, nil)
 	require.NoError(t, err)
 
 	list, err := sa.propertyExpressions()

@@ -36,8 +36,11 @@ func (v *mqlVsphereCluster) vsan() (*mqlVsphereClusterVsan, error) {
 	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
 	ctx := context.Background()
 
-	var clusterRef vimtypes.ManagedObjectReference
-	if !clusterRef.FromString(v.Moid.Data) {
+	// v.Moid.Data is the ManagedObjectReference.Encode() form (type and
+	// URL-escaped value joined with "-"); FromString is not its inverse, so
+	// decode it explicitly. See decodeMoRef in tags.go.
+	clusterRef, ok := decodeMoRef(v.Moid.Data)
+	if !ok {
 		return nil, fmt.Errorf("invalid cluster moid: %q", v.Moid.Data)
 	}
 

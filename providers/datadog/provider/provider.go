@@ -135,12 +135,8 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.DatadogConnect
 	asset.Id = conn.Conf.Type
 	asset.Name = "Datadog Account"
 
-	asset.Platform = &inventory.Platform{
-		Name:   "datadog",
-		Family: []string{"datadog"},
-		Kind:   "api",
-		Title:  "Datadog",
-	}
+	asset.Platform = &inventory.Platform{}
+	connection.PlatformByName("datadog").Apply(asset.Platform)
 
 	platformId := "//platformid.api.mondoo.app/runtime/datadog"
 	if orgId := conn.OrgPublicId(); orgId != "" {

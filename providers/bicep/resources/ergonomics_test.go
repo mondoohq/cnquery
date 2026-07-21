@@ -96,7 +96,7 @@ resource sa 'Microsoft.Storage/storageAccounts@2023-05-01' = {
 	resolver := newSymbolResolver("inline.bicep", parsed)
 	runtime := testRuntime()
 
-	pricing, err := newMqlBicepResource(runtime, "bicep.resource:inline:pricing", findResource(parsed, "pricing"), resolver)
+	pricing, err := newMqlBicepResource(runtime, "bicep.resource:inline:pricing", findResource(parsed, "pricing"), resolver, nil)
 	require.NoError(t, err)
 	// a literal name has its surrounding quotes stripped, so `name == "VirtualMachines"` matches
 	assert.Equal(t, "VirtualMachines", pricing.Name.Data)
@@ -105,7 +105,7 @@ resource sa 'Microsoft.Storage/storageAccounts@2023-05-01' = {
 	require.NoError(t, err)
 	assert.Equal(t, exprKindLiteral, nt.node.kind)
 
-	sa, err := newMqlBicepResource(runtime, "bicep.resource:inline:sa", findResource(parsed, "sa"), resolver)
+	sa, err := newMqlBicepResource(runtime, "bicep.resource:inline:sa", findResource(parsed, "sa"), resolver, nil)
 	require.NoError(t, err)
 	// an expression-valued name is left untouched
 	assert.Equal(t, "storageName", sa.Name.Data)

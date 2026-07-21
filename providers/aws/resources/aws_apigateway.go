@@ -129,9 +129,8 @@ func initAwsApigatewayRestapi(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["name"] = llx.StringData(ids.name)
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 
@@ -184,6 +183,12 @@ func (a *mqlAwsApigatewayRestapi) stages() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		// CacheDataEncrypted is configured per method; the "*/*" key holds the
+		// stage-wide default that applies unless a specific method overrides it.
+		cacheDataEncrypted := false
+		if ms, ok := stage.MethodSettings["*/*"]; ok {
+			cacheDataEncrypted = ms.CacheDataEncrypted
+		}
 		mqlStage, err := CreateResource(a.MqlRuntime, ResourceAwsApigatewayStage,
 			map[string]*llx.RawData{
 				"arn":                  llx.StringData(fmt.Sprintf(apiStageArnPattern, region, conn.AccountId(), restApiId, convert.ToValue(stage.StageName))),
@@ -195,6 +200,7 @@ func (a *mqlAwsApigatewayRestapi) stages() ([]any, error) {
 				"cacheClusterEnabled":  llx.BoolData(stage.CacheClusterEnabled),
 				"cacheClusterSize":     llx.StringData(string(stage.CacheClusterSize)),
 				"cacheClusterStatus":   llx.StringData(string(stage.CacheClusterStatus)),
+				"cacheDataEncrypted":   llx.BoolData(cacheDataEncrypted),
 				"clientCertificateId":  llx.StringData(convert.ToValue(stage.ClientCertificateId)),
 				"webAclArn":            llx.StringData(convert.ToValue(stage.WebAclArn)),
 				"createdAt":            llx.TimeDataPtr(stage.CreatedDate),
@@ -279,6 +285,53 @@ func (a *mqlAwsApigatewayRestapi) authorizers() ([]any, error) {
 				return nil, err
 			}
 			res = append(res, mqlAuth)
+		}
+		if resp.Position == nil {
+			break
+		}
+		position = resp.Position
+	}
+	return res, nil
+}
+
+func (a *mqlAwsApigatewayRestapi) deployments() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	restApiId := a.Id.Data
+	svc := conn.Apigateway(region)
+	ctx := context.Background()
+
+	res := []any{}
+	var position *string
+	for {
+		resp, err := svc.GetDeployments(ctx, &apigateway.GetDeploymentsInput{RestApiId: &restApiId, Position: position})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				log.Warn().Str("region", region).Str("restApiId", restApiId).Msg("error accessing API gateway deployments")
+				return res, nil
+			}
+			return nil, errors.Wrap(err, "could not gather AWS API Gateway deployments")
+		}
+		for _, d := range resp.Items {
+			depId := convert.ToValue(d.Id)
+			apiSummary, err := convert.JsonToDict(d.ApiSummary)
+			if err != nil {
+				return nil, err
+			}
+			mqlDep, err := CreateResource(a.MqlRuntime, "aws.apigateway.deployment",
+				map[string]*llx.RawData{
+					"__id":        llx.StringData(restApiId + "/" + depId),
+					"id":          llx.StringData(depId),
+					"restApiId":   llx.StringData(restApiId),
+					"createdDate": llx.TimeDataPtr(d.CreatedDate),
+					"description": llx.StringData(convert.ToValue(d.Description)),
+					"apiSummary":  llx.DictData(apiSummary),
+					"region":      llx.StringData(region),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlDep)
 		}
 		if resp.Position == nil {
 			break

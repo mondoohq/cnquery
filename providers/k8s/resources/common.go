@@ -72,6 +72,12 @@ func k8sResourceToMql(r *plugin.Runtime, kind string, fn resourceConvertFn) ([]a
 			return nil, err
 		}
 
+		// Attach the manifest source location (no-op for non-manifest scans and
+		// for resources the manifest doesn't contain).
+		if err := setK8sSourceContext(r, kt, obj, objT, mqlK8sResource); err != nil {
+			return nil, err
+		}
+
 		resp = append(resp, mqlK8sResource)
 	}
 

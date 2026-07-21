@@ -130,6 +130,7 @@ func (o *mqlOciRedis) getClusters(conn *connection.OciConnection, regions []any)
 					"timeUpdated":                llx.TimeDataPtr(updated),
 					"freeformTags":               llx.MapData(freeformTags, types.String),
 					"definedTags":                llx.MapData(definedTags, types.Any),
+					"systemTags":                 llx.MapData(definedTagsToAny(c.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err

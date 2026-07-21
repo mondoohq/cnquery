@@ -12,12 +12,13 @@ import (
 var Config = plugin.Provider{
 	Name:    "gitlab",
 	ID:      "go.mondoo.com/cnquery/v9/providers/gitlab",
-	Version: "13.3.4",
+	Version: "13.5.2",
 	ConnectionTypes: []string{
 		provider.ConnectionType,
 		provider.GitlabGroupConnection,
 		provider.GitlabProjectConnection,
 	},
+	Platforms: provider.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "gitlab",
@@ -39,13 +40,18 @@ Examples:
   cnspec shell gitlab --group <GROUP_NAME> --project <PROJECT_NAME> --token <YOUR_TOKEN>
 
 Notes:
-  Mondoo needs a personal access token to scan a GitLab group or project. The token's level of access determines how much information Mondoo can retrieve. Instead of providing a token with every command, you can supply your personal access token to Mondoo by setting the GITLAB_TOKEN environment variable. To learn how, read https://mondoo.com/docs/cnspec/saas/gitlab/.
+  Mondoo needs a personal access token to scan a GitLab group or project. The token's level of access determines how much information Mondoo can retrieve. Instead of providing a token with every command, you can supply your personal access token to Mondoo by setting the GITLAB_TOKEN environment variable. To learn how, read https://mondoo.com/docs/cnspec/saas/gitlab.
 `,
 			Discovery: []string{
 				provider.DiscoveryGroup,
 				provider.DiscoveryProject,
 				provider.DiscoveryTerraform,
 				provider.DiscoveryK8sManifests,
+				provider.DiscoveryCloudformation,
+				provider.DiscoveryDockerfiles,
+				provider.DiscoveryBicep,
+				provider.DiscoveryHelm,
+				provider.DiscoveryKustomize,
 			},
 			Flags: []plugin.Flag{
 				{

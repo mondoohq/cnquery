@@ -113,6 +113,9 @@ func parseFlagsToFiltersOpts(m map[string]*llx.Primitive) map[string]string {
 			"ecr:private-repository-names",
 			"ecr:public-repository-names",
 			"ecr:scope",
+			// s3 filters
+			"s3:bucket-names",
+			"s3:exclude:bucket-names",
 			// ecs filters
 			"ecs:only-running-containers",
 			"ecs:discover-instances",

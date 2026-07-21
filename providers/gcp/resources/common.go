@@ -101,6 +101,111 @@ func resolveServiceAccountRef(runtime *plugin.Runtime, raw, fallbackProjectId st
 	return res.(*mqlGcpProjectIamServiceServiceAccount), nil
 }
 
+// projectRefById resolves the typed gcp.project resource for a project id.
+// Returns nil when the id is empty, leaving the caller to mark the field null.
+func projectRefById(runtime *plugin.Runtime, projectId string) (*mqlGcpProject, error) {
+	if projectId == "" {
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "gcp.project", map[string]*llx.RawData{
+		"id": llx.StringData(projectId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProject), nil
+}
+
+// artifactRegistryRepoFromPath parses an Artifact Registry repository resource
+// name of the form "projects/{project}/locations/{location}/repositories/{repo}"
+// and returns its project, location, and repository components. Any component
+// not present in the path is returned empty.
+func artifactRegistryRepoFromPath(path string) (project, location, repo string) {
+	parts := strings.Split(path, "/")
+	for i := 0; i+1 < len(parts); i++ {
+		switch parts[i] {
+		case "projects":
+			project = parts[i+1]
+		case "locations":
+			location = parts[i+1]
+		case "repositories":
+			repo = parts[i+1]
+		}
+	}
+	return project, location, repo
+}
+
+// artifactRegistryRepoFromImage parses an Artifact Registry container image URL
+// of the form "{location}-docker.pkg.dev/{project}/{repo}/{image}[:tag|@digest]"
+// and returns its project, location, and repository components. It returns empty
+// strings for images that are not hosted in Artifact Registry (for example
+// Container Registry "gcr.io" images or external registries).
+func artifactRegistryRepoFromImage(image string) (project, location, repo string) {
+	s := strings.TrimPrefix(image, "https://")
+	parts := strings.Split(s, "/")
+	if len(parts) < 3 {
+		return "", "", ""
+	}
+	host := parts[0]
+	const suffix = "-docker.pkg.dev"
+	if !strings.HasSuffix(host, suffix) {
+		return "", "", ""
+	}
+	return parts[1], strings.TrimSuffix(host, suffix), parts[2]
+}
+
+// resolveArtifactRegistryRepoRef resolves the typed Artifact Registry repository
+// resource for a given project, location, and repository name. It returns nil
+// when any component is empty so callers can mark the field null.
+func resolveArtifactRegistryRepoRef(runtime *plugin.Runtime, project, location, repo string) (*mqlGcpProjectArtifactRegistryServiceRepository, error) {
+	if project == "" || location == "" || repo == "" {
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "gcp.project.artifactRegistryService.repository", map[string]*llx.RawData{
+		"name":      llx.StringData(repo),
+		"location":  llx.StringData(location),
+		"projectId": llx.StringData(project),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectArtifactRegistryServiceRepository), nil
+}
+
+// parentFolderFromId resolves the typed folder for a Cloud Resource Manager
+// parent reference. It returns nil when the parent is not a folder (for example
+// an organization or an empty reference), leaving the caller to mark the field
+// null.
+func parentFolderFromId(parentId string, runtime *plugin.Runtime) (*mqlGcpFolder, error) {
+	const prefix = "folders/"
+	if !strings.HasPrefix(parentId, prefix) {
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "gcp.folder", map[string]*llx.RawData{
+		"id": llx.StringData(strings.TrimPrefix(parentId, prefix)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpFolder), nil
+}
+
+// parentOrganizationFromId resolves the typed organization for a Cloud Resource
+// Manager parent reference. It returns nil when the direct parent is not an
+// organization (for example a folder). The organization resource resolves the
+// organization of the active connection, which is the parent org of any project
+// or folder under that org.
+func parentOrganizationFromId(parentId string, runtime *plugin.Runtime) (*mqlGcpOrganization, error) {
+	if !strings.HasPrefix(parentId, "organizations/") {
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "gcp.organization", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpOrganization), nil
+}
+
 // protoToDict converts a protobuf message to a map[string]any suitable for use as a dict field.
 // Returns nil for nil input, including typed nil interface values.
 func protoToDict(msg proto.Message) (map[string]any, error) {
@@ -214,6 +319,32 @@ func parseProjectFromPath(fullPath string) string {
 		}
 	}
 	return ""
+}
+
+// resolvePubsubTopicRef resolves a Pub/Sub topic reference to the typed
+// gcp.project.pubsubService.topic resource. The reference is typically a full
+// "projects/{project}/topics/{topic}" path; both the project and the short
+// topic name are pulled from it (fallbackProjectId is used only when the path
+// carries no project segment). Both are required: the topic init matches on the
+// short name and needs the project to build its parent service, so passing the
+// full path as the name (or omitting the project) leaves the ref unresolved.
+// Returns nil when the reference is empty.
+func resolvePubsubTopicRef(runtime *plugin.Runtime, topicRef, fallbackProjectId string) (*mqlGcpProjectPubsubServiceTopic, error) {
+	if topicRef == "" {
+		return nil, nil
+	}
+	projectId := fallbackProjectId
+	if p := parseProjectFromPath(topicRef); p != "" {
+		projectId = p
+	}
+	res, err := NewResource(runtime, "gcp.project.pubsubService.topic", map[string]*llx.RawData{
+		"name":      llx.StringData(parseResourceName(topicRef)),
+		"projectId": llx.StringData(projectId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectPubsubServiceTopic), nil
 }
 
 // parseLocationFromPath extracts the location/region from a GCP resource path.
@@ -336,26 +467,43 @@ func getNetworkByUrl(networkUrl string, runtime *plugin.Runtime) (*mqlGcpProject
 	return res.(*mqlGcpProjectComputeServiceNetwork), nil
 }
 
+// parseSubnetworkURL extracts the project, region, and name from a compute
+// subnetwork self-link. It accepts both the www.googleapis.com and
+// compute.googleapis.com hosts. ok is false when the URL is empty or is not a
+// recognized subnetwork reference.
+func parseSubnetworkURL(subnetUrl string) (project, region, name string, ok bool) {
+	if subnetUrl == "" {
+		return "", "", "", false
+	}
+	// Format is https://www.googleapis.com/compute/v1/projects/project1/regions/us-central1/subnetworks/subnet-1
+	// or https://compute.googleapis.com/compute/v1/projects/project1/regions/us-central1/subnetworks/subnet-1
+	params := strings.TrimPrefix(subnetUrl, "https://www.googleapis.com/compute/v1/")
+	params = strings.TrimPrefix(params, "https://compute.googleapis.com/compute/v1/")
+	parts := strings.Split(params, "/")
+	if len(parts) < 6 || parts[0] != "projects" || parts[2] != "regions" || parts[4] != "subnetworks" {
+		return "", "", "", false
+	}
+	return parts[1], parts[3], parts[5], true
+}
+
 func getSubnetworkByUrl(subnetUrl string, runtime *plugin.Runtime) (*mqlGcpProjectComputeServiceSubnetwork, error) {
 	// A reference to a subnetwork is not mandatory for this resource
 	if subnetUrl == "" {
 		return nil, nil
 	}
 
-	// Format is https://www.googleapis.com/compute/v1/projects/project1/regions/us-central1/subnetworks/subnet-1
-	// or https://compute.googleapis.com/compute/v1/projects/project1/regions/us-central1/subnetworks/subnet-1
-	params := strings.TrimPrefix(subnetUrl, "https://www.googleapis.com/compute/v1/")
-	params = strings.TrimPrefix(params, "https://compute.googleapis.com/compute/v1/")
-	parts := strings.Split(params, "/")
-	resId := resourceId{Project: parts[1], Region: parts[3], Name: parts[5]}
+	project, region, name, ok := parseSubnetworkURL(subnetUrl)
+	if !ok {
+		return nil, fmt.Errorf("unrecognized subnetwork reference: %q", subnetUrl)
+	}
 	// regionUrl is the full URL up to and including the region segment
-	regionUrl := "https://www.googleapis.com/compute/v1/projects/" + resId.Project + "/regions/" + resId.Region
+	regionUrl := "https://www.googleapis.com/compute/v1/projects/" + project + "/regions/" + region
 
 	// Use NewResource so initGcpProjectComputeServiceSubnetwork runs and
 	// populates every field instead of leaving the resource partially set.
 	res, err := NewResource(runtime, "gcp.project.computeService.subnetwork", map[string]*llx.RawData{
-		"name":      llx.StringData(resId.Name),
-		"projectId": llx.StringData(resId.Project),
+		"name":      llx.StringData(name),
+		"projectId": llx.StringData(project),
 		"regionUrl": llx.StringData(regionUrl),
 	})
 	if err != nil {

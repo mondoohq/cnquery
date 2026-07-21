@@ -32,6 +32,7 @@ const (
 	DiscoveryRedisClusters         = "redis-clusters"
 	DiscoveryVaultSecrets          = "vault-secrets"
 	DiscoveryOkeClusters           = "oke-clusters"
+	DiscoveryGenerativeAiEndpoints = "generativeai-endpoints"
 )
 
 // AllAPIResources lists every fine-grained per-resource discovery target.
@@ -39,6 +40,7 @@ const (
 var AllAPIResources = []string{
 	DiscoveryAPIGatewayDeployments,
 	DiscoveryBuckets,
+	DiscoveryGenerativeAiEndpoints,
 	DiscoveryLoadBalancers,
 	DiscoveryOkeClusters,
 	DiscoveryPolicies,
@@ -319,6 +321,30 @@ func discover(runtime *plugin.Runtime, conn *connection.OciConnection, target st
 				objectType:  "cluster",
 			}, c.Name.Data, tagsToLabels(c.FreeformTags.Data), conn))
 		}
+	case DiscoveryGenerativeAiEndpoints:
+		res, err := NewResource(runtime, "oci.ai.generativeAi", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+		genAi := res.(*mqlOciAiGenerativeAi)
+		endpoints := genAi.GetEndpoints()
+		if endpoints.Error != nil {
+			return nil, endpoints.Error
+		}
+		for i := range endpoints.Data {
+			e := endpoints.Data[i].(*mqlOciAiGenerativeAiEndpoint)
+			appendIfNotNil(&assetList, ociObjectToAsset(ociObject{
+				tenantID:    tenantID,
+				compartment: e.CompartmentID.Data,
+				// cacheRegion is populated during endpoint enumeration (the
+				// listing runs per subscribed region); empty only when the
+				// enumeration didn't hit a region (defensive fallback).
+				region:     fallbackRegion(e.cacheRegion),
+				id:         e.Id.Data,
+				service:    "generativeai",
+				objectType: "endpoint",
+			}, e.Name.Data, tagsToLabels(e.FreeformTags.Data), conn))
+		}
 	default:
 		log.Warn().Str("target", target).Msg("oci discovery: unknown target; skipping")
 	}
@@ -396,31 +422,10 @@ func getPlatformName(obj ociObject) string {
 		if obj.objectType == "cluster" {
 			return "oci-oke-cluster"
 		}
-	}
-	return ""
-}
-
-// getPlatformTitle returns the human-readable title displayed in cnspec/UI.
-func getPlatformTitle(platform string) string {
-	switch platform {
-	case "oci-network-securitylist":
-		return "OCI Network Security List"
-	case "oci-identity-user":
-		return "OCI Identity User"
-	case "oci-identity-policy":
-		return "OCI Identity Policy"
-	case "oci-objectstorage-bucket":
-		return "OCI Object Storage Bucket"
-	case "oci-apigateway-deployment":
-		return "OCI API Gateway Deployment"
-	case "oci-loadbalancer":
-		return "OCI Load Balancer"
-	case "oci-redis-cluster":
-		return "OCI Redis Cluster"
-	case "oci-vault-secret":
-		return "OCI Vault Secret"
-	case "oci-oke-cluster":
-		return "OCI OKE Cluster"
+	case "generativeai":
+		if obj.objectType == "endpoint" {
+			return "oci-ai-generativeai-endpoint"
+		}
 	}
 	return ""
 }
@@ -447,16 +452,12 @@ func ociObjectToAsset(obj ociObject, name string, labels map[string]string, conn
 		inventory.WithParentConnectionId(conn.Conf.Id),
 	)
 	clonedConfig.PlatformId = platformID
+	platform := &inventory.Platform{}
+	PlatformByName(platformName).Apply(platform)
 	return &inventory.Asset{
 		PlatformIds: []string{platformID},
 		Name:        name,
-		Platform: &inventory.Platform{
-			Name:    platformName,
-			Title:   getPlatformTitle(platformName),
-			Runtime: "oci",
-			Kind:    "oci-object",
-			Family:  []string{"oci"},
-		},
+		Platform:    platform,
 		Labels:      labels,
 		Connections: []*inventory.Config{clonedConfig},
 	}

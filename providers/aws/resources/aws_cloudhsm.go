@@ -26,18 +26,7 @@ func (a *mqlAwsCloudhsm) id() (string, error) {
 }
 
 func cloudHsmTagsToMap(tags []cloudhsmv2_types.Tag) map[string]any {
-	res := map[string]any{}
-	for _, t := range tags {
-		if t.Key == nil {
-			continue
-		}
-		val := ""
-		if t.Value != nil {
-			val = *t.Value
-		}
-		res[*t.Key] = val
-	}
-	return res
+	return tagsToMap(tags, func(t cloudhsmv2_types.Tag) *string { return t.Key }, func(t cloudhsmv2_types.Tag) *string { return t.Value })
 }
 
 // ---- aws.cloudhsm.cluster ----
@@ -178,6 +167,13 @@ type mqlAwsCloudhsmClusterInternal struct {
 	cacheHsms            []cloudhsmv2_types.Hsm
 }
 
+const cloudhsmClusterArnPattern = "arn:aws:cloudhsm:%s:%s:cluster/%s"
+
+func (a *mqlAwsCloudhsmCluster) arn() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return fmt.Sprintf(cloudhsmClusterArnPattern, a.Region.Data, conn.AccountId(), a.ClusterId.Data), nil
+}
+
 func (a *mqlAwsCloudhsmCluster) vpc() (*mqlAwsVpc, error) {
 	if a.cacheVpcId == nil || *a.cacheVpcId == "" {
 		a.Vpc.State = plugin.StateIsSet | plugin.StateIsNull
@@ -303,6 +299,20 @@ func (a *mqlAwsCloudhsmHsm) subnet() (*mqlAwsVpcSubnet, error) {
 		return nil, err
 	}
 	return mqlSubnet.(*mqlAwsVpcSubnet), nil
+}
+
+func (a *mqlAwsCloudhsmHsm) networkInterface() (*mqlAwsEc2Networkinterface, error) {
+	eniId := a.EniId.Data
+	if eniId == "" {
+		a.NetworkInterface.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAwsEc2Networkinterface,
+		map[string]*llx.RawData{"id": llx.StringData(eniId), "region": llx.StringData(a.region)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEc2Networkinterface), nil
 }
 
 // ---- aws.cloudhsm.backup ----

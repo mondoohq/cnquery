@@ -47,6 +47,13 @@ func listStorageContainers(conn *connection.NutanixConnection) ([]clustermgmtcon
 }
 
 func newMqlStorageContainer(runtime *plugin.Runtime, c *clustermgmtconfig.StorageContainer) (*mqlNutanixStorageContainer, error) {
+	// ExtId is the container's stable identity and becomes the resource __id.
+	// The API can return a container without one (e.g. system/partially
+	// provisioned containers); such a container cannot be cached or
+	// cross-referenced, so skip it rather than fail the whole listing.
+	if c.ExtId == nil {
+		return nil, nil
+	}
 	onDiskDedup := ""
 	if c.OnDiskDedup != nil {
 		onDiskDedup = c.OnDiskDedup.GetName()
@@ -67,6 +74,7 @@ func newMqlStorageContainer(runtime *plugin.Runtime, c *clustermgmtconfig.Storag
 	res, err := CreateResource(runtime, "nutanix.storage.container", map[string]*llx.RawData{
 		"__id":                                 llx.StringDataPtr(c.ExtId),
 		"id":                                   llx.StringDataPtr(c.ExtId),
+		"tenantId":                             llx.StringDataPtr(c.TenantId),
 		"name":                                 llx.StringDataPtr(c.Name),
 		"maxCapacityBytes":                     llx.IntData(derefInt64(c.MaxCapacityBytes)),
 		"logicalAdvertisedCapacityBytes":       llx.IntData(derefInt64(c.LogicalAdvertisedCapacityBytes)),
@@ -83,10 +91,11 @@ func newMqlStorageContainer(runtime *plugin.Runtime, c *clustermgmtconfig.Storag
 		"isSoftwareEncryptionEnabled":          llx.BoolData(derefBool(c.IsSoftwareEncryptionEnabled)),
 		"nfsWhitelistAddresses":                llx.ArrayData(nfsWhitelist, types.String),
 		"isNfsWhitelistInherited":              llx.BoolData(derefBool(c.IsNfsWhitelistInherited)),
-		"isShared":                             llx.BoolData(derefBool(c.IsShared)),
-		"isInternal":                           llx.BoolData(derefBool(c.IsInternal)),
-		"isMarkedForRemoval":                   llx.BoolData(derefBool(c.IsMarkedForRemoval)),
-		"storagePoolId":                        llx.StringDataPtr(c.StoragePoolExtId),
+		// The v4.0 API does not report whether a container is shared across clusters.
+		"isShared":           llx.BoolDataPtr(nil),
+		"isInternal":         llx.BoolData(derefBool(c.IsInternal)),
+		"isMarkedForRemoval": llx.BoolData(derefBool(c.IsMarkedForRemoval)),
+		"storagePoolId":      llx.StringDataPtr(c.StoragePoolExtId),
 	})
 	if err != nil {
 		return nil, err
@@ -94,6 +103,9 @@ func newMqlStorageContainer(runtime *plugin.Runtime, c *clustermgmtconfig.Storag
 	mqlContainer := res.(*mqlNutanixStorageContainer)
 	if c.ClusterExtId != nil {
 		mqlContainer.cacheClusterId = *c.ClusterExtId
+	}
+	if c.OwnerExtId != nil {
+		mqlContainer.cacheOwnerId = *c.OwnerExtId
 	}
 	return mqlContainer, nil
 }
@@ -113,6 +125,9 @@ func storageContainersForCluster(runtime *plugin.Runtime, conn *connection.Nutan
 		if err != nil {
 			return nil, err
 		}
+		if mqlContainer == nil {
+			continue
+		}
 		res = append(res, mqlContainer)
 	}
 	return res, nil
@@ -130,6 +145,22 @@ func (a *mqlNutanixCluster) storageContainers() ([]any, error) {
 
 type mqlNutanixStorageContainerInternal struct {
 	cacheClusterId string
+	cacheOwnerId   string
+}
+
+func (a *mqlNutanixStorageContainer) owner() (*mqlNutanixIamUser, error) {
+	if a.cacheOwnerId == "" {
+		a.Owner.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := userByID(a.MqlRuntime, a.cacheOwnerId)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		a.Owner.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return res, nil
 }
 
 func (a *mqlNutanixStorageContainer) cluster() (*mqlNutanixCluster, error) {
@@ -174,6 +205,9 @@ func (a *mqlNutanix) volumeGroups() ([]any, error) {
 		}
 		for i := range items {
 			vg := items[i]
+			if vg.ExtId == nil {
+				continue
+			}
 			sharingStatus := ""
 			if vg.SharingStatus != nil {
 				sharingStatus = vg.SharingStatus.GetName()
@@ -197,6 +231,8 @@ func (a *mqlNutanix) volumeGroups() ([]any, error) {
 			mqlVg, err := CreateResource(a.MqlRuntime, "nutanix.storage.volumeGroup", map[string]*llx.RawData{
 				"__id":                           llx.StringDataPtr(vg.ExtId),
 				"id":                             llx.StringDataPtr(vg.ExtId),
+				"tenantId":                       llx.StringDataPtr(vg.TenantId),
+				"createdBy":                      llx.StringDataPtr(vg.CreatedBy),
 				"name":                           llx.StringDataPtr(vg.Name),
 				"description":                    llx.StringDataPtr(vg.Description),
 				"sharingStatus":                  llx.StringData(sharingStatus),

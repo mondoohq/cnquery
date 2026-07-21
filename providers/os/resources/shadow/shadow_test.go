@@ -4,6 +4,7 @@
 package shadow_test
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -42,6 +43,33 @@ func TestParseShadow(t *testing.T) {
 	}
 	found := findUser(shadowEntries, "chris")
 	assert.Equal(t, expected, found)
+}
+
+func TestParseShadow_PasswordWithDoubleQuote(t *testing.T) {
+	// A double quote anywhere in the line must be treated literally. The old
+	// csv-based parser interpreted it as a CSV quote and corrupted the entry.
+	input := `alice:$6$ab"cd$hashvalue:18900:0:99999:7:::
+bob:!:18900:0:99999:7:::
+`
+	entries, err := shadow.ParseShadow(strings.NewReader(input))
+	require.NoError(t, err)
+	require.Len(t, entries, 2)
+
+	alice := findUser(entries, "alice")
+	require.NotNil(t, alice)
+	assert.Equal(t, `$6$ab"cd$hashvalue`, alice.Password)
+
+	bob := findUser(entries, "bob")
+	require.NotNil(t, bob)
+	assert.Equal(t, "!", bob.Password)
+}
+
+func TestParseShadow_ShortLineErrors(t *testing.T) {
+	// A line with fewer than 9 fields must produce an error rather than panic.
+	input := "broken:x:18900\n"
+	_, err := shadow.ParseShadow(strings.NewReader(input))
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid shadow entry")
 }
 
 func findUser(shadowEntries []shadow.ShadowEntry, user string) *shadow.ShadowEntry {

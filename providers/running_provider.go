@@ -7,7 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/hashicorp/go-plugin"
@@ -48,21 +50,46 @@ type connectionGraph struct {
 	nodes map[uint32]connectionGraphNode
 	// edges is a map of connection id to parent connection id
 	edges map[uint32]uint32
+	// collectedNodes preserves connect request data for nodes removed by
+	// garbageCollect. A later Connect() call with a ParentConnectionId
+	// pointing to a collected node can use this data to transparently
+	// reconnect the parent before connecting the child.
+	//
+	// Bounded by: addNode/addImplicitNode remove entries for re-added
+	// IDs, and Reconnect() clears this map since stale data from before
+	// a provider restart is no longer meaningful.
+	collectedNodes map[uint32]connectReq
 }
 
 func newConnectionGraph() *connectionGraph {
 	return &connectionGraph{
-		nodes: map[uint32]connectionGraphNode{},
-		edges: map[uint32]uint32{},
+		nodes:          map[uint32]connectionGraphNode{},
+		edges:          map[uint32]uint32{},
+		collectedNodes: map[uint32]connectReq{},
 	}
 }
 
 // addNode adds a node to the graph with the given data.
+// If the node was previously garbage-collected, its stale entry in
+// collectedNodes is removed since the fresh data supersedes it.
 func (c *connectionGraph) addNode(node uint32, data connectReq) {
 	c.nodes[node] = connectionGraphNode{
 		explicitlyConnected: true,
 		data:                data,
 	}
+	delete(c.collectedNodes, node)
+}
+
+// addImplicitNode adds a node that is NOT explicitly connected — it was
+// reconnected on behalf of a child, not by a direct user request. The node
+// will be kept alive by topoSort as long as an explicitly-connected child
+// references it, and garbage-collected once all such children disconnect.
+func (c *connectionGraph) addImplicitNode(node uint32, data connectReq) {
+	c.nodes[node] = connectionGraphNode{
+		explicitlyConnected: false,
+		data:                data,
+	}
+	delete(c.collectedNodes, node)
 }
 
 // getNode returns the connect request data for the given node.
@@ -115,7 +142,11 @@ func (c *connectionGraph) topoSort() []uint32 {
 	return sorted
 }
 
-// garbageCollect removes nodes from the graph that are not explicitly connected and are not required by any other connection.
+// garbageCollect removes nodes from the graph that are not explicitly
+// connected and are not required by any other connection.
+// The connect request data of collected nodes is preserved in
+// collectedNodes so that a future child connection can transparently
+// reconnect a garbage-collected parent.
 func (c *connectionGraph) garbageCollect() []uint32 {
 	sorted := c.topoSort()
 
@@ -128,12 +159,20 @@ func (c *connectionGraph) garbageCollect() []uint32 {
 	for node := range c.nodes {
 		if _, ok := keep[node]; !ok {
 			collected = append(collected, node)
+			c.collectedNodes[node] = c.nodes[node].data
 			delete(c.nodes, node)
 			delete(c.edges, node)
 		}
 	}
 
 	return collected
+}
+
+// getCollectedNode returns the preserved connect request data for a
+// node that was previously removed by garbageCollect.
+func (c *connectionGraph) getCollectedNode(id uint32) (connectReq, bool) {
+	cr, ok := c.collectedNodes[id]
+	return cr, ok
 }
 
 type (
@@ -163,19 +202,59 @@ func (r *RestartableProvider) Client() *plugin.Client {
 
 // Connect implements plugin.ProviderPlugin.
 func (r *RestartableProvider) Connect(req *pp.ConnectReq, cb pp.ProviderCallback) (*pp.ConnectRes, error) {
+	var parentToReconnect *connectReq
+
 	if len(req.Asset.GetConnections()) > 0 {
 		reqClone := req.CloneVT()
 		r.lock.Lock()
 		connectionId := req.Asset.Connections[0].Id
+		parentId := req.Asset.Connections[0].ParentConnectionId
 		if _, ok := r.connectionGraph.getNode(connectionId); !ok {
 			r.connectionGraph.addNode(connectionId, connectReq{
 				req: reqClone,
 				cb:  cb,
 			})
-			r.connectionGraph.setEdge(connectionId, req.Asset.Connections[0].ParentConnectionId)
+			r.connectionGraph.setEdge(connectionId, parentId)
+		}
+
+		// If the parent was garbage-collected (its runtime was disconnected
+		// because all previous children finished), we need to reconnect it
+		// before connecting this child. The preserved connect data lets us
+		// re-establish the parent's runtime transparently.
+		if parentId > 0 {
+			if _, inGraph := r.connectionGraph.getNode(parentId); !inGraph {
+				if cr, ok := r.connectionGraph.getCollectedNode(parentId); ok {
+					parentToReconnect = &cr
+				}
+			}
 		}
 
 		r.lock.Unlock()
+	}
+
+	if parentToReconnect != nil {
+		parentId := req.Asset.Connections[0].ParentConnectionId
+
+		// Re-check under lock: a concurrent Connect for a sibling child
+		// may have already reconnected this parent.
+		r.lock.Lock()
+		_, alreadyBack := r.connectionGraph.getNode(parentId)
+		r.lock.Unlock()
+
+		if !alreadyBack {
+			if _, err := r.plugin.Connect(parentToReconnect.req, parentToReconnect.cb); err != nil {
+				return nil, fmt.Errorf("failed to reconnect garbage-collected parent %d: %w", parentId, err)
+			} else {
+				r.lock.Lock()
+				if _, ok := r.connectionGraph.getNode(parentId); !ok {
+					r.connectionGraph.addImplicitNode(parentId, *parentToReconnect)
+					if parentToReconnect.req != nil && len(parentToReconnect.req.Asset.GetConnections()) > 0 {
+						r.connectionGraph.setEdge(parentId, parentToReconnect.req.Asset.Connections[0].ParentConnectionId)
+					}
+				}
+				r.lock.Unlock()
+			}
+		}
 	}
 
 	resp, err := r.plugin.Connect(req, cb)
@@ -201,6 +280,7 @@ func (r *RestartableProvider) Reconnect() error {
 	}
 	r.plugin = p
 	r.client = c
+	clear(r.connectionGraph.collectedNodes)
 
 	connectRequestOrder := r.connectionGraph.topoSort()
 
@@ -299,6 +379,20 @@ type RunningProvider struct {
 	// we can include the most recent stderr (typically a runtime fatal or
 	// panic stack trace) in the error attached to Runtime.CriticalErrors.
 	crashLog *crashLogBuffer
+	// proc tracks the plugin subprocess so crash diagnostics can report its
+	// exit disposition (exit code vs. signal, peak RSS) after it dies. Nil
+	// for builtin providers and providers constructed without a subprocess.
+	proc *processTracker
+	// exitGraceExpired memoizes that awaitExit already waited a full grace
+	// period without the subprocess exiting, so subsequent crash-diagnostic
+	// builds don't each re-pay the wait for a hung-but-alive provider.
+	// Reset on successful reconnect.
+	exitGraceExpired atomic.Bool
+	// killedSelf records that we sent the kill signal to the subprocess
+	// ourselves (shutdown, heartbeat-triggered or otherwise). It lets crash
+	// diagnostics distinguish our own SIGKILL from an external one — the
+	// latter, with an empty stderr tail, is the OOM-killer fingerprint.
+	killedSelf atomic.Bool
 	// provider errors which are evaluated and printed during shutdown of the provider
 	err          error
 	lock         sync.Mutex
@@ -416,6 +510,8 @@ func (p *RunningProvider) Reconnect() error {
 		}
 		p.isClosed = false
 		p.isShutdown = false
+		p.exitGraceExpired.Store(false)
+		p.killedSelf.Store(false)
 		hbCtx, hbCancelFunc := context.WithCancel(context.Background())
 		if p.hbCancelFunc != nil {
 			p.hbCancelFunc()
@@ -454,6 +550,7 @@ func (p *RunningProvider) Shutdown() error {
 		if rp, ok := p.Plugin.(*RestartableProvider); ok {
 			c := rp.Client()
 			if c != nil {
+				p.killedSelf.Store(true)
 				c.Kill()
 			}
 		}
@@ -474,21 +571,56 @@ func (p *RunningProvider) KillClient() {
 	if rp, ok := p.Plugin.(*RestartableProvider); ok {
 		c := rp.Client()
 		if c != nil {
+			p.killedSelf.Store(true)
 			c.Kill()
 		}
 	}
 }
 
-// hasExited reports whether the underlying plugin subprocess has exited.
-// Returns false if we have no client handle (e.g. for builtin providers).
-func (p *RunningProvider) hasExited() bool {
-	if rp, ok := p.Plugin.(*RestartableProvider); ok {
-		c := rp.Client()
-		if c != nil {
-			return c.Exited()
+// wasKilledLocally reports whether we sent the subprocess its kill signal
+// ourselves, so crash diagnostics don't misread our own SIGKILL as the
+// OOM killer's.
+func (p *RunningProvider) wasKilledLocally() bool {
+	return p.killedSelf.Load()
+}
+
+// awaitExit waits up to grace for the plugin subprocess to be reaped,
+// reporting whether it exited and, if so, its exit state. An in-flight RPC
+// fails the instant the child's socket dies — usually before go-plugin's
+// exit-watcher goroutine has waited on the process — so crash diagnostics
+// built immediately would see "still running" and miss the exit
+// disposition. Reaping a dead direct child settles within milliseconds; the
+// grace bound only matters for the true-hang case, where the process really
+// is still running.
+//
+// It reads exclusively from the process tracker: consulting the
+// RestartableProvider's client here would block on its lock, which
+// Reconnect() holds for the full duration of re-establishing every tracked
+// connection. The wait is also memoized — handlePluginError builds
+// diagnostics once per failed RPC, and a hung-but-alive provider must stall
+// the first of them at most, not every one.
+// Returns immediately when no subprocess is tracked (builtin providers).
+func (p *RunningProvider) awaitExit(grace time.Duration) (bool, *os.ProcessState) {
+	if p.proc == nil {
+		return false, nil
+	}
+	if exited, ps := p.proc.exitInfo(); exited {
+		return true, ps
+	}
+	if p.exitGraceExpired.Load() {
+		return false, nil
+	}
+	deadline := time.Now().Add(grace)
+	for {
+		time.Sleep(25 * time.Millisecond)
+		if exited, ps := p.proc.exitInfo(); exited {
+			return true, ps
+		}
+		if time.Now().After(deadline) {
+			p.exitGraceExpired.Store(true)
+			return false, nil
 		}
 	}
-	return false
 }
 
 // uptime reports how long the provider has been running. Zero if startedAt

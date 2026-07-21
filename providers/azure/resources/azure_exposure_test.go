@@ -171,3 +171,153 @@ func TestStorageAccountIsPublic(t *testing.T) {
 		assert.False(t, storageAccountIsPublic("Enabled", "", true))
 	})
 }
+
+func TestRuleSourceIsInternet(t *testing.T) {
+	assert.True(t, ruleSourceIsInternet(map[string]any{"sourceAddressPrefix": "*"}))
+	assert.True(t, ruleSourceIsInternet(map[string]any{"sourceAddressPrefix": "Internet"}))
+	assert.True(t, ruleSourceIsInternet(map[string]any{"sourceAddressPrefixes": []any{"10.0.0.0/8", "0.0.0.0/0"}}))
+	assert.True(t, ruleSourceIsInternet(map[string]any{"expandedSourceAddressPrefix": []any{"*"}}))
+	assert.False(t, ruleSourceIsInternet(map[string]any{"sourceAddressPrefix": "VirtualNetwork"}))
+	assert.False(t, ruleSourceIsInternet(map[string]any{"sourceAddressPrefixes": []any{"10.0.0.0/8"}}))
+	assert.False(t, ruleSourceIsInternet(map[string]any{}))
+}
+
+func TestRuleInt(t *testing.T) {
+	v, ok := ruleInt(map[string]any{"priority": float64(100)}, "priority")
+	assert.True(t, ok)
+	assert.Equal(t, 100, v)
+	v, ok = ruleInt(map[string]any{"priority": 200}, "priority")
+	assert.True(t, ok)
+	assert.Equal(t, 200, v)
+	_, ok = ruleInt(map[string]any{"priority": "300"}, "priority")
+	assert.False(t, ok, "string priority is not accepted")
+	_, ok = ruleInt(map[string]any{}, "priority")
+	assert.False(t, ok)
+}
+
+func TestRulePortIntervals(t *testing.T) {
+	assert.Equal(t, []portInterval{{0, 65535}}, rulePortIntervals(map[string]any{"destinationPortRange": "*"}))
+	assert.Equal(t, []portInterval{{22, 22}}, rulePortIntervals(map[string]any{"destinationPortRange": "22"}))
+	assert.Equal(t, []portInterval{{80, 443}}, rulePortIntervals(map[string]any{"destinationPortRange": "80-443"}))
+	assert.Equal(t, []portInterval{{22, 22}, {443, 443}}, rulePortIntervals(map[string]any{"destinationPortRanges": []any{"22", "443"}}))
+	assert.Equal(t, []portInterval{{0, 65535}}, rulePortIntervals(map[string]any{}), "absent ports means all ports")
+}
+
+func TestPortsCover(t *testing.T) {
+	all := []portInterval{{0, 65535}}
+	assert.True(t, portsCover(all, []portInterval{{22, 22}}))
+	assert.True(t, portsCover([]portInterval{{20, 30}}, []portInterval{{22, 25}}))
+	assert.False(t, portsCover([]portInterval{{20, 30}}, []portInterval{{22, 40}}))
+	assert.False(t, portsCover([]portInterval{{80, 80}}, []portInterval{{22, 22}}))
+	// allow spanning two deny intervals is not covered (must fall within one)
+	assert.False(t, portsCover([]portInterval{{20, 25}, {26, 30}}, []portInterval{{22, 28}}))
+}
+
+func TestProtocolCovers(t *testing.T) {
+	assert.True(t, protocolCovers("*", "Tcp"))
+	assert.True(t, protocolCovers("Any", "Tcp"))
+	assert.True(t, protocolCovers("", "Tcp"))
+	assert.True(t, protocolCovers("Tcp", "tcp"))
+	assert.False(t, protocolCovers("Udp", "Tcp"))
+}
+
+func TestDestCovers(t *testing.T) {
+	assert.True(t, destCovers(map[string]any{"destinationAddressPrefix": "*"}, map[string]any{"destinationAddressPrefix": "10.0.0.4"}))
+	assert.True(t, destCovers(map[string]any{"destinationAddressPrefix": "0.0.0.0/0"}, map[string]any{"destinationAddressPrefix": "10.0.0.4"}))
+	assert.True(t, destCovers(map[string]any{"destinationAddressPrefix": "10.0.0.4"}, map[string]any{"destinationAddressPrefix": "10.0.0.4"}))
+	assert.True(t, destCovers(map[string]any{"destinationAddressPrefixes": []any{"10.0.0.4"}}, map[string]any{"destinationAddressPrefix": "10.0.0.4"}))
+	assert.False(t, destCovers(map[string]any{"destinationAddressPrefix": "10.0.0.5"}, map[string]any{"destinationAddressPrefix": "10.0.0.4"}))
+	// allow rule using the plural destination form is read on the allow side too
+	assert.True(t, destCovers(map[string]any{"destinationAddressPrefix": "10.0.0.4"}, map[string]any{"destinationAddressPrefixes": []any{"10.0.0.4"}}))
+	// every allow destination must be covered; a deny covering only one is not enough
+	assert.False(t, destCovers(map[string]any{"destinationAddressPrefix": "10.0.0.4"}, map[string]any{"destinationAddressPrefixes": []any{"10.0.0.4", "10.0.0.5"}}))
+	assert.True(t, destCovers(map[string]any{"destinationAddressPrefix": "*"}, map[string]any{"destinationAddressPrefixes": []any{"10.0.0.4", "10.0.0.5"}}))
+	// a narrow deny cannot cover an allow that targets all addresses
+	assert.False(t, destCovers(map[string]any{"destinationAddressPrefix": "10.0.0.4"}, map[string]any{"destinationAddressPrefix": "*"}))
+}
+
+func TestDenyDominatesAllow(t *testing.T) {
+	denyAll := map[string]any{"protocol": "*", "destinationPortRange": "*", "destinationAddressPrefix": "*"}
+	allowSsh := map[string]any{"protocol": "Tcp", "destinationPortRange": "22", "destinationAddressPrefix": "*"}
+	assert.True(t, denyDominatesAllow(denyAll, allowSsh))
+
+	denyOtherPort := map[string]any{"protocol": "*", "destinationPortRange": "80", "destinationAddressPrefix": "*"}
+	assert.False(t, denyDominatesAllow(denyOtherPort, allowSsh), "deny on a different port does not shadow")
+
+	denyOtherProto := map[string]any{"protocol": "Udp", "destinationPortRange": "*", "destinationAddressPrefix": "*"}
+	assert.False(t, denyDominatesAllow(denyOtherProto, allowSsh), "deny on a different protocol does not shadow")
+
+	denyOtherDest := map[string]any{"protocol": "*", "destinationPortRange": "*", "destinationAddressPrefix": "10.0.0.5"}
+	assert.False(t, denyDominatesAllow(denyOtherDest, allowSsh), "deny on a different destination does not shadow")
+}
+
+func TestNsgAllowsInternetIngress(t *testing.T) {
+	allowSsh := map[string]any{
+		"direction": "Inbound", "access": "Allow", "sourceAddressPrefix": "*",
+		"protocol": "Tcp", "destinationPortRange": "22", "priority": float64(300),
+		"destinationAddressPrefix": "*",
+	}
+	denyAllHigh := map[string]any{
+		"direction": "Inbound", "access": "Deny", "sourceAddressPrefix": "*",
+		"protocol": "*", "destinationPortRange": "*", "priority": float64(100),
+		"destinationAddressPrefix": "*",
+	}
+	denyAllLow := map[string]any{
+		"direction": "Inbound", "access": "Deny", "sourceAddressPrefix": "*",
+		"protocol": "*", "destinationPortRange": "*", "priority": float64(4000),
+		"destinationAddressPrefix": "*",
+	}
+
+	t.Run("allow with no deny is open", func(t *testing.T) {
+		open, surviving := nsgAllowsInternetIngress([]map[string]any{allowSsh})
+		assert.True(t, open)
+		assert.Len(t, surviving, 1)
+	})
+	t.Run("higher-priority deny-all shadows the allow", func(t *testing.T) {
+		open, surviving := nsgAllowsInternetIngress([]map[string]any{allowSsh, denyAllHigh})
+		assert.False(t, open)
+		assert.Empty(t, surviving)
+	})
+	t.Run("lower-priority deny-all does not shadow the allow", func(t *testing.T) {
+		open, surviving := nsgAllowsInternetIngress([]map[string]any{allowSsh, denyAllLow})
+		assert.True(t, open)
+		assert.Len(t, surviving, 1)
+	})
+	t.Run("deny on a different port leaves the allow open", func(t *testing.T) {
+		denyHttp := map[string]any{
+			"direction": "Inbound", "access": "Deny", "sourceAddressPrefix": "*",
+			"protocol": "Tcp", "destinationPortRange": "80", "priority": float64(100),
+			"destinationAddressPrefix": "*",
+		}
+		open, _ := nsgAllowsInternetIngress([]map[string]any{allowSsh, denyHttp})
+		assert.True(t, open)
+	})
+	t.Run("no internet-source rule admits nothing", func(t *testing.T) {
+		vnetAllow := map[string]any{
+			"direction": "Inbound", "access": "Allow", "sourceAddressPrefix": "VirtualNetwork",
+			"protocol": "*", "destinationPortRange": "*", "priority": float64(100),
+		}
+		open, surviving := nsgAllowsInternetIngress([]map[string]any{vnetAllow})
+		assert.False(t, open)
+		assert.Empty(t, surviving)
+	})
+	t.Run("deny-internet only admits nothing", func(t *testing.T) {
+		open, _ := nsgAllowsInternetIngress([]map[string]any{denyAllHigh})
+		assert.False(t, open)
+	})
+	t.Run("one allow shadowed, another open", func(t *testing.T) {
+		allowHttp := map[string]any{
+			"direction": "Inbound", "access": "Allow", "sourceAddressPrefix": "*",
+			"protocol": "Tcp", "destinationPortRange": "443", "priority": float64(200),
+			"destinationAddressPrefix": "*",
+		}
+		denySshHigh := map[string]any{
+			"direction": "Inbound", "access": "Deny", "sourceAddressPrefix": "*",
+			"protocol": "Tcp", "destinationPortRange": "22", "priority": float64(150),
+			"destinationAddressPrefix": "*",
+		}
+		open, surviving := nsgAllowsInternetIngress([]map[string]any{allowSsh, allowHttp, denySshHigh})
+		assert.True(t, open)
+		assert.Len(t, surviving, 1, "only the HTTPS allow survives")
+	})
+}

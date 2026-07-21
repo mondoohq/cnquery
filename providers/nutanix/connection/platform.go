@@ -59,36 +59,27 @@ func (c *NutanixConnection) PlatformIDs() []string {
 }
 
 func NewPrismCentralPlatform(endpoint string) *inventory.Platform {
-	return &inventory.Platform{
-		Name:                  "nutanix-prism-central",
-		Title:                 "Nutanix Prism Central",
-		Family:                []string{Family},
-		Kind:                  "api",
-		Runtime:               "nutanix",
+	p := &inventory.Platform{
 		TechnologyUrlSegments: []string{"virtualization", "nutanix", "prism-central", endpoint},
 	}
+	PlatformByName("nutanix-prism-central").Apply(p)
+	return p
 }
 
 func NewClusterPlatform(clusterId string) *inventory.Platform {
-	return &inventory.Platform{
-		Name:                  "nutanix-cluster",
-		Title:                 "Nutanix Cluster",
-		Family:                []string{Family},
-		Kind:                  "api",
-		Runtime:               "nutanix",
+	p := &inventory.Platform{
 		TechnologyUrlSegments: []string{"virtualization", "nutanix", "cluster", clusterId},
 	}
+	PlatformByName("nutanix-cluster").Apply(p)
+	return p
 }
 
 func NewNodePlatform(nodeId string) *inventory.Platform {
-	return &inventory.Platform{
-		Name:                  "nutanix-node",
-		Title:                 "Nutanix Node",
-		Family:                []string{Family},
-		Kind:                  inventory.AssetKindBaremetal,
-		Runtime:               "nutanix",
+	p := &inventory.Platform{
 		TechnologyUrlSegments: []string{"virtualization", "nutanix", "node", nodeId},
 	}
+	PlatformByName("nutanix-node").Apply(p)
+	return p
 }
 
 func NewPrismCentralIdentifier(endpoint string) string {

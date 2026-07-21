@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
-  "version": "13.23.1",
-  "generated_at": "2026-06-12T17:40:19-07:00",
+  "version": "13.31.2",
+  "generated_at": "2026-07-18T10:34:00-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.batchPredictionJobs.list",
@@ -20,11 +20,15 @@
     "aiplatform.metadataStores.list",
     "aiplatform.modelDeploymentMonitoringJobs.list",
     "aiplatform.models.get",
+    "aiplatform.models.getIamPolicy",
     "aiplatform.models.list",
     "aiplatform.notebookExecutionJobs.list",
+    "aiplatform.notebookRuntimeTemplates.get",
+    "aiplatform.notebookRuntimeTemplates.getIamPolicy",
     "aiplatform.notebookRuntimeTemplates.list",
     "aiplatform.notebookRuntimes.list",
     "aiplatform.persistentResources.list",
+    "aiplatform.pipelineJobs.get",
     "aiplatform.pipelineJobs.list",
     "aiplatform.ragCorpora.list",
     "aiplatform.reasoningEngines.list",
@@ -171,6 +175,9 @@
     "dns.policies.list",
     "dns.resourceRecordSets.list",
     "dns.responsePolicies.list",
+    "documentai.processorVersions.get",
+    "documentai.processorVersions.list",
+    "documentai.processors.list",
     "domains.registrations.list",
     "essentialcontacts.contacts.list",
     "eventarc.channels.list",
@@ -203,6 +210,7 @@
     "memorystore.instances.get",
     "memorystore.instances.list",
     "modelarmor.floorSettings.get",
+    "modelarmor.templates.get",
     "modelarmor.templates.list",
     "monitoring.alertPolicies.list",
     "monitoring.dashboards.list",
@@ -261,6 +269,7 @@
     "storage.buckets.get",
     "storage.buckets.getIamPolicy",
     "storage.buckets.list",
+    "storage.buckets.listEffectiveTags",
     "workflows.workflows.list"
   ],
   "details": [
@@ -367,6 +376,12 @@
       "source_file": "vertexai.go"
     },
     {
+      "permission": "aiplatform.models.getIamPolicy",
+      "service": "aiplatform",
+      "action": "GetIamPolicy",
+      "source_file": "vertexai.go"
+    },
+    {
       "permission": "aiplatform.models.list",
       "service": "aiplatform",
       "action": "ListModels",
@@ -376,6 +391,18 @@
       "permission": "aiplatform.notebookExecutionJobs.list",
       "service": "aiplatform",
       "action": "ListNotebookExecutionJobs",
+      "source_file": "vertexai.go"
+    },
+    {
+      "permission": "aiplatform.notebookRuntimeTemplates.get",
+      "service": "aiplatform",
+      "action": "GetNotebookRuntimeTemplate",
+      "source_file": "vertexai.go"
+    },
+    {
+      "permission": "aiplatform.notebookRuntimeTemplates.getIamPolicy",
+      "service": "aiplatform",
+      "action": "GetIamPolicy",
       "source_file": "vertexai.go"
     },
     {
@@ -394,6 +421,12 @@
       "permission": "aiplatform.persistentResources.list",
       "service": "aiplatform",
       "action": "ListPersistentResources",
+      "source_file": "vertexai.go"
+    },
+    {
+      "permission": "aiplatform.pipelineJobs.get",
+      "service": "aiplatform",
+      "action": "GetPipelineJob",
       "source_file": "vertexai.go"
     },
     {
@@ -859,6 +892,12 @@
       "source_file": "compute_instance_groups_firewall_policies.go"
     },
     {
+      "permission": "compute.instanceGroups.list",
+      "service": "compute",
+      "action": "InstanceGroups.ListInstances",
+      "source_file": "compute_network_edges.go"
+    },
+    {
       "permission": "compute.instanceTemplates.list",
       "service": "compute",
       "action": "InstanceTemplates.List",
@@ -1321,6 +1360,24 @@
       "source_file": "dns.go"
     },
     {
+      "permission": "documentai.processorVersions.get",
+      "service": "documentai",
+      "action": "GetProcessorVersion",
+      "source_file": "documentai.go"
+    },
+    {
+      "permission": "documentai.processorVersions.list",
+      "service": "documentai",
+      "action": "ListProcessorVersions",
+      "source_file": "documentai.go"
+    },
+    {
+      "permission": "documentai.processors.list",
+      "service": "documentai",
+      "action": "ListProcessors",
+      "source_file": "documentai.go"
+    },
+    {
       "permission": "domains.registrations.list",
       "service": "domains",
       "action": "Registrations.List",
@@ -1510,6 +1567,12 @@
       "permission": "modelarmor.floorSettings.get",
       "service": "modelarmor",
       "action": "GetFloorSetting",
+      "source_file": "modelarmor.go"
+    },
+    {
+      "permission": "modelarmor.templates.get",
+      "service": "modelarmor",
+      "action": "GetTemplate",
       "source_file": "modelarmor.go"
     },
     {
@@ -1730,6 +1793,13 @@
       "permission": "resourcemanager.organizations.get",
       "service": "resourcemanager",
       "action": "Organizations.Get",
+      "source_file": "gcp_organization.go",
+      "scope": "org"
+    },
+    {
+      "permission": "resourcemanager.organizations.get",
+      "service": "resourcemanager",
+      "action": "Organizations.Get",
       "source_file": "organization.go",
       "scope": "org"
     },
@@ -1739,6 +1809,12 @@
       "action": "Organizations.GetIamPolicy",
       "source_file": "organization.go",
       "scope": "org"
+    },
+    {
+      "permission": "resourcemanager.projects.get",
+      "service": "resourcemanager",
+      "action": "Projects.Get",
+      "source_file": "gcp_organization.go"
     },
     {
       "permission": "resourcemanager.projects.get",
@@ -1914,6 +1990,12 @@
       "permission": "storage.buckets.list",
       "service": "storage",
       "action": "Buckets.List",
+      "source_file": "storage.go"
+    },
+    {
+      "permission": "storage.buckets.listEffectiveTags",
+      "service": "resourcemanager",
+      "action": "EffectiveTagBindingCollections.Get",
       "source_file": "storage.go"
     },
     {

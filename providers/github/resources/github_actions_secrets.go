@@ -4,7 +4,7 @@
 package resources
 
 import (
-	"github.com/google/go-github/v88/github"
+	"github.com/google/go-github/v89/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -269,7 +269,7 @@ func (g *mqlGithubEnvironment) secrets() ([]any, error) {
 	opts := &github.ListOptions{PerPage: paginationPerPage}
 	var all []*github.Secret
 	for {
-		page, resp, err := conn.Client().Actions.ListEnvSecrets(conn.Context(), int(repoID), envName, opts)
+		page, resp, err := conn.Client().Actions.ListEnvSecrets(conn.Context(), owner, repo, envName, opts)
 		if err != nil {
 			return handleActionsListErr(err, "environment secrets")
 		}

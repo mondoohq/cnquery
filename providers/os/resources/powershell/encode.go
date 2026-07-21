@@ -6,10 +6,68 @@ package powershell
 import (
 	"encoding/base64"
 	"fmt"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"golang.org/x/text/encoding/unicode"
 )
+
+// interpreters holds the executable names that Encode/EncodeUnix/Wrap emit as
+// the leading token of a self-contained PowerShell invocation.
+var interpreters = map[string]bool{
+	"powershell":     true,
+	"powershell.exe": true,
+	"pwsh":           true,
+	"pwsh.exe":       true,
+}
+
+// SplitInvocation parses a command string produced by Encode, EncodeUnix, or
+// Wrap back into an argv ([binary, args...]) so a caller can exec it directly
+// instead of nesting it inside another PowerShell shell. Running a
+// PowerShell invocation through a `powershell -c "..."` shell spawns a
+// redundant second powershell.exe, which endpoint protection (e.g.
+// SentinelOne) flags as an encoded-command / LOLBIN-chain attack pattern.
+//
+// It recognizes the two shapes we emit:
+//
+//	powershell.exe -NoProfile -EncodedCommand <base64>   (Encode / EncodeUnix)
+//	powershell -c "<script>"                             (Wrap)
+//
+// Returns ok=false for anything else so callers keep their existing behavior.
+func SplitInvocation(cmd string) (argv []string, ok bool) {
+	trimmed := strings.TrimSpace(cmd)
+	sp := strings.IndexAny(trimmed, " \t")
+	if sp < 0 {
+		return nil, false
+	}
+	bin := trimmed[:sp]
+	if !interpreters[strings.ToLower(bin)] {
+		return nil, false
+	}
+	rest := strings.TrimSpace(trimmed[sp+1:])
+
+	// Encode / EncodeUnix form: -NoProfile -EncodedCommand <base64>.
+	// The base64 payload never contains whitespace, so this is unambiguous.
+	if enc, found := strings.CutPrefix(rest, "-NoProfile -EncodedCommand "); found {
+		enc = strings.TrimSpace(enc)
+		if enc == "" || strings.ContainsAny(enc, " \t") {
+			return nil, false
+		}
+		return []string{bin, "-NoProfile", "-EncodedCommand", enc}, true
+	}
+
+	// Wrap form: -c "<script>". Wrap builds this as `powershell -c "` + cmd + `"`,
+	// so the script is the content between the outer double quotes.
+	if script, found := strings.CutPrefix(rest, "-c "); found {
+		script = strings.TrimSpace(script)
+		if len(script) >= 2 && strings.HasPrefix(script, `"`) && strings.HasSuffix(script, `"`) {
+			script = script[1 : len(script)-1]
+			return []string{bin, "-c", script}, true
+		}
+	}
+
+	return nil, false
+}
 
 // Encode encodes a long powershell script as base64 and returns the wrapped command
 //

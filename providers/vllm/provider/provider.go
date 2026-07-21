@@ -154,13 +154,9 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.VllmConnection
 	asset.Name = "vLLM " + conn.BaseURL()
 
 	asset.Platform = &inventory.Platform{
-		Name:                  "vllm-server",
-		Family:                []string{"vllm"},
-		Kind:                  "api",
-		Runtime:               "vllm",
-		Title:                 "vLLM Inference Server",
 		TechnologyUrlSegments: []string{"ai", "vllm", "server"},
 	}
+	PlatformByName("vllm-server").Apply(asset.Platform)
 
 	asset.Fqdn = conn.Conf.Host
 	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/vllm/server/" + conn.BaseURL()}

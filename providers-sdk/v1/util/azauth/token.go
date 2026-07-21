@@ -5,6 +5,7 @@ package azauth
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -137,12 +138,24 @@ func (t *retryableManagedIdentityCredential) tryGetToken(ctx context.Context, op
 	return
 }
 
+// GetWorkloadIdentityToken builds a keyless credential that exchanges a
+// Mondoo-issued OIDC token (written to federatedTokenFile) for an Entra access
+// token via the federated identity credential on the app registration.
+func GetWorkloadIdentityToken(tenantId, clientId, federatedTokenFile string) (azcore.TokenCredential, error) {
+	return azidentity.NewWorkloadIdentityCredential(&azidentity.WorkloadIdentityCredentialOptions{
+		TenantID:      tenantId,
+		ClientID:      clientId,
+		TokenFilePath: federatedTokenFile,
+	})
+}
+
 func GetTokenFromCredential(credential *vault.Credential, tenantId, clientId string) (azcore.TokenCredential, error) {
 	var azCred azcore.TokenCredential
 	var err error
+	usedDefaultChain := credential == nil
 	// fallback to default authorizer if no credentials are specified
 	if credential == nil {
-		log.Debug().Msg("using default azure token chain resolver")
+		log.Info().Msg("no Azure credentials were provided; trying to sign in with your local Azure CLI session, Azure environment variables, or a managed identity")
 		azCred, err = GetDefaultChainedToken(&azidentity.DefaultAzureCredentialOptions{})
 		if err != nil {
 			return nil, errors.Wrap(err, "error creating CLI credentials")
@@ -167,5 +180,47 @@ func GetTokenFromCredential(credential *vault.Credential, tenantId, clientId str
 			return nil, errors.New("invalid secret configuration for microsoft transport: " + credential.Type.String())
 		}
 	}
-	return azCred, nil
+	return &guidedCredential{inner: azCred, usedDefaultChain: usedDefaultChain}, nil
+}
+
+// guidedCredential decorates an azcore.TokenCredential so that a failed sign-in
+// surfaces a plain-language, actionable message instead of the raw error from
+// deep inside the Azure SDK (for example a JSON decode error when the Azure CLI
+// returns something other than a token). usedDefaultChain records whether we
+// fell back to signing in with whatever Azure login is available on the machine
+// because no credentials were supplied, which changes the guidance we give.
+type guidedCredential struct {
+	inner            azcore.TokenCredential
+	usedDefaultChain bool
+}
+
+func (c *guidedCredential) GetToken(ctx context.Context, opts policy.TokenRequestOptions) (azcore.AccessToken, error) {
+	tk, err := c.inner.GetToken(ctx, opts)
+	if err != nil {
+		return azcore.AccessToken{}, enrichTokenError(err, c.usedDefaultChain)
+	}
+	return tk, nil
+}
+
+// enrichTokenError wraps a sign-in failure with guidance tailored to how the
+// credential was configured. The original error is always preserved so no
+// diagnostic detail is lost.
+func enrichTokenError(err error, usedDefaultChain bool) error {
+	if !usedDefaultChain {
+		return errors.Wrap(err, "Azure sign-in with the provided credentials failed; double-check the tenant ID, client ID, and the certificate or client secret")
+	}
+
+	msg := "Azure sign-in failed. No credentials were provided, so we tried to sign in using your local Azure CLI session, Azure environment variables, and a managed identity, and none of them worked. " +
+		"Run `az login` and confirm `az account get-access-token` returns a token, or provide credentials directly with --tenant-id and --client-id plus a certificate or client secret"
+
+	// azidentity's Azure CLI credential reports output that isn't a token (for
+	// example a message asking you to sign in again) as a JSON decode error.
+	// Match the typed decode error first, falling back to the message substring
+	// in case the SDK stringifies the error and drops its type.
+	var jsonSyntaxErr *json.SyntaxError
+	if errors.As(err, &jsonSyntaxErr) || strings.Contains(err.Error(), "looking for beginning of value") {
+		msg = "Your Azure CLI returned something other than a sign-in token, which usually means it needs you to sign in again (run `az login`) or is printing a notice. " + msg
+	}
+
+	return errors.Wrap(err, msg)
 }

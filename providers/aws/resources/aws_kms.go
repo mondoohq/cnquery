@@ -489,6 +489,11 @@ func (a *mqlAwsKmsKey) tags() (map[string]any, error) {
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
+			// AWS-managed keys reject ListResourceTags with AccessDenied;
+			// treat that as no tags rather than failing managedBy/tags.
+			if Is400AccessDeniedError(err) {
+				return nil, nil
+			}
 			return nil, err
 		}
 		for i := range page.Tags {
@@ -679,6 +684,33 @@ func (a *mqlAwsKmsKey) origin() (string, error) {
 	return string(md.Origin), nil
 }
 
+func (a *mqlAwsKmsKey) currentKeyMaterialId() (string, error) {
+	md, err := a.getKeyMetadata()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(md.CurrentKeyMaterialId), nil
+}
+
+func (a *mqlAwsKmsKey) cloudHsmCluster() (*mqlAwsCloudhsmCluster, error) {
+	md, err := a.getKeyMetadata()
+	if err != nil {
+		return nil, err
+	}
+	if md.CloudHsmClusterId == nil || *md.CloudHsmClusterId == "" {
+		a.CloudHsmCluster.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	cluster, err := NewResource(a.MqlRuntime, "aws.cloudhsm.cluster",
+		map[string]*llx.RawData{
+			"clusterId": llx.StringDataPtr(md.CloudHsmClusterId),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return cluster.(*mqlAwsCloudhsmCluster), nil
+}
+
 func (a *mqlAwsKmsKey) customKeyStore() (*mqlAwsKmsCustomKeyStore, error) {
 	md, err := a.getKeyMetadata()
 	if err != nil {
@@ -733,6 +765,18 @@ func (a *mqlAwsKmsKey) signingAlgorithms() ([]any, error) {
 	}
 	res := make([]any, len(md.SigningAlgorithms))
 	for i, alg := range md.SigningAlgorithms {
+		res[i] = string(alg)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsKmsKey) macAlgorithms() ([]any, error) {
+	md, err := a.getKeyMetadata()
+	if err != nil {
+		return nil, err
+	}
+	res := make([]any, len(md.MacAlgorithms))
+	for i, alg := range md.MacAlgorithms {
 		res[i] = string(alg)
 	}
 	return res, nil
@@ -895,9 +939,8 @@ func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["name"] = llx.StringData(ids.name)
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 

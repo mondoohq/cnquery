@@ -46,7 +46,10 @@ func TestReposFilter_Both(t *testing.T) {
 }
 
 func TestHandleTargets(t *testing.T) {
-	t.Run("all expands to every discovery target", func(t *testing.T) {
+	t.Run("all expands to repos, users, and the cheap per-repo IaC targets", func(t *testing.T) {
+		// The clone-per-match IaC targets (cloudformation, dockerfiles, bicep,
+		// helm, kustomize) are intentionally excluded from `all` and only run
+		// on an explicit --discover <type>.
 		got := handleTargets([]string{connection.DiscoveryAll})
 		assert.Equal(t, []string{
 			connection.DiscoveryRepos,
@@ -64,6 +67,17 @@ func TestHandleTargets(t *testing.T) {
 			connection.DiscoveryTerraform,
 			connection.DiscoveryK8sManifests,
 		}, got)
+	})
+
+	t.Run("opt-in IaC targets pass through unchanged", func(t *testing.T) {
+		in := []string{
+			connection.DiscoveryCloudformation,
+			connection.DiscoveryDockerfiles,
+			connection.DiscoveryBicep,
+			connection.DiscoveryHelm,
+			connection.DiscoveryKustomize,
+		}
+		assert.Equal(t, in, handleTargets(in))
 	})
 
 	t.Run("explicit targets pass through unchanged", func(t *testing.T) {

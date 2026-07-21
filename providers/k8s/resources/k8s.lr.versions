@@ -13,6 +13,7 @@ k8s.accessReview.subject 13.3.1
 k8s.accessReview.verb 13.3.1
 k8s.admission.mutatingwebhookconfiguration 13.0.16
 k8s.admission.mutatingwebhookconfiguration.annotations 13.0.16
+k8s.admission.mutatingwebhookconfiguration.context 13.6.1
 k8s.admission.mutatingwebhookconfiguration.created 13.0.16
 k8s.admission.mutatingwebhookconfiguration.failsOpen 13.3.1
 k8s.admission.mutatingwebhookconfiguration.id 13.0.16
@@ -29,6 +30,7 @@ k8s.admission.validatingadmissionpolicy 13.2.2
 k8s.admission.validatingadmissionpolicy.annotations 13.2.2
 k8s.admission.validatingadmissionpolicy.auditAnnotations 13.2.2
 k8s.admission.validatingadmissionpolicy.bindings 13.2.2
+k8s.admission.validatingadmissionpolicy.context 13.6.1
 k8s.admission.validatingadmissionpolicy.created 13.2.2
 k8s.admission.validatingadmissionpolicy.failurePolicy 13.2.2
 k8s.admission.validatingadmissionpolicy.id 13.2.2
@@ -47,6 +49,7 @@ k8s.admission.validatingadmissionpolicy.validations 13.2.2
 k8s.admission.validatingadmissionpolicy.variables 13.2.2
 k8s.admission.validatingadmissionpolicybinding 13.2.2
 k8s.admission.validatingadmissionpolicybinding.annotations 13.2.2
+k8s.admission.validatingadmissionpolicybinding.context 13.6.1
 k8s.admission.validatingadmissionpolicybinding.created 13.2.2
 k8s.admission.validatingadmissionpolicybinding.id 13.2.2
 k8s.admission.validatingadmissionpolicybinding.kind 13.2.2
@@ -64,6 +67,7 @@ k8s.admission.validatingadmissionpolicybinding.uid 13.2.2
 k8s.admission.validatingadmissionpolicybinding.validationActions 13.2.2
 k8s.admission.validatingwebhookconfiguration 11.1.63
 k8s.admission.validatingwebhookconfiguration.annotations 11.1.63
+k8s.admission.validatingwebhookconfiguration.context 13.6.1
 k8s.admission.validatingwebhookconfiguration.created 11.1.63
 k8s.admission.validatingwebhookconfiguration.failsOpen 13.3.1
 k8s.admission.validatingwebhookconfiguration.id 11.1.63
@@ -100,6 +104,7 @@ k8s.apiservice 13.0.16
 k8s.apiservice.annotations 13.0.16
 k8s.apiservice.caBundle 13.0.16
 k8s.apiservice.conditions 13.0.16
+k8s.apiservice.context 13.6.1
 k8s.apiservice.created 13.0.16
 k8s.apiservice.group 13.0.16
 k8s.apiservice.groupPriorityMinimum 13.0.16
@@ -132,6 +137,7 @@ k8s.certificatesigningrequest 13.0.16
 k8s.certificatesigningrequest.annotations 13.0.16
 k8s.certificatesigningrequest.certificate 13.0.16
 k8s.certificatesigningrequest.conditions 13.0.16
+k8s.certificatesigningrequest.context 13.6.1
 k8s.certificatesigningrequest.created 13.0.16
 k8s.certificatesigningrequest.expirationSeconds 13.0.16
 k8s.certificatesigningrequest.groups 13.0.16
@@ -153,6 +159,7 @@ k8s.clusterrolebindings 9.0.0
 k8s.clusterroles 9.0.0
 k8s.configmap 9.0.0
 k8s.configmap.annotations 9.0.0
+k8s.configmap.context 13.6.1
 k8s.configmap.created 9.0.0
 k8s.configmap.data 9.0.0
 k8s.configmap.id 9.0.0
@@ -214,6 +221,10 @@ k8s.containerStatus.resources 13.0.16
 k8s.containerStatus.restartCount 11.1.110
 k8s.containerStatus.started 13.0.16
 k8s.containerStatus.state 13.0.16
+k8s.context 13.6.1
+k8s.context.content 13.6.1
+k8s.context.path 13.6.1
+k8s.context.range 13.6.1
 k8s.cronjob 9.0.0
 k8s.cronjob.active 13.0.16
 k8s.cronjob.activeJobs 13.0.16
@@ -225,6 +236,7 @@ k8s.cronjob.concurrencyPolicy 13.0.16
 k8s.cronjob.consumedSecrets 13.3.1
 k8s.cronjob.containerImages 13.3.1
 k8s.cronjob.containers 9.0.0
+k8s.cronjob.context 13.6.1
 k8s.cronjob.created 9.0.0
 k8s.cronjob.dropsAllCapabilities 13.2.2
 k8s.cronjob.failedJobsHistoryLimit 13.0.16
@@ -280,6 +292,7 @@ k8s.cronjob.usesUnmaskedProcMount 13.4.1
 k8s.cronjobs 9.0.0
 k8s.customresource 9.0.0
 k8s.customresource.annotations 9.0.0
+k8s.customresource.context 13.6.1
 k8s.customresource.created 9.0.0
 k8s.customresource.id 9.0.0
 k8s.customresource.kind 9.0.0
@@ -302,6 +315,7 @@ k8s.daemonset.conditions 13.0.16
 k8s.daemonset.consumedSecrets 13.3.1
 k8s.daemonset.containerImages 13.3.1
 k8s.daemonset.containers 9.0.0
+k8s.daemonset.context 13.6.1
 k8s.daemonset.created 9.0.0
 k8s.daemonset.currentNumberScheduled 13.0.16
 k8s.daemonset.desiredNumberScheduled 13.0.16
@@ -370,6 +384,7 @@ k8s.deployment.conditions 13.0.16
 k8s.deployment.consumedSecrets 13.3.1
 k8s.deployment.containerImages 13.3.1
 k8s.deployment.containers 9.0.0
+k8s.deployment.context 13.6.1
 k8s.deployment.created 9.0.0
 k8s.deployment.desiredReplicas 13.0.16
 k8s.deployment.dropsAllCapabilities 13.2.2
@@ -458,6 +473,7 @@ k8s.endpointSlices 11.1.139
 k8s.endpointslice 11.1.139
 k8s.endpointslice.addressType 11.1.139
 k8s.endpointslice.annotations 11.1.139
+k8s.endpointslice.context 13.6.1
 k8s.endpointslice.created 11.1.139
 k8s.endpointslice.endpoints 11.1.139
 k8s.endpointslice.externalAddresses 13.4.1
@@ -506,6 +522,7 @@ k8s.gateway 13.0.16
 k8s.gateway.addresses 13.0.16
 k8s.gateway.annotations 13.0.16
 k8s.gateway.conditions 13.0.16
+k8s.gateway.context 13.6.1
 k8s.gateway.created 13.0.16
 k8s.gateway.gatewayClass 13.0.16
 k8s.gateway.gatewayClassName 13.0.16
@@ -529,6 +546,7 @@ k8s.gatewayClasses 13.0.16
 k8s.gatewayclass 13.0.16
 k8s.gatewayclass.annotations 13.0.16
 k8s.gatewayclass.conditions 13.0.16
+k8s.gatewayclass.context 13.6.1
 k8s.gatewayclass.controllerName 13.0.16
 k8s.gatewayclass.created 13.0.16
 k8s.gatewayclass.description 13.0.16
@@ -546,6 +564,7 @@ k8s.gateways 13.0.16
 k8s.grpcRoutes 13.0.16
 k8s.grpcroute 13.0.16
 k8s.grpcroute.annotations 13.0.16
+k8s.grpcroute.context 13.6.1
 k8s.grpcroute.created 13.0.16
 k8s.grpcroute.hostnames 13.0.16
 k8s.grpcroute.id 13.0.16
@@ -566,6 +585,7 @@ k8s.horizontalpodautoscaler 11.1.139
 k8s.horizontalpodautoscaler.annotations 11.1.139
 k8s.horizontalpodautoscaler.behavior 13.0.16
 k8s.horizontalpodautoscaler.conditions 13.0.16
+k8s.horizontalpodautoscaler.context 13.6.1
 k8s.horizontalpodautoscaler.created 11.1.139
 k8s.horizontalpodautoscaler.currentMetrics 13.0.16
 k8s.horizontalpodautoscaler.currentReplicas 13.0.16
@@ -596,6 +616,7 @@ k8s.horizontalpodautoscaler.uid 11.1.139
 k8s.httpRoutes 13.0.16
 k8s.httproute 13.0.16
 k8s.httproute.annotations 13.0.16
+k8s.httproute.context 13.6.1
 k8s.httproute.created 13.0.16
 k8s.httproute.hostnames 13.0.16
 k8s.httproute.id 13.0.16
@@ -613,6 +634,7 @@ k8s.httproute.rules 13.0.16
 k8s.httproute.uid 13.0.16
 k8s.ingress 9.0.0
 k8s.ingress.annotations 9.0.0
+k8s.ingress.context 13.6.1
 k8s.ingress.created 9.0.0
 k8s.ingress.id 9.0.0
 k8s.ingress.ingressClass 13.0.16
@@ -638,6 +660,7 @@ k8s.ingressbackend.resourceRef 9.0.0
 k8s.ingressbackend.service 9.0.0
 k8s.ingressclass 13.0.16
 k8s.ingressclass.annotations 13.0.16
+k8s.ingressclass.context 13.6.1
 k8s.ingressclass.controller 13.0.16
 k8s.ingressclass.created 13.0.16
 k8s.ingressclass.id 13.0.16
@@ -727,6 +750,7 @@ k8s.job.conditions 13.0.16
 k8s.job.consumedSecrets 13.3.1
 k8s.job.containerImages 13.3.1
 k8s.job.containers 9.0.0
+k8s.job.context 13.6.1
 k8s.job.created 9.0.0
 k8s.job.dropsAllCapabilities 13.2.2
 k8s.job.failed 13.0.16
@@ -787,6 +811,7 @@ k8s.jobs 9.0.0
 k8s.lease 13.0.16
 k8s.lease.acquireTime 13.0.16
 k8s.lease.annotations 13.0.16
+k8s.lease.context 13.6.1
 k8s.lease.created 13.0.16
 k8s.lease.holderIdentity 13.0.16
 k8s.lease.id 13.0.16
@@ -808,6 +833,7 @@ k8s.leases 13.0.16
 k8s.limitRanges 11.1.139
 k8s.limitrange 11.1.139
 k8s.limitrange.annotations 11.1.139
+k8s.limitrange.context 13.6.1
 k8s.limitrange.created 11.1.139
 k8s.limitrange.id 11.1.139
 k8s.limitrange.kind 11.1.139
@@ -914,6 +940,7 @@ k8s.networkPolicyCoverage.workloadRef 13.3.2
 k8s.networkPolicyCoverages 13.3.2
 k8s.networkpolicy 9.0.0
 k8s.networkpolicy.annotations 9.0.0
+k8s.networkpolicy.context 13.6.1
 k8s.networkpolicy.coverage 13.3.2
 k8s.networkpolicy.created 9.0.0
 k8s.networkpolicy.egress 13.0.16
@@ -939,6 +966,7 @@ k8s.node.architecture 13.0.16
 k8s.node.capacity 11.1.138
 k8s.node.conditions 11.1.138
 k8s.node.containerRuntimeVersion 13.0.16
+k8s.node.context 13.6.1
 k8s.node.created 11.1.42
 k8s.node.id 9.0.0
 k8s.node.images 13.0.16
@@ -994,6 +1022,7 @@ k8s.persistentvolume.capacity 13.0.16
 k8s.persistentvolume.claim 13.0.16
 k8s.persistentvolume.claimName 13.0.16
 k8s.persistentvolume.claimNamespace 13.0.16
+k8s.persistentvolume.context 13.6.1
 k8s.persistentvolume.created 11.1.139
 k8s.persistentvolume.id 11.1.139
 k8s.persistentvolume.kind 11.1.139
@@ -1021,6 +1050,7 @@ k8s.persistentvolumeclaim.annotations 11.1.139
 k8s.persistentvolumeclaim.boundAccessModes 13.0.16
 k8s.persistentvolumeclaim.capacity 13.0.16
 k8s.persistentvolumeclaim.conditions 13.0.16
+k8s.persistentvolumeclaim.context 13.6.1
 k8s.persistentvolumeclaim.created 11.1.139
 k8s.persistentvolumeclaim.dataSource 13.0.16
 k8s.persistentvolumeclaim.dataSourceRef 13.0.16
@@ -1057,6 +1087,7 @@ k8s.pod.consumedSecrets 13.3.1
 k8s.pod.containerImages 13.3.1
 k8s.pod.containerStatuses 11.1.110
 k8s.pod.containers 9.0.0
+k8s.pod.context 13.6.1
 k8s.pod.created 9.0.0
 k8s.pod.daemonSet 13.0.16
 k8s.pod.deployment 13.0.16
@@ -1149,6 +1180,7 @@ k8s.podDisruptionBudgets 13.0.16
 k8s.poddisruptionbudget 13.0.16
 k8s.poddisruptionbudget.annotations 13.0.16
 k8s.poddisruptionbudget.conditions 13.0.16
+k8s.poddisruptionbudget.context 13.6.1
 k8s.poddisruptionbudget.created 13.0.16
 k8s.poddisruptionbudget.currentHealthy 13.0.16
 k8s.poddisruptionbudget.desiredHealthy 13.0.16
@@ -1173,6 +1205,7 @@ k8s.pods 9.0.0
 k8s.priorityClasses 11.1.139
 k8s.priorityclass 11.1.139
 k8s.priorityclass.annotations 11.1.139
+k8s.priorityclass.context 13.6.1
 k8s.priorityclass.created 11.1.139
 k8s.priorityclass.description 11.1.139
 k8s.priorityclass.globalDefault 11.1.139
@@ -1193,6 +1226,7 @@ k8s.rbac.clusterrole.allowsPrivilegeEscalation 13.2.2
 k8s.rbac.clusterrole.annotations 9.0.0
 k8s.rbac.clusterrole.boundBy 13.0.16
 k8s.rbac.clusterrole.canReadSecrets 13.2.2
+k8s.rbac.clusterrole.context 13.6.1
 k8s.rbac.clusterrole.created 9.0.0
 k8s.rbac.clusterrole.grantsClusterAdmin 13.3.1
 k8s.rbac.clusterrole.hasWildcardRule 13.2.2
@@ -1212,6 +1246,7 @@ k8s.rbac.clusterrolebinding.allowsPrivilegeEscalation 13.3.1
 k8s.rbac.clusterrolebinding.annotations 9.0.0
 k8s.rbac.clusterrolebinding.canReadSecrets 13.3.1
 k8s.rbac.clusterrolebinding.clusterRole 13.0.16
+k8s.rbac.clusterrolebinding.context 13.6.1
 k8s.rbac.clusterrolebinding.created 9.0.0
 k8s.rbac.clusterrolebinding.grantsClusterAdmin 13.3.1
 k8s.rbac.clusterrolebinding.hasWildcardRule 13.3.1
@@ -1238,6 +1273,7 @@ k8s.rbac.role.allowsPrivilegeEscalation 13.2.2
 k8s.rbac.role.annotations 9.0.0
 k8s.rbac.role.boundBy 13.0.16
 k8s.rbac.role.canReadSecrets 13.2.2
+k8s.rbac.role.context 13.6.1
 k8s.rbac.role.created 9.0.0
 k8s.rbac.role.grantsClusterAdmin 13.3.1
 k8s.rbac.role.hasWildcardRule 13.2.2
@@ -1258,6 +1294,7 @@ k8s.rbac.rolebinding.allowsPrivilegeEscalation 13.3.1
 k8s.rbac.rolebinding.annotations 9.0.0
 k8s.rbac.rolebinding.canReadSecrets 13.3.1
 k8s.rbac.rolebinding.clusterRole 13.0.16
+k8s.rbac.rolebinding.context 13.6.1
 k8s.rbac.rolebinding.created 9.0.0
 k8s.rbac.rolebinding.grantsClusterAdmin 13.3.1
 k8s.rbac.rolebinding.hasWildcardRule 13.3.1
@@ -1297,6 +1334,7 @@ k8s.rbacSubjects 13.3.1
 k8s.referenceGrants 13.0.16
 k8s.referencegrant 13.0.16
 k8s.referencegrant.annotations 13.0.16
+k8s.referencegrant.context 13.6.1
 k8s.referencegrant.created 13.0.16
 k8s.referencegrant.from 13.0.16
 k8s.referencegrant.id 13.0.16
@@ -1320,6 +1358,7 @@ k8s.replicaset.conditions 13.0.16
 k8s.replicaset.consumedSecrets 13.3.1
 k8s.replicaset.containerImages 13.3.1
 k8s.replicaset.containers 9.0.0
+k8s.replicaset.context 13.6.1
 k8s.replicaset.created 9.0.0
 k8s.replicaset.desiredReplicas 13.0.16
 k8s.replicaset.dropsAllCapabilities 13.2.2
@@ -1375,6 +1414,7 @@ k8s.replicasets 9.0.0
 k8s.resourceQuotas 11.1.139
 k8s.resourcequota 11.1.139
 k8s.resourcequota.annotations 11.1.139
+k8s.resourcequota.context 13.6.1
 k8s.resourcequota.created 11.1.139
 k8s.resourcequota.hard 13.0.16
 k8s.resourcequota.id 11.1.139
@@ -1398,6 +1438,7 @@ k8s.secret 9.0.0
 k8s.secret.annotations 9.0.0
 k8s.secret.certificateExpiry 13.3.4
 k8s.secret.certificates 9.0.2
+k8s.secret.context 13.6.1
 k8s.secret.created 9.0.0
 k8s.secret.hasExpiredCertificate 13.3.4
 k8s.secret.id 9.0.0
@@ -1422,6 +1463,7 @@ k8s.service.allocateLoadBalancerNodePorts 13.0.16
 k8s.service.annotations 9.0.0
 k8s.service.clusterIP 13.0.16
 k8s.service.clusterIPs 13.0.16
+k8s.service.context 13.6.1
 k8s.service.created 9.0.0
 k8s.service.endpointSlices 13.0.16
 k8s.service.externalEndpoints 13.4.1
@@ -1462,6 +1504,7 @@ k8s.serviceaccount.automountServiceAccountToken 9.0.0
 k8s.serviceaccount.canEscalatePrivileges 13.3.1
 k8s.serviceaccount.canReadSecrets 13.3.1
 k8s.serviceaccount.clusterRoleBindings 13.3.1
+k8s.serviceaccount.context 13.6.1
 k8s.serviceaccount.created 9.0.0
 k8s.serviceaccount.hasWildcardPermissions 13.3.1
 k8s.serviceaccount.id 9.0.0
@@ -1491,6 +1534,7 @@ k8s.statefulset.conditions 13.0.16
 k8s.statefulset.consumedSecrets 13.3.1
 k8s.statefulset.containerImages 13.3.1
 k8s.statefulset.containers 9.0.0
+k8s.statefulset.context 13.6.1
 k8s.statefulset.created 9.0.0
 k8s.statefulset.currentReplicas 13.0.16
 k8s.statefulset.currentRevision 13.0.16
@@ -1556,6 +1600,7 @@ k8s.storageClasses 11.1.139
 k8s.storageclass 11.1.139
 k8s.storageclass.allowVolumeExpansion 11.1.139
 k8s.storageclass.annotations 11.1.139
+k8s.storageclass.context 13.6.1
 k8s.storageclass.created 11.1.139
 k8s.storageclass.id 11.1.139
 k8s.storageclass.kind 11.1.139

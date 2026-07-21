@@ -93,6 +93,13 @@ func (m *mqlHetznerDatacenter) serverTypesAvailableForMigration() ([]any, error)
 	return serverTypeRefs(m.MqlRuntime, m.cacheServerTypesAvailableMigration)
 }
 
+func (m *mqlHetznerDatacenter) servers() ([]any, error) {
+	dcID := m.Id.Data
+	return serversMatching(m.MqlRuntime, func(s *hcloud.Server) bool {
+		return s.Datacenter != nil && s.Datacenter.ID == dcID
+	})
+}
+
 func serverTypeRefs(runtime *plugin.Runtime, types []*hcloud.ServerType) ([]any, error) {
 	out := make([]any, 0, len(types))
 	for _, t := range types {

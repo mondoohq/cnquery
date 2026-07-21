@@ -22,6 +22,11 @@ func TestParseAuthPolicyList(t *testing.T) {
 		{"double-quoted", `("PASSWORD","SAML")`, []any{"PASSWORD", "SAML"}},
 		{"extra whitespace", "(  'PASSWORD' , 'SAML'  )", []any{"PASSWORD", "SAML"}},
 		{"trailing comma yields no empty entry", "('PASSWORD',)", []any{"PASSWORD"}},
+		// Snowflake actually returns these lists in square brackets, unquoted.
+		{"bracket single", "[ALL]", []any{"ALL"}},
+		{"bracket multiple", "[PASSWORD, SAML]", []any{"PASSWORD", "SAML"}},
+		{"bracket empty", "[]", []any{}},
+		{"bracket no space", "[PASSWORD,SAML]", []any{"PASSWORD", "SAML"}},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

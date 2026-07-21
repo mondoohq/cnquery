@@ -13,8 +13,9 @@ import (
 var Config = plugin.Provider{
 	Name:            "k8s",
 	ID:              "go.mondoo.com/cnquery/v9/providers/k8s",
-	Version:         "13.5.0",
+	Version:         "13.8.2",
 	ConnectionTypes: []string{provider.ConnectionType},
+	Platforms:       resources.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:    "k8s",
@@ -68,10 +69,34 @@ Examples:
 					Desc:    "Only include Kubernetes objects in the matching namespaces",
 				},
 				{
+					Long:    "namespace-label-selector",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Only include Kubernetes namespaces matching the label selector, along with all objects discovered within those namespaces",
+				},
+				{
+					Long:    "object-label-selector",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Only include Kubernetes objects matching the label selector; for container image discovery this matches the pod that references the image",
+				},
+				{
 					Long:    "container-proxy",
 					Type:    plugin.FlagType_String,
 					Default: "",
 					Desc:    "HTTP proxy to use for container pulls",
+				},
+				{
+					Long:    "images",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Only include container images matching the given image references during discovery (comma-separated, glob supported)",
+				},
+				{
+					Long:    "images-exclude",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Filter out container images matching the given image references during discovery (comma-separated, glob supported)",
 				},
 				{
 					Long:    "kubelogin",

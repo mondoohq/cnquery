@@ -6,10 +6,12 @@ Usage:
   mql providers [command]
 
 Available Commands:
+  delete      Remove an installed provider from disk
   info        Show detailed information about one or more providers
   install     Install or update a provider
   list        List all providers on the system
   resources   List resources or show resource details for a provider
+  update      Update installed providers to their latest versions
 
 Flags:
   -h, --help   help for providers

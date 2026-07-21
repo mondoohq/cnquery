@@ -43,7 +43,10 @@ func (o *mqlOpenstack) dnsZones() ([]any, error) {
 	c := conn(o.MqlRuntime)
 	client, err := c.DNSClient()
 	if err != nil {
-		return []any{}, nil
+		if serviceMissing(err) {
+			return []any{}, nil
+		}
+		return nil, err
 	}
 	pages, err := zones.List(client, zones.ListOpts{}).AllPages(ctx())
 	if err != nil {
@@ -102,7 +105,10 @@ func (r *mqlOpenstackDnsZone) recordsets() ([]any, error) {
 	c := conn(r.MqlRuntime)
 	client, err := c.DNSClient()
 	if err != nil {
-		return []any{}, nil
+		if serviceMissing(err) {
+			return []any{}, nil
+		}
+		return nil, err
 	}
 	pages, err := recordsets.ListByZone(client, r.Id.Data, recordsets.ListOpts{}).AllPages(ctx())
 	if err != nil {

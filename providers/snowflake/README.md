@@ -1,7 +1,7 @@
 # Snowflake Provider
 
 ```shell
-cnquery shell snowflake
+mql shell snowflake
 ```
 
 Required arguments:
@@ -13,7 +13,35 @@ Required arguments:
 
 > The easiest way to get the account name and region is to look at the URL when you log in to the Snowflake web interface. When clicking on the account icon you can copy the account URL that included the account name and region.
 
-**Password Authentication**
+**Programmatic Access Token (PAT) — recommended**
+
+A programmatic access token (PAT) is Snowflake's recommended method for tools and automation. It replaces password sign-ins, which Snowflake is phasing out, and can be scoped to a role and governed by a network policy.
+
+Arguments:
+
+- `--token` - The programmatic access token.
+
+```shell
+cnspec shell snowflake --account zi12345 --region us-central1.gcp --user CHRIS --role ACCOUNTADMIN --token <your PAT>
+```
+
+> To generate a PAT, use [Snowsight](https://docs.snowflake.com/en/user-guide/programmatic-access-tokens) and assign it to your user. Prefer a token scoped to the least-privileged role that still allows the scan.
+
+**Key-Pair Authentication**
+
+Arguments:
+
+- `--identity-file` (`-i`) - The path to the private key file.
+
+```shell
+cnspec shell snowflake --account zi12345 --region us-central1.gcp --user CHRIS --role ACCOUNTADMIN --identity-file ~/.ssh/id_rsa
+```
+
+> You need to generate a RSA key pair and assign the public key to your user via [Snowsight](https://docs.snowflake.com/en/user-guide/key-pair-auth).
+
+**Password Authentication (legacy)**
+
+Password sign-ins are being deprecated by Snowflake and require MFA for interactive users. Prefer a PAT or key-pair for new setups.
 
 Arguments:
 
@@ -21,29 +49,41 @@ Arguments:
 - `--ask-pass` - Prompt for the Snowflake password.
 
 ```shell
-shell snowflake --account zi12345 --region us-central1.gcp --user CHRIS  --role ACCOUNTADMIN --ask-pass
+cnspec shell snowflake --account zi12345 --region us-central1.gcp --user CHRIS --role ACCOUNTADMIN --ask-pass
 ```
 
 > To create a username and password, use [Snowsight](https://docs.snowflake.com/en/user-guide/admin-user-management#using-snowsight) or using [SQL](https://docs.snowflake.com/en/user-guide/admin-user-management#using-sql).
 
-**Certificate Authentication**
+## Asset Discovery
 
-Arguments:
+A scan surfaces the Snowflake account as its own asset and, in addition, one asset per database in the account:
 
-- `--private-key` - The path to the private key file.
+- The **account asset** (`snowflake`) carries the account-wide security posture: users, roles, integrations, network/password/session/authentication policies, and resource monitors.
+- Each **database asset** (`snowflake-database`) carries that database's data-governance posture: its schemas, database roles, masking policies, row-access policies, tags, and secrets.
+
+This split lets account-wide checks target the account asset while per-database checks target each database asset independently.
+
+The account asset is always the root of the scan; the `--discover` targets only control which additional child assets are emitted alongside it:
+
+- `auto` (default) - also emit one asset per database. Same as `all`.
+- `all` - also emit one asset per database.
+- `databases` - also emit one asset per database.
+- `none` - account only, without emitting per-database assets.
 
 ```shell
-shell snowflake --account zi12345 --region us-central1.gcp --user CHRIS  --role ACCOUNTADMIN --private-key ~/.ssh/id_rsa
-```
+# Scan the account and every database
+cnspec scan snowflake --account zi12345 --region us-central1.gcp --user CHRIS --role ACCOUNTADMIN --identity-file ~/.ssh/id_rsa
 
-> You need to generate a RSA key pair and assign the public key to your user via [Snowsight](https://docs.snowflake.com/en/user-guide/key-pair-auth).
+# Scan the account only
+cnspec scan snowflake --account zi12345 --region us-central1.gcp --user CHRIS --role ACCOUNTADMIN --identity-file ~/.ssh/id_rsa --discover none
+```
 
 ## Examples
 
 **Retrieve all users**
 
 ```shell
-cnquery> snowflake.account.users
+mql> snowflake.account.users
 snowflake.account.users: [
   0: snowflake.user name="CHRIS"
   1: snowflake.user name="DATAUSER"
@@ -54,7 +94,7 @@ snowflake.account.users: [
 **Retrieve all users that have no MFA**
 
 ```shell
-cnquery> snowflake.account.users.where(extAuthnDuo == false)
+mql> snowflake.account.users.where(extAuthnDuo == false)
 snowflake.account.users.where: [
   0: snowflake.user name="CHRIS"
   1: snowflake.user name="DATAUSER"
@@ -65,7 +105,7 @@ snowflake.account.users.where: [
 **Retrieve all users that have password authentication**
 
 ```shell
-cnquery> snowflake.account.users.where(hasPassword)
+mql> snowflake.account.users.where(hasPassword)
 snowflake.account.users.where: [
   0: snowflake.user name="CHRIS"
   1: snowflake.user name="DATAUSER"
@@ -77,7 +117,7 @@ snowflake.account.users.where: [
 **Retrieve all users that have certificate authentication**
 
 ```shell
-cnquery> snowflake.account.users.where(hasRsaPublicKey)
+mql> snowflake.account.users.where(hasRsaPublicKey)
 snowflake.account.users.where: [
   0: snowflake.user name="CHRIS"
 ]
@@ -86,7 +126,7 @@ snowflake.account.users.where: [
 **Retrieve users that have not logged in for 30 days**
 
 ```shell
-cnquery> snowflake.account.users.where(time.now - lastSuccessLogin > time.day * 30) { lastSuccessLogin }
+mql> snowflake.account.users.where(time.now - lastSuccessLogin > time.day * 30) { lastSuccessLogin }
 snowflake.account.users.where: [
   0: {
     lastSuccessLogin: 366 days 
@@ -97,7 +137,7 @@ snowflake.account.users.where: [
 **Check that SCIM is enabled**
 
 ```shell
-cnquery> snowflake.account.securityIntegrations.where(type == /SCIM/).any(enabled == true)
+mql> snowflake.account.securityIntegrations.where(type == /SCIM/).any(enabled == true)
 [failed] [].any()
   actual:   []
 ```
@@ -105,13 +145,13 @@ cnquery> snowflake.account.securityIntegrations.where(type == /SCIM/).any(enable
 **Check the retention time is greater 90 days**
 
 ```shell
-cnquery> snowflake.account.parameters.one(key == "DATA_RETENTION_TIME_IN_DAYS" && value >= 90)
+mql> snowflake.account.parameters.one(key == "DATA_RETENTION_TIME_IN_DAYS" && value >= 90)
 ```
 
 **Retrieve all databases**
 
 ```shell
-cnquery> snowflake.account.databases
+mql> snowflake.account.databases
 snowflake.account.databases: [
   0: snowflake.database name="CNQUERY"
   1: snowflake.database name="SNOWFLAKE"

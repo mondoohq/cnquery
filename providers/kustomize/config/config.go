@@ -13,9 +13,10 @@ import (
 var Config = plugin.Provider{
 	Name:            "kustomize",
 	ID:              "go.mondoo.com/mql/v13/providers/kustomize",
-	Version:         "13.1.3",
+	Version:         "13.1.8",
 	Maturity:        resources.MaturityExperimental,
 	ConnectionTypes: []string{provider.DefaultConnectionType},
+	Platforms:       provider.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "kustomize",

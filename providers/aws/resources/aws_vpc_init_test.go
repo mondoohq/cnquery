@@ -56,7 +56,7 @@ func testAwsRuntime(assetName string, platformIds []string, vpcs []*mqlAwsVpc) *
 func TestInitAwsVpc(t *testing.T) {
 	const (
 		vpcId  = "vpc-0abc123def456"
-		vpcArn = "arn:aws:ec2:us-east-1:123456789012:vpc/vpc-0abc123def456"
+		vpcArn = "arn:aws:vpc:us-east-1:123456789012:id/vpc-0abc123def456"
 		region = "us-east-1"
 	)
 
@@ -66,11 +66,12 @@ func TestInitAwsVpc(t *testing.T) {
 		Region: plugin.TValue[string]{Data: region, State: plugin.StateIsSet},
 	}
 
-	t.Run("resolves VPC by ARN when asset name is a tag (not VPC ID)", func(t *testing.T) {
+	t.Run("derives VPC id from ARN when asset name is a tag (not VPC ID)", func(t *testing.T) {
 		// This is the bug scenario: during discovery, MqlObjectToAsset
 		// overrides the asset name with the VPC's "Name" tag.  The old
 		// code set args["id"] = ids.name (the tag), then tried to match
 		// against vpc.Id.Data (the real VPC ID) — which never matched.
+		// deriveVpcTarget must derive the id from the ARN, never the name.
 		tagName := "scottford-upgrade-eks-container-escape-demo-02c1-vpc"
 		runtime := testAwsRuntime(
 			tagName,
@@ -82,17 +83,13 @@ func TestInitAwsVpc(t *testing.T) {
 		)
 
 		args := map[string]*llx.RawData{}
-		resultArgs, resource, err := initAwsVpc(runtime, args)
-		require.NoError(t, err)
-		require.NotNil(t, resource)
-
-		vpc := resource.(*mqlAwsVpc)
-		assert.Equal(t, vpcId, vpc.Id.Data)
-		assert.Equal(t, vpcArn, vpc.Arn.Data)
-		assert.Equal(t, vpcArn, resultArgs["arn"].Value.(string))
+		region, gotVpcId := deriveVpcTarget(runtime, args)
+		assert.Equal(t, "us-east-1", region)
+		assert.Equal(t, vpcId, gotVpcId)
+		assert.Equal(t, vpcArn, args["arn"].Value.(string))
 	})
 
-	t.Run("resolves VPC by ARN when asset name matches VPC ID", func(t *testing.T) {
+	t.Run("derives VPC id from ARN when asset name matches VPC ID", func(t *testing.T) {
 		// When there's no "Name" tag, the asset name IS the VPC ID.
 		runtime := testAwsRuntime(
 			vpcId,
@@ -104,12 +101,18 @@ func TestInitAwsVpc(t *testing.T) {
 		)
 
 		args := map[string]*llx.RawData{}
-		_, resource, err := initAwsVpc(runtime, args)
-		require.NoError(t, err)
-		require.NotNil(t, resource)
+		region, gotVpcId := deriveVpcTarget(runtime, args)
+		assert.Equal(t, "us-east-1", region)
+		assert.Equal(t, vpcId, gotVpcId)
+	})
 
-		vpc := resource.(*mqlAwsVpc)
-		assert.Equal(t, vpcId, vpc.Id.Data)
+	t.Run("derives region and id from an explicit arn arg", func(t *testing.T) {
+		runtime := testAwsRuntime("irrelevant", nil, []*mqlAwsVpc{testVpc})
+
+		args := map[string]*llx.RawData{"arn": llx.StringData(vpcArn)}
+		region, gotVpcId := deriveVpcTarget(runtime, args)
+		assert.Equal(t, "us-east-1", region)
+		assert.Equal(t, vpcId, gotVpcId)
 	})
 
 	t.Run("resolves VPC by explicit id arg", func(t *testing.T) {
@@ -126,20 +129,6 @@ func TestInitAwsVpc(t *testing.T) {
 		assert.Equal(t, vpcId, vpc.Id.Data)
 	})
 
-	t.Run("resolves VPC by explicit arn arg", func(t *testing.T) {
-		runtime := testAwsRuntime("irrelevant", nil, []*mqlAwsVpc{testVpc})
-
-		args := map[string]*llx.RawData{
-			"arn": llx.StringData(vpcArn),
-		}
-		_, resource, err := initAwsVpc(runtime, args)
-		require.NoError(t, err)
-		require.NotNil(t, resource)
-
-		vpc := resource.(*mqlAwsVpc)
-		assert.Equal(t, vpcArn, vpc.Arn.Data)
-	})
-
 	t.Run("returns error when VPC not found", func(t *testing.T) {
 		runtime := testAwsRuntime("irrelevant", nil, []*mqlAwsVpc{testVpc})
 
@@ -152,14 +141,14 @@ func TestInitAwsVpc(t *testing.T) {
 	})
 
 	t.Run("returns error when asset has no valid ARN in platform IDs", func(t *testing.T) {
-		// getAssetIdentifier returns a non-nil result with an empty arn
-		// when the asset has no "arn:aws:" platform ID. The empty-string
-		// arn won't match any VPC.
+		// getAssetIdentifier returns "" when the asset has no valid
+		// "arn:aws:" platform ID, so no arn arg is injected and the init
+		// errors out before any lookup.
 		runtime := testAwsRuntime("some-vpc", []string{"not-an-arn"}, []*mqlAwsVpc{testVpc})
 
 		args := map[string]*llx.RawData{}
 		_, _, err := initAwsVpc(runtime, args)
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "vpc does not exist")
+		assert.Contains(t, err.Error(), "arn or id required")
 	})
 }

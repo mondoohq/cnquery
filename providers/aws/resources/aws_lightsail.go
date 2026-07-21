@@ -876,17 +876,7 @@ func (a *mqlAwsLightsailDisk) attachedTo() (*mqlAwsLightsailInstance, error) {
 }
 
 func lightsailTagsToMap(tags []lightsail_types.Tag) map[string]any {
-	result := make(map[string]any)
-	for _, t := range tags {
-		if t.Key != nil {
-			val := ""
-			if t.Value != nil {
-				val = *t.Value
-			}
-			result[*t.Key] = val
-		}
-	}
-	return result
+	return tagsToMap(tags, func(t lightsail_types.Tag) *string { return t.Key }, func(t lightsail_types.Tag) *string { return t.Value })
 }
 
 func (a *mqlAwsLightsailDistribution) id() (string, error) {

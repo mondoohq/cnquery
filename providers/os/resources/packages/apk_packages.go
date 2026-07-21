@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"strings"
 
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	cpe2 "go.mondoo.com/mql/v13/providers/os/resources/cpe"
@@ -178,4 +179,52 @@ func (apm *AlpinePkgManager) Available() (map[string]PackageUpdate, error) {
 func (apm *AlpinePkgManager) Files(name string, version string, arch string) ([]FileRecord, error) {
 	// not yet implemented
 	return nil, nil
+}
+
+var apkOwnerRegex = regexp.MustCompile(`is owned by (\S+)`)
+
+// FindFileOwner implements PkgFileOwnershipResolver via `apk info --who-owns`,
+// which prints "<path> is owned by <name>-<version>-r<rel>" and exits non-zero
+// when no package owns the path.
+func (apm *AlpinePkgManager) FindFileOwner(path string) (string, error) {
+	if !apm.conn.Capabilities().Has(shared.Capability_RunCommand) {
+		return "", nil
+	}
+	cmd, err := apm.conn.RunCommand("apk info --who-owns " + shellQuote(path))
+	if err != nil {
+		return "", err
+	}
+	if cmd.ExitStatus != 0 {
+		return "", nil
+	}
+	return parseApkOwner(readCommandOutput(cmd.Stdout)), nil
+}
+
+// parseApkOwner extracts the package name from `apk info --who-owns` output of
+// the form "<path> is owned by <name>-<version>-r<rel>".
+func parseApkOwner(output string) string {
+	m := apkOwnerRegex.FindStringSubmatch(output)
+	if m == nil {
+		return ""
+	}
+	return apkStripVersion(m[1])
+}
+
+// apkReleaseSuffix matches the trailing "-r<digits>" apk release component,
+// anchored at the end so a stray "-r" inside a version segment (e.g. a
+// hypothetical "1.0-rc1") is not mistaken for the release separator.
+var apkReleaseSuffix = regexp.MustCompile(`-r\d+$`)
+
+// apkStripVersion turns an apk "name-version-rREL" token into the bare package
+// name. apk names can contain hyphens while versions cannot, so we strip the
+// trailing "-rREL" release and then the "-version" component rather than
+// splitting on the first hyphen.
+func apkStripVersion(s string) string {
+	if loc := apkReleaseSuffix.FindStringIndex(s); loc != nil {
+		s = s[:loc[0]]
+	}
+	if i := strings.LastIndex(s, "-"); i >= 0 {
+		s = s[:i]
+	}
+	return s
 }

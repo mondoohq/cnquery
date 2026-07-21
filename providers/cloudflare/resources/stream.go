@@ -40,17 +40,19 @@ type streamVideo struct {
 }
 
 func (c *mqlCloudflareStreamsLiveInput) id() (string, error) {
-	if c.Id.Error != nil {
-		return "", c.Id.Error
+	v := c.GetUid()
+	if v.Error != nil {
+		return "", v.Error
 	}
-	return c.Id.Data, nil
+	return v.Data, nil
 }
 
 func (c *mqlCloudflareStreamsVideo) id() (string, error) {
-	if c.Id.Error != nil {
-		return "", c.Id.Error
+	v := c.GetUid()
+	if v.Error != nil {
+		return "", v.Error
 	}
-	return c.Id.Data, nil
+	return v.Data, nil
 }
 
 func (c *mqlCloudflareZone) liveInputs() ([]any, error) {
@@ -77,7 +79,10 @@ func fetchLiveInputs(runtime *plugin.Runtime, accountID string) ([]any, error) {
 	}
 	uri := fmt.Sprintf("accounts/%s/stream/live_inputs", accountID)
 	if err := conn.Cf.Get(context.TODO(), uri, nil, &env); err != nil {
-		return nil, err
+		// Stream is a gated add-on; an account without it returns 403
+		// ("Cloudflare Stream not enabled"). Degrade to empty like the
+		// other add-on-gated list accessors rather than failing the query.
+		return degradedList(err)
 	}
 
 	var res []any
@@ -85,7 +90,7 @@ func fetchLiveInputs(runtime *plugin.Runtime, accountID string) ([]any, error) {
 		name, _ := result.Meta["name"].(string)
 
 		input, err := NewResource(runtime, "cloudflare.streams.liveInput", map[string]*llx.RawData{
-			"id":                       llx.StringData(result.UID),
+			"__id":                     llx.StringData(result.UID),
 			"uid":                      llx.StringData(result.UID),
 			"deleteRecordingAfterDays": llx.IntData(result.DeleteRecordingAfterDays),
 			"name":                     llx.StringData(name),
@@ -120,7 +125,10 @@ func fetchVideos(runtime *plugin.Runtime, accountID string) ([]any, error) {
 	}
 	uri := fmt.Sprintf("accounts/%s/stream", accountID)
 	if err := conn.Cf.Get(context.TODO(), uri, nil, &env); err != nil {
-		return nil, err
+		// Stream is a gated add-on; an account without it returns 403
+		// ("Cloudflare Stream not enabled"). Degrade to empty like the
+		// other add-on-gated list accessors rather than failing the query.
+		return degradedList(err)
 	}
 
 	var result []any
@@ -130,7 +138,7 @@ func fetchVideos(runtime *plugin.Runtime, accountID string) ([]any, error) {
 		name, _ := video.Meta["name"].(string)
 
 		res, err := NewResource(runtime, "cloudflare.streams.video", map[string]*llx.RawData{
-			"id":                    llx.StringData(video.UID),
+			"__id":                  llx.StringData(video.UID),
 			"uid":                   llx.StringData(video.UID),
 			"name":                  llx.StringData(name),
 			"creator":               llx.StringData(video.Creator),

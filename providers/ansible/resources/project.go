@@ -270,15 +270,25 @@ func newMqlAnsibleRole(runtime *plugin.Runtime, role *project.Role) (*mqlAnsible
 }
 
 func (r *mqlAnsibleRole) tasks() ([]any, error) {
+	// role is nil when the resource was instantiated bare (e.g. a top-level
+	// `ansible.role` query, or recording replay) rather than through
+	// newMqlAnsibleRole. Guard before dereferencing, matching the sibling
+	// ansible.play / ansible.task accessors.
+	if r.role == nil {
+		return []any{}, nil
+	}
 	return newMqlAnsibleTasks(r.MqlRuntime, r.MqlID(), "tasks", filepath.Join(r.role.Path, "tasks"), r.role.Tasks)
 }
 
 func (r *mqlAnsibleRole) handlers() ([]any, error) {
+	if r.role == nil {
+		return []any{}, nil
+	}
 	return newMqlAnsibleHandlers(r.MqlRuntime, r.MqlID(), r.role.Handlers)
 }
 
 func (r *mqlAnsibleRole) meta() (*mqlAnsibleRoleMeta, error) {
-	if r.role.Meta == nil {
+	if r.role == nil || r.role.Meta == nil {
 		r.Meta.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -297,7 +307,7 @@ func (r *mqlAnsibleRole) meta() (*mqlAnsibleRoleMeta, error) {
 
 func (r *mqlAnsibleRole) dependencies() ([]any, error) {
 	proj := ansibleProject(r.MqlRuntime)
-	if proj == nil {
+	if proj == nil || r.role == nil {
 		return []any{}, nil
 	}
 	return newMqlAnsibleRoleRefs(r.MqlRuntime, proj, r.role.DependencyNames)

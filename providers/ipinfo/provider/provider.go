@@ -124,12 +124,8 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.IpinfoConnecti
 	asset.Id = conn.Conf.Type
 	asset.Name = conn.Conf.Host
 
-	asset.Platform = &inventory.Platform{
-		Name:   "ipinfo",
-		Family: []string{"ipinfo"},
-		Kind:   "api",
-		Title:  "ipinfo",
-	}
+	asset.Platform = &inventory.Platform{}
+	PlatformByName("ipinfo").Apply(asset.Platform)
 
 	// TODO: Add platform IDs
 	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/oci/"}

@@ -5,6 +5,10 @@ package authorizedkeys
 
 import (
 	"bufio"
+	"crypto/dsa" //nolint:staticcheck // DSA is deprecated, but we still detect legacy DSA keys for crypto-posture auditing
+	"crypto/ecdsa"
+	"crypto/ed25519"
+	"crypto/rsa"
 	"encoding/base64"
 	"io"
 	"strings"
@@ -24,6 +28,35 @@ type Entry struct {
 
 func (e Entry) Base64Key() string {
 	return RawStdEncoding.EncodeToString(e.Key.Marshal())
+}
+
+// Bits returns the key size in bits of the entry's public key. It unwraps SSH
+// certificates to inspect the underlying key and returns 0 when the key type is
+// unknown or does not expose an underlying crypto public key (e.g., security-key
+// backed keys that do not implement ssh.CryptoPublicKey).
+func (e Entry) Bits() int64 {
+	key := e.Key
+	if cert, ok := key.(*ssh.Certificate); ok {
+		key = cert.Key
+	}
+
+	cryptoKey, ok := key.(ssh.CryptoPublicKey)
+	if !ok {
+		return 0
+	}
+
+	switch k := cryptoKey.CryptoPublicKey().(type) {
+	case *rsa.PublicKey:
+		return int64(k.N.BitLen())
+	case *ecdsa.PublicKey:
+		return int64(k.Curve.Params().BitSize)
+	case ed25519.PublicKey:
+		return 256
+	case *dsa.PublicKey:
+		return int64(k.P.BitLen())
+	default:
+		return 0
+	}
 }
 
 func Parse(r io.Reader) ([]Entry, error) {

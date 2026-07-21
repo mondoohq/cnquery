@@ -5,12 +5,17 @@ package plugin
 
 import (
 	"errors"
+	"fmt"
 	"os"
+	goruntime "runtime"
+	"runtime/debug"
+	"runtime/pprof"
 	"strconv"
 	"strings"
 	sync "sync"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	llx "go.mondoo.com/mql/v13/llx"
 	inventory "go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/memoize"
@@ -74,10 +79,11 @@ func (s *Service) AddRuntime(conf *inventory.Config, createRuntime func(connId u
 		if parentId := runtime.Connection.ParentID(); parentId > 0 {
 			parentRuntime, err := s.GetRuntime(parentId)
 			if err != nil {
-				return nil, errors.New("parent connection " + strconv.FormatUint(uint64(parentId), 10) + " not found")
+				log.Warn().Uint32("parent", parentId).Uint32("child", conf.Id).
+					Msg("parent connection not found, proceeding without shared resource cache")
+			} else {
+				runtime.Resources = parentRuntime.Resources
 			}
-			runtime.Resources = parentRuntime.Resources
-
 		}
 	}
 
@@ -110,10 +116,11 @@ func (s *Service) deprecatedAddRuntime(createRuntime func(connId uint32) (*Runti
 		if parentId := runtime.Connection.ParentID(); parentId > 0 {
 			parentRuntime, err := s.doGetRuntime(parentId)
 			if err != nil {
-				return nil, errors.New("parent connection " + strconv.FormatUint(uint64(parentId), 10) + " not found")
+				log.Warn().Uint32("parent", parentId).Uint32("child", s.lastConnectionID).
+					Msg("parent connection not found, proceeding without shared resource cache")
+			} else {
+				runtime.Resources = parentRuntime.Resources
 			}
-			runtime.Resources = parentRuntime.Resources
-
 		}
 	}
 	s.runtimes[s.lastConnectionID] = runtime
@@ -137,14 +144,48 @@ func (s *Service) doGetRuntime(id uint32) (*Runtime, error) {
 	return nil, errors.New("connection " + strconv.FormatUint(uint64(id), 10) + " not found")
 }
 
-func (s *Service) Disconnect(req *DisconnectReq) (*DisconnectRes, error) {
+func (s *Service) disconnectRuntime(id uint32) int {
 	s.runtimesLock.Lock()
 	defer s.runtimesLock.Unlock()
-	s.doDisconnect(req.Connection)
+	s.doDisconnect(id)
 	if len(s.runtimes) == 0 {
-		// flush our memoizer when there are no more connected runtimes
 		s.Flush()
 	}
+	return len(s.runtimes)
+}
+
+func (s *Service) Disconnect(req *DisconnectReq) (*DisconnectRes, error) {
+	remaining := s.disconnectRuntime(req.Connection)
+
+	debug.FreeOSMemory()
+
+	if os.Getenv("DEBUG_PROVIDER_MEMORY") != "" {
+		var m goruntime.MemStats
+		goruntime.ReadMemStats(&m)
+		log.Info().
+			Int("remaining_runtimes", remaining).
+			Uint64("heap_alloc_mb", m.Alloc/1024/1024).
+			Uint64("heap_sys_mb", m.HeapSys/1024/1024).
+			Uint64("heap_inuse_mb", m.HeapInuse/1024/1024).
+			Uint64("total_alloc_mb", m.TotalAlloc/1024/1024).
+			Msg("provider memory stats after disconnect")
+
+		if remaining == 0 {
+			path := fmt.Sprintf("/tmp/provider_heap_%d_conn%d.pprof", os.Getpid(), req.Connection)
+			f, err := os.Create(path)
+			if err != nil {
+				log.Error().Err(err).Str("path", path).Msg("failed to create heap profile file")
+			} else {
+				if err := pprof.WriteHeapProfile(f); err != nil {
+					log.Error().Err(err).Msg("failed to write heap profile")
+				} else {
+					log.Info().Str("path", path).Msg("wrote heap profile after disconnect")
+				}
+				f.Close()
+			}
+		}
+	}
+
 	return &DisconnectRes{}, nil
 }
 

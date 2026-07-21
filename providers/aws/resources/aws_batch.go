@@ -604,6 +604,46 @@ func (a *mqlAwsBatch) jobDefinitions() ([]any, error) {
 	return res, nil
 }
 
+// initAwsBatchJobDefinition resolves a single Batch job definition. When
+// invoked for a discovered asset (aws-batch-jobdefinition platform), no args
+// are passed, so the job definition ARN is read from the connection's asset
+// identifier and used to select the matching definition from the parent
+// collection.
+func initAwsBatchJobDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	if len(args) == 0 {
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
+		}
+	}
+	if args["arn"] == nil {
+		return args, nil, fmt.Errorf("arn required to fetch batch job definition")
+	}
+
+	obj, err := CreateResource(runtime, "aws.batch", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	jds := obj.(*mqlAwsBatch).GetJobDefinitions()
+	if jds.Error != nil {
+		return nil, nil, jds.Error
+	}
+
+	wantArn := args["arn"].Value.(string)
+	for _, r := range jds.Data {
+		jd := r.(*mqlAwsBatchJobDefinition)
+		if jd.Arn.Data == wantArn {
+			return args, jd, nil
+		}
+	}
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.batch.jobDefinition with arn %q not found", wantArn)
+}
+
 func (a *mqlAwsBatch) getJobDefinitions(conn *connection.AwsConnection) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := conn.Regions()
@@ -1622,8 +1662,11 @@ func initAwsBatchComputeEnvironment(runtime *plugin.Runtime, args map[string]*ll
 	if err != nil {
 		return nil, nil, err
 	}
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
 	if len(resp.ComputeEnvironments) == 0 {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("aws.batch.computeEnvironment with arn %q not found", arnStr)
 	}
 	ce := resp.ComputeEnvironments[0]
 
@@ -1690,8 +1733,11 @@ func initAwsBatchSchedulingPolicy(runtime *plugin.Runtime, args map[string]*llx.
 	if err != nil {
 		return nil, nil, err
 	}
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
 	if len(resp.SchedulingPolicies) == 0 {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("aws.batch.schedulingPolicy with arn %q not found", arnStr)
 	}
 	sp := resp.SchedulingPolicies[0]
 

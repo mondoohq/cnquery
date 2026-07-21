@@ -18,6 +18,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
 	"go.mondoo.com/mql/v13/providers/kustomize/connection"
 	"go.mondoo.com/mql/v13/providers/kustomize/resources"
+	"go.mondoo.com/mql/v13/utils/urlx"
 )
 
 const (
@@ -128,12 +129,30 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.KustomizeConnection) error {
 	asset.Platform = &inventory.Platform{
-		Name:                  "kustomize",
-		Family:                []string{"kustomize"},
-		Runtime:               "kustomize",
-		Kind:                  "api",
-		Title:                 "Kustomize",
 		TechnologyUrlSegments: []string{"iac", "kustomize", "overlay"},
+	}
+	PlatformByName("kustomize").Apply(asset.Platform)
+
+	// When discovered from a git repository (e.g. by the GitHub provider) prefer
+	// the repo (org/repo) for the name and platform ID. The local path is a
+	// temporary clone directory whose hash would change on every scan.
+	if url, ok := asset.Connections[0].Options["ssh-url"]; ok {
+		domain, org, repo, err := urlx.ParseGitSshUrl(url)
+		if err == nil {
+			name := org + "/" + repo
+			platformID := "//platformid.api.mondoo.app/runtime/kustomize/domain/" + domain + "/org/" + org + "/repo/" + repo
+			// A repository can hold multiple kustomizations (e.g. base + overlays);
+			// qualify by the repo-relative directory so each is a distinct asset.
+			if relPath := asset.Connections[0].Options["path"]; relPath != "" {
+				platformID += "/path/" + relPath
+				name += "/" + relPath
+			}
+			asset.Id = platformID
+			asset.Connections[0].PlatformId = platformID
+			asset.PlatformIds = []string{platformID}
+			asset.Name = "Kustomize file " + name
+			return nil
+		}
 	}
 
 	projectPath, ok := asset.Connections[0].Options["path"]
@@ -149,7 +168,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.KustomizeConne
 		asset.Id = platformID
 		asset.Connections[0].PlatformId = platformID
 		asset.PlatformIds = []string{platformID}
-		asset.Name = "Kustomize Static Analysis " + parseNameFromPath(projectPath)
+		asset.Name = "Kustomize file " + parseNameFromPath(projectPath)
 		return nil
 	}
 

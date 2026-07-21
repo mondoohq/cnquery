@@ -10,7 +10,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights/v2"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights/v3"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/securityinsights/armsecurityinsights"
 	"github.com/rs/zerolog/log"
 
@@ -41,6 +41,14 @@ func (a *mqlAzureSubscriptionSentinelService) id() (string, error) {
 
 func (a *mqlAzureSubscriptionSentinelServiceWorkspace) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+type mqlAzureSubscriptionSentinelServiceWorkspaceInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionSentinelServiceWorkspace) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionSentinelServiceAlertRule) id() (string, error) {
@@ -109,6 +117,11 @@ func (a *mqlAzureSubscriptionSentinelService) workspaces() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(ws.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlWs.(*mqlAzureSubscriptionSentinelServiceWorkspace).cacheSystemData = sysData
 			res = append(res, mqlWs)
 		}
 	}
@@ -292,7 +305,22 @@ func sentinelAlertRuleToMql(runtime *plugin.Runtime, raw armsecurityinsights.Ale
 	if err != nil {
 		return nil, err
 	}
+
+	sysData, err := convert.JsonToDict(base.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlAzureSubscriptionSentinelServiceAlertRule).cacheSystemData = sysData
+
 	return res.(*mqlAzureSubscriptionSentinelServiceAlertRule), nil
+}
+
+type mqlAzureSubscriptionSentinelServiceAlertRuleInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionSentinelServiceAlertRule) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionSentinelServiceWorkspace) dataConnectors() ([]any, error) {

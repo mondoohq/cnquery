@@ -10,13 +10,14 @@ import (
 // Discovery targets. "auto" and "all" both expand to every specific
 // child-asset type the provider knows how to split an account into.
 const (
-	DiscoveryAuto          = "auto"
-	DiscoveryAll           = "all"
-	DiscoveryDatabases     = "databases"
-	DiscoveryKubernetes    = "kubernetes"
-	DiscoveryLoadBalancers = "loadbalancers"
-	DiscoveryFirewalls     = "firewalls"
-	DiscoverySpacesBuckets = "spaces-buckets"
+	DiscoveryAuto             = "auto"
+	DiscoveryAll              = "all"
+	DiscoveryDatabases        = "databases"
+	DiscoveryKubernetes       = "kubernetes"
+	DiscoveryLoadBalancers    = "loadbalancers"
+	DiscoveryFirewalls        = "firewalls"
+	DiscoverySpacesBuckets    = "spaces-buckets"
+	DiscoveryGradientaiAgents = "gradientai-agents"
 )
 
 // Connection options that scope a connection to a single discovered
@@ -36,49 +37,53 @@ const (
 	OptionSpacesBucket = "spaces-bucket"
 	// OptionSpacesRegion is paired with OptionSpacesBucket because a
 	// bucket is addressed by (region, name) on the S3-compatible API.
-	OptionSpacesRegion = "spaces-region"
+	OptionSpacesRegion    = "spaces-region"
+	OptionGradientaiAgent = "gradientai-agent"
 )
 
 const platformIDBase = "//platformid.api.mondoo.app/runtime/digitalocean"
 
-func basePlatform(name, title string) *inventory.Platform {
-	return &inventory.Platform{
-		Name:    name,
-		Title:   title,
-		Family:  []string{"digitalocean"},
-		Kind:    "api",
-		Runtime: "digitalocean",
-	}
+// basePlatform builds a runtime platform from the static catalog entry for the
+// given name, keeping the catalog (platforms.go) as the single source of truth.
+func basePlatform(name string) *inventory.Platform {
+	p := &inventory.Platform{}
+	PlatformByName(name).Apply(p)
+	return p
 }
 
 // AccountPlatform is the root DigitalOcean account asset.
 func AccountPlatform() *inventory.Platform {
-	return basePlatform("digitalocean", "DigitalOcean")
+	return basePlatform("digitalocean")
 }
 
 // DatabasePlatform is a single managed database cluster.
 func DatabasePlatform() *inventory.Platform {
-	return basePlatform("digitalocean-database", "DigitalOcean Database")
+	return basePlatform("digitalocean-database")
 }
 
 // KubernetesPlatform is a single DOKS cluster.
 func KubernetesPlatform() *inventory.Platform {
-	return basePlatform("digitalocean-kubernetes-cluster", "DigitalOcean Kubernetes Cluster")
+	return basePlatform("digitalocean-kubernetes-cluster")
 }
 
 // LoadBalancerPlatform is a single load balancer.
 func LoadBalancerPlatform() *inventory.Platform {
-	return basePlatform("digitalocean-loadbalancer", "DigitalOcean Load Balancer")
+	return basePlatform("digitalocean-loadbalancer")
 }
 
 // FirewallPlatform is a single cloud firewall.
 func FirewallPlatform() *inventory.Platform {
-	return basePlatform("digitalocean-firewall", "DigitalOcean Cloud Firewall")
+	return basePlatform("digitalocean-firewall")
 }
 
 // SpacesBucketPlatform is a single Spaces bucket.
 func SpacesBucketPlatform() *inventory.Platform {
-	return basePlatform("digitalocean-spaces-bucket", "DigitalOcean Spaces Bucket")
+	return basePlatform("digitalocean-spaces-bucket")
+}
+
+// GradientaiAgentPlatform is a single GradientAI agent.
+func GradientaiAgentPlatform() *inventory.Platform {
+	return basePlatform("digitalocean-gradientai-agent")
 }
 
 // NewAccountIdentifier builds the platform id for the account root. The
@@ -114,6 +119,10 @@ func NewSpacesBucketIdentifier(accountUUID, region, name string) string {
 	return childIdentifier(accountUUID, "spaces-bucket", region+"/"+name)
 }
 
+func NewGradientaiAgentIdentifier(accountUUID, uuid string) string {
+	return childIdentifier(accountUUID, "gradientai-agent", uuid)
+}
+
 // SubAssetPlatform reports the specific platform, platform id, and asset
 // name when this connection is scoped to a single discovered sub-asset.
 // It returns (nil, "", "") for a plain account connection. The account
@@ -138,6 +147,9 @@ func (c *DigitaloceanConnection) SubAssetPlatform() (*inventory.Platform, string
 	if name := opts[OptionSpacesBucket]; name != "" {
 		region := opts[OptionSpacesRegion]
 		return SpacesBucketPlatform(), NewSpacesBucketIdentifier(accountUUID, region, name), "DigitalOcean Spaces Bucket " + name
+	}
+	if uuid := opts[OptionGradientaiAgent]; uuid != "" {
+		return GradientaiAgentPlatform(), NewGradientaiAgentIdentifier(accountUUID, uuid), "DigitalOcean GradientAI Agent " + uuid
 	}
 	return nil, "", ""
 }

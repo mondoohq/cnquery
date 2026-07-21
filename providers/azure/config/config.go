@@ -12,9 +12,10 @@ import (
 )
 
 var Config = plugin.Provider{
-	Name:    "azure",
-	ID:      "go.mondoo.com/cnquery/v9/providers/azure",
-	Version: "13.20.0",
+	Name:      "azure",
+	ID:        "go.mondoo.com/cnquery/v9/providers/azure",
+	Version:   "13.32.0",
+	Platforms: resources.Platforms,
 	ConnectionTypes: []string{
 		provider.ConnectionType,
 		string(azureinstancesnapshot.SnapshotConnectionType),
@@ -53,9 +54,12 @@ Examples run in the Azure CLI:
 				resources.DiscoveryStorageAccounts,
 				resources.DiscoveryStorageContainers,
 				resources.DiscoveryKeyVaults,
+				resources.DiscoveryManagedHsms,
+				resources.DiscoveryIotHubs,
 				resources.DiscoverySecurityGroups,
 				resources.DiscoveryCosmosDb,
 				resources.DiscoveryVirtualNetworks,
+				resources.DiscoveryCognitiveServices,
 			},
 			Flags: []plugin.Flag{
 				{
@@ -107,6 +111,18 @@ Examples run in the Azure CLI:
 					Default: "",
 					Desc:    "Comma-separated list of Azure subscriptions to exclude",
 				},
+				{
+					Long:    "federated-token-file",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Path to a file containing an OIDC token to exchange via Azure workload identity federation",
+				},
+				{
+					Long:    "filters",
+					Type:    plugin.FlagType_KeyValue,
+					Default: "",
+					Desc:    "Filter options, e.g., --filters subscriptions=<id1>,<id2> --filters subscriptions-exclude=<id3> --filters propagate-subscription-tags=true --filters subscription-tag:<key>=<value>",
+				},
 			},
 		},
 	},
@@ -148,8 +164,9 @@ Examples run in the Azure CLI:
 										"other":           nil,
 									},
 								},
-								"keyvault": nil,
-								"cosmosdb": nil,
+								"keyvault":          nil,
+								"cosmosdb":          nil,
+								"cognitiveservices": nil,
 							},
 						},
 					},

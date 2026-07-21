@@ -77,7 +77,7 @@ func (y *mqlYum) repos() ([]any, error) {
 	return mqlRepos, nil
 }
 
-var rhel67release = regexp.MustCompile(`^[6|7].*$`)
+var rhel67release = regexp.MustCompile(`^[67].*$`)
 
 func (y *mqlYum) vars() (map[string]any, error) {
 	conn := y.MqlRuntime.Connection.(shared.Connection)

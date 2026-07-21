@@ -294,9 +294,28 @@ func newMqlAwsEsDomain(runtime *plugin.Runtime, region, accountID string, svc *e
 		serviceSoftwareUpdateAvailable = convert.ToValue(s.UpdateAvailable)
 		serviceSoftwareCancellable = convert.ToValue(s.Cancellable)
 		serviceSoftwareUpdateStatus = string(s.UpdateStatus)
-		serviceSoftwareAutomatedUpdateDate = llx.TimeDataPtr(s.AutomatedUpdateDate)
+		// AWS returns the Unix epoch when no automated update is scheduled;
+		// surface that sentinel as null rather than a 1970 timestamp.
+		if d := s.AutomatedUpdateDate; d != nil && d.Unix() > 0 {
+			serviceSoftwareAutomatedUpdateDate = llx.TimeDataPtr(d)
+		} else {
+			serviceSoftwareAutomatedUpdateDate = llx.NilData
+		}
 	} else {
 		serviceSoftwareAutomatedUpdateDate = llx.NilData
+	}
+
+	// Last configuration change progress (change provenance: who initiated the
+	// most recent change and when).
+	var lastConfigChangeId, lastConfigChangeInitiatedBy, lastConfigChangeStatus string
+	lastConfigChangeStartedAt := llx.NilData
+	lastConfigChangeUpdatedAt := llx.NilData
+	if cpd := status.ChangeProgressDetails; cpd != nil {
+		lastConfigChangeId = convert.ToValue(cpd.ChangeId)
+		lastConfigChangeInitiatedBy = string(cpd.InitiatedBy)
+		lastConfigChangeStatus = string(cpd.ConfigChangeStatus)
+		lastConfigChangeStartedAt = llx.TimeDataPtr(cpd.StartTime)
+		lastConfigChangeUpdatedAt = llx.TimeDataPtr(cpd.LastUpdatedTime)
 	}
 
 	// endpoints map
@@ -312,6 +331,8 @@ func newMqlAwsEsDomain(runtime *plugin.Runtime, region, accountID string, svc *e
 		"domainId":                           llx.StringDataPtr(status.DomainId),
 		"domainName":                         llx.StringDataPtr(status.DomainName),
 		"elasticsearchVersion":               llx.StringDataPtr(status.ElasticsearchVersion),
+		"engineMode":                         llx.StringData(string(status.EngineMode)),
+		"useCase":                            llx.StringData(string(status.UseCase)),
 		"endpoint":                           llx.StringDataPtr(status.Endpoint),
 		"endpoints":                          llx.MapData(endpointsMap, types.String),
 		"tags":                               llx.MapData(tags, types.String),
@@ -364,6 +385,11 @@ func newMqlAwsEsDomain(runtime *plugin.Runtime, region, accountID string, svc *e
 		"serviceSoftwareCancellable":         llx.BoolData(serviceSoftwareCancellable),
 		"serviceSoftwareUpdateStatus":        llx.StringData(serviceSoftwareUpdateStatus),
 		"serviceSoftwareAutomatedUpdateDate": serviceSoftwareAutomatedUpdateDate,
+		"lastConfigChangeId":                 llx.StringData(lastConfigChangeId),
+		"lastConfigChangeInitiatedBy":        llx.StringData(lastConfigChangeInitiatedBy),
+		"lastConfigChangeStatus":             llx.StringData(lastConfigChangeStatus),
+		"lastConfigChangeStartedAt":          lastConfigChangeStartedAt,
+		"lastConfigChangeUpdatedAt":          lastConfigChangeUpdatedAt,
 		"auditLogEnabled":                    llx.BoolData(auditLogEnabled),
 		"indexSlowLogEnabled":                llx.BoolData(indexSlowLogEnabled),
 		"searchSlowLogEnabled":               llx.BoolData(searchSlowLogEnabled),
@@ -403,9 +429,8 @@ func initAwsEsDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["name"] = llx.StringData(ids.name)
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 
@@ -484,6 +509,34 @@ func (a *mqlAwsEsDomain) vpc() (*mqlAwsVpc, error) {
 		return nil, err
 	}
 	return mqlVpc.(*mqlAwsVpc), nil
+}
+
+func (a *mqlAwsEsDomain) customEndpointCertificate() (*mqlAwsAcmCertificate, error) {
+	arnVal := a.CustomEndpointCertificateArn.Data
+	if arnVal == "" {
+		a.CustomEndpointCertificate.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAwsAcmCertificate,
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsAcmCertificate), nil
+}
+
+func (a *mqlAwsEsDomain) cognitoRole() (*mqlAwsIamRole, error) {
+	arnVal := a.CognitoRoleArn.Data
+	if arnVal == "" {
+		a.CognitoRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
 }
 
 func (a *mqlAwsEsDomain) subnets() ([]any, error) {

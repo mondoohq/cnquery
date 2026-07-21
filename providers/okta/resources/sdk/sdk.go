@@ -20,6 +20,18 @@ type ApiExtension struct {
 	Host string
 	// Token is the Okta API token used for SSWS authorization.
 	Token string
+	// HTTPClient issues the requests. When nil, http.DefaultClient is used.
+	// Tests inject a client with a custom transport so pagination can be
+	// exercised without mutating any global state.
+	HTTPClient *http.Client
+}
+
+// httpClient returns the configured client, falling back to the shared default.
+func (m *ApiExtension) httpClient() *http.Client {
+	if m.HTTPClient != nil {
+		return m.HTTPClient
+	}
+	return http.DefaultClient
 }
 
 // get issues an authenticated GET against an absolute Okta URL and decodes the
@@ -36,7 +48,7 @@ func (m *ApiExtension) get(ctx context.Context, url string, out any) (*http.Resp
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "SSWS "+m.Token)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := m.httpClient().Do(req)
 	if err != nil {
 		return nil, err
 	}

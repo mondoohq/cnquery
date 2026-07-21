@@ -26,6 +26,11 @@ func TestLogpushJobs(t *testing.T) {
 	require.Len(t, result, 1)
 
 	job := result[0].(*mqlCloudflareZoneLogpushJob)
+	// The cache key must embed the zone: id() reads a zoneID set only after
+	// NewResource returns, so the fix passes __id explicitly. Without it the
+	// key was `logpush@@42` (empty zone) and jobs with the same numeric id in
+	// different zones would alias.
+	assert.Contains(t, job.MqlID(), testZoneID, "logpush job __id must be zone-scoped")
 	assert.Equal(t, int64(42), job.Id.Data)
 	assert.Equal(t, "HTTP Requests to S3", job.Name.Data)
 	assert.Equal(t, "http_requests", job.Dataset.Data)

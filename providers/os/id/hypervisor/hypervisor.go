@@ -42,7 +42,8 @@ type hyper struct {
 	platform   *inventory.Platform
 }
 
-// Hypervisor returns the hypervisor of the system.
+// Hypervisor returns the hypervisor of the system. Not cached here; the os.hypervisor
+// resource memoizes it per connection via plugin.GetOrCompute.
 func Hypervisor(conn shared.Connection, pf *inventory.Platform) (hypervisor string, ok bool) {
 	if !pf.IsFamily(inventory.FAMILY_UNIX) && !pf.IsFamily(inventory.FAMILY_WINDOWS) {
 		log.Debug().Msg("your platform is not supported for hypervisor detection")

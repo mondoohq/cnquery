@@ -9,7 +9,7 @@ import (
 	"github.com/stackitcloud/stackit-sdk-go/services/mongodbflex"
 	"github.com/stackitcloud/stackit-sdk-go/services/observability"
 	"github.com/stackitcloud/stackit-sdk-go/services/postgresflex"
-	"github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex"
+	sqlserverflex "github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex/v2api"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
@@ -498,12 +498,14 @@ func (r *mqlStackitSecretsManager) instances() ([]any, error) {
 	for i := range items {
 		inst := items[i]
 		args := map[string]*llx.RawData{
-			"id":            llx.StringData(inst.GetId()),
-			"name":          llx.StringData(inst.GetName()),
-			"state":         llx.StringData(inst.GetState()),
-			"apiUrl":        llx.StringData(inst.GetApiUrl()),
-			"secretsEngine": llx.StringData(inst.GetSecretsEngine()),
-			"secretCount":   llx.IntData(int64(inst.GetSecretCount())),
+			"id":                 llx.StringData(inst.GetId()),
+			"name":               llx.StringData(inst.GetName()),
+			"state":              llx.StringData(inst.GetState()),
+			"apiUrl":             llx.StringData(inst.GetApiUrl()),
+			"secretsEngine":      llx.StringData(inst.GetSecretsEngine()),
+			"secretCount":        llx.IntData(int64(inst.GetSecretCount())),
+			"creationStartedAt":  llx.TimeDataPtr(parseDnsTime(inst.GetCreationStartDate())),
+			"creationFinishedAt": llx.TimeDataPtr(parseDnsTime(inst.GetCreationFinishedDate())),
 		}
 		res, err := CreateResource(r.MqlRuntime, "stackit.secretsManager.instance", args)
 		if err != nil {
@@ -658,6 +660,9 @@ func (r *mqlStackitObservabilityInstance) isUpdatable() (bool, error) {
 func initStackitPostgresFlexInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
 	if !ok {
+		id, ok = conn(runtime).AssetObjectID("postgres-flex")
+	}
+	if !ok {
 		return args, nil, nil
 	}
 	c := conn(runtime)
@@ -691,6 +696,9 @@ func initStackitPostgresFlexInstance(runtime *plugin.Runtime, args map[string]*l
 func initStackitMongoDbFlexInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
 	if !ok {
+		id, ok = conn(runtime).AssetObjectID("mongodb-flex")
+	}
+	if !ok {
 		return args, nil, nil
 	}
 	c := conn(runtime)
@@ -723,6 +731,9 @@ func initStackitMongoDbFlexInstance(runtime *plugin.Runtime, args map[string]*ll
 
 func initStackitOpenSearchInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
+	if !ok {
+		id, ok = conn(runtime).AssetObjectID("opensearch")
+	}
 	if !ok {
 		return args, nil, nil
 	}
@@ -758,6 +769,9 @@ func initStackitOpenSearchInstance(runtime *plugin.Runtime, args map[string]*llx
 func initStackitMariaDbInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
 	if !ok {
+		id, ok = conn(runtime).AssetObjectID("mariadb")
+	}
+	if !ok {
 		return args, nil, nil
 	}
 	c := conn(runtime)
@@ -791,6 +805,9 @@ func initStackitMariaDbInstance(runtime *plugin.Runtime, args map[string]*llx.Ra
 
 func initStackitRedisInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
+	if !ok {
+		id, ok = conn(runtime).AssetObjectID("redis")
+	}
 	if !ok {
 		return args, nil, nil
 	}
@@ -826,6 +843,9 @@ func initStackitRedisInstance(runtime *plugin.Runtime, args map[string]*llx.RawD
 func initStackitRabbitMqInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
 	if !ok {
+		id, ok = conn(runtime).AssetObjectID("rabbitmq")
+	}
+	if !ok {
 		return args, nil, nil
 	}
 	c := conn(runtime)
@@ -860,6 +880,9 @@ func initStackitRabbitMqInstance(runtime *plugin.Runtime, args map[string]*llx.R
 func initStackitSecretsManagerInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
 	if !ok {
+		id, ok = conn(runtime).AssetObjectID("secrets-manager")
+	}
+	if !ok {
 		return args, nil, nil
 	}
 	c := conn(runtime)
@@ -872,12 +895,14 @@ func initStackitSecretsManagerInstance(runtime *plugin.Runtime, args map[string]
 		return nil, nil, err
 	}
 	res, err := CreateResource(runtime, "stackit.secretsManager.instance", map[string]*llx.RawData{
-		"id":            llx.StringData(inst.GetId()),
-		"name":          llx.StringData(inst.GetName()),
-		"state":         llx.StringData(inst.GetState()),
-		"apiUrl":        llx.StringData(inst.GetApiUrl()),
-		"secretsEngine": llx.StringData(inst.GetSecretsEngine()),
-		"secretCount":   llx.IntData(int64(inst.GetSecretCount())),
+		"id":                 llx.StringData(inst.GetId()),
+		"name":               llx.StringData(inst.GetName()),
+		"state":              llx.StringData(inst.GetState()),
+		"apiUrl":             llx.StringData(inst.GetApiUrl()),
+		"secretsEngine":      llx.StringData(inst.GetSecretsEngine()),
+		"secretCount":        llx.IntData(int64(inst.GetSecretCount())),
+		"creationStartedAt":  llx.TimeDataPtr(parseDnsTime(inst.GetCreationStartDate())),
+		"creationFinishedAt": llx.TimeDataPtr(parseDnsTime(inst.GetCreationFinishedDate())),
 	})
 	if err != nil {
 		return nil, nil, err
@@ -968,6 +993,9 @@ func (r *mqlStackitLogMeInstance) id() (string, error) {
 func initStackitLogMeInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
 	if !ok {
+		id, ok = conn(runtime).AssetObjectID("logme")
+	}
+	if !ok {
 		return args, nil, nil
 	}
 	c := conn(runtime)
@@ -1017,7 +1045,7 @@ func (r *mqlStackitSqlServerFlex) instances() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListInstancesExecute(bgctx(), c.ProjectID(), c.Region())
+	resp, err := client.DefaultAPI.ListInstances(bgctx(), c.ProjectID(), c.Region()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -1061,7 +1089,7 @@ func (r *mqlStackitSqlServerFlexInstance) fetchDetail() (*sqlserverflex.Instance
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.GetInstanceExecute(bgctx(), c.ProjectID(), r.Id.Data, c.Region())
+	resp, err := client.DefaultAPI.GetInstance(bgctx(), c.ProjectID(), r.Id.Data, c.Region()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			r.fetched = true
@@ -1070,7 +1098,7 @@ func (r *mqlStackitSqlServerFlexInstance) fetchDetail() (*sqlserverflex.Instance
 		return nil, err
 	}
 	if item, ok := resp.GetItemOk(); ok {
-		r.detail = &item
+		r.detail = item
 	}
 	r.fetched = true
 	return r.detail, nil
@@ -1108,7 +1136,7 @@ func (r *mqlStackitSqlServerFlexInstance) replicas() (int64, error) {
 	if err != nil || d == nil {
 		return 0, err
 	}
-	return d.GetReplicas(), nil
+	return int64(d.GetReplicas()), nil
 }
 
 func (r *mqlStackitSqlServerFlexInstance) storage() (any, error) {
@@ -1138,6 +1166,9 @@ func (r *mqlStackitSqlServerFlexInstance) options() (map[string]any, error) {
 func initStackitSqlServerFlexInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
 	if !ok {
+		id, ok = conn(runtime).AssetObjectID("sqlserver-flex")
+	}
+	if !ok {
 		return args, nil, nil
 	}
 	c := conn(runtime)
@@ -1145,7 +1176,7 @@ func initStackitSqlServerFlexInstance(runtime *plugin.Runtime, args map[string]*
 	if err != nil {
 		return nil, nil, err
 	}
-	resp, err := client.GetInstanceExecute(bgctx(), c.ProjectID(), id, c.Region())
+	resp, err := client.DefaultAPI.GetInstance(bgctx(), c.ProjectID(), id, c.Region()).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1163,7 +1194,7 @@ func initStackitSqlServerFlexInstance(runtime *plugin.Runtime, args map[string]*
 		return nil, nil, err
 	}
 	r := res.(*mqlStackitSqlServerFlexInstance)
-	r.detail = &inst
+	r.detail = inst
 	r.fetched = true
 	return nil, res, nil
 }

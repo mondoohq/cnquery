@@ -164,5 +164,19 @@ func searchServiceToMql(runtime *plugin.Runtime, svc *armsearch.Service) (*mqlAz
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionSearchServiceService), nil
+	mqlService := res.(*mqlAzureSubscriptionSearchServiceService)
+	sysData, err := convert.JsonToDict(svc.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlService.cacheSystemData = sysData
+	return mqlService, nil
+}
+
+type mqlAzureSubscriptionSearchServiceServiceInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionSearchServiceService) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }

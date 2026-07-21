@@ -4,7 +4,6 @@
 package resources
 
 import (
-	"regexp"
 	"strings"
 	"testing"
 
@@ -291,107 +290,69 @@ func TestCountUnquotedParens(t *testing.T) {
 	}
 }
 
-func TestGlobToRegex(t *testing.T) {
-	tests := []struct {
-		name  string
-		glob  string
-		want  string
-		match []string // basenames that should match the resulting regex (with anchors)
-		miss  []string // basenames that should NOT match
-	}{
-		{
-			name:  "star",
-			glob:  "*.conf",
-			want:  `[^/]*\.conf`,
-			match: []string{"foo.conf", "00-local.conf", ".conf"},
-			miss:  []string{"foo.conf.bak", "foo", "sub/foo.conf"},
-		},
-		{
-			name:  "question mark",
-			glob:  "0?-local.conf",
-			want:  `0[^/]-local\.conf`,
-			match: []string{"00-local.conf", "0a-local.conf"},
-			miss:  []string{"000-local.conf", "0-local.conf"},
-		},
-		{
-			name:  "character class passed through",
-			glob:  "[0-9]*.conf",
-			want:  `[0-9][^/]*\.conf`,
-			match: []string{"0foo.conf", "9.conf"},
-			miss:  []string{"afoo.conf"},
-		},
-		{
-			name:  "regex meta in literal portion is escaped",
-			glob:  "foo.bar+.conf",
-			want:  `foo\.bar\+\.conf`,
-			match: []string{"foo.bar+.conf"},
-			miss:  []string{"fooxbar+.conf", "foo.bar.conf"},
-		},
-		{
-			name:  "no metas",
-			glob:  "local.conf",
-			want:  `local\.conf`,
-			match: []string{"local.conf"},
-			miss:  []string{"localxconf"},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := globToRegex(tt.glob)
-			assert.Equal(t, tt.want, got)
-			anchored := regexp.MustCompile("^" + got + "$")
-			for _, m := range tt.match {
-				assert.True(t, anchored.MatchString(m), "expected %q to match %q", m, "^"+got+"$")
-			}
-			for _, m := range tt.miss {
-				assert.False(t, anchored.MatchString(m), "expected %q NOT to match %q", m, "^"+got+"$")
-			}
-		})
-	}
-}
-
 func TestResolveRsyslogInclude(t *testing.T) {
 	tests := []struct {
 		name      string
 		parentDir string
 		pattern   string
 		wantDir   string
-		wantName  string
+		wantGlob  string
 	}{
 		{
 			name:      "absolute path with glob",
 			parentDir: "/etc",
 			pattern:   "/etc/rsyslog.d/*.conf",
 			wantDir:   "/etc/rsyslog.d",
-			wantName:  `^[^/]*\.conf$`,
+			wantGlob:  "*.conf",
 		},
 		{
 			name:      "absolute path with no glob",
 			parentDir: "/etc",
 			pattern:   "/etc/rsyslog.d/00-local.conf",
 			wantDir:   "/etc/rsyslog.d",
-			wantName:  `^00-local\.conf$`,
+			wantGlob:  "00-local.conf",
 		},
 		{
 			name:      "relative path is anchored at parent dir",
 			parentDir: "/etc/rsyslog.d",
 			pattern:   "local.conf",
 			wantDir:   "/etc/rsyslog.d",
-			wantName:  `^local\.conf$`,
+			wantGlob:  "local.conf",
 		},
 		{
 			name:      "relative path with subdir",
 			parentDir: "/etc/rsyslog.d",
 			pattern:   "extras/local.conf",
 			wantDir:   "/etc/rsyslog.d/extras",
-			wantName:  `^local\.conf$`,
+			wantGlob:  "local.conf",
+		},
+		{
+			name:      "relative path with glob",
+			parentDir: "/etc/rsyslog.d",
+			pattern:   "extras/*.conf",
+			wantDir:   "/etc/rsyslog.d/extras",
+			wantGlob:  "*.conf",
+		},
+		{
+			name:      "glob metacharacters are left intact for the matcher",
+			parentDir: "/etc",
+			pattern:   "/etc/rsyslog.d/[0-9]?-local.conf",
+			wantDir:   "/etc/rsyslog.d",
+			wantGlob:  "[0-9]?-local.conf",
+		},
+		{
+			name:      "parent traversal is cleaned",
+			parentDir: "/etc/rsyslog.d",
+			pattern:   "../rsyslog.extra/*.conf",
+			wantDir:   "/etc/rsyslog.extra",
+			wantGlob:  "*.conf",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dir, name := resolveRsyslogInclude(tt.parentDir, tt.pattern)
+			dir, glob := resolveRsyslogInclude(tt.parentDir, tt.pattern)
 			assert.Equal(t, tt.wantDir, dir)
-			assert.Equal(t, tt.wantName, name)
+			assert.Equal(t, tt.wantGlob, glob)
 		})
 	}
 }

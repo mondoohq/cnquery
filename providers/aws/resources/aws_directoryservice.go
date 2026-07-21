@@ -6,8 +6,10 @@ package resources
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	dstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/rs/zerolog/log"
@@ -38,6 +40,49 @@ func (a *mqlAwsDirectoryservice) directories() ([]any, error) {
 		}
 	}
 	return res, nil
+}
+
+// initAwsDirectoryserviceDirectory resolves a single Directory Service
+// directory. When invoked for a discovered asset
+// (aws-directoryservice-directory platform), no args are passed, so the
+// directory id is derived from the synthetic directory ARN carried by the
+// connection's asset identifier and used to select the matching directory
+// from the parent collection.
+func initAwsDirectoryserviceDirectory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	if len(args) == 0 {
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			if parsed, err := arn.Parse(assetArn); err == nil {
+				args["directoryId"] = llx.StringData(strings.TrimPrefix(parsed.Resource, "directory/"))
+			}
+		}
+	}
+	if args["directoryId"] == nil {
+		return args, nil, fmt.Errorf("directoryId required to fetch directory service directory")
+	}
+
+	obj, err := CreateResource(runtime, "aws.directoryservice", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	dirs := obj.(*mqlAwsDirectoryservice).GetDirectories()
+	if dirs.Error != nil {
+		return nil, nil, dirs.Error
+	}
+
+	wantId := args["directoryId"].Value.(string)
+	for _, r := range dirs.Data {
+		d := r.(*mqlAwsDirectoryserviceDirectory)
+		if d.DirectoryId.Data == wantId {
+			return args, d, nil
+		}
+	}
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.directoryservice.directory with id %q not found", wantId)
 }
 
 func (a *mqlAwsDirectoryservice) getDirectories(conn *connection.AwsConnection) []*jobpool.Job {
@@ -130,6 +175,19 @@ type mqlAwsDirectoryserviceDirectoryInternal struct {
 
 func (a *mqlAwsDirectoryserviceDirectory) id() (string, error) {
 	return "aws.directoryservice.directory/" + a.Region.Data + "/" + a.DirectoryId.Data, nil
+}
+
+// directoryServiceDirectoryArn synthesizes the canonical Directory Service
+// directory ARN. The DescribeDirectories API does not return an ARN, so it is
+// built from the region, account, and directory id. Keep this in sync with the
+// discovered asset's platform id (see discovery.go).
+func directoryServiceDirectoryArn(region, accountID, directoryID string) string {
+	return fmt.Sprintf("arn:aws:ds:%s:%s:directory/%s", region, accountID, directoryID)
+}
+
+func (a *mqlAwsDirectoryserviceDirectory) arn() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return directoryServiceDirectoryArn(a.Region.Data, conn.AccountId(), a.DirectoryId.Data), nil
 }
 
 func (a *mqlAwsDirectoryserviceDirectory) tags() (map[string]any, error) {

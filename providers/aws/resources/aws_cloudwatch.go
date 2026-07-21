@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	cloudwatchtypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	cloudwatchlogstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -602,48 +603,15 @@ func (a *mqlAwsCloudwatch) getLogGroups(conn *connection.AwsConnection) []*jobpo
 						}
 					}
 
-					args := make(map[string]*llx.RawData)
-					args["arn"] = llx.StringDataPtr(loggroup.Arn)
-					args["name"] = llx.StringDataPtr(loggroup.LogGroupName)
-					args["region"] = llx.StringData(region)
-					args["retentionInDays"] = llx.IntDataDefault(loggroup.RetentionInDays, 0)
-					args["dataProtectionStatus"] = llx.StringData(string(loggroup.DataProtectionStatus))
-					args["deletionProtectionEnabled"] = llx.BoolDataPtr(loggroup.DeletionProtectionEnabled)
-					args["logGroupClass"] = llx.StringData(string(loggroup.LogGroupClass))
-					args["storedBytes"] = llx.IntDataDefault(loggroup.StoredBytes, 0)
-
-					inherited := make([]any, 0, len(loggroup.InheritedProperties))
-					for _, ip := range loggroup.InheritedProperties {
-						inherited = append(inherited, string(ip))
-					}
-					args["inheritedProperties"] = llx.ArrayData(inherited, types.String)
-
-					// add kms key if there is one
-					if loggroup.KmsKeyId != nil {
-						mqlKeyResource, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
-							map[string]*llx.RawData{
-								"arn": llx.StringDataPtr(loggroup.KmsKeyId),
-							})
-						if err != nil {
-							args["kmsKey"] = llx.NilData
-						} else {
-							mqlKey := mqlKeyResource.(*mqlAwsKmsKey)
-							args["kmsKey"] = llx.ResourceData(mqlKey, mqlKey.MqlName())
-						}
-					} else {
-						args["kmsKey"] = llx.NilData
-					}
-
-					mqlLogGroup, err := CreateResource(a.MqlRuntime, ResourceAwsCloudwatchLoggroup, args)
+					lg, err := buildLogGroupResource(a.MqlRuntime, region, loggroup)
 					if err != nil {
 						return nil, err
 					}
-					lg := mqlLogGroup.(*mqlAwsCloudwatchLoggroup)
 					if groupTags != nil {
 						lg.cacheTags = groupTags
 						lg.tagsFetched = true
 					}
-					res = append(res, mqlLogGroup)
+					res = append(res, lg)
 				}
 			}
 			return jobpool.JobResult(res), nil
@@ -653,21 +621,115 @@ func (a *mqlAwsCloudwatch) getLogGroups(conn *connection.AwsConnection) []*jobpo
 	return tasks
 }
 
+// buildLogGroupResource maps an SDK log group into an aws.cloudwatch.loggroup
+// resource. Shared by the list path and the targeted init lookup.
+func buildLogGroupResource(runtime *plugin.Runtime, region string, loggroup cloudwatchlogstypes.LogGroup) (*mqlAwsCloudwatchLoggroup, error) {
+	args := make(map[string]*llx.RawData)
+	args["arn"] = llx.StringDataPtr(loggroup.Arn)
+	args["name"] = llx.StringDataPtr(loggroup.LogGroupName)
+	args["region"] = llx.StringData(region)
+	args["retentionInDays"] = llx.IntDataDefault(loggroup.RetentionInDays, 0)
+	args["createdAt"] = llx.TimeDataPtr(int64MillisToTime(loggroup.CreationTime))
+	args["dataProtectionStatus"] = llx.StringData(string(loggroup.DataProtectionStatus))
+	args["deletionProtectionEnabled"] = llx.BoolDataPtr(loggroup.DeletionProtectionEnabled)
+	args["logGroupClass"] = llx.StringData(string(loggroup.LogGroupClass))
+	args["storedBytes"] = llx.IntDataDefault(loggroup.StoredBytes, 0)
+
+	inherited := make([]any, 0, len(loggroup.InheritedProperties))
+	for _, ip := range loggroup.InheritedProperties {
+		inherited = append(inherited, string(ip))
+	}
+	args["inheritedProperties"] = llx.ArrayData(inherited, types.String)
+
+	// add kms key if there is one
+	if loggroup.KmsKeyId != nil {
+		mqlKeyResource, err := NewResource(runtime, ResourceAwsKmsKey,
+			map[string]*llx.RawData{
+				"arn": llx.StringDataPtr(loggroup.KmsKeyId),
+			})
+		if err != nil {
+			args["kmsKey"] = llx.NilData
+		} else {
+			mqlKey := mqlKeyResource.(*mqlAwsKmsKey)
+			args["kmsKey"] = llx.ResourceData(mqlKey, mqlKey.MqlName())
+		}
+	} else {
+		args["kmsKey"] = llx.NilData
+	}
+
+	mqlLogGroup, err := CreateResource(runtime, ResourceAwsCloudwatchLoggroup, args)
+	if err != nil {
+		return nil, err
+	}
+	return mqlLogGroup.(*mqlAwsCloudwatchLoggroup), nil
+}
+
 func initAwsCloudwatchLoggroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 1 {
 		return args, nil, nil
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["name"] = llx.StringData(ids.name)
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 	if args["arn"] == nil {
 		return nil, nil, errors.New("arn required to fetch cloudwatch log group")
 	}
 
+	conn := runtime.Connection.(*connection.AwsConnection)
+	arnVal := args["arn"].Value.(string)
+
+	// Targeted lookup: derive the region + group name from the ARN and fetch
+	// just this one log group (by name prefix) instead of describing every log
+	// group in every region. Only attempt this for log groups owned by the
+	// account we're connected to; cross-account references fall through to the
+	// scan + placeholder path below.
+	region := ""
+	name := ""
+	sameAccount := true
+	if parsed, parseErr := arn.Parse(arnVal); parseErr == nil {
+		region = parsed.Region
+		name = strings.TrimSuffix(strings.TrimPrefix(parsed.Resource, "log-group:"), ":*")
+		sameAccount = parsed.AccountID == "" || parsed.AccountID == conn.AccountId()
+	}
+	if args["region"] != nil {
+		if r, ok := args["region"].Value.(string); ok && r != "" {
+			region = r
+		}
+	}
+	if region != "" && name != "" && sameAccount {
+		svc := conn.CloudwatchLogs(region)
+		// DescribeLogGroups only filters by name *prefix*, so other groups can
+		// share this group's prefix and the exact match may land on a later
+		// page. Paginate and match exactly; on access-denied fall through to the
+		// scan + placeholder path below.
+		paginator := cloudwatchlogs.NewDescribeLogGroupsPaginator(svc, &cloudwatchlogs.DescribeLogGroupsInput{
+			LogGroupNamePrefix: &name,
+		})
+		for paginator.HasMorePages() {
+			out, err := paginator.NextPage(context.Background())
+			if err != nil {
+				if Is400AccessDeniedError(err) {
+					break
+				}
+				return nil, nil, err
+			}
+			for i := range out.LogGroups {
+				if convert.ToValue(out.LogGroups[i].LogGroupName) == name {
+					lg, err := buildLogGroupResource(runtime, region, out.LogGroups[i])
+					if err != nil {
+						return nil, nil, err
+					}
+					return args, lg, nil
+				}
+			}
+		}
+	}
+
+	// Fallback: scan all log groups (e.g. cross-account references or when the
+	// ARN carries no usable region).
 	obj, err := CreateResource(runtime, "aws.cloudwatch", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
@@ -678,7 +740,6 @@ func initAwsCloudwatchLoggroup(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return nil, nil, rawResources.Error
 	}
 
-	arnVal := args["arn"].Value.(string)
 	// CloudWatch's DescribeLogGroups returns ARNs with a trailing ":*" suffix;
 	// other AWS services (e.g. EventBridge Pipes LogConfiguration) return the
 	// bare ARN without it. Compare both with and without the suffix so init
@@ -696,15 +757,14 @@ func initAwsCloudwatchLoggroup(runtime *plugin.Runtime, args map[string]*llx.Raw
 	// If the log group is in a different account (e.g., organizational trail referencing
 	// a log group in the management account), create a placeholder resource with basic
 	// info extracted from the ARN instead of failing.
-	conn := runtime.Connection.(*connection.AwsConnection)
 	if parsedArn, parseErr := arn.Parse(arnVal); parseErr == nil && parsedArn.AccountID != conn.AccountId() {
 		log.Warn().Str("arn", arnVal).Str("currentAccount", conn.AccountId()).Str("logGroupAccount", parsedArn.AccountID).Msg("cross-account CloudWatch log group reference")
-		region, groupName := parseLogGroupArn(arnVal)
-		if region == "" || groupName == "" {
+		grpRegion, groupName := parseLogGroupArn(arnVal)
+		if grpRegion == "" || groupName == "" {
 			return nil, nil, errors.New("cloudwatch log group does not exist")
 		}
 		args["name"] = llx.StringData(groupName)
-		args["region"] = llx.StringData(region)
+		args["region"] = llx.StringData(grpRegion)
 		args["retentionInDays"] = llx.IntData(-1)
 		args["storedBytes"] = llx.IntData(-1)
 		args["dataProtectionStatus"] = llx.StringData("")
@@ -737,7 +797,9 @@ func (a *mqlAwsCloudwatchLoggroup) tags() (map[string]any, error) {
 	svc := conn.CloudwatchLogs(a.Region.Data)
 	ctx := context.Background()
 
-	arnVal := a.Arn.Data
+	// CloudWatch Logs stores the log-group ARN with a trailing ":*" wildcard,
+	// which ListTagsForResource rejects as an invalid resourceArn. Strip it.
+	arnVal := strings.TrimSuffix(a.Arn.Data, ":*")
 	tagsResp, err := svc.ListTagsForResource(ctx, &cloudwatchlogs.ListTagsForResourceInput{ResourceArn: &arnVal})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
@@ -752,6 +814,14 @@ func (a *mqlAwsCloudwatchLoggroup) tags() (map[string]any, error) {
 }
 
 func (a *mqlAwsCloudwatchLoggroup) kmsKey() (*mqlAwsKmsKey, error) {
+	// Return the key resolved at creation time when present; only mark the field
+	// null (with an explicit state) when no key was set — e.g. the cross-account
+	// placeholder path that never populates kmsKey. Unconditionally nulling here
+	// would drop the KMS key on log groups that actually have one.
+	if a.KmsKey.Data == nil {
+		a.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
 	return a.KmsKey.Data, nil
 }
 
@@ -922,6 +992,58 @@ func (a *mqlAwsCloudwatchLoggroupSubscriptionfilter) iamRole() (*mqlAwsIamRole, 
 		return nil, err
 	}
 	return res.(*mqlAwsIamRole), nil
+}
+
+// destinationResource resolves the subscription filter's destination ARN to a
+// typed resource, but only when the ARN belongs to wantService. A filter has
+// exactly one destination, so the accessors for the other services resolve to
+// null.
+func (a *mqlAwsCloudwatchLoggroupSubscriptionfilter) destinationResource(wantService, resourceName string) (plugin.Resource, bool, error) {
+	arnVal := a.DestinationArn.Data
+	if arnVal == "" {
+		return nil, false, nil
+	}
+	parsed, err := arn.Parse(arnVal)
+	if err != nil {
+		log.Warn().Str("arn", arnVal).Err(err).Msg("could not parse subscription filter destination ARN")
+		return nil, false, nil
+	}
+	if parsed.Service != wantService {
+		return nil, false, nil
+	}
+	res, err := NewResource(a.MqlRuntime, resourceName,
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, false, err
+	}
+	return res, true, nil
+}
+
+func (a *mqlAwsCloudwatchLoggroupSubscriptionfilter) lambdaFunction() (*mqlAwsLambdaFunction, error) {
+	res, ok, err := a.destinationResource("lambda", "aws.lambda.function")
+	if err != nil || !ok {
+		a.LambdaFunction.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, err
+	}
+	return res.(*mqlAwsLambdaFunction), nil
+}
+
+func (a *mqlAwsCloudwatchLoggroupSubscriptionfilter) kinesisStream() (*mqlAwsKinesisStream, error) {
+	res, ok, err := a.destinationResource("kinesis", "aws.kinesis.stream")
+	if err != nil || !ok {
+		a.KinesisStream.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, err
+	}
+	return res.(*mqlAwsKinesisStream), nil
+}
+
+func (a *mqlAwsCloudwatchLoggroupSubscriptionfilter) firehoseDeliveryStream() (*mqlAwsKinesisFirehoseDeliveryStream, error) {
+	res, ok, err := a.destinationResource("firehose", "aws.kinesis.firehoseDeliveryStream")
+	if err != nil || !ok {
+		a.FirehoseDeliveryStream.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, err
+	}
+	return res.(*mqlAwsKinesisFirehoseDeliveryStream), nil
 }
 
 func (a *mqlAwsCloudwatchLoggroup) logStreams() ([]any, error) {

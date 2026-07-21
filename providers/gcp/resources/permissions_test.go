@@ -55,11 +55,15 @@ var validatedGCPPermissions = []string{
 	"aiplatform.metadataStores.list",
 	"aiplatform.modelDeploymentMonitoringJobs.list",
 	"aiplatform.models.get",
+	"aiplatform.models.getIamPolicy",
 	"aiplatform.models.list",
 	"aiplatform.notebookExecutionJobs.list",
+	"aiplatform.notebookRuntimeTemplates.get",
+	"aiplatform.notebookRuntimeTemplates.getIamPolicy",
 	"aiplatform.notebookRuntimeTemplates.list",
 	"aiplatform.notebookRuntimes.list",
 	"aiplatform.persistentResources.list",
+	"aiplatform.pipelineJobs.get",
 	"aiplatform.pipelineJobs.list",
 	"aiplatform.ragCorpora.list",
 	"aiplatform.reasoningEngines.list",
@@ -206,6 +210,9 @@ var validatedGCPPermissions = []string{
 	"dns.policies.list",
 	"dns.resourceRecordSets.list",
 	"dns.responsePolicies.list",
+	"documentai.processorVersions.get",
+	"documentai.processorVersions.list",
+	"documentai.processors.list",
 	// Real and required (Cloud Domains), but customRolesSupportLevel is
 	// NOT_SUPPORTED: GCP grants it only via a predefined role (roles/domains.viewer),
 	// never a custom role. It is therefore absent from list-testable-permissions and
@@ -242,6 +249,7 @@ var validatedGCPPermissions = []string{
 	"memorystore.instances.get",
 	"memorystore.instances.list",
 	"modelarmor.floorSettings.get",
+	"modelarmor.templates.get",
 	"modelarmor.templates.list",
 	"monitoring.alertPolicies.list",
 	"monitoring.dashboards.list",
@@ -300,6 +308,7 @@ var validatedGCPPermissions = []string{
 	"storage.buckets.get",
 	"storage.buckets.getIamPolicy",
 	"storage.buckets.list",
+	"storage.buckets.listEffectiveTags",
 	"workflows.workflows.list",
 }
 

@@ -370,13 +370,7 @@ func (a *mqlAtlassianConfluencePage) hasRestrictions() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	for _, r := range restrictions {
-		entry := r.(*mqlAtlassianConfluencePageRestriction)
-		if len(entry.UserIds.Data) > 0 || len(entry.GroupNames.Data) > 0 {
-			return true, nil
-		}
-	}
-	return false, nil
+	return contentHasRestrictions(restrictions), nil
 }
 
 func (a *mqlAtlassianConfluencePage) restrictions() ([]any, error) {
@@ -397,80 +391,10 @@ func (a *mqlAtlassianConfluencePage) fetchRestrictions() ([]any, error) {
 	if a.Restrictions.State == plugin.StateIsSet {
 		return a.Restrictions.Data, nil
 	}
-	conn, ok := a.MqlRuntime.Connection.(*confluence.ConfluenceConnection)
-	if !ok {
-		return nil, errors.New("Current connection does not allow confluence access")
+	res, err := confluenceContentRestrictions(a.MqlRuntime, a.Id.Data)
+	if err != nil {
+		return nil, err
 	}
-	client := conn.Client()
-
-	contentID := a.Id.Data
-	if contentID == "" {
-		a.Restrictions = plugin.TValue[[]any]{Data: []any{}, State: plugin.StateIsSet}
-		return []any{}, nil
-	}
-
-	res := []any{}
-	startAt := 0
-	for {
-		page, _, err := client.Content.Restriction.Gets(context.Background(),
-			contentID,
-			[]string{"restrictions.user", "restrictions.group"},
-			startAt,
-			CONFLUENCE_PAGE_LIMIT,
-		)
-		if err != nil {
-			return nil, err
-		}
-		if page == nil || len(page.Results) == 0 {
-			break
-		}
-		for _, restriction := range page.Results {
-			if restriction == nil {
-				continue
-			}
-			users := []any{}
-			groups := []any{}
-			if restriction.Restrictions != nil {
-				if restriction.Restrictions.User != nil {
-					for _, u := range restriction.Restrictions.User.Results {
-						if u == nil {
-							continue
-						}
-						if u.AccountID != "" {
-							users = append(users, u.AccountID)
-						}
-					}
-				}
-				if restriction.Restrictions.Group != nil {
-					for _, g := range restriction.Restrictions.Group.Results {
-						if g == nil {
-							continue
-						}
-						if g.Name != "" {
-							groups = append(groups, g.Name)
-						}
-					}
-				}
-			}
-			compositeID := contentID + "/" + restriction.Operation
-			mqlRestriction, err := CreateResource(a.MqlRuntime, "atlassian.confluence.page.restriction",
-				map[string]*llx.RawData{
-					"id":         llx.StringData(compositeID),
-					"operation":  llx.StringData(restriction.Operation),
-					"userIds":    llx.ArrayData(users, types.String),
-					"groupNames": llx.ArrayData(groups, types.String),
-				})
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, mqlRestriction)
-		}
-		if len(page.Results) < CONFLUENCE_PAGE_LIMIT {
-			break
-		}
-		startAt += len(page.Results)
-	}
-
 	a.Restrictions = plugin.TValue[[]any]{Data: res, State: plugin.StateIsSet}
 	return res, nil
 }
@@ -607,14 +531,19 @@ func mqlConfluencePageFromContent(runtime *plugin.Runtime, content *models.Conte
 // expansions. Pages reached via space.homepage or page.parent start with an
 // empty cache and trigger a lazy fetch on first access.
 type mqlAtlassianConfluencePageInternal struct {
-	fetched        bool
-	lock           sync.Mutex
-	cacheVersion   int64
-	cacheCreatedAt *time.Time
-	cacheUpdatedAt *time.Time
-	cacheCreatedBy *models.ContentUserScheme
-	cacheParent    *models.ContentScheme
-	cacheLabels    []string
+	fetched             bool
+	lock                sync.Mutex
+	cacheVersion        int64
+	cacheCreatedAt      *time.Time
+	cacheUpdatedAt      *time.Time
+	cacheCreatedBy      *models.ContentUserScheme
+	cacheUpdatedBy      *models.ContentUserScheme
+	cacheVersionMessage string
+	cacheMinorEdit      bool
+	cacheParent         *models.ContentScheme
+	cacheAncestorIds    []string
+	cacheWebURL         string
+	cacheLabels         []string
 }
 
 // cacheFromContent populates the Internal cache from a ContentScheme with the
@@ -625,6 +554,9 @@ func (a *mqlAtlassianConfluencePage) cacheFromContent(content *models.ContentSch
 	}
 	if content.Version != nil {
 		a.cacheVersion = int64(content.Version.Number)
+		a.cacheUpdatedBy = content.Version.By
+		a.cacheVersionMessage = content.Version.Message
+		a.cacheMinorEdit = content.Version.MinorEdit
 	}
 	if content.History != nil {
 		a.cacheCreatedAt = parseConfluenceTime(content.History.CreatedDate)
@@ -632,6 +564,12 @@ func (a *mqlAtlassianConfluencePage) cacheFromContent(content *models.ContentSch
 	}
 	if content.Version != nil && content.Version.When != "" {
 		a.cacheUpdatedAt = parseConfluenceTime(content.Version.When)
+	}
+	if content.Links != nil && content.Links.Base != "" && content.Links.Webui != "" {
+		// Webui is relative to the instance base; only build the URL when the
+		// base is present so the field stays absolute (or empty), never a bare
+		// relative path.
+		a.cacheWebURL = content.Links.Base + content.Links.Webui
 	}
 	if content.Metadata != nil && content.Metadata.Labels != nil {
 		labels := make([]string, 0, len(content.Metadata.Labels.Results))
@@ -646,6 +584,15 @@ func (a *mqlAtlassianConfluencePage) cacheFromContent(content *models.ContentSch
 	if len(content.Ancestors) > 0 {
 		// Direct parent is the last ancestor returned by the API.
 		a.cacheParent = content.Ancestors[len(content.Ancestors)-1]
+		// Ancestors are ordered root first, direct parent last.
+		ids := make([]string, 0, len(content.Ancestors))
+		for _, anc := range content.Ancestors {
+			if anc == nil || anc.ID == "" {
+				continue
+			}
+			ids = append(ids, anc.ID)
+		}
+		a.cacheAncestorIds = ids
 	}
 	a.fetched = true
 }
@@ -723,6 +670,65 @@ func (a *mqlAtlassianConfluencePage) createdBy() (*mqlAtlassianConfluenceUser, e
 		return nil, err
 	}
 	return mqlUser.(*mqlAtlassianConfluenceUser), nil
+}
+
+func (a *mqlAtlassianConfluencePage) updatedBy() (*mqlAtlassianConfluenceUser, error) {
+	if err := a.ensureFetched(); err != nil {
+		return nil, err
+	}
+	if a.cacheUpdatedBy == nil || a.cacheUpdatedBy.AccountID == "" {
+		a.UpdatedBy.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlUser, err := NewResource(a.MqlRuntime, "atlassian.confluence.user",
+		map[string]*llx.RawData{
+			"id":   llx.StringData(a.cacheUpdatedBy.AccountID),
+			"name": llx.StringData(a.cacheUpdatedBy.DisplayName),
+			"type": llx.StringData(a.cacheUpdatedBy.AccountType),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlUser.(*mqlAtlassianConfluenceUser), nil
+}
+
+func (a *mqlAtlassianConfluencePage) versionMessage() (string, error) {
+	if err := a.ensureFetched(); err != nil {
+		return "", err
+	}
+	return a.cacheVersionMessage, nil
+}
+
+func (a *mqlAtlassianConfluencePage) minorEdit() (bool, error) {
+	if err := a.ensureFetched(); err != nil {
+		return false, err
+	}
+	return a.cacheMinorEdit, nil
+}
+
+func (a *mqlAtlassianConfluencePage) ancestorIds() ([]any, error) {
+	if err := a.ensureFetched(); err != nil {
+		return nil, err
+	}
+	out := make([]any, 0, len(a.cacheAncestorIds))
+	for _, id := range a.cacheAncestorIds {
+		out = append(out, id)
+	}
+	return out, nil
+}
+
+func (a *mqlAtlassianConfluencePage) depth() (int64, error) {
+	if err := a.ensureFetched(); err != nil {
+		return 0, err
+	}
+	return int64(len(a.cacheAncestorIds)), nil
+}
+
+func (a *mqlAtlassianConfluencePage) webUrl() (string, error) {
+	if err := a.ensureFetched(); err != nil {
+		return "", err
+	}
+	return a.cacheWebURL, nil
 }
 
 func (a *mqlAtlassianConfluencePage) parent() (*mqlAtlassianConfluencePage, error) {

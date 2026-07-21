@@ -24,6 +24,8 @@ extend-exclude = [
 # baselined here and left for a separate, deliberate cleanup.
 [default.extend-words]
 # Technical terms, abbreviations, command names, and short identifier fragments.
+# MikroTik RouterOS (and the go-routeros SDK package name).
+routeros = "routeros"
 aks = "aks"
 nd = "nd"
 hashi = "hashi"
@@ -82,6 +84,16 @@ als = "als"
 # (HKLM\...\PowerShell\Transcription\EnableTranscripting). Microsoft's own
 # spelling, so it must stay verbatim to match the real registry key.
 transcripting = "transcripting"
+# Alibaba Cloud Go SDK field spellings baked into exported identifiers
+# (RouteEntrys, MaxLoginAttemps, IzNo, LoadBalancerBussinessStatus). These are
+# the SDK's own spellings, so references to them cannot be renamed.
+entrys = "entrys"
+attemps = "attemps"
+iz = "iz"
+bussiness = "bussiness"
+# Databricks Go SDK type name GetPrivateAccesRequest (missing the second "s").
+# The SDK's own spelling, so references to it cannot be renamed.
+acces = "acces"
 # Pre-existing misspellings in MQL schema fields / exported Go identifiers.
 # Renaming these would break the schema or API, so they are baselined.
 appliable = "appliable"

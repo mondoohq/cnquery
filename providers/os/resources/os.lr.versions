@@ -21,6 +21,8 @@ ai.model.version 13.16.10
 ai.models 13.16.9
 antigravity 13.13.1
 antigravity.configPath 13.13.1
+antigravity.package 13.31.1
+antigravity.runtime 13.33.1
 antigravity.skill 13.13.1
 antigravity.skill.allowedTools 13.13.1
 antigravity.skill.argumentHint 13.13.1
@@ -170,6 +172,8 @@ auditpol.entry.success 13.22.2
 auditpol.list 9.0.1
 augment 13.13.1
 augment.configPath 13.13.1
+augment.package 13.31.1
+augment.runtime 13.33.1
 augment.skill 13.13.1
 augment.skill.allowedTools 13.13.1
 augment.skill.argumentHint 13.13.1
@@ -182,6 +186,7 @@ augment.skills 13.13.1
 authorizedkeys 9.0.0
 authorizedkeys.content 9.0.0
 authorizedkeys.entry 9.0.0
+authorizedkeys.entry.bits 13.34.4
 authorizedkeys.entry.file 9.0.0
 authorizedkeys.entry.key 9.0.0
 authorizedkeys.entry.label 9.0.0
@@ -288,6 +293,7 @@ claude.code.mcpServer.needsAuth 13.8.2
 claude.code.mcpServers 13.8.2
 claude.code.organization 13.8.2
 claude.code.organizationId 13.8.2
+claude.code.package 13.31.1
 claude.code.plugin 13.8.2
 claude.code.plugin.enabled 13.8.2
 claude.code.plugin.gitCommitSha 13.8.2
@@ -303,6 +309,7 @@ claude.code.project.hasMemory 13.8.2
 claude.code.project.path 13.8.2
 claude.code.projects 13.8.2
 claude.code.role 13.8.2
+claude.code.runtime 13.33.1
 claude.code.settings 13.8.2
 claude.code.skill 13.8.2
 claude.code.skill.allowedTools 13.8.2
@@ -317,6 +324,8 @@ claude.code.subscription 13.8.2
 claude.code.userId 13.8.2
 cline 13.13.1
 cline.configPath 13.13.1
+cline.package 13.31.1
+cline.runtime 13.33.1
 cline.skill 13.13.1
 cline.skill.allowedTools 13.13.1
 cline.skill.argumentHint 13.13.1
@@ -374,6 +383,8 @@ containerd.container.status 11.4.84
 containerd.containers 11.4.84
 continuedev 13.13.1
 continuedev.configPath 13.13.1
+continuedev.package 13.31.1
+continuedev.runtime 13.33.1
 continuedev.skill 13.13.1
 continuedev.skill.allowedTools 13.13.1
 continuedev.skill.argumentHint 13.13.1
@@ -405,11 +416,13 @@ cursor.mcpServer.hasEnv 13.10.1
 cursor.mcpServer.name 13.10.1
 cursor.mcpServer.url 13.10.1
 cursor.mcpServers 13.10.1
+cursor.package 13.31.1
 cursor.rule 13.10.1
 cursor.rule.content 13.10.1
 cursor.rule.name 13.10.1
 cursor.rule.source 13.10.1
 cursor.rules 13.10.1
+cursor.runtime 13.33.1
 cursor.skill 13.10.1
 cursor.skill.allowedTools 13.10.1
 cursor.skill.argumentHint 13.10.1
@@ -450,16 +463,19 @@ docker.file.add 11.0.2
 docker.file.add.checksum 13.16.10
 docker.file.add.chmod 11.0.2
 docker.file.add.chown 11.0.2
+docker.file.add.context 13.30.2
 docker.file.add.dst 11.0.2
 docker.file.add.excludes 13.16.10
 docker.file.add.link 13.16.10
 docker.file.add.src 11.0.2
 docker.file.arg 11.4.70
+docker.file.arg.context 13.30.2
 docker.file.arg.default 11.4.70
 docker.file.arg.name 11.4.70
 docker.file.copy 11.0.2
 docker.file.copy.chmod 11.0.2
 docker.file.copy.chown 11.0.2
+docker.file.copy.context 13.30.2
 docker.file.copy.dst 11.0.2
 docker.file.copy.excludes 13.16.10
 docker.file.copy.from 13.16.10
@@ -468,14 +484,17 @@ docker.file.copy.parents 13.16.10
 docker.file.copy.src 11.0.2
 docker.file.directives 13.16.10
 docker.file.env 11.4.70
+docker.file.env.context 13.30.2
 docker.file.env.name 11.4.70
 docker.file.env.value 11.4.70
 docker.file.expose 11.0.3
+docker.file.expose.context 13.30.2
 docker.file.expose.port 11.0.3
 docker.file.expose.protocol 11.0.3
 docker.file.file 11.0.2
 docker.file.finalStage 13.21.1
 docker.file.from 11.0.2
+docker.file.from.context 13.30.2
 docker.file.from.digest 11.0.2
 docker.file.from.image 11.0.2
 docker.file.from.name 11.0.2
@@ -483,6 +502,7 @@ docker.file.from.platform 11.0.2
 docker.file.from.tag 11.0.2
 docker.file.hasSyntaxDirective 13.21.1
 docker.file.healthcheck 11.8.14
+docker.file.healthcheck.context 13.30.2
 docker.file.healthcheck.interval 11.8.14
 docker.file.healthcheck.none 11.8.14
 docker.file.healthcheck.retries 11.8.14
@@ -509,6 +529,7 @@ docker.file.oci.url 13.25.1
 docker.file.oci.vendor 13.25.1
 docker.file.oci.version 13.25.1
 docker.file.onbuild 13.16.10
+docker.file.onbuild.context 13.30.2
 docker.file.onbuild.expression 13.16.10
 docker.file.run 11.0.2
 docker.file.run.command 13.25.1
@@ -517,6 +538,7 @@ docker.file.run.command.binary 13.25.1
 docker.file.run.command.flags 13.25.1
 docker.file.run.command.subcommand 13.25.1
 docker.file.run.commands 13.25.1
+docker.file.run.context 13.30.2
 docker.file.run.isExecForm 13.21.1
 docker.file.run.isShellForm 13.21.1
 docker.file.run.mount 13.16.10
@@ -541,6 +563,7 @@ docker.file.run.script 11.0.2
 docker.file.run.security 13.16.10
 docker.file.shell 11.8.15
 docker.file.shell.command 11.8.15
+docker.file.shell.context 13.30.2
 docker.file.stage 11.0.2
 docker.file.stage.add 11.0.2
 docker.file.stage.arg 11.0.2
@@ -566,14 +589,18 @@ docker.file.stage.volumes 11.8.14
 docker.file.stage.workdir 11.8.15
 docker.file.stages 11.0.2
 docker.file.stopsignal 13.16.10
+docker.file.stopsignal.context 13.30.2
 docker.file.stopsignal.signal 13.16.10
 docker.file.user 11.1.3
+docker.file.user.context 13.30.2
 docker.file.user.group 11.1.3
 docker.file.user.isRoot 13.21.1
 docker.file.user.user 11.1.3
 docker.file.volume 11.8.14
+docker.file.volume.context 13.30.2
 docker.file.volume.path 11.8.14
 docker.file.workdir 11.8.15
+docker.file.workdir.context 13.30.2
 docker.file.workdir.path 11.8.15
 docker.image 9.0.0
 docker.image.id 9.0.0
@@ -619,6 +646,8 @@ exim 13.23.1
 exim.configPath 13.23.1
 exim.localInterfaces 13.23.1
 exim.params 13.23.1
+extensionRuntime 13.33.1
+extensionRuntime.package 13.33.1
 file 9.0.0
 file.basename 9.0.0
 file.content 9.0.0
@@ -731,6 +760,8 @@ gemini.mcpServer.command 13.13.1
 gemini.mcpServer.hasEnv 13.13.1
 gemini.mcpServer.name 13.13.1
 gemini.mcpServers 13.13.1
+gemini.package 13.31.1
+gemini.runtime 13.33.1
 gemini.settings 13.13.1
 gemini.skill 13.13.1
 gemini.skill.allowedTools 13.13.1
@@ -753,6 +784,8 @@ github.copilot.mcpServer.command 13.12.1
 github.copilot.mcpServer.name 13.12.1
 github.copilot.mcpServer.type 13.12.1
 github.copilot.mcpServers 13.12.1
+github.copilot.package 13.31.1
+github.copilot.runtime 13.33.1
 github.copilot.skill 13.12.1
 github.copilot.skill.allowedTools 13.12.1
 github.copilot.skill.argumentHint 13.12.1
@@ -796,7 +829,9 @@ goose.extension.timeout 13.13.1
 goose.extension.type 13.13.1
 goose.extensions 13.13.1
 goose.model 13.13.1
+goose.package 13.31.1
 goose.provider 13.13.1
+goose.runtime 13.33.1
 goose.skill 13.13.1
 goose.skill.allowedTools 13.13.1
 goose.skill.argumentHint 13.13.1
@@ -1077,6 +1112,8 @@ homebrew.packages 13.10.1
 homebrew.packages.list 13.10.1
 ibm.bob 13.13.1
 ibm.bob.configPath 13.13.1
+ibm.bob.package 13.31.1
+ibm.bob.runtime 13.33.1
 ibm.bob.skill 13.13.1
 ibm.bob.skill.allowedTools 13.13.1
 ibm.bob.skill.argumentHint 13.13.1
@@ -1204,6 +1241,8 @@ julia.packages.list 13.13.1
 julia.packages.path 13.13.1
 junie 13.13.1
 junie.configPath 13.13.1
+junie.package 13.31.1
+junie.runtime 13.33.1
 junie.skill 13.13.1
 junie.skill.allowedTools 13.13.1
 junie.skill.argumentHint 13.13.1
@@ -1244,6 +1283,8 @@ kernel.taint.reasons 13.16.10
 kernel.taint.tainted 13.16.10
 kilocode 13.13.1
 kilocode.configPath 13.13.1
+kilocode.package 13.31.1
+kilocode.runtime 13.33.1
 kilocode.skill 13.13.1
 kilocode.skill.allowedTools 13.13.1
 kilocode.skill.argumentHint 13.13.1
@@ -1255,6 +1296,8 @@ kilocode.skill.source 13.13.1
 kilocode.skills 13.13.1
 kiro 13.13.1
 kiro.configPath 13.13.1
+kiro.package 13.31.1
+kiro.runtime 13.33.1
 kiro.skill 13.13.1
 kiro.skill.allowedTools 13.13.1
 kiro.skill.argumentHint 13.13.1
@@ -1613,6 +1656,8 @@ mdadm.device.role 13.1.2
 mdadm.device.state 13.1.2
 mistral.vibe 13.13.1
 mistral.vibe.configPath 13.13.1
+mistral.vibe.package 13.31.1
+mistral.vibe.runtime 13.33.1
 mistral.vibe.skill 13.13.1
 mistral.vibe.skill.allowedTools 13.13.1
 mistral.vibe.skill.argumentHint 13.13.1
@@ -1878,6 +1923,7 @@ openai.codex.mcpServer.plugin 13.8.2
 openai.codex.mcpServer.type 13.8.2
 openai.codex.mcpServer.url 13.8.2
 openai.codex.mcpServers 13.8.2
+openai.codex.package 13.31.1
 openai.codex.plugin 13.8.2
 openai.codex.plugin.author 13.8.2
 openai.codex.plugin.capabilities 13.8.2
@@ -1889,6 +1935,7 @@ openai.codex.plugin.name 13.8.2
 openai.codex.plugin.skillNames 13.8.2
 openai.codex.plugin.version 13.8.2
 openai.codex.plugins 13.8.2
+openai.codex.runtime 13.33.1
 openai.codex.skill 13.8.2
 openai.codex.skill.content 13.8.2
 openai.codex.skill.description 13.8.2
@@ -1900,6 +1947,8 @@ openai.codex.skills 13.8.2
 openai.codex.version 13.8.2
 openclaw 13.13.1
 openclaw.configPath 13.13.1
+openclaw.package 13.31.1
+openclaw.runtime 13.33.1
 openclaw.skill 13.13.1
 openclaw.skill.allowedTools 13.13.1
 openclaw.skill.argumentHint 13.13.1
@@ -1911,6 +1960,8 @@ openclaw.skill.source 13.13.1
 openclaw.skills 13.13.1
 opencode 13.13.1
 opencode.configPath 13.13.1
+opencode.package 13.31.1
+opencode.runtime 13.33.1
 opencode.skill 13.13.1
 opencode.skill.allowedTools 13.13.1
 opencode.skill.argumentHint 13.13.1
@@ -1922,6 +1973,8 @@ opencode.skill.source 13.13.1
 opencode.skills 13.13.1
 openhands 13.13.1
 openhands.configPath 13.13.1
+openhands.package 13.31.1
+openhands.runtime 13.33.1
 openhands.skill 13.13.1
 openhands.skill.allowedTools 13.13.1
 openhands.skill.argumentHint 13.13.1
@@ -2068,6 +2121,8 @@ php.packages.path 13.10.1
 php.packages.root 13.10.1
 pi 13.13.1
 pi.configPath 13.13.1
+pi.package 13.31.1
+pi.runtime 13.33.1
 pi.skill 13.13.1
 pi.skill.allowedTools 13.13.1
 pi.skill.argumentHint 13.13.1
@@ -2125,6 +2180,8 @@ privatekey.encrypted 9.0.0
 privatekey.file 9.0.0
 privatekey.path 9.0.0
 privatekey.pem 9.0.0
+privatekey.publicKeyAlgorithm 13.34.4
+privatekey.publicKeyBits 13.34.4
 process 9.0.1
 process.command 9.0.1
 process.executable 9.0.1
@@ -2163,6 +2220,8 @@ python.path 9.0.1
 python.toplevel 9.0.1
 qwen.code 13.13.1
 qwen.code.configPath 13.13.1
+qwen.code.package 13.31.1
+qwen.code.runtime 13.33.1
 qwen.code.skill 13.13.1
 qwen.code.skill.allowedTools 13.13.1
 qwen.code.skill.argumentHint 13.13.1
@@ -2201,6 +2260,8 @@ registrykey.property.value 9.0.1
 registrykey.userSid 13.29.1
 roo 13.13.1
 roo.configPath 13.13.1
+roo.package 13.31.1
+roo.runtime 13.33.1
 roo.skill 13.13.1
 roo.skill.allowedTools 13.13.1
 roo.skill.argumentHint 13.13.1
@@ -2345,6 +2406,8 @@ snmpd.config.rwCommunities 13.24.1
 snmpd.config.rwUsers 13.24.1
 snowflake.cortex 13.13.1
 snowflake.cortex.configPath 13.13.1
+snowflake.cortex.package 13.31.1
+snowflake.cortex.runtime 13.33.1
 snowflake.cortex.skill 13.13.1
 snowflake.cortex.skill.allowedTools 13.13.1
 snowflake.cortex.skill.argumentHint 13.13.1
@@ -2604,6 +2667,8 @@ terraform.packages.list 13.10.1
 terraform.packages.path 13.10.1
 trae 13.13.1
 trae.configPath 13.13.1
+trae.package 13.31.1
+trae.runtime 13.33.1
 trae.skill 13.13.1
 trae.skill.allowedTools 13.13.1
 trae.skill.argumentHint 13.13.1
@@ -2677,6 +2742,7 @@ vscode.extension.identifier 11.4.86
 vscode.extension.name 11.4.86
 vscode.extension.path 11.4.86
 vscode.extension.publisher 11.4.86
+vscode.extension.purl 13.31.1
 vscode.extension.version 11.4.86
 vscode.extension.vscodeVersion 11.4.86
 vscode.extensions 11.4.86
@@ -2709,6 +2775,8 @@ vulnmgmt.packages 9.1.15
 vulnmgmt.stats 9.1.15
 warp 13.13.1
 warp.configPath 13.13.1
+warp.package 13.31.1
+warp.runtime 13.33.1
 warp.skill 13.13.1
 warp.skill.allowedTools 13.13.1
 warp.skill.argumentHint 13.13.1
@@ -3112,6 +3180,10 @@ windows.rdp.singleSessionPerUser 13.29.1
 windows.rdp.solicitedRemoteAssistanceAllowed 13.29.1
 windows.rdp.uiAutomationRedirectionEnabled 13.29.1
 windows.rdp.webAuthnRedirectionDisabled 13.29.1
+windows.schannel 13.34.4
+windows.schannel.cipherSuites 13.34.4
+windows.schannel.ellipticCurves 13.34.4
+windows.schannel.pqcKeyExchangeEnabled 13.34.4
 windows.scheduledTask 13.25.1
 windows.scheduledTask.action 13.25.1
 windows.scheduledTask.action.arguments 13.25.1
@@ -3369,11 +3441,13 @@ windsurf.mcpServer.command 13.13.1
 windsurf.mcpServer.hasEnv 13.13.1
 windsurf.mcpServer.name 13.13.1
 windsurf.mcpServers 13.13.1
+windsurf.package 13.31.1
 windsurf.rule 13.13.1
 windsurf.rule.content 13.13.1
 windsurf.rule.name 13.13.1
 windsurf.rule.source 13.13.1
 windsurf.rules 13.13.1
+windsurf.runtime 13.33.1
 windsurf.skill 13.13.1
 windsurf.skill.allowedTools 13.13.1
 windsurf.skill.argumentHint 13.13.1
@@ -3422,6 +3496,8 @@ yum.vars 9.0.1
 zed 13.13.1
 zed.configPath 13.13.1
 zed.extensions 13.13.1
+zed.package 13.31.1
+zed.runtime 13.33.1
 zed.settings 13.13.1
 zfs 13.1.2
 zfs.dataset 13.1.2

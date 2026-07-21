@@ -118,3 +118,55 @@ func TestIPSubnetToString(t *testing.T) {
 		t.Errorf("got %q, want 10.0.0.0/24", got)
 	}
 }
+
+func TestSubResourceID(t *testing.T) {
+	// A present ExtId is used verbatim, ignoring the parent/kind/index.
+	if got := subResourceID("disk-ext-id", "vm-1", "disk", 3); got != "disk-ext-id" {
+		t.Errorf("got %q, want disk-ext-id", got)
+	}
+	// A missing ExtId falls back to a parent-qualified, index-stamped key.
+	if got := subResourceID("", "vm-1", "disk", 3); got != "vm-1/disk/3" {
+		t.Errorf("got %q, want vm-1/disk/3", got)
+	}
+
+	// The whole point of the fallback is uniqueness: two siblings with no
+	// ExtId under the same parent must not share a cache key, otherwise
+	// CreateResource de-dupes them onto the first one built.
+	first := subResourceID("", "vm-1", "nic", 0)
+	second := subResourceID("", "vm-1", "nic", 1)
+	if first == second {
+		t.Errorf("siblings collided on %q; index must disambiguate", first)
+	}
+}
+
+func TestMetadataProvenance(t *testing.T) {
+	name, owner, project := metadataProvenance(nil)
+	if name != "" || owner != "" || project != "" {
+		t.Errorf("nil metadata: got (%q, %q, %q), want all empty", name, owner, project)
+	}
+
+	// Fields are independently optional; a partial metadata must not bleed
+	// one field's value into another.
+	name, owner, project = metadataProvenance(&netcommon.Metadata{
+		ProjectName:      sp("prod"),
+		OwnerReferenceId: sp("owner-42"),
+	})
+	if name != "prod" {
+		t.Errorf("projectName = %q, want prod", name)
+	}
+	if owner != "owner-42" {
+		t.Errorf("ownerId = %q, want owner-42", owner)
+	}
+	if project != "" {
+		t.Errorf("projectId = %q, want empty (ProjectReferenceId unset)", project)
+	}
+
+	name, owner, project = metadataProvenance(&netcommon.Metadata{
+		ProjectName:        sp("dev"),
+		OwnerReferenceId:   sp("owner-1"),
+		ProjectReferenceId: sp("proj-9"),
+	})
+	if name != "dev" || owner != "owner-1" || project != "proj-9" {
+		t.Errorf("got (%q, %q, %q), want (dev, owner-1, proj-9)", name, owner, project)
+	}
+}

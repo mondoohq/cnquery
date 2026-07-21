@@ -8,7 +8,9 @@ import "strings"
 type SystemSetupCmdOutput struct{}
 
 func (s SystemSetupCmdOutput) ParseDate(in string) string {
-	return strings.TrimSpace(strings.TrimPrefix(in, "Time:"))
+	// systemsetup -getdate emits a bare date (e.g. "6/23/2026") with no label,
+	// unlike its sibling getters, so there's no prefix to strip.
+	return strings.TrimSpace(in)
 }
 
 func (s SystemSetupCmdOutput) ParseTime(in string) string {

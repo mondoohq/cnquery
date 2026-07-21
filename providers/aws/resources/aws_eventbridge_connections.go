@@ -5,6 +5,8 @@ package resources
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
@@ -311,14 +313,27 @@ func initAwsEventbridgeConnection(runtime *plugin.Runtime, args map[string]*llx.
 		return args, nil, nil
 	}
 	if _, ok := args["arn"]; !ok {
-		return args, nil, nil
+		return nil, nil, errors.New("arn required to fetch eventbridge connection")
 	}
-	if arn, ok := args["arn"].Value.(string); !ok || arn == "" {
-		return args, nil, nil
+	arn, ok := args["arn"].Value.(string)
+	if !ok || arn == "" {
+		return nil, nil, errors.New("arn required to fetch eventbridge connection")
 	}
-	// Cache lookup in the runtime is sufficient — connections are
-	// materialized by aws.eventbridge.connections() across regions.
-	return args, nil, nil
+	// Connections are materialized by aws.eventbridge.connections() across
+	// regions; resolve the ARN against that set.
+	res, err := findEventbridgeArnMatch(runtime, arn,
+		func(eb *mqlAwsEventbridge) *plugin.TValue[[]any] { return eb.GetConnections() },
+		func(item any) string { return item.(*mqlAwsEventbridgeConnection).Arn.Data })
+	if err != nil {
+		return nil, nil, err
+	}
+	if res == nil {
+		// Returning (args, nil, nil) here would let the runtime create a resource
+		// whose fields are all unset, which surfaces as malformed nil data when
+		// those fields are queried.
+		return nil, nil, fmt.Errorf("aws.eventbridge.connection with arn %q not found", arn)
+	}
+	return args, res.(*mqlAwsEventbridgeConnection), nil
 }
 
 // ----- api destinations -----
@@ -499,12 +514,25 @@ func initAwsEventbridgeApiDestination(runtime *plugin.Runtime, args map[string]*
 		return args, nil, nil
 	}
 	if _, ok := args["arn"]; !ok {
-		return args, nil, nil
+		return nil, nil, errors.New("arn required to fetch eventbridge api destination")
 	}
-	if arn, ok := args["arn"].Value.(string); !ok || arn == "" {
-		return args, nil, nil
+	arn, ok := args["arn"].Value.(string)
+	if !ok || arn == "" {
+		return nil, nil, errors.New("arn required to fetch eventbridge api destination")
 	}
-	return args, nil, nil
+	res, err := findEventbridgeArnMatch(runtime, arn,
+		func(eb *mqlAwsEventbridge) *plugin.TValue[[]any] { return eb.GetApiDestinations() },
+		func(item any) string { return item.(*mqlAwsEventbridgeApiDestination).Arn.Data })
+	if err != nil {
+		return nil, nil, err
+	}
+	if res == nil {
+		// Returning (args, nil, nil) here would let the runtime create a resource
+		// whose fields are all unset, which surfaces as malformed nil data when
+		// those fields are queried.
+		return nil, nil, fmt.Errorf("aws.eventbridge.apiDestination with arn %q not found", arn)
+	}
+	return args, res.(*mqlAwsEventbridgeApiDestination), nil
 }
 
 // ----- archives -----
@@ -676,12 +704,25 @@ func initAwsEventbridgeArchive(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return args, nil, nil
 	}
 	if _, ok := args["arn"]; !ok {
-		return args, nil, nil
+		return nil, nil, errors.New("arn required to fetch eventbridge archive")
 	}
-	if arn, ok := args["arn"].Value.(string); !ok || arn == "" {
-		return args, nil, nil
+	arn, ok := args["arn"].Value.(string)
+	if !ok || arn == "" {
+		return nil, nil, errors.New("arn required to fetch eventbridge archive")
 	}
-	return args, nil, nil
+	res, err := findEventbridgeArnMatch(runtime, arn,
+		func(eb *mqlAwsEventbridge) *plugin.TValue[[]any] { return eb.GetArchives() },
+		func(item any) string { return item.(*mqlAwsEventbridgeArchive).Arn.Data })
+	if err != nil {
+		return nil, nil, err
+	}
+	if res == nil {
+		// Returning (args, nil, nil) here would let the runtime create a resource
+		// whose fields are all unset, which surfaces as malformed nil data when
+		// those fields are queried.
+		return nil, nil, fmt.Errorf("aws.eventbridge.archive with arn %q not found", arn)
+	}
+	return args, res.(*mqlAwsEventbridgeArchive), nil
 }
 
 // ----- replays -----
@@ -881,12 +922,25 @@ func initAwsEventbridgeReplay(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return args, nil, nil
 	}
 	if _, ok := args["arn"]; !ok {
-		return args, nil, nil
+		return nil, nil, errors.New("arn required to fetch eventbridge replay")
 	}
-	if arn, ok := args["arn"].Value.(string); !ok || arn == "" {
-		return args, nil, nil
+	arn, ok := args["arn"].Value.(string)
+	if !ok || arn == "" {
+		return nil, nil, errors.New("arn required to fetch eventbridge replay")
 	}
-	return args, nil, nil
+	res, err := findEventbridgeArnMatch(runtime, arn,
+		func(eb *mqlAwsEventbridge) *plugin.TValue[[]any] { return eb.GetReplays() },
+		func(item any) string { return item.(*mqlAwsEventbridgeReplay).Arn.Data })
+	if err != nil {
+		return nil, nil, err
+	}
+	if res == nil {
+		// Returning (args, nil, nil) here would let the runtime create a resource
+		// whose fields are all unset, which surfaces as malformed nil data when
+		// those fields are queried.
+		return nil, nil, fmt.Errorf("aws.eventbridge.replay with arn %q not found", arn)
+	}
+	return args, res.(*mqlAwsEventbridgeReplay), nil
 }
 
 // ----- global endpoints -----
@@ -1016,10 +1070,23 @@ func initAwsEventbridgeEndpoint(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return args, nil, nil
 	}
 	if _, ok := args["arn"]; !ok {
-		return args, nil, nil
+		return nil, nil, errors.New("arn required to fetch eventbridge endpoint")
 	}
-	if arn, ok := args["arn"].Value.(string); !ok || arn == "" {
-		return args, nil, nil
+	arn, ok := args["arn"].Value.(string)
+	if !ok || arn == "" {
+		return nil, nil, errors.New("arn required to fetch eventbridge endpoint")
 	}
-	return args, nil, nil
+	res, err := findEventbridgeArnMatch(runtime, arn,
+		func(eb *mqlAwsEventbridge) *plugin.TValue[[]any] { return eb.GetEndpoints() },
+		func(item any) string { return item.(*mqlAwsEventbridgeEndpoint).Arn.Data })
+	if err != nil {
+		return nil, nil, err
+	}
+	if res == nil {
+		// Returning (args, nil, nil) here would let the runtime create a resource
+		// whose fields are all unset, which surfaces as malformed nil data when
+		// those fields are queried.
+		return nil, nil, fmt.Errorf("aws.eventbridge.endpoint with arn %q not found", arn)
+	}
+	return args, res.(*mqlAwsEventbridgeEndpoint), nil
 }

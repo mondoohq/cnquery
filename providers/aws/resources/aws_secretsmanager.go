@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -54,8 +55,8 @@ func initAwsSecretsmanagerSecret(runtime *plugin.Runtime, args map[string]*llx.R
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 
@@ -66,7 +67,10 @@ func initAwsSecretsmanagerSecret(runtime *plugin.Runtime, args map[string]*llx.R
 	arnVal := args["arn"].Value.(string)
 	region, err := GetRegionFromArn(arnVal)
 	if err != nil {
-		return args, nil, nil
+		// Returning (args, nil, nil) here would let the runtime create a
+		// resource whose fields are all unset, which surfaces as malformed
+		// nil data when those fields are queried.
+		return nil, nil, err
 	}
 
 	conn := runtime.Connection.(*connection.AwsConnection)
@@ -148,6 +152,7 @@ func initAwsSecretsmanagerSecret(runtime *plugin.Runtime, args map[string]*llx.R
 	mqlSecretRes := mqlSecret.(*mqlAwsSecretsmanagerSecret)
 	mqlSecretRes.cacheRegion = region
 	mqlSecretRes.cacheType = convert.ToValue(resp.Type)
+	mqlSecretRes.cacheExternalRotationRoleArn = resp.ExternalSecretRotationRoleArn
 	mqlSecretRes.DeletedAt = plugin.TValue[*time.Time]{Data: resp.DeletedDate, State: plugin.StateIsSet}
 
 	// We already have the replication status from DescribeSecret; populate
@@ -290,6 +295,7 @@ func (a *mqlAwsSecretsmanager) getSecrets(conn *connection.AwsConnection) []*job
 					mqlSecretRes := mqlSecret.(*mqlAwsSecretsmanagerSecret)
 					mqlSecretRes.cacheRegion = region
 					mqlSecretRes.cacheType = convert.ToValue(secret.Type)
+					mqlSecretRes.cacheExternalRotationRoleArn = secret.ExternalSecretRotationRoleArn
 					mqlSecretRes.DeletedAt = plugin.TValue[*time.Time]{Data: secret.DeletedDate, State: plugin.StateIsSet}
 					res = append(res, mqlSecret)
 				}
@@ -338,8 +344,22 @@ func (a *mqlAwsSecretsmanagerSecret) replicaRegions() ([]any, error) {
 }
 
 type mqlAwsSecretsmanagerSecretInternal struct {
-	cacheRegion string
-	cacheType   string
+	cacheRegion                  string
+	cacheType                    string
+	cacheExternalRotationRoleArn *string
+}
+
+func (a *mqlAwsSecretsmanagerSecret) externalRotationRole() (*mqlAwsIamRole, error) {
+	if a.cacheExternalRotationRoleArn == nil || *a.cacheExternalRotationRoleArn == "" {
+		a.ExternalRotationRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheExternalRotationRoleArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
 }
 
 func (a *mqlAwsSecretsmanagerSecret) compute_type() (string, error) {
@@ -386,8 +406,43 @@ func (a *mqlAwsSecretsmanagerSecret) versions() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			mqlVersion.(*mqlAwsSecretsmanagerSecretVersion).region = region
+			mqlVersion.(*mqlAwsSecretsmanagerSecretVersion).accountID = conn.AccountId()
 			res = append(res, mqlVersion)
 		}
+	}
+	return res, nil
+}
+
+type mqlAwsSecretsmanagerSecretVersionInternal struct {
+	region    string
+	accountID string
+}
+
+func (a *mqlAwsSecretsmanagerSecretVersion) kmsKeys() ([]any, error) {
+	res := []any{}
+	for _, idAny := range a.KmsKeyIds.Data {
+		keyID, ok := idAny.(string)
+		if !ok || keyID == "" {
+			continue
+		}
+		// Versions encrypted with the AWS-managed secrets manager key report the
+		// literal "DefaultEncryptionKey" sentinel rather than a resolvable key id.
+		if keyID == "DefaultEncryptionKey" {
+			continue
+		}
+		// KmsKeyIds may already be full ARNs or bare key ids; build an ARN from
+		// the version's region + account only when it isn't one already.
+		arnStr := keyID
+		if !strings.HasPrefix(keyID, "arn:") {
+			arnStr = fmt.Sprintf(kmsKeyArnPattern, a.region, a.accountID, keyID)
+		}
+		mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+			map[string]*llx.RawData{"arn": llx.StringData(arnStr)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlKey)
 	}
 	return res, nil
 }
@@ -419,14 +474,5 @@ func (a *mqlAwsSecretsmanagerSecretReplicaRegion) kmsKey() (*mqlAwsKmsKey, error
 }
 
 func secretTagsToMap(tags []secretstypes.Tag) map[string]any {
-	tagsMap := make(map[string]any)
-
-	if len(tags) > 0 {
-		for i := range tags {
-			tag := tags[i]
-			tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
-		}
-	}
-
-	return tagsMap
+	return tagsToMap(tags, func(t secretstypes.Tag) *string { return t.Key }, func(t secretstypes.Tag) *string { return t.Value })
 }

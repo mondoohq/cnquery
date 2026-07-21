@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/eventhub/armeventhub"
@@ -20,14 +21,27 @@ import (
 )
 
 type mqlAzureSubscriptionEventHubServiceNamespaceInternal struct {
-	networkRuleSetFetched bool
-	networkRuleSetProps   *armeventhub.NetworkRuleSetProperties
-	networkRuleSetLock    sync.Mutex
-	cacheSystemData       any
+	networkRuleSetFetched           bool
+	networkRuleSetProps             *armeventhub.NetworkRuleSetProperties
+	networkRuleSetLock              sync.Mutex
+	cacheSystemData                 any
+	cachePrivateEndpointConnections []*armeventhub.PrivateEndpointConnection
+}
+
+func (a *mqlAzureSubscriptionEventHubServiceNamespace) privateEndpointConnections() ([]any, error) {
+	return azurePrivateEndpointConnectionsToMql(a.MqlRuntime, a.cachePrivateEndpointConnections)
 }
 
 type mqlAzureSubscriptionEventHubServiceNamespaceEventHubInternal struct {
 	cacheSystemData any
+}
+
+type mqlAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroupInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionEventHubService) id() (string, error) {
@@ -95,7 +109,9 @@ func (a *mqlAzureSubscriptionEventHubService) namespaces() ([]any, error) {
 			var maximumThroughputUnits int64
 			var minimumTlsVersion, publicNetworkAccess string
 			var cmkKeys []any
+			var creationTime *time.Time
 			if ns.Properties != nil {
+				creationTime = ns.Properties.CreatedAt
 				if ns.Properties.Status != nil {
 					status = *ns.Properties.Status
 				}
@@ -153,6 +169,7 @@ func (a *mqlAzureSubscriptionEventHubService) namespaces() ([]any, error) {
 				"cmkKeySource":                    llx.StringData(cmkKeySource),
 				"requireInfrastructureEncryption": llx.BoolDataPtr(requireInfraEnc),
 				"cmkKeys":                         llx.ArrayData(cmkKeys, types.Dict),
+				"creationTime":                    llx.TimeDataPtr(creationTime),
 			})
 			if err != nil {
 				return nil, err
@@ -161,7 +178,11 @@ func (a *mqlAzureSubscriptionEventHubService) namespaces() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			mqlNs.(*mqlAzureSubscriptionEventHubServiceNamespace).cacheSystemData = sysData
+			mqlNsRes := mqlNs.(*mqlAzureSubscriptionEventHubServiceNamespace)
+			mqlNsRes.cacheSystemData = sysData
+			if ns.Properties != nil {
+				mqlNsRes.cachePrivateEndpointConnections = ns.Properties.PrivateEndpointConnections
+			}
 			res = append(res, mqlNs)
 		}
 	}
@@ -205,7 +226,9 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespace) eventHubs() ([]any, error
 			var partitionCount, messageRetentionInDays int64
 			var status string
 			var partitionIds []any
+			var creationTime *time.Time
 			if eh.Properties != nil {
+				creationTime = eh.Properties.CreatedAt
 				if eh.Properties.PartitionCount != nil {
 					partitionCount = *eh.Properties.PartitionCount
 				}
@@ -231,6 +254,7 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespace) eventHubs() ([]any, error
 				"messageRetentionInDays": llx.IntData(messageRetentionInDays),
 				"status":                 llx.StringData(status),
 				"partitionIds":           llx.ArrayData(partitionIds, types.String),
+				"creationTime":           llx.TimeDataPtr(creationTime),
 			})
 			if err != nil {
 				return nil, err
@@ -286,18 +310,28 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespaceEventHub) consumerGroups() 
 			}
 
 			var userMetadata string
-			if cg.Properties != nil && cg.Properties.UserMetadata != nil {
-				userMetadata = *cg.Properties.UserMetadata
+			var creationTime *time.Time
+			if cg.Properties != nil {
+				creationTime = cg.Properties.CreatedAt
+				if cg.Properties.UserMetadata != nil {
+					userMetadata = *cg.Properties.UserMetadata
+				}
 			}
 
 			mqlCg, err := CreateResource(a.MqlRuntime, "azure.subscription.eventHubService.namespace.eventHub.consumerGroup", map[string]*llx.RawData{
 				"id":           llx.StringDataPtr(cg.ID),
 				"name":         llx.StringDataPtr(cg.Name),
 				"userMetadata": llx.StringData(userMetadata),
+				"creationTime": llx.TimeDataPtr(creationTime),
 			})
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(cg.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlCg.(*mqlAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup).cacheSystemData = sysData
 			res = append(res, mqlCg)
 		}
 	}

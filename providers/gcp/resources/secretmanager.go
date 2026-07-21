@@ -370,6 +370,40 @@ func (g *mqlGcpProjectSecretmanagerServiceSecret) kmsKeys() ([]any, error) {
 	return res, nil
 }
 
+func (g *mqlGcpProjectSecretmanagerServiceSecret) topicRefs() ([]any, error) {
+	if g.Topics.Error != nil {
+		return nil, g.Topics.Error
+	}
+	topics := g.Topics.Data
+	if len(topics) == 0 {
+		return []any{}, nil
+	}
+	res := make([]any, 0, len(topics))
+	for _, raw := range topics {
+		name, ok := raw.(string)
+		if !ok || name == "" {
+			continue
+		}
+		projectId := projectFromResourceName(name)
+		if projectId == "" {
+			continue
+		}
+		t, err := NewResource(g.MqlRuntime, "gcp.project.pubsubService.topic", map[string]*llx.RawData{
+			"projectId": llx.StringData(projectId),
+			"name":      llx.StringData(lastPathSegment(name)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, t)
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectSecretmanagerServiceSecret) managedBy() (string, error) {
+	return managedByFromLabels(g.GetLabels(), g.GetAnnotations())
+}
+
 func (g *mqlGcpProjectSecretmanagerServiceSecret) customerManagedEncryptionEnabled() (bool, error) {
 	if g.CustomerManagedEncryption.Error != nil {
 		return false, g.CustomerManagedEncryption.Error

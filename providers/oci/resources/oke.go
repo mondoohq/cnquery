@@ -154,6 +154,7 @@ func (o *mqlOciOke) getClusters(conn *connection.OciConnection, regions []any) [
 					"freeformTags":                llx.MapData(freeformTags, types.String),
 					"definedTags":                 llx.MapData(definedTags, types.Any),
 					"securityAttributes":          llx.MapData(securityAttributes, types.Dict),
+					"systemTags":                  llx.MapData(definedTagsToAny(cluster.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err
@@ -351,6 +352,7 @@ func (o *mqlOciOkeCluster) nodePools() ([]any, error) {
 			"nodeImageName":     llx.StringDataPtr(np.NodeImageName),
 			"sshPublicKey":      llx.StringDataPtr(np.SshPublicKey),
 			"state":             llx.StringData(string(np.LifecycleState)),
+			"systemTags":        llx.MapData(definedTagsToAny(np.SystemTags), types.Dict),
 		})
 		if err != nil {
 			return nil, err
@@ -358,6 +360,7 @@ func (o *mqlOciOkeCluster) nodePools() ([]any, error) {
 		mqlPool := mqlInstance.(*mqlOciOkeNodePool)
 		mqlPool.cacheSubnetIds = subnetIds
 		mqlPool.cacheNsgIds = nsgIds
+		mqlPool.cacheClusterID = stringValue(np.ClusterId)
 		res = append(res, mqlPool)
 	}
 
@@ -367,6 +370,7 @@ func (o *mqlOciOkeCluster) nodePools() ([]any, error) {
 type mqlOciOkeNodePoolInternal struct {
 	cacheSubnetIds []string
 	cacheNsgIds    []string
+	cacheClusterID string
 }
 
 func (o *mqlOciOkeNodePool) id() (string, error) {

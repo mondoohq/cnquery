@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -18,6 +19,97 @@ import (
 	"go.mondoo.com/mql/v13/providers/azure/connection"
 	"go.mondoo.com/mql/v13/types"
 )
+
+// sortedUserAssignedIdentityIDs returns the keys of a UserAssignedIdentities
+// map (the ARM resource IDs of the assigned managed identities) in stable
+// sorted order. Returns nil when the map is empty.
+func sortedUserAssignedIdentityIDs[V any](m map[string]V) []string {
+	if len(m) == 0 {
+		return nil
+	}
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+// sortedUserAssignedIdentityKeys returns the keys of a UserAssignedIdentities
+// map whose values are non-pointer (e.g. the MySQL flexible server SDK uses
+// map[string]any) in stable sorted order. Returns nil when the map is empty.
+func sortedUserAssignedIdentityKeys[V any](m map[string]V) []string {
+	if len(m) == 0 {
+		return nil
+	}
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+// resolveUserAssignedIdentities resolves a set of user-assigned managed
+// identity ARM resource IDs into typed managedIdentity resources. The IDs are
+// the keys of an SDK UserAssignedIdentities map. The runtime cache short-
+// circuits identities already listed by managedIdentities(); others are
+// fetched on demand by their init. Returns an empty slice when none are set.
+func resolveUserAssignedIdentities(runtime *plugin.Runtime, ids []string) ([]any, error) {
+	res := make([]any, 0, len(ids))
+	for _, id := range ids {
+		if id == "" {
+			continue
+		}
+		mqlIdentity, err := NewResource(runtime, "azure.subscription.managedIdentity",
+			map[string]*llx.RawData{"__id": llx.StringData(id)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlIdentity)
+	}
+	return res, nil
+}
+
+// newSystemAssignedManagedIdentity represents a resource's system-assigned
+// managed identity as a managed-identity resource keyed on its principal ID.
+// Unlike a user-assigned identity it has no standalone ARM resource, so it is
+// synthesized from the owning resource's ID and the identity's principal (and
+// tenant) so the same roleAssignments -> role -> permissions chain can be
+// traversed.
+//
+// When principalID is empty (no system-assigned identity) it marks the caller's
+// field null and returns nil, so callers pass their field pointer and do not
+// guard separately. This mirrors resolveRoleDefinition.
+func newSystemAssignedManagedIdentity(runtime *plugin.Runtime, ownerID, principalID, tenantID string, field *plugin.TValue[*mqlAzureSubscriptionManagedIdentity]) (*mqlAzureSubscriptionManagedIdentity, error) {
+	if principalID == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	r, err := CreateResource(runtime, "azure.subscription.managedIdentity",
+		map[string]*llx.RawData{
+			"__id":        llx.StringData(ownerID + "/systemAssignedIdentity"),
+			"name":        llx.StringData(""),
+			"clientId":    llx.StringData(""),
+			"principalId": llx.StringData(principalID),
+			"tenantId":    llx.StringData(tenantID),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlAzureSubscriptionManagedIdentity), nil
+}
+
+// tenantIDFromIdentityDict extracts the tenantId from a resource's identity dict
+// (the managed-identity block Azure returns on a resource), or "" when absent.
+func tenantIDFromIdentityDict(identity plugin.TValue[any]) string {
+	if id, ok := identity.Data.(map[string]any); ok {
+		if t, ok := id["tenantId"].(string); ok {
+			return t
+		}
+	}
+	return ""
+}
 
 func (a *mqlAzureSubscription) iam() (*mqlAzureSubscriptionAuthorizationService, error) {
 	svc, err := NewResource(a.MqlRuntime, "azure.subscription.authorizationService", map[string]*llx.RawData{
@@ -71,9 +163,19 @@ func (a *mqlAzureSubscriptionAuthorizationService) roles() ([]any, error) {
 			return nil, err
 		}
 		for _, roleDef := range page.Value {
-			roleType := convert.ToValue(roleDef.Properties.RoleType)
+			if roleDef == nil {
+				continue
+			}
+			// Properties is a nullable pointer that is dereferenced throughout
+			// the loop body; normalize to an empty struct to avoid a panic
+			// (mirrors newMqlRoleAssignment below).
+			props := roleDef.Properties
+			if props == nil {
+				props = &authorization.RoleDefinitionProperties{}
+			}
+			roleType := convert.ToValue(props.RoleType)
 			scopes := []any{}
-			for _, s := range roleDef.Properties.AssignableScopes {
+			for _, s := range props.AssignableScopes {
 				if s != nil {
 					scopes = append(scopes, *s)
 				}
@@ -82,8 +184,8 @@ func (a *mqlAzureSubscriptionAuthorizationService) roles() ([]any, error) {
 				map[string]*llx.RawData{
 					"__id":        llx.StringDataPtr(roleDef.ID),
 					"id":          llx.StringDataPtr(roleDef.ID),
-					"name":        llx.StringDataPtr(roleDef.Properties.RoleName),
-					"description": llx.StringDataPtr(roleDef.Properties.Description),
+					"name":        llx.StringDataPtr(props.RoleName),
+					"description": llx.StringDataPtr(props.Description),
 					"type":        llx.StringData(roleType),
 					"scopes":      llx.ArrayData(scopes, types.String),
 				})
@@ -91,7 +193,7 @@ func (a *mqlAzureSubscriptionAuthorizationService) roles() ([]any, error) {
 				return nil, err
 			}
 			mqlRole := mqlRoleDefinition.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition)
-			mqlRole.cachePermissions = roleDef.Properties.Permissions
+			mqlRole.cachePermissions = props.Permissions
 			res = append(res, mqlRole)
 		}
 	}
@@ -259,9 +361,15 @@ func (a *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) role() (*mqlAzu
 	if err != nil {
 		return nil, err
 	}
-	mqlResource := r.(*mqlAzureSubscription)
-	iamResource := mqlResource.GetIam().Data
-	roles := iamResource.GetRoles().Data
+	iam := r.(*mqlAzureSubscription).GetIam()
+	if iam.Error != nil {
+		return nil, iam.Error
+	}
+	rolesVal := iam.Data.GetRoles()
+	if rolesVal.Error != nil {
+		return nil, rolesVal.Error
+	}
+	roles := rolesVal.Data
 	for i := range roles {
 		role := roles[i].(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition)
 		if role.__id == a.roleDefinitionId {
@@ -286,10 +394,9 @@ func (a *mqlAzureSubscriptionAuthorizationService) managedIdentities() ([]any, e
 
 	ctx := context.Background()
 
-	// list all role assignments since we need to attach them to the managed identities
-	roleAssignments := a.GetRoleAssignments().Data
-
-	// list user assigned identities
+	// list user assigned identities; each identity's roleAssignments accessor
+	// resolves its granted roles on demand by filtering the subscription's
+	// (cached) role-assignment list by principal ID.
 	pager := client.NewListBySubscriptionPager(nil)
 	res := []any{}
 	for pager.More() {
@@ -302,22 +409,6 @@ func (a *mqlAzureSubscriptionAuthorizationService) managedIdentities() ([]any, e
 			if err != nil {
 				return nil, err
 			}
-
-			// set assigned roles to nil
-			mqlManagedIdentity.RoleAssignments = plugin.TValue[[]any]{Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
-
-			assignedRoles := []any{}
-			for i := range roleAssignments {
-				roleAssignment := roleAssignments[i].(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment)
-				if roleAssignment.PrincipalId == mqlManagedIdentity.PrincipalId {
-					assignedRoles = append(assignedRoles, roleAssignment)
-				}
-			}
-
-			if len(assignedRoles) > 0 {
-				mqlManagedIdentity.RoleAssignments = plugin.TValue[[]any]{Error: nil, Data: assignedRoles, State: plugin.StateIsSet}
-			}
-
 			res = append(res, mqlManagedIdentity)
 		}
 	}
@@ -376,6 +467,7 @@ func initAzureSubscriptionManagedIdentity(runtime *plugin.Runtime, args map[stri
 
 type mqlAzureSubscriptionManagedIdentityInternal struct {
 	cacheResourceID string
+	cacheSystemData any
 }
 
 func newMqlManagedIdentity(runtime *plugin.Runtime, managedIdentity *armmsi.Identity) (*mqlAzureSubscriptionManagedIdentity, error) {
@@ -401,12 +493,70 @@ func newMqlManagedIdentity(runtime *plugin.Runtime, managedIdentity *armmsi.Iden
 
 	mqlManagedIdentity := r.(*mqlAzureSubscriptionManagedIdentity)
 	mqlManagedIdentity.cacheResourceID = convert.ToValue(managedIdentity.ID)
+
+	sysData, err := convert.JsonToDict(managedIdentity.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlManagedIdentity.cacheSystemData = sysData
+
 	return mqlManagedIdentity, nil
 }
 
+func (a *mqlAzureSubscriptionManagedIdentity) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.__id, a.cacheSystemData, &a.SystemMetadata)
+}
+
 func (a *mqlAzureSubscriptionManagedIdentity) roleAssignments() ([]any, error) {
-	// NOTE: this should never be called since we assign roles during the managed identities query
-	return nil, errors.New("could not fetch role assignments for managed identities")
+	return roleAssignmentsForPrincipal(a.MqlRuntime, a.PrincipalId.Data)
+}
+
+// roleAssignmentsForPrincipal returns the subscription role assignments granted
+// directly to a principal, identified by its object/principal ID. It filters
+// the subscription's role-assignment list (which the runtime caches), so every
+// caller shares a single API fetch rather than issuing a per-principal query.
+// An empty principalId yields no assignments.
+//
+// This is the identity-to-privilege edge of a resource's attack path: a managed
+// identity (system- or user-assigned) resolves to the roles it holds, and each
+// role assignment resolves further to its role definition and permissions.
+func roleAssignmentsForPrincipal(runtime *plugin.Runtime, principalId string) ([]any, error) {
+	if principalId == "" {
+		return []any{}, nil
+	}
+	conn := runtime.Connection.(*connection.AzureConnection)
+	r, err := CreateResource(runtime, "azure.subscription", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(conn.SubId()),
+	})
+	if err != nil {
+		return nil, err
+	}
+	sub := r.(*mqlAzureSubscription)
+	iam := sub.GetIam().Data
+	if iam == nil {
+		return []any{}, nil
+	}
+	all := iam.GetRoleAssignments()
+	if all.Error != nil {
+		return nil, all.Error
+	}
+	return filterRoleAssignmentsByPrincipal(all.Data, principalId), nil
+}
+
+// filterRoleAssignmentsByPrincipal returns the role assignments whose principal
+// ID matches the given principal.
+func filterRoleAssignmentsByPrincipal(assignments []any, principalId string) []any {
+	res := []any{}
+	for _, ra := range assignments {
+		assignment, ok := ra.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment)
+		if !ok {
+			continue
+		}
+		if assignment.PrincipalId.Data == principalId {
+			res = append(res, assignment)
+		}
+	}
+	return res
 }
 
 func (a *mqlAzureSubscriptionManagedIdentity) federatedIdentityCredentials() ([]any, error) {

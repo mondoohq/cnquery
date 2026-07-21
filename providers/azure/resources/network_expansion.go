@@ -8,7 +8,7 @@ import (
 	"errors"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
+	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v10"
 	trafficmanager "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/trafficmanager/armtrafficmanager"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -128,6 +128,20 @@ func (a *mqlAzureSubscriptionNetworkService) trafficManagerProfiles() ([]any, er
 	return res, nil
 }
 
+// trafficManagerProfileEnabled reports whether the Traffic Manager profile is
+// enabled. The SDK models this as an Enabled/Disabled enum; we collapse it to a
+// bool where only the explicit Enabled state is true.
+func trafficManagerProfileEnabled(props *trafficmanager.ProfileProperties) bool {
+	return props != nil && props.ProfileStatus != nil && *props.ProfileStatus == trafficmanager.ProfileStatusEnabled
+}
+
+// trafficManagerEndpointEnabled reports whether the Traffic Manager endpoint is
+// enabled. The SDK models this as an Enabled/Disabled enum; we collapse it to a
+// bool where only the explicit Enabled state is true.
+func trafficManagerEndpointEnabled(props *trafficmanager.EndpointProperties) bool {
+	return props != nil && props.EndpointStatus != nil && *props.EndpointStatus == trafficmanager.EndpointStatusEnabled
+}
+
 func azureTrafficManagerProfileToMql(runtime *plugin.Runtime, p *trafficmanager.Profile) (plugin.Resource, error) {
 	if p == nil {
 		return nil, nil
@@ -145,6 +159,7 @@ func azureTrafficManagerProfileToMql(runtime *plugin.Runtime, p *trafficmanager.
 		"type":                        llx.StringDataPtr(p.Type),
 		"properties":                  llx.DictData(properties),
 		"profileStatus":               llx.StringDataPtr(nil),
+		"status":                      llx.BoolData(false),
 		"trafficRoutingMethod":        llx.StringDataPtr(nil),
 		"trafficViewEnrollmentStatus": llx.StringDataPtr(nil),
 		"maxReturn":                   llx.IntDataDefault[int64](nil, 0),
@@ -163,6 +178,7 @@ func azureTrafficManagerProfileToMql(runtime *plugin.Runtime, p *trafficmanager.
 		s := string(*props.ProfileStatus)
 		args["profileStatus"] = llx.StringData(s)
 	}
+	args["status"] = llx.BoolData(trafficManagerProfileEnabled(props))
 	if props.TrafficRoutingMethod != nil {
 		s := string(*props.TrafficRoutingMethod)
 		args["trafficRoutingMethod"] = llx.StringData(s)
@@ -224,6 +240,7 @@ func azureTrafficManagerEndpointToMql(runtime *plugin.Runtime, ep *trafficmanage
 		"properties":            llx.DictData(properties),
 		"alwaysServe":           llx.StringDataPtr(nil),
 		"endpointStatus":        llx.StringDataPtr(nil),
+		"status":                llx.BoolData(false),
 		"endpointMonitorStatus": llx.StringDataPtr(nil),
 		"target":                llx.StringDataPtr(nil),
 		"targetResourceId":      llx.StringDataPtr(nil),
@@ -251,6 +268,7 @@ func azureTrafficManagerEndpointToMql(runtime *plugin.Runtime, ep *trafficmanage
 		s := string(*props.EndpointStatus)
 		args["endpointStatus"] = llx.StringData(s)
 	}
+	args["status"] = llx.BoolData(trafficManagerEndpointEnabled(props))
 	if props.EndpointMonitorStatus != nil {
 		s := string(*props.EndpointMonitorStatus)
 		args["endpointMonitorStatus"] = llx.StringData(s)
@@ -814,9 +832,95 @@ func initAzureSubscriptionNetworkServiceFirewall(runtime *plugin.Runtime, args m
 	return args, mql, nil
 }
 
+// initAzureSubscriptionNetworkServiceFirewallPolicy resolves a firewall policy
+// by its ARM ID so typed references to it (e.g. from an IP group's
+// firewallPolicies backreference) populate fully rather than staying a husk.
+func initAzureSubscriptionNetworkServiceFirewallPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	if args["id"] == nil {
+		return args, nil, nil
+	}
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
+	azureId, err := ParseResourceID(id)
+	if err != nil {
+		return nil, nil, err
+	}
+	name, err := azureId.Component("firewallPolicies")
+	if err != nil {
+		return nil, nil, err
+	}
+	client, err := network.NewFirewallPoliciesClient(azureId.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.Get(context.Background(), azureId.ResourceGroup, name, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	mql, err := azureFirewallPolicyToMql(runtime, resp.FirewallPolicy)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, mql, nil
+}
+
 // -----------------------------------------------------------------------------
 // ExpressRoute
 // -----------------------------------------------------------------------------
+
+// initAzureSubscriptionNetworkServiceExpressRouteCircuit resolves an ExpressRoute
+// circuit by its ARM ID so typed references to it (e.g. from an ExpressRoute
+// port's circuits) populate fully rather than staying a husk.
+func initAzureSubscriptionNetworkServiceExpressRouteCircuit(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	if args["id"] == nil {
+		return args, nil, nil
+	}
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
+	azureId, err := ParseResourceID(id)
+	if err != nil {
+		return nil, nil, err
+	}
+	name, err := azureId.Component("expressRouteCircuits")
+	if err != nil {
+		return nil, nil, err
+	}
+	client, err := network.NewExpressRouteCircuitsClient(azureId.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.Get(context.Background(), azureId.ResourceGroup, name, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	mql, err := azureExpressRouteCircuitToMql(runtime, &resp.ExpressRouteCircuit)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, mql, nil
+}
 
 func (a *mqlAzureSubscriptionNetworkService) expressRouteCircuits() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)

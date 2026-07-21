@@ -72,3 +72,33 @@ LeapStatus=
 	assert.Equal(t, "", props["SystemNTPServers"])
 	assert.Equal(t, "", props["FallbackNTPServers"])
 }
+
+func TestTimesyncd_StatusFallback(t *testing.T) {
+	// systemd < 239 (e.g. v237 on Ubuntu 18.04) has no `timedatectl show`
+	// verb, so `synchronized` falls back to parsing `timedatectl status`.
+	status := `                      Local time: Wed 2026-06-17 06:34:18 CEST
+                  Universal time: Wed 2026-06-17 04:34:18 UTC
+                        RTC time: Wed 2026-06-17 04:34:18
+                       Time zone: Europe/Berlin (CEST, +0200)
+       System clock synchronized: yes
+systemd-timesyncd.service active: yes
+                 RTC in local TZ: no
+`
+	assert.True(t, parseTimedatectlStatusSynchronized(status))
+
+	notSynced := `       System clock synchronized: no
+systemd-timesyncd.service active: yes
+`
+	assert.False(t, parseTimedatectlStatusSynchronized(notSynced))
+}
+
+func TestTimesyncd_StatusFallbackEdgeCases(t *testing.T) {
+	// Missing line -> not synchronized rather than a false positive.
+	assert.False(t, parseTimedatectlStatusSynchronized(""))
+	assert.False(t, parseTimedatectlStatusSynchronized("Time zone: UTC (UTC, +0000)\n"))
+
+	// Case-insensitive value, and the "active" line must not be mistaken
+	// for the synchronized line.
+	assert.True(t, parseTimedatectlStatusSynchronized("System clock synchronized: Yes\n"))
+	assert.False(t, parseTimedatectlStatusSynchronized("systemd-timesyncd.service active: yes\n"))
+}

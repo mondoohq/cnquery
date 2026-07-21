@@ -4,6 +4,8 @@
 package connection
 
 import (
+	"sync"
+
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclparse"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
@@ -29,6 +31,25 @@ type Connection struct {
 	state           *State
 	plan            *Plan
 	closer          func()
+
+	// features carries the active MQL feature flags (encoded bitset) for this
+	// connection. Used to gate behaviors like Terraform variable resolution.
+	features []byte
+
+	// varCtx memoizes the resolved var.*/local.* evaluation context so it is
+	// built only once per connection. Guarded by varCtxOnce.
+	varCtx     *hcl.EvalContext
+	varCtxOnce sync.Once
+}
+
+// SetFeatures stores the active MQL feature-flag bitset on the connection.
+func (c *Connection) SetFeatures(features []byte) {
+	c.features = features
+}
+
+// Features returns the active MQL feature-flag bitset for this connection.
+func (c *Connection) Features() []byte {
+	return c.features
 }
 
 func (c *Connection) Close() {

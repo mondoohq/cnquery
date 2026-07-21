@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/servicebus/armservicebus"
@@ -20,9 +21,43 @@ import (
 )
 
 type mqlAzureSubscriptionServiceBusServiceNamespaceInternal struct {
-	networkRuleSetFetched bool
-	networkRuleSetProps   *armservicebus.NetworkRuleSetProperties
-	networkRuleSetLock    sync.Mutex
+	networkRuleSetFetched           bool
+	networkRuleSetProps             *armservicebus.NetworkRuleSetProperties
+	networkRuleSetLock              sync.Mutex
+	cacheSystemData                 any
+	cachePrivateEndpointConnections []*armservicebus.PrivateEndpointConnection
+}
+
+func (a *mqlAzureSubscriptionServiceBusServiceNamespace) privateEndpointConnections() ([]any, error) {
+	return azurePrivateEndpointConnectionsToMql(a.MqlRuntime, a.cachePrivateEndpointConnections)
+}
+
+type mqlAzureSubscriptionServiceBusServiceNamespaceQueueInternal struct {
+	cacheSystemData any
+}
+
+type mqlAzureSubscriptionServiceBusServiceNamespaceTopicInternal struct {
+	cacheSystemData any
+}
+
+type mqlAzureSubscriptionServiceBusServiceNamespaceTopicSubscriptionInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionServiceBusServiceNamespace) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionServiceBusServiceNamespaceQueue) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionServiceBusServiceNamespaceTopic) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionServiceBusServiceNamespaceTopicSubscription) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionServiceBusService) id() (string, error) {
@@ -92,7 +127,9 @@ func (a *mqlAzureSubscriptionServiceBusService) namespaces() ([]any, error) {
 			var disableLocalAuth, zoneRedundant bool
 			var requireInfraEnc *bool
 			var cmkKeys []any
+			var creationTime *time.Time
 			if ns.Properties != nil {
+				creationTime = ns.Properties.CreatedAt
 				if ns.Properties.Status != nil {
 					status = *ns.Properties.Status
 				}
@@ -138,9 +175,19 @@ func (a *mqlAzureSubscriptionServiceBusService) namespaces() ([]any, error) {
 				"cmkKeySource":                    llx.StringData(cmkKeySource),
 				"requireInfrastructureEncryption": llx.BoolDataPtr(requireInfraEnc),
 				"cmkKeys":                         llx.ArrayData(cmkKeys, types.Dict),
+				"creationTime":                    llx.TimeDataPtr(creationTime),
 			})
 			if err != nil {
 				return nil, err
+			}
+			sysData, err := convert.JsonToDict(ns.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlNsRes := mqlNs.(*mqlAzureSubscriptionServiceBusServiceNamespace)
+			mqlNsRes.cacheSystemData = sysData
+			if ns.Properties != nil {
+				mqlNsRes.cachePrivateEndpointConnections = ns.Properties.PrivateEndpointConnections
 			}
 			res = append(res, mqlNs)
 		}
@@ -187,7 +234,9 @@ func (a *mqlAzureSubscriptionServiceBusServiceNamespace) queues() ([]any, error)
 			var messageCount, deadLetterMessageCount int64
 			var lockDuration, defaultMessageTimeToLive string
 			var requiresDuplicateDetection, requiresSession, enablePartitioning bool
+			var creationTime *time.Time
 			if q.Properties != nil {
+				creationTime = q.Properties.CreatedAt
 				if q.Properties.Status != nil {
 					status = string(*q.Properties.Status)
 				}
@@ -233,10 +282,16 @@ func (a *mqlAzureSubscriptionServiceBusServiceNamespace) queues() ([]any, error)
 				"requiresDuplicateDetection": llx.BoolData(requiresDuplicateDetection),
 				"requiresSession":            llx.BoolData(requiresSession),
 				"enablePartitioning":         llx.BoolData(enablePartitioning),
+				"creationTime":               llx.TimeDataPtr(creationTime),
 			})
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(q.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlQueue.(*mqlAzureSubscriptionServiceBusServiceNamespaceQueue).cacheSystemData = sysData
 			res = append(res, mqlQueue)
 		}
 	}
@@ -282,7 +337,9 @@ func (a *mqlAzureSubscriptionServiceBusServiceNamespace) topics() ([]any, error)
 			var subscriptionCount int64
 			var enablePartitioning, supportOrdering, requiresDuplicateDetection bool
 			var defaultMessageTimeToLive string
+			var creationTime *time.Time
 			if t.Properties != nil {
+				creationTime = t.Properties.CreatedAt
 				if t.Properties.Status != nil {
 					status = string(*t.Properties.Status)
 				}
@@ -316,10 +373,16 @@ func (a *mqlAzureSubscriptionServiceBusServiceNamespace) topics() ([]any, error)
 				"supportOrdering":            llx.BoolData(supportOrdering),
 				"requiresDuplicateDetection": llx.BoolData(requiresDuplicateDetection),
 				"defaultMessageTimeToLive":   llx.StringData(defaultMessageTimeToLive),
+				"creationTime":               llx.TimeDataPtr(creationTime),
 			})
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(t.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlTopic.(*mqlAzureSubscriptionServiceBusServiceNamespaceTopic).cacheSystemData = sysData
 			res = append(res, mqlTopic)
 		}
 	}
@@ -370,7 +433,9 @@ func (a *mqlAzureSubscriptionServiceBusServiceNamespaceTopic) subscriptions() ([
 			var maxDeliveryCount int64
 			var lockDuration, defaultMessageTimeToLive string
 			var requiresSession bool
+			var creationTime *time.Time
 			if sub.Properties != nil {
+				creationTime = sub.Properties.CreatedAt
 				if sub.Properties.Status != nil {
 					status = string(*sub.Properties.Status)
 				}
@@ -404,10 +469,16 @@ func (a *mqlAzureSubscriptionServiceBusServiceNamespaceTopic) subscriptions() ([
 				"lockDuration":             llx.StringData(lockDuration),
 				"defaultMessageTimeToLive": llx.StringData(defaultMessageTimeToLive),
 				"requiresSession":          llx.BoolData(requiresSession),
+				"creationTime":             llx.TimeDataPtr(creationTime),
 			})
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(sub.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlSub.(*mqlAzureSubscriptionServiceBusServiceNamespaceTopicSubscription).cacheSystemData = sysData
 			res = append(res, mqlSub)
 		}
 	}

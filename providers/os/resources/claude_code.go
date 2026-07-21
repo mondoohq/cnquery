@@ -16,7 +16,6 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/types"
 )
 
 const defaultClaudeCodeConfigDir = ".claude"
@@ -180,47 +179,8 @@ func (r *mqlClaudeCode) plugins() ([]interface{}, error) {
 }
 
 func (r *mqlClaudeCode) skills() ([]interface{}, error) {
-	afs := r.afs()
-	skillsDir := filepath.Join(r.configDir(), "skills")
-
-	subdirs, err := listSubdirsAfero(afs, skillsDir)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	var result []interface{}
-	for _, dir := range subdirs {
-		skillPath := filepath.Join(dir.path, "SKILL.md")
-		data, err := afs.ReadFile(skillPath)
-		if err != nil {
-			continue
-		}
-
-		skill := parseSkillMd(dir.name, skillPath, string(data))
-
-		allowedToolsAny := make([]interface{}, len(skill.allowedTools))
-		for i, t := range skill.allowedTools {
-			allowedToolsAny[i] = t
-		}
-
-		res, err := NewResource(r.MqlRuntime, "claude.code.skill", map[string]*llx.RawData{
-			"__id":         llx.StringData("claude.code.skill/" + dir.name),
-			"name":         llx.StringData(skill.name),
-			"description":  llx.StringData(skill.description),
-			"allowedTools": llx.ArrayData(allowedToolsAny, types.String),
-			"argumentHint": llx.StringData(skill.argumentHint),
-			"source":       llx.StringData(skill.source),
-			"content":      llx.StringData(skill.content),
-		})
-		if err != nil {
-			return nil, err
-		}
-		result = append(result, res)
-	}
-	return result, nil
+	return agentSkills(r.MqlRuntime, "claude.code.skill", r.configDir(), defaultClaudeCodeConfigDir,
+		filepath.Join(defaultClaudeCodeConfigDir, "skills"), filepath.Join(r.configDir(), "skills"))
 }
 
 func (r *mqlClaudeCode) projects() ([]interface{}, error) {
@@ -398,7 +358,7 @@ func (r *mqlClaudeCodePlugin) id() (string, error) {
 }
 
 func (r *mqlClaudeCodeSkill) id() (string, error) {
-	return "claude.code.skill/" + r.Name.Data, nil
+	return "claude.code.skill/" + r.Source.Data, nil
 }
 
 func (r *mqlClaudeCodeSkill) sha256() (string, error) {

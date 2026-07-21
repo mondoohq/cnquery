@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/types"
 	"google.golang.org/protobuf/proto"
 )
@@ -710,7 +711,18 @@ func primitive2array(b *blockExecutor, ref uint64, args []*Primitive) ([]any, ui
 
 		if cur != nil {
 			if cur.Error != nil {
-				return nil, 0, cur.Error
+				// In execution mode (b != nil) a bad element is a real
+				// computation error and must propagate. During late value
+				// extraction (b == nil) it must not: discarding the whole
+				// collection here is what let one malformed element empty an
+				// entire array and surface as an empty assessment. Log it and
+				// null out just that element instead.
+				if b != nil {
+					return nil, 0, cur.Error
+				}
+				log.Error().Err(cur.Error).Int("index", i).Msg("llx: dropping malformed array element during value conversion, coercing to null")
+				res[i] = nil
+				continue
 			}
 			res[i] = cur.Value
 		}
@@ -733,7 +745,12 @@ func primitive2mapV2(m map[string]*Primitive) (map[string]any, error) {
 		}
 		cur := v.RawData()
 		if cur.Error != nil {
-			return nil, cur.Error
+			// Loud-and-narrow: a single malformed element must not discard the
+			// whole map. Log it and null out just this key. (Previously this
+			// propagated up and the surrounding collection was emptied.)
+			log.Error().Err(cur.Error).Str("key", k).Msg("llx: dropping malformed map element during value conversion, coercing to null")
+			res[k] = nil
+			continue
 		}
 		res[k] = cur.Value
 	}
@@ -755,7 +772,10 @@ func primitive2rawdataMapV2(m map[string]*Primitive) (map[string]any, error) {
 		}
 		cur := v.RawData()
 		if cur.Error != nil {
-			return nil, cur.Error
+			// Loud-and-narrow: keep the erroring RawData under its key so the
+			// error stays inspectable per-element, and log it — but never
+			// discard the surrounding map because one element is malformed.
+			log.Error().Err(cur.Error).Str("key", k).Msg("llx: malformed map element during value conversion, keeping per-key error")
 		}
 		res[k] = cur
 	}
@@ -765,9 +785,26 @@ func primitive2rawdataMapV2(m map[string]*Primitive) (map[string]any, error) {
 // RawData converts the primitive into the internal go-representation of the
 // data that can be used for computations
 func (p *Primitive) RawData() *RawData {
-	// FIXME: This is a stopgap. It points to an underlying problem that exists and needs fixing.
+	// A primitive with no type information is malformed: it is never produced
+	// deliberately (a genuine null is `NilPrimitive`, with Type == types.Nil).
+	// It only appears when an upstream layer emits a broken primitive — a
+	// provider encoding an unset field (see plugin.TValue.ToDataRes) or the
+	// compiler binding a predicate's value field to a resource that lacks it
+	// (see mqlc.addValueFieldChunks).
+	//
+	// Behavior here is loud-and-narrow:
+	//   - narrow: coerce just this field to null instead of returning an error.
+	//     An error would propagate through primitive2array / primitive2rawdataMapV2
+	//     and discard the entire surrounding collection (parray2raw rewrites the
+	//     dropped slice to an empty `[]`), so one broken leaf would empty a whole
+	//     failing-resource list and surface as an empty assessment.
+	//   - loud: log it. Silently coercing to a fake-valid null is what made the
+	//     original compiler bug nearly impossible to find; logging keeps the
+	//     underlying (usually compiler) defect visible even though we degrade
+	//     gracefully for the surrounding data.
 	if p.GetType() == "" {
-		return &RawData{Error: errors.New("cannot convert primitive with NO type information")}
+		log.Error().Msg("llx: encountered a primitive with no type information, coercing to null (an upstream layer — a provider or the compiler — produced a malformed primitive)")
+		return &RawData{Type: types.Nil}
 	}
 
 	typ := types.Type(p.Type)

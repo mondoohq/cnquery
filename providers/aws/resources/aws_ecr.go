@@ -7,9 +7,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	ecrtypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/aws/aws-sdk-go-v2/service/ecrpublic"
@@ -197,27 +199,7 @@ func (a *mqlAwsEcr) getPrivateRepositories(conn *connection.AwsConnection) []*jo
 						return nil, err
 					}
 					for _, r := range repoResp.Repositories {
-						imageScanOnPush := false
-						if r.ImageScanningConfiguration != nil {
-							imageScanOnPush = r.ImageScanningConfiguration.ScanOnPush
-						}
-						var encryptionType string
-						if r.EncryptionConfiguration != nil {
-							encryptionType = string(r.EncryptionConfiguration.EncryptionType)
-						}
-						mqlRepoResource, err := CreateResource(a.MqlRuntime, ResourceAwsEcrRepository,
-							map[string]*llx.RawData{
-								"arn":                llx.StringDataPtr(r.RepositoryArn),
-								"name":               llx.StringDataPtr(r.RepositoryName),
-								"uri":                llx.StringDataPtr(r.RepositoryUri),
-								"registryId":         llx.StringDataPtr(r.RegistryId),
-								"public":             llx.BoolData(false),
-								"region":             llx.StringData(region),
-								"imageScanOnPush":    llx.BoolData(imageScanOnPush),
-								"imageTagMutability": llx.StringData(string(r.ImageTagMutability)),
-								"encryptionType":     llx.StringData(encryptionType),
-								"createdAt":          llx.TimeDataPtr(r.CreatedAt),
-							})
+						mqlRepoResource, err := buildEcrPrivateRepositoryResource(a.MqlRuntime, region, r)
 						if err != nil {
 							return nil, err
 						}
@@ -291,14 +273,15 @@ func (a *mqlAwsEcrRepository) images() ([]any, error) {
 				}
 				mqlImage, err := CreateResource(a.MqlRuntime, ResourceAwsEcrImage,
 					map[string]*llx.RawData{
-						"digest":     llx.StringDataPtr(image.ImageDigest),
-						"mediaType":  llx.StringDataPtr(image.ImageManifestMediaType),
-						"tags":       llx.ArrayData(toInterfaceArr(image.ImageTags), types.String),
-						"registryId": llx.StringDataPtr(image.RegistryId),
-						"repoName":   llx.StringData(name),
-						"region":     llx.StringData(region),
-						"arn":        llx.StringData(ecrImageArn(ImageInfo{Region: region, RegistryId: convert.ToValue(image.RegistryId), RepoName: name, Digest: convert.ToValue(image.ImageDigest)})),
-						"uri":        llx.StringData(uri),
+						"digest":            llx.StringDataPtr(image.ImageDigest),
+						"mediaType":         llx.StringDataPtr(image.ImageManifestMediaType),
+						"artifactMediaType": llx.StringDataPtr(image.ArtifactMediaType),
+						"tags":              llx.ArrayData(toInterfaceArr(image.ImageTags), types.String),
+						"registryId":        llx.StringDataPtr(image.RegistryId),
+						"repoName":          llx.StringData(name),
+						"region":            llx.StringData(region),
+						"arn":               llx.StringData(ecrImageArn(ImageInfo{Region: region, RegistryId: convert.ToValue(image.RegistryId), RepoName: name, Digest: convert.ToValue(image.ImageDigest)})),
+						"uri":               llx.StringData(uri),
 					})
 				if err != nil {
 					return nil, err
@@ -333,6 +316,7 @@ func (a *mqlAwsEcrRepository) images() ([]any, error) {
 					"digest":               llx.StringDataPtr(image.ImageDigest),
 					"lastRecordedPullTime": llx.TimeDataPtr(image.LastRecordedPullTime),
 					"mediaType":            llx.StringDataPtr(image.ImageManifestMediaType),
+					"artifactMediaType":    llx.StringDataPtr(image.ArtifactMediaType),
 					"pushedAt":             llx.TimeDataPtr(image.ImagePushedAt),
 					"region":               llx.StringData(region),
 					"registryId":           llx.StringDataPtr(image.RegistryId),
@@ -500,15 +484,32 @@ func EcrImageName(i ImageInfo) string {
 	return i.RepoName + "@" + i.Digest
 }
 
+func (a *mqlAwsEcrImage) repository() (*mqlAwsEcrRepository, error) {
+	repoName := a.RepoName.Data
+	if repoName == "" {
+		a.Repository.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	arnVal := fmt.Sprintf("arn:aws:ecr:%s:%s:repository/%s", a.Region.Data, a.RegistryId.Data, repoName)
+	res, err := NewResource(a.MqlRuntime, "aws.ecr.repository",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		// Public-gallery images and cross-account repositories won't resolve to a
+		// repository in this account; leave the reference null rather than failing.
+		a.Repository.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return res.(*mqlAwsEcrRepository), nil
+}
+
 func initAwsEcrImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["name"] = llx.StringData(ids.name)
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 
@@ -572,22 +573,7 @@ func (a *mqlAwsEcr) publicRepositories() ([]any, error) {
 			}
 
 			for _, r := range repoResp.Repositories {
-				mqlRepoResource, err := CreateResource(a.MqlRuntime, ResourceAwsEcrRepository,
-					map[string]*llx.RawData{
-						"arn":        llx.StringDataPtr(r.RepositoryArn),
-						"name":       llx.StringDataPtr(r.RepositoryName),
-						"uri":        llx.StringDataPtr(r.RepositoryUri),
-						"registryId": llx.StringDataPtr(r.RegistryId),
-						"public":     llx.BoolData(true),
-						"region":     llx.StringData("us-east-1"),
-						// Public ECR does not support scan-on-push, uses immutable tags,
-						// and always uses AES256 encryption. These are platform-enforced
-						// defaults (not returned by the public ECR DescribeRepositories API).
-						"imageScanOnPush":    llx.BoolData(false),
-						"imageTagMutability": llx.StringData("IMMUTABLE"),
-						"encryptionType":     llx.StringData("AES256"),
-						"createdAt":          llx.TimeDataPtr(r.CreatedAt),
-					})
+				mqlRepoResource, err := buildEcrPublicRepositoryResource(a.MqlRuntime, r)
 				if err != nil {
 					return nil, err
 				}
@@ -599,10 +585,79 @@ func (a *mqlAwsEcr) publicRepositories() ([]any, error) {
 	return res, nil
 }
 
+func buildEcrPrivateRepositoryResource(runtime *plugin.Runtime, region string, r ecrtypes.Repository) (*mqlAwsEcrRepository, error) {
+	imageScanOnPush := false
+	if r.ImageScanningConfiguration != nil {
+		imageScanOnPush = r.ImageScanningConfiguration.ScanOnPush
+	}
+	var encryptionType string
+	var kmsKeyArn *string
+	if r.EncryptionConfiguration != nil {
+		encryptionType = string(r.EncryptionConfiguration.EncryptionType)
+		kmsKeyArn = r.EncryptionConfiguration.KmsKey
+	}
+	mqlRepoResource, err := CreateResource(runtime, ResourceAwsEcrRepository,
+		map[string]*llx.RawData{
+			"arn":                llx.StringDataPtr(r.RepositoryArn),
+			"name":               llx.StringDataPtr(r.RepositoryName),
+			"uri":                llx.StringDataPtr(r.RepositoryUri),
+			"registryId":         llx.StringDataPtr(r.RegistryId),
+			"public":             llx.BoolData(false),
+			"region":             llx.StringData(region),
+			"imageScanOnPush":    llx.BoolData(imageScanOnPush),
+			"imageTagMutability": llx.StringData(string(r.ImageTagMutability)),
+			"encryptionType":     llx.StringData(encryptionType),
+			"createdAt":          llx.TimeDataPtr(r.CreatedAt),
+		})
+	if err != nil {
+		return nil, err
+	}
+	res := mqlRepoResource.(*mqlAwsEcrRepository)
+	res.cacheKmsKeyArn = kmsKeyArn
+	return res, nil
+}
+
+func buildEcrPublicRepositoryResource(runtime *plugin.Runtime, r ecrpublic_types.Repository) (*mqlAwsEcrRepository, error) {
+	mqlRepoResource, err := CreateResource(runtime, ResourceAwsEcrRepository,
+		map[string]*llx.RawData{
+			"arn":        llx.StringDataPtr(r.RepositoryArn),
+			"name":       llx.StringDataPtr(r.RepositoryName),
+			"uri":        llx.StringDataPtr(r.RepositoryUri),
+			"registryId": llx.StringDataPtr(r.RegistryId),
+			"public":     llx.BoolData(true),
+			"region":     llx.StringData("us-east-1"),
+			// Public ECR does not support scan-on-push, uses immutable tags,
+			// and always uses AES256 encryption. These are platform-enforced
+			// defaults (not returned by the public ECR DescribeRepositories API).
+			"imageScanOnPush":    llx.BoolData(false),
+			"imageTagMutability": llx.StringData("IMMUTABLE"),
+			"encryptionType":     llx.StringData("AES256"),
+			"createdAt":          llx.TimeDataPtr(r.CreatedAt),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlRepoResource.(*mqlAwsEcrRepository), nil
+}
+
 type mqlAwsEcrRepositoryInternal struct {
 	catalogFetched bool
 	catalogData    *ecrpublic_types.RepositoryCatalogData
 	catalogLock    sync.Mutex
+	cacheKmsKeyArn *string
+}
+
+func (a *mqlAwsEcrRepository) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheKmsKeyArn == nil || *a.cacheKmsKeyArn == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.kms.key",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheKmsKeyArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsKmsKey), nil
 }
 
 func (a *mqlAwsEcrRepository) fetchCatalogData() (*ecrpublic_types.RepositoryCatalogData, error) {
@@ -910,9 +965,8 @@ func initAwsEcrRepository(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["name"] = llx.StringData(ids.name)
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 
@@ -920,6 +974,59 @@ func initAwsEcrRepository(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return nil, nil, errors.New("arn or name required to fetch ecr repository")
 	}
 
+	// When an ARN is supplied, the registry kind (private vs public), region,
+	// and repository name are all encoded in it, so we can issue a single
+	// targeted DescribeRepositories call instead of listing every repository in
+	// every region (plus all public repos).
+	if args["arn"] != nil {
+		arnVal, _ := args["arn"].Value.(string)
+		if parsed, err := arn.Parse(arnVal); err == nil && strings.HasPrefix(parsed.Resource, "repository/") {
+			name := strings.TrimPrefix(parsed.Resource, "repository/")
+			conn := runtime.Connection.(*connection.AwsConnection)
+			switch parsed.Service {
+			case "ecr-public":
+				svc := conn.EcrPublic("us-east-1") // only supported for us-east-1
+				resp, err := svc.DescribeRepositories(context.Background(), &ecrpublic.DescribeRepositoriesInput{
+					RegistryId:      aws.String(conn.AccountId()),
+					RepositoryNames: []string{name},
+				}, withEcrPublicDescribeRetries)
+				if err != nil {
+					// Surface unexpected errors; on access-denied or a stale ARN
+					// (RepositoryNotFoundException) fall through to the list-scan.
+					if !Is400AccessDeniedError(err) && !isResourceNotFoundError(err) {
+						return nil, nil, err
+					}
+				} else if len(resp.Repositories) > 0 {
+					r, err := buildEcrPublicRepositoryResource(runtime, resp.Repositories[0])
+					if err != nil {
+						return nil, nil, err
+					}
+					return args, r, nil
+				}
+			case "ecr":
+				svc := conn.Ecr(parsed.Region)
+				resp, err := svc.DescribeRepositories(context.Background(), &ecr.DescribeRepositoriesInput{
+					RepositoryNames: []string{name},
+				}, withEcrDescribeRetries)
+				if err != nil {
+					// Surface unexpected errors; on access-denied or a stale ARN
+					// (RepositoryNotFoundException) fall through to the list-scan.
+					if !Is400AccessDeniedError(err) && !isResourceNotFoundError(err) {
+						return nil, nil, err
+					}
+				} else if len(resp.Repositories) > 0 {
+					r, err := buildEcrPrivateRepositoryResource(runtime, parsed.Region, resp.Repositories[0])
+					if err != nil {
+						return nil, nil, err
+					}
+					return args, r, nil
+				}
+			}
+		}
+	}
+
+	// Fallback: list private + public repositories and scan (e.g. when called
+	// with only a name and no ARN, or the targeted lookup was denied/not found).
 	obj, err := CreateResource(runtime, ResourceAwsEcr, map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err

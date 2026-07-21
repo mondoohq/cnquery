@@ -8,10 +8,19 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/docker/docker/client"
+	"github.com/moby/moby/client"
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.com/mql/v13/providers/os/resources/discovery/docker_engine"
 )
+
+func newClientFromDockerEnv(t *testing.T) (*client.Client, error) {
+	t.Helper()
+	opts, err := docker_engine.FromDockerEnv()
+	if err != nil {
+		return nil, err
+	}
+	return client.New(opts...)
+}
 
 func TestDockerEnvParsing(t *testing.T) {
 	// reset env from https://go.dev/src/os/env_test.go
@@ -24,36 +33,36 @@ func TestDockerEnvParsing(t *testing.T) {
 		}
 	}(os.Environ())
 
-	cli, err := client.NewClientWithOpts(docker_engine.FromDockerEnv)
+	cli, err := newClientFromDockerEnv(t)
 	assert.Nil(t, err)
 	assert.Equal(t, "unix:///var/run/docker.sock", cli.DaemonHost())
 
 	os.Setenv("DOCKER_HOST", "tcp://0.0.0.0:2375")
-	cli, err = client.NewClientWithOpts(docker_engine.FromDockerEnv)
+	cli, err = newClientFromDockerEnv(t)
 	assert.Nil(t, err)
 	assert.Equal(t, "tcp://0.0.0.0:2375", cli.DaemonHost())
 
 	os.Setenv("DOCKER_HOST", "unix:///var/run/docker.sock")
-	cli, err = client.NewClientWithOpts(docker_engine.FromDockerEnv)
+	cli, err = newClientFromDockerEnv(t)
 	assert.Nil(t, err)
 	assert.Equal(t, "unix:///var/run/docker.sock", cli.DaemonHost())
 
 	os.Setenv("DOCKER_HOST", "192.186.1.1")
-	cli, err = client.NewClientWithOpts(docker_engine.FromDockerEnv)
+	cli, err = newClientFromDockerEnv(t)
 	assert.Nil(t, err)
 	assert.Equal(t, "tcp://192.186.1.1:2375", cli.DaemonHost())
 
 	os.Setenv("DOCKER_HOST", "http://192.186.1.1")
-	_, err = client.NewClientWithOpts(docker_engine.FromDockerEnv)
+	_, err = newClientFromDockerEnv(t)
 	assert.NotNil(t, err)
 
 	os.Setenv("DOCKER_HOST", "tcp://192.186.1.1")
-	cli, err = client.NewClientWithOpts(docker_engine.FromDockerEnv)
+	cli, err = newClientFromDockerEnv(t)
 	assert.Nil(t, err)
 	assert.Equal(t, "tcp://192.186.1.1:2375", cli.DaemonHost())
 
 	os.Setenv("DOCKER_HOST", "tcp://192.168.59.103:2377")
-	cli, err = client.NewClientWithOpts(docker_engine.FromDockerEnv)
+	cli, err = newClientFromDockerEnv(t)
 	assert.Nil(t, err)
 	assert.Equal(t, "tcp://192.168.59.103:2377", cli.DaemonHost())
 }

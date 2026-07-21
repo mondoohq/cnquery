@@ -59,12 +59,9 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			req.Asset.Name = host
 		}
 
-		req.Asset.Platform = &inventory.Platform{
-			Name:    "proxmox",
-			Title:   "Proxmox VE",
-			Family:  []string{"proxmox"},
-			Kind:    "api",
-			Runtime: "proxmox",
+		req.Asset.Platform = &inventory.Platform{}
+		if pi, ok := connection.PlatformByName("proxmox"); ok {
+			pi.Apply(req.Asset.Platform)
 		}
 
 		req.Asset.PlatformIds = []string{

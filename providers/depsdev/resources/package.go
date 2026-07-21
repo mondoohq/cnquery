@@ -20,6 +20,13 @@ type mqlDepsdevPackageInternal struct {
 
 type mqlDepsdevPackageVersionInternal struct {
 	packageName string
+	fetched     bool
+	lock        sync.Mutex
+}
+
+type mqlDepsdevRelatedProjectInternal struct {
+	projectID string
+	versionID string
 }
 
 func initDepsdevPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -66,11 +73,15 @@ func (r *mqlDepsdevPackage) fetchPackageInfo() error {
 	for _, v := range pkg.Versions {
 		publishedAt := v.PublishedAt
 
+		// Pass __id explicitly: CreateResource calls id() before packageName is
+		// set below, so id() would otherwise build a key with an empty package
+		// name and collide across packages that share a version string.
+		vid := "depsdev.packageVersion/" + r.Name.Data + "@" + v.VersionKey.Version
 		vr, err := CreateResource(r.MqlRuntime, "depsdev.packageVersion", map[string]*llx.RawData{
+			"__id":        llx.StringData(vid),
 			"version":     llx.StringData(v.VersionKey.Version),
 			"publishedAt": llx.TimeData(publishedAt),
 			"isDefault":   llx.BoolData(v.IsDefault),
-			"licenses":    llx.ArrayData([]any{}, "\x09"), // licenses are not in the package endpoint
 		})
 		if err != nil {
 			return err
@@ -142,28 +153,155 @@ func (r *mqlDepsdevPackage) project() (*mqlDepsdevProject, error) {
 		return nil, err
 	}
 
-	// Find the first related project
+	// Prefer the source repository relation; fall back to the first related
+	// project with a non-empty id.
+	projectID := ""
 	for _, rp := range ver.RelatedProjects {
-		projectID := rp.ProjectKey.ID
-		if projectID == "" {
+		if rp.ProjectKey.ID == "" {
 			continue
 		}
-
-		res, err := NewResource(r.MqlRuntime, "depsdev.project", map[string]*llx.RawData{
-			"id": llx.StringData(projectID),
-		})
-		if err != nil {
-			return nil, err
+		if rp.RelationType == "SOURCE_REPO" {
+			projectID = rp.ProjectKey.ID
+			break
 		}
-		return res.(*mqlDepsdevProject), nil
+		if projectID == "" {
+			projectID = rp.ProjectKey.ID
+		}
 	}
 
-	r.Project.State = plugin.StateIsNull | plugin.StateIsSet
-	return nil, nil
+	if projectID == "" {
+		r.Project.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	res, err := NewResource(r.MqlRuntime, "depsdev.project", map[string]*llx.RawData{
+		"id": llx.StringData(projectID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlDepsdevProject), nil
 }
 
 // depsdev.packageVersion
 
 func (r *mqlDepsdevPackageVersion) id() (string, error) {
 	return "depsdev.packageVersion/" + r.packageName + "@" + r.Version.Data, nil
+}
+
+// fetchVersionDetail fetches the version detail from deps.dev and populates
+// licenses, links, registries, slsaProvenances, and relatedProjects in one call.
+func (r *mqlDepsdevPackageVersion) fetchVersionDetail() error {
+	if r.fetched {
+		return nil
+	}
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	if r.fetched {
+		return nil
+	}
+
+	conn := r.MqlRuntime.Connection.(*connection.DepsDevConnection)
+
+	ver, err := fetchVersion(conn.HttpClient, r.packageName, r.Version.Data)
+	if err != nil {
+		return err
+	}
+
+	licenses := make([]any, 0, len(ver.Licenses))
+	for _, l := range ver.Licenses {
+		licenses = append(licenses, l)
+	}
+	r.Licenses = plugin.TValue[[]any]{Data: licenses, State: plugin.StateIsSet}
+
+	links := map[string]any{}
+	for _, lk := range ver.Links {
+		if lk.Label == "" {
+			continue
+		}
+		links[lk.Label] = lk.URL
+	}
+	r.Links = plugin.TValue[map[string]any]{Data: links, State: plugin.StateIsSet}
+
+	registries := make([]any, 0, len(ver.Registries))
+	for _, rg := range ver.Registries {
+		registries = append(registries, rg)
+	}
+	r.Registries = plugin.TValue[[]any]{Data: registries, State: plugin.StateIsSet}
+
+	provenances := make([]any, 0, len(ver.SlsaProvenances))
+	for _, p := range ver.SlsaProvenances {
+		provenances = append(provenances, map[string]any{
+			"sourceRepository": p.SourceRepository,
+			"commit":           p.Commit,
+			"url":              p.URL,
+			"verified":         p.Verified,
+		})
+	}
+	r.SlsaProvenances = plugin.TValue[[]any]{Data: provenances, State: plugin.StateIsSet}
+
+	versionID := r.packageName + "@" + r.Version.Data
+	related := make([]any, 0, len(ver.RelatedProjects))
+	for _, rp := range ver.RelatedProjects {
+		// Pass __id explicitly: CreateResource calls id() before the Internal
+		// fields below are set, so id() cannot build the key from them.
+		id := "depsdev.relatedProject/" + versionID + "/" + rp.RelationType + "/" + rp.ProjectKey.ID
+		res, err := CreateResource(r.MqlRuntime, "depsdev.relatedProject", map[string]*llx.RawData{
+			"__id":               llx.StringData(id),
+			"relationType":       llx.StringData(rp.RelationType),
+			"relationProvenance": llx.StringData(rp.RelationProvenance),
+		})
+		if err != nil {
+			return err
+		}
+		mqlRp := res.(*mqlDepsdevRelatedProject)
+		mqlRp.projectID = rp.ProjectKey.ID
+		mqlRp.versionID = versionID
+		related = append(related, res)
+	}
+	r.RelatedProjects = plugin.TValue[[]any]{Data: related, State: plugin.StateIsSet}
+
+	r.fetched = true
+	return nil
+}
+
+func (r *mqlDepsdevPackageVersion) licenses() ([]any, error) {
+	return nil, r.fetchVersionDetail()
+}
+
+func (r *mqlDepsdevPackageVersion) links() (map[string]any, error) {
+	return nil, r.fetchVersionDetail()
+}
+
+func (r *mqlDepsdevPackageVersion) registries() ([]any, error) {
+	return nil, r.fetchVersionDetail()
+}
+
+func (r *mqlDepsdevPackageVersion) slsaProvenances() ([]any, error) {
+	return nil, r.fetchVersionDetail()
+}
+
+func (r *mqlDepsdevPackageVersion) relatedProjects() ([]any, error) {
+	return nil, r.fetchVersionDetail()
+}
+
+// depsdev.relatedProject
+
+func (r *mqlDepsdevRelatedProject) id() (string, error) {
+	return "depsdev.relatedProject/" + r.versionID + "/" + r.RelationType.Data + "/" + r.projectID, nil
+}
+
+func (r *mqlDepsdevRelatedProject) project() (*mqlDepsdevProject, error) {
+	if r.projectID == "" {
+		r.Project.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	res, err := NewResource(r.MqlRuntime, "depsdev.project", map[string]*llx.RawData{
+		"id": llx.StringData(r.projectID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlDepsdevProject), nil
 }

@@ -23,7 +23,9 @@ import (
 )
 
 type mqlAzureSubscriptionContainerAppServiceContainerAppInternal struct {
-	cacheRGAndName struct {
+	cacheSystemData              any
+	cacheUserAssignedIdentityIds []string
+	cacheRGAndName               struct {
 		resourceGroup string
 		name          string
 	}
@@ -36,7 +38,8 @@ type mqlAzureSubscriptionContainerAppServiceContainerAppInternal struct {
 }
 
 type mqlAzureSubscriptionContainerAppServiceManagedEnvironmentInternal struct {
-	cacheRGAndName struct {
+	cacheSystemData any
+	cacheRGAndName  struct {
 		resourceGroup string
 		name          string
 	}
@@ -55,6 +58,78 @@ type mqlAzureSubscriptionContainerAppServiceManagedEnvironmentInternal struct {
 	maintenanceLock     sync.Mutex
 	maintenanceFetched  atomic.Bool
 	maintenanceCache    []any
+}
+
+type mqlAzureSubscriptionContainerAppServiceJobInternal struct {
+	cacheSystemData any
+}
+
+type mqlAzureSubscriptionContainerAppServiceManagedEnvironmentDaprComponentInternal struct {
+	cacheSystemData any
+}
+
+type mqlAzureSubscriptionContainerAppServiceManagedEnvironmentCertificateInternal struct {
+	cacheSystemData any
+}
+
+type mqlAzureSubscriptionContainerAppServiceContainerAppRevisionInternal struct {
+	cacheSystemData any
+}
+
+type mqlAzureSubscriptionContainerAppServiceContainerAppAuthConfigInternal struct {
+	cacheSystemData any
+}
+
+type mqlAzureSubscriptionContainerAppServiceManagedEnvironmentPrivateEndpointConnectionInternal struct {
+	cacheSystemData any
+}
+
+type mqlAzureSubscriptionContainerAppServiceManagedEnvironmentHttpRouteConfigInternal struct {
+	cacheSystemData any
+}
+
+type mqlAzureSubscriptionContainerAppServiceManagedEnvironmentMaintenanceConfigurationInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionContainerAppServiceContainerApp) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionContainerAppServiceJob) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironmentDaprComponent) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironmentCertificate) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionContainerAppServiceContainerAppRevision) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionContainerAppServiceContainerAppAuthConfig) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironmentPrivateEndpointConnection) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironmentHttpRouteConfig) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironmentMaintenanceConfiguration) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionContainerAppService) id() (string, error) {
@@ -166,6 +241,82 @@ func initAzureSubscriptionContainerAppServiceContainerApp(runtime *plugin.Runtim
 		return nil, nil, err
 	}
 	return args, mql, nil
+}
+
+func (a *mqlAzureSubscriptionContainerAppServiceContainerApp) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
+}
+
+func (a *mqlAzureSubscriptionContainerAppServiceContainerApp) systemAssignedIdentity() (*mqlAzureSubscriptionManagedIdentity, error) {
+	return newSystemAssignedManagedIdentity(a.MqlRuntime, a.Id.Data, a.PrincipalId.Data, tenantIDFromIdentityDict(a.Identity), &a.SystemAssignedIdentity)
+}
+
+// managedEnvironment resolves the parent managed environment of the container
+// app from its ARM resource ID. The runtime cache short-circuits environments
+// already listed by managedEnvironments(); otherwise the init fetches it on
+// demand.
+func (a *mqlAzureSubscriptionContainerAppServiceContainerApp) managedEnvironment() (*mqlAzureSubscriptionContainerAppServiceManagedEnvironment, error) {
+	if a.ManagedEnvironmentId.Data == "" {
+		a.ManagedEnvironment.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.containerAppService.managedEnvironment",
+		map[string]*llx.RawData{"id": llx.StringData(a.ManagedEnvironmentId.Data)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionContainerAppServiceManagedEnvironment), nil
+}
+
+// initAzureSubscriptionContainerAppServiceManagedEnvironment resolves a single
+// managed environment by its ARM resource ID so typed cross-references (and
+// platform-discovered assets) can be queried directly without re-listing every
+// environment in the subscription.
+func initAzureSubscriptionContainerAppServiceManagedEnvironment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["id"] = llx.StringData(ids.id)
+		}
+	}
+
+	if args["id"] == nil {
+		return args, nil, nil
+	}
+
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, nil, err
+	}
+	envName, err := resourceID.Component("managedEnvironments")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	client, err := apps.NewManagedEnvironmentsClient(resourceID.SubscriptionID, conn.Token(), acaClientOptions(conn))
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.Get(context.Background(), resourceID.ResourceGroup, envName, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	mqlEnv, err := acaManagedEnvironmentToMQL(runtime, &resp.ManagedEnvironment)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, mqlEnv, nil
 }
 
 // resourceGroupAndName parses an ARM resource ID and returns the resource
@@ -352,6 +503,11 @@ func acaManagedEnvironmentToMQL(runtime *plugin.Runtime, entry *apps.ManagedEnvi
 	rg, name := resourceGroupAndName(envRes.Id.Data, "managedEnvironments")
 	envRes.cacheRGAndName.resourceGroup = rg
 	envRes.cacheRGAndName.name = name
+	sysData, err := convert.JsonToDict(entry.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	envRes.cacheSystemData = sysData
 	return envRes, nil
 }
 
@@ -435,6 +591,11 @@ func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) daprComponen
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(entry.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlComp.(*mqlAzureSubscriptionContainerAppServiceManagedEnvironmentDaprComponent).cacheSystemData = sysData
 			res = append(res, mqlComp)
 		}
 	}
@@ -534,6 +695,11 @@ func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) certificates
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(entry.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlCert.(*mqlAzureSubscriptionContainerAppServiceManagedEnvironmentCertificate).cacheSystemData = sysData
 			res = append(res, mqlCert)
 		}
 	}
@@ -722,12 +888,16 @@ func acaContainerAppToMQL(runtime *plugin.Runtime, entry *apps.ContainerApp) (pl
 		}
 	}
 
+	var principalId *string
+	var userAssignedIdentityIds []string
 	if entry.Identity != nil {
 		d, err := convert.JsonToDict(entry.Identity)
 		if err != nil {
 			return nil, err
 		}
 		identity = d
+		principalId = entry.Identity.PrincipalID
+		userAssignedIdentityIds = sortedUserAssignedIdentityIDs(entry.Identity.UserAssignedIdentities)
 	}
 	if entry.Kind != nil {
 		kind = string(*entry.Kind)
@@ -762,6 +932,7 @@ func acaContainerAppToMQL(runtime *plugin.Runtime, entry *apps.ContainerApp) (pl
 			"maxReplicas":              llx.IntDataDefault(maxReplicas, 0),
 			"scaleRules":               llx.ArrayData(scaleRules, types.Dict),
 			"identity":                 llx.DictData(identity),
+			"principalId":              llx.StringDataPtr(principalId),
 			"registries":               llx.ArrayData(registries, types.Dict),
 			"registryAuthUsesIdentity": llx.BoolData(registryUsesIdentity),
 			"secretNames":              llx.ArrayData(secretNames, types.String),
@@ -772,9 +943,15 @@ func acaContainerAppToMQL(runtime *plugin.Runtime, entry *apps.ContainerApp) (pl
 	}
 
 	appRes := mqlApp.(*mqlAzureSubscriptionContainerAppServiceContainerApp)
+	appRes.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 	rg, name := resourceGroupAndName(appRes.Id.Data, "containerApps")
 	appRes.cacheRGAndName.resourceGroup = rg
 	appRes.cacheRGAndName.name = name
+	appSysData, err := convert.JsonToDict(entry.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	appRes.cacheSystemData = appSysData
 
 	containers, err := acaContainersToMQL(runtime, appRes.Id.Data, containerSpecs, "containers")
 	if err != nil {
@@ -955,6 +1132,11 @@ func (a *mqlAzureSubscriptionContainerAppServiceContainerApp) revisions() ([]any
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(entry.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlRev.(*mqlAzureSubscriptionContainerAppServiceContainerAppRevision).cacheSystemData = sysData
 			res = append(res, mqlRev)
 		}
 	}
@@ -1073,6 +1255,11 @@ func (a *mqlAzureSubscriptionContainerAppServiceContainerApp) authConfigs() ([]a
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(entry.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlAuth.(*mqlAzureSubscriptionContainerAppServiceContainerAppAuthConfig).cacheSystemData = sysData
 			res = append(res, mqlAuth)
 		}
 	}
@@ -1200,6 +1387,11 @@ func (a *mqlAzureSubscriptionContainerAppService) jobs() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(entry.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlJob.(*mqlAzureSubscriptionContainerAppServiceJob).cacheSystemData = sysData
 			res = append(res, mqlJob)
 		}
 	}
@@ -1283,6 +1475,11 @@ func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) privateEndpo
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(entry.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlPE.(*mqlAzureSubscriptionContainerAppServiceManagedEnvironmentPrivateEndpointConnection).cacheSystemData = sysData
 			res = append(res, mqlPE)
 		}
 	}
@@ -1372,6 +1569,11 @@ func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) httpRouteCon
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(entry.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlRoute.(*mqlAzureSubscriptionContainerAppServiceManagedEnvironmentHttpRouteConfig).cacheSystemData = sysData
 			res = append(res, mqlRoute)
 		}
 	}
@@ -1431,6 +1633,11 @@ func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) maintenanceC
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(entry.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlMaint.(*mqlAzureSubscriptionContainerAppServiceManagedEnvironmentMaintenanceConfiguration).cacheSystemData = sysData
 			res = append(res, mqlMaint)
 		}
 	}

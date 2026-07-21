@@ -115,9 +115,8 @@ func initAwsOpensearchDomain(runtime *plugin.Runtime, args map[string]*llx.RawDa
 
 	// Get asset identifier if no args provided
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["name"] = llx.StringData(ids.name)
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 
@@ -315,9 +314,33 @@ func newMqlAwsOpensearchDomain(runtime *plugin.Runtime, region string, accountID
 	auditLogEnabled := parseAuditLogEnabled(domain.LogPublishingOptions)
 
 	// Service software options
-	var serviceSoftwareNewVersion string
-	if domain.ServiceSoftwareOptions != nil {
-		serviceSoftwareNewVersion = convert.ToValue(domain.ServiceSoftwareOptions.NewVersion)
+	var serviceSoftwareCurrentVersion, serviceSoftwareNewVersion, serviceSoftwareUpdateStatus string
+	var serviceSoftwareUpdateAvailable, serviceSoftwareCancellable bool
+	serviceSoftwareAutomatedUpdateDate := llx.NilData
+	if s := domain.ServiceSoftwareOptions; s != nil {
+		serviceSoftwareCurrentVersion = convert.ToValue(s.CurrentVersion)
+		serviceSoftwareNewVersion = convert.ToValue(s.NewVersion)
+		serviceSoftwareUpdateAvailable = convert.ToValue(s.UpdateAvailable)
+		serviceSoftwareCancellable = convert.ToValue(s.Cancellable)
+		serviceSoftwareUpdateStatus = string(s.UpdateStatus)
+		// AWS returns the Unix epoch when no automated update is scheduled;
+		// surface that sentinel as null rather than a 1970 timestamp.
+		if d := s.AutomatedUpdateDate; d != nil && d.Unix() > 0 {
+			serviceSoftwareAutomatedUpdateDate = llx.TimeDataPtr(d)
+		}
+	}
+
+	// Last configuration change progress (change provenance: who initiated the
+	// most recent change and when).
+	var lastConfigChangeId, lastConfigChangeInitiatedBy, lastConfigChangeStatus string
+	lastConfigChangeStartedAt := llx.NilData
+	lastConfigChangeUpdatedAt := llx.NilData
+	if cpd := domain.ChangeProgressDetails; cpd != nil {
+		lastConfigChangeId = convert.ToValue(cpd.ChangeId)
+		lastConfigChangeInitiatedBy = string(cpd.InitiatedBy)
+		lastConfigChangeStatus = string(cpd.ConfigChangeStatus)
+		lastConfigChangeStartedAt = llx.TimeDataPtr(cpd.StartTime)
+		lastConfigChangeUpdatedAt = llx.TimeDataPtr(cpd.LastUpdatedTime)
 	}
 
 	// Software update options
@@ -355,56 +378,66 @@ func newMqlAwsOpensearchDomain(runtime *plugin.Runtime, region string, accountID
 
 	resource, err := CreateResource(runtime, ResourceAwsOpensearchDomain,
 		map[string]*llx.RawData{
-			"arn":                             llx.StringDataPtr(domain.ARN),
-			"name":                            llx.StringDataPtr(domain.DomainName),
-			"domainId":                        llx.StringDataPtr(domain.DomainId),
-			"region":                          llx.StringData(region),
-			"engineVersion":                   llx.StringDataPtr(domain.EngineVersion),
-			"endpoint":                        llx.StringData(endpoint),
-			"encryptionAtRestEnabled":         llx.BoolData(encryptionAtRestEnabled),
-			"encryptionAtRestKmsKeyId":        llx.StringData(encryptionAtRestKmsKeyId),
-			"nodeToNodeEncryptionEnabled":     llx.BoolData(nodeToNodeEncryptionEnabled),
-			"dedicatedMasterEnabled":          llx.BoolData(dedicatedMasterEnabled),
-			"dedicatedMasterType":             llx.StringData(dedicatedMasterType),
-			"dedicatedMasterCount":            llx.IntData(dedicatedMasterCount),
-			"instanceType":                    llx.StringData(instanceType),
-			"instanceCount":                   llx.IntData(instanceCount),
-			"zoneAwarenessEnabled":            llx.BoolData(zoneAwarenessEnabled),
-			"availabilityZoneCount":           llx.IntData(availabilityZoneCount),
-			"warmEnabled":                     llx.BoolData(warmEnabled),
-			"warmType":                        llx.StringData(warmType),
-			"warmCount":                       llx.IntData(warmCount),
-			"coldStorageEnabled":              llx.BoolData(coldStorageEnabled),
-			"ebsEnabled":                      llx.BoolData(ebsEnabled),
-			"ebsVolumeType":                   llx.StringData(ebsVolumeType),
-			"ebsVolumeSize":                   llx.IntData(ebsVolumeSize),
-			"ebsIops":                         llx.IntData(ebsIops),
-			"ebsThroughput":                   llx.IntData(ebsThroughput),
-			"vpcId":                           llx.StringData(vpcId),
-			"vpcEgressEnabled":                llx.BoolData(vpcEgressEnabled),
-			"enforceHTTPS":                    llx.BoolData(enforceHTTPS),
-			"tlsSecurityPolicy":               llx.StringData(tlsSecurityPolicy),
-			"customEndpointEnabled":           llx.BoolData(customEndpointEnabled),
-			"customEndpoint":                  llx.StringData(customEndpoint),
-			"samlEnabled":                     llx.BoolData(samlEnabled),
-			"jwtEnabled":                      llx.BoolData(jwtEnabled),
-			"jwksUrl":                         llx.StringData(jwksUrl),
-			"anonymousAuthEnabled":            llx.BoolData(anonymousAuthEnabled),
-			"internalUserDatabaseEnabled":     llx.BoolData(internalUserDatabaseEnabled),
-			"advancedSecurityEnabled":         llx.BoolData(advancedSecurityEnabled),
-			"processing":                      llx.BoolDataPtr(domain.Processing),
-			"upgradeProcessing":               llx.BoolDataPtr(domain.UpgradeProcessing),
-			"createdAt":                       createdAt,
-			"autoTuneState":                   llx.StringData(autoTuneState),
-			"auditLogEnabled":                 llx.BoolData(auditLogEnabled),
-			"ipAddressType":                   llx.StringData(string(domain.IPAddressType)),
-			"serviceSoftwareNewVersion":       llx.StringData(serviceSoftwareNewVersion),
-			"autoSoftwareUpdateEnabled":       llx.BoolData(autoSoftwareUpdateEnabled),
-			"offPeakWindowEnabled":            llx.BoolData(offPeakWindowEnabled),
-			"automatedSnapshotPauseEnabled":   llx.BoolData(automatedSnapshotPauseEnabled),
-			"automatedSnapshotPauseState":     llx.StringData(automatedSnapshotPauseState),
-			"automatedSnapshotPauseStartTime": automatedSnapshotPauseStartTime,
-			"automatedSnapshotPauseEndTime":   automatedSnapshotPauseEndTime,
+			"arn":                                llx.StringDataPtr(domain.ARN),
+			"name":                               llx.StringDataPtr(domain.DomainName),
+			"domainId":                           llx.StringDataPtr(domain.DomainId),
+			"region":                             llx.StringData(region),
+			"engineVersion":                      llx.StringDataPtr(domain.EngineVersion),
+			"endpoint":                           llx.StringData(endpoint),
+			"encryptionAtRestEnabled":            llx.BoolData(encryptionAtRestEnabled),
+			"encryptionAtRestKmsKeyId":           llx.StringData(encryptionAtRestKmsKeyId),
+			"nodeToNodeEncryptionEnabled":        llx.BoolData(nodeToNodeEncryptionEnabled),
+			"dedicatedMasterEnabled":             llx.BoolData(dedicatedMasterEnabled),
+			"dedicatedMasterType":                llx.StringData(dedicatedMasterType),
+			"dedicatedMasterCount":               llx.IntData(dedicatedMasterCount),
+			"instanceType":                       llx.StringData(instanceType),
+			"instanceCount":                      llx.IntData(instanceCount),
+			"zoneAwarenessEnabled":               llx.BoolData(zoneAwarenessEnabled),
+			"availabilityZoneCount":              llx.IntData(availabilityZoneCount),
+			"warmEnabled":                        llx.BoolData(warmEnabled),
+			"warmType":                           llx.StringData(warmType),
+			"warmCount":                          llx.IntData(warmCount),
+			"coldStorageEnabled":                 llx.BoolData(coldStorageEnabled),
+			"ebsEnabled":                         llx.BoolData(ebsEnabled),
+			"ebsVolumeType":                      llx.StringData(ebsVolumeType),
+			"ebsVolumeSize":                      llx.IntData(ebsVolumeSize),
+			"ebsIops":                            llx.IntData(ebsIops),
+			"ebsThroughput":                      llx.IntData(ebsThroughput),
+			"vpcId":                              llx.StringData(vpcId),
+			"vpcEgressEnabled":                   llx.BoolData(vpcEgressEnabled),
+			"enforceHTTPS":                       llx.BoolData(enforceHTTPS),
+			"tlsSecurityPolicy":                  llx.StringData(tlsSecurityPolicy),
+			"customEndpointEnabled":              llx.BoolData(customEndpointEnabled),
+			"customEndpoint":                     llx.StringData(customEndpoint),
+			"samlEnabled":                        llx.BoolData(samlEnabled),
+			"jwtEnabled":                         llx.BoolData(jwtEnabled),
+			"jwksUrl":                            llx.StringData(jwksUrl),
+			"anonymousAuthEnabled":               llx.BoolData(anonymousAuthEnabled),
+			"internalUserDatabaseEnabled":        llx.BoolData(internalUserDatabaseEnabled),
+			"advancedSecurityEnabled":            llx.BoolData(advancedSecurityEnabled),
+			"processing":                         llx.BoolDataPtr(domain.Processing),
+			"upgradeProcessing":                  llx.BoolDataPtr(domain.UpgradeProcessing),
+			"createdAt":                          createdAt,
+			"autoTuneState":                      llx.StringData(autoTuneState),
+			"auditLogEnabled":                    llx.BoolData(auditLogEnabled),
+			"ipAddressType":                      llx.StringData(string(domain.IPAddressType)),
+			"serviceSoftwareNewVersion":          llx.StringData(serviceSoftwareNewVersion),
+			"serviceSoftwareCurrentVersion":      llx.StringData(serviceSoftwareCurrentVersion),
+			"serviceSoftwareUpdateAvailable":     llx.BoolData(serviceSoftwareUpdateAvailable),
+			"serviceSoftwareCancellable":         llx.BoolData(serviceSoftwareCancellable),
+			"serviceSoftwareUpdateStatus":        llx.StringData(serviceSoftwareUpdateStatus),
+			"serviceSoftwareAutomatedUpdateDate": serviceSoftwareAutomatedUpdateDate,
+			"lastConfigChangeId":                 llx.StringData(lastConfigChangeId),
+			"lastConfigChangeInitiatedBy":        llx.StringData(lastConfigChangeInitiatedBy),
+			"lastConfigChangeStatus":             llx.StringData(lastConfigChangeStatus),
+			"lastConfigChangeStartedAt":          lastConfigChangeStartedAt,
+			"lastConfigChangeUpdatedAt":          lastConfigChangeUpdatedAt,
+			"autoSoftwareUpdateEnabled":          llx.BoolData(autoSoftwareUpdateEnabled),
+			"offPeakWindowEnabled":               llx.BoolData(offPeakWindowEnabled),
+			"automatedSnapshotPauseEnabled":      llx.BoolData(automatedSnapshotPauseEnabled),
+			"automatedSnapshotPauseState":        llx.StringData(automatedSnapshotPauseState),
+			"automatedSnapshotPauseStartTime":    automatedSnapshotPauseStartTime,
+			"automatedSnapshotPauseEndTime":      automatedSnapshotPauseEndTime,
 		})
 	if err != nil {
 		return nil, err

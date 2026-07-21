@@ -8,24 +8,35 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservices/v2"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservices/v3"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
+	subscriptions "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions/v2"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/azure/connection"
 	"go.mondoo.com/mql/v13/types"
+	"golang.org/x/sync/errgroup"
 )
 
 type mqlAzureSubscriptionRecoveryServicesServiceVaultInternal struct {
-	cacheSecuritySettings    *armrecoveryservices.SecuritySettings
-	cacheEncryption          *armrecoveryservices.VaultPropertiesEncryption
-	cacheMonitoringSettings  *armrecoveryservices.MonitoringSettings
-	cacheRedundancySettings  *armrecoveryservices.VaultPropertiesRedundancySettings
-	cachePrivateEndpointConn []*armrecoveryservices.PrivateEndpointConnectionVaultProperties
+	cacheSecuritySettings        *armrecoveryservices.SecuritySettings
+	cacheEncryption              *armrecoveryservices.VaultPropertiesEncryption
+	cacheMonitoringSettings      *armrecoveryservices.MonitoringSettings
+	cacheRedundancySettings      *armrecoveryservices.VaultPropertiesRedundancySettings
+	cachePrivateEndpointConn     []*armrecoveryservices.PrivateEndpointConnectionVaultProperties
+	cacheSystemData              any
+	cacheUserAssignedIdentityIds []string
+}
+
+type mqlAzureSubscriptionRecoveryServicesServiceDeletedVaultInternal struct {
+	cacheSystemData any
 }
 
 func (a *mqlAzureSubscriptionRecoveryServicesService) id() (string, error) {
@@ -137,6 +148,143 @@ func (a *mqlAzureSubscriptionRecoveryServicesService) vaults() ([]any, error) {
 	return res, nil
 }
 
+// deletedVaults lists soft-deleted Recovery Services vaults awaiting purge.
+// The Azure API only lists deleted vaults per region, so the subscription's
+// physical regions are enumerated and queried concurrently.
+func (a *mqlAzureSubscriptionRecoveryServicesService) deletedVaults() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	subClient, err := subscriptions.NewClient(token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var locations []string
+	locPager := subClient.NewListLocationsPager(subId, nil)
+	for locPager.More() {
+		page, err := locPager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, loc := range page.Value {
+			if loc == nil || loc.Name == nil {
+				continue
+			}
+			// Skip logical regions (e.g. edge zones); deleted vaults live in
+			// physical regions only.
+			if loc.Metadata != nil && loc.Metadata.RegionType != nil &&
+				*loc.Metadata.RegionType != subscriptions.RegionTypePhysical {
+				continue
+			}
+			locations = append(locations, *loc.Name)
+		}
+	}
+
+	client, err := armrecoveryservices.NewDeletedVaultsClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Each deleted vault is paired with the region it was queried from, since
+	// the DeletedVault payload itself carries no location.
+	type deletedVaultEntry struct {
+		vault    *armrecoveryservices.DeletedVault
+		location string
+	}
+	var mu sync.Mutex
+	var deleted []deletedVaultEntry
+	g, gctx := errgroup.WithContext(ctx)
+	g.SetLimit(10)
+	for _, location := range locations {
+		g.Go(func() error {
+			pager := client.NewListBySubscriptionIDPager(location, nil)
+			for pager.More() {
+				page, err := pager.NextPage(gctx)
+				if err != nil {
+					// One unreachable or access-denied region shouldn't fail the
+					// whole listing; log it and continue with the rest.
+					log.Warn().Err(err).Str("location", location).Msg("could not list deleted recovery services vaults in region")
+					return nil
+				}
+				mu.Lock()
+				for _, dv := range page.Value {
+					if dv == nil {
+						continue
+					}
+					deleted = append(deleted, deletedVaultEntry{vault: dv, location: location})
+				}
+				mu.Unlock()
+			}
+			return nil
+		})
+	}
+	if err := g.Wait(); err != nil {
+		return nil, err
+	}
+
+	var res []any
+	for _, entry := range deleted {
+		mqlDeletedVault, err := createDeletedVaultResource(a.MqlRuntime, entry.vault, entry.location)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlDeletedVault)
+	}
+	return res, nil
+}
+
+func createDeletedVaultResource(runtime *plugin.Runtime, dv *armrecoveryservices.DeletedVault, location string) (*mqlAzureSubscriptionRecoveryServicesServiceDeletedVault, error) {
+	var vaultResourceId string
+	var vaultDeletionTime *time.Time
+	var purgeAt *time.Time
+	if dv.Properties != nil {
+		if dv.Properties.VaultID != nil {
+			vaultResourceId = *dv.Properties.VaultID
+		}
+		vaultDeletionTime = dv.Properties.VaultDeletionTime
+		purgeAt = dv.Properties.PurgeAt
+	}
+
+	resource, err := CreateResource(runtime, ResourceAzureSubscriptionRecoveryServicesServiceDeletedVault,
+		map[string]*llx.RawData{
+			"id":                llx.StringDataPtr(dv.ID),
+			"name":              llx.StringDataPtr(dv.Name),
+			"location":          llx.StringData(location),
+			"type":              llx.StringDataPtr(dv.Type),
+			"vaultResourceId":   llx.StringData(vaultResourceId),
+			"vaultDeletionTime": llx.TimeDataPtr(vaultDeletionTime),
+			"purgeAt":           llx.TimeDataPtr(purgeAt),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	mqlDeletedVault := resource.(*mqlAzureSubscriptionRecoveryServicesServiceDeletedVault)
+
+	sysData, err := convert.JsonToDict(dv.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlDeletedVault.cacheSystemData = sysData
+
+	return mqlDeletedVault, nil
+}
+
+func (a *mqlAzureSubscriptionRecoveryServicesServiceDeletedVault) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionRecoveryServicesServiceDeletedVault) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
 func createVaultResource(runtime *plugin.Runtime, vault *armrecoveryservices.Vault) (*mqlAzureSubscriptionRecoveryServicesServiceVault, error) {
 	props := vault.Properties
 	if props == nil {
@@ -146,6 +294,11 @@ func createVaultResource(runtime *plugin.Runtime, vault *armrecoveryservices.Vau
 	identity, err := convert.JsonToDict(vault.Identity)
 	if err != nil {
 		return nil, err
+	}
+
+	var userAssignedIdentityIds []string
+	if vault.Identity != nil {
+		userAssignedIdentityIds = sortedUserAssignedIdentityIDs(vault.Identity.UserAssignedIdentities)
 	}
 
 	var skuName string
@@ -183,6 +336,11 @@ func createVaultResource(runtime *plugin.Runtime, vault *armrecoveryservices.Vau
 		secureScore = string(*props.SecureScore)
 	}
 
+	var costManagementGranularityLevel string
+	if props.CostManagementSettings != nil && props.CostManagementSettings.GranularityLevel != nil {
+		costManagementGranularityLevel = string(*props.CostManagementSettings.GranularityLevel)
+	}
+
 	resource, err := CreateResource(runtime, ResourceAzureSubscriptionRecoveryServicesServiceVault,
 		map[string]*llx.RawData{
 			"id":                                  llx.StringDataPtr(vault.ID),
@@ -198,6 +356,7 @@ func createVaultResource(runtime *plugin.Runtime, vault *armrecoveryservices.Vau
 			"privateEndpointStateForBackup":       llx.StringData(privateEndpointStateForBackup),
 			"privateEndpointStateForSiteRecovery": llx.StringData(privateEndpointStateForSiteRecovery),
 			"secureScore":                         llx.StringData(secureScore),
+			"costManagementGranularityLevel":      llx.StringData(costManagementGranularityLevel),
 		})
 	if err != nil {
 		return nil, err
@@ -209,8 +368,24 @@ func createVaultResource(runtime *plugin.Runtime, vault *armrecoveryservices.Vau
 	mqlVault.cacheMonitoringSettings = props.MonitoringSettings
 	mqlVault.cacheRedundancySettings = props.RedundancySettings
 	mqlVault.cachePrivateEndpointConn = props.PrivateEndpointConnections
+	mqlVault.cacheUserAssignedIdentityIds = userAssignedIdentityIds
+
+	sysData, err := convert.JsonToDict(vault.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlVault.cacheSystemData = sysData
 
 	return mqlVault, nil
+}
+
+func (a *mqlAzureSubscriptionRecoveryServicesServiceVault) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+// userAssignedIdentities returns the typed user-assigned managed identities of the vault.
+func (a *mqlAzureSubscriptionRecoveryServicesServiceVault) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 // securitySettings builds the security settings sub-resource from cached data.

@@ -110,48 +110,8 @@ func (r *mqlWindsurf) mcpServers() ([]interface{}, error) {
 }
 
 func (r *mqlWindsurf) skills() ([]interface{}, error) {
-	afs := connectionAfs(r.MqlRuntime)
-	// Windsurf skills live at ~/.codeium/windsurf/skills/
-	skillsDir := filepath.Join(r.ConfigPath.Data, "skills")
-
-	subdirs, err := listSubdirsAfero(afs, skillsDir)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	var result []interface{}
-	for _, dir := range subdirs {
-		skillPath := filepath.Join(dir.path, "SKILL.md")
-		data, err := afs.ReadFile(skillPath)
-		if err != nil {
-			continue
-		}
-
-		skill := parseSkillMd(dir.name, skillPath, string(data))
-
-		allowedToolsAny := make([]interface{}, len(skill.allowedTools))
-		for i, t := range skill.allowedTools {
-			allowedToolsAny[i] = t
-		}
-
-		res, err := NewResource(r.MqlRuntime, "windsurf.skill", map[string]*llx.RawData{
-			"__id":         llx.StringData("windsurf.skill/" + dir.name),
-			"name":         llx.StringData(skill.name),
-			"description":  llx.StringData(skill.description),
-			"allowedTools": llx.ArrayData(allowedToolsAny, types.String),
-			"argumentHint": llx.StringData(skill.argumentHint),
-			"source":       llx.StringData(skill.source),
-			"content":      llx.StringData(skill.content),
-		})
-		if err != nil {
-			return nil, err
-		}
-		result = append(result, res)
-	}
-	return result, nil
+	return agentSkills(r.MqlRuntime, "windsurf.skill", r.ConfigPath.Data, defaultWindsurfConfigDir,
+		filepath.Join(defaultWindsurfConfigDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
 }
 
 // Child resource ID methods
@@ -165,7 +125,7 @@ func (r *mqlWindsurfMcpServer) id() (string, error) {
 }
 
 func (r *mqlWindsurfSkill) id() (string, error) {
-	return "windsurf.skill/" + r.Name.Data, nil
+	return "windsurf.skill/" + r.Source.Data, nil
 }
 
 func (r *mqlWindsurfSkill) sha256() (string, error) {

@@ -15,21 +15,21 @@ opcua.namespaces: [
 ]
 
 # gather root node
-cnquery> opcua.root
+mql> opcua.root
 opcua.root: opcua.node id="i=84" name="Root"
 
 
 # gather all nodes
-cnquery> opcua.nodes { name namespace.name }
+mql> opcua.nodes { name namespace.name }
 
 # gather node with a specific id
-cnquery> opcua.nodes.where (id == "i=2253")
+mql> opcua.nodes.where (id == "i=2253")
 opcua.nodes.where: [
   0: opcua.node id="i=2253" name="Server"
 ]
 
 # gather details about the server
-cnquery> opcua.server { * }
+mql> opcua.server { * }
 opcua.server: {
   buildInfo: {
     BuildDate: "2023-05-21T21:03:43.817369Z"

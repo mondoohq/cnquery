@@ -92,9 +92,12 @@ func parseOptions(opts string) map[string]string {
 	entries := strings.Split(opts, ",")
 	for i := range entries {
 		entry := entries[i]
-		keyval := strings.Split(entry, "=")
-		if len(keyval) == 2 {
-			res[strings.TrimSpace(keyval[0])] = strings.TrimSpace(keyval[1])
+		// Split on the first `=` only: option values can themselves contain
+		// `=` (e.g. SELinux context=...), and splitting on every `=` would
+		// drop such options instead of recording their value.
+		key, value, found := strings.Cut(entry, "=")
+		if found {
+			res[strings.TrimSpace(key)] = strings.TrimSpace(value)
 		} else {
 			res[strings.TrimSpace(entry)] = ""
 		}

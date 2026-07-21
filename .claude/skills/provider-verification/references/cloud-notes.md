@@ -38,7 +38,12 @@ failed `apply`.
 - **SageMaker domain**: needs a VPC + subnet + execution IAM role.
 - **CloudFront viewer mTLS**: set `viewer_mtls_config` on the distribution
   referencing a `aws_cloudfront_trust_store` (CA bundle uploaded to S3).
-- Tag with `Project = mql-pr-verify`.
+- **Private CA (`aws_acmpca_certificate_authority`)**: a general-purpose CA bills
+  **~$400/month flat** whether or not it issues a cert, with no compute to signal
+  it is running — a silent cost bomb. Prefer avoiding it; if a check needs one,
+  make sure `mondoo-expiry` is short and confirm it is deleted in teardown.
+- **Apply tags via `default_tags` on the `aws` provider block** (schema in
+  SKILL.md step 5) — never per resource, or one untagged resource escapes cleanup.
 
 ## Azure
 
@@ -137,4 +142,21 @@ cleanly (empty list, no error) and record the limitation.
   service. `terraform state rm` the App Engine resources and delete the rest;
   report the App Engine app as a permanent leftover (it costs ~$0 idle).
 
-After teardown, confirm nothing tagged `mql-pr-verify` remains in any account.
+## Verifying teardown (do not trust the tag API)
+
+- **The Resource Groups Tagging API lags deletions by hours** and keeps listing
+  resources that are already gone — it *over*-reports leftovers. Confirm each
+  delete against the owning service (`describe-*` / `get-*` → NotFound), not the
+  tag sweep. In one cleanup, ~40% of what the tag API listed was already deleted.
+- **`get-resources` cannot delete** — it only lists. Deletion is `terraform
+  destroy`, a tag-scoped nuke tool, or per-service calls in dependency order.
+- **Non-deletable historical records are expected, not leaks** (and cost $0):
+  deregistered ECS task-definitions and Batch job-definitions linger as
+  `INACTIVE` forever, terminated EMR clusters and completed SageMaker jobs stay
+  listed, canceled signer profiles remain. Don't chase them.
+- **Scope teardown by `mondoo-run-id`**, and sweep **all regions** — a leftover
+  can sit in a region the current run never touched (as can a security group in
+  the account's *default* VPC, which a VPC-scoped teardown will miss).
+
+After teardown, confirm nothing tagged `mql-pr-verify` for this `mondoo-run-id`
+remains — verified per service, per the points above.

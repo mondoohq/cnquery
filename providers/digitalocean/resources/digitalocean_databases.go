@@ -57,7 +57,9 @@ func (r *mqlDigitaloceanDatabase) fetchBackups() ([]godo.DatabaseBackup, error) 
 		}
 		page, perr := resp.Links.CurrentPage()
 		if perr != nil {
-			break
+			r.backupsErr = perr
+			r.backupsDone = true
+			return nil, perr
 		}
 		opt.Page = page + 1
 	}

@@ -6,8 +6,10 @@ package resources
 import (
 	"context"
 	"errors"
+	"net/http"
 	"strings"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -17,7 +19,7 @@ import (
 
 	mysql "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mysql/armmysql"
 
-	flexible "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mysql/armmysqlflexibleservers"
+	flexible "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mysql/armmysqlflexibleservers/v2"
 )
 
 func (a *mqlAzureSubscriptionMySqlService) id() (string, error) {
@@ -194,26 +196,71 @@ func (a *mqlAzureSubscriptionMySqlService) flexibleServers() ([]any, error) {
 				}
 			}
 
+			var identityType, identityPrincipalId, identityTenantId *string
+			var userAssignedIdentityIds []string
+			if dbServer.Identity != nil {
+				identityType = cosmosEnumStrPtr(dbServer.Identity.Type)
+				identityPrincipalId = dbServer.Identity.PrincipalID
+				identityTenantId = dbServer.Identity.TenantID
+				userAssignedIdentityIds = sortedUserAssignedIdentityKeys(dbServer.Identity.UserAssignedIdentities)
+			}
+
+			var fullVersion, storageRedundancy, maintenancePatchStrategy *string
+			var databasePort, backupIntervalHours *int32
+			var storageAutoIoScaling, storageLogOnDisk *bool
+			if dbServer.Properties != nil {
+				fullVersion = dbServer.Properties.FullVersion
+				databasePort = dbServer.Properties.DatabasePort
+				if dbServer.Properties.Backup != nil {
+					backupIntervalHours = dbServer.Properties.Backup.BackupIntervalHours
+				}
+				if dbServer.Properties.Storage != nil {
+					storageRedundancy = (*string)(dbServer.Properties.Storage.StorageRedundancy)
+					if dbServer.Properties.Storage.AutoIoScaling != nil {
+						v := *dbServer.Properties.Storage.AutoIoScaling == flexible.EnableStatusEnumEnabled
+						storageAutoIoScaling = &v
+					}
+					if dbServer.Properties.Storage.LogOnDisk != nil {
+						v := *dbServer.Properties.Storage.LogOnDisk == flexible.EnableStatusEnumEnabled
+						storageLogOnDisk = &v
+					}
+				}
+				if dbServer.Properties.MaintenancePolicy != nil {
+					maintenancePatchStrategy = (*string)(dbServer.Properties.MaintenancePolicy.PatchStrategy)
+				}
+			}
+
 			mqlAzureDbServer, err := CreateResource(a.MqlRuntime, "azure.subscription.mySqlService.flexibleServer",
 				map[string]*llx.RawData{
-					"id":                    llx.StringDataPtr(dbServer.ID),
-					"name":                  llx.StringDataPtr(dbServer.Name),
-					"location":              llx.StringDataPtr(dbServer.Location),
-					"tags":                  llx.MapData(convert.PtrMapStrToInterface(dbServer.Tags), types.String),
-					"type":                  llx.StringDataPtr(dbServer.Type),
-					"properties":            llx.DictData(properties),
-					"version":               llx.StringData(version),
-					"publicNetworkAccess":   llx.StringData(publicNetworkAccess),
-					"dataEncryptionType":    llx.StringData(dataEncryptionType),
-					"backupRetentionDays":   llx.IntData(backupRetentionDays),
-					"geoRedundantBackup":    llx.StringData(geoRedundantBackup),
-					"highAvailabilityMode":  llx.StringData(haMode),
-					"highAvailabilityState": llx.StringData(haState),
+					"id":                       llx.StringDataPtr(dbServer.ID),
+					"name":                     llx.StringDataPtr(dbServer.Name),
+					"location":                 llx.StringDataPtr(dbServer.Location),
+					"tags":                     llx.MapData(convert.PtrMapStrToInterface(dbServer.Tags), types.String),
+					"type":                     llx.StringDataPtr(dbServer.Type),
+					"properties":               llx.DictData(properties),
+					"version":                  llx.StringData(version),
+					"publicNetworkAccess":      llx.StringData(publicNetworkAccess),
+					"dataEncryptionType":       llx.StringData(dataEncryptionType),
+					"backupRetentionDays":      llx.IntData(backupRetentionDays),
+					"geoRedundantBackup":       llx.StringData(geoRedundantBackup),
+					"highAvailabilityMode":     llx.StringData(haMode),
+					"highAvailabilityState":    llx.StringData(haState),
+					"identityType":             llx.StringDataPtr(identityType),
+					"principalId":              llx.StringDataPtr(identityPrincipalId),
+					"tenantId":                 llx.StringDataPtr(identityTenantId),
+					"fullVersion":              llx.StringDataPtr(fullVersion),
+					"databasePort":             llx.IntDataPtr(databasePort),
+					"storageAutoIoScaling":     llx.BoolDataPtr(storageAutoIoScaling),
+					"storageLogOnDisk":         llx.BoolDataPtr(storageLogOnDisk),
+					"storageRedundancy":        llx.StringDataPtr(storageRedundancy),
+					"backupIntervalHours":      llx.IntDataPtr(backupIntervalHours),
+					"maintenancePatchStrategy": llx.StringDataPtr(maintenancePatchStrategy),
 				})
 			if err != nil {
 				return nil, err
 			}
 			mqlServer := mqlAzureDbServer.(*mqlAzureSubscriptionMySqlServiceFlexibleServer)
+			mqlServer.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 			if dbServer.Properties != nil && dbServer.Properties.DataEncryption != nil {
 				if dbServer.Properties.DataEncryption.PrimaryKeyURI != nil {
 					mqlServer.cacheDataEncryptionKeyURI = *dbServer.Properties.DataEncryption.PrimaryKeyURI
@@ -222,6 +269,11 @@ func (a *mqlAzureSubscriptionMySqlService) flexibleServers() ([]any, error) {
 					mqlServer.cacheGeoBackupKeyURI = *dbServer.Properties.DataEncryption.GeoBackupKeyURI
 				}
 			}
+			sysData, err := convert.JsonToDict(dbServer.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlServer.cacheSystemData = sysData
 			res = append(res, mqlAzureDbServer)
 		}
 	}
@@ -252,8 +304,15 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) sslEnforcement() (bool,
 
 	resp, err := dbConfClient.Get(ctx, resourceID.ResourceGroup, server, "require_secure_transport", nil)
 	if err != nil {
-		// Default to true as MySQL flexible servers enforce SSL by default
-		return true, nil
+		// Only tolerate access-denied / not-found: swallowing every error would
+		// report a transient/permission failure as SSL enforced, masking the real
+		// state of a security-relevant setting. MySQL flexible servers enforce SSL
+		// by default, so on those two cases we fall back to that default.
+		var rerr *azcore.ResponseError
+		if errors.As(err, &rerr) && (rerr.StatusCode == http.StatusForbidden || rerr.StatusCode == http.StatusNotFound) {
+			return true, nil
+		}
+		return false, err
 	}
 
 	if resp.Properties != nil && resp.Properties.Value != nil {
@@ -551,8 +610,189 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) configuration() ([]any,
 }
 
 type mqlAzureSubscriptionMySqlServiceFlexibleServerInternal struct {
-	cacheDataEncryptionKeyURI string
-	cacheGeoBackupKeyURI      string
+	cacheDataEncryptionKeyURI    string
+	cacheGeoBackupKeyURI         string
+	cacheSystemData              any
+	cacheUserAssignedIdentityIds []string
+}
+
+func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+type mqlAzureSubscriptionMySqlServiceFlexibleServerAdministratorInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+// threatProtectionState fetches the Microsoft Defender for Cloud advanced threat protection state.
+func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) threatProtectionState() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	resourceID, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return "", err
+	}
+	server, err := resourceID.Component("flexibleServers")
+	if err != nil {
+		return "", err
+	}
+	client, err := flexible.NewAdvancedThreatProtectionSettingsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return "", err
+	}
+	resp, err := client.Get(ctx, resourceID.ResourceGroup, server, flexible.AdvancedThreatProtectionNameDefault, nil)
+	if err != nil {
+		return "", err
+	}
+	if resp.Properties == nil || resp.Properties.State == nil {
+		return "", nil
+	}
+	return string(*resp.Properties.State), nil
+}
+
+func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) azureAdAdministrators() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	resourceID, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	server, err := resourceID.Component("flexibleServers")
+	if err != nil {
+		return nil, err
+	}
+	adminClient, err := flexible.NewAzureADAdministratorsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	pager := adminClient.NewListByServerPager(resourceID.ResourceGroup, server, nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
+			var administratorType, login, sid, tenantId *string
+			if entry.Properties != nil {
+				administratorType = (*string)(entry.Properties.AdministratorType)
+				login = entry.Properties.Login
+				sid = entry.Properties.Sid
+				tenantId = entry.Properties.TenantID
+			}
+			mqlAdmin, err := CreateResource(a.MqlRuntime, "azure.subscription.mySqlService.flexibleServer.administrator",
+				map[string]*llx.RawData{
+					"id":                llx.StringDataPtr(entry.ID),
+					"name":              llx.StringDataPtr(entry.Name),
+					"type":              llx.StringDataPtr(entry.Type),
+					"administratorType": llx.StringDataPtr(administratorType),
+					"login":             llx.StringDataPtr(login),
+					"sid":               llx.StringDataPtr(sid),
+					"tenantId":          llx.StringDataPtr(tenantId),
+				})
+			if err != nil {
+				return nil, err
+			}
+			sysData, err := convert.JsonToDict(entry.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlAdmin.(*mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator).cacheSystemData = sysData
+			res = append(res, mqlAdmin)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) privateEndpointConnections() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	resourceID, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	server, err := resourceID.Component("flexibleServers")
+	if err != nil {
+		return nil, err
+	}
+	client, err := flexible.NewPrivateEndpointConnectionsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	resp, err := client.ListByServer(ctx, resourceID.ResourceGroup, server, nil)
+	if err != nil {
+		return nil, err
+	}
+	for _, pec := range resp.Value {
+		if pec == nil {
+			continue
+		}
+		args := map[string]*llx.RawData{
+			"__id": llx.StringDataPtr(pec.ID),
+			"id":   llx.StringDataPtr(pec.ID),
+			"name": llx.StringDataPtr(pec.Name),
+			"type": llx.StringDataPtr(pec.Type),
+		}
+		if pec.Properties != nil {
+			propsMap, err := convert.JsonToDict(pec.Properties)
+			if err != nil {
+				return nil, err
+			}
+			args["properties"] = llx.DictData(propsMap)
+			if pec.Properties.PrivateEndpoint != nil {
+				args["privateEndpointId"] = llx.StringDataPtr(pec.Properties.PrivateEndpoint.ID)
+			}
+			if pec.Properties.ProvisioningState != nil {
+				args["provisioningState"] = llx.StringData(string(*pec.Properties.ProvisioningState))
+			}
+			if pec.Properties.PrivateLinkServiceConnectionState != nil {
+				stateArgs := map[string]*llx.RawData{}
+				if pec.Properties.PrivateLinkServiceConnectionState.ActionsRequired != nil {
+					stateArgs["actionsRequired"] = llx.StringDataPtr(pec.Properties.PrivateLinkServiceConnectionState.ActionsRequired)
+				}
+				if pec.Properties.PrivateLinkServiceConnectionState.Description != nil {
+					stateArgs["description"] = llx.StringDataPtr(pec.Properties.PrivateLinkServiceConnectionState.Description)
+				}
+				if pec.Properties.PrivateLinkServiceConnectionState.Status != nil {
+					stateArgs["status"] = llx.StringData(string(*pec.Properties.PrivateLinkServiceConnectionState.Status))
+				}
+				stateRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState, stateArgs)
+				if err != nil {
+					return nil, err
+				}
+				args["privateLinkServiceConnectionState"] = llx.ResourceData(stateRes, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState)
+			}
+		}
+		mqlConn, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnection, args)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlConn)
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) dataEncryptionKey() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {

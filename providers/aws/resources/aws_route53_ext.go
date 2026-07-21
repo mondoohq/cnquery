@@ -156,7 +156,10 @@ func initAwsRoute53TrafficPolicy(runtime *plugin.Runtime, args map[string]*llx.R
 			return args, tp, nil
 		}
 	}
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.route53.trafficpolicy with id %q not found", idVal)
 }
 
 // ----- Traffic policy instances -----

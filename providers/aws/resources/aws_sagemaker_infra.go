@@ -49,15 +49,10 @@ func initAwsSagemakerImage(runtime *plugin.Runtime, args map[string]*llx.RawData
 		}
 	}
 
-	// Fallback: derive name/region from ARN so minimal fields resolve.
-	_, region, _, name := parseSagemakerArn(arnVal)
-	if args["name"] == nil && name != "" {
-		args["name"] = llx.StringData(name)
-	}
-	if args["region"] == nil && region != "" {
-		args["region"] = llx.StringData(region)
-	}
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.sagemaker.image with arn %q not found", arnVal)
 }
 
 func initAwsSagemakerImageVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -132,21 +127,10 @@ func initAwsSagemakerUserProfile(runtime *plugin.Runtime, args map[string]*llx.R
 		}
 	}
 
-	// Fallback: parse region and <domain-id>/<user-profile-name> from ARN.
-	parts := strings.Split(arnVal, ":")
-	if len(parts) >= 6 {
-		region := parts[3]
-		segs := strings.SplitN(strings.TrimPrefix(parts[5], "user-profile/"), "/", 2)
-		if len(segs) == 2 {
-			if args["name"] == nil {
-				args["name"] = llx.StringData(segs[1])
-			}
-			if args["region"] == nil {
-				args["region"] = llx.StringData(region)
-			}
-		}
-	}
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.sagemaker.userProfile with arn %q not found", arnVal)
 }
 
 func initAwsSagemakerSpace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -174,21 +158,10 @@ func initAwsSagemakerSpace(runtime *plugin.Runtime, args map[string]*llx.RawData
 		}
 	}
 
-	// Fallback: parse region and <domain-id>/<space-name> from ARN.
-	parts := strings.Split(arnVal, ":")
-	if len(parts) >= 6 {
-		region := parts[3]
-		segs := strings.SplitN(strings.TrimPrefix(parts[5], "space/"), "/", 2)
-		if len(segs) == 2 {
-			if args["name"] == nil {
-				args["name"] = llx.StringData(segs[1])
-			}
-			if args["region"] == nil {
-				args["region"] = llx.StringData(region)
-			}
-		}
-	}
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.sagemaker.space with arn %q not found", arnVal)
 }
 
 // ---- Apps ----

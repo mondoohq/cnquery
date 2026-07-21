@@ -181,7 +181,7 @@ func (o *mqlOktaUser) roles() ([]any, error) {
 
 	appendEntry := func(datalist []okta.Role) error {
 		for i := range datalist {
-			mqlOktaRole, err := newMqlOktaRole(o.MqlRuntime, &datalist[i])
+			mqlOktaRole, err := newMqlOktaRole(o.MqlRuntime, &datalist[i], "user", o.Id.Data)
 			if err != nil {
 				return err
 			}
@@ -205,20 +205,4 @@ func (o *mqlOktaUser) roles() ([]any, error) {
 		}
 	}
 	return res, nil
-}
-
-func newMqlOktaRole(runtime *plugin.Runtime, role *okta.Role) (*mqlOktaRole, error) {
-	r, err := CreateResource(runtime, "okta.role", map[string]*llx.RawData{
-		"id":             llx.StringData(oktaStr(role.Id)),
-		"assignmentType": llx.StringData(oktaStr(role.AssignmentType)),
-		"created":        llx.TimeDataPtr(role.Created),
-		"lastUpdated":    llx.TimeDataPtr(role.LastUpdated),
-		"label":          llx.StringData(oktaStr(role.Label)),
-		"status":         llx.StringData(oktaStr(role.Status)),
-		"type":           llx.StringData(oktaStr(role.Type)),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return r.(*mqlOktaRole), nil
 }

@@ -28,7 +28,11 @@ func createMqlParameters(runtime *plugin.Runtime, filePath string, params []pars
 		allowed := sliceToAny(p.allowed)
 		decorators := sliceToAny(p.decorators)
 
-		res, err := CreateResource(runtime, "bicep.parameter", map[string]*llx.RawData{
+		ctx, err := newBicepContext(runtime, filePath, p.startLine, p.endLine)
+		if err != nil {
+			return nil, err
+		}
+		args := map[string]*llx.RawData{
 			"__id":         llx.StringData("bicep.parameter:" + filePath + ":" + p.name),
 			"name":         llx.StringData(p.name),
 			"type":         llx.StringData(p.typ),
@@ -41,7 +45,9 @@ func createMqlParameters(runtime *plugin.Runtime, filePath string, params []pars
 			"minValue":     llx.IntDataPtr(p.minValue),
 			"maxValue":     llx.IntDataPtr(p.maxValue),
 			"decorators":   llx.ArrayData(decorators, types.String),
-		})
+		}
+		contextArg(args, ctx)
+		res, err := CreateResource(runtime, "bicep.parameter", args)
 		if err != nil {
 			return nil, err
 		}
@@ -76,6 +82,10 @@ type mqlBicepVariableInternal struct {
 func createMqlVariables(runtime *plugin.Runtime, filePath string, vars []parsedVariable, resolver *symbolResolver) ([]any, error) {
 	var mqlVars []any
 	for _, v := range vars {
+		ctx, err := newBicepContext(runtime, filePath, v.startLine, v.endLine)
+		if err != nil {
+			return nil, err
+		}
 		args := map[string]*llx.RawData{
 			"__id":        llx.StringData("bicep.variable:" + filePath + ":" + v.name),
 			"name":        llx.StringData(v.name),
@@ -83,6 +93,7 @@ func createMqlVariables(runtime *plugin.Runtime, filePath string, vars []parsedV
 			"description": llx.StringData(v.description),
 		}
 		addLoopArgs(args, v.loop)
+		contextArg(args, ctx)
 		res, err := CreateResource(runtime, "bicep.variable", args)
 		if err != nil {
 			return nil, err
@@ -118,7 +129,11 @@ type mqlBicepResourceInternal struct {
 func createMqlResources(runtime *plugin.Runtime, filePath string, resources []parsedResource, resolver *symbolResolver) ([]any, error) {
 	var mqlResources []any
 	for _, r := range resources {
-		res, err := newMqlBicepResource(runtime, "bicep.resource:"+filePath+":"+r.symbolicName, r, resolver)
+		ctx, err := newBicepContext(runtime, filePath, r.startLine, r.endLine)
+		if err != nil {
+			return nil, err
+		}
+		res, err := newMqlBicepResource(runtime, "bicep.resource:"+filePath+":"+r.symbolicName, r, resolver, ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -150,7 +165,7 @@ func resourceBodyInner(body string) string {
 // parent-qualified `<parentId>/<childSymbolicName>`. The parsed nested
 // declarations are cached on the Internal struct for the lazy `resources()`
 // accessor to materialize, recursively.
-func newMqlBicepResource(runtime *plugin.Runtime, id string, r parsedResource, resolver *symbolResolver) (*mqlBicepResource, error) {
+func newMqlBicepResource(runtime *plugin.Runtime, id string, r parsedResource, resolver *symbolResolver, ctx *mqlBicepContext) (*mqlBicepResource, error) {
 	dependsOn := sliceToAny(r.dependsOn)
 	decorators := sliceToAny(r.decorators)
 
@@ -209,6 +224,7 @@ func newMqlBicepResource(runtime *plugin.Runtime, id string, r parsedResource, r
 		args["tags"] = llx.MapData(tags, types.String)
 	}
 	addLoopArgs(args, r.loop)
+	contextArg(args, ctx)
 
 	res, err := CreateResource(runtime, "bicep.resource", args)
 	if err != nil {
@@ -230,7 +246,9 @@ func (r *mqlBicepResource) resources() ([]any, error) {
 	out := make([]any, 0, len(r.nested))
 	for _, child := range r.nested {
 		childID := r.__id + "/" + child.symbolicName
-		mqlChild, err := newMqlBicepResource(r.MqlRuntime, childID, child, r.resolver)
+		// Nested resources are re-parsed from the parent body without absolute
+		// line offsets, so they carry no source context.
+		mqlChild, err := newMqlBicepResource(r.MqlRuntime, childID, child, r.resolver, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -269,6 +287,10 @@ func createMqlModules(runtime *plugin.Runtime, filePath string, modules []parsed
 
 		decorators := sliceToAny(m.decorators)
 
+		ctx, err := newBicepContext(runtime, filePath, m.startLine, m.endLine)
+		if err != nil {
+			return nil, err
+		}
 		args := map[string]*llx.RawData{
 			"__id":           llx.StringData("bicep.module:" + filePath + ":" + m.name),
 			"name":           llx.StringData(m.name),
@@ -282,6 +304,7 @@ func createMqlModules(runtime *plugin.Runtime, filePath string, modules []parsed
 			"decorators":     llx.ArrayData(decorators, types.String),
 		}
 		addLoopArgs(args, m.loop)
+		contextArg(args, ctx)
 		res, err := CreateResource(runtime, "bicep.module", args)
 		if err != nil {
 			return nil, err
@@ -671,6 +694,10 @@ type mqlBicepOutputInternal struct {
 func createMqlOutputs(runtime *plugin.Runtime, filePath string, outputs []parsedOutput, resolver *symbolResolver) ([]any, error) {
 	var mqlOutputs []any
 	for _, o := range outputs {
+		ctx, err := newBicepContext(runtime, filePath, o.startLine, o.endLine)
+		if err != nil {
+			return nil, err
+		}
 		args := map[string]*llx.RawData{
 			"__id":        llx.StringData("bicep.output:" + filePath + ":" + o.name),
 			"name":        llx.StringData(o.name),
@@ -679,6 +706,7 @@ func createMqlOutputs(runtime *plugin.Runtime, filePath string, outputs []parsed
 			"description": llx.StringData(o.description),
 		}
 		addLoopArgs(args, o.loop)
+		contextArg(args, ctx)
 		res, err := CreateResource(runtime, "bicep.output", args)
 		if err != nil {
 			return nil, err

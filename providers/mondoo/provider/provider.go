@@ -107,22 +107,20 @@ func fillAsset(conn *connection.Connection, asset *inventory.Asset) {
 	if conn.Type == connection.ConnTypeSpace {
 		asset.Name = fmt.Sprintf("Mondoo Space %s", name)
 		asset.Platform = &inventory.Platform{
-			Name:    "mondoo-space",
-			Title:   "Mondoo Space",
-			Family:  []string{},
-			Kind:    "api",
-			Runtime: "mondoo",
-			Labels:  map[string]string{},
+			Family: []string{},
+			Labels: map[string]string{},
+		}
+		if pi, ok := PlatformByName("mondoo-space"); ok {
+			pi.Apply(asset.Platform)
 		}
 	} else if conn.Type == connection.ConnTypeOrganization {
 		asset.Name = fmt.Sprintf("Mondoo Organization %s", name)
 		asset.Platform = &inventory.Platform{
-			Name:    "mondoo-organization",
-			Title:   "Mondoo Organization",
-			Family:  []string{},
-			Kind:    "api",
-			Runtime: "mondoo",
-			Labels:  map[string]string{},
+			Family: []string{},
+			Labels: map[string]string{},
+		}
+		if pi, ok := PlatformByName("mondoo-organization"); ok {
+			pi.Apply(asset.Platform)
 		}
 	}
 }

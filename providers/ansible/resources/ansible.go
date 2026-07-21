@@ -83,6 +83,9 @@ type mqlAnsiblePlayInternal struct {
 // directives (when, tags, vars) and the resolved role. Standalone playbook
 // files resolve the role to null.
 func (r *mqlAnsiblePlay) roleApplications() ([]any, error) {
+	if r.play == nil {
+		return []any{}, nil
+	}
 	apps := r.play.RoleApplications()
 	out := make([]any, 0, len(apps))
 	for i, app := range apps {
@@ -158,6 +161,9 @@ func newMqlAnsibleHandlers(runtime *plugin.Runtime, parentID string, handlers []
 }
 
 func (r *mqlAnsiblePlay) handlers() ([]any, error) {
+	if r.play == nil {
+		return []any{}, nil
+	}
 	return newMqlAnsibleHandlers(r.MqlRuntime, r.MqlID(), r.play.Handlers)
 }
 
@@ -217,34 +223,58 @@ type mqlAnsibleTaskInternal struct {
 }
 
 func (r *mqlAnsibleTask) module() (string, error) {
+	if r.task == nil {
+		return "", nil
+	}
 	return r.task.Module(), nil
 }
 
 func (r *mqlAnsibleTask) moduleArgs() (any, error) {
+	if r.task == nil {
+		return nil, nil
+	}
 	return normalizeDict(r.task.ModuleArgs()), nil
 }
 
 func (r *mqlAnsiblePlay) preTasks() ([]any, error) {
+	if r.play == nil {
+		return []any{}, nil
+	}
 	return newMqlAnsibleTasks(r.MqlRuntime, r.MqlID(), "preTasks", r.baseDir, r.play.PreTasks)
 }
 
 func (r *mqlAnsiblePlay) tasks() ([]any, error) {
+	if r.play == nil {
+		return []any{}, nil
+	}
 	return newMqlAnsibleTasks(r.MqlRuntime, r.MqlID(), "tasks", r.baseDir, r.play.Tasks)
 }
 
 func (r *mqlAnsiblePlay) postTasks() ([]any, error) {
+	if r.play == nil {
+		return []any{}, nil
+	}
 	return newMqlAnsibleTasks(r.MqlRuntime, r.MqlID(), "postTasks", r.baseDir, r.play.PostTasks)
 }
 
 func (r *mqlAnsibleTask) block() ([]any, error) {
+	if r.task == nil {
+		return []any{}, nil
+	}
 	return newMqlAnsibleTasks(r.MqlRuntime, r.MqlID(), "block", r.baseDir, r.task.Block)
 }
 
 func (r *mqlAnsibleTask) rescue() ([]any, error) {
+	if r.task == nil {
+		return []any{}, nil
+	}
 	return newMqlAnsibleTasks(r.MqlRuntime, r.MqlID(), "rescue", r.baseDir, r.task.Rescue)
 }
 
 func (r *mqlAnsibleTask) always() ([]any, error) {
+	if r.task == nil {
+		return []any{}, nil
+	}
 	return newMqlAnsibleTasks(r.MqlRuntime, r.MqlID(), "always", r.baseDir, r.task.Always)
 }
 
@@ -252,6 +282,9 @@ func (r *mqlAnsibleTask) always() ([]any, error) {
 // parsed tasks of the target file. A Jinja2-templated or unresolvable path
 // yields an empty list; the raw string fields remain authoritative.
 func (r *mqlAnsibleTask) importedTasks() ([]any, error) {
+	if r.task == nil {
+		return []any{}, nil
+	}
 	ref := firstNonEmpty(r.task.ImportTasks, r.task.IncludeTasks)
 	path := r.resolveRef(ref)
 	if path == "" {
@@ -272,6 +305,10 @@ func (r *mqlAnsibleTask) importedTasks() ([]any, error) {
 // reference to the parsed playbook. A Jinja2-templated or unresolvable path
 // yields null.
 func (r *mqlAnsibleTask) importedPlaybook() (*mqlAnsiblePlaybook, error) {
+	if r.task == nil {
+		r.ImportedPlaybook.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
 	ref := firstNonEmpty(r.task.ImportPlaybook, r.task.IncludePlaybook)
 	path := r.resolveRef(ref)
 	if path == "" {

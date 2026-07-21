@@ -7,9 +7,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/image"
-	"github.com/docker/docker/client"
+	"github.com/moby/moby/client"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -22,10 +20,11 @@ func (p *mqlDocker) images() ([]any, error) {
 		return nil, err
 	}
 
-	dImages, err := cl.ImageList(context.Background(), image.ListOptions{})
+	imageListRes, err := cl.ImageList(context.Background(), client.ImageListOptions{})
 	if err != nil {
 		return nil, err
 	}
+	dImages := imageListRes.Items
 
 	imgs := make([]any, len(dImages))
 	for i, dImg := range dImages {
@@ -62,10 +61,11 @@ func (p *mqlDocker) containers() ([]any, error) {
 		return nil, err
 	}
 
-	dContainers, err := cl.ContainerList(context.Background(), container.ListOptions{})
+	containerListRes, err := cl.ContainerList(context.Background(), client.ContainerListOptions{})
 	if err != nil {
 		return nil, err
 	}
+	dContainers := containerListRes.Items
 
 	container := make([]any, len(dContainers))
 
@@ -95,7 +95,7 @@ func (p *mqlDocker) containers() ([]any, error) {
 			"image":   llx.StringData(dContainer.Image),
 			"imageid": llx.StringData(dContainer.ImageID),
 			"command": llx.StringData(dContainer.Command),
-			"state":   llx.StringData(dContainer.State),
+			"state":   llx.StringData(string(dContainer.State)),
 			"status":  llx.StringData(dContainer.Status),
 			"labels":  llx.MapData(labels, types.String),
 			"names":   llx.ArrayData(names, types.String),
@@ -132,16 +132,20 @@ func (p *mqlDockerContainer) hostConfig() (any, error) {
 		return nil, err
 	}
 
-	dContainer, err := cl.ContainerInspect(context.Background(), p.Id.Data)
+	res, err := cl.ContainerInspect(context.Background(), p.Id.Data, client.ContainerInspectOptions{})
 	if err != nil {
 		return nil, err
 	}
 
-	return convert.JsonToDict(dContainer.HostConfig)
+	return convert.JsonToDict(res.Container.HostConfig)
 }
 
 func dockerClient() (*client.Client, error) {
-	cl, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	// No explicit NegotiateAPIVersion call: the method was removed from *Client in
+	// moby/moby's v29 client rewrite. API version negotiation now happens
+	// automatically on the first request (WithAPIVersionNegotiation is a
+	// documented no-op kept only for backward compatibility).
+	cl, err := client.New(client.FromEnv)
 	if err != nil {
 		return nil, err
 	}

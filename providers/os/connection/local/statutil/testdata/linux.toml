@@ -4,17 +4,11 @@ stdout = "x86_64"
 [commands."uname -s"]
 stdout = "Linux"
 
-[commands."stat -L /etc/ssh/sshd_config -c '%s.%f.%u.%g.%X.%Y.%C'"]
-stdout = """4317.8180.0.0.1590420240.1590418792.?
+# compound stat command wrapped in sh -c for sudo compatibility
+[commands."sh -c 'SL=0; test -L \"$1\" && SL=1; test -e \"$1\" -o $SL -eq 1 || exit 1; r=$(stat -L \"$1\" -c \"$SL.%s.%f.%u.%g.%X.%Y.%C\" 2>/dev/null) && printf \"%s\\n\" \"$r\" || { [ -n \"$r\" ] && printf \"%s\\n\" \"$r\" || stat \"$1\" -c \"$SL.%s.%f.%u.%g.%X.%Y.%C\" 2>/dev/null; }' _ /etc/ssh/sshd_config"]
+stdout = """0.4317.8180.0.0.1590420240.1590418792.?
 """
 
-[commands."stat -L /usr/bin/su -c '%s.%f.%u.%g.%X.%Y.%C'"]
-stdout = """71728.89ed.0.0.1634057181.1629123001.?
+[commands."sh -c 'SL=0; test -L \"$1\" && SL=1; test -e \"$1\" -o $SL -eq 1 || exit 1; r=$(stat -L \"$1\" -c \"$SL.%s.%f.%u.%g.%X.%Y.%C\" 2>/dev/null) && printf \"%s\\n\" \"$r\" || { [ -n \"$r\" ] && printf \"%s\\n\" \"$r\" || stat \"$1\" -c \"$SL.%s.%f.%u.%g.%X.%Y.%C\" 2>/dev/null; }' _ /usr/bin/su"]
+stdout = """0.71728.89ed.0.0.1634057181.1629123001.?
 """
-
-
-[commands."test -e /etc/ssh/sshd_config"]
-stdout = ""
-
-[commands."test -e /usr/bin/su"]
-stdout = ""

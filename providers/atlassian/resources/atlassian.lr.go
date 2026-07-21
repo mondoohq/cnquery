@@ -47,6 +47,8 @@ const (
 	ResourceAtlassianConfluenceGroup                      string = "atlassian.confluence.group"
 	ResourceAtlassianConfluenceSpace                      string = "atlassian.confluence.space"
 	ResourceAtlassianConfluencePage                       string = "atlassian.confluence.page"
+	ResourceAtlassianConfluenceBlogpost                   string = "atlassian.confluence.blogpost"
+	ResourceAtlassianConfluenceAttachment                 string = "atlassian.confluence.attachment"
 	ResourceAtlassianConfluencePageRestriction            string = "atlassian.confluence.page.restriction"
 )
 
@@ -59,11 +61,11 @@ func init() {
 			Create: createAtlassianScim,
 		},
 		"atlassian.scim.user": {
-			// to override args, implement: initAtlassianScimUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAtlassianScimUser,
 			Create: createAtlassianScimUser,
 		},
 		"atlassian.scim.group": {
-			// to override args, implement: initAtlassianScimGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAtlassianScimGroup,
 			Create: createAtlassianScimGroup,
 		},
 		"atlassian.admin.organization": {
@@ -178,6 +180,14 @@ func init() {
 			// to override args, implement: initAtlassianConfluencePage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAtlassianConfluencePage,
 		},
+		"atlassian.confluence.blogpost": {
+			// to override args, implement: initAtlassianConfluenceBlogpost(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAtlassianConfluenceBlogpost,
+		},
+		"atlassian.confluence.attachment": {
+			// to override args, implement: initAtlassianConfluenceAttachment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAtlassianConfluenceAttachment,
+		},
 		"atlassian.confluence.page.restriction": {
 			// to override args, implement: initAtlassianConfluencePageRestriction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAtlassianConfluencePageRestriction,
@@ -274,11 +284,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.scim.user.title": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianScimUser).GetTitle()).ToDataRes(types.String)
 	},
+	"atlassian.scim.user.active": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianScimUser).GetActive()).ToDataRes(types.Bool)
+	},
+	"atlassian.scim.user.groups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianScimUser).GetGroups()).ToDataRes(types.Array(types.Resource("atlassian.scim.group")))
+	},
 	"atlassian.scim.group.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianScimGroup).GetId()).ToDataRes(types.String)
 	},
 	"atlassian.scim.group.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianScimGroup).GetName()).ToDataRes(types.String)
+	},
+	"atlassian.scim.group.members": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianScimGroup).GetMembers()).ToDataRes(types.Array(types.Resource("atlassian.scim.user")))
 	},
 	"atlassian.admin.organization.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganization).GetId()).ToDataRes(types.String)
@@ -556,6 +575,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.jira.serverInfo.buildNumber": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraServerInfo).GetBuildNumber()).ToDataRes(types.Int)
 	},
+	"atlassian.jira.serverInfo.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraServerInfo).GetVersion()).ToDataRes(types.String)
+	},
+	"atlassian.jira.serverInfo.buildDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraServerInfo).GetBuildDate()).ToDataRes(types.Time)
+	},
+	"atlassian.jira.serverInfo.serverTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraServerInfo).GetServerTime()).ToDataRes(types.Time)
+	},
 	"atlassian.jira.serverInfo.serverTitle": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraServerInfo).GetServerTitle()).ToDataRes(types.String)
 	},
@@ -603,6 +631,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"atlassian.jira.project.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraProject).GetName()).ToDataRes(types.String)
+	},
+	"atlassian.jira.project.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraProject).GetDescription()).ToDataRes(types.String)
 	},
 	"atlassian.jira.project.uuid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraProject).GetUuid()).ToDataRes(types.String)
@@ -793,6 +824,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.jira.customField.contextsCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraCustomField).GetContextsCount()).ToDataRes(types.Int)
 	},
+	"atlassian.jira.customField.lastUsed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraCustomField).GetLastUsed()).ToDataRes(types.Dict)
+	},
 	"atlassian.jira.workflow.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraWorkflow).GetId()).ToDataRes(types.String)
 	},
@@ -880,6 +914,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.confluence.space.pages": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianConfluenceSpace).GetPages()).ToDataRes(types.Array(types.Resource("atlassian.confluence.page")))
 	},
+	"atlassian.confluence.space.blogposts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceSpace).GetBlogposts()).ToDataRes(types.Array(types.Resource("atlassian.confluence.blogpost")))
+	},
 	"atlassian.confluence.page.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianConfluencePage).GetId()).ToDataRes(types.String)
 	},
@@ -907,8 +944,26 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.confluence.page.createdBy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianConfluencePage).GetCreatedBy()).ToDataRes(types.Resource("atlassian.confluence.user"))
 	},
+	"atlassian.confluence.page.updatedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluencePage).GetUpdatedBy()).ToDataRes(types.Resource("atlassian.confluence.user"))
+	},
+	"atlassian.confluence.page.versionMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluencePage).GetVersionMessage()).ToDataRes(types.String)
+	},
+	"atlassian.confluence.page.minorEdit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluencePage).GetMinorEdit()).ToDataRes(types.Bool)
+	},
 	"atlassian.confluence.page.parent": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianConfluencePage).GetParent()).ToDataRes(types.Resource("atlassian.confluence.page"))
+	},
+	"atlassian.confluence.page.ancestorIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluencePage).GetAncestorIds()).ToDataRes(types.Array(types.String))
+	},
+	"atlassian.confluence.page.depth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluencePage).GetDepth()).ToDataRes(types.Int)
+	},
+	"atlassian.confluence.page.webUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluencePage).GetWebUrl()).ToDataRes(types.String)
 	},
 	"atlassian.confluence.page.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianConfluencePage).GetLabels()).ToDataRes(types.Array(types.String))
@@ -918,6 +973,93 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"atlassian.confluence.page.restrictions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianConfluencePage).GetRestrictions()).ToDataRes(types.Array(types.Resource("atlassian.confluence.page.restriction")))
+	},
+	"atlassian.confluence.page.attachments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluencePage).GetAttachments()).ToDataRes(types.Array(types.Resource("atlassian.confluence.attachment")))
+	},
+	"atlassian.confluence.blogpost.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceBlogpost).GetId()).ToDataRes(types.String)
+	},
+	"atlassian.confluence.blogpost.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceBlogpost).GetTitle()).ToDataRes(types.String)
+	},
+	"atlassian.confluence.blogpost.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceBlogpost).GetStatus()).ToDataRes(types.String)
+	},
+	"atlassian.confluence.blogpost.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceBlogpost).GetType()).ToDataRes(types.String)
+	},
+	"atlassian.confluence.blogpost.spaceKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceBlogpost).GetSpaceKey()).ToDataRes(types.String)
+	},
+	"atlassian.confluence.blogpost.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceBlogpost).GetVersion()).ToDataRes(types.Int)
+	},
+	"atlassian.confluence.blogpost.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceBlogpost).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"atlassian.confluence.blogpost.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceBlogpost).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"atlassian.confluence.blogpost.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceBlogpost).GetCreatedBy()).ToDataRes(types.Resource("atlassian.confluence.user"))
+	},
+	"atlassian.confluence.blogpost.updatedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceBlogpost).GetUpdatedBy()).ToDataRes(types.Resource("atlassian.confluence.user"))
+	},
+	"atlassian.confluence.blogpost.versionMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceBlogpost).GetVersionMessage()).ToDataRes(types.String)
+	},
+	"atlassian.confluence.blogpost.minorEdit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceBlogpost).GetMinorEdit()).ToDataRes(types.Bool)
+	},
+	"atlassian.confluence.blogpost.webUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceBlogpost).GetWebUrl()).ToDataRes(types.String)
+	},
+	"atlassian.confluence.blogpost.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceBlogpost).GetLabels()).ToDataRes(types.Array(types.String))
+	},
+	"atlassian.confluence.blogpost.hasRestrictions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceBlogpost).GetHasRestrictions()).ToDataRes(types.Bool)
+	},
+	"atlassian.confluence.blogpost.restrictions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceBlogpost).GetRestrictions()).ToDataRes(types.Array(types.Resource("atlassian.confluence.page.restriction")))
+	},
+	"atlassian.confluence.blogpost.attachments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceBlogpost).GetAttachments()).ToDataRes(types.Array(types.Resource("atlassian.confluence.attachment")))
+	},
+	"atlassian.confluence.attachment.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceAttachment).GetId()).ToDataRes(types.String)
+	},
+	"atlassian.confluence.attachment.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceAttachment).GetTitle()).ToDataRes(types.String)
+	},
+	"atlassian.confluence.attachment.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceAttachment).GetStatus()).ToDataRes(types.String)
+	},
+	"atlassian.confluence.attachment.mediaType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceAttachment).GetMediaType()).ToDataRes(types.String)
+	},
+	"atlassian.confluence.attachment.fileSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceAttachment).GetFileSize()).ToDataRes(types.Int)
+	},
+	"atlassian.confluence.attachment.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceAttachment).GetComment()).ToDataRes(types.String)
+	},
+	"atlassian.confluence.attachment.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceAttachment).GetVersion()).ToDataRes(types.Int)
+	},
+	"atlassian.confluence.attachment.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceAttachment).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"atlassian.confluence.attachment.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceAttachment).GetCreatedBy()).ToDataRes(types.Resource("atlassian.confluence.user"))
+	},
+	"atlassian.confluence.attachment.downloadLink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceAttachment).GetDownloadLink()).ToDataRes(types.String)
+	},
+	"atlassian.confluence.attachment.webUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceAttachment).GetWebUrl()).ToDataRes(types.String)
 	},
 	"atlassian.confluence.page.restriction.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianConfluencePageRestriction).GetId()).ToDataRes(types.String)
@@ -985,6 +1127,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAtlassianScimUser).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"atlassian.scim.user.active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianScimUser).Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"atlassian.scim.user.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianScimUser).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"atlassian.scim.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianScimGroup).__id, ok = v.Value.(string)
 		return
@@ -995,6 +1145,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"atlassian.scim.group.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianScimGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.scim.group.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianScimGroup).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"atlassian.admin.organization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1409,6 +1563,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAtlassianJiraServerInfo).BuildNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"atlassian.jira.serverInfo.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraServerInfo).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.serverInfo.buildDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraServerInfo).BuildDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.serverInfo.serverTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraServerInfo).ServerTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"atlassian.jira.serverInfo.serverTitle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraServerInfo).ServerTitle, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1483,6 +1649,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"atlassian.jira.project.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraProject).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.project.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraProject).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"atlassian.jira.project.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1765,6 +1935,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAtlassianJiraCustomField).ContextsCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"atlassian.jira.customField.lastUsed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraCustomField).LastUsed, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"atlassian.jira.workflow.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraWorkflow).__id, ok = v.Value.(string)
 		return
@@ -1905,6 +2079,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAtlassianConfluenceSpace).Pages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"atlassian.confluence.space.blogposts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceSpace).Blogposts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"atlassian.confluence.page.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianConfluencePage).__id, ok = v.Value.(string)
 		return
@@ -1945,8 +2123,32 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAtlassianConfluencePage).CreatedBy, ok = plugin.RawToTValue[*mqlAtlassianConfluenceUser](v.Value, v.Error)
 		return
 	},
+	"atlassian.confluence.page.updatedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluencePage).UpdatedBy, ok = plugin.RawToTValue[*mqlAtlassianConfluenceUser](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.page.versionMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluencePage).VersionMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.page.minorEdit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluencePage).MinorEdit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"atlassian.confluence.page.parent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianConfluencePage).Parent, ok = plugin.RawToTValue[*mqlAtlassianConfluencePage](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.page.ancestorIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluencePage).AncestorIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.page.depth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluencePage).Depth, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.page.webUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluencePage).WebUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"atlassian.confluence.page.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1959,6 +2161,130 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"atlassian.confluence.page.restrictions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianConfluencePage).Restrictions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.page.attachments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluencePage).Attachments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.blogpost.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceBlogpost).__id, ok = v.Value.(string)
+		return
+	},
+	"atlassian.confluence.blogpost.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceBlogpost).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.blogpost.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceBlogpost).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.blogpost.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceBlogpost).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.blogpost.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceBlogpost).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.blogpost.spaceKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceBlogpost).SpaceKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.blogpost.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceBlogpost).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.blogpost.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceBlogpost).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.blogpost.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceBlogpost).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.blogpost.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceBlogpost).CreatedBy, ok = plugin.RawToTValue[*mqlAtlassianConfluenceUser](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.blogpost.updatedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceBlogpost).UpdatedBy, ok = plugin.RawToTValue[*mqlAtlassianConfluenceUser](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.blogpost.versionMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceBlogpost).VersionMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.blogpost.minorEdit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceBlogpost).MinorEdit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.blogpost.webUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceBlogpost).WebUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.blogpost.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceBlogpost).Labels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.blogpost.hasRestrictions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceBlogpost).HasRestrictions, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.blogpost.restrictions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceBlogpost).Restrictions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.blogpost.attachments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceBlogpost).Attachments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.attachment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceAttachment).__id, ok = v.Value.(string)
+		return
+	},
+	"atlassian.confluence.attachment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceAttachment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.attachment.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceAttachment).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.attachment.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceAttachment).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.attachment.mediaType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceAttachment).MediaType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.attachment.fileSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceAttachment).FileSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.attachment.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceAttachment).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.attachment.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceAttachment).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.attachment.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceAttachment).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.attachment.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceAttachment).CreatedBy, ok = plugin.RawToTValue[*mqlAtlassianConfluenceUser](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.attachment.downloadLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceAttachment).DownloadLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.attachment.webUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceAttachment).WebUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"atlassian.confluence.page.restriction.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2095,12 +2421,14 @@ func (c *mqlAtlassianScim) GetGroups() *plugin.TValue[[]any] {
 type mqlAtlassianScimUser struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAtlassianScimUserInternal it will be used here
+	mqlAtlassianScimUserInternal
 	Id           plugin.TValue[string]
 	Name         plugin.TValue[string]
 	DisplayName  plugin.TValue[string]
 	Organization plugin.TValue[string]
 	Title        plugin.TValue[string]
+	Active       plugin.TValue[bool]
+	Groups       plugin.TValue[[]any]
 }
 
 // createAtlassianScimUser creates a new instance of this resource
@@ -2160,13 +2488,34 @@ func (c *mqlAtlassianScimUser) GetTitle() *plugin.TValue[string] {
 	return &c.Title
 }
 
+func (c *mqlAtlassianScimUser) GetActive() *plugin.TValue[bool] {
+	return &c.Active
+}
+
+func (c *mqlAtlassianScimUser) GetGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Groups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.scim.user", c.__id, "groups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.groups()
+	})
+}
+
 // mqlAtlassianScimGroup for the atlassian.scim.group resource
 type mqlAtlassianScimGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAtlassianScimGroupInternal it will be used here
-	Id   plugin.TValue[string]
-	Name plugin.TValue[string]
+	mqlAtlassianScimGroupInternal
+	Id      plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Members plugin.TValue[[]any]
 }
 
 // createAtlassianScimGroup creates a new instance of this resource
@@ -2212,6 +2561,22 @@ func (c *mqlAtlassianScimGroup) GetId() *plugin.TValue[string] {
 
 func (c *mqlAtlassianScimGroup) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlAtlassianScimGroup) GetMembers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Members, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.scim.group", c.__id, "members")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.members()
+	})
 }
 
 // mqlAtlassianAdminOrganization for the atlassian.admin.organization resource
@@ -3279,6 +3644,9 @@ type mqlAtlassianJiraServerInfo struct {
 	// optional: if you define mqlAtlassianJiraServerInfoInternal it will be used here
 	BaseUrl        plugin.TValue[string]
 	BuildNumber    plugin.TValue[int64]
+	Version        plugin.TValue[string]
+	BuildDate      plugin.TValue[*time.Time]
+	ServerTime     plugin.TValue[*time.Time]
 	ServerTitle    plugin.TValue[string]
 	DeploymentType plugin.TValue[string]
 }
@@ -3321,6 +3689,18 @@ func (c *mqlAtlassianJiraServerInfo) GetBaseUrl() *plugin.TValue[string] {
 
 func (c *mqlAtlassianJiraServerInfo) GetBuildNumber() *plugin.TValue[int64] {
 	return &c.BuildNumber
+}
+
+func (c *mqlAtlassianJiraServerInfo) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlAtlassianJiraServerInfo) GetBuildDate() *plugin.TValue[*time.Time] {
+	return &c.BuildDate
+}
+
+func (c *mqlAtlassianJiraServerInfo) GetServerTime() *plugin.TValue[*time.Time] {
+	return &c.ServerTime
 }
 
 func (c *mqlAtlassianJiraServerInfo) GetServerTitle() *plugin.TValue[string] {
@@ -3505,6 +3885,7 @@ type mqlAtlassianJiraProject struct {
 	// optional: if you define mqlAtlassianJiraProjectInternal it will be used here
 	Id               plugin.TValue[string]
 	Name             plugin.TValue[string]
+	Description      plugin.TValue[string]
 	Uuid             plugin.TValue[string]
 	Key              plugin.TValue[string]
 	Url              plugin.TValue[string]
@@ -3564,6 +3945,10 @@ func (c *mqlAtlassianJiraProject) GetId() *plugin.TValue[string] {
 
 func (c *mqlAtlassianJiraProject) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlAtlassianJiraProject) GetDescription() *plugin.TValue[string] {
+	return &c.Description
 }
 
 func (c *mqlAtlassianJiraProject) GetUuid() *plugin.TValue[string] {
@@ -4144,6 +4529,7 @@ type mqlAtlassianJiraCustomField struct {
 	SchemaCustomId plugin.TValue[int64]
 	ScreensCount   plugin.TValue[int64]
 	ContextsCount  plugin.TValue[int64]
+	LastUsed       plugin.TValue[any]
 }
 
 // createAtlassianJiraCustomField creates a new instance of this resource
@@ -4245,6 +4631,10 @@ func (c *mqlAtlassianJiraCustomField) GetScreensCount() *plugin.TValue[int64] {
 
 func (c *mqlAtlassianJiraCustomField) GetContextsCount() *plugin.TValue[int64] {
 	return &c.ContextsCount
+}
+
+func (c *mqlAtlassianJiraCustomField) GetLastUsed() *plugin.TValue[any] {
+	return &c.LastUsed
 }
 
 // mqlAtlassianJiraWorkflow for the atlassian.jira.workflow resource
@@ -4585,6 +4975,7 @@ type mqlAtlassianConfluenceSpace struct {
 	CreatedBy        plugin.TValue[*mqlAtlassianConfluenceUser]
 	CreatedAt        plugin.TValue[*time.Time]
 	Pages            plugin.TValue[[]any]
+	Blogposts        plugin.TValue[[]any]
 }
 
 // createAtlassianConfluenceSpace creates a new instance of this resource
@@ -4716,6 +5107,22 @@ func (c *mqlAtlassianConfluenceSpace) GetPages() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAtlassianConfluenceSpace) GetBlogposts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Blogposts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.confluence.space", c.__id, "blogposts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.blogposts()
+	})
+}
+
 // mqlAtlassianConfluencePage for the atlassian.confluence.page resource
 type mqlAtlassianConfluencePage struct {
 	MqlRuntime *plugin.Runtime
@@ -4730,10 +5137,17 @@ type mqlAtlassianConfluencePage struct {
 	CreatedAt       plugin.TValue[*time.Time]
 	UpdatedAt       plugin.TValue[*time.Time]
 	CreatedBy       plugin.TValue[*mqlAtlassianConfluenceUser]
+	UpdatedBy       plugin.TValue[*mqlAtlassianConfluenceUser]
+	VersionMessage  plugin.TValue[string]
+	MinorEdit       plugin.TValue[bool]
 	Parent          plugin.TValue[*mqlAtlassianConfluencePage]
+	AncestorIds     plugin.TValue[[]any]
+	Depth           plugin.TValue[int64]
+	WebUrl          plugin.TValue[string]
 	Labels          plugin.TValue[[]any]
 	HasRestrictions plugin.TValue[bool]
 	Restrictions    plugin.TValue[[]any]
+	Attachments     plugin.TValue[[]any]
 }
 
 // createAtlassianConfluencePage creates a new instance of this resource
@@ -4827,6 +5241,34 @@ func (c *mqlAtlassianConfluencePage) GetCreatedBy() *plugin.TValue[*mqlAtlassian
 	})
 }
 
+func (c *mqlAtlassianConfluencePage) GetUpdatedBy() *plugin.TValue[*mqlAtlassianConfluenceUser] {
+	return plugin.GetOrCompute[*mqlAtlassianConfluenceUser](&c.UpdatedBy, func() (*mqlAtlassianConfluenceUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.confluence.page", c.__id, "updatedBy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAtlassianConfluenceUser), nil
+			}
+		}
+
+		return c.updatedBy()
+	})
+}
+
+func (c *mqlAtlassianConfluencePage) GetVersionMessage() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.VersionMessage, func() (string, error) {
+		return c.versionMessage()
+	})
+}
+
+func (c *mqlAtlassianConfluencePage) GetMinorEdit() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MinorEdit, func() (bool, error) {
+		return c.minorEdit()
+	})
+}
+
 func (c *mqlAtlassianConfluencePage) GetParent() *plugin.TValue[*mqlAtlassianConfluencePage] {
 	return plugin.GetOrCompute[*mqlAtlassianConfluencePage](&c.Parent, func() (*mqlAtlassianConfluencePage, error) {
 		if c.MqlRuntime.HasRecording {
@@ -4840,6 +5282,24 @@ func (c *mqlAtlassianConfluencePage) GetParent() *plugin.TValue[*mqlAtlassianCon
 		}
 
 		return c.parent()
+	})
+}
+
+func (c *mqlAtlassianConfluencePage) GetAncestorIds() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AncestorIds, func() ([]any, error) {
+		return c.ancestorIds()
+	})
+}
+
+func (c *mqlAtlassianConfluencePage) GetDepth() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Depth, func() (int64, error) {
+		return c.depth()
+	})
+}
+
+func (c *mqlAtlassianConfluencePage) GetWebUrl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.WebUrl, func() (string, error) {
+		return c.webUrl()
 	})
 }
 
@@ -4869,6 +5329,276 @@ func (c *mqlAtlassianConfluencePage) GetRestrictions() *plugin.TValue[[]any] {
 
 		return c.restrictions()
 	})
+}
+
+func (c *mqlAtlassianConfluencePage) GetAttachments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Attachments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.confluence.page", c.__id, "attachments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.attachments()
+	})
+}
+
+// mqlAtlassianConfluenceBlogpost for the atlassian.confluence.blogpost resource
+type mqlAtlassianConfluenceBlogpost struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAtlassianConfluenceBlogpostInternal
+	Id              plugin.TValue[string]
+	Title           plugin.TValue[string]
+	Status          plugin.TValue[string]
+	Type            plugin.TValue[string]
+	SpaceKey        plugin.TValue[string]
+	Version         plugin.TValue[int64]
+	CreatedAt       plugin.TValue[*time.Time]
+	UpdatedAt       plugin.TValue[*time.Time]
+	CreatedBy       plugin.TValue[*mqlAtlassianConfluenceUser]
+	UpdatedBy       plugin.TValue[*mqlAtlassianConfluenceUser]
+	VersionMessage  plugin.TValue[string]
+	MinorEdit       plugin.TValue[bool]
+	WebUrl          plugin.TValue[string]
+	Labels          plugin.TValue[[]any]
+	HasRestrictions plugin.TValue[bool]
+	Restrictions    plugin.TValue[[]any]
+	Attachments     plugin.TValue[[]any]
+}
+
+// createAtlassianConfluenceBlogpost creates a new instance of this resource
+func createAtlassianConfluenceBlogpost(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAtlassianConfluenceBlogpost{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("atlassian.confluence.blogpost", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAtlassianConfluenceBlogpost) MqlName() string {
+	return "atlassian.confluence.blogpost"
+}
+
+func (c *mqlAtlassianConfluenceBlogpost) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAtlassianConfluenceBlogpost) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAtlassianConfluenceBlogpost) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlAtlassianConfluenceBlogpost) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAtlassianConfluenceBlogpost) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAtlassianConfluenceBlogpost) GetSpaceKey() *plugin.TValue[string] {
+	return &c.SpaceKey
+}
+
+func (c *mqlAtlassianConfluenceBlogpost) GetVersion() *plugin.TValue[int64] {
+	return &c.Version
+}
+
+func (c *mqlAtlassianConfluenceBlogpost) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAtlassianConfluenceBlogpost) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAtlassianConfluenceBlogpost) GetCreatedBy() *plugin.TValue[*mqlAtlassianConfluenceUser] {
+	return &c.CreatedBy
+}
+
+func (c *mqlAtlassianConfluenceBlogpost) GetUpdatedBy() *plugin.TValue[*mqlAtlassianConfluenceUser] {
+	return &c.UpdatedBy
+}
+
+func (c *mqlAtlassianConfluenceBlogpost) GetVersionMessage() *plugin.TValue[string] {
+	return &c.VersionMessage
+}
+
+func (c *mqlAtlassianConfluenceBlogpost) GetMinorEdit() *plugin.TValue[bool] {
+	return &c.MinorEdit
+}
+
+func (c *mqlAtlassianConfluenceBlogpost) GetWebUrl() *plugin.TValue[string] {
+	return &c.WebUrl
+}
+
+func (c *mqlAtlassianConfluenceBlogpost) GetLabels() *plugin.TValue[[]any] {
+	return &c.Labels
+}
+
+func (c *mqlAtlassianConfluenceBlogpost) GetHasRestrictions() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasRestrictions, func() (bool, error) {
+		return c.hasRestrictions()
+	})
+}
+
+func (c *mqlAtlassianConfluenceBlogpost) GetRestrictions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Restrictions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.confluence.blogpost", c.__id, "restrictions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.restrictions()
+	})
+}
+
+func (c *mqlAtlassianConfluenceBlogpost) GetAttachments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Attachments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.confluence.blogpost", c.__id, "attachments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.attachments()
+	})
+}
+
+// mqlAtlassianConfluenceAttachment for the atlassian.confluence.attachment resource
+type mqlAtlassianConfluenceAttachment struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAtlassianConfluenceAttachmentInternal it will be used here
+	Id           plugin.TValue[string]
+	Title        plugin.TValue[string]
+	Status       plugin.TValue[string]
+	MediaType    plugin.TValue[string]
+	FileSize     plugin.TValue[int64]
+	Comment      plugin.TValue[string]
+	Version      plugin.TValue[int64]
+	CreatedAt    plugin.TValue[*time.Time]
+	CreatedBy    plugin.TValue[*mqlAtlassianConfluenceUser]
+	DownloadLink plugin.TValue[string]
+	WebUrl       plugin.TValue[string]
+}
+
+// createAtlassianConfluenceAttachment creates a new instance of this resource
+func createAtlassianConfluenceAttachment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAtlassianConfluenceAttachment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("atlassian.confluence.attachment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAtlassianConfluenceAttachment) MqlName() string {
+	return "atlassian.confluence.attachment"
+}
+
+func (c *mqlAtlassianConfluenceAttachment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAtlassianConfluenceAttachment) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAtlassianConfluenceAttachment) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlAtlassianConfluenceAttachment) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAtlassianConfluenceAttachment) GetMediaType() *plugin.TValue[string] {
+	return &c.MediaType
+}
+
+func (c *mqlAtlassianConfluenceAttachment) GetFileSize() *plugin.TValue[int64] {
+	return &c.FileSize
+}
+
+func (c *mqlAtlassianConfluenceAttachment) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlAtlassianConfluenceAttachment) GetVersion() *plugin.TValue[int64] {
+	return &c.Version
+}
+
+func (c *mqlAtlassianConfluenceAttachment) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAtlassianConfluenceAttachment) GetCreatedBy() *plugin.TValue[*mqlAtlassianConfluenceUser] {
+	return &c.CreatedBy
+}
+
+func (c *mqlAtlassianConfluenceAttachment) GetDownloadLink() *plugin.TValue[string] {
+	return &c.DownloadLink
+}
+
+func (c *mqlAtlassianConfluenceAttachment) GetWebUrl() *plugin.TValue[string] {
+	return &c.WebUrl
 }
 
 // mqlAtlassianConfluencePageRestriction for the atlassian.confluence.page.restriction resource

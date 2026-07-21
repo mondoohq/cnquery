@@ -43,7 +43,7 @@ jobs:
       build_list: ${{ steps.providers.outputs.build_list }}
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
 
@@ -122,7 +122,7 @@ jobs:
         provider: ${{ fromJSON(needs.scoping.outputs.build_list) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
 
@@ -130,14 +130,14 @@ jobs:
         run: cat ".github/env" >> $GITHUB_ENV
 
       - name: Set up Go
-        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version: ">=${{ env.golang-version }}"
           check-latest: true
           cache: false
 
       - name: Install Protoc
-        uses: arduino/setup-protoc@c65c819552d16ad3c9b72d9dfd5ba5237b9c906b # v3.0.0
+        uses: ./.github/actions/setup-protoc
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           version: ${{ env.protoc-version }}
@@ -218,7 +218,7 @@ jobs:
           echo "version=$VER" >> $GITHUB_OUTPUT
 
       - name: "Notify Slack on provider release"
-        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        uses: slackapi/slack-github-action@0d95c9a7becc1e6e297d76df9bc735c44f4cbcbc # v3.0.5
         # Only on a real publish that built successfully.
         if: ${{ ! inputs.skip_publish && steps.build-providers.outcome == 'success' }}
         with:
@@ -249,7 +249,7 @@ jobs:
           path: dist
 
       - name: Send Slack notification on failure
-        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        uses: slackapi/slack-github-action@0d95c9a7becc1e6e297d76df9bc735c44f4cbcbc # v3.0.5
         if: ${{ always() && steps.build-providers.outcome != 'success' }}
         with:
           method: chat.postMessage

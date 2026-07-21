@@ -6,14 +6,16 @@ package config
 import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/slack/connection"
 	"go.mondoo.com/mql/v13/providers/slack/provider"
 )
 
 var Config = plugin.Provider{
 	Name:            "slack",
 	ID:              "go.mondoo.com/cnquery/v9/providers/slack",
-	Version:         "13.1.11",
+	Version:         "13.1.16",
 	ConnectionTypes: []string{provider.ConnectionType},
+	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "slack",
@@ -33,7 +35,7 @@ Examples:
 					Long:    "token",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Slack API token (To learn more, read https://mondoo.com/docs/cnspec/saas/slack/)",
+					Desc:    "Slack API token (To learn more, read https://mondoo.com/docs/cnspec/saas/slack)",
 				},
 				{
 					Long:    "team-id",

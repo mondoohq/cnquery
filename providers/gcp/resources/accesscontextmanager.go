@@ -70,10 +70,11 @@ func (g *mqlGcpOrganization) accessPolicies() ([]any, error) {
 		}
 
 		mqlPolicy, err := CreateResource(g.MqlRuntime, "gcp.accesscontextmanager.accessPolicy", map[string]*llx.RawData{
-			"name":   llx.StringData(policy.Name),
-			"title":  llx.StringData(policy.Title),
-			"parent": llx.StringData(policy.Parent),
-			"etag":   llx.StringData(policy.Etag),
+			"name":    llx.StringData(policy.Name),
+			"title":   llx.StringData(policy.Title),
+			"parent":  llx.StringData(policy.Parent),
+			"etag":    llx.StringData(policy.Etag),
+			"created": llx.TimeDataPtr(timestampAsTimePtr(policy.GetCreateTime())),
 		})
 		if err != nil {
 			return nil, err

@@ -246,6 +246,18 @@ func (g *mqlGcpProjectGkeServiceCluster) databaseEncryptionKey() (*mqlGcpProject
 	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
 }
 
+func (g *mqlGcpProjectGkeServiceCluster) managedBy() (string, error) {
+	return managedByFromLabels(g.GetResourceLabels())
+}
+
+func (g *mqlGcpProjectGkeServiceClusterNodepoolConfig) bootDiskKmsKeyRef() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	keyName := g.GetBootDiskKmsKey()
+	if keyName.Error != nil {
+		return nil, keyName.Error
+	}
+	return newKmsCryptoKeyRef(g.MqlRuntime, &g.BootDiskKmsKeyRef, keyName.Data)
+}
+
 func (g *mqlGcpProjectGkeServiceCluster) networkPolicy() (*mqlGcpProjectGkeServiceClusterNetworkPolicy, error) {
 	if g.NetworkPolicyConfig.Error != nil {
 		return nil, g.NetworkPolicyConfig.Error
@@ -1420,18 +1432,14 @@ type mqlGcpProjectGkeServiceClusterNotificationConfigInternal struct {
 }
 
 func (g *mqlGcpProjectGkeServiceClusterNotificationConfig) topic() (*mqlGcpProjectPubsubServiceTopic, error) {
-	topicName := g.cacheTopic
-	if topicName == "" {
-		g.Topic.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
-	}
-	res, err := NewResource(g.MqlRuntime, "gcp.project.pubsubService.topic", map[string]*llx.RawData{
-		"name": llx.StringData(topicName),
-	})
+	ref, err := resolvePubsubTopicRef(g.MqlRuntime, g.cacheTopic, "")
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGcpProjectPubsubServiceTopic), nil
+	if ref == nil {
+		g.Topic.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return ref, nil
 }
 
 func (g *mqlGcpProjectGkeServiceCluster) loggingEnabled() (bool, error) {

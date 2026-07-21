@@ -6,10 +6,14 @@ package resources
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/applicationautoscaling"
+	aatypes "github.com/aws/aws-sdk-go-v2/service/applicationautoscaling/types"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	ddtypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/cockroachdb/errors"
@@ -243,6 +247,10 @@ func (a *mqlAwsDynamodbExport) table() (*mqlAwsDynamodbTable, error) {
 	if err != nil {
 		return nil, err
 	}
+	if exp == nil {
+		a.Table.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
 	if exp.TableArn == nil || *exp.TableArn == "" {
 		a.Table.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -326,9 +334,8 @@ func initAwsDynamodbTable(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["name"] = llx.StringData(ids.name)
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 
@@ -336,7 +343,46 @@ func initAwsDynamodbTable(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return nil, nil, errors.New("arn required to fetch dynamodb table")
 	}
 
-	// load all rds db instances
+	arnVal := args["arn"].Value.(string)
+
+	// No API call is required: the DynamoDB table ARN
+	// (arn:aws:dynamodb:<region>:<acct>:table/<name>) carries both the region
+	// and the table name, and the list path only constructs a shell (arn / name
+	// / region / id) - the heavy fields lazy-load via fetchDetail->DescribeTable.
+	// So derive region + name from the ARN and build the shell directly instead
+	// of fanning ListTables across every region and scanning in memory.
+	var region, tableName string
+	if parsed, err := arn.Parse(arnVal); err == nil && strings.HasPrefix(parsed.Resource, "table/") {
+		region = parsed.Region
+		tableName = strings.TrimPrefix(parsed.Resource, "table/")
+	}
+	if args["region"] != nil {
+		if r, ok := args["region"].Value.(string); ok && r != "" {
+			region = r
+		}
+	}
+	if args["name"] != nil {
+		if n, ok := args["name"].Value.(string); ok && n != "" {
+			tableName = n
+		}
+	}
+
+	if region != "" && tableName != "" {
+		table, err := CreateResource(runtime, "aws.dynamodb.table",
+			map[string]*llx.RawData{
+				"arn":    llx.StringData(arnVal),
+				"name":   llx.StringData(tableName),
+				"region": llx.StringData(region),
+				"id":     llx.StringData(""),
+			})
+		if err != nil {
+			return nil, nil, err
+		}
+		return args, table, nil
+	}
+
+	// Fallback: scan the cached list (e.g. when the ARN can't be parsed and
+	// there's no region hint).
 	obj, err := CreateResource(runtime, "aws.dynamodb", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
@@ -348,7 +394,6 @@ func initAwsDynamodbTable(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return nil, nil, rawResources.Error
 	}
 
-	arnVal := args["arn"].Value.(string)
 	for _, rawResource := range rawResources.Data {
 		dbInstance := rawResource.(*mqlAwsDynamodbTable)
 		if dbInstance.Arn.Data == arnVal {
@@ -385,10 +430,16 @@ func (a *mqlAwsDynamodbTable) backups() ([]any, error) {
 }
 
 type mqlAwsDynamodbTableInternal struct {
-	cacheSseKmsKeyArn *string
-	fetched           bool
-	fetchErr          error
-	lock              sync.Mutex
+	cacheSseKmsKeyArn   *string
+	cacheSourceTableArn *string
+	fetched             bool
+	fetchErr            error
+	lock                sync.Mutex
+
+	cbFetched bool
+	cbErr     error
+	cb        *ddtypes.ContinuousBackupsDescription
+	cbLock    sync.Mutex
 }
 
 func (a *mqlAwsDynamodbTable) sseKmsKey() (*mqlAwsKmsKey, error) {
@@ -642,6 +693,19 @@ func (a *mqlAwsDynamodbTable) fetchDetail() error {
 	a.BillingMode = plugin.TValue[string]{Data: billingModeFromSummary(table.Table.BillingModeSummary), State: plugin.StateIsSet}
 	a.ReplicaRegions = plugin.TValue[[]any]{Data: replicaRegionsFromDescriptions(table.Table.Replicas), State: plugin.StateIsSet}
 
+	// RestoreSummary is only present when the table was created by restoring from
+	// a backup or point-in-time recovery; its absence means "not restored".
+	rs := table.Table.RestoreSummary
+	a.RestoredFromBackup = plugin.TValue[bool]{Data: rs != nil, State: plugin.StateIsSet}
+	if rs != nil {
+		a.RestoreInProgress = plugin.TValue[bool]{Data: convert.ToValue(rs.RestoreInProgress), State: plugin.StateIsSet}
+		a.RestoreDateTime = plugin.TValue[*time.Time]{Data: rs.RestoreDateTime, State: plugin.StateIsSet}
+		a.cacheSourceTableArn = rs.SourceTableArn
+	} else {
+		a.RestoreInProgress = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
+		a.RestoreDateTime = plugin.TValue[*time.Time]{Data: nil, State: plugin.StateIsSet | plugin.StateIsNull}
+	}
+
 	gsiList := []any{}
 	for _, gsi := range table.Table.GlobalSecondaryIndexes {
 		d, _ := convert.JsonToDict(gsi)
@@ -721,6 +785,67 @@ func (a *mqlAwsDynamodbTable) replicaRegions() ([]any, error) {
 	return nil, a.fetchDetail()
 }
 
+func (a *mqlAwsDynamodbTable) restoredFromBackup() (bool, error) {
+	return false, a.fetchDetail()
+}
+
+func (a *mqlAwsDynamodbTable) restoreInProgress() (bool, error) {
+	return false, a.fetchDetail()
+}
+
+func (a *mqlAwsDynamodbTable) restoreDateTime() (*time.Time, error) {
+	return nil, a.fetchDetail()
+}
+
+func (a *mqlAwsDynamodbTable) sourceTable() (*mqlAwsDynamodbTable, error) {
+	if err := a.fetchDetail(); err != nil {
+		return nil, err
+	}
+	if a.cacheSourceTableArn == nil || *a.cacheSourceTableArn == "" {
+		a.SourceTable.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.dynamodb.table",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheSourceTableArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsDynamodbTable), nil
+}
+
+func (a *mqlAwsDynamodbTable) autoScalingEnabled() (bool, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	tableName := a.Name.Data
+	svc := conn.ApplicationAutoscaling(region)
+	ctx := context.Background()
+
+	// A table "scales with demand" when both its read and write capacity have
+	// Application Auto Scaling scalable targets. On-demand (PAY_PER_REQUEST)
+	// tables have none and are evaluated by their billing mode instead.
+	resp, err := svc.DescribeScalableTargets(ctx, &applicationautoscaling.DescribeScalableTargetsInput{
+		ServiceNamespace: aatypes.ServiceNamespaceDynamodb,
+		ResourceIds:      []string{"table/" + tableName},
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	var hasRead, hasWrite bool
+	for i := range resp.ScalableTargets {
+		switch resp.ScalableTargets[i].ScalableDimension {
+		case aatypes.ScalableDimensionDynamoDBTableReadCapacityUnits:
+			hasRead = true
+		case aatypes.ScalableDimensionDynamoDBTableWriteCapacityUnits:
+			hasWrite = true
+		}
+	}
+	return hasRead && hasWrite, nil
+}
+
 func (a *mqlAwsDynamodbTable) globalSecondaryIndexes() ([]any, error) {
 	return nil, a.fetchDetail()
 }
@@ -781,11 +906,7 @@ func replicaRegionsFromDescriptions(replicas []ddtypes.ReplicaDescription) []any
 }
 
 func dynamoDBTagsToMap(tags []ddtypes.Tag) map[string]any {
-	tagsMap := make(map[string]any)
-	for _, tag := range tags {
-		tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
-	}
-	return tagsMap
+	return tagsToMap(tags, func(t ddtypes.Tag) *string { return t.Key }, func(t ddtypes.Tag) *string { return t.Value })
 }
 
 func (a *mqlAwsDynamodbGlobaltable) replicaSettings() ([]any, error) {
@@ -808,9 +929,8 @@ func initAwsDynamodbGlobaltable(runtime *plugin.Runtime, args map[string]*llx.Ra
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			(args)["name"] = llx.StringData(ids.name)
-			(args)["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 
@@ -839,19 +959,86 @@ func initAwsDynamodbGlobaltable(runtime *plugin.Runtime, args map[string]*llx.Ra
 	return nil, nil, errors.New("dynamo db table does not exist")
 }
 
-func (a *mqlAwsDynamodbTable) continuousBackups() (any, error) {
-	tableName := a.Name.Data
-	region := a.Region.Data
+// fetchContinuousBackups loads the table's continuous-backups description once
+// and shares it across the raw continuousBackups dict and the typed PITR
+// scalars, so the whole group costs a single DescribeContinuousBackups call.
+func (a *mqlAwsDynamodbTable) fetchContinuousBackups() (*ddtypes.ContinuousBackupsDescription, error) {
+	if a.cbFetched {
+		return a.cb, a.cbErr
+	}
+	a.cbLock.Lock()
+	defer a.cbLock.Unlock()
+	if a.cbFetched {
+		return a.cb, a.cbErr
+	}
+
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.Dynamodb(region)
+	svc := conn.Dynamodb(a.Region.Data)
 	ctx := context.Background()
 
 	// no pagination required
-	continuousBackupsResp, err := svc.DescribeContinuousBackups(ctx, &dynamodb.DescribeContinuousBackupsInput{TableName: &tableName})
+	resp, err := svc.DescribeContinuousBackups(ctx, &dynamodb.DescribeContinuousBackupsInput{TableName: &a.Name.Data})
+	a.cbFetched = true
 	if err != nil {
-		return nil, errors.Wrap(err, "could not gather aws dynamodb continuous backups")
+		a.cbErr = errors.Wrap(err, "could not gather aws dynamodb continuous backups")
+		return nil, a.cbErr
 	}
-	return convert.JsonToDict(continuousBackupsResp.ContinuousBackupsDescription)
+	a.cb = resp.ContinuousBackupsDescription
+	return a.cb, nil
+}
+
+func (a *mqlAwsDynamodbTable) continuousBackups() (any, error) {
+	cb, err := a.fetchContinuousBackups()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(cb)
+}
+
+func (a *mqlAwsDynamodbTable) continuousBackupsEnabled() (bool, error) {
+	cb, err := a.fetchContinuousBackups()
+	if err != nil || cb == nil {
+		return false, err
+	}
+	return cb.ContinuousBackupsStatus == ddtypes.ContinuousBackupsStatusEnabled, nil
+}
+
+func (a *mqlAwsDynamodbTable) pointInTimeRecoveryEnabled() (bool, error) {
+	cb, err := a.fetchContinuousBackups()
+	if err != nil || cb == nil || cb.PointInTimeRecoveryDescription == nil {
+		return false, err
+	}
+	return cb.PointInTimeRecoveryDescription.PointInTimeRecoveryStatus == ddtypes.PointInTimeRecoveryStatusEnabled, nil
+}
+
+func (a *mqlAwsDynamodbTable) earliestRestorableDateTime() (*time.Time, error) {
+	cb, err := a.fetchContinuousBackups()
+	if err != nil || cb == nil || cb.PointInTimeRecoveryDescription == nil {
+		return nil, err
+	}
+	return cb.PointInTimeRecoveryDescription.EarliestRestorableDateTime, nil
+}
+
+func (a *mqlAwsDynamodbTable) latestRestorableDateTime() (*time.Time, error) {
+	cb, err := a.fetchContinuousBackups()
+	if err != nil || cb == nil || cb.PointInTimeRecoveryDescription == nil {
+		return nil, err
+	}
+	return cb.PointInTimeRecoveryDescription.LatestRestorableDateTime, nil
+}
+
+func (a *mqlAwsDynamodbTable) pitrRecoveryPeriodInDays() (int64, error) {
+	cb, err := a.fetchContinuousBackups()
+	if err != nil || cb == nil || cb.PointInTimeRecoveryDescription == nil {
+		return 0, err
+	}
+	period := cb.PointInTimeRecoveryDescription.RecoveryPeriodInDays
+	if period == nil {
+		// 0 is not a valid PITR window (AWS uses 1-35 days), so it unambiguously
+		// signals "no configured recovery period" (PITR disabled or default retention).
+		return 0, nil
+	}
+	return int64(*period), nil
 }
 
 func (a *mqlAwsDynamodbGlobaltable) id() (string, error) {

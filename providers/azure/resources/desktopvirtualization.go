@@ -136,5 +136,19 @@ func hostPoolToMql(runtime *plugin.Runtime, hp *armdesktopvirtualization.HostPoo
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionDesktopVirtualizationServiceHostPool), nil
+	mqlHostPool := res.(*mqlAzureSubscriptionDesktopVirtualizationServiceHostPool)
+	sysData, err := convert.JsonToDict(hp.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlHostPool.cacheSystemData = sysData
+	return mqlHostPool, nil
+}
+
+type mqlAzureSubscriptionDesktopVirtualizationServiceHostPoolInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionDesktopVirtualizationServiceHostPool) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }

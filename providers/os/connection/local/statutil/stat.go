@@ -22,6 +22,28 @@ type CommandRunner interface {
 	RunCommand(command string) (*shared.Command, error)
 }
 
+// linuxStatScript detects symlinks, verifies existence, and stats in one
+// round-trip. SL=1 if symlink. Falls back to stat without -L for dangling
+// symlinks. Captures stat -L stdout before checking exit code so SELinux
+// %C errors don't trigger a spurious fallback. Path is passed as $1.
+const linuxStatScript = `sh -c '` +
+	`SL=0; test -L "$1" && SL=1; ` +
+	`test -e "$1" -o $SL -eq 1 || exit 1; ` +
+	`r=$(stat -L "$1" -c "$SL.%s.%f.%u.%g.%X.%Y.%C" 2>/dev/null) ` +
+	`&& printf "%s\n" "$r" ` +
+	`|| { [ -n "$r" ] && printf "%s\n" "$r" ` +
+	`|| stat "$1" -c "$SL.%s.%f.%u.%g.%X.%Y.%C" 2>/dev/null; }` +
+	`' _ `
+
+// bsdStatScript detects symlinks and stats in one round-trip. Falls back
+// to stat without -L for dangling symlinks. Path is passed as $1.
+const bsdStatScript = `sh -c '` +
+	`SL=0; test -L "$1" && SL=1; ` +
+	`test -e "$1" -o $SL -eq 1 || exit 1; ` +
+	`stat -L -f "$SL:%z:%p:%u:%g:%a:%m" "$1" 2>/dev/null ` +
+	`|| stat -f "$SL:%z:%p:%u:%g:%a:%m" "$1"` +
+	`' _ `
+
 type statParser func(name string) (os.FileInfo, error)
 
 func New(cmdRunner CommandRunner) *statHelper {
@@ -82,25 +104,9 @@ func (s *statHelper) Stat(name string) (os.FileInfo, error) {
 func (s *statHelper) linux(name string) (os.FileInfo, error) {
 	path := shared.ShellEscape(name)
 
-	// check if file exists
-	cmd, err := s.commandRunner.RunCommand("test -e " + path)
-	if err != nil || cmd.ExitStatus != 0 {
-		return nil, os.ErrNotExist
-	}
+	command := linuxStatScript + path
 
-	var sb strings.Builder
-	sb.WriteString("stat -L ")
-	sb.WriteString(path)
-	sb.WriteString(" -c '%s.%f.%u.%g.%X.%Y.%C'")
-
-	// NOTE: handling the exit code here does not work for all cases
-	// sometimes stat returns something like: failed to get security context of '/etc/ssh/sshd_config': No data available
-	// Therefore we continue after this command and try to parse the result and focus on making the parsing more robust
-	command := sb.String()
-	cmd, err = s.commandRunner.RunCommand(command)
-
-	// we get stderr content in cases where we could not gather the security context via failed to get security context of
-	// it could also include: No such file or directory
+	cmd, err := s.commandRunner.RunCommand(command)
 	if err != nil {
 		log.Debug().Str("path", path).Str("command", command).Err(err).Send()
 	}
@@ -114,45 +120,56 @@ func (s *statHelper) linux(name string) (os.FileInfo, error) {
 		return nil, err
 	}
 
-	statsData := strings.Split(strings.TrimSpace(string(data)), ".")
-	if len(statsData) != 7 {
+	// Output format: SL.size.mode.uid.gid.atime.mtime.selinux
+	// where SL is 1 (symlink) or 0 (not a symlink).
+	// Take only the first line in case stderr leaked into the output.
+	output := strings.TrimSpace(string(data))
+	if output == "" {
+		return nil, os.ErrNotExist
+	}
+	if idx := strings.IndexByte(output, '\n'); idx >= 0 {
+		output = output[:idx]
+	}
+	statsData := strings.Split(output, ".")
+	if len(statsData) != 8 {
 		log.Debug().Str("path", path).Msg("could not parse file stat information")
-		// TODO: we may need to parse the returning error to better distinguish between a real error and file not found
-		// if we are going to check for file not found, we probably run into the issue that the error message is returned in
-		// multiple languages
 		return nil, errors.New("could not parse file stat: " + path)
 	}
 
+	isSymlink := statsData[0] == "1"
+
 	// Note: The SElinux context may not be supported by stats on all OSs.
-	// For example: Alpine does not support it, resulting in statsData[6] == "C"
+	// For example: Alpine does not support it, resulting in statsData[7] == "C"
 
-	size, err := strconv.Atoi(statsData[0])
+	size, err := strconv.Atoi(statsData[1])
 	if err != nil {
 		return nil, errors.Wrap(err, "could not stat "+name)
 	}
 
-	uid, err := strconv.ParseInt(statsData[2], 10, 64)
+	uid, err := strconv.ParseInt(statsData[3], 10, 64)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not stat "+name)
 	}
 
-	gid, err := strconv.ParseInt(statsData[3], 10, 64)
+	gid, err := strconv.ParseInt(statsData[4], 10, 64)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not stat "+name)
 	}
 
-	mask, err := strconv.ParseUint(statsData[1], 16, 32)
+	mask, err := strconv.ParseUint(statsData[2], 16, 32)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not stat "+name)
 	}
 
-	mtime, err := strconv.ParseInt(statsData[4], 10, 64)
+	mtime, err := strconv.ParseInt(statsData[5], 10, 64)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not stat "+name)
 	}
 
-	// extract file modes
 	mapMode := toFileMode(mask)
+	if isSymlink {
+		mapMode |= fs.ModeSymlink
+	}
 
 	return &shared.FileInfo{
 		FName:    filepath.Base(path),
@@ -166,20 +183,9 @@ func (s *statHelper) linux(name string) (os.FileInfo, error) {
 }
 
 func (s *statHelper) unix(name string) (os.FileInfo, error) {
-	lstat := "-L"
-	format := "-f"
 	path := shared.ShellEscape(name)
 
-	var sb strings.Builder
-	sb.WriteString("stat ")
-	sb.WriteString(lstat)
-	sb.WriteString(" ")
-	sb.WriteString(format)
-	sb.WriteString(" '%z:%p:%u:%g:%a:%m'")
-	sb.WriteString(" ")
-	sb.WriteString(path)
-
-	cmd, err := s.commandRunner.RunCommand(sb.String())
+	cmd, err := s.commandRunner.RunCommand(bsdStatScript + path)
 	if err != nil {
 		log.Debug().Err(err).Send()
 	}
@@ -190,35 +196,39 @@ func (s *statHelper) unix(name string) (os.FileInfo, error) {
 	}
 
 	statsData := strings.Split(string(data), ":")
-	if len(statsData) != 6 {
-		// TODO: there are likely cases where the file exist but we could still not parse it
+	if len(statsData) != 7 {
 		return nil, os.ErrNotExist
 	}
 
-	size, err := strconv.Atoi(statsData[0])
+	isSymlink := statsData[0] == "1"
+
+	size, err := strconv.Atoi(statsData[1])
 	if err != nil {
 		return nil, errors.Wrap(err, "could not stat "+name)
 	}
 
-	uid, err := strconv.ParseInt(statsData[2], 10, 64)
+	uid, err := strconv.ParseInt(statsData[3], 10, 64)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not stat "+name)
 	}
 
-	gid, err := strconv.ParseInt(statsData[3], 10, 64)
+	gid, err := strconv.ParseInt(statsData[4], 10, 64)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not stat "+name)
 	}
 
 	// NOTE: the base is 8 instead of 16 on linux systems
-	mask, err := strconv.ParseUint(statsData[1], 8, 32)
+	mask, err := strconv.ParseUint(statsData[2], 8, 32)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not stat "+name)
 	}
 
 	mode := toFileMode(mask)
+	if isSymlink {
+		mode |= fs.ModeSymlink
+	}
 
-	mtime, err := strconv.ParseInt(statsData[4], 10, 64)
+	mtime, err := strconv.ParseInt(statsData[5], 10, 64)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not stat "+name)
 	}
@@ -238,7 +248,8 @@ func (s *statHelper) aix(name string) (os.FileInfo, error) {
 	path := shared.ShellEscape(name)
 	var sb strings.Builder
 
-	// AIX does not ship with stat, therefore we use perl stat function to retrieve the same information as on linux
+	// AIX does not ship with stat, therefore we use perl stat function to retrieve the same information as on linux.
+	// perl's -l operator detects symlinks; the result is prepended as the first colon-separated field.
 	// Codes are taken from https://perldoc.perl.org/functions/stat
 	//0 dev      device number of filesystem
 	//1 ino      inode number
@@ -253,7 +264,8 @@ func (s *statHelper) aix(name string) (os.FileInfo, error) {
 	//10 ctime    inode change time (NOT creation time!) since the epoch
 	//11 blksize  preferred block size for file system I/O
 	//12 blocks   actual number of blocks allocated
-	script := `perl -e '@a = stat(shift) or exit 2; $u = getpwuid($a[4]); $g = getgrgid($a[5]); printf("0%o:%s:%d:%s:%d:%d:%d", $a[2], $u, $a[4], $g, $a[5], $a[7], $a[9])'`
+	// perl stat() follows symlinks; lstat() fallback handles dangling symlinks
+	script := `perl -e '$p = shift; $l = -l $p ? 1 : 0; @a = stat($p); @a = lstat($p) if !@a && $l; exit 2 if !@a; $u = getpwuid($a[4]); $g = getgrgid($a[5]); printf("%d:0%o:%s:%d:%s:%d:%d:%d", $l, $a[2], $u, $a[4], $g, $a[5], $a[7], $a[9])'`
 	sb.WriteString(script)
 	sb.WriteString(" ")
 	sb.WriteString(path)
@@ -269,34 +281,39 @@ func (s *statHelper) aix(name string) (os.FileInfo, error) {
 	}
 
 	statsData := strings.Split(string(data), ":")
-	if len(statsData) != 7 {
+	if len(statsData) != 8 {
 		return nil, os.ErrNotExist
 	}
 
-	size, err := strconv.Atoi(statsData[5])
+	isSymlink := statsData[0] == "1"
+
+	size, err := strconv.Atoi(statsData[6])
 	if err != nil {
 		return nil, errors.Wrap(err, "could not stat "+name)
 	}
 
-	uid, err := strconv.ParseInt(statsData[2], 10, 64)
+	uid, err := strconv.ParseInt(statsData[3], 10, 64)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not stat "+name)
 	}
 
-	gid, err := strconv.ParseInt(statsData[4], 10, 64)
+	gid, err := strconv.ParseInt(statsData[5], 10, 64)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not stat "+name)
 	}
 
 	// NOTE: the base is 8 instead of 16 on linux systems
-	mask, err := strconv.ParseUint(statsData[0], 8, 32)
+	mask, err := strconv.ParseUint(statsData[1], 8, 32)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not stat "+name)
 	}
 
 	mode := toFileMode(mask)
+	if isSymlink {
+		mode |= fs.ModeSymlink
+	}
 
-	mtime, err := strconv.ParseInt(statsData[6], 10, 64)
+	mtime, err := strconv.ParseInt(statsData[7], 10, 64)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not stat "+name)
 	}

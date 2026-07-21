@@ -5,14 +5,16 @@ package config
 
 import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/depsdev/connection"
 	"go.mondoo.com/mql/v13/providers/depsdev/provider"
 )
 
 var Config = plugin.Provider{
 	Name:            "depsdev",
 	ID:              "go.mondoo.com/mql/v13/providers/depsdev",
-	Version:         "13.0.17",
+	Version:         "13.1.3",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
+	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "depsdev",

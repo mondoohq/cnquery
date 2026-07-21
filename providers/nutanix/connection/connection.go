@@ -181,6 +181,11 @@ func (c *NutanixConnection) VmApi() *vmmapi.VmApi {
 	return vmmapi.NewVmApi(c.vmmClient)
 }
 
+// ImagesApi returns the VMM images API.
+func (c *NutanixConnection) ImagesApi() *vmmapi.ImagesApi {
+	return vmmapi.NewImagesApi(c.vmmClient)
+}
+
 // UsersApi returns the IAM users API.
 func (c *NutanixConnection) UsersApi() *iamapi.UsersApi {
 	return iamapi.NewUsersApi(c.iamClient)

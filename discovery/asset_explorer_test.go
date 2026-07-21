@@ -8,8 +8,34 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/v13/cli/config"
 	inventory "go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 )
+
+// TestMergeConnectionFeatures verifies that connection features are the union of
+// the local cli/config.Features global and caller-supplied (server-activated)
+// features — so a feature present only on the context (e.g. TerraformResolveVars
+// from GetScanParameters) still reaches the provider connection.
+func TestMergeConnectionFeatures(t *testing.T) {
+	saved := config.Features
+	t.Cleanup(func() { config.Features = saved })
+	config.Features = []byte{7, 9} // local config features
+
+	t.Run("adds server features on top of local ones", func(t *testing.T) {
+		got := mergeConnectionFeatures([]byte{17}) // TerraformResolveVars from server
+		assert.ElementsMatch(t, []byte{7, 9, 17}, got)
+	})
+
+	t.Run("deduplicates overlap", func(t *testing.T) {
+		got := mergeConnectionFeatures([]byte{9, 17})
+		assert.ElementsMatch(t, []byte{7, 9, 17}, got)
+	})
+
+	t.Run("nil extra returns just the local features", func(t *testing.T) {
+		got := mergeConnectionFeatures(nil)
+		assert.ElementsMatch(t, []byte{7, 9}, got)
+	})
+}
 
 func newTestExplorer(assets ...*TrackedAsset) *AssetExplorer {
 	return &AssetExplorer{

@@ -92,42 +92,73 @@ func scanBinaryForTag(fs *afero.Afero, path string, tag []byte) string {
 	}
 	defer f.Close()
 
-	const chunkSize = 64 * 1024
 	// Overlap must be at least len(tag) + max version length to avoid
 	// missing a match that spans two chunks.
-	overlap := len(tag) + 20
+	return scanReaderForTag(f, tag, len(tag)+20, isApacheVersionByte)
+}
+
+// isApacheVersionByte reports whether b belongs to an Apache/nginx style
+// dot-separated numeric version (e.g. "2.4.62").
+func isApacheVersionByte(b byte) bool {
+	return b == '.' || (b >= '0' && b <= '9')
+}
+
+// scanReaderForTag streams r in chunks, looking for tag followed by a run of
+// version bytes (as classified by isVersionByte). It is the reader-based core
+// shared by the binary version scanners; the caller owns opening/closing the
+// underlying file. `overlap` is the number of trailing bytes retained between
+// chunks so a match spanning a chunk boundary isn't missed.
+func scanReaderForTag(r io.Reader, tag []byte, overlap int, isVersionByte func(byte) bool) string {
+	const chunkSize = 64 * 1024
 	buf := make([]byte, chunkSize+overlap)
 	carry := 0
 
 	for {
-		n, err := f.Read(buf[carry:])
-		if n == 0 && err != nil {
-			break
-		}
+		n, err := r.Read(buf[carry:])
 		active := buf[:carry+n]
 
 		idx := bytes.Index(active, tag)
 		if idx >= 0 {
 			start := idx + len(tag)
 			end := start
-			for end < len(active) && (active[end] == '.' || (active[end] >= '0' && active[end] <= '9')) {
+			for end < len(active) && isVersionByte(active[end]) {
 				end++
 			}
 			if end > start {
+				// If the version run reaches the end of the current buffer
+				// and more data may still follow (err == nil), the literal
+				// might continue into the next chunk. Carry the tag and the
+				// partial run forward and keep reading rather than returning
+				// a truncated version (e.g. "2.4.6" instead of "2.4.62").
+				// The len(active)-idx guard ensures carrying from the tag
+				// frees room in the buffer for the next read (avoiding an
+				// infinite loop when a run fills the whole buffer).
+				if end == len(active) && err == nil && len(active)-idx < len(buf) {
+					copy(buf, active[idx:])
+					carry = len(active) - idx
+					continue
+				}
 				return string(active[start:end])
 			}
 		}
 
-		// Keep the last `overlap` bytes so a tag spanning chunks isn't missed.
+		// Stop once the reader is drained. `active` was already scanned
+		// above, so any tail carried from a previous iteration has had its
+		// final chance to match.
+		if err != nil {
+			break
+		}
+
+		// Keep the last `overlap` bytes so a tag spanning chunks isn't
+		// missed. On a short read (len(active) <= overlap) retain the whole
+		// buffer instead of discarding it, so a tag split across two short
+		// reads is still found.
 		if len(active) > overlap {
 			copy(buf, active[len(active)-overlap:])
 			carry = overlap
 		} else {
-			carry = 0
-		}
-
-		if err != nil {
-			break
+			copy(buf, active)
+			carry = len(active)
 		}
 	}
 	return ""

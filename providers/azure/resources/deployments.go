@@ -8,13 +8,17 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	armdeployments "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armdeployments"
+	armdeployments "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armdeployments/v2"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/azure/connection"
 	"go.mondoo.com/mql/v13/types"
 )
+
+type mqlAzureSubscriptionDeploymentInternal struct {
+	cacheSystemData any
+}
 
 func (a *mqlAzureSubscriptionDeployment) id() (string, error) {
 	return a.Id.Data, nil
@@ -165,5 +169,11 @@ func newMqlAzureDeployment(runtime *plugin.Runtime, deployment *armdeployments.D
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionDeployment), nil
+	mqlDeployment := res.(*mqlAzureSubscriptionDeployment)
+	sysData, err := convert.JsonToDict(deployment.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlDeployment.cacheSystemData = sysData
+	return mqlDeployment, nil
 }

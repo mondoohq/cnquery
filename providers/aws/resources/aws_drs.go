@@ -75,6 +75,20 @@ func (a *mqlAwsDrsReplicationConfiguration) ebsEncryptionKey() (*mqlAwsKmsKey, e
 	return res.(*mqlAwsKmsKey), nil
 }
 
+func (a *mqlAwsDrsReplicationConfiguration) stagingAreaSubnet() (*mqlAwsVpcSubnet, error) {
+	subnetID := a.StagingAreaSubnetId.Data
+	if subnetID == "" {
+		a.StagingAreaSubnet.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.vpc.subnet",
+		map[string]*llx.RawData{"id": llx.StringData(subnetID)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsVpcSubnet), nil
+}
+
 func (a *mqlAwsDrsLaunchConfiguration) id() (string, error) {
 	return "aws.drs.launchConfiguration/" + a.SourceServerID.Data, nil
 }

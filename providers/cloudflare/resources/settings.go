@@ -87,6 +87,13 @@ func (c *mqlCloudflareZone) settings() (*mqlCloudflareZoneSettings, error) {
 	}
 	uri := fmt.Sprintf("zones/%s/settings", c.Id.Data)
 	if err := conn.Cf.Get(context.Background(), uri, nil, &env); err != nil {
+		// A token that can read the zone but not its settings (403), or a plan
+		// without this endpoint (404), degrades to null rather than failing the
+		// whole zone traversal — matching botManagement() below.
+		if isUnavailable(err) {
+			c.Settings.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
 		return nil, err
 	}
 

@@ -905,13 +905,7 @@ func (a *mqlAwsNetworkfirewallRulegroup) snsTopic() (*mqlAwsSnsTopic, error) {
 }
 
 func nfTagsToMap(tags []nftypes.Tag) map[string]any {
-	m := make(map[string]any, len(tags))
-	for _, t := range tags {
-		if t.Key != nil && t.Value != nil {
-			m[*t.Key] = *t.Value
-		}
-	}
-	return m
+	return tagsToMap(tags, func(t nftypes.Tag) *string { return t.Key }, func(t nftypes.Tag) *string { return t.Value })
 }
 
 type mqlAwsNetworkfirewallTlsInspectionConfigurationInternal struct {

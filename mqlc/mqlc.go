@@ -6,6 +6,7 @@ package mqlc
 import (
 	"errors"
 	"fmt"
+	"math"
 	"regexp"
 	"sort"
 	"strconv"
@@ -835,7 +836,12 @@ func (c *compiler) unnamedArgs(callerLabel string, init *resources.Init, args []
 	}
 
 	// add all calls to the chunk stack
-	// collect all their types and call references
+	// collect all their types and call references.
+	// len(args) is bounded by the parsed query, but guard the size computation
+	// explicitly so len(args)*2 can never overflow on pathological input.
+	if len(args) > math.MaxInt/2 {
+		return nil, errors.New("Called " + callerLabel + " with too many arguments")
+	}
 	res := make([]*llx.Primitive, len(args)*2)
 
 	for idx := range args {
@@ -894,6 +900,11 @@ func (c *compiler) resourceArgs(resource *resources.ResourceInfo, args []*parser
 		return c.unnamedResourceArgs(resource, args)
 	}
 
+	// len(args) is bounded by the parsed query, but guard the size computation
+	// explicitly so len(args)*2 can never overflow on pathological input.
+	if len(args) > math.MaxInt/2 {
+		return nil, errors.New("resource " + resource.Name + " called with too many arguments")
+	}
 	res := make([]*llx.Primitive, len(args)*2)
 	for idx := range args {
 		arg := args[idx]
@@ -1789,8 +1800,9 @@ func (c *compiler) postCompile() {
 				expanded := c.expandResourceFields(chunk, typ, ref)
 				// when no defaults are defined or query isn't about a resource, no block was added
 				if expanded {
-					block.Datapoints = append(block.Datapoints, block.TailRef(ref))
-					c.addValueFieldChunks(ref)
+					autoExpandRef := block.TailRef(ref)
+					block.Datapoints = append(block.Datapoints, autoExpandRef)
+					c.addValueFieldChunks(ref, autoExpandRef)
 				}
 			default:
 				c.expandResourceFields(chunk, typ, ref)
@@ -1803,7 +1815,7 @@ func (c *compiler) postCompile() {
 // block for the default fields
 // This way, the actual data of the assessment automatically shows up in the output
 // of the assessment that failed the assessment
-func (c *compiler) addValueFieldChunks(ref uint64) {
+func (c *compiler) addValueFieldChunks(ref uint64, autoExpandRef uint64) {
 	var whereChunk *llx.Chunk
 
 	// find chunk with where/whereNot function
@@ -1964,8 +1976,23 @@ func (c *compiler) addValueFieldChunks(ref uint64) {
 		return true
 	})
 
-	defaultFieldsBlock := c.Result.CodeV2.Blocks[len(c.Result.CodeV2.Blocks)-1]
-	defaultFieldsRef := defaultFieldsBlock.HeadRef(c.Result.CodeV2.LastBlockRef())
+	// The default-fields block is the one referenced by the auto-expand `{}`
+	// chunk we just created for this list — NOT necessarily the last block.
+	// A resource with a `@context` annotation appends a further nested block
+	// (the context expansion), so `Blocks[len-1]` would wrongly target the
+	// context block and bind the predicate's value fields to the context
+	// resource (e.g. `file.context.criteria`), yielding an untyped/empty field
+	// that breaks the failing-resource list. Resolve the block from the chunk.
+	autoExpandChunk := c.Result.CodeV2.Chunk(autoExpandRef)
+	if autoExpandChunk == nil || autoExpandChunk.Function == nil || len(autoExpandChunk.Function.Args) == 0 {
+		return
+	}
+	defaultFieldsBlockRef, ok := autoExpandChunk.Function.Args[0].RawData().Value.(uint64)
+	if !ok {
+		return
+	}
+	defaultFieldsBlock := c.Result.CodeV2.Block(defaultFieldsBlockRef)
+	defaultFieldsRef := defaultFieldsBlock.HeadRef(defaultFieldsBlockRef)
 	defaultFieldsBlockTree := blockToFieldTree(defaultFieldsBlock, func(chunkIdx int, chunk *llx.Chunk) bool {
 		return true
 	})

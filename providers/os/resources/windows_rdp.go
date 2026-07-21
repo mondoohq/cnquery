@@ -80,9 +80,6 @@ func (r *mqlWindowsRdp) readRdpKey(path string) (map[string]int64, error) {
 // load reads the policy and effective registry keys exactly once and caches
 // them so every field shares a single set of registry reads.
 func (r *mqlWindowsRdp) load() error {
-	if r.loaded {
-		return nil
-	}
 	r.lock.Lock()
 	defer r.lock.Unlock()
 	if r.loaded || r.loadErr != nil {

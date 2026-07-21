@@ -1,0 +1,3650 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/mql/providers/alicloud"
+option go_package = "go.mondoo.com/mql/v13/providers/alicloud/resources"
+
+// Alibaba Cloud
+//
+// Entry point for querying an Alibaba Cloud account. Exposes the account
+// identity and the region IDs enabled on the account, and is the root from
+// which the RAM, ECS, VPC, OSS, SLB, ALB, NLB, and managed-database resources
+// are reached, along with the Container Service for Kubernetes, Function
+// Compute, NAS file storage, Web Application Firewall, Cloud Firewall,
+// Anti-DDoS, Key Management Service, ActionTrail, Log Service, Cloud Config, and
+// Resource Directory resources.
+alicloud {
+  // Account (UID) that the active credential belongs to
+  accountId() string
+  // Region IDs enabled on the account, for example cn-hangzhou
+  regions() []string
+}
+
+// Alibaba Cloud Resource Access Management
+//
+// Identity and access configuration for an Alibaba Cloud account. Exposes the
+// RAM users, user groups, roles, and permission policies defined in the
+// account, along with the account-wide password policy and the console and
+// credential security preferences.
+alicloud.ram {
+  // RAM users in the account
+  users() []alicloud.ram.user
+  // RAM user groups in the account
+  groups() []alicloud.ram.group
+  // RAM roles in the account
+  roles() []alicloud.ram.role
+  // Permission policies in the account, both system and custom
+  policies() []alicloud.ram.policy
+  // Account-wide password policy for RAM users
+  passwordPolicy() alicloud.ram.passwordPolicy
+  // Console and credential security preferences for the account
+  //
+  // Nested preferences controlling whether RAM users may manage their own
+  // access keys, MFA devices, and public keys, whether they may change their
+  // own password, the console login network masks, and the login session
+  // duration.
+  securityPreference() dict
+}
+
+// Resource Access Management user
+//
+// A single RAM identity, keyed by userName. Exposes the user profile (display
+// name, email, mobile phone, comments) and lifecycle timestamps, plus the
+// user's access keys, group memberships, attached policies, MFA device binding,
+// and console login profile.
+alicloud.ram.user {
+  // User ID
+  userId string
+  // User name, used as the console sign-in name and the lookup key
+  userName string
+  // Display name
+  displayName string
+  // Email address bound to the user
+  email string
+  // Mobile phone number bound to the user
+  mobilePhone string
+  // Comments describing the user
+  comments string
+  // Time the user was created
+  createDate time
+  // Time the user was last updated
+  updateDate time
+  // Time the user last signed in to the console
+  lastLoginDate() time
+  // Access keys belonging to the user
+  accessKeys() []alicloud.ram.accessKey
+  // Groups the user belongs to
+  groups() []alicloud.ram.group
+  // Policies attached directly to the user
+  //
+  // Each entry lists the policyName, policyType (System or Custom),
+  // defaultVersion, description, and attachDate of a policy attached to the
+  // user.
+  policies() []dict
+  // Multi-factor authentication device bound to the user
+  //
+  // The serialNumber and type of the bound MFA device, or null when the user
+  // has no MFA device.
+  mfaDevice() dict
+  // Console login profile for the user
+  //
+  // Presence indicates the user can sign in to the console. Exposes userName,
+  // mfaBindRequired, passwordResetRequired, and createDate, or null when the
+  // user has no console login enabled.
+  loginProfile() dict
+}
+
+// Resource Access Management access key
+//
+// An access key credential belonging to a RAM user, keyed by the owning
+// userName and accessKeyId. Exposes the key status and creation time. The
+// secret access key is never exposed.
+alicloud.ram.accessKey {
+  // User name that owns the access key
+  userName string
+  // Access key ID
+  accessKeyId string
+  // Key status
+  //
+  // Either Active or Inactive.
+  status string
+  // Time the access key was created
+  createDate time
+}
+
+// Resource Access Management user group
+//
+// A collection of RAM users, keyed by groupName. Exposes the group metadata
+// and lifecycle timestamps, plus the member users and the policies attached to
+// the group.
+alicloud.ram.group {
+  // Group ID
+  groupId string
+  // Group name, used as the lookup key
+  groupName string
+  // Comments describing the group
+  comments string
+  // Time the group was created
+  createDate time
+  // Time the group was last updated
+  updateDate time
+  // Users that belong to the group
+  users() []alicloud.ram.user
+  // Policies attached to the group
+  //
+  // Each entry lists the policyName, policyType (System or Custom),
+  // defaultVersion, description, and attachDate of a policy attached to the
+  // group.
+  policies() []dict
+}
+
+// Resource Access Management role
+//
+// A RAM role that trusted identities can assume, keyed by roleName. Exposes the
+// role identifiers, description, session limits, and tags, along with the trust
+// policy that governs who may assume it and the permission policies attached to
+// it.
+alicloud.ram.role {
+  // Role ID
+  roleId string
+  // Role name, used as the lookup key
+  roleName string
+  // Alibaba Cloud Resource Name of the role
+  arn string
+  // Description of the role
+  description string
+  // Time the role was created
+  createDate time
+  // Time the role was last updated
+  updateDate time
+  // Maximum session duration in seconds allowed when assuming the role
+  maxSessionDuration int
+  // Tags attached to the role
+  tags map[string]string
+  // Trust policy document controlling which identities may assume the role
+  //
+  // The assume-role policy as a JSON string, naming the principals permitted to
+  // assume this role and the conditions on that trust.
+  assumeRolePolicyDocument() string
+  // Policies attached to the role
+  //
+  // Each entry lists the policyName, policyType (System or Custom),
+  // defaultVersion, description, and attachDate of a policy attached to the
+  // role.
+  policies() []dict
+}
+
+// Resource Access Management permission policy
+//
+// A permission policy, keyed by policyName. Exposes the policy metadata,
+// attachment count, and default version, along with the policy document of the
+// default version. System policies are managed by Alibaba Cloud; custom
+// policies are defined in the account.
+alicloud.ram.policy {
+  // Policy name, used as the lookup key
+  policyName string
+  // Policy type
+  //
+  // Either System for an Alibaba Cloud managed policy or Custom for an
+  // account-defined policy.
+  policyType string
+  // Description of the policy
+  description string
+  // Version ID of the default policy version, for example v1
+  defaultVersion string
+  // Number of entities the policy is attached to
+  attachmentCount int
+  // Time the policy was created
+  createDate time
+  // Time the policy was last updated
+  updateDate time
+  // Tags attached to the policy
+  tags map[string]string
+  // Policy document of the default version
+  //
+  // The permission statements of the default version as a JSON string.
+  policyDocument() string
+}
+
+// Resource Access Management password policy
+//
+// Account-wide password requirements for RAM users. Exposes the minimum
+// length, character-class requirements, expiration and reuse rules, and the
+// failed-login lockout threshold.
+alicloud.ram.passwordPolicy {
+  // Minimum number of characters required in a password
+  minimumPasswordLength int
+  // Whether passwords must contain a lowercase letter
+  requireLowercaseCharacters bool
+  // Whether passwords must contain an uppercase letter
+  requireUppercaseCharacters bool
+  // Whether passwords must contain a number
+  requireNumbers bool
+  // Whether passwords must contain a symbol
+  requireSymbols bool
+  // Whether an expired password blocks console sign-in until an administrator resets it
+  //
+  // When true, a user whose password has expired cannot sign in and an
+  // administrator must reset the password. When false, the user may change the
+  // expired password at sign-in.
+  hardExpiry bool
+  // Maximum password age in days before it must be changed, or 0 when passwords never expire
+  maxPasswordAge int
+  // Number of previous passwords that cannot be reused
+  passwordReusePrevention int
+  // Number of consecutive failed sign-in attempts before the user is locked out
+  maxLoginAttempts int
+}
+
+// Elastic Compute Service (ECS)
+//
+// Compute resources in a region, including virtual machine instances,
+// their attached block-storage disks, machine images, SSH key pairs, and
+// the security groups that filter instance traffic. Fans out over every
+// region enabled on the account.
+alicloud.ecs {
+  // ECS instances across all enabled regions
+  instances() []alicloud.ecs.instance
+  // Block-storage disks across all enabled regions
+  disks() []alicloud.ecs.disk
+  // Machine images visible to the account across all enabled regions
+  images() []alicloud.ecs.image
+  // SSH key pairs across all enabled regions
+  keyPairs() []alicloud.ecs.keypair
+  // Security groups across all enabled regions
+  securityGroups() []alicloud.ecs.securitygroup
+}
+
+// Elastic Compute Service instance
+//
+// A single ECS virtual machine, keyed by the composite region and
+// instanceId. Exposes the lifecycle status, the instance type and zone,
+// hardware sizing (vCPUs, memory, GPUs), billing and charge configuration,
+// the private, public, and elastic IP addresses, the VPC and vSwitch it is
+// attached to, and the security groups controlling its traffic.
+alicloud.ecs.instance @defaults("instanceId instanceName status instanceType") {
+  // Instance ID, for example i-bp1234567890abcdef
+  instanceId string
+  // Instance name
+  instanceName string
+  // Instance description
+  description string
+  // Lifecycle status
+  //
+  // One of Pending, Running, Starting, Stopping, or Stopped.
+  status string
+  // Instance type, for example ecs.g5.large
+  instanceType string
+  // Instance type family, for example ecs.g5
+  instanceTypeFamily string
+  // Image the instance was created from
+  image() alicloud.ecs.image
+  // Region ID of the instance, for example cn-hangzhou
+  regionId string
+  // Zone ID of the instance, for example cn-hangzhou-g
+  zoneId string
+  // Number of vCPUs
+  cpu int
+  // Memory size in MiB
+  memory int
+  // Name of the operating system
+  osName string
+  // English name of the operating system
+  osNameEn string
+  // Operating system family
+  //
+  // One of windows or linux.
+  osType string
+  // Hostname of the instance
+  hostName string
+  // Serial number of the instance
+  serialNumber string
+  // Billing method of the instance
+  //
+  // One of PrePaid (subscription) or PostPaid (pay-as-you-go).
+  instanceChargeType string
+  // Bidding policy for a pay-as-you-go instance
+  //
+  // One of NoSpot, SpotWithPriceLimit, or SpotAsPriceGo.
+  spotStrategy string
+  // Maximum hourly price for a preemptible instance
+  spotPriceLimit float
+  // Protection period of a preemptible instance in hours
+  spotDuration int
+  // Billing method for network usage
+  //
+  // One of PayByBandwidth or PayByTraffic.
+  internetChargeType string
+  // Maximum inbound public bandwidth in Mbit/s
+  internetMaxBandwidthIn int
+  // Maximum outbound public bandwidth in Mbit/s
+  internetMaxBandwidthOut int
+  // Time when the instance was created
+  creationTime time
+  // Time when the instance was last started
+  startTime time
+  // Expiration time of the instance
+  expiredTime time
+  // Automatic release time of a pay-as-you-go instance
+  autoReleaseTime time
+  // Stopped-instance billing mode
+  //
+  // One of KeepCharging, StopCharging, or Not-applicable.
+  stoppedMode string
+  // Deployment set ID the instance belongs to
+  deploymentSetId string
+  // Name of the SSH key pair used by the instance
+  keyPairName string
+  // Whether release protection is enabled
+  deletionProtection bool
+  // Whether the instance is I/O optimized
+  ioOptimized bool
+  // Number of GPUs attached to the instance
+  gpuAmount int
+  // GPU model of the instance type, for example NVIDIA V100
+  gpuSpec string
+  // Performance mode of a burstable instance
+  //
+  // One of Standard or Unlimited.
+  creditSpecification string
+  // Whether data disks can be attached to the instance
+  deviceAvailable bool
+  // Number of local disks attached to the instance
+  localStorageAmount int
+  // Capacity of local disks attached to the instance in GiB
+  localStorageCapacity int
+  // Resource group ID the instance belongs to
+  resourceGroupId string
+  // Network type of the instance
+  //
+  // One of classic or vpc.
+  networkType string
+  // VPC the instance is attached to
+  vpc() alicloud.vpc.network
+  // vSwitch the instance is connected to
+  vswitch() alicloud.vpc.vswitch
+  // Security group IDs applied to the instance
+  securityGroupIds []string
+  // Private IP addresses assigned to the instance
+  privateIpAddresses []string
+  // Public IP addresses assigned directly to the instance
+  publicIpAddresses []string
+  // Elastic IP address associated with the instance
+  eipAddress string
+  // Tags on the instance, as key-value pairs
+  tags map[string]string
+  // Security groups controlling the instance's traffic
+  securityGroups() []alicloud.ecs.securitygroup
+  // Whether the instance is reachable from the internet
+  //
+  // True when the instance has a directly-assigned public IP address or an
+  // associated elastic IP address, indicating inbound reachability from the
+  // public internet before security-group rules are considered.
+  internetExposed() bool
+}
+
+// Elastic Compute Service disk
+//
+// A single block-storage disk (cloud disk or local disk), keyed by the
+// composite region and diskId. Exposes the disk category and size, its
+// attachment to an instance, encryption state and KMS key, snapshot
+// behavior, and the performance level.
+alicloud.ecs.disk @defaults("diskId diskName category size status") {
+  // Disk ID, for example d-bp1234567890abcdef
+  diskId string
+  // Disk name
+  diskName string
+  // Disk description
+  description string
+  // Disk role
+  //
+  // One of system or data.
+  type string
+  // Disk category
+  //
+  // One of cloud, cloud_efficiency, cloud_ssd, cloud_essd, cloud_auto,
+  // cloud_essd_entry, ephemeral_ssd, or local disk categories.
+  category string
+  // Disk size in GiB
+  size int
+  // Disk status
+  //
+  // One of In_use, Available, Attaching, Detaching, Creating, or ReIniting.
+  status string
+  // Whether the disk is encrypted
+  encrypted bool
+  // KMS key ID used to encrypt the disk
+  //
+  // Deprecated in favor of kmsKey.
+  kmsKeyId @maturity("deprecated") string
+  // KMS key used to encrypt the disk, null when the disk is not encrypted
+  kmsKey() alicloud.kms.key
+  // Instance the disk is attached to
+  instance() alicloud.ecs.instance
+  // Device name the disk is mounted as, for example /dev/xvda
+  device string
+  // Whether the disk is released together with its instance
+  deleteWithInstance bool
+  // Whether automatic snapshots are deleted together with the disk
+  deleteAutoSnapshot bool
+  // Whether the automatic snapshot policy is enabled for the disk
+  enableAutoSnapshot bool
+  // Whether the disk can be detached
+  portable bool
+  // Zone ID of the disk
+  zoneId string
+  // Region ID of the disk
+  regionId string
+  // Time when the disk was created
+  creationTime time
+  // Time when the disk was last attached
+  attachedTime time
+  // Time when the disk was last detached
+  detachedTime time
+  // Performance level of an ESSD disk
+  //
+  // One of PL0, PL1, PL2, or PL3.
+  performanceLevel string
+  // Billing method of the disk
+  //
+  // One of PrePaid (subscription) or PostPaid (pay-as-you-go).
+  diskChargeType string
+  // Tags on the disk, as key-value pairs
+  tags map[string]string
+}
+
+// Elastic Compute Service image
+//
+// A single machine image visible to the account, keyed by the composite
+// region and imageId. Exposes the operating system and architecture, the
+// image size and version, its ownership and sharing state, and whether it
+// is public or supports cloud-init.
+alicloud.ecs.image @defaults("imageId imageName osName status") {
+  // Image ID, for example m-bp1234567890abcdef
+  imageId string
+  // Image name
+  imageName string
+  // Image description
+  description string
+  // Name of the operating system in the image
+  osName string
+  // Operating system family
+  //
+  // One of windows or linux.
+  osType string
+  // CPU architecture of the image
+  //
+  // One of i386 or x86_64.
+  architecture string
+  // Image size in GiB
+  size int
+  // Alias of the image owner
+  //
+  // One of system, self, others, or marketplace.
+  imageOwnerAlias string
+  // Image status
+  //
+  // One of UnAvailable, Available, Creating, or CreateFailed.
+  status string
+  // Whether the image is public
+  isPublic bool
+  // Whether the image is shared to other accounts by the owner
+  isSelfShared string
+  // Whether the image supports cloud-init
+  isSupportCloudinit bool
+  // Platform of the operating system, for example CentOS or Ubuntu
+  platform string
+  // Time when the image was created
+  creationTime time
+  // Image version
+  imageVersion string
+  // How the image is used
+  //
+  // One of instance, none, or reserved.
+  usage string
+  // Region ID of the image
+  regionId string
+}
+
+// Elastic Compute Service SSH key pair
+//
+// A single SSH key pair, keyed by the composite region and keyPairName.
+// Exposes the public-key fingerprint, the creation time, and the resource
+// group the key pair belongs to.
+alicloud.ecs.keypair @defaults("keyPairName") {
+  // Key pair name
+  keyPairName string
+  // Fingerprint of the public key
+  keyPairFingerPrint string
+  // Time when the key pair was created
+  creationTime time
+  // Resource group ID the key pair belongs to
+  resourceGroupId string
+  // Region ID of the key pair
+  regionId string
+  // Tags on the key pair, as key-value pairs
+  tags map[string]string
+}
+
+// Elastic Compute Service security group
+//
+// A single security group, keyed by the composite region and
+// securityGroupId. Exposes the group name and type, the VPC it belongs to,
+// its inbound and outbound rules, and the instances it is applied to.
+alicloud.ecs.securitygroup @defaults("securityGroupId securityGroupName securityGroupType") {
+  // Security group ID, for example sg-bp1234567890abcdef
+  securityGroupId string
+  // Security group name
+  securityGroupName string
+  // Security group description
+  description string
+  // VPC ID the security group belongs to
+  vpcId string
+  // Security group type
+  //
+  // One of normal or enterprise.
+  securityGroupType string
+  // Time when the security group was created
+  creationTime time
+  // Region ID of the security group
+  regionId string
+  // Resource group ID the security group belongs to
+  resourceGroupId string
+  // Tags on the security group, as key-value pairs
+  tags map[string]string
+  // Inbound and outbound rules of the security group
+  permissions() []alicloud.ecs.securitygroup.permission
+  // Instances the security group is applied to
+  instances() []alicloud.ecs.instance
+}
+
+// Elastic Compute Service security group rule
+//
+// A single inbound or outbound rule of a security group, keyed by the
+// security group ID, direction, and position. Exposes the protocol and
+// port range, the source and destination CIDR blocks, referenced security
+// groups, prefix lists, and the accept or drop policy.
+alicloud.ecs.securitygroup.permission @defaults("direction ipProtocol portRange policy") {
+  // Rule ID
+  securityGroupRuleId string
+  // Rule direction
+  //
+  // One of ingress or egress.
+  direction string
+  // Access policy of the rule
+  //
+  // One of Accept or Drop.
+  policy string
+  // Priority of the rule, from 1 (highest) to 100 (lowest)
+  priority string
+  // Transport protocol the rule matches
+  //
+  // One of TCP, UDP, ICMP, ICMPv6, GRE, or ALL.
+  ipProtocol string
+  // Network interface type the rule applies to
+  //
+  // One of internet or intranet.
+  nicType string
+  // Destination port range matched by the rule, for example 22/22 or 1/65535
+  portRange string
+  // Source port range matched by the rule
+  sourcePortRange string
+  // Source IPv4 CIDR block for an inbound rule
+  sourceCidrIp string
+  // Source security group for an inbound rule
+  sourceSecurityGroup() alicloud.ecs.securitygroup
+  // Source prefix list ID for an inbound rule
+  sourcePrefixListId string
+  // Source IPv6 CIDR block for an inbound rule
+  ipv6SourceCidrIp string
+  // Destination IPv4 CIDR block for an outbound rule
+  destCidrIp string
+  // Destination security group for an outbound rule
+  destSecurityGroup() alicloud.ecs.securitygroup
+  // Destination prefix list ID for an outbound rule
+  destPrefixListId string
+  // Destination IPv6 CIDR block for an outbound rule
+  ipv6DestCidrIp string
+  // Rule description
+  description string
+  // Time when the rule was created
+  createTime time
+}
+
+// Virtual Private Cloud (VPC)
+//
+// Entry point for the Alibaba Cloud VPC networking service. Exposes the VPCs,
+// vSwitches, route tables, NAT gateways, elastic IP addresses, and network ACLs
+// defined across every enabled region on the account.
+alicloud.vpc {
+  // VPC networks across all enabled regions
+  networks() []alicloud.vpc.network
+  // vSwitches (subnets) across all enabled regions
+  vswitches() []alicloud.vpc.vswitch
+  // Route tables across all enabled regions
+  routeTables() []alicloud.vpc.routeTable
+  // NAT gateways across all enabled regions
+  natGateways() []alicloud.vpc.natGateway
+  // Elastic IP addresses across all enabled regions
+  eipAddresses() []alicloud.vpc.eipAddress
+  // Network ACLs across all enabled regions
+  networkAcls() []alicloud.vpc.networkAcl
+  // Flow logs across all enabled regions
+  flowLogs() []alicloud.vpc.flowLog
+}
+
+// Virtual Private Cloud network
+//
+// A single VPC, keyed by vpcId, for example vpc-bp1qpo0kug3a20qqe0abc. Exposes
+// the primary and secondary CIDR blocks, the IPv6 configuration, the lifecycle
+// status, the default-VPC flag, the vRouter, and the vSwitches, route tables,
+// and NAT gateways associated with the network.
+alicloud.vpc.network {
+  // VPC ID, for example vpc-bp1qpo0kug3a20qqe0abc
+  vpcId string
+  // VPC name
+  vpcName string
+  // Description of the VPC
+  description string
+  // Primary IPv4 CIDR block of the VPC
+  cidrBlock string
+  // Secondary IPv4 CIDR blocks of the VPC
+  cidrBlocks []string
+  // IPv6 CIDR block of the VPC
+  ipv6CidrBlock string
+  // IPv6 CIDR blocks with their ISP line type
+  //
+  // Each entry carries the ipv6CidrBlock and its ipv6Isp line type (for
+  // example BGP, ChinaMobile, ChinaUnicom, or ChinaTelecom).
+  ipv6CidrBlocks []dict
+  // Whether IPv6 is enabled for the VPC
+  enabledIpv6 bool
+  // Lifecycle status
+  //
+  // One of Pending or Available.
+  status string
+  // Whether this is the default VPC in the region
+  isDefault bool
+  // Region ID the VPC belongs to, for example cn-hangzhou
+  regionId string
+  // vRouter ID of the VPC
+  vRouterId string
+  // Time when the VPC was created
+  creationTime time
+  // Resource group ID the VPC belongs to
+  resourceGroupId string
+  // User CIDR blocks associated with the VPC
+  userCidrs []string
+  // vSwitches in the VPC
+  vswitches() []alicloud.vpc.vswitch
+  // NAT gateways attached to the VPC
+  natGateways() []alicloud.vpc.natGateway
+  // Route tables associated with the VPC
+  routeTables() []alicloud.vpc.routeTable
+  // DNS hostname feature status
+  //
+  // Indicates whether the DNS hostname feature is enabled, for example ENABLED
+  // or DISABLED.
+  dnsHostnameStatus string
+  // DHCP options set ID bound to the VPC
+  dhcpOptionsSetId string
+  // DHCP options set status
+  //
+  // One of Available, InUse, Deleted, or Pending.
+  dhcpOptionsSetStatus string
+  // Cloud Enterprise Network (CEN) attachment status
+  //
+  // Returned as Attached only when the VPC is attached to a CEN instance.
+  cenStatus string
+  // ID of the Alibaba Cloud account that owns the VPC
+  ownerId int
+  // Tags attached to the VPC
+  tags map[string]string
+}
+
+// vSwitch (VPC subnet)
+//
+// A single vSwitch, keyed by vSwitchId, for example vsw-25bcdxs7pv1abc. Exposes
+// the CIDR blocks, the zone, the number of free IP addresses, the associated
+// route table and network ACL, and the parent VPC.
+alicloud.vpc.vswitch {
+  // vSwitch ID, for example vsw-25bcdxs7pv1abc
+  vSwitchId string
+  // vSwitch name
+  vSwitchName string
+  // Description of the vSwitch
+  description string
+  // IPv4 CIDR block of the vSwitch
+  cidrBlock string
+  // IPv6 CIDR block of the vSwitch
+  ipv6CidrBlock string
+  // Whether IPv6 is enabled for the vSwitch
+  enabledIpv6 bool
+  // Lifecycle status
+  //
+  // One of Pending or Available.
+  status string
+  // VPC the vSwitch belongs to
+  vpc() alicloud.vpc.network
+  // Zone ID the vSwitch belongs to, for example cn-hangzhou-d
+  zoneId string
+  // Number of available IP addresses in the vSwitch
+  availableIpAddressCount int
+  // Whether the vSwitch is the default vSwitch in its zone
+  isDefault bool
+  // Time when the vSwitch was created
+  creationTime time
+  // Route table associated with the vSwitch
+  routeTable() alicloud.vpc.routeTable
+  // Type of the associated route table, for example System or Custom
+  routeTableType string
+  // Network ACL bound to the vSwitch
+  networkAcl() alicloud.vpc.networkAcl
+  // Resource group ID the vSwitch belongs to
+  resourceGroupId string
+  // vSwitch sharing status
+  //
+  // Empty for a regular vSwitch, Shared once the vSwitch is shared, or Sharing
+  // while sharing is in progress.
+  shareType string
+  // ID of the Alibaba Cloud account that owns the vSwitch
+  ownerId int
+  // Tags attached to the vSwitch
+  tags map[string]string
+}
+
+// VPC route table
+//
+// A single route table, keyed by routeTableId, for example vtb-bp1e123abc.
+// Exposes the route table type, the bound vSwitches and gateways, the lifecycle
+// status, and the individual route entries through routeEntries.
+alicloud.vpc.routeTable {
+  // Route table ID, for example vtb-bp1e123abc
+  routeTableId string
+  // Route table name
+  routeTableName string
+  // Route table type
+  //
+  // One of System or Custom.
+  routeTableType string
+  // Description of the route table
+  description string
+  // VPC the route table belongs to
+  vpc() alicloud.vpc.network
+  // Lifecycle status
+  //
+  // One of Pending or Available.
+  status string
+  // Time when the route table was created
+  creationTime time
+  // Resource group ID the route table belongs to
+  resourceGroupId string
+  // vSwitches associated with the route table
+  vswitches() []alicloud.vpc.vswitch
+  // Gateway IDs associated with the route table
+  gatewayIds []string
+  // Type of resource the route table is associated with
+  //
+  // One of VSwitch or Gateway.
+  associateType string
+  // ID of the router the route table belongs to
+  routerId string
+  // Type of router the route table belongs to
+  //
+  // One of VRouter or VBR.
+  routerType string
+  // Whether route propagation is enabled for the route table
+  routePropagationEnable bool
+  // ID of the Alibaba Cloud account that owns the route table
+  ownerId int
+  // Tags attached to the route table
+  tags map[string]string
+  // Route entries in the route table
+  //
+  // Each entry carries destinationCidrBlock, nextHopType, nextHopId, status,
+  // type, routeEntryId, routeEntryName, description, ipVersion, and origin.
+  routeEntries() []dict
+}
+
+// VPC NAT gateway
+//
+// A single NAT gateway, keyed by natGatewayId, for example ngw-bp1uewa15k4abc.
+// Exposes the specification, the NAT type and network type, the lifecycle and
+// billing status, the SNAT and DNAT table IDs, and the private-network placement.
+alicloud.vpc.natGateway {
+  // NAT gateway ID, for example ngw-bp1uewa15k4abc
+  natGatewayId string
+  // NAT gateway name
+  name string
+  // Description of the NAT gateway
+  description string
+  // VPC the NAT gateway belongs to
+  vpc() alicloud.vpc.network
+  // Lifecycle status
+  //
+  // One of Creating, Available, Modifying, Deleting, or Converting.
+  status string
+  // Specification of the NAT gateway
+  //
+  // One of Small, Middle, Large, or XLarge.1 for a standard NAT gateway.
+  spec string
+  // NAT gateway type
+  //
+  // One of Normal or Enhanced.
+  natType string
+  // Network type of the NAT gateway
+  //
+  // One of internet for a public gateway or intranet for a private gateway.
+  networkType string
+  // Business (payment) status of the NAT gateway
+  //
+  // One of Normal or FinancialLocked.
+  businessStatus string
+  // Time when the NAT gateway was created
+  creationTime time
+  // Time when the NAT gateway expires
+  expiredTime time
+  // Metering method for internet data transfer
+  //
+  // One of PayByLcu or PayBySpec.
+  internetChargeType string
+  // Billing method of the NAT gateway
+  //
+  // One of PrePaid (subscription) or PostPaid (pay-as-you-go).
+  instanceChargeType string
+  // Whether deletion protection is enabled
+  deletionProtection bool
+  // Whether flow monitoring (ECS metrics) is enabled
+  ecsMetricEnabled bool
+  // Whether the NAT gateway replies to ICMP (ping) requests
+  icmpReplyEnabled bool
+  // Whether PrivateLink is enabled for the NAT gateway
+  privateLinkEnabled bool
+  // PrivateLink mode of the NAT gateway
+  privateLinkMode string
+  // Whether firewall (security protection) is enabled
+  securityProtectionEnabled bool
+  // EIP binding mode of the NAT gateway
+  //
+  // One of MULTI_BINDED or NAT.
+  eipBindMode string
+  // Whether NAT session logging is enabled
+  enableSessionLog string
+  // Whether the order is automatically paid for a subscription NAT gateway
+  autoPay bool
+  // Region ID the NAT gateway belongs to
+  regionId string
+  // Resource group ID the NAT gateway belongs to
+  resourceGroupId string
+  // SNAT table IDs of the NAT gateway
+  snatTableIds []string
+  // DNAT (forward) table IDs of the NAT gateway
+  forwardTableIds []string
+  // FULLNAT table IDs of the NAT gateway
+  fullNatTableIds []string
+  // Private-network placement of an enhanced NAT gateway
+  //
+  // Carries vswitchId, privateIpAddress, eniInstanceId, eniType, izNo,
+  // maxBandwidth, maxSessionEstablishRate, and maxSessionQuota.
+  natGatewayPrivateInfo dict
+  // Elastic IP addresses associated with the NAT gateway
+  //
+  // Each entry carries allocationId, ipAddress, privateIpAddress,
+  // snatEntryEnabled, and usingStatus.
+  ipLists []dict
+  // Access mode of the NAT gateway
+  //
+  // Carries modeValue and tunnelType.
+  accessMode dict
+  // Tags attached to the NAT gateway
+  tags map[string]string
+}
+
+// Elastic IP address (EIP)
+//
+// A single elastic IP address, keyed by allocationId, for example
+// eip-2zeerraiwb7uabc. Exposes the public IP address, the bandwidth and billing
+// configuration, the ISP line, the lifecycle status, and the instance the EIP
+// is bound to.
+alicloud.vpc.eipAddress {
+  // Allocation ID of the EIP, for example eip-2zeerraiwb7uabc
+  allocationId string
+  // Name of the EIP
+  name string
+  // Description of the EIP
+  description string
+  // Public IP address of the EIP
+  ipAddress string
+  // Lifecycle status
+  //
+  // One of Associating, Unassociating, InUse, or Available.
+  status string
+  // Peak bandwidth of the EIP in Mbit/s
+  bandwidth string
+  // Metering method for internet data transfer
+  //
+  // One of PayByBandwidth or PayByTraffic.
+  internetChargeType string
+  // Billing method of the EIP
+  //
+  // One of PrePaid (subscription) or PostPaid (pay-as-you-go).
+  chargeType string
+  // ISP line of the EIP
+  //
+  // One of BGP, BGP_PRO, ChinaTelecom, ChinaUnicom, or ChinaMobile.
+  isp string
+  // ID of the instance the EIP is bound to
+  instanceId string
+  // Type of the instance the EIP is bound to
+  //
+  // One of EcsInstance, SlbInstance, Nat, HaVip, NetworkInterface, or
+  // IpAddress.
+  instanceType string
+  // Region ID of the instance the EIP is bound to
+  instanceRegionId string
+  // Private IP address of the instance the EIP is bound to
+  privateIpAddress string
+  // Time when the EIP was allocated
+  allocationTime time
+  // Time when the EIP expires
+  expiredTime time
+  // High-definition monitoring status of the EIP
+  hdMonitorStatus string
+  // Whether deletion protection is enabled
+  deletionProtection bool
+  // Whether the EIP has renewal (reservation) data
+  hasReservationData string
+  // Network mode of the EIP
+  //
+  // One of public or a private network mode.
+  netmode string
+  // ID of the IP address pool the EIP was drawn from
+  publicIpAddressPoolId string
+  // Region ID the EIP belongs to
+  regionId string
+  // Resource group ID the EIP belongs to
+  resourceGroupId string
+  // VPC the EIP is associated with
+  vpc() alicloud.vpc.network
+  // Zone the EIP belongs to
+  zone string
+  // ID of the bandwidth plan (shared bandwidth) the EIP joined
+  bandwidthPackageId string
+  // Type of the bandwidth plan the EIP joined
+  bandwidthPackageType string
+  // Maximum bandwidth of the bandwidth plan in Mbit/s
+  bandwidthPackageBandwidth string
+  // Maximum bandwidth of the EIP in Mbit/s
+  eipBandwidth string
+  // Business type of the EIP
+  bizType string
+  // Business (payment) status of the EIP
+  //
+  // One of Normal or FinancialLocked.
+  businessStatus string
+  // Association mode of the EIP
+  //
+  // One of NAT, MULTI_BINDED, or BINDED.
+  mode string
+  // Whether second-level (fine-grained) monitoring is limited
+  secondLimited bool
+  // ID of the contiguous EIP group the EIP belongs to
+  segmentInstanceId string
+  // Firewall (security protection) types enabled on the EIP
+  securityProtectionTypes []string
+  // Whether the EIP is managed by an Alibaba Cloud service
+  //
+  // 0 indicates the EIP is user-managed, 1 indicates it is managed by a service.
+  serviceManaged int
+  // Tags attached to the EIP
+  tags map[string]string
+}
+
+// VPC network ACL
+//
+// A single network ACL, keyed by networkAclId, for example
+// nacl-a2do9e413e0spzasx. Exposes the lifecycle status, the ingress and egress
+// rule entries, and the vSwitches the ACL is bound to.
+alicloud.vpc.networkAcl {
+  // Network ACL ID, for example nacl-a2do9e413e0spzasx
+  networkAclId string
+  // Network ACL name
+  networkAclName string
+  // Description of the network ACL
+  description string
+  // VPC the network ACL belongs to
+  vpc() alicloud.vpc.network
+  // Lifecycle status
+  //
+  // One of Available or Modifying.
+  status string
+  // Time when the network ACL was created
+  creationTime time
+  // Region ID the network ACL belongs to
+  regionId string
+  // ID of the Alibaba Cloud account that owns the network ACL
+  ownerId int
+  // Inbound rule entries of the network ACL
+  //
+  // Each entry carries protocol, port, sourceCidrIp, policy, description,
+  // entryType, ipVersion, networkAclEntryId, and networkAclEntryName.
+  ingressAclEntries []dict
+  // Outbound rule entries of the network ACL
+  //
+  // Each entry carries protocol, port, destinationCidrIp, policy, description,
+  // entryType, ipVersion, networkAclEntryId, and networkAclEntryName.
+  egressAclEntries []dict
+  // Resources the network ACL is bound to
+  //
+  // Each entry carries resourceId, resourceType, and status.
+  resources []dict
+  // Tags attached to the network ACL
+  tags map[string]string
+}
+
+// Object Storage Service
+//
+// Entry point for the Object Storage Service (OSS) in an Alibaba Cloud
+// account. Exposes every bucket the credential can list across all regions
+// through buckets, from which per-bucket access control, encryption,
+// versioning, logging, tagging, and public-access posture are reachable.
+alicloud.oss {
+  // Buckets owned by the account across all regions
+  buckets() []alicloud.oss.bucket
+}
+
+// Object Storage Service bucket
+//
+// A single OSS bucket, keyed by name (bucket names are globally unique).
+// The summary fields (region, storageClass, creationDate, endpoints,
+// resourceGroupId) come from the account bucket listing. The remaining
+// accessors call the per-bucket configuration APIs to expose the access
+// control policy, default server-side encryption, versioning state, access
+// logging target, bucket policy document, tags, and the block-public-access
+// posture used to audit exposure.
+alicloud.oss.bucket {
+  // Bucket name, globally unique across Alibaba Cloud
+  name string
+  // Region ID the bucket resides in, for example cn-hangzhou
+  region string
+  // Data center that stores the bucket, for example oss-cn-hangzhou
+  location string
+  // Storage class
+  //
+  // One of Standard, IA, Archive, ColdArchive, or DeepColdArchive.
+  storageClass string
+  // Time the bucket was created
+  creationDate time
+  // Internal endpoint for access from ECS instances in the same region
+  intranetEndpoint string
+  // Public endpoint for access over the Internet
+  extranetEndpoint string
+  // ID of the resource group the bucket belongs to
+  resourceGroupId string
+  // Access control list grant
+  //
+  // The canned ACL applied to the bucket. One of private, public-read, or
+  // public-read-write. public-read and public-read-write expose bucket
+  // contents to anonymous callers.
+  acl() string
+  // Versioning state
+  //
+  // One of Enabled or Suspended. Empty when versioning was never configured.
+  versioning() string
+  // Default server-side encryption rule
+  //
+  // The default encryption applied to new objects, with the SSEAlgorithm
+  // (KMS, AES256, or SM4), the KMSMasterKeyID when a specific key is used,
+  // and the KMSDataEncryption algorithm. Null when no default encryption
+  // rule is configured.
+  encryption() dict
+  // Default server-side encryption algorithm
+  //
+  // The SSEAlgorithm from the default encryption rule (KMS, AES256, or SM4),
+  // flattened for auditing. Empty when no default encryption is configured.
+  sseAlgorithm() string
+  // KMS key used for default server-side encryption
+  //
+  // The customer master key named by the bucket's default encryption rule.
+  // Null when the bucket has no default encryption or uses the AES256/SM4
+  // built-in keys rather than a specific KMS key.
+  kmsKey() alicloud.kms.key
+  // Access logging configuration
+  //
+  // The access-logging target when logging is enabled, with TargetBucket,
+  // TargetPrefix, and LoggingRole. Null when access logging is disabled.
+  logging() dict
+  // Bucket policy document
+  //
+  // The raw JSON bucket policy that grants cross-account or anonymous
+  // permissions. Empty when no bucket policy is attached.
+  policy() string
+  // Bucket tags as key-value pairs
+  tags() map[string]string
+  // Block public access configuration
+  //
+  // The block-public-access setting, with BlockPublicAccess indicating
+  // whether public access is blocked. Null when never configured.
+  publicAccessBlock() dict
+  // Full bucket information
+  //
+  // The complete bucket detail record, including access monitoring, data
+  // redundancy type, cross-region replication, transfer acceleration, the
+  // server-side encryption rule, the log bucket policy, owner, comment, and
+  // the block-public-access flag.
+  bucketInfo() dict
+  // Transfer acceleration state
+  //
+  // Whether transfer acceleration is enabled for the bucket. One of Enabled
+  // or Disabled. Empty when the setting is not returned.
+  transferAcceleration() string
+  // Cross-region replication state
+  //
+  // Whether cross-region replication is enabled for the bucket. One of
+  // Enabled or Disabled. Empty when the setting is not returned.
+  crossRegionReplication() string
+  // Data redundancy type
+  //
+  // The redundancy model for stored data. One of LRS (locally redundant) or
+  // ZRS (zone redundant). Empty when the setting is not returned.
+  dataRedundancyType() string
+  // Whether block public access is enabled for the bucket
+  blockPublicAccess() bool
+}
+
+// Server Load Balancer
+//
+// Classic Load Balancer (CLB) resources in an Alibaba Cloud account. Exposes
+// the CLB instances discovered across every enabled region through
+// loadBalancers, from which listeners, backend servers, addressing, and
+// protection settings can be audited.
+alicloud.slb {
+  // CLB instances across all enabled regions
+  loadBalancers() []alicloud.slb.loadBalancer
+}
+
+// Server Load Balancer (CLB) instance
+//
+// A single Classic Load Balancer instance, keyed by loadBalancerId (for
+// example lb-bp1b6c719dfa08ex). Exposes the instance addressing and network
+// placement, the internet or intranet exposure signalled by addressType, the
+// billing and specification settings, the deletion and modification
+// protection flags, and the configured listeners and backend servers.
+alicloud.slb.loadBalancer {
+  // CLB instance ID, for example lb-bp1b6c719dfa08ex
+  loadBalancerId string
+  // Name of the CLB instance
+  loadBalancerName string
+  // Service IP address that the CLB instance uses to provide services
+  address string
+  // Network exposure of the CLB instance
+  //
+  // One of internet (a public IP address is assigned and requests are
+  // forwarded over the internet) or intranet (a private IP address is
+  // assigned and requests are forwarded only over internal networks).
+  addressType string
+  // IP version of the service address
+  //
+  // One of ipv4 or ipv6.
+  addressIPVersion string
+  // Lifecycle status of the CLB instance
+  //
+  // One of active (running as expected), inactive (disabled, does not forward
+  // traffic), or locked (locked, for example after expiration or non-payment).
+  status string
+  // Region ID where the CLB instance is deployed, for example cn-hangzhou
+  regionId string
+  // ID of the primary zone, for example cn-hangzhou-b
+  masterZoneId string
+  // ID of the secondary zone, for example cn-hangzhou-d
+  slaveZoneId string
+  // Network type of an internal-facing CLB instance
+  //
+  // One of vpc or classic.
+  networkType string
+  // VPC that the CLB instance belongs to
+  vpc() alicloud.vpc.network
+  // vSwitch that the CLB instance belongs to
+  vswitch() alicloud.vpc.vswitch
+  // Metering method of internet data transfer
+  //
+  // One of paybybandwidth (pay-by-bandwidth) or paybytraffic
+  // (pay-by-data-transfer).
+  internetChargeType string
+  // Metering method of the CLB instance
+  //
+  // One of PayBySpec or PayByCLCU. Takes effect only for pay-as-you-go
+  // instances.
+  instanceChargeType string
+  // Specification of the CLB instance, for example slb.s1.small
+  //
+  // Pay-as-you-go instances are not subject to specifications and report
+  // slb.lcu.elastic by default.
+  loadBalancerSpec string
+  // Billing method of the CLB instance
+  //
+  // One of PayOnDemand (pay-as-you-go) or PrePay (subscription).
+  payType string
+  // Maximum bandwidth of a pay-by-bandwidth internet-facing instance, in Mbit/s
+  bandwidth int
+  // Time when the CLB instance was created
+  createTime time
+  // Whether deletion protection is enabled
+  //
+  // One of on or off.
+  deleteProtection string
+  // Whether the configuration read-only (modification protection) mode is enabled
+  //
+  // One of NonProtection (disabled) or ConsoleProtection (enabled, instance
+  // configuration cannot be changed in the console).
+  modificationProtectionStatus string
+  // Reason recorded when the configuration read-only mode is enabled
+  modificationProtectionReason string
+  // ID of the resource group that the CLB instance belongs to
+  resourceGroupId string
+  // Tags attached to the CLB instance, as key-value pairs
+  tags map[string]string
+  // Listeners configured on the CLB instance
+  listeners() []alicloud.slb.listener
+  // Backend servers attached to the CLB instance
+  //
+  // Each entry carries the serverId, serverIp, weight, type (ecs or eni), and
+  // an optional description of an attached backend server.
+  backendServers() []dict
+  // Whether the load balancer is reachable from the internet
+  //
+  // True when addressType is internet, meaning the CLB has a public IP address
+  // and forwards requests from the public internet to its backend servers.
+  internetFacing() bool
+}
+
+// Server Load Balancer (CLB) listener
+//
+// A single listener configured on a CLB instance, keyed by the composite of
+// loadBalancerId, protocol, and listenerPort. Exposes the protocol and port
+// mapping, the scheduling algorithm, the access-control (ACL) settings, and,
+// for HTTPS listeners, the TLS cipher policy and the server and CA
+// certificates. Protocol-specific health-check and forwarding settings are
+// available through config.
+alicloud.slb.listener {
+  // ID of the CLB instance that the listener belongs to
+  loadBalancerId string
+  // Protocol used by the listener
+  //
+  // One of http, https, tcp, or udp.
+  protocol string
+  // Frontend port on which the listener accepts requests
+  listenerPort int
+  // Backend server port that the listener forwards requests to
+  backendServerPort int
+  // Status of the listener
+  //
+  // One of running or stopped.
+  status string
+  // Maximum bandwidth of the listener, in Mbit/s (-1 indicates unlimited)
+  bandwidth int
+  // Scheduling algorithm used to distribute requests
+  //
+  // One of wrr (weighted round-robin), rr (round-robin), sch (source-IP
+  // consistent hashing), tch (four-tuple consistent hashing), or qch (QUIC-ID
+  // consistent hashing).
+  scheduler string
+  // Description of the listener
+  description string
+  // Whether access control is enabled for the listener
+  //
+  // One of on or off.
+  aclStatus string
+  // Type of access control applied when aclStatus is on
+  //
+  // One of white (only requests from allowlisted addresses are forwarded) or
+  // black (requests from blocklisted addresses are denied).
+  aclType string
+  // ID of the access control list bound to the listener
+  aclId string
+  // IDs of the access control lists bound to the listener
+  aclIds []string
+  // ID of the vServer group associated with the listener
+  vServerGroupId string
+  // TLS security policy applied to an HTTPS listener
+  //
+  // One of tls_cipher_policy_1_0, tls_cipher_policy_1_1,
+  // tls_cipher_policy_1_2, tls_cipher_policy_1_2_strict, or
+  // tls_cipher_policy_1_2_strict_with_1_3, each enabling a different set of
+  // TLS versions and cipher suites. Null for non-HTTPS listeners.
+  tlsCipherPolicy string
+  // ID of the server certificate bound to an HTTPS listener
+  serverCertificateId string
+  // ID of the CA certificate used for mutual TLS on an HTTPS listener
+  caCertificateId string
+  // Whether HTTP/2 is enabled on an HTTPS listener
+  //
+  // One of on or off. Null for non-HTTPS listeners.
+  enableHttp2 string
+  // Protocol-specific listener configuration
+  //
+  // The health-check, session-persistence, connection-drain, and
+  // request-header settings for the listener. The available keys vary by
+  // protocol (HTTP, HTTPS, TCP, or UDP).
+  config dict
+}
+
+// ApsaraDB RDS
+//
+// ApsaraDB relational database instances in an Alibaba Cloud account. Exposes
+// the RDS instances discovered across every enabled region through instances,
+// from which the database engine and version, the network placement, and the
+// security posture (SSL/TLS, TDE encryption, public accessibility, and IP
+// address whitelist) can be audited.
+alicloud.rds {
+  // RDS instances across all enabled regions
+  instances() []alicloud.rds.instance
+}
+
+// ApsaraDB RDS instance
+//
+// A single ApsaraDB relational database instance, keyed by dbInstanceId (for
+// example rm-uf6wjk5xxxxxxx). Exposes the database engine and version, the
+// instance class and storage, the network placement and connection endpoint,
+// the billing and lock state, and the security posture: whether SSL/TLS and
+// TDE encryption are enabled, the IP address whitelist, and the attached ECS
+// security groups.
+alicloud.rds.instance {
+  // Instance ID, for example rm-uf6wjk5xxxxxxx
+  dbInstanceId string
+  // Description of the instance
+  dbInstanceDescription string
+  // Database engine
+  //
+  // One of MySQL, SQLServer, PostgreSQL, or MariaDB.
+  engine string
+  // Database engine version, for example 5.7
+  engineVersion string
+  // Lifecycle status of the instance, for example Running or Creating
+  dbInstanceStatus string
+  // Role of the instance
+  //
+  // One of Primary (primary instance), Readonly (read-only instance),
+  // Guard (disaster recovery instance), or Temp (temporary instance).
+  dbInstanceType string
+  // Instance type (class), for example rds.mys2.small
+  dbInstanceClass string
+  // Storage type of the instance
+  //
+  // One of local_ssd, cloud_ssd, cloud_essd, cloud_essd2, or cloud_essd3.
+  dbInstanceStorageType string
+  // Network connection type of the instance
+  //
+  // One of Internet (public) or Intranet (internal).
+  dbInstanceNetType string
+  // Connection mode of the instance
+  //
+  // One of Standard (standard mode) or Safe (database proxy mode).
+  connectionMode string
+  // Endpoint used to connect to the instance
+  connectionString string
+  // Region ID where the instance is deployed, for example cn-hangzhou
+  regionId string
+  // Zone ID where the instance is deployed, for example cn-hangzhou-a
+  zoneId string
+  // VPC that the instance belongs to
+  vpc() alicloud.vpc.network
+  // vSwitch that the instance belongs to
+  vswitch() alicloud.vpc.vswitch
+  // Network type of the instance
+  //
+  // One of VPC or Classic.
+  instanceNetworkType string
+  // Billing method of the instance
+  //
+  // One of Postpaid (pay-as-you-go) or Prepaid (subscription).
+  payType string
+  // Time when the instance was created
+  createTime time
+  // Time when the instance expires (subscription instances only)
+  expireTime time
+  // Lock state of the instance
+  //
+  // One of Unlock, ManualLock, LockByExpiration, LockByRestoration, or
+  // LockByDiskQuota.
+  lockMode string
+  // Reason the instance is locked
+  lockReason string
+  // RDS edition of the instance
+  //
+  // One of Basic, HighAvailability, cluster, Finance, or serverless_basic.
+  category string
+  // Whether release (deletion) protection is enabled for the instance
+  deletionProtection bool
+  // Primary instance, set for read-only and disaster recovery instances
+  masterInstance() alicloud.rds.instance
+  // ID of the resource group the instance belongs to
+  resourceGroupId string
+  // Storage capacity of the instance in GB
+  dbInstanceStorage() int
+  // Port on which the instance listens for connections
+  port() int
+  // Tags attached to the instance as key-value pairs
+  tags() map[string]string
+  // Whether SSL/TLS encryption is enabled for client connections
+  sslEnabled() bool
+  // Expiration time of the server certificate used for SSL/TLS
+  sslExpireTime() time
+  // Whether Transparent Data Encryption (TDE) is enabled for the instance
+  tdeEnabled() bool
+  // IP address whitelist
+  //
+  // The IP addresses and CIDR blocks allowed to connect to the instance. A
+  // whitelist entry of 0.0.0.0/0 exposes the instance to the entire internet.
+  securityIPList() []string
+  // IDs of the ECS security groups attached to the instance
+  securityGroupIds() []string
+}
+
+// ApsaraDB for Redis
+//
+// Entry point for the ApsaraDB for Redis (Tair) instances in an
+// Alibaba Cloud account. Enumerates every Redis and Tair instance across
+// the enabled regions through instances, each of which exposes its
+// configuration and security posture.
+alicloud.redis {
+  // ApsaraDB for Redis (Tair) instances across all enabled regions
+  instances() []alicloud.redis.instance
+}
+
+// ApsaraDB for Redis instance
+//
+// A single ApsaraDB for Redis or Tair instance, keyed by instanceId
+// (for example r-bp1zxszhcgatnx). Exposes the instance class and
+// architecture, the engine version, the network placement, and the
+// security posture (TLS encryption, transparent data encryption, the IP
+// whitelist, attached ECS security groups, and whether password
+// authentication is enforced).
+alicloud.redis.instance {
+  // Instance ID, for example r-bp1zxszhcgatnx
+  instanceId string
+  // Instance name
+  instanceName string
+  // Lifecycle status
+  //
+  // One of Normal, Creating, Changing, Inactive, Flushing, Released,
+  // Transforming, Unavailable, Error, Migrating, BackupRecovering,
+  // MinorVersionUpgrading, NetworkModifying, SSLModifying, or
+  // MajorVersionUpgrading.
+  instanceStatus string
+  // Database engine
+  //
+  // One of Redis (Redis Open-Source Edition), Tair (Tair Enterprise
+  // Edition), or Memcache.
+  instanceType string
+  // Instance type, for example redis.master.small.default
+  instanceClass string
+  // Deployment architecture
+  //
+  // One of cluster (cluster architecture), standard (standard
+  // architecture), or rwsplit (read/write splitting architecture).
+  architectureType string
+  // Database engine version, for example 4.0, 5.0, 6.0, or 7.0
+  engineVersion string
+  // Region ID the instance is deployed in, for example cn-hangzhou
+  regionId string
+  // Zone ID the instance is deployed in, for example cn-hangzhou-b
+  zoneId string
+  // Secondary zone ID for a zone-redundant instance
+  secondaryZoneId string
+  // VPC the instance belongs to
+  vpc() alicloud.vpc.network
+  // vSwitch the instance is attached to
+  vswitch() alicloud.vpc.vswitch
+  // Network type
+  //
+  // One of CLASSIC (classic network) or VPC (virtual private cloud).
+  networkType string
+  // Internal endpoint (connection domain) of the instance
+  connectionDomain string
+  // Service port the instance listens on, for example 6379
+  port int
+  // Private IP address of the instance
+  privateIp string
+  // Storage capacity of the instance, in MB
+  capacity int
+  // Maximum internal bandwidth of the instance, in Mbit/s
+  bandwidth int
+  // Maximum number of queries per second the instance can serve
+  qps int
+  // Maximum number of concurrent connections the instance supports
+  connections int
+  // Billing method
+  //
+  // One of PrePaid (subscription) or PostPaid (pay-as-you-go).
+  chargeType string
+  // Node type
+  //
+  // One of double (master-replica) or single (standalone).
+  nodeType string
+  // Package type
+  //
+  // One of standard (standard package) or customized (custom package).
+  packageType string
+  // Edition
+  //
+  // One of Community (Redis Open-Source Edition) or Enterprise (Tair
+  // Enterprise Edition).
+  editionType string
+  // ID of the resource group the instance belongs to
+  resourceGroupId string
+  // Time the instance was created
+  createTime time
+  // Time the subscription instance expires
+  endTime time
+  // Tags attached to the instance, as key/value pairs
+  tags map[string]string
+  // Whether TLS (SSL) encryption is enabled for in-transit traffic
+  sslEnabled() bool
+  // Whether transparent data encryption (TDE) is enabled for data at rest
+  tdeEnabled() bool
+  // IP addresses and CIDR blocks allowed by the instance whitelists
+  securityIPList() []string
+  // IDs of the ECS security groups associated with the instance
+  securityGroupIds() []string
+  // Whether password authentication is enforced
+  //
+  // True when password authentication is required. False when
+  // password-free access is enabled, allowing connections from within the
+  // VPC without a password.
+  authEnabled() bool
+}
+
+// ApsaraDB for MongoDB
+//
+// Managed MongoDB service in an Alibaba Cloud account. Exposes the MongoDB
+// instances across every enabled region through instances, spanning replica
+// set, sharded cluster, and serverless deployments together with their
+// security posture.
+alicloud.mongodb {
+  // MongoDB instances across all enabled regions
+  instances() []alicloud.mongodb.instance
+}
+
+// ApsaraDB for MongoDB instance
+//
+// A single ApsaraDB for MongoDB instance, keyed by dbInstanceId, for example
+// dds-bp199659b178cef4. Exposes the deployment architecture, engine version,
+// storage and network placement, maintenance window, and the security posture
+// including TLS, transparent data encryption, the IP whitelist, the bound ECS
+// security groups, and audit log status.
+alicloud.mongodb.instance {
+  // Instance ID, for example dds-bp199659b178cef4
+  dbInstanceId string
+  // Instance name set by the user
+  dbInstanceDescription string
+  // Deployment architecture
+  //
+  // One of replicate (replica set or standalone), sharding (sharded cluster),
+  // or serverless.
+  dbInstanceType string
+  // Instance type (specification), for example dds.mongo.mid
+  dbInstanceClass string
+  // Storage capacity in GB
+  dbInstanceStorage int
+  // Database engine, for example MongoDB
+  engine string
+  // Database engine version
+  //
+  // One of 7.0, 6.0, 5.0, 4.4, 4.2, 4.0, or 3.4.
+  engineVersion string
+  // Lifecycle status
+  //
+  // Common values include Creating, Running, Deleting, Rebooting, DBInstanceClassChanging, and TransingToOthers. See the ApsaraDB for MongoDB instance state reference for the full set.
+  dbInstanceStatus string
+  // Region ID of the instance, for example cn-hangzhou
+  regionId string
+  // Primary zone ID of the instance, for example cn-hangzhou-g
+  zoneId string
+  // ID of the secondary zone in a multi-zone deployment
+  secondaryZoneId string
+  // ID of the hidden (third) zone in a multi-zone deployment
+  hiddenZoneId string
+  // Network type
+  //
+  // One of Classic (classic network) or VPC.
+  networkType string
+  // Billing method
+  //
+  // One of PrePaid (subscription) or PostPaid (pay-as-you-go).
+  chargeType string
+  // Disk storage type
+  //
+  // One of cloud_essd, cloud_essd1, cloud_essd2, cloud_essd3, local_ssd, or cloud_essd_dbfs_s.
+  storageType string
+  // Number of nodes in a replica set instance
+  replicationFactor string
+  // Password-free access over VPC
+  //
+  // One of Open (password-free access within the VPC is enabled), Close (a password is required), or NotSupport.
+  vpcAuthMode string
+  // Backup retention policy applied when the instance is released
+  //
+  // One of 0 (all backup sets deleted immediately on release), 1 (one backup set retained long-term on release), or 2 (all backup sets retained long-term on release).
+  backupRetentionPolicy int
+  // I/O throughput consumed by a serverless instance
+  capacityUnit string
+  // Hardware kind code
+  //
+  // One of 0 (physical machine), 1 (ECS instance), 2 (Docker cluster), or 18 (Kubernetes cluster).
+  kindCode string
+  // Time when the instance was created
+  createTime time
+  // Time when a subscription instance expires
+  expireTime time
+  // Time when the released instance data is destroyed
+  destroyTime time
+  // Time when the instance was released
+  releaseTime time
+  // Date of the last downgrade operation, for example 2021-05-08
+  lastDowngradeTime string
+  // Lock status
+  //
+  // One of Unlock, ManualLock, LockByExpiration, LockByRestoration, LockByDiskQuota, or Released.
+  lockMode string
+  // ID of the resource group the instance belongs to
+  resourceGroupId string
+  // Tags attached to the instance, keyed by tag key
+  tags map[string]string
+  // VPC hosting the instance
+  vpc() alicloud.vpc.network
+  // vSwitch hosting the instance
+  vswitch() alicloud.vpc.vswitch
+  // Storage engine, for example WiredTiger or RocksDB
+  storageEngine() string
+  // Access protocol type of a sharded cluster instance
+  //
+  // One of mongodb or dynamodb. Returned only for sharded cluster instances.
+  protocolType() string
+  // Number of read-only nodes in the instance
+  readonlyReplicas() string
+  // Start of the maintenance window in UTC, for example 18:00Z
+  maintainStartTime() string
+  // End of the maintenance window in UTC, for example 03:00Z
+  maintainEndTime() string
+  // Whether disk encryption is enabled for the instance
+  encrypted() bool
+  // KMS key ID used for disk encryption, empty when disk encryption is disabled
+  //
+  // Deprecated in favor of kmsKey.
+  encryptionKey() @maturity("deprecated") string
+  // KMS key used for disk encryption, null when disk encryption is disabled
+  kmsKey() alicloud.kms.key
+  // Whether release protection is enabled for the instance
+  releaseProtection() bool
+  // Current minor kernel version of the database, for example 5.0.5-20220721143518_0
+  currentKernelVersion() string
+  // Whether TLS/SSL is enabled for client connections
+  sslEnabled() bool
+  // Time when the current SSL certificate expires
+  sslExpireTime() time
+  // Whether transparent data encryption (TDE) is enabled
+  tdeEnabled() bool
+  // IP addresses and CIDR blocks in the instance whitelist
+  securityIPList() []string
+  // IDs of the ECS security groups bound to the instance
+  securityGroupIds() []string
+  // Whether the audit log feature is enabled
+  auditPolicyEnabled() bool
+}
+
+// PolarDB
+//
+// Entry point for querying ApsaraDB for PolarDB, the cloud-native relational
+// database service. Exposes the PolarDB clusters provisioned across every
+// enabled region through clusters.
+alicloud.polardb {
+  // PolarDB clusters across all enabled regions
+  clusters() []alicloud.polardb.cluster
+}
+
+// PolarDB cluster
+//
+// A single ApsaraDB for PolarDB cluster, keyed by dbClusterId. Exposes the
+// cluster lifecycle status, database engine and version, node class and count,
+// storage usage, network placement, billing, and the security-posture controls
+// that govern it: SSL/TLS encryption in transit, Transparent Data Encryption
+// (TDE) at rest, the IP access whitelist, deletion protection, and the
+// connection endpoints. Select a cluster with
+// alicloud.polardb.cluster(dbClusterId: "pc-xxxxxxxx").
+alicloud.polardb.cluster {
+  // Cluster ID, for example pc-bp1234567890abc
+  dbClusterId string
+  // User-defined cluster description
+  dbClusterDescription string
+  // Lifecycle status
+  //
+  // For example Creating, Running, Deleting, Rebooting, DBNodeCreating,
+  // DBNodeDeleting, ClassChanging, NetAddressCreating, NetAddressDeleting, or
+  // NetAddressModifying.
+  dbClusterStatus string
+  // Database engine family
+  //
+  // One of MySQL, PostgreSQL, or Oracle.
+  dbType string
+  // Database engine version, for example 8.0, 5.7, 5.6, 11, or 14
+  dbVersion string
+  // Storage engine of the cluster
+  //
+  // One of POLARDB (compute-storage separated) or MySQL.
+  engine string
+  // Product edition
+  //
+  // One of Normal (Cluster Edition), Basic (Single Node Edition), ArchiveNormal
+  // (X-Engine), or SENormal (Standard Edition).
+  category string
+  // Product sub-edition, for example Exclusive or General
+  subCategory string
+  // Node specification class, for example polar.mysql.x4.medium
+  dbNodeClass string
+  // Number of nodes in the cluster
+  dbNodeNumber int
+  // Number of CPU cores per node
+  cpuCores string
+  // Memory size per node, in MB
+  memorySize string
+  // Used storage, in bytes
+  storageUsed int
+  // Maximum storage capacity, in bytes
+  //
+  // For PSL5/PSL4 (compute-storage separated) clusters this is the auto-scaling
+  // ceiling. Resolved from the cluster attribute detail.
+  storageMax() int
+  // Storage type
+  //
+  // For example HighPerformance, PSL5, PSL4, or ESSDAUTOPL.
+  storageType string
+  // Storage billing method
+  //
+  // One of Prepaid (subscription) or Postpaid (pay-as-you-go).
+  storagePayType string
+  // Provisioned storage space, in GB (0 when storage auto-scales)
+  storageSpace int
+  // Region ID the cluster resides in, for example cn-hangzhou
+  regionId string
+  // Zone ID the primary node resides in, for example cn-hangzhou-i
+  zoneId string
+  // VPC the cluster is attached to
+  vpc() alicloud.vpc.network
+  // vSwitch the cluster is attached to
+  vswitch() alicloud.vpc.vswitch
+  // Billing method
+  //
+  // One of Prepaid (subscription) or Postpaid (pay-as-you-go).
+  payType string
+  // Creation time
+  createTime time
+  // Expiration time (null for pay-as-you-go clusters)
+  expireTime time
+  // Whether the subscription cluster has expired, as a string
+  //
+  // One of true or false. Empty for pay-as-you-go clusters.
+  expired string
+  // Lock state of the cluster
+  //
+  // One of Unlock, ManualLock, LockByExpiration, or LockByDiskQuota.
+  lockMode string
+  // Deletion protection flag
+  //
+  // 1 when release/deletion protection is enabled, 0 when it is disabled.
+  deletionLock int
+  // ID of the resource group the cluster belongs to
+  resourceGroupId string
+  // Serverless cluster type, for example AgileServerless or SteadyServerless (empty for non-serverless clusters)
+  serverlessType string
+  // Network type
+  //
+  // One of VPC or Classic.
+  dbClusterNetworkType string
+  // AI feature type of the cluster
+  //
+  // One of SearchNode, DLNode, or an empty string when no AI node is attached.
+  aiType string
+  // Whether the cluster is a hot-standby (multi-zone) cluster
+  //
+  // One of ON or OFF.
+  hotStandbyCluster string
+  // Whether multi-node strict consistency is enabled
+  //
+  // One of ON or OFF.
+  strictConsistency string
+  // Tags attached to the cluster, as key-value pairs
+  tags map[string]string
+  // Database nodes in the cluster
+  //
+  // One entry per node with dbNodeId, dbNodeClass, dbNodeRole (Writer or
+  // Reader), zoneId, regionId, imciSwitch (columnar index state), hotReplicaMode,
+  // and serverless.
+  dbNodes []dict
+  // Whether SSL/TLS encryption in transit is enabled on any endpoint
+  //
+  // True when at least one endpoint reports SSLEnabled as Enabled. False when
+  // SSL is disabled on all endpoints.
+  sslEnabled() bool
+  // Whether Transparent Data Encryption (TDE) at rest is enabled
+  //
+  // True when the cluster TDE status is Enabled. False when TDE is disabled.
+  tdeEnabled() bool
+  // IP access whitelist entries
+  //
+  // The flattened set of CIDR entries permitted to connect to the cluster,
+  // gathered across every whitelist group. An entry of 0.0.0.0/0 means the
+  // cluster accepts connections from any source.
+  accessWhitelist() []string
+  // Connection endpoints of the cluster
+  //
+  // One entry per network address with endpointType (Cluster, Primary, or
+  // Custom), dbEndpointId, addressType (the network type, Public or Private),
+  // connectionString, port, readWriteMode, and nodes.
+  endpoints() []dict
+}
+
+// VPC flow log
+//
+// A single flow log that captures traffic metadata for a VPC, vSwitch, or
+// elastic network interface, keyed by flowLogId within its region. Exposes the
+// monitored resource, the traffic direction and path captured, and the Log
+// Service project and logstore that receive the records. Use it to audit
+// whether flow logging is enabled for a network and where the records are
+// delivered. For example `alicloud.vpc.flowLog(flowLogId: "fl-xxx", regionId: "cn-hangzhou")`.
+alicloud.vpc.flowLog {
+  // Region ID the flow log resides in, for example cn-hangzhou
+  regionId string
+  // Flow log ID, used as the lookup key within its region
+  flowLogId string
+  // Flow log name
+  flowLogName string
+  // Description of the flow log
+  description string
+  // Flow log state
+  //
+  // One of Active or Inactive. A flow log only captures traffic while Active.
+  status string
+  // Business (billing) state of the flow log
+  //
+  // For example Normal, or FinancialLocked when the flow log is locked for
+  // overdue payment.
+  businessStatus string
+  // ID of the monitored resource (a VPC, vSwitch, or elastic network interface)
+  resourceId string
+  // Type of the monitored resource
+  //
+  // One of VPC, VSwitch, or NetworkInterface.
+  resourceType string
+  // Traffic direction captured
+  //
+  // One of All, Allow (accepted traffic), or Drop (rejected traffic).
+  trafficType string
+  // Traffic path captured
+  //
+  // The network paths the flow log records, for example full for all paths or
+  // a subset such as internetGateway. Empty when no path filter is applied.
+  trafficPath []string
+  // IP version captured
+  //
+  // One of IPv4, IPv6, or all.
+  ipVersion string
+  // Interval in seconds over which records are aggregated, for example 600
+  aggregationInterval int
+  // Name of the Log Service project that receives the records
+  projectName string
+  // Name of the Log Service logstore that receives the records
+  logStoreName string
+  // ID of the resource group the flow log belongs to
+  resourceGroupId string
+  // Time the flow log was created
+  creationTime time
+  // Delivery state of the records to Log Service
+  //
+  // For example FlowLogDeliverStarted when records are being delivered, or a
+  // failure state when delivery is not succeeding.
+  deliverStatus string
+  // Most recent delivery error, empty when delivery is healthy
+  deliverErrorMessage string
+  // Tags applied to the flow log
+  tags map[string]string
+  // Log Service logstore that receives the records
+  logstore() alicloud.log.logstore
+  // VPC network monitored by the flow log
+  //
+  // Null when the monitored resource is a vSwitch or an elastic network
+  // interface rather than a VPC.
+  network() alicloud.vpc.network
+  // vSwitch monitored by the flow log
+  //
+  // Null when the monitored resource is a VPC or an elastic network interface
+  // rather than a vSwitch.
+  vswitch() alicloud.vpc.vswitch
+}
+
+// Alibaba Cloud Key Management Service
+//
+// Encryption keys and secrets managed for an Alibaba Cloud account. Exposes the
+// customer master keys across all enabled regions, including their lifecycle
+// state, cryptographic spec, rotation configuration, and protection level, and
+// the secrets held in Secrets Manager along with the master key that protects
+// each one. Use it to audit key rotation, deletion protection, and whether keys
+// are backed by a hardware security module.
+alicloud.kms {
+  // Customer master keys across all enabled regions
+  keys() []alicloud.kms.key
+  // Secrets held in Secrets Manager across all enabled regions
+  secrets() []alicloud.kms.secret
+}
+
+// Key Management Service customer master key
+//
+// A single customer master key (CMK), keyed by keyId within its region. Exposes
+// the key lifecycle state, cryptographic spec and usage, material origin,
+// protection level, and the automatic-rotation configuration, along with the
+// aliases that point at the key. Use it to audit whether keys rotate, whether
+// deletion protection is on, and whether the key material lives in an HSM. For
+// example `alicloud.kms.key(keyId: "0d24xxxx", regionId: "cn-hangzhou")`.
+alicloud.kms.key {
+  // Region ID the key resides in, for example cn-hangzhou
+  regionId string
+  // Key ID, used as the lookup key within its region
+  keyId string
+  // Alibaba Cloud Resource Name of the key
+  arn string
+  // Key lifecycle state
+  //
+  // One of Enabled, Disabled, PendingDeletion, or PendingImport.
+  keyState string
+  // Cryptographic operations the key may perform
+  //
+  // Either ENCRYPT/DECRYPT for encryption keys or SIGN/VERIFY for signing keys.
+  keyUsage string
+  // Cryptographic specification of the key
+  //
+  // For example Aliyun_AES_256, Aliyun_SM4, RSA_2048, EC_P256, or EC_SM2.
+  keySpec string
+  // Source of the key material
+  //
+  // Aliyun_KMS when the material was generated by KMS, or EXTERNAL when it was
+  // imported.
+  origin string
+  // Protection level of the key material
+  //
+  // SOFTWARE for software-protected keys, or HSM when the material is stored in
+  // a hardware security module.
+  protectionLevel string
+  // Automatic key-rotation state
+  //
+  // One of Enabled, Disabled, or Suspended. Suspended means rotation was
+  // enabled but KMS cannot rotate the key, for example after the key was
+  // disabled.
+  automaticRotation string
+  // Interval between automatic rotations, for example 31536000s
+  rotationInterval string
+  // Time the key was created
+  creationDate time
+  // Time the key is scheduled for deletion, null when no deletion is scheduled
+  deleteDate time
+  // Time the key material was last rotated, null when never rotated
+  lastRotationDate time
+  // Time the key is next scheduled to rotate, null when rotation is disabled
+  nextRotationDate time
+  // Time imported key material expires, null when it does not expire
+  materialExpireTime time
+  // Identifier of the current primary key version
+  primaryKeyVersion string
+  // Deletion-protection state
+  //
+  // Enabled when the key cannot be scheduled for deletion until protection is
+  // turned off.
+  deletionProtection string
+  // Account (UID) or service that created the key
+  creator string
+  // Description of the key
+  description string
+  // Dedicated KMS instance ID that holds the key, empty for the shared default KMS
+  dkmsInstanceId string
+  // Alias names that point at the key, for example alias/my-key
+  aliases() []string
+}
+
+// Key Management Service secret
+//
+// A single secret held in Secrets Manager, keyed by secretName within its
+// region. Exposes the secret metadata, type, rotation configuration, and the
+// customer master key that encrypts the secret value. The secret value itself
+// is never exposed. Use it to audit which secrets rotate and which key protects
+// each one.
+alicloud.kms.secret {
+  // Region ID the secret resides in, for example cn-hangzhou
+  regionId string
+  // Secret name, used as the lookup key within its region
+  secretName string
+  // Alibaba Cloud Resource Name of the secret
+  arn string
+  // Secret type
+  //
+  // One of Generic, Rds, RAMCredentials, or ECS. Managed types (Rds, ECS,
+  // RAMCredentials) are rotated by the owning service.
+  secretType string
+  // Automatic-rotation state
+  //
+  // One of Enabled, Disabled, or Suspended.
+  automaticRotation string
+  // Interval between automatic rotations, for example 604800s
+  rotationInterval string
+  // Time the secret was last rotated, null when never rotated
+  lastRotationDate time
+  // Time the secret is next scheduled to rotate, null when rotation is disabled
+  nextRotationDate time
+  // Time the secret is scheduled for deletion, null when no deletion is scheduled
+  plannedDeleteTime time
+  // Service that owns the secret, empty for user-managed secrets
+  owingService string
+  // Description of the secret
+  description string
+  // Dedicated KMS instance ID that holds the secret, empty for the shared default KMS
+  dkmsInstanceId string
+  // Type-specific extended configuration
+  //
+  // Parsed from the secret's extended-config document; the shape varies by
+  // secretType, for example the linked instance and account for an Rds secret.
+  // Null for Generic secrets.
+  extendedConfig dict
+  // Time the secret was created
+  createTime time
+  // Time the secret was last updated
+  updateTime time
+  // Customer master key that encrypts the secret value
+  encryptionKey() alicloud.kms.key
+  // Tags applied to the secret
+  tags map[string]string
+}
+
+// Alibaba Cloud ActionTrail
+//
+// Audit trail configuration for an Alibaba Cloud account. Exposes the trails
+// that record management and data-plane API events, including where each trail
+// delivers events (an OSS bucket or a Log Service project), whether it spans the
+// resource directory, and its live logging and delivery health. Use it to audit
+// whether API activity is being recorded and successfully delivered.
+alicloud.actiontrail {
+  // Trails configured in the account
+  trails() []alicloud.actiontrail.trail
+}
+
+// ActionTrail trail
+//
+// A single audit trail, keyed by name. Exposes the event categories it captures
+// (read, write, or all), the OSS bucket and Log Service project it delivers to,
+// the delivery roles, whether it is an organization trail, and its live logging
+// and delivery status. Use it to confirm a trail is actively logging and
+// delivering events without errors.
+alicloud.actiontrail.trail {
+  // Trail name, used as the lookup key
+  name string
+  // Configuration state of the trail
+  //
+  // One of Enable, Disable, or Fresh. Fresh means the trail was created but has
+  // never started logging.
+  status string
+  // Event categories the trail records
+  //
+  // One of Write, Read, or All.
+  eventRW string
+  // Region the trail was created in
+  homeRegion string
+  // Region whose events the trail records, or All for a multi-region trail
+  trailRegion string
+  // Alibaba Cloud Resource Name of the trail
+  trailArn string
+  // Whether the trail records events across all accounts in the resource directory
+  isOrganizationTrail bool
+  // Resource directory (organization) ID for an organization trail, empty otherwise
+  organizationId string
+  // Name of the OSS bucket that receives delivered events, empty when not delivering to OSS
+  ossBucketName string
+  // Region of the OSS bucket, for example oss-cn-hangzhou
+  ossBucketLocation string
+  // Object-name prefix applied to delivered event files
+  ossKeyPrefix string
+  // RAM role ARN ActionTrail assumes to write to the OSS bucket
+  ossWriteRoleArn string
+  // ARN of the Log Service project that receives delivered events, empty when not delivering to SLS
+  slsProjectArn string
+  // RAM role ARN ActionTrail assumes to write to the Log Service project
+  slsWriteRoleArn string
+  // Time the trail was created
+  createTime time
+  // Time the trail was last updated
+  updateTime time
+  // Time the trail most recently started logging
+  startLoggingTime time
+  // Time the trail most recently stopped logging, empty while logging
+  stopLoggingTime time
+  // OSS bucket that receives delivered events
+  ossBucket() alicloud.oss.bucket
+  // Log Service project that receives delivered events
+  slsProject() alicloud.log.project
+  // Whether the trail is actively logging events
+  //
+  // The live logging state reported by ActionTrail, which can differ from the
+  // configured status.
+  isLogging() bool
+  // Time of the most recent successful event delivery, null when none
+  latestDeliveryTime() time
+  // Most recent event-delivery error, empty when the last delivery succeeded
+  latestDeliveryError() string
+  // Time of the most recent successful delivery to Log Service, null when none
+  latestDeliveryLogServiceTime() time
+  // Most recent Log Service delivery error, empty when the last delivery succeeded
+  latestDeliveryLogServiceError() string
+}
+
+// Alibaba Cloud Log Service
+//
+// Log Service (SLS) projects and their logstores across an Alibaba Cloud
+// account. Exposes the projects in every enabled region and, within each, the
+// logstores that ingest and store logs, including their retention period and
+// server-side encryption configuration. Log Service is the delivery target for
+// ActionTrail trails and VPC flow logs, so these resources anchor the account's
+// logging posture.
+alicloud.log {
+  // Log Service projects across all enabled regions
+  projects() []alicloud.log.project
+}
+
+// Log Service project
+//
+// A single Log Service project, keyed by name within its region. A project is
+// the top-level container that groups logstores, dashboards, and alerts.
+// Exposes the project metadata, endpoints, and the logstores it contains. For
+// example `alicloud.log.project(name: "my-project", regionId: "cn-hangzhou")`.
+alicloud.log.project {
+  // Region ID the project resides in, for example cn-hangzhou
+  regionId string
+  // Project name, globally unique and used as the lookup key
+  name string
+  // Description of the project
+  description string
+  // Project status, for example Normal
+  status string
+  // Account (UID) that owns the project
+  owner string
+  // ID of the resource group the project belongs to
+  resourceGroupId string
+  // Data-redundancy type of the project storage, for example LRS or ZRS
+  dataRedundancyType string
+  // Whether the recycle bin is enabled for the project
+  recycleBinEnabled bool
+  // Internal endpoint for access from within Alibaba Cloud
+  internalEndpoint string
+  // Public endpoint for access over the Internet
+  internetEndpoint string
+  // Time the project was created
+  createTime time
+  // Time the project was last modified
+  lastModifyTime time
+  // Logstores contained in the project
+  logstores() []alicloud.log.logstore
+}
+
+// Log Service logstore
+//
+// A single logstore within a Log Service project, keyed by the owning project
+// name and logstore name. A logstore ingests, stores, and indexes a stream of
+// logs. Exposes the retention period, shard layout, telemetry type, and the
+// server-side encryption configuration. Use it to audit log retention and
+// whether logs are encrypted with a customer master key.
+alicloud.log.logstore {
+  // Region ID the logstore resides in, for example cn-hangzhou
+  regionId string
+  // Name of the project that contains the logstore
+  projectName string
+  // Logstore name, used with the project name as the lookup key
+  name string
+  // Number of days ingested logs are retained; 3650 means permanent retention
+  ttl() int
+  // Number of days logs are kept in hot storage before moving to cold storage
+  hotTtl() int
+  // Number of read/write shards the logstore is split into
+  shardCount() int
+  // Whether the logstore automatically splits shards under load
+  autoSplit() bool
+  // Maximum number of shards the logstore may auto-split into
+  maxSplitShard() int
+  // Whether the built-in reserved fields (for example __topic__) are recorded
+  appendMeta() bool
+  // Whether WebTracking ingestion is enabled for the logstore
+  enableTracking() bool
+  // Telemetry type stored, for example None for logs or Metrics
+  telemetryType() string
+  // Logstore mode, for example standard or query
+  mode() string
+  // Whether server-side encryption is enabled for the logstore
+  encryptionEnabled() bool
+  // Server-side encryption algorithm
+  //
+  // For example default or sm4. Empty when encryption is disabled.
+  encryptionType() string
+  // Customer master key used for server-side encryption
+  //
+  // Null when encryption is disabled or uses a service-managed key rather than
+  // a specific customer master key.
+  encryptionKey() alicloud.kms.key
+  // Time the logstore was created
+  createTime() time
+  // Time the logstore was last modified
+  lastModifyTime() time
+}
+
+// Alibaba Cloud Cloud Config
+//
+// Configuration-compliance state for an Alibaba Cloud account. Exposes the
+// Config rules that continuously evaluate resource configuration, the
+// account-wide compliance summary, and whether the configuration recorder and
+// its delivery channels are active. Use it to audit whether configuration
+// recording is enabled and how many resources are non-compliant.
+alicloud.config {
+  // Config rules defined in the account
+  rules() []alicloud.config.rule
+  // Whether the configuration recorder is registered and actively recording
+  //
+  // True when the recorder status is REGISTERED. When false, resource
+  // configuration changes are not being captured.
+  recorderEnabled() bool
+  // Configuration-recorder status
+  //
+  // One of REGISTRABLE, BUILDING, REGISTERED, or REBUILDING. REGISTERED means
+  // recording is active.
+  recorderStatus() string
+  // Resource types the configuration recorder captures
+  recordedResourceTypes() []string
+  // Account-wide compliance summary
+  //
+  // Counts of compliant and non-compliant rules and resources. Keys include
+  // compliantRuleCount, nonCompliantRuleCount, totalRuleCount,
+  // compliantResourceCount, nonCompliantResourceCount, totalResourceCount, and
+  // the highRisk, mediumRisk, and lowRisk non-compliant resource counts.
+  complianceSummary() dict
+  // Delivery channels that export configuration data and compliance results
+  //
+  // Each entry lists the channelId, name, type (OSS, SLS, or MNS), targetArn,
+  // assumeRoleArn, and enabled state, plus the snapshot and notification
+  // toggles. Empty when no delivery channel is configured.
+  deliveryChannels() []dict
+}
+
+// Cloud Config rule
+//
+// A single Config rule, keyed by configRuleId. A rule continuously evaluates
+// whether resources of a given type meet a configuration requirement and
+// reports each resource as compliant or non-compliant. Exposes the rule
+// definition, risk level, evaluation source, and current compliance result.
+alicloud.config.rule {
+  // Config rule ID, used as the lookup key
+  configRuleId string
+  // Config rule name
+  configRuleName string
+  // Alibaba Cloud Resource Name of the rule
+  configRuleArn string
+  // Rule state
+  //
+  // One of ACTIVE, INACTIVE, EVALUATING, or DELETING.
+  configRuleState string
+  // Description of the rule
+  description string
+  // Risk level of a non-compliant result
+  //
+  // 1 for high, 2 for medium, 3 for low.
+  riskLevel int
+  // Owner of the rule's evaluation logic
+  //
+  // ALIYUN for a managed rule, or a custom source such as CUSTOM_FC for a
+  // Function Compute-backed rule.
+  sourceOwner string
+  // Identifier of the managed rule or custom evaluation function
+  sourceIdentifier string
+  // Automation type applied to non-compliant resources, empty when none
+  automationType string
+  // Resource types the rule evaluates
+  resourceTypesScope []string
+  // Compliance result type
+  //
+  // One of COMPLIANT, NON_COMPLIANT, NOT_APPLICABLE, or INSUFFICIENT_DATA.
+  complianceType string
+  // Number of resources in the current compliance result
+  complianceCount int
+  // ID of the compliance pack the rule belongs to, empty when the rule is standalone
+  compliancePackId string
+  // Maximum interval at which a periodic rule re-evaluates
+  //
+  // One of One_Hour, Three_Hours, Six_Hours, Twelve_Hours, or
+  // TwentyFour_Hours. Empty for change-triggered rules.
+  maximumExecutionFrequency() string
+  // Time the rule was created
+  createTime() time
+  // Time the rule was last modified
+  modifiedTime() time
+  // Tags applied to the rule
+  tags map[string]string
+}
+
+// Alibaba Cloud Resource Directory
+//
+// Multi-account governance structure for an Alibaba Cloud account. Exposes the
+// resource directory (the organization), the management and member accounts it
+// contains, the folder hierarchy that groups them, and the control policies
+// available to restrict member-account permissions. Use it to audit
+// organization membership and whether control policies are enabled.
+alicloud.resourceManager {
+  // Resource directory (organization) ID
+  resourceDirectoryId() string
+  // Root folder ID of the resource directory
+  rootFolderId() string
+  // Management (master) account ID
+  masterAccountId() string
+  // Management (master) account name
+  masterAccountName() string
+  // Member-account deletion state
+  //
+  // Enabled when member accounts may be deleted from the directory.
+  memberDeletionStatus() string
+  // Control-policy enablement state
+  //
+  // Enabled when control policies may be attached to restrict member-account
+  // permissions.
+  controlPolicyStatus() string
+  // Time the resource directory was created
+  createTime() time
+  // Member and management accounts in the resource directory
+  accounts() []alicloud.resourceManager.account
+  // Folders in the resource directory
+  folders() []alicloud.resourceManager.folder
+  // Control policies in the resource directory, both system and custom
+  controlPolicies() []alicloud.resourceManager.controlPolicy
+}
+
+// Resource Directory account
+//
+// A single member or management account in the resource directory, keyed by
+// accountId. Exposes the account profile, its position in the folder hierarchy,
+// how it joined the directory, and its lifecycle timestamps.
+alicloud.resourceManager.account {
+  // Account (UID)
+  accountId string
+  // Display name of the account
+  displayName string
+  // Account status, for example CreateSuccess or InviteSuccess
+  status string
+  // Account type
+  //
+  // ResourceAccount for an account created in the directory, or CloudAccount
+  // for an existing account invited into it.
+  type string
+  // ID of the folder that contains the account
+  folderId string
+  // Resource directory (organization) ID
+  resourceDirectoryId string
+  // How the account joined the directory
+  //
+  // Either created or invited.
+  joinMethod string
+  // Time the account joined the directory
+  joinTime time
+  // Time the account was last modified
+  modifyTime time
+  // Folder that contains the account
+  folder() alicloud.resourceManager.folder
+}
+
+// Resource Directory folder
+//
+// A single folder in the resource directory hierarchy, keyed by folderId. A
+// folder groups member accounts and can nest other folders. Exposes the folder
+// name, its parent, and creation time.
+alicloud.resourceManager.folder {
+  // Folder ID, used as the lookup key
+  folderId string
+  // Folder name
+  folderName string
+  // ID of the parent folder, empty for the root folder
+  parentFolderId string
+  // Time the folder was created
+  createTime time
+}
+
+// Resource Directory control policy
+//
+// A single control policy in the resource directory, keyed by policyId. A
+// control policy sets the maximum permissions available to the accounts and
+// folders it is attached to. Exposes the policy metadata and how many entities
+// it is attached to.
+alicloud.resourceManager.controlPolicy {
+  // Policy ID, used as the lookup key
+  policyId string
+  // Policy name
+  policyName string
+  // Policy type
+  //
+  // Either System for an Alibaba Cloud-managed policy or Custom for a
+  // user-defined one.
+  policyType string
+  // Description of the policy
+  description string
+  // Identity types the policy governs, for example RAM
+  effectScope string
+  // Number of accounts and folders the policy is attached to
+  attachmentCount int
+  // Time the policy was created
+  createDate time
+  // Time the policy was last updated
+  updateDate time
+}
+
+// Alibaba Cloud Container Service for Kubernetes
+//
+// ACK clusters across an Alibaba Cloud account. Exposes the Kubernetes clusters
+// in every enabled region, including their type and version, network layout,
+// API server exposure, control-plane audit logging, workload-identity (RRSA)
+// settings, node pools, and installed addons. Use it to audit whether a
+// cluster's API server is reachable from the internet and whether audit logging
+// is enabled.
+alicloud.cs {
+  // Kubernetes clusters across all enabled regions
+  clusters() []alicloud.cs.cluster
+}
+
+// Container Service for Kubernetes cluster
+//
+// A single ACK cluster, keyed by clusterId within its region. Exposes the
+// cluster type and Kubernetes version, the VPC, vSwitches, and security group it
+// runs in, the pod and service CIDRs, the public and intranet API server
+// endpoints, and the derived internet-exposure of the API server. Node pools,
+// installed addons, control-plane audit logging, and workload-identity (RRSA)
+// settings are reached from here. For example
+// alicloud.cs.cluster(clusterId: "c1a2b3", regionId: "cn-hangzhou").
+alicloud.cs.cluster {
+  // Region ID the cluster resides in, for example cn-hangzhou
+  regionId string
+  // Cluster ID, used as the lookup key within its region
+  clusterId string
+  // Cluster name
+  name string
+  // Cluster type
+  //
+  // One of Kubernetes (dedicated), ManagedKubernetes, Ask (serverless), or
+  // ExternalKubernetes.
+  clusterType string
+  // Cluster profile, for example Default, Serverless, or Edge
+  profile string
+  // Managed-tier specification
+  //
+  // For example ack.pro.small or ack.standard. Empty for dedicated Kubernetes
+  // clusters.
+  clusterSpec string
+  // Cluster lifecycle state
+  //
+  // For example running, initial, failed, or deleting.
+  state string
+  // Running Kubernetes version
+  currentVersion string
+  // Kubernetes version the cluster was created with
+  initVersion string
+  // Next Kubernetes version available for upgrade, empty when up to date
+  nextVersion string
+  // Pod CIDR block
+  containerCidr string
+  // Service CIDR block
+  serviceCidr string
+  // Node subnet CIDR block
+  subnetCidr string
+  // IP stack of the cluster
+  //
+  // One of ipv4, ipv6, or dual.
+  ipStack string
+  // kube-proxy mode, either iptables or ipvs
+  proxyMode string
+  // Cluster network mode, for example vpc or overlay
+  networkMode string
+  // Cluster local DNS domain, for example cluster.local
+  clusterDomain string
+  // Whether PrivateZone (private DNS) is enabled for the cluster
+  privateZone bool
+  // Whether deletion protection is enabled for the cluster
+  deletionProtection bool
+  // Total number of nodes in the cluster
+  size int
+  // ID of the resource group the cluster belongs to
+  resourceGroupId string
+  // Zone ID the cluster's managed resources reside in
+  zoneId string
+  // Time zone configured for the cluster
+  timezone string
+  // Public (internet) API server endpoint
+  //
+  // The internet-facing Kubernetes API server URL. Empty when the API server
+  // has no public endpoint.
+  apiServerPublicEndpoint string
+  // Intranet (private) API server endpoint
+  apiServerIntranetEndpoint string
+  // Whether the Kubernetes API server is reachable from the internet
+  //
+  // True when the cluster exposes a public API server endpoint. A publicly
+  // reachable API server broadens the attack surface of the control plane.
+  apiServerInternetExposed bool
+  // Time the cluster was created
+  created time
+  // Time the cluster was last updated
+  updated time
+  // Tags applied to the cluster
+  tags map[string]string
+  // Maintenance window configuration
+  //
+  // The scheduled maintenance window, with enable, duration, maintenanceTime,
+  // recurrence, and weeklyPeriod. Null when no window is configured.
+  maintenanceWindow dict
+  // VPC the cluster runs in
+  vpc() alicloud.vpc.network
+  // vSwitches the cluster's control plane and nodes attach to
+  vswitches() []alicloud.vpc.vswitch
+  // Security group applied to the cluster nodes
+  securityGroup() alicloud.ecs.securitygroup
+  // Worker node RAM role, null when the cluster has no worker RAM role
+  workerRamRole() alicloud.ram.role
+  // Whether RAM Roles for Service Accounts (RRSA) workload identity is enabled
+  //
+  // True when the cluster issues OIDC tokens for pod-level RAM authorization
+  // instead of relying on the shared worker node role.
+  rrsaEnabled() bool
+  // OIDC issuer URL for workload identity, empty when RRSA is disabled
+  oidcIssuerUrl() string
+  // Whether Kubernetes API server audit logging is enabled
+  //
+  // True when the control-plane audit component ships logs to Log Service. When
+  // false, API server activity is not being recorded.
+  auditLogEnabled() bool
+  // Control-plane components shipping logs to Log Service
+  //
+  // For example apiserver, audit, kcm (kube-controller-manager), scheduler, or
+  // ccm (cloud-controller-manager). Empty when control-plane logging is off.
+  controlPlaneLogComponents() []string
+  // Retention in days of the control-plane logs, 0 when logging is disabled
+  controlPlaneLogTtl() int
+  // Log Service project that receives the control-plane logs
+  //
+  // Null when control-plane logging is not configured.
+  controlPlaneLogProject() alicloud.log.project
+  // Node pools in the cluster
+  nodePools() []alicloud.cs.nodePool
+  // Addons installed in the cluster
+  //
+  // Each entry lists the name, version, and state of an installed addon, for
+  // example security-inspector, logtail-ds, terway-eniip, or csi-plugin. Use it
+  // to audit which security and observability addons are present.
+  addons() []dict
+}
+
+// Container Service for Kubernetes node pool
+//
+// A single node pool within an ACK cluster, keyed by nodePoolId. Exposes the
+// node instance configuration, scaling and management policy, OS hardening
+// flags, disk encryption, and the typed references to the security groups,
+// vSwitches, RAM role, and KMS key the nodes use. Use it to audit node disk
+// encryption, OS hardening, and automatic CVE patching.
+alicloud.cs.nodePool {
+  // Region ID the node pool resides in
+  regionId string
+  // ID of the cluster the node pool belongs to
+  clusterId string
+  // Node pool ID, used as the lookup key
+  nodePoolId string
+  // Node pool name
+  name string
+  // Node pool type, for example ess or edge
+  type string
+  // ID of the resource group the node pool belongs to
+  resourceGroupId string
+  // Whether this is the cluster's default node pool
+  isDefault bool
+  // Time the node pool was created
+  created time
+  // Time the node pool was last updated
+  updated time
+  // ECS instance types used for nodes
+  instanceTypes []string
+  // System disk category, for example cloud_essd
+  systemDiskCategory string
+  // System disk size in GiB
+  systemDiskSize int
+  // Whether the system disk is encrypted
+  systemDiskEncrypted bool
+  // System disk encryption algorithm, for example aes-256 or sm4
+  systemDiskEncryptAlgorithm string
+  // Key pair name used for node SSH access, empty when password or managed login is used
+  keyPair string
+  // Image type used for nodes, for example AliyunLinux or ContainerOS
+  imageType string
+  // ID of the image used for nodes
+  imageId string
+  // Node billing method
+  //
+  // Either PrePaid (subscription) or PostPaid (pay-as-you-go).
+  instanceChargeType string
+  // Desired number of nodes in the pool
+  desiredSize int
+  // Multi-zone scaling policy, for example PRIORITY, COST_OPTIMIZED, or BALANCE
+  multiAzPolicy string
+  // Spot instance strategy
+  //
+  // One of NoSpot, SpotWithPriceLimit, or SpotAsPriceGo.
+  spotStrategy string
+  // Whether OS security hardening is applied to nodes
+  securityHardeningOs bool
+  // Whether MLPS (Multi-Level Protection Scheme) compliance hardening is enabled
+  socEnabled bool
+  // Whether CIS benchmark hardening is enabled for nodes
+  cisEnabled bool
+  // Maximum outbound internet bandwidth in Mbps assigned to nodes, 0 when nodes have no public bandwidth
+  internetMaxBandwidthOut int
+  // Data disks attached to nodes
+  //
+  // Each entry lists the category, size, encrypted, kmsKeyId, performanceLevel,
+  // and autoSnapshotPolicyId of a data disk.
+  dataDisks []dict
+  // Container runtime, for example containerd or docker
+  runtime string
+  // Container runtime version
+  runtimeVersion string
+  // Whether the CloudMonitor agent is installed on nodes
+  cmsEnabled bool
+  // CPU management policy, either none or static
+  cpuPolicy string
+  // Whether nodes are marked unschedulable
+  unschedulable bool
+  // Kubernetes labels applied to nodes
+  labels map[string]string
+  // Kubernetes taints applied to nodes
+  //
+  // Each entry lists the key, value, and effect (NoSchedule, PreferNoSchedule,
+  // or NoExecute) of a node taint.
+  taints []dict
+  // Whether autoscaling is enabled for the node pool
+  autoScalingEnabled bool
+  // Autoscaling type, for example cpu, gpu, or spot
+  autoScalingType string
+  // Minimum number of nodes when autoscaling is enabled
+  minInstances int
+  // Maximum number of nodes when autoscaling is enabled
+  maxInstances int
+  // Whether the node pool is managed (control-plane operated)
+  managed bool
+  // Whether managed nodes are automatically repaired
+  autoRepair bool
+  // Whether managed nodes are automatically upgraded
+  autoUpgrade bool
+  // Whether managed nodes automatically receive CVE fixes
+  autoVulFix bool
+  // Whether trusted (confidential) computing is enabled for nodes
+  teeEnabled bool
+  // Total number of nodes in the pool
+  totalNodes int
+  // Number of nodes serving workloads
+  servingNodes int
+  // Number of healthy nodes
+  healthyNodes int
+  // Number of failed nodes
+  failedNodes int
+  // Node pool state, for example active or scaling
+  nodePoolState string
+  // KMS key used to encrypt the system disk, null when the system disk is not encrypted
+  systemDiskKmsKey() alicloud.kms.key
+  // Security groups applied to the nodes
+  securityGroups() []alicloud.ecs.securitygroup
+  // vSwitches the nodes attach to
+  vswitches() []alicloud.vpc.vswitch
+  // RAM role assigned to the nodes, null when the node pool has no RAM role
+  ramRole() alicloud.ram.role
+}
+
+// Alibaba Cloud Application Load Balancer
+//
+// ALB (Layer-7) load balancers across an Alibaba Cloud account. Exposes the
+// application load balancers in every enabled region, along with their
+// listeners and server groups. Use it to audit which load balancers are
+// internet-facing, whether HTTPS listeners use a strong TLS policy, and whether
+// access logging is enabled.
+alicloud.alb {
+  // Application load balancers across all enabled regions
+  loadBalancers() []alicloud.alb.loadBalancer
+  // ALB server groups across all enabled regions
+  serverGroups() []alicloud.alb.serverGroup
+}
+
+// Application Load Balancer instance
+//
+// A single ALB load balancer, keyed by loadBalancerId within its region.
+// Exposes the address type and the derived internet-facing state, the VPC and
+// security groups it runs in, its access-logging configuration, and its
+// listeners. Use it to audit public exposure and access logging. For example
+// alicloud.alb.loadBalancer(loadBalancerId: "alb-xxx", regionId: "cn-hangzhou").
+alicloud.alb.loadBalancer {
+  // Region ID the load balancer resides in, for example cn-hangzhou
+  regionId string
+  // Load balancer ID, used as the lookup key within its region
+  loadBalancerId string
+  // Load balancer name
+  name string
+  // Load balancer status
+  //
+  // For example Active, Inactive, Provisioning, or Configuring.
+  status string
+  // Address type
+  //
+  // Either Internet (internet-facing) or Intranet (internal only).
+  addressType string
+  // Address allocation mode, either Fixed or Dynamic
+  addressAllocatedMode string
+  // IP version of the address, either IPv4 or DualStack
+  addressIpVersion string
+  // IPv6 address type, either Internet or Intranet
+  ipv6AddressType string
+  // DNS name assigned to the load balancer
+  dnsName string
+  // Load balancer edition, one of Basic, Standard, or StandardWithWaf
+  edition string
+  // Business (billing) status of the load balancer, for example Normal
+  businessStatus string
+  // ID of the bandwidth package bound to the load balancer, empty when none
+  bandwidthPackageId string
+  // ID of the resource group the load balancer belongs to
+  resourceGroupId string
+  // Time the load balancer was created
+  createTime time
+  // Whether deletion protection is enabled
+  deletionProtectionEnabled bool
+  // Modification-protection status, either NonProtection or ConsoleProtection
+  modificationProtectionStatus string
+  // Whether access logging to Log Service is enabled
+  //
+  // True when the load balancer delivers access logs to a Log Service project
+  // and logstore. When false, request-level access logs are not retained.
+  accessLoggingEnabled bool
+  // Tags applied to the load balancer
+  tags map[string]string
+  // Whether the load balancer serves traffic from the public internet
+  //
+  // True when the address type is Internet. An internet-facing load balancer is
+  // reachable from outside the VPC.
+  internetFacing() bool
+  // VPC the load balancer runs in
+  vpc() alicloud.vpc.network
+  // Security groups applied to the load balancer
+  securityGroups() []alicloud.ecs.securitygroup
+  // vSwitches the load balancer attaches to across its zones
+  vswitches() []alicloud.vpc.vswitch
+  // Log Service project that receives access logs, null when access logging is disabled
+  accessLogProject() alicloud.log.project
+  // Log Service logstore that receives access logs, null when access logging is disabled
+  accessLogStore() alicloud.log.logstore
+  // Listeners configured on the load balancer
+  listeners() []alicloud.alb.listener
+}
+
+// Application Load Balancer listener
+//
+// A single listener on an ALB load balancer, keyed by listenerId. Exposes the
+// protocol and port it serves, the TLS security policy for HTTPS/QUIC
+// listeners, and the server groups it forwards to. Use it to audit whether an
+// HTTPS listener enforces a strong TLS policy and presents certificates.
+alicloud.alb.listener {
+  // Region ID the listener resides in
+  regionId string
+  // Listener ID, used as the lookup key
+  listenerId string
+  // ID of the load balancer the listener belongs to
+  loadBalancerId string
+  // Listener protocol, one of HTTP, HTTPS, or QUIC
+  protocol string
+  // Port the listener serves on
+  port int
+  // Listener status, for example Running, Configuring, or Stopped
+  status string
+  // Description of the listener
+  description string
+  // TLS security policy applied to the listener, empty for non-TLS listeners
+  securityPolicyId string
+  // Whether HTTP/2 is enabled
+  http2Enabled bool
+  // Whether response gzip compression is enabled
+  gzipEnabled bool
+  // Idle connection timeout in seconds
+  idleTimeout int
+  // Request timeout in seconds
+  requestTimeout int
+  // Tags applied to the listener
+  tags map[string]string
+  // Server certificate IDs presented by the listener
+  //
+  // Empty for non-TLS listeners. A populated list confirms the HTTPS/QUIC
+  // listener presents a server certificate.
+  certificateIds() []string
+  // Whether mutual TLS (client certificate authentication) is enabled
+  mutualTlsEnabled() bool
+  // Server groups the listener forwards requests to
+  serverGroups() []alicloud.alb.serverGroup
+}
+
+// Application Load Balancer server group
+//
+// A single ALB server group, keyed by serverGroupId within its region. A server
+// group is a set of backends that listeners forward requests to. Exposes the
+// backend protocol, scheduling algorithm, health-check configuration, and the
+// VPC the group belongs to.
+alicloud.alb.serverGroup {
+  // Region ID the server group resides in
+  regionId string
+  // Server group ID, used as the lookup key within its region
+  serverGroupId string
+  // Server group name
+  name string
+  // Server group type, one of Instance, Ip, or Fc
+  type string
+  // Server group status
+  status string
+  // Backend protocol, one of HTTP, HTTPS, or gRPC
+  protocol string
+  // Scheduling algorithm, one of Wrr, Wlc, or Sch
+  scheduler string
+  // Number of backend servers in the group
+  serverCount int
+  // ID of the resource group the server group belongs to
+  resourceGroupId string
+  // Time the server group was created
+  createTime time
+  // Whether cross-zone load balancing is enabled
+  crossZoneEnabled bool
+  // Whether health checks are enabled for the group
+  healthCheckEnabled bool
+  // Health-check protocol, one of HTTP, TCP, or gRPC
+  healthCheckProtocol string
+  // Health-check request path, for HTTP health checks
+  healthCheckPath string
+  // Whether session stickiness is enabled
+  stickySessionEnabled bool
+  // Session stickiness type, either Insert or Server
+  stickySessionType string
+  // Tags applied to the server group
+  tags map[string]string
+  // VPC the server group belongs to
+  vpc() alicloud.vpc.network
+}
+
+// Alibaba Cloud Network Load Balancer
+//
+// NLB (Layer-4) load balancers across an Alibaba Cloud account. Exposes the
+// network load balancers in every enabled region, along with their listeners
+// and server groups. Use it to audit which load balancers are internet-facing,
+// whether security groups are applied, and whether TCPSSL listeners use a strong
+// TLS policy.
+alicloud.nlb {
+  // Network load balancers across all enabled regions
+  loadBalancers() []alicloud.nlb.loadBalancer
+  // NLB server groups across all enabled regions
+  serverGroups() []alicloud.nlb.serverGroup
+}
+
+// Network Load Balancer instance
+//
+// A single NLB load balancer, keyed by loadBalancerId within its region.
+// Exposes the address type and the derived internet-facing state, the VPC,
+// vSwitches, and security groups it runs in, and its listeners. Unlike an ALB,
+// an NLB can enforce security groups directly. For example
+// alicloud.nlb.loadBalancer(loadBalancerId: "nlb-xxx", regionId: "cn-hangzhou").
+alicloud.nlb.loadBalancer {
+  // Region ID the load balancer resides in, for example cn-hangzhou
+  regionId string
+  // Load balancer ID, used as the lookup key within its region
+  loadBalancerId string
+  // Load balancer name
+  name string
+  // Load balancer status
+  //
+  // For example Active, Inactive, Provisioning, or Configuring.
+  status string
+  // Load balancer type, always Network for NLB
+  type string
+  // Business (billing) status, either Normal or Abnormal
+  businessStatus string
+  // Address type
+  //
+  // Either Internet (internet-facing) or Intranet (internal only).
+  addressType string
+  // IP version of the address, either Ipv4 or DualStack
+  addressIpVersion string
+  // IPv6 address type, either Internet or Intranet
+  ipv6AddressType string
+  // DNS name assigned to the load balancer
+  dnsName string
+  // ID of the resource group the load balancer belongs to
+  resourceGroupId string
+  // Time the load balancer was created
+  createTime time
+  // ID of the bandwidth package bound to the load balancer, empty when none
+  bandwidthPackageId string
+  // Whether cross-zone load balancing is enabled
+  crossZoneEnabled bool
+  // Whether deletion protection is enabled
+  deletionProtectionEnabled bool
+  // Modification-protection status, either NonProtection or ConsoleProtection
+  modificationProtectionStatus string
+  // Tags applied to the load balancer
+  tags map[string]string
+  // Whether the load balancer serves traffic from the public internet
+  //
+  // True when the address type is Internet. An internet-facing load balancer is
+  // reachable from outside the VPC.
+  internetFacing() bool
+  // VPC the load balancer runs in
+  vpc() alicloud.vpc.network
+  // Security groups applied to the load balancer
+  //
+  // NLB enforces these security groups on traffic to the load balancer. An
+  // empty result means no security-group filtering is applied at the load
+  // balancer.
+  securityGroups() []alicloud.ecs.securitygroup
+  // vSwitches the load balancer attaches to across its zones
+  vswitches() []alicloud.vpc.vswitch
+  // Listeners configured on the load balancer
+  listeners() []alicloud.nlb.listener
+}
+
+// Network Load Balancer listener
+//
+// A single listener on an NLB load balancer, keyed by listenerId. Exposes the
+// protocol and port it serves, the TLS security policy and certificates for
+// TCPSSL listeners, and the server group it forwards to. Use it to audit
+// whether a TCPSSL listener enforces a strong TLS policy.
+alicloud.nlb.listener {
+  // Region ID the listener resides in
+  regionId string
+  // Listener ID, used as the lookup key
+  listenerId string
+  // ID of the load balancer the listener belongs to
+  loadBalancerId string
+  // Listener protocol, one of TCP, UDP, or TCPSSL
+  protocol string
+  // Port the listener serves on
+  port int
+  // Listener status, for example Running, Configuring, or Stopped
+  status string
+  // Description of the listener
+  description string
+  // TLS security policy applied to the listener, meaningful for TCPSSL listeners
+  securityPolicyId string
+  // Server certificate IDs presented by a TCPSSL listener
+  certificateIds []string
+  // CA certificate IDs used for mutual TLS on a TCPSSL listener
+  caCertificateIds []string
+  // Whether mutual TLS (client certificate authentication) is enabled
+  caEnabled bool
+  // Idle connection timeout in seconds
+  idleTimeout int
+  // Whether the Proxy Protocol is enabled to pass client information to backends
+  proxyProtocolEnabled bool
+  // Whether ALPN is enabled
+  alpnEnabled bool
+  // ALPN policy applied when ALPN is enabled
+  alpnPolicy string
+  // Connections-per-second limit for the listener, 0 when unlimited
+  cps int
+  // Tags applied to the listener
+  tags map[string]string
+  // Server group the listener forwards traffic to
+  serverGroup() alicloud.nlb.serverGroup
+}
+
+// Network Load Balancer server group
+//
+// A single NLB server group, keyed by serverGroupId within its region. A server
+// group is a set of backends that listeners forward traffic to. Exposes the
+// backend protocol, scheduling algorithm, client-IP preservation, health-check
+// configuration, and the VPC the group belongs to.
+alicloud.nlb.serverGroup {
+  // Region ID the server group resides in
+  regionId string
+  // Server group ID, used as the lookup key within its region
+  serverGroupId string
+  // Server group name
+  name string
+  // Server group type, either Instance or Ip
+  type string
+  // Server group status
+  status string
+  // Backend protocol, one of TCP, UDP, or TCPSSL
+  protocol string
+  // Scheduling algorithm, for example Wrr, rr, sch, tch, or qch
+  scheduler string
+  // IP version of the backends, either Ipv4 or DualStack
+  addressIpVersion string
+  // Number of backend servers in the group
+  serverCount int
+  // Whether client source IP preservation is enabled
+  preserveClientIpEnabled bool
+  // Whether connection draining is enabled
+  connectionDrainEnabled bool
+  // Whether health checks are enabled for the group
+  healthCheckEnabled bool
+  // Health-check protocol, one of TCP, HTTP, or UDP
+  healthCheckType string
+  // Health-check connection port
+  healthCheckConnectPort int
+  // ID of the resource group the server group belongs to
+  resourceGroupId string
+  // Tags applied to the server group
+  tags map[string]string
+  // VPC the server group belongs to
+  vpc() alicloud.vpc.network
+}
+
+// Alibaba Cloud Function Compute
+//
+// Function Compute (FC 3.0) functions across an Alibaba Cloud account. Exposes
+// the serverless functions in every enabled region, along with their triggers.
+// Use it to audit function execution roles, network placement, public egress
+// and invocation, and whether environment variables might carry secrets.
+alicloud.fc {
+  // Functions across all enabled regions
+  functions() []alicloud.fc.function
+}
+
+// Function Compute function
+//
+// A single FC 3.0 function, keyed by functionName within its region. Exposes the
+// runtime and resource configuration, the execution RAM role, the VPC and log
+// configuration, public network egress, environment variables, and the
+// function's triggers. Use it to audit the function's privilege and network
+// exposure. For example
+// alicloud.fc.function(functionName: "my-fn", regionId: "cn-hangzhou").
+alicloud.fc.function {
+  // Region ID the function resides in, for example cn-hangzhou
+  regionId string
+  // Function name, used as the lookup key within its region
+  functionName string
+  // System-generated function ID
+  functionId string
+  // Alibaba Cloud Resource Name of the function
+  arn string
+  // Description of the function
+  description string
+  // Function runtime
+  //
+  // For example nodejs18, python3.10, go1, java11, php7.2, custom,
+  // custom.debian10, or custom-container.
+  runtime string
+  // Request handler entry point, for example index.handler
+  handler string
+  // Maximum execution time in seconds
+  timeout int
+  // Memory allocated to the function in MB
+  memorySize int
+  // Ephemeral disk size in MB, either 512 or 10240
+  diskSize int
+  // vCPU cores allocated to the function
+  cpu float
+  // Function state, for example Active or Pending
+  state string
+  // Reason for the current state, empty when healthy
+  stateReason string
+  // Deployed code size in bytes
+  codeSize int
+  // CRC-64 checksum of the deployed code
+  codeChecksum string
+  // Time the function was created
+  createdTime time
+  // Time the function was last modified
+  lastModifiedTime time
+  // Whether the function has public internet egress
+  //
+  // True when the function may reach the public internet for outbound requests.
+  internetAccess bool
+  // Maximum number of concurrent requests handled by one instance
+  instanceConcurrency int
+  // ID of the resource group the function belongs to
+  resourceGroupId string
+  // Environment variables configured on the function
+  //
+  // Audit these for plaintext secrets; values are returned as configured.
+  environmentVariables map[string]string
+  // Container image for a custom-container function, empty for other runtimes
+  customContainerImage string
+  // Name of the Log Service logstore that receives function logs
+  logStore string
+  // Tags applied to the function
+  tags map[string]string
+  // RAM role the function assumes when it runs
+  //
+  // Null when the function has no execution role. The role determines the
+  // permissions the function code runs with.
+  executionRole() alicloud.ram.role
+  // VPC the function is attached to, null when the function has no VPC configuration
+  vpc() alicloud.vpc.network
+  // vSwitches the function's elastic network interfaces attach to
+  vswitches() []alicloud.vpc.vswitch
+  // Security group applied to the function's VPC elastic network interface
+  securityGroup() alicloud.ecs.securitygroup
+  // Log Service project that receives function logs, null when logging is not configured
+  logProject() alicloud.log.project
+  // Triggers configured on the function
+  triggers() []alicloud.fc.trigger
+}
+
+// Function Compute trigger
+//
+// A single trigger on an FC function, keyed by the owning functionName and
+// triggerName. Exposes the trigger type and event source, the public and
+// intranet HTTP endpoints for HTTP triggers, and the RAM role the event source
+// assumes to invoke the function. Use it to audit whether a function is
+// invocable from the internet.
+alicloud.fc.trigger {
+  // Region ID the trigger resides in
+  regionId string
+  // Name of the function the trigger belongs to
+  functionName string
+  // Trigger name, used with the function name as the lookup key
+  triggerName string
+  // System-generated trigger ID
+  triggerId string
+  // Trigger type
+  //
+  // One of http, oss, timer, log, mns_topic, cdn_events, or eventbridge.
+  type string
+  // ARN of the event source that fires the trigger
+  sourceArn string
+  // ARN of the invocation target
+  targetArn string
+  // Version or alias the trigger invokes
+  qualifier string
+  // Trigger status, for example OK or Disabled
+  status string
+  // Description of the trigger
+  description string
+  // Time the trigger was created
+  createdTime time
+  // Time the trigger was last modified
+  lastModifiedTime time
+  // Public HTTP endpoint for an http trigger
+  //
+  // Empty for non-http triggers or when the public URL is disabled. A non-empty
+  // value means the function can be invoked over the internet.
+  httpUrlInternet string
+  // Intranet (VPC-only) HTTP endpoint for an http trigger
+  httpUrlIntranet string
+  // Type-specific trigger configuration
+  //
+  // Parsed from the trigger's config document; the shape varies by type, for
+  // example authType and methods for an http trigger, or events for an oss
+  // trigger.
+  triggerConfig dict
+  // Whether the function is invocable from the public internet through this trigger
+  //
+  // True when an http trigger exposes a public URL. Combine with the
+  // triggerConfig authType to determine whether anonymous invocation is allowed.
+  internetInvocable() bool
+  // RAM role the event source assumes to invoke the function, null when none
+  invocationRole() alicloud.ram.role
+}
+
+// Alibaba Cloud NAS file storage
+//
+// Apsara File Storage NAS file systems and access controls across an Alibaba
+// Cloud account. Exposes the file systems in every enabled region, their mount
+// targets, and the access groups and rules that govern which clients may mount
+// them. Use it to audit whether file systems are encrypted and whether their
+// exports are open to overly broad client ranges.
+alicloud.nas {
+  // NAS file systems across all enabled regions
+  fileSystems() []alicloud.nas.fileSystem
+  // NAS access groups across all enabled regions
+  accessGroups() []alicloud.nas.accessGroup
+}
+
+// NAS file system
+//
+// A single NAS file system, keyed by fileSystemId within its region. Exposes the
+// storage and protocol type, the encryption state and key, capacity and used
+// size, and the mount targets that expose it to clients. Use it to audit
+// encryption at rest and the network exposure of the mount targets. For example
+// alicloud.nas.fileSystem(fileSystemId: "1a2b3c", regionId: "cn-hangzhou").
+alicloud.nas.fileSystem {
+  // Region ID the file system resides in, for example cn-hangzhou
+  regionId string
+  // File system ID, used as the lookup key within its region
+  fileSystemId string
+  // File system type, one of standard, extreme, cpfs, or cpfsse
+  fileSystemType string
+  // Access protocol, one of NFS, SMB, or cpfs
+  protocolType string
+  // Storage class, for example Performance, Capacity, standard, or advance
+  storageType string
+  // Description of the file system
+  description string
+  // Zone ID the file system resides in
+  zoneId string
+  // Provisioned capacity in GiB
+  capacity int
+  // Used (metered) size in bytes
+  meteredSize int
+  // File system status, for example Running, Pending, or Stopped
+  status string
+  // Billing method, either PayAsYouGo or Subscription
+  chargeType string
+  // Storage redundancy type, for example LRS
+  redundancyType string
+  // Server-side encryption type
+  //
+  // One of 0 (no encryption), 1 (NAS-managed service key), or 2 (a customer
+  // master key from KMS).
+  encryptType int
+  // Whether the file system is encrypted at rest
+  //
+  // True when the encryption type is 1 or 2. When false, data is stored
+  // unencrypted.
+  encrypted bool
+  // ID of the resource group the file system belongs to
+  resourceGroupId string
+  // Time the file system was created
+  createTime time
+  // Tags applied to the file system
+  tags map[string]string
+  // Customer master key used for encryption
+  //
+  // Null unless the encryption type is 2 (a specific KMS key). The NAS-managed
+  // service key (type 1) is not a queryable KMS key.
+  kmsKey() alicloud.kms.key
+  // Mount targets that expose the file system to clients
+  mountTargets() []alicloud.nas.mountTarget
+}
+
+// NAS mount target
+//
+// A single mount target of a NAS file system, keyed by mountTargetDomain. A
+// mount target is the network endpoint clients mount, bound to a VPC and access
+// group. Exposes the network placement and the access group that controls which
+// clients may mount it. Use it to audit whether a file system is reachable from
+// a classic (non-VPC) network.
+alicloud.nas.mountTarget {
+  // Region ID the mount target resides in
+  regionId string
+  // ID of the file system the mount target belongs to
+  fileSystemId string
+  // Mount target domain (the mount address), used as the lookup key
+  mountTargetDomain string
+  // Mount target status, for example Active or Inactive
+  status string
+  // Network type
+  //
+  // Either Vpc (isolated to a VPC) or Classic (the legacy shared network).
+  networkType string
+  // Name of the access group that controls which clients may mount the target
+  accessGroupName string
+  // VPC the mount target is attached to, null for a classic-network mount target
+  vpc() alicloud.vpc.network
+  // vSwitch the mount target attaches to, null for a classic-network mount target
+  vswitch() alicloud.vpc.vswitch
+  // Access group that controls which clients may mount the target
+  accessGroup() alicloud.nas.accessGroup
+}
+
+// NAS access group
+//
+// A single NAS access group, keyed by accessGroupName within its region. An
+// access group is a named set of access rules that govern which client IP
+// ranges may mount the file systems bound to it. Exposes the group metadata and
+// its access rules. Use it to audit the client ranges permitted to mount.
+alicloud.nas.accessGroup {
+  // Region ID the access group resides in
+  regionId string
+  // Access group name, used as the lookup key within its region
+  accessGroupName string
+  // Access group network type, either Vpc or Classic
+  accessGroupType string
+  // File system type the access group applies to
+  fileSystemType string
+  // Number of access rules in the group
+  ruleCount int
+  // Number of mount targets bound to the group
+  mountTargetCount int
+  // Description of the access group
+  description string
+  // Time the access group was created
+  createTime time
+  // Access rules that govern which clients may mount
+  accessRules() []alicloud.nas.accessRule
+}
+
+// NAS access rule
+//
+// A single access rule within a NAS access group, keyed by accessRuleId. A rule
+// permits a client IP range to mount with a given read/write and user-squash
+// policy. Exposes the allowed CIDR, access mode, and squash setting. Use it to
+// find rules that open a file system to broad client ranges or disable root
+// squashing.
+alicloud.nas.accessRule {
+  // Region ID the access rule resides in
+  regionId string
+  // Name of the access group the rule belongs to
+  accessGroupName string
+  // Access rule ID, used as the lookup key
+  accessRuleId string
+  // Allowed IPv4 client CIDR
+  //
+  // The client address range permitted to mount. 0.0.0.0/0 permits every IPv4
+  // client.
+  sourceCidrIp string
+  // Allowed IPv6 client CIDR, empty when no IPv6 rule is set
+  //
+  // The IPv6 client range permitted to mount. ::/0 permits every IPv6 client.
+  ipv6SourceCidrIp string
+  // Read/write access granted, either RDWR (read-write) or RDONLY (read-only)
+  rwAccess string
+  // Root-squash policy
+  //
+  // One of no_squash (root is not squashed), root_squash (root maps to an
+  // anonymous user), or all_squash (every user maps to anonymous). no_squash
+  // gives mounting clients full root access to the file system.
+  userAccess string
+  // Rule priority, 1 (highest) to 100 (lowest)
+  priority int
+}
+
+// Alibaba Cloud Web Application Firewall
+//
+// WAF 3.0 instances and the resources they protect for an Alibaba Cloud account.
+// WAF is a center service with one instance per account in each of the China and
+// international centers. Exposes the instance edition and subscription state,
+// the protected objects (domains and cloud-native resources), and the CNAME
+// domains with their TLS configuration. Use it to audit which web assets are
+// behind WAF and whether their listeners terminate TLS.
+alicloud.waf {
+  // WAF instances across the China and international centers
+  instances() []alicloud.waf.instance
+}
+
+// Web Application Firewall instance
+//
+// A single WAF 3.0 instance, keyed by instanceId. WAF provisions one instance
+// per account per center. Exposes the edition, subscription window, and status,
+// and is the parent of the protected resources and domains. Use it to confirm
+// WAF is provisioned and not expired.
+alicloud.waf.instance {
+  // Center region the instance belongs to, either cn-hangzhou or ap-southeast-1
+  regionId string
+  // WAF instance ID, used as the lookup key
+  instanceId string
+  // Instance status
+  //
+  // 1 (Normal), 2 (Expired), or 3 (Released). Only a Normal instance is
+  // actively protecting traffic.
+  status int
+  // Instance edition or plan
+  edition string
+  // Billing method, for example POSTPAY or SUBSCRIPTION
+  payType string
+  // Whether the instance is in debt (overdue payment)
+  inDebt string
+  // Start of the subscription window
+  startTime time
+  // End of the subscription window
+  endTime time
+  // Protected objects (domains and cloud-native resources) behind the instance
+  defenseResources() []alicloud.waf.defenseResource
+  // CNAME-access domains protected by the instance
+  domains() []alicloud.waf.domain
+}
+
+// Web Application Firewall protected resource
+//
+// A single protected object of a WAF instance, keyed by the owning instanceId
+// and resource name. A protected object is a CNAME domain or an attached
+// cloud-native resource (ALB, CLB, MSE). Exposes the backing product, protection
+// mode, and provisioning health. Use it to enumerate what WAF is protecting and
+// whether protection is active.
+alicloud.waf.defenseResource {
+  // Center region the resource belongs to
+  regionId string
+  // ID of the WAF instance protecting the resource
+  instanceId string
+  // Protected object name, for example a domain or a cloud resource id
+  resource string
+  // Cloud service backing the resource, for example alb, clb, or mse; empty for a CNAME domain
+  product string
+  // Protection mode of the object, for example domain
+  pattern string
+  // Provisioning status
+  //
+  // active when protection is running, or initializing / init_failed while it
+  // is being set up.
+  resourceStatus string
+  // WAF protection-group the resource belongs to
+  resourceGroup string
+  // Time the protected object was created
+  createTime time
+}
+
+// Web Application Firewall protected domain
+//
+// A single CNAME-access domain protected by a WAF instance, keyed by domain.
+// Exposes the WAF-assigned CNAME, listen ports, and the TLS configuration
+// (certificate, minimum TLS version) of the HTTPS listener. Use it to audit
+// whether an HTTPS domain enforces a strong TLS version and presents a
+// non-expired certificate.
+alicloud.waf.domain {
+  // Center region the domain belongs to
+  regionId string
+  // ID of the WAF instance protecting the domain
+  instanceId string
+  // Protected hostname, used as the lookup key
+  domain string
+  // WAF-assigned CNAME that traffic must resolve to
+  cname string
+  // Domain status
+  //
+  // 1 (normal), 2 (creating), 3 (modifying), 4 (releasing), or 5 (forwarding
+  // disabled).
+  status int
+  // HTTP listener ports
+  httpPorts []int
+  // HTTPS listener ports
+  httpsPorts []int
+  // Whether the domain serves HTTPS
+  //
+  // True when at least one HTTPS listener port is configured.
+  httpsEnabled bool
+  // ID of the certificate bound to the HTTPS listener, empty when none
+  certId() string
+  // Minimum TLS version accepted, for example tlsv1.2
+  tlsVersion() string
+  // Whether TLS 1.3 is enabled
+  tls13Enabled() bool
+  // Expiry time of the bound certificate, null when no certificate is configured
+  certExpireTime() time
+}
+
+// Alibaba Cloud Cloud Firewall
+//
+// Cloud Firewall access-control state for an Alibaba Cloud account. Cloud
+// Firewall is a center service. Exposes whether the firewall service is active,
+// its edition, and the internet-boundary control policies (the allow and deny
+// rules). Use it to audit whether the firewall is enabled and whether any rule
+// broadly permits inbound traffic.
+alicloud.cloudFirewall {
+  // Whether the Cloud Firewall service is active for the account
+  enabled() bool
+  // Cloud Firewall edition
+  //
+  // 2 (Premium), 3 (Enterprise), 4 (Ultimate), or 10 (pay-as-you-go). 0 when
+  // the service is not provisioned.
+  edition() int
+  // Internet-boundary control policies in both the inbound and outbound directions
+  controlPolicies() []alicloud.cloudFirewall.controlPolicy
+}
+
+// Cloud Firewall control policy
+//
+// A single internet-boundary access-control rule, keyed by aclUuid. A rule
+// permits or denies traffic between a source and destination on given ports and
+// protocols. Exposes the action, source, destination, and whether it is
+// enabled. Use it to find enabled rules that broadly accept inbound traffic (for
+// example an accept rule with source 0.0.0.0/0).
+alicloud.cloudFirewall.controlPolicy {
+  // Rule UUID, used as the lookup key
+  aclUuid string
+  // Traffic direction the rule applies to, either in (inbound) or out (outbound)
+  direction string
+  // Action taken on matching traffic
+  //
+  // One of accept (allow), drop (deny), or log (monitor only).
+  action string
+  // Source address, CIDR, or address-book reference
+  source string
+  // Source type, for example net (CIDR), group (address book), or location
+  sourceType string
+  // Destination address, CIDR, domain, or address-book reference
+  destination string
+  // Destination type, for example net, group, domain, or location
+  destinationType string
+  // Destination port or port range
+  destPort string
+  // Protocol, one of ANY, TCP, UDP, or ICMP
+  proto string
+  // Application-layer protocol the rule matches, for example HTTP or ANY
+  applicationName string
+  // Description of the rule
+  description string
+  // Whether the rule is enabled
+  //
+  // A disabled rule is configured but not enforced.
+  enabled bool
+  // Rule priority order
+  order int
+  // Cumulative number of times the rule has matched traffic
+  hitTimes int
+}
+
+// Alibaba Cloud Anti-DDoS
+//
+// Anti-DDoS Pro and Premium instances and the assets they protect for an
+// Alibaba Cloud account. Anti-DDoS is a center service. Exposes the scrubbing
+// instances, their subscription health, and the web domains and forwarding
+// ports under protection. Use it to audit which assets are protected and whether
+// an instance's protection has lapsed (expired, disabled, or in debt).
+alicloud.antiddos {
+  // Anti-DDoS Pro and Premium instances across the China and international centers
+  instances() []alicloud.antiddos.instance
+}
+
+// Anti-DDoS instance
+//
+// A single Anti-DDoS Pro or Premium instance, keyed by instanceId. Exposes the
+// mitigation edition, forwarding state, and subscription window, and is the
+// parent of the protected web domains and forwarding ports. Use it to confirm an
+// instance is enabled and not expired. Protection is effectively off when the
+// instance is expired or not forwarding traffic.
+alicloud.antiddos.instance {
+  // Center region the instance belongs to, either cn-hangzhou or ap-southeast-1
+  regionId string
+  // Anti-DDoS instance ID, used as the lookup key
+  instanceId string
+  // Instance remark
+  remark string
+  // Instance status
+  //
+  // 1 (Normal) or 2 (Expired). An expired instance no longer scrubs traffic.
+  status int
+  // Mitigation edition
+  //
+  // 0 (Premium Insurance), 1 (Premium Unlimited), 2 (Premium mainland
+  // acceleration), or 9 (Pro Profession).
+  edition int
+  // Whether the instance is forwarding (protecting) traffic
+  //
+  // False when the instance is not forwarding service traffic, which means its
+  // protection is effectively off.
+  enabled bool
+  // Forwarding mode of the instance IP, for example fnat
+  ipMode string
+  // IP version of the instance, either Ipv4 or Ipv6
+  ipVersion string
+  // Anti-DDoS instance IP that scrubbed traffic is delivered from
+  ip string
+  // Overdue-payment status, 0 when there is no overdue payment
+  debtStatus int
+  // Time the instance subscription expires
+  expireTime time
+  // Time the instance was created
+  createTime time
+  // Web (HTTP/HTTPS) domains protected by the instance
+  webRules() []alicloud.antiddos.webRule
+  // Non-web (TCP/UDP) forwarding ports protected by the instance
+  networkRules() []alicloud.antiddos.networkRule
+}
+
+// Anti-DDoS protected web domain
+//
+// A single web domain protected by an Anti-DDoS instance, keyed by the owning
+// instanceId and domain. Exposes the scrubbing CNAME, the HTTP flood (CC)
+// protection state, the certificate, and the origin servers. Use it to audit
+// whether a protected domain has CC protection and a non-expired certificate.
+alicloud.antiddos.webRule {
+  // Center region the domain belongs to
+  regionId string
+  // ID of the Anti-DDoS instance protecting the domain
+  instanceId string
+  // Protected hostname, used with the instance ID as the lookup key
+  domain string
+  // Anti-DDoS scrubbing CNAME that traffic must resolve to
+  cname string
+  // Whether HTTP flood (CC) protection is enabled
+  ccEnabled bool
+  // Whether a CC protection rule is enabled
+  ccRuleEnabled bool
+  // Name of the certificate bound to the domain, empty when none
+  certName string
+  // Expiry time of the bound certificate, null when no certificate is configured
+  certExpireTime time
+  // Whether the domain is currently penalized (blocked) for abnormal traffic
+  penalized bool
+  // Protocols and listener ports the domain serves
+  //
+  // Each entry lists the proxyType (http, https, websocket, or websockets) and
+  // the proxyPorts it listens on.
+  proxyTypes []dict
+  // Origin servers traffic is forwarded to after scrubbing
+  //
+  // Each entry lists the realServer (an IP or hostname) and its rsType (0 for an
+  // IP, 1 for a domain).
+  realServers []dict
+}
+
+// Anti-DDoS protected forwarding port
+//
+// A single non-web (Layer-4) forwarding rule on an Anti-DDoS instance, keyed by
+// the instanceId, protocol, and frontend port. Exposes the frontend and backend
+// ports and the origin servers. Use it to enumerate the TCP and UDP ports under
+// Anti-DDoS protection.
+alicloud.antiddos.networkRule {
+  // Center region the rule belongs to
+  regionId string
+  // ID of the Anti-DDoS instance the rule belongs to
+  instanceId string
+  // Forwarding protocol, either tcp or udp
+  protocol string
+  // Frontend (listener) port scrubbed traffic arrives on
+  frontendPort int
+  // Backend (origin) port traffic is forwarded to
+  backendPort int
+  // Origin servers traffic is forwarded to after scrubbing
+  realServers []string
+}

@@ -157,6 +157,13 @@ func (o *mqlOciComputeVnic) securityGroups() ([]any, error) {
 	return resolveOciSecurityGroups(o.MqlRuntime, o.NsgIds.Data)
 }
 
+func (o *mqlOciLoadBalancerLoadBalancer) securityGroups() ([]any, error) {
+	if o.NsgIds.Error != nil {
+		return nil, o.NsgIds.Error
+	}
+	return resolveOciSecurityGroups(o.MqlRuntime, o.NsgIds.Data)
+}
+
 // ----- kms -----
 
 func (o *mqlOciKmsVault) compartment() (*mqlOciCompartment, error) {
@@ -235,4 +242,354 @@ func (o *mqlOciDatabaseAutonomousDatabase) securityGroups() ([]any, error) {
 		return nil, o.NsgIds.Error
 	}
 	return resolveOciSecurityGroups(o.MqlRuntime, o.NsgIds.Data)
+}
+
+// ----- compartment accessors (ownership) -----
+
+func (o *mqlOciIdentityUser) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciIdentityGroup) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciIdentityPolicy) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciIdentityOauth2ClientCredential) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciIdentityDynamicGroup) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciIdentityIdentityProvider) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciIdentityNetworkSource) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciNetworkPublicIp) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciNetworkVcn) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciNetworkSubnet) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciNetworkInternetGateway) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciNetworkNatGateway) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciNetworkRouteTable) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciLoggingLogGroup) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciObjectStorageBucket) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciFileStorageFileSystem) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciCloudGuardTarget) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciCloudGuardSecurityZone) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciCloudGuardSecurityZoneRecipe) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciCloudGuardSecurityPolicy) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciLoadBalancerLoadBalancer) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciNetworkFirewallFirewall) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciNetworkFirewallPolicy) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciOkeCluster) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciOkeNodePool) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciWafFirewall) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciWafPolicy) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciFunctionsApplication) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciFunctionsFunction) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciContainerInstancesInstance) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciContainerInstancesContainer) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciDatabaseBackup) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciDatabaseAutonomousDatabaseBackup) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciDatabaseDbSystem) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciApigatewayGateway) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciApigatewayDeployment) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciApigatewayCertificate) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciCertificatesCertificate) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciCertificatesCertificateAuthority) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciCertificatesCaBundle) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciRedisCluster) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciDataSafeConfiguration) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentId.Data, &o.Compartment)
+}
+
+func (o *mqlOciDataSafeTargetDatabase) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentId.Data, &o.Compartment)
+}
+
+func (o *mqlOciDataSafeSecurityAssessment) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentId.Data, &o.Compartment)
+}
+
+func (o *mqlOciDataSafeUserAssessment) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentId.Data, &o.Compartment)
+}
+
+func (o *mqlOciDataSafeSensitiveDataModel) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentId.Data, &o.Compartment)
+}
+
+func (o *mqlOciDataSafeSensitiveType) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentId.Data, &o.Compartment)
+}
+
+func (o *mqlOciDataSafeMaskingPolicy) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentId.Data, &o.Compartment)
+}
+
+func (o *mqlOciCloudGuardDetectorRecipe) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+// ----- source / lineage accessors -----
+
+func (o *mqlOciComputeImage) baseImage() (*mqlOciComputeImage, error) {
+	return resolveOciImage(o.MqlRuntime, o.cacheBaseImageID, &o.BaseImage)
+}
+
+func (o *mqlOciComputeInstance) bootVolume() (*mqlOciComputeBootVolume, error) {
+	if o.cacheBootVolumeID == "" {
+		o.BootVolume.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(o.MqlRuntime, "oci.compute.bootVolume", map[string]*llx.RawData{
+		"id": llx.StringData(o.cacheBootVolumeID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciComputeBootVolume), nil
+}
+
+func (o *mqlOciComputeBlockVolume) sourceVolume() (*mqlOciComputeBlockVolume, error) {
+	if o.cacheSourceVolumeID == "" {
+		o.SourceVolume.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(o.MqlRuntime, "oci.compute.blockVolume", map[string]*llx.RawData{
+		"id": llx.StringData(o.cacheSourceVolumeID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciComputeBlockVolume), nil
+}
+
+func (o *mqlOciComputeBootVolume) sourceBootVolume() (*mqlOciComputeBootVolume, error) {
+	if o.cacheSourceBootVolumeID == "" {
+		o.SourceBootVolume.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(o.MqlRuntime, "oci.compute.bootVolume", map[string]*llx.RawData{
+		"id": llx.StringData(o.cacheSourceBootVolumeID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciComputeBootVolume), nil
+}
+
+func (o *mqlOciIdentityUser) identityProvider() (*mqlOciIdentityIdentityProvider, error) {
+	if o.cacheIdentityProviderID == "" {
+		o.IdentityProvider.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(o.MqlRuntime, "oci.identity.identityProvider", map[string]*llx.RawData{
+		"id": llx.StringData(o.cacheIdentityProviderID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciIdentityIdentityProvider), nil
+}
+
+func (o *mqlOciOkeNodePool) cluster() (*mqlOciOkeCluster, error) {
+	if o.cacheClusterID == "" {
+		o.Cluster.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(o.MqlRuntime, "oci.oke.cluster", map[string]*llx.RawData{
+		"id": llx.StringData(o.cacheClusterID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciOkeCluster), nil
+}
+
+func (o *mqlOciLoadBalancerLoadBalancer) subnets() ([]any, error) {
+	out := make([]any, 0, len(o.cacheSubnetIDs))
+	for _, id := range o.cacheSubnetIDs {
+		if id == "" {
+			continue
+		}
+		res, err := NewResource(o.MqlRuntime, "oci.network.subnet", map[string]*llx.RawData{
+			"id": llx.StringData(id),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+func (o *mqlOciNetworkSubnet) securityLists() ([]any, error) {
+	out := make([]any, 0, len(o.cacheSecurityListIds))
+	for _, id := range o.cacheSecurityListIds {
+		if id == "" {
+			continue
+		}
+		res, err := NewResource(o.MqlRuntime, "oci.network.securityList", map[string]*llx.RawData{
+			"id": llx.StringData(id),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+func (o *mqlOciFileStorageFileSystem) parentFileSystem() (*mqlOciFileStorageFileSystem, error) {
+	if o.cacheParentFileSystemId == "" {
+		o.ParentFileSystem.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(o.MqlRuntime, "oci.fileStorage.fileSystem", map[string]*llx.RawData{
+		"id": llx.StringData(o.cacheParentFileSystemId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciFileStorageFileSystem), nil
+}
+
+func (o *mqlOciDatabaseDbSystem) sourceDbSystem() (*mqlOciDatabaseDbSystem, error) {
+	if o.cacheSourceDbSystemId == "" {
+		o.SourceDbSystem.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(o.MqlRuntime, "oci.database.dbSystem", map[string]*llx.RawData{
+		"id": llx.StringData(o.cacheSourceDbSystemId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciDatabaseDbSystem), nil
+}
+
+func (o *mqlOciDatabaseAutonomousDatabase) sourceDatabase() (*mqlOciDatabaseAutonomousDatabase, error) {
+	if o.cacheSourceId == "" {
+		o.SourceDatabase.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(o.MqlRuntime, "oci.database.autonomousDatabase", map[string]*llx.RawData{
+		"id": llx.StringData(o.cacheSourceId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciDatabaseAutonomousDatabase), nil
 }

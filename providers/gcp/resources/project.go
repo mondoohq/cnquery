@@ -89,6 +89,36 @@ func (g *mqlGcpProject) id() (string, error) {
 	return g.Id.Data, g.Id.Error
 }
 
+func (g *mqlGcpProject) parentFolder() (*mqlGcpFolder, error) {
+	parentId := g.GetParentId()
+	if parentId.Error != nil {
+		return nil, parentId.Error
+	}
+	f, err := parentFolderFromId(parentId.Data, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if f == nil {
+		g.ParentFolder.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return f, nil
+}
+
+func (g *mqlGcpProject) parentOrganization() (*mqlGcpOrganization, error) {
+	parentId := g.GetParentId()
+	if parentId.Error != nil {
+		return nil, parentId.Error
+	}
+	o, err := parentOrganizationFromId(parentId.Data, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if o == nil {
+		g.ParentOrganization.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return o, nil
+}
+
 func (g *mqlGcpProject) name() (string, error) {
 	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
@@ -121,6 +151,10 @@ func (g *mqlGcpProject) labels() (map[string]any, error) {
 
 func (g *mqlGcpProject) deleteTime() (*time.Time, error) {
 	return nil, errors.New("not implemented")
+}
+
+func (g *mqlGcpProject) managedBy() (string, error) {
+	return managedByFromLabels(g.GetLabels())
 }
 
 func (g *mqlGcpProject) number() (string, error) {

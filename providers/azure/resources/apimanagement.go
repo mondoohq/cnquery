@@ -7,12 +7,13 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	apim "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/apimanagement/armapimanagement/v3"
-	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
+	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v10"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -22,7 +23,47 @@ import (
 )
 
 type mqlAzureSubscriptionApiManagementServiceServiceInternal struct {
-	cachePublicIpAddressId string
+	cachePublicIpAddressId          string
+	cacheSystemData                 any
+	cacheUserAssignedIdentityIds    []string
+	cachePrivateEndpointConnections []*apim.RemotePrivateEndpointConnectionWrapper
+}
+
+func (a *mqlAzureSubscriptionApiManagementServiceService) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
+}
+
+func (a *mqlAzureSubscriptionApiManagementServiceService) systemAssignedIdentity() (*mqlAzureSubscriptionManagedIdentity, error) {
+	return newSystemAssignedManagedIdentity(a.MqlRuntime, a.Id.Data, a.PrincipalId.Data, a.TenantId.Data, &a.SystemAssignedIdentity)
+}
+
+func (a *mqlAzureSubscriptionApiManagementServiceService) privateEndpointConnections() ([]any, error) {
+	return azurePrivateEndpointConnectionsToMql(a.MqlRuntime, a.cachePrivateEndpointConnections)
+}
+
+// API Management encodes its gateway TLS protocol and cipher policy as
+// string "True"/"False" values under these custom-property keys.
+const (
+	apimTLS10Key        = "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls10"
+	apimTLS11Key        = "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls11"
+	apimSSL30Key        = "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Ssl30"
+	apimBackendTLS10Key = "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls10"
+	apimBackendTLS11Key = "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls11"
+	apimBackendSSL30Key = "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Ssl30"
+	apimTripleDesKey    = "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TripleDes168"
+	apimHTTP2Key        = "Microsoft.WindowsAzure.ApiManagement.Gateway.Protocols.Server.Http2"
+)
+
+// apimBoolCustomProperty reads a "True"/"False" API Management custom property,
+// returning nil when the key is absent so the field surfaces as null rather
+// than a misleading false.
+func apimBoolCustomProperty(props map[string]*string, key string) *bool {
+	v, ok := props[key]
+	if !ok || v == nil {
+		return nil
+	}
+	b := strings.EqualFold(*v, "true")
+	return &b
 }
 
 func (a *mqlAzureSubscriptionApiManagementService) id() (string, error) {
@@ -31,6 +72,10 @@ func (a *mqlAzureSubscriptionApiManagementService) id() (string, error) {
 
 func (a *mqlAzureSubscriptionApiManagementServiceService) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionApiManagementServiceService) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func initAzureSubscriptionApiManagementService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -81,8 +126,15 @@ func (a *mqlAzureSubscriptionApiManagementService) services() ([]any, error) {
 			}
 
 			var identityType string
-			if svc.Identity != nil && svc.Identity.Type != nil {
-				identityType = string(*svc.Identity.Type)
+			var identityPrincipalId, identityTenantId *string
+			var userAssignedIdentityIds []string
+			if svc.Identity != nil {
+				if svc.Identity.Type != nil {
+					identityType = string(*svc.Identity.Type)
+				}
+				identityPrincipalId = svc.Identity.PrincipalID
+				identityTenantId = svc.Identity.TenantID
+				userAssignedIdentityIds = sortedUserAssignedIdentityIDs(svc.Identity.UserAssignedIdentities)
 			}
 
 			var (
@@ -106,6 +158,14 @@ func (a *mqlAzureSubscriptionApiManagementService) services() ([]any, error) {
 				legacyPortalStatus             string
 				platformVersion                string
 				customProperties               = map[string]any{}
+				tls10Enabled                   *bool
+				tls11Enabled                   *bool
+				ssl30Enabled                   *bool
+				backendTls10Enabled            *bool
+				backendTls11Enabled            *bool
+				backendSsl30Enabled            *bool
+				tripleDesEnabled               *bool
+				http2Enabled                   *bool
 				publicIpAddresses              = []any{}
 				privateIpAddresses             = []any{}
 				outboundPublicIpAddresses      = []any{}
@@ -172,6 +232,14 @@ func (a *mqlAzureSubscriptionApiManagementService) services() ([]any, error) {
 						customProperties[k] = *v
 					}
 				}
+				tls10Enabled = apimBoolCustomProperty(p.CustomProperties, apimTLS10Key)
+				tls11Enabled = apimBoolCustomProperty(p.CustomProperties, apimTLS11Key)
+				ssl30Enabled = apimBoolCustomProperty(p.CustomProperties, apimSSL30Key)
+				backendTls10Enabled = apimBoolCustomProperty(p.CustomProperties, apimBackendTLS10Key)
+				backendTls11Enabled = apimBoolCustomProperty(p.CustomProperties, apimBackendTLS11Key)
+				backendSsl30Enabled = apimBoolCustomProperty(p.CustomProperties, apimBackendSSL30Key)
+				tripleDesEnabled = apimBoolCustomProperty(p.CustomProperties, apimTripleDesKey)
+				http2Enabled = apimBoolCustomProperty(p.CustomProperties, apimHTTP2Key)
 				for _, ip := range p.PublicIPAddresses {
 					if ip != nil {
 						publicIpAddresses = append(publicIpAddresses, *ip)
@@ -229,7 +297,17 @@ func (a *mqlAzureSubscriptionApiManagementService) services() ([]any, error) {
 					"legacyPortalStatus":             llx.StringData(legacyPortalStatus),
 					"platformVersion":                llx.StringData(platformVersion),
 					"customProperties":               llx.MapData(customProperties, types.String),
+					"tls10Enabled":                   llx.BoolDataPtr(tls10Enabled),
+					"tls11Enabled":                   llx.BoolDataPtr(tls11Enabled),
+					"ssl30Enabled":                   llx.BoolDataPtr(ssl30Enabled),
+					"backendTls10Enabled":            llx.BoolDataPtr(backendTls10Enabled),
+					"backendTls11Enabled":            llx.BoolDataPtr(backendTls11Enabled),
+					"backendSsl30Enabled":            llx.BoolDataPtr(backendSsl30Enabled),
+					"tripleDesEnabled":               llx.BoolDataPtr(tripleDesEnabled),
+					"http2Enabled":                   llx.BoolDataPtr(http2Enabled),
 					"identityType":                   llx.StringData(identityType),
+					"principalId":                    llx.StringDataPtr(identityPrincipalId),
+					"tenantId":                       llx.StringDataPtr(identityTenantId),
 					"publicIpAddresses":              llx.ArrayData(publicIpAddresses, types.String),
 					"privateIpAddresses":             llx.ArrayData(privateIpAddresses, types.String),
 					"outboundPublicIpAddresses":      llx.ArrayData(outboundPublicIpAddresses, types.String),
@@ -240,7 +318,17 @@ func (a *mqlAzureSubscriptionApiManagementService) services() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			mqlSvc.(*mqlAzureSubscriptionApiManagementServiceService).cachePublicIpAddressId = publicIpAddressId
+			svcRes := mqlSvc.(*mqlAzureSubscriptionApiManagementServiceService)
+			svcRes.cachePublicIpAddressId = publicIpAddressId
+			svcRes.cacheUserAssignedIdentityIds = userAssignedIdentityIds
+			if p := svc.Properties; p != nil {
+				svcRes.cachePrivateEndpointConnections = p.PrivateEndpointConnections
+			}
+			sysData, err := convert.JsonToDict(svc.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			svcRes.cacheSystemData = sysData
 			res = append(res, mqlSvc)
 		}
 	}

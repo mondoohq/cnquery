@@ -10,7 +10,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/datafactory/armdatafactory/v10"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/datafactory/armdatafactory/v11"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -32,6 +32,56 @@ func (a *mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork) id(
 
 func (a *mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+type mqlAzureSubscriptionDataFactoryServiceFactoryLinkedServiceInternal struct {
+	cacheSystemData any
+}
+
+type mqlAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntimeInternal struct {
+	cacheSystemData any
+}
+
+type mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetworkInternal struct {
+	cacheSystemData any
+}
+
+type mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpointInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+// linkedServiceAuthType extracts the connector's declared authentication mode
+// from the linked-service body. Data Factory names this field differently per
+// connector (authenticationType for most, clusterAuthType /
+// clusterResourceGroupAuthType for the HDInsight connectors), so we probe the
+// known keys inside typeProperties and return the first present value.
+func linkedServiceAuthType(typeProps map[string]any) string {
+	inner, ok := typeProps["typeProperties"].(map[string]any)
+	if !ok {
+		return ""
+	}
+	for _, key := range []string{"authenticationType", "clusterAuthType", "clusterResourceGroupAuthType"} {
+		if v, ok := inner[key].(string); ok && v != "" {
+			return v
+		}
+	}
+	return ""
 }
 
 // factoryResourceGroup parses the factory ARM id to {resourceGroup, factoryName}.
@@ -123,7 +173,7 @@ func linkedServiceToMQL(runtime *plugin.Runtime, ls *armdatafactory.LinkedServic
 		}
 	}
 
-	return CreateResource(runtime, "azure.subscription.dataFactoryService.factory.linkedService",
+	res, err := CreateResource(runtime, "azure.subscription.dataFactoryService.factory.linkedService",
 		map[string]*llx.RawData{
 			"id":                     llx.StringDataPtr(ls.ID),
 			"name":                   llx.StringDataPtr(ls.Name),
@@ -134,9 +184,19 @@ func linkedServiceToMQL(runtime *plugin.Runtime, ls *armdatafactory.LinkedServic
 			"integrationRuntimeName": llx.StringData(irName),
 			"parameterNames":         llx.ArrayData(parameterNames, types.String),
 			"usesKeyVaultReference":  llx.BoolData(usesKV),
+			"authenticationType":     llx.StringData(linkedServiceAuthType(typeProps)),
 			"annotations":            llx.ArrayData(annotations, types.Dict),
 			"typeProperties":         llx.DictData(typeProps),
 		})
+	if err != nil {
+		return nil, err
+	}
+	sysData, err := convert.JsonToDict(ls.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService).cacheSystemData = sysData
+	return res, nil
 }
 
 // sortedParameterNames returns the keys of the parameter map in sorted order so
@@ -238,6 +298,11 @@ func (a *mqlAzureSubscriptionDataFactoryServiceFactory) integrationRuntimes() ([
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(ir.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlIr.(*mqlAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime).cacheSystemData = sysData
 			res = append(res, mqlIr)
 		}
 	}
@@ -293,7 +358,13 @@ func (a *mqlAzureSubscriptionDataFactoryServiceFactory) managedVirtualNetwork() 
 			if err != nil {
 				return nil, err
 			}
-			return mqlMvn.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork), nil
+			sysData, err := convert.JsonToDict(mvn.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlMvnRes := mqlMvn.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork)
+			mqlMvnRes.cacheSystemData = sysData
+			return mqlMvnRes, nil
 		}
 	}
 
@@ -392,6 +463,11 @@ func (a *mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork) pri
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(ep.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlEp.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint).cacheSystemData = sysData
 			res = append(res, mqlEp)
 		}
 	}

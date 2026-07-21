@@ -28,7 +28,7 @@ export MS365_TENANT_ID='your-tenant-id'
 export MS365_CERTIFICATE_PATH='certificate.combo.pem'
 ```
 ```shell
-cnquery shell ms365 --certificate-path ${MS365_CERTIFICATE_PATH} --tenant-id ${MS365_TENANT_ID} --client-id ${MS365_CLIENT_ID}
+mql shell ms365 --certificate-path ${MS365_CERTIFICATE_PATH} --tenant-id ${MS365_TENANT_ID} --client-id ${MS365_CLIENT_ID}
 ```
 
 ## Examples
@@ -44,15 +44,18 @@ microsoft.domains: [
 ```
 
 ### Get Information about the Azure Application Your Using
+
 Get the integration thumbprint
+
 ```shell
-MS365_THUMBPRINT=$(cnquery run local -c "parse.certificates('${MS365_CERTIFICATE_PATH}') { fingerprints.sha1 }" --json | jq -r '.[0]["parse.certificates.list"][0]["fingerprints[sha1]"]')
-```
-Use it to find the Azure Entra Application
-```shell
-cnquery run ms365 --certificate-path ${MS365_CERTIFICATE_PATH} --tenant-id ${MS365_TENANT_ID} --client-id ${MS365_CLIENT_ID} -c "microsoft.applications.where(appId=='${MS365_CLIENT_ID}').where(certificates.any(thumbprint == /${MS365_THUMBPRINT}/i)) { name certificates }"
+MS365_THUMBPRINT=$(mql run local -c "parse.certificates('${MS365_CERTIFICATE_PATH}') { fingerprints.sha1 }" --json | jq -r '.[0]["parse.certificates.list"][0]["fingerprints[sha1]"]')
 ```
 
+Use it to find the Azure Entra Application
+
+```shell
+mql run ms365 --certificate-path ${MS365_CERTIFICATE_PATH} --tenant-id ${MS365_TENANT_ID} --client-id ${MS365_CLIENT_ID} -c "microsoft.applications.where(appId=='${MS365_CLIENT_ID}').where(certificates.any(thumbprint == /${MS365_THUMBPRINT}/i)) { name certificates }"
+```
 
 ## Troubleshooting
 

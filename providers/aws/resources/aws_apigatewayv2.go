@@ -150,8 +150,14 @@ func initAwsApigatewayv2Api(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	if len(args) > 2 {
 		return args, nil, nil
 	}
-	if args["apiId"] == nil {
-		return args, nil, errors.New("apiId required to fetch aws.apigatewayv2.api")
+	// Resolve a discovered asset (aws-apigatewayv2-api platform) by its ARN.
+	if len(args) == 0 {
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
+		}
+	}
+	if args["apiId"] == nil && args["arn"] == nil {
+		return args, nil, errors.New("apiId or arn required to fetch aws.apigatewayv2.api")
 	}
 
 	obj, err := CreateResource(runtime, "aws.apigatewayv2", map[string]*llx.RawData{})
@@ -163,14 +169,26 @@ func initAwsApigatewayv2Api(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return nil, nil, apis.Error
 	}
 
-	want := args["apiId"].Value.(string)
+	var wantApiId, wantArn string
+	if args["apiId"] != nil {
+		wantApiId = args["apiId"].Value.(string)
+	}
+	if args["arn"] != nil {
+		wantArn = args["arn"].Value.(string)
+	}
 	for _, r := range apis.Data {
 		api := r.(*mqlAwsApigatewayv2Api)
-		if api.ApiId.Data == want {
+		if (wantApiId != "" && api.ApiId.Data == wantApiId) || (wantArn != "" && api.Arn.Data == wantArn) {
 			return args, api, nil
 		}
 	}
-	return nil, nil, fmt.Errorf("aws.apigatewayv2.api with apiId %q not found", want)
+	if wantApiId != "" {
+		return nil, nil, fmt.Errorf("aws.apigatewayv2.api with apiId %q not found", wantApiId)
+	}
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.apigatewayv2.api with arn %q not found", wantArn)
 }
 
 // ---------- aws.apigatewayv2.stage ----------

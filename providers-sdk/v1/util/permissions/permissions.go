@@ -61,7 +61,6 @@ func main() {
 	}
 
 	providerName := filepath.Base(providerPath)
-	resourcesDir := filepath.Join(providerPath, "resources")
 
 	// Read provider version from config/config.go
 	version := readProviderVersion(filepath.Join(providerPath, "config", "config.go"))
@@ -70,11 +69,11 @@ func main() {
 	var details []PermissionDetail
 	switch providerName {
 	case "aws":
-		details = extractAWSPermissions(resourcesDir)
+		details = extractAWSPermissions(providerPath)
 	case "gcp":
-		details = extractGCPPermissions(resourcesDir)
+		details = extractGCPPermissions(providerPath)
 	case "azure":
-		details = extractAzurePermissions(resourcesDir)
+		details = extractAzurePermissions(providerPath)
 	default:
 		fmt.Fprintf(os.Stderr, "skipping %s: not a supported cloud provider (aws, gcp, azure)\n", providerName)
 		os.Exit(0)
@@ -370,6 +369,7 @@ var awsPermissionOverrides = map[string]string{
 	"apigateway:GetApiKeys":           "apigateway:GET",
 	"apigateway:GetApis":              "apigateway:GET",
 	"apigateway:GetAuthorizers":       "apigateway:GET",
+	"apigateway:GetDeployments":       "apigateway:GET",
 	"apigateway:GetDomainNames":       "apigateway:GET",
 	"apigateway:GetRequestValidators": "apigateway:GET",
 	"apigateway:GetRestApis":          "apigateway:GET",
@@ -416,9 +416,9 @@ func awsApplyOverride(perm string) (string, bool) {
 	return perm, true
 }
 
-func extractAWSPermissions(resourcesDir string) []PermissionDetail {
+func extractAWSPermissions(root string) []PermissionDetail {
 	var details []PermissionDetail
-	files := listGoFiles(resourcesDir)
+	files := listGoFiles(root)
 
 	for _, filePath := range files {
 		fileName := filepath.Base(filePath)
@@ -444,8 +444,22 @@ func extractAWSPermissions(resourcesDir string) []PermissionDetail {
 				return true
 			}
 
-			// Build variable -> service map for this function
+			// Build variable -> service map for this function.
 			varServices := map[string]string{}
+
+			// Detect clients passe passed as function parameters.
+			if fn.Type != nil && fn.Type.Params != nil {
+				for _, param := range fn.Type.Params.List {
+					svcPkg, ok := awsClientParamService(param.Type, awsImports)
+					if !ok {
+						continue
+					}
+					for _, name := range param.Names {
+						varServices[name.Name] = svcPkg
+					}
+				}
+			}
+
 			ast.Inspect(fn.Body, func(n ast.Node) bool {
 				assignStmt, ok := n.(*ast.AssignStmt)
 				if !ok {
@@ -554,6 +568,30 @@ func extractAWSImports(f *ast.File) map[string]string {
 	return result
 }
 
+// awsClientParamService reports the AWS SDK package name for a function
+// parameter typed *<alias>.Client (or the rare non-pointer <alias>.Client),
+// where <alias> is an AWS SDK import in this file — e.g. `svc *route53.Client`
+// returns "route53".
+func awsClientParamService(expr ast.Expr, awsImports map[string]string) (string, bool) {
+	// Unwrap a leading pointer: *route53.Client -> route53.Client.
+	if star, ok := expr.(*ast.StarExpr); ok {
+		expr = star.X
+	}
+	sel, ok := expr.(*ast.SelectorExpr)
+	if !ok || sel.Sel.Name != "Client" {
+		return "", false
+	}
+	ident, ok := sel.X.(*ast.Ident)
+	if !ok {
+		return "", false
+	}
+	pkg, ok := awsImports[ident.Name]
+	if !ok {
+		return "", false
+	}
+	return pkg, true
+}
+
 // awsConnectionMethodToService maps AwsConnection method names to service names.
 // e.g., "Sns" -> "sns", "Ec2" -> "ec2", "S3Control" -> "s3control"
 func awsConnectionMethodToService(method string) string {
@@ -600,6 +638,8 @@ func awsConnectionMethodToService(method string) string {
 		"apigateway":               "apigateway",
 		"autoscaling":              "autoscaling",
 		"backup":                   "backup",
+		"datasync":                 "datasync",
+		"appflow":                  "appflow",
 		"codebuild":                "codebuild",
 		"emr":                      "emr",
 		"guardduty":                "guardduty",
@@ -670,6 +710,7 @@ func awsConnectionMethodToService(method string) string {
 		"bedrockagent":             "bedrockagent",
 		"qbusiness":                "qbusiness",
 		"bedrockagentcorecontrol":  "bedrockagentcorecontrol",
+		"personalize":              "personalize",
 	}
 	if svc, ok := knownMethods[lower]; ok {
 		return svc
@@ -704,9 +745,9 @@ func isAWSAPIMethod(name string) bool {
 // GCP Permission Extraction
 // =============================================================================
 
-func extractGCPPermissions(resourcesDir string) []PermissionDetail {
+func extractGCPPermissions(root string) []PermissionDetail {
 	var details []PermissionDetail
-	files := listGoFiles(resourcesDir)
+	files := listGoFiles(root)
 
 	for _, filePath := range files {
 		fileName := filepath.Base(filePath)
@@ -1115,6 +1156,11 @@ var gcpPermissionOverrides = map[string]map[string]string{
 	"compute": {
 		"NetworkFirewallPolicies.Get":  "compute.firewallPolicies.get",
 		"NetworkFirewallPolicies.List": "compute.firewallPolicies.list",
+		// Reading the members of a zonal or regional instance group is governed
+		// by compute.instanceGroups.list; there is no distinct listInstances or
+		// regionInstanceGroups permission namespace in GCP IAM.
+		"InstanceGroups.ListInstances":       "compute.instanceGroups.list",
+		"RegionInstanceGroups.ListInstances": "compute.instanceGroups.list",
 	},
 	"recommender": {
 		// recommender.recommendations.list is not a real permission; the Recommender
@@ -1137,6 +1183,9 @@ var gcpPermissionOverrides = map[string]map[string]string{
 	},
 	"modelarmor": {
 		"GetFloorSetting": "modelarmor.floorSettings.get",
+		// GetTemplate → singular "template" by default; the real IAM permission
+		// is the plural form (matching modelarmor.templates.list).
+		"GetTemplate": "modelarmor.templates.get",
 	},
 	"cloudbuild": {
 		// Cloud Build triggers use the builds permission, not a separate triggers permission
@@ -1227,6 +1276,25 @@ var gcpPermissionOverrides = map[string]map[string]string{
 		// EndpointClient.GetEndpoint → singular "endpoint" by default; the real
 		// IAM permission is the plural form (matching aiplatform.endpoints.list).
 		"GetEndpoint": "aiplatform.endpoints.get",
+		// PipelineClient.GetPipelineJob → singular "pipelineJob" by default; the
+		// real IAM permission is the plural form (matching
+		// aiplatform.pipelineJobs.list).
+		"GetPipelineJob": "aiplatform.pipelineJobs.get",
+		// NotebookClient.GetNotebookRuntimeTemplate → singular
+		// "notebookRuntimeTemplate" by default; the real IAM permission is the
+		// plural form (matching aiplatform.notebookRuntimeTemplates.list).
+		"GetNotebookRuntimeTemplate": "aiplatform.notebookRuntimeTemplates.get",
+		// GetIamPolicy is the shared google.iam.v1 mixin method on both
+		// ModelClient and NotebookClient; map each to its resource-scoped
+		// permission (clientType derived from NewModelClient/NewNotebookClient).
+		"Model.GetIamPolicy":    "aiplatform.models.getIamPolicy",
+		"Notebook.GetIamPolicy": "aiplatform.notebookRuntimeTemplates.getIamPolicy",
+	},
+	"documentai": {
+		// DocumentProcessorClient.GetProcessorVersion → singular "processorVersion"
+		// by default; the real IAM permission is the plural form (matching
+		// documentai.processorVersions.list).
+		"GetProcessorVersion": "documentai.processorVersions.get",
 	},
 	"pubsub": {
 		// SchemaClient.GetSchema → singular "schema" by default; real IAM
@@ -1271,9 +1339,20 @@ var gcpPermissionOverrides = map[string]map[string]string{
 		// Projects.Get call in initGcpProject — so skip the generic form here
 		// rather than overwriting that entry's action.
 		"Liens.List": "",
+		// GetAncestry (used by the connection layer to resolve a project's
+		// org/folder ancestry) is governed by resourcemanager.projects.get, not
+		// the auto-derived "resourcemanager.projects.getancestry" (not a real
+		// permission).
+		"Projects.GetAncestry": "resourcemanager.projects.get",
 		// Tag bindings are listed via the resourceTagBindings permission, not a
 		// "resourcemanager.tagBindings.list" form (which is not a real permission).
 		"TagBindings.List": "resourcemanager.resourceTagBindings.list",
+		// Reading effective tag binding collections on a resource is governed by
+		// that resource's listEffectiveTags permission (we only call it for
+		// storage buckets in storage.go), not the auto-derived
+		// "resourcemanager.effectiveTagBindingCollections.get" (not a real
+		// permission).
+		"EffectiveTagBindingCollections.Get": "storage.buckets.listEffectiveTags",
 	},
 }
 
@@ -1427,9 +1506,9 @@ func gcpRESTToPermission(service, resource, method string) (string, bool) {
 // Azure Permission Extraction
 // =============================================================================
 
-func extractAzurePermissions(resourcesDir string) []PermissionDetail {
+func extractAzurePermissions(root string) []PermissionDetail {
 	var details []PermissionDetail
-	files := listGoFiles(resourcesDir)
+	files := listGoFiles(root)
 
 	for _, filePath := range files {
 		fileName := filepath.Base(filePath)
@@ -1457,6 +1536,12 @@ func extractAzurePermissions(resourcesDir string) []PermissionDetail {
 
 			// Track client variables: varName -> (ARM provider, resource type)
 			clientVars := map[string]*azureClientInfo{}
+			// Track client-factory variables: varName -> ARM provider. Many azure
+			// SDKs (e.g. armsecurity) create clients via
+			// `f := pkg.NewClientFactory(...)` then `f.NewXxxClient()` rather than
+			// a package-qualified `pkg.NewXxxClient(...)`, so we resolve the ARM
+			// provider through the factory var.
+			factoryVars := map[string]string{}
 
 			ast.Inspect(fn.Body, func(n ast.Node) bool {
 				assignStmt, ok := n.(*ast.AssignStmt)
@@ -1475,22 +1560,38 @@ func extractAzurePermissions(resourcesDir string) []PermissionDetail {
 					}
 					methodName := sel.Sel.Name
 
-					// Pattern: pkg.NewXxxClient(...)
+					pkgIdent, isIdentReceiver := sel.X.(*ast.Ident)
+
+					// Pattern: f := pkg.NewClientFactory(...) — remember the
+					// factory var so its clients resolve to this ARM provider.
+					if methodName == "NewClientFactory" {
+						if isIdentReceiver {
+							if imp, isAzureImport := azureImports[pkgIdent.Name]; isAzureImport && i < len(assignStmt.Lhs) {
+								if ident, ok := assignStmt.Lhs[i].(*ast.Ident); ok {
+									factoryVars[ident.Name] = imp.armProvider
+								}
+							}
+						}
+						continue
+					}
+
+					// Pattern: pkg.NewXxxClient(...) or factoryVar.NewXxxClient(...)
 					if !strings.HasPrefix(methodName, "New") || !strings.HasSuffix(methodName, "Client") {
 						continue
 					}
-					// Skip NewClientFactory
-					if methodName == "NewClientFactory" {
+					if !isIdentReceiver {
 						continue
 					}
 
-					pkgIdent, ok := sel.X.(*ast.Ident)
-					if !ok {
-						continue
-					}
-
+					// Resolve the ARM provider: either the receiver is a tracked
+					// azure package import, or a tracked client-factory var.
 					imp, isAzureImport := azureImports[pkgIdent.Name]
-					if !isAzureImport {
+					armProvider := ""
+					if isAzureImport {
+						armProvider = imp.armProvider
+					} else if prov, isFactory := factoryVars[pkgIdent.Name]; isFactory {
+						armProvider = prov
+					} else {
 						continue
 					}
 
@@ -1500,15 +1601,19 @@ func extractAzurePermissions(resourcesDir string) []PermissionDetail {
 					resourceType := strings.TrimPrefix(methodName, "New")
 					resourceType = strings.TrimSuffix(resourceType, "Client")
 
-					// For generic NewClient (no resource type), use package info
+					// A generic NewClient carries no resource type; only a
+					// package import can map it via its package name.
 					if resourceType == "" {
+						if !isAzureImport {
+							continue
+						}
 						resourceType = azureResourceFromPackage(imp.pkgName)
 					}
 
 					if i < len(assignStmt.Lhs) {
 						if ident, ok := assignStmt.Lhs[i].(*ast.Ident); ok {
 							clientVars[ident.Name] = &azureClientInfo{
-								armProvider:  imp.armProvider,
+								armProvider:  armProvider,
 								resourceType: resourceType,
 							}
 						}
@@ -1516,6 +1621,21 @@ func extractAzurePermissions(resourcesDir string) []PermissionDetail {
 				}
 				return true
 			})
+
+			emitReadPerm := func(armProvider, resourceType, methodName string) {
+				perm := azurePermission(armProvider, resourceType)
+				// A client serving multiple read methods may need per-method
+				// permissions that the client-level derivation can't express.
+				if o, ok := azureMethodPermissionOverrides[resourceType+"."+methodName]; ok {
+					perm = o
+				}
+				details = append(details, PermissionDetail{
+					Permission: perm,
+					Service:    armProvider,
+					Action:     methodName,
+					SourceFile: fileName,
+				})
+			}
 
 			// Find pager/method calls on client variables
 			ast.Inspect(fn.Body, func(n ast.Node) bool {
@@ -1528,31 +1648,42 @@ func extractAzurePermissions(resourcesDir string) []PermissionDetail {
 					return true
 				}
 				methodName := sel.Sel.Name
-
-				ident, ok := sel.X.(*ast.Ident)
-				if !ok {
+				if !isAzureReadMethod(methodName) {
 					return true
 				}
 
-				info, ok := clientVars[ident.Name]
-				if !ok {
-					return true
-				}
-
-				// Only care about read operations
-				if isAzureReadMethod(methodName) {
-					perm := azurePermission(info.armProvider, info.resourceType)
-					// A client serving multiple read methods may need per-method
-					// permissions that the client-level derivation can't express.
-					if o, ok := azureMethodPermissionOverrides[info.resourceType+"."+methodName]; ok {
-						perm = o
+				switch recv := sel.X.(type) {
+				case *ast.Ident:
+					// Read method on a tracked client var: client.NewListPager(...)
+					if info, ok := clientVars[recv.Name]; ok {
+						emitReadPerm(info.armProvider, info.resourceType, methodName)
 					}
-					details = append(details, PermissionDetail{
-						Permission: perm,
-						Service:    info.armProvider,
-						Action:     methodName,
-						SourceFile: fileName,
-					})
+				case *ast.CallExpr:
+					// Inline factory chain: factoryVar.NewXxxClient().NewListPager(...)
+					innerSel, ok := recv.Fun.(*ast.SelectorExpr)
+					if !ok {
+						return true
+					}
+					facIdent, ok := innerSel.X.(*ast.Ident)
+					if !ok {
+						return true
+					}
+					prov, isFactory := factoryVars[facIdent.Name]
+					if !isFactory {
+						return true
+					}
+					ctor := innerSel.Sel.Name
+					if !strings.HasPrefix(ctor, "New") || !strings.HasSuffix(ctor, "Client") {
+						return true
+					}
+					resourceType := strings.TrimSuffix(strings.TrimPrefix(ctor, "New"), "Client")
+					// A generic NewClient() on a factory has no resource type in
+					// its name and no package to derive one from (the receiver is
+					// a factory var, not an import), so skip it — same as the
+					// stored-variable path, which also can't map a factory generic.
+					if resourceType != "" {
+						emitReadPerm(prov, resourceType, methodName)
+					}
 				}
 
 				return true
@@ -1687,6 +1818,19 @@ var azureMethodPermissionOverrides = map[string]string{
 	// to the correct resource.
 	"SQLResources.NewListSQLRoleAssignmentsPager": "Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments/read",
 	"SQLResources.NewListSQLRoleDefinitionsPager": "Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions/read",
+
+	// The Cassandra, Gremlin, Table and MongoMI resource clients each serve
+	// role-assignment and role-definition reads that the client name derives to a
+	// coarse <api>Resources/read; redirect them to the correct databaseAccounts
+	// sub-resource, matching the SQLResources entries above.
+	"CassandraResources.NewListCassandraRoleAssignmentsPager": "Microsoft.DocumentDB/databaseAccounts/cassandraRoleAssignments/read",
+	"CassandraResources.NewListCassandraRoleDefinitionsPager": "Microsoft.DocumentDB/databaseAccounts/cassandraRoleDefinitions/read",
+	"GremlinResources.NewListGremlinRoleAssignmentsPager":     "Microsoft.DocumentDB/databaseAccounts/gremlinRoleAssignments/read",
+	"GremlinResources.NewListGremlinRoleDefinitionsPager":     "Microsoft.DocumentDB/databaseAccounts/gremlinRoleDefinitions/read",
+	"TableResources.NewListTableRoleAssignmentsPager":         "Microsoft.DocumentDB/databaseAccounts/tableRoleAssignments/read",
+	"TableResources.NewListTableRoleDefinitionsPager":         "Microsoft.DocumentDB/databaseAccounts/tableRoleDefinitions/read",
+	"MongoMIResources.NewListMongoMIRoleAssignmentsPager":     "Microsoft.DocumentDB/databaseAccounts/mongoMIRoleAssignments/read",
+	"MongoMIResources.NewListMongoMIRoleDefinitionsPager":     "Microsoft.DocumentDB/databaseAccounts/mongoMIRoleDefinitions/read",
 }
 
 // azurePermissionOverrides maps generated permission strings to the correct
@@ -1960,6 +2104,8 @@ func isAzureReadMethod(name string) bool {
 		"NewListByResourceGroupPager", "Get",
 		"NewListByServerPager", "NewListByAccountPager",
 		"NewListByNamespacePager",
+		// Non-paged list variants (some SDKs return the full list in one call)
+		"ListByServer", "ListBySubscription",
 	}
 	for _, m := range readMethods {
 		if name == m {

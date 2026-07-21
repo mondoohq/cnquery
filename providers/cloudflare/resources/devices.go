@@ -49,7 +49,7 @@ func (c *mqlCloudflareOne) devices() ([]any, error) {
 
 	records, err := cfGetPaged[teamsDevice](conn, fmt.Sprintf("accounts/%s/devices", c.AccountID))
 	if err != nil {
-		return nil, err
+		return degradedList(err)
 	}
 
 	var result []any
@@ -70,10 +70,10 @@ func (c *mqlCloudflareOne) devices() ([]any, error) {
 			"osDistroRevision": llx.StringData(rec.OSDistroRevision),
 			"version":          llx.StringData(rec.Version),
 			"deleted":          llx.BoolData(rec.Deleted),
-			"created":          llx.TimeData(parseRFC3339(rec.Created)),
-			"updated":          llx.TimeData(parseRFC3339(rec.Updated)),
-			"lastSeen":         llx.TimeData(parseRFC3339(rec.LastSeen)),
-			"revokedAt":        llx.TimeData(parseRFC3339(rec.RevokedAt)),
+			"created":          timeOrNil(parseRFC3339(rec.Created)),
+			"updated":          timeOrNil(parseRFC3339(rec.Updated)),
+			"lastSeen":         timeOrNil(parseRFC3339(rec.LastSeen)),
+			"revokedAt":        timeOrNil(parseRFC3339(rec.RevokedAt)),
 		})
 		if err != nil {
 			return nil, err
@@ -117,7 +117,7 @@ func (c *mqlCloudflareOne) devicePostureRules() ([]any, error) {
 		result = append(result, res)
 	}
 	if err := iter.Err(); err != nil {
-		return nil, err
+		return degradedList(err)
 	}
 
 	return result, nil
@@ -153,7 +153,7 @@ func (c *mqlCloudflareOne) devicePostureIntegrations() ([]any, error) {
 		result = append(result, res)
 	}
 	if err := iter.Err(); err != nil {
-		return nil, err
+		return degradedList(err)
 	}
 
 	return result, nil

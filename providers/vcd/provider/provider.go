@@ -154,8 +154,6 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.VcdConnection)
 	digits := vcdVersion.Version.Segments()
 
 	asset.Platform = &inventory.Platform{
-		Name:    "vcd",
-		Kind:    "api",
 		Title:   "VMware Cloud Director " + conn.Conf.Host,
 		Version: fmt.Sprintf("%d.%d.%d", digits[0], digits[1], digits[2]),
 		Build:   strconv.Itoa(digits[3]),
@@ -163,6 +161,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.VcdConnection)
 			"vcd.vmware.com/api-version": c.Client.APIVersion,
 		},
 	}
+	PlatformByName("vcd").Apply(asset.Platform)
 
 	// TODO: Add platform IDs
 	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/vcd/host/" + conn.Conf.Host}

@@ -225,8 +225,9 @@ func resolveChartInRepo(repoURL, chartName, version, username, password string) 
 var chartHTTPClient = &http.Client{Timeout: 60 * time.Second}
 
 // maxChartDownloadSize caps a downloaded chart archive or repository index
-// (128 MiB) so a misbehaving repo can't exhaust memory.
-const maxChartDownloadSize = 128 << 20
+// (128 MiB) so a misbehaving repo can't exhaust memory. It is a var (not a
+// const) only so tests can lower it without downloading 128 MiB.
+var maxChartDownloadSize int64 = 128 << 20
 
 // httpGetBytes fetches a URL with optional basic auth, a request timeout,
 // and a bounded read.
@@ -246,7 +247,17 @@ func httpGetBytes(rawURL, username, password string) ([]byte, error) {
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to fetch %q: status %d", rawURL, resp.StatusCode)
 	}
-	return io.ReadAll(io.LimitReader(resp.Body, maxChartDownloadSize))
+	// Read up to one byte past the cap so we can tell "exactly at the limit"
+	// from "exceeds the limit". io.LimitReader alone returns EOF at the cap
+	// with no error, silently truncating an oversized archive/index.
+	data, err := io.ReadAll(io.LimitReader(resp.Body, maxChartDownloadSize+1))
+	if err != nil {
+		return nil, err
+	}
+	if int64(len(data)) > maxChartDownloadSize {
+		return nil, fmt.Errorf("response from %q exceeds the maximum allowed size of %d bytes", rawURL, maxChartDownloadSize)
+	}
+	return data, nil
 }
 
 // lastPathSegment returns the final path segment of a registry reference,

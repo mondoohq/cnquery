@@ -11,8 +11,9 @@ import (
 var Config = plugin.Provider{
 	Name:            "mondoo",
 	ID:              "go.mondoo.com/mql/v13/providers/mondoo",
-	Version:         "13.1.4",
+	Version:         "13.1.12",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
+	Platforms:       provider.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "mondoo",
@@ -20,7 +21,7 @@ var Config = plugin.Provider{
 			Short: "Mondoo Platform",
 			Long: `Use the mondoo provider to query resources in Mondoo Platform.
 
-To query Mondoo Platform from a workstation, the workstation must be registered with Mondoo Platform. To learn how to register a workstation, read https://mondoo.com/docs/cnspec/cnspec-adv-install/registration/. 
+To query Mondoo Platform from a workstation, the workstation must be registered with Mondoo Platform. To learn how to register a workstation, read https://mondoo.com/docs/cnspec/install/registration. 
 
 Examples:
   cnspec shell mondoo

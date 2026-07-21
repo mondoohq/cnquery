@@ -60,20 +60,20 @@ func initAwsSagemakerExperiment(runtime *plugin.Runtime, args map[string]*llx.Ra
 		}
 	}
 
-	// Fallback: derive name/region from ARN so minimal fields resolve.
-	_, region, _, name := parseSagemakerArn(arnVal)
-	if args["name"] == nil && name != "" {
-		args["name"] = llx.StringData(name)
-	}
-	if args["region"] == nil && region != "" {
-		args["region"] = llx.StringData(region)
-	}
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.sagemaker.experiment with arn %q not found", arnVal)
 }
 
 func initAwsSagemakerModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
+	}
+	if len(args) == 0 {
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
+		}
 	}
 	if args["arn"] == nil {
 		return nil, nil, errors.New("arn required to resolve sagemaker model")
@@ -96,14 +96,10 @@ func initAwsSagemakerModel(runtime *plugin.Runtime, args map[string]*llx.RawData
 		}
 	}
 
-	_, region, _, name := parseSagemakerArn(arnVal)
-	if args["name"] == nil && name != "" {
-		args["name"] = llx.StringData(name)
-	}
-	if args["region"] == nil && region != "" {
-		args["region"] = llx.StringData(region)
-	}
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.sagemaker.model with arn %q not found", arnVal)
 }
 
 // ---- Experiments ----

@@ -999,6 +999,12 @@ var defaultLinux = &PlatformResolver{
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		// if we reach here, we know that we detected linux already
 		log.Debug().Msg("platform> we do not know the linux system, but we do our best in guessing")
+		// the system carries no name we could derive from lsb or os-release, so
+		// fall back to this resolver's own name. Without it the platform stays
+		// unnamed and gets reported as "unknown" (see addTechnologyUrl).
+		if pf.Name == "" {
+			pf.Name = r.Name
+		}
 		return true, nil
 	},
 }
@@ -1097,6 +1103,25 @@ func slugifyDarwin(s string) string {
 	s = strings.ToLower(s)
 	s = slugRe.ReplaceAllString(s, "_")
 	return strings.Trim(s, "_")
+}
+
+var (
+	// characters that are dropped outright, so "FRITZ!OS" slugs to "fritzos"
+	// instead of gaining a separator where the punctuation used to be
+	platformNameDropRe = regexp.MustCompile(`[^a-z0-9\s._-]+`)
+	// runs of whitespace and underscores that become a single "-"
+	platformNameSepRe = regexp.MustCompile(`[\s_]+`)
+)
+
+// slugifyPlatformName derives a platform name from a human-readable os-release
+// value (NAME or PRETTY_NAME) for systems that ship no ID field. It mirrors how
+// vendors write ID themselves: "FRITZ!OS" -> "fritzos", "Generic Vendor Linux"
+// -> "generic-vendor-linux".
+func slugifyPlatformName(s string) string {
+	s = strings.ToLower(strings.TrimSpace(s))
+	s = platformNameDropRe.ReplaceAllString(s, "")
+	s = platformNameSepRe.ReplaceAllString(s, "-")
+	return strings.Trim(s, "-.")
 }
 
 // Families
@@ -1317,6 +1342,17 @@ var linuxFamily = &PlatformResolver{
 				// Deprecated: remove in 12.0
 				pf.Labels[LabelDistroID] = osr["ID"]
 				pf.Metadata[LabelDistroID] = osr["ID"]
+			} else if name := slugifyPlatformName(osr["NAME"]); name != "" {
+				// ID is optional per the os-release spec and vendor firmware
+				// (e.g. FRITZ!OS) often ships without it. Derive the name from
+				// NAME instead, otherwise the platform stays unnamed and is
+				// reported as "unknown" downstream.
+				//
+				// PRETTY_NAME is deliberately not used as a further fallback: it
+				// usually carries the version too, which would mint a new
+				// platform name for every release. Without a NAME we fall
+				// through to generic-linux.
+				pf.Name = name
 			}
 			if len(osr["PRETTY_NAME"]) > 0 {
 				pf.Title = osr["PRETTY_NAME"]

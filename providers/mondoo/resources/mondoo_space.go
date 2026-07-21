@@ -84,6 +84,7 @@ func (m *mqlMondooSpace) assets() ([]any, error) {
 				"name":                llx.StringData(e.Node.Name),
 				"mrn":                 llx.StringData(e.Node.Mrn),
 				"platform":            llx.StringData(e.Node.AssetType),
+				"state":               llx.StringData(e.Node.State),
 				"annotations":         llx.MapData(keyvals2map(e.Node.Annotations), types.Map(types.String, types.String)),
 				"labels":              llx.MapData(keyvals2map(e.Node.Labels), types.Map(types.String, types.String)),
 				"updatedAt":           llx.TimeDataPtr(string2time(e.Node.UpdatedAt)),

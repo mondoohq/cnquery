@@ -644,7 +644,10 @@ func (g *mqlGcpProjectComputeServiceAttachedDisk) source() (*mqlGcpProjectComput
 }
 
 type mqlGcpProjectComputeServiceInstanceInternal struct {
-	instanceMachineType string
+	instanceMachineType       string
+	cacheNetworkUrls          []string
+	cacheSubnetworkUrls       []string
+	cacheServiceAccountEmails []string
 }
 
 func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeServiceZone, runtime *plugin.Runtime, instance *compute.Instance) (*mqlGcpProjectComputeServiceInstance, error) {
@@ -713,10 +716,32 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 		return nil, err
 	}
 
+	mqlNics := make([]any, 0, len(instance.NetworkInterfaces))
+	for _, ni := range instance.NetworkInterfaces {
+		if ni == nil {
+			continue
+		}
+		nic, err := newMqlComputeNetworkInterface(runtime, instance.Id, ni)
+		if err != nil {
+			return nil, err
+		}
+		mqlNics = append(mqlNics, nic)
+	}
+
 	stackTypeSet := map[string]struct{}{}
 	networkStackTypes := []any{}
+	var networkUrls, subnetworkUrls []string
 	for _, ni := range instance.NetworkInterfaces {
-		if ni == nil || ni.StackType == "" {
+		if ni == nil {
+			continue
+		}
+		if ni.Network != "" {
+			networkUrls = append(networkUrls, ni.Network)
+		}
+		if ni.Subnetwork != "" {
+			subnetworkUrls = append(subnetworkUrls, ni.Subnetwork)
+		}
+		if ni.StackType == "" {
 			continue
 		}
 		if _, ok := stackTypeSet[ni.StackType]; ok {
@@ -724,6 +749,13 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 		}
 		stackTypeSet[ni.StackType] = struct{}{}
 		networkStackTypes = append(networkStackTypes, ni.StackType)
+	}
+
+	var serviceAccountEmails []string
+	for _, sa := range instance.ServiceAccounts {
+		if sa != nil && sa.Email != "" {
+			serviceAccountEmails = append(serviceAccountEmails, sa.Email)
+		}
 	}
 
 	var mqlWorkloadIdentityConfig map[string]any
@@ -820,6 +852,7 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 		"enableDisplay":                   llx.BoolData(enableDisplay),
 		"guestAccelerators":               llx.ArrayData(guestAccelerators, types.Dict),
 		"fingerprint":                     llx.StringData(instance.Fingerprint),
+		"selfLink":                        llx.StringData(instance.SelfLink),
 		"hostname":                        llx.StringData(instance.Hostname),
 		"keyRevocationActionType":         llx.StringData(instance.KeyRevocationActionType),
 		"labels":                          llx.MapData(convert.MapToInterfaceMap(instance.Labels), types.String),
@@ -829,6 +862,7 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 		"metadata":                        llx.MapData(convert.MapToInterfaceMap(metadata), types.String),
 		"minCpuPlatform":                  llx.StringData(instance.MinCpuPlatform),
 		"networkInterfaces":               llx.ArrayData(networkInterfaces, types.Dict),
+		"nics":                            llx.ArrayData(mqlNics, types.Resource("gcp.project.computeService.instance.networkInterface")),
 		"networkStackTypes":               llx.ArrayData(networkStackTypes, types.String),
 		"privateIpv6GoogleAccess":         llx.StringData(instance.PrivateIpv6GoogleAccess),
 		"reservationAffinity":             llx.DictData(reservationAffinity),
@@ -861,7 +895,60 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 	}
 	mqlR := entry.(*mqlGcpProjectComputeServiceInstance)
 	mqlR.instanceMachineType = instance.MachineType
+	mqlR.cacheNetworkUrls = networkUrls
+	mqlR.cacheSubnetworkUrls = subnetworkUrls
+	mqlR.cacheServiceAccountEmails = serviceAccountEmails
 	return mqlR, nil
+}
+
+func (g *mqlGcpProjectComputeServiceInstance) managedBy() (string, error) {
+	return managedByFromLabels(g.GetLabels())
+}
+
+func (g *mqlGcpProjectComputeServiceInstance) networks() ([]any, error) {
+	res := make([]any, 0, len(g.cacheNetworkUrls))
+	for _, url := range g.cacheNetworkUrls {
+		network, err := getNetworkByUrl(url, g.MqlRuntime)
+		if err != nil {
+			return nil, err
+		}
+		if network != nil {
+			res = append(res, network)
+		}
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectComputeServiceInstance) subnetworks() ([]any, error) {
+	res := make([]any, 0, len(g.cacheSubnetworkUrls))
+	for _, url := range g.cacheSubnetworkUrls {
+		subnet, err := getSubnetworkByUrl(url, g.MqlRuntime)
+		if err != nil {
+			return nil, err
+		}
+		if subnet != nil {
+			res = append(res, subnet)
+		}
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectComputeServiceInstance) serviceAccountRefs() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+	res := make([]any, 0, len(g.cacheServiceAccountEmails))
+	for _, email := range g.cacheServiceAccountEmails {
+		sa, err := resolveServiceAccountRef(g.MqlRuntime, email, projectId)
+		if err != nil {
+			return nil, err
+		}
+		if sa != nil {
+			res = append(res, sa)
+		}
+	}
+	return res, nil
 }
 
 func (g *mqlGcpProjectComputeService) instances() ([]any, error) {
@@ -944,6 +1031,10 @@ func (g *mqlGcpProjectComputeServiceDisk) id() (string, error) {
 	}
 	id := g.Id.Data
 	return "gcloud.compute.disk/" + id, nil
+}
+
+func (g *mqlGcpProjectComputeServiceDisk) managedBy() (string, error) {
+	return managedByFromLabels(g.GetLabels())
 }
 
 type mqlGcpProjectComputeServiceDiskInternal struct {
@@ -1221,6 +1312,39 @@ func (g *mqlGcpProjectComputeServiceFirewall) network() (*mqlGcpProjectComputeSe
 	return getNetworkByUrl(g.cacheNetworkUrl, g.MqlRuntime)
 }
 
+func (g *mqlGcpProjectComputeServiceFirewall) resolveServiceAccountRefs(emails *plugin.TValue[[]any]) ([]any, error) {
+	if emails.Error != nil {
+		return nil, emails.Error
+	}
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+	res := make([]any, 0, len(emails.Data))
+	for _, e := range emails.Data {
+		email, ok := e.(string)
+		if !ok || email == "" {
+			continue
+		}
+		sa, err := resolveServiceAccountRef(g.MqlRuntime, email, projectId)
+		if err != nil {
+			return nil, err
+		}
+		if sa != nil {
+			res = append(res, sa)
+		}
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectComputeServiceFirewall) sourceServiceAccountRefs() ([]any, error) {
+	return g.resolveServiceAccountRefs(g.GetSourceServiceAccounts())
+}
+
+func (g *mqlGcpProjectComputeServiceFirewall) targetServiceAccountRefs() ([]any, error) {
+	return g.resolveServiceAccountRefs(g.GetTargetServiceAccounts())
+}
+
 func (g *mqlGcpProjectComputeServiceFirewall) id() (string, error) {
 	if g.Id.Error != nil {
 		return "", g.Id.Error
@@ -1378,6 +1502,10 @@ func (g *mqlGcpProjectComputeServiceSnapshot) id() (string, error) {
 	return "gcloud.compute.snapshot/" + id, nil
 }
 
+func (g *mqlGcpProjectComputeServiceSnapshot) managedBy() (string, error) {
+	return managedByFromLabels(g.GetLabels())
+}
+
 func (g *mqlGcpProjectComputeService) snapshots() ([]any, error) {
 	// when the service is not enabled, we return nil
 	if !g.GetEnabled().Data {
@@ -1442,7 +1570,9 @@ func (g *mqlGcpProjectComputeService) snapshots() ([]any, error) {
 				return err
 			}
 
-			mqlSnapshpt.(*mqlGcpProjectComputeServiceSnapshot).cacheKmsKeyName = snapshotKmsKeyName
+			mqlSnap := mqlSnapshpt.(*mqlGcpProjectComputeServiceSnapshot)
+			mqlSnap.cacheKmsKeyName = snapshotKmsKeyName
+			mqlSnap.cacheSourceDiskUrl = snapshot.SourceDisk
 			res = append(res, mqlSnapshpt)
 		}
 		return nil
@@ -1459,6 +1589,10 @@ func (g *mqlGcpProjectComputeServiceImage) id() (string, error) {
 	}
 	id := g.Id.Data
 	return "gcloud.compute.image/" + id, nil
+}
+
+func (g *mqlGcpProjectComputeServiceImage) managedBy() (string, error) {
+	return managedByFromLabels(g.GetLabels())
 }
 
 func initGcpProjectComputeServiceImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -1527,7 +1661,8 @@ func (g *mqlGcpProjectComputeServiceImage) kmsKey() (*mqlGcpProjectKmsServiceKey
 }
 
 type mqlGcpProjectComputeServiceSnapshotInternal struct {
-	cacheKmsKeyName string
+	cacheKmsKeyName    string
+	cacheSourceDiskUrl string
 }
 
 func (g *mqlGcpProjectComputeServiceSnapshot) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
@@ -1541,6 +1676,14 @@ func (g *mqlGcpProjectComputeServiceSnapshot) kmsKey() (*mqlGcpProjectKmsService
 		return nil, err
 	}
 	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+}
+
+func (g *mqlGcpProjectComputeServiceSnapshot) sourceDiskRef() (*mqlGcpProjectComputeServiceDisk, error) {
+	if g.cacheSourceDiskUrl == "" {
+		g.SourceDiskRef.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return getDiskByUrl(g.cacheSourceDiskUrl, g.MqlRuntime)
 }
 
 func (g *mqlGcpProjectComputeServiceImage) sourceDisk() (*mqlGcpProjectComputeServiceDisk, error) {
@@ -1689,6 +1832,51 @@ func (g *mqlGcpProjectComputeServiceNetwork) id() (string, error) {
 	return "gcloud.compute.network/" + id, nil
 }
 
+func (g *mqlGcpProjectComputeServiceNetwork) firewallPolicyRef() (*mqlGcpProjectComputeServiceFirewallPolicy, error) {
+	if g.FirewallPolicy.Error != nil {
+		return nil, g.FirewallPolicy.Error
+	}
+	url := g.FirewallPolicy.Data
+	if url == "" {
+		g.FirewallPolicyRef.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+
+	obj, err := CreateResource(g.MqlRuntime, "gcp.project.computeService", map[string]*llx.RawData{
+		"projectId": llx.StringData(g.ProjectId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	policies := obj.(*mqlGcpProjectComputeService).GetFirewallPolicies()
+	if policies.Error != nil {
+		return nil, policies.Error
+	}
+
+	// The network's firewallPolicy is a self-link URL; match it against the
+	// listed policies by selfLink, then fall back to the trailing name/id
+	// segment for shapes that omit the full self-link.
+	lastSegment := url[strings.LastIndex(url, "/")+1:]
+	for _, p := range policies.Data {
+		policy := p.(*mqlGcpProjectComputeServiceFirewallPolicy)
+		if policy.SelfLink.Error == nil && policy.SelfLink.Data == url {
+			return policy, nil
+		}
+		if policy.Name.Error == nil && policy.Name.Data == lastSegment {
+			return policy, nil
+		}
+		if policy.Id.Error == nil && policy.Id.Data == lastSegment {
+			return policy, nil
+		}
+	}
+
+	g.FirewallPolicyRef.State = plugin.StateIsNull | plugin.StateIsSet
+	return nil, nil
+}
+
 func (g *mqlGcpProjectComputeServiceNetwork) networkPeerings() ([]any, error) {
 	if g.cachePeerings == nil {
 		return []any{}, nil
@@ -1748,26 +1936,17 @@ func (g *mqlGcpProjectComputeServiceNetwork) subnetworks() ([]any, error) {
 		return nil, g.SubnetworkUrls.Error
 	}
 	subnetUrls := g.SubnetworkUrls.Data
-	type resourceId struct {
-		Project string
-		Region  string
-		Name    string
-	}
 	subnets := make([]any, 0, len(subnetUrls))
 	for _, subnetUrl := range subnetUrls {
-		// Format is https://www.googleapis.com/compute/v1/projects/project1regions/us-central1/subnetworks/subnet-1
-		params := strings.TrimPrefix(subnetUrl.(string), "https://www.googleapis.com/compute/v1/")
-		parts := strings.Split(params, "/")
-		resId := resourceId{Project: parts[1], Region: parts[3], Name: parts[5]}
-		regionUrl := strings.SplitN(subnetUrl.(string), "/subnetworks", 2)
-
-		subnet, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.subnetwork", map[string]*llx.RawData{
-			"name":      llx.StringData(resId.Name),
-			"projectId": llx.StringData(resId.Project),
-			"regionUrl": llx.StringData(regionUrl[0]),
-		})
+		// Resolve through the shared helper so it uses NewResource and the
+		// subnetwork init populates every field (and a stable __id) instead of
+		// leaving a partially-set husk that collides in the resource cache.
+		subnet, err := getSubnetworkByUrl(subnetUrl.(string), g.MqlRuntime)
 		if err != nil {
 			return nil, err
+		}
+		if subnet == nil {
+			continue
 		}
 		subnets = append(subnets, subnet)
 	}
@@ -2635,7 +2814,7 @@ func (g *mqlGcpProjectComputeService) backendServices() ([]any, error) {
 					"customRequestHeaders":            llx.ArrayData(convert.SliceAnyToInterface(b.CustomRequestHeaders), types.String),
 					"customResponseHeaders":           llx.ArrayData(convert.SliceAnyToInterface(b.CustomResponseHeaders), types.String),
 					"description":                     llx.StringData(b.Description),
-					"edgeSecurityPolicy":              llx.StringData(b.EdgeSecurityPolicy),
+					"edgeSecurityPolicyUrl":           llx.StringData(b.EdgeSecurityPolicy),
 					"enableCDN":                       llx.BoolData(b.EnableCDN),
 					"failoverPolicy":                  llx.DictData(mqlFailoverPolicy),
 					"healthChecks":                    llx.ArrayData(convert.SliceAnyToInterface(b.HealthChecks), types.String),
@@ -2661,6 +2840,7 @@ func (g *mqlGcpProjectComputeService) backendServices() ([]any, error) {
 					"serviceLbPolicy":                 llx.StringData(b.ServiceLbPolicy),
 					"ipAddressSelectionPolicy":        llx.StringData(b.IpAddressSelectionPolicy),
 					"fingerprint":                     llx.StringData(b.Fingerprint),
+					"selfLink":                        llx.StringData(b.SelfLink),
 				})
 				if err != nil {
 					return err
@@ -2767,7 +2947,14 @@ func (g *mqlGcpProjectComputeServiceAddress) network() (*mqlGcpProjectComputeSer
 		return nil, g.NetworkUrl.Error
 	}
 	networkUrl := g.NetworkUrl.Data
-	return getNetworkByUrl(networkUrl, g.MqlRuntime)
+	net, err := getNetworkByUrl(networkUrl, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if net == nil {
+		g.Network.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return net, nil
 }
 
 func (g *mqlGcpProjectComputeServiceAddress) subnetwork() (*mqlGcpProjectComputeServiceSubnetwork, error) {
@@ -2775,7 +2962,14 @@ func (g *mqlGcpProjectComputeServiceAddress) subnetwork() (*mqlGcpProjectCompute
 		return nil, g.SubnetworkUrl.Error
 	}
 	subnetUrl := g.SubnetworkUrl.Data
-	return getSubnetworkByUrl(subnetUrl, g.MqlRuntime)
+	subnet, err := getSubnetworkByUrl(subnetUrl, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if subnet == nil {
+		g.Subnetwork.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return subnet, nil
 }
 
 func (g *mqlGcpProjectComputeServiceAddress) id() (string, error) {
@@ -2841,7 +3035,7 @@ func (g *mqlGcpProjectComputeService) forwardingRules() ([]any, error) {
 				"ipProtocol":                    llx.StringData(fwr.GetIPProtocol()),
 				"allPorts":                      llx.BoolData(fwr.GetAllPorts()),
 				"allowGlobalAccess":             llx.BoolData(fwr.GetAllowGlobalAccess()),
-				"backendService":                llx.StringData(fwr.GetBackendService()),
+				"backendServiceUrl":             llx.StringData(fwr.GetBackendService()),
 				"created":                       llx.TimeDataPtr(parseTime(fwr.GetCreationTimestamp())),
 				"description":                   llx.StringData(fwr.GetDescription()),
 				"ipVersion":                     llx.StringData(fwr.GetIpVersion()),
@@ -2866,6 +3060,7 @@ func (g *mqlGcpProjectComputeService) forwardingRules() ([]any, error) {
 				"sourceIpRanges":                llx.ArrayData(convert.SliceAnyToInterface(fwr.GetSourceIpRanges()), types.String),
 				"fingerprint":                   llx.StringData(fwr.GetFingerprint()),
 				"ipCollection":                  llx.StringData(fwr.GetIpCollection()),
+				"selfLink":                      llx.StringData(fwr.GetSelfLink()),
 			})
 			if err != nil {
 				return nil, err
@@ -3420,6 +3615,7 @@ func (g *mqlGcpProjectComputeService) vpnTunnels() ([]any, error) {
 					"vpnGatewayUrl":                llx.StringData(t.VpnGateway),
 					"vpnGatewayInterface":          llx.IntData(int64(t.VpnGatewayInterface)),
 					"resourceManagerTags":          llx.MapData(tunnelResourceManagerTags, types.String),
+					"selfLink":                     llx.StringData(t.SelfLink),
 				})
 				if err != nil {
 					return err
@@ -3724,6 +3920,15 @@ func (g *mqlGcpProjectComputeServiceInstance) hasInstanceSshKeys() (bool, error)
 	}
 	s, _ := md.Data["ssh-keys"].(string)
 	return s != "", nil
+}
+
+func (g *mqlGcpProjectComputeServiceInstance) instanceSshKeys() ([]any, error) {
+	md := g.GetMetadata()
+	if md.Error != nil {
+		return nil, md.Error
+	}
+	raw, _ := md.Data["ssh-keys"].(string)
+	return parseInstanceSSHKeys(raw), nil
 }
 
 func (g *mqlGcpProjectComputeServiceInstance) osLoginEnabled() (bool, error) {

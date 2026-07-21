@@ -6,6 +6,7 @@ package config
 import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/aws/connection"
 	"go.mondoo.com/mql/v13/providers/aws/connection/awsec2ebsconn"
 	"go.mondoo.com/mql/v13/providers/aws/provider"
 	"go.mondoo.com/mql/v13/providers/aws/resources"
@@ -14,7 +15,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "aws",
 	ID:              "go.mondoo.com/cnquery/v9/providers/aws",
-	Version:         "13.37.0",
+	Version:         "13.49.0",
 	ConnectionTypes: []string{provider.DefaultConnectionType, string(awsec2ebsconn.EBSConnectionType)},
 	Connectors: []plugin.Connector{
 		{
@@ -50,7 +51,7 @@ Examples:
 
 Notes:
   If you set the AWS_PROFILE environment variable, you can omit the profile flag.
-	To learn about setting up your AWS credentials, read https://mondoo.com/docs/cnspec/cloud/aws/.
+	To learn about setting up your AWS credentials, read https://mondoo.com/docs/cnspec/cloud/aws.
 `,
 			MinArgs: 0,
 			MaxArgs: 4,
@@ -59,6 +60,8 @@ Notes:
 				resources.DiscoveryCloudfrontDistributions,
 				resources.DiscoveryCloudtrailTrails,
 				resources.DiscoveryCloudwatchLoggroups,
+				resources.DiscoveryCodebuildProjects,
+				resources.DiscoveryCognitoUserPools,
 				resources.DiscoveryDocumentDBClusters,
 				resources.DiscoveryDynamoDBGlobalTables,
 				resources.DiscoveryDynamoDBTables,
@@ -84,6 +87,7 @@ Notes:
 				resources.DiscoveryInstances,
 				resources.DiscoveryKMSKeys,
 				resources.DiscoveryLambdaFunctions,
+				resources.DiscoveryMemorydbClusters,
 				resources.DiscoveryMqBrokers,
 				resources.DiscoveryMskClusters,
 				resources.DiscoveryNeptuneClusters,
@@ -97,10 +101,19 @@ Notes:
 				resources.DiscoverySagemakerNotebookInstances,
 				resources.DiscoverySagemakerProcessingJobs,
 				resources.DiscoverySagemakerTrainingJobs,
+				resources.DiscoverySagemakerDomains,
+				resources.DiscoverySagemakerModels,
 				resources.DiscoverySecretsManagerSecrets,
 				resources.DiscoverySecurityGroups,
 				resources.DiscoverySSMInstances,
 				resources.DiscoverySSMInstanceAPI,
+				resources.DiscoveryTransferServers,
+				resources.DiscoveryAPIGatewayV2APIs,
+				resources.DiscoveryAthenaWorkgroups,
+				resources.DiscoveryAppStreamFleets,
+				resources.DiscoveryBatchJobDefinitions,
+				resources.DiscoveryDirectoryServiceDirectories,
+				resources.DiscoveryDocumentDBInstances,
 				resources.DiscoveryVPCs,
 			},
 			Flags: []plugin.Flag{
@@ -144,7 +157,7 @@ Notes:
 					Long:    "filters",
 					Type:    plugin.FlagType_KeyValue,
 					Default: "",
-					Desc:    "Filter options, e.g., --filters regions=us-east-2,us-east-1 --filters ec2:instance-ids=i-093439483935 --filters tag:Environment=production --filters tag:Team=platform --filters exclude:tag:Environment=dev",
+					Desc:    "Filter options, e.g., --filters regions=us-east-2,us-east-1 --filters ec2:instance-ids=i-093439483935 --filters s3:bucket-names=my-bucket --filters tag:Environment=production --filters tag:Team=platform --filters exclude:tag:Environment=dev",
 				},
 			},
 		},
@@ -181,10 +194,20 @@ Notes:
 						"msk":        nil,
 						"mq":         nil,
 						"route53":    nil,
+						"memorydb":   nil,
+						"codebuild":  nil,
+						"cognito":    nil,
+						"transfer":   nil,
+						"athena":     nil,
+						"appstream":  nil,
+						"batch":      nil,
+						"ds":         nil,
+						"documentdb": nil,
 						"other":      nil,
 					},
 				},
 			},
 		},
 	},
+	Platforms: connection.Platforms,
 }

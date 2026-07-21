@@ -6,9 +6,11 @@ option go_package = "go.mondoo.com/mql/v13/providers/huggingface/resources"
 
 // Hugging Face
 //
-// Use the `huggingface` resource to examine your Hugging Face account,
-// including models, datasets, spaces, webhooks, inference endpoints,
-// and organization memberships accessible through the configured API token.
+// Hugging Face account reachable through the configured API token, and
+// the entry point for auditing everything that token can access: the
+// authenticated user, organization memberships, models, datasets,
+// Spaces, webhooks, and inference endpoints. Query it to inventory
+// hosted AI assets and to understand the reach of the credential in use.
 huggingface @defaults("user.name") {
   // Authenticated user
   user() huggingface.user
@@ -28,13 +30,17 @@ huggingface @defaults("user.name") {
 
 // Hugging Face user account
 //
-// Examine properties of a Hugging Face user, including organization
-// memberships, pro status, and the permissions of the API token
-// used to authenticate.
+// Account identity behind the configured API token: the login
+// name, display name, and whether the account carries a Pro
+// subscription. The accessToken field exposes the role and
+// fine-grained permission scopes of the token used to authenticate,
+// which govern what the account can read and write across models,
+// datasets, and spaces.
 huggingface.user @defaults("name") {
   id string
   name string
   fullname string
+  // Account type reported by the whoami API (user)
   type string
   isPro bool
   avatarUrl string
@@ -44,8 +50,11 @@ huggingface.user @defaults("name") {
 
 // Hugging Face organization
 //
-// Examine a Hugging Face organization including enterprise status,
-// billing capability, and the authenticated user's role within it.
+// Team or company account on the Hugging Face Hub, exposing its
+// enterprise status via isEnterprise, billing capability via canPay,
+// and the authenticated user's role within it via roleInOrg. Useful
+// for confirming that model and dataset repositories are owned by a
+// governed enterprise organization rather than an unmanaged account.
 huggingface.organization @defaults("name") {
   id string
   name string
@@ -60,8 +69,12 @@ huggingface.organization @defaults("name") {
 
 // Hugging Face access token
 //
-// Examine the API access token used for authentication, including
-// its display name, role, and fine-grained permission scopes.
+// API access token presented for authentication against the Hugging Face
+// Hub. The token's role and fine-grained permission scopes determine which
+// repositories and organization resources it can reach, making it a central
+// subject for least-privilege audits. The role field distinguishes a broad
+// read or write token from a fineGrained token whose access is constrained
+// to specific entities through scopedPermissions.
 huggingface.accessToken @defaults("displayName role") {
   displayName string
   // Token role
@@ -69,6 +82,7 @@ huggingface.accessToken @defaults("displayName role") {
   // One of read, write, or fineGrained.
   role string
   createdAt time
+  // Whether the token can download from gated (access-restricted) repositories
   canReadGatedRepos bool
   // Global permissions granted to the token
   globalPermissions []string
@@ -78,12 +92,13 @@ huggingface.accessToken @defaults("displayName role") {
 
 // Scoped permission grant on a Hugging Face access token
 //
-// Examine a single scoped permission entry that grants specific
-// permissions to an entity (user or organization). The `entityName`
+// Single scoped permission entry that grants a fine-grained token specific
+// capabilities on one entity (a user or organization). The `entityName`
 // field identifies the target, and `permissions` lists the granted
 // capabilities such as `repo.content.read` or `org.read`.
 private huggingface.accessToken.scope @defaults("entityName") {
   entityId string
+  // Type of the target entity, such as user or org
   entityType string
   entityName string
   permissions []string
@@ -91,10 +106,10 @@ private huggingface.accessToken.scope @defaults("entityName") {
 
 // Hugging Face model repository
 //
-// Examine a model hosted on the Hugging Face Hub, including its
-// visibility, access gating, license, pipeline tag, library,
-// and download/like counts. Use `cardData` and `config` for deep
-// metadata needed by AI Bill of Materials (AIBOM) generation.
+// Model hosted on the Hugging Face Hub, covering its visibility,
+// access gating, license, pipeline tag, library, and download/like
+// counts. `cardData` and `config` expose the deep metadata needed
+// for AI Bill of Materials (AIBOM) generation.
 huggingface.model @defaults("id author") {
   // Full model ID (e.g., "meta-llama/Llama-3.1-8B")
   id string
@@ -128,14 +143,21 @@ huggingface.model @defaults("id author") {
   modelCard() string
   // Parsed config.json (architecture, model_type, hidden_size, vocab_size, etc.)
   config() dict
-  // File listing in the model repository
+  // Repository file listing
+  //
+  // Each entry describes one file in the model repository with a
+  // single `rfilename` key holding the file path relative to the
+  // repository root.
   siblings() []dict
 }
 
 // Hugging Face dataset repository
 //
-// Examine a dataset hosted on the Hugging Face Hub, including its
-// visibility, description, and download/like counts.
+// Dataset hosted on the Hugging Face Hub, covering its visibility
+// (public or private), owning author, descriptive tags, and community
+// signals such as download and like counts. Query it to audit which
+// datasets an organization exposes and whether any that should be
+// restricted are marked public.
 huggingface.dataset @defaults("id") {
   id string
   name string
@@ -149,8 +171,11 @@ huggingface.dataset @defaults("id") {
 
 // Hugging Face Space application
 //
-// Examine a Hugging Face Space (hosted app) including its visibility,
-// description, tags, and like count.
+// Hosted app (a Space) published to the Hugging Face Hub, covering its
+// visibility, description, tags, author, and popularity. Audit these to
+// surface which apps an organization exposes and whether any that should
+// stay internal are public. The `private` field reports whether the Space
+// is restricted to its owner or openly accessible.
 huggingface.space @defaults("id") {
   id string
   name string
@@ -163,22 +188,37 @@ huggingface.space @defaults("id") {
 
 // Hugging Face webhook
 //
-// Examine a configured webhook including its target URL, watched
-// repositories, event domains, and enabled/disabled state.
+// Configured webhook that delivers HTTP callbacks to an external
+// endpoint when watched repositories or discussions change. Auditing
+// webhooks surfaces where repository events are sent, whether a
+// webhook is currently disabled, and which repositories or namespaces
+// it monitors.
 huggingface.webhook @defaults("id webhookUrl") {
   id string
   // Target URL that receives webhook events
   webhookUrl string
+  // Event domains this webhook subscribes to
+  //
+  // Each entry is one of "repo" (repository lifecycle events such as
+  // new commits or config changes) or "discussion" (discussion and
+  // pull request activity).
   domains []string
   disabled bool
-  // Watched entities that trigger this webhook
+  // Repositories and namespaces this webhook watches
+  //
+  // Each entry has a `type` (one of "dataset", "model", "space",
+  // "org", or "user") and a `name` (the repository ID or namespace,
+  // for example "openai/whisper").
   watched []dict
 }
 
 // Hugging Face inference endpoint
 //
-// Examine a deployed inference endpoint including the model it serves,
-// the ML framework, its operational status, and the endpoint URL.
+// Managed deployment that serves a Hugging Face model behind a
+// dedicated URL. Reports the model it hosts, the ML framework it runs
+// on, its operational status, and the reachable endpoint URL, so you
+// can audit which models are exposed, whether a deployment is healthy
+// or scaled to zero, and where inference traffic is served from.
 huggingface.inferenceEndpoint @defaults("name status") {
   id string
   name string

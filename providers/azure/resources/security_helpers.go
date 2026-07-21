@@ -30,3 +30,25 @@ func newKeyVaultKeyResource(runtime *plugin.Runtime, keyURI string) (*mqlAzureSu
 	}
 	return mqlKey.(*mqlAzureSubscriptionKeyVaultServiceKey), nil
 }
+
+// newKeyVaultSecretResource creates a typed azure.subscription.keyVaultService.secret
+// reference from a Key Vault secret URI (e.g. https://myvault.vault.azure.net/secrets/mysecret/version).
+// Returns nil resource if secretURI is empty.
+func newKeyVaultSecretResource(runtime *plugin.Runtime, secretURI string) (*mqlAzureSubscriptionKeyVaultServiceSecret, error) {
+	if secretURI == "" {
+		return nil, nil
+	}
+
+	// Use NewResource so that if the secret is already cached it gets reused.
+	// The id field (the secret URI) is the canonical identifier for key vault secrets.
+	mqlSecret, err := NewResource(runtime, "azure.subscription.keyVaultService.secret",
+		map[string]*llx.RawData{
+			"id":      llx.StringData(secretURI),
+			"managed": llx.BoolData(false),
+			"tags":    llx.MapData(map[string]interface{}{}, types.String),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlSecret.(*mqlAzureSubscriptionKeyVaultServiceSecret), nil
+}

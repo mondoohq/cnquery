@@ -109,24 +109,7 @@ func (g *mqlGcpProjectModelArmorService) templates() ([]any, error) {
 			return nil, err
 		}
 
-		filterConfig, err := protoToDict(template.FilterConfig)
-		if err != nil {
-			return nil, err
-		}
-		templateMetadata, err := protoToDict(template.TemplateMetadata)
-		if err != nil {
-			return nil, err
-		}
-
-		mqlTemplate, err := CreateResource(g.MqlRuntime, "gcp.project.modelArmorService.template", map[string]*llx.RawData{
-			"name":             llx.StringData(template.Name),
-			"projectId":        llx.StringData(projectId),
-			"createdAt":        llx.TimeDataPtr(timestampAsTimePtr(template.CreateTime)),
-			"updatedAt":        llx.TimeDataPtr(timestampAsTimePtr(template.UpdateTime)),
-			"labels":           llx.MapData(convert.MapToInterfaceMap(template.Labels), types.String),
-			"filterConfig":     llx.DictData(filterConfig),
-			"templateMetadata": llx.DictData(templateMetadata),
-		})
+		mqlTemplate, err := newMqlModelArmorServiceTemplate(g.MqlRuntime, projectId, template)
 		if err != nil {
 			return nil, err
 		}
@@ -134,6 +117,88 @@ func (g *mqlGcpProjectModelArmorService) templates() ([]any, error) {
 	}
 
 	return res, nil
+}
+
+// newMqlModelArmorServiceTemplate maps a Model Armor Template proto into the MQL
+// resource. Shared by templates() and the discovered-asset init.
+func newMqlModelArmorServiceTemplate(runtime *plugin.Runtime, projectId string, template *modelarmorpb.Template) (*mqlGcpProjectModelArmorServiceTemplate, error) {
+	filterConfig, err := protoToDict(template.FilterConfig)
+	if err != nil {
+		return nil, err
+	}
+	templateMetadata, err := protoToDict(template.TemplateMetadata)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := CreateResource(runtime, "gcp.project.modelArmorService.template", map[string]*llx.RawData{
+		"name":             llx.StringData(template.Name),
+		"projectId":        llx.StringData(projectId),
+		"createdAt":        llx.TimeDataPtr(timestampAsTimePtr(template.CreateTime)),
+		"updatedAt":        llx.TimeDataPtr(timestampAsTimePtr(template.UpdateTime)),
+		"labels":           llx.MapData(convert.MapToInterfaceMap(template.Labels), types.String),
+		"filterConfig":     llx.DictData(filterConfig),
+		"templateMetadata": llx.DictData(templateMetadata),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectModelArmorServiceTemplate), nil
+}
+
+// initGcpProjectModelArmorServiceTemplate resolves a single Model Armor template.
+// When invoked for a discovered gcp-modelarmor-template asset (no args), it
+// reconstructs the resource name from the asset identifier and fetches it so the
+// asset resolves to exactly one template instead of an empty husk.
+func initGcpProjectModelArmorServiceTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// Fully populated (e.g., from CreateResource in templates()); nothing to do.
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	if args == nil {
+		args = make(map[string]*llx.RawData)
+	}
+
+	// Resolve from the asset identifier when accessed as a discovered asset.
+	if len(args) == 0 {
+		ids := getAssetIdentifier(runtime)
+		if ids == nil {
+			return nil, nil, errors.New("no asset identifier found")
+		}
+		args["name"] = llx.StringData(fmt.Sprintf("projects/%s/locations/%s/templates/%s", ids.project, ids.region, ids.name))
+	}
+
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return args, nil, nil
+	}
+	name := nameRaw.Value.(string)
+
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
+	creds, err := conn.Credentials(modelarmor.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, nil, err
+	}
+	ctx := context.Background()
+	client, err := modelarmor.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
+	if err != nil {
+		return nil, nil, err
+	}
+	defer client.Close()
+
+	template, err := client.GetTemplate(ctx, &modelarmorpb.GetTemplateRequest{Name: name})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	res, err := newMqlModelArmorServiceTemplate(runtime, parseProjectFromPath(name), template)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, res, nil
 }
 
 func (g *mqlGcpProjectModelArmorServiceTemplate) id() (string, error) {

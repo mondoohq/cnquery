@@ -306,10 +306,10 @@ func (s *mqlFile) exists(path string) (bool, error) {
 func (l *mqlFilePermissions) id() (string, error) {
 	res := []byte("----------")
 
-	if l.IsDirectory.Data {
-		res[0] = 'd'
-	} else if l.IsSymlink.Data {
+	if l.IsSymlink.Data {
 		res[0] = 'l'
+	} else if l.IsDirectory.Data {
+		res[0] = 'd'
 	}
 
 	if l.User_readable.Data {

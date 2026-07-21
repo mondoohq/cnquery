@@ -12,6 +12,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	authorization "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cognitiveservices/armcognitiveservices/v3"
 	"github.com/rs/zerolog/log"
 
@@ -38,6 +39,59 @@ func initAzureSubscriptionCognitiveServicesService(runtime *plugin.Runtime, args
 
 func (a *mqlAzureSubscriptionCognitiveServicesService) id() (string, error) {
 	return "azure.subscription.cognitiveServicesService/" + a.SubscriptionId.Data, nil
+}
+
+// initAzureSubscriptionCognitiveServicesServiceAccount resolves a single AI
+// Services (Cognitive Services) account. When called without arguments it falls
+// back to the discovered asset's platform id (see getAssetIdentifier), so an
+// azure-cognitiveservices-account asset resolves to its backing account instead
+// of an empty husk.
+func initAzureSubscriptionCognitiveServicesServiceAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["id"] = llx.StringData(ids.id)
+		}
+	}
+
+	if args["id"] == nil {
+		return nil, nil, errors.New("id required to fetch azure cognitive services account")
+	}
+
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+
+	id := args["id"].Value.(string)
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, nil, err
+	}
+	accountName, err := resourceID.Component("accounts")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	client, err := armcognitiveservices.NewAccountsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	account, err := client.Get(context.Background(), resourceID.ResourceGroup, accountName, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	res, err := cognitiveServicesAccountToMql(runtime, &account.Account)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, res, nil
 }
 
 func (a *mqlAzureSubscriptionCognitiveServicesServiceAccount) id() (string, error) {
@@ -95,13 +149,27 @@ func cognitiveServicesAccountToMql(runtime *plugin.Runtime, account *armcognitiv
 	}
 
 	var publicNetworkAccess, customSubDomainName string
-	var cmkKeySource, cmkKeyName, cmkKeyVaultUri string
+	var cmkKeySource, cmkKeyName, cmkKeyVaultUri, cmkKeyVersion, cmkIdentityClientId string
 	var endpoint, provisioningState string
 	var disableLocalAuth, restrictOutboundNetworkAccess, storedCompletionsDisabled bool
 	var networkAclsDefaultAction, networkAclsBypass string
+	var creationTime *time.Time
 	networkAcls := llx.NilData
 
+	var abusePenaltyAction, raiMonitorAdxStorage, raiMonitorIdentityClientId, multiRegionRoutingMethod string
+	var abusePenaltyExpiration *time.Time
+	var abusePenaltyRateLimit float64
+	allowedFqdnList := []any{}
+	ipRules := []any{}
+	vnetRules := []any{}
+	userOwnedStorage := []any{}
+	networkInjections := []any{}
+	commitmentPlanAssociations := []any{}
+	multiRegionSettings := []any{}
+
 	if p := account.Properties; p != nil {
+		// DateCreated arrives as an ISO 8601 string; parse it to a timestamp.
+		creationTime = parseAzureTimestamp(p.DateCreated)
 		if p.PublicNetworkAccess != nil {
 			publicNetworkAccess = string(*p.PublicNetworkAccess)
 		}
@@ -126,6 +194,33 @@ func cognitiveServicesAccountToMql(runtime *plugin.Runtime, account *armcognitiv
 			if p.NetworkACLs.Bypass != nil {
 				networkAclsBypass = string(*p.NetworkACLs.Bypass)
 			}
+			for _, ipr := range p.NetworkACLs.IPRules {
+				if ipr != nil && ipr.Value != nil {
+					ipRules = append(ipRules, *ipr.Value)
+				}
+			}
+			for _, vr := range p.NetworkACLs.VirtualNetworkRules {
+				if vr == nil || vr.ID == nil {
+					continue
+				}
+				var state string
+				if vr.State != nil {
+					state = *vr.State
+				}
+				var ignore bool
+				if vr.IgnoreMissingVnetServiceEndpoint != nil {
+					ignore = *vr.IgnoreMissingVnetServiceEndpoint
+				}
+				mqlVr, err := CreateResource(runtime, "azure.subscription.cognitiveServicesService.account.virtualNetworkRule", map[string]*llx.RawData{
+					"id":                               llx.StringDataPtr(vr.ID),
+					"state":                            llx.StringData(state),
+					"ignoreMissingVnetServiceEndpoint": llx.BoolData(ignore),
+				})
+				if err != nil {
+					return nil, err
+				}
+				vnetRules = append(vnetRules, mqlVr)
+			}
 		}
 		if enc := p.Encryption; enc != nil {
 			if enc.KeySource != nil {
@@ -138,6 +233,12 @@ func cognitiveServicesAccountToMql(runtime *plugin.Runtime, account *armcognitiv
 				if enc.KeyVaultProperties.KeyVaultURI != nil {
 					cmkKeyVaultUri = *enc.KeyVaultProperties.KeyVaultURI
 				}
+				if enc.KeyVaultProperties.KeyVersion != nil {
+					cmkKeyVersion = *enc.KeyVaultProperties.KeyVersion
+				}
+				if enc.KeyVaultProperties.IdentityClientID != nil {
+					cmkIdentityClientId = *enc.KeyVaultProperties.IdentityClientID
+				}
 			}
 		}
 		if p.Endpoint != nil {
@@ -149,29 +250,136 @@ func cognitiveServicesAccountToMql(runtime *plugin.Runtime, account *armcognitiv
 		if p.StoredCompletionsDisabled != nil {
 			storedCompletionsDisabled = *p.StoredCompletionsDisabled
 		}
+		for _, fqdn := range p.AllowedFqdnList {
+			if fqdn != nil {
+				allowedFqdnList = append(allowedFqdnList, *fqdn)
+			}
+		}
+		if ap := p.AbusePenalty; ap != nil {
+			if ap.Action != nil {
+				abusePenaltyAction = string(*ap.Action)
+			}
+			abusePenaltyExpiration = ap.Expiration
+			if ap.RateLimitPercentage != nil {
+				abusePenaltyRateLimit = float64(*ap.RateLimitPercentage)
+			}
+		}
+		if rmc := p.RaiMonitorConfig; rmc != nil {
+			if rmc.AdxStorageResourceID != nil {
+				raiMonitorAdxStorage = *rmc.AdxStorageResourceID
+			}
+			if rmc.IdentityClientID != nil {
+				raiMonitorIdentityClientId = *rmc.IdentityClientID
+			}
+		}
+		for _, uos := range p.UserOwnedStorage {
+			if uos == nil || uos.ResourceID == nil {
+				continue
+			}
+			var identityClientId string
+			if uos.IdentityClientID != nil {
+				identityClientId = *uos.IdentityClientID
+			}
+			mqlUos, err := CreateResource(runtime, "azure.subscription.cognitiveServicesService.account.userOwnedStorage", map[string]*llx.RawData{
+				"id":               llx.StringDataPtr(uos.ResourceID),
+				"identityClientId": llx.StringData(identityClientId),
+			})
+			if err != nil {
+				return nil, err
+			}
+			userOwnedStorage = append(userOwnedStorage, mqlUos)
+		}
+		for _, cpa := range p.CommitmentPlanAssociations {
+			if cpa == nil {
+				continue
+			}
+			d, err := convert.JsonToDict(cpa)
+			if err != nil {
+				return nil, err
+			}
+			commitmentPlanAssociations = append(commitmentPlanAssociations, d)
+		}
+		if loc := p.Locations; loc != nil {
+			if loc.RoutingMethod != nil {
+				multiRegionRoutingMethod = string(*loc.RoutingMethod)
+			}
+			for _, rs := range loc.Regions {
+				if rs == nil {
+					continue
+				}
+				d, err := convert.JsonToDict(rs)
+				if err != nil {
+					return nil, err
+				}
+				multiRegionSettings = append(multiRegionSettings, d)
+			}
+		}
+		for _, ni := range p.NetworkInjections {
+			if ni == nil || ni.SubnetArmID == nil {
+				continue
+			}
+			var scenario string
+			if ni.Scenario != nil {
+				scenario = string(*ni.Scenario)
+			}
+			var useMSFT bool
+			if ni.UseMicrosoftManagedNetwork != nil {
+				useMSFT = *ni.UseMicrosoftManagedNetwork
+			}
+			mqlNi, err := CreateResource(runtime, "azure.subscription.cognitiveServicesService.account.networkInjection", map[string]*llx.RawData{
+				// The subnet ARM ID alone is not unique: the same subnet can back
+				// more than one injection scenario. Key the cache on subnet+scenario
+				// while keeping the user-facing id the bare subnet ID so subnet()
+				// still resolves.
+				"__id":                       llx.StringData(*ni.SubnetArmID + "/" + scenario),
+				"id":                         llx.StringDataPtr(ni.SubnetArmID),
+				"scenario":                   llx.StringData(scenario),
+				"useMicrosoftManagedNetwork": llx.BoolData(useMSFT),
+			})
+			if err != nil {
+				return nil, err
+			}
+			networkInjections = append(networkInjections, mqlNi)
+		}
 	}
 
 	res, err := CreateResource(runtime, "azure.subscription.cognitiveServicesService.account", map[string]*llx.RawData{
-		"id":                            llx.StringDataPtr(account.ID),
-		"name":                          llx.StringDataPtr(account.Name),
-		"location":                      llx.StringDataPtr(account.Location),
-		"kind":                          llx.StringDataPtr(account.Kind),
-		"tags":                          llx.MapData(convert.PtrMapStrToInterface(account.Tags), types.String),
-		"sku":                           llx.DictData(sku),
-		"identity":                      llx.DictData(identity),
-		"publicNetworkAccess":           llx.StringData(publicNetworkAccess),
-		"disableLocalAuth":              llx.BoolData(disableLocalAuth),
-		"restrictOutboundNetworkAccess": llx.BoolData(restrictOutboundNetworkAccess),
-		"customSubDomainName":           llx.StringData(customSubDomainName),
-		"networkAcls":                   networkAcls,
-		"networkAclsDefaultAction":      llx.StringData(networkAclsDefaultAction),
-		"networkAclsBypass":             llx.StringData(networkAclsBypass),
-		"cmkKeySource":                  llx.StringData(cmkKeySource),
-		"cmkKeyName":                    llx.StringData(cmkKeyName),
-		"cmkKeyVaultUri":                llx.StringData(cmkKeyVaultUri),
-		"endpoint":                      llx.StringData(endpoint),
-		"provisioningState":             llx.StringData(provisioningState),
-		"storedCompletionsDisabled":     llx.BoolData(storedCompletionsDisabled),
+		"id":                              llx.StringDataPtr(account.ID),
+		"name":                            llx.StringDataPtr(account.Name),
+		"location":                        llx.StringDataPtr(account.Location),
+		"kind":                            llx.StringDataPtr(account.Kind),
+		"tags":                            llx.MapData(convert.PtrMapStrToInterface(account.Tags), types.String),
+		"sku":                             llx.DictData(sku),
+		"identity":                        llx.DictData(identity),
+		"publicNetworkAccess":             llx.StringData(publicNetworkAccess),
+		"disableLocalAuth":                llx.BoolData(disableLocalAuth),
+		"restrictOutboundNetworkAccess":   llx.BoolData(restrictOutboundNetworkAccess),
+		"customSubDomainName":             llx.StringData(customSubDomainName),
+		"networkAcls":                     networkAcls,
+		"networkAclsDefaultAction":        llx.StringData(networkAclsDefaultAction),
+		"networkAclsBypass":               llx.StringData(networkAclsBypass),
+		"cmkKeySource":                    llx.StringData(cmkKeySource),
+		"cmkKeyName":                      llx.StringData(cmkKeyName),
+		"cmkKeyVaultUri":                  llx.StringData(cmkKeyVaultUri),
+		"endpoint":                        llx.StringData(endpoint),
+		"provisioningState":               llx.StringData(provisioningState),
+		"storedCompletionsDisabled":       llx.BoolData(storedCompletionsDisabled),
+		"creationTime":                    llx.TimeDataPtr(creationTime),
+		"allowedFqdnList":                 llx.ArrayData(allowedFqdnList, types.String),
+		"ipRules":                         llx.ArrayData(ipRules, types.String),
+		"virtualNetworkRules":             llx.ArrayData(vnetRules, types.Resource("azure.subscription.cognitiveServicesService.account.virtualNetworkRule")),
+		"abusePenaltyAction":              llx.StringData(abusePenaltyAction),
+		"abusePenaltyExpiration":          llx.TimeDataPtr(abusePenaltyExpiration),
+		"abusePenaltyRateLimitPercentage": llx.FloatData(abusePenaltyRateLimit),
+		"cmkKeyVersion":                   llx.StringData(cmkKeyVersion),
+		"cmkIdentityClientId":             llx.StringData(cmkIdentityClientId),
+		"userOwnedStorageAccounts":        llx.ArrayData(userOwnedStorage, types.Resource("azure.subscription.cognitiveServicesService.account.userOwnedStorage")),
+		"raiMonitorAdxStorageResourceId":  llx.StringData(raiMonitorAdxStorage),
+		"raiMonitorIdentityClientId":      llx.StringData(raiMonitorIdentityClientId),
+		"commitmentPlanAssociations":      llx.ArrayData(commitmentPlanAssociations, types.Dict),
+		"multiRegionSettings":             llx.ArrayData(multiRegionSettings, types.Dict),
+		"multiRegionRoutingMethod":        llx.StringData(multiRegionRoutingMethod),
+		"networkInjections":               llx.ArrayData(networkInjections, types.Resource("azure.subscription.cognitiveServicesService.account.networkInjection")),
 	})
 	if err != nil {
 		return nil, err
@@ -182,11 +390,114 @@ func cognitiveServicesAccountToMql(runtime *plugin.Runtime, account *armcognitiv
 		return nil, err
 	}
 	mqlAccount.cacheSystemData = sysData
+	if account.Properties != nil {
+		mqlAccount.cachePrivateEndpointConnections = account.Properties.PrivateEndpointConnections
+	}
 	return mqlAccount, nil
 }
 
 type mqlAzureSubscriptionCognitiveServicesServiceAccountInternal struct {
-	cacheSystemData any
+	cacheSystemData                 any
+	cachePrivateEndpointConnections []*armcognitiveservices.PrivateEndpointConnection
+}
+
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccount) privateEndpointConnections() ([]any, error) {
+	return azurePrivateEndpointConnectionsToMql(a.MqlRuntime, a.cachePrivateEndpointConnections)
+}
+
+// roleAssignments returns the effective Microsoft Entra role assignments at the
+// account scope. NewListForScopePager with no filter returns assignments at the
+// scope and inherited from the resource group, subscription, and management-
+// group ancestors, so the result reflects effective RBAC access to the account
+// (not just assignments made directly on it).
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccount) roleAssignments() ([]any, error) {
+	conn, ok := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+
+	resourceID, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := authorization.NewRoleAssignmentsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	pager := client.NewListForScopePager(a.Id.Data, &authorization.RoleAssignmentsClientListForScopeOptions{})
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list cognitive services account role assignments due to access denied")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, roleAssignment := range page.Value {
+			if roleAssignment == nil {
+				continue
+			}
+			mqlRoleAssignment, err := newMqlRoleAssignment(a.MqlRuntime, roleAssignment)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlRoleAssignment)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRule) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRule) subnet() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+	return cognitiveServicesResolveSubnet(a.MqlRuntime, &a.Subnet, a.Id.Data)
+}
+
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountNetworkInjection) subnet() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+	return cognitiveServicesResolveSubnet(a.MqlRuntime, &a.Subnet, a.Id.Data)
+}
+
+// cognitiveServicesResolveSubnet resolves a subnet ARM ID to the typed subnet
+// resource, marking the field null when the ID is empty. Shared by the
+// virtual-network-rule and network-injection sub-resources.
+func cognitiveServicesResolveSubnet(runtime *plugin.Runtime, field *plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet], subnetId string) (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+	if subnetId == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "azure.subscription.networkService.subnet",
+		map[string]*llx.RawData{"id": llx.StringData(subnetId)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
+}
+
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountUserOwnedStorage) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountUserOwnedStorage) storageAccount() (*mqlAzureSubscriptionStorageServiceAccount, error) {
+	if a.Id.Data == "" {
+		a.StorageAccount.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.storageService.account",
+		map[string]*llx.RawData{"id": llx.StringData(a.Id.Data)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionStorageServiceAccount), nil
 }
 
 func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy) id() (string, error) {
@@ -399,7 +710,21 @@ func raiPolicyToMql(runtime *plugin.Runtime, pol *armcognitiveservices.RaiPolicy
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy), nil
+	mqlPolicy := res.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy)
+	sysData, err := convert.JsonToDict(pol.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlPolicy.cacheSystemData = sysData
+	return mqlPolicy, nil
+}
+
+type mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func raiContentFilterToMql(runtime *plugin.Runtime, pol *armcognitiveservices.RaiPolicy, idx int, f *armcognitiveservices.RaiPolicyContentFilter) (*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter, error) {
@@ -673,11 +998,21 @@ func cognitiveServicesDeploymentToMql(runtime *plugin.Runtime, dep *armcognitive
 				parsed.SubscriptionID, parsed.ResourceGroup, parsed.Path["accounts"])
 		}
 	}
+	sysData, err := convert.JsonToDict(dep.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlDep.cacheSystemData = sysData
 	return mqlDep, nil
 }
 
 type mqlAzureSubscriptionCognitiveServicesServiceAccountDeploymentInternal struct {
-	cacheAccountId string
+	cacheAccountId  string
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 // raiPolicy resolves the deployment's content-filter policy by matching raiPolicyName
@@ -752,12 +1087,27 @@ func raiTopicToMql(runtime *plugin.Runtime, t *armcognitiveservices.RaiTopic) (*
 		"failedReason":   llx.StringData(failedReason),
 		"sampleBlobUrl":  llx.StringData(sampleBlobUrl),
 		"createdAt":      llx.TimeDataPtr(createdAt),
+		"creationTime":   llx.TimeDataPtr(createdAt),
 		"lastModifiedAt": llx.TimeDataPtr(lastModifiedAt),
 	})
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic), nil
+	mqlTopic := res.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic)
+	sysData, err := convert.JsonToDict(t.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlTopic.cacheSystemData = sysData
+	return mqlTopic, nil
+}
+
+type mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopicInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountProject) id() (string, error) {
@@ -862,7 +1212,21 @@ func cognitiveServicesProjectToMql(runtime *plugin.Runtime, proj *armcognitivese
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject), nil
+	mqlProject := res.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject)
+	sysData, err := convert.JsonToDict(proj.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlProject.cacheSystemData = sysData
+	return mqlProject, nil
+}
+
+type mqlAzureSubscriptionCognitiveServicesServiceAccountProjectInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountProject) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionCognitiveServicesServiceAccount) connections() ([]any, error) {
@@ -1023,5 +1387,31 @@ func cognitiveServicesConnectionToMql(runtime *plugin.Runtime, resourceType stri
 	if err != nil {
 		return nil, err
 	}
+	sysData, err := convert.JsonToDict(c.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	switch r := res.(type) {
+	case *mqlAzureSubscriptionCognitiveServicesServiceAccountConnection:
+		r.cacheSystemData = sysData
+	case *mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection:
+		r.cacheSystemData = sysData
+	}
 	return res, nil
+}
+
+type mqlAzureSubscriptionCognitiveServicesServiceAccountConnectionInternal struct {
+	cacheSystemData any
+}
+
+type mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnectionInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountConnection) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }

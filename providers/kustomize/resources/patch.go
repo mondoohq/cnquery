@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"gopkg.in/yaml.v3"
@@ -78,14 +79,32 @@ func newMqlKustomizePatch(runtime *plugin.Runtime, kustPath string, index int, p
 		// containment check so a symlinked scan root (e.g. /tmp on macOS,
 		// which resolves to /private/tmp) doesn't cause false rejections.
 		full := filepath.Join(kustPath, p.Path)
-		base, baseErr := filepath.EvalSymlinks(kustPath)
-		resolved, resErr := filepath.EvalSymlinks(full)
-		if baseErr == nil && resErr == nil {
-			if rel, err := filepath.Rel(base, resolved); err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
-				if data, err := os.ReadFile(resolved); err == nil {
-					raw = data
-				}
+		// Prefer symlink-resolved paths for the containment check (this catches
+		// a symlink inside the directory whose target escapes it). When symlink
+		// resolution fails for any reason other than the target being a
+		// resolvable escape — e.g. a broken/unresolvable symlink component in
+		// kustPath itself — fall back to a lexical containment check so a
+		// perfectly readable patch file isn't silently dropped and misclassified
+		// as an empty strategic-merge patch.
+		base, target := filepath.Clean(kustPath), filepath.Clean(full)
+		if rb, err1 := filepath.EvalSymlinks(kustPath); err1 == nil {
+			if rt, err2 := filepath.EvalSymlinks(full); err2 == nil {
+				base, target = rb, rt
 			}
+		}
+		if rel, err := filepath.Rel(base, target); err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+			data, readErr := os.ReadFile(target)
+			switch {
+			case readErr == nil:
+				raw = data
+			case !os.IsNotExist(readErr):
+				// A genuinely missing file is the expected best-effort case; any
+				// other read failure would silently misclassify the patch, so
+				// surface it.
+				log.Warn().Err(readErr).Str("path", p.Path).Msg("kustomize: could not read patch file; treating it as an empty patch")
+			}
+		} else {
+			log.Warn().Str("path", p.Path).Msg("kustomize: patch path escapes the kustomization directory; ignoring")
 		}
 	}
 

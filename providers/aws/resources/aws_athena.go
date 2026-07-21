@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"strings"
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/service/athena"
@@ -17,6 +18,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 func (a *mqlAwsAthena) id() (string, error) {
@@ -80,6 +82,51 @@ func (a *mqlAwsAthena) getWorkgroups(conn *connection.AwsConnection) []*jobpool.
 	return tasks
 }
 
+// initAwsAthenaWorkgroup resolves a single Athena workgroup. When invoked
+// for a discovered asset (aws-athena-workgroup platform), no args are passed,
+// so the workgroup ARN is read from the connection's asset identifier and used
+// to select the matching workgroup from the parent collection.
+func initAwsAthenaWorkgroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	if len(args) == 0 {
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
+		}
+	}
+	if args["arn"] == nil && args["name"] == nil {
+		return args, nil, fmt.Errorf("arn or name required to fetch athena workgroup")
+	}
+
+	obj, err := CreateResource(runtime, "aws.athena", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	wgs := obj.(*mqlAwsAthena).GetWorkgroups()
+	if wgs.Error != nil {
+		return nil, nil, wgs.Error
+	}
+
+	var wantArn, wantName string
+	if args["arn"] != nil {
+		wantArn = args["arn"].Value.(string)
+	}
+	if args["name"] != nil {
+		wantName = args["name"].Value.(string)
+	}
+	for _, r := range wgs.Data {
+		wg := r.(*mqlAwsAthenaWorkgroup)
+		if (wantArn != "" && wg.Arn.Data == wantArn) || (wantName != "" && wg.Name.Data == wantName) {
+			return args, wg, nil
+		}
+	}
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.athena.workgroup with arn %q or name %q not found", wantArn, wantName)
+}
+
 func newMqlAwsAthenaWorkgroupFromSummary(runtime *plugin.Runtime, region string, accountID string, wg *athena_types.WorkGroupSummary) (*mqlAwsAthenaWorkgroup, error) {
 	if wg == nil {
 		return nil, fmt.Errorf("workgroup summary is nil")
@@ -103,14 +150,23 @@ func newMqlAwsAthenaWorkgroupFromSummary(runtime *plugin.Runtime, region string,
 }
 
 type mqlAwsAthenaWorkgroupInternal struct {
-	fetched           bool
-	cachedEnforce     bool
-	cachedPublish     bool
-	cachedRequester   bool
-	cachedBytesCutoff int64
-	cachedEngineVer   any
-	cachedResultCfg   any
-	lock              sync.Mutex
+	fetched                   bool
+	cachedEnforce             bool
+	cachedPublish             bool
+	cachedRequester           bool
+	cachedBytesCutoff         int64
+	cachedEngineVer           any
+	cachedResultCfg           any
+	cachedEncOption           string
+	cachedKmsKeyRef           string
+	cachedOutputLoc           string
+	cachedMinEncEnforced      bool
+	cachedExpectedBucketOwner string
+	cachedAclOption           string
+	cachedExecutionRole       string
+	cachedCustomerKmsKey      string
+	cachedAdditionalConfig    string
+	lock                      sync.Mutex
 }
 
 func (a *mqlAwsAthenaWorkgroup) fetchConfig() error {
@@ -148,6 +204,14 @@ func (a *mqlAwsAthenaWorkgroup) fetchConfig() error {
 		if cfg.BytesScannedCutoffPerQuery != nil {
 			a.cachedBytesCutoff = *cfg.BytesScannedCutoffPerQuery
 		}
+		if cfg.EnableMinimumEncryptionConfiguration != nil {
+			a.cachedMinEncEnforced = *cfg.EnableMinimumEncryptionConfiguration
+		}
+		a.cachedAdditionalConfig = convert.ToValue(cfg.AdditionalConfiguration)
+		a.cachedExecutionRole = convert.ToValue(cfg.ExecutionRole)
+		if cc := cfg.CustomerContentEncryptionConfiguration; cc != nil {
+			a.cachedCustomerKmsKey = convert.ToValue(cc.KmsKey)
+		}
 		var err2 error
 		a.cachedEngineVer, err2 = convert.JsonToDict(cfg.EngineVersion)
 		if err2 != nil {
@@ -156,6 +220,21 @@ func (a *mqlAwsAthenaWorkgroup) fetchConfig() error {
 		a.cachedResultCfg, err2 = convert.JsonToDict(cfg.ResultConfiguration)
 		if err2 != nil {
 			return err2
+		}
+		if rc := cfg.ResultConfiguration; rc != nil {
+			if rc.OutputLocation != nil {
+				a.cachedOutputLoc = *rc.OutputLocation
+			}
+			a.cachedExpectedBucketOwner = convert.ToValue(rc.ExpectedBucketOwner)
+			if rc.AclConfiguration != nil {
+				a.cachedAclOption = string(rc.AclConfiguration.S3AclOption)
+			}
+			if rc.EncryptionConfiguration != nil {
+				a.cachedEncOption = string(rc.EncryptionConfiguration.EncryptionOption)
+				if rc.EncryptionConfiguration.KmsKey != nil {
+					a.cachedKmsKeyRef = *rc.EncryptionConfiguration.KmsKey
+				}
+			}
 		}
 	}
 	a.fetched = true
@@ -202,6 +281,140 @@ func (a *mqlAwsAthenaWorkgroup) resultConfiguration() (any, error) {
 		return nil, err
 	}
 	return a.cachedResultCfg, nil
+}
+
+func (a *mqlAwsAthenaWorkgroup) resultOutputLocation() (string, error) {
+	if err := a.fetchConfig(); err != nil {
+		return "", err
+	}
+	return a.cachedOutputLoc, nil
+}
+
+func (a *mqlAwsAthenaWorkgroup) resultEncryptionOption() (string, error) {
+	if err := a.fetchConfig(); err != nil {
+		return "", err
+	}
+	return a.cachedEncOption, nil
+}
+
+func (a *mqlAwsAthenaWorkgroup) encrypted() (bool, error) {
+	if err := a.fetchConfig(); err != nil {
+		return false, err
+	}
+	return a.cachedEncOption != "", nil
+}
+
+func (a *mqlAwsAthenaWorkgroup) kmsKey() (*mqlAwsKmsKey, error) {
+	if err := a.fetchConfig(); err != nil {
+		return nil, err
+	}
+	if a.cachedKmsKeyRef == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn":    llx.StringData(a.cachedKmsKeyRef),
+			"region": llx.StringData(a.Region.Data),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
+func (a *mqlAwsAthenaWorkgroup) minimumEncryptionEnforced() (bool, error) {
+	if err := a.fetchConfig(); err != nil {
+		return false, err
+	}
+	return a.cachedMinEncEnforced, nil
+}
+
+func (a *mqlAwsAthenaWorkgroup) expectedResultBucketOwner() (string, error) {
+	if err := a.fetchConfig(); err != nil {
+		return "", err
+	}
+	return a.cachedExpectedBucketOwner, nil
+}
+
+func (a *mqlAwsAthenaWorkgroup) resultAclOption() (string, error) {
+	if err := a.fetchConfig(); err != nil {
+		return "", err
+	}
+	return a.cachedAclOption, nil
+}
+
+func (a *mqlAwsAthenaWorkgroup) additionalConfiguration() (string, error) {
+	if err := a.fetchConfig(); err != nil {
+		return "", err
+	}
+	return a.cachedAdditionalConfig, nil
+}
+
+func (a *mqlAwsAthenaWorkgroup) resultBucket() (*mqlAwsS3Bucket, error) {
+	if err := a.fetchConfig(); err != nil {
+		return nil, err
+	}
+	bucket := athenaBucketFromS3Location(a.cachedOutputLoc)
+	if bucket == "" {
+		a.ResultBucket.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlBucket, err := NewResource(a.MqlRuntime, "aws.s3.bucket",
+		map[string]*llx.RawData{
+			"name": llx.StringData(bucket),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlBucket.(*mqlAwsS3Bucket), nil
+}
+
+func (a *mqlAwsAthenaWorkgroup) executionRole() (*mqlAwsIamRole, error) {
+	if err := a.fetchConfig(); err != nil {
+		return nil, err
+	}
+	if a.cachedExecutionRole == "" {
+		a.ExecutionRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlRole, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{
+			"arn": llx.StringData(a.cachedExecutionRole),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlRole.(*mqlAwsIamRole), nil
+}
+
+func (a *mqlAwsAthenaWorkgroup) customerContentKmsKey() (*mqlAwsKmsKey, error) {
+	if err := a.fetchConfig(); err != nil {
+		return nil, err
+	}
+	if a.cachedCustomerKmsKey == "" {
+		a.CustomerContentKmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn":    llx.StringData(a.cachedCustomerKmsKey),
+			"region": llx.StringData(a.Region.Data),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
+// athenaBucketFromS3Location extracts the bucket name from an Athena result
+// output location such as "s3://my-results-bucket/prefix/".
+func athenaBucketFromS3Location(location string) string {
+	trimmed := strings.TrimPrefix(location, "s3://")
+	if trimmed == location {
+		return ""
+	}
+	return strings.SplitN(trimmed, "/", 2)[0]
 }
 
 func (a *mqlAwsAthena) dataCatalogs() ([]any, error) {
@@ -287,6 +500,13 @@ type mqlAwsAthenaDataCatalogInternal struct {
 	lock          sync.Mutex
 }
 
+const athenaDataCatalogArnPattern = "arn:aws:athena:%s:%s:datacatalog/%s"
+
+func (a *mqlAwsAthenaDataCatalog) arn() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return fmt.Sprintf(athenaDataCatalogArnPattern, a.Region.Data, conn.AccountId(), a.Name.Data), nil
+}
+
 func (a *mqlAwsAthenaDataCatalog) fetchDetail() error {
 	if a.fetchedDetail {
 		return nil
@@ -333,6 +553,43 @@ func (a *mqlAwsAthenaDataCatalog) parameters() (map[string]any, error) {
 		return nil, err
 	}
 	return a.cachedParams, nil
+}
+
+// lambdaFunction resolves the Lambda function backing a LAMBDA or FEDERATED
+// metadata connector. Athena stores it under the "function" parameter, or as a
+// pair of "metadata-function"/"record-function" parameters for split
+// connectors; the metadata function is used when present.
+func (a *mqlAwsAthenaDataCatalog) lambdaFunction() (*mqlAwsLambdaFunction, error) {
+	if err := a.fetchDetail(); err != nil {
+		return nil, err
+	}
+	arn := athenaLambdaArnFromParams(a.cachedParams)
+	if arn == "" {
+		a.LambdaFunction.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlFn, err := NewResource(a.MqlRuntime, "aws.lambda.function",
+		map[string]*llx.RawData{
+			"arn": llx.StringData(arn),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlFn.(*mqlAwsLambdaFunction), nil
+}
+
+// athenaLambdaArnFromParams returns the Lambda function ARN from a data-catalog
+// parameter map, preferring the single "function" key and falling back to
+// "metadata-function". Returns "" when no Lambda ARN is present.
+func athenaLambdaArnFromParams(params map[string]any) string {
+	for _, key := range []string{"function", "metadata-function"} {
+		if v, ok := params[key]; ok {
+			if s, ok := v.(string); ok && strings.HasPrefix(s, "arn:") {
+				return s
+			}
+		}
+	}
+	return ""
 }
 
 func (a *mqlAwsAthena) namedQueries() ([]any, error) {
@@ -425,6 +682,24 @@ func newMqlAwsAthenaNamedQuery(runtime *plugin.Runtime, region string, nq athena
 	return resource.(*mqlAwsAthenaNamedQuery), nil
 }
 
+func (a *mqlAwsAthenaNamedQuery) queryWorkgroup() (*mqlAwsAthenaWorkgroup, error) {
+	name := a.WorkGroup.Data
+	if name == "" {
+		a.QueryWorkgroup.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arn := fmt.Sprintf("arn:aws:athena:%s:%s:workgroup/%s", a.Region.Data, conn.AccountId(), name)
+	mqlWg, err := NewResource(a.MqlRuntime, "aws.athena.workgroup",
+		map[string]*llx.RawData{
+			"arn": llx.StringData(arn),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlWg.(*mqlAwsAthenaWorkgroup), nil
+}
+
 func (a *mqlAwsAthenaWorkgroup) tags() (map[string]any, error) {
 	if a.Arn.Error != nil {
 		return nil, a.Arn.Error
@@ -462,4 +737,196 @@ func (a *mqlAwsAthenaWorkgroup) tags() (map[string]any, error) {
 		nextToken = resp.NextToken
 	}
 	return tags, nil
+}
+
+func (a *mqlAwsAthena) capacityReservations() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getCapacityReservations(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		if poolOfJobs.Jobs[i].Result != nil {
+			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsAthena) getCapacityReservations(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("athena>getCapacityReservations>calling aws with region %s", region)
+
+			svc := conn.Athena(region)
+			ctx := context.Background()
+			res := []any{}
+
+			paginator := athena.NewListCapacityReservationsPaginator(svc, &athena.ListCapacityReservationsInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, cr := range page.CapacityReservations {
+					mqlCr, err := newMqlAwsAthenaCapacityReservation(a.MqlRuntime, region, conn.AccountId(), cr)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlCr)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func newMqlAwsAthenaCapacityReservation(runtime *plugin.Runtime, region string, accountID string, cr athena_types.CapacityReservation) (*mqlAwsAthenaCapacityReservation, error) {
+	arn := fmt.Sprintf("arn:aws:athena:%s:%s:capacity-reservation/%s", region, accountID, convert.ToValue(cr.Name))
+
+	resource, err := CreateResource(runtime, "aws.athena.capacityReservation",
+		map[string]*llx.RawData{
+			"__id":                       llx.StringData(arn),
+			"arn":                        llx.StringData(arn),
+			"name":                       llx.StringDataPtr(cr.Name),
+			"status":                     llx.StringData(string(cr.Status)),
+			"allocatedDpus":              llx.IntDataPtr(cr.AllocatedDpus),
+			"targetDpus":                 llx.IntDataPtr(cr.TargetDpus),
+			"createdAt":                  llx.TimeDataPtr(cr.CreationTime),
+			"lastSuccessfulAllocationAt": llx.TimeDataPtr(cr.LastSuccessfulAllocationTime),
+			"region":                     llx.StringData(region),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlAwsAthenaCapacityReservation), nil
+}
+
+func (a *mqlAwsAthenaDataCatalog) databases() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Athena(a.Region.Data)
+	ctx := context.Background()
+
+	catalogName := a.Name.Data
+	res := []any{}
+	paginator := athena.NewListDatabasesPaginator(svc, &athena.ListDatabasesInput{
+		CatalogName: &catalogName,
+	})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				log.Warn().Str("catalog", catalogName).Msg("error listing Athena databases")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, db := range page.DatabaseList {
+			mqlDb, err := newMqlAwsAthenaDatabase(a.MqlRuntime, a.Region.Data, catalogName, db)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlDb)
+		}
+	}
+	return res, nil
+}
+
+func newMqlAwsAthenaDatabase(runtime *plugin.Runtime, region string, catalogName string, db athena_types.Database) (*mqlAwsAthenaDatabase, error) {
+	id := fmt.Sprintf("aws.athena.database/%s/%s/%s", region, catalogName, convert.ToValue(db.Name))
+
+	resource, err := CreateResource(runtime, "aws.athena.database",
+		map[string]*llx.RawData{
+			"__id":        llx.StringData(id),
+			"name":        llx.StringDataPtr(db.Name),
+			"catalogName": llx.StringData(catalogName),
+			"description": llx.StringDataPtr(db.Description),
+			"parameters":  llx.MapData(stringMapToAny(db.Parameters), types.String),
+			"region":      llx.StringData(region),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlAwsAthenaDatabase), nil
+}
+
+func (a *mqlAwsAthenaDatabase) tables() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Athena(a.Region.Data)
+	ctx := context.Background()
+
+	catalogName := a.CatalogName.Data
+	dbName := a.Name.Data
+	res := []any{}
+	paginator := athena.NewListTableMetadataPaginator(svc, &athena.ListTableMetadataInput{
+		CatalogName:  &catalogName,
+		DatabaseName: &dbName,
+	})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				log.Warn().Str("catalog", catalogName).Str("database", dbName).Msg("error listing Athena table metadata")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, tbl := range page.TableMetadataList {
+			mqlTbl, err := newMqlAwsAthenaTable(a.MqlRuntime, a.Region.Data, catalogName, dbName, tbl)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlTbl)
+		}
+	}
+	return res, nil
+}
+
+func newMqlAwsAthenaTable(runtime *plugin.Runtime, region, catalogName, dbName string, tbl athena_types.TableMetadata) (*mqlAwsAthenaTable, error) {
+	id := fmt.Sprintf("aws.athena.table/%s/%s/%s/%s", region, catalogName, dbName, convert.ToValue(tbl.Name))
+
+	resource, err := CreateResource(runtime, "aws.athena.table",
+		map[string]*llx.RawData{
+			"__id":          llx.StringData(id),
+			"name":          llx.StringDataPtr(tbl.Name),
+			"tableType":     llx.StringDataPtr(tbl.TableType),
+			"createdAt":     llx.TimeDataPtr(tbl.CreateTime),
+			"lastAccessAt":  llx.TimeDataPtr(tbl.LastAccessTime),
+			"columns":       llx.ArrayData(athenaColumnsToDict(tbl.Columns), types.Dict),
+			"partitionKeys": llx.ArrayData(athenaColumnsToDict(tbl.PartitionKeys), types.Dict),
+			"parameters":    llx.MapData(stringMapToAny(tbl.Parameters), types.String),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlAwsAthenaTable), nil
+}
+
+// athenaColumnsToDict converts Athena column metadata to a list of dicts, each
+// carrying the column name, data type, and comment.
+func athenaColumnsToDict(cols []athena_types.Column) []any {
+	res := make([]any, 0, len(cols))
+	for _, c := range cols {
+		res = append(res, map[string]any{
+			"name":    convert.ToValue(c.Name),
+			"type":    convert.ToValue(c.Type),
+			"comment": convert.ToValue(c.Comment),
+		})
+	}
+	return res
 }

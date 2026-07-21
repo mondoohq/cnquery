@@ -109,13 +109,21 @@ private audit.cvss @defaults("score") {
 
 // VMware vSphere
 //
-// Use the top-level entry point for all vSphere inventory queries. Exposes
-// system identity (`about`), `licenses`, `datacenters`, RBAC `roles` and
-// `permissions`, inventory `folders`, SSO `identitySources`, and KMIP
-// `kmsClusters`. Most audits start here and navigate into
-// `vsphere.datacenter` objects for hosts, VMs, clusters, and networking.
+// Root of the vSphere inventory for a connected vCenter Server or ESXi host,
+// and the starting point for most audits. System identity is exposed through
+// about, with the surrounding fields covering licensing, RBAC roles and
+// permission grants, SSO configuration, KMIP key providers, tags, alarms,
+// scheduled and recent tasks, events, and certificates. Navigate into
+// vsphere.datacenter to reach hosts, virtual machines, clusters, and
+// networking.
 vsphere {
-  // System information including the name, type, version, and build number
+  // System identity of the connected vSphere endpoint
+  //
+  // Keyed by property name, including name, fullName, vendor, version, build,
+  // osType, apiType, apiVersion, productLineId, instanceUuid,
+  // licenseProductName, and licenseProductVersion. The apiType key
+  // distinguishes a vCenter Server (VirtualCenter) from a standalone ESXi host
+  // (HostAgent).
   about() dict
   // Configured licenses
   licenses() []vsphere.license
@@ -139,15 +147,36 @@ vsphere {
   ssoLockoutPolicy() vsphere.sso.lockoutPolicy
   // Remote syslog forwarding targets configured on the vCenter Server Appliance
   loggingForwarding() []vsphere.logging.forwarding
+  // Tag categories defined in vCenter (the namespaces that group tags)
+  categories() []vsphere.category
+  // Tags defined in vCenter across all categories
+  tags() []vsphere.tag
+  // Content libraries hosting VM templates, OVF/OVA, and ISO images
+  contentLibraries() []vsphere.contentLibrary
+  // Custom attribute (custom field) definitions registered in vCenter
+  customFields() []vsphere.customField
+  // Alarm definitions configured in vCenter
+  alarms() []vsphere.alarm
+  // Alarms currently in a triggered (non-green) state across the inventory
+  triggeredAlarms() []vsphere.alarm.state
+  // Scheduled tasks registered in vCenter (timer-driven automation jobs)
+  scheduledTasks() []vsphere.scheduledTask
+  // Most recent tasks tracked by vCenter (the bounded recent-task ring buffer)
+  recentTasks() []vsphere.task
+  // Most recent events recorded by vCenter (bounded to the latest page)
+  events() []vsphere.event
+  // vCenter Server certificates (machine SSL, SSO/STS signing, VMCA root, trusted roots)
+  certificates() []vsphere.certificate
 }
 
 // vCenter SSO Lockout Policy
 //
-// Examine the Single Sign-On account lockout policy: how many failed
-// authentication attempts trigger a lockout (`maxFailedAttempts`), the rolling
-// window those attempts are counted over (`failedAttemptIntervalSec`), and how
-// long an account stays locked before it unlocks automatically
-// (`autoUnlockIntervalSec`).
+// Single Sign-On account lockout policy governing how vCenter defends local SSO
+// accounts against password-guessing. `maxFailedAttempts` sets how many failed
+// authentication attempts trigger a lockout, `failedAttemptIntervalSec` is the
+// rolling window those attempts are counted over, and `autoUnlockIntervalSec` is
+// how long an account stays locked before it unlocks automatically. Auditing
+// these values confirms brute-force protection is tuned to policy.
 private vsphere.sso.lockoutPolicy @defaults("maxFailedAttempts autoUnlockIntervalSec") {
   // Human-readable policy description
   description string
@@ -161,10 +190,11 @@ private vsphere.sso.lockoutPolicy @defaults("maxFailedAttempts autoUnlockInterva
 
 // vCenter Appliance Remote Syslog Forwarding
 //
-// Examine a single remote syslog forwarding target configured on the vCenter
-// Server Appliance: the destination `hostname`, `port`, and transport
-// `protocol` (TCP, UDP, TLS, or RELP). When no targets are configured, vCenter
-// is not forwarding its logs off-box.
+// Remote syslog forwarding target configured on the vCenter Server Appliance:
+// the destination `hostname`, `port`, and transport `protocol` (TCP, UDP, TLS,
+// or RELP). When no targets are configured, vCenter is not forwarding its logs
+// off-box, which leaves audit and security events without an external copy for
+// tamper-evident retention or SIEM ingestion.
 private vsphere.logging.forwarding @defaults("hostname port protocol") {
   // Destination host that vCenter forwards syslog messages to
   hostname string
@@ -176,11 +206,12 @@ private vsphere.logging.forwarding @defaults("hostname port protocol") {
 
 // vSphere RBAC Permission Grant
 //
-// Examine a single (entity, principal, role) permission tuple from vCenter's
+// Single (entity, principal, role) permission tuple from vCenter's
 // AuthorizationManager. Each grant ties a `principal` (user or group, often
-// in `DOMAIN\\name` form) to a `role` on a specific managed object identified
-// by `entityMoid` and `entityType`. Use `propagate` to determine whether the
-// grant flows down the inventory hierarchy. Iterate from `vsphere.permissions`.
+// in "DOMAIN\\name" form) to a `role` on a specific managed object identified
+// by `entityMoid` and `entityType`. The `propagate` field indicates whether
+// the grant flows down the inventory hierarchy to child objects, which is
+// central to auditing who has effective access across the inventory tree.
 private vsphere.permission @defaults("principal entityType entityMoid") {
   // Identifier (entity moid + principal kind + principal)
   id string
@@ -200,11 +231,13 @@ private vsphere.permission @defaults("principal entityType entityMoid") {
 
 // vSphere Inventory Folder
 //
-// Examine an organizational container in vCenter's inventory tree. Folders
-// are the unit of permission inheritance — RBAC grants on a folder propagate
-// to all objects inside it. Key fields include `name`, `inventoryPath`,
-// `childTypes` (the managed-object types allowed as direct children), and
-// `childCount` (number of immediate children). Iterate from `vsphere.folders`.
+// Organizational container in vCenter's inventory tree. Folders are the unit
+// of permission inheritance: an RBAC grant on a folder propagates to every
+// object inside it, so folder structure and its assigned tags matter for
+// auditing who can reach which virtual machines, hosts, and networks. The
+// childTypes field lists the managed-object types allowed as direct children
+// (for example VirtualMachine, Folder, HostSystem) and childCount reports the
+// number of immediate children.
 private vsphere.folder @defaults("name inventoryPath") {
   // vSphere managed object ID
   moid string
@@ -216,16 +249,20 @@ private vsphere.folder @defaults("name inventoryPath") {
   childTypes []string
   // Number of immediate child entities under this folder
   childCount int
+  // Tags attached to this folder
+  tagRefs() []vsphere.tag
 }
 
 // vSphere SSO Identity Source
 //
-// Examine an authentication provider registered with vCenter's SSO service.
-// Sources include the built-in `vsphere.local` domain, the local OS identity
-// source, native Active Directory integration, and external LDAP/AD providers.
-// The `type` field distinguishes source kinds (system, localos, nativead, ldap);
-// LDAP sources expose `primaryUrl`, `failoverUrl`, `userBaseDn`, `groupBaseDn`,
-// and `authenticationUsername`. Iterate from `vsphere.identitySources`.
+// Authentication provider registered with vCenter's SSO service.
+// Sources include the built-in `vsphere.local` domain, the local OS
+// identity source, native Active Directory integration, and external
+// LDAP/AD providers. The `type` field distinguishes source kinds
+// (system, localos, nativead, ldap); LDAP sources populate `primaryUrl`,
+// `failoverUrl`, `userBaseDn`, `groupBaseDn`, and `authenticationUsername`,
+// which remain empty for the other kinds. Reviewing identity sources shows
+// how directory logins are configured and where bind credentials point.
 private vsphere.identitysource @defaults("name type") {
   // Domain name of the identity source (e.g., vsphere.local, corp.example.com)
   name string
@@ -249,17 +286,17 @@ private vsphere.identitysource @defaults("name type") {
 
 // vSphere KMIP Key-Management Cluster
 //
-// Examine a registered key-management server cluster used for VM encryption
+// Key-management server cluster registered with vCenter for VM encryption
 // and virtual TPM provisioning. KMIP clusters are configured at the vCenter
-// level (not per host). The `clusterId` is the vCenter-visible name,
-// `useAsDefault` indicates whether this cluster is the default for new
-// encryption keys, `managementType` distinguishes cluster kinds (vCenter,
-// trustAuthority, nativeKeyProvider, externalKeyProvider), and `servers`
-// lists each KMS server entry. Iterate from `vsphere.kmsClusters`.
+// level, not per host, which makes them a central control point for the
+// keys protecting every encrypted VM and vSAN datastore. The managementType
+// field distinguishes cluster kinds (vCenter, trustAuthority,
+// nativeKeyProvider, externalKeyProvider), and useAsDefault marks the
+// cluster vCenter selects when issuing new encryption keys.
 private vsphere.kmsCluster @defaults("clusterId useAsDefault managementType") {
-  // Cluster identifier — also the vCenter-visible name
+  // Cluster identifier, also the vCenter-visible name
   //
-  // KmipClusterInfo has no separate display name; the ID you set when registering the cluster is what appears in the UI.
+  // A KMIP cluster has no separate display name; the ID you set when registering the cluster is what appears in the UI.
   clusterId string
   // Whether this cluster is the vCenter default for new encryption keys
   useAsDefault bool
@@ -273,10 +310,12 @@ private vsphere.kmsCluster @defaults("clusterId useAsDefault managementType") {
 
 // vSphere Authorization Role
 //
-// Examine an RBAC role definition from vCenter's AuthorizationManager. Each
-// role has a `name`, a human-readable `label`, a `summary` description, and
-// a `privileges` list of privilege identifiers it grants. Built-in (immutable)
-// roles are identified by `system == true`. Iterate from `vsphere.roles`.
+// RBAC role definition from vCenter's AuthorizationManager. A role bundles a
+// set of privileges that can be granted to users or groups on inventory
+// objects, so auditing the definition reveals exactly which permissions the
+// role confers. Built-in roles are administrator-immutable and identified by
+// `system == true`; the rest are custom roles created by administrators. The
+// `privileges` field lists the individual privilege identifiers granted.
 private vsphere.role @defaults("name system") {
   // Unique role identifier
   roleId int
@@ -294,9 +333,10 @@ private vsphere.role @defaults("name system") {
 
 // vSphere License
 //
-// Examine a license entry assigned in vCenter. Each license has a `name`,
-// a `total` seat count, and a `used` seat count. Iterate from
-// `vsphere.licenses` to audit license compliance and over-assignment.
+// A license entry registered in vCenter, identified by its `name`. The
+// `total` field reports how many seats the license grants and `used`
+// reports how many are currently consumed, so the two together reveal
+// license compliance and over-assignment across the environment.
 private vsphere.license @defaults("name") {
   // License name
   name string
@@ -308,11 +348,12 @@ private vsphere.license @defaults("name") {
 
 // vSphere Datacenter
 //
-// Examine a datacenter object in the vCenter inventory. A datacenter is the
-// primary organizational unit containing `hosts`, `vms`, `clusters`,
-// `distributedSwitches`, `distributedPortGroups`, `datastores`, and
-// `resourcePools`. Use `moid` and `inventoryPath` to identify a specific
-// datacenter when multiple exist. Iterate from `vsphere.datacenters`.
+// Datacenter object in the vCenter inventory, the primary organizational unit
+// that groups compute, network, and storage. Through it you reach the
+// datacenter's hosts, vms, clusters, distributedSwitches, distributedPortGroups,
+// datastores, and resourcePools, making it the entry point for auditing an
+// entire vSphere site. The moid and inventoryPath fields identify a specific
+// datacenter when several exist.
 private vsphere.datacenter @defaults("moid name") {
   // vSphere managed object ID
   moid string
@@ -334,16 +375,20 @@ private vsphere.datacenter @defaults("moid name") {
   datastores() []vsphere.datastore
   // Resource pools in the datacenter (CPU/memory partitions on clusters or standalone hosts)
   resourcePools() []vsphere.resourcepool
+  // Tags attached to this datacenter
+  tagRefs() []vsphere.tag
 }
 
 // vSphere Resource Pool
 //
-// Examine a CPU and memory partition on a cluster or standalone host. Resource
-// pools enforce reservation, limit, and share policies independently for CPU
-// and memory. Key fields include `cpuReservationMhz`, `cpuLimitMhz`,
-// `cpuShareLevel`, `memoryReservationMB`, `memoryLimitMB`, and
-// `memoryShareLevel`. Use `inventoryPath` to identify the pool's position in
-// the hierarchy. Iterate from `vsphere.datacenter.resourcePools`.
+// CPU and memory partition on a cluster or standalone host. Resource pools
+// enforce reservation, limit, and share policies independently for CPU and
+// memory, so auditing them surfaces capacity guarantees and contention
+// controls that govern how virtual machines compete for compute. The
+// `cpuShareLevel` and `memoryShareLevel` values (low, normal, high, custom)
+// determine relative priority under contention, while the reservation and
+// limit fields bound guaranteed and maximum allocation. The `inventoryPath`
+// identifies the pool's position in the hierarchy.
 private vsphere.resourcepool @defaults("name") {
   // vSphere managed object ID
   moid string
@@ -371,16 +416,19 @@ private vsphere.resourcepool @defaults("name") {
   memoryShareLevel string
   // Memory shares (only meaningful when memoryShareLevel == custom)
   memoryShares int
+  // Tags attached to this resource pool
+  tagRefs() []vsphere.tag
 }
 
 // vSphere Datastore
 //
-// Examine a storage backing for virtual machine files. Each datastore has a
-// `type` (VMFS, NFS, NFS41, vsan, VVOL), `capacity` and `freeSpace` in bytes,
-// an `accessible` flag (when false, capacity data is unreliable), and a
-// `maintenanceMode` status. VMFS datastores also expose `vmfsVersion` and `ssd`.
-// Navigate to `hosts` and `vms` to audit which hosts have it mounted and which
-// VMs store files on it. Iterate from `vsphere.datacenter.datastores`.
+// Storage backing for virtual machine files. Each datastore carries a `type`
+// (VMFS, NFS, NFS41, vsan, VVOL), `capacity` and `freeSpace` in bytes, an
+// `accessible` flag (when false, capacity data is unreliable), and a
+// `maintenanceMode` status; VMFS datastores additionally expose `vmfsVersion`
+// and `ssd`. The `hosts` and `vms` fields reveal which hosts have the datastore
+// mounted and which VMs store their files on it, so you can audit capacity
+// pressure, over-commit through `uncommitted`, and unexpected shared access.
 private vsphere.datastore @defaults("name type") {
   // vSphere managed object ID
   moid string
@@ -412,15 +460,19 @@ private vsphere.datastore @defaults("name type") {
   hosts() []vsphere.host
   // Virtual machines whose files are stored on this datastore, resolved against vsphere.datacenters[].vms
   vms() []vsphere.vm
+  // Tags attached to this datastore
+  tagRefs() []vsphere.tag
 }
 
 // vSphere Cluster
 //
-// Examine a cluster compute resource in a vCenter datacenter. A cluster groups
-// multiple ESXi `hosts` and exposes key configuration flags: `vsanEnabled`,
+// Cluster compute resource in a vCenter datacenter. A cluster groups multiple
+// ESXi `hosts` and pools their CPU and memory, and its configuration flags
+// carry the availability and scheduling posture worth auditing: `vsanEnabled`,
 // `haEnabled` (vSphere HA), `drsEnabled` (Distributed Resource Scheduler), and
-// `evcMode` (Enhanced vMotion Compatibility baseline). Use `properties` for the
-// full raw ClusterConfigInfo dict. Iterate from `vsphere.datacenter.clusters`.
+// `evcMode` (Enhanced vMotion Compatibility baseline). `properties` holds the
+// raw ClusterComputeResource managed object for anything not surfaced as its
+// own field, and `vsan` exposes the vSAN service configuration.
 private vsphere.cluster @defaults("moid name") {
   // vSphere managed object ID
   moid string
@@ -429,6 +481,11 @@ private vsphere.cluster @defaults("moid name") {
   // vSphere inventory path
   inventoryPath string
   // Cluster properties
+  //
+  // Raw ClusterComputeResource managed object serialized from vCenter,
+  // including its nested configuration and summary. The commonly audited
+  // settings are surfaced directly as vsanEnabled, haEnabled, drsEnabled,
+  // and evcMode; use this dict for anything not exposed as its own field.
   properties dict
   // ESXi hosts running in the cluster
   hosts() []vsphere.host
@@ -436,25 +493,24 @@ private vsphere.cluster @defaults("moid name") {
   vsanEnabled bool
   // vSAN service configuration; null when vSAN is not enabled on the cluster
   vsan() vsphere.cluster.vsan
-  // Whether vSphere HA (Distributed Availability Service) is enabled
+  // Whether vSphere HA (High Availability) is enabled
   haEnabled bool
   // Whether DRS (Distributed Resource Scheduler) is enabled
   drsEnabled bool
   // Currently-applied EVC (Enhanced vMotion Compatibility) baseline key, e.g. "intel-broadwell"; empty if EVC is disabled
   evcMode string
+  // Tags attached to this cluster
+  tagRefs() []vsphere.tag
 }
 
 // vSphere ESXi Host
 //
-// Examine an ESXi host managed by vCenter. Exposes hardware identity
-// (`vendor`, `model`, `numCpuCores`, `cpuMhz`), security posture
-// (`lockdownMode`, `firewallIncomingBlocked`, `firewallOutgoingBlocked`,
-// `secureBootEnabled`), network configuration (`standardSwitch`,
-// `distributedSwitch`, `adapters`, `vmknics`), storage (`datastores`),
-// software inventory (`packages`, `kernelModules`), and operational
-// configuration (`advancedSettings`, `services`, `ntp`, `snmp`,
-// `timezone`, `certificate`). Navigate to `cluster` for cluster membership.
-// Iterate from `vsphere.datacenter.hosts`.
+// ESXi hypervisor host managed by vCenter, covering hardware identity,
+// security posture (lockdown mode, host firewall defaults, UEFI Secure
+// Boot), network and storage configuration, installed software inventory,
+// and operational settings such as advanced settings, management services,
+// NTP, SNMP, and the host TLS certificate. Audit these to assess a host's
+// hardening and patch state.
 private vsphere.host @defaults("moid name") {
   // vSphere managed object ID
   moid string
@@ -488,8 +544,13 @@ private vsphere.host @defaults("moid name") {
   ntp() vsphere.host.ntpConfig
   // Host SNMP configuration
   snmp() map[string]string
-  //Host tags
-  tags []string
+  // Host tags
+  //
+  // Deprecated in favor of `tagRefs`, which resolves each tag to a typed
+  // vsphere.tag (with its category) rather than a "category:tag" string.
+  tags @maturity("deprecated") []string
+  // Tags attached to this host
+  tagRefs() []vsphere.tag
   // Lockdown mode (lockdownDisabled, lockdownNormal, lockdownStrict)
   lockdownMode string
   // User and service accounts exempt from lockdown mode; these accounts retain direct host access even while lockdown mode is enabled
@@ -536,7 +597,7 @@ private vsphere.host @defaults("moid name") {
   cpuMhz int
   // Number of physical CPU cores across all sockets
   numCpuCores int
-  // ESXi firewall rulesets — per-service rule definitions (CIM, SSH, NTP, vMotion, etc.)
+  // ESXi firewall rulesets: per-service rule definitions (CIM, SSH, NTP, vMotion, etc.)
   firewallRulesets() []vsphere.host.firewallRuleset
   // iSCSI host bus adapters configured on the host (zero entries if iSCSI is not in use)
   iscsiAdapters() []vsphere.host.iscsiAdapter
@@ -546,7 +607,7 @@ private vsphere.host @defaults("moid name") {
   datastores() []vsphere.datastore
   // Last-boot timestamp + BIOS / firmware identity
   bootInfo() vsphere.host.bootInfo
-  // Hardware identity — UUID, serial, asset/service tag, install date
+  // Hardware identity: UUID, serial, asset/service tag, install date
   systemInfo() vsphere.host.systemInfo
   // Host DNS configuration
   dnsConfig() vsphere.host.dnsConfig
@@ -564,9 +625,9 @@ private vsphere.host @defaults("moid name") {
 
 // ESXi Host SSH Daemon Configuration
 //
-// Examine the ESXi SSH daemon configuration exposed through the esxcli
+// ESXi SSH daemon configuration exposed through the esxcli
 // `system ssh` namespace. `serverConfig` holds the full set of SSH server
-// settings keyed by name — query individual hardening keys such as
+// settings keyed by name; query individual hardening keys such as
 // serverConfig["ciphers"], serverConfig["hostbasedauthentication"],
 // serverConfig["gatewayports"], or serverConfig["permitrootlogin"].
 // `clientConfig` holds the equivalent client-side settings.
@@ -579,11 +640,11 @@ private vsphere.host.ssh @defaults("serverConfig") {
 
 // ESXi Host Security Configuration
 //
-// Examine host-level security settings exposed through the esxcli
+// Host-level security settings exposed through the esxcli
 // `system security` namespace. `keyPersistenceEnabled` reports whether
-// TPM-backed key persistence is active — available on ESXi 7.0 Update 2
+// TPM-backed key persistence is active (available on ESXi 7.0 Update 2
 // and later, and false on hosts that predate or otherwise do not support
-// it. `certificateStore` lists the trusted CA certificates installed in
+// it). `certificateStore` lists the trusted CA certificates installed in
 // the host certificate store.
 private vsphere.host.security @defaults("keyPersistenceEnabled") {
   // Whether TPM-backed key persistence is enabled (ESXi 7.0 Update 2 and later); false on hosts that do not support it
@@ -594,7 +655,7 @@ private vsphere.host.security @defaults("keyPersistenceEnabled") {
 
 // vSAN Cluster Configuration
 //
-// Examine the vSAN service configuration of a cluster: the storage
+// vSAN service configuration of a cluster: the storage
 // architecture (`esaEnabled` distinguishes Express Storage Architecture from
 // the original architecture) and the security-relevant data services. Space
 // efficiency is reported by `dedupEnabled` and `compressionEnabled`; data
@@ -604,7 +665,7 @@ private vsphere.host.security @defaults("keyPersistenceEnabled") {
 // data-in-transit encryption by `inTransitEncryptionEnabled` and
 // `rekeyIntervalMinutes`. `fileServiceEnabled` and `perfServiceEnabled`
 // report the file and performance services, and `health` summarizes overall
-// vSAN object health. Reached from `vsphere.cluster.vsan`.
+// vSAN object health.
 private vsphere.cluster.vsan @defaults("esaEnabled encryptionEnabled checksumEnabled") {
   // vSAN datastore UUID for the cluster
   uuid string
@@ -632,17 +693,23 @@ private vsphere.cluster.vsan @defaults("esaEnabled encryptionEnabled checksumEna
   fileServiceEnabled bool
   // Whether the vSAN performance service is enabled
   perfServiceEnabled bool
-  // Overall vSAN object health summary; null when vCenter reports no health data
+  // Overall vSAN object health summary
+  //
+  // Object identity health reported by vCenter, with keys
+  // objectVersionCompliance (whether all objects are on the current object
+  // version) and objectsRelayoutBytes (bytes pending relayout). When vCenter
+  // returns per-object detail, objectHealthDetail lists the health state of
+  // each object group. Null when vCenter reports no health data.
   health() dict
 }
 
 // vSAN Host Configuration
 //
-// Examine how a single ESXi host participates in vSAN: whether the service is
+// vSAN participation for a single ESXi host: whether the service is
 // `enabled`, whether the host automatically claims local disks
 // (`autoClaimStorage`), whether `checksumEnabled` integrity protection is in
 // force, and the `diskGroups` of cache and capacity disks the host
-// contributes to the vSAN datastore. Reached from `vsphere.host.vsan`.
+// contributes to the vSAN datastore.
 private vsphere.host.vsan @defaults("enabled checksumEnabled") {
   // Whether vSAN is enabled on the host
   enabled bool
@@ -656,13 +723,12 @@ private vsphere.host.vsan @defaults("enabled checksumEnabled") {
 
 // vSAN Disk Group
 //
-// Examine a single vSAN disk group on a host: one cache (flash) disk fronting
+// Single vSAN disk group on a host: one cache (flash) disk fronting
 // a set of capacity disks. The `cacheDiskUuid` selects the group, `cacheDisk`
 // and `capacityDisks` give the device canonical names, and `capacityBytes`
-// reports the total raw capacity backing the group. Iterate from
-// `vsphere.host.vsan.diskGroups`.
+// reports the total raw capacity backing the group.
 private vsphere.host.vsan.diskGroup @defaults("cacheDiskUuid capacityDiskCount capacityBytes") {
-  // Cache (flash) disk UUID — unique identifier for the disk group
+  // Cache (flash) disk UUID; unique identifier for the disk group
   cacheDiskUuid string
   // Cache (flash) disk canonical device name
   cacheDisk string
@@ -676,11 +742,10 @@ private vsphere.host.vsan.diskGroup @defaults("cacheDiskUuid capacityDiskCount c
 
 // ESXi Host Boot and BIOS Information
 //
-// Examine the last-boot timestamp and BIOS/platform-firmware identity for an
+// Last-boot timestamp and BIOS/platform-firmware identity for an
 // ESXi host. Exposes `bootTime`, BIOS version (`biosVersion`,
 // `biosReleaseDate`, `biosMajorRelease`, `biosMinorRelease`), and platform
 // firmware release numbers (`firmwareMajorRelease`, `firmwareMinorRelease`).
-// Accessed from `vsphere.host.bootInfo`.
 private vsphere.host.bootInfo @defaults("bootTime biosVersion") {
   // Last time the host booted; zero time if vCenter has never observed a boot
   bootTime time
@@ -700,14 +765,14 @@ private vsphere.host.bootInfo @defaults("bootTime biosVersion") {
 
 // ESXi Host Hardware Identity
 //
-// Examine the hardware identity for an ESXi host sourced from SMBIOS and
+// Hardware identity for an ESXi host sourced from SMBIOS and
 // HostSystemIdentificationInfo. Key fields include `vendor`, `model`, `uuid`
 // (stable per chassis), `serialNumber`, `assetTag`, `serviceTag` (Dell only),
 // and `installDate` (vSphere 7+). Unrecognized OEM identifiers land in
 // `oemSpecific` so unusual platforms (HPE iLO, IBM, custom OEM) don't lose
-// data. Accessed from `vsphere.host.systemInfo`.
+// data.
 private vsphere.host.systemInfo @defaults("model serialNumber") {
-  // Hardware vendor (SMBIOS) — same value as vsphere.host.vendor, exposed here for grouping
+  // Hardware vendor (SMBIOS); same value as vsphere.host.vendor, exposed here for grouping
   vendor string
   // Hardware model (SMBIOS)
   model string
@@ -727,11 +792,11 @@ private vsphere.host.systemInfo @defaults("model serialNumber") {
 
 // ESXi Host DNS Configuration
 //
-// Examine the DNS configuration on an ESXi host. Key fields include `dhcp`
+// DNS configuration on an ESXi host. Key fields include `dhcp`
 // (whether DNS settings come from DHCP), `hostName`, `domain`, `fqdn`
 // (computed convenience), `servers` (configured DNS server addresses), and
 // `searchDomains`. The `virtualNicDevice` field identifies which VMkernel NIC
-// the DNS configuration is bound to. Accessed from `vsphere.host.dnsConfig`.
+// the DNS configuration is bound to.
 private vsphere.host.dnsConfig @defaults("hostName domain") {
   // Whether DNS settings come from DHCP (when true, the static fields below may be ignored)
   dhcp bool
@@ -751,10 +816,9 @@ private vsphere.host.dnsConfig @defaults("hostName domain") {
 
 // ESXi Host IP Routing Configuration
 //
-// Examine the IP routing (default gateway) configuration on an ESXi host.
+// IP routing (default gateway) configuration on an ESXi host.
 // Exposes `defaultGateway` and `gatewayDevice` (bound VMkernel NIC) for IPv4,
-// and `ipv6DefaultGateway` and `ipv6GatewayDevice` for IPv6. Accessed from
-// `vsphere.host.ipRouteConfig`.
+// and `ipv6DefaultGateway` and `ipv6GatewayDevice` for IPv6.
 private vsphere.host.ipRouteConfig @defaults("defaultGateway ipv6DefaultGateway") {
   // IPv4 default gateway; empty when not configured
   defaultGateway string
@@ -768,14 +832,13 @@ private vsphere.host.ipRouteConfig @defaults("defaultGateway ipv6DefaultGateway"
 
 // ESXi Host Firewall Ruleset
 //
-// Examine one per-service firewall rule entry on an ESXi host. Each ruleset
+// One per-service firewall ruleset entry on an ESXi host. Each ruleset
 // has a `key` (service identifier such as `CIMHttpServer`, `sshServer`),
 // `label`, `enabled` state, and a `required` flag for rulesets ESXi cannot
 // disable. The allowed-IP scope is controlled by `allIpsAllowed`,
 // `allowedIpAddresses`, and `allowedIpNetworks`. Port and protocol details
 // are in `rules`. The global default-deny posture for the host lives on
 // `vsphere.host.firewallIncomingBlocked` and `firewallOutgoingBlocked`.
-// Iterate from `vsphere.host.firewallRulesets`.
 private vsphere.host.firewallRuleset @defaults("key enabled allIpsAllowed") {
   // Identifier (host inventory path + ruleset key)
   id string
@@ -801,10 +864,10 @@ private vsphere.host.firewallRuleset @defaults("key enabled allIpsAllowed") {
 
 // ESXi Host Firewall Rule
 //
-// Examine a single port/protocol rule within a `vsphere.host.firewallRuleset`.
+// Single port/protocol rule within a `vsphere.host.firewallRuleset`.
 // Each rule specifies a `port` (or start port for a range), `endPort`, traffic
 // `direction` (inbound, outbound), `portType` (src, dst), and `protocol`
-// (tcp, udp). Iterate from `vsphere.host.firewallRuleset.rules`.
+// (tcp, udp).
 private vsphere.host.firewallRule @defaults("port direction protocol") {
   // Identifier (parent ruleset id + rule index)
   id string
@@ -822,12 +885,11 @@ private vsphere.host.firewallRule @defaults("port direction protocol") {
 
 // ESXi iSCSI Host Bus Adapter
 //
-// Examine an iSCSI HBA configured on an ESXi host. Each adapter exposes its
+// iSCSI host bus adapter configured on an ESXi host. Each adapter exposes its
 // `device` name (e.g., `vmhba65`), `iScsiName` (IQN), and `iScsiAlias`.
 // CHAP authentication posture is available via `chapAuthEnabled`,
 // `chapAuthenticationType`, and `chapName` (the secret is intentionally not
-// exposed); mutual CHAP settings follow the same pattern. Iterate from
-// `vsphere.host.iscsiAdapters`.
+// exposed); mutual CHAP settings follow the same pattern.
 private vsphere.host.iscsiAdapter @defaults("device iScsiName") {
   // Identifier (host inventory path + device name)
   id string
@@ -851,12 +913,11 @@ private vsphere.host.iscsiAdapter @defaults("device iScsiName") {
 
 // ESXi Host SSL/TLS Certificate
 //
-// Examine a TLS certificate managed by the ESXi HostCertificateManager.
+// TLS certificate managed by the ESXi HostCertificateManager.
 // Key fields include `subject` and `issuer` distinguished names, `notBefore`
 // and `notAfter` validity timestamps, and `status` as reported by vCenter
-// (good, expiring, expiringSoon, expired, unknown). Use `notAfter` and
-// `status` to audit certificate expiration posture. Accessed from
-// `vsphere.host.certificate`.
+// (unknown, expired, expiring, expiringShortly, expirationImminent, good).
+// Use `notAfter` and `status` to audit certificate expiration posture.
 private vsphere.host.certificate @defaults("subject status notAfter") {
   // Identifier (host inventory path + cert kind)
   id string
@@ -870,7 +931,7 @@ private vsphere.host.certificate @defaults("subject status notAfter") {
   notBefore time
   // Validity end (expiration)
   notAfter time
-  // Status reported by vCenter (good, expiring, expired, expiringShortly, unknown, etc.)
+  // Status reported by vCenter (unknown, expired, expiring, expiringShortly, expirationImminent, good)
   status string
 }
 
@@ -885,9 +946,13 @@ private esxi.firewallRuleset @defaults("key enabled allIpsAllowed") @maturity("d
   label string
   enabled bool
   required bool
+  // Backing service name (matches a vsphere.host.service.key); empty if no daemon service
   service string
+  // Whether traffic is allowed from any IP. When false, callers should consult allowedIpAddresses / allowedIpNetworks.
   allIpsAllowed bool
+  // Specific IP addresses allowed to reach the service (only populated when allIpsAllowed == false)
   allowedIpAddresses []string
+  // Specific IP networks allowed (only populated when allIpsAllowed == false). Each entry is a dict with `network` and `prefixLength`.
   allowedIpNetworks []dict
   rules []esxi.firewallRule
 }
@@ -898,11 +963,17 @@ private esxi.firewallRuleset @defaults("key enabled allIpsAllowed") @maturity("d
 // kept for backward compatibility and has the same fields as its
 // replacement.
 private esxi.firewallRule @defaults("port direction protocol") @maturity("deprecated") {
+  // Identifier (parent ruleset id + rule index)
   id string
+  // Port number (or start port for a range)
   port int
+  // End port (only meaningful when the rule covers a range; 0 for single-port rules)
   endPort int
+  // Direction (inbound, outbound)
   direction string
+  // Port type (src, dst)
   portType string
+  // Protocol (tcp, udp)
   protocol string
 }
 
@@ -912,14 +983,23 @@ private esxi.firewallRule @defaults("port direction protocol") @maturity("deprec
 // kept for backward compatibility and has the same fields as its
 // replacement.
 private esxi.iscsiAdapter @defaults("device iScsiName") @maturity("deprecated") {
+  // Identifier (host inventory path + device name)
   id string
+  // HBA device name (e.g., vmhba65)
   device string
+  // iSCSI Qualified Name (IQN)
   iScsiName string
+  // Optional alias
   iScsiAlias string
+  // Whether CHAP authentication is enabled at all
   chapAuthEnabled bool
+  // CHAP authentication policy (chapDiscouraged, chapPreferred, chapRequired, chapProhibited)
   chapAuthenticationType string
+  // CHAP username (the secret is intentionally NOT exposed)
   chapName string
+  // Mutual CHAP authentication policy (chapProhibited, chapRequired, ...)
   mutualChapAuthenticationType string
+  // Mutual CHAP username
   mutualChapName string
 }
 
@@ -929,25 +1009,32 @@ private esxi.iscsiAdapter @defaults("device iScsiName") @maturity("deprecated") 
 // kept for backward compatibility and has the same fields as its
 // replacement.
 private esxi.certificate @defaults("subject status notAfter") @maturity("deprecated") {
+  // Identifier (host inventory path + cert kind)
   id string
+  // Certificate kind (e.g. machine, vmca); empty/unset means the host machine cert
   kind string
+  // Subject distinguished name
   subject string
+  // Issuer distinguished name
   issuer string
+  // Validity start
   notBefore time
+  // Validity end (expiration)
   notAfter time
+  // Status reported by vCenter (good, expiring, expiringShortly, expirationImminent, expired, unknown)
   status string
 }
 
 // vSphere Virtual Machine
 //
-// Examine a virtual machine managed by vCenter. Covers security configuration
-// (`bootFirmware`, `secureBootEnabled`, `vbsEnabled`, `encrypted`,
-// `encryptionKeyId`, `kmsCluster`, `vtpmPresent`), hardware allocation
-// (`numCpu`, `memoryMB`, `cpuAllocation`, `memoryAllocation`), operational
-// state (`powerState`, `vmwareToolsRunning`, `vmwareToolsVersion`),
-// and attached devices (`disks`, `cdroms`, `networkAdapters`, `snapshots`).
-// Navigate to `host` for the ESXi host running the VM and `datastores` for
-// its storage backing. Iterate from `vsphere.datacenter.vms`.
+// Virtual machine managed by vCenter, exposing its security posture (boot
+// firmware, UEFI Secure Boot, Virtualization-Based Security, VM encryption
+// and the wrapping KMS cluster, and virtual TPM presence), hardware sizing
+// (virtual CPU and memory counts with their reservation, limit, and share
+// allocations), power and VMware Tools state, and attached devices (disks,
+// CD/DVD drives, network adapters, and snapshots). The `host` field points at
+// the ESXi host currently running the VM and `datastores` at the storage
+// backing its files.
 private vsphere.vm @defaults("moid name") {
   // vSphere managed object ID
   moid string
@@ -956,11 +1043,27 @@ private vsphere.vm @defaults("moid name") {
   // vSphere inventory path
   inventoryPath string
   // Virtual machine properties
+  //
+  // Raw serialization of the underlying vCenter managed object, with its
+  // config, guest, runtime, and summary sub-objects nested under their
+  // vSphere property names. The commonly audited values are also exposed as
+  // dedicated fields on this resource; reach into `properties` for attributes
+  // not otherwise surfaced.
   properties dict
-  // Virtual machine advanced properties
+  // VM advanced configuration options
+  //
+  // Advanced VMX configuration parameters (the VM's extraConfig), keyed by
+  // option name such as `isolation.tools.copy.disable` or
+  // `isolation.tools.setGUIOptions.enable`, with each value rendered as a
+  // string. Useful for auditing VM hardening settings.
   advancedSettings() map[string]string
   // VM tags
-  tags []string
+  //
+  // Deprecated in favor of `tagRefs`, which resolves each tag to a typed
+  // vsphere.tag (with its category) rather than a "category:tag" string.
+  tags @maturity("deprecated") []string
+  // Tags attached to this virtual machine
+  tagRefs() []vsphere.tag
   // Boot firmware (bios or efi)
   bootFirmware string
   // Whether UEFI Secure Boot is enabled (only meaningful when bootFirmware is efi)
@@ -1019,7 +1122,9 @@ private vsphere.vm @defaults("moid name") {
   cpuAllocation() vsphere.vm.cpuAllocation
   // Memory resource allocation (reservation, limit, shares, overhead limit)
   memoryAllocation() vsphere.vm.memoryAllocation
-  // VM instance UUID — stable across vCenter migrations (vc.uuid + InstanceUuid bit), unique per vCenter
+  // VM instance UUID
+  //
+  // Stable across vCenter migrations (vc.uuid + InstanceUuid bit) and unique per vCenter.
   instanceUuid string
   // SMBIOS UUID exposed to the guest OS via virtual BIOS; can be reused if a VM is cloned with same uuid setting
   biosUuid string
@@ -1029,14 +1134,13 @@ private vsphere.vm @defaults("moid name") {
 
 // vSphere VM Virtual CD/DVD Device
 //
-// Examine a virtual CD/DVD drive attached to a VM. The `backingType` field
+// Virtual CD/DVD drive attached to a VM. The `backingType` field
 // identifies the source: `iso` (file on a datastore), `atapi` (host ATAPI
 // passthrough), `passthrough` (host CD/DVD), `remoteAtapi`, or
 // `remotePassthrough`. For ISO-backed drives, `isoPath` gives the
 // datastore-bracket path and `datastore` resolves the backing datastore.
-// Use `connected` and `connectedAtPowerOn` to audit ISO attachment posture
-// (running production VMs should typically have no ISO attached).
-// Iterate from `vsphere.vm.cdroms`.
+// The `connected` and `connectedAtPowerOn` fields reveal ISO attachment
+// posture (running production VMs should typically have no ISO attached).
 private vsphere.vm.cdrom @defaults("label backingType connected") {
   // Device key (unique within the parent VM, stable across reconfigure)
   key int
@@ -1062,14 +1166,13 @@ private vsphere.vm.cdrom @defaults("label backingType connected") {
 
 // vSphere VM Virtual Network Adapter
 //
-// Examine a virtual NIC attached to a VM. Covers all NIC variants: e1000,
-// e1000e, vmxnet, vmxnet2, vmxnet3, pcnet32, sriov. Key fields include
-// `adapterType`, `macAddress`, `addressType` (manual, generated, assigned),
-// `connected`, `connectedAtPowerOn`, and `wakeOnLan`. The `backingType`
+// Virtual NIC attached to a VM, across every adapter variant (e1000,
+// e1000e, vmxnet, vmxnet2, vmxnet3, pcnet32, sriov). The `backingType`
 // distinguishes standard portgroup (`network`), distributed portgroup (`dvs`),
-// and NSX-T logical switch (`opaque`) backings; use `portGroupName` or
-// `portGroupMoid` / `portGroup` to identify the backing network.
-// Iterate from `vsphere.vm.networkAdapters`.
+// and NSX-T logical switch (`opaque`) backings, while `portGroupName`,
+// `portGroupMoid`, and `portGroup` identify the backing network. The
+// `addressType` field records how the MAC was assigned (manual, generated,
+// assigned) and `connected` and `connectedAtPowerOn` its attachment state.
 private vsphere.vm.networkAdapter @defaults("label adapterType macAddress connected") {
   // Device key (unique within the parent VM, stable across reconfigure)
   key int
@@ -1093,7 +1196,7 @@ private vsphere.vm.networkAdapter @defaults("label adapterType macAddress connec
   backingType string
   // Network or portgroup name (human-readable)
   //
-  // Populated for standard portgroup backings (`backingType == "network"`) and opaque-network backings; empty for DVS backings — use `portGroupMoid` to identify the port group instead.
+  // Populated for standard portgroup backings (`backingType == "network"`) and opaque-network backings; empty for DVS backings, where `portGroupMoid` identifies the port group instead.
   portGroupName string
   // DistributedVirtualSwitchPortConnection.PortgroupKey (the moid of the distributed port group); empty for standard portgroup or opaque backings
   portGroupMoid string
@@ -1105,11 +1208,10 @@ private vsphere.vm.networkAdapter @defaults("label adapterType macAddress connec
 
 // vSphere VM CPU Resource Allocation
 //
-// Examine the CPU resource allocation settings for a virtual machine. Fields
-// include `reservationMHz` (guaranteed MHz), `limitMHz` (-1 = unlimited),
-// `expandableReservation`, `sharesLevel` (low, normal, high, custom), and
-// `shares` (numeric weight when `sharesLevel` is custom). Accessed from
-// `vsphere.vm.cpuAllocation`.
+// CPU resource allocation settings for a virtual machine: `reservationMHz`
+// (guaranteed MHz), `limitMHz` (-1 = unlimited), `expandableReservation`,
+// `sharesLevel` (low, normal, high, custom), and `shares` (the numeric weight
+// applied when `sharesLevel` is custom).
 private vsphere.vm.cpuAllocation @defaults("reservationMHz limitMHz sharesLevel") {
   // Guaranteed CPU reservation in MHz
   reservationMHz int
@@ -1125,12 +1227,11 @@ private vsphere.vm.cpuAllocation @defaults("reservationMHz limitMHz sharesLevel"
 
 // vSphere VM Memory Resource Allocation
 //
-// Examine the memory resource allocation settings for a virtual machine.
-// Fields include `reservationMB` (guaranteed MB), `limitMB` (-1 = unlimited),
-// `expandableReservation`, `sharesLevel` (low, normal, high, custom),
-// `shares` (numeric weight when `sharesLevel` is custom), and
-// `overheadLimitMB` (cap on virtualization overhead memory; -1 = unlimited).
-// Accessed from `vsphere.vm.memoryAllocation`.
+// Memory resource allocation settings for a virtual machine: `reservationMB`
+// (guaranteed MB), `limitMB` (-1 = unlimited), `expandableReservation`,
+// `sharesLevel` (low, normal, high, custom), `shares` (the numeric weight
+// applied when `sharesLevel` is custom), and `overheadLimitMB` (cap on
+// virtualization overhead memory; -1 = unlimited).
 private vsphere.vm.memoryAllocation @defaults("reservationMB limitMB sharesLevel") {
   // Guaranteed memory reservation in MB
   reservationMB int
@@ -1148,12 +1249,11 @@ private vsphere.vm.memoryAllocation @defaults("reservationMB limitMB sharesLevel
 
 // vSphere VM Snapshot
 //
-// Examine a single snapshot in a VM's snapshot tree. The tree is flattened —
-// use `parentMoid` to reconstruct hierarchy and `current` to identify the
-// active snapshot. Key fields include `name`, `description`, `createDate`,
-// `powerState` at snapshot time, and `quiesced` (file-system consistent
-// snapshot). Use `numSnapshots` on the parent VM to quickly check if any
-// snapshots exist. Iterate from `vsphere.vm.snapshots`.
+// Single snapshot in a VM's snapshot tree. The tree is returned flattened, so
+// `parentMoid` reconstructs the hierarchy and `current` identifies the active
+// snapshot. The remaining fields record the snapshot `name`, `description`,
+// `createDate`, the `powerState` captured at snapshot time, and `quiesced`
+// (whether the snapshot is file-system consistent).
 private vsphere.vm.snapshot @defaults("name id createDate") {
   // ManagedObjectReference of the snapshot, encoded
   moid string
@@ -1177,12 +1277,13 @@ private vsphere.vm.snapshot @defaults("name id createDate") {
 
 // vSphere VM Virtual Disk
 //
-// Examine a virtual disk attached to a VM. The `backingType` identifies the
+// Virtual disk attached to a VM. The `backingType` identifies the
 // VMDK variant (flatVer2 for regular VMFS, rdmV1 for raw device mapping, etc.).
-// Key audit fields include `diskMode` (persistence mode — independent disks are
-// excluded from snapshots), `thinProvisioned`, `eagerlyScrub` (required for FT),
-// and `uuid`. Navigate to `encryptionKey` to check disk-level encryption and to
-// `datastore` to identify the backing storage. Iterate from `vsphere.vm.disks`.
+// The `diskMode` field gives the persistence mode (independent disks are
+// excluded from snapshots), `thinProvisioned` and `eagerlyScrub` (required for
+// FT) the provisioning, and `uuid` the stable disk identifier. The
+// `encryptionKey` field resolves disk-level encryption and `datastore` the
+// backing storage.
 private vsphere.vm.disk @defaults("label capacityBytes diskMode") {
   // Device key (unique within the parent VM, stable across reconfigure)
   key int
@@ -1220,15 +1321,15 @@ private vsphere.vm.disk @defaults("label capacityBytes diskMode") {
 
 // vSphere VM Encryption Key Reference
 //
-// Examine a CryptoKeyId reference on an encrypted virtual machine resource.
-// vCenter only tracks the key's `keyId` (UUID assigned by the KMS provider)
-// and `providerId` (KMS provider/cluster identifier); key material lives in
-// the external KMS. Navigate to `kmsCluster` to resolve the provider reference
-// against the registered KMIP clusters. Accessed from `vsphere.vm.disk.encryptionKey`.
+// CryptoKeyId reference on an encrypted virtual machine. vCenter tracks
+// only the key's `keyId` (UUID assigned by the KMS provider) and
+// `providerId` (KMS provider/cluster identifier); the key material itself
+// lives in the external KMS. Navigate to `kmsCluster` to resolve the
+// provider reference against the registered KMIP clusters.
 private vsphere.encryptionKey @defaults("keyId providerId") {
-  // CryptoKeyId.KeyId — UUID assigned by the KMS provider
+  // KeyId of the CryptoKeyId: UUID assigned by the KMS provider
   keyId string
-  // CryptoKeyId.ProviderId — KMS provider/cluster identifier; empty when the key isn't tied to a registered provider
+  // ProviderId of the CryptoKeyId: KMS provider/cluster identifier; empty when the key isn't tied to a registered provider
   providerId string
   // KMS cluster that issued the key, resolved against vsphere.kmsClusters; null when the provider isn't registered
   kmsCluster() vsphere.kmsCluster
@@ -1236,24 +1337,22 @@ private vsphere.encryptionKey @defaults("keyId providerId") {
 
 // vSphere Standard Virtual Switch
 //
-// Examine a per-host standard vSwitch on an ESXi host. Unlike a distributed
+// Per-host standard vSwitch on an ESXi host. Unlike a distributed
 // virtual switch, a standard vSwitch is not shared across the cluster.
-// Key fields include `name`, `mtu`, `numPorts`, and `numPortsAvailable`.
-// Security, failover, and shaping policies are available via
+// Security, failover, and shaping policies are available through
 // `securityPolicySettings`, `failoverPolicySettings`, and
-// `shapingPolicySettings`. Navigate to `uplinks` for bound physical NICs and
-// `portGroups` for attached standard port groups. Iterate from
-// `vsphere.host.standardSwitch`.
+// `shapingPolicySettings`; `uplinks` lists the bound physical NICs and
+// `portGroups` the attached standard port groups.
 private vsphere.vswitch.standard @defaults("name") {
   // vSwitch name (unique within the host, e.g. "vSwitch0")
   name string
   // Raw output of `esxcli network vswitch standard list` for this switch, as a dict
   properties dict
-  // MTU in bytes for traffic on this vSwitch — typically 1500, or 9000 for jumbo-frame fabrics. 0 when the host doesn't expose it.
+  // MTU in bytes for traffic on this vSwitch. Typically 1500, or 9000 for jumbo-frame fabrics. 0 when the host doesn't expose it.
   mtu int
   // Total ports configured on the switch (the pre-allocated capacity, not the number currently in use)
   numPorts int
-  // Free ports remaining — equal to numPorts minus the ports consumed by attached VMkernel and VM NICs
+  // Free ports remaining, equal to numPorts minus the ports consumed by attached VMkernel and VM NICs
   numPortsAvailable int
   // Raw failover policy dict
   //
@@ -1281,14 +1380,14 @@ private vsphere.vswitch.standard @defaults("name") {
 
 // vSphere Standard vSwitch Port Group
 //
-// Examine a per-host port group attached to a standard vSwitch (e.g.,
+// Per-host port group attached to a standard vSwitch (e.g.,
 // "Management Network", "VM Network"). Standard port groups are per-host;
 // the same name on two different hosts represents two distinct objects.
-// Key fields include `name`, `vSwitchName`, and `vlanId` (0 = untagged,
-// 4095 = trunk). Policy methods — `securityPolicySettings`,
-// `failoverPolicySettings`, `shapingPolicySettings` — return the effective
-// merged policy (port-group override applied on top of the parent vSwitch
-// policy). Iterate from `vsphere.vswitch.standard.portGroups`.
+// The `name` field selects the port group within its host, and `vlanId`
+// reports its VLAN tag (0 = untagged, 4095 = trunk). The policy methods
+// `securityPolicySettings`, `failoverPolicySettings`, and
+// `shapingPolicySettings` return the effective merged policy, the
+// port-group override applied on top of the parent vSwitch policy.
 private vsphere.vswitch.standard.portgroup @defaults("name vlanId vSwitchName") {
   // Stable identifier built from the host inventory path and the port-group name
   id string
@@ -1310,18 +1409,24 @@ private vsphere.vswitch.standard.portgroup @defaults("name vlanId vSwitchName") 
 
 // vSphere Distributed Virtual Switch
 //
-// Examine a vDS managed at the datacenter or cluster level. Unlike standard
-// vSwitches, a distributed virtual switch is shared across all member hosts.
-// Key fields include `moid`, `name`, and `properties` (full raw dict from
-// esxcli). Navigate to `uplinks` to see the physical NICs all member hosts
-// contribute. Iterate from `vsphere.datacenter.distributedSwitches`.
+// vDS managed at the datacenter or cluster level. Unlike standard
+// vSwitches, a distributed virtual switch is shared across all member
+// hosts. The `uplinks` method lists the physical NICs all member hosts
+// contribute, and `vspanSessions` the port-mirroring sessions configured
+// on the switch.
 private vsphere.vswitch.dvs @defaults("name") {
   // Encoded ManagedObjectReference of the DVS
   moid string
   // DVS name
   name string
+  // Tags attached to this distributed virtual switch
+  tagRefs() []vsphere.tag
   // Raw output of `esxcli network vswitch dvs vmware list` for this DVS, as a dict
   properties dict
+  // When the distributed virtual switch was created
+  //
+  // Reported by vCenter for switches iterated from `vsphere.datacenter.distributedSwitches`; null when the switch is observed directly from a host or vCenter does not report it.
+  createDate time
   // Physical NICs the host (or all member hosts) contribute as uplinks to this DVS
   uplinks() []vsphere.vmnic
   // Port-mirroring (SPAN) sessions configured on the switch
@@ -1335,12 +1440,12 @@ private vsphere.vswitch.dvs @defaults("name") {
 
 // Distributed Switch Port-Mirroring Session
 //
-// Examine a port-mirroring (SPAN) session on a distributed virtual switch.
-// `enabled` reports whether the session is active, `sessionType` distinguishes
+// Port-mirroring (SPAN) session on a distributed virtual switch. Because a
+// mirror session copies traffic off the switch, auditing which sessions
+// exist and whether they are enabled matters. `sessionType` distinguishes
 // the mirror mode (`dvPortMirror`, `remoteMirrorSource`, `remoteMirrorDest`,
-// `encapsulatedRemoteMirrorSource`), and `normalTrafficAllowed`,
-// `stripOriginalVlan`, and `encapsulationVlanId` describe how mirrored traffic
-// is handled. The `key` field selects the session within its switch.
+// `encapsulatedRemoteMirrorSource`), and the `key` field selects the
+// session within its switch.
 private vsphere.vswitch.dvs.vspanSession @defaults("name enabled sessionType") {
   // Session key, unique within the distributed switch
   key string
@@ -1366,25 +1471,28 @@ private vsphere.vswitch.dvs.vspanSession @defaults("name enabled sessionType") {
 
 // vSphere Distributed Virtual Port Group
 //
-// Examine a port group on a distributed virtual switch. DVS port groups are
-// cluster-scoped — one object shared across every host attached to the switch —
-// so they are identified by `moid` rather than by name. Key fields include
-// `name`, `vlanId` (0 = untagged; VLAN trunking and PVLAN configs also report
-// 0 — check `properties` for the full spec), and the typed policy methods
-// `securityPolicySettings`, `failoverPolicySettings`, and `shapingPolicySettings`.
-// Iterate from `vsphere.datacenter.distributedPortGroups`.
+// Port group on a distributed virtual switch. DVS port groups are
+// cluster-scoped (one object shared across every host attached to the
+// switch), so they are identified by `moid` rather than by name. `vlanId`
+// reports the VLAN tag (0 = untagged; VLAN trunking and PVLAN configs also
+// report 0, so check `properties` for the full spec). Layer-2 security,
+// failover, shaping, and MAC management policies are available through the
+// `securityPolicySettings`, `failoverPolicySettings`, `shapingPolicySettings`,
+// and `macManagementPolicySettings` methods.
 private vsphere.vswitch.portgroup @defaults("name vlanId") {
   // Encoded ManagedObjectReference of the distributed port group
   moid string
   // Port group name
   name string
+  // Tags attached to this distributed port group
+  tagRefs() []vsphere.tag
   // Generated dict view of the port-group config
   //
   // Covers DefaultPortConfig, policy overrides, etc. Use the typed `*PolicySettings` methods for audit-friendly access.
   properties dict
   // VLAN tag carried on this port group's traffic
   //
-  // 0 means untagged; non-zero is a single tag. For VLAN trunking or PVLAN configurations vlanId is reported as 0 — inspect `properties` for the full VLAN spec.
+  // 0 means untagged; non-zero is a single tag. For VLAN trunking or PVLAN configurations vlanId is reported as 0, so inspect `properties` for the full VLAN spec.
   vlanId int
   // Layer-2 security policy from the port group's DefaultPortConfig
   securityPolicySettings() vsphere.vswitch.securityPolicy
@@ -1403,8 +1511,8 @@ private vsphere.vswitch.portgroup @defaults("name vlanId") {
 
 // vSphere Distributed Virtual Switch MAC Management Policy
 //
-// Examine the MAC management policy applied to a distributed virtual port
-// group's DefaultPortConfig. `allowPromiscuous` (whether a guest NIC observes
+// MAC management policy applied to a distributed virtual port group's
+// DefaultPortConfig. `allowPromiscuous` (whether a guest NIC observes
 // traffic destined for other ports), `allowMacChanges` (whether the guest may
 // change its effective MAC at runtime), and `allowForgedTransmits` (whether
 // the guest may send frames with a different source MAC) are the layer-2
@@ -1414,7 +1522,6 @@ private vsphere.vswitch.portgroup @defaults("name vlanId") {
 // permits flooding of unknown unicast ingress traffic, `macLearningLimit`
 // caps the number of learned addresses, and `macLearningLimitPolicy` is the
 // switching policy applied once that limit is exceeded (DROP or ALLOW).
-// Accessed via `macManagementPolicySettings` on a distributed port group.
 private vsphere.vswitch.macManagementPolicy @defaults("allowPromiscuous allowForgedTransmits allowMacChanges macLearningEnabled") {
   // Whether a guest VM on this port can put its NIC in promiscuous mode
   //
@@ -1444,14 +1551,14 @@ private vsphere.vswitch.macManagementPolicy @defaults("allowPromiscuous allowFor
 
 // vSphere vSwitch Layer-2 Security Policy
 //
-// Examine the layer-2 security policy applied at a vSwitch or port group
-// level. Applies to both standard vSwitches and DVS port groups. The three
-// key audit fields are `allowPromiscuous` (whether a guest NIC can observe
-// traffic destined for other ports), `allowForgedTransmits` (whether the
-// guest may send frames with a different source MAC), and `allowMacChanges`
-// (whether the guest may change its NIC's effective MAC at runtime). CIS
-// hardening benchmarks typically require all three to be false on production
-// port groups. Accessed via `securityPolicySettings` on vSwitch/portgroup.
+// Layer-2 security policy applied at a vSwitch or port group level, for
+// both standard vSwitches and DVS port groups. The three key audit fields
+// are `allowPromiscuous` (whether a guest NIC can observe traffic destined
+// for other ports), `allowForgedTransmits` (whether the guest may send
+// frames with a different source MAC), and `allowMacChanges` (whether the
+// guest may change its NIC's effective MAC at runtime). CIS hardening
+// benchmarks typically require all three to be false on production port
+// groups.
 private vsphere.vswitch.securityPolicy @defaults("allowPromiscuous allowForgedTransmits allowMacChanges") {
   // Whether a guest VM on this port can put its NIC in promiscuous mode
   //
@@ -1469,13 +1576,12 @@ private vsphere.vswitch.securityPolicy @defaults("allowPromiscuous allowForgedTr
 
 // vSphere vSwitch NIC Teaming and Failover Policy
 //
-// Examine the NIC teaming and failover policy applied at a vSwitch or port
-// group level. Applies to both standard vSwitches and DVS port groups. The
-// `policy` field specifies the load-balancing algorithm (loadbalance_ip,
+// NIC teaming and failover policy applied at a vSwitch or port group
+// level, for both standard vSwitches and DVS port groups. The `policy`
+// field specifies the load-balancing algorithm (loadbalance_ip,
 // loadbalance_srcmac, loadbalance_srcid, loadbalance_loadbased, failover_explicit).
-// `notifySwitches` controls upstream switch notification on failover.
+// `notifySwitches` controls upstream switch notification on failover, and
 // `activeNic` and `standbyNic` list uplinks in priority order.
-// Accessed via `failoverPolicySettings` on vSwitch/portgroup.
 private vsphere.vswitch.failoverPolicy @defaults("policy notifySwitches") {
   // Load-balancing algorithm: loadbalance_ip, loadbalance_srcmac, loadbalance_srcid, loadbalance_loadbased (DVS only), failover_explicit
   policy string
@@ -1495,11 +1601,10 @@ private vsphere.vswitch.failoverPolicy @defaults("policy notifySwitches") {
 
 // vSphere vSwitch Traffic Shaping Policy
 //
-// Examine the traffic shaping policy applied at a vSwitch or port group level.
-// Applies to both standard vSwitches and DVS port groups. When `enabled` is
-// true, `averageBandwidth` and `peakBandwidth` (both in bits per second) and
-// `burstSize` (in bytes) constrain outbound traffic. Accessed via
-// `shapingPolicySettings` on vSwitch/portgroup.
+// Traffic shaping policy applied at a vSwitch or port group level, for
+// both standard vSwitches and DVS port groups. When `enabled` is true,
+// `averageBandwidth` and `peakBandwidth` (both in bits per second) and
+// `burstSize` (in bytes) constrain outbound traffic.
 private vsphere.vswitch.shapingPolicy @defaults("enabled averageBandwidth peakBandwidth") {
   // Whether shaping is currently enabled
   enabled bool
@@ -1513,22 +1618,32 @@ private vsphere.vswitch.shapingPolicy @defaults("enabled averageBandwidth peakBa
 
 // vSphere ESXi Physical NIC (Uplink)
 //
-// Examine a physical NIC on an ESXi host — one entry per pNIC bound to a
-// vSwitch or available for binding. Each adapter is identified by `name`
-// (e.g., `vmnic0`) and exposes `mac`, `linkSpeedMb`, `fullDuplex`, `driver`,
-// and `wakeOnLanSupported`. The `properties` dict holds raw `esxcli network nic
-// list` output; `details` provides additional negotiation and capability data.
-// Iterate from `vsphere.host.adapters`.
+// Physical network adapter (pNIC) on an ESXi host, either bound to a
+// virtual switch or available for binding as an uplink. Each adapter is
+// selected by `name` (e.g. `vmnic0`) and reports its hardware MAC, the
+// currently negotiated link speed and duplex, the kernel driver, and
+// whether the hardware advertises Wake-on-LAN. Query it to audit uplink
+// health, driver versions, and negotiated speeds across a host's physical
+// networking.
 private vsphere.vmnic @defaults("name mac linkSpeedMb") {
   // Device name as ESXi exposes it (e.g. "vmnic0", "vmnic1")
   name string
-  // Raw output of `esxcli network nic list` for this device, as a dict
+  // Per-device output of `esxcli network nic list`, as a dict
+  //
+  // Keyed by esxcli column: `Name`, `PCIDevice`, `Driver`, `MACAddress`,
+  // `MTU`, `Speed`, `Duplex`, `Link`, `LinkStatus`, `AdminStatus`, and
+  // `Description`. The mac, linkSpeedMb, fullDuplex, and driver fields
+  // expose the same values in normalized form.
   properties dict
   // Output of `esxcli network nic get` for this device
   //
-  // Reports driver, advertised auto-negotiation modes, VMDirectPath capability, and virtual address. Lazy-loaded; one ESXCli call per access.
+  // Reports driver info, advertised auto-negotiation link modes, VMDirectPath (passthrough) capability, and the virtual MAC address.
   details() dict
   // 802.3x (Ethernet flow-control) pause-frame parameters reported by the driver
+  //
+  // Output of `esxcli network nic pauseParams list` for this device, keyed
+  // by esxcli column: `NIC`, `PauseRX` and `PauseTX` (whether receive and
+  // transmit pause frames are enabled), and `PauseAutoNegotiate`.
   pauseParams dict
   // Hardware MAC address
   mac string
@@ -1544,22 +1659,27 @@ private vsphere.vmnic @defaults("name mac linkSpeedMb") {
 
 // vSphere ESXi VMkernel NIC
 //
-// Examine a VMkernel virtual network interface on an ESXi host — the host's
-// own network endpoint for management, vMotion, vSAN, FT, replication, and
-// other services. Identified by `name` (e.g., `vmk0`). Key fields include
-// `mac`, `mtu`, `dhcp`, `ipv4` and `ipv6` address records, `tcpipStack`,
-// and `services` (the list of managed services this NIC carries, such as
-// `management`, `vmotion`, `vsan`). Binding to a standard port group is via
-// `portGroupName`; binding to a DVS port group is via `portGroupMoid`.
-// Iterate from `vsphere.host.vmknics`.
+// VMkernel virtual network interface on an ESXi host, the host's own network
+// endpoint for management, vMotion, vSAN, fault tolerance, replication, and
+// other services. Selected by `name`, for example `vmk0`. The `services`
+// list reports which managed traffic types the interface carries, so it
+// reveals whether sensitive traffic such as vMotion or vSAN shares an
+// interface that also serves management. Exactly one of `portGroupName`
+// (standard-vSwitch binding) or `portGroupMoid` (distributed-switch binding)
+// is populated.
 private vsphere.vmknic @defaults("name portGroupName tcpipStack") {
   // Device name as ESXi exposes it (e.g. "vmk0", "vmk1")
   name string
-  // Raw output of `esxcli network ip interface list` for this device, as a dict
+  // Raw esxcli row for the device
+  //
+  // Row from `esxcli network ip interface list` as a dict, keyed by the
+  // command's column names (Name, MACAddress, MTU, Portset, Portgroup,
+  // Enabled, NetstackInstance, and similar). Parsed equivalents are exposed
+  // as the mac, mtu, portGroupName, and tcpipStack fields.
   properties dict
-  // Per-IPv4 address records (Address, Netmask, Type — DHCP / STATIC). One entry per assigned address.
+  // Per-IPv4 address records (Address, Netmask, Type: DHCP / STATIC). One entry per assigned address.
   ipv4 []dict
-  // Per-IPv6 address records (Address, PrefixLength, Type — autoconf / DHCP / static / linklayer). One entry per assigned address.
+  // Per-IPv6 address records (Address, PrefixLength, Type: autoconf / DHCP / static / linklayer). One entry per assigned address.
   ipv6 []dict
   // Optional ESXi-managed tag list on the VMkernel NIC; rarely populated, useful for vendor-specific labelling.
   tags []string
@@ -1573,7 +1693,7 @@ private vsphere.vmknic @defaults("name portGroupName tcpipStack") {
   dhcp bool
   // Standard-vSwitch port group the VMkernel NIC is attached to
   //
-  // Empty when bound to a DVS port group instead — exactly one of `portGroupName` / `portGroupMoid` is populated.
+  // Empty when bound to a DVS port group instead. Exactly one of `portGroupName` / `portGroupMoid` is populated.
   portGroupName string
   // Encoded ManagedObjectReference of the DistributedVirtualPortgroup the VMkernel NIC is attached to
   //
@@ -1587,9 +1707,9 @@ private vsphere.vmknic @defaults("name portGroupName tcpipStack") {
 
 // ESXi Host Command Execution
 //
-// Examine the output of an arbitrary command run on an ESXi host. The
-// connected target must be a host — use `--platform-id` to select one
-// when connecting through vCenter. The `command` field holds the raw
+// Output of an arbitrary command run on an ESXi host. The
+// connected target must be a host (use `--platform-id` to select one
+// when connecting through vCenter). The `command` field holds the raw
 // command string, `inventoryPath` identifies the host, and `result`
 // returns the parsed command output as a list of dicts.
 vsphere.host.command {
@@ -1604,11 +1724,11 @@ vsphere.host.command {
 
 // ESXi VIB (vSphere Installation Bundle)
 //
-// Examine a software package installed on an ESXi host. Each VIB has a
+// Software package installed on an ESXi host. Each VIB has a
 // `name`, `version`, `vendor`, `acceptanceLevel` (VMwareCertified,
 // VMwareAccepted, PartnerSupported, CommunitySupported), `creationDate`,
 // `installDate`, and `status`. Use `acceptanceLevel` to audit the software
-// acceptance policy of the host. Iterate from `vsphere.host.packages`.
+// acceptance policy of the host.
 private vsphere.host.vib @defaults("id name") {
   // VIB ID
   id string
@@ -1630,11 +1750,10 @@ private vsphere.host.vib @defaults("id name") {
 
 // ESXi Kernel Module (Driver)
 //
-// Examine a kernel module loaded on an ESXi host. Each module exposes `name`,
+// Kernel module (driver) loaded on an ESXi host. Each module exposes `name`,
 // `modulefile`, `version`, `loaded`, `enabled`, `license`, `signedStatus`,
 // `signatureDigest`, `signatureFingerprint`, and `vibAcceptanceLevel`. Use
 // `signedStatus` and `vibAcceptanceLevel` to audit driver signing posture.
-// Iterate from `vsphere.host.kernelModules`.
 private vsphere.host.kernelModule @defaults("name") {
   // Module name
   name string
@@ -1660,13 +1779,12 @@ private vsphere.host.kernelModule @defaults("name") {
 
 // ESXi Management Service
 //
-// Examine a management daemon on an ESXi host. Each service has a `key`
+// Management daemon on an ESXi host. Each service has a `key`
 // (brief identifier), `label`, `running` state, `required` flag (cannot be
 // disabled), and `policy` (activation mode: on, off, automatic). The `ruleset`
 // field lists the firewall ruleset keys this service relies on. Use `running`
 // and `policy` to audit service enablement posture (e.g., SSH should typically
-// be off or set to automatic-with-justification). Iterate from
-// `vsphere.host.services`.
+// be off or set to automatic-with-justification).
 private vsphere.host.service @defaults("key label") {
   // Brief identifier for the service
   key string
@@ -1684,9 +1802,9 @@ private vsphere.host.service @defaults("key label") {
 
 // ESXi Host Timezone Configuration
 //
-// Examine the time zone configured on an ESXi host. Fields include `key`
+// Time zone configured on an ESXi host. Fields include `key`
 // (timezone identifier), `name` (display name), `description`, and `offset`
-// (GMT offset in seconds). Accessed from `vsphere.host.timezone`.
+// (GMT offset in seconds).
 private vsphere.host.timezone @defaults("key name") {
   // Identifier for the time zone
   key string
@@ -1700,9 +1818,9 @@ private vsphere.host.timezone @defaults("key name") {
 
 // ESXi Host NTP Configuration
 //
-// Examine the NTP configuration on an ESXi host. The `server` list contains
+// NTP configuration on an ESXi host. The `server` list contains
 // the configured NTP server addresses (IP or FQDN), and `config` holds the
-// raw lines of the host's `ntp.conf` file. Accessed from `vsphere.host.ntp`.
+// raw lines of the host's `ntp.conf` file.
 private vsphere.host.ntpConfig @defaults("id") {
   // NTP config ID
   id string
@@ -1725,8 +1843,15 @@ esxi @maturity("deprecated") {}
 // for backward compatibility and has the same fields as its replacement.
 esxi.command @maturity("deprecated") {
   init(command string)
+  // vSphere inventory path of the host the command runs on
   inventoryPath string
+  // Raw command string
   command string
+  // Parsed command output
+  //
+  // List of dicts, one per output record. The keys are taken directly
+  // from the ESXi command output, so the exact key set depends on which
+  // command was run.
   result() []dict
 }
 
@@ -1737,6 +1862,7 @@ esxi.command @maturity("deprecated") {
 private esxi.vib @defaults("id name") @maturity("deprecated") {
   id string
   name string
+  // Acceptance level (VMwareCertified, VMwareAccepted, PartnerSupported, CommunitySupported)
   acceptanceLevel string
   creationDate time
   installDate time
@@ -1781,9 +1907,13 @@ private esxi.service @defaults("key label") @maturity("deprecated") {
 // Deprecated in favor of `vsphere.host.timezone`. This resource is kept
 // for backward compatibility and has the same fields as its replacement.
 private esxi.timezone @defaults("key name") @maturity("deprecated") {
+  // Identifier for the time zone
   key string
+  // Time zone name
   name string
+  // Description of the time zone
   description string
+  // GMT offset in seconds
   offset int
 }
 
@@ -1793,7 +1923,348 @@ private esxi.timezone @defaults("key name") @maturity("deprecated") {
 // kept for backward compatibility and has the same fields as its
 // replacement.
 private esxi.ntpconfig @defaults("id") @maturity("deprecated") {
+  // NTP config ID
   id string
+  // List of time servers, specified as either IP addresses or fully qualified domain names (FQDNs)
   server []string
+  // Content of ntp.conf host configuration file, split by lines
   config []string
+}
+
+// vSphere Tag Category
+//
+// Tag category in vCenter: the namespace that groups related tags and
+// constrains how they can be used. `cardinality` is SINGLE (at most one tag
+// from this category per object) or MULTIPLE, and `associableTypes` limits
+// which managed-object types tags in the category can attach to (empty means
+// any object type). The `id` is the Inventory Service category URN.
+private vsphere.category @defaults("name cardinality") {
+  // Inventory Service category identifier (URN)
+  id string
+  // Category name
+  name string
+  // Category description
+  description string
+  // How many tags from this category may attach to one object: SINGLE or MULTIPLE
+  cardinality string
+  // Managed-object types tags in this category can attach to; empty means any object type
+  associableTypes []string
+  // Tags defined in this category
+  tags() []vsphere.tag
+}
+
+// vSphere Tag
+//
+// Tag in vCenter that can be attached to inventory objects for organization,
+// search, and policy targeting. Each tag belongs to a category that governs
+// its cardinality and which object types it can attach to. Navigate to
+// `category` for those constraints. The `id` is the Inventory Service tag URN.
+private vsphere.tag @defaults("name") {
+  // Inventory Service tag identifier (URN)
+  id string
+  // Tag name
+  name string
+  // Tag description
+  description string
+  // Category this tag belongs to
+  category() vsphere.category
+}
+
+// vSphere Content Library
+//
+// Content library hosting VM templates, OVF/OVA packages, and ISO images for
+// deployment across the inventory. `type` is LOCAL (content created here) or
+// SUBSCRIBED (mirrored from a published library); for subscribed libraries
+// `subscriptionUrl`, `subscriptionAutomaticSync`, and `subscriptionOnDemand`
+// describe the sync source and behavior, and for libraries published to others
+// `published` and `publishUrl` apply. The `items` hold the stored content.
+private vsphere.contentLibrary @defaults("name type") {
+  // Content library identifier
+  id string
+  // Content library name
+  name string
+  // Library kind: LOCAL or SUBSCRIBED
+  type string
+  // Library description
+  description string
+  // When the library was created
+  creationTime time
+  // When the library was last modified
+  lastModifiedTime time
+  // When a subscribed library last synced from its source; zero for local libraries
+  lastSyncTime time
+  // Library content version
+  version string
+  // Whether this library is published for other vCenters to subscribe to
+  published bool
+  // URL other vCenters subscribe to when this library is published; empty when not published
+  publishUrl string
+  // Source URL a subscribed library mirrors content from; empty for local libraries
+  subscriptionUrl string
+  // Whether a subscribed library syncs automatically on a schedule
+  subscriptionAutomaticSync bool
+  // Whether a subscribed library downloads item content only on demand rather than eagerly
+  subscriptionOnDemand bool
+  // Authentication method used to reach the subscription source (NONE or BASIC); empty for local libraries
+  subscriptionAuthMethod string
+  // Storage backings for the library. Each entry is a dict with `type` (DATASTORE or OTHER) and `datastoreId`.
+  storageBackings []dict
+  // Datastores backing the library, resolved against vsphere.datacenters[].datastores
+  datastores() []vsphere.datastore
+  // Security policy identifier applied to the library; empty when none is assigned
+  securityPolicyId string
+  // Items stored in this library
+  items() []vsphere.contentLibrary.item
+}
+
+// vSphere Content Library Item
+//
+// Item stored in a content library: a VM template, OVF/OVA package, ISO image,
+// or other content. `type` identifies the content kind (ovf, iso, vm-template,
+// and others), `cached` reports whether the item's content is downloaded
+// locally, and `size` is the on-disk size in bytes. For subscribed libraries,
+// `securityCompliant` reflects certificate verification of the item content.
+private vsphere.contentLibrary.item @defaults("name type size") {
+  // Content library item identifier
+  id string
+  // Item name
+  name string
+  // Content kind (ovf, iso, vm-template, and others)
+  type string
+  // Item description
+  description string
+  // Item version
+  version string
+  // Content version, incremented each time the item's files change
+  contentVersion string
+  // Metadata version, incremented each time the item's metadata changes
+  metadataVersion string
+  // On-disk size of the item content in bytes
+  size int
+  // Whether the item's content is currently downloaded and cached locally
+  cached bool
+  // When the item was created
+  creationTime time
+  // When the item was last modified
+  lastModifiedTime time
+  // When the item last synced from a subscription source; zero when not applicable
+  lastSyncTime time
+  // Identifier of the source item this was synced from; empty when not synced from a source
+  sourceId string
+  // Whether the item content passed certificate verification (subscribed libraries with a security policy); null when not evaluated
+  securityCompliant bool
+}
+
+// vSphere Custom Attribute Definition
+//
+// Custom attribute (custom field) definition registered in vCenter. Custom
+// attributes are the pre-tag annotation mechanism: each definition has a `name`
+// and an optional `managedObjectType` limiting which inventory object type it
+// applies to (empty means any object type). The `key` is the numeric field
+// identifier referenced by per-object values.
+private vsphere.customField @defaults("name managedObjectType") {
+  // Numeric field identifier
+  key int
+  // Custom attribute name
+  name string
+  // Managed-object type the attribute applies to (e.g. VirtualMachine, HostSystem); empty means any object type
+  managedObjectType string
+  // Value type of the attribute (typically string)
+  type string
+}
+
+// vSphere Alarm Definition
+//
+// Alarm definition configured in vCenter: the condition-or-event rule that,
+// when met on a monitored entity, raises an alarm and runs its configured
+// actions. `enabled` reflects whether the alarm is active, `systemName` is set
+// only for predefined alarms shipped by the server or extensions (user-created
+// alarms have none), and `entityMoid` is the inventory object the alarm is
+// registered on (commonly the root folder for global alarms).
+private vsphere.alarm @defaults("name enabled") {
+  // Managed object ID of the alarm
+  moid string
+  // Stable alarm key
+  key string
+  // Alarm name
+  name string
+  // System name for predefined alarms; empty for user-created alarms
+  systemName string
+  // Alarm description
+  description string
+  // Whether the alarm is enabled
+  enabled bool
+  // Managed object ID of the entity the alarm is registered on
+  entityMoid string
+  // Type of the entity the alarm is registered on (e.g. Folder, Datacenter, ClusterComputeResource)
+  entityType string
+  // When the alarm was created or last modified
+  lastModifiedTime time
+  // User who last modified the alarm
+  lastModifiedUser string
+}
+
+// vSphere Triggered Alarm
+//
+// Alarm currently in a non-green state on an inventory object. Each entry ties
+// a triggered `alarm` definition to the `entityMoid` it fired on, with
+// `overallStatus` giving the severity (red or yellow), the `time` it fired,
+// and whether it has been `acknowledged` (and by whom and when).
+private vsphere.alarm.state @defaults("overallStatus acknowledged") {
+  // Identifier (alarm moid + entity moid)
+  id string
+  // Alarm definition that triggered
+  alarm() vsphere.alarm
+  // Managed object ID of the entity the alarm fired on
+  entityMoid string
+  // Type of the entity the alarm fired on
+  entityType string
+  // Severity of the triggered state: red, yellow, green, or gray
+  overallStatus string
+  // When the alarm entered its current triggered state
+  time time
+  // Whether an operator has acknowledged the triggered alarm
+  acknowledged bool
+  // User who acknowledged the alarm; empty when not acknowledged
+  acknowledgedByUser string
+  // When the alarm was acknowledged; zero when not acknowledged
+  acknowledgedTime time
+}
+
+// vSphere Scheduled Task
+//
+// Timer-driven automation job registered in vCenter. Each scheduled task runs
+// an `action` (a power operation, reconfigure, snapshot, and others) against a
+// target entity on a recurrence described by `schedulerType`. `enabled`
+// reflects whether it will run, `nextRunTime` and `prevRunTime` bracket its
+// schedule, and `lastModifiedUser` records who last changed it. Auditing these
+// surfaces unexpected automation that could power off, reconfigure, or snapshot
+// inventory objects on a recurring schedule.
+private vsphere.scheduledTask @defaults("name enabled nextRunTime") {
+  // Managed object ID of the scheduled task
+  moid string
+  // Scheduled task name
+  name string
+  // Scheduled task description
+  description string
+  // Whether the scheduled task is enabled
+  enabled bool
+  // Recurrence kind: Once, AfterStartup, Hourly, Daily, Weekly, or Monthly
+  schedulerType string
+  // Action performed when the task runs (the action type, e.g. a method name)
+  action string
+  // Managed object ID of the entity the task acts on
+  entityMoid string
+  // Type of the entity the task acts on
+  entityType string
+  // Most recent run state: success, error, running, or queued
+  state string
+  // Next time the task is scheduled to run; zero when not scheduled to run again
+  nextRunTime time
+  // Previous time the task ran; zero when it has never run
+  prevRunTime time
+  // When the task was created or last modified
+  lastModifiedTime time
+  // User who last modified the task
+  lastModifiedUser string
+}
+
+// vSphere Recent Task
+//
+// Recently executed or in-flight task tracked by vCenter, drawn from the
+// bounded recent-task ring buffer (vCenter retains only the latest tasks).
+// `operation` is the API operation performed (e.g. VirtualMachine.powerOn),
+// `state` is its outcome (success, error, running, queued), and `user` is the
+// principal that initiated it. For failed tasks, `errorMessage` carries the
+// fault. Useful for auditing recent administrative and automated activity and
+// for spotting failed operations in the audit window.
+private vsphere.task @defaults("operation state user") {
+  // Task key (unique within vCenter)
+  key string
+  // API operation performed (e.g. VirtualMachine.powerOn)
+  operation string
+  // Outcome: success, error, running, or queued
+  state string
+  // Managed object ID of the entity the task ran against
+  entityMoid string
+  // Type of the entity the task ran against
+  entityType string
+  // Name of the entity the task ran against
+  entityName string
+  // Principal that initiated the task
+  user string
+  // When the task was queued
+  queueTime time
+  // When the task started running; zero when it never started
+  startTime time
+  // When the task finished; zero when still running or queued
+  completeTime time
+  // Completion percentage while running (0 to 100)
+  //
+  // vCenter reports this only for in-flight tasks; a task that has not reported
+  // progress (queued, or already finished) reads as 0, so 0 means "none
+  // reported" rather than necessarily "0% complete".
+  progress int
+  // Whether the task can be cancelled
+  cancelable bool
+  // Whether the task was cancelled
+  cancelled bool
+  // Fault message when the task failed; empty otherwise
+  errorMessage string
+}
+
+// vSphere Event
+//
+// Event recorded by vCenter, drawn from the latest page of the event stream
+// (bounded to keep scans fast). Events form the vCenter audit trail: logins,
+// permission and role changes, configuration edits, power operations, and
+// more. `type` is the event class (e.g. UserLoginSessionEvent), `category`
+// is its severity (info, warning, error, or user), and `userName` is the
+// acting principal when one is recorded.
+private vsphere.event @defaults("type category createdTime") {
+  // Event key (unique within vCenter)
+  key int
+  // Event class name (e.g. UserLoginSessionEvent, PermissionAddedEvent)
+  type string
+  // Severity: info, warning, error, or user
+  category string
+  // When the event was created
+  createdTime time
+  // Acting principal recorded on the event; empty for system events
+  userName string
+  // Fully formatted human-readable event message
+  message string
+  // Managed object ID of the entity the event concerns; empty when none
+  entityMoid string
+  // Name of the entity the event concerns; empty when none
+  entityName string
+}
+
+// vCenter Server Certificate
+//
+// Certificate in the vCenter Server trust chain. `type` distinguishes the
+// machine SSL certificate that serves the reverse proxy (MACHINE_SSL_CERT),
+// the SSO/STS token-signing certificate whose silent expiry breaks
+// authentication (SIGNING_CERT), the VMCA root that signs solution and host
+// certificates (VMCA_ROOT), and other trusted roots (TRUSTED_ROOT). `notAfter`
+// is the expiry to monitor for silent lapses that break TLS or authentication.
+private vsphere.certificate @defaults("type subject notAfter") {
+  // Identifier (certificate type and thumbprint)
+  id string
+  // Certificate role: MACHINE_SSL_CERT, SIGNING_CERT, VMCA_ROOT, or TRUSTED_ROOT
+  type string
+  // Distinguished name of the certificate subject
+  subject string
+  // Distinguished name of the issuer
+  issuer string
+  // Start of the validity window
+  notBefore time
+  // End of the validity window (the expiry to monitor)
+  notAfter time
+  // Certificate serial number
+  serialNumber string
+  // SHA-256 fingerprint of the certificate
+  thumbprint string
+  // Signature algorithm used to sign the certificate
+  signatureAlgorithm string
 }

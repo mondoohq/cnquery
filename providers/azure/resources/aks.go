@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -20,9 +21,12 @@ import (
 )
 
 type mqlAzureSubscriptionAksServiceClusterInternal struct {
-	cacheKmsKeyId   string
-	cacheProperties *clusters.ManagedClusterProperties
-	cacheSystemData any
+	cacheKmsKeyId                string
+	cacheKubeletIdentityId       string
+	cacheDiskEncryptionSetId     string
+	cacheUserAssignedIdentityIds []string
+	cacheProperties              *clusters.ManagedClusterProperties
+	cacheSystemData              any
 }
 
 type mqlAzureSubscriptionAksServiceClusterIdentityBindingInternal struct {
@@ -136,6 +140,11 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			// Normalize a nil Properties to an empty struct so the many early
+			// accesses below are nil-safe; the later blocks already guard it.
+			if entry.Properties == nil {
+				entry.Properties = &clusters.ManagedClusterProperties{}
+			}
 			storageProfile, err := convert.JsonToDict(entry.Properties.StorageProfile)
 			if err != nil {
 				return nil, err
@@ -268,6 +277,38 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 				controlPlaneMetricsEnabled = amp.Metrics.ControlPlane.Enabled
 			}
 
+			identityDict, err := convert.JsonToDict(entry.Identity)
+			if err != nil {
+				return nil, err
+			}
+			var principalId *string
+			var userAssignedIdentityIds []string
+			if entry.Identity != nil {
+				principalId = entry.Identity.PrincipalID
+				userAssignedIdentityIds = sortedUserAssignedIdentityIDs(entry.Identity.UserAssignedIdentities)
+			}
+
+			diskEncryptionSetId := ""
+			if entry.Properties != nil && entry.Properties.DiskEncryptionSetID != nil {
+				diskEncryptionSetId = *entry.Properties.DiskEncryptionSetID
+			}
+
+			servicePrincipalClientId := ""
+			kubeletIdentityId := ""
+			if entry.Properties != nil {
+				// Service-principal clusters report the SP client ID here;
+				// managed-identity clusters report the sentinel "msi" instead,
+				// which carries no provenance value.
+				if spp := entry.Properties.ServicePrincipalProfile; spp != nil && spp.ClientID != nil && !strings.EqualFold(*spp.ClientID, "msi") {
+					servicePrincipalClientId = *spp.ClientID
+				}
+				for k, v := range entry.Properties.IdentityProfile {
+					if strings.EqualFold(k, "kubeletidentity") && v != nil {
+						kubeletIdentityId = convert.ToValue(v.ResourceID)
+					}
+				}
+			}
+
 			mqlAksCluster, err := CreateResource(a.MqlRuntime, "azure.subscription.aksService.cluster",
 				map[string]*llx.RawData{
 					"id":                                llx.StringDataPtr(entry.ID),
@@ -315,12 +356,18 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 					"serviceMeshMode":                   llx.StringDataPtr(serviceMeshMode),
 					"supportPlan":                       llx.StringDataPtr((*string)(entry.Properties.SupportPlan)),
 					"controlPlaneMetricsEnabled":        llx.BoolDataPtr(controlPlaneMetricsEnabled),
+					"identity":                          llx.DictData(identityDict),
+					"principalId":                       llx.StringDataPtr(principalId),
+					"servicePrincipalClientId":          llx.StringData(servicePrincipalClientId),
 				})
 			if err != nil {
 				return nil, err
 			}
 			mqlCluster := mqlAksCluster.(*mqlAzureSubscriptionAksServiceCluster)
 			mqlCluster.cacheKmsKeyId = azureKeyVaultKmsKeyId
+			mqlCluster.cacheKubeletIdentityId = kubeletIdentityId
+			mqlCluster.cacheDiskEncryptionSetId = diskEncryptionSetId
+			mqlCluster.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 			mqlCluster.cacheProperties = entry.Properties
 			sysData, err := convert.JsonToDict(entry.SystemData)
 			if err != nil {
@@ -519,6 +566,38 @@ func (a *mqlAzureSubscriptionAksServiceClusterIdentityBinding) id() (string, err
 	return a.Id.Data, nil
 }
 
+func (a *mqlAzureSubscriptionAksServiceCluster) privateEndpointConnections() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+
+	resourceID, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := clusters.NewPrivateEndpointConnectionsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.List(ctx, resourceID.ResourceGroup, a.Name.Data, nil)
+	if err != nil {
+		// Private endpoint connections are absent on clusters without private
+		// networking, and the endpoint returns 403 when the caller lacks
+		// access. Treat both as "no connections" rather than failing.
+		var respErr *azcore.ResponseError
+		if errors.As(err, &respErr) && (respErr.StatusCode == http.StatusNotFound || respErr.StatusCode == http.StatusForbidden) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+
+	return azurePrivateEndpointConnectionsToMql(a.MqlRuntime, resp.Value)
+}
+
 func (a *mqlAzureSubscriptionAksServiceCluster) identityBindings() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
@@ -603,6 +682,40 @@ func (a *mqlAzureSubscriptionAksServiceClusterIdentityBinding) managedIdentity()
 		return nil, err
 	}
 	return res.(*mqlAzureSubscriptionManagedIdentity), nil
+}
+
+func (a *mqlAzureSubscriptionAksServiceCluster) kubeletIdentity() (*mqlAzureSubscriptionManagedIdentity, error) {
+	if a.cacheKubeletIdentityId == "" {
+		a.KubeletIdentity.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.managedIdentity",
+		map[string]*llx.RawData{"__id": llx.StringData(a.cacheKubeletIdentityId)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionManagedIdentity), nil
+}
+
+func (a *mqlAzureSubscriptionAksServiceCluster) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
+}
+
+func (a *mqlAzureSubscriptionAksServiceCluster) systemAssignedIdentity() (*mqlAzureSubscriptionManagedIdentity, error) {
+	return newSystemAssignedManagedIdentity(a.MqlRuntime, a.Id.Data, a.PrincipalId.Data, tenantIDFromIdentityDict(a.Identity), &a.SystemAssignedIdentity)
+}
+
+func (a *mqlAzureSubscriptionAksServiceCluster) diskEncryptionSet() (*mqlAzureSubscriptionComputeServiceDiskEncryptionSet, error) {
+	if a.cacheDiskEncryptionSetId == "" {
+		a.DiskEncryptionSet.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.computeService.diskEncryptionSet",
+		map[string]*llx.RawData{"id": llx.StringData(strings.ToLower(a.cacheDiskEncryptionSetId))})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet), nil
 }
 
 func (a *mqlAzureSubscriptionAksServiceClusterNodePool) recentlyUsedVersions() ([]any, error) {

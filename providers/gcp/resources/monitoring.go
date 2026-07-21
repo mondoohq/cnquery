@@ -256,7 +256,7 @@ func (g *mqlGcpProjectMonitoringService) alertPolicies() ([]any, error) {
 			"labels":                  llx.MapData(convert.MapToInterfaceMap(p.UserLabels), types.String),
 			"conditions":              llx.ArrayData(mqlConditions, types.Dict),
 			"combiner":                llx.StringData(p.Combiner.String()),
-			"enabled":                 llx.BoolData(p.Enabled.Value),
+			"enabled":                 llx.BoolData(p.Enabled.GetValue()),
 			"validity":                llx.DictData(mqlValidity),
 			"notificationChannelUrls": llx.ArrayData(convert.SliceAnyToInterface(p.NotificationChannels), types.String),
 			"created":                 mutationRecordTime(p.CreationRecord),
@@ -415,6 +415,7 @@ func (g *mqlGcpProjectMonitoringService) notificationChannels() ([]any, error) {
 			"labels":             llx.MapData(convert.MapToInterfaceMap(ch.Labels), types.String),
 			"userLabels":         llx.MapData(convert.MapToInterfaceMap(ch.UserLabels), types.String),
 			"verificationStatus": llx.StringData(ch.VerificationStatus.String()),
+			"created":            llx.TimeDataPtr(timestampAsTimePtr(ch.GetCreationRecord().GetMutateTime())),
 		})
 		if err != nil {
 			return nil, err

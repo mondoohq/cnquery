@@ -8,7 +8,7 @@ import (
 	"errors"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	subscriptions "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
+	subscriptions "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions/v2"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -424,6 +424,16 @@ func (a *mqlAzureSubscription) search() (*mqlAzureSubscriptionSearchService, err
 		return nil, err
 	}
 	return svc.(*mqlAzureSubscriptionSearchService), nil
+}
+
+func (a *mqlAzureSubscription) lighthouse() (*mqlAzureSubscriptionLighthouseService, error) {
+	svc, err := NewResource(a.MqlRuntime, "azure.subscription.lighthouseService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionLighthouseService), nil
 }
 
 func (a *mqlAzureSubscription) signalR() (*mqlAzureSubscriptionSignalRService, error) {
