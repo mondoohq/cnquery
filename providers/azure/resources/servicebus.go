@@ -44,6 +44,53 @@ type mqlAzureSubscriptionServiceBusServiceNamespaceTopicSubscriptionInternal str
 	cacheSystemData any
 }
 
+type mqlAzureSubscriptionServiceBusServiceAuthorizationRuleInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionServiceBusServiceAuthorizationRule) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionServiceBusServiceAuthorizationRule) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+// serviceBusAuthorizationRulesToMql maps a list of Service Bus SAS authorization rules
+// (from a namespace, queue, or topic) to the shared authorizationRule resource.
+func serviceBusAuthorizationRulesToMql(runtime *plugin.Runtime, rules []*armservicebus.SBAuthorizationRule) ([]any, error) {
+	res := []any{}
+	for _, r := range rules {
+		if r == nil {
+			continue
+		}
+		rights := []any{}
+		if r.Properties != nil {
+			for _, right := range r.Properties.Rights {
+				if right == nil {
+					continue
+				}
+				rights = append(rights, string(*right))
+			}
+		}
+		mqlRule, err := CreateResource(runtime, "azure.subscription.serviceBusService.authorizationRule", map[string]*llx.RawData{
+			"id":     llx.StringDataPtr(r.ID),
+			"name":   llx.StringDataPtr(r.Name),
+			"rights": llx.ArrayData(rights, types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		sysData, err := convert.JsonToDict(r.SystemData)
+		if err != nil {
+			return nil, err
+		}
+		mqlRule.(*mqlAzureSubscriptionServiceBusServiceAuthorizationRule).cacheSystemData = sysData
+		res = append(res, mqlRule)
+	}
+	return res, nil
+}
+
 func (a *mqlAzureSubscriptionServiceBusServiceNamespace) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
 	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
@@ -484,6 +531,89 @@ func (a *mqlAzureSubscriptionServiceBusServiceNamespaceTopic) subscriptions() ([
 	}
 
 	return res, nil
+}
+
+func (a *mqlAzureSubscriptionServiceBusServiceNamespace) authorizationRules() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	resourceID, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	client, err := armservicebus.NewNamespacesClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	pager := client.NewListAuthorizationRulesPager(resourceID.ResourceGroup, a.Name.Data, nil)
+	var rules []*armservicebus.SBAuthorizationRule
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		rules = append(rules, page.Value...)
+	}
+	return serviceBusAuthorizationRulesToMql(a.MqlRuntime, rules)
+}
+
+func (a *mqlAzureSubscriptionServiceBusServiceNamespaceQueue) authorizationRules() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	resourceID, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	nsName, err := resourceID.Component("namespaces")
+	if err != nil {
+		return nil, err
+	}
+	client, err := armservicebus.NewQueuesClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	pager := client.NewListAuthorizationRulesPager(resourceID.ResourceGroup, nsName, a.Name.Data, nil)
+	var rules []*armservicebus.SBAuthorizationRule
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		rules = append(rules, page.Value...)
+	}
+	return serviceBusAuthorizationRulesToMql(a.MqlRuntime, rules)
+}
+
+func (a *mqlAzureSubscriptionServiceBusServiceNamespaceTopic) authorizationRules() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	resourceID, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	nsName, err := resourceID.Component("namespaces")
+	if err != nil {
+		return nil, err
+	}
+	client, err := armservicebus.NewTopicsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	pager := client.NewListAuthorizationRulesPager(resourceID.ResourceGroup, nsName, a.Name.Data, nil)
+	var rules []*armservicebus.SBAuthorizationRule
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		rules = append(rules, page.Value...)
+	}
+	return serviceBusAuthorizationRulesToMql(a.MqlRuntime, rules)
 }
 
 // networkRuleSet fetches the namespace-level network rule set (default action, public network access,

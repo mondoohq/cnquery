@@ -44,6 +44,107 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup) syst
 	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
+type mqlAzureSubscriptionEventHubServiceAuthorizationRuleInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionEventHubServiceAuthorizationRule) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionEventHubServiceAuthorizationRule) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+// eventHubAuthorizationRulesToMql maps a list of Event Hubs SAS authorization rules
+// (from a namespace or an individual Event Hub) to the shared authorizationRule resource.
+func eventHubAuthorizationRulesToMql(runtime *plugin.Runtime, rules []*armeventhub.AuthorizationRule) ([]any, error) {
+	res := []any{}
+	for _, r := range rules {
+		if r == nil {
+			continue
+		}
+		rights := []any{}
+		if r.Properties != nil {
+			for _, right := range r.Properties.Rights {
+				if right == nil {
+					continue
+				}
+				rights = append(rights, string(*right))
+			}
+		}
+		mqlRule, err := CreateResource(runtime, "azure.subscription.eventHubService.authorizationRule", map[string]*llx.RawData{
+			"id":     llx.StringDataPtr(r.ID),
+			"name":   llx.StringDataPtr(r.Name),
+			"rights": llx.ArrayData(rights, types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		sysData, err := convert.JsonToDict(r.SystemData)
+		if err != nil {
+			return nil, err
+		}
+		mqlRule.(*mqlAzureSubscriptionEventHubServiceAuthorizationRule).cacheSystemData = sysData
+		res = append(res, mqlRule)
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionEventHubServiceNamespace) authorizationRules() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	resourceID, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	client, err := armeventhub.NewNamespacesClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	pager := client.NewListAuthorizationRulesPager(resourceID.ResourceGroup, a.Name.Data, nil)
+	var rules []*armeventhub.AuthorizationRule
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		rules = append(rules, page.Value...)
+	}
+	return eventHubAuthorizationRulesToMql(a.MqlRuntime, rules)
+}
+
+func (a *mqlAzureSubscriptionEventHubServiceNamespaceEventHub) authorizationRules() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	resourceID, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	nsName, err := resourceID.Component("namespaces")
+	if err != nil {
+		return nil, err
+	}
+	client, err := armeventhub.NewEventHubsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	pager := client.NewListAuthorizationRulesPager(resourceID.ResourceGroup, nsName, a.Name.Data, nil)
+	var rules []*armeventhub.AuthorizationRule
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		rules = append(rules, page.Value...)
+	}
+	return eventHubAuthorizationRulesToMql(a.MqlRuntime, rules)
+}
+
 func (a *mqlAzureSubscriptionEventHubService) id() (string, error) {
 	return "azure.subscription.eventHub/" + a.SubscriptionId.Data, nil
 }

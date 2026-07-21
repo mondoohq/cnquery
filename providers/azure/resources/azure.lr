@@ -11976,6 +11976,8 @@ azure.subscription.serviceBusService.namespace @defaults("id name location") {
   queues() []azure.subscription.serviceBusService.namespace.queue
   // Topics in this namespace
   topics() []azure.subscription.serviceBusService.namespace.topic
+  // Shared access signature (SAS) authorization rules on the namespace
+  authorizationRules() []azure.subscription.serviceBusService.authorizationRule
   // Private endpoint connections to the namespace
   privateEndpointConnections() []azure.subscription.privateEndpointConnection
   // When the namespace was created
@@ -12054,6 +12056,8 @@ private azure.subscription.serviceBusService.namespace.queue @defaults("id name"
   enablePartitioning bool
   // When the queue was created
   creationTime time
+  // Shared access signature (SAS) authorization rules on the queue
+  authorizationRules() []azure.subscription.serviceBusService.authorizationRule
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -12088,6 +12092,8 @@ private azure.subscription.serviceBusService.namespace.topic @defaults("id name"
   creationTime time
   // Subscriptions on this topic
   subscriptions() []azure.subscription.serviceBusService.namespace.topic.subscription
+  // Shared access signature (SAS) authorization rules on the topic
+  authorizationRules() []azure.subscription.serviceBusService.authorizationRule
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -12119,6 +12125,26 @@ private azure.subscription.serviceBusService.namespace.topic.subscription @defau
   requiresSession bool
   // When the subscription was created
   creationTime time
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Service Bus shared access signature authorization rule
+//
+// Shared access signature (SAS) policy attached to a Service Bus
+// namespace, queue, or topic, selected by `name`. The `rights` list
+// enumerates the granted permissions: Listen, Send, or Manage. A rule
+// that grants Manage (including the default RootManageSharedAccessKey)
+// confers full control of the entity, so audit these to find
+// over-privileged keys and to confirm SAS access is scoped to the
+// minimum each client needs.
+private azure.subscription.serviceBusService.authorizationRule @defaults("name rights") {
+  // Authorization rule resource ID
+  id string
+  // Authorization rule name
+  name string
+  // Granted rights (Listen, Send, Manage)
+  rights []string
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -12191,6 +12217,8 @@ azure.subscription.eventHubService.namespace @defaults("id name location") {
   networkRules() azure.subscription.eventHubService.namespace.networkRules
   // Event Hubs in this namespace
   eventHubs() []azure.subscription.eventHubService.namespace.eventHub
+  // Shared access signature (SAS) authorization rules on the namespace
+  authorizationRules() []azure.subscription.eventHubService.authorizationRule
   // Private endpoint connections to the namespace
   privateEndpointConnections() []azure.subscription.privateEndpointConnection
   // When the namespace was created
@@ -12251,6 +12279,8 @@ private azure.subscription.eventHubService.namespace.eventHub @defaults("id name
   partitionIds []string
   // Consumer groups for this Event Hub
   consumerGroups() []azure.subscription.eventHubService.namespace.eventHub.consumerGroup
+  // Shared access signature (SAS) authorization rules on the Event Hub
+  authorizationRules() []azure.subscription.eventHubService.authorizationRule
   // When the Event Hub was created
   creationTime time
   // Creation and last-modification provenance recorded by Azure Resource Manager
@@ -12267,6 +12297,26 @@ private azure.subscription.eventHubService.namespace.eventHub.consumerGroup @def
   userMetadata string
   // When the consumer group was created
   creationTime time
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Event Hubs shared access signature authorization rule
+//
+// Shared access signature (SAS) policy attached to an Event Hubs
+// namespace or an individual Event Hub, selected by `name`. The
+// `rights` list enumerates the granted permissions: Listen, Send, or
+// Manage. A rule that grants Manage (including the default
+// RootManageSharedAccessKey) confers full control, so audit these to
+// find over-privileged keys and to confirm SAS access is scoped to the
+// minimum each client needs.
+private azure.subscription.eventHubService.authorizationRule @defaults("name rights") {
+  // Authorization rule resource ID
+  id string
+  // Authorization rule name
+  name string
+  // Granted rights (Listen, Send, Manage)
+  rights []string
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }

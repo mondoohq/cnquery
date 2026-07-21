@@ -1,7 +1,7 @@
 {
   "provider": "azure",
-  "version": "13.31.0",
-  "generated_at": "2026-07-18T10:34:00-07:00",
+  "version": "13.32.0",
+  "generated_at": "2026-07-21T08:12:38-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -943,13 +943,13 @@
     {
       "permission": "Microsoft.EventHub/namespaces/eventhubs/read",
       "service": "Microsoft.EventHub",
-      "action": "NewListByNamespacePager",
+      "action": "NewListAuthorizationRulesPager",
       "source_file": "eventhub.go"
     },
     {
       "permission": "Microsoft.EventHub/namespaces/read",
       "service": "Microsoft.EventHub",
-      "action": "NewListPager",
+      "action": "NewListAuthorizationRulesPager",
       "source_file": "eventhub.go"
     },
     {
@@ -1789,19 +1789,19 @@
     {
       "permission": "Microsoft.ServiceBus/namespaces/queues/read",
       "service": "Microsoft.ServiceBus",
-      "action": "NewListByNamespacePager",
+      "action": "NewListAuthorizationRulesPager",
       "source_file": "servicebus.go"
     },
     {
       "permission": "Microsoft.ServiceBus/namespaces/read",
       "service": "Microsoft.ServiceBus",
-      "action": "NewListPager",
+      "action": "NewListAuthorizationRulesPager",
       "source_file": "servicebus.go"
     },
     {
       "permission": "Microsoft.ServiceBus/namespaces/topics/read",
       "service": "Microsoft.ServiceBus",
-      "action": "NewListByNamespacePager",
+      "action": "NewListAuthorizationRulesPager",
       "source_file": "servicebus.go"
     },
     {

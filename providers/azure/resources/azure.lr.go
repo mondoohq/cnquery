@@ -383,12 +383,14 @@ const (
 	ResourceAzureSubscriptionServiceBusServiceNamespaceQueue                                          string = "azure.subscription.serviceBusService.namespace.queue"
 	ResourceAzureSubscriptionServiceBusServiceNamespaceTopic                                          string = "azure.subscription.serviceBusService.namespace.topic"
 	ResourceAzureSubscriptionServiceBusServiceNamespaceTopicSubscription                              string = "azure.subscription.serviceBusService.namespace.topic.subscription"
+	ResourceAzureSubscriptionServiceBusServiceAuthorizationRule                                       string = "azure.subscription.serviceBusService.authorizationRule"
 	ResourceAzureSubscriptionEventHubService                                                          string = "azure.subscription.eventHubService"
 	ResourceAzureSubscriptionEventHubServiceNamespace                                                 string = "azure.subscription.eventHubService.namespace"
 	ResourceAzureSubscriptionEventHubServiceNamespaceNetworkRules                                     string = "azure.subscription.eventHubService.namespace.networkRules"
 	ResourceAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRule                   string = "azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule"
 	ResourceAzureSubscriptionEventHubServiceNamespaceEventHub                                         string = "azure.subscription.eventHubService.namespace.eventHub"
 	ResourceAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup                            string = "azure.subscription.eventHubService.namespace.eventHub.consumerGroup"
+	ResourceAzureSubscriptionEventHubServiceAuthorizationRule                                         string = "azure.subscription.eventHubService.authorizationRule"
 	ResourceAzureSubscriptionEventGridService                                                         string = "azure.subscription.eventGridService"
 	ResourceAzureSubscriptionEventGridServiceTopic                                                    string = "azure.subscription.eventGridService.topic"
 	ResourceAzureSubscriptionEventGridServiceSystemTopic                                              string = "azure.subscription.eventGridService.systemTopic"
@@ -1952,6 +1954,10 @@ func init() {
 			// to override args, implement: initAzureSubscriptionServiceBusServiceNamespaceTopicSubscription(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionServiceBusServiceNamespaceTopicSubscription,
 		},
+		"azure.subscription.serviceBusService.authorizationRule": {
+			// to override args, implement: initAzureSubscriptionServiceBusServiceAuthorizationRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionServiceBusServiceAuthorizationRule,
+		},
 		"azure.subscription.eventHubService": {
 			Init:   initAzureSubscriptionEventHubService,
 			Create: createAzureSubscriptionEventHubService,
@@ -1975,6 +1981,10 @@ func init() {
 		"azure.subscription.eventHubService.namespace.eventHub.consumerGroup": {
 			// to override args, implement: initAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup,
+		},
+		"azure.subscription.eventHubService.authorizationRule": {
+			// to override args, implement: initAzureSubscriptionEventHubServiceAuthorizationRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionEventHubServiceAuthorizationRule,
 		},
 		"azure.subscription.eventGridService": {
 			Init:   initAzureSubscriptionEventGridService,
@@ -15165,6 +15175,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.serviceBusService.namespace.topics": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespace).GetTopics()).ToDataRes(types.Array(types.Resource("azure.subscription.serviceBusService.namespace.topic")))
 	},
+	"azure.subscription.serviceBusService.namespace.authorizationRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespace).GetAuthorizationRules()).ToDataRes(types.Array(types.Resource("azure.subscription.serviceBusService.authorizationRule")))
+	},
 	"azure.subscription.serviceBusService.namespace.privateEndpointConnections": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespace).GetPrivateEndpointConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.privateEndpointConnection")))
 	},
@@ -15234,6 +15247,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.serviceBusService.namespace.queue.creationTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceQueue).GetCreationTime()).ToDataRes(types.Time)
 	},
+	"azure.subscription.serviceBusService.namespace.queue.authorizationRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceQueue).GetAuthorizationRules()).ToDataRes(types.Array(types.Resource("azure.subscription.serviceBusService.authorizationRule")))
+	},
 	"azure.subscription.serviceBusService.namespace.queue.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceQueue).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
@@ -15270,6 +15286,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.serviceBusService.namespace.topic.subscriptions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceTopic).GetSubscriptions()).ToDataRes(types.Array(types.Resource("azure.subscription.serviceBusService.namespace.topic.subscription")))
 	},
+	"azure.subscription.serviceBusService.namespace.topic.authorizationRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceTopic).GetAuthorizationRules()).ToDataRes(types.Array(types.Resource("azure.subscription.serviceBusService.authorizationRule")))
+	},
 	"azure.subscription.serviceBusService.namespace.topic.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceTopic).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
@@ -15305,6 +15324,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.serviceBusService.namespace.topic.subscription.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceTopicSubscription).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.serviceBusService.authorizationRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceBusServiceAuthorizationRule).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceBusService.authorizationRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceBusServiceAuthorizationRule).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceBusService.authorizationRule.rights": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceBusServiceAuthorizationRule).GetRights()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.serviceBusService.authorizationRule.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceBusServiceAuthorizationRule).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
 	"azure.subscription.eventHubService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventHubService).GetSubscriptionId()).ToDataRes(types.String)
@@ -15369,6 +15400,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.eventHubService.namespace.eventHubs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventHubServiceNamespace).GetEventHubs()).ToDataRes(types.Array(types.Resource("azure.subscription.eventHubService.namespace.eventHub")))
 	},
+	"azure.subscription.eventHubService.namespace.authorizationRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventHubServiceNamespace).GetAuthorizationRules()).ToDataRes(types.Array(types.Resource("azure.subscription.eventHubService.authorizationRule")))
+	},
 	"azure.subscription.eventHubService.namespace.privateEndpointConnections": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventHubServiceNamespace).GetPrivateEndpointConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.privateEndpointConnection")))
 	},
@@ -15420,6 +15454,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.eventHubService.namespace.eventHub.consumerGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventHubServiceNamespaceEventHub).GetConsumerGroups()).ToDataRes(types.Array(types.Resource("azure.subscription.eventHubService.namespace.eventHub.consumerGroup")))
 	},
+	"azure.subscription.eventHubService.namespace.eventHub.authorizationRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventHubServiceNamespaceEventHub).GetAuthorizationRules()).ToDataRes(types.Array(types.Resource("azure.subscription.eventHubService.authorizationRule")))
+	},
 	"azure.subscription.eventHubService.namespace.eventHub.creationTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventHubServiceNamespaceEventHub).GetCreationTime()).ToDataRes(types.Time)
 	},
@@ -15440,6 +15477,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.eventHubService.namespace.eventHub.consumerGroup.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.eventHubService.authorizationRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventHubServiceAuthorizationRule).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventHubService.authorizationRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventHubServiceAuthorizationRule).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventHubService.authorizationRule.rights": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventHubServiceAuthorizationRule).GetRights()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.eventHubService.authorizationRule.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventHubServiceAuthorizationRule).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
 	"azure.subscription.eventGridService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventGridService).GetSubscriptionId()).ToDataRes(types.String)
@@ -36947,6 +36996,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionServiceBusServiceNamespace).Topics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.serviceBusService.namespace.authorizationRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceBusServiceNamespace).AuthorizationRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.serviceBusService.namespace.privateEndpointConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionServiceBusServiceNamespace).PrivateEndpointConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -37051,6 +37104,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionServiceBusServiceNamespaceQueue).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.serviceBusService.namespace.queue.authorizationRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceBusServiceNamespaceQueue).AuthorizationRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.serviceBusService.namespace.queue.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionServiceBusServiceNamespaceQueue).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
@@ -37103,6 +37160,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionServiceBusServiceNamespaceTopic).Subscriptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.serviceBusService.namespace.topic.authorizationRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceBusServiceNamespaceTopic).AuthorizationRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.serviceBusService.namespace.topic.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionServiceBusServiceNamespaceTopic).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
@@ -37153,6 +37214,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.serviceBusService.namespace.topic.subscription.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionServiceBusServiceNamespaceTopicSubscription).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceBusService.authorizationRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceBusServiceAuthorizationRule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.serviceBusService.authorizationRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceBusServiceAuthorizationRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceBusService.authorizationRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceBusServiceAuthorizationRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceBusService.authorizationRule.rights": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceBusServiceAuthorizationRule).Rights, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceBusService.authorizationRule.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceBusServiceAuthorizationRule).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.eventHubService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -37247,6 +37328,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionEventHubServiceNamespace).EventHubs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.eventHubService.namespace.authorizationRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventHubServiceNamespace).AuthorizationRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.eventHubService.namespace.privateEndpointConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionEventHubServiceNamespace).PrivateEndpointConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -37327,6 +37412,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionEventHubServiceNamespaceEventHub).ConsumerGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.eventHubService.namespace.eventHub.authorizationRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventHubServiceNamespaceEventHub).AuthorizationRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.eventHubService.namespace.eventHub.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionEventHubServiceNamespaceEventHub).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -37357,6 +37446,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.eventHubService.namespace.eventHub.consumerGroup.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventHubService.authorizationRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventHubServiceAuthorizationRule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.eventHubService.authorizationRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventHubServiceAuthorizationRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventHubService.authorizationRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventHubServiceAuthorizationRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventHubService.authorizationRule.rights": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventHubServiceAuthorizationRule).Rights, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventHubService.authorizationRule.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventHubServiceAuthorizationRule).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.eventGridService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -86837,6 +86946,7 @@ type mqlAzureSubscriptionServiceBusServiceNamespace struct {
 	NetworkRules                    plugin.TValue[*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules]
 	Queues                          plugin.TValue[[]any]
 	Topics                          plugin.TValue[[]any]
+	AuthorizationRules              plugin.TValue[[]any]
 	PrivateEndpointConnections      plugin.TValue[[]any]
 	CreationTime                    plugin.TValue[*time.Time]
 	SystemMetadata                  plugin.TValue[*mqlAzureSubscriptionSystemData]
@@ -86982,6 +87092,22 @@ func (c *mqlAzureSubscriptionServiceBusServiceNamespace) GetTopics() *plugin.TVa
 		}
 
 		return c.topics()
+	})
+}
+
+func (c *mqlAzureSubscriptionServiceBusServiceNamespace) GetAuthorizationRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AuthorizationRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.serviceBusService.namespace", c.__id, "authorizationRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.authorizationRules()
 	})
 }
 
@@ -87164,6 +87290,7 @@ type mqlAzureSubscriptionServiceBusServiceNamespaceQueue struct {
 	RequiresSession            plugin.TValue[bool]
 	EnablePartitioning         plugin.TValue[bool]
 	CreationTime               plugin.TValue[*time.Time]
+	AuthorizationRules         plugin.TValue[[]any]
 	SystemMetadata             plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -87256,6 +87383,22 @@ func (c *mqlAzureSubscriptionServiceBusServiceNamespaceQueue) GetCreationTime() 
 	return &c.CreationTime
 }
 
+func (c *mqlAzureSubscriptionServiceBusServiceNamespaceQueue) GetAuthorizationRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AuthorizationRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.serviceBusService.namespace.queue", c.__id, "authorizationRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.authorizationRules()
+	})
+}
+
 func (c *mqlAzureSubscriptionServiceBusServiceNamespaceQueue) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
 	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
 		if c.MqlRuntime.HasRecording {
@@ -87288,6 +87431,7 @@ type mqlAzureSubscriptionServiceBusServiceNamespaceTopic struct {
 	DefaultMessageTimeToLive   plugin.TValue[string]
 	CreationTime               plugin.TValue[*time.Time]
 	Subscriptions              plugin.TValue[[]any]
+	AuthorizationRules         plugin.TValue[[]any]
 	SystemMetadata             plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -87381,6 +87525,22 @@ func (c *mqlAzureSubscriptionServiceBusServiceNamespaceTopic) GetSubscriptions()
 		}
 
 		return c.subscriptions()
+	})
+}
+
+func (c *mqlAzureSubscriptionServiceBusServiceNamespaceTopic) GetAuthorizationRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AuthorizationRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.serviceBusService.namespace.topic", c.__id, "authorizationRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.authorizationRules()
 	})
 }
 
@@ -87511,6 +87671,82 @@ func (c *mqlAzureSubscriptionServiceBusServiceNamespaceTopicSubscription) GetSys
 	})
 }
 
+// mqlAzureSubscriptionServiceBusServiceAuthorizationRule for the azure.subscription.serviceBusService.authorizationRule resource
+type mqlAzureSubscriptionServiceBusServiceAuthorizationRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionServiceBusServiceAuthorizationRuleInternal
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Rights         plugin.TValue[[]any]
+	SystemMetadata plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionServiceBusServiceAuthorizationRule creates a new instance of this resource
+func createAzureSubscriptionServiceBusServiceAuthorizationRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionServiceBusServiceAuthorizationRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.serviceBusService.authorizationRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionServiceBusServiceAuthorizationRule) MqlName() string {
+	return "azure.subscription.serviceBusService.authorizationRule"
+}
+
+func (c *mqlAzureSubscriptionServiceBusServiceAuthorizationRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionServiceBusServiceAuthorizationRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionServiceBusServiceAuthorizationRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionServiceBusServiceAuthorizationRule) GetRights() *plugin.TValue[[]any] {
+	return &c.Rights
+}
+
+func (c *mqlAzureSubscriptionServiceBusServiceAuthorizationRule) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.serviceBusService.authorizationRule", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
 // mqlAzureSubscriptionEventHubService for the azure.subscription.eventHubService resource
 type mqlAzureSubscriptionEventHubService struct {
 	MqlRuntime *plugin.Runtime
@@ -87601,6 +87837,7 @@ type mqlAzureSubscriptionEventHubServiceNamespace struct {
 	NetworkRuleSet                  plugin.TValue[any]
 	NetworkRules                    plugin.TValue[*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules]
 	EventHubs                       plugin.TValue[[]any]
+	AuthorizationRules              plugin.TValue[[]any]
 	PrivateEndpointConnections      plugin.TValue[[]any]
 	CreationTime                    plugin.TValue[*time.Time]
 	SystemMetadata                  plugin.TValue[*mqlAzureSubscriptionSystemData]
@@ -87742,6 +87979,22 @@ func (c *mqlAzureSubscriptionEventHubServiceNamespace) GetEventHubs() *plugin.TV
 		}
 
 		return c.eventHubs()
+	})
+}
+
+func (c *mqlAzureSubscriptionEventHubServiceNamespace) GetAuthorizationRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AuthorizationRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.eventHubService.namespace", c.__id, "authorizationRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.authorizationRules()
 	})
 }
 
@@ -87918,6 +88171,7 @@ type mqlAzureSubscriptionEventHubServiceNamespaceEventHub struct {
 	Status                 plugin.TValue[string]
 	PartitionIds           plugin.TValue[[]any]
 	ConsumerGroups         plugin.TValue[[]any]
+	AuthorizationRules     plugin.TValue[[]any]
 	CreationTime           plugin.TValue[*time.Time]
 	SystemMetadata         plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
@@ -87996,6 +88250,22 @@ func (c *mqlAzureSubscriptionEventHubServiceNamespaceEventHub) GetConsumerGroups
 		}
 
 		return c.consumerGroups()
+	})
+}
+
+func (c *mqlAzureSubscriptionEventHubServiceNamespaceEventHub) GetAuthorizationRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AuthorizationRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.eventHubService.namespace.eventHub", c.__id, "authorizationRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.authorizationRules()
 	})
 }
 
@@ -88088,6 +88358,82 @@ func (c *mqlAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup) GetS
 	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.eventHubService.namespace.eventHub.consumerGroup", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionEventHubServiceAuthorizationRule for the azure.subscription.eventHubService.authorizationRule resource
+type mqlAzureSubscriptionEventHubServiceAuthorizationRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionEventHubServiceAuthorizationRuleInternal
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Rights         plugin.TValue[[]any]
+	SystemMetadata plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionEventHubServiceAuthorizationRule creates a new instance of this resource
+func createAzureSubscriptionEventHubServiceAuthorizationRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionEventHubServiceAuthorizationRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.eventHubService.authorizationRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionEventHubServiceAuthorizationRule) MqlName() string {
+	return "azure.subscription.eventHubService.authorizationRule"
+}
+
+func (c *mqlAzureSubscriptionEventHubServiceAuthorizationRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionEventHubServiceAuthorizationRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionEventHubServiceAuthorizationRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionEventHubServiceAuthorizationRule) GetRights() *plugin.TValue[[]any] {
+	return &c.Rights
+}
+
+func (c *mqlAzureSubscriptionEventHubServiceAuthorizationRule) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.eventHubService.authorizationRule", c.__id, "systemMetadata")
 			if err != nil {
 				return nil, err
 			}
