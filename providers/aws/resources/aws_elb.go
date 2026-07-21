@@ -663,16 +663,27 @@ func (a *mqlAwsElbLoadbalancer) listeners() ([]any, error) {
 				return nil, err
 			}
 
+			var mutualAuth any
+			mutualAuthTrustStoreArn := ""
+			if l.MutualAuthentication != nil {
+				mutualAuth, err = convert.JsonToDict(l.MutualAuthentication)
+				if err != nil {
+					return nil, err
+				}
+				mutualAuthTrustStoreArn = convert.ToValue(l.MutualAuthentication.TrustStoreArn)
+			}
+
 			args := map[string]*llx.RawData{
-				"__id":            llx.StringDataPtr(l.ListenerArn),
-				"arn":             llx.StringDataPtr(l.ListenerArn),
-				"loadBalancerArn": llx.StringDataPtr(l.LoadBalancerArn),
-				"port":            llx.IntDataPtr(l.Port),
-				"protocol":        llx.StringData(string(l.Protocol)),
-				"sslPolicy":       llx.StringDataPtr(l.SslPolicy),
-				"defaultActions":  llx.ArrayData(defaultActions, types.Dict),
-				"certificates":    llx.ArrayData(certificates, types.Dict),
-				"alpnPolicy":      llx.ArrayData(llx.TArr2Raw(l.AlpnPolicy), types.String),
+				"__id":                 llx.StringDataPtr(l.ListenerArn),
+				"arn":                  llx.StringDataPtr(l.ListenerArn),
+				"loadBalancerArn":      llx.StringDataPtr(l.LoadBalancerArn),
+				"port":                 llx.IntDataPtr(l.Port),
+				"protocol":             llx.StringData(string(l.Protocol)),
+				"sslPolicy":            llx.StringDataPtr(l.SslPolicy),
+				"defaultActions":       llx.ArrayData(defaultActions, types.Dict),
+				"certificates":         llx.ArrayData(certificates, types.Dict),
+				"alpnPolicy":           llx.ArrayData(llx.TArr2Raw(l.AlpnPolicy), types.String),
+				"mutualAuthentication": llx.DictData(mutualAuth),
 			}
 
 			mqlListener, err := CreateResource(a.MqlRuntime, "aws.elb.listener", args)
@@ -680,6 +691,7 @@ func (a *mqlAwsElbLoadbalancer) listeners() ([]any, error) {
 				return nil, err
 			}
 			mqlListener.(*mqlAwsElbListener).defaultActionsCache = l.DefaultActions
+			mqlListener.(*mqlAwsElbListener).mutualAuthTrustStoreArn = mutualAuthTrustStoreArn
 			res = append(res, mqlListener)
 		}
 	}
@@ -687,7 +699,262 @@ func (a *mqlAwsElbLoadbalancer) listeners() ([]any, error) {
 }
 
 type mqlAwsElbListenerInternal struct {
-	defaultActionsCache []elbtypes.Action
+	defaultActionsCache     []elbtypes.Action
+	mutualAuthTrustStoreArn string
+}
+
+func (a *mqlAwsElb) sslPolicies() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getSSLPolicies(conn), 5)
+	poolOfJobs.Run()
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for _, job := range poolOfJobs.Jobs {
+		if job.Result != nil {
+			res = append(res, job.Result.([]any)...)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsElb) getSSLPolicies(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.Elbv2(region)
+			ctx := context.Background()
+			res := []any{}
+			var marker *string
+			for {
+				resp, err := svc.DescribeSSLPolicies(ctx, &elasticloadbalancingv2.DescribeSSLPoliciesInput{Marker: marker})
+				if err != nil {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, p := range resp.SslPolicies {
+					mqlP, err := buildElbSSLPolicyResource(a.MqlRuntime, region, p)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlP)
+				}
+				if resp.NextMarker == nil {
+					break
+				}
+				marker = resp.NextMarker
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func buildElbSSLPolicyResource(runtime *plugin.Runtime, region string, p elbtypes.SslPolicy) (*mqlAwsElbSslPolicy, error) {
+	ciphers := []any{}
+	for _, c := range p.Ciphers {
+		ciphers = append(ciphers, map[string]any{
+			"Name":     convert.ToValue(c.Name),
+			"Priority": int64(convert.ToValue(c.Priority)),
+		})
+	}
+	res, err := CreateResource(runtime, "aws.elb.sslPolicy",
+		map[string]*llx.RawData{
+			"__id":                       llx.StringData(region + "/" + convert.ToValue(p.Name)),
+			"name":                       llx.StringDataPtr(p.Name),
+			"region":                     llx.StringData(region),
+			"sslProtocols":               llx.ArrayData(llx.TArr2Raw(p.SslProtocols), types.String),
+			"ciphers":                    llx.ArrayData(ciphers, types.Dict),
+			"supportedLoadBalancerTypes": llx.ArrayData(llx.TArr2Raw(p.SupportedLoadBalancerTypes), types.String),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsElbSslPolicy), nil
+}
+
+func (a *mqlAwsElbSslPolicy) id() (string, error) {
+	return a.Region.Data + "/" + a.Name.Data, nil
+}
+
+func (a *mqlAwsElb) trustStores() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getTrustStores(conn), 5)
+	poolOfJobs.Run()
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for _, job := range poolOfJobs.Jobs {
+		if job.Result != nil {
+			res = append(res, job.Result.([]any)...)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsElb) getTrustStores(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.Elbv2(region)
+			ctx := context.Background()
+			res := []any{}
+			paginator := elasticloadbalancingv2.NewDescribeTrustStoresPaginator(svc, &elasticloadbalancingv2.DescribeTrustStoresInput{})
+			for paginator.HasMorePages() {
+				resp, err := paginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, ts := range resp.TrustStores {
+					mqlTs, err := buildElbTrustStoreResource(a.MqlRuntime, region, ts)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlTs)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func buildElbTrustStoreResource(runtime *plugin.Runtime, region string, ts elbtypes.TrustStore) (*mqlAwsElbTruststore, error) {
+	res, err := CreateResource(runtime, "aws.elb.truststore",
+		map[string]*llx.RawData{
+			"__id":                   llx.StringDataPtr(ts.TrustStoreArn),
+			"arn":                    llx.StringDataPtr(ts.TrustStoreArn),
+			"name":                   llx.StringDataPtr(ts.Name),
+			"region":                 llx.StringData(region),
+			"status":                 llx.StringData(string(ts.Status)),
+			"numberOfCaCertificates": llx.IntDataPtr(ts.NumberOfCaCertificates),
+			"totalRevokedEntries":    llx.IntDataPtr(ts.TotalRevokedEntries),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsElbTruststore), nil
+}
+
+func (a *mqlAwsElbTruststore) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsElbListener) sslPolicyRef() (*mqlAwsElbSslPolicy, error) {
+	name := a.SslPolicy.Data
+	if name == "" {
+		a.SslPolicyRef.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	region, err := GetRegionFromArn(a.Arn.Data)
+	if err != nil {
+		return nil, err
+	}
+	parent, err := CreateResource(a.MqlRuntime, ResourceAwsElb, map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	policies := parent.(*mqlAwsElb).GetSslPolicies()
+	if policies.Error != nil {
+		return nil, policies.Error
+	}
+	for _, p := range policies.Data {
+		sp := p.(*mqlAwsElbSslPolicy)
+		if sp.Name.Data == name && sp.Region.Data == region {
+			return sp, nil
+		}
+	}
+	a.SslPolicyRef.State = plugin.StateIsNull | plugin.StateIsSet
+	return nil, nil
+}
+
+func (a *mqlAwsElbListener) trustStore() (*mqlAwsElbTruststore, error) {
+	if a.mutualAuthTrustStoreArn == "" {
+		a.TrustStore.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	parent, err := CreateResource(a.MqlRuntime, ResourceAwsElb, map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	stores := parent.(*mqlAwsElb).GetTrustStores()
+	if stores.Error != nil {
+		return nil, stores.Error
+	}
+	for _, s := range stores.Data {
+		ts := s.(*mqlAwsElbTruststore)
+		if ts.Arn.Data == a.mutualAuthTrustStoreArn {
+			return ts, nil
+		}
+	}
+	a.TrustStore.State = plugin.StateIsNull | plugin.StateIsSet
+	return nil, nil
+}
+
+func (a *mqlAwsElbListener) rules() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arnVal := a.Arn.Data
+	region, err := GetRegionFromArn(arnVal)
+	if err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+	svc := conn.Elbv2(region)
+	res := []any{}
+	paginator := elasticloadbalancingv2.NewDescribeRulesPaginator(svc, &elasticloadbalancingv2.DescribeRulesInput{ListenerArn: &arnVal})
+	for paginator.HasMorePages() {
+		resp, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, r := range resp.Rules {
+			conditions, err := convert.JsonToDictSlice(r.Conditions)
+			if err != nil {
+				return nil, err
+			}
+			actions, err := convert.JsonToDictSlice(r.Actions)
+			if err != nil {
+				return nil, err
+			}
+			mqlRule, err := CreateResource(a.MqlRuntime, "aws.elb.listener.rule",
+				map[string]*llx.RawData{
+					"__id":       llx.StringDataPtr(r.RuleArn),
+					"arn":        llx.StringDataPtr(r.RuleArn),
+					"priority":   llx.StringDataPtr(r.Priority),
+					"isDefault":  llx.BoolDataPtr(r.IsDefault),
+					"conditions": llx.ArrayData(conditions, types.Dict),
+					"actions":    llx.ArrayData(actions, types.Dict),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlRule)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsElbListenerRule) id() (string, error) {
+	return a.Arn.Data, nil
 }
 
 // forwardTargetGroups resolves the target groups named by the listener's default

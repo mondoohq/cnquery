@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.49.0",
-  "generated_at": "2026-07-21T11:56:46-07:00",
+  "generated_at": "2026-07-21T12:54:57-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindings",
@@ -383,10 +383,13 @@
     "elasticloadbalancing:DescribeListeners",
     "elasticloadbalancing:DescribeLoadBalancerAttributes",
     "elasticloadbalancing:DescribeLoadBalancers",
+    "elasticloadbalancing:DescribeRules",
+    "elasticloadbalancing:DescribeSSLPolicies",
     "elasticloadbalancing:DescribeTags",
     "elasticloadbalancing:DescribeTargetGroupAttributes",
     "elasticloadbalancing:DescribeTargetGroups",
     "elasticloadbalancing:DescribeTargetHealth",
+    "elasticloadbalancing:DescribeTrustStores",
     "elasticmapreduce:DescribeCluster",
     "elasticmapreduce:DescribeSecurityConfiguration",
     "elasticmapreduce:DescribeStep",
@@ -3303,6 +3306,18 @@
       "source_file": "aws_elb.go"
     },
     {
+      "permission": "elasticloadbalancing:DescribeRules",
+      "service": "elasticloadbalancing",
+      "action": "DescribeRules",
+      "source_file": "aws_elb.go"
+    },
+    {
+      "permission": "elasticloadbalancing:DescribeSSLPolicies",
+      "service": "elasticloadbalancing",
+      "action": "DescribeSSLPolicies",
+      "source_file": "aws_elb.go"
+    },
+    {
       "permission": "elasticloadbalancing:DescribeTags",
       "service": "elasticloadbalancing",
       "action": "DescribeTags",
@@ -3324,6 +3339,12 @@
       "permission": "elasticloadbalancing:DescribeTargetHealth",
       "service": "elasticloadbalancing",
       "action": "DescribeTargetHealth",
+      "source_file": "aws_elb.go"
+    },
+    {
+      "permission": "elasticloadbalancing:DescribeTrustStores",
+      "service": "elasticloadbalancing",
+      "action": "DescribeTrustStores",
       "source_file": "aws_elb.go"
     },
     {

@@ -6184,6 +6184,53 @@ aws.elb {
   classicLoadBalancers() []aws.elb.loadbalancer
   // List of application, gateway, and network load balancers (elbv2)
   loadBalancers() []aws.elb.loadbalancer
+  // List of predefined and custom SSL negotiation policies
+  sslPolicies() []aws.elb.sslPolicy
+  // List of mutual TLS trust stores
+  trustStores() []aws.elb.truststore
+}
+
+// AWS ELB SSL negotiation policy
+//
+// Predefined or custom SSL/TLS negotiation policy attached to an HTTPS or TLS
+// listener. The `name` field selects the policy, and `sslProtocols` and
+// `ciphers` describe the exact protocol versions and cipher suites it permits,
+// for auditing listeners against weak-TLS baselines.
+private aws.elb.sslPolicy @defaults("name region") {
+  // Name of the SSL policy
+  name string
+  // Region where the policy is available
+  region string
+  // TLS protocol versions the policy permits, for example TLSv1.2 and TLSv1.3
+  sslProtocols []string
+  // Cipher suites the policy permits, in negotiation-priority order
+  //
+  // Each dict has `Name` (the cipher suite) and `Priority` (its position in the
+  // negotiation order).
+  ciphers []dict
+  // Load balancer types the policy supports, for example application or network
+  supportedLoadBalancerTypes []string
+}
+
+// AWS ELB mutual TLS trust store
+//
+// Bundle of certificate authority certificates a load balancer uses to verify
+// client certificates on mutual TLS listeners. The `arn` field selects the
+// trust store, and `numberOfCaCertificates` and `totalRevokedEntries` describe
+// the CA bundle and revocation list it holds.
+private aws.elb.truststore @defaults("name arn status") {
+  // ARN of the trust store
+  arn string
+  // Name of the trust store
+  name string
+  // Region where the trust store exists
+  region string
+  // Status of the trust store, for example ACTIVE or CREATING
+  status string
+  // Number of CA certificates in the trust store bundle
+  numberOfCaCertificates int
+  // Number of revoked certificate entries loaded into the trust store
+  totalRevokedEntries int
 }
 
 // AWS Elastic Load Balancer (ELB) Target Group
@@ -6417,6 +6464,49 @@ private aws.elb.listener @defaults("arn port protocol") {
   certificates []dict
   // ALPN policy for TLS listeners
   alpnPolicy []string
+  // SSL negotiation policy resolved to its ciphers and protocols
+  //
+  // Resolves the `sslPolicy` name to the policy's actual protocol versions and
+  // cipher suites. Null for listeners without an SSL policy.
+  sslPolicyRef() aws.elb.sslPolicy
+  // Mutual TLS authentication settings for the listener
+  //
+  // Has `Mode` (off, passthrough, or verify), `TrustStoreArn`,
+  // `IgnoreClientCertificateExpiry`, `AdvertiseTrustStoreCaNames`, and
+  // `TrustStoreAssociationStatus`. Empty for listeners without mTLS.
+  mutualAuthentication dict
+  // Trust store used to verify client certificates on mutual TLS listeners
+  trustStore() aws.elb.truststore
+  // Rules that route requests reaching the listener
+  rules() []aws.elb.listener.rule
+}
+
+// AWS ELB listener rule
+//
+// Single routing rule evaluated by an application load balancer listener. Each
+// rule pairs `conditions` (host-header, path-pattern, HTTP-header, HTTP-method,
+// query-string, or source-IP matches) with `actions` (forward, redirect,
+// fixed-response, or authenticate). `priority` orders rule evaluation and
+// `isDefault` marks the listener's fallback rule.
+private aws.elb.listener.rule @defaults("arn priority isDefault") {
+  // ARN of the rule
+  arn string
+  // Evaluation priority of the rule (lower values are evaluated first)
+  priority string
+  // Whether this is the listener's default rule
+  isDefault bool
+  // Conditions a request must match for the rule to apply
+  //
+  // Each dict has a `Field` and the matching config for that field, for example
+  // `HostHeaderConfig`, `PathPatternConfig`, `HttpHeaderConfig`,
+  // `HttpRequestMethodConfig`, `QueryStringConfig`, or `SourceIpConfig`.
+  conditions []dict
+  // Actions the rule applies to matching requests
+  //
+  // Each dict has a `Type` (forward, redirect, fixed-response,
+  // authenticate-cognito, or authenticate-oidc), an `Order`, and the config
+  // block for that type.
+  actions []dict
 }
 
 // AWS ELB load balancer attributes

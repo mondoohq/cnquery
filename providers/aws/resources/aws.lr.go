@@ -227,11 +227,14 @@ const (
 	ResourceAwsAutoscalingGroup                                                 string = "aws.autoscaling.group"
 	ResourceAwsAutoscalingGroupTag                                              string = "aws.autoscaling.group.tag"
 	ResourceAwsElb                                                              string = "aws.elb"
+	ResourceAwsElbSslPolicy                                                     string = "aws.elb.sslPolicy"
+	ResourceAwsElbTruststore                                                    string = "aws.elb.truststore"
 	ResourceAwsElbTargetgroup                                                   string = "aws.elb.targetgroup"
 	ResourceAwsElbTargetgroupAttributes                                         string = "aws.elb.targetgroup.attributes"
 	ResourceAwsElbLoadbalancer                                                  string = "aws.elb.loadbalancer"
 	ResourceAwsNetworkExposure                                                  string = "aws.network.exposure"
 	ResourceAwsElbListener                                                      string = "aws.elb.listener"
+	ResourceAwsElbListenerRule                                                  string = "aws.elb.listener.rule"
 	ResourceAwsElbLoadbalancerAttribute                                         string = "aws.elb.loadbalancer.attribute"
 	ResourceAwsCodebuild                                                        string = "aws.codebuild"
 	ResourceAwsCodebuildProject                                                 string = "aws.codebuild.project"
@@ -1795,6 +1798,14 @@ func init() {
 			// to override args, implement: initAwsElb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsElb,
 		},
+		"aws.elb.sslPolicy": {
+			// to override args, implement: initAwsElbSslPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsElbSslPolicy,
+		},
+		"aws.elb.truststore": {
+			// to override args, implement: initAwsElbTruststore(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsElbTruststore,
+		},
 		"aws.elb.targetgroup": {
 			// to override args, implement: initAwsElbTargetgroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsElbTargetgroup,
@@ -1814,6 +1825,10 @@ func init() {
 		"aws.elb.listener": {
 			// to override args, implement: initAwsElbListener(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsElbListener,
+		},
+		"aws.elb.listener.rule": {
+			// to override args, implement: initAwsElbListenerRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsElbListenerRule,
 		},
 		"aws.elb.loadbalancer.attribute": {
 			// to override args, implement: initAwsElbLoadbalancerAttribute(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -11338,6 +11353,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elb.loadBalancers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElb).GetLoadBalancers()).ToDataRes(types.Array(types.Resource("aws.elb.loadbalancer")))
 	},
+	"aws.elb.sslPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElb).GetSslPolicies()).ToDataRes(types.Array(types.Resource("aws.elb.sslPolicy")))
+	},
+	"aws.elb.trustStores": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElb).GetTrustStores()).ToDataRes(types.Array(types.Resource("aws.elb.truststore")))
+	},
+	"aws.elb.sslPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbSslPolicy).GetName()).ToDataRes(types.String)
+	},
+	"aws.elb.sslPolicy.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbSslPolicy).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.elb.sslPolicy.sslProtocols": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbSslPolicy).GetSslProtocols()).ToDataRes(types.Array(types.String))
+	},
+	"aws.elb.sslPolicy.ciphers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbSslPolicy).GetCiphers()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.elb.sslPolicy.supportedLoadBalancerTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbSslPolicy).GetSupportedLoadBalancerTypes()).ToDataRes(types.Array(types.String))
+	},
+	"aws.elb.truststore.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbTruststore).GetArn()).ToDataRes(types.String)
+	},
+	"aws.elb.truststore.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbTruststore).GetName()).ToDataRes(types.String)
+	},
+	"aws.elb.truststore.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbTruststore).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.elb.truststore.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbTruststore).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.elb.truststore.numberOfCaCertificates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbTruststore).GetNumberOfCaCertificates()).ToDataRes(types.Int)
+	},
+	"aws.elb.truststore.totalRevokedEntries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbTruststore).GetTotalRevokedEntries()).ToDataRes(types.Int)
+	},
 	"aws.elb.targetgroup.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbTargetgroup).GetName()).ToDataRes(types.String)
 	},
@@ -11568,6 +11622,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.elb.listener.alpnPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbListener).GetAlpnPolicy()).ToDataRes(types.Array(types.String))
+	},
+	"aws.elb.listener.sslPolicyRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbListener).GetSslPolicyRef()).ToDataRes(types.Resource("aws.elb.sslPolicy"))
+	},
+	"aws.elb.listener.mutualAuthentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbListener).GetMutualAuthentication()).ToDataRes(types.Dict)
+	},
+	"aws.elb.listener.trustStore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbListener).GetTrustStore()).ToDataRes(types.Resource("aws.elb.truststore"))
+	},
+	"aws.elb.listener.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbListener).GetRules()).ToDataRes(types.Array(types.Resource("aws.elb.listener.rule")))
+	},
+	"aws.elb.listener.rule.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbListenerRule).GetArn()).ToDataRes(types.String)
+	},
+	"aws.elb.listener.rule.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbListenerRule).GetPriority()).ToDataRes(types.String)
+	},
+	"aws.elb.listener.rule.isDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbListenerRule).GetIsDefault()).ToDataRes(types.Bool)
+	},
+	"aws.elb.listener.rule.conditions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbListenerRule).GetConditions()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.elb.listener.rule.actions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbListenerRule).GetActions()).ToDataRes(types.Array(types.Dict))
 	},
 	"aws.elb.loadbalancer.attribute.loadBalancerArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbLoadbalancerAttribute).GetLoadBalancerArn()).ToDataRes(types.String)
@@ -44589,6 +44670,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsElb).LoadBalancers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.elb.sslPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElb).SslPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.elb.trustStores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElb).TrustStores, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.elb.sslPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbSslPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.elb.sslPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbSslPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elb.sslPolicy.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbSslPolicy).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elb.sslPolicy.sslProtocols": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbSslPolicy).SslProtocols, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.elb.sslPolicy.ciphers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbSslPolicy).Ciphers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.elb.sslPolicy.supportedLoadBalancerTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbSslPolicy).SupportedLoadBalancerTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.elb.truststore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbTruststore).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.elb.truststore.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbTruststore).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elb.truststore.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbTruststore).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elb.truststore.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbTruststore).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elb.truststore.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbTruststore).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elb.truststore.numberOfCaCertificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbTruststore).NumberOfCaCertificates, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.elb.truststore.totalRevokedEntries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbTruststore).TotalRevokedEntries, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"aws.elb.targetgroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElbTargetgroup).__id, ok = v.Value.(string)
 		return
@@ -44915,6 +45056,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.elb.listener.alpnPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElbListener).AlpnPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.elb.listener.sslPolicyRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbListener).SslPolicyRef, ok = plugin.RawToTValue[*mqlAwsElbSslPolicy](v.Value, v.Error)
+		return
+	},
+	"aws.elb.listener.mutualAuthentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbListener).MutualAuthentication, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.elb.listener.trustStore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbListener).TrustStore, ok = plugin.RawToTValue[*mqlAwsElbTruststore](v.Value, v.Error)
+		return
+	},
+	"aws.elb.listener.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbListener).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.elb.listener.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbListenerRule).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.elb.listener.rule.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbListenerRule).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elb.listener.rule.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbListenerRule).Priority, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elb.listener.rule.isDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbListenerRule).IsDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.elb.listener.rule.conditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbListenerRule).Conditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.elb.listener.rule.actions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbListenerRule).Actions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.elb.loadbalancer.attribute.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -104743,6 +104924,8 @@ type mqlAwsElb struct {
 	mqlAwsElbInternal
 	ClassicLoadBalancers plugin.TValue[[]any]
 	LoadBalancers        plugin.TValue[[]any]
+	SslPolicies          plugin.TValue[[]any]
+	TrustStores          plugin.TValue[[]any]
 }
 
 // createAwsElb creates a new instance of this resource
@@ -104812,6 +104995,181 @@ func (c *mqlAwsElb) GetLoadBalancers() *plugin.TValue[[]any] {
 
 		return c.loadBalancers()
 	})
+}
+
+func (c *mqlAwsElb) GetSslPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SslPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elb", c.__id, "sslPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sslPolicies()
+	})
+}
+
+func (c *mqlAwsElb) GetTrustStores() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TrustStores, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elb", c.__id, "trustStores")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.trustStores()
+	})
+}
+
+// mqlAwsElbSslPolicy for the aws.elb.sslPolicy resource
+type mqlAwsElbSslPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsElbSslPolicyInternal it will be used here
+	Name                       plugin.TValue[string]
+	Region                     plugin.TValue[string]
+	SslProtocols               plugin.TValue[[]any]
+	Ciphers                    plugin.TValue[[]any]
+	SupportedLoadBalancerTypes plugin.TValue[[]any]
+}
+
+// createAwsElbSslPolicy creates a new instance of this resource
+func createAwsElbSslPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsElbSslPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.elb.sslPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsElbSslPolicy) MqlName() string {
+	return "aws.elb.sslPolicy"
+}
+
+func (c *mqlAwsElbSslPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsElbSslPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsElbSslPolicy) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsElbSslPolicy) GetSslProtocols() *plugin.TValue[[]any] {
+	return &c.SslProtocols
+}
+
+func (c *mqlAwsElbSslPolicy) GetCiphers() *plugin.TValue[[]any] {
+	return &c.Ciphers
+}
+
+func (c *mqlAwsElbSslPolicy) GetSupportedLoadBalancerTypes() *plugin.TValue[[]any] {
+	return &c.SupportedLoadBalancerTypes
+}
+
+// mqlAwsElbTruststore for the aws.elb.truststore resource
+type mqlAwsElbTruststore struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsElbTruststoreInternal it will be used here
+	Arn                    plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Region                 plugin.TValue[string]
+	Status                 plugin.TValue[string]
+	NumberOfCaCertificates plugin.TValue[int64]
+	TotalRevokedEntries    plugin.TValue[int64]
+}
+
+// createAwsElbTruststore creates a new instance of this resource
+func createAwsElbTruststore(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsElbTruststore{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.elb.truststore", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsElbTruststore) MqlName() string {
+	return "aws.elb.truststore"
+}
+
+func (c *mqlAwsElbTruststore) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsElbTruststore) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsElbTruststore) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsElbTruststore) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsElbTruststore) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsElbTruststore) GetNumberOfCaCertificates() *plugin.TValue[int64] {
+	return &c.NumberOfCaCertificates
+}
+
+func (c *mqlAwsElbTruststore) GetTotalRevokedEntries() *plugin.TValue[int64] {
+	return &c.TotalRevokedEntries
 }
 
 // mqlAwsElbTargetgroup for the aws.elb.targetgroup resource
@@ -105481,16 +105839,20 @@ type mqlAwsElbListener struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsElbListenerInternal
-	Arn                 plugin.TValue[string]
-	LoadBalancer        plugin.TValue[*mqlAwsElbLoadbalancer]
-	LoadBalancerArn     plugin.TValue[string]
-	Port                plugin.TValue[int64]
-	Protocol            plugin.TValue[string]
-	SslPolicy           plugin.TValue[string]
-	DefaultActions      plugin.TValue[[]any]
-	ForwardTargetGroups plugin.TValue[[]any]
-	Certificates        plugin.TValue[[]any]
-	AlpnPolicy          plugin.TValue[[]any]
+	Arn                  plugin.TValue[string]
+	LoadBalancer         plugin.TValue[*mqlAwsElbLoadbalancer]
+	LoadBalancerArn      plugin.TValue[string]
+	Port                 plugin.TValue[int64]
+	Protocol             plugin.TValue[string]
+	SslPolicy            plugin.TValue[string]
+	DefaultActions       plugin.TValue[[]any]
+	ForwardTargetGroups  plugin.TValue[[]any]
+	Certificates         plugin.TValue[[]any]
+	AlpnPolicy           plugin.TValue[[]any]
+	SslPolicyRef         plugin.TValue[*mqlAwsElbSslPolicy]
+	MutualAuthentication plugin.TValue[any]
+	TrustStore           plugin.TValue[*mqlAwsElbTruststore]
+	Rules                plugin.TValue[[]any]
 }
 
 // createAwsElbListener creates a new instance of this resource
@@ -105592,6 +105954,127 @@ func (c *mqlAwsElbListener) GetCertificates() *plugin.TValue[[]any] {
 
 func (c *mqlAwsElbListener) GetAlpnPolicy() *plugin.TValue[[]any] {
 	return &c.AlpnPolicy
+}
+
+func (c *mqlAwsElbListener) GetSslPolicyRef() *plugin.TValue[*mqlAwsElbSslPolicy] {
+	return plugin.GetOrCompute[*mqlAwsElbSslPolicy](&c.SslPolicyRef, func() (*mqlAwsElbSslPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elb.listener", c.__id, "sslPolicyRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsElbSslPolicy), nil
+			}
+		}
+
+		return c.sslPolicyRef()
+	})
+}
+
+func (c *mqlAwsElbListener) GetMutualAuthentication() *plugin.TValue[any] {
+	return &c.MutualAuthentication
+}
+
+func (c *mqlAwsElbListener) GetTrustStore() *plugin.TValue[*mqlAwsElbTruststore] {
+	return plugin.GetOrCompute[*mqlAwsElbTruststore](&c.TrustStore, func() (*mqlAwsElbTruststore, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elb.listener", c.__id, "trustStore")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsElbTruststore), nil
+			}
+		}
+
+		return c.trustStore()
+	})
+}
+
+func (c *mqlAwsElbListener) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elb.listener", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rules()
+	})
+}
+
+// mqlAwsElbListenerRule for the aws.elb.listener.rule resource
+type mqlAwsElbListenerRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsElbListenerRuleInternal it will be used here
+	Arn        plugin.TValue[string]
+	Priority   plugin.TValue[string]
+	IsDefault  plugin.TValue[bool]
+	Conditions plugin.TValue[[]any]
+	Actions    plugin.TValue[[]any]
+}
+
+// createAwsElbListenerRule creates a new instance of this resource
+func createAwsElbListenerRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsElbListenerRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.elb.listener.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsElbListenerRule) MqlName() string {
+	return "aws.elb.listener.rule"
+}
+
+func (c *mqlAwsElbListenerRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsElbListenerRule) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsElbListenerRule) GetPriority() *plugin.TValue[string] {
+	return &c.Priority
+}
+
+func (c *mqlAwsElbListenerRule) GetIsDefault() *plugin.TValue[bool] {
+	return &c.IsDefault
+}
+
+func (c *mqlAwsElbListenerRule) GetConditions() *plugin.TValue[[]any] {
+	return &c.Conditions
+}
+
+func (c *mqlAwsElbListenerRule) GetActions() *plugin.TValue[[]any] {
+	return &c.Actions
 }
 
 // mqlAwsElbLoadbalancerAttribute for the aws.elb.loadbalancer.attribute resource
