@@ -42,6 +42,7 @@ type mqlAwsWafAclInternal struct {
 	fetched                  bool
 	cachedManagedByFwManager bool
 	cachedRules              []waftypes.Rule
+	cachedACL                *waftypes.WebACL
 	lock                     sync.Mutex
 }
 
@@ -69,6 +70,7 @@ func (a *mqlAwsWafAcl) fetchACLDetails() error {
 	}
 	a.cachedManagedByFwManager = resp.WebACL.ManagedByFirewallManager
 	a.cachedRules = resp.WebACL.Rules
+	a.cachedACL = resp.WebACL
 	a.fetched = true
 	return nil
 }
@@ -78,6 +80,123 @@ func (a *mqlAwsWafAcl) managedByFirewallManager() (bool, error) {
 		return false, err
 	}
 	return a.cachedManagedByFwManager, nil
+}
+
+func (a *mqlAwsWafAcl) defaultAction() (string, error) {
+	if err := a.fetchACLDetails(); err != nil {
+		return "", err
+	}
+	action := ""
+	if a.cachedACL != nil && a.cachedACL.DefaultAction != nil {
+		if a.cachedACL.DefaultAction.Allow != nil {
+			action = "allow"
+		}
+		if a.cachedACL.DefaultAction.Block != nil {
+			action = "block"
+		}
+	}
+	return action, nil
+}
+
+func (a *mqlAwsWafAcl) visibilityConfig() (any, error) {
+	if err := a.fetchACLDetails(); err != nil {
+		return nil, err
+	}
+	if a.cachedACL == nil {
+		return nil, nil
+	}
+	return wafVisibilityConfigToDict(a.cachedACL.VisibilityConfig), nil
+}
+
+func (a *mqlAwsWafAcl) capacity() (int64, error) {
+	if err := a.fetchACLDetails(); err != nil {
+		return 0, err
+	}
+	if a.cachedACL == nil {
+		return 0, nil
+	}
+	return a.cachedACL.Capacity, nil
+}
+
+func (a *mqlAwsWafAcl) tokenDomains() ([]any, error) {
+	if err := a.fetchACLDetails(); err != nil {
+		return nil, err
+	}
+	if a.cachedACL == nil {
+		return nil, nil
+	}
+	return convert.SliceAnyToInterface(a.cachedACL.TokenDomains), nil
+}
+
+func (a *mqlAwsWafAcl) labelNamespace() (string, error) {
+	if err := a.fetchACLDetails(); err != nil {
+		return "", err
+	}
+	if a.cachedACL == nil {
+		return "", nil
+	}
+	return convert.ToValue(a.cachedACL.LabelNamespace), nil
+}
+
+func wafVisibilityConfigToDict(vc *waftypes.VisibilityConfig) map[string]any {
+	if vc == nil {
+		return nil
+	}
+	return map[string]any{
+		"cloudWatchMetricsEnabled": vc.CloudWatchMetricsEnabled,
+		"sampledRequestsEnabled":   vc.SampledRequestsEnabled,
+		"metricName":               convert.ToValue(vc.MetricName),
+	}
+}
+
+func wafLoggingFilterToDict(lf *waftypes.LoggingFilter) map[string]any {
+	if lf == nil {
+		return nil
+	}
+	filters := []any{}
+	for _, f := range lf.Filters {
+		conditions := []any{}
+		for _, c := range f.Conditions {
+			cond := map[string]any{}
+			if c.ActionCondition != nil {
+				cond["actionCondition"] = string(c.ActionCondition.Action)
+			}
+			if c.LabelNameCondition != nil {
+				cond["labelNameCondition"] = convert.ToValue(c.LabelNameCondition.LabelName)
+			}
+			conditions = append(conditions, cond)
+		}
+		filters = append(filters, map[string]any{
+			"behavior":    string(f.Behavior),
+			"requirement": string(f.Requirement),
+			"conditions":  conditions,
+		})
+	}
+	return map[string]any{
+		"defaultBehavior": string(lf.DefaultBehavior),
+		"filters":         filters,
+	}
+}
+
+func wafRuleLabelsToInterface(labels []waftypes.Label) []any {
+	res := []any{}
+	for _, l := range labels {
+		res = append(res, convert.ToValue(l.Name))
+	}
+	return res
+}
+
+func wafOverrideActionString(oa *waftypes.OverrideAction) string {
+	if oa == nil {
+		return ""
+	}
+	if oa.Count != nil {
+		return "count"
+	}
+	if oa.None != nil {
+		return "none"
+	}
+	return ""
 }
 
 func (a *mqlAwsWafRule) id() (string, error) {
@@ -336,12 +455,15 @@ func (a *mqlAwsWafRulegroup) rules() ([]any, error) {
 		}
 		mqlRule, err := CreateResource(a.MqlRuntime, "aws.waf.rule",
 			map[string]*llx.RawData{
-				"id":        llx.StringData(ruleID),
-				"name":      llx.StringDataPtr(rule.Name),
-				"priority":  llx.IntData(int64(rule.Priority)),
-				"action":    llx.ResourceData(ruleAction, "aws.waf.rule.action"),
-				"statement": llx.ResourceData(mqlStatement, "aws.waf.rule.statement"),
-				"belongsTo": llx.StringData(a.Arn.Data),
+				"id":               llx.StringData(ruleID),
+				"name":             llx.StringDataPtr(rule.Name),
+				"priority":         llx.IntData(int64(rule.Priority)),
+				"action":           llx.ResourceData(ruleAction, "aws.waf.rule.action"),
+				"overrideAction":   llx.StringData(wafOverrideActionString(rule.OverrideAction)),
+				"visibilityConfig": llx.DictData(wafVisibilityConfigToDict(rule.VisibilityConfig)),
+				"ruleLabels":       llx.ArrayData(wafRuleLabelsToInterface(rule.RuleLabels), types.String),
+				"statement":        llx.ResourceData(mqlStatement, "aws.waf.rule.statement"),
+				"belongsTo":        llx.StringData(a.Arn.Data),
 			},
 		)
 		if err != nil {
@@ -449,12 +571,15 @@ func (a *mqlAwsWafAcl) rules() ([]any, error) {
 		}
 		mqlRule, err := CreateResource(a.MqlRuntime, "aws.waf.rule",
 			map[string]*llx.RawData{
-				"id":        llx.StringData(ruleID),
-				"name":      llx.StringDataPtr(rule.Name),
-				"priority":  llx.IntData(int64(rule.Priority)),
-				"action":    llx.ResourceData(ruleAction, "aws.waf.rule.action"),
-				"statement": llx.ResourceData(mqlStatement, "aws.waf.rule.statement"),
-				"belongsTo": llx.StringData(a.Arn.Data),
+				"id":               llx.StringData(ruleID),
+				"name":             llx.StringDataPtr(rule.Name),
+				"priority":         llx.IntData(int64(rule.Priority)),
+				"action":           llx.ResourceData(ruleAction, "aws.waf.rule.action"),
+				"overrideAction":   llx.StringData(wafOverrideActionString(rule.OverrideAction)),
+				"visibilityConfig": llx.DictData(wafVisibilityConfigToDict(rule.VisibilityConfig)),
+				"ruleLabels":       llx.ArrayData(wafRuleLabelsToInterface(rule.RuleLabels), types.String),
+				"statement":        llx.ResourceData(mqlStatement, "aws.waf.rule.statement"),
+				"belongsTo":        llx.StringData(a.Arn.Data),
 			},
 		)
 		if err != nil {
@@ -1056,6 +1181,9 @@ func (a *mqlAwsWafAcl) loggingConfiguration() (*mqlAwsWafAclLoggingConfiguration
 				"logDestinationConfigs":    llx.ArrayData([]any{}, types.String),
 				"managedByFirewallManager": llx.BoolData(false),
 				"redactedFields":           llx.ArrayData([]any{}, types.String),
+				"loggingFilter":            llx.DictData(nil),
+				"logScope":                 llx.StringData(""),
+				"logType":                  llx.StringData(""),
 			},
 		)
 		if createErr != nil {
@@ -1087,6 +1215,9 @@ func (a *mqlAwsWafAcl) loggingConfiguration() (*mqlAwsWafAclLoggingConfiguration
 			"logDestinationConfigs":    llx.ArrayData(destinations, types.String),
 			"managedByFirewallManager": llx.BoolData(logConfig.ManagedByFirewallManager),
 			"redactedFields":           llx.ArrayData(redactedFields, types.String),
+			"loggingFilter":            llx.DictData(wafLoggingFilterToDict(logConfig.LoggingFilter)),
+			"logScope":                 llx.StringData(string(logConfig.LogScope)),
+			"logType":                  llx.StringData(string(logConfig.LogType)),
 		},
 	)
 	if err != nil {

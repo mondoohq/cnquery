@@ -773,6 +773,22 @@ private aws.waf.acl @defaults("name") {
   description string
   // Whether the ACL is managed by Firewall Manager
   managedByFirewallManager() bool
+  // Default action for requests that match no rule
+  //
+  // One of `allow` or `block`.
+  defaultAction() string
+  // CloudWatch metrics and request-sampling settings for the ACL
+  //
+  // Has `cloudWatchMetricsEnabled` (whether metrics are emitted),
+  // `sampledRequestsEnabled` (whether a sample of inspected requests is stored),
+  // and `metricName`.
+  visibilityConfig() dict
+  // Web ACL capacity units (WCU) consumed by the ACL
+  capacity() int
+  // Domains WAF accepts in host headers when generating and validating challenge and CAPTCHA tokens
+  tokenDomains() []string
+  // Label namespace prefix WAF applies to labels this ACL generates
+  labelNamespace() string
   // List of WAF rules
   rules() []aws.waf.rule
   // Scope either REGIONAL or CLOUDFRONT
@@ -822,6 +838,17 @@ private aws.waf.rule @defaults("name") {
   statement aws.waf.rule.statement
   // Part of the rule that tells WAF what to do with a web request when it matches the criteria defined in the rule
   action aws.waf.rule.action
+  // Override applied to a rule-group or managed-rule-group reference
+  //
+  // One of `count` (override the referenced group's actions to Count) or `none`
+  // (keep the group's own actions). Empty for rules with their own `action`.
+  overrideAction string
+  // CloudWatch metrics and request-sampling settings for the rule
+  //
+  // Has `cloudWatchMetricsEnabled`, `sampledRequestsEnabled`, and `metricName`.
+  visibilityConfig dict
+  // Labels WAF adds to matching requests, consumed by later label-match rules
+  ruleLabels []string
   // ARN of either rule ACL or the RuleGroup that this rule belongs to
   belongsTo string
 }
@@ -1258,6 +1285,17 @@ private aws.waf.acl.loggingConfiguration @defaults("arn") {
   managedByFirewallManager bool
   // Fields that are redacted from logs
   redactedFields []string
+  // Filter deciding which requests are kept in or dropped from the logs
+  //
+  // Has `defaultBehavior` (`KEEP` or `DROP` for requests matching no filter) and
+  // `filters` (each with `behavior`, `requirement` of `MEETS_ALL` or `MEETS_ANY`,
+  // and `conditions` selecting on rule action or label name). Empty when no filter
+  // is configured.
+  loggingFilter dict
+  // Scope of logging: CUSTOMER, SECURITY_LAKE, or CLOUDWATCH_TELEMETRY_RULE_MANAGED
+  logScope string
+  // Type of logging, for example WAF_LOGS
+  logType string
 }
 
 // AWS Network Firewall

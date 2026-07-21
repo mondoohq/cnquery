@@ -5441,6 +5441,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.acl.managedByFirewallManager": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafAcl).GetManagedByFirewallManager()).ToDataRes(types.Bool)
 	},
+	"aws.waf.acl.defaultAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAcl).GetDefaultAction()).ToDataRes(types.String)
+	},
+	"aws.waf.acl.visibilityConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAcl).GetVisibilityConfig()).ToDataRes(types.Dict)
+	},
+	"aws.waf.acl.capacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAcl).GetCapacity()).ToDataRes(types.Int)
+	},
+	"aws.waf.acl.tokenDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAcl).GetTokenDomains()).ToDataRes(types.Array(types.String))
+	},
+	"aws.waf.acl.labelNamespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAcl).GetLabelNamespace()).ToDataRes(types.String)
+	},
 	"aws.waf.acl.rules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafAcl).GetRules()).ToDataRes(types.Array(types.Resource("aws.waf.rule")))
 	},
@@ -5488,6 +5503,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.waf.rule.action": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRule).GetAction()).ToDataRes(types.Resource("aws.waf.rule.action"))
+	},
+	"aws.waf.rule.overrideAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRule).GetOverrideAction()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.visibilityConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRule).GetVisibilityConfig()).ToDataRes(types.Dict)
+	},
+	"aws.waf.rule.ruleLabels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRule).GetRuleLabels()).ToDataRes(types.Array(types.String))
 	},
 	"aws.waf.rule.belongsTo": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRule).GetBelongsTo()).ToDataRes(types.String)
@@ -5935,6 +5959,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.waf.acl.loggingConfiguration.redactedFields": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafAclLoggingConfiguration).GetRedactedFields()).ToDataRes(types.Array(types.String))
+	},
+	"aws.waf.acl.loggingConfiguration.loggingFilter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAclLoggingConfiguration).GetLoggingFilter()).ToDataRes(types.Dict)
+	},
+	"aws.waf.acl.loggingConfiguration.logScope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAclLoggingConfiguration).GetLogScope()).ToDataRes(types.String)
+	},
+	"aws.waf.acl.loggingConfiguration.logType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAclLoggingConfiguration).GetLogType()).ToDataRes(types.String)
 	},
 	"aws.networkfirewall.firewalls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewall).GetFirewalls()).ToDataRes(types.Array(types.Resource("aws.networkfirewall.firewall")))
@@ -35752,6 +35785,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsWafAcl).ManagedByFirewallManager, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"aws.waf.acl.defaultAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAcl).DefaultAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.visibilityConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAcl).VisibilityConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.capacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAcl).Capacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.tokenDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAcl).TokenDomains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.labelNamespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAcl).LabelNamespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.acl.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafAcl).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -35822,6 +35875,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.waf.rule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRule).Action, ok = plugin.RawToTValue[*mqlAwsWafRuleAction](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.overrideAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRule).OverrideAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.visibilityConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRule).VisibilityConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.ruleLabels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRule).RuleLabels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rule.belongsTo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -36546,6 +36611,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.waf.acl.loggingConfiguration.redactedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafAclLoggingConfiguration).RedactedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.loggingConfiguration.loggingFilter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAclLoggingConfiguration).LoggingFilter, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.loggingConfiguration.logScope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAclLoggingConfiguration).LogScope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.loggingConfiguration.logType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAclLoggingConfiguration).LogType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.networkfirewall.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -81235,6 +81312,11 @@ type mqlAwsWafAcl struct {
 	Name                     plugin.TValue[string]
 	Description              plugin.TValue[string]
 	ManagedByFirewallManager plugin.TValue[bool]
+	DefaultAction            plugin.TValue[string]
+	VisibilityConfig         plugin.TValue[any]
+	Capacity                 plugin.TValue[int64]
+	TokenDomains             plugin.TValue[[]any]
+	LabelNamespace           plugin.TValue[string]
 	Rules                    plugin.TValue[[]any]
 	Scope                    plugin.TValue[string]
 	LoggingConfiguration     plugin.TValue[*mqlAwsWafAclLoggingConfiguration]
@@ -81298,6 +81380,36 @@ func (c *mqlAwsWafAcl) GetDescription() *plugin.TValue[string] {
 func (c *mqlAwsWafAcl) GetManagedByFirewallManager() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.ManagedByFirewallManager, func() (bool, error) {
 		return c.managedByFirewallManager()
+	})
+}
+
+func (c *mqlAwsWafAcl) GetDefaultAction() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DefaultAction, func() (string, error) {
+		return c.defaultAction()
+	})
+}
+
+func (c *mqlAwsWafAcl) GetVisibilityConfig() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.VisibilityConfig, func() (any, error) {
+		return c.visibilityConfig()
+	})
+}
+
+func (c *mqlAwsWafAcl) GetCapacity() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Capacity, func() (int64, error) {
+		return c.capacity()
+	})
+}
+
+func (c *mqlAwsWafAcl) GetTokenDomains() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TokenDomains, func() ([]any, error) {
+		return c.tokenDomains()
+	})
+}
+
+func (c *mqlAwsWafAcl) GetLabelNamespace() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LabelNamespace, func() (string, error) {
+		return c.labelNamespace()
 	})
 }
 
@@ -81450,12 +81562,15 @@ type mqlAwsWafRule struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsWafRuleInternal it will be used here
-	Id        plugin.TValue[string]
-	Name      plugin.TValue[string]
-	Priority  plugin.TValue[int64]
-	Statement plugin.TValue[*mqlAwsWafRuleStatement]
-	Action    plugin.TValue[*mqlAwsWafRuleAction]
-	BelongsTo plugin.TValue[string]
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Priority         plugin.TValue[int64]
+	Statement        plugin.TValue[*mqlAwsWafRuleStatement]
+	Action           plugin.TValue[*mqlAwsWafRuleAction]
+	OverrideAction   plugin.TValue[string]
+	VisibilityConfig plugin.TValue[any]
+	RuleLabels       plugin.TValue[[]any]
+	BelongsTo        plugin.TValue[string]
 }
 
 // createAwsWafRule creates a new instance of this resource
@@ -81513,6 +81628,18 @@ func (c *mqlAwsWafRule) GetStatement() *plugin.TValue[*mqlAwsWafRuleStatement] {
 
 func (c *mqlAwsWafRule) GetAction() *plugin.TValue[*mqlAwsWafRuleAction] {
 	return &c.Action
+}
+
+func (c *mqlAwsWafRule) GetOverrideAction() *plugin.TValue[string] {
+	return &c.OverrideAction
+}
+
+func (c *mqlAwsWafRule) GetVisibilityConfig() *plugin.TValue[any] {
+	return &c.VisibilityConfig
+}
+
+func (c *mqlAwsWafRule) GetRuleLabels() *plugin.TValue[[]any] {
+	return &c.RuleLabels
 }
 
 func (c *mqlAwsWafRule) GetBelongsTo() *plugin.TValue[string] {
@@ -83606,6 +83733,9 @@ type mqlAwsWafAclLoggingConfiguration struct {
 	LogDestinationConfigs    plugin.TValue[[]any]
 	ManagedByFirewallManager plugin.TValue[bool]
 	RedactedFields           plugin.TValue[[]any]
+	LoggingFilter            plugin.TValue[any]
+	LogScope                 plugin.TValue[string]
+	LogType                  plugin.TValue[string]
 }
 
 // createAwsWafAclLoggingConfiguration creates a new instance of this resource
@@ -83659,6 +83789,18 @@ func (c *mqlAwsWafAclLoggingConfiguration) GetManagedByFirewallManager() *plugin
 
 func (c *mqlAwsWafAclLoggingConfiguration) GetRedactedFields() *plugin.TValue[[]any] {
 	return &c.RedactedFields
+}
+
+func (c *mqlAwsWafAclLoggingConfiguration) GetLoggingFilter() *plugin.TValue[any] {
+	return &c.LoggingFilter
+}
+
+func (c *mqlAwsWafAclLoggingConfiguration) GetLogScope() *plugin.TValue[string] {
+	return &c.LogScope
+}
+
+func (c *mqlAwsWafAclLoggingConfiguration) GetLogType() *plugin.TValue[string] {
+	return &c.LogType
 }
 
 // mqlAwsNetworkfirewall for the aws.networkfirewall resource
