@@ -445,6 +445,7 @@ const (
 	ResourceAzureSubscriptionLighthouseServiceRegistrationAssignment                                  string = "azure.subscription.lighthouseService.registrationAssignment"
 	ResourceAzureSubscriptionMachineLearningService                                                   string = "azure.subscription.machineLearningService"
 	ResourceAzureSubscriptionMachineLearningServiceWorkspace                                          string = "azure.subscription.machineLearningService.workspace"
+	ResourceAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule                string = "azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule"
 	ResourceAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint                            string = "azure.subscription.machineLearningService.workspace.onlineEndpoint"
 	ResourceAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpointDeployment                  string = "azure.subscription.machineLearningService.workspace.onlineEndpoint.deployment"
 	ResourceAzureSubscriptionMachineLearningServiceWorkspaceServerlessEndpoint                        string = "azure.subscription.machineLearningService.workspace.serverlessEndpoint"
@@ -2212,6 +2213,10 @@ func init() {
 		"azure.subscription.machineLearningService.workspace": {
 			// to override args, implement: initAzureSubscriptionMachineLearningServiceWorkspace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionMachineLearningServiceWorkspace,
+		},
+		"azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule": {
+			// to override args, implement: initAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule,
 		},
 		"azure.subscription.machineLearningService.workspace.onlineEndpoint": {
 			// to override args, implement: initAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -17519,8 +17524,44 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.machineLearningService.workspace.models": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspace).GetModels()).ToDataRes(types.Array(types.Resource("azure.subscription.machineLearningService.workspace.model")))
 	},
+	"azure.subscription.machineLearningService.workspace.managedNetworkOutboundRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspace).GetManagedNetworkOutboundRules()).ToDataRes(types.Array(types.Resource("azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule")))
+	},
 	"azure.subscription.machineLearningService.workspace.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspace).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule).GetCategory()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule).GetStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule.destinationFqdn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule).GetDestinationFqdn()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule.privateEndpointResourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule).GetPrivateEndpointResourceId()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule.privateEndpointSubresourceTarget": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule).GetPrivateEndpointSubresourceTarget()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule.privateEndpointSparkEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule).GetPrivateEndpointSparkEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule.serviceTag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule).GetServiceTag()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule.serviceTagProtocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule).GetServiceTagProtocol()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule.serviceTagPortRanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule).GetServiceTagPortRanges()).ToDataRes(types.String)
 	},
 	"azure.subscription.machineLearningService.workspace.onlineEndpoint.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint).GetId()).ToDataRes(types.String)
@@ -40863,8 +40904,60 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspace).Models, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.machineLearningService.workspace.managedNetworkOutboundRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspace).ManagedNetworkOutboundRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.machineLearningService.workspace.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspace).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule.destinationFqdn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule).DestinationFqdn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule.privateEndpointResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule).PrivateEndpointResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule.privateEndpointSubresourceTarget": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule).PrivateEndpointSubresourceTarget, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule.privateEndpointSparkEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule).PrivateEndpointSparkEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule.serviceTag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule).ServiceTag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule.serviceTagProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule).ServiceTagProtocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule.serviceTagPortRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule).ServiceTagPortRanges, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.machineLearningService.workspace.onlineEndpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -96261,6 +96354,7 @@ type mqlAzureSubscriptionMachineLearningServiceWorkspace struct {
 	ServerlessEndpoints             plugin.TValue[[]any]
 	Computes                        plugin.TValue[[]any]
 	Models                          plugin.TValue[[]any]
+	ManagedNetworkOutboundRules     plugin.TValue[[]any]
 	SystemMetadata                  plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -96545,6 +96639,22 @@ func (c *mqlAzureSubscriptionMachineLearningServiceWorkspace) GetModels() *plugi
 	})
 }
 
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspace) GetManagedNetworkOutboundRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedNetworkOutboundRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.machineLearningService.workspace", c.__id, "managedNetworkOutboundRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedNetworkOutboundRules()
+	})
+}
+
 func (c *mqlAzureSubscriptionMachineLearningServiceWorkspace) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
 	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
 		if c.MqlRuntime.HasRecording {
@@ -96559,6 +96669,100 @@ func (c *mqlAzureSubscriptionMachineLearningServiceWorkspace) GetSystemMetadata(
 
 		return c.systemMetadata()
 	})
+}
+
+// mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule for the azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule resource
+type mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRuleInternal it will be used here
+	Name                             plugin.TValue[string]
+	Type                             plugin.TValue[string]
+	Category                         plugin.TValue[string]
+	Status                           plugin.TValue[string]
+	DestinationFqdn                  plugin.TValue[string]
+	PrivateEndpointResourceId        plugin.TValue[string]
+	PrivateEndpointSubresourceTarget plugin.TValue[string]
+	PrivateEndpointSparkEnabled      plugin.TValue[bool]
+	ServiceTag                       plugin.TValue[string]
+	ServiceTagProtocol               plugin.TValue[string]
+	ServiceTagPortRanges             plugin.TValue[string]
+}
+
+// createAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule creates a new instance of this resource
+func createAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule) MqlName() string {
+	return "azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule"
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule) GetCategory() *plugin.TValue[string] {
+	return &c.Category
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule) GetDestinationFqdn() *plugin.TValue[string] {
+	return &c.DestinationFqdn
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule) GetPrivateEndpointResourceId() *plugin.TValue[string] {
+	return &c.PrivateEndpointResourceId
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule) GetPrivateEndpointSubresourceTarget() *plugin.TValue[string] {
+	return &c.PrivateEndpointSubresourceTarget
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule) GetPrivateEndpointSparkEnabled() *plugin.TValue[bool] {
+	return &c.PrivateEndpointSparkEnabled
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule) GetServiceTag() *plugin.TValue[string] {
+	return &c.ServiceTag
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule) GetServiceTagProtocol() *plugin.TValue[string] {
+	return &c.ServiceTagProtocol
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule) GetServiceTagPortRanges() *plugin.TValue[string] {
+	return &c.ServiceTagPortRanges
 }
 
 // mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint for the azure.subscription.machineLearningService.workspace.onlineEndpoint resource

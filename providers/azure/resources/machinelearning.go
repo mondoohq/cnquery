@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
@@ -26,6 +27,7 @@ import (
 type mqlAzureSubscriptionMachineLearningServiceWorkspaceInternal struct {
 	cacheEncryptionKeyUri string
 	cacheSystemData       any
+	cacheOutboundRules    map[string]ml.OutboundRuleClassification
 }
 
 func initAzureSubscriptionMachineLearningService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -48,6 +50,73 @@ func (a *mqlAzureSubscriptionMachineLearningService) id() (string, error) {
 
 func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+// managedNetworkOutboundRules maps the workspace's managed-network approved
+// outbound rules (a name-keyed, type-discriminated map) to the unified rule
+// resource. Rules are emitted in name order for stable output.
+func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) managedNetworkOutboundRules() ([]any, error) {
+	names := make([]string, 0, len(a.cacheOutboundRules))
+	for name := range a.cacheOutboundRules {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
+	res := []any{}
+	for _, name := range names {
+		rule := a.cacheOutboundRules[name]
+		if rule == nil {
+			continue
+		}
+		var ruleType, category, status string
+		if base := rule.GetOutboundRule(); base != nil {
+			if base.Type != nil {
+				ruleType = string(*base.Type)
+			}
+			if base.Category != nil {
+				category = string(*base.Category)
+			}
+			if base.Status != nil {
+				status = string(*base.Status)
+			}
+		}
+		args := map[string]*llx.RawData{
+			"__id":                             llx.StringData(a.Id.Data + "/outboundRules/" + name),
+			"name":                             llx.StringData(name),
+			"type":                             llx.StringData(ruleType),
+			"category":                         llx.StringData(category),
+			"status":                           llx.StringData(status),
+			"destinationFqdn":                  llx.StringData(""),
+			"privateEndpointResourceId":        llx.StringData(""),
+			"privateEndpointSubresourceTarget": llx.StringData(""),
+			"privateEndpointSparkEnabled":      llx.BoolDataPtr(nil),
+			"serviceTag":                       llx.StringData(""),
+			"serviceTagProtocol":               llx.StringData(""),
+			"serviceTagPortRanges":             llx.StringData(""),
+		}
+		switch r := rule.(type) {
+		case *ml.FqdnOutboundRule:
+			args["destinationFqdn"] = llx.StringDataPtr(r.Destination)
+		case *ml.PrivateEndpointOutboundRule:
+			if d := r.Destination; d != nil {
+				args["privateEndpointResourceId"] = llx.StringDataPtr(d.ServiceResourceID)
+				args["privateEndpointSubresourceTarget"] = llx.StringDataPtr(d.SubresourceTarget)
+				args["privateEndpointSparkEnabled"] = llx.BoolDataPtr(d.SparkEnabled)
+			}
+		case *ml.ServiceTagOutboundRule:
+			if d := r.Destination; d != nil {
+				args["serviceTag"] = llx.StringDataPtr(d.ServiceTag)
+				args["serviceTagProtocol"] = llx.StringDataPtr(d.Protocol)
+				args["serviceTagPortRanges"] = llx.StringDataPtr(d.PortRanges)
+			}
+		}
+		mqlRule, err := CreateResource(a.MqlRuntime, "azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule", args)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlRule)
+	}
+	return res, nil
 }
 
 func (a *mqlAzureSubscriptionMachineLearningService) workspaces() ([]any, error) {
@@ -112,8 +181,12 @@ func machineLearningWorkspaceToMql(runtime *plugin.Runtime, ws *ml.Workspace) (*
 	if props.ProvisioningState != nil {
 		provisioningState = string(*props.ProvisioningState)
 	}
-	if props.ManagedNetwork != nil && props.ManagedNetwork.IsolationMode != nil {
-		managedNetworkIsolationMode = string(*props.ManagedNetwork.IsolationMode)
+	var outboundRules map[string]ml.OutboundRuleClassification
+	if props.ManagedNetwork != nil {
+		if props.ManagedNetwork.IsolationMode != nil {
+			managedNetworkIsolationMode = string(*props.ManagedNetwork.IsolationMode)
+		}
+		outboundRules = props.ManagedNetwork.OutboundRules
 	}
 
 	var encryptionStatus, encryptionKeyUri string
@@ -165,6 +238,7 @@ func machineLearningWorkspaceToMql(runtime *plugin.Runtime, ws *ml.Workspace) (*
 
 	mqlWs := resource.(*mqlAzureSubscriptionMachineLearningServiceWorkspace)
 	mqlWs.cacheEncryptionKeyUri = encryptionKeyUri
+	mqlWs.cacheOutboundRules = outboundRules
 	sysData, err := convert.JsonToDict(ws.SystemData)
 	if err != nil {
 		return nil, err

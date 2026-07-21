@@ -14329,8 +14329,45 @@ azure.subscription.machineLearningService.workspace @defaults("id name location 
   computes() []azure.subscription.machineLearningService.workspace.compute
   // Models registered in the workspace
   models() []azure.subscription.machineLearningService.workspace.model
+  // Approved-outbound rules of the managed virtual network
+  managedNetworkOutboundRules() []azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
+}
+
+// Machine Learning workspace managed-network outbound rule
+//
+// A single approved-outbound rule of a workspace's managed virtual
+// network, selected by `name`. When the workspace runs in
+// AllowOnlyApprovedOutbound isolation, these rules are the entire
+// allow-list of destinations its compute may reach, so auditing them is
+// what makes the isolation mode meaningful. Which fields carry values
+// depends on `type`: an FQDN rule populates `destinationFqdn`; a
+// PrivateEndpoint rule populates the `privateEndpoint` fields; a
+// ServiceTag rule populates the `serviceTag` fields.
+private azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule @defaults("name type category status") {
+  // Rule name (the allow-list entry key)
+  name string
+  // Rule type (FQDN, PrivateEndpoint, ServiceTag)
+  type string
+  // Rule category (Dependency, Required, UserDefined)
+  category string
+  // Rule status (Active, Inactive)
+  status string
+  // FQDN rule: the allowed fully-qualified domain name
+  destinationFqdn string
+  // PrivateEndpoint rule: ARM resource ID of the target service
+  privateEndpointResourceId string
+  // PrivateEndpoint rule: sub-resource (group ID) targeted on the service
+  privateEndpointSubresourceTarget string
+  // PrivateEndpoint rule: whether Spark workloads may use the private endpoint
+  privateEndpointSparkEnabled bool
+  // ServiceTag rule: the Azure service tag allowed as a destination
+  serviceTag string
+  // ServiceTag rule: protocol allowed (TCP, UDP, ICMP, or *)
+  serviceTagProtocol string
+  // ServiceTag rule: port ranges allowed
+  serviceTagPortRanges string
 }
 
 // Real-time inference endpoint in an Azure Machine Learning workspace
