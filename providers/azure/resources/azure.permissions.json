@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.32.0",
-  "generated_at": "2026-07-21T12:54:57-07:00",
+  "generated_at": "2026-07-21T13:04:38-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -194,6 +194,7 @@
     "Microsoft.Network/securityPerimeterProfiles/read",
     "Microsoft.Network/securityPerimeters/read",
     "Microsoft.Network/serviceEndpointPolicies/read",
+    "Microsoft.Network/staticMembers/read",
     "Microsoft.Network/trafficManagerProfiles/read",
     "Microsoft.Network/vPNGateways/read",
     "Microsoft.Network/vPNServerConfigurations/read",
@@ -1500,6 +1501,12 @@
       "service": "Microsoft.Network",
       "action": "NewListPager",
       "source_file": "network.go"
+    },
+    {
+      "permission": "Microsoft.Network/staticMembers/read",
+      "service": "Microsoft.Network",
+      "action": "NewListPager",
+      "source_file": "network_avnm.go"
     },
     {
       "permission": "Microsoft.Network/trafficManagerProfiles/read",

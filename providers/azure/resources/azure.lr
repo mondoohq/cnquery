@@ -1746,8 +1746,32 @@ private azure.subscription.networkService.networkManager.networkGroup @defaults(
   memberType string
   // Resource GUID of the group
   resourceGuid string
+  // Statically-defined members of the group
+  staticMembers() []azure.subscription.networkService.networkManager.networkGroup.staticMember
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
+}
+
+// Network manager network group static member
+//
+// A resource explicitly added to a network group, as opposed to one
+// matched by an Azure Policy membership rule. Names the member resource
+// (a virtual network, or a subnet when the group's member type is
+// Subnet) and the region it lives in. Static membership determines
+// which virtual networks a manager's connectivity and security admin
+// configurations actually apply to. Select by the member's Azure
+// resource ID.
+private azure.subscription.networkService.networkManager.networkGroup.staticMember @defaults("name region") {
+  // Static member resource ID
+  id string
+  // Static member name
+  name string
+  // ARM resource ID of the member resource (a virtual network or a subnet)
+  resourceId string
+  // Region the member resource lives in
+  region string
+  // The member virtual network, when the group's member type is VirtualNetwork
+  virtualNetwork() azure.subscription.networkService.virtualNetwork
 }
 
 // Network manager security admin configuration

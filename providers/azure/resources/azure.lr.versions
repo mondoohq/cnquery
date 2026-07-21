@@ -3839,6 +3839,13 @@ azure.subscription.networkService.networkManager.networkGroup.memberType 13.25.1
 azure.subscription.networkService.networkManager.networkGroup.name 13.25.1
 azure.subscription.networkService.networkManager.networkGroup.provisioningState 13.25.1
 azure.subscription.networkService.networkManager.networkGroup.resourceGuid 13.25.1
+azure.subscription.networkService.networkManager.networkGroup.staticMember 13.32.1
+azure.subscription.networkService.networkManager.networkGroup.staticMember.id 13.32.1
+azure.subscription.networkService.networkManager.networkGroup.staticMember.name 13.32.1
+azure.subscription.networkService.networkManager.networkGroup.staticMember.region 13.32.1
+azure.subscription.networkService.networkManager.networkGroup.staticMember.resourceId 13.32.1
+azure.subscription.networkService.networkManager.networkGroup.staticMember.virtualNetwork 13.32.1
+azure.subscription.networkService.networkManager.networkGroup.staticMembers 13.32.1
 azure.subscription.networkService.networkManager.networkGroup.systemMetadata 13.28.1
 azure.subscription.networkService.networkManager.networkGroup.type 13.25.1
 azure.subscription.networkService.networkManager.networkGroups 13.25.1

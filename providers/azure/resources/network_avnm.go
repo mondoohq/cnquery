@@ -200,6 +200,85 @@ func (a *mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup) systemMet
 	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
+type mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMemberInternal struct {
+	cacheMemberType string
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup) staticMembers() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	resourceID, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	managerName, err := resourceID.Component("networkManagers")
+	if err != nil {
+		return nil, err
+	}
+	groupName, err := resourceID.Component("networkGroups")
+	if err != nil {
+		return nil, err
+	}
+	client, err := network.NewStaticMembersClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	res := []any{}
+	pager := client.NewListPager(resourceID.ResourceGroup, managerName, groupName, &network.StaticMembersClientListOptions{})
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, m := range page.Value {
+			if m == nil {
+				continue
+			}
+			var resourceId, region string
+			if p := m.Properties; p != nil {
+				resourceId = convert.ToValue(p.ResourceID)
+				region = convert.ToValue(p.Region)
+			}
+			mqlMember, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.networkManager.networkGroup.staticMember",
+				map[string]*llx.RawData{
+					"id":         llx.StringDataPtr(m.ID),
+					"name":       llx.StringDataPtr(m.Name),
+					"resourceId": llx.StringData(resourceId),
+					"region":     llx.StringData(region),
+				})
+			if err != nil {
+				return nil, err
+			}
+			mqlMember.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember).cacheMemberType = a.MemberType.Data
+			res = append(res, mqlMember)
+		}
+	}
+	return res, nil
+}
+
+// virtualNetwork resolves a static member's resource to its typed virtual
+// network. Returns null for members whose group is subnet-typed, since the
+// member ID then points at a subnet rather than a virtual network.
+func (a *mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember) virtualNetwork() (*mqlAzureSubscriptionNetworkServiceVirtualNetwork, error) {
+	if a.cacheMemberType != "VirtualNetwork" || a.ResourceId.Data == "" {
+		a.VirtualNetwork.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.virtualNetwork", map[string]*llx.RawData{
+		"id": llx.StringData(a.ResourceId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceVirtualNetwork), nil
+}
+
 // initAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup resolves a
 // network group by its ARM ID so typed references to it (from admin rule
 // collections and connectivity configurations) populate fully.

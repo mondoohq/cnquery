@@ -49,6 +49,7 @@ const (
 	ResourceAzureSubscriptionNetworkService                                                           string = "azure.subscription.networkService"
 	ResourceAzureSubscriptionNetworkServiceNetworkManager                                             string = "azure.subscription.networkService.networkManager"
 	ResourceAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup                                 string = "azure.subscription.networkService.networkManager.networkGroup"
+	ResourceAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember                     string = "azure.subscription.networkService.networkManager.networkGroup.staticMember"
 	ResourceAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration                   string = "azure.subscription.networkService.networkManager.securityAdminConfiguration"
 	ResourceAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection     string = "azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection"
 	ResourceAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule string = "azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule"
@@ -627,6 +628,10 @@ func init() {
 		"azure.subscription.networkService.networkManager.networkGroup": {
 			Init:   initAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup,
 			Create: createAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup,
+		},
+		"azure.subscription.networkService.networkManager.networkGroup.staticMember": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember,
 		},
 		"azure.subscription.networkService.networkManager.securityAdminConfiguration": {
 			// to override args, implement: initAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4335,8 +4340,26 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.networkManager.networkGroup.resourceGuid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup).GetResourceGuid()).ToDataRes(types.String)
 	},
+	"azure.subscription.networkService.networkManager.networkGroup.staticMembers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup).GetStaticMembers()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.networkManager.networkGroup.staticMember")))
+	},
 	"azure.subscription.networkService.networkManager.networkGroup.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.networkService.networkManager.networkGroup.staticMember.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.networkGroup.staticMember.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.networkGroup.staticMember.resourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember).GetResourceId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.networkGroup.staticMember.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember).GetRegion()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.networkGroup.staticMember.virtualNetwork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember).GetVirtualNetwork()).ToDataRes(types.Resource("azure.subscription.networkService.virtualNetwork"))
 	},
 	"azure.subscription.networkService.networkManager.securityAdminConfiguration.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration).GetId()).ToDataRes(types.String)
@@ -21684,8 +21707,36 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup).ResourceGuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.networkManager.networkGroup.staticMembers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup).StaticMembers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.networkManager.networkGroup.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.networkGroup.staticMember.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.networkManager.networkGroup.staticMember.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.networkGroup.staticMember.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.networkGroup.staticMember.resourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember).ResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.networkGroup.staticMember.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.networkGroup.staticMember.virtualNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember).VirtualNetwork, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceVirtualNetwork](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.networkManager.securityAdminConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -49424,6 +49475,7 @@ type mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup struct {
 	Description       plugin.TValue[string]
 	MemberType        plugin.TValue[string]
 	ResourceGuid      plugin.TValue[string]
+	StaticMembers     plugin.TValue[[]any]
 	SystemMetadata    plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -49496,6 +49548,22 @@ func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup) GetResour
 	return &c.ResourceGuid
 }
 
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup) GetStaticMembers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.StaticMembers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.networkManager.networkGroup", c.__id, "staticMembers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.staticMembers()
+	})
+}
+
 func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
 	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
 		if c.MqlRuntime.HasRecording {
@@ -49509,6 +49577,87 @@ func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup) GetSystem
 		}
 
 		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember for the azure.subscription.networkService.networkManager.networkGroup.staticMember resource
+type mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMemberInternal
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	ResourceId     plugin.TValue[string]
+	Region         plugin.TValue[string]
+	VirtualNetwork plugin.TValue[*mqlAzureSubscriptionNetworkServiceVirtualNetwork]
+}
+
+// createAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.networkManager.networkGroup.staticMember", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember) MqlName() string {
+	return "azure.subscription.networkService.networkManager.networkGroup.staticMember"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember) GetResourceId() *plugin.TValue[string] {
+	return &c.ResourceId
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember) GetVirtualNetwork() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceVirtualNetwork] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceVirtualNetwork](&c.VirtualNetwork, func() (*mqlAzureSubscriptionNetworkServiceVirtualNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.networkManager.networkGroup.staticMember", c.__id, "virtualNetwork")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceVirtualNetwork), nil
+			}
+		}
+
+		return c.virtualNetwork()
 	})
 }
 
