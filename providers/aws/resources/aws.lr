@@ -13740,6 +13740,102 @@ aws.elasticache @defaults("cacheClusters") {
   serviceUpdates() []aws.elasticache.serviceUpdate
   // List of cache snapshots
   snapshots() []aws.elasticache.snapshot
+  // List of replication groups
+  replicationGroups() []aws.elasticache.replicationGroup
+}
+
+// ElastiCache replication group
+//
+// Redis or Valkey replication group: the logical cluster that spans one or
+// more node groups (shards) and carries the security posture nothing on the
+// individual clusters exposes, including RBAC user-group bindings, at-rest and
+// in-transit encryption, Redis auth-token enforcement, the KMS key protecting
+// data at rest, and automatic-failover and Multi-AZ configuration. The
+// `replicationGroupId` field selects the group and `memberClusters` lists the
+// clusters that belong to it.
+private aws.elasticache.replicationGroup @defaults("replicationGroupId status description") {
+  // ARN of the replication group
+  arn string
+  // Identifier of the replication group
+  replicationGroupId string
+  // Region where the replication group exists
+  region string
+  // User-supplied description of the replication group
+  description string
+  // Current state of the replication group, for example creating, available, or modifying
+  status string
+  // Cache engine, either redis or valkey
+  engine string
+  // Compute and memory capacity node type of the group's nodes
+  cacheNodeType string
+  // Whether cluster mode (multiple node groups/shards) is enabled
+  clusterEnabled bool
+  // Cluster mode: enabled, disabled, or compatible
+  clusterMode string
+  // Automatic-failover status: enabled, disabled, enabling, or disabling
+  automaticFailover string
+  // Multi-AZ status: enabled or disabled
+  multiAZ string
+  // Data-tiering status (memory plus SSD on r6gd nodes): enabled or disabled
+  dataTiering string
+  // Whether encryption at rest is enabled
+  atRestEncryptionEnabled bool
+  // Whether encryption in transit is enabled
+  transitEncryptionEnabled bool
+  // In-transit encryption mode: preferred or required
+  transitEncryptionMode string
+  // Whether a Redis auth token (password) is enabled for the group
+  authTokenEnabled bool
+  // Time the auth token was last modified
+  authTokenLastModifiedAt time
+  // KMS key used to encrypt data at rest
+  kmsKey() aws.kms.key
+  // Whether minor engine version upgrades are applied automatically
+  autoMinorVersionUpgrade bool
+  // Number of days automatic snapshots are retained
+  snapshotRetentionLimit int
+  // Daily time range during which automatic snapshots are taken
+  snapshotWindow string
+  // Identifier of the cluster used to take automatic snapshots
+  snapshottingClusterId string
+  // Time the replication group was created
+  replicationGroupCreatedAt time
+  // Identifiers of the clusters that belong to the replication group
+  memberClusters []string
+  // RBAC user groups associated with the replication group
+  userGroupIds []string
+  // Network type: ipv4, ipv6, or dual_stack
+  networkType string
+  // IP discovery type used by cluster-mode clients: ipv4 or ipv6
+  ipDiscovery string
+  // Storage encryption type applied to the group
+  storageEncryptionType string
+  // Configured data durability level for the group
+  durability string
+  // Effective data durability level currently in force
+  effectiveDurability string
+  // Configuration endpoint for cluster-mode clients
+  //
+  // Has `Address` (the DNS name) and `Port`. Empty for non-cluster-mode groups.
+  configurationEndpoint dict
+  // Global datastore membership for the group
+  //
+  // Has `GlobalReplicationGroupId` and `GlobalReplicationGroupMemberRole`
+  // (PRIMARY or SECONDARY). Empty when the group is not part of a global datastore.
+  globalReplicationGroupInfo dict
+  // Node groups (shards) that make up the replication group
+  //
+  // One entry per shard. Each dict has `NodeGroupId`, `Status`, `Slots` (the
+  // keyspace hash-slot range in cluster mode), `PrimaryEndpoint`, `ReaderEndpoint`,
+  // and `NodeGroupMembers` (the individual cluster nodes and their roles).
+  nodeGroups []dict
+  // Destinations that slow-log and engine-log entries are published to
+  //
+  // Each dict has `LogType` (slow-log or engine-log), `DestinationType`
+  // (cloudwatch-logs or kinesis-firehose), `DestinationDetails`, `LogFormat`, and `Status`.
+  logDeliveryConfigurations []dict
+  // Group settings that are pending application
+  pendingModifiedValues dict
 }
 
 // Amazon ElastiCache cluster
@@ -13833,6 +13929,8 @@ private aws.elasticache.cluster @defaults("cacheClusterId region nodeType engine
   replicationGroupLogDeliveryEnabled bool
   // Identifier of the replication group the cluster belongs to, when part of one
   replicationGroupId string
+  // Replication group the cluster belongs to, when part of one
+  replicationGroup() aws.elasticache.replicationGroup
   // Name of the cache parameter group applied to the cluster
   cacheParameterGroupName string
   // Cache parameter group applied to the cluster

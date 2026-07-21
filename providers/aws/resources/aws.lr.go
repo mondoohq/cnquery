@@ -478,6 +478,7 @@ const (
 	ResourceAwsRdsParameterGroup                                                string = "aws.rds.parameterGroup"
 	ResourceAwsRdsParameterGroupParameter                                       string = "aws.rds.parameterGroup.parameter"
 	ResourceAwsElasticache                                                      string = "aws.elasticache"
+	ResourceAwsElasticacheReplicationGroup                                      string = "aws.elasticache.replicationGroup"
 	ResourceAwsElasticacheCluster                                               string = "aws.elasticache.cluster"
 	ResourceAwsElasticacheServerlessCache                                       string = "aws.elasticache.serverlessCache"
 	ResourceAwsElasticacheParameterGroup                                        string = "aws.elasticache.parameterGroup"
@@ -2797,6 +2798,10 @@ func init() {
 		"aws.elasticache": {
 			// to override args, implement: initAwsElasticache(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsElasticache,
+		},
+		"aws.elasticache.replicationGroup": {
+			// to override args, implement: initAwsElasticacheReplicationGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsElasticacheReplicationGroup,
 		},
 		"aws.elasticache.cluster": {
 			Init:   initAwsElasticacheCluster,
@@ -18824,6 +18829,114 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elasticache.snapshots": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticache).GetSnapshots()).ToDataRes(types.Array(types.Resource("aws.elasticache.snapshot")))
 	},
+	"aws.elasticache.replicationGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticache).GetReplicationGroups()).ToDataRes(types.Array(types.Resource("aws.elasticache.replicationGroup")))
+	},
+	"aws.elasticache.replicationGroup.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetArn()).ToDataRes(types.String)
+	},
+	"aws.elasticache.replicationGroup.replicationGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetReplicationGroupId()).ToDataRes(types.String)
+	},
+	"aws.elasticache.replicationGroup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.elasticache.replicationGroup.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.elasticache.replicationGroup.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.elasticache.replicationGroup.engine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetEngine()).ToDataRes(types.String)
+	},
+	"aws.elasticache.replicationGroup.cacheNodeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetCacheNodeType()).ToDataRes(types.String)
+	},
+	"aws.elasticache.replicationGroup.clusterEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetClusterEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.elasticache.replicationGroup.clusterMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetClusterMode()).ToDataRes(types.String)
+	},
+	"aws.elasticache.replicationGroup.automaticFailover": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetAutomaticFailover()).ToDataRes(types.String)
+	},
+	"aws.elasticache.replicationGroup.multiAZ": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetMultiAZ()).ToDataRes(types.String)
+	},
+	"aws.elasticache.replicationGroup.dataTiering": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetDataTiering()).ToDataRes(types.String)
+	},
+	"aws.elasticache.replicationGroup.atRestEncryptionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetAtRestEncryptionEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.elasticache.replicationGroup.transitEncryptionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetTransitEncryptionEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.elasticache.replicationGroup.transitEncryptionMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetTransitEncryptionMode()).ToDataRes(types.String)
+	},
+	"aws.elasticache.replicationGroup.authTokenEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetAuthTokenEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.elasticache.replicationGroup.authTokenLastModifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetAuthTokenLastModifiedAt()).ToDataRes(types.Time)
+	},
+	"aws.elasticache.replicationGroup.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.elasticache.replicationGroup.autoMinorVersionUpgrade": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetAutoMinorVersionUpgrade()).ToDataRes(types.Bool)
+	},
+	"aws.elasticache.replicationGroup.snapshotRetentionLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetSnapshotRetentionLimit()).ToDataRes(types.Int)
+	},
+	"aws.elasticache.replicationGroup.snapshotWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetSnapshotWindow()).ToDataRes(types.String)
+	},
+	"aws.elasticache.replicationGroup.snapshottingClusterId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetSnapshottingClusterId()).ToDataRes(types.String)
+	},
+	"aws.elasticache.replicationGroup.replicationGroupCreatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetReplicationGroupCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.elasticache.replicationGroup.memberClusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetMemberClusters()).ToDataRes(types.Array(types.String))
+	},
+	"aws.elasticache.replicationGroup.userGroupIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetUserGroupIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.elasticache.replicationGroup.networkType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetNetworkType()).ToDataRes(types.String)
+	},
+	"aws.elasticache.replicationGroup.ipDiscovery": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetIpDiscovery()).ToDataRes(types.String)
+	},
+	"aws.elasticache.replicationGroup.storageEncryptionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetStorageEncryptionType()).ToDataRes(types.String)
+	},
+	"aws.elasticache.replicationGroup.durability": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetDurability()).ToDataRes(types.String)
+	},
+	"aws.elasticache.replicationGroup.effectiveDurability": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetEffectiveDurability()).ToDataRes(types.String)
+	},
+	"aws.elasticache.replicationGroup.configurationEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetConfigurationEndpoint()).ToDataRes(types.Dict)
+	},
+	"aws.elasticache.replicationGroup.globalReplicationGroupInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetGlobalReplicationGroupInfo()).ToDataRes(types.Dict)
+	},
+	"aws.elasticache.replicationGroup.nodeGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetNodeGroups()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.elasticache.replicationGroup.logDeliveryConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetLogDeliveryConfigurations()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.elasticache.replicationGroup.pendingModifiedValues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheReplicationGroup).GetPendingModifiedValues()).ToDataRes(types.Dict)
+	},
 	"aws.elasticache.cluster.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheCluster).GetArn()).ToDataRes(types.String)
 	},
@@ -18928,6 +19041,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.elasticache.cluster.replicationGroupId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheCluster).GetReplicationGroupId()).ToDataRes(types.String)
+	},
+	"aws.elasticache.cluster.replicationGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetReplicationGroup()).ToDataRes(types.Resource("aws.elasticache.replicationGroup"))
 	},
 	"aws.elasticache.cluster.cacheParameterGroupName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheCluster).GetCacheParameterGroupName()).ToDataRes(types.String)
@@ -55435,6 +55551,154 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsElasticache).Snapshots, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.elasticache.replicationGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticache).ReplicationGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.elasticache.replicationGroup.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.replicationGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).ReplicationGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.engine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).Engine, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.cacheNodeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).CacheNodeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.clusterEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).ClusterEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.clusterMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).ClusterMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.automaticFailover": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).AutomaticFailover, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.multiAZ": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).MultiAZ, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.dataTiering": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).DataTiering, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.atRestEncryptionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).AtRestEncryptionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.transitEncryptionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).TransitEncryptionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.transitEncryptionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).TransitEncryptionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.authTokenEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).AuthTokenEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.authTokenLastModifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).AuthTokenLastModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.autoMinorVersionUpgrade": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).AutoMinorVersionUpgrade, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.snapshotRetentionLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).SnapshotRetentionLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.snapshotWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).SnapshotWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.snapshottingClusterId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).SnapshottingClusterId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.replicationGroupCreatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).ReplicationGroupCreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.memberClusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).MemberClusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.userGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).UserGroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.networkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).NetworkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.ipDiscovery": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).IpDiscovery, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.storageEncryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).StorageEncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.durability": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).Durability, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.effectiveDurability": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).EffectiveDurability, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.configurationEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).ConfigurationEndpoint, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.globalReplicationGroupInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).GlobalReplicationGroupInfo, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.nodeGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).NodeGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.logDeliveryConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).LogDeliveryConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.replicationGroup.pendingModifiedValues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheReplicationGroup).PendingModifiedValues, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"aws.elasticache.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElasticacheCluster).__id, ok = v.Value.(string)
 		return
@@ -55577,6 +55841,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.elasticache.cluster.replicationGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElasticacheCluster).ReplicationGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.replicationGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).ReplicationGroup, ok = plugin.RawToTValue[*mqlAwsElasticacheReplicationGroup](v.Value, v.Error)
 		return
 	},
 	"aws.elasticache.cluster.cacheParameterGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -133317,13 +133585,14 @@ type mqlAwsElasticache struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsElasticacheInternal
-	CacheClusters    plugin.TValue[[]any]
-	ServerlessCaches plugin.TValue[[]any]
-	ParameterGroups  plugin.TValue[[]any]
-	SubnetGroups     plugin.TValue[[]any]
-	Users            plugin.TValue[[]any]
-	ServiceUpdates   plugin.TValue[[]any]
-	Snapshots        plugin.TValue[[]any]
+	CacheClusters     plugin.TValue[[]any]
+	ServerlessCaches  plugin.TValue[[]any]
+	ParameterGroups   plugin.TValue[[]any]
+	SubnetGroups      plugin.TValue[[]any]
+	Users             plugin.TValue[[]any]
+	ServiceUpdates    plugin.TValue[[]any]
+	Snapshots         plugin.TValue[[]any]
+	ReplicationGroups plugin.TValue[[]any]
 }
 
 // createAwsElasticache creates a new instance of this resource
@@ -133475,6 +133744,253 @@ func (c *mqlAwsElasticache) GetSnapshots() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsElasticache) GetReplicationGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ReplicationGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elasticache", c.__id, "replicationGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.replicationGroups()
+	})
+}
+
+// mqlAwsElasticacheReplicationGroup for the aws.elasticache.replicationGroup resource
+type mqlAwsElasticacheReplicationGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsElasticacheReplicationGroupInternal
+	Arn                        plugin.TValue[string]
+	ReplicationGroupId         plugin.TValue[string]
+	Region                     plugin.TValue[string]
+	Description                plugin.TValue[string]
+	Status                     plugin.TValue[string]
+	Engine                     plugin.TValue[string]
+	CacheNodeType              plugin.TValue[string]
+	ClusterEnabled             plugin.TValue[bool]
+	ClusterMode                plugin.TValue[string]
+	AutomaticFailover          plugin.TValue[string]
+	MultiAZ                    plugin.TValue[string]
+	DataTiering                plugin.TValue[string]
+	AtRestEncryptionEnabled    plugin.TValue[bool]
+	TransitEncryptionEnabled   plugin.TValue[bool]
+	TransitEncryptionMode      plugin.TValue[string]
+	AuthTokenEnabled           plugin.TValue[bool]
+	AuthTokenLastModifiedAt    plugin.TValue[*time.Time]
+	KmsKey                     plugin.TValue[*mqlAwsKmsKey]
+	AutoMinorVersionUpgrade    plugin.TValue[bool]
+	SnapshotRetentionLimit     plugin.TValue[int64]
+	SnapshotWindow             plugin.TValue[string]
+	SnapshottingClusterId      plugin.TValue[string]
+	ReplicationGroupCreatedAt  plugin.TValue[*time.Time]
+	MemberClusters             plugin.TValue[[]any]
+	UserGroupIds               plugin.TValue[[]any]
+	NetworkType                plugin.TValue[string]
+	IpDiscovery                plugin.TValue[string]
+	StorageEncryptionType      plugin.TValue[string]
+	Durability                 plugin.TValue[string]
+	EffectiveDurability        plugin.TValue[string]
+	ConfigurationEndpoint      plugin.TValue[any]
+	GlobalReplicationGroupInfo plugin.TValue[any]
+	NodeGroups                 plugin.TValue[[]any]
+	LogDeliveryConfigurations  plugin.TValue[[]any]
+	PendingModifiedValues      plugin.TValue[any]
+}
+
+// createAwsElasticacheReplicationGroup creates a new instance of this resource
+func createAwsElasticacheReplicationGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsElasticacheReplicationGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.elasticache.replicationGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) MqlName() string {
+	return "aws.elasticache.replicationGroup"
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetReplicationGroupId() *plugin.TValue[string] {
+	return &c.ReplicationGroupId
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetEngine() *plugin.TValue[string] {
+	return &c.Engine
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetCacheNodeType() *plugin.TValue[string] {
+	return &c.CacheNodeType
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetClusterEnabled() *plugin.TValue[bool] {
+	return &c.ClusterEnabled
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetClusterMode() *plugin.TValue[string] {
+	return &c.ClusterMode
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetAutomaticFailover() *plugin.TValue[string] {
+	return &c.AutomaticFailover
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetMultiAZ() *plugin.TValue[string] {
+	return &c.MultiAZ
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetDataTiering() *plugin.TValue[string] {
+	return &c.DataTiering
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetAtRestEncryptionEnabled() *plugin.TValue[bool] {
+	return &c.AtRestEncryptionEnabled
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetTransitEncryptionEnabled() *plugin.TValue[bool] {
+	return &c.TransitEncryptionEnabled
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetTransitEncryptionMode() *plugin.TValue[string] {
+	return &c.TransitEncryptionMode
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetAuthTokenEnabled() *plugin.TValue[bool] {
+	return &c.AuthTokenEnabled
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetAuthTokenLastModifiedAt() *plugin.TValue[*time.Time] {
+	return &c.AuthTokenLastModifiedAt
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elasticache.replicationGroup", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetAutoMinorVersionUpgrade() *plugin.TValue[bool] {
+	return &c.AutoMinorVersionUpgrade
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetSnapshotRetentionLimit() *plugin.TValue[int64] {
+	return &c.SnapshotRetentionLimit
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetSnapshotWindow() *plugin.TValue[string] {
+	return &c.SnapshotWindow
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetSnapshottingClusterId() *plugin.TValue[string] {
+	return &c.SnapshottingClusterId
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetReplicationGroupCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.ReplicationGroupCreatedAt
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetMemberClusters() *plugin.TValue[[]any] {
+	return &c.MemberClusters
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetUserGroupIds() *plugin.TValue[[]any] {
+	return &c.UserGroupIds
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetNetworkType() *plugin.TValue[string] {
+	return &c.NetworkType
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetIpDiscovery() *plugin.TValue[string] {
+	return &c.IpDiscovery
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetStorageEncryptionType() *plugin.TValue[string] {
+	return &c.StorageEncryptionType
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetDurability() *plugin.TValue[string] {
+	return &c.Durability
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetEffectiveDurability() *plugin.TValue[string] {
+	return &c.EffectiveDurability
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetConfigurationEndpoint() *plugin.TValue[any] {
+	return &c.ConfigurationEndpoint
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetGlobalReplicationGroupInfo() *plugin.TValue[any] {
+	return &c.GlobalReplicationGroupInfo
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetNodeGroups() *plugin.TValue[[]any] {
+	return &c.NodeGroups
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetLogDeliveryConfigurations() *plugin.TValue[[]any] {
+	return &c.LogDeliveryConfigurations
+}
+
+func (c *mqlAwsElasticacheReplicationGroup) GetPendingModifiedValues() *plugin.TValue[any] {
+	return &c.PendingModifiedValues
+}
+
 // mqlAwsElasticacheCluster for the aws.elasticache.cluster resource
 type mqlAwsElasticacheCluster struct {
 	MqlRuntime *plugin.Runtime
@@ -133515,6 +134031,7 @@ type mqlAwsElasticacheCluster struct {
 	PreferredMaintenanceWindow         plugin.TValue[string]
 	ReplicationGroupLogDeliveryEnabled plugin.TValue[bool]
 	ReplicationGroupId                 plugin.TValue[string]
+	ReplicationGroup                   plugin.TValue[*mqlAwsElasticacheReplicationGroup]
 	CacheParameterGroupName            plugin.TValue[string]
 	ParameterGroup                     plugin.TValue[*mqlAwsElasticacheParameterGroup]
 	ConfigurationEndpointAddress       plugin.TValue[string]
@@ -133754,6 +134271,22 @@ func (c *mqlAwsElasticacheCluster) GetReplicationGroupLogDeliveryEnabled() *plug
 
 func (c *mqlAwsElasticacheCluster) GetReplicationGroupId() *plugin.TValue[string] {
 	return &c.ReplicationGroupId
+}
+
+func (c *mqlAwsElasticacheCluster) GetReplicationGroup() *plugin.TValue[*mqlAwsElasticacheReplicationGroup] {
+	return plugin.GetOrCompute[*mqlAwsElasticacheReplicationGroup](&c.ReplicationGroup, func() (*mqlAwsElasticacheReplicationGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elasticache.cluster", c.__id, "replicationGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsElasticacheReplicationGroup), nil
+			}
+		}
+
+		return c.replicationGroup()
+	})
 }
 
 func (c *mqlAwsElasticacheCluster) GetCacheParameterGroupName() *plugin.TValue[string] {

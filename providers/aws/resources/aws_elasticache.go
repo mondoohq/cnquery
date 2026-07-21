@@ -353,6 +353,177 @@ func (a *mqlAwsElasticacheCluster) parameterGroup() (*mqlAwsElasticacheParameter
 	return nil, nil
 }
 
+func (a *mqlAwsElasticacheCluster) replicationGroup() (*mqlAwsElasticacheReplicationGroup, error) {
+	if a.cacheReplicationGroupId == nil || *a.cacheReplicationGroupId == "" {
+		a.ReplicationGroup.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	parent, err := CreateResource(a.MqlRuntime, "aws.elasticache", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	rgs := parent.(*mqlAwsElasticache).GetReplicationGroups()
+	if rgs.Error != nil {
+		return nil, rgs.Error
+	}
+	for _, r := range rgs.Data {
+		rg := r.(*mqlAwsElasticacheReplicationGroup)
+		if rg.ReplicationGroupId.Data == *a.cacheReplicationGroupId && rg.Region.Data == a.region {
+			return rg, nil
+		}
+	}
+	a.ReplicationGroup.State = plugin.StateIsNull | plugin.StateIsSet
+	return nil, nil
+}
+
+func (a *mqlAwsElasticache) replicationGroups() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getReplicationGroups(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for _, job := range poolOfJobs.Jobs {
+		if job.Result != nil {
+			res = append(res, job.Result.([]any)...)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsElasticache) getReplicationGroups(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.Elasticache(region)
+			ctx := context.Background()
+			res := []any{}
+
+			paginator := elasticache.NewDescribeReplicationGroupsPaginator(svc, &elasticache.DescribeReplicationGroupsInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					if IsServiceNotAvailableInRegionError(err) {
+						log.Debug().Str("region", region).Msg("elasticache service not available in region")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, rg := range page.ReplicationGroups {
+					mqlRg, err := newMqlAwsElasticacheReplicationGroup(a.MqlRuntime, region, rg)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlRg)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+type mqlAwsElasticacheReplicationGroupInternal struct {
+	cacheKmsKeyId *string
+}
+
+func newMqlAwsElasticacheReplicationGroup(runtime *plugin.Runtime, region string, rg elasticache_types.ReplicationGroup) (*mqlAwsElasticacheReplicationGroup, error) {
+	nodeGroups, err := convert.JsonToDictSlice(rg.NodeGroups)
+	if err != nil {
+		return nil, err
+	}
+	logDeliveryConfigurations, err := convert.JsonToDictSlice(rg.LogDeliveryConfigurations)
+	if err != nil {
+		return nil, err
+	}
+	configurationEndpoint, err := convert.JsonToDict(rg.ConfigurationEndpoint)
+	if err != nil {
+		return nil, err
+	}
+	globalReplicationGroupInfo, err := convert.JsonToDict(rg.GlobalReplicationGroupInfo)
+	if err != nil {
+		return nil, err
+	}
+	pendingModifiedValues, err := convert.JsonToDict(rg.PendingModifiedValues)
+	if err != nil {
+		return nil, err
+	}
+
+	resource, err := CreateResource(runtime, "aws.elasticache.replicationGroup",
+		map[string]*llx.RawData{
+			"__id":                       llx.StringDataPtr(rg.ARN),
+			"arn":                        llx.StringDataPtr(rg.ARN),
+			"replicationGroupId":         llx.StringDataPtr(rg.ReplicationGroupId),
+			"region":                     llx.StringData(region),
+			"description":                llx.StringDataPtr(rg.Description),
+			"status":                     llx.StringDataPtr(rg.Status),
+			"engine":                     llx.StringDataPtr(rg.Engine),
+			"cacheNodeType":              llx.StringDataPtr(rg.CacheNodeType),
+			"clusterEnabled":             llx.BoolDataPtr(rg.ClusterEnabled),
+			"clusterMode":                llx.StringData(string(rg.ClusterMode)),
+			"automaticFailover":          llx.StringData(string(rg.AutomaticFailover)),
+			"multiAZ":                    llx.StringData(string(rg.MultiAZ)),
+			"dataTiering":                llx.StringData(string(rg.DataTiering)),
+			"atRestEncryptionEnabled":    llx.BoolDataPtr(rg.AtRestEncryptionEnabled),
+			"transitEncryptionEnabled":   llx.BoolDataPtr(rg.TransitEncryptionEnabled),
+			"transitEncryptionMode":      llx.StringData(string(rg.TransitEncryptionMode)),
+			"authTokenEnabled":           llx.BoolDataPtr(rg.AuthTokenEnabled),
+			"authTokenLastModifiedAt":    llx.TimeDataPtr(rg.AuthTokenLastModifiedDate),
+			"autoMinorVersionUpgrade":    llx.BoolDataPtr(rg.AutoMinorVersionUpgrade),
+			"snapshotRetentionLimit":     llx.IntDataDefault(rg.SnapshotRetentionLimit, 0),
+			"snapshotWindow":             llx.StringDataPtr(rg.SnapshotWindow),
+			"snapshottingClusterId":      llx.StringDataPtr(rg.SnapshottingClusterId),
+			"replicationGroupCreatedAt":  llx.TimeDataPtr(rg.ReplicationGroupCreateTime),
+			"memberClusters":             llx.ArrayData(convert.SliceAnyToInterface(rg.MemberClusters), types.String),
+			"userGroupIds":               llx.ArrayData(convert.SliceAnyToInterface(rg.UserGroupIds), types.String),
+			"networkType":                llx.StringData(string(rg.NetworkType)),
+			"ipDiscovery":                llx.StringData(string(rg.IpDiscovery)),
+			"storageEncryptionType":      llx.StringData(string(rg.StorageEncryptionType)),
+			"durability":                 llx.StringData(string(rg.Durability)),
+			"effectiveDurability":        llx.StringData(string(rg.EffectiveDurability)),
+			"configurationEndpoint":      llx.DictData(configurationEndpoint),
+			"globalReplicationGroupInfo": llx.DictData(globalReplicationGroupInfo),
+			"nodeGroups":                 llx.ArrayData(nodeGroups, types.Any),
+			"logDeliveryConfigurations":  llx.ArrayData(logDeliveryConfigurations, types.Any),
+			"pendingModifiedValues":      llx.DictData(pendingModifiedValues),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlRg := resource.(*mqlAwsElasticacheReplicationGroup)
+	mqlRg.cacheKmsKeyId = rg.KmsKeyId
+	return mqlRg, nil
+}
+
+func (a *mqlAwsElasticacheReplicationGroup) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsElasticacheReplicationGroup) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheKmsKeyId == nil || *a.cacheKmsKeyId == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheKmsKeyId)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
 func (a *mqlAwsElasticache) serverlessCaches() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []any{}
