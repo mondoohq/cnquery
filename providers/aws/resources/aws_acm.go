@@ -140,7 +140,66 @@ func initAwsAcmCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return nil, nil, err
 	}
 	args["domainValidationOptions"] = llx.ArrayData(domainValidationOptions, types.Dict)
-	return args, nil, nil
+
+	cert := certDetails.Certificate
+	args["subjectAlternativeNames"] = llx.ArrayData(convert.SliceAnyToInterface(cert.SubjectAlternativeNames), types.String)
+
+	keyUsages := make([]any, 0, len(cert.KeyUsages))
+	for _, ku := range cert.KeyUsages {
+		keyUsages = append(keyUsages, string(ku.Name))
+	}
+	args["keyUsages"] = llx.ArrayData(keyUsages, types.String)
+
+	extKeyUsages := make([]any, 0, len(cert.ExtendedKeyUsages))
+	for _, eku := range cert.ExtendedKeyUsages {
+		extKeyUsages = append(extKeyUsages, map[string]any{
+			"name": string(eku.Name),
+			"oid":  convert.ToValue(eku.OID),
+		})
+	}
+	args["extendedKeyUsages"] = llx.ArrayData(extKeyUsages, types.Dict)
+
+	exportable := false
+	if cert.Options != nil {
+		exportable = cert.Options.Export == acmtypes.CertificateExportEnabled
+	}
+	args["exportable"] = llx.BoolData(exportable)
+
+	renewalSummary, err := convert.JsonToDict(cert.RenewalSummary)
+	if err != nil {
+		return nil, nil, err
+	}
+	args["renewalSummary"] = llx.DictData(renewalSummary)
+
+	args["failureReason"] = llx.StringData(string(cert.FailureReason))
+	args["revocationReason"] = llx.StringData(string(cert.RevocationReason))
+	args["revokedAt"] = llx.TimeDataPtr(cert.RevokedAt)
+	args["awsManagedBy"] = llx.StringData(string(cert.ManagedBy))
+
+	res, err := CreateResource(runtime, "aws.acm.certificate", args)
+	if err != nil {
+		return nil, nil, err
+	}
+	mqlCert := res.(*mqlAwsAcmCertificate)
+	mqlCert.cacheCertificateAuthorityArn = cert.CertificateAuthorityArn
+	return args, mqlCert, nil
+}
+
+type mqlAwsAcmCertificateInternal struct {
+	cacheCertificateAuthorityArn *string
+}
+
+func (a *mqlAwsAcmCertificate) certificateAuthority() (*mqlAwsPrivatecaCertificateAuthority, error) {
+	if a.cacheCertificateAuthorityArn == nil || *a.cacheCertificateAuthorityArn == "" {
+		a.CertificateAuthority.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlCA, err := NewResource(a.MqlRuntime, "aws.privateca.certificateAuthority",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheCertificateAuthorityArn)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlCA.(*mqlAwsPrivatecaCertificateAuthority), nil
 }
 
 func CertTagsToMapTags(tags []acmtypes.Tag) map[string]any {

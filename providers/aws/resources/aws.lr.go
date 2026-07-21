@@ -4403,7 +4403,7 @@ func init() {
 			Create: createAwsPrivateca,
 		},
 		"aws.privateca.certificateAuthority": {
-			// to override args, implement: initAwsPrivatecaCertificateAuthority(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsPrivatecaCertificateAuthority,
 			Create: createAwsPrivatecaCertificateAuthority,
 		},
 		"aws.securitylake": {
@@ -11110,6 +11110,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.acm.certificate.domainValidationOptions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAcmCertificate).GetDomainValidationOptions()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.acm.certificate.subjectAlternativeNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAcmCertificate).GetSubjectAlternativeNames()).ToDataRes(types.Array(types.String))
+	},
+	"aws.acm.certificate.keyUsages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAcmCertificate).GetKeyUsages()).ToDataRes(types.Array(types.String))
+	},
+	"aws.acm.certificate.extendedKeyUsages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAcmCertificate).GetExtendedKeyUsages()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.acm.certificate.exportable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAcmCertificate).GetExportable()).ToDataRes(types.Bool)
+	},
+	"aws.acm.certificate.renewalSummary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAcmCertificate).GetRenewalSummary()).ToDataRes(types.Dict)
+	},
+	"aws.acm.certificate.failureReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAcmCertificate).GetFailureReason()).ToDataRes(types.String)
+	},
+	"aws.acm.certificate.revocationReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAcmCertificate).GetRevocationReason()).ToDataRes(types.String)
+	},
+	"aws.acm.certificate.revokedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAcmCertificate).GetRevokedAt()).ToDataRes(types.Time)
+	},
+	"aws.acm.certificate.awsManagedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAcmCertificate).GetAwsManagedBy()).ToDataRes(types.String)
+	},
+	"aws.acm.certificate.certificateAuthority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAcmCertificate).GetCertificateAuthority()).ToDataRes(types.Resource("aws.privateca.certificateAuthority"))
 	},
 	"aws.autoscaling.groups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAutoscaling).GetGroups()).ToDataRes(types.Array(types.Resource("aws.autoscaling.group")))
@@ -44096,6 +44126,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.acm.certificate.domainValidationOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAcmCertificate).DomainValidationOptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.acm.certificate.subjectAlternativeNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAcmCertificate).SubjectAlternativeNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.acm.certificate.keyUsages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAcmCertificate).KeyUsages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.acm.certificate.extendedKeyUsages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAcmCertificate).ExtendedKeyUsages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.acm.certificate.exportable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAcmCertificate).Exportable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.acm.certificate.renewalSummary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAcmCertificate).RenewalSummary, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.acm.certificate.failureReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAcmCertificate).FailureReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.acm.certificate.revocationReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAcmCertificate).RevocationReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.acm.certificate.revokedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAcmCertificate).RevokedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.acm.certificate.awsManagedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAcmCertificate).AwsManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.acm.certificate.certificateAuthority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAcmCertificate).CertificateAuthority, ok = plugin.RawToTValue[*mqlAwsPrivatecaCertificateAuthority](v.Value, v.Error)
 		return
 	},
 	"aws.autoscaling.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -103581,7 +103651,7 @@ func (c *mqlAwsAcm) GetCertificates() *plugin.TValue[[]any] {
 type mqlAwsAcmCertificate struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsAcmCertificateInternal it will be used here
+	mqlAwsAcmCertificateInternal
 	Arn                     plugin.TValue[string]
 	NotBefore               plugin.TValue[*time.Time]
 	NotAfter                plugin.TValue[*time.Time]
@@ -103601,6 +103671,16 @@ type mqlAwsAcmCertificate struct {
 	SignatureAlgorithm      plugin.TValue[string]
 	InUseBy                 plugin.TValue[[]any]
 	DomainValidationOptions plugin.TValue[[]any]
+	SubjectAlternativeNames plugin.TValue[[]any]
+	KeyUsages               plugin.TValue[[]any]
+	ExtendedKeyUsages       plugin.TValue[[]any]
+	Exportable              plugin.TValue[bool]
+	RenewalSummary          plugin.TValue[any]
+	FailureReason           plugin.TValue[string]
+	RevocationReason        plugin.TValue[string]
+	RevokedAt               plugin.TValue[*time.Time]
+	AwsManagedBy            plugin.TValue[string]
+	CertificateAuthority    plugin.TValue[*mqlAwsPrivatecaCertificateAuthority]
 }
 
 // createAwsAcmCertificate creates a new instance of this resource
@@ -103726,6 +103806,58 @@ func (c *mqlAwsAcmCertificate) GetInUseBy() *plugin.TValue[[]any] {
 
 func (c *mqlAwsAcmCertificate) GetDomainValidationOptions() *plugin.TValue[[]any] {
 	return &c.DomainValidationOptions
+}
+
+func (c *mqlAwsAcmCertificate) GetSubjectAlternativeNames() *plugin.TValue[[]any] {
+	return &c.SubjectAlternativeNames
+}
+
+func (c *mqlAwsAcmCertificate) GetKeyUsages() *plugin.TValue[[]any] {
+	return &c.KeyUsages
+}
+
+func (c *mqlAwsAcmCertificate) GetExtendedKeyUsages() *plugin.TValue[[]any] {
+	return &c.ExtendedKeyUsages
+}
+
+func (c *mqlAwsAcmCertificate) GetExportable() *plugin.TValue[bool] {
+	return &c.Exportable
+}
+
+func (c *mqlAwsAcmCertificate) GetRenewalSummary() *plugin.TValue[any] {
+	return &c.RenewalSummary
+}
+
+func (c *mqlAwsAcmCertificate) GetFailureReason() *plugin.TValue[string] {
+	return &c.FailureReason
+}
+
+func (c *mqlAwsAcmCertificate) GetRevocationReason() *plugin.TValue[string] {
+	return &c.RevocationReason
+}
+
+func (c *mqlAwsAcmCertificate) GetRevokedAt() *plugin.TValue[*time.Time] {
+	return &c.RevokedAt
+}
+
+func (c *mqlAwsAcmCertificate) GetAwsManagedBy() *plugin.TValue[string] {
+	return &c.AwsManagedBy
+}
+
+func (c *mqlAwsAcmCertificate) GetCertificateAuthority() *plugin.TValue[*mqlAwsPrivatecaCertificateAuthority] {
+	return plugin.GetOrCompute[*mqlAwsPrivatecaCertificateAuthority](&c.CertificateAuthority, func() (*mqlAwsPrivatecaCertificateAuthority, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.acm.certificate", c.__id, "certificateAuthority")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsPrivatecaCertificateAuthority), nil
+			}
+		}
+
+		return c.certificateAuthority()
+	})
 }
 
 // mqlAwsAutoscaling for the aws.autoscaling resource

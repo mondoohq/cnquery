@@ -5966,6 +5966,40 @@ private aws.acm.certificate @defaults("domainName issuer createdAt notAfter") {
   // `ResourceRecord` holding the `Name`, `Type`, and `Value` of the CNAME
   // record to publish.
   domainValidationOptions []dict
+  // Additional domains (subject alternative names) the certificate covers
+  subjectAlternativeNames []string
+  // Key Usage X.509 extension values
+  //
+  // Purposes the certificate public key may be used for, for example
+  // DIGITAL_SIGNATURE or KEY_ENCIPHERMENT.
+  keyUsages []string
+  // Extended Key Usage X.509 extension values
+  //
+  // One entry per purpose. Each dict has `name` (for example
+  // TLS_WEB_SERVER_AUTHENTICATION or CODE_SIGNING) and `oid` (the object
+  // identifier, set for custom purposes).
+  extendedKeyUsages []dict
+  // Whether the certificate private key can be exported (public ACM certificates)
+  exportable bool
+  // Managed-renewal status for the certificate
+  //
+  // Has `RenewalStatus` (PENDING_AUTO_RENEWAL, PENDING_VALIDATION, SUCCESS, or
+  // FAILED), `RenewalStatusReason` (why renewal failed), `UpdatedAt`, and
+  // `DomainValidationOptions`. Empty for certificates without managed renewal.
+  renewalSummary dict
+  // Reason the certificate request failed (set only when status is FAILED)
+  failureReason string
+  // Reason the certificate was revoked (set only when status is REVOKED)
+  revocationReason string
+  // Time the certificate was revoked (set only when status is REVOKED)
+  revokedAt time
+  // AWS service that manages the certificate, for example CLOUDFRONT
+  awsManagedBy string
+  // Private certificate authority that issued the certificate
+  //
+  // Set only for PRIVATE certificates issued from AWS Private CA. Null for
+  // AMAZON_ISSUED and IMPORTED certificates.
+  certificateAuthority() aws.privateca.certificateAuthority
 }
 
 // Amazon EC2 Auto Scaling
