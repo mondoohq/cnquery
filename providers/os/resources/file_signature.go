@@ -1,4 +1,4 @@
-// Copyright Mondoo, Inc. 2026
+// Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
 package resources
@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"strconv"
 	"strings"
 	"time"
 
@@ -16,11 +15,6 @@ import (
 	"go.mondoo.com/mql/providers/os/connection/shared"
 	"go.mondoo.com/mql/providers/os/resources/powershell"
 )
-
-func (s *mqlFileSignature) id() (string, error) {
-	return "file.signature/" + s.Format.Data + "/" + strconv.FormatBool(s.Signed.Data) +
-		"/" + strconv.FormatBool(s.Verified.Data) + "/" + s.Authority.Data, nil
-}
 
 // signature returns the file's code signature. macOS uses codesign, Windows uses
 // Authenticode; on every other platform (no universal per-file ELF signing model)
@@ -39,8 +33,12 @@ func (s *mqlFile) signature(path string) (*mqlFileSignature, error) {
 	}
 }
 
-func (s *mqlFile) newSignature(signed, verified bool, authority, teamID, issuer string, ts *time.Time, format string) (*mqlFileSignature, error) {
+func (s *mqlFile) newSignature(path string, signed, verified bool, authority, teamID, issuer string, ts *time.Time, format string) (*mqlFileSignature, error) {
 	res, err := CreateResource(s.MqlRuntime, "file.signature", map[string]*llx.RawData{
+		// scope the id to the file path: many files share the same authority
+		// (e.g. every Apple binary is signed by "Software Signing"), so an
+		// id built from the signature fields alone would collide across files.
+		"__id":      llx.StringData("file.signature/" + path),
 		"signed":    llx.BoolData(signed),
 		"verified":  llx.BoolData(verified),
 		"authority": llx.StringData(authority),
@@ -95,13 +93,17 @@ func (s *mqlFile) codesignSignature(conn shared.Connection, path string) (*mqlFi
 				teamID = v
 			}
 		case ts == nil && strings.HasPrefix(line, "Timestamp="):
+			// codesign's -dvvv timestamp is locale-formatted, so this parse is
+			// best-effort: on a non-English macOS it may not match and ts stays
+			// nil (the signature's signed/verified/authority fields are
+			// unaffected).
 			v := strings.TrimPrefix(line, "Timestamp=")
 			if t, e := time.Parse("Jan 2, 2006 at 3:04:05 PM", v); e == nil {
 				ts = &t
 			}
 		}
 	}
-	return s.newSignature(signed, verified, authority, teamID, "", ts, "codesign")
+	return s.newSignature(path, signed, verified, authority, teamID, "", ts, "codesign")
 }
 
 // --- Windows (Authenticode) ---
@@ -135,7 +137,7 @@ func (s *mqlFile) authenticodeSignature(conn shared.Connection, path string) (*m
 
 	signed := r.Status != "" && r.Status != "NotSigned"
 	verified := r.Status == "Valid"
-	return s.newSignature(signed, verified, r.Subject, "", r.Issuer, nil, "authenticode")
+	return s.newSignature(path, signed, verified, r.Subject, "", r.Issuer, nil, "authenticode")
 }
 
 // --- helpers ---

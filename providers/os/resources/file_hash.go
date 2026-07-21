@@ -1,4 +1,4 @@
-// Copyright Mondoo, Inc. 2026
+// Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
 package resources
@@ -15,6 +15,11 @@ import (
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/os/connection/shared"
 )
+
+// MD5 and SHA1 are intentional here: these digests identify files for inventory
+// and threat-intel/IOC matching (mirroring the widely-used osquery `hash` table),
+// not for any security-sensitive hashing. The provider already relies on
+// crypto/md5 for the same purpose in fsutil.
 
 // computeHashes reads the file exactly once and computes its MD5, SHA1, and
 // SHA256 digests together, caching all three on the resource. It is safe to call

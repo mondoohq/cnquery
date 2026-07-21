@@ -1,4 +1,4 @@
-// Copyright Mondoo, Inc. 2026
+// Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
 package resources
@@ -49,6 +49,9 @@ func (m *mqlMacosScreenlock) fetch() error {
 	return nil
 }
 
+// readDefault reads one com.apple.screensaver ByHost default. `key` is
+// concatenated into the command, so callers must pass only trusted literals
+// (the two fixed keys below) — never user-influenced input.
 func readDefault(conn shared.Connection, key string) string {
 	cmd, err := conn.RunCommand("defaults -currentHost read com.apple.screensaver " + key)
 	if err != nil || cmd.ExitStatus != 0 {

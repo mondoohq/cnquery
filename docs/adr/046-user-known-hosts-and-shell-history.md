@@ -60,10 +60,10 @@ Introduce three supporting resources:
   `init(path string)` so it can be selected directly by absolute path, which
   covers the **system-wide** file `/etc/ssh/ssh_known_hosts` that has no owning
   user.
-- `private knownhosts.entry` — one parsed line, carrying
-  `{line, host, isHashed, type, key, file}`.
-- `private shellHistory.command` — one history command, carrying
-  `{user, command, time, file}`.
+- `knownhosts.entry` — one parsed line, carrying
+  `{line, host, isHashed, type, key}`.
+- `shellHistory.command` — one history command, carrying
+  `{user, line, command, time, file}`.
 
 Field-name rationale:
 
@@ -184,21 +184,23 @@ user @defaults("name uid gid") {
   shellHistory() []shellHistory.command
 }
 
-// SSH known_hosts file
+// SSH known_hosts
 //
-// A single known_hosts file: its path, the file reference, the raw content, and
-// the parsed entry list. Select by absolute path
+// A known_hosts file: its path, the underlying file, the raw content, and the
+// parsed entry list. Select by absolute path
 // (e.g. knownhosts(path: "/etc/ssh/ssh_known_hosts")) for the system-wide file,
-// or reach it per account through user.knownHosts.
+// or reach it per account through user.knownHosts. `file()` and `content()` are
+// pure getters (not list() deps) so that .where() works: a resource-typed field
+// cannot round-trip through the filter's StoreData.
 knownhosts {
-  []knownhosts.entry(file, content)
+  []knownhosts.entry
   init(path string)
   // Path to the known_hosts file
   path string
-  // known_hosts file
-  file file
-  // known_hosts file content
-  content(file) string
+  // The underlying file
+  file() file
+  // Raw file content
+  content() string
 }
 
 // A single known_hosts entry
@@ -206,8 +208,9 @@ knownhosts {
 // One parsed line from a known_hosts file. `host` holds the raw host field; when
 // isHashed is true it is an opaque |1|… token and the original host is not
 // recoverable. @cert-authority / @revoked markers are stripped from the front and
-// the entry is kept.
-private knownhosts.entry @defaults("host type") {
+// the entry is kept. The source file is available on the parent `knownhosts`
+// resource, so it is not duplicated on each entry.
+knownhosts.entry @defaults("host type") {
   // Line number of the entry in the file
   line int
   // Host pattern(s); raw hashed token when isHashed is true
@@ -218,8 +221,6 @@ private knownhosts.entry @defaults("host type") {
   type string
   // Base64-encoded host key material
   key string
-  // Source file
-  file file
 }
 
 // A single shell history command
@@ -228,9 +229,11 @@ private knownhosts.entry @defaults("host type") {
 // when the shell records it (fish always; zsh with EXTENDED_HISTORY; bash only
 // with HISTTIMEFORMAT) and is empty otherwise — notably for default bash and
 // PowerShell. `file` identifies the source history file, and thus the shell.
-private shellHistory.command @defaults("command") {
+shellHistory.command @defaults("command") {
   // Owning account name
   user string
+  // Position of the command in its history file (1-based)
+  line int
   // Command text
   command string
   // Execution time, when recorded by the shell (else empty)
@@ -249,7 +252,6 @@ private shellHistory.command @defaults("command") {
 | `isHashed` | bool | True when the host field begins with `\|1\|` |
 | `type` | string | Key type token (field 2) |
 | `key` | string | Base64 key material (field 3) |
-| `file` | file | The `knownhosts` source file resource |
 
 ### `shellHistory.command` fields
 
