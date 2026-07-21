@@ -695,21 +695,23 @@ func cryptoKeyVersionToMql(runtime *plugin.Runtime, v *kmspb.CryptoKeyVersion) (
 		}
 	}
 	return CreateResource(runtime, "gcp.project.kmsService.keyring.cryptokey.version", map[string]*llx.RawData{
-		"resourcePath":                   llx.StringData(v.Name),
-		"name":                           llx.StringData(parseResourceName(v.Name)),
-		"state":                          llx.StringData(v.State.String()),
-		"protectionLevel":                llx.StringData(v.ProtectionLevel.String()),
-		"algorithm":                      llx.StringData(v.Algorithm.String()),
-		"attestation":                    llx.ResourceData(mqlAttestation, "gcp.project.kmsService.keyring.cryptokey.version.attestation"),
-		"created":                        llx.TimeDataPtr(timestampAsTimePtr(v.CreateTime)),
-		"generated":                      llx.TimeDataPtr(timestampAsTimePtr(v.GenerateTime)),
-		"destroyed":                      llx.TimeDataPtr(timestampAsTimePtr(v.DestroyTime)),
-		"destroyEventTime":               llx.TimeDataPtr(timestampAsTimePtr(v.DestroyEventTime)),
-		"importJob":                      llx.StringData(v.ImportJob),
-		"importTime":                     llx.TimeDataPtr(timestampAsTimePtr(v.ImportTime)),
-		"importFailureReason":            llx.StringData(v.ImportFailureReason),
-		"externalProtectionLevelOptions": llx.ResourceData(mqlExtProtOpts, "gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions"),
-		"reimportEligible":               llx.BoolData(v.ReimportEligible),
+		"resourcePath":                     llx.StringData(v.Name),
+		"name":                             llx.StringData(parseResourceName(v.Name)),
+		"state":                            llx.StringData(v.State.String()),
+		"protectionLevel":                  llx.StringData(v.ProtectionLevel.String()),
+		"algorithm":                        llx.StringData(v.Algorithm.String()),
+		"attestation":                      llx.ResourceData(mqlAttestation, "gcp.project.kmsService.keyring.cryptokey.version.attestation"),
+		"created":                          llx.TimeDataPtr(timestampAsTimePtr(v.CreateTime)),
+		"generated":                        llx.TimeDataPtr(timestampAsTimePtr(v.GenerateTime)),
+		"destroyed":                        llx.TimeDataPtr(timestampAsTimePtr(v.DestroyTime)),
+		"destroyEventTime":                 llx.TimeDataPtr(timestampAsTimePtr(v.DestroyEventTime)),
+		"importJob":                        llx.StringData(v.ImportJob),
+		"importTime":                       llx.TimeDataPtr(timestampAsTimePtr(v.ImportTime)),
+		"importFailureReason":              llx.StringData(v.ImportFailureReason),
+		"generationFailureReason":          llx.StringData(v.GenerationFailureReason),
+		"externalDestructionFailureReason": llx.StringData(v.ExternalDestructionFailureReason),
+		"externalProtectionLevelOptions":   llx.ResourceData(mqlExtProtOpts, "gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions"),
+		"reimportEligible":                 llx.BoolData(v.ReimportEligible),
 	})
 }
 

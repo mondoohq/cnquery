@@ -5509,6 +5509,10 @@ private gcp.project.kmsService.keyring.cryptokey.version @defaults("name state")
   importTime time
   // The root cause of an import failure
   importFailureReason string
+  // The root cause of a key-generation failure (set when state is GENERATION_FAILED)
+  generationFailureReason string
+  // The root cause of an external-destruction failure (set when state is EXTERNAL_DESTRUCTION_FAILED)
+  externalDestructionFailureReason string
   // Additional fields for configuring external protection level
   externalProtectionLevelOptions gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions
   // Whether the crypto key version is eligible for reimport
@@ -9816,6 +9820,8 @@ private gcp.project.certificateAuthorityService.caPool @defaults("name tier") {
   certificateAuthorities() []gcp.project.certificateAuthorityService.certificateAuthority
   // Certificates in this pool
   certificates() []gcp.project.certificateAuthorityService.certificate
+  // IAM policy bindings on the CA pool, governing who may request certificates from it
+  iamPolicy() []gcp.resourcemanager.binding
 }
 
 // Google Cloud (GCP) Certificate Authority
@@ -10708,6 +10714,14 @@ private gcp.project.filestoreService.instance.fileShare @defaults("name capacity
   name string
   // File share capacity in GiB
   capacityGb int
+  // NFS export access rules
+  //
+  // Each entry controls client access to the share, with keys `ipRanges`
+  // (client IP ranges the rule applies to), `accessMode` (READ_ONLY or
+  // READ_WRITE), `squashMode` (NO_ROOT_SQUASH or ROOT_SQUASH), `anonUid`, and
+  // `anonGid` (the anonymous UID/GID that root is mapped to under
+  // ROOT_SQUASH). An empty `ipRanges` applies the rule to every client.
+  nfsExportOptions []dict
 }
 
 // Google Cloud (GCP) Filestore instance network configuration
@@ -11592,6 +11606,21 @@ private gcp.project.computeService.targetHttpsProxy @defaults("name") {
   sslPolicy() gcp.project.computeService.sslPolicy
   // QUIC override setting (NONE, ENABLE, DISABLE)
   quicOverride string
+  // Certificate Manager certificate map URL presented by this proxy
+  certificateMap string
+  // Network Security server TLS policy URL governing inbound TLS termination
+  //
+  // References a networksecurity ServerTlsPolicy that authenticates inbound
+  // connections. Empty means the proxy applies no server TLS policy, so
+  // communications are not authenticated by one.
+  serverTlsPolicy string
+  // Network Security authorization policy URL restricting inbound traffic. Empty means no authorization policy is applied.
+  authorizationPolicy string
+  // TLS 1.3 early-data (0-RTT) handling
+  //
+  // One of STRICT, PERMISSIVE, DISABLED, or UNRESTRICTED. PERMISSIVE and
+  // UNRESTRICTED accept 0-RTT data, which a network attacker can replay.
+  tlsEarlyData string
   // Creation timestamp
   created time
   // Server-defined URL for the resource

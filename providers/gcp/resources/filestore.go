@@ -99,10 +99,22 @@ func (g *mqlGcpProjectFilestoreService) instances() ([]any, error) {
 
 		fileShares := make([]any, 0, len(instance.FileShares))
 		for _, fs := range instance.FileShares {
+			nfsExportOptions := make([]any, 0, len(fs.NfsExportOptions))
+			for _, opt := range fs.NfsExportOptions {
+				nfsExportOptions = append(nfsExportOptions, map[string]any{
+					"ipRanges":   convert.SliceAnyToInterface(opt.IpRanges),
+					"accessMode": opt.AccessMode.String(),
+					"squashMode": opt.SquashMode.String(),
+					"anonUid":    opt.AnonUid,
+					"anonGid":    opt.AnonGid,
+				})
+			}
+
 			mqlFs, err := CreateResource(g.MqlRuntime, "gcp.project.filestoreService.instance.fileShare", map[string]*llx.RawData{
-				"id":         llx.StringData(fmt.Sprintf("%s/fileShares/%s", instance.Name, fs.Name)),
-				"name":       llx.StringData(fs.Name),
-				"capacityGb": llx.IntData(fs.CapacityGb),
+				"id":               llx.StringData(fmt.Sprintf("%s/fileShares/%s", instance.Name, fs.Name)),
+				"name":             llx.StringData(fs.Name),
+				"capacityGb":       llx.IntData(fs.CapacityGb),
+				"nfsExportOptions": llx.ArrayData(nfsExportOptions, types.Dict),
 			})
 			if err != nil {
 				return nil, err

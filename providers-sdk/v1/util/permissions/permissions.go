@@ -1162,6 +1162,11 @@ var gcpPermissionOverrides = map[string]map[string]string{
 	"artifactregistry": {
 		"GetIamPolicy": "artifactregistry.repositories.getIamPolicy",
 	},
+	"privateca": {
+		// CA pool IAM policy reads use the caPools.getIamPolicy permission; the
+		// generic derivation yields the non-existent "privateca.iamPolicy.get".
+		"GetIamPolicy": "privateca.caPools.getIamPolicy",
+	},
 	"cloudasset": {
 		// Cloud Asset Inventory search methods map to the assets resource with a
 		// search* verb, not the naive "allResources"/"allIamPolicies" derivation.

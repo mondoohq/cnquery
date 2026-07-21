@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.32.0",
-  "generated_at": "2026-07-21T12:20:42-07:00",
+  "generated_at": "2026-07-21T12:32:09-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.batchPredictionJobs.list",
@@ -238,6 +238,7 @@
     "osconfig.patchDeployments.list",
     "osconfig.vulnerabilityReports.get",
     "policyanalyzer.serviceAccountLastAuthenticationActivities.query",
+    "privateca.caPools.getIamPolicy",
     "privateca.caPools.list",
     "privateca.certificateAuthorities.list",
     "privateca.certificateRevocationLists.list",
@@ -1749,6 +1750,12 @@
       "service": "policyanalyzer",
       "action": "Activities.Query",
       "source_file": "iam.go"
+    },
+    {
+      "permission": "privateca.caPools.getIamPolicy",
+      "service": "privateca",
+      "action": "GetIamPolicy",
+      "source_file": "privateca.go"
     },
     {
       "permission": "privateca.caPools.list",

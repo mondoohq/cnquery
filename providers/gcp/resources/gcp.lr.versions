@@ -873,6 +873,7 @@ gcp.project.certificateAuthorityService 11.5.1
 gcp.project.certificateAuthorityService.caPool 11.5.1
 gcp.project.certificateAuthorityService.caPool.certificateAuthorities 11.5.1
 gcp.project.certificateAuthorityService.caPool.certificates 11.5.1
+gcp.project.certificateAuthorityService.caPool.iamPolicy 13.32.1
 gcp.project.certificateAuthorityService.caPool.issuancePolicy 11.5.1
 gcp.project.certificateAuthorityService.caPool.kmsKey 13.19.2
 gcp.project.certificateAuthorityService.caPool.labels 11.5.1
@@ -2436,6 +2437,8 @@ gcp.project.computeService.targetHttpProxy.urlMap 11.6.6
 gcp.project.computeService.targetHttpProxy.urlMapUrl 11.6.6
 gcp.project.computeService.targetHttpsProxies 11.6.6
 gcp.project.computeService.targetHttpsProxy 11.6.6
+gcp.project.computeService.targetHttpsProxy.authorizationPolicy 13.32.1
+gcp.project.computeService.targetHttpsProxy.certificateMap 13.32.1
 gcp.project.computeService.targetHttpsProxy.created 11.6.6
 gcp.project.computeService.targetHttpsProxy.description 11.6.6
 gcp.project.computeService.targetHttpsProxy.id 11.6.6
@@ -2446,10 +2449,12 @@ gcp.project.computeService.targetHttpsProxy.quicOverride 11.6.6
 gcp.project.computeService.targetHttpsProxy.region 13.16.3
 gcp.project.computeService.targetHttpsProxy.regionUrl 11.6.6
 gcp.project.computeService.targetHttpsProxy.selfLink 11.6.6
+gcp.project.computeService.targetHttpsProxy.serverTlsPolicy 13.32.1
 gcp.project.computeService.targetHttpsProxy.sslCertificateUrls 11.6.6
 gcp.project.computeService.targetHttpsProxy.sslCertificates 13.21.2
 gcp.project.computeService.targetHttpsProxy.sslPolicy 11.6.6
 gcp.project.computeService.targetHttpsProxy.sslPolicyUrl 11.6.6
+gcp.project.computeService.targetHttpsProxy.tlsEarlyData 13.32.1
 gcp.project.computeService.targetHttpsProxy.urlMap 11.6.6
 gcp.project.computeService.targetHttpsProxy.urlMapUrl 11.6.6
 gcp.project.computeService.targetPool 13.6.1
@@ -3187,6 +3192,7 @@ gcp.project.filestoreService.instance.fileShare 11.6.6
 gcp.project.filestoreService.instance.fileShare.capacityGb 11.6.6
 gcp.project.filestoreService.instance.fileShare.id 11.6.6
 gcp.project.filestoreService.instance.fileShare.name 11.6.6
+gcp.project.filestoreService.instance.fileShare.nfsExportOptions 13.32.1
 gcp.project.filestoreService.instance.fileShares 11.6.6
 gcp.project.filestoreService.instance.kmsKey 13.19.2
 gcp.project.filestoreService.instance.kmsKeyName 11.6.6
@@ -3804,11 +3810,13 @@ gcp.project.kmsService.keyring.cryptokey.version.attestation.format 9.0.0
 gcp.project.kmsService.keyring.cryptokey.version.created 9.0.0
 gcp.project.kmsService.keyring.cryptokey.version.destroyEventTime 9.0.0
 gcp.project.kmsService.keyring.cryptokey.version.destroyed 9.0.0
+gcp.project.kmsService.keyring.cryptokey.version.externalDestructionFailureReason 13.32.1
 gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions 9.0.0
 gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions.cryptoKeyVersionName 9.0.0
 gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions.ekmConnectionKeyPath 9.0.0
 gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions.externalKeyUri 9.0.0
 gcp.project.kmsService.keyring.cryptokey.version.generated 9.0.0
+gcp.project.kmsService.keyring.cryptokey.version.generationFailureReason 13.32.1
 gcp.project.kmsService.keyring.cryptokey.version.importFailureReason 9.0.0
 gcp.project.kmsService.keyring.cryptokey.version.importJob 9.0.0
 gcp.project.kmsService.keyring.cryptokey.version.importTime 9.0.0

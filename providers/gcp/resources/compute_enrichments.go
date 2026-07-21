@@ -258,18 +258,22 @@ func (g *mqlGcpProjectComputeService) targetHttpsProxies() ([]any, error) {
 		for _, scoped := range page.Items {
 			for _, proxy := range scoped.TargetHttpsProxies {
 				mqlProxy, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.targetHttpsProxy", map[string]*llx.RawData{
-					"id":                 llx.StringData(strconv.FormatUint(proxy.Id, 10)),
-					"projectId":          llx.StringData(projectId),
-					"name":               llx.StringData(proxy.Name),
-					"description":        llx.StringData(proxy.Description),
-					"urlMapUrl":          llx.StringData(proxy.UrlMap),
-					"sslCertificateUrls": llx.ArrayData(convert.SliceAnyToInterface(proxy.SslCertificates), types.String),
-					"sslPolicyUrl":       llx.StringData(proxy.SslPolicy),
-					"quicOverride":       llx.StringData(proxy.QuicOverride),
-					"created":            llx.TimeDataPtr(parseTime(proxy.CreationTimestamp)),
-					"selfLink":           llx.StringData(proxy.SelfLink),
-					"proxyBind":          llx.BoolData(proxy.ProxyBind),
-					"regionUrl":          llx.StringData(proxy.Region),
+					"id":                  llx.StringData(strconv.FormatUint(proxy.Id, 10)),
+					"projectId":           llx.StringData(projectId),
+					"name":                llx.StringData(proxy.Name),
+					"description":         llx.StringData(proxy.Description),
+					"urlMapUrl":           llx.StringData(proxy.UrlMap),
+					"sslCertificateUrls":  llx.ArrayData(convert.SliceAnyToInterface(proxy.SslCertificates), types.String),
+					"sslPolicyUrl":        llx.StringData(proxy.SslPolicy),
+					"quicOverride":        llx.StringData(proxy.QuicOverride),
+					"certificateMap":      llx.StringData(proxy.CertificateMap),
+					"serverTlsPolicy":     llx.StringData(proxy.ServerTlsPolicy),
+					"authorizationPolicy": llx.StringData(proxy.AuthorizationPolicy),
+					"tlsEarlyData":        llx.StringData(proxy.TlsEarlyData),
+					"created":             llx.TimeDataPtr(parseTime(proxy.CreationTimestamp)),
+					"selfLink":            llx.StringData(proxy.SelfLink),
+					"proxyBind":           llx.BoolData(proxy.ProxyBind),
+					"regionUrl":           llx.StringData(proxy.Region),
 				})
 				if err != nil {
 					return err

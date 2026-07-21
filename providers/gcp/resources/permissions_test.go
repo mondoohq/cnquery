@@ -277,6 +277,7 @@ var validatedGCPPermissions = []string{
 	"osconfig.patchDeployments.list",
 	"osconfig.vulnerabilityReports.get",
 	"policyanalyzer.serviceAccountLastAuthenticationActivities.query",
+	"privateca.caPools.getIamPolicy",
 	"privateca.caPools.list",
 	"privateca.certificateAuthorities.list",
 	"privateca.certificateRevocationLists.list",

@@ -7596,6 +7596,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.kmsService.keyring.cryptokey.version.importFailureReason": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersion).GetImportFailureReason()).ToDataRes(types.String)
 	},
+	"gcp.project.kmsService.keyring.cryptokey.version.generationFailureReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersion).GetGenerationFailureReason()).ToDataRes(types.String)
+	},
+	"gcp.project.kmsService.keyring.cryptokey.version.externalDestructionFailureReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersion).GetExternalDestructionFailureReason()).ToDataRes(types.String)
+	},
 	"gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersion).GetExternalProtectionLevelOptions()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions"))
 	},
@@ -11325,6 +11331,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.certificateAuthorityService.caPool.certificates": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCertificateAuthorityServiceCaPool).GetCertificates()).ToDataRes(types.Array(types.Resource("gcp.project.certificateAuthorityService.certificate")))
 	},
+	"gcp.project.certificateAuthorityService.caPool.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCertificateAuthorityServiceCaPool).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
+	},
 	"gcp.project.certificateAuthorityService.certificateAuthority.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCertificateAuthorityServiceCertificateAuthority).GetProjectId()).ToDataRes(types.String)
 	},
@@ -12135,6 +12144,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.filestoreService.instance.fileShare.capacityGb": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectFilestoreServiceInstanceFileShare).GetCapacityGb()).ToDataRes(types.Int)
 	},
+	"gcp.project.filestoreService.instance.fileShare.nfsExportOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectFilestoreServiceInstanceFileShare).GetNfsExportOptions()).ToDataRes(types.Array(types.Dict))
+	},
 	"gcp.project.filestoreService.instance.network.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectFilestoreServiceInstanceNetwork).GetId()).ToDataRes(types.String)
 	},
@@ -12881,6 +12893,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.targetHttpsProxy.quicOverride": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).GetQuicOverride()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.targetHttpsProxy.certificateMap": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).GetCertificateMap()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.targetHttpsProxy.serverTlsPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).GetServerTlsPolicy()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.targetHttpsProxy.authorizationPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).GetAuthorizationPolicy()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.targetHttpsProxy.tlsEarlyData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).GetTlsEarlyData()).ToDataRes(types.String)
 	},
 	"gcp.project.computeService.targetHttpsProxy.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).GetCreated()).ToDataRes(types.Time)
@@ -25473,6 +25497,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersion).ImportFailureReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.kmsService.keyring.cryptokey.version.generationFailureReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersion).GenerationFailureReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.keyring.cryptokey.version.externalDestructionFailureReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersion).ExternalDestructionFailureReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersion).ExternalProtectionLevelOptions, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOptions](v.Value, v.Error)
 		return
@@ -30889,6 +30921,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectCertificateAuthorityServiceCaPool).Certificates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.certificateAuthorityService.caPool.iamPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCertificateAuthorityServiceCaPool).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.certificateAuthorityService.certificateAuthority.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCertificateAuthorityServiceCertificateAuthority).__id, ok = v.Value.(string)
 		return
@@ -32065,6 +32101,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectFilestoreServiceInstanceFileShare).CapacityGb, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"gcp.project.filestoreService.instance.fileShare.nfsExportOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectFilestoreServiceInstanceFileShare).NfsExportOptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.filestoreService.instance.network.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectFilestoreServiceInstanceNetwork).__id, ok = v.Value.(string)
 		return
@@ -33183,6 +33223,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.targetHttpsProxy.quicOverride": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).QuicOverride, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpsProxy.certificateMap": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).CertificateMap, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpsProxy.serverTlsPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).ServerTlsPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpsProxy.authorizationPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).AuthorizationPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpsProxy.tlsEarlyData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).TlsEarlyData, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.targetHttpsProxy.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -58647,21 +58703,23 @@ type mqlGcpProjectKmsServiceKeyringCryptokeyVersion struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectKmsServiceKeyringCryptokeyVersionInternal it will be used here
-	ResourcePath                   plugin.TValue[string]
-	Name                           plugin.TValue[string]
-	State                          plugin.TValue[string]
-	ProtectionLevel                plugin.TValue[string]
-	Algorithm                      plugin.TValue[string]
-	Attestation                    plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokeyVersionAttestation]
-	Created                        plugin.TValue[*time.Time]
-	Generated                      plugin.TValue[*time.Time]
-	Destroyed                      plugin.TValue[*time.Time]
-	DestroyEventTime               plugin.TValue[*time.Time]
-	ImportJob                      plugin.TValue[string]
-	ImportTime                     plugin.TValue[*time.Time]
-	ImportFailureReason            plugin.TValue[string]
-	ExternalProtectionLevelOptions plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOptions]
-	ReimportEligible               plugin.TValue[bool]
+	ResourcePath                     plugin.TValue[string]
+	Name                             plugin.TValue[string]
+	State                            plugin.TValue[string]
+	ProtectionLevel                  plugin.TValue[string]
+	Algorithm                        plugin.TValue[string]
+	Attestation                      plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokeyVersionAttestation]
+	Created                          plugin.TValue[*time.Time]
+	Generated                        plugin.TValue[*time.Time]
+	Destroyed                        plugin.TValue[*time.Time]
+	DestroyEventTime                 plugin.TValue[*time.Time]
+	ImportJob                        plugin.TValue[string]
+	ImportTime                       plugin.TValue[*time.Time]
+	ImportFailureReason              plugin.TValue[string]
+	GenerationFailureReason          plugin.TValue[string]
+	ExternalDestructionFailureReason plugin.TValue[string]
+	ExternalProtectionLevelOptions   plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOptions]
+	ReimportEligible                 plugin.TValue[bool]
 }
 
 // createGcpProjectKmsServiceKeyringCryptokeyVersion creates a new instance of this resource
@@ -58751,6 +58809,14 @@ func (c *mqlGcpProjectKmsServiceKeyringCryptokeyVersion) GetImportTime() *plugin
 
 func (c *mqlGcpProjectKmsServiceKeyringCryptokeyVersion) GetImportFailureReason() *plugin.TValue[string] {
 	return &c.ImportFailureReason
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringCryptokeyVersion) GetGenerationFailureReason() *plugin.TValue[string] {
+	return &c.GenerationFailureReason
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringCryptokeyVersion) GetExternalDestructionFailureReason() *plugin.TValue[string] {
+	return &c.ExternalDestructionFailureReason
 }
 
 func (c *mqlGcpProjectKmsServiceKeyringCryptokeyVersion) GetExternalProtectionLevelOptions() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOptions] {
@@ -71326,6 +71392,7 @@ type mqlGcpProjectCertificateAuthorityServiceCaPool struct {
 	Labels                 plugin.TValue[map[string]any]
 	CertificateAuthorities plugin.TValue[[]any]
 	Certificates           plugin.TValue[[]any]
+	IamPolicy              plugin.TValue[[]any]
 }
 
 // createGcpProjectCertificateAuthorityServiceCaPool creates a new instance of this resource
@@ -71450,6 +71517,22 @@ func (c *mqlGcpProjectCertificateAuthorityServiceCaPool) GetCertificates() *plug
 		}
 
 		return c.certificates()
+	})
+}
+
+func (c *mqlGcpProjectCertificateAuthorityServiceCaPool) GetIamPolicy() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IamPolicy, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.certificateAuthorityService.caPool", c.__id, "iamPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.iamPolicy()
 	})
 }
 
@@ -74067,9 +74150,10 @@ type mqlGcpProjectFilestoreServiceInstanceFileShare struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectFilestoreServiceInstanceFileShareInternal it will be used here
-	Id         plugin.TValue[string]
-	Name       plugin.TValue[string]
-	CapacityGb plugin.TValue[int64]
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	CapacityGb       plugin.TValue[int64]
+	NfsExportOptions plugin.TValue[[]any]
 }
 
 // createGcpProjectFilestoreServiceInstanceFileShare creates a new instance of this resource
@@ -74119,6 +74203,10 @@ func (c *mqlGcpProjectFilestoreServiceInstanceFileShare) GetName() *plugin.TValu
 
 func (c *mqlGcpProjectFilestoreServiceInstanceFileShare) GetCapacityGb() *plugin.TValue[int64] {
 	return &c.CapacityGb
+}
+
+func (c *mqlGcpProjectFilestoreServiceInstanceFileShare) GetNfsExportOptions() *plugin.TValue[[]any] {
+	return &c.NfsExportOptions
 }
 
 // mqlGcpProjectFilestoreServiceInstanceNetwork for the gcp.project.filestoreService.instance.network resource
@@ -76967,22 +77055,26 @@ type mqlGcpProjectComputeServiceTargetHttpsProxy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectComputeServiceTargetHttpsProxyInternal it will be used here
-	Id                 plugin.TValue[string]
-	ProjectId          plugin.TValue[string]
-	Name               plugin.TValue[string]
-	Description        plugin.TValue[string]
-	UrlMapUrl          plugin.TValue[string]
-	UrlMap             plugin.TValue[*mqlGcpProjectComputeServiceUrlMap]
-	SslCertificateUrls plugin.TValue[[]any]
-	SslCertificates    plugin.TValue[[]any]
-	SslPolicyUrl       plugin.TValue[string]
-	SslPolicy          plugin.TValue[*mqlGcpProjectComputeServiceSslPolicy]
-	QuicOverride       plugin.TValue[string]
-	Created            plugin.TValue[*time.Time]
-	SelfLink           plugin.TValue[string]
-	ProxyBind          plugin.TValue[bool]
-	RegionUrl          plugin.TValue[string]
-	Region             plugin.TValue[*mqlGcpProjectComputeServiceRegion]
+	Id                  plugin.TValue[string]
+	ProjectId           plugin.TValue[string]
+	Name                plugin.TValue[string]
+	Description         plugin.TValue[string]
+	UrlMapUrl           plugin.TValue[string]
+	UrlMap              plugin.TValue[*mqlGcpProjectComputeServiceUrlMap]
+	SslCertificateUrls  plugin.TValue[[]any]
+	SslCertificates     plugin.TValue[[]any]
+	SslPolicyUrl        plugin.TValue[string]
+	SslPolicy           plugin.TValue[*mqlGcpProjectComputeServiceSslPolicy]
+	QuicOverride        plugin.TValue[string]
+	CertificateMap      plugin.TValue[string]
+	ServerTlsPolicy     plugin.TValue[string]
+	AuthorizationPolicy plugin.TValue[string]
+	TlsEarlyData        plugin.TValue[string]
+	Created             plugin.TValue[*time.Time]
+	SelfLink            plugin.TValue[string]
+	ProxyBind           plugin.TValue[bool]
+	RegionUrl           plugin.TValue[string]
+	Region              plugin.TValue[*mqlGcpProjectComputeServiceRegion]
 }
 
 // createGcpProjectComputeServiceTargetHttpsProxy creates a new instance of this resource
@@ -77100,6 +77192,22 @@ func (c *mqlGcpProjectComputeServiceTargetHttpsProxy) GetSslPolicy() *plugin.TVa
 
 func (c *mqlGcpProjectComputeServiceTargetHttpsProxy) GetQuicOverride() *plugin.TValue[string] {
 	return &c.QuicOverride
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpsProxy) GetCertificateMap() *plugin.TValue[string] {
+	return &c.CertificateMap
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpsProxy) GetServerTlsPolicy() *plugin.TValue[string] {
+	return &c.ServerTlsPolicy
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpsProxy) GetAuthorizationPolicy() *plugin.TValue[string] {
+	return &c.AuthorizationPolicy
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpsProxy) GetTlsEarlyData() *plugin.TValue[string] {
+	return &c.TlsEarlyData
 }
 
 func (c *mqlGcpProjectComputeServiceTargetHttpsProxy) GetCreated() *plugin.TValue[*time.Time] {
