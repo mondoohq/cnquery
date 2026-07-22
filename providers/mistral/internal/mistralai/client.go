@@ -11,7 +11,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strconv"
 	"time"
 )
 
@@ -107,58 +106,62 @@ func (c *Client) GetModel(ctx context.Context, modelID string) (*Model, error) {
 	return &model, nil
 }
 
-func (c *Client) ListFineTuningJobs(ctx context.Context) ([]FineTuningJob, error) {
-	var all []FineTuningJob
-	page := 0
-	for {
-		var resp FineTuningJobList
-		endpoint := fmt.Sprintf("/v1/fine_tuning/jobs?page=%d&page_size=%d", page, defaultPageSize)
+// pagedList is the envelope every offset-paginated Mistral list endpoint
+// returns. Total and HasMore are pointers so a missing field ("null" or
+// absent) is distinguishable from a real zero/false.
+type pagedList[T any] struct {
+	Data    []T    `json:"data"`
+	Object  string `json:"object"`
+	Total   *int   `json:"total"`
+	HasMore *bool  `json:"has_more"`
+}
+
+// listPaged walks every page of an offset-paginated endpoint and returns the
+// concatenated results. Termination prefers the strongest signal the API
+// actually provides, so it stays correct whether or not a given endpoint
+// returns has_more/total, and even if the server caps page_size below what we
+// request:
+//  1. an empty page means there is nothing left;
+//  2. an explicit has_more:false means the server says it is done;
+//  3. otherwise, if a total is reported, stop once we have collected it;
+//  4. with no pagination metadata at all, a short page is the last page.
+func listPaged[T any](ctx context.Context, c *Client, path string) ([]T, error) {
+	var all []T
+	for page := 0; ; page++ {
+		var resp pagedList[T]
+		endpoint := fmt.Sprintf("%s?page=%d&page_size=%d", path, page, defaultPageSize)
 		if err := c.request(ctx, http.MethodGet, endpoint, &resp); err != nil {
 			return nil, err
 		}
 		all = append(all, resp.Data...)
-		if len(all) >= resp.Total || len(resp.Data) == 0 {
-			break
+
+		switch {
+		case len(resp.Data) == 0:
+			return all, nil
+		case resp.HasMore != nil:
+			if !*resp.HasMore {
+				return all, nil
+			}
+		case resp.Total != nil:
+			if len(all) >= *resp.Total {
+				return all, nil
+			}
+		case len(resp.Data) < defaultPageSize:
+			return all, nil
 		}
-		page++
 	}
-	return all, nil
+}
+
+func (c *Client) ListFineTuningJobs(ctx context.Context) ([]FineTuningJob, error) {
+	return listPaged[FineTuningJob](ctx, c, "/v1/fine_tuning/jobs")
 }
 
 func (c *Client) ListFiles(ctx context.Context) ([]File, error) {
-	var all []File
-	page := 0
-	for {
-		var resp FileList
-		endpoint := "/v1/files?page=" + strconv.Itoa(page) + "&page_size=" + strconv.Itoa(defaultPageSize)
-		if err := c.request(ctx, http.MethodGet, endpoint, &resp); err != nil {
-			return nil, err
-		}
-		all = append(all, resp.Data...)
-		if resp.Total == nil || len(all) >= *resp.Total || len(resp.Data) == 0 {
-			break
-		}
-		page++
-	}
-	return all, nil
+	return listPaged[File](ctx, c, "/v1/files")
 }
 
 func (c *Client) ListBatchJobs(ctx context.Context) ([]BatchJob, error) {
-	var all []BatchJob
-	page := 0
-	for {
-		var resp BatchJobList
-		endpoint := fmt.Sprintf("/v1/batch/jobs?page=%d&page_size=%d", page, defaultPageSize)
-		if err := c.request(ctx, http.MethodGet, endpoint, &resp); err != nil {
-			return nil, err
-		}
-		all = append(all, resp.Data...)
-		if len(all) >= resp.Total || len(resp.Data) == 0 {
-			break
-		}
-		page++
-	}
-	return all, nil
+	return listPaged[BatchJob](ctx, c, "/v1/batch/jobs")
 }
 
 func IsAccessDenied(err error) bool {

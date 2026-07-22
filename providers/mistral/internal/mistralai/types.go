@@ -3,6 +3,11 @@
 
 package mistralai
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
 type ModelList struct {
 	Object string  `json:"object"`
 	Data   []Model `json:"data"`
@@ -39,12 +44,6 @@ type ModelCapabilities struct {
 	Moderation         bool `json:"moderation"`
 	Audio              bool `json:"audio"`
 	AudioTranscription bool `json:"audio_transcription"`
-}
-
-type FineTuningJobList struct {
-	Data   []FineTuningJob `json:"data"`
-	Object string          `json:"object"`
-	Total  int             `json:"total"`
 }
 
 type FineTuningJob struct {
@@ -93,12 +92,6 @@ type WandbIntegration struct {
 	URL     *string `json:"url"`
 }
 
-type FileList struct {
-	Data   []File `json:"data"`
-	Object string `json:"object"`
-	Total  *int   `json:"total"`
-}
-
 type File struct {
 	ID         string  `json:"id"`
 	Object     string  `json:"object"`
@@ -110,12 +103,6 @@ type File struct {
 	Source     string  `json:"source"`
 	NumLines   *int64  `json:"num_lines"`
 	MimeType   *string `json:"mimetype"`
-}
-
-type BatchJobList struct {
-	Data   []BatchJob `json:"data"`
-	Object string     `json:"object"`
-	Total  int        `json:"total"`
 }
 
 type BatchJob struct {
@@ -144,10 +131,25 @@ type BatchError struct {
 }
 
 type APIError struct {
-	Message    string `json:"message"`
-	StatusCode int    `json:"-"`
+	Message string `json:"message"`
+	// Detail carries validation-style error payloads (HTTP 422), which Mistral
+	// returns under "detail" instead of "message" (either a string or an array
+	// of objects). Kept raw so Error() can surface something meaningful rather
+	// than an empty string.
+	Detail     json.RawMessage `json:"detail"`
+	StatusCode int             `json:"-"`
 }
 
 func (e *APIError) Error() string {
-	return e.Message
+	if e.Message != "" {
+		return e.Message
+	}
+	if len(e.Detail) > 0 {
+		var s string
+		if err := json.Unmarshal(e.Detail, &s); err == nil {
+			return s
+		}
+		return string(e.Detail)
+	}
+	return fmt.Sprintf("mistral API error (status %d)", e.StatusCode)
 }

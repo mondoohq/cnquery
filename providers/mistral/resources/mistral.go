@@ -20,6 +20,15 @@ func mistralConn(runtime *plugin.Runtime) *connection.MistralConnection {
 	return runtime.Connection.(*connection.MistralConnection)
 }
 
+// floatDataPtr maps a *float64 to MQL data, preserving null for an unset value.
+// llx ships IntDataPtr/BoolDataPtr/StringDataPtr but no float equivalent.
+func floatDataPtr(f *float64) *llx.RawData {
+	if f == nil {
+		return llx.NilData
+	}
+	return llx.FloatData(*f)
+}
+
 func (r *mqlMistral) id() (string, error) {
 	return "mistral", nil
 }
@@ -139,10 +148,6 @@ func (r *mqlMistral) fineTuningJobs() ([]interface{}, error) {
 		if j.Suffix != nil {
 			suffix = *j.Suffix
 		}
-		var trainedTokens int64
-		if j.TrainedTokens != nil {
-			trainedTokens = *j.TrainedTokens
-		}
 
 		trainingFiles := make([]interface{}, 0, len(j.TrainingFiles))
 		for _, f := range j.TrainingFiles {
@@ -153,25 +158,12 @@ func (r *mqlMistral) fineTuningJobs() ([]interface{}, error) {
 			validationFiles = append(validationFiles, f)
 		}
 
-		var trainingSteps int64
-		if j.Hyperparameters.TrainingSteps != nil {
-			trainingSteps = *j.Hyperparameters.TrainingSteps
-		}
-		var epochs float64
-		if j.Hyperparameters.Epochs != nil {
-			epochs = *j.Hyperparameters.Epochs
-		}
-
-		var expectedDuration int64
-		var cost float64
-		var costCurrency string
+		var expectedDuration *int64
+		var cost *float64
+		costCurrency := ""
 		if j.Metadata != nil {
-			if j.Metadata.ExpectedDurationSeconds != nil {
-				expectedDuration = *j.Metadata.ExpectedDurationSeconds
-			}
-			if j.Metadata.Cost != nil {
-				cost = *j.Metadata.Cost
-			}
+			expectedDuration = j.Metadata.ExpectedDurationSeconds
+			cost = j.Metadata.Cost
 			if j.Metadata.CostCurrency != nil {
 				costCurrency = *j.Metadata.CostCurrency
 			}
@@ -187,15 +179,15 @@ func (r *mqlMistral) fineTuningJobs() ([]interface{}, error) {
 			"autoStart":               llx.BoolData(j.AutoStart),
 			"trainingFiles":           llx.ArrayData(trainingFiles, types.String),
 			"validationFiles":         llx.ArrayData(validationFiles, types.String),
-			"trainedTokens":           llx.IntData(trainedTokens),
+			"trainedTokens":           llx.IntDataPtr(j.TrainedTokens),
 			"createdAt":               llx.TimeDataPtr(createdAt),
 			"modifiedAt":              llx.TimeDataPtr(modifiedAt),
 			"jobType":                 llx.StringData(j.JobType),
-			"trainingSteps":           llx.IntData(trainingSteps),
+			"trainingSteps":           llx.IntDataPtr(j.Hyperparameters.TrainingSteps),
 			"learningRate":            llx.FloatData(j.Hyperparameters.LearningRate),
-			"epochs":                  llx.FloatData(epochs),
-			"expectedDurationSeconds": llx.IntData(expectedDuration),
-			"cost":                    llx.FloatData(cost),
+			"epochs":                  floatDataPtr(j.Hyperparameters.Epochs),
+			"expectedDurationSeconds": llx.IntDataPtr(expectedDuration),
+			"cost":                    floatDataPtr(cost),
 			"costCurrency":            llx.StringData(costCurrency),
 		})
 		if err != nil {
@@ -223,10 +215,6 @@ func (r *mqlMistral) files() ([]interface{}, error) {
 	for _, f := range files {
 		createdAt := timeFromUnix(f.CreatedAt)
 
-		var numLines int64
-		if f.NumLines != nil {
-			numLines = *f.NumLines
-		}
 		mimeType := ""
 		if f.MimeType != nil {
 			mimeType = *f.MimeType
@@ -241,7 +229,7 @@ func (r *mqlMistral) files() ([]interface{}, error) {
 			"createdAt":  llx.TimeDataPtr(createdAt),
 			"sampleType": llx.StringData(f.SampleType),
 			"source":     llx.StringData(f.Source),
-			"numLines":   llx.IntData(numLines),
+			"numLines":   llx.IntDataPtr(f.NumLines),
 			"mimeType":   llx.StringData(mimeType),
 		})
 		if err != nil {
@@ -343,6 +331,11 @@ var mistralFamilies = []struct {
 	{"mistral", "Mistral"},
 }
 
+// matchFamily maps a model identifier to its architecture family by substring.
+// This is a best-effort heuristic: a fine-tuned model whose user-chosen suffix
+// happens to contain a family token (e.g. "my-embed-tuner" rooted on
+// mistral-large) can be misclassified. The order of mistralFamilies resolves
+// the ambiguous base-model cases most-specific first.
 func matchFamily(id string) string {
 	lower := strings.ToLower(id)
 	for _, f := range mistralFamilies {
@@ -353,37 +346,45 @@ func matchFamily(id string) string {
 	return ""
 }
 
-func (r *mqlMistralModel) family() (string, error) {
-	if f := matchFamily(r.Id.Data); f != "" {
-		return f, nil
+// familyFromNames resolves a family from the model id, falling back to the root
+// base model id for fine-tuned models.
+func familyFromNames(id, root string) string {
+	if f := matchFamily(id); f != "" {
+		return f
 	}
-	if root := r.Root.Data; root != "" {
+	if root != "" {
 		if f := matchFamily(root); f != "" {
-			return f, nil
+			return f
 		}
 	}
-	return "", nil
+	return ""
 }
 
-func (r *mqlMistralModel) parameterSize() (string, error) {
-	id := r.Id.Data
+// parseParameterSize extracts a normalized parameter count (e.g. "7B",
+// "8x22B") from the model id, falling back to the root base model id for
+// fine-tuned models. Returns "" when no size token is present.
+func parseParameterSize(id, root string) string {
 	m := mistralParamSizeRe.FindStringSubmatch(id)
-	if m == nil {
-		// Try root model for fine-tuned models
-		root := r.Root.Data
-		if root != "" {
-			m = mistralParamSizeRe.FindStringSubmatch(root)
-		}
+	if m == nil && root != "" {
+		m = mistralParamSizeRe.FindStringSubmatch(root)
 	}
 	if m == nil {
-		return "", nil
+		return ""
 	}
 	size := m[1]
 	last := size[len(size)-1]
 	if last >= 'a' && last <= 'z' {
 		size = size[:len(size)-1] + strings.ToUpper(string(last))
 	}
-	return size, nil
+	return size
+}
+
+func (r *mqlMistralModel) family() (string, error) {
+	return familyFromNames(r.Id.Data, r.Root.Data), nil
+}
+
+func (r *mqlMistralModel) parameterSize() (string, error) {
+	return parseParameterSize(r.Id.Data, r.Root.Data), nil
 }
 
 func (r *mqlMistralFineTuningJob) id() (string, error) {
