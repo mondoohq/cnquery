@@ -6,6 +6,7 @@ package resources
 import (
 	"errors"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -14,13 +15,13 @@ import (
 )
 
 type mqlDepsdevPackageInternal struct {
-	fetched bool
+	fetched atomic.Bool
 	lock    sync.Mutex
 }
 
 type mqlDepsdevPackageVersionInternal struct {
 	packageName string
-	fetched     bool
+	fetched     atomic.Bool
 	lock        sync.Mutex
 }
 
@@ -49,12 +50,12 @@ func (r *mqlDepsdevPackage) id() (string, error) {
 // fetchPackageInfo fetches all version data from deps.dev and populates
 // versions, latestVersion, and latestPublished in one call.
 func (r *mqlDepsdevPackage) fetchPackageInfo() error {
-	if r.fetched {
+	if r.fetched.Load() {
 		return nil
 	}
 	r.lock.Lock()
 	defer r.lock.Unlock()
-	if r.fetched {
+	if r.fetched.Load() {
 		return nil
 	}
 
@@ -109,7 +110,7 @@ func (r *mqlDepsdevPackage) fetchPackageInfo() error {
 		r.LatestPublished = plugin.TValue[*time.Time]{Data: nil, State: plugin.StateIsSet | plugin.StateIsNull}
 	}
 
-	r.fetched = true
+	r.fetched.Store(true)
 	return nil
 }
 
@@ -192,12 +193,12 @@ func (r *mqlDepsdevPackageVersion) id() (string, error) {
 // fetchVersionDetail fetches the version detail from deps.dev and populates
 // licenses, links, registries, slsaProvenances, and relatedProjects in one call.
 func (r *mqlDepsdevPackageVersion) fetchVersionDetail() error {
-	if r.fetched {
+	if r.fetched.Load() {
 		return nil
 	}
 	r.lock.Lock()
 	defer r.lock.Unlock()
-	if r.fetched {
+	if r.fetched.Load() {
 		return nil
 	}
 
@@ -261,7 +262,7 @@ func (r *mqlDepsdevPackageVersion) fetchVersionDetail() error {
 	}
 	r.RelatedProjects = plugin.TValue[[]any]{Data: related, State: plugin.StateIsSet}
 
-	r.fetched = true
+	r.fetched.Store(true)
 	return nil
 }
 
