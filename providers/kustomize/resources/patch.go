@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -67,8 +68,11 @@ func newMqlKustomizePatch(runtime *plugin.Runtime, kustPath string, index int, p
 	}
 
 	// Read the raw patch bytes: inline content wins, otherwise the file the
-	// patch points at (relative to the kustomization directory).
+	// patch points at (relative to the kustomization directory). `content`
+	// tracks the same bytes so a file-based patch surfaces its body through
+	// the `content` field rather than an empty string.
 	raw := []byte(p.Patch)
+	content := p.Patch
 	if len(raw) == 0 && p.Path != "" {
 		// Best-effort read; a missing/unreadable file falls back to
 		// strategic-merge with no operations rather than failing the audit.
@@ -97,6 +101,7 @@ func newMqlKustomizePatch(runtime *plugin.Runtime, kustPath string, index int, p
 			switch {
 			case readErr == nil:
 				raw = data
+				content = string(data)
 			case !os.IsNotExist(readErr):
 				// A genuinely missing file is the expected best-effort case; any
 				// other read failure would silently misclassify the patch, so
@@ -114,7 +119,7 @@ func newMqlKustomizePatch(runtime *plugin.Runtime, kustPath string, index int, p
 
 	res, err := CreateResource(runtime, "kustomize.patch", map[string]*llx.RawData{
 		"__id":                     llx.StringData(id),
-		"content":                  llx.StringData(p.Patch),
+		"content":                  llx.StringData(content),
 		"path":                     llx.StringData(p.Path),
 		"format":                   llx.StringData(format),
 		"targetGroup":              llx.StringData(targetGroup),
@@ -187,6 +192,13 @@ func decodeJSON6902(raw []byte) ([]jsonPatchOp, bool) {
 
 		pathVal, _ := elem["path"].(string)
 		value, hasValue := elem["value"]
+		if hasValue {
+			// yaml.v3 decodes integer scalars to Go `int`, which the llx dict
+			// serializer rejects (it accepts only int64/float64 among numbers).
+			// Normalize every value to JSON-native types so a common patch such
+			// as `value: 3` doesn't error when the `value` field is queried.
+			value = toJSONNative(value)
+		}
 
 		ops = append(ops, jsonPatchOp{
 			op:       opStr,
@@ -196,6 +208,28 @@ func decodeJSON6902(raw []byte) ([]jsonPatchOp, bool) {
 		})
 	}
 	return ops, true
+}
+
+// toJSONNative round-trips a yaml.v3-decoded value through encoding/json so
+// every number, map, and slice is expressed with the JSON-native Go types the
+// llx dict serializer accepts (float64/string/bool/[]any/map[string]any/nil).
+// yaml.v3 hands back Go `int` for integer scalars, which dict serialization
+// rejects; the round-trip converts those to float64. On the (practically
+// impossible for yaml-derived data) marshal error, the original value is
+// returned unchanged so behavior is never worse than before.
+func toJSONNative(v any) any {
+	if v == nil {
+		return nil
+	}
+	data, err := json.Marshal(v)
+	if err != nil {
+		return v
+	}
+	var out any
+	if err := json.Unmarshal(data, &out); err != nil {
+		return v
+	}
+	return out
 }
 
 func (c *mqlKustomizePatch) operations() ([]any, error) {
