@@ -1871,6 +1871,10 @@ type Evidence struct {
 	//	*Evidence_RegistryKey
 	//	*Evidence_Connection
 	//	*Evidence_HttpRequest
+	//	*Evidence_DnsRecord
+	//	*Evidence_Certificate
+	//	*Evidence_DomainRegistration
+	//	*Evidence_NetworkRange
 	Details isEvidence_Details `protobuf_oneof:"details"`
 	// Additional properties specific to this evidence
 	Properties    map[string]string `protobuf:"bytes,4,rep,name=properties,proto3" json:"properties,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
@@ -2008,6 +2012,42 @@ func (x *Evidence) GetHttpRequest() *HttpRequest {
 	return nil
 }
 
+func (x *Evidence) GetDnsRecord() *DnsRecord {
+	if x != nil {
+		if x, ok := x.Details.(*Evidence_DnsRecord); ok {
+			return x.DnsRecord
+		}
+	}
+	return nil
+}
+
+func (x *Evidence) GetCertificate() *Certificate {
+	if x != nil {
+		if x, ok := x.Details.(*Evidence_Certificate); ok {
+			return x.Certificate
+		}
+	}
+	return nil
+}
+
+func (x *Evidence) GetDomainRegistration() *DomainRegistration {
+	if x != nil {
+		if x, ok := x.Details.(*Evidence_DomainRegistration); ok {
+			return x.DomainRegistration
+		}
+	}
+	return nil
+}
+
+func (x *Evidence) GetNetworkRange() *NetworkRange {
+	if x != nil {
+		if x, ok := x.Details.(*Evidence_NetworkRange); ok {
+			return x.NetworkRange
+		}
+	}
+	return nil
+}
+
 func (x *Evidence) GetProperties() map[string]string {
 	if x != nil {
 		return x.Properties
@@ -2051,6 +2091,22 @@ type Evidence_HttpRequest struct {
 	HttpRequest *HttpRequest `protobuf:"bytes,27,opt,name=http_request,json=httpRequest,proto3,oneof"`
 }
 
+type Evidence_DnsRecord struct {
+	DnsRecord *DnsRecord `protobuf:"bytes,28,opt,name=dns_record,json=dnsRecord,proto3,oneof"`
+}
+
+type Evidence_Certificate struct {
+	Certificate *Certificate `protobuf:"bytes,29,opt,name=certificate,proto3,oneof"`
+}
+
+type Evidence_DomainRegistration struct {
+	DomainRegistration *DomainRegistration `protobuf:"bytes,30,opt,name=domain_registration,json=domainRegistration,proto3,oneof"`
+}
+
+type Evidence_NetworkRange struct {
+	NetworkRange *NetworkRange `protobuf:"bytes,31,opt,name=network_range,json=networkRange,proto3,oneof"`
+}
+
 func (*Evidence_User) isEvidence_Details() {}
 
 func (*Evidence_File) isEvidence_Details() {}
@@ -2066,6 +2122,14 @@ func (*Evidence_RegistryKey) isEvidence_Details() {}
 func (*Evidence_Connection) isEvidence_Details() {}
 
 func (*Evidence_HttpRequest) isEvidence_Details() {}
+
+func (*Evidence_DnsRecord) isEvidence_Details() {}
+
+func (*Evidence_Certificate) isEvidence_Details() {}
+
+func (*Evidence_DomainRegistration) isEvidence_Details() {}
+
+func (*Evidence_NetworkRange) isEvidence_Details() {}
 
 // Experimental. File information
 type File struct {
@@ -2501,7 +2565,11 @@ type Connection struct {
 	// Optional: Source port
 	SourcePort int32 `protobuf:"varint,4,opt,name=source_port,json=sourcePort,proto3" json:"source_port,omitempty"`
 	// Protocol used in the connection
-	Protocol      Connection_ConnectionProtocol `protobuf:"varint,5,opt,name=protocol,proto3,enum=mql.fex.v1.Connection_ConnectionProtocol" json:"protocol,omitempty"`
+	Protocol Connection_ConnectionProtocol `protobuf:"varint,5,opt,name=protocol,proto3,enum=mql.fex.v1.Connection_ConnectionProtocol" json:"protocol,omitempty"`
+	// Optional. The matched banner or service string that confirms the finding,
+	// e.g. a TCP service banner or an nmap NSE script hit. The Connection
+	// analogue of HttpRequest.evidence, for non-web probes.
+	Evidence      string `protobuf:"bytes,6,opt,name=evidence,proto3" json:"evidence,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2569,6 +2637,13 @@ func (x *Connection) GetProtocol() Connection_ConnectionProtocol {
 		return x.Protocol
 	}
 	return Connection_UNSPECIFIED
+}
+
+func (x *Connection) GetEvidence() string {
+	if x != nil {
+		return x.Evidence
+	}
+	return ""
 }
 
 // HttpRequest captures the web request that triggered a finding. It is the
@@ -2673,6 +2748,378 @@ func (x *HttpRequest) GetResponse() string {
 	return ""
 }
 
+// DnsRecord captures a DNS resolution that triggered a finding — subdomain
+// enumeration, a dangling or misconfigured CNAME, or a reverse (PTR) lookup.
+// It is the first-class evidence for DNS and network scanners, which
+// otherwise stash the resolution in the generic properties map.
+type DnsRecord struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The queried name, e.g. "app.example.com".
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// The record type, e.g. A, AAAA, CNAME, MX, TXT, NS, PTR.
+	Type string `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	// The resolved values (IP addresses, CNAME target, name servers, ...).
+	Values []string `protobuf:"bytes,3,rep,name=values,proto3" json:"values,omitempty"`
+	// Optional. Record time-to-live in seconds.
+	Ttl           int32 `protobuf:"varint,4,opt,name=ttl,proto3" json:"ttl,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DnsRecord) Reset() {
+	*x = DnsRecord{}
+	mi := &file_fex_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DnsRecord) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DnsRecord) ProtoMessage() {}
+
+func (x *DnsRecord) ProtoReflect() protoreflect.Message {
+	mi := &file_fex_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DnsRecord.ProtoReflect.Descriptor instead.
+func (*DnsRecord) Descriptor() ([]byte, []int) {
+	return file_fex_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *DnsRecord) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *DnsRecord) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *DnsRecord) GetValues() []string {
+	if x != nil {
+		return x.Values
+	}
+	return nil
+}
+
+func (x *DnsRecord) GetTtl() int32 {
+	if x != nil {
+		return x.Ttl
+	}
+	return 0
+}
+
+// Certificate captures the TLS certificate or handshake that triggered a
+// finding — a weak protocol/cipher, or an expired, self-signed, or misissued
+// certificate.
+type Certificate struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Certificate subject distinguished name.
+	Subject string `protobuf:"bytes,1,opt,name=subject,proto3" json:"subject,omitempty"`
+	// Certificate issuer distinguished name.
+	Issuer string `protobuf:"bytes,2,opt,name=issuer,proto3" json:"issuer,omitempty"`
+	// Certificate serial number.
+	Serial string `protobuf:"bytes,3,opt,name=serial,proto3" json:"serial,omitempty"`
+	// SHA-256 fingerprint of the certificate.
+	Fingerprint string `protobuf:"bytes,4,opt,name=fingerprint,proto3" json:"fingerprint,omitempty"`
+	// Subject alternative names.
+	Sans []string `protobuf:"bytes,5,rep,name=sans,proto3" json:"sans,omitempty"`
+	// Start of the certificate validity window.
+	NotBefore *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=not_before,json=notBefore,proto3" json:"not_before,omitempty"`
+	// End of the certificate validity window.
+	NotAfter *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=not_after,json=notAfter,proto3" json:"not_after,omitempty"`
+	// Optional. Negotiated TLS protocol version, e.g. "TLS 1.0".
+	ProtocolVersion string `protobuf:"bytes,8,opt,name=protocol_version,json=protocolVersion,proto3" json:"protocol_version,omitempty"`
+	// Optional. Negotiated cipher suite.
+	CipherSuite   string `protobuf:"bytes,9,opt,name=cipher_suite,json=cipherSuite,proto3" json:"cipher_suite,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Certificate) Reset() {
+	*x = Certificate{}
+	mi := &file_fex_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Certificate) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Certificate) ProtoMessage() {}
+
+func (x *Certificate) ProtoReflect() protoreflect.Message {
+	mi := &file_fex_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Certificate.ProtoReflect.Descriptor instead.
+func (*Certificate) Descriptor() ([]byte, []int) {
+	return file_fex_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *Certificate) GetSubject() string {
+	if x != nil {
+		return x.Subject
+	}
+	return ""
+}
+
+func (x *Certificate) GetIssuer() string {
+	if x != nil {
+		return x.Issuer
+	}
+	return ""
+}
+
+func (x *Certificate) GetSerial() string {
+	if x != nil {
+		return x.Serial
+	}
+	return ""
+}
+
+func (x *Certificate) GetFingerprint() string {
+	if x != nil {
+		return x.Fingerprint
+	}
+	return ""
+}
+
+func (x *Certificate) GetSans() []string {
+	if x != nil {
+		return x.Sans
+	}
+	return nil
+}
+
+func (x *Certificate) GetNotBefore() *timestamppb.Timestamp {
+	if x != nil {
+		return x.NotBefore
+	}
+	return nil
+}
+
+func (x *Certificate) GetNotAfter() *timestamppb.Timestamp {
+	if x != nil {
+		return x.NotAfter
+	}
+	return nil
+}
+
+func (x *Certificate) GetProtocolVersion() string {
+	if x != nil {
+		return x.ProtocolVersion
+	}
+	return ""
+}
+
+func (x *Certificate) GetCipherSuite() string {
+	if x != nil {
+		return x.CipherSuite
+	}
+	return ""
+}
+
+// DomainRegistration captures WHOIS/RDAP registration data that triggered a
+// finding — an imminent expiry, a missing transfer lock, or a suspect
+// registrar.
+type DomainRegistration struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The registered domain.
+	Domain string `protobuf:"bytes,1,opt,name=domain,proto3" json:"domain,omitempty"`
+	// The sponsoring registrar.
+	Registrar string `protobuf:"bytes,2,opt,name=registrar,proto3" json:"registrar,omitempty"`
+	// When the registration was created.
+	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	// When the registration was last updated.
+	UpdatedAt *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	// When the registration expires.
+	ExpiresAt *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	// Authoritative name servers.
+	NameServers []string `protobuf:"bytes,6,rep,name=name_servers,json=nameServers,proto3" json:"name_servers,omitempty"`
+	// EPP status codes, e.g. "clientTransferProhibited".
+	Statuses      []string `protobuf:"bytes,7,rep,name=statuses,proto3" json:"statuses,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DomainRegistration) Reset() {
+	*x = DomainRegistration{}
+	mi := &file_fex_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DomainRegistration) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DomainRegistration) ProtoMessage() {}
+
+func (x *DomainRegistration) ProtoReflect() protoreflect.Message {
+	mi := &file_fex_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DomainRegistration.ProtoReflect.Descriptor instead.
+func (*DomainRegistration) Descriptor() ([]byte, []int) {
+	return file_fex_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *DomainRegistration) GetDomain() string {
+	if x != nil {
+		return x.Domain
+	}
+	return ""
+}
+
+func (x *DomainRegistration) GetRegistrar() string {
+	if x != nil {
+		return x.Registrar
+	}
+	return ""
+}
+
+func (x *DomainRegistration) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *DomainRegistration) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return nil
+}
+
+func (x *DomainRegistration) GetExpiresAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ExpiresAt
+	}
+	return nil
+}
+
+func (x *DomainRegistration) GetNameServers() []string {
+	if x != nil {
+		return x.NameServers
+	}
+	return nil
+}
+
+func (x *DomainRegistration) GetStatuses() []string {
+	if x != nil {
+		return x.Statuses
+	}
+	return nil
+}
+
+// NetworkRange captures an IP address block that triggered a finding — an
+// announced BGP prefix or an owned/discovered CIDR from ASN mapping.
+type NetworkRange struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The address block in CIDR notation, e.g. "203.0.113.0/24".
+	Cidr string `protobuf:"bytes,1,opt,name=cidr,proto3" json:"cidr,omitempty"`
+	// Optional. Origin autonomous system number.
+	Asn int32 `protobuf:"varint,2,opt,name=asn,proto3" json:"asn,omitempty"`
+	// Optional. Autonomous system or organization name.
+	AsName string `protobuf:"bytes,3,opt,name=as_name,json=asName,proto3" json:"as_name,omitempty"`
+	// Optional. Two-letter ISO country code.
+	Country       string `protobuf:"bytes,4,opt,name=country,proto3" json:"country,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *NetworkRange) Reset() {
+	*x = NetworkRange{}
+	mi := &file_fex_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *NetworkRange) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*NetworkRange) ProtoMessage() {}
+
+func (x *NetworkRange) ProtoReflect() protoreflect.Message {
+	mi := &file_fex_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NetworkRange.ProtoReflect.Descriptor instead.
+func (*NetworkRange) Descriptor() ([]byte, []int) {
+	return file_fex_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *NetworkRange) GetCidr() string {
+	if x != nil {
+		return x.Cidr
+	}
+	return ""
+}
+
+func (x *NetworkRange) GetAsn() int32 {
+	if x != nil {
+		return x.Asn
+	}
+	return 0
+}
+
+func (x *NetworkRange) GetAsName() string {
+	if x != nil {
+		return x.AsName
+	}
+	return ""
+}
+
+func (x *NetworkRange) GetCountry() string {
+	if x != nil {
+		return x.Country
+	}
+	return ""
+}
+
 // AttackTactic is used to identify the tactic used in an attack.
 // Typically this refers to identifier on the MITRE ATT&CK framework.
 type AttackTactic struct {
@@ -2689,7 +3136,7 @@ type AttackTactic struct {
 
 func (x *AttackTactic) Reset() {
 	*x = AttackTactic{}
-	mi := &file_fex_proto_msgTypes[23]
+	mi := &file_fex_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2701,7 +3148,7 @@ func (x *AttackTactic) String() string {
 func (*AttackTactic) ProtoMessage() {}
 
 func (x *AttackTactic) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[23]
+	mi := &file_fex_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2714,7 +3161,7 @@ func (x *AttackTactic) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AttackTactic.ProtoReflect.Descriptor instead.
 func (*AttackTactic) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{23}
+	return file_fex_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *AttackTactic) GetId() string {
@@ -2754,7 +3201,7 @@ type AttackTechnique struct {
 
 func (x *AttackTechnique) Reset() {
 	*x = AttackTechnique{}
-	mi := &file_fex_proto_msgTypes[24]
+	mi := &file_fex_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2766,7 +3213,7 @@ func (x *AttackTechnique) String() string {
 func (*AttackTechnique) ProtoMessage() {}
 
 func (x *AttackTechnique) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[24]
+	mi := &file_fex_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2779,7 +3226,7 @@ func (x *AttackTechnique) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AttackTechnique.ProtoReflect.Descriptor instead.
 func (*AttackTechnique) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{24}
+	return file_fex_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *AttackTechnique) GetId() string {
@@ -2818,7 +3265,7 @@ type Kubernetes_Pod struct {
 
 func (x *Kubernetes_Pod) Reset() {
 	*x = Kubernetes_Pod{}
-	mi := &file_fex_proto_msgTypes[31]
+	mi := &file_fex_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2830,7 +3277,7 @@ func (x *Kubernetes_Pod) String() string {
 func (*Kubernetes_Pod) ProtoMessage() {}
 
 func (x *Kubernetes_Pod) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[31]
+	mi := &file_fex_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2880,7 +3327,7 @@ type Kubernetes_Node struct {
 
 func (x *Kubernetes_Node) Reset() {
 	*x = Kubernetes_Node{}
-	mi := &file_fex_proto_msgTypes[32]
+	mi := &file_fex_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2892,7 +3339,7 @@ func (x *Kubernetes_Node) String() string {
 func (*Kubernetes_Node) ProtoMessage() {}
 
 func (x *Kubernetes_Node) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[32]
+	mi := &file_fex_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3082,7 +3529,7 @@ const file_fex_proto_rawDesc = "" +
 	"\x0fCATEGORY_THREAT\x10\x04\x12\x14\n" +
 	"\x10CATEGORY_MALWARE\x10\x05\x12\x1a\n" +
 	"\x16CATEGORY_INFORMATIONAL\x10\x06\x12\x13\n" +
-	"\x0fCATEGORY_SECRET\x10\a\"\xe7\x05\n" +
+	"\x0fCATEGORY_SECRET\x10\a\"\xf0\a\n" +
 	"\bEvidence\x120\n" +
 	"\x06tactic\x18\x01 \x01(\v2\x18.mql.fex.v1.AttackTacticR\x06tactic\x129\n" +
 	"\ttechnique\x18\x02 \x01(\v2\x1b.mql.fex.v1.AttackTechniqueR\ttechnique\x126\n" +
@@ -3100,7 +3547,12 @@ const file_fex_proto_rawDesc = "" +
 	"\n" +
 	"connection\x18\x1a \x01(\v2\x16.mql.fex.v1.ConnectionH\x00R\n" +
 	"connection\x12<\n" +
-	"\fhttp_request\x18\x1b \x01(\v2\x17.mql.fex.v1.HttpRequestH\x00R\vhttpRequest\x12D\n" +
+	"\fhttp_request\x18\x1b \x01(\v2\x17.mql.fex.v1.HttpRequestH\x00R\vhttpRequest\x126\n" +
+	"\n" +
+	"dns_record\x18\x1c \x01(\v2\x15.mql.fex.v1.DnsRecordH\x00R\tdnsRecord\x12;\n" +
+	"\vcertificate\x18\x1d \x01(\v2\x17.mql.fex.v1.CertificateH\x00R\vcertificate\x12Q\n" +
+	"\x13domain_registration\x18\x1e \x01(\v2\x1e.mql.fex.v1.DomainRegistrationH\x00R\x12domainRegistration\x12?\n" +
+	"\rnetwork_range\x18\x1f \x01(\v2\x18.mql.fex.v1.NetworkRangeH\x00R\fnetworkRange\x12D\n" +
 	"\n" +
 	"properties\x18\x04 \x03(\v2$.mql.fex.v1.Evidence.PropertiesEntryR\n" +
 	"properties\x1a=\n" +
@@ -3150,7 +3602,7 @@ const file_fex_proto_rawDesc = "" +
 	"\vRegistryKey\x12\x12\n" +
 	"\x04path\x18\x01 \x01(\tR\x04path\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
-	"\x04data\x18\x03 \x01(\tR\x04data\"\xba\x02\n" +
+	"\x04data\x18\x03 \x01(\tR\x04data\"\xd6\x02\n" +
 	"\n" +
 	"Connection\x12/\n" +
 	"\x13destination_address\x18\x01 \x01(\tR\x12destinationAddress\x12)\n" +
@@ -3158,7 +3610,8 @@ const file_fex_proto_rawDesc = "" +
 	"\x0esource_address\x18\x03 \x01(\tR\rsourceAddress\x12\x1f\n" +
 	"\vsource_port\x18\x04 \x01(\x05R\n" +
 	"sourcePort\x12E\n" +
-	"\bprotocol\x18\x05 \x01(\x0e2).mql.fex.v1.Connection.ConnectionProtocolR\bprotocol\"A\n" +
+	"\bprotocol\x18\x05 \x01(\x0e2).mql.fex.v1.Connection.ConnectionProtocolR\bprotocol\x12\x1a\n" +
+	"\bevidence\x18\x06 \x01(\tR\bevidence\"A\n" +
 	"\x12ConnectionProtocol\x12\x0f\n" +
 	"\vUNSPECIFIED\x10\x00\x12\b\n" +
 	"\x04ICMP\x10\x01\x12\a\n" +
@@ -3171,7 +3624,39 @@ const file_fex_proto_rawDesc = "" +
 	"\x06attack\x18\x04 \x01(\tR\x06attack\x12\x1a\n" +
 	"\bevidence\x18\x05 \x01(\tR\bevidence\x12\x18\n" +
 	"\arequest\x18\x06 \x01(\tR\arequest\x12\x1a\n" +
-	"\bresponse\x18\a \x01(\tR\bresponse\"T\n" +
+	"\bresponse\x18\a \x01(\tR\bresponse\"]\n" +
+	"\tDnsRecord\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
+	"\x04type\x18\x02 \x01(\tR\x04type\x12\x16\n" +
+	"\x06values\x18\x03 \x03(\tR\x06values\x12\x10\n" +
+	"\x03ttl\x18\x04 \x01(\x05R\x03ttl\"\xcf\x02\n" +
+	"\vCertificate\x12\x18\n" +
+	"\asubject\x18\x01 \x01(\tR\asubject\x12\x16\n" +
+	"\x06issuer\x18\x02 \x01(\tR\x06issuer\x12\x16\n" +
+	"\x06serial\x18\x03 \x01(\tR\x06serial\x12 \n" +
+	"\vfingerprint\x18\x04 \x01(\tR\vfingerprint\x12\x12\n" +
+	"\x04sans\x18\x05 \x03(\tR\x04sans\x129\n" +
+	"\n" +
+	"not_before\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tnotBefore\x127\n" +
+	"\tnot_after\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\bnotAfter\x12)\n" +
+	"\x10protocol_version\x18\b \x01(\tR\x0fprotocolVersion\x12!\n" +
+	"\fcipher_suite\x18\t \x01(\tR\vcipherSuite\"\xba\x02\n" +
+	"\x12DomainRegistration\x12\x16\n" +
+	"\x06domain\x18\x01 \x01(\tR\x06domain\x12\x1c\n" +
+	"\tregistrar\x18\x02 \x01(\tR\tregistrar\x129\n" +
+	"\n" +
+	"created_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"\n" +
+	"updated_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x129\n" +
+	"\n" +
+	"expires_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\x12!\n" +
+	"\fname_servers\x18\x06 \x03(\tR\vnameServers\x12\x1a\n" +
+	"\bstatuses\x18\a \x03(\tR\bstatuses\"g\n" +
+	"\fNetworkRange\x12\x12\n" +
+	"\x04cidr\x18\x01 \x01(\tR\x04cidr\x12\x10\n" +
+	"\x03asn\x18\x02 \x01(\x05R\x03asn\x12\x17\n" +
+	"\aas_name\x18\x03 \x01(\tR\x06asName\x12\x18\n" +
+	"\acountry\x18\x04 \x01(\tR\acountry\"T\n" +
 	"\fAttackTactic\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
@@ -3223,7 +3708,7 @@ func file_fex_proto_rawDescGZIP() []byte {
 }
 
 var file_fex_proto_enumTypes = make([]protoimpl.EnumInfo, 7)
-var file_fex_proto_msgTypes = make([]protoimpl.MessageInfo, 33)
+var file_fex_proto_msgTypes = make([]protoimpl.MessageInfo, 37)
 var file_fex_proto_goTypes = []any{
 	(Status)(0),                        // 0: mql.fex.v1.Status
 	(ScoringMethod)(0),                 // 1: mql.fex.v1.ScoringMethod
@@ -3255,43 +3740,47 @@ var file_fex_proto_goTypes = []any{
 	(*RegistryKey)(nil),                // 27: mql.fex.v1.RegistryKey
 	(*Connection)(nil),                 // 28: mql.fex.v1.Connection
 	(*HttpRequest)(nil),                // 29: mql.fex.v1.HttpRequest
-	(*AttackTactic)(nil),               // 30: mql.fex.v1.AttackTactic
-	(*AttackTechnique)(nil),            // 31: mql.fex.v1.AttackTechnique
-	nil,                                // 32: mql.fex.v1.Reference.MetadataEntry
-	nil,                                // 33: mql.fex.v1.Component.IdentifiersEntry
-	nil,                                // 34: mql.fex.v1.Component.PropertiesEntry
-	nil,                                // 35: mql.fex.v1.FindingDetail.PropertiesEntry
-	nil,                                // 36: mql.fex.v1.Evidence.PropertiesEntry
-	nil,                                // 37: mql.fex.v1.User.PropertiesEntry
-	(*Kubernetes_Pod)(nil),             // 38: mql.fex.v1.Kubernetes.Pod
-	(*Kubernetes_Node)(nil),            // 39: mql.fex.v1.Kubernetes.Node
-	(*timestamppb.Timestamp)(nil),      // 40: google.protobuf.Timestamp
-	(*structpb.Struct)(nil),            // 41: google.protobuf.Struct
+	(*DnsRecord)(nil),                  // 30: mql.fex.v1.DnsRecord
+	(*Certificate)(nil),                // 31: mql.fex.v1.Certificate
+	(*DomainRegistration)(nil),         // 32: mql.fex.v1.DomainRegistration
+	(*NetworkRange)(nil),               // 33: mql.fex.v1.NetworkRange
+	(*AttackTactic)(nil),               // 34: mql.fex.v1.AttackTactic
+	(*AttackTechnique)(nil),            // 35: mql.fex.v1.AttackTechnique
+	nil,                                // 36: mql.fex.v1.Reference.MetadataEntry
+	nil,                                // 37: mql.fex.v1.Component.IdentifiersEntry
+	nil,                                // 38: mql.fex.v1.Component.PropertiesEntry
+	nil,                                // 39: mql.fex.v1.FindingDetail.PropertiesEntry
+	nil,                                // 40: mql.fex.v1.Evidence.PropertiesEntry
+	nil,                                // 41: mql.fex.v1.User.PropertiesEntry
+	(*Kubernetes_Pod)(nil),             // 42: mql.fex.v1.Kubernetes.Pod
+	(*Kubernetes_Node)(nil),            // 43: mql.fex.v1.Kubernetes.Node
+	(*timestamppb.Timestamp)(nil),      // 44: google.protobuf.Timestamp
+	(*structpb.Struct)(nil),            // 45: google.protobuf.Struct
 }
 var file_fex_proto_depIdxs = []int32{
 	9,  // 0: mql.fex.v1.FindingDocument.vex:type_name -> mql.fex.v1.VulnerabilityExchange
 	19, // 1: mql.fex.v1.FindingDocument.fex:type_name -> mql.fex.v1.FindingExchange
 	7,  // 2: mql.fex.v1.FindingsUploadRequest.findings:type_name -> mql.fex.v1.FindingDocument
-	40, // 3: mql.fex.v1.FindingsUploadRequest.import_started_at:type_name -> google.protobuf.Timestamp
+	44, // 3: mql.fex.v1.FindingsUploadRequest.import_started_at:type_name -> google.protobuf.Timestamp
 	12, // 4: mql.fex.v1.VulnerabilityExchange.details:type_name -> mql.fex.v1.VulnerabilityDetails
 	11, // 5: mql.fex.v1.VulnerabilityExchange.source:type_name -> mql.fex.v1.Source
 	16, // 6: mql.fex.v1.VulnerabilityExchange.ratings:type_name -> mql.fex.v1.Rating
-	40, // 7: mql.fex.v1.VulnerabilityExchange.first_seen:type_name -> google.protobuf.Timestamp
-	40, // 8: mql.fex.v1.VulnerabilityExchange.remediated:type_name -> google.protobuf.Timestamp
+	44, // 7: mql.fex.v1.VulnerabilityExchange.first_seen:type_name -> google.protobuf.Timestamp
+	44, // 8: mql.fex.v1.VulnerabilityExchange.remediated:type_name -> google.protobuf.Timestamp
 	13, // 9: mql.fex.v1.VulnerabilityExchange.affects:type_name -> mql.fex.v1.Affects
 	0,  // 10: mql.fex.v1.VulnerabilityExchange.status:type_name -> mql.fex.v1.Status
 	10, // 11: mql.fex.v1.VulnerabilityExchange.references:type_name -> mql.fex.v1.Reference
 	18, // 12: mql.fex.v1.VulnerabilityExchange.remediations:type_name -> mql.fex.v1.Remediation
-	41, // 13: mql.fex.v1.VulnerabilityExchange.database_specific:type_name -> google.protobuf.Struct
+	45, // 13: mql.fex.v1.VulnerabilityExchange.database_specific:type_name -> google.protobuf.Struct
 	21, // 14: mql.fex.v1.VulnerabilityExchange.evidences:type_name -> mql.fex.v1.Evidence
-	32, // 15: mql.fex.v1.Reference.metadata:type_name -> mql.fex.v1.Reference.MetadataEntry
-	40, // 16: mql.fex.v1.VulnerabilityDetails.created:type_name -> google.protobuf.Timestamp
-	40, // 17: mql.fex.v1.VulnerabilityDetails.published:type_name -> google.protobuf.Timestamp
-	40, // 18: mql.fex.v1.VulnerabilityDetails.updated:type_name -> google.protobuf.Timestamp
+	36, // 15: mql.fex.v1.Reference.metadata:type_name -> mql.fex.v1.Reference.MetadataEntry
+	44, // 16: mql.fex.v1.VulnerabilityDetails.created:type_name -> google.protobuf.Timestamp
+	44, // 17: mql.fex.v1.VulnerabilityDetails.published:type_name -> google.protobuf.Timestamp
+	44, // 18: mql.fex.v1.VulnerabilityDetails.updated:type_name -> google.protobuf.Timestamp
 	14, // 19: mql.fex.v1.Affects.component:type_name -> mql.fex.v1.Component
 	14, // 20: mql.fex.v1.Affects.sub_components:type_name -> mql.fex.v1.Component
-	33, // 21: mql.fex.v1.Component.identifiers:type_name -> mql.fex.v1.Component.IdentifiersEntry
-	34, // 22: mql.fex.v1.Component.properties:type_name -> mql.fex.v1.Component.PropertiesEntry
+	37, // 21: mql.fex.v1.Component.identifiers:type_name -> mql.fex.v1.Component.IdentifiersEntry
+	38, // 22: mql.fex.v1.Component.properties:type_name -> mql.fex.v1.Component.PropertiesEntry
 	15, // 23: mql.fex.v1.Component.file:type_name -> mql.fex.v1.FileComponent
 	11, // 24: mql.fex.v1.Rating.source:type_name -> mql.fex.v1.Source
 	1,  // 25: mql.fex.v1.Rating.method:type_name -> mql.fex.v1.ScoringMethod
@@ -3300,9 +3789,9 @@ var file_fex_proto_depIdxs = []int32{
 	3,  // 28: mql.fex.v1.Severity.rating:type_name -> mql.fex.v1.SeverityRating
 	4,  // 29: mql.fex.v1.Remediation.category:type_name -> mql.fex.v1.Remediation.Category
 	20, // 30: mql.fex.v1.FindingExchange.details:type_name -> mql.fex.v1.FindingDetail
-	40, // 31: mql.fex.v1.FindingExchange.first_seen_at:type_name -> google.protobuf.Timestamp
-	40, // 32: mql.fex.v1.FindingExchange.last_seen_at:type_name -> google.protobuf.Timestamp
-	40, // 33: mql.fex.v1.FindingExchange.remediated_at:type_name -> google.protobuf.Timestamp
+	44, // 31: mql.fex.v1.FindingExchange.first_seen_at:type_name -> google.protobuf.Timestamp
+	44, // 32: mql.fex.v1.FindingExchange.last_seen_at:type_name -> google.protobuf.Timestamp
+	44, // 33: mql.fex.v1.FindingExchange.remediated_at:type_name -> google.protobuf.Timestamp
 	0,  // 34: mql.fex.v1.FindingExchange.status:type_name -> mql.fex.v1.Status
 	11, // 35: mql.fex.v1.FindingExchange.source:type_name -> mql.fex.v1.Source
 	13, // 36: mql.fex.v1.FindingExchange.affects:type_name -> mql.fex.v1.Affects
@@ -3312,9 +3801,9 @@ var file_fex_proto_depIdxs = []int32{
 	17, // 40: mql.fex.v1.FindingDetail.severity:type_name -> mql.fex.v1.Severity
 	2,  // 41: mql.fex.v1.FindingDetail.confidence:type_name -> mql.fex.v1.Confidence
 	10, // 42: mql.fex.v1.FindingDetail.references:type_name -> mql.fex.v1.Reference
-	35, // 43: mql.fex.v1.FindingDetail.properties:type_name -> mql.fex.v1.FindingDetail.PropertiesEntry
-	30, // 44: mql.fex.v1.Evidence.tactic:type_name -> mql.fex.v1.AttackTactic
-	31, // 45: mql.fex.v1.Evidence.technique:type_name -> mql.fex.v1.AttackTechnique
+	39, // 43: mql.fex.v1.FindingDetail.properties:type_name -> mql.fex.v1.FindingDetail.PropertiesEntry
+	34, // 44: mql.fex.v1.Evidence.tactic:type_name -> mql.fex.v1.AttackTactic
+	35, // 45: mql.fex.v1.Evidence.technique:type_name -> mql.fex.v1.AttackTechnique
 	2,  // 46: mql.fex.v1.Evidence.confidence:type_name -> mql.fex.v1.Confidence
 	23, // 47: mql.fex.v1.Evidence.user:type_name -> mql.fex.v1.User
 	22, // 48: mql.fex.v1.Evidence.file:type_name -> mql.fex.v1.File
@@ -3324,21 +3813,30 @@ var file_fex_proto_depIdxs = []int32{
 	27, // 52: mql.fex.v1.Evidence.registry_key:type_name -> mql.fex.v1.RegistryKey
 	28, // 53: mql.fex.v1.Evidence.connection:type_name -> mql.fex.v1.Connection
 	29, // 54: mql.fex.v1.Evidence.http_request:type_name -> mql.fex.v1.HttpRequest
-	36, // 55: mql.fex.v1.Evidence.properties:type_name -> mql.fex.v1.Evidence.PropertiesEntry
-	37, // 56: mql.fex.v1.User.properties:type_name -> mql.fex.v1.User.PropertiesEntry
-	22, // 57: mql.fex.v1.Process.binary:type_name -> mql.fex.v1.File
-	22, // 58: mql.fex.v1.Process.script:type_name -> mql.fex.v1.File
-	23, // 59: mql.fex.v1.Process.user:type_name -> mql.fex.v1.User
-	24, // 60: mql.fex.v1.Process.parent:type_name -> mql.fex.v1.Process
-	38, // 61: mql.fex.v1.Kubernetes.pods:type_name -> mql.fex.v1.Kubernetes.Pod
-	39, // 62: mql.fex.v1.Kubernetes.nodes:type_name -> mql.fex.v1.Kubernetes.Node
-	6,  // 63: mql.fex.v1.Connection.protocol:type_name -> mql.fex.v1.Connection.ConnectionProtocol
-	25, // 64: mql.fex.v1.Kubernetes.Pod.containers:type_name -> mql.fex.v1.Container
-	65, // [65:65] is the sub-list for method output_type
-	65, // [65:65] is the sub-list for method input_type
-	65, // [65:65] is the sub-list for extension type_name
-	65, // [65:65] is the sub-list for extension extendee
-	0,  // [0:65] is the sub-list for field type_name
+	30, // 55: mql.fex.v1.Evidence.dns_record:type_name -> mql.fex.v1.DnsRecord
+	31, // 56: mql.fex.v1.Evidence.certificate:type_name -> mql.fex.v1.Certificate
+	32, // 57: mql.fex.v1.Evidence.domain_registration:type_name -> mql.fex.v1.DomainRegistration
+	33, // 58: mql.fex.v1.Evidence.network_range:type_name -> mql.fex.v1.NetworkRange
+	40, // 59: mql.fex.v1.Evidence.properties:type_name -> mql.fex.v1.Evidence.PropertiesEntry
+	41, // 60: mql.fex.v1.User.properties:type_name -> mql.fex.v1.User.PropertiesEntry
+	22, // 61: mql.fex.v1.Process.binary:type_name -> mql.fex.v1.File
+	22, // 62: mql.fex.v1.Process.script:type_name -> mql.fex.v1.File
+	23, // 63: mql.fex.v1.Process.user:type_name -> mql.fex.v1.User
+	24, // 64: mql.fex.v1.Process.parent:type_name -> mql.fex.v1.Process
+	42, // 65: mql.fex.v1.Kubernetes.pods:type_name -> mql.fex.v1.Kubernetes.Pod
+	43, // 66: mql.fex.v1.Kubernetes.nodes:type_name -> mql.fex.v1.Kubernetes.Node
+	6,  // 67: mql.fex.v1.Connection.protocol:type_name -> mql.fex.v1.Connection.ConnectionProtocol
+	44, // 68: mql.fex.v1.Certificate.not_before:type_name -> google.protobuf.Timestamp
+	44, // 69: mql.fex.v1.Certificate.not_after:type_name -> google.protobuf.Timestamp
+	44, // 70: mql.fex.v1.DomainRegistration.created_at:type_name -> google.protobuf.Timestamp
+	44, // 71: mql.fex.v1.DomainRegistration.updated_at:type_name -> google.protobuf.Timestamp
+	44, // 72: mql.fex.v1.DomainRegistration.expires_at:type_name -> google.protobuf.Timestamp
+	25, // 73: mql.fex.v1.Kubernetes.Pod.containers:type_name -> mql.fex.v1.Container
+	74, // [74:74] is the sub-list for method output_type
+	74, // [74:74] is the sub-list for method input_type
+	74, // [74:74] is the sub-list for extension type_name
+	74, // [74:74] is the sub-list for extension extendee
+	0,  // [0:74] is the sub-list for field type_name
 }
 
 func init() { file_fex_proto_init() }
@@ -3362,6 +3860,10 @@ func file_fex_proto_init() {
 		(*Evidence_RegistryKey)(nil),
 		(*Evidence_Connection)(nil),
 		(*Evidence_HttpRequest)(nil),
+		(*Evidence_DnsRecord)(nil),
+		(*Evidence_Certificate)(nil),
+		(*Evidence_DomainRegistration)(nil),
+		(*Evidence_NetworkRange)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -3369,7 +3871,7 @@ func file_fex_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_fex_proto_rawDesc), len(file_fex_proto_rawDesc)),
 			NumEnums:      7,
-			NumMessages:   33,
+			NumMessages:   37,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -378,6 +378,10 @@ message Evidence {
     RegistryKey registry_key = 25;
     Connection connection = 26;
     HttpRequest http_request = 27;
+    DnsRecord dns_record = 28;
+    Certificate certificate = 29;
+    DomainRegistration domain_registration = 30;
+    NetworkRange network_range = 31;
   }
   // Additional properties specific to this evidence
   map<string, string> properties = 4;
@@ -497,6 +501,10 @@ message Connection {
   int32 source_port = 4;
   // Protocol used in the connection
   ConnectionProtocol protocol = 5;
+  // Optional. The matched banner or service string that confirms the finding,
+  // e.g. a TCP service banner or an nmap NSE script hit. The Connection
+  // analogue of HttpRequest.evidence, for non-web probes.
+  string evidence = 6;
 }
 
 // HttpRequest captures the web request that triggered a finding. It is the
@@ -517,6 +525,78 @@ message HttpRequest {
   string request = 6;
   // Optional. The full raw HTTP response.
   string response = 7;
+}
+
+// DnsRecord captures a DNS resolution that triggered a finding — subdomain
+// enumeration, a dangling or misconfigured CNAME, or a reverse (PTR) lookup.
+// It is the first-class evidence for DNS and network scanners, which
+// otherwise stash the resolution in the generic properties map.
+message DnsRecord {
+  // The queried name, e.g. "app.example.com".
+  string name = 1;
+  // The record type, e.g. A, AAAA, CNAME, MX, TXT, NS, PTR.
+  string type = 2;
+  // The resolved values (IP addresses, CNAME target, name servers, ...).
+  repeated string values = 3;
+  // Optional. Record time-to-live in seconds.
+  int32 ttl = 4;
+}
+
+// Certificate captures the TLS certificate or handshake that triggered a
+// finding — a weak protocol/cipher, or an expired, self-signed, or misissued
+// certificate.
+message Certificate {
+  // Certificate subject distinguished name.
+  string subject = 1;
+  // Certificate issuer distinguished name.
+  string issuer = 2;
+  // Certificate serial number.
+  string serial = 3;
+  // SHA-256 fingerprint of the certificate.
+  string fingerprint = 4;
+  // Subject alternative names.
+  repeated string sans = 5;
+  // Start of the certificate validity window.
+  google.protobuf.Timestamp not_before = 6;
+  // End of the certificate validity window.
+  google.protobuf.Timestamp not_after = 7;
+  // Optional. Negotiated TLS protocol version, e.g. "TLS 1.0".
+  string protocol_version = 8;
+  // Optional. Negotiated cipher suite.
+  string cipher_suite = 9;
+}
+
+// DomainRegistration captures WHOIS/RDAP registration data that triggered a
+// finding — an imminent expiry, a missing transfer lock, or a suspect
+// registrar.
+message DomainRegistration {
+  // The registered domain.
+  string domain = 1;
+  // The sponsoring registrar.
+  string registrar = 2;
+  // When the registration was created.
+  google.protobuf.Timestamp created_at = 3;
+  // When the registration was last updated.
+  google.protobuf.Timestamp updated_at = 4;
+  // When the registration expires.
+  google.protobuf.Timestamp expires_at = 5;
+  // Authoritative name servers.
+  repeated string name_servers = 6;
+  // EPP status codes, e.g. "clientTransferProhibited".
+  repeated string statuses = 7;
+}
+
+// NetworkRange captures an IP address block that triggered a finding — an
+// announced BGP prefix or an owned/discovered CIDR from ASN mapping.
+message NetworkRange {
+  // The address block in CIDR notation, e.g. "203.0.113.0/24".
+  string cidr = 1;
+  // Optional. Origin autonomous system number.
+  int32 asn = 2;
+  // Optional. Autonomous system or organization name.
+  string as_name = 3;
+  // Optional. Two-letter ISO country code.
+  string country = 4;
 }
 
 // AttackTactic is used to identify the tactic used in an attack.
