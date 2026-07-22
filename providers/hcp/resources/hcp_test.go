@@ -80,10 +80,15 @@ type codeErr struct{ code int }
 func (e codeErr) Error() string { return "boom" }
 func (e codeErr) Code() int     { return e.code }
 
-func TestIsNotFoundOrForbidden(t *testing.T) {
-	assert.True(t, isNotFoundOrForbidden(codeErr{404}))
-	assert.True(t, isNotFoundOrForbidden(codeErr{403}))
-	assert.False(t, isNotFoundOrForbidden(codeErr{500}))
-	assert.False(t, isNotFoundOrForbidden(errors.New("plain error")))
-	assert.False(t, isNotFoundOrForbidden(nil))
+func TestIsServiceUnavailable(t *testing.T) {
+	// A product that is not entitled surfaces as a 404, a 403, or an
+	// unparseable gateway error; all three must degrade rather than fail.
+	assert.True(t, isServiceUnavailable(codeErr{404}))
+	assert.True(t, isServiceUnavailable(codeErr{403}))
+	assert.True(t, isServiceUnavailable(errors.New(
+		"&{0 []  } (*models.GrpcGatewayRuntimeError) is not supported by the TextConsumer, can be resolved by supporting TextUnmarshaler interface")))
+	// A real failure (server error, auth) must still propagate.
+	assert.False(t, isServiceUnavailable(codeErr{500}))
+	assert.False(t, isServiceUnavailable(errors.New("connection refused")))
+	assert.False(t, isServiceUnavailable(nil))
 }

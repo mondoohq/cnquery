@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 
 	packer_service "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2023-01-01/client/packer_service"
 	packermodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2023-01-01/models"
@@ -29,14 +30,26 @@ type mqlHcpPackerBucketInternal struct {
 // exposing the HTTP status code.
 type codeError interface{ Code() int }
 
-// isNotFoundOrForbidden reports whether an SDK error is a 404 or 403, used to
-// degrade an optional resource to null rather than failing the whole query.
-func isNotFoundOrForbidden(err error) bool {
+// isServiceUnavailable reports whether an SDK error means the product is simply
+// not available or entitled for this organization or project, so the caller can
+// degrade to an empty/null result rather than failing the whole scan. This
+// covers three shapes seen from live HCP APIs:
+//   - a 404 (no such resource, e.g. a project with no Packer registry)
+//   - a 403 (not entitled, e.g. a Waypoint namespace that is not activated)
+//   - an error body the generated client cannot decode, which surfaces as a
+//     go-openapi consumer error rather than a typed response (seen from Consul
+//     Dedicated, which is winding down, on organizations without it enabled)
+func isServiceUnavailable(err error) bool {
+	if err == nil {
+		return false
+	}
 	var ce codeError
 	if errors.As(err, &ce) {
 		return ce.Code() == 404 || ce.Code() == 403
 	}
-	return false
+	msg := err.Error()
+	return strings.Contains(msg, "GrpcGatewayRuntimeError") ||
+		strings.Contains(msg, "is not supported by the TextConsumer")
 }
 
 // parseVersionCount converts the API's string-encoded version count to an int,
@@ -66,7 +79,7 @@ func (r *mqlHcpProject) packerRegistry() (*mqlHcpPackerRegistry, error) {
 	params.LocationProjectID = r.Id.Data
 	resp, err := client.PackerServiceGetRegistry(params, nil)
 	if err != nil {
-		if isNotFoundOrForbidden(err) {
+		if isServiceUnavailable(err) {
 			r.PackerRegistry.State = plugin.StateIsSet | plugin.StateIsNull
 			return nil, nil
 		}

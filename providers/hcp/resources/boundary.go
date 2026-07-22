@@ -38,6 +38,11 @@ func listMqlHcpBoundaryClusters(runtime *plugin.Runtime, orgID, projectID string
 		params.PaginationNextPageToken = nextToken
 		resp, err := client.BoundaryServiceList(params, nil)
 		if err != nil {
+			// HCP Boundary is not enabled for every organization; degrade to no
+			// clusters rather than failing the whole scan.
+			if isServiceUnavailable(err) {
+				return out, nil
+			}
 			return nil, err
 		}
 		if resp.Payload == nil {

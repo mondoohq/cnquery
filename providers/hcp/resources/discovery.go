@@ -109,17 +109,17 @@ func Discover(runtime *plugin.Runtime, opts map[string]string) (*inventory.Inven
 			}
 		}
 		if want(connection.DiscoveryPackerRegistries) {
-			proj, err := fetchMqlHcpProject(runtime, proj.id)
+			mqlProj, err := fetchMqlHcpProject(runtime, proj.id)
 			if err != nil {
 				return nil, err
 			}
-			reg, err := proj.packerRegistry()
+			reg, err := mqlProj.packerRegistry()
 			if err != nil {
 				return nil, err
 			}
 			if reg != nil {
 				in.Spec.Assets = append(in.Spec.Assets,
-					childAsset(conf, conn.ID(), oid, connection.ScopePackerRegistry, "HCP Packer registry "+reg.Id.Data, proj.Id.Data, reg.Id.Data))
+					childAsset(conf, conn.ID(), oid, connection.ScopePackerRegistry, "HCP Packer registry "+reg.Id.Data, mqlProj.Id.Data, reg.Id.Data))
 			}
 		}
 		if want(connection.DiscoveryWaypointApplications) {

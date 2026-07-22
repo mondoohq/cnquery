@@ -133,7 +133,9 @@ func newMqlHcpOrganization(runtime *plugin.Runtime, o *rmmodels.HashicorpCloudRe
 // initHcpOrganization resolves an organization from an explicit id argument or,
 // when none is given, the organization the connection is rooted at.
 func initHcpOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 1 {
+	// A fully-specified resource carries more than the id and the injected
+	// __id; fetch on anything less so a bare id reference hydrates completely.
+	if len(args) > 2 {
 		return args, nil, nil
 	}
 	id := ""
@@ -233,7 +235,9 @@ func fetchMqlHcpProject(runtime *plugin.Runtime, id string) (*mqlHcpProject, err
 // is given, the project the connection is scoped to. The typed project()
 // references on clusters, registries, and applications hydrate through here.
 func initHcpProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 1 {
+	// A fully-specified resource carries more than the id and the injected
+	// __id; fetch on anything less so a bare id reference hydrates completely.
+	if len(args) > 2 {
 		return args, nil, nil
 	}
 	id := ""

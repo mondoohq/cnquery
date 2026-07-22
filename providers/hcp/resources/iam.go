@@ -90,8 +90,10 @@ func (r *mqlHcpProject) servicePrincipals() ([]any, error) {
 }
 
 func newMqlHcpIamServicePrincipal(runtime *plugin.Runtime, orgID string, sp *iammodels.HashicorpCloudIamServicePrincipal) (*mqlHcpIamServicePrincipal, error) {
+	// Scope the cache key by org and project so an organization-level and a
+	// project-level principal that happen to share an id cannot collide.
 	res, err := CreateResource(runtime, "hcp.iam.servicePrincipal", map[string]*llx.RawData{
-		"__id":         llx.StringData("hcp.iam.servicePrincipal/" + sp.ID),
+		"__id":         llx.StringData("hcp.iam.servicePrincipal/" + orgID + "/" + sp.ProjectID + "/" + sp.ID),
 		"id":           llx.StringData(sp.ID),
 		"name":         llx.StringData(sp.Name),
 		"resourceName": llx.StringData(sp.ResourceName),

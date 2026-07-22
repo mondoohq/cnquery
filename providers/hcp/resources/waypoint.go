@@ -38,9 +38,9 @@ func listMqlHcpWaypointApplications(runtime *plugin.Runtime, orgID, projectID st
 		params.PaginationNextPageToken = nextToken
 		resp, err := client.WaypointServiceListApplications(params, nil)
 		if err != nil {
-			// Waypoint is not enabled in every project; degrade to no
+			// Waypoint is not activated in every project; degrade to no
 			// applications rather than failing the whole project query.
-			if isNotFoundOrForbidden(err) {
+			if isServiceUnavailable(err) {
 				return out, nil
 			}
 			return nil, err

@@ -219,7 +219,7 @@ hcp.packer.bucket @defaults("name latestVersion platforms") {
 // Exposes the application name and the template it was created from,
 // describing what internal-developer-platform workloads exist and which
 // golden-path template produced them. The `id` field is the application id.
-hcp.waypoint.application @defaults("id name templateName") {
+hcp.waypoint.application @defaults("id name templateName") @maturity("preview") {
   // Unique application id
   id string
   // Application name
