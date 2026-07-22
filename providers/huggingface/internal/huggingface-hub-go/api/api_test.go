@@ -118,6 +118,31 @@ func TestListModelsStopsOnRepeatedCursor(t *testing.T) {
 	assert.Len(t, list.Models, 2)
 }
 
+// TestListWebhooksPagination proves webhooks follow the same cursor pagination
+// as the other list endpoints (the settings endpoint returns a bare array).
+func TestListWebhooksPagination(t *testing.T) {
+	var srv *httptest.Server
+	srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/api/settings/webhooks", r.URL.Path)
+		switch r.URL.Query().Get("cursor") {
+		case "":
+			w.Header().Set("Link", fmt.Sprintf(`<%s/api/settings/webhooks?cursor=page2>; rel="next"`, srv.URL))
+			_, _ = w.Write([]byte(`[{"id":"w1"},{"id":"w2"}]`))
+		case "page2":
+			_, _ = w.Write([]byte(`[{"id":"w3"}]`))
+		default:
+			t.Fatalf("unexpected cursor %q", r.URL.Query().Get("cursor"))
+		}
+	}))
+	defer srv.Close()
+
+	a := NewAPI(srv.URL, srv.Client(), "")
+	hooks, err := a.ListWebhooks(context.Background(), models.NewWebhookListOptions())
+	require.NoError(t, err)
+	require.Len(t, hooks, 3)
+	assert.Equal(t, "w3", hooks[2].ID)
+}
+
 func TestListModelsPropagatesError(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)

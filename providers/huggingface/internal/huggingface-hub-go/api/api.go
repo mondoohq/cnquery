@@ -434,10 +434,21 @@ func (a *API) ListWebhooks(ctx context.Context, opts *models.WebhookListOptions)
 		endpoint = fmt.Sprintf("%s?%s", endpoint, params.Encode())
 	}
 
+	// Follow cursor pagination like the other list endpoints. The settings
+	// endpoint may not paginate today, in which case the loop simply runs once
+	// (no Link header, so next is empty).
 	var webhookList models.WebhookList
-	err := a.request(ctx, http.MethodGet, endpoint, nil, &webhookList)
-	if err != nil {
-		return nil, err
+	next := endpoint
+	seen := map[string]bool{}
+	for next != "" && !seen[next] {
+		seen[next] = true
+		var page models.WebhookList
+		nextURL, err := a.getPaged(ctx, next, &page)
+		if err != nil {
+			return nil, err
+		}
+		webhookList = append(webhookList, page...)
+		next = nextURL
 	}
 	return []models.Webhook(webhookList), nil
 }
