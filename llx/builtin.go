@@ -842,9 +842,15 @@ func runResourceFunction(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint
 
 	// watch this field in the resource
 	err := e.ctx.runtime.WatchAndUpdate(rr, chunk.Id, wid, func(fieldData any, fieldError error) {
+		// A field can be missing from the schema when the compiled bundle and
+		// the loaded provider disagree (e.g. the provider was updated at runtime
+		// independently of the bundle version). Fall back to Unset rather than
+		// crash, but log it so the schema mismatch stays observable.
 		fieldType := types.Unset
 		if field := resource.Fields[chunk.Id]; field != nil {
 			fieldType = types.Type(field.Type)
+		} else {
+			log.Warn().Str("resource", rr.MqlName()).Str("field", chunk.Id).Msg("exec> field missing from schema in WatchAndUpdate callback")
 		}
 		data := &RawData{
 			Type:  fieldType,
