@@ -276,8 +276,6 @@ func initAlicloudVpcNetworkAcl(runtime *plugin.Runtime, args map[string]*llx.Raw
 	return nil, nil, fmt.Errorf("alicloud.vpc.networkAcl %q not found in region %q", networkAclID, region)
 }
 
-// requiredStringArg reads a required non-empty string argument from an init
-// args map, returning a descriptive error when it is missing or blank.
 // scopedInitArgs backfills a singular resource's identifying arguments from the
 // connection scope when the resource is invoked bare (no arguments) on a
 // discovered child asset. Fine-grained discovery pins the object id under
@@ -302,6 +300,8 @@ func scopedInitArgs(runtime *plugin.Runtime, args map[string]*llx.RawData, scope
 	}
 }
 
+// requiredStringArg reads a required non-empty string argument from an init
+// args map, returning a descriptive error when it is missing or blank.
 func requiredStringArg(args map[string]*llx.RawData, name, resource string) (string, error) {
 	raw, ok := args[name]
 	if !ok {
