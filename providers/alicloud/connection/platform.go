@@ -32,7 +32,7 @@ const (
 // account itself, and the per-object platforms produced by fine-grained asset
 // discovery.
 var Platforms = []*plugin.PlatformInfo{
-	{Name: "alicloud", Title: "Alibaba Cloud account", Family: []string{"alicloud"}, Kind: []string{"api"}, Runtime: []string{"alicloud"}},
+	{Name: "alibaba-account", Title: "Alibaba Cloud account", Family: []string{"alicloud"}, Kind: []string{"api"}, Runtime: []string{"alicloud"}},
 	{Name: "alicloud-ack-cluster", Title: "Alibaba Cloud ACK Cluster", Family: []string{"alicloud"}, Kind: []string{"api"}, Runtime: []string{"alicloud"}},
 	{Name: "alicloud-alb-loadbalancer", Title: "Alibaba Cloud Application Load Balancer", Family: []string{"alicloud"}, Kind: []string{"api"}, Runtime: []string{"alicloud"}},
 	{Name: "alicloud-nlb-loadbalancer", Title: "Alibaba Cloud Network Load Balancer", Family: []string{"alicloud"}, Kind: []string{"api"}, Runtime: []string{"alicloud"}},
@@ -60,7 +60,7 @@ func newPlatform(name, title string, segments []string) *inventory.Platform {
 
 // NewAccountPlatform returns the platform for an Alibaba Cloud account asset.
 func NewAccountPlatform(accountID string) *inventory.Platform {
-	return newPlatform("alicloud", "Alibaba Cloud account "+accountID,
+	return newPlatform("alibaba-account", "Alibaba Cloud account "+accountID,
 		[]string{"technology=alicloud", "kind=account", "account=" + accountID})
 }
 

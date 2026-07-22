@@ -15,7 +15,7 @@ func TestAlicloudPlatforms(t *testing.T) {
 	for _, pi := range Platforms {
 		assert.Same(t, pi, PlatformByName(pi.Name), pi.Name)
 	}
-	assert.True(t, PlatformByName("alicloud").Consistent(NewAccountPlatform("1234567890")))
+	assert.True(t, PlatformByName("alibaba-account").Consistent(NewAccountPlatform("1234567890")))
 	assert.True(t, PlatformByName("alicloud-ack-cluster").Consistent(NewAckClusterPlatform("c-abc")))
 	assert.True(t, PlatformByName("alicloud-alb-loadbalancer").Consistent(NewAlbPlatform("alb-abc")))
 	assert.True(t, PlatformByName("alicloud-nlb-loadbalancer").Consistent(NewNlbPlatform("nlb-abc")))
