@@ -35,6 +35,7 @@ together.cluster.region 13.0.0
 together.cluster.reservationEndTime 13.0.0
 together.cluster.reservationStartTime 13.0.0
 together.cluster.status 13.0.0
+together.cluster.storageVolumes 13.0.0
 together.clusterStorageVolume 13.0.0
 together.clusterStorageVolume.sizeTib 13.0.0
 together.clusterStorageVolume.status 13.0.0
