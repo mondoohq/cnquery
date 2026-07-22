@@ -4,9 +4,12 @@
 package resources
 
 import (
+	"errors"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
+	together "github.com/togethercomputer/together-go"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
@@ -90,4 +93,68 @@ func TestModelDescription(t *testing.T) {
 	got, err := m.description()
 	assert.NoError(t, err)
 	assert.Equal(t, "Llama 3.3 70B Instruct Turbo", got)
+}
+
+func TestParseTimeStr(t *testing.T) {
+	t.Run("empty string returns nil", func(t *testing.T) {
+		assert.Nil(t, parseTimeStr(""))
+	})
+
+	t.Run("unparseable string returns nil", func(t *testing.T) {
+		assert.Nil(t, parseTimeStr("not-a-timestamp"))
+		assert.Nil(t, parseTimeStr("1719878400")) // unix epoch is not an accepted layout
+	})
+
+	want := time.Date(2026, 6, 20, 15, 4, 5, 0, time.UTC)
+	tests := []struct {
+		name  string
+		input string
+		want  time.Time
+	}{
+		{"RFC3339", "2026-06-20T15:04:05Z", want},
+		{"RFC3339Nano", "2026-06-20T15:04:05.000000000Z", want},
+		{"no timezone", "2026-06-20T15:04:05", want},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := parseTimeStr(tt.input)
+			if assert.NotNil(t, got) {
+				assert.True(t, got.Equal(tt.want), "got %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestTimeOrNil(t *testing.T) {
+	t.Run("zero time returns nil", func(t *testing.T) {
+		assert.Nil(t, timeOrNil(time.Time{}))
+	})
+
+	t.Run("set time returns pointer", func(t *testing.T) {
+		want := time.Date(2026, 6, 20, 15, 4, 5, 0, time.UTC)
+		got := timeOrNil(want)
+		if assert.NotNil(t, got) {
+			assert.True(t, got.Equal(want))
+		}
+	})
+}
+
+func TestIsAccessDenied(t *testing.T) {
+	tests := []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{"nil error", nil, false},
+		{"401 unauthorized", &together.Error{StatusCode: 401}, true},
+		{"403 forbidden", &together.Error{StatusCode: 403}, true},
+		{"404 not found", &together.Error{StatusCode: 404}, false},
+		{"500 server error", &together.Error{StatusCode: 500}, false},
+		{"non-API error", errors.New("connection refused"), false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, isAccessDenied(tt.err))
+		})
+	}
 }

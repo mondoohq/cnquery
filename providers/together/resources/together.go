@@ -225,16 +225,13 @@ func (r *mqlTogether) clusters() ([]interface{}, error) {
 			"numCpuWorkers":        llx.IntData(c.NumCPUWorkers),
 			"oidcIssuer":           llx.StringData(c.OidcConfig.IssuerURL),
 			"oidcClientId":         llx.StringData(c.OidcConfig.ClientID),
-			"createdAt":            llx.TimeData(c.CreatedAt),
-			"reservationStartTime": llx.TimeData(c.ReservationStartTime),
-			"reservationEndTime":   llx.TimeData(c.ReservationEndTime),
+			"createdAt":            llx.TimeDataPtr(timeOrNil(c.CreatedAt)),
+			"reservationStartTime": llx.TimeDataPtr(timeOrNil(c.ReservationStartTime)),
+			"reservationEndTime":   llx.TimeDataPtr(timeOrNil(c.ReservationEndTime)),
 		})
 		if err != nil {
 			return nil, err
 		}
-		cluster := mqlCluster.(*mqlTogetherCluster)
-		cluster.clusterId = c.ClusterID
-		cluster.projectId = c.ProjectID
 		res = append(res, mqlCluster)
 	}
 
@@ -280,18 +277,17 @@ func (r *mqlTogether) secrets() ([]interface{}, error) {
 	return res, nil
 }
 
-type mqlTogetherClusterInternal struct {
-	clusterId string
-	projectId string
-}
-
-func (r *mqlTogetherCluster) storageVolumes() ([]interface{}, error) {
+func (r *mqlTogether) clusterStorageVolumes() ([]interface{}, error) {
 	conn := togetherConn(r.MqlRuntime)
 	client := conn.Client()
 
+	// The storage volume API is project-scoped, not cluster-scoped: the list
+	// endpoint accepts only a project filter and the returned volumes carry no
+	// cluster reference, so they belong to the account's project and are shared
+	// across its clusters.
 	params := together.BetaClusterStorageListParams{}
-	if r.projectId != "" {
-		params.ProjectID = together.Opt(r.projectId)
+	if project := conn.Project(); project != "" {
+		params.ProjectID = together.Opt(project)
 	}
 
 	resp, err := client.Beta.Clusters.Storage.List(context.Background(), params)
@@ -308,7 +304,7 @@ func (r *mqlTogetherCluster) storageVolumes() ([]interface{}, error) {
 	res := make([]interface{}, 0, len(resp.Volumes))
 	for _, v := range resp.Volumes {
 		mqlVol, err := CreateResource(r.MqlRuntime, "together.clusterStorageVolume", map[string]*llx.RawData{
-			"__id":       llx.StringData(r.clusterId + "/" + v.VolumeID),
+			"__id":       llx.StringData(v.VolumeID),
 			"volumeId":   llx.StringData(v.VolumeID),
 			"volumeName": llx.StringData(v.VolumeName),
 			"sizeTib":    llx.IntData(v.SizeTib),
@@ -364,8 +360,8 @@ func (r *mqlTogether) deployments() ([]interface{}, error) {
 			"minReplicas":              llx.IntData(d.MinReplicas),
 			"maxReplicas":              llx.IntData(d.MaxReplicas),
 			"environmentVariableNames": llx.ArrayData(envVarNames, types.String),
-			"createdAt":                llx.TimeData(d.CreatedAt),
-			"updatedAt":                llx.TimeData(d.UpdatedAt),
+			"createdAt":                llx.TimeDataPtr(timeOrNil(d.CreatedAt)),
+			"updatedAt":                llx.TimeDataPtr(timeOrNil(d.UpdatedAt)),
 		})
 		if err != nil {
 			return nil, err
@@ -405,9 +401,9 @@ func (r *mqlTogether) batches() ([]interface{}, error) {
 			"progress":      llx.FloatData(b.Progress),
 			"fileSizeBytes": llx.IntData(b.FileSizeBytes),
 			"userId":        llx.StringData(b.UserID),
-			"createdAt":     llx.TimeData(b.CreatedAt),
-			"completedAt":   llx.TimeData(b.CompletedAt),
-			"jobDeadline":   llx.TimeData(b.JobDeadline),
+			"createdAt":     llx.TimeDataPtr(timeOrNil(b.CreatedAt)),
+			"completedAt":   llx.TimeDataPtr(timeOrNil(b.CompletedAt)),
+			"jobDeadline":   llx.TimeDataPtr(timeOrNil(b.JobDeadline)),
 		})
 		if err != nil {
 			return nil, err
@@ -441,8 +437,8 @@ func (r *mqlTogether) evals() ([]interface{}, error) {
 			"type":       llx.StringData(string(e.Type)),
 			"status":     llx.StringData(string(e.Status)),
 			"ownerId":    llx.StringData(e.OwnerID),
-			"createdAt":  llx.TimeData(e.CreatedAt),
-			"updatedAt":  llx.TimeData(e.UpdatedAt),
+			"createdAt":  llx.TimeDataPtr(timeOrNil(e.CreatedAt)),
+			"updatedAt":  llx.TimeDataPtr(timeOrNil(e.UpdatedAt)),
 		})
 		if err != nil {
 			return nil, err
@@ -623,6 +619,18 @@ func (r *mqlTogetherEval) id() (string, error) {
 
 func (r *mqlTogetherVolume) id() (string, error) {
 	return r.Id.Data, nil
+}
+
+// timeOrNil maps a zero time.Time to nil so absent SDK timestamps render as
+// null instead of the year-1 zero value. The Together SDK returns optional
+// timestamps as zero-valued time.Time (not pointers), so a job that has not
+// completed or a cluster with no reservation window would otherwise surface
+// 0001-01-01T00:00:00Z.
+func timeOrNil(t time.Time) *time.Time {
+	if t.IsZero() {
+		return nil
+	}
+	return &t
 }
 
 func parseTimeStr(s string) *time.Time {

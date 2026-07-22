@@ -35,12 +35,12 @@ together.cluster.region 13.0.0
 together.cluster.reservationEndTime 13.0.0
 together.cluster.reservationStartTime 13.0.0
 together.cluster.status 13.0.0
-together.cluster.storageVolumes 13.0.0
 together.clusterStorageVolume 13.0.0
 together.clusterStorageVolume.sizeTib 13.0.0
 together.clusterStorageVolume.status 13.0.0
 together.clusterStorageVolume.volumeId 13.0.0
 together.clusterStorageVolume.volumeName 13.0.0
+together.clusterStorageVolumes 13.0.9
 together.clusters 13.0.0
 together.deployment 13.0.0
 together.deployment.cpu 13.0.0

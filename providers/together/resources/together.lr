@@ -10,9 +10,10 @@ option go_package = "go.mondoo.com/mql/v13/providers/together/resources"
 // auditing an account's inference and training footprint. Reachable
 // through it are the available models catalog, fine-tuning jobs,
 // dedicated endpoint deployments, container deployments, uploaded
-// files, GPU compute clusters, managed secrets, batch inference jobs,
-// evaluation jobs, and persistent volumes. The project the account is
-// scoped to is reported by the organization field.
+// files, GPU compute clusters, cluster storage volumes, managed
+// secrets, batch inference jobs, evaluation jobs, and persistent
+// volumes. The project the account is scoped to is reported by the
+// organization field.
 together @defaults("organization") @maturity("preview") {
   // Project identifier the account connection is scoped to
   organization() string
@@ -28,6 +29,8 @@ together @defaults("organization") @maturity("preview") {
   files() []together.file
   // GPU compute clusters
   clusters() []together.cluster
+  // Shared storage volumes for GPU compute clusters
+  clusterStorageVolumes() []together.clusterStorageVolume
   // Managed secrets for deployments
   secrets() []together.secret
   // Batch inference jobs
@@ -228,8 +231,6 @@ together.cluster @defaults("name gpuType numGpus region status") @maturity("prev
   reservationStartTime time
   // Reservation end time
   reservationEndTime time
-  // Persistent storage volumes attached to this cluster
-  storageVolumes() []together.clusterStorageVolume
 }
 
 // Together AI managed secret
@@ -257,12 +258,13 @@ together.secret @defaults("id name") @maturity("preview") {
 
 // Together AI cluster storage volume
 //
-// Persistent storage volume attached to a Together AI GPU cluster.
-// Volumes back model checkpoints, datasets, and scratch space for
-// cluster workloads, so tracking their capacity and lifecycle state
-// matters for both cost and availability. The `sizeTib` field reports
-// provisioned capacity in TiB, and `status` reports where the volume
-// sits in its provisioning and binding lifecycle.
+// Shared storage volume available to a Together AI account's GPU compute
+// clusters, scoped to the connection's project rather than owned by a
+// single cluster. Volumes back model checkpoints, datasets, and scratch
+// space for cluster workloads, so tracking their capacity and lifecycle
+// state matters for both cost and availability. The `sizeTib` field
+// reports provisioned capacity in TiB, and `status` reports where the
+// volume sits in its provisioning and binding lifecycle.
 private together.clusterStorageVolume @defaults("volumeName sizeTib status") @maturity("preview") {
   // Volume identifier
   volumeId string
