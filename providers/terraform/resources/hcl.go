@@ -648,12 +648,22 @@ func hclBodyToValuesDict(rawBody hcl.Body, ctx *hcl.EvalContext) (map[string]any
 	}
 
 	for _, block := range body.Blocks {
-		child, err := hclBodyToValuesDict(block.Body, ctx)
-		if err != nil {
-			return nil, err
+		// Expand `dynamic "X"` blocks into the `X` blocks they generate, exactly
+		// as listHclBlocks does for blocks(). Terraform plan/state already expose
+		// the generated blocks under their real type, so without this the HCL
+		// values() folds them under a "dynamic" key (nested under "content") and a
+		// policy written as values["X"] silently sees nothing on an HCL asset while
+		// matching on the plan/state asset. normalizeHclSyntaxBlock returns the
+		// block unchanged when it is not a dynamic block, so static blocks keep
+		// their existing shape.
+		for _, nb := range normalizeHclSyntaxBlock(block) {
+			child, err := hclBodyToValuesDict(nb.Body, ctx)
+			if err != nil {
+				return nil, err
+			}
+			existing, _ := dict[nb.Type].([]any)
+			dict[nb.Type] = append(existing, child)
 		}
-		existing, _ := dict[block.Type].([]any)
-		dict[block.Type] = append(existing, child)
 	}
 
 	return dict, nil
@@ -1016,13 +1026,38 @@ func GetKeyString(key any) string {
 	case []string:
 		return strings.Join(v, ",")
 	case []any:
-		s := ""
+		var sb strings.Builder
 		for i := range v {
-			s = s + v[i].(string)
+			sb.WriteString(keyScalarToString(v[i]))
 		}
-		return s
+		return sb.String()
 	default:
-		return key.(string)
+		return keyScalarToString(key)
+	}
+}
+
+// keyScalarToString renders an evaluated object key as the string Terraform
+// itself would use for a map key. Object keys resolve to whatever type the key
+// expression evaluates to: with variable resolution active a `{ (var.x) = ... }`
+// key can be a number/bool/null, and a bareword numeric key like `{ 8080 = ... }`
+// always evaluates to a number. A bare `key.(string)` assertion on any of those
+// panics, and because query blocks run in goroutines that panic crashes the
+// entire scan rather than one query. Stringify each scalar kind explicitly and
+// treat null/unknown keys as empty.
+func keyScalarToString(key any) string {
+	switch k := key.(type) {
+	case string:
+		return k
+	case bool:
+		return strconv.FormatBool(k)
+	case float64:
+		return strconv.FormatFloat(k, 'f', -1, 64)
+	case int64:
+		return strconv.FormatInt(k, 10)
+	case nil:
+		return ""
+	default:
+		return fmt.Sprint(k)
 	}
 }
 

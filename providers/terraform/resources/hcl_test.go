@@ -551,3 +551,123 @@ resource "google_sql_database_instance" "example" {
 	assert.Equal(t, "skip_show_database", flags[0].(map[string]any)["name"])
 	assert.Equal(t, "local_infile", flags[1].(map[string]any)["name"])
 }
+
+// TestKeyScalarToString covers every scalar kind an evaluated object key can
+// take. A number/bool/null key used to reach a bare `key.(string)` assertion in
+// GetKeyString and panic; each kind must now stringify (or empty) instead.
+func TestKeyScalarToString(t *testing.T) {
+	assert.Equal(t, "http", keyScalarToString("http"))
+	assert.Equal(t, "8080", keyScalarToString(float64(8080)))
+	assert.Equal(t, "8080.5", keyScalarToString(float64(8080.5)))
+	assert.Equal(t, "42", keyScalarToString(int64(42)))
+	assert.Equal(t, "true", keyScalarToString(true))
+	assert.Equal(t, "false", keyScalarToString(false))
+	assert.Equal(t, "", keyScalarToString(nil))
+}
+
+// TestGetKeyString covers the container branches of GetKeyString, including a
+// []any that holds non-string scalars (which previously panicked on the
+// v[i].(string) assertion).
+func TestGetKeyString(t *testing.T) {
+	assert.Equal(t, "keytest", GetKeyString("keytest"))
+	assert.Equal(t, "key,thing", GetKeyString([]string{"key", "thing"}))
+	assert.Equal(t, "keything", GetKeyString([]any{"key", "thing"}))
+	assert.Equal(t, "a8080true", GetKeyString([]any{"a", float64(8080), true}))
+	assert.Equal(t, "8080", GetKeyString(float64(8080)))
+	assert.Equal(t, "", GetKeyString(nil))
+}
+
+// TestGetCtyValue_ObjectNumericKey is a regression test: a map literal with a
+// numeric key (e.g. `{ 8080 = "http" }`, common in port/priority maps) is valid
+// HCL whose key evaluates to a number. GetKeyString used to assert it as a
+// string and panic, and because query blocks run in goroutines that panic
+// crashes the whole scan. The key must stringify and the object must resolve.
+func TestGetCtyValue_ObjectNumericKey(t *testing.T) {
+	attrs := parseAttrs(t, `ports = { 8080 = "http", 443 = "https" }`)
+	got, err := hclResolvedAttributesToDict(attrs, nil)
+	require.NoError(t, err)
+
+	m, ok := got["ports"].(map[string]any)
+	require.True(t, ok, "ports should be a map, got %#v", got["ports"])
+	assert.Equal(t, "http", m["8080"])
+	assert.Equal(t, "https", m["443"])
+}
+
+// TestGetCtyValue_ObjectResolvedScalarKey verifies the same panic path is safe
+// when variable resolution turns a `{ (var.x) = ... }` key into a real scalar.
+func TestGetCtyValue_ObjectResolvedScalarKey(t *testing.T) {
+	attrs := parseAttrs(t, `m = { (var.port) = "http" }`)
+	ctx := resolvingCtx(map[string]cty.Value{
+		"port": cty.NumberIntVal(8080),
+	}, nil)
+	got, err := hclResolvedAttributesToDict(attrs, ctx)
+	require.NoError(t, err)
+
+	m, ok := got["m"].(map[string]any)
+	require.True(t, ok, "m should be a map, got %#v", got["m"])
+	assert.Equal(t, "http", m["8080"])
+}
+
+// TestHclBodyToValuesDict_DynamicBlockExpanded verifies that values() expands a
+// `dynamic "X"` block into the `X` blocks it generates, matching how Terraform
+// plan/state expose the already-expanded blocks. Without this a policy written
+// as values["ingress"] silently sees nothing on an HCL asset while matching on
+// the plan/state asset.
+func TestHclBodyToValuesDict_DynamicBlockExpanded(t *testing.T) {
+	body := resourceBody(t, `
+resource "aws_security_group" "example" {
+  name = "example"
+
+  dynamic "ingress" {
+    for_each = var.rules
+    content {
+      from_port = ingress.value.port
+      protocol  = "tcp"
+    }
+  }
+}
+`)
+
+	values, err := hclBodyToValuesDict(body, nil)
+	require.NoError(t, err)
+
+	// The dynamic wrapper must not leak through as a "dynamic" key.
+	_, hasDynamic := values["dynamic"]
+	assert.False(t, hasDynamic, "dynamic wrapper should be expanded, got keys %#v", values)
+
+	ingress, ok := values["ingress"].([]any)
+	require.True(t, ok, "ingress should be []any, got %#v", values["ingress"])
+	require.Len(t, ingress, 1)
+	assert.Equal(t, "tcp", ingress[0].(map[string]any)["protocol"])
+}
+
+// TestHclBodyToValuesDict_DynamicBlockNested verifies a dynamic block nested
+// inside a static block also expands to its real type.
+func TestHclBodyToValuesDict_DynamicBlockNested(t *testing.T) {
+	body := resourceBody(t, `
+resource "aws_appautoscaling_policy" "example" {
+  step_scaling_policy_configuration {
+    dynamic "step_adjustment" {
+      for_each = var.steps
+      content {
+        scaling_adjustment = step_adjustment.value.adjustment
+      }
+    }
+  }
+}
+`)
+
+	values, err := hclBodyToValuesDict(body, nil)
+	require.NoError(t, err)
+
+	cfg, ok := values["step_scaling_policy_configuration"].([]any)
+	require.True(t, ok)
+	require.Len(t, cfg, 1)
+
+	inner := cfg[0].(map[string]any)
+	_, hasDynamic := inner["dynamic"]
+	assert.False(t, hasDynamic, "nested dynamic wrapper should be expanded, got %#v", inner)
+	steps, ok := inner["step_adjustment"].([]any)
+	require.True(t, ok, "step_adjustment should be []any, got %#v", inner["step_adjustment"])
+	require.Len(t, steps, 1)
+}
