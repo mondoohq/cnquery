@@ -664,6 +664,44 @@ func (s EsxiAdvancedSetting) Overridden() bool {
 	return s.Default != s.Value
 }
 
+// esxiColumn returns the single value for an esxcli result column, or "" when
+// the column is absent or carries anything other than exactly one value. An
+// empty XML element decodes to a present, len-1 slice holding "", so an absent
+// value and a genuinely empty value both collapse to "" here.
+func esxiColumn(val map[string][]string, key string) string {
+	if v, ok := val[key]; ok && len(v) == 1 {
+		return v[0]
+	}
+	return ""
+}
+
+// buildAdvancedSetting maps one `system settings advanced list` DataObject into
+// an EsxiAdvancedSetting. esxcli emits BOTH the integer and the string variant
+// of the value/default columns for every setting; the variant that doesn't
+// apply is present but empty (`DefaultStringValue :` for an integer setting).
+// The Type column ("integer" or "string") tells us which pair is authoritative,
+// so we select on it rather than writing both variants to the same field and
+// letting Go's randomized map-iteration order decide the winner (which produced
+// nondeterministic empty/wrong Default and Value between scans).
+func buildAdvancedSetting(val map[string][]string) EsxiAdvancedSetting {
+	setting := EsxiAdvancedSetting{
+		Description: esxiColumn(val, "Description"),
+	}
+	if path := esxiColumn(val, "Path"); path != "" {
+		setting.Path = path
+		setting.Key = strings.ReplaceAll(strings.TrimPrefix(path, "/"), "/", ".")
+	}
+	if esxiColumn(val, "Type") == "string" {
+		setting.Default = esxiColumn(val, "DefaultStringValue")
+		setting.Value = esxiColumn(val, "StringValue")
+	} else {
+		// integer (the only other advertised type) uses the numeric columns
+		setting.Default = esxiColumn(val, "DefaultIntValue")
+		setting.Value = esxiColumn(val, "IntValue")
+	}
+	return setting
+}
+
 // $ESXCli.system.settings.advanced.list()
 // DefaultIntValue    : 1
 // DefaultStringValue :
@@ -691,31 +729,7 @@ func (esxi *Esxi) AdvancedSettings() ([]EsxiAdvancedSetting, error) {
 
 	settings := []EsxiAdvancedSetting{}
 	for _, val := range res.Values {
-		setting := EsxiAdvancedSetting{}
-
-		for k := range val {
-			if len(val[k]) == 1 {
-				value := val[k][0]
-				switch k {
-				case "Path":
-					setting.Path = value
-					setting.Key = strings.ReplaceAll(strings.TrimPrefix(value, "/"), "/", ".")
-				case "Description":
-					setting.Description = value
-				case "DefaultIntValue":
-					setting.Default = value
-				case "DefaultStringValue":
-					setting.Default = value
-				case "StringValue":
-					setting.Value = value
-				case "IntValue":
-					setting.Value = value
-				}
-			} else {
-				log.Error().Str("key", k).Msg("Vibs> unsupported key")
-			}
-		}
-		settings = append(settings, setting)
+		settings = append(settings, buildAdvancedSetting(val))
 	}
 
 	// fetch kernel settings

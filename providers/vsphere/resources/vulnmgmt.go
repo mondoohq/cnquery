@@ -269,3 +269,11 @@ func (a *mqlVulnAdvisory) id() (string, error) {
 func (c *mqlVulnCve) id() (string, error) {
 	return c.Id.Data, c.Id.Error
 }
+
+// id keys each package by name+version. Without it every vuln.package would
+// share the empty cache key "vuln.package\x00" and collapse onto the first
+// package created (see mql CreateResource caching), so vulnmgmt.packages would
+// report that one package once per row.
+func (p *mqlVulnPackage) id() (string, error) {
+	return p.Name.Data + "-" + p.Version.Data, p.Name.Error
+}

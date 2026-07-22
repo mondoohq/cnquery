@@ -503,6 +503,21 @@ func (v *mqlVsphereHost) vmknics() ([]any, error) {
 	return mqlVmknics, nil
 }
 
+// parseVibDate parses a VIB's date column (esxcli reports "2020-07-16"),
+// returning nil for an empty or unparseable value. A single VIB with a missing
+// date must not sink the whole host's package list, so we degrade that one
+// field to null rather than erroring the accessor.
+func parseVibDate(s string) *time.Time {
+	if s == "" {
+		return nil
+	}
+	t, err := time.Parse("2006-01-02", s)
+	if err != nil {
+		return nil
+	}
+	return &t
+}
+
 func (v *mqlVsphereHost) packages() ([]any, error) {
 	esxiClient, err := v.esxiClient()
 	if err != nil {
@@ -517,28 +532,16 @@ func (v *mqlVsphereHost) packages() ([]any, error) {
 	for i := range vibs {
 		vib := vibs[i]
 
-		// parse timestamps in format "2020-07-16"
-		format := "2006-01-02"
-		var creationDate *time.Time
-		parsedCreation, err := time.Parse(format, vib.CreationDate)
-		if err != nil {
-			return nil, errors.New("cannot parse vib creationDate: " + vib.CreationDate)
-		}
-		creationDate = &parsedCreation
-
-		var installDate *time.Time
-		parsedInstall, err := time.Parse(format, vib.InstallDate)
-		if err != nil {
-			return nil, errors.New("cannot parse vib installDate: " + vib.InstallDate)
-		}
-		installDate = &parsedInstall
-
 		mqlVib, err := CreateResource(v.MqlRuntime, "vsphere.host.vib", map[string]*llx.RawData{
+			// __id must be host-scoped: a VIB ID is identical on every host
+			// running the same ESXi build, so keying only on it would alias
+			// (and clobber) the per-host installDate/status across hosts.
+			"__id":            llx.StringData(esxiClient.InventoryPath + "/vib/" + vib.ID),
 			"id":              llx.StringData(vib.ID),
 			"name":            llx.StringData(vib.Name),
 			"acceptanceLevel": llx.StringData(vib.AcceptanceLevel),
-			"creationDate":    llx.TimeDataPtr(creationDate),
-			"installDate":     llx.TimeDataPtr(installDate),
+			"creationDate":    llx.TimeDataPtr(parseVibDate(vib.CreationDate)),
+			"installDate":     llx.TimeDataPtr(parseVibDate(vib.InstallDate)),
 			"status":          llx.StringData(vib.Status),
 			"vendor":          llx.StringData(vib.Vendor),
 			"version":         llx.StringData(vib.Version),
@@ -931,8 +934,11 @@ func (v *mqlVsphereHost) firewallRulesets() ([]any, error) {
 	if v.host == nil || v.host.Config == nil || v.host.Config.Firewall == nil {
 		return []any{}, nil
 	}
-	hostPath := ""
-	if v.InventoryPath.Error == nil {
+	// Prefer the readable inventory path, but fall back to the host moid (always
+	// unique) so the sub-resource __ids can never collapse to "/..." and alias
+	// across hosts if InventoryPath is unset.
+	hostPath := v.Moid.Data
+	if v.InventoryPath.Error == nil && v.InventoryPath.Data != "" {
 		hostPath = v.InventoryPath.Data
 	}
 
@@ -1012,8 +1018,11 @@ func (v *mqlVsphereHost) iscsiAdapters() ([]any, error) {
 	if v.host == nil || v.host.Config == nil || v.host.Config.StorageDevice == nil {
 		return []any{}, nil
 	}
-	hostPath := ""
-	if v.InventoryPath.Error == nil {
+	// Prefer the readable inventory path, but fall back to the host moid (always
+	// unique) so the sub-resource __ids can never collapse to "/..." and alias
+	// across hosts if InventoryPath is unset.
+	hostPath := v.Moid.Data
+	if v.InventoryPath.Error == nil && v.InventoryPath.Data != "" {
 		hostPath = v.InventoryPath.Data
 	}
 

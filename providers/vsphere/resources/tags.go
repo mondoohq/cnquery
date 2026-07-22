@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vapi/tags"
 	vmwaretypes "github.com/vmware/govmomi/vim25/types"
@@ -206,14 +207,21 @@ func attachedTagRefs(runtime *plugin.Runtime, moid string) ([]any, error) {
 
 	conn := runtime.Connection.(*connection.VsphereConnection)
 	ctx := context.Background()
+	// tagRefs is the typed sibling of the best-effort mo.ManagedEntity.Tag
+	// string field (see BatchGetTags in common.go): when the vAPI is
+	// unreachable (direct ESXi connection, or a token without vAPI scope) it
+	// degrades to an empty list rather than erroring the whole object, so the
+	// two tag views stay consistent.
 	rc, err := conn.RestClient(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to vAPI: %w", err)
+		log.Debug().Err(err).Msg("vsphere> vAPI rest client unavailable; returning no tag refs")
+		return []any{}, nil
 	}
 
 	tagIDs, err := tags.NewManager(rc).ListAttachedTags(ctx, ref)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list attached tags: %w", err)
+		log.Debug().Err(err).Msg("vsphere> ListAttachedTags failed; returning no tag refs")
+		return []any{}, nil
 	}
 	return resolveTagRefs(runtime, tagIDs)
 }
