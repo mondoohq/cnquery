@@ -167,18 +167,23 @@ func (d *mqlGrafanaDatasource) tlsSkipVerify() (bool, error) {
 	return boolFromJsonData(d.jsonDataMap(), "tlsSkipVerify"), nil
 }
 
-// tlsClientAuth is true if the datasource is configured for mutual TLS, either
-// via the tlsAuth flag in jsonData or by having a stored tlsClientCert secret.
-func (d *mqlGrafanaDatasource) tlsClientAuth() (bool, error) {
-	if boolFromJsonData(d.jsonDataMap(), "tlsAuth") {
-		return true, nil
+// datasourceTLSClientAuth is true if the datasource is configured for mutual
+// TLS, either via the tlsAuth flag in jsonData or by having a stored
+// tlsClientCert / tlsClientKey secret listed in secureJsonFields.
+func datasourceTLSClientAuth(jsonData map[string]any, secureFields []any) bool {
+	if boolFromJsonData(jsonData, "tlsAuth") {
+		return true
 	}
-	for _, f := range d.SecureJsonFields.Data {
+	for _, f := range secureFields {
 		if s, ok := f.(string); ok && (s == "tlsClientCert" || s == "tlsClientKey") {
-			return true, nil
+			return true
 		}
 	}
-	return false, nil
+	return false
+}
+
+func (d *mqlGrafanaDatasource) tlsClientAuth() (bool, error) {
+	return datasourceTLSClientAuth(d.jsonDataMap(), d.SecureJsonFields.Data), nil
 }
 
 func (d *mqlGrafanaDatasource) oauthPassThru() (bool, error) {

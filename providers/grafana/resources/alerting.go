@@ -131,53 +131,62 @@ func (c *mqlGrafanaContactPoint) isHttps() (bool, error) {
 	return strings.HasPrefix(strings.ToLower(u), "https://"), nil
 }
 
-func (c *mqlGrafanaContactPoint) tlsSkipVerify() (bool, error) {
-	s := c.contactPointSettings()
-	if s == nil {
-		return false, nil
+// contactPointTLSSkipVerify reports whether the contact-point settings disable
+// TLS server-certificate verification. httpConfig.tlsConfig is the standard
+// Alertmanager-style nested key; a top-level tlsConfig is the flatter
+// Grafana-managed key.
+func contactPointTLSSkipVerify(settings map[string]any) bool {
+	if settings == nil {
+		return false
 	}
-	// httpConfig is the standard Alertmanager-style nested key; tlsConfig is the
-	// flatter Grafana-managed key.
-	if hc, ok := s["httpConfig"].(map[string]any); ok {
+	if hc, ok := settings["httpConfig"].(map[string]any); ok {
 		if tls, ok := hc["tlsConfig"].(map[string]any); ok {
 			if v, ok := tls["insecureSkipVerify"].(bool); ok && v {
-				return true, nil
+				return true
 			}
 		}
 	}
-	if tls, ok := s["tlsConfig"].(map[string]any); ok {
+	if tls, ok := settings["tlsConfig"].(map[string]any); ok {
 		if v, ok := tls["insecureSkipVerify"].(bool); ok && v {
-			return true, nil
+			return true
 		}
 	}
-	return false, nil
+	return false
 }
 
-// hasHttpAuth reports whether basic-auth or bearer-token auth is configured on
-// the contact point, indicating the alert receiver requires authentication.
-func (c *mqlGrafanaContactPoint) hasHttpAuth() (bool, error) {
-	s := c.contactPointSettings()
-	if s == nil {
-		return false, nil
+func (c *mqlGrafanaContactPoint) tlsSkipVerify() (bool, error) {
+	return contactPointTLSSkipVerify(c.contactPointSettings()), nil
+}
+
+// contactPointHasHTTPAuth reports whether basic-auth or bearer-token auth is
+// configured on the contact point, indicating the alert receiver requires
+// authentication.
+func contactPointHasHTTPAuth(settings map[string]any) bool {
+	if settings == nil {
+		return false
 	}
-	if _, ok := s["username"]; ok {
-		return true, nil
+	if _, ok := settings["username"]; ok {
+		return true
 	}
-	if _, ok := s["authorizationCredentials"]; ok {
-		return true, nil
+	if _, ok := settings["authorizationCredentials"]; ok {
+		return true
 	}
-	if hc, ok := s["httpConfig"].(map[string]any); ok {
+	if hc, ok := settings["httpConfig"].(map[string]any); ok {
 		if _, ok := hc["basicAuth"]; ok {
-			return true, nil
+			return true
 		}
 		if _, ok := hc["bearerToken"]; ok {
-			return true, nil
+			return true
 		}
 		if _, ok := hc["authorization"]; ok {
-			return true, nil
+			return true
 		}
 	}
-	return false, nil
+	return false
+}
+
+func (c *mqlGrafanaContactPoint) hasHttpAuth() (bool, error) {
+	return contactPointHasHTTPAuth(c.contactPointSettings()), nil
 }
 
 // initGrafanaNotificationPolicy delegates to the parent grafana resource when

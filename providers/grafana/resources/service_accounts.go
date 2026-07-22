@@ -57,8 +57,8 @@ const (
 
 // fetchServiceAccountPage fetches a single page of service accounts and closes
 // the response body before returning, avoiding FD leaks in pagination loops.
-func fetchServiceAccountPage(ctx context.Context, conn *connection.GrafanaConnection, page int) (*grafanaServiceAccountsResponse, error) {
-	path := fmt.Sprintf("/api/serviceaccounts/search?perpage=%d&page=%d", serviceAccountPageSize, page)
+func fetchServiceAccountPage(ctx context.Context, conn *connection.GrafanaConnection, page, perPage int) (*grafanaServiceAccountsResponse, error) {
+	path := fmt.Sprintf("/api/serviceaccounts/search?perpage=%d&page=%d", perPage, page)
 	resp, err := conn.Get(ctx, path)
 	if err != nil {
 		return nil, err
@@ -76,35 +76,52 @@ func fetchServiceAccountPage(ctx context.Context, conn *connection.GrafanaConnec
 	return &result, nil
 }
 
-func (g *mqlGrafana) serviceAccounts() ([]interface{}, error) {
-	conn, err := grafanaConnection(g.MqlRuntime)
-	if err != nil {
-		return nil, err
+// serviceAccountPageCount computes how many pages to fetch given the reported
+// totalCount and the number of items the server actually returned on page 1.
+//
+// It keys off the effective first-page length rather than the requested
+// perpage, which keeps it correct across all three server behaviors:
+//   - honors perpage (firstPageLen == request): standard ceil(total/perpage);
+//   - caps perpage below the request (firstPageLen < request): pages are sized
+//     to what the server actually returned, so nothing is truncated;
+//   - ignores perpage and returns everything in one page (firstPageLen >=
+//     totalCount): a single page, so we never re-fetch and duplicate rows.
+//
+// The caller must fetch pages 2..N with perPage set to firstPageLen so the
+// server-side offsets line up with this page count.
+func serviceAccountPageCount(totalCount, firstPageLen int) int {
+	if firstPageLen <= 0 || firstPageLen >= totalCount {
+		return 1
 	}
+	return (totalCount + firstPageLen - 1) / firstPageLen
+}
 
-	// Fetch page 1 first to learn totalCount, then fan out remaining pages
-	// concurrently. The previous sequential loop was O(N) round trips on the
-	// critical path; this is O(N/pageFanout) for the same byte volume.
-	first, err := fetchServiceAccountPage(context.Background(), conn, 1)
+// fetchAllServiceAccounts fetches every service account across all pages of
+// /api/serviceaccounts/search. It fetches page 1 to learn totalCount, then fans
+// out the remaining pages concurrently. The previous sequential loop was O(N)
+// round trips on the critical path; this is O(N/pageFanout) for the same byte
+// volume. Pagination is planned off the effective first-page length (see
+// serviceAccountPageCount), so a server that caps or ignores perpage neither
+// truncates nor duplicates.
+func fetchAllServiceAccounts(ctx context.Context, conn *connection.GrafanaConnection) ([]grafanaServiceAccountJSON, error) {
+	first, err := fetchServiceAccountPage(ctx, conn, 1, serviceAccountPageSize)
 	if err != nil {
 		return nil, err
 	}
 
 	allSAs := first.ServiceAccounts
-	// Compute remaining pages from totalCount. Guard against a short first page
-	// (server returned all results in one call) before fanning out.
-	totalPages := 1
-	if first.TotalCount > serviceAccountPageSize && len(first.ServiceAccounts) >= serviceAccountPageSize {
-		totalPages = (first.TotalCount + serviceAccountPageSize - 1) / serviceAccountPageSize
-	}
+	// Subsequent pages must use the same effective size so offsets line up with
+	// the page count computed by serviceAccountPageCount.
+	effectivePerPage := len(first.ServiceAccounts)
+	totalPages := serviceAccountPageCount(first.TotalCount, effectivePerPage)
 	if totalPages > 1 {
 		pages := make([][]grafanaServiceAccountJSON, totalPages-1)
-		grp, ctx := errgroup.WithContext(context.Background())
+		grp, grpCtx := errgroup.WithContext(ctx)
 		grp.SetLimit(pageFanout)
 		for i := range totalPages - 1 {
 			page := i + 2 // pages 2..totalPages
 			grp.Go(func() error {
-				result, err := fetchServiceAccountPage(ctx, conn, page)
+				result, err := fetchServiceAccountPage(grpCtx, conn, page, effectivePerPage)
 				if err != nil {
 					return err
 				}
@@ -118,6 +135,19 @@ func (g *mqlGrafana) serviceAccounts() ([]interface{}, error) {
 		for _, p := range pages {
 			allSAs = append(allSAs, p...)
 		}
+	}
+	return allSAs, nil
+}
+
+func (g *mqlGrafana) serviceAccounts() ([]interface{}, error) {
+	conn, err := grafanaConnection(g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+
+	allSAs, err := fetchAllServiceAccounts(context.Background(), conn)
+	if err != nil {
+		return nil, err
 	}
 
 	list := make([]interface{}, 0, len(allSAs))
