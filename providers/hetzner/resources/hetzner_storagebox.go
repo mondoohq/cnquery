@@ -162,7 +162,7 @@ func (m *mqlHetznerStorageBox) snapshots() ([]any, error) {
 }
 
 func (r *mqlHetznerStorageBoxSubaccount) id() (string, error) {
-	return fmt.Sprintf("hetzner.storageBox.subaccount/%d", r.Id.Data), nil
+	return fmt.Sprintf("hetzner.storageBox.subaccount/%d/%d", r.StorageBoxId.Data, r.Id.Data), nil
 }
 
 func newMqlHetznerStorageBoxSubaccount(runtime *plugin.Runtime, storageBoxID int64, sa *hcloud.StorageBoxSubaccount) (*mqlHetznerStorageBoxSubaccount, error) {
@@ -175,7 +175,7 @@ func newMqlHetznerStorageBoxSubaccount(runtime *plugin.Runtime, storageBoxID int
 		webdav = sa.AccessSettings.WebDAVEnabled
 	}
 	res, err := CreateResource(runtime, "hetzner.storageBox.subaccount", map[string]*llx.RawData{
-		"__id":                llx.StringData(fmt.Sprintf("hetzner.storageBox.subaccount/%d", sa.ID)),
+		"__id":                llx.StringData(fmt.Sprintf("hetzner.storageBox.subaccount/%d/%d", storageBoxID, sa.ID)),
 		"id":                  llx.IntData(sa.ID),
 		"storageBoxId":        llx.IntData(storageBoxID),
 		"name":                llx.StringData(sa.Name),
@@ -198,12 +198,12 @@ func newMqlHetznerStorageBoxSubaccount(runtime *plugin.Runtime, storageBoxID int
 }
 
 func (r *mqlHetznerStorageBoxSnapshot) id() (string, error) {
-	return fmt.Sprintf("hetzner.storageBox.snapshot/%d", r.Id.Data), nil
+	return fmt.Sprintf("hetzner.storageBox.snapshot/%d/%d", r.StorageBoxId.Data, r.Id.Data), nil
 }
 
 func newMqlHetznerStorageBoxSnapshot(runtime *plugin.Runtime, storageBoxID int64, sn *hcloud.StorageBoxSnapshot) (*mqlHetznerStorageBoxSnapshot, error) {
 	res, err := CreateResource(runtime, "hetzner.storageBox.snapshot", map[string]*llx.RawData{
-		"__id":           llx.StringData(fmt.Sprintf("hetzner.storageBox.snapshot/%d", sn.ID)),
+		"__id":           llx.StringData(fmt.Sprintf("hetzner.storageBox.snapshot/%d/%d", storageBoxID, sn.ID)),
 		"id":             llx.IntData(sn.ID),
 		"storageBoxId":   llx.IntData(storageBoxID),
 		"name":           llx.StringData(sn.Name),

@@ -154,6 +154,25 @@ func timePtrUnix0(t time.Time) *time.Time {
 	return &t
 }
 
+// deprecationDict renders an hcloud DeprecationInfo as a dict with RFC3339
+// timestamp strings. Times are formatted to strings because the dict-to-
+// primitive converter only accepts bool/int64/float64/string/[]any/map values;
+// a raw time.Time would fail serialization when the field is queried. Returns an
+// empty dict when the resource is not deprecated.
+func deprecationDict(d *hcloud.DeprecationInfo) map[string]any {
+	out := map[string]any{}
+	if d == nil {
+		return out
+	}
+	if !d.Announced.IsZero() {
+		out["announced"] = d.Announced.Format(time.RFC3339)
+	}
+	if !d.UnavailableAfter.IsZero() {
+		out["unavailableAfter"] = d.UnavailableAfter.Format(time.RFC3339)
+	}
+	return out
+}
+
 func dnsPtrSliceFromMap(m map[string]string) []any {
 	if len(m) == 0 {
 		return []any{}

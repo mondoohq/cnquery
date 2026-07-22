@@ -83,11 +83,7 @@ func newMqlHetznerServerTypeLocation(runtime *plugin.Runtime, serverTypeID int64
 	if stl.Location != nil {
 		locationID = stl.Location.ID
 	}
-	dep := map[string]any{}
-	if stl.Deprecation != nil {
-		dep["announced"] = stl.Deprecation.Announced
-		dep["unavailableAfter"] = stl.Deprecation.UnavailableAfter
-	}
+	dep := deprecationDict(stl.Deprecation)
 	res, err := CreateResource(runtime, "hetzner.serverType.location", map[string]*llx.RawData{
 		"__id":         llx.StringData(fmt.Sprintf("hetzner.serverType.location/%d/%d", serverTypeID, locationID)),
 		"serverTypeId": llx.IntData(serverTypeID),

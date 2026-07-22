@@ -193,23 +193,32 @@ func (r *mqlHetznerLoadBalancerService) id() (string, error) {
 	return fmt.Sprintf("hetzner.loadBalancer/%d/service/%d", r.LoadBalancerId.Data, r.ListenPort.Data), nil
 }
 
-func newMqlHetznerLoadBalancerService(runtime *plugin.Runtime, lbID int64, s hcloud.LoadBalancerService) (*mqlHetznerLoadBalancerService, error) {
-	hc := map[string]any{
-		"protocol": string(s.HealthCheck.Protocol),
-		"port":     s.HealthCheck.Port,
-		"interval": s.HealthCheck.Interval.Seconds(),
-		"timeout":  s.HealthCheck.Timeout.Seconds(),
-		"retries":  s.HealthCheck.Retries,
+// loadBalancerHealthCheckDict renders a service health check as a dict. Port and
+// Retries are hcloud `int` fields, so they are widened to int64: the dict-to-
+// primitive converter only accepts int64 (a raw int fails serialization when the
+// healthCheck field is queried).
+func loadBalancerHealthCheckDict(hc hcloud.LoadBalancerServiceHealthCheck) map[string]any {
+	out := map[string]any{
+		"protocol": string(hc.Protocol),
+		"port":     int64(hc.Port),
+		"interval": hc.Interval.Seconds(),
+		"timeout":  hc.Timeout.Seconds(),
+		"retries":  int64(hc.Retries),
 	}
-	if s.HealthCheck.HTTP != nil {
-		hc["http"] = map[string]any{
-			"domain":      s.HealthCheck.HTTP.Domain,
-			"path":        s.HealthCheck.HTTP.Path,
-			"response":    s.HealthCheck.HTTP.Response,
-			"statusCodes": stringSlice(s.HealthCheck.HTTP.StatusCodes),
-			"tls":         s.HealthCheck.HTTP.TLS,
+	if hc.HTTP != nil {
+		out["http"] = map[string]any{
+			"domain":      hc.HTTP.Domain,
+			"path":        hc.HTTP.Path,
+			"response":    hc.HTTP.Response,
+			"statusCodes": stringSlice(hc.HTTP.StatusCodes),
+			"tls":         hc.HTTP.TLS,
 		}
 	}
+	return out
+}
+
+func newMqlHetznerLoadBalancerService(runtime *plugin.Runtime, lbID int64, s hcloud.LoadBalancerService) (*mqlHetznerLoadBalancerService, error) {
+	hc := loadBalancerHealthCheckDict(s.HealthCheck)
 
 	http := map[string]any{
 		"cookieName":     s.HTTP.CookieName,
@@ -274,14 +283,22 @@ func (r *mqlHetznerLoadBalancerTarget) id() (string, error) {
 	return fmt.Sprintf("hetzner.loadBalancer/%d/target/%s", r.LoadBalancerId.Data, key), nil
 }
 
-func newMqlHetznerLoadBalancerTarget(runtime *plugin.Runtime, lbID int64, idx int, t hcloud.LoadBalancerTarget) (*mqlHetznerLoadBalancerTarget, error) {
-	healthStatus := make([]any, 0, len(t.HealthStatus))
-	for _, hs := range t.HealthStatus {
-		healthStatus = append(healthStatus, map[string]any{
-			"listenPort": hs.ListenPort,
+// loadBalancerHealthStatusDicts renders a target's per-listener health status as
+// dicts. ListenPort is an hcloud `int`, widened to int64 so the healthStatus
+// []dict field serializes (a raw int fails the dict-to-primitive converter).
+func loadBalancerHealthStatusDicts(statuses []hcloud.LoadBalancerTargetHealthStatus) []any {
+	out := make([]any, 0, len(statuses))
+	for _, hs := range statuses {
+		out = append(out, map[string]any{
+			"listenPort": int64(hs.ListenPort),
 			"status":     string(hs.Status),
 		})
 	}
+	return out
+}
+
+func newMqlHetznerLoadBalancerTarget(runtime *plugin.Runtime, lbID int64, idx int, t hcloud.LoadBalancerTarget) (*mqlHetznerLoadBalancerTarget, error) {
+	healthStatus := loadBalancerHealthStatusDicts(t.HealthStatus)
 
 	labelSelector := ""
 	if t.LabelSelector != nil {

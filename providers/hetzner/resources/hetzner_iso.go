@@ -35,11 +35,7 @@ func (h *mqlHetzner) isos() ([]any, error) {
 }
 
 func newMqlHetznerIso(runtime *plugin.Runtime, iso *hcloud.ISO) (*mqlHetznerIso, error) {
-	dep := map[string]any{}
-	if iso.Deprecation != nil {
-		dep["announced"] = iso.Deprecation.Announced
-		dep["unavailableAfter"] = iso.Deprecation.UnavailableAfter
-	}
+	dep := deprecationDict(iso.Deprecation)
 	arch := ""
 	if iso.Architecture != nil {
 		arch = string(*iso.Architecture)
