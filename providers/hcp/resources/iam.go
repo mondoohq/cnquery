@@ -6,6 +6,7 @@ package resources
 import (
 	sp_service "github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/client/service_principals_service"
 	iammodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/models"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
@@ -29,6 +30,13 @@ func (r *mqlHcpOrganization) servicePrincipals() ([]any, error) {
 		params.PaginationNextPageToken = nextToken
 		resp, err := client.ServicePrincipalsServiceListOrganizationServicePrincipals(params, nil)
 		if err != nil {
+			// The service principal may lack IAM read permission on the org;
+			// degrade to no principals (with a warning) rather than failing the
+			// whole query.
+			if isServiceUnavailable(err) {
+				log.Warn().Str("org", r.Id.Data).Msg("hcp: cannot list organization service principals (permission denied)")
+				return out, nil
+			}
 			return nil, err
 		}
 		if resp.Payload == nil {
@@ -68,6 +76,13 @@ func (r *mqlHcpProject) servicePrincipals() ([]any, error) {
 		params.PaginationNextPageToken = nextToken
 		resp, err := client.ServicePrincipalsServiceListProjectServicePrincipals(params, nil)
 		if err != nil {
+			// The service principal may lack IAM read permission on the project;
+			// degrade to no principals (with a warning) rather than failing the
+			// whole query.
+			if isServiceUnavailable(err) {
+				log.Warn().Str("project", r.Id.Data).Msg("hcp: cannot list project service principals (permission denied)")
+				return out, nil
+			}
 			return nil, err
 		}
 		if resp.Payload == nil {
