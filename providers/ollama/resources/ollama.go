@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -81,16 +82,17 @@ func ollamaModelArgs(m api.ListModelResponse) map[string]*llx.RawData {
 // (size, modifiedAt, digest, ...) rather than placeholder values. Models
 // created directly via ollama.models carry a digest and skip this path.
 func initOllamaModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// Created directly with full metadata (carries a digest); nothing to resolve.
 	if _, ok := args["digest"]; ok {
 		return args, nil, nil
 	}
 	nameRaw, ok := args["name"]
 	if !ok {
-		return args, nil, nil
+		return nil, nil, errors.New("ollama.model init requires a name or digest")
 	}
 	name, ok := nameRaw.Value.(string)
 	if !ok || name == "" {
-		return args, nil, nil
+		return nil, nil, errors.New("ollama.model init requires a non-empty name")
 	}
 
 	// Reuse an already-listed model instead of calling the API again.
