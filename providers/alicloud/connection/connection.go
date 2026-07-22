@@ -166,6 +166,29 @@ func (c *AlicloudConnection) AccountID() string {
 	return c.accountID
 }
 
+// ScopedObject returns the object id and region a discovered child asset is
+// pinned to for the given scope option (OptionClusterID, OptionAlbID, ...). Fine-
+// grained discovery stamps the object id under the scope key and the object's
+// region under OptionRegions, so a singular resource's init can resolve itself
+// from the connection when invoked with no identifying arguments. ok is false on
+// the account root asset (or any asset not scoped to this kind of object), where
+// callers must fall back to explicit arguments.
+func (c *AlicloudConnection) ScopedObject(option string) (id, region string, ok bool) {
+	if c.Conf == nil || c.Conf.Options == nil {
+		return "", "", false
+	}
+	id = c.Conf.Options[option]
+	if id == "" {
+		return "", "", false
+	}
+	if len(c.regionFilter) > 0 {
+		region = c.regionFilter[0]
+	} else {
+		region = c.region
+	}
+	return id, region, true
+}
+
 func firstNonEmpty(vals ...string) string {
 	for _, v := range vals {
 		if v != "" {

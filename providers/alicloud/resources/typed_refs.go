@@ -86,6 +86,7 @@ func initAlicloudVpcNetwork(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	if len(args) > 2 {
 		return args, nil, nil
 	}
+	args = scopedInitArgs(runtime, args, connection.OptionVpcID, "vpcId")
 
 	vpcID, err := requiredStringArg(args, "vpcId", "alicloud.vpc.network")
 	if err != nil {
@@ -277,6 +278,30 @@ func initAlicloudVpcNetworkAcl(runtime *plugin.Runtime, args map[string]*llx.Raw
 
 // requiredStringArg reads a required non-empty string argument from an init
 // args map, returning a descriptive error when it is missing or blank.
+// scopedInitArgs backfills a singular resource's identifying arguments from the
+// connection scope when the resource is invoked bare (no arguments) on a
+// discovered child asset. Fine-grained discovery pins the object id under
+// scopeOption and its region under OptionRegions, so `alicloud.cs.cluster` (and
+// the ALB/NLB/VPC/WAF equivalents) resolve to the asset they are scanned against
+// without the caller naming an id. When the caller supplied arguments, or the
+// asset is not scoped to this object kind (for example the account root), the
+// original args are returned unchanged and the resource's normal by-id lookup or
+// required-argument error applies.
+func scopedInitArgs(runtime *plugin.Runtime, args map[string]*llx.RawData, scopeOption, idField string) map[string]*llx.RawData {
+	if len(args) != 0 {
+		return args
+	}
+	conn := runtime.Connection.(*connection.AlicloudConnection)
+	id, region, ok := conn.ScopedObject(scopeOption)
+	if !ok {
+		return args
+	}
+	return map[string]*llx.RawData{
+		idField:    llx.StringData(id),
+		"regionId": llx.StringData(region),
+	}
+}
+
 func requiredStringArg(args map[string]*llx.RawData, name, resource string) (string, error) {
 	raw, ok := args[name]
 	if !ok {

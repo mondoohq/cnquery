@@ -213,6 +213,7 @@ func initAlicloudCsCluster(runtime *plugin.Runtime, args map[string]*llx.RawData
 	if len(args) > 2 {
 		return args, nil, nil
 	}
+	args = scopedInitArgs(runtime, args, connection.OptionClusterID, "clusterId")
 
 	clusterID, err := requiredStringArg(args, "clusterId", "alicloud.cs.cluster")
 	if err != nil {

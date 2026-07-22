@@ -72,6 +72,62 @@ func (r *mqlAlicloudVpc) flowLogs() ([]any, error) {
 	return res, nil
 }
 
+// flowLogs lists the flow logs whose monitored resource is this VPC, in the
+// VPC's region. It backs alicloud.vpc.network.flowLogs so a VPC-scoped asset can
+// assert its own flow-log coverage without scanning the whole account. vSwitch-
+// and ENI-scoped flow logs are excluded by filtering the request on this VPC id.
+func (r *mqlAlicloudVpcNetwork) flowLogs() ([]any, error) {
+	if r.cacheVpcID == "" || r.cacheRegion == "" {
+		return []any{}, nil
+	}
+	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.VpcClient(r.cacheRegion)
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	pageNumber := int32(1)
+	pageSize := int32(50)
+	for {
+		resp, err := client.DescribeFlowLogs(&vpcclient.DescribeFlowLogsRequest{
+			RegionId:     tea.String(r.cacheRegion),
+			ResourceType: tea.String("VPC"),
+			ResourceId:   tea.String(r.cacheVpcID),
+			PageNumber:   tea.Int32(pageNumber),
+			PageSize:     tea.Int32(pageSize),
+		})
+		if err != nil {
+			return nil, err
+		}
+		if resp == nil || resp.Body == nil || resp.Body.FlowLogs == nil {
+			break
+		}
+
+		items := resp.Body.FlowLogs.FlowLog
+		for _, fl := range items {
+			if fl == nil || fl.FlowLogId == nil {
+				continue
+			}
+			mqlFlowLog, err := newVpcFlowLog(r.MqlRuntime, r.cacheRegion, fl)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlFlowLog)
+		}
+
+		total := 0
+		if resp.Body.TotalCount != nil {
+			total, _ = strconv.Atoi(*resp.Body.TotalCount)
+		}
+		if len(items) < int(pageSize) || (total > 0 && int(pageNumber)*int(pageSize) >= total) {
+			break
+		}
+		pageNumber++
+	}
+	return res, nil
+}
+
 // newVpcFlowLog builds a fully populated alicloud.vpc.flowLog from a
 // DescribeFlowLogs item within a region.
 func newVpcFlowLog(runtime *plugin.Runtime, region string, fl *vpcclient.DescribeFlowLogsResponseBodyFlowLogsFlowLog) (*mqlAlicloudVpcFlowLog, error) {

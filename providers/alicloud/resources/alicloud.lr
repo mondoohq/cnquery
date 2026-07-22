@@ -681,6 +681,12 @@ alicloud.vpc.network {
   natGateways() []alicloud.vpc.natGateway
   // Route tables associated with the VPC
   routeTables() []alicloud.vpc.routeTable
+  // Flow logs monitoring this VPC
+  //
+  // Flow logs whose monitored resource is the VPC itself. A flow log only
+  // captures traffic while its status is Active. Flow logs scoped to a vSwitch
+  // or an elastic network interface inside the VPC are not included.
+  flowLogs() []alicloud.vpc.flowLog
   // DNS hostname feature status
   //
   // Indicates whether the DNS hostname feature is enabled, for example ENABLED

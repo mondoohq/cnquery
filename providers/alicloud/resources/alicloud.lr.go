@@ -382,7 +382,7 @@ func init() {
 			Create: createAlicloudWaf,
 		},
 		"alicloud.waf.instance": {
-			// to override args, implement: initAlicloudWafInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAlicloudWafInstance,
 			Create: createAlicloudWafInstance,
 		},
 		"alicloud.waf.defenseResource": {
@@ -1135,6 +1135,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.vpc.network.routeTables": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudVpcNetwork).GetRouteTables()).ToDataRes(types.Array(types.Resource("alicloud.vpc.routeTable")))
+	},
+	"alicloud.vpc.network.flowLogs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcNetwork).GetFlowLogs()).ToDataRes(types.Array(types.Resource("alicloud.vpc.flowLog")))
 	},
 	"alicloud.vpc.network.dnsHostnameStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudVpcNetwork).GetDnsHostnameStatus()).ToDataRes(types.String)
@@ -4799,6 +4802,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.vpc.network.routeTables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudVpcNetwork).RouteTables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.network.flowLogs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcNetwork).FlowLogs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"alicloud.vpc.network.dnsHostnameStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10802,6 +10809,7 @@ type mqlAlicloudVpcNetwork struct {
 	Vswitches            plugin.TValue[[]any]
 	NatGateways          plugin.TValue[[]any]
 	RouteTables          plugin.TValue[[]any]
+	FlowLogs             plugin.TValue[[]any]
 	DnsHostnameStatus    plugin.TValue[string]
 	DhcpOptionsSetId     plugin.TValue[string]
 	DhcpOptionsSetStatus plugin.TValue[string]
@@ -10952,6 +10960,22 @@ func (c *mqlAlicloudVpcNetwork) GetRouteTables() *plugin.TValue[[]any] {
 		}
 
 		return c.routeTables()
+	})
+}
+
+func (c *mqlAlicloudVpcNetwork) GetFlowLogs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FlowLogs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.vpc.network", c.__id, "flowLogs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.flowLogs()
 	})
 }
 

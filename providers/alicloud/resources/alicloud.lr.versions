@@ -1097,6 +1097,7 @@ alicloud.vpc.network.dhcpOptionsSetId 13.0.0
 alicloud.vpc.network.dhcpOptionsSetStatus 13.0.0
 alicloud.vpc.network.dnsHostnameStatus 13.0.0
 alicloud.vpc.network.enabledIpv6 13.0.0
+alicloud.vpc.network.flowLogs 13.2.1
 alicloud.vpc.network.ipv6CidrBlock 13.0.0
 alicloud.vpc.network.ipv6CidrBlocks 13.0.0
 alicloud.vpc.network.isDefault 13.0.0

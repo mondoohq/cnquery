@@ -8,7 +8,50 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 )
+
+func TestScopedObject(t *testing.T) {
+	t.Run("resolves id and region from a discovered child asset", func(t *testing.T) {
+		c := &AlicloudConnection{
+			Conf: &inventory.Config{Options: map[string]string{
+				OptionClusterID: "c123",
+				OptionRegions:   "cn-hangzhou",
+			}},
+			regionFilter: []string{"cn-hangzhou"},
+			region:       DefaultRegion,
+		}
+		id, region, ok := c.ScopedObject(OptionClusterID)
+		assert.True(t, ok)
+		assert.Equal(t, "c123", id)
+		assert.Equal(t, "cn-hangzhou", region)
+	})
+
+	t.Run("not scoped when the option is absent (account root)", func(t *testing.T) {
+		c := &AlicloudConnection{Conf: &inventory.Config{Options: map[string]string{}}}
+		id, region, ok := c.ScopedObject(OptionAlbID)
+		assert.False(t, ok)
+		assert.Empty(t, id)
+		assert.Empty(t, region)
+	})
+
+	t.Run("falls back to the default region when no region filter is set", func(t *testing.T) {
+		c := &AlicloudConnection{
+			Conf:   &inventory.Config{Options: map[string]string{OptionWafInstanceID: "waf-1"}},
+			region: "cn-shanghai",
+		}
+		id, region, ok := c.ScopedObject(OptionWafInstanceID)
+		assert.True(t, ok)
+		assert.Equal(t, "waf-1", id)
+		assert.Equal(t, "cn-shanghai", region)
+	})
+
+	t.Run("not scoped when options are nil", func(t *testing.T) {
+		c := &AlicloudConnection{Conf: &inventory.Config{}}
+		_, _, ok := c.ScopedObject(OptionVpcID)
+		assert.False(t, ok)
+	})
+}
 
 func TestFirstNonEmpty(t *testing.T) {
 	assert.Equal(t, "", firstNonEmpty())

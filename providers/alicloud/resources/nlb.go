@@ -151,6 +151,7 @@ func initAlicloudNlbLoadBalancer(runtime *plugin.Runtime, args map[string]*llx.R
 	if len(args) > 2 {
 		return args, nil, nil
 	}
+	args = scopedInitArgs(runtime, args, connection.OptionNlbID, "loadBalancerId")
 	lbID, err := requiredStringArg(args, "loadBalancerId", "alicloud.nlb.loadBalancer")
 	if err != nil {
 		return nil, nil, err

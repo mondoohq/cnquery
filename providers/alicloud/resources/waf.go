@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"errors"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -88,6 +90,46 @@ func newWafInstance(runtime *plugin.Runtime, region string, body *wafclient.Desc
 	mqlInstance.region = region
 	mqlInstance.instanceId = instanceID
 	return mqlInstance, nil
+}
+
+// initAlicloudWafInstance resolves the WAF instance for a discovered
+// alicloud-waf-instance asset when the resource is invoked bare. WAF exposes one
+// instance per region and DescribeInstance takes no instance id, so the lookup
+// is keyed solely on the scoped region; there is no by-id form. On any other
+// asset the resource is only constructed from the alicloud.waf.instances list.
+func initAlicloudWafInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) != 0 {
+		return args, nil, nil
+	}
+
+	conn := runtime.Connection.(*connection.AlicloudConnection)
+	instanceID, region, ok := conn.ScopedObject(connection.OptionWafInstanceID)
+	if !ok {
+		return nil, nil, errors.New("alicloud.waf.instance is only available on a discovered WAF instance asset; use alicloud.waf.instances to enumerate them")
+	}
+
+	if x, ok := runtime.Resources.Get("alicloud.waf.instance\x00" + region + "/" + instanceID); ok {
+		return nil, x, nil
+	}
+
+	client, err := conn.WafClient(region)
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.DescribeInstance(&wafclient.DescribeInstanceRequest{
+		RegionId: tea.String(region),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	if resp == nil || resp.Body == nil || tea.StringValue(resp.Body.InstanceId) == "" {
+		return nil, nil, fmt.Errorf("alicloud.waf.instance %q not found in region %q", instanceID, region)
+	}
+	res, err := newWafInstance(runtime, region, resp.Body)
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, res, nil
 }
 
 func (r *mqlAlicloudWafInstance) id() (string, error) {
