@@ -33,7 +33,7 @@ openai @defaults("organization") @maturity("preview") {
   users() []openai.organizationUser
   // Pending invites (requires admin API key)
   invites() []openai.invite
-  // Audit log entries (requires admin API key)
+  // Audit log entries from the last 30 days (requires admin API key)
   auditLogs() []openai.auditLog
 }
 
@@ -317,9 +317,9 @@ openai.invite @defaults("id email status") @maturity("preview") {
 // organization, such as API key creation, project updates, login events,
 // and role changes. Query these entries to monitor security-relevant
 // activity, detect unauthorized changes, and support compliance
-// requirements. The `type` field identifies the recorded event and
-// `actorType` distinguishes whether a user session or an API key
-// performed it.
+// requirements. The collection covers the last 30 days of activity. The
+// `type` field identifies the recorded event and `actorType` distinguishes
+// whether a user session or an API key performed it.
 openai.auditLog @defaults("id type effectiveAt") @maturity("preview") {
   // Log entry identifier
   id string

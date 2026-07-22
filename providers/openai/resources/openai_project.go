@@ -67,7 +67,12 @@ func (r *mqlOpenaiProject) apiKeys() ([]any, error) {
 	for iter.Next() {
 		k := iter.Current()
 		created := unixToTime(k.CreatedAt)
-		lastUsed := unixToTime(k.LastUsedAt)
+
+		var lastUsedAt *time.Time
+		if k.LastUsedAt != 0 {
+			t := unixToTime(k.LastUsedAt)
+			lastUsedAt = &t
+		}
 
 		ownerType := k.Owner.Type
 		var ownerName, ownerId string
@@ -86,7 +91,7 @@ func (r *mqlOpenaiProject) apiKeys() ([]any, error) {
 			"name":          llx.StringData(k.Name),
 			"redactedValue": llx.StringData(k.RedactedValue),
 			"createdAt":     llx.TimeData(created),
-			"lastUsedAt":    llx.TimeData(lastUsed),
+			"lastUsedAt":    llx.TimeDataPtr(lastUsedAt),
 			"ownerType":     llx.StringData(ownerType),
 			"ownerName":     llx.StringData(ownerName),
 			"ownerId":       llx.StringData(ownerId),
