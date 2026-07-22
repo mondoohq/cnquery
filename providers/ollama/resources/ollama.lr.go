@@ -31,7 +31,7 @@ func init() {
 			Create: createOllama,
 		},
 		"ollama.model": {
-			// to override args, implement: initOllamaModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOllamaModel,
 			Create: createOllamaModel,
 		},
 		"ollama.model.info": {
@@ -876,7 +876,7 @@ func (c *mqlOllamaModelInfo) GetTokenizerModel() *plugin.TValue[string] {
 type mqlOllamaRunningModel struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlOllamaRunningModelInternal
+	// optional: if you define mqlOllamaRunningModelInternal it will be used here
 	Name          plugin.TValue[string]
 	Model         plugin.TValue[*mqlOllamaModel]
 	ExpiresAt     plugin.TValue[*time.Time]

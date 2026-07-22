@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/ollama/ollama/api"
 	"go.mondoo.com/mql/v13/llx"
@@ -40,25 +39,7 @@ func (r *mqlOllama) models() ([]interface{}, error) {
 
 	res := make([]interface{}, 0, len(resp.Models))
 	for _, m := range resp.Models {
-		families := make([]interface{}, len(m.Details.Families))
-		for i, f := range m.Details.Families {
-			families[i] = f
-		}
-
-		mqlModel, err := CreateResource(r.MqlRuntime, "ollama.model", map[string]*llx.RawData{
-			"__id":              llx.StringData(m.Digest),
-			"name":              llx.StringData(m.Name),
-			"model":             llx.StringData(m.Model),
-			"modifiedAt":        llx.TimeData(m.ModifiedAt),
-			"size":              llx.IntData(m.Size),
-			"digest":            llx.StringData(m.Digest),
-			"format":            llx.StringData(m.Details.Format),
-			"family":            llx.StringData(m.Details.Family),
-			"families":          llx.ArrayData(families, types.String),
-			"parameterSize":     llx.StringData(m.Details.ParameterSize),
-			"quantizationLevel": llx.StringData(m.Details.QuantizationLevel),
-			"parentModel":       llx.StringData(m.Details.ParentModel),
-		})
+		mqlModel, err := CreateResource(r.MqlRuntime, "ollama.model", ollamaModelArgs(m))
 		if err != nil {
 			return nil, err
 		}
@@ -66,6 +47,69 @@ func (r *mqlOllama) models() ([]interface{}, error) {
 	}
 
 	return res, nil
+}
+
+// ollamaModelArgs builds the full set of resource args for an installed model.
+// The name is the stable, unique identifier a user selects by, so it is used as
+// the cache key. The digest is not unique: aliased tags (e.g. "llama3.1:latest"
+// and "llama3.1:8b") share one manifest digest, so keying on it would collapse
+// distinct models into a single cached resource.
+func ollamaModelArgs(m api.ListModelResponse) map[string]*llx.RawData {
+	families := make([]interface{}, len(m.Details.Families))
+	for i, f := range m.Details.Families {
+		families[i] = f
+	}
+
+	return map[string]*llx.RawData{
+		"__id":              llx.StringData(m.Name),
+		"name":              llx.StringData(m.Name),
+		"model":             llx.StringData(m.Model),
+		"modifiedAt":        llx.TimeData(m.ModifiedAt),
+		"size":              llx.IntData(m.Size),
+		"digest":            llx.StringData(m.Digest),
+		"format":            llx.StringData(m.Details.Format),
+		"family":            llx.StringData(m.Details.Family),
+		"families":          llx.ArrayData(families, types.String),
+		"parameterSize":     llx.StringData(m.Details.ParameterSize),
+		"quantizationLevel": llx.StringData(m.Details.QuantizationLevel),
+		"parentModel":       llx.StringData(m.Details.ParentModel),
+	}
+}
+
+// initOllamaModel resolves an installed model from just its name, so a
+// cross-reference like ollama.runningModel.model returns full, real metadata
+// (size, modifiedAt, digest, ...) rather than placeholder values. Models
+// created directly via ollama.models carry a digest and skip this path.
+func initOllamaModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if _, ok := args["digest"]; ok {
+		return args, nil, nil
+	}
+	nameRaw, ok := args["name"]
+	if !ok {
+		return args, nil, nil
+	}
+	name, ok := nameRaw.Value.(string)
+	if !ok || name == "" {
+		return args, nil, nil
+	}
+
+	// Reuse an already-listed model instead of calling the API again.
+	if x, ok := runtime.Resources.Get("ollama.model\x00" + name); ok {
+		return nil, x, nil
+	}
+
+	conn := ollamaConn(runtime)
+	resp, err := conn.Client().List(context.Background())
+	if err != nil {
+		return nil, nil, err
+	}
+	for _, m := range resp.Models {
+		if m.Name == name {
+			return ollamaModelArgs(m), nil, nil
+		}
+	}
+
+	return nil, nil, fmt.Errorf("ollama model %q not found", name)
 }
 
 func (r *mqlOllama) runningModels() ([]interface{}, error) {
@@ -80,7 +124,7 @@ func (r *mqlOllama) runningModels() ([]interface{}, error) {
 	res := make([]interface{}, 0, len(resp.Models))
 	for _, m := range resp.Models {
 		mqlRunning, err := CreateResource(r.MqlRuntime, "ollama.runningModel", map[string]*llx.RawData{
-			"__id":          llx.StringData("running/" + m.Digest),
+			"__id":          llx.StringData("running/" + m.Name),
 			"name":          llx.StringData(m.Name),
 			"expiresAt":     llx.TimeData(m.ExpiresAt),
 			"sizeVram":      llx.IntData(m.SizeVRAM),
@@ -89,10 +133,6 @@ func (r *mqlOllama) runningModels() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-
-		rm := mqlRunning.(*mqlOllamaRunningModel)
-		rm.cacheDigest = m.Digest
-		rm.cacheDetails = m.Details
 
 		res = append(res, mqlRunning)
 	}
@@ -128,7 +168,7 @@ func (r *mqlOllamaModel) fetchShow() (*api.ShowResponse, error) {
 }
 
 func (r *mqlOllamaModel) id() (string, error) {
-	return r.Digest.Data, nil
+	return r.Name.Data, nil
 }
 
 func (r *mqlOllamaModel) license() (string, error) {
@@ -189,7 +229,7 @@ func (r *mqlOllamaModel) info() (*mqlOllamaModelInfo, error) {
 	datasets := getStringSlice(mi, "general.datasets")
 
 	res, err := CreateResource(r.MqlRuntime, "ollama.model.info", map[string]*llx.RawData{
-		"__id":              llx.StringData(r.Digest.Data + "/info"),
+		"__id":              llx.StringData(r.Name.Data + "/info"),
 		"architecture":      llx.StringData(arch),
 		"basename":          llx.StringData(getString(mi, "general.basename")),
 		"finetune":          llx.StringData(getString(mi, "general.finetune")),
@@ -265,34 +305,13 @@ func (r *mqlOllamaModelInfo) id() (string, error) {
 	return r.Architecture.Data + "/" + r.Basename.Data + "/" + r.SizeLabel.Data, nil
 }
 
-type mqlOllamaRunningModelInternal struct {
-	cacheDigest  string
-	cacheDetails api.ModelDetails
-}
-
 func (r *mqlOllamaRunningModel) id() (string, error) {
-	return "running/" + r.cacheDigest, nil
+	return "running/" + r.Name.Data, nil
 }
 
 func (r *mqlOllamaRunningModel) model() (*mqlOllamaModel, error) {
-	families := make([]interface{}, len(r.cacheDetails.Families))
-	for i, f := range r.cacheDetails.Families {
-		families[i] = f
-	}
-
 	res, err := NewResource(r.MqlRuntime, "ollama.model", map[string]*llx.RawData{
-		"__id":              llx.StringData(r.cacheDigest),
-		"name":              llx.StringData(r.GetName().Data),
-		"model":             llx.StringData(r.GetName().Data),
-		"modifiedAt":        llx.TimeData(time.Time{}),
-		"size":              llx.IntData(0),
-		"digest":            llx.StringData(r.cacheDigest),
-		"format":            llx.StringData(r.cacheDetails.Format),
-		"family":            llx.StringData(r.cacheDetails.Family),
-		"families":          llx.ArrayData(families, types.String),
-		"parameterSize":     llx.StringData(r.cacheDetails.ParameterSize),
-		"quantizationLevel": llx.StringData(r.cacheDetails.QuantizationLevel),
-		"parentModel":       llx.StringData(r.cacheDetails.ParentModel),
+		"name": llx.StringData(r.GetName().Data),
 	})
 	if err != nil {
 		return nil, err
