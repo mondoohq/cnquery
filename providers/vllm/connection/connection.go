@@ -485,6 +485,30 @@ func ObservationAnonymousAccessible(obs EndpointObservation) (bool, bool) {
 	}
 }
 
+// CategoryAnonymousAccessible aggregates the anonymous-access verdict across all
+// observations in a functional category. It returns (true, true) as soon as any
+// endpoint in the category is anonymously accessible; otherwise it returns
+// (false, true) when at least one endpoint had a known verdict, and
+// (false, false) when every endpoint in the category was unknown (so the caller
+// can report null rather than a misleading "not exposed").
+func CategoryAnonymousAccessible(observations []EndpointObservation, category string) (bool, bool) {
+	known := false
+	for _, obs := range observations {
+		if obs.Spec.Category != category {
+			continue
+		}
+		accessible, ok := ObservationAnonymousAccessible(obs)
+		if !ok {
+			continue
+		}
+		known = true
+		if accessible {
+			return true, true
+		}
+	}
+	return false, known
+}
+
 func ObservationRequiresAuth(obs EndpointObservation) (bool, bool) {
 	if obs.AnonymousStatusCode == nil || *obs.AnonymousStatusCode == http.StatusNotFound || *obs.AnonymousStatusCode >= 500 {
 		return false, false

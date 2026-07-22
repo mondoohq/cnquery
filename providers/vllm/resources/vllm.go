@@ -111,7 +111,7 @@ func (r *mqlVllm) models() ([]any, error) {
 			"root":        llx.StringData(c.Root),
 			"parent":      llx.StringData(c.Parent),
 			"maxModelLen": llx.IntData(c.MaxModelLen),
-			"created":     llx.TimeData(time.Unix(c.Created, 0)),
+			"created":     llx.TimeDataPtr(modelCreatedTime(c.Created)),
 			"ownedBy":     llx.StringData(c.OwnedBy),
 		})
 		if err != nil {
@@ -121,6 +121,17 @@ func (r *mqlVllm) models() ([]any, error) {
 	}
 
 	return res, nil
+}
+
+// modelCreatedTime converts a vLLM model card's Unix creation timestamp into a
+// time pointer, returning nil when the server did not report one (a zero value)
+// so the field resolves to null instead of the Unix epoch.
+func modelCreatedTime(unix int64) *time.Time {
+	if unix <= 0 {
+		return nil
+	}
+	t := time.Unix(unix, 0)
+	return &t
 }
 
 func (r *mqlVllmModel) id() (string, error) {
@@ -283,7 +294,12 @@ func initVllmEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 		args["method"] = llx.StringData(http.MethodGet)
 	}
 	if method, ok := args["method"]; ok {
-		args["method"] = llx.StringData(strings.ToUpper(method.Value.(string)))
+		raw, isString := method.Value.(string)
+		if !isString || raw == "" {
+			args["method"] = llx.StringData(http.MethodGet)
+		} else {
+			args["method"] = llx.StringData(strings.ToUpper(raw))
+		}
 	}
 	return args, nil, nil
 }
@@ -454,21 +470,8 @@ func categoryAnonymousAccessibleKnown(runtime *plugin.Runtime, category string) 
 	if err != nil {
 		return false, false, err
 	}
-	knownCount := 0
-	for _, obs := range observations {
-		if obs.Spec.Category != category {
-			continue
-		}
-		accessible, known := connection.ObservationAnonymousAccessible(obs)
-		if !known {
-			continue
-		}
-		knownCount++
-		if accessible {
-			return true, true, nil
-		}
-	}
-	return false, knownCount > 0, nil
+	accessible, known := connection.CategoryAnonymousAccessible(observations, category)
+	return accessible, known, nil
 }
 
 func endpointObservation(runtime *plugin.Runtime, method string, path string) (connection.EndpointObservation, error) {
