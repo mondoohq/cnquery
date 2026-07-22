@@ -242,7 +242,12 @@ func (r *mqlHuggingface) spaces() ([]any, error) {
 func (r *mqlHuggingface) webhooks() ([]any, error) {
 	client := hfConn(r.MqlRuntime).Client()
 
-	webhookList, err := client.ListWebhooks(context.Background(), nil)
+	// Match the high page size used by the other collections so accounts with
+	// many webhooks are not silently truncated to the 20-item default.
+	opts := hfmodels.NewWebhookListOptions()
+	opts.Limit = 1000
+
+	webhookList, err := client.ListWebhooks(context.Background(), opts)
 	if isAccessDenied(err) {
 		return []any{}, nil
 	}
@@ -424,11 +429,11 @@ func initHuggingfaceModel(runtime *plugin.Runtime, args map[string]*llx.RawData)
 
 	idRaw, ok := args["id"]
 	if !ok || idRaw == nil || idRaw.Value == nil {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("huggingface.model requires an 'id' (for example \"owner/model\")")
 	}
 	modelID, ok := idRaw.Value.(string)
 	if !ok || modelID == "" {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("huggingface.model 'id' must be a non-empty string")
 	}
 
 	modelID, err := normalizeModelID(modelID)
@@ -495,6 +500,11 @@ func (r *mqlHuggingfaceModel) id() (string, error) {
 func (r *mqlHuggingfaceModel) author() (string, error) {
 	if r.listAuthor != "" {
 		return r.listAuthor, nil
+	}
+	// The author is the owner segment of the "owner/name" ID; derive it
+	// directly to avoid a per-model detail fetch (the list API omits author).
+	if parts := strings.SplitN(r.Id.Data, "/", 2); len(parts) == 2 {
+		return parts[0], nil
 	}
 	detail, err := r.fetchDetail()
 	if err != nil {
@@ -645,8 +655,12 @@ func normalizeModelID(input string) (string, error) {
 			return "", fmt.Errorf("invalid model URL: %w", err)
 		}
 		parts := strings.Split(strings.Trim(u.Path, "/"), "/")
-		if len(parts) < 2 {
-			return "", fmt.Errorf("model URL must contain owner/model path: %s", input)
+		if len(parts) == 0 || parts[0] == "" {
+			return "", fmt.Errorf("model URL must contain a model path: %s", input)
+		}
+		// Canonical models (e.g. "gpt2") have no owner segment.
+		if len(parts) == 1 {
+			return parts[0], nil
 		}
 		return parts[0] + "/" + parts[1], nil
 	}
