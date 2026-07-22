@@ -75,8 +75,9 @@ func parseTarget(target string) (string, int, string, string, error) {
 	// the assumptions that users have when they use other resources (like TLS).
 	// For example: `host google.com` and command `tls.versions` is a user
 	// indicating that they want the TLS config of https://google.com of course.
-	// However, we also want to use HTTP:80 when we do `http.get` requests,
-	// because that is the default way this is handled in the web (for now).
+	// The same holds for `http.get`, which defaults an unschemed target to
+	// HTTPS (see initHttpGet) so a bare `host google.com` inspects the HTTPS
+	// endpoint rather than plain :80.
 	//
 	// Thus: the scheme becomes empty "" and the port is set to 0. Every resource
 	// needs to figure out what that means to it.

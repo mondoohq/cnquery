@@ -58,14 +58,7 @@ func initHttpGet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 
 		scheme := conn.Conf.Runtime
 		if scheme == "" {
-			// At this point we are in best effort territory. Which means we will
-			// go HTTP unless port 443 is specified. Users can always provide a
-			// scheme to be prescriptive.
-			if conn.Conf.Port == 443 {
-				scheme = "https"
-			} else {
-				scheme = "http"
-			}
+			scheme = defaultHTTPScheme(conn.Conf.Port)
 		}
 		url, err := NewResource(runtime, "url", map[string]*llx.RawData{
 			"host":   llx.StringData(conn.Conf.Host),
@@ -84,6 +77,23 @@ func initHttpGet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 	}
 
 	return args, nil, nil
+}
+
+// defaultHTTPScheme picks the URL scheme for http.get when the target carried no
+// explicit scheme (a bare `host <domain>`). It defaults to HTTPS — the modern
+// web default and consistent with the tls resource, which assumes 443 for a bare
+// target — so scanning a bare domain exercises the HTTPS endpoint, where the
+// hardening headers policies check (HSTS, CSP, cookie flags) actually live,
+// instead of plain :80. Only an explicit non-TLS port falls back to HTTP, so
+// `http.get` on `example.com:8080` still speaks HTTP. Users can always prefix a
+// scheme to be prescriptive.
+func defaultHTTPScheme(port int32) string {
+	switch port {
+	case 0, 443:
+		return "https"
+	default:
+		return "http"
+	}
 }
 
 func (x *mqlHttpGet) id() (string, error) {

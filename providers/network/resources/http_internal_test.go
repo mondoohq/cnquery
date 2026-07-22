@@ -22,6 +22,27 @@ func (timeoutErr) Error() string   { return "i/o timeout" }
 func (timeoutErr) Timeout() bool   { return true }
 func (timeoutErr) Temporary() bool { return true }
 
+func TestDefaultHTTPScheme(t *testing.T) {
+	tests := []struct {
+		name string
+		port int32
+		want string
+	}{
+		// A bare `host <domain>` (no scheme, no port) now inspects HTTPS, so the
+		// tls and http policies both target the same endpoint.
+		{"bare domain, no port", 0, "https"},
+		{"standard https port", 443, "https"},
+		// An explicit http port stays plain HTTP.
+		{"explicit http port", 80, "http"},
+		{"non-standard port", 8080, "http"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, defaultHTTPScheme(tt.port))
+		})
+	}
+}
+
 func TestHttpNotReachable(t *testing.T) {
 	tests := []struct {
 		name string
