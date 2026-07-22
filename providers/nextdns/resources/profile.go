@@ -22,8 +22,10 @@ import (
 // findings attributed to that profile. An explicit `id` argument is honored as
 // well; without one, the connection must be scoped to a single profile.
 func initNextdnsProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if id, ok := args["id"]; ok && id.Value != nil && id.Value.(string) != "" {
-		return args, nil, nil
+	if id, ok := args["id"]; ok && id.Value != nil {
+		if s, ok := id.Value.(string); ok && s != "" {
+			return args, nil, nil
+		}
 	}
 
 	conn := runtime.Connection.(*connection.NextdnsConnection)
