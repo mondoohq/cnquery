@@ -220,6 +220,7 @@ PROVIDERS := \
 	gitlab \
 	grafana \
 	google-workspace \
+	hcp \
 	helm \
 	hetzner \
 	huggingface \

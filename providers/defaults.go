@@ -336,6 +336,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"hcp": {
+		Provider: &plugin.Provider{
+			Name:            "hcp",
+			ID:              "go.mondoo.com/mql/providers/hcp",
+			ConnectionTypes: []string{"hcp"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "hcp",
+					Use:   "hcp",
+					Short: "a HashiCorp Cloud Platform organization",
+				},
+			},
+		},
+	},
+
 	"huggingface": {
 		Provider: &plugin.Provider{
 			Name:            "huggingface",
