@@ -23,7 +23,8 @@ func startContainer() (*client.Client, string, error) {
 	// Start new docker container
 	ctx := context.Background()
 	var err error
-	dockerClient, err := client.New(client.FromEnv)
+	// Honor DOCKER_HOST and the active docker context, same as production code paths.
+	dockerClient, err := GetDockerClient()
 	if err != nil {
 		return nil, "", err
 	}
