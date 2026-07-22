@@ -534,12 +534,16 @@ message HttpRequest {
 message DnsRecord {
   // The queried name, e.g. "app.example.com".
   string name = 1;
-  // The record type, e.g. A, AAAA, CNAME, MX, TXT, NS, PTR.
+  // The record type, e.g. A, AAAA, CNAME, MX, TXT, NS, PTR. Free-form string,
+  // not an enum: the IANA record-type registry is large and evolving (HTTPS,
+  // SVCB, TLSA, CAA, ...) and scanners surface arbitrary types, so an enum
+  // would lock the set and need coordination to extend.
   string type = 2;
   // The resolved values (IP addresses, CNAME target, name servers, ...).
   repeated string values = 3;
-  // Optional. Record time-to-live in seconds.
-  int32 ttl = 4;
+  // Optional. Record time-to-live in seconds. Unsigned: TTL is a 31-bit
+  // unsigned quantity (RFC 2181 §8), so negative values are not meaningful.
+  uint32 ttl = 4;
 }
 
 // Certificate captures the TLS certificate or handshake that triggered a

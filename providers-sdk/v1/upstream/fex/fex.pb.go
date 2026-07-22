@@ -2756,12 +2756,16 @@ type DnsRecord struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The queried name, e.g. "app.example.com".
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	// The record type, e.g. A, AAAA, CNAME, MX, TXT, NS, PTR.
+	// The record type, e.g. A, AAAA, CNAME, MX, TXT, NS, PTR. Free-form string,
+	// not an enum: the IANA record-type registry is large and evolving (HTTPS,
+	// SVCB, TLSA, CAA, ...) and scanners surface arbitrary types, so an enum
+	// would lock the set and need coordination to extend.
 	Type string `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
 	// The resolved values (IP addresses, CNAME target, name servers, ...).
 	Values []string `protobuf:"bytes,3,rep,name=values,proto3" json:"values,omitempty"`
-	// Optional. Record time-to-live in seconds.
-	Ttl           int32 `protobuf:"varint,4,opt,name=ttl,proto3" json:"ttl,omitempty"`
+	// Optional. Record time-to-live in seconds. Unsigned: TTL is a 31-bit
+	// unsigned quantity (RFC 2181 §8), so negative values are not meaningful.
+	Ttl           uint32 `protobuf:"varint,4,opt,name=ttl,proto3" json:"ttl,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2817,7 +2821,7 @@ func (x *DnsRecord) GetValues() []string {
 	return nil
 }
 
-func (x *DnsRecord) GetTtl() int32 {
+func (x *DnsRecord) GetTtl() uint32 {
 	if x != nil {
 		return x.Ttl
 	}
@@ -3630,7 +3634,7 @@ const file_fex_proto_rawDesc = "" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
 	"\x04type\x18\x02 \x01(\tR\x04type\x12\x16\n" +
 	"\x06values\x18\x03 \x03(\tR\x06values\x12\x10\n" +
-	"\x03ttl\x18\x04 \x01(\x05R\x03ttl\"\xcf\x02\n" +
+	"\x03ttl\x18\x04 \x01(\rR\x03ttl\"\xcf\x02\n" +
 	"\vCertificate\x12\x18\n" +
 	"\asubject\x18\x01 \x01(\tR\asubject\x12\x16\n" +
 	"\x06issuer\x18\x02 \x01(\tR\x06issuer\x12\x16\n" +
