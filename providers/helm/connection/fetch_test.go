@@ -83,6 +83,13 @@ func TestLatestChartVersion(t *testing.T) {
 		})
 		assert.Equal(t, "latest", got.Version)
 	})
+
+	t.Run("empty slice returns the zero value without panicking", func(t *testing.T) {
+		assert.NotPanics(t, func() {
+			got := latestChartVersion(nil)
+			assert.Equal(t, repoChartVersion{}, got)
+		})
+	})
 }
 
 // resolveChartInRepo maps a chart name (+ optional version) from a repository's

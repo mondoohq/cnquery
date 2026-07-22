@@ -177,6 +177,9 @@ type repoIndex struct {
 // isn't valid semver are ignored for ranking; if none parse, the first listed
 // entry is returned so a non-semver repository still resolves to something.
 func latestChartVersion(versions []repoChartVersion) repoChartVersion {
+	if len(versions) == 0 {
+		return repoChartVersion{}
+	}
 	best := versions[0]
 	var bestVer *semver.Version
 	if v, err := semver.NewVersion(best.Version); err == nil {
