@@ -100,6 +100,11 @@ func (a *mqlAwsTransferServer) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+var transferServerArnSpec = arnSpec{
+	resource: ResourceAwsTransferServer,
+	services: []string{"transfer"},
+}
+
 func initAwsTransferServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
@@ -107,12 +112,12 @@ func initAwsTransferServer(runtime *plugin.Runtime, args map[string]*llx.RawData
 
 	// During a discovered-asset scan the resource is queried with no args; recover
 	// the server's region and id from the ARN carried on the asset.
-	arnVal, err := resolveArnArg(runtime, args, "transfer server", "transfer")
+	ref, err := transferServerArnSpec.resolve(runtime, args)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	parsed, err := arn.Parse(arnVal)
+	parsed, err := arn.Parse(ref.RawArn)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -133,8 +138,8 @@ func initAwsTransferServer(runtime *plugin.Runtime, args map[string]*llx.RawData
 	s := resp.Server
 	mqlServer, err := CreateResource(runtime, "aws.transfer.server",
 		map[string]*llx.RawData{
-			"__id":         llx.StringData(arnVal),
-			"arn":          llx.StringData(arnVal),
+			"__id":         llx.StringData(ref.RawArn),
+			"arn":          llx.StringData(ref.RawArn),
 			"serverId":     llx.StringDataPtr(s.ServerId),
 			"region":       llx.StringData(region),
 			"endpointType": llx.StringData(string(s.EndpointType)),

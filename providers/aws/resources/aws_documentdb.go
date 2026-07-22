@@ -254,11 +254,16 @@ type mqlAwsDocumentdbClusterInternal struct {
 	cacheSubnetGroupName             *string
 }
 
+var documentdbClusterArnSpec = arnSpec{
+	resource: ResourceAwsDocumentdbCluster,
+	services: []string{"rds"},
+}
+
 func initAwsDocumentdbCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
-	arnVal, err := resolveArnArg(runtime, args, "documentdb cluster", "rds")
+	ref, err := documentdbClusterArnSpec.resolve(runtime, args)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -272,14 +277,14 @@ func initAwsDocumentdbCluster(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 	for _, raw := range rawResources.Data {
 		c := raw.(*mqlAwsDocumentdbCluster)
-		if c.Arn.Data == arnVal {
+		if c.Arn.Data == ref.RawArn {
 			return args, c, nil
 		}
 	}
 	// Returning (args, nil, nil) here would let the runtime create a resource
 	// whose fields are all unset, which surfaces as malformed nil data when
 	// those fields are queried.
-	return nil, nil, fmt.Errorf("aws.documentdb.cluster with arn %q not found", arnVal)
+	return nil, nil, fmt.Errorf("aws.documentdb.cluster with arn %q not found", ref.RawArn)
 }
 
 func (a *mqlAwsDocumentdbCluster) kmsKey() (*mqlAwsKmsKey, error) {
@@ -726,11 +731,16 @@ type mqlAwsDocumentdbInstanceInternal struct {
 	cacheClusterIdentifier           *string
 }
 
+var documentdbInstanceArnSpec = arnSpec{
+	resource: ResourceAwsDocumentdbInstance,
+	services: []string{"rds"},
+}
+
 func initAwsDocumentdbInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
-	arnVal, err := resolveArnArg(runtime, args, "documentdb instance", "rds")
+	ref, err := documentdbInstanceArnSpec.resolve(runtime, args)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -744,14 +754,14 @@ func initAwsDocumentdbInstance(runtime *plugin.Runtime, args map[string]*llx.Raw
 	}
 	for _, raw := range rawResources.Data {
 		i := raw.(*mqlAwsDocumentdbInstance)
-		if i.Arn.Data == arnVal {
+		if i.Arn.Data == ref.RawArn {
 			return args, i, nil
 		}
 	}
 	// Returning (args, nil, nil) here would let the runtime create a resource
 	// whose fields are all unset, which surfaces as malformed nil data when
 	// those fields are queried.
-	return nil, nil, fmt.Errorf("aws.documentdb.instance with arn %q not found", arnVal)
+	return nil, nil, fmt.Errorf("aws.documentdb.instance with arn %q not found", ref.RawArn)
 }
 
 func docdbInstancePendingModifiedValues(p *docdb_types.PendingModifiedValues) map[string]any {

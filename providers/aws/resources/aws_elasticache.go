@@ -641,12 +641,17 @@ func (a *mqlAwsElasticacheServerlessCache) subnets() ([]any, error) {
 	return res, nil
 }
 
+var elasticacheClusterArnSpec = arnSpec{
+	resource: ResourceAwsElasticacheCluster,
+	services: []string{"elasticache"},
+}
+
 func initAwsElasticacheCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	arnVal, err := resolveArnArg(runtime, args, "elasticache cluster", "elasticache")
+	ref, err := elasticacheClusterArnSpec.resolve(runtime, args)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -664,7 +669,7 @@ func initAwsElasticacheCluster(runtime *plugin.Runtime, args map[string]*llx.Raw
 
 	for _, rawResource := range rawResources.Data {
 		cluster := rawResource.(*mqlAwsElasticacheCluster)
-		if cluster.Arn.Data == arnVal {
+		if cluster.Arn.Data == ref.RawArn {
 			return args, cluster, nil
 		}
 	}

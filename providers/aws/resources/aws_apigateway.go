@@ -123,12 +123,17 @@ func (a *mqlAwsApigateway) getRestApis(conn *connection.AwsConnection) []*jobpoo
 	return tasks
 }
 
+var apigatewayRestapiArnSpec = arnSpec{
+	resource: ResourceAwsApigatewayRestapi,
+	services: []string{"apigateway"},
+}
+
 func initAwsApigatewayRestapi(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	arnVal, err := resolveArnArg(runtime, args, "gateway restapi", "apigateway")
+	ref, err := apigatewayRestapiArnSpec.resolve(runtime, args)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -146,7 +151,7 @@ func initAwsApigatewayRestapi(runtime *plugin.Runtime, args map[string]*llx.RawD
 
 	for _, rawResource := range rawResources.Data {
 		restApi := rawResource.(*mqlAwsApigatewayRestapi)
-		if restApi.Arn.Data == arnVal {
+		if restApi.Arn.Data == ref.RawArn {
 			return args, restApi, nil
 		}
 	}

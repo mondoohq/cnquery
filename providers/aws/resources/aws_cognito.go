@@ -111,6 +111,11 @@ func (a *mqlAwsCognito) getUserPools(conn *connection.AwsConnection) []*jobpool.
 	return tasks
 }
 
+var cognitoUserPoolArnSpec = arnSpec{
+	resource: ResourceAwsCognitoUserPool,
+	services: []string{"cognito-idp"},
+}
+
 func initAwsCognitoUserPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
@@ -118,12 +123,12 @@ func initAwsCognitoUserPool(runtime *plugin.Runtime, args map[string]*llx.RawDat
 
 	// During a discovered-asset scan the resource is queried with no args; recover
 	// the pool's region and id from the ARN carried on the asset.
-	arnVal, err := resolveArnArg(runtime, args, "cognito user pool", "cognito-idp")
+	ref, err := cognitoUserPoolArnSpec.resolve(runtime, args)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	parsed, err := arn.Parse(arnVal)
+	parsed, err := arn.Parse(ref.RawArn)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -146,8 +151,8 @@ func initAwsCognitoUserPool(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	up := resp.UserPool
 	mqlPool, err := CreateResource(runtime, "aws.cognito.userPool",
 		map[string]*llx.RawData{
-			"__id":      llx.StringData(arnVal),
-			"arn":       llx.StringData(arnVal),
+			"__id":      llx.StringData(ref.RawArn),
+			"arn":       llx.StringData(ref.RawArn),
 			"id":        llx.StringData(poolId),
 			"name":      llx.StringDataPtr(up.Name),
 			"region":    llx.StringData(region),

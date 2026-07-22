@@ -279,12 +279,17 @@ func (a *mqlAwsSsmInstance) iamRole() (*mqlAwsIamRole, error) {
 
 const ssmInstanceArnPattern = "arn:aws:ssm:%s:%s:instance/%s"
 
+var ssmInstanceArnSpec = arnSpec{
+	resource: ResourceAwsSsmInstance,
+	services: []string{"ssm"},
+}
+
 func initAwsSsmInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	arnVal, err := resolveArnArg(runtime, args, "ssm instance", "ssm")
+	ref, err := ssmInstanceArnSpec.resolve(runtime, args)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -302,7 +307,7 @@ func initAwsSsmInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 
 	for _, rawResource := range rawResources.Data {
 		instance := rawResource.(*mqlAwsSsmInstance)
-		if instance.Arn.Data == arnVal {
+		if instance.Arn.Data == ref.RawArn {
 			return args, instance, nil
 		}
 	}

@@ -15,11 +15,11 @@ import (
 type arnInitFunc func(*plugin.Runtime, map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 
 // TestInitsRejectForeignArns covers every init that resolves strictly by ARN.
-// Both paths it exercises fail inside resolveArnArg, before the init builds an
+// Both paths it exercises fail inside arnSpec.resolve, before the init builds an
 // AWS client or issues a request, so the whole table runs offline with no
 // credentials.
 //
-// What it protects: an init that drops the resolveArnArg call (or reverts to
+// What it protects: an init that drops the arnSpec.resolve call (or reverts to
 // adopting the asset ARN unchecked) starts resolving a foreign ARN into a husk
 // resource whose fields are never set -- which surfaces to users as "provider
 // returned no data and no error for a field" and "llx: encountered a primitive
@@ -29,52 +29,53 @@ func TestInitsRejectForeignArns(t *testing.T) {
 	// some other service" for all of them.
 	const foreignArn = "arn:aws:iam::012345678910:role/some-role"
 
+	// Pairing each init with its spec keeps the expected resource name in the
+	// error messages tied to the single place that declares it.
 	cases := []struct {
 		init arnInitFunc
-		// resource is the name resolveArnArg puts in its error messages.
-		resource string
+		spec arnSpec
 	}{
-		{initAwsApigatewayRestapi, "gateway restapi"},
-		{initAwsBatchJobDefinition, "batch job definition"},
-		{initAwsCloudfrontDistribution, "cloudfront distribution"},
-		{initAwsCloudwatchLoggroup, "cloudwatch log group"},
-		{initAwsCognitoUserPool, "cognito user pool"},
-		{initAwsDocumentdbCluster, "documentdb cluster"},
-		{initAwsDocumentdbInstance, "documentdb instance"},
-		{initAwsDynamodbGlobaltable, "dynamodb global table"},
-		{initAwsDynamodbTable, "dynamodb table"},
-		{initAwsEc2Instance, "ec2 instance"},
-		{initAwsEc2Volume, "aws volume"},
-		{initAwsEcrImage, "ecr image"},
-		{initAwsEcsCluster, "ecs cluster"},
-		{initAwsEcsService, "ecs service"},
-		{initAwsEcsTask, "ecs task"},
-		{initAwsEcsTaskDefinition, "aws ecs task definition"},
-		{initAwsEfsFilesystem, "efs filesystem"},
-		{initAwsEksCluster, "eks cluster"},
-		{initAwsElasticacheCluster, "elasticache cluster"},
-		{initAwsElbLoadbalancer, "elb loadbalancer"},
-		{initAwsEmrCluster, "emr cluster"},
-		{initAwsFsxBackup, "fsx backup"},
-		{initAwsFsxCache, "fsx cache"},
-		{initAwsFsxFilesystem, "fsx filesystem"},
-		{initAwsMemorydbCluster, "memorydb cluster"},
-		{initAwsMskCluster, "aws msk cluster"},
-		{initAwsNeptuneCluster, "neptune cluster"},
-		{initAwsRdsDbcluster, "rds db cluster"},
-		{initAwsRdsDbinstance, "rds db instance"},
-		{initAwsRedshiftCluster, "redshift cluster"},
-		{initAwsSagemakerDomain, "sagemaker domain"},
-		{initAwsSagemakerModel, "sagemaker model"},
-		{initAwsSagemakerNotebookinstance, "sagemaker notebookinstance"},
-		{initAwsSecretsmanagerSecret, "secretsmanager secret"},
-		{initAwsSsmInstance, "ssm instance"},
-		{initAwsStoragegatewayGateway, "storage gateway"},
-		{initAwsTransferServer, "transfer server"},
+		{initAwsApigatewayRestapi, apigatewayRestapiArnSpec},
+		{initAwsBatchJobDefinition, batchJobDefinitionArnSpec},
+		{initAwsCloudfrontDistribution, cloudfrontDistributionArnSpec},
+		{initAwsCloudwatchLoggroup, cloudwatchLoggroupArnSpec},
+		{initAwsCognitoUserPool, cognitoUserPoolArnSpec},
+		{initAwsDocumentdbCluster, documentdbClusterArnSpec},
+		{initAwsDocumentdbInstance, documentdbInstanceArnSpec},
+		{initAwsDynamodbGlobaltable, dynamodbGlobaltableArnSpec},
+		{initAwsDynamodbTable, dynamodbTableArnSpec},
+		{initAwsEc2Instance, ec2InstanceArnSpec},
+		{initAwsEc2Volume, ec2VolumeArnSpec},
+		{initAwsEcrImage, ecrImageArnSpec},
+		{initAwsEcsCluster, ecsClusterArnSpec},
+		{initAwsEcsService, ecsServiceArnSpec},
+		{initAwsEcsTask, ecsTaskArnSpec},
+		{initAwsEcsTaskDefinition, ecsTaskDefinitionArnSpec},
+		{initAwsEfsFilesystem, efsFilesystemArnSpec},
+		{initAwsEksCluster, eksClusterArnSpec},
+		{initAwsElasticacheCluster, elasticacheClusterArnSpec},
+		{initAwsElbLoadbalancer, elbLoadbalancerArnSpec},
+		{initAwsEmrCluster, emrClusterArnSpec},
+		{initAwsFsxBackup, fsxBackupArnSpec},
+		{initAwsFsxCache, fsxCacheArnSpec},
+		{initAwsFsxFilesystem, fsxFilesystemArnSpec},
+		{initAwsMemorydbCluster, memorydbClusterArnSpec},
+		{initAwsMskCluster, mskClusterArnSpec},
+		{initAwsNeptuneCluster, neptuneClusterArnSpec},
+		{initAwsRdsDbcluster, rdsDbclusterArnSpec},
+		{initAwsRdsDbinstance, rdsDbinstanceArnSpec},
+		{initAwsRedshiftCluster, redshiftClusterArnSpec},
+		{initAwsSagemakerDomain, sagemakerDomainArnSpec},
+		{initAwsSagemakerModel, sagemakerModelArnSpec},
+		{initAwsSagemakerNotebookinstance, sagemakerNotebookinstanceArnSpec},
+		{initAwsSecretsmanagerSecret, secretsmanagerSecretArnSpec},
+		{initAwsSsmInstance, ssmInstanceArnSpec},
+		{initAwsStoragegatewayGateway, storagegatewayGatewayArnSpec},
+		{initAwsTransferServer, transferServerArnSpec},
 	}
 
 	for _, tc := range cases {
-		t.Run(tc.resource, func(t *testing.T) {
+		t.Run(tc.spec.resource, func(t *testing.T) {
 			t.Run("rejects an explicitly passed foreign arn", func(t *testing.T) {
 				runtime := testAwsIdentifierRuntime("irrelevant", nil)
 				args := map[string]*llx.RawData{"arn": llx.StringData(foreignArn)}
@@ -82,7 +83,7 @@ func TestInitsRejectForeignArns(t *testing.T) {
 				_, res, err := tc.init(runtime, args)
 
 				require.Error(t, err)
-				assert.Contains(t, err.Error(), "is not a "+tc.resource+" arn")
+				assert.Contains(t, err.Error(), "is not an "+tc.spec.resource+" arn")
 				assert.Nil(t, res, "must not build a resource from a foreign arn")
 			})
 
@@ -95,7 +96,7 @@ func TestInitsRejectForeignArns(t *testing.T) {
 				_, res, err := tc.init(runtime, args)
 
 				require.Error(t, err)
-				assert.Contains(t, err.Error(), "arn required to fetch "+tc.resource)
+				assert.Contains(t, err.Error(), "arn required to fetch "+tc.spec.resource)
 				assert.Nil(t, res, "must not build a resource from an unrelated asset")
 				assert.Nil(t, args["arn"], "must not leave a foreign arn in args")
 			})

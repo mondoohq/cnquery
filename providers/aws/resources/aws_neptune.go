@@ -193,12 +193,17 @@ func (a *mqlAwsNeptuneCluster) securityGroups() ([]any, error) {
 	return a.newSecurityGroupResources(a.MqlRuntime)
 }
 
+var neptuneClusterArnSpec = arnSpec{
+	resource: ResourceAwsNeptuneCluster,
+	services: []string{"rds"},
+}
+
 func initAwsNeptuneCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	arnVal, err := resolveArnArg(runtime, args, "neptune cluster", "rds")
+	ref, err := neptuneClusterArnSpec.resolve(runtime, args)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -216,7 +221,7 @@ func initAwsNeptuneCluster(runtime *plugin.Runtime, args map[string]*llx.RawData
 
 	for _, rawResource := range rawResources.Data {
 		cluster := rawResource.(*mqlAwsNeptuneCluster)
-		if cluster.Arn.Data == arnVal {
+		if cluster.Arn.Data == ref.RawArn {
 			return args, cluster, nil
 		}
 	}

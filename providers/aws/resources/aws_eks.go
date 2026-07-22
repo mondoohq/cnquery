@@ -479,12 +479,17 @@ func (a *mqlAwsEksCluster) certificateAuthority() (string, error) {
 	return "", a.fetchDetail()
 }
 
+var eksClusterArnSpec = arnSpec{
+	resource: ResourceAwsEksCluster,
+	services: []string{"eks"},
+}
+
 func initAwsEksCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	arnVal, err := resolveArnArg(runtime, args, "eks cluster", "eks")
+	ref, err := eksClusterArnSpec.resolve(runtime, args)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -500,7 +505,7 @@ func initAwsEksCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 
 	for _, rawResource := range rawResources.Data {
 		cluster := rawResource.(*mqlAwsEksCluster)
-		if cluster.Arn.Data == arnVal {
+		if cluster.Arn.Data == ref.RawArn {
 			return args, cluster, nil
 		}
 	}

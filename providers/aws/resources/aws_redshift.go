@@ -372,12 +372,17 @@ func (a *mqlAwsRedshiftCluster) cloudformationStack() (*mqlAwsCloudformationStac
 	return stack, nil
 }
 
+var redshiftClusterArnSpec = arnSpec{
+	resource: ResourceAwsRedshiftCluster,
+	services: []string{"redshift"},
+}
+
 func initAwsRedshiftCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	arnVal, err := resolveArnArg(runtime, args, "redshift cluster", "redshift")
+	ref, err := redshiftClusterArnSpec.resolve(runtime, args)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -396,7 +401,7 @@ func initAwsRedshiftCluster(runtime *plugin.Runtime, args map[string]*llx.RawDat
 
 	for _, rawResource := range rawResources.Data {
 		cluster := rawResource.(*mqlAwsRedshiftCluster)
-		if cluster.Arn.Data == arnVal {
+		if cluster.Arn.Data == ref.RawArn {
 			return args, cluster, nil
 		}
 	}

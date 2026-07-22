@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/aws/smithy-go/transport/http"
@@ -153,12 +152,17 @@ func (a *mqlAwsEfsFilesystem) kmsKey() (*mqlAwsKmsKey, error) {
 	return nil, nil
 }
 
+var efsFilesystemArnSpec = arnSpec{
+	resource: ResourceAwsEfsFilesystem,
+	services: []string{"elasticfilesystem"},
+}
+
 func initAwsEfsFilesystem(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	arnVal, err := resolveArnArg(runtime, args, "efs filesystem", "elasticfilesystem")
+	ref, err := efsFilesystemArnSpec.resolve(runtime, args)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -166,9 +170,9 @@ func initAwsEfsFilesystem(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	// Derive region + filesystem id for a single targeted DescribeFileSystems
 	// call instead of listing every filesystem in every region.
 	var region, fsId string
-	if parsed, err := arn.Parse(arnVal); err == nil && strings.HasPrefix(parsed.Resource, "file-system/") {
-		region = parsed.Region
-		fsId = strings.TrimPrefix(parsed.Resource, "file-system/")
+	if strings.HasPrefix(ref.Resource, "file-system/") {
+		region = ref.Region
+		fsId = strings.TrimPrefix(ref.Resource, "file-system/")
 	}
 
 	if region != "" && fsId != "" {
@@ -205,7 +209,7 @@ func initAwsEfsFilesystem(runtime *plugin.Runtime, args map[string]*llx.RawData)
 
 	for _, rawResource := range rawResources.Data {
 		fs := rawResource.(*mqlAwsEfsFilesystem)
-		if fs.Arn.Data == arnVal {
+		if fs.Arn.Data == ref.RawArn {
 			return args, fs, nil
 		}
 	}

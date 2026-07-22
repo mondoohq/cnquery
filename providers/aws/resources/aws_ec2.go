@@ -2132,30 +2132,31 @@ func buildSecurityGroupResource(runtime *plugin.Runtime, region, accountID strin
 	return sg, nil
 }
 
+// The spec declares no prefix: an ec2 ARN for some other resource type is not
+// an error here, it just means the targeted lookup below is skipped in favour
+// of scanning the cached list.
+var ec2SecuritygroupArnSpec = arnSpec{
+	resource: ResourceAwsEc2Securitygroup,
+	services: []string{"ec2"},
+	altKeys:  []string{"id"},
+}
+
 func initAwsEc2Securitygroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifierForService(runtime, "ec2"); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil && args["id"] == nil {
-		return nil, nil, errors.New("arn or id required to fetch aws security group")
+	ref, err := ec2SecuritygroupArnSpec.resolve(runtime, args)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	// Derive region + groupId for a single targeted DescribeSecurityGroups
 	// call instead of listing every SG in every region.
 	var region, groupId string
-	if args["arn"] != nil {
-		arnVal := args["arn"].Value.(string)
-		if parsed, err := arn.Parse(arnVal); err == nil && strings.HasPrefix(parsed.Resource, "security-group/") {
-			region = parsed.Region
-			groupId = strings.TrimPrefix(parsed.Resource, "security-group/")
-		}
+	if strings.HasPrefix(ref.Resource, "security-group/") {
+		region = ref.Region
+		groupId = strings.TrimPrefix(ref.Resource, "security-group/")
 	}
 	if args["id"] != nil && groupId == "" {
 		groupId = args["id"].Value.(string)
@@ -2501,21 +2502,25 @@ func (a *mqlAwsEc2) getVolumes(conn *connection.AwsConnection) []*jobpool.Job {
 	return tasks
 }
 
+var ec2VolumeArnSpec = arnSpec{
+	resource: ResourceAwsEc2Volume,
+	services: []string{"ec2"},
+}
+
 func initAwsEc2Volume(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	arnVal, err := resolveArnArg(runtime, args, "aws volume", "ec2")
+	ref, err := ec2VolumeArnSpec.resolve(runtime, args)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	parsed, err := arn.Parse(arnVal)
-	if err == nil && parsed.Region != "" && strings.HasPrefix(parsed.Resource, "volume/") {
-		volumeId := strings.TrimPrefix(parsed.Resource, "volume/")
+	if ref.Region != "" && strings.HasPrefix(ref.Resource, "volume/") {
+		volumeId := strings.TrimPrefix(ref.Resource, "volume/")
 		conn := runtime.Connection.(*connection.AwsConnection)
-		svc := conn.Ec2(parsed.Region)
+		svc := conn.Ec2(ref.Region)
 		resp, err := svc.DescribeVolumes(context.Background(), &ec2.DescribeVolumesInput{
 			VolumeIds: []string{volumeId},
 		})
@@ -2523,7 +2528,7 @@ func initAwsEc2Volume(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 			return nil, nil, err
 		}
 		if len(resp.Volumes) > 0 {
-			mqlVol, err := buildVolumeResource(runtime, parsed.Region, conn.AccountId(), resp.Volumes[0])
+			mqlVol, err := buildVolumeResource(runtime, ref.Region, conn.AccountId(), resp.Volumes[0])
 			if err != nil {
 				return nil, nil, err
 			}
@@ -2544,7 +2549,7 @@ func initAwsEc2Volume(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 	}
 	for _, rawResource := range rawResources.Data {
 		volume := rawResource.(*mqlAwsEc2Volume)
-		if volume.Arn.Data == arnVal {
+		if volume.Arn.Data == ref.RawArn {
 			return args, volume, nil
 		}
 	}
@@ -2643,13 +2648,18 @@ func (a *mqlAwsEc2Volume) kmsKey() (*mqlAwsKmsKey, error) {
 	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
+var ec2InstanceArnSpec = arnSpec{
+	resource: ResourceAwsEc2Instance,
+	services: []string{"ec2"},
+}
+
 func initAwsEc2Instance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
 	log.Debug().Msg("init an ec2 instance")
-	arnVal, err := resolveArnArg(runtime, args, "ec2 instance", "ec2")
+	ref, err := ec2InstanceArnSpec.resolve(runtime, args)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -2657,9 +2667,8 @@ func initAwsEc2Instance(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	// Parse the ARN to extract region + instance id and target a single
 	// DescribeInstances call. Fall back to the cross-region list path only
 	// when the ARN is malformed.
-	parsed, err := arn.Parse(arnVal)
-	if err == nil && parsed.Region != "" && strings.HasPrefix(parsed.Resource, "instance/") {
-		instanceId := strings.TrimPrefix(parsed.Resource, "instance/")
+	if ref.Region != "" && strings.HasPrefix(ref.Resource, "instance/") {
+		instanceId := strings.TrimPrefix(ref.Resource, "instance/")
 		obj, err := CreateResource(runtime, ResourceAwsEc2, map[string]*llx.RawData{})
 		if err != nil {
 			return nil, nil, err
@@ -2667,7 +2676,7 @@ func initAwsEc2Instance(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		mqlEc2 := obj.(*mqlAwsEc2)
 
 		conn := runtime.Connection.(*connection.AwsConnection)
-		svc := conn.Ec2(parsed.Region)
+		svc := conn.Ec2(ref.Region)
 		resp, err := svc.DescribeInstances(context.Background(), &ec2.DescribeInstancesInput{
 			InstanceIds: []string{instanceId},
 		})
@@ -2678,7 +2687,7 @@ func initAwsEc2Instance(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 			if len(reservation.Instances) == 0 {
 				continue
 			}
-			res, err := mqlEc2.gatherInstanceInfo(reservation.Instances[:1], parsed.Region)
+			res, err := mqlEc2.gatherInstanceInfo(reservation.Instances[:1], ref.Region)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -2701,7 +2710,7 @@ func initAwsEc2Instance(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 	for _, rawResource := range rawResources.Data {
 		instance := rawResource.(*mqlAwsEc2Instance)
-		if instance.Arn.Data == arnVal {
+		if instance.Arn.Data == ref.RawArn {
 			return args, instance, nil
 		}
 	}
@@ -2738,43 +2747,44 @@ func buildSnapshotResource(runtime *plugin.Runtime, region, accountID string, sn
 	return s, nil
 }
 
+// The spec declares no prefix: an ec2 ARN for some other resource type is not
+// an error here, it just means the targeted lookup below is skipped in favour
+// of scanning the cached list.
+var ec2SnapshotArnSpec = arnSpec{
+	resource: ResourceAwsEc2Snapshot,
+	services: []string{"ec2"},
+	altKeys:  []string{"id"},
+}
+
 func initAwsEc2Snapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifierForService(runtime, "ec2"); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil && args["id"] == nil {
-		return nil, nil, errors.New("arn or id required to fetch aws snapshot")
+	ref, err := ec2SnapshotArnSpec.resolve(runtime, args)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	// Targeted path: arn carries the region and snapshot id.
-	if args["arn"] != nil {
-		arnVal := args["arn"].Value.(string)
-		if parsed, err := arn.Parse(arnVal); err == nil && parsed.Region != "" && strings.HasPrefix(parsed.Resource, "snapshot/") {
-			snapshotId := strings.TrimPrefix(parsed.Resource, "snapshot/")
-			conn := runtime.Connection.(*connection.AwsConnection)
-			svc := conn.Ec2(parsed.Region)
-			resp, err := svc.DescribeSnapshots(context.Background(), &ec2.DescribeSnapshotsInput{
-				SnapshotIds: []string{snapshotId},
-			})
+	if ref.Region != "" && strings.HasPrefix(ref.Resource, "snapshot/") {
+		snapshotId := strings.TrimPrefix(ref.Resource, "snapshot/")
+		conn := runtime.Connection.(*connection.AwsConnection)
+		svc := conn.Ec2(ref.Region)
+		resp, err := svc.DescribeSnapshots(context.Background(), &ec2.DescribeSnapshotsInput{
+			SnapshotIds: []string{snapshotId},
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+		if len(resp.Snapshots) > 0 {
+			mqlSnap, err := buildSnapshotResource(runtime, ref.Region, conn.AccountId(), resp.Snapshots[0])
 			if err != nil {
 				return nil, nil, err
 			}
-			if len(resp.Snapshots) > 0 {
-				mqlSnap, err := buildSnapshotResource(runtime, parsed.Region, conn.AccountId(), resp.Snapshots[0])
-				if err != nil {
-					return nil, nil, err
-				}
-				return args, mqlSnap, nil
-			}
-			return nil, nil, errors.New("snapshot does not exist")
+			return args, mqlSnap, nil
 		}
+		return nil, nil, errors.New("snapshot does not exist")
 	}
 
 	// Fallback: scan the cached list when only an opaque id was supplied or
@@ -3621,8 +3631,10 @@ func (a *mqlAwsEc2Vpnconnection) customerGateway() (*mqlAwsEc2CustomerGateway, e
 
 // Customer gateway (#4)
 
-const customerGatewayArnPattern = "arn:aws:ec2:%s:%s:customer-gateway/%s"
-const egressOnlyIgwArnPattern = "arn:aws:ec2:%s:%s:egress-only-internet-gateway/%s"
+const (
+	customerGatewayArnPattern = "arn:aws:ec2:%s:%s:customer-gateway/%s"
+	egressOnlyIgwArnPattern   = "arn:aws:ec2:%s:%s:egress-only-internet-gateway/%s"
+)
 
 func (a *mqlAwsEc2CustomerGateway) id() (string, error) {
 	return a.Arn.Data, nil

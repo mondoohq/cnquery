@@ -83,7 +83,8 @@ func TestInitAwsVpc(t *testing.T) {
 		)
 
 		args := map[string]*llx.RawData{}
-		region, gotVpcId := deriveVpcTarget(runtime, args)
+		region, gotVpcId, err := deriveVpcTarget(runtime, args)
+		require.NoError(t, err)
 		assert.Equal(t, "us-east-1", region)
 		assert.Equal(t, vpcId, gotVpcId)
 		assert.Equal(t, vpcArn, args["arn"].Value.(string))
@@ -101,7 +102,8 @@ func TestInitAwsVpc(t *testing.T) {
 		)
 
 		args := map[string]*llx.RawData{}
-		region, gotVpcId := deriveVpcTarget(runtime, args)
+		region, gotVpcId, err := deriveVpcTarget(runtime, args)
+		require.NoError(t, err)
 		assert.Equal(t, "us-east-1", region)
 		assert.Equal(t, vpcId, gotVpcId)
 	})
@@ -110,7 +112,8 @@ func TestInitAwsVpc(t *testing.T) {
 		runtime := testAwsRuntime("irrelevant", nil, []*mqlAwsVpc{testVpc})
 
 		args := map[string]*llx.RawData{"arn": llx.StringData(vpcArn)}
-		region, gotVpcId := deriveVpcTarget(runtime, args)
+		region, gotVpcId, err := deriveVpcTarget(runtime, args)
+		require.NoError(t, err)
 		assert.Equal(t, "us-east-1", region)
 		assert.Equal(t, vpcId, gotVpcId)
 	})

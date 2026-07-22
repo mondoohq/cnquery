@@ -271,12 +271,17 @@ func (a *mqlAwsSagemaker) getNotebookInstances(conn *connection.AwsConnection) [
 	return tasks
 }
 
+var sagemakerNotebookinstanceArnSpec = arnSpec{
+	resource: ResourceAwsSagemakerNotebookinstance,
+	services: []string{"sagemaker"},
+}
+
 func initAwsSagemakerNotebookinstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	arnVal, err := resolveArnArg(runtime, args, "sagemaker notebookinstance", "sagemaker")
+	ref, err := sagemakerNotebookinstanceArnSpec.resolve(runtime, args)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -294,7 +299,7 @@ func initAwsSagemakerNotebookinstance(runtime *plugin.Runtime, args map[string]*
 
 	for _, rawResource := range rawResources.Data {
 		ni := rawResource.(*mqlAwsSagemakerNotebookinstance)
-		if ni.Arn.Data == arnVal {
+		if ni.Arn.Data == ref.RawArn {
 			return args, ni, nil
 		}
 	}
@@ -2071,12 +2076,17 @@ func (a *mqlAwsSagemaker) getDomains(conn *connection.AwsConnection) []*jobpool.
 	return tasks
 }
 
+var sagemakerDomainArnSpec = arnSpec{
+	resource: ResourceAwsSagemakerDomain,
+	services: []string{"sagemaker"},
+}
+
 func initAwsSagemakerDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	arnVal, err := resolveArnArg(runtime, args, "sagemaker domain", "sagemaker")
+	ref, err := sagemakerDomainArnSpec.resolve(runtime, args)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -2094,7 +2104,7 @@ func initAwsSagemakerDomain(runtime *plugin.Runtime, args map[string]*llx.RawDat
 
 	for _, rawResource := range rawResources.Data {
 		d := rawResource.(*mqlAwsSagemakerDomain)
-		if d.Arn.Data == arnVal {
+		if d.Arn.Data == ref.RawArn {
 			return args, d, nil
 		}
 	}
@@ -2102,7 +2112,7 @@ func initAwsSagemakerDomain(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	// Returning (args, nil, nil) here would let the runtime create a resource
 	// whose fields are all unset, which surfaces as malformed nil data when
 	// those fields are queried.
-	return nil, nil, fmt.Errorf("aws.sagemaker.domain with arn %q not found", arnVal)
+	return nil, nil, fmt.Errorf("aws.sagemaker.domain with arn %q not found", ref.RawArn)
 }
 
 type mqlAwsSagemakerDomainInternal struct {
@@ -4496,19 +4506,19 @@ func getSagemakerTags(ctx context.Context, svc *sagemaker.Client, arn *string) (
 	return tags, nil
 }
 
+var sagemakerTrainingjobArnSpec = arnSpec{
+	resource: ResourceAwsSagemakerTrainingjob,
+	services: []string{"sagemaker"},
+	altKeys:  []string{"name"},
+}
+
 func initAwsSagemakerTrainingjob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifierForService(runtime, "sagemaker"); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil && args["name"] == nil {
-		return nil, nil, errors.New("arn or name required to fetch sagemaker training job")
+	if _, err := sagemakerTrainingjobArnSpec.resolve(runtime, args); err != nil {
+		return nil, nil, err
 	}
 
 	obj, err := CreateResource(runtime, "aws.sagemaker", map[string]*llx.RawData{})
@@ -4538,19 +4548,19 @@ func initAwsSagemakerTrainingjob(runtime *plugin.Runtime, args map[string]*llx.R
 	return nil, nil, errors.New("sagemaker training job does not exist")
 }
 
+var sagemakerProcessingjobArnSpec = arnSpec{
+	resource: ResourceAwsSagemakerProcessingjob,
+	services: []string{"sagemaker"},
+	altKeys:  []string{"name"},
+}
+
 func initAwsSagemakerProcessingjob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifierForService(runtime, "sagemaker"); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil && args["name"] == nil {
-		return nil, nil, errors.New("arn or name required to fetch sagemaker processing job")
+	if _, err := sagemakerProcessingjobArnSpec.resolve(runtime, args); err != nil {
+		return nil, nil, err
 	}
 
 	obj, err := CreateResource(runtime, "aws.sagemaker", map[string]*llx.RawData{})

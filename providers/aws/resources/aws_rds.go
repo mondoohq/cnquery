@@ -651,12 +651,17 @@ func (a *mqlAwsRdsDbinstanceAssociatedRole) iamRole() (*mqlAwsIamRole, error) {
 	return mqlRole.(*mqlAwsIamRole), nil
 }
 
+var rdsDbclusterArnSpec = arnSpec{
+	resource: ResourceAwsRdsDbcluster,
+	services: []string{"rds"},
+}
+
 func initAwsRdsDbcluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	arnVal, err := resolveArnArg(runtime, args, "rds db cluster", "rds")
+	ref, err := rdsDbclusterArnSpec.resolve(runtime, args)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -675,11 +680,16 @@ func initAwsRdsDbcluster(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 
 	for _, rawResource := range rawResources.Data {
 		dbInstance := rawResource.(*mqlAwsRdsDbcluster)
-		if dbInstance.Arn.Data == arnVal {
+		if dbInstance.Arn.Data == ref.RawArn {
 			return args, dbInstance, nil
 		}
 	}
 	return nil, nil, errors.New("rds db cluster does not exist")
+}
+
+var rdsDbinstanceArnSpec = arnSpec{
+	resource: ResourceAwsRdsDbinstance,
+	services: []string{"rds"},
 }
 
 func initAwsRdsDbinstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -687,7 +697,7 @@ func initAwsRdsDbinstance(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return args, nil, nil
 	}
 
-	arnVal, err := resolveArnArg(runtime, args, "rds db instance", "rds")
+	ref, err := rdsDbinstanceArnSpec.resolve(runtime, args)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -706,7 +716,7 @@ func initAwsRdsDbinstance(runtime *plugin.Runtime, args map[string]*llx.RawData)
 
 	for _, rawResource := range rawResources.Data {
 		dbInstance := rawResource.(*mqlAwsRdsDbinstance)
-		if dbInstance.Arn.Data == arnVal {
+		if dbInstance.Arn.Data == ref.RawArn {
 			return args, dbInstance, nil
 		}
 	}

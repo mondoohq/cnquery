@@ -568,12 +568,17 @@ func (a *mqlAwsCloudfrontAnycastIpList) tags() (map[string]any, error) {
 	return tags, nil
 }
 
+var cloudfrontDistributionArnSpec = arnSpec{
+	resource: ResourceAwsCloudfrontDistribution,
+	services: []string{"cloudfront"},
+}
+
 func initAwsCloudfrontDistribution(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	arnVal, err := resolveArnArg(runtime, args, "cloudfront distribution", "cloudfront")
+	ref, err := cloudfrontDistributionArnSpec.resolve(runtime, args)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -591,7 +596,7 @@ func initAwsCloudfrontDistribution(runtime *plugin.Runtime, args map[string]*llx
 
 	for _, rawResource := range rawResources.Data {
 		distribution := rawResource.(*mqlAwsCloudfrontDistribution)
-		if distribution.Arn.Data == arnVal {
+		if distribution.Arn.Data == ref.RawArn {
 			return args, distribution, nil
 		}
 	}

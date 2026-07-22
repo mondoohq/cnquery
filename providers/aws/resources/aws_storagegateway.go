@@ -120,12 +120,17 @@ func (a *mqlAwsStoragegatewayGateway) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+var storagegatewayGatewayArnSpec = arnSpec{
+	resource: ResourceAwsStoragegatewayGateway,
+	services: []string{"storagegateway"},
+}
+
 func initAwsStoragegatewayGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	arnVal, err := resolveArnArg(runtime, args, "storage gateway", "storagegateway")
+	ref, err := storagegatewayGatewayArnSpec.resolve(runtime, args)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -142,7 +147,7 @@ func initAwsStoragegatewayGateway(runtime *plugin.Runtime, args map[string]*llx.
 
 	for _, rawResource := range rawResources.Data {
 		gw := rawResource.(*mqlAwsStoragegatewayGateway)
-		if gw.Arn.Data == arnVal {
+		if gw.Arn.Data == ref.RawArn {
 			return args, gw, nil
 		}
 	}

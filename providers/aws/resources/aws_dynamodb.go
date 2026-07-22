@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/applicationautoscaling"
 	aatypes "github.com/aws/aws-sdk-go-v2/service/applicationautoscaling/types"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -328,12 +327,17 @@ func (a *mqlAwsDynamodb) getBackups(conn *connection.AwsConnection) []*jobpool.J
 	return tasks
 }
 
+var dynamodbTableArnSpec = arnSpec{
+	resource: ResourceAwsDynamodbTable,
+	services: []string{"dynamodb"},
+}
+
 func initAwsDynamodbTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	arnVal, err := resolveArnArg(runtime, args, "dynamodb table", "dynamodb")
+	ref, err := dynamodbTableArnSpec.resolve(runtime, args)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -345,9 +349,9 @@ func initAwsDynamodbTable(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	// So derive region + name from the ARN and build the shell directly instead
 	// of fanning ListTables across every region and scanning in memory.
 	var region, tableName string
-	if parsed, err := arn.Parse(arnVal); err == nil && strings.HasPrefix(parsed.Resource, "table/") {
-		region = parsed.Region
-		tableName = strings.TrimPrefix(parsed.Resource, "table/")
+	if strings.HasPrefix(ref.Resource, "table/") {
+		region = ref.Region
+		tableName = strings.TrimPrefix(ref.Resource, "table/")
 	}
 	if args["region"] != nil {
 		if r, ok := args["region"].Value.(string); ok && r != "" {
@@ -363,7 +367,7 @@ func initAwsDynamodbTable(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	if region != "" && tableName != "" {
 		table, err := CreateResource(runtime, "aws.dynamodb.table",
 			map[string]*llx.RawData{
-				"arn":    llx.StringData(arnVal),
+				"arn":    llx.StringData(ref.RawArn),
 				"name":   llx.StringData(tableName),
 				"region": llx.StringData(region),
 				"id":     llx.StringData(""),
@@ -389,7 +393,7 @@ func initAwsDynamodbTable(runtime *plugin.Runtime, args map[string]*llx.RawData)
 
 	for _, rawResource := range rawResources.Data {
 		dbInstance := rawResource.(*mqlAwsDynamodbTable)
-		if dbInstance.Arn.Data == arnVal {
+		if dbInstance.Arn.Data == ref.RawArn {
 			return args, dbInstance, nil
 		}
 	}
@@ -916,12 +920,17 @@ func (a *mqlAwsDynamodbGlobaltable) replicaSettings() ([]any, error) {
 	return convert.JsonToDictSlice(tableSettingsResp.ReplicaSettings)
 }
 
+var dynamodbGlobaltableArnSpec = arnSpec{
+	resource: ResourceAwsDynamodbGlobaltable,
+	services: []string{"dynamodb"},
+}
+
 func initAwsDynamodbGlobaltable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	arnVal, err := resolveArnArg(runtime, args, "dynamodb global table", "dynamodb")
+	ref, err := dynamodbGlobaltableArnSpec.resolve(runtime, args)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -939,7 +948,7 @@ func initAwsDynamodbGlobaltable(runtime *plugin.Runtime, args map[string]*llx.Ra
 
 	for _, rawResource := range rawResources.Data {
 		dbInstance := rawResource.(*mqlAwsDynamodbGlobaltable)
-		if dbInstance.Arn.Data == arnVal {
+		if dbInstance.Arn.Data == ref.RawArn {
 			return args, dbInstance, nil
 		}
 	}
