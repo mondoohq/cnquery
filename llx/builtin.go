@@ -842,8 +842,12 @@ func runResourceFunction(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint
 
 	// watch this field in the resource
 	err := e.ctx.runtime.WatchAndUpdate(rr, chunk.Id, wid, func(fieldData any, fieldError error) {
+		fieldType := types.Unset
+		if field := resource.Fields[chunk.Id]; field != nil {
+			fieldType = types.Type(field.Type)
+		}
 		data := &RawData{
-			Type:  types.Type(resource.Fields[chunk.Id].Type),
+			Type:  fieldType,
 			Value: fieldData,
 			Error: fieldError,
 		}
