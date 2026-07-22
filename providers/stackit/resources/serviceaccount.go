@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"fmt"
+
 	"github.com/stackitcloud/stackit-sdk-go/services/serviceaccount"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -71,7 +73,7 @@ func initStackitServiceAccount(runtime *plugin.Runtime, args map[string]*llx.Raw
 		}
 		return nil, res, nil
 	}
-	return args, nil, nil
+	return nil, nil, fmt.Errorf("stackit.serviceAccount with email %q not found", email)
 }
 
 func (r *mqlStackitServiceAccount) accessTokens() ([]any, error) {
@@ -90,18 +92,24 @@ func (r *mqlStackitServiceAccount) accessTokens() ([]any, error) {
 	items, _ := resp.GetItemsOk()
 	out := make([]any, 0, len(items))
 	for i := range items {
-		t := &items[i]
-		createdAt, ok1 := t.GetCreatedAtOk()
-		validUntil, ok2 := t.GetValidUntilOk()
-		entry := map[string]any{
-			"id":         t.GetId(),
-			"active":     t.GetActive(),
-			"createdAt":  timeOrNil(createdAt, ok1),
-			"validUntil": timeOrNil(validUntil, ok2),
-		}
-		out = append(out, entry)
+		out = append(out, serviceAccountTokenEntry(&items[i]))
 	}
 	return out, nil
+}
+
+// serviceAccountTokenEntry maps an access-token metadata record into a
+// dict-native map. Timestamps are RFC3339 strings (a `dict` cannot carry a
+// *time.Time) so the entry serializes cleanly for the `accessTokens []dict`
+// field.
+func serviceAccountTokenEntry(t *serviceaccount.AccessTokenMetadata) map[string]any {
+	createdAt, ok1 := t.GetCreatedAtOk()
+	validUntil, ok2 := t.GetValidUntilOk()
+	return map[string]any{
+		"id":         t.GetId(),
+		"active":     t.GetActive(),
+		"createdAt":  rfc3339OrNil(createdAt, ok1),
+		"validUntil": rfc3339OrNil(validUntil, ok2),
+	}
 }
 
 func (r *mqlStackitServiceAccount) keys() ([]any, error) {
@@ -120,19 +128,26 @@ func (r *mqlStackitServiceAccount) keys() ([]any, error) {
 	items, _ := resp.GetItemsOk()
 	out := make([]any, 0, len(items))
 	for i := range items {
-		k := &items[i]
-		createdAt, ok1 := k.GetCreatedAtOk()
-		validUntil, ok2 := k.GetValidUntilOk()
-		entry := map[string]any{
-			"id":           k.GetId(),
-			"keyType":      k.GetKeyType(),
-			"keyAlgorithm": k.GetKeyAlgorithm(),
-			"keyOrigin":    k.GetKeyOrigin(),
-			"active":       k.GetActive(),
-			"createdAt":    timeOrNil(createdAt, ok1),
-			"validUntil":   timeOrNil(validUntil, ok2),
-		}
-		out = append(out, entry)
+		out = append(out, serviceAccountKeyEntry(&items[i]))
 	}
 	return out, nil
+}
+
+// serviceAccountKeyEntry maps a service-account key record into a dict-native
+// map. The key* fields are named string enums in the SDK, cast to plain
+// strings, and the timestamps are RFC3339 strings so the entry serializes
+// cleanly for the `keys []dict` field (a `dict` cannot carry a *time.Time or a
+// defined string type).
+func serviceAccountKeyEntry(k *serviceaccount.ServiceAccountKeyListResponse) map[string]any {
+	createdAt, ok1 := k.GetCreatedAtOk()
+	validUntil, ok2 := k.GetValidUntilOk()
+	return map[string]any{
+		"id":           k.GetId(),
+		"keyType":      string(k.GetKeyType()),
+		"keyAlgorithm": string(k.GetKeyAlgorithm()),
+		"keyOrigin":    string(k.GetKeyOrigin()),
+		"active":       k.GetActive(),
+		"createdAt":    rfc3339OrNil(createdAt, ok1),
+		"validUntil":   rfc3339OrNil(validUntil, ok2),
+	}
 }

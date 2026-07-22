@@ -29,6 +29,18 @@ func timeOrNil(t time.Time, ok bool) *time.Time {
 	return &t
 }
 
+// rfc3339OrNil formats a (time, ok) pair from the SDK's GetXxxOk methods as an
+// RFC3339 string for embedding as a `dict` value, or nil when unset or zero.
+// A `dict` value must be a dict-native scalar (string/number/bool), so a
+// *time.Time cannot be stored directly; use llx.TimeDataPtr for typed `time`
+// fields and this helper only for timestamps that live inside a dict.
+func rfc3339OrNil(t time.Time, ok bool) any {
+	if !ok || t.IsZero() {
+		return nil
+	}
+	return t.Format(time.RFC3339)
+}
+
 // parseRFC3339 turns an RFC3339 timestamp string into the *time.Time form
 // llx.TimeDataPtr wants, or nil if the string is empty or malformed. Several
 // STACKIT services return timestamps as strings rather than time.Time.

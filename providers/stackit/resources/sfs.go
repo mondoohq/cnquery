@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/stackitcloud/stackit-sdk-go/services/sfs"
@@ -250,7 +251,7 @@ func initStackitSfsResourcePool(runtime *plugin.Runtime, args map[string]*llx.Ra
 	}
 	pool, ok := resp.GetResourcePoolOk()
 	if !ok {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("stackit.sfs.resourcePool with id %q not found", id)
 	}
 	res, err := CreateResource(runtime, "stackit.sfs.resourcePool", sfsResourcePoolArgs(c.Region(), &pool))
 	if err != nil {
@@ -370,7 +371,7 @@ func initStackitSfsExportPolicy(runtime *plugin.Runtime, args map[string]*llx.Ra
 	}
 	pol, ok := resp.GetShareExportPolicyOk()
 	if !ok {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("stackit.sfs.exportPolicy with id %q not found", id)
 	}
 	res, err := newSfsExportPolicy(runtime, c.Region(), &pol)
 	if err != nil {

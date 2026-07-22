@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/stackitcloud/stackit-sdk-go/services/dns"
@@ -117,7 +118,7 @@ func initStackitDnsZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 	z, ok := resp.GetZoneOk()
 	if !ok {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("stackit.dns.zone with id %q not found", id)
 	}
 	res, err := buildDnsZone(runtime, &z)
 	if err != nil {

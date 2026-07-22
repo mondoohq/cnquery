@@ -41,21 +41,33 @@ func (r *mqlStackit) albWafs() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.DefaultAPI.ListWAF(bgctx(), c.ProjectID(), c.Region()).Execute()
-	if err != nil {
-		if isAccessDenied(err) || isNotFound(err) {
-			return []any{}, nil
+	out := []any{}
+	pageId := ""
+	for {
+		req := client.DefaultAPI.ListWAF(bgctx(), c.ProjectID(), c.Region())
+		if pageId != "" {
+			req = req.PageId(pageId)
 		}
-		return nil, err
-	}
-	items, _ := resp.GetItemsOk()
-	out := make([]any, 0, len(items))
-	for i := range items {
-		res, err := buildAlbWaf(r.MqlRuntime, &items[i])
+		resp, err := req.Execute()
 		if err != nil {
+			if isAccessDenied(err) || isNotFound(err) {
+				return []any{}, nil
+			}
 			return nil, err
 		}
-		out = append(out, res)
+		items, _ := resp.GetItemsOk()
+		for i := range items {
+			res, err := buildAlbWaf(r.MqlRuntime, &items[i])
+			if err != nil {
+				return nil, err
+			}
+			out = append(out, res)
+		}
+		next, ok := resp.GetNextPageIdOk()
+		if !ok || next == nil || *next == "" {
+			break
+		}
+		pageId = *next
 	}
 	return out, nil
 }

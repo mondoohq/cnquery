@@ -16,21 +16,33 @@ func (r *mqlStackit) loadBalancers() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListLoadBalancersExecute(bgctx(), c.ProjectID(), c.Region())
-	if err != nil {
-		if isAccessDenied(err) {
-			return []any{}, nil
+	out := []any{}
+	pageId := ""
+	for {
+		req := client.ListLoadBalancers(bgctx(), c.ProjectID(), c.Region())
+		if pageId != "" {
+			req = req.PageId(pageId)
 		}
-		return nil, err
-	}
-	items, _ := resp.GetLoadBalancersOk()
-	out := make([]any, 0, len(items))
-	for i := range items {
-		res, err := buildLoadBalancer(r.MqlRuntime, &items[i], c.Region())
+		resp, err := req.Execute()
 		if err != nil {
+			if isAccessDenied(err) {
+				return []any{}, nil
+			}
 			return nil, err
 		}
-		out = append(out, res)
+		items, _ := resp.GetLoadBalancersOk()
+		for i := range items {
+			res, err := buildLoadBalancer(r.MqlRuntime, &items[i], c.Region())
+			if err != nil {
+				return nil, err
+			}
+			out = append(out, res)
+		}
+		next, ok := resp.GetNextPageIdOk()
+		if !ok || next == "" {
+			break
+		}
+		pageId = next
 	}
 	return out, nil
 }

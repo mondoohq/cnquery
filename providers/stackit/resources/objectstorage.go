@@ -91,7 +91,7 @@ func initStackitObjectStorageBucket(runtime *plugin.Runtime, args map[string]*ll
 	}
 	b, ok := resp.GetBucketOk()
 	if !ok {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("stackit.objectStorage.bucket %q not found", name)
 	}
 	res, err := buildBucket(runtime, &b)
 	if err != nil {

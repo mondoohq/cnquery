@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"strconv"
+
 	"github.com/stackitcloud/stackit-sdk-go/services/iaas"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -825,10 +827,14 @@ func (r *mqlStackitSecurityGroup) rules() ([]any, error) {
 	for i := range items {
 		rule := items[i]
 
-		var icmpType, icmpCode int64
+		// icmpType/icmpCode are nullable in the schema: leave them nil (MQL null)
+		// for non-ICMP rules rather than emitting 0, which is a valid ICMP type.
+		var icmpType, icmpCode *int64
 		if icmp, ok := rule.GetIcmpParametersOk(); ok {
-			icmpType = int64(icmp.GetType())
-			icmpCode = int64(icmp.GetCode())
+			t := icmp.GetType()
+			code := icmp.GetCode()
+			icmpType = &t
+			icmpCode = &code
 		}
 		var portMin, portMax int64
 		if pr, ok := rule.GetPortRangeOk(); ok {
@@ -837,7 +843,8 @@ func (r *mqlStackitSecurityGroup) rules() ([]any, error) {
 		}
 		var protocol string
 		if p, ok := rule.GetProtocolOk(); ok {
-			protocol = p.GetName()
+			n, okNum := p.GetNumberOk()
+			protocol = protocolLabel(p.GetName(), n, okNum)
 		}
 
 		createdAt, okCreated := rule.GetCreatedAtOk()
@@ -849,8 +856,8 @@ func (r *mqlStackitSecurityGroup) rules() ([]any, error) {
 			"ethertype":             llx.StringData(rule.GetEthertype()),
 			"protocol":              llx.StringData(protocol),
 			"description":           llx.StringData(rule.GetDescription()),
-			"icmpType":              llx.IntData(icmpType),
-			"icmpCode":              llx.IntData(icmpCode),
+			"icmpType":              llx.IntDataPtr(icmpType),
+			"icmpCode":              llx.IntDataPtr(icmpCode),
 			"portRangeMin":          llx.IntData(portMin),
 			"portRangeMax":          llx.IntData(portMax),
 			"ipRange":               llx.StringData(rule.GetIpRange()),
@@ -864,6 +871,20 @@ func (r *mqlStackitSecurityGroup) rules() ([]any, error) {
 		out = append(out, res)
 	}
 	return out, nil
+}
+
+// protocolLabel renders a security-group rule protocol as its name, falling
+// back to the numeric protocol id when the API returns only a number (for
+// example GRE as 47), or "" when neither is set. The API populates exactly one
+// of the two, so a numeric-only protocol would otherwise render empty.
+func protocolLabel(name string, number int64, hasNumber bool) string {
+	if name != "" {
+		return name
+	}
+	if hasNumber {
+		return strconv.FormatInt(number, 10)
+	}
+	return ""
 }
 
 func (r *mqlStackitSecurityGroupRule) id() (string, error) {

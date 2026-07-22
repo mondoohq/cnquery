@@ -4,7 +4,9 @@
 package resources
 
 import (
+	"fmt"
 	"sync"
+	"sync/atomic"
 
 	"github.com/stackitcloud/stackit-sdk-go/services/mongodbflex"
 	"github.com/stackitcloud/stackit-sdk-go/services/observability"
@@ -22,7 +24,7 @@ import (
 // computed methods that share a single cached fetch per instance.
 
 type mqlStackitPostgresFlexInstanceInternal struct {
-	fetched bool
+	fetched atomic.Bool
 	detail  *postgresflex.Instance
 	lock    sync.Mutex
 }
@@ -67,12 +69,12 @@ func (r *mqlStackitPostgresFlexInstance) id() (string, error) {
 // for the lifetime of this resource. Double-check locked so concurrent field
 // accesses share one API call.
 func (r *mqlStackitPostgresFlexInstance) fetchDetail() (*postgresflex.Instance, error) {
-	if r.fetched {
+	if r.fetched.Load() {
 		return r.detail, nil
 	}
 	r.lock.Lock()
 	defer r.lock.Unlock()
-	if r.fetched {
+	if r.fetched.Load() {
 		return r.detail, nil
 	}
 	c := conn(r.MqlRuntime)
@@ -83,7 +85,7 @@ func (r *mqlStackitPostgresFlexInstance) fetchDetail() (*postgresflex.Instance, 
 	resp, err := client.GetInstanceExecute(bgctx(), c.ProjectID(), c.Region(), r.Id.Data)
 	if err != nil {
 		if isAccessDenied(err) {
-			r.fetched = true
+			r.fetched.Store(true)
 			return nil, nil
 		}
 		return nil, err
@@ -91,7 +93,7 @@ func (r *mqlStackitPostgresFlexInstance) fetchDetail() (*postgresflex.Instance, 
 	if item, ok := resp.GetItemOk(); ok {
 		r.detail = &item
 	}
-	r.fetched = true
+	r.fetched.Store(true)
 	return r.detail, nil
 }
 
@@ -161,7 +163,7 @@ func (r *mqlStackitPostgresFlexInstance) options() (map[string]any, error) {
 // lazy-loaded once per instance.
 
 type mqlStackitMongoDbFlexInstanceInternal struct {
-	fetched bool
+	fetched atomic.Bool
 	detail  *mongodbflex.Instance
 	lock    sync.Mutex
 }
@@ -207,12 +209,12 @@ func (r *mqlStackitMongoDbFlexInstance) id() (string, error) {
 }
 
 func (r *mqlStackitMongoDbFlexInstance) fetchDetail() (*mongodbflex.Instance, error) {
-	if r.fetched {
+	if r.fetched.Load() {
 		return r.detail, nil
 	}
 	r.lock.Lock()
 	defer r.lock.Unlock()
-	if r.fetched {
+	if r.fetched.Load() {
 		return r.detail, nil
 	}
 	c := conn(r.MqlRuntime)
@@ -223,7 +225,7 @@ func (r *mqlStackitMongoDbFlexInstance) fetchDetail() (*mongodbflex.Instance, er
 	resp, err := client.GetInstanceExecute(bgctx(), c.ProjectID(), r.Id.Data, c.Region())
 	if err != nil {
 		if isAccessDenied(err) {
-			r.fetched = true
+			r.fetched.Store(true)
 			return nil, nil
 		}
 		return nil, err
@@ -231,7 +233,7 @@ func (r *mqlStackitMongoDbFlexInstance) fetchDetail() (*mongodbflex.Instance, er
 	if item, ok := resp.GetItemOk(); ok {
 		r.detail = &item
 	}
-	r.fetched = true
+	r.fetched.Store(true)
 	return r.detail, nil
 }
 
@@ -548,7 +550,7 @@ func (r *mqlStackitSecretsManagerInstance) acls() ([]any, error) {
 // are lazy-loaded once per instance.
 
 type mqlStackitObservabilityInstanceInternal struct {
-	fetched bool
+	fetched atomic.Bool
 	detail  *observability.GetInstanceResponse
 	lock    sync.Mutex
 }
@@ -591,12 +593,12 @@ func (r *mqlStackitObservabilityInstance) id() (string, error) {
 }
 
 func (r *mqlStackitObservabilityInstance) fetchDetail() (*observability.GetInstanceResponse, error) {
-	if r.fetched {
+	if r.fetched.Load() {
 		return r.detail, nil
 	}
 	r.lock.Lock()
 	defer r.lock.Unlock()
-	if r.fetched {
+	if r.fetched.Load() {
 		return r.detail, nil
 	}
 	c := conn(r.MqlRuntime)
@@ -607,13 +609,13 @@ func (r *mqlStackitObservabilityInstance) fetchDetail() (*observability.GetInsta
 	resp, err := client.GetInstanceExecute(bgctx(), r.Id.Data, c.ProjectID())
 	if err != nil {
 		if isAccessDenied(err) {
-			r.fetched = true
+			r.fetched.Store(true)
 			return nil, nil
 		}
 		return nil, err
 	}
 	r.detail = resp
-	r.fetched = true
+	r.fetched.Store(true)
 	return r.detail, nil
 }
 
@@ -676,7 +678,7 @@ func initStackitPostgresFlexInstance(runtime *plugin.Runtime, args map[string]*l
 	}
 	inst, ok := resp.GetItemOk()
 	if !ok {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("stackit.postgresFlex.instance with id %q not found", id)
 	}
 	res, err := CreateResource(runtime, "stackit.postgresFlex.instance", map[string]*llx.RawData{
 		"id":     llx.StringData(inst.GetId()),
@@ -689,7 +691,7 @@ func initStackitPostgresFlexInstance(runtime *plugin.Runtime, args map[string]*l
 	}
 	r := res.(*mqlStackitPostgresFlexInstance)
 	r.detail = &inst
-	r.fetched = true
+	r.fetched.Store(true)
 	return nil, res, nil
 }
 
@@ -712,7 +714,7 @@ func initStackitMongoDbFlexInstance(runtime *plugin.Runtime, args map[string]*ll
 	}
 	inst, ok := resp.GetItemOk()
 	if !ok {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("stackit.mongoDbFlex.instance with id %q not found", id)
 	}
 	res, err := CreateResource(runtime, "stackit.mongoDbFlex.instance", map[string]*llx.RawData{
 		"id":     llx.StringData(inst.GetId()),
@@ -725,7 +727,7 @@ func initStackitMongoDbFlexInstance(runtime *plugin.Runtime, args map[string]*ll
 	}
 	r := res.(*mqlStackitMongoDbFlexInstance)
 	r.detail = &inst
-	r.fetched = true
+	r.fetched.Store(true)
 	return nil, res, nil
 }
 
@@ -936,7 +938,7 @@ func initStackitObservabilityInstance(runtime *plugin.Runtime, args map[string]*
 	}
 	r := res.(*mqlStackitObservabilityInstance)
 	r.detail = resp
-	r.fetched = true
+	r.fetched.Store(true)
 	return nil, res, nil
 }
 
@@ -1034,7 +1036,7 @@ func initStackitLogMeInstance(runtime *plugin.Runtime, args map[string]*llx.RawD
 // options are lazy-loaded once per instance via GetInstance.
 
 type mqlStackitSqlServerFlexInstanceInternal struct {
-	fetched bool
+	fetched atomic.Bool
 	detail  *sqlserverflex.Instance
 	lock    sync.Mutex
 }
@@ -1076,12 +1078,12 @@ func (r *mqlStackitSqlServerFlexInstance) id() (string, error) {
 }
 
 func (r *mqlStackitSqlServerFlexInstance) fetchDetail() (*sqlserverflex.Instance, error) {
-	if r.fetched {
+	if r.fetched.Load() {
 		return r.detail, nil
 	}
 	r.lock.Lock()
 	defer r.lock.Unlock()
-	if r.fetched {
+	if r.fetched.Load() {
 		return r.detail, nil
 	}
 	c := conn(r.MqlRuntime)
@@ -1092,7 +1094,7 @@ func (r *mqlStackitSqlServerFlexInstance) fetchDetail() (*sqlserverflex.Instance
 	resp, err := client.DefaultAPI.GetInstance(bgctx(), c.ProjectID(), r.Id.Data, c.Region()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
-			r.fetched = true
+			r.fetched.Store(true)
 			return nil, nil
 		}
 		return nil, err
@@ -1100,7 +1102,7 @@ func (r *mqlStackitSqlServerFlexInstance) fetchDetail() (*sqlserverflex.Instance
 	if item, ok := resp.GetItemOk(); ok {
 		r.detail = item
 	}
-	r.fetched = true
+	r.fetched.Store(true)
 	return r.detail, nil
 }
 
@@ -1182,7 +1184,7 @@ func initStackitSqlServerFlexInstance(runtime *plugin.Runtime, args map[string]*
 	}
 	inst, ok := resp.GetItemOk()
 	if !ok {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("stackit.sqlServerFlex.instance with id %q not found", id)
 	}
 	res, err := CreateResource(runtime, "stackit.sqlServerFlex.instance", map[string]*llx.RawData{
 		"id":     llx.StringData(inst.GetId()),
@@ -1195,6 +1197,6 @@ func initStackitSqlServerFlexInstance(runtime *plugin.Runtime, args map[string]*
 	}
 	r := res.(*mqlStackitSqlServerFlexInstance)
 	r.detail = inst
-	r.fetched = true
+	r.fetched.Store(true)
 	return nil, res, nil
 }

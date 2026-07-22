@@ -40,6 +40,27 @@ func TestTimeOrNil(t *testing.T) {
 	}
 }
 
+func TestRfc3339OrNil(t *testing.T) {
+	now := time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC)
+	cases := []struct {
+		name string
+		in   time.Time
+		ok   bool
+		want any
+	}{
+		{"ok=false", now, false, nil},
+		{"ok=true zero time", time.Time{}, true, nil},
+		{"ok=true real time", now, true, now.Format(time.RFC3339)},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := rfc3339OrNil(tc.in, tc.ok); got != tc.want {
+				t.Fatalf("got %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestParseDnsTime(t *testing.T) {
 	cases := []struct {
 		name    string

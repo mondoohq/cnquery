@@ -4,12 +4,20 @@
 package resources
 
 import (
+	"errors"
 	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/types"
 )
+
+// errFlexReachabilityUnknown is returned by a Flex instance's
+// internetReachable() when the instance detail (and thus its ACL) could not be
+// fetched, typically because the token can list instances but is denied
+// GetInstance. Surfacing an error keeps an `internetReachable == false`
+// assertion from passing vacuously when exposure was never actually determined.
+var errFlexReachabilityUnknown = errors.New("stackit: cannot determine internet reachability, instance ACL unavailable (access denied to GetInstance)")
 
 // nicsHavePublicIp reports whether any network interface dict carries a
 // non-empty public IP.
@@ -318,6 +326,13 @@ func newNetworkExposure(runtime *plugin.Runtime, id string, internetReachable, h
 // ---- Flex managed databases (ACL-based) ----
 
 func (c *mqlStackitPostgresFlexInstance) internetReachable() (bool, error) {
+	d, err := c.fetchDetail()
+	if err != nil {
+		return false, err
+	}
+	if d == nil {
+		return false, errFlexReachabilityUnknown
+	}
 	acl := c.GetAcl()
 	if acl.Error != nil {
 		return false, acl.Error
@@ -326,6 +341,13 @@ func (c *mqlStackitPostgresFlexInstance) internetReachable() (bool, error) {
 }
 
 func (c *mqlStackitMongoDbFlexInstance) internetReachable() (bool, error) {
+	d, err := c.fetchDetail()
+	if err != nil {
+		return false, err
+	}
+	if d == nil {
+		return false, errFlexReachabilityUnknown
+	}
 	acl := c.GetAcl()
 	if acl.Error != nil {
 		return false, acl.Error
@@ -334,6 +356,13 @@ func (c *mqlStackitMongoDbFlexInstance) internetReachable() (bool, error) {
 }
 
 func (c *mqlStackitSqlServerFlexInstance) internetReachable() (bool, error) {
+	d, err := c.fetchDetail()
+	if err != nil {
+		return false, err
+	}
+	if d == nil {
+		return false, errFlexReachabilityUnknown
+	}
 	acl := c.GetAcl()
 	if acl.Error != nil {
 		return false, acl.Error
