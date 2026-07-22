@@ -11369,7 +11369,7 @@ func (m *NetworkRange) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Asn |= int32(b&0x7F) << shift
+				m.Asn |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

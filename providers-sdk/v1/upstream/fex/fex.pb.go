@@ -3052,8 +3052,9 @@ type NetworkRange struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The address block in CIDR notation, e.g. "203.0.113.0/24".
 	Cidr string `protobuf:"bytes,1,opt,name=cidr,proto3" json:"cidr,omitempty"`
-	// Optional. Origin autonomous system number.
-	Asn int32 `protobuf:"varint,2,opt,name=asn,proto3" json:"asn,omitempty"`
+	// Optional. Origin autonomous system number. Unsigned 32-bit: 4-byte ASNs
+	// (RFC 6793) range up to 4,294,967,295, which overflows a signed int32.
+	Asn uint32 `protobuf:"varint,2,opt,name=asn,proto3" json:"asn,omitempty"`
 	// Optional. Autonomous system or organization name.
 	AsName string `protobuf:"bytes,3,opt,name=as_name,json=asName,proto3" json:"as_name,omitempty"`
 	// Optional. Two-letter ISO country code.
@@ -3099,7 +3100,7 @@ func (x *NetworkRange) GetCidr() string {
 	return ""
 }
 
-func (x *NetworkRange) GetAsn() int32 {
+func (x *NetworkRange) GetAsn() uint32 {
 	if x != nil {
 		return x.Asn
 	}
@@ -3654,7 +3655,7 @@ const file_fex_proto_rawDesc = "" +
 	"\bstatuses\x18\a \x03(\tR\bstatuses\"g\n" +
 	"\fNetworkRange\x12\x12\n" +
 	"\x04cidr\x18\x01 \x01(\tR\x04cidr\x12\x10\n" +
-	"\x03asn\x18\x02 \x01(\x05R\x03asn\x12\x17\n" +
+	"\x03asn\x18\x02 \x01(\rR\x03asn\x12\x17\n" +
 	"\aas_name\x18\x03 \x01(\tR\x06asName\x12\x18\n" +
 	"\acountry\x18\x04 \x01(\tR\acountry\"T\n" +
 	"\fAttackTactic\x12\x0e\n" +
