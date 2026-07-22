@@ -84,7 +84,7 @@ type DeviceID struct {
 	ProvidesDeviceSDRs      bool                    `json:"providesDeviceSDRs"`
 	DeviceAvailable         bool                    `json:"deviceAvailable"`
 	FirmwareRevision        string                  `json:"firmwareRevision"`
-	IpmiVersion             int64                   `json:"ipmiVersion"`
+	IpmiVersion             string                  `json:"ipmiVersion"`
 	ManufacturerID          int64                   `json:"manufacturerID"`
 	ManufacturerName        string                  `json:"manufacturerName"`
 	ProductID               int64                   `json:"productID"`
@@ -132,11 +132,11 @@ func (c *IpmiClient) DeviceID() (*DeviceID, error) {
 
 	return &DeviceID{
 		DeviceID:           int64(res.DeviceID),
-		DeviceRevision:     int64(res.DeviceRevision & 0x07), // only the last 3 bits 00000111
+		DeviceRevision:     int64(res.DeviceRevision & 0x0F), // §20.1: revision is the low 4 bits
 		ProvidesDeviceSDRs: res.DeviceRevision&0x80 != 0,
 		DeviceAvailable:    res.FirmwareRevision1&0x80 == 0, // 0 - normal operation, 1 - firmware
-		FirmwareRevision:   fmt.Sprintf("%d.%02d", res.FirmwareRevision1&0x7F, res.FirmwareRevision2),
-		IpmiVersion:        int64(res.IPMIVersion),
+		FirmwareRevision:   decodeFirmwareRevision(res.FirmwareRevision1, res.FirmwareRevision2),
+		IpmiVersion:        decodeIPMIVersion(res.IPMIVersion),
 		ManufacturerID:     int64(manufactor),
 		ManufacturerName:   manufactor.String(),
 		ProductID:          int64(product),
@@ -256,6 +256,13 @@ func (c *IpmiClient) ChassisSystemBootOptions() (*ChassisSystemBootOptions, erro
 	err := c.Client.Send(req, res)
 	if err != nil {
 		return nil, err
+	}
+	// The boot-flags parameter carries 5 data bytes (§28.13). The transport
+	// does not enforce that length on the response, so a BMC that returns a
+	// success completion code with a short payload would otherwise panic the
+	// index accesses below (and BootDeviceSelector, which reads Data[1]).
+	if len(res.Data) < 5 {
+		return nil, fmt.Errorf("ipmi: short boot options response, expected 5 data bytes, got %d", len(res.Data))
 	}
 	return &ChassisSystemBootOptions{
 		ParameterVersion:       int64(res.Version),
