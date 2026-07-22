@@ -6,6 +6,7 @@ package resources
 import (
 	"fmt"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/iru/connection"
@@ -16,6 +17,10 @@ func (r *mqlIru) blueprints() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.IruConnection)
 	bps, err := conn.ListBlueprints()
 	if err != nil {
+		if client.IsAccessDenied(err) {
+			log.Warn().Err(err).Msg("iru> access denied to blueprints; returning empty list")
+			return []any{}, nil
+		}
 		return nil, err
 	}
 

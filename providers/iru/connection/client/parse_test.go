@@ -73,3 +73,44 @@ func TestParseInt(t *testing.T) {
 		}
 	}
 }
+
+func TestParseIntOK(t *testing.T) {
+	tests := []struct {
+		in     string
+		want   int64
+		wantOK bool
+	}{
+		{"10", 10, true},
+		{"", 0, true},          // absent value, not a failure
+		{"  ", 0, true},        // whitespace-only, treated as absent
+		{"32 GB", 0, false},    // genuinely non-numeric
+		{"No value", 0, false}, // Kandji sometimes emits this literal
+	}
+	for _, tt := range tests {
+		got, ok := ParseIntOK(tt.in)
+		if got != tt.want || ok != tt.wantOK {
+			t.Errorf("ParseIntOK(%q) = (%d, %v), want (%d, %v)", tt.in, got, ok, tt.want, tt.wantOK)
+		}
+	}
+}
+
+func TestParseMemoryBytes(t *testing.T) {
+	tests := []struct {
+		in   string
+		want int64
+	}{
+		{"32 GB LPDDR5", 32 << 30},
+		{"16 GB", 16 << 30},
+		{"512 MB", 512 << 20},
+		{"1 TB", 1 << 40},
+		{"", 0},
+		{"32GB", 0},  // no separating space, no recognizable unit token
+		{"lots", 0},  // non-numeric
+		{"8 GiB", 0}, // unrecognized unit spelling
+	}
+	for _, tt := range tests {
+		if got := ParseMemoryBytes(tt.in); got != tt.want {
+			t.Errorf("ParseMemoryBytes(%q) = %d, want %d", tt.in, got, tt.want)
+		}
+	}
+}

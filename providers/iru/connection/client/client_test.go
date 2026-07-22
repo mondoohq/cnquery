@@ -239,3 +239,24 @@ func TestAPIErrorAndAccessDenied(t *testing.T) {
 		t.Errorf("error not wrapped as APIError: %v", err)
 	}
 }
+
+func TestIsAccessDenied(t *testing.T) {
+	// A 401 on a listing endpoint must be classified as access-denied so the
+	// resource layer can degrade to an empty list instead of failing the
+	// whole query (Kandji tokens carry per-endpoint permission flags).
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, `{"message":"Invalid authentication"}`, http.StatusUnauthorized)
+	}))
+	t.Cleanup(srv.Close)
+	c, err := New(srv.URL, "bad-token")
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+	_, err = c.ListBlueprints()
+	if err == nil {
+		t.Fatal("expected error from a 401 endpoint")
+	}
+	if !IsAccessDenied(err) {
+		t.Errorf("401 not classified as access-denied: %v", err)
+	}
+}

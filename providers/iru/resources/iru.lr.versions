@@ -60,6 +60,7 @@ iru.device.macAddress 13.0.1
 iru.device.mdmEnabled 13.0.0
 iru.device.mdmInstallDate 13.0.1
 iru.device.memory 13.0.0
+iru.device.memoryBytes 13.0.1
 iru.device.model 13.0.0
 iru.device.modelIdentifier 13.0.0
 iru.device.name 13.0.0

@@ -130,8 +130,14 @@ iru.device @defaults("name serialNumber osVersion platform") {
   // Total number of CPU cores reported by the device
   coreCount() int
 
-  // Human-readable installed memory, for example "32 GB LPDDR5"
+  // Installed memory as a display string, for example "32 GB LPDDR5"
+  //
+  // This mirrors the value the API reports and is not a byte count. Use
+  // `memoryBytes` for size comparisons.
   memory() string
+
+  // Installed memory in bytes parsed from the display string (0 if unparseable)
+  memoryBytes() int
 
   // Battery health status reported by the device, for example "normal"
   batteryHealth() string

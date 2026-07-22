@@ -31,6 +31,10 @@ func (r *mqlIru) devices() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.IruConnection)
 	devices, err := conn.Client.ListDevices()
 	if err != nil {
+		if client.IsAccessDenied(err) {
+			log.Warn().Err(err).Msg("iru> access denied to devices; returning empty list")
+			return []any{}, nil
+		}
 		return nil, err
 	}
 
@@ -214,7 +218,7 @@ func (c *mqlIruDevice) processorCount() (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	return client.ParseInt(d.HardwareOverview.NumberOfProcessors), nil
+	return c.parseIntField(d.HardwareOverview.NumberOfProcessors, "processorCount"), nil
 }
 
 func (c *mqlIruDevice) coreCount() (int64, error) {
@@ -222,7 +226,7 @@ func (c *mqlIruDevice) coreCount() (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	return client.ParseInt(d.HardwareOverview.TotalNumberOfCores), nil
+	return c.parseIntField(d.HardwareOverview.TotalNumberOfCores, "coreCount"), nil
 }
 
 func (c *mqlIruDevice) memory() (string, error) {
@@ -231,6 +235,27 @@ func (c *mqlIruDevice) memory() (string, error) {
 		return "", err
 	}
 	return d.HardwareOverview.Memory, nil
+}
+
+func (c *mqlIruDevice) memoryBytes() (int64, error) {
+	d, err := c.getDetails()
+	if err != nil {
+		return 0, err
+	}
+	return client.ParseMemoryBytes(d.HardwareOverview.Memory), nil
+}
+
+// parseIntField parses an integer field from the detail endpoint, warning
+// (rather than silently returning 0) when the API hands back a non-empty
+// value that isn't numeric, so a zero from a decode problem is
+// distinguishable from a genuinely absent field in the logs.
+func (c *mqlIruDevice) parseIntField(s, field string) int64 {
+	n, ok := client.ParseIntOK(s)
+	if !ok {
+		log.Warn().Str("value", s).Str("field", field).Str("device", c.Id.Data).
+			Msg("iru> unexpected non-integer value; using 0")
+	}
+	return n
 }
 
 func (c *mqlIruDevice) batteryHealth() (string, error) {
@@ -439,7 +464,7 @@ func (c *mqlIruDevice) apps() ([]any, error) {
 			"bundleId":         llx.StringData(a.BundleID),
 			"version":          llx.StringData(a.Version),
 			"appId":            llx.StringData(a.AppID),
-			"bundleSize":       llx.IntData(client.ParseInt(a.BundleSize)),
+			"bundleSize":       llx.IntData(c.parseIntField(a.BundleSize, "app.bundleSize")),
 			"source":           llx.StringData(a.Source),
 			"process":          llx.StringData(a.Process),
 			"signature":        llx.StringData(a.Signature),

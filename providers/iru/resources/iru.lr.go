@@ -233,6 +233,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"iru.device.memory": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruDevice).GetMemory()).ToDataRes(types.String)
 	},
+	"iru.device.memoryBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetMemoryBytes()).ToDataRes(types.Int)
+	},
 	"iru.device.batteryHealth": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruDevice).GetBatteryHealth()).ToDataRes(types.String)
 	},
@@ -604,6 +607,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"iru.device.memory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIruDevice).Memory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iru.device.memoryBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).MemoryBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"iru.device.batteryHealth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1082,6 +1089,7 @@ type mqlIruDevice struct {
 	ProcessorCount                       plugin.TValue[int64]
 	CoreCount                            plugin.TValue[int64]
 	Memory                               plugin.TValue[string]
+	MemoryBytes                          plugin.TValue[int64]
 	BatteryHealth                        plugin.TValue[string]
 	FilevaultEnabled                     plugin.TValue[bool]
 	FilevaultRecoveryKeyEscrowed         plugin.TValue[bool]
@@ -1289,6 +1297,12 @@ func (c *mqlIruDevice) GetCoreCount() *plugin.TValue[int64] {
 func (c *mqlIruDevice) GetMemory() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Memory, func() (string, error) {
 		return c.memory()
+	})
+}
+
+func (c *mqlIruDevice) GetMemoryBytes() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MemoryBytes, func() (int64, error) {
+		return c.memoryBytes()
 	})
 }
 

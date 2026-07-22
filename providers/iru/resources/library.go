@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/iru/connection"
 	"go.mondoo.com/mql/v13/providers/iru/connection/client"
@@ -13,6 +14,10 @@ func (r *mqlIru) libraryItems() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.IruConnection)
 	items, err := conn.ListLibraryItems()
 	if err != nil {
+		if client.IsAccessDenied(err) {
+			log.Warn().Err(err).Msg("iru> access denied to library items; returning empty list")
+			return []any{}, nil
+		}
 		return nil, err
 	}
 

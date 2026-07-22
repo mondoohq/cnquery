@@ -57,9 +57,51 @@ func ParseBool(s string) bool {
 // (for example hardware core counts), returning 0 when the value is empty
 // or non-numeric.
 func ParseInt(s string) int64 {
-	n, err := strconv.ParseInt(strings.TrimSpace(s), 10, 64)
+	n, _ := ParseIntOK(s)
+	return n
+}
+
+// ParseIntOK is ParseInt that also reports whether the input was well-formed.
+// An empty string is treated as a legitimate absent value (0, ok), so callers
+// can warn on a genuinely unexpected non-numeric value while staying quiet on
+// a field the API simply didn't populate.
+func ParseIntOK(s string) (int64, bool) {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return 0, true
+	}
+	n, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return 0, false
+	}
+	return n, true
+}
+
+// ParseMemoryBytes converts a human-readable memory string like
+// "32 GB LPDDR5" to bytes using binary units (1 GB = 1024^3, matching how
+// Apple reports installed memory). It returns 0 when the string has no
+// recognizable "<number> <unit>" prefix.
+func ParseMemoryBytes(s string) int64 {
+	fields := strings.Fields(s)
+	if len(fields) < 2 {
+		return 0
+	}
+	val, err := strconv.ParseFloat(fields[0], 64)
 	if err != nil {
 		return 0
 	}
-	return n
+	var mult float64
+	switch strings.ToUpper(fields[1]) {
+	case "KB":
+		mult = 1 << 10
+	case "MB":
+		mult = 1 << 20
+	case "GB":
+		mult = 1 << 30
+	case "TB":
+		mult = 1 << 40
+	default:
+		return 0
+	}
+	return int64(val * mult)
 }
