@@ -21,6 +21,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/os/connection/container"
 	"go.mondoo.com/mql/v13/providers/os/connection/container/image"
+	"go.mondoo.com/mql/v13/providers/os/connection/dockerclient"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	"go.mondoo.com/mql/v13/providers/os/connection/ssh/cat"
 	"go.mondoo.com/mql/v13/providers/os/connection/tar"
@@ -101,11 +102,9 @@ func NewContainerConnection(id uint32, conf *inventory.Config, asset *inventory.
 }
 
 func GetDockerClient() (*client.Client, error) {
-	// No explicit NegotiateAPIVersion call: the method was removed from *Client in
-	// moby/moby's v29 client rewrite. API version negotiation now happens
-	// automatically on the first request (WithAPIVersionNegotiation is a
-	// documented no-op kept only for backward compatibility).
-	return client.New(client.FromEnv)
+	// Route through the shared builder so we honor DOCKER_HOST *and* the active
+	// docker CLI context (rootless / remote contexts), not just DOCKER_HOST.
+	return dockerclient.NewDockerClient()
 }
 
 func (c *ContainerConnection) Name() string {
@@ -253,6 +252,7 @@ func NewContainerImageConnection(id uint32, conf *inventory.Config, asset *inven
 	// manifest digest, which is stable across architectures for multi-arch tags.
 	ded, dockerErr := dockerDiscovery.NewDockerEngineDiscovery()
 	if dockerErr != nil {
+		log.Debug().Err(dockerErr).Str("image", conf.Host).Msg("could not reach local docker engine, resolving image from registry instead")
 		if err := fillAssetFromRegistry(asset, conf); err != nil {
 			return nil, err
 		}
@@ -261,6 +261,11 @@ func NewContainerImageConnection(id uint32, conf *inventory.Config, asset *inven
 
 	ii, err := ded.ImageInfo(conf.Host)
 	if err != nil {
+		// The local lookup failed, so we treat conf.Host as a registry reference.
+		// Surface the underlying reason: when the engine is unreachable (e.g. a
+		// rootless socket not picked up, see FromDockerEnv) a bare image ID cannot
+		// be resolved from a registry and the ensuing error is otherwise cryptic.
+		log.Debug().Err(err).Str("image", conf.Host).Msg("image not found in local docker engine, resolving from registry instead")
 		if err := fillAssetFromRegistry(asset, conf); err != nil {
 			return nil, err
 		}

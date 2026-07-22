@@ -12,6 +12,7 @@ import (
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/daemon"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
+	"go.mondoo.com/mql/v13/providers/os/connection/dockerclient"
 )
 
 type ShaReference struct {
@@ -39,7 +40,14 @@ func (r ShaReference) Scope(scope string) string {
 }
 
 func LoadImageFromDockerEngine(sha string, disableBuffer bool) (v1.Image, error) {
-	opts := []daemon.Option{}
+	// Inject a context-aware docker client so rootless / remote docker contexts
+	// are reached. daemon.Image otherwise defaults to client.FromEnv, which only
+	// honors DOCKER_HOST and the compiled-in default socket.
+	dc, err := dockerclient.NewDockerClient()
+	if err != nil {
+		return nil, err
+	}
+	opts := []daemon.Option{daemon.WithClient(dc)}
 	if disableBuffer {
 		opts = append(opts, daemon.WithUnbufferedOpener())
 	}

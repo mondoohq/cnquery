@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/v13/providers/os/connection/dockerclient"
 	"go.mondoo.com/mql/v13/types"
 )
 
@@ -141,11 +142,9 @@ func (p *mqlDockerContainer) hostConfig() (any, error) {
 }
 
 func dockerClient() (*client.Client, error) {
-	// No explicit NegotiateAPIVersion call: the method was removed from *Client in
-	// moby/moby's v29 client rewrite. API version negotiation now happens
-	// automatically on the first request (WithAPIVersionNegotiation is a
-	// documented no-op kept only for backward compatibility).
-	cl, err := client.New(client.FromEnv)
+	// Honor DOCKER_HOST and the active docker CLI context (rootless / remote),
+	// not just DOCKER_HOST. See dockerclient.FromDockerEnv for the why.
+	cl, err := dockerclient.NewDockerClient()
 	if err != nil {
 		return nil, err
 	}
