@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strconv"
 	"sync"
+	"sync/atomic"
 
 	"github.com/deploymenttheory/go-api-sdk-jamfpro/sdk/jamfpro"
 	"go.mondoo.com/mql/v13/llx"
@@ -36,9 +37,10 @@ func jamfScopeEntitiesPtr[T any](items *[]T, idName func(T) (any, string)) []int
 
 // mqlJamfPolicyInternal caches the detail record. The list API returns only id
 // and name, so the remaining fields are fetched once, on first access, via
-// GetPolicyByID.
+// GetPolicyByID. detail is an atomic pointer so the lock-free fast path in
+// fetchDetail can read it without racing the write under lock.
 type mqlJamfPolicyInternal struct {
-	detail *jamfpro.ResourcePolicy
+	detail atomic.Pointer[jamfpro.ResourcePolicy]
 	lock   sync.Mutex
 }
 
@@ -79,14 +81,14 @@ func (p *mqlJamfPolicy) id() (string, error) {
 }
 
 func (p *mqlJamfPolicy) fetchDetail() (*jamfpro.ResourcePolicy, error) {
-	if p.detail != nil {
-		return p.detail, nil
+	if d := p.detail.Load(); d != nil {
+		return d, nil
 	}
 
 	p.lock.Lock()
 	defer p.lock.Unlock()
-	if p.detail != nil {
-		return p.detail, nil
+	if d := p.detail.Load(); d != nil {
+		return d, nil
 	}
 
 	conn := p.MqlRuntime.Connection.(*connection.JamfConnection)
@@ -94,7 +96,7 @@ func (p *mqlJamfPolicy) fetchDetail() (*jamfpro.ResourcePolicy, error) {
 	if err != nil {
 		return nil, err
 	}
-	p.detail = detail
+	p.detail.Store(detail)
 	return detail, nil
 }
 

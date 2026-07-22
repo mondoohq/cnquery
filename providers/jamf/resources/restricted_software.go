@@ -6,6 +6,7 @@ package resources
 import (
 	"strconv"
 	"sync"
+	"sync/atomic"
 
 	"github.com/deploymenttheory/go-api-sdk-jamfpro/sdk/jamfpro"
 	"go.mondoo.com/mql/v13/llx"
@@ -14,9 +15,11 @@ import (
 
 // mqlJamfRestrictedSoftwareInternal caches the detail record. The list API
 // returns only id and name, so the remaining fields are fetched once, on
-// first access, via GetRestrictedSoftwareByID.
+// first access, via GetRestrictedSoftwareByID. detail is an atomic pointer so
+// the lock-free fast path in fetchDetail can read it without racing the write
+// under lock.
 type mqlJamfRestrictedSoftwareInternal struct {
-	detail *jamfpro.ResourceRestrictedSoftware
+	detail atomic.Pointer[jamfpro.ResourceRestrictedSoftware]
 	lock   sync.Mutex
 }
 
@@ -49,14 +52,14 @@ func (r *mqlJamfRestrictedSoftware) id() (string, error) {
 }
 
 func (r *mqlJamfRestrictedSoftware) fetchDetail() (*jamfpro.ResourceRestrictedSoftware, error) {
-	if r.detail != nil {
-		return r.detail, nil
+	if d := r.detail.Load(); d != nil {
+		return d, nil
 	}
 
 	r.lock.Lock()
 	defer r.lock.Unlock()
-	if r.detail != nil {
-		return r.detail, nil
+	if d := r.detail.Load(); d != nil {
+		return d, nil
 	}
 
 	conn := r.MqlRuntime.Connection.(*connection.JamfConnection)
@@ -64,7 +67,7 @@ func (r *mqlJamfRestrictedSoftware) fetchDetail() (*jamfpro.ResourceRestrictedSo
 	if err != nil {
 		return nil, err
 	}
-	r.detail = detail
+	r.detail.Store(detail)
 	return detail, nil
 }
 

@@ -26,8 +26,8 @@ func initJamfUserByName(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		// Bare resource access is a valid empty state, not an error.
 		return args, nil, nil
 	}
-	name := nameArg.Value.(string)
-	if name == "" {
+	name, ok := nameArg.Value.(string)
+	if !ok || name == "" {
 		return nil, nil, errors.New("jamf.userByName requires a non-empty name")
 	}
 
