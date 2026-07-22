@@ -382,6 +382,10 @@ message Evidence {
     Certificate certificate = 29;
     DomainRegistration domain_registration = 30;
     NetworkRange network_range = 31;
+    ThreatIntelIndicator threat_intel_indicator = 32;
+    Malware malware = 33;
+    AiModel ai_model = 34;
+    AiAgent ai_agent = 35;
   }
   // Additional properties specific to this evidence
   map<string, string> properties = 4;
@@ -602,6 +606,71 @@ message NetworkRange {
   string as_name = 3;
   // Optional. Two-letter ISO country code.
   string country = 4;
+}
+
+// ThreatIntelIndicator captures an artifact — an IP, domain, URL, or file hash
+// — that was observed and matched against threat intelligence, indicating
+// malicious or suspicious activity. It is the first-class evidence for threat
+// findings (e.g. a host talking to a known command-and-control address).
+message ThreatIntelIndicator {
+  // The indicator kind, e.g. "ipv4", "ipv6", "domain", "url", "sha256", "md5".
+  // Free-form: the set of indicator kinds is open and evolving.
+  string type = 1;
+  // The indicator value itself — the address, domain, url, or hash.
+  string value = 2;
+  // Optional. The threat category, e.g. "malware", "command-and-control",
+  // "phishing", "tor-exit-node".
+  string category = 3;
+  // Optional. The threat-intelligence source that matched the indicator.
+  string source = 4;
+  // Optional. A URL for more detail on the indicator from its source.
+  string source_url = 5;
+  // Optional. When the indicator was last observed.
+  google.protobuf.Timestamp last_observed_at = 6;
+}
+
+// Malware captures a malicious-software artifact identified for a finding — a
+// detected trojan, ransomware, rootkit, or cryptominer.
+message Malware {
+  // Name of the malware, e.g. "Pony", "WannaCry".
+  string name = 1;
+  // Optional. Type of the malware, e.g. "trojan", "ransomware", "rootkit",
+  // "cryptominer". Free-form: malware taxonomies vary across sources.
+  string type = 2;
+  // Optional. Filesystem path of the malicious artifact.
+  string path = 3;
+  // Optional. Observed state of the malware, e.g. "observed", "removed".
+  string state = 4;
+}
+
+// AiModel captures the AI/ML model involved in a finding — for findings about a
+// model's deployment, configuration, or use.
+message AiModel {
+  // Name of the model, e.g. "gpt-4o", "llama-3".
+  string name = 1;
+  // Optional. Model family or type, e.g. "llm", "vision", "embedding".
+  string type = 2;
+  // Optional. Model version.
+  string version = 3;
+  // Optional. Provider or publisher, e.g. "openai", "meta", "google".
+  string publisher = 4;
+  // Optional. Where the model is deployed, e.g. a serving endpoint or resource
+  // identifier.
+  string deployment = 5;
+}
+
+// AiAgent captures the AI agent implicated in or that flagged a finding —
+// evidence for the emerging class of agent-driven and agent-security findings.
+message AiAgent {
+  // Stable identifier for the agent.
+  string id = 1;
+  // Human-readable name of the agent.
+  string name = 2;
+  // Optional. The underlying model the agent runs on.
+  string model = 3;
+  // Optional. The conversational/session identifier in which the finding
+  // occurred.
+  string session_id = 4;
 }
 
 // AttackTactic is used to identify the tactic used in an attack.

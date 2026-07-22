@@ -1875,6 +1875,10 @@ type Evidence struct {
 	//	*Evidence_Certificate
 	//	*Evidence_DomainRegistration
 	//	*Evidence_NetworkRange
+	//	*Evidence_ThreatIntelIndicator
+	//	*Evidence_Malware
+	//	*Evidence_AiModel
+	//	*Evidence_AiAgent
 	Details isEvidence_Details `protobuf_oneof:"details"`
 	// Additional properties specific to this evidence
 	Properties    map[string]string `protobuf:"bytes,4,rep,name=properties,proto3" json:"properties,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
@@ -2048,6 +2052,42 @@ func (x *Evidence) GetNetworkRange() *NetworkRange {
 	return nil
 }
 
+func (x *Evidence) GetThreatIntelIndicator() *ThreatIntelIndicator {
+	if x != nil {
+		if x, ok := x.Details.(*Evidence_ThreatIntelIndicator); ok {
+			return x.ThreatIntelIndicator
+		}
+	}
+	return nil
+}
+
+func (x *Evidence) GetMalware() *Malware {
+	if x != nil {
+		if x, ok := x.Details.(*Evidence_Malware); ok {
+			return x.Malware
+		}
+	}
+	return nil
+}
+
+func (x *Evidence) GetAiModel() *AiModel {
+	if x != nil {
+		if x, ok := x.Details.(*Evidence_AiModel); ok {
+			return x.AiModel
+		}
+	}
+	return nil
+}
+
+func (x *Evidence) GetAiAgent() *AiAgent {
+	if x != nil {
+		if x, ok := x.Details.(*Evidence_AiAgent); ok {
+			return x.AiAgent
+		}
+	}
+	return nil
+}
+
 func (x *Evidence) GetProperties() map[string]string {
 	if x != nil {
 		return x.Properties
@@ -2107,6 +2147,22 @@ type Evidence_NetworkRange struct {
 	NetworkRange *NetworkRange `protobuf:"bytes,31,opt,name=network_range,json=networkRange,proto3,oneof"`
 }
 
+type Evidence_ThreatIntelIndicator struct {
+	ThreatIntelIndicator *ThreatIntelIndicator `protobuf:"bytes,32,opt,name=threat_intel_indicator,json=threatIntelIndicator,proto3,oneof"`
+}
+
+type Evidence_Malware struct {
+	Malware *Malware `protobuf:"bytes,33,opt,name=malware,proto3,oneof"`
+}
+
+type Evidence_AiModel struct {
+	AiModel *AiModel `protobuf:"bytes,34,opt,name=ai_model,json=aiModel,proto3,oneof"`
+}
+
+type Evidence_AiAgent struct {
+	AiAgent *AiAgent `protobuf:"bytes,35,opt,name=ai_agent,json=aiAgent,proto3,oneof"`
+}
+
 func (*Evidence_User) isEvidence_Details() {}
 
 func (*Evidence_File) isEvidence_Details() {}
@@ -2130,6 +2186,14 @@ func (*Evidence_Certificate) isEvidence_Details() {}
 func (*Evidence_DomainRegistration) isEvidence_Details() {}
 
 func (*Evidence_NetworkRange) isEvidence_Details() {}
+
+func (*Evidence_ThreatIntelIndicator) isEvidence_Details() {}
+
+func (*Evidence_Malware) isEvidence_Details() {}
+
+func (*Evidence_AiModel) isEvidence_Details() {}
+
+func (*Evidence_AiAgent) isEvidence_Details() {}
 
 // Experimental. File information
 type File struct {
@@ -3125,6 +3189,336 @@ func (x *NetworkRange) GetCountry() string {
 	return ""
 }
 
+// ThreatIntelIndicator captures an artifact — an IP, domain, URL, or file hash
+// — that was observed and matched against threat intelligence, indicating
+// malicious or suspicious activity. It is the first-class evidence for threat
+// findings (e.g. a host talking to a known command-and-control address).
+type ThreatIntelIndicator struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The indicator kind, e.g. "ipv4", "ipv6", "domain", "url", "sha256", "md5".
+	// Free-form: the set of indicator kinds is open and evolving.
+	Type string `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
+	// The indicator value itself — the address, domain, url, or hash.
+	Value string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	// Optional. The threat category, e.g. "malware", "command-and-control",
+	// "phishing", "tor-exit-node".
+	Category string `protobuf:"bytes,3,opt,name=category,proto3" json:"category,omitempty"`
+	// Optional. The threat-intelligence source that matched the indicator.
+	Source string `protobuf:"bytes,4,opt,name=source,proto3" json:"source,omitempty"`
+	// Optional. A URL for more detail on the indicator from its source.
+	SourceUrl string `protobuf:"bytes,5,opt,name=source_url,json=sourceUrl,proto3" json:"source_url,omitempty"`
+	// Optional. When the indicator was last observed.
+	LastObservedAt *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=last_observed_at,json=lastObservedAt,proto3" json:"last_observed_at,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *ThreatIntelIndicator) Reset() {
+	*x = ThreatIntelIndicator{}
+	mi := &file_fex_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ThreatIntelIndicator) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ThreatIntelIndicator) ProtoMessage() {}
+
+func (x *ThreatIntelIndicator) ProtoReflect() protoreflect.Message {
+	mi := &file_fex_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ThreatIntelIndicator.ProtoReflect.Descriptor instead.
+func (*ThreatIntelIndicator) Descriptor() ([]byte, []int) {
+	return file_fex_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *ThreatIntelIndicator) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *ThreatIntelIndicator) GetValue() string {
+	if x != nil {
+		return x.Value
+	}
+	return ""
+}
+
+func (x *ThreatIntelIndicator) GetCategory() string {
+	if x != nil {
+		return x.Category
+	}
+	return ""
+}
+
+func (x *ThreatIntelIndicator) GetSource() string {
+	if x != nil {
+		return x.Source
+	}
+	return ""
+}
+
+func (x *ThreatIntelIndicator) GetSourceUrl() string {
+	if x != nil {
+		return x.SourceUrl
+	}
+	return ""
+}
+
+func (x *ThreatIntelIndicator) GetLastObservedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.LastObservedAt
+	}
+	return nil
+}
+
+// Malware captures a malicious-software artifact identified for a finding — a
+// detected trojan, ransomware, rootkit, or cryptominer.
+type Malware struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Name of the malware, e.g. "Pony", "WannaCry".
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// Optional. Type of the malware, e.g. "trojan", "ransomware", "rootkit",
+	// "cryptominer". Free-form: malware taxonomies vary across sources.
+	Type string `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	// Optional. Filesystem path of the malicious artifact.
+	Path string `protobuf:"bytes,3,opt,name=path,proto3" json:"path,omitempty"`
+	// Optional. Observed state of the malware, e.g. "observed", "removed".
+	State         string `protobuf:"bytes,4,opt,name=state,proto3" json:"state,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Malware) Reset() {
+	*x = Malware{}
+	mi := &file_fex_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Malware) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Malware) ProtoMessage() {}
+
+func (x *Malware) ProtoReflect() protoreflect.Message {
+	mi := &file_fex_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Malware.ProtoReflect.Descriptor instead.
+func (*Malware) Descriptor() ([]byte, []int) {
+	return file_fex_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *Malware) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Malware) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *Malware) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
+func (x *Malware) GetState() string {
+	if x != nil {
+		return x.State
+	}
+	return ""
+}
+
+// AiModel captures the AI/ML model involved in a finding — for findings about a
+// model's deployment, configuration, or use.
+type AiModel struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Name of the model, e.g. "gpt-4o", "llama-3".
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// Optional. Model family or type, e.g. "llm", "vision", "embedding".
+	Type string `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	// Optional. Model version.
+	Version string `protobuf:"bytes,3,opt,name=version,proto3" json:"version,omitempty"`
+	// Optional. Provider or publisher, e.g. "openai", "meta", "google".
+	Publisher string `protobuf:"bytes,4,opt,name=publisher,proto3" json:"publisher,omitempty"`
+	// Optional. Where the model is deployed, e.g. a serving endpoint or resource
+	// identifier.
+	Deployment    string `protobuf:"bytes,5,opt,name=deployment,proto3" json:"deployment,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AiModel) Reset() {
+	*x = AiModel{}
+	mi := &file_fex_proto_msgTypes[29]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AiModel) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AiModel) ProtoMessage() {}
+
+func (x *AiModel) ProtoReflect() protoreflect.Message {
+	mi := &file_fex_proto_msgTypes[29]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AiModel.ProtoReflect.Descriptor instead.
+func (*AiModel) Descriptor() ([]byte, []int) {
+	return file_fex_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *AiModel) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *AiModel) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *AiModel) GetVersion() string {
+	if x != nil {
+		return x.Version
+	}
+	return ""
+}
+
+func (x *AiModel) GetPublisher() string {
+	if x != nil {
+		return x.Publisher
+	}
+	return ""
+}
+
+func (x *AiModel) GetDeployment() string {
+	if x != nil {
+		return x.Deployment
+	}
+	return ""
+}
+
+// AiAgent captures the AI agent implicated in or that flagged a finding —
+// evidence for the emerging class of agent-driven and agent-security findings.
+type AiAgent struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Stable identifier for the agent.
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// Human-readable name of the agent.
+	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	// Optional. The underlying model the agent runs on.
+	Model string `protobuf:"bytes,3,opt,name=model,proto3" json:"model,omitempty"`
+	// Optional. The conversational/session identifier in which the finding
+	// occurred.
+	SessionId     string `protobuf:"bytes,4,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AiAgent) Reset() {
+	*x = AiAgent{}
+	mi := &file_fex_proto_msgTypes[30]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AiAgent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AiAgent) ProtoMessage() {}
+
+func (x *AiAgent) ProtoReflect() protoreflect.Message {
+	mi := &file_fex_proto_msgTypes[30]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AiAgent.ProtoReflect.Descriptor instead.
+func (*AiAgent) Descriptor() ([]byte, []int) {
+	return file_fex_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *AiAgent) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *AiAgent) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *AiAgent) GetModel() string {
+	if x != nil {
+		return x.Model
+	}
+	return ""
+}
+
+func (x *AiAgent) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
 // AttackTactic is used to identify the tactic used in an attack.
 // Typically this refers to identifier on the MITRE ATT&CK framework.
 type AttackTactic struct {
@@ -3141,7 +3535,7 @@ type AttackTactic struct {
 
 func (x *AttackTactic) Reset() {
 	*x = AttackTactic{}
-	mi := &file_fex_proto_msgTypes[27]
+	mi := &file_fex_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3153,7 +3547,7 @@ func (x *AttackTactic) String() string {
 func (*AttackTactic) ProtoMessage() {}
 
 func (x *AttackTactic) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[27]
+	mi := &file_fex_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3166,7 +3560,7 @@ func (x *AttackTactic) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AttackTactic.ProtoReflect.Descriptor instead.
 func (*AttackTactic) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{27}
+	return file_fex_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *AttackTactic) GetId() string {
@@ -3206,7 +3600,7 @@ type AttackTechnique struct {
 
 func (x *AttackTechnique) Reset() {
 	*x = AttackTechnique{}
-	mi := &file_fex_proto_msgTypes[28]
+	mi := &file_fex_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3218,7 +3612,7 @@ func (x *AttackTechnique) String() string {
 func (*AttackTechnique) ProtoMessage() {}
 
 func (x *AttackTechnique) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[28]
+	mi := &file_fex_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3231,7 +3625,7 @@ func (x *AttackTechnique) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AttackTechnique.ProtoReflect.Descriptor instead.
 func (*AttackTechnique) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{28}
+	return file_fex_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *AttackTechnique) GetId() string {
@@ -3270,7 +3664,7 @@ type Kubernetes_Pod struct {
 
 func (x *Kubernetes_Pod) Reset() {
 	*x = Kubernetes_Pod{}
-	mi := &file_fex_proto_msgTypes[35]
+	mi := &file_fex_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3282,7 +3676,7 @@ func (x *Kubernetes_Pod) String() string {
 func (*Kubernetes_Pod) ProtoMessage() {}
 
 func (x *Kubernetes_Pod) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[35]
+	mi := &file_fex_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3332,7 +3726,7 @@ type Kubernetes_Node struct {
 
 func (x *Kubernetes_Node) Reset() {
 	*x = Kubernetes_Node{}
-	mi := &file_fex_proto_msgTypes[36]
+	mi := &file_fex_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3344,7 +3738,7 @@ func (x *Kubernetes_Node) String() string {
 func (*Kubernetes_Node) ProtoMessage() {}
 
 func (x *Kubernetes_Node) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[36]
+	mi := &file_fex_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3534,7 +3928,7 @@ const file_fex_proto_rawDesc = "" +
 	"\x0fCATEGORY_THREAT\x10\x04\x12\x14\n" +
 	"\x10CATEGORY_MALWARE\x10\x05\x12\x1a\n" +
 	"\x16CATEGORY_INFORMATIONAL\x10\x06\x12\x13\n" +
-	"\x0fCATEGORY_SECRET\x10\a\"\xf0\a\n" +
+	"\x0fCATEGORY_SECRET\x10\a\"\xdf\t\n" +
 	"\bEvidence\x120\n" +
 	"\x06tactic\x18\x01 \x01(\v2\x18.mql.fex.v1.AttackTacticR\x06tactic\x129\n" +
 	"\ttechnique\x18\x02 \x01(\v2\x1b.mql.fex.v1.AttackTechniqueR\ttechnique\x126\n" +
@@ -3557,7 +3951,11 @@ const file_fex_proto_rawDesc = "" +
 	"dns_record\x18\x1c \x01(\v2\x15.mql.fex.v1.DnsRecordH\x00R\tdnsRecord\x12;\n" +
 	"\vcertificate\x18\x1d \x01(\v2\x17.mql.fex.v1.CertificateH\x00R\vcertificate\x12Q\n" +
 	"\x13domain_registration\x18\x1e \x01(\v2\x1e.mql.fex.v1.DomainRegistrationH\x00R\x12domainRegistration\x12?\n" +
-	"\rnetwork_range\x18\x1f \x01(\v2\x18.mql.fex.v1.NetworkRangeH\x00R\fnetworkRange\x12D\n" +
+	"\rnetwork_range\x18\x1f \x01(\v2\x18.mql.fex.v1.NetworkRangeH\x00R\fnetworkRange\x12X\n" +
+	"\x16threat_intel_indicator\x18  \x01(\v2 .mql.fex.v1.ThreatIntelIndicatorH\x00R\x14threatIntelIndicator\x12/\n" +
+	"\amalware\x18! \x01(\v2\x13.mql.fex.v1.MalwareH\x00R\amalware\x120\n" +
+	"\bai_model\x18\" \x01(\v2\x13.mql.fex.v1.AiModelH\x00R\aaiModel\x120\n" +
+	"\bai_agent\x18# \x01(\v2\x13.mql.fex.v1.AiAgentH\x00R\aaiAgent\x12D\n" +
 	"\n" +
 	"properties\x18\x04 \x03(\v2$.mql.fex.v1.Evidence.PropertiesEntryR\n" +
 	"properties\x1a=\n" +
@@ -3661,7 +4059,34 @@ const file_fex_proto_rawDesc = "" +
 	"\x04cidr\x18\x01 \x01(\tR\x04cidr\x12\x10\n" +
 	"\x03asn\x18\x02 \x01(\rR\x03asn\x12\x17\n" +
 	"\aas_name\x18\x03 \x01(\tR\x06asName\x12\x18\n" +
-	"\acountry\x18\x04 \x01(\tR\acountry\"T\n" +
+	"\acountry\x18\x04 \x01(\tR\acountry\"\xd9\x01\n" +
+	"\x14ThreatIntelIndicator\x12\x12\n" +
+	"\x04type\x18\x01 \x01(\tR\x04type\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value\x12\x1a\n" +
+	"\bcategory\x18\x03 \x01(\tR\bcategory\x12\x16\n" +
+	"\x06source\x18\x04 \x01(\tR\x06source\x12\x1d\n" +
+	"\n" +
+	"source_url\x18\x05 \x01(\tR\tsourceUrl\x12D\n" +
+	"\x10last_observed_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\x0elastObservedAt\"[\n" +
+	"\aMalware\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
+	"\x04type\x18\x02 \x01(\tR\x04type\x12\x12\n" +
+	"\x04path\x18\x03 \x01(\tR\x04path\x12\x14\n" +
+	"\x05state\x18\x04 \x01(\tR\x05state\"\x89\x01\n" +
+	"\aAiModel\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
+	"\x04type\x18\x02 \x01(\tR\x04type\x12\x18\n" +
+	"\aversion\x18\x03 \x01(\tR\aversion\x12\x1c\n" +
+	"\tpublisher\x18\x04 \x01(\tR\tpublisher\x12\x1e\n" +
+	"\n" +
+	"deployment\x18\x05 \x01(\tR\n" +
+	"deployment\"b\n" +
+	"\aAiAgent\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n" +
+	"\x05model\x18\x03 \x01(\tR\x05model\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x04 \x01(\tR\tsessionId\"T\n" +
 	"\fAttackTactic\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
@@ -3713,7 +4138,7 @@ func file_fex_proto_rawDescGZIP() []byte {
 }
 
 var file_fex_proto_enumTypes = make([]protoimpl.EnumInfo, 7)
-var file_fex_proto_msgTypes = make([]protoimpl.MessageInfo, 37)
+var file_fex_proto_msgTypes = make([]protoimpl.MessageInfo, 41)
 var file_fex_proto_goTypes = []any{
 	(Status)(0),                        // 0: mql.fex.v1.Status
 	(ScoringMethod)(0),                 // 1: mql.fex.v1.ScoringMethod
@@ -3749,43 +4174,47 @@ var file_fex_proto_goTypes = []any{
 	(*Certificate)(nil),                // 31: mql.fex.v1.Certificate
 	(*DomainRegistration)(nil),         // 32: mql.fex.v1.DomainRegistration
 	(*NetworkRange)(nil),               // 33: mql.fex.v1.NetworkRange
-	(*AttackTactic)(nil),               // 34: mql.fex.v1.AttackTactic
-	(*AttackTechnique)(nil),            // 35: mql.fex.v1.AttackTechnique
-	nil,                                // 36: mql.fex.v1.Reference.MetadataEntry
-	nil,                                // 37: mql.fex.v1.Component.IdentifiersEntry
-	nil,                                // 38: mql.fex.v1.Component.PropertiesEntry
-	nil,                                // 39: mql.fex.v1.FindingDetail.PropertiesEntry
-	nil,                                // 40: mql.fex.v1.Evidence.PropertiesEntry
-	nil,                                // 41: mql.fex.v1.User.PropertiesEntry
-	(*Kubernetes_Pod)(nil),             // 42: mql.fex.v1.Kubernetes.Pod
-	(*Kubernetes_Node)(nil),            // 43: mql.fex.v1.Kubernetes.Node
-	(*timestamppb.Timestamp)(nil),      // 44: google.protobuf.Timestamp
-	(*structpb.Struct)(nil),            // 45: google.protobuf.Struct
+	(*ThreatIntelIndicator)(nil),       // 34: mql.fex.v1.ThreatIntelIndicator
+	(*Malware)(nil),                    // 35: mql.fex.v1.Malware
+	(*AiModel)(nil),                    // 36: mql.fex.v1.AiModel
+	(*AiAgent)(nil),                    // 37: mql.fex.v1.AiAgent
+	(*AttackTactic)(nil),               // 38: mql.fex.v1.AttackTactic
+	(*AttackTechnique)(nil),            // 39: mql.fex.v1.AttackTechnique
+	nil,                                // 40: mql.fex.v1.Reference.MetadataEntry
+	nil,                                // 41: mql.fex.v1.Component.IdentifiersEntry
+	nil,                                // 42: mql.fex.v1.Component.PropertiesEntry
+	nil,                                // 43: mql.fex.v1.FindingDetail.PropertiesEntry
+	nil,                                // 44: mql.fex.v1.Evidence.PropertiesEntry
+	nil,                                // 45: mql.fex.v1.User.PropertiesEntry
+	(*Kubernetes_Pod)(nil),             // 46: mql.fex.v1.Kubernetes.Pod
+	(*Kubernetes_Node)(nil),            // 47: mql.fex.v1.Kubernetes.Node
+	(*timestamppb.Timestamp)(nil),      // 48: google.protobuf.Timestamp
+	(*structpb.Struct)(nil),            // 49: google.protobuf.Struct
 }
 var file_fex_proto_depIdxs = []int32{
 	9,  // 0: mql.fex.v1.FindingDocument.vex:type_name -> mql.fex.v1.VulnerabilityExchange
 	19, // 1: mql.fex.v1.FindingDocument.fex:type_name -> mql.fex.v1.FindingExchange
 	7,  // 2: mql.fex.v1.FindingsUploadRequest.findings:type_name -> mql.fex.v1.FindingDocument
-	44, // 3: mql.fex.v1.FindingsUploadRequest.import_started_at:type_name -> google.protobuf.Timestamp
+	48, // 3: mql.fex.v1.FindingsUploadRequest.import_started_at:type_name -> google.protobuf.Timestamp
 	12, // 4: mql.fex.v1.VulnerabilityExchange.details:type_name -> mql.fex.v1.VulnerabilityDetails
 	11, // 5: mql.fex.v1.VulnerabilityExchange.source:type_name -> mql.fex.v1.Source
 	16, // 6: mql.fex.v1.VulnerabilityExchange.ratings:type_name -> mql.fex.v1.Rating
-	44, // 7: mql.fex.v1.VulnerabilityExchange.first_seen:type_name -> google.protobuf.Timestamp
-	44, // 8: mql.fex.v1.VulnerabilityExchange.remediated:type_name -> google.protobuf.Timestamp
+	48, // 7: mql.fex.v1.VulnerabilityExchange.first_seen:type_name -> google.protobuf.Timestamp
+	48, // 8: mql.fex.v1.VulnerabilityExchange.remediated:type_name -> google.protobuf.Timestamp
 	13, // 9: mql.fex.v1.VulnerabilityExchange.affects:type_name -> mql.fex.v1.Affects
 	0,  // 10: mql.fex.v1.VulnerabilityExchange.status:type_name -> mql.fex.v1.Status
 	10, // 11: mql.fex.v1.VulnerabilityExchange.references:type_name -> mql.fex.v1.Reference
 	18, // 12: mql.fex.v1.VulnerabilityExchange.remediations:type_name -> mql.fex.v1.Remediation
-	45, // 13: mql.fex.v1.VulnerabilityExchange.database_specific:type_name -> google.protobuf.Struct
+	49, // 13: mql.fex.v1.VulnerabilityExchange.database_specific:type_name -> google.protobuf.Struct
 	21, // 14: mql.fex.v1.VulnerabilityExchange.evidences:type_name -> mql.fex.v1.Evidence
-	36, // 15: mql.fex.v1.Reference.metadata:type_name -> mql.fex.v1.Reference.MetadataEntry
-	44, // 16: mql.fex.v1.VulnerabilityDetails.created:type_name -> google.protobuf.Timestamp
-	44, // 17: mql.fex.v1.VulnerabilityDetails.published:type_name -> google.protobuf.Timestamp
-	44, // 18: mql.fex.v1.VulnerabilityDetails.updated:type_name -> google.protobuf.Timestamp
+	40, // 15: mql.fex.v1.Reference.metadata:type_name -> mql.fex.v1.Reference.MetadataEntry
+	48, // 16: mql.fex.v1.VulnerabilityDetails.created:type_name -> google.protobuf.Timestamp
+	48, // 17: mql.fex.v1.VulnerabilityDetails.published:type_name -> google.protobuf.Timestamp
+	48, // 18: mql.fex.v1.VulnerabilityDetails.updated:type_name -> google.protobuf.Timestamp
 	14, // 19: mql.fex.v1.Affects.component:type_name -> mql.fex.v1.Component
 	14, // 20: mql.fex.v1.Affects.sub_components:type_name -> mql.fex.v1.Component
-	37, // 21: mql.fex.v1.Component.identifiers:type_name -> mql.fex.v1.Component.IdentifiersEntry
-	38, // 22: mql.fex.v1.Component.properties:type_name -> mql.fex.v1.Component.PropertiesEntry
+	41, // 21: mql.fex.v1.Component.identifiers:type_name -> mql.fex.v1.Component.IdentifiersEntry
+	42, // 22: mql.fex.v1.Component.properties:type_name -> mql.fex.v1.Component.PropertiesEntry
 	15, // 23: mql.fex.v1.Component.file:type_name -> mql.fex.v1.FileComponent
 	11, // 24: mql.fex.v1.Rating.source:type_name -> mql.fex.v1.Source
 	1,  // 25: mql.fex.v1.Rating.method:type_name -> mql.fex.v1.ScoringMethod
@@ -3794,9 +4223,9 @@ var file_fex_proto_depIdxs = []int32{
 	3,  // 28: mql.fex.v1.Severity.rating:type_name -> mql.fex.v1.SeverityRating
 	4,  // 29: mql.fex.v1.Remediation.category:type_name -> mql.fex.v1.Remediation.Category
 	20, // 30: mql.fex.v1.FindingExchange.details:type_name -> mql.fex.v1.FindingDetail
-	44, // 31: mql.fex.v1.FindingExchange.first_seen_at:type_name -> google.protobuf.Timestamp
-	44, // 32: mql.fex.v1.FindingExchange.last_seen_at:type_name -> google.protobuf.Timestamp
-	44, // 33: mql.fex.v1.FindingExchange.remediated_at:type_name -> google.protobuf.Timestamp
+	48, // 31: mql.fex.v1.FindingExchange.first_seen_at:type_name -> google.protobuf.Timestamp
+	48, // 32: mql.fex.v1.FindingExchange.last_seen_at:type_name -> google.protobuf.Timestamp
+	48, // 33: mql.fex.v1.FindingExchange.remediated_at:type_name -> google.protobuf.Timestamp
 	0,  // 34: mql.fex.v1.FindingExchange.status:type_name -> mql.fex.v1.Status
 	11, // 35: mql.fex.v1.FindingExchange.source:type_name -> mql.fex.v1.Source
 	13, // 36: mql.fex.v1.FindingExchange.affects:type_name -> mql.fex.v1.Affects
@@ -3806,9 +4235,9 @@ var file_fex_proto_depIdxs = []int32{
 	17, // 40: mql.fex.v1.FindingDetail.severity:type_name -> mql.fex.v1.Severity
 	2,  // 41: mql.fex.v1.FindingDetail.confidence:type_name -> mql.fex.v1.Confidence
 	10, // 42: mql.fex.v1.FindingDetail.references:type_name -> mql.fex.v1.Reference
-	39, // 43: mql.fex.v1.FindingDetail.properties:type_name -> mql.fex.v1.FindingDetail.PropertiesEntry
-	34, // 44: mql.fex.v1.Evidence.tactic:type_name -> mql.fex.v1.AttackTactic
-	35, // 45: mql.fex.v1.Evidence.technique:type_name -> mql.fex.v1.AttackTechnique
+	43, // 43: mql.fex.v1.FindingDetail.properties:type_name -> mql.fex.v1.FindingDetail.PropertiesEntry
+	38, // 44: mql.fex.v1.Evidence.tactic:type_name -> mql.fex.v1.AttackTactic
+	39, // 45: mql.fex.v1.Evidence.technique:type_name -> mql.fex.v1.AttackTechnique
 	2,  // 46: mql.fex.v1.Evidence.confidence:type_name -> mql.fex.v1.Confidence
 	23, // 47: mql.fex.v1.Evidence.user:type_name -> mql.fex.v1.User
 	22, // 48: mql.fex.v1.Evidence.file:type_name -> mql.fex.v1.File
@@ -3822,26 +4251,31 @@ var file_fex_proto_depIdxs = []int32{
 	31, // 56: mql.fex.v1.Evidence.certificate:type_name -> mql.fex.v1.Certificate
 	32, // 57: mql.fex.v1.Evidence.domain_registration:type_name -> mql.fex.v1.DomainRegistration
 	33, // 58: mql.fex.v1.Evidence.network_range:type_name -> mql.fex.v1.NetworkRange
-	40, // 59: mql.fex.v1.Evidence.properties:type_name -> mql.fex.v1.Evidence.PropertiesEntry
-	41, // 60: mql.fex.v1.User.properties:type_name -> mql.fex.v1.User.PropertiesEntry
-	22, // 61: mql.fex.v1.Process.binary:type_name -> mql.fex.v1.File
-	22, // 62: mql.fex.v1.Process.script:type_name -> mql.fex.v1.File
-	23, // 63: mql.fex.v1.Process.user:type_name -> mql.fex.v1.User
-	24, // 64: mql.fex.v1.Process.parent:type_name -> mql.fex.v1.Process
-	42, // 65: mql.fex.v1.Kubernetes.pods:type_name -> mql.fex.v1.Kubernetes.Pod
-	43, // 66: mql.fex.v1.Kubernetes.nodes:type_name -> mql.fex.v1.Kubernetes.Node
-	6,  // 67: mql.fex.v1.Connection.protocol:type_name -> mql.fex.v1.Connection.ConnectionProtocol
-	44, // 68: mql.fex.v1.Certificate.not_before:type_name -> google.protobuf.Timestamp
-	44, // 69: mql.fex.v1.Certificate.not_after:type_name -> google.protobuf.Timestamp
-	44, // 70: mql.fex.v1.DomainRegistration.created_at:type_name -> google.protobuf.Timestamp
-	44, // 71: mql.fex.v1.DomainRegistration.updated_at:type_name -> google.protobuf.Timestamp
-	44, // 72: mql.fex.v1.DomainRegistration.expires_at:type_name -> google.protobuf.Timestamp
-	25, // 73: mql.fex.v1.Kubernetes.Pod.containers:type_name -> mql.fex.v1.Container
-	74, // [74:74] is the sub-list for method output_type
-	74, // [74:74] is the sub-list for method input_type
-	74, // [74:74] is the sub-list for extension type_name
-	74, // [74:74] is the sub-list for extension extendee
-	0,  // [0:74] is the sub-list for field type_name
+	34, // 59: mql.fex.v1.Evidence.threat_intel_indicator:type_name -> mql.fex.v1.ThreatIntelIndicator
+	35, // 60: mql.fex.v1.Evidence.malware:type_name -> mql.fex.v1.Malware
+	36, // 61: mql.fex.v1.Evidence.ai_model:type_name -> mql.fex.v1.AiModel
+	37, // 62: mql.fex.v1.Evidence.ai_agent:type_name -> mql.fex.v1.AiAgent
+	44, // 63: mql.fex.v1.Evidence.properties:type_name -> mql.fex.v1.Evidence.PropertiesEntry
+	45, // 64: mql.fex.v1.User.properties:type_name -> mql.fex.v1.User.PropertiesEntry
+	22, // 65: mql.fex.v1.Process.binary:type_name -> mql.fex.v1.File
+	22, // 66: mql.fex.v1.Process.script:type_name -> mql.fex.v1.File
+	23, // 67: mql.fex.v1.Process.user:type_name -> mql.fex.v1.User
+	24, // 68: mql.fex.v1.Process.parent:type_name -> mql.fex.v1.Process
+	46, // 69: mql.fex.v1.Kubernetes.pods:type_name -> mql.fex.v1.Kubernetes.Pod
+	47, // 70: mql.fex.v1.Kubernetes.nodes:type_name -> mql.fex.v1.Kubernetes.Node
+	6,  // 71: mql.fex.v1.Connection.protocol:type_name -> mql.fex.v1.Connection.ConnectionProtocol
+	48, // 72: mql.fex.v1.Certificate.not_before:type_name -> google.protobuf.Timestamp
+	48, // 73: mql.fex.v1.Certificate.not_after:type_name -> google.protobuf.Timestamp
+	48, // 74: mql.fex.v1.DomainRegistration.created_at:type_name -> google.protobuf.Timestamp
+	48, // 75: mql.fex.v1.DomainRegistration.updated_at:type_name -> google.protobuf.Timestamp
+	48, // 76: mql.fex.v1.DomainRegistration.expires_at:type_name -> google.protobuf.Timestamp
+	48, // 77: mql.fex.v1.ThreatIntelIndicator.last_observed_at:type_name -> google.protobuf.Timestamp
+	25, // 78: mql.fex.v1.Kubernetes.Pod.containers:type_name -> mql.fex.v1.Container
+	79, // [79:79] is the sub-list for method output_type
+	79, // [79:79] is the sub-list for method input_type
+	79, // [79:79] is the sub-list for extension type_name
+	79, // [79:79] is the sub-list for extension extendee
+	0,  // [0:79] is the sub-list for field type_name
 }
 
 func init() { file_fex_proto_init() }
@@ -3869,6 +4303,10 @@ func file_fex_proto_init() {
 		(*Evidence_Certificate)(nil),
 		(*Evidence_DomainRegistration)(nil),
 		(*Evidence_NetworkRange)(nil),
+		(*Evidence_ThreatIntelIndicator)(nil),
+		(*Evidence_Malware)(nil),
+		(*Evidence_AiModel)(nil),
+		(*Evidence_AiAgent)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -3876,7 +4314,7 @@ func file_fex_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_fex_proto_rawDesc), len(file_fex_proto_rawDesc)),
 			NumEnums:      7,
-			NumMessages:   37,
+			NumMessages:   41,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
