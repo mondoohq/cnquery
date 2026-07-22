@@ -1562,6 +1562,18 @@ private stackit.openSearch.instance @defaults("id name status planName") {
   // source-IP allow-list (`sgw_acl`) is empty or admits any address
   // (0.0.0.0/0 or ::/0), making the instance reachable from the internet.
   internetReachable() bool
+  // Enabled TLS protocol versions
+  //
+  // TLS protocol versions the instance's OpenSearch endpoint accepts,
+  // from the `tls-protocols` parameter (for example TLSv1.2 or TLSv1.3).
+  // Empty when the instance uses the service default. Use it to audit
+  // instances still accepting legacy TLS versions.
+  tlsProtocols() []string
+  // Enabled TLS cipher list
+  //
+  // Cipher suites the OpenSearch endpoint offers, from the `tls-ciphers`
+  // parameter. Empty when the instance uses the service default.
+  tlsCiphers() []string
 }
 
 // STACKIT MariaDB namespace
@@ -1674,6 +1686,24 @@ private stackit.redis.instance @defaults("id name status planName") {
   // source-IP allow-list (`sgw_acl`) is empty or admits any address
   // (0.0.0.0/0 or ::/0), making the instance reachable from the internet.
   internetReachable() bool
+  // Enabled TLS protocol versions
+  //
+  // TLS protocol versions the instance accepts, from the `tls-protocols`
+  // parameter (for example TLSv1.2 or TLSv1.3). Empty when the instance
+  // uses the engine default. Use it to audit instances still accepting
+  // legacy TLS versions.
+  tlsProtocols() []string
+  // Enabled TLS 1.2 cipher list
+  //
+  // Cipher suites offered for TLS 1.2 connections, from the `tls-ciphers`
+  // parameter. Empty when the instance uses the engine default.
+  tlsCiphers() []string
+  // Enabled TLS 1.3 cipher suites
+  //
+  // Colon-separated TLS 1.3 cipher suites the instance offers, from the
+  // `tls-ciphersuites` parameter. Empty when the instance uses the engine
+  // default.
+  tlsCiphersuites() string
 }
 
 // STACKIT RabbitMQ namespace
@@ -1731,6 +1761,18 @@ private stackit.rabbitMq.instance @defaults("id name status planName") {
   // source-IP allow-list (`sgw_acl`) is empty or admits any address
   // (0.0.0.0/0 or ::/0), making the instance reachable from the internet.
   internetReachable() bool
+  // Enabled TLS protocol versions
+  //
+  // TLS protocol versions the broker accepts, from the `tls-protocols`
+  // parameter (for example TLSv1.2 or TLSv1.3). Empty when the instance
+  // uses the broker default. Use it to audit brokers still accepting
+  // legacy TLS versions.
+  tlsProtocols() []string
+  // Enabled TLS cipher list
+  //
+  // Cipher suites the broker offers, from the `tls-ciphers` parameter.
+  // Empty when the instance uses the broker default.
+  tlsCiphers() []string
 }
 
 // STACKIT LogMe namespace
@@ -1786,6 +1828,36 @@ private stackit.logMe.instance @defaults("id name status planName") {
   // source-IP allow-list (`sgw_acl`) is empty or admits any address
   // (0.0.0.0/0 or ::/0), making the instance reachable from the internet.
   internetReachable() bool
+  // Minimum TLS version for the Fluentd log-ingestion endpoint
+  //
+  // Lowest TLS protocol version accepted by the Fluentd ingestion
+  // listener, from the `fluentd-tls-min-version` parameter (for example
+  // TLSv1.2). Empty when the instance uses the service default.
+  fluentdTlsMinVersion() string
+  // Maximum TLS version for the Fluentd log-ingestion endpoint
+  //
+  // Highest TLS protocol version accepted by the Fluentd ingestion
+  // listener, from the `fluentd-tls-max-version` parameter. Empty when
+  // the instance uses the service default.
+  fluentdTlsMaxVersion() string
+  // Fluentd endpoint TLS cipher list
+  //
+  // Cipher suites the Fluentd ingestion listener offers, from the
+  // `fluentd-tls-ciphers` parameter. Empty when the instance uses the
+  // service default.
+  fluentdTlsCiphers() string
+  // Enabled TLS protocol versions for the embedded OpenSearch endpoint
+  //
+  // TLS protocol versions accepted by the instance's OpenSearch API,
+  // from the `opensearch-tls-protocols` parameter (for example TLSv1.2
+  // or TLSv1.3). Empty when the instance uses the service default.
+  opensearchTlsProtocols() []string
+  // OpenSearch endpoint TLS cipher list
+  //
+  // Cipher suites the instance's OpenSearch API offers, from the
+  // `opensearch-tls-ciphers` parameter. Empty when the instance uses the
+  // service default.
+  opensearchTlsCiphers() []string
 }
 
 // STACKIT Secrets Manager namespace

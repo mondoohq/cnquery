@@ -231,11 +231,16 @@ stackit.logMe.instance 13.0.1
 stackit.logMe.instance.cfOrganizationGuid 13.0.1
 stackit.logMe.instance.cfSpaceGuid 13.0.1
 stackit.logMe.instance.dashboardUrl 13.0.1
+stackit.logMe.instance.fluentdTlsCiphers 13.4.2
+stackit.logMe.instance.fluentdTlsMaxVersion 13.4.2
+stackit.logMe.instance.fluentdTlsMinVersion 13.4.2
 stackit.logMe.instance.id 13.0.1
 stackit.logMe.instance.imageUrl 13.0.1
 stackit.logMe.instance.internetReachable 13.0.6
 stackit.logMe.instance.name 13.0.1
 stackit.logMe.instance.offeringName 13.0.1
+stackit.logMe.instance.opensearchTlsCiphers 13.4.2
+stackit.logMe.instance.opensearchTlsProtocols 13.4.2
 stackit.logMe.instance.parameters 13.0.1
 stackit.logMe.instance.planId 13.0.1
 stackit.logMe.instance.planName 13.0.1
@@ -377,6 +382,8 @@ stackit.openSearch.instance.parameters 13.0.0
 stackit.openSearch.instance.planId 13.0.0
 stackit.openSearch.instance.planName 13.0.0
 stackit.openSearch.instance.status 13.0.0
+stackit.openSearch.instance.tlsCiphers 13.4.2
+stackit.openSearch.instance.tlsProtocols 13.4.2
 stackit.openSearch.instances 13.0.0
 stackit.postgresFlex 13.0.0
 stackit.postgresFlex.instance 13.0.0
@@ -420,6 +427,8 @@ stackit.rabbitMq.instance.parameters 13.0.0
 stackit.rabbitMq.instance.planId 13.0.0
 stackit.rabbitMq.instance.planName 13.0.0
 stackit.rabbitMq.instance.status 13.0.0
+stackit.rabbitMq.instance.tlsCiphers 13.4.2
+stackit.rabbitMq.instance.tlsProtocols 13.4.2
 stackit.rabbitMq.instances 13.0.0
 stackit.redis 13.0.0
 stackit.redis.instance 13.0.0
@@ -435,6 +444,9 @@ stackit.redis.instance.parameters 13.0.0
 stackit.redis.instance.planId 13.0.0
 stackit.redis.instance.planName 13.0.0
 stackit.redis.instance.status 13.0.0
+stackit.redis.instance.tlsCiphers 13.4.2
+stackit.redis.instance.tlsCiphersuites 13.4.2
+stackit.redis.instance.tlsProtocols 13.4.2
 stackit.redis.instances 13.0.0
 stackit.region 13.0.0
 stackit.secretsManager 13.0.0

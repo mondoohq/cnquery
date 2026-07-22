@@ -162,6 +162,15 @@ func dictStrSlice(v any) []string {
 	}
 }
 
+// dictStr reads a single string value out of a dict, returning "" when the
+// value is missing or not a string.
+func dictStr(v any) string {
+	if s, ok := v.(string); ok {
+		return s
+	}
+	return ""
+}
+
 // dictBool reads a bool-ish value out of a dict. STACKIT parameter blobs encode
 // booleans as actual bools or as the strings "true"/"false".
 func dictBool(v any) bool {

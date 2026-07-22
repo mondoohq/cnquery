@@ -1933,6 +1933,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.openSearch.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitOpenSearchInstance).GetInternetReachable()).ToDataRes(types.Bool)
 	},
+	"stackit.openSearch.instance.tlsProtocols": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchInstance).GetTlsProtocols()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.openSearch.instance.tlsCiphers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchInstance).GetTlsCiphers()).ToDataRes(types.Array(types.String))
+	},
 	"stackit.mariaDb.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitMariaDb).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.mariaDb.instance")))
 	},
@@ -2011,6 +2017,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.redis.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitRedisInstance).GetInternetReachable()).ToDataRes(types.Bool)
 	},
+	"stackit.redis.instance.tlsProtocols": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisInstance).GetTlsProtocols()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.redis.instance.tlsCiphers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisInstance).GetTlsCiphers()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.redis.instance.tlsCiphersuites": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisInstance).GetTlsCiphersuites()).ToDataRes(types.String)
+	},
 	"stackit.rabbitMq.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitRabbitMq).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.rabbitMq.instance")))
 	},
@@ -2050,6 +2065,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.rabbitMq.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitRabbitMqInstance).GetInternetReachable()).ToDataRes(types.Bool)
 	},
+	"stackit.rabbitMq.instance.tlsProtocols": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqInstance).GetTlsProtocols()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.rabbitMq.instance.tlsCiphers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqInstance).GetTlsCiphers()).ToDataRes(types.Array(types.String))
+	},
 	"stackit.logMe.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLogMe).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.logMe.instance")))
 	},
@@ -2088,6 +2109,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.logMe.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLogMeInstance).GetInternetReachable()).ToDataRes(types.Bool)
+	},
+	"stackit.logMe.instance.fluentdTlsMinVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetFluentdTlsMinVersion()).ToDataRes(types.String)
+	},
+	"stackit.logMe.instance.fluentdTlsMaxVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetFluentdTlsMaxVersion()).ToDataRes(types.String)
+	},
+	"stackit.logMe.instance.fluentdTlsCiphers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetFluentdTlsCiphers()).ToDataRes(types.String)
+	},
+	"stackit.logMe.instance.opensearchTlsProtocols": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetOpensearchTlsProtocols()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.logMe.instance.opensearchTlsCiphers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetOpensearchTlsCiphers()).ToDataRes(types.Array(types.String))
 	},
 	"stackit.secretsManager.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSecretsManager).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.secretsManager.instance")))
@@ -4781,6 +4817,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitOpenSearchInstance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"stackit.openSearch.instance.tlsProtocols": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchInstance).TlsProtocols, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.instance.tlsCiphers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchInstance).TlsCiphers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"stackit.mariaDb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitMariaDb).__id, ok = v.Value.(string)
 		return
@@ -4901,6 +4945,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitRedisInstance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"stackit.redis.instance.tlsProtocols": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstance).TlsProtocols, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.instance.tlsCiphers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstance).TlsCiphers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.instance.tlsCiphersuites": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstance).TlsCiphersuites, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"stackit.rabbitMq.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitRabbitMq).__id, ok = v.Value.(string)
 		return
@@ -4961,6 +5017,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitRabbitMqInstance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"stackit.rabbitMq.instance.tlsProtocols": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqInstance).TlsProtocols, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.instance.tlsCiphers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqInstance).TlsCiphers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"stackit.logMe.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitLogMe).__id, ok = v.Value.(string)
 		return
@@ -5019,6 +5083,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.logMe.instance.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitLogMeInstance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.fluentdTlsMinVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).FluentdTlsMinVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.fluentdTlsMaxVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).FluentdTlsMaxVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.fluentdTlsCiphers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).FluentdTlsCiphers, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.opensearchTlsProtocols": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).OpensearchTlsProtocols, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.opensearchTlsCiphers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).OpensearchTlsCiphers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"stackit.secretsManager.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11422,6 +11506,8 @@ type mqlStackitOpenSearchInstance struct {
 	ImageUrl           plugin.TValue[string]
 	Parameters         plugin.TValue[any]
 	InternetReachable  plugin.TValue[bool]
+	TlsProtocols       plugin.TValue[[]any]
+	TlsCiphers         plugin.TValue[[]any]
 }
 
 // createStackitOpenSearchInstance creates a new instance of this resource
@@ -11508,6 +11594,18 @@ func (c *mqlStackitOpenSearchInstance) GetParameters() *plugin.TValue[any] {
 func (c *mqlStackitOpenSearchInstance) GetInternetReachable() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
 		return c.internetReachable()
+	})
+}
+
+func (c *mqlStackitOpenSearchInstance) GetTlsProtocols() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TlsProtocols, func() ([]any, error) {
+		return c.tlsProtocols()
+	})
+}
+
+func (c *mqlStackitOpenSearchInstance) GetTlsCiphers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TlsCiphers, func() ([]any, error) {
+		return c.tlsCiphers()
 	})
 }
 
@@ -11756,6 +11854,9 @@ type mqlStackitRedisInstance struct {
 	ImageUrl           plugin.TValue[string]
 	Parameters         plugin.TValue[any]
 	InternetReachable  plugin.TValue[bool]
+	TlsProtocols       plugin.TValue[[]any]
+	TlsCiphers         plugin.TValue[[]any]
+	TlsCiphersuites    plugin.TValue[string]
 }
 
 // createStackitRedisInstance creates a new instance of this resource
@@ -11845,6 +11946,24 @@ func (c *mqlStackitRedisInstance) GetInternetReachable() *plugin.TValue[bool] {
 	})
 }
 
+func (c *mqlStackitRedisInstance) GetTlsProtocols() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TlsProtocols, func() ([]any, error) {
+		return c.tlsProtocols()
+	})
+}
+
+func (c *mqlStackitRedisInstance) GetTlsCiphers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TlsCiphers, func() ([]any, error) {
+		return c.tlsCiphers()
+	})
+}
+
+func (c *mqlStackitRedisInstance) GetTlsCiphersuites() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TlsCiphersuites, func() (string, error) {
+		return c.tlsCiphersuites()
+	})
+}
+
 // mqlStackitRabbitMq for the stackit.rabbitMq resource
 type mqlStackitRabbitMq struct {
 	MqlRuntime *plugin.Runtime
@@ -11923,6 +12042,8 @@ type mqlStackitRabbitMqInstance struct {
 	ImageUrl           plugin.TValue[string]
 	Parameters         plugin.TValue[any]
 	InternetReachable  plugin.TValue[bool]
+	TlsProtocols       plugin.TValue[[]any]
+	TlsCiphers         plugin.TValue[[]any]
 }
 
 // createStackitRabbitMqInstance creates a new instance of this resource
@@ -12012,6 +12133,18 @@ func (c *mqlStackitRabbitMqInstance) GetInternetReachable() *plugin.TValue[bool]
 	})
 }
 
+func (c *mqlStackitRabbitMqInstance) GetTlsProtocols() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TlsProtocols, func() ([]any, error) {
+		return c.tlsProtocols()
+	})
+}
+
+func (c *mqlStackitRabbitMqInstance) GetTlsCiphers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TlsCiphers, func() ([]any, error) {
+		return c.tlsCiphers()
+	})
+}
+
 // mqlStackitLogMe for the stackit.logMe resource
 type mqlStackitLogMe struct {
 	MqlRuntime *plugin.Runtime
@@ -12073,18 +12206,23 @@ type mqlStackitLogMeInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlStackitLogMeInstanceInternal it will be used here
-	Id                 plugin.TValue[string]
-	Name               plugin.TValue[string]
-	Status             plugin.TValue[string]
-	PlanName           plugin.TValue[string]
-	PlanId             plugin.TValue[string]
-	OfferingName       plugin.TValue[string]
-	CfOrganizationGuid plugin.TValue[string]
-	CfSpaceGuid        plugin.TValue[string]
-	DashboardUrl       plugin.TValue[string]
-	ImageUrl           plugin.TValue[string]
-	Parameters         plugin.TValue[any]
-	InternetReachable  plugin.TValue[bool]
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Status                 plugin.TValue[string]
+	PlanName               plugin.TValue[string]
+	PlanId                 plugin.TValue[string]
+	OfferingName           plugin.TValue[string]
+	CfOrganizationGuid     plugin.TValue[string]
+	CfSpaceGuid            plugin.TValue[string]
+	DashboardUrl           plugin.TValue[string]
+	ImageUrl               plugin.TValue[string]
+	Parameters             plugin.TValue[any]
+	InternetReachable      plugin.TValue[bool]
+	FluentdTlsMinVersion   plugin.TValue[string]
+	FluentdTlsMaxVersion   plugin.TValue[string]
+	FluentdTlsCiphers      plugin.TValue[string]
+	OpensearchTlsProtocols plugin.TValue[[]any]
+	OpensearchTlsCiphers   plugin.TValue[[]any]
 }
 
 // createStackitLogMeInstance creates a new instance of this resource
@@ -12171,6 +12309,36 @@ func (c *mqlStackitLogMeInstance) GetParameters() *plugin.TValue[any] {
 func (c *mqlStackitLogMeInstance) GetInternetReachable() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
 		return c.internetReachable()
+	})
+}
+
+func (c *mqlStackitLogMeInstance) GetFluentdTlsMinVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.FluentdTlsMinVersion, func() (string, error) {
+		return c.fluentdTlsMinVersion()
+	})
+}
+
+func (c *mqlStackitLogMeInstance) GetFluentdTlsMaxVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.FluentdTlsMaxVersion, func() (string, error) {
+		return c.fluentdTlsMaxVersion()
+	})
+}
+
+func (c *mqlStackitLogMeInstance) GetFluentdTlsCiphers() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.FluentdTlsCiphers, func() (string, error) {
+		return c.fluentdTlsCiphers()
+	})
+}
+
+func (c *mqlStackitLogMeInstance) GetOpensearchTlsProtocols() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OpensearchTlsProtocols, func() ([]any, error) {
+		return c.opensearchTlsProtocols()
+	})
+}
+
+func (c *mqlStackitLogMeInstance) GetOpensearchTlsCiphers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OpensearchTlsCiphers, func() ([]any, error) {
+		return c.opensearchTlsCiphers()
 	})
 }
 
