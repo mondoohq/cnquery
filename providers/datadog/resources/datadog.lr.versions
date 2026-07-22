@@ -48,6 +48,7 @@ datadog.integration.aws.accountTags 13.0.1
 datadog.integration.aws.excludedRegions 13.0.1
 datadog.integration.aws.filterTags 13.0.1
 datadog.integration.aws.hostTags 13.0.1
+datadog.integration.aws.includedRegions 13.0.17
 datadog.integration.aws.logsEnabled 13.0.1
 datadog.integration.aws.metricsEnabled 13.0.1
 datadog.integration.aws.resourceCollectionEnabled 13.0.1

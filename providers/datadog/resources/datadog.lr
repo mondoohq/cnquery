@@ -464,7 +464,7 @@ datadog.applicationKey @defaults("id name") {
 // the account, so auditing it exposes the delegation trust that grants
 // Datadog access. The metricsEnabled, resourceCollectionEnabled, and
 // logsEnabled flags show which data streams are active, while
-// excludedRegions and filterTags narrow what Datadog ingests.
+// includedRegions and filterTags narrow what Datadog ingests.
 datadog.integration.aws @defaults("accountId") {
   // AWS account ID
   accountId string
@@ -483,7 +483,16 @@ datadog.integration.aws @defaults("accountId") {
   // Account tags
   accountTags []string
   // Excluded regions
+  //
+  // Always empty. The Datadog v2 AWS integration API expresses region
+  // selection as includedRegions (an allowlist) rather than an exclusion
+  // list. Retained for backward compatibility with the earlier schema.
   excludedRegions []string
+  // Included regions
+  //
+  // Explicit allowlist of AWS regions Datadog collects data from. Empty
+  // when the account is configured to collect from all regions.
+  includedRegions []string
 }
 
 // Datadog Team

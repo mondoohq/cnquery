@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/DataDog/datadog-api-client-go/v2/api/datadogV1"
@@ -127,10 +128,10 @@ func (r *mqlDatadog) securitySuppressions() ([]interface{}, error) {
 	for _, s := range resp.GetData() {
 		attrs := s.GetAttributes()
 
+		// expiration_date is a Unix millisecond timestamp.
 		var expirationDate *time.Time
 		if v, ok := attrs.GetExpirationDateOk(); ok && v != nil {
-			t := time.Unix(*v, 0)
-			expirationDate = &t
+			expirationDate = epochMillisToTimePtr(*v)
 		}
 
 		res, err := CreateResource(r.MqlRuntime, "datadog.securitySuppression", map[string]*llx.RawData{
@@ -301,10 +302,11 @@ func (r *mqlDatadog) rumApplications() ([]interface{}, error) {
 			"type": llx.StringData(attrs.GetType()),
 			// clientToken is not available on the list API response (only the create response)
 			"clientToken": llx.StringData(""),
-			"createdAt":   llx.TimeDataPtr(timePtr(time.Unix(attrs.GetCreatedAt(), 0))),
-			"updatedAt":   llx.TimeDataPtr(timePtr(time.Unix(attrs.GetUpdatedAt(), 0))),
-			"orgId":       llx.StringData(strconv.FormatInt(int64(attrs.GetOrgId()), 10)),
-			"isActive":    llx.BoolData(attrs.GetIsActive()),
+			// created_at and updated_at are Unix millisecond timestamps.
+			"createdAt": llx.TimeDataPtr(epochMillisToTimePtr(attrs.GetCreatedAt())),
+			"updatedAt": llx.TimeDataPtr(epochMillisToTimePtr(attrs.GetUpdatedAt())),
+			"orgId":     llx.StringData(strconv.FormatInt(int64(attrs.GetOrgId()), 10)),
+			"isActive":  llx.BoolData(attrs.GetIsActive()),
 		})
 		if err != nil {
 			return nil, err
@@ -403,7 +405,7 @@ func (r *mqlDatadogSyntheticsPrivateLocation) id() (string, error) {
 }
 
 type mqlDatadogSyntheticsPrivateLocationInternal struct {
-	fetched        bool
+	fetched        atomic.Bool
 	cachedDesc     string
 	cachedTags     []string
 	cachedMetadata map[string]interface{}
@@ -411,12 +413,12 @@ type mqlDatadogSyntheticsPrivateLocationInternal struct {
 }
 
 func (r *mqlDatadogSyntheticsPrivateLocation) fetchDetails() error {
-	if r.fetched {
+	if r.fetched.Load() {
 		return nil
 	}
 	r.lock.Lock()
 	defer r.lock.Unlock()
-	if r.fetched {
+	if r.fetched.Load() {
 		return nil
 	}
 
@@ -437,7 +439,7 @@ func (r *mqlDatadogSyntheticsPrivateLocation) fetchDetails() error {
 			r.cachedMetadata["restrictedRoles"] = v
 		}
 	}
-	r.fetched = true
+	r.fetched.Store(true)
 	return nil
 }
 

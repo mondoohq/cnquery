@@ -62,6 +62,28 @@ func parseTime(s string) *time.Time {
 	return &t
 }
 
+// epochSecondsToTimePtr converts a Unix timestamp in seconds to a *time.Time,
+// returning nil for a zero value (an unset timestamp).
+func epochSecondsToTimePtr(sec int64) *time.Time {
+	if sec == 0 {
+		return nil
+	}
+	t := time.Unix(sec, 0)
+	return &t
+}
+
+// epochMillisToTimePtr converts a Unix timestamp in milliseconds to a *time.Time,
+// returning nil for a zero value (an unset timestamp). Several Datadog APIs report
+// timestamps in milliseconds (RUM applications, security suppressions), so passing
+// the raw value to time.Unix (which expects seconds) yields a date far in the future.
+func epochMillisToTimePtr(ms int64) *time.Time {
+	if ms == 0 {
+		return nil
+	}
+	t := time.UnixMilli(ms)
+	return &t
+}
+
 // fetchUsers fetches all users once and caches the result, shared by users() and serviceAccounts().
 func (r *mqlDatadog) fetchUsers() ([]datadogV2.User, error) {
 	r.usersOnce.Do(func() {
@@ -126,29 +148,41 @@ func (r *mqlDatadog) roles() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewRolesApi(conn.ApiClient())
 
-	resp, httpResp, err := api.ListRoles(conn.AuthCtx())
-	if err != nil {
-		if isForbidden(httpResp) {
-			log.Warn().Msg("datadog> roles not available (403 Forbidden)")
-			return nil, nil
-		}
-		return nil, err
-	}
-
 	var all []interface{}
-	for _, role := range resp.GetData() {
-		attrs := role.GetAttributes()
-		res, err := CreateResource(r.MqlRuntime, "datadog.role", map[string]*llx.RawData{
-			"id":         llx.StringData(role.GetId()),
-			"name":       llx.StringData(attrs.GetName()),
-			"userCount":  llx.IntData(int64(attrs.GetUserCount())),
-			"createdAt":  llx.TimeDataPtr(timePtr(attrs.GetCreatedAt())),
-			"modifiedAt": llx.TimeDataPtr(timePtr(attrs.GetModifiedAt())),
-		})
+	pageSize := int64(100)
+	page := int64(0)
+
+	for {
+		resp, httpResp, err := api.ListRoles(conn.AuthCtx(),
+			*datadogV2.NewListRolesOptionalParameters().WithPageSize(pageSize).WithPageNumber(page))
 		if err != nil {
+			if isForbidden(httpResp) {
+				log.Warn().Msg("datadog> roles not available (403 Forbidden)")
+				return nil, nil
+			}
 			return nil, err
 		}
-		all = append(all, res)
+
+		data := resp.GetData()
+		for _, role := range data {
+			attrs := role.GetAttributes()
+			res, err := CreateResource(r.MqlRuntime, "datadog.role", map[string]*llx.RawData{
+				"id":         llx.StringData(role.GetId()),
+				"name":       llx.StringData(attrs.GetName()),
+				"userCount":  llx.IntData(int64(attrs.GetUserCount())),
+				"createdAt":  llx.TimeDataPtr(timePtr(attrs.GetCreatedAt())),
+				"modifiedAt": llx.TimeDataPtr(timePtr(attrs.GetModifiedAt())),
+			})
+			if err != nil {
+				return nil, err
+			}
+			all = append(all, res)
+		}
+
+		if int64(len(data)) < pageSize {
+			break
+		}
+		page++
 	}
 	return all, nil
 }
@@ -363,58 +397,70 @@ func (r *mqlDatadog) slos() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV1.NewServiceLevelObjectivesApi(conn.ApiClient())
 
-	resp, httpResp, err := api.ListSLOs(conn.AuthCtx())
-	if err != nil {
-		if isForbidden(httpResp) {
-			log.Warn().Msg("datadog> SLOs not available (403 Forbidden)")
-			return nil, nil
-		}
-		return nil, err
-	}
-
 	var all []interface{}
-	for _, s := range resp.GetData() {
-		tags := toAnyStrings(s.GetTags())
+	limit := int64(1000)
+	offset := int64(0)
 
-		creator := ""
-		if c, ok := s.GetCreatorOk(); ok && c != nil {
-			creator = c.GetEmail()
-		}
-
-		targetThreshold := float64(0)
-		warningThreshold := float64(0)
-		timeframe := ""
-		if thresholds := s.GetThresholds(); len(thresholds) > 0 {
-			targetThreshold = thresholds[0].GetTarget()
-			if w, ok := thresholds[0].GetWarningOk(); ok && w != nil {
-				warningThreshold = *w
-			}
-			timeframe = string(thresholds[0].GetTimeframe())
-		}
-
-		monitorIds := make([]interface{}, len(s.GetMonitorIds()))
-		for i, id := range s.GetMonitorIds() {
-			monitorIds[i] = id
-		}
-
-		res, err := CreateResource(r.MqlRuntime, "datadog.slo", map[string]*llx.RawData{
-			"id":               llx.StringData(s.GetId()),
-			"name":             llx.StringData(s.GetName()),
-			"type":             llx.StringData(string(s.GetType())),
-			"description":      llx.StringData(s.GetDescription()),
-			"tags":             llx.ArrayData(tags, "\x02"),
-			"targetThreshold":  llx.FloatData(targetThreshold),
-			"warningThreshold": llx.FloatData(warningThreshold),
-			"timeframe":        llx.StringData(timeframe),
-			"creator":          llx.StringData(creator),
-			"createdAt":        llx.TimeDataPtr(timePtr(time.Unix(s.GetCreatedAt(), 0))),
-			"modifiedAt":       llx.TimeDataPtr(timePtr(time.Unix(s.GetModifiedAt(), 0))),
-			"monitorIds":       llx.ArrayData(monitorIds, "\x05"),
-		})
+	for {
+		resp, httpResp, err := api.ListSLOs(conn.AuthCtx(),
+			*datadogV1.NewListSLOsOptionalParameters().WithLimit(limit).WithOffset(offset))
 		if err != nil {
+			if isForbidden(httpResp) {
+				log.Warn().Msg("datadog> SLOs not available (403 Forbidden)")
+				return nil, nil
+			}
 			return nil, err
 		}
-		all = append(all, res)
+
+		data := resp.GetData()
+		for _, s := range data {
+			tags := toAnyStrings(s.GetTags())
+
+			creator := ""
+			if c, ok := s.GetCreatorOk(); ok && c != nil {
+				creator = c.GetEmail()
+			}
+
+			targetThreshold := float64(0)
+			warningThreshold := float64(0)
+			timeframe := ""
+			if thresholds := s.GetThresholds(); len(thresholds) > 0 {
+				targetThreshold = thresholds[0].GetTarget()
+				if w, ok := thresholds[0].GetWarningOk(); ok && w != nil {
+					warningThreshold = *w
+				}
+				timeframe = string(thresholds[0].GetTimeframe())
+			}
+
+			monitorIds := make([]interface{}, len(s.GetMonitorIds()))
+			for i, id := range s.GetMonitorIds() {
+				monitorIds[i] = id
+			}
+
+			res, err := CreateResource(r.MqlRuntime, "datadog.slo", map[string]*llx.RawData{
+				"id":               llx.StringData(s.GetId()),
+				"name":             llx.StringData(s.GetName()),
+				"type":             llx.StringData(string(s.GetType())),
+				"description":      llx.StringData(s.GetDescription()),
+				"tags":             llx.ArrayData(tags, "\x02"),
+				"targetThreshold":  llx.FloatData(targetThreshold),
+				"warningThreshold": llx.FloatData(warningThreshold),
+				"timeframe":        llx.StringData(timeframe),
+				"creator":          llx.StringData(creator),
+				"createdAt":        llx.TimeDataPtr(epochSecondsToTimePtr(s.GetCreatedAt())),
+				"modifiedAt":       llx.TimeDataPtr(epochSecondsToTimePtr(s.GetModifiedAt())),
+				"monitorIds":       llx.ArrayData(monitorIds, "\x05"),
+			})
+			if err != nil {
+				return nil, err
+			}
+			all = append(all, res)
+		}
+
+		if int64(len(data)) < limit {
+			break
+		}
+		offset += limit
 	}
 	return all, nil
 }
@@ -892,6 +938,15 @@ func (r *mqlDatadog) integrationAwsAccounts() ([]interface{}, error) {
 			filterTags = []interface{}{}
 		}
 
+		// The v2 API models region selection as either "include all" or an
+		// explicit "include only" list; expose the latter. It has no notion of
+		// excluded regions, so excludedRegions stays empty (retained for
+		// backward-compat with the v1-era schema).
+		includedRegions := []interface{}{}
+		if ar, ok := attrs.GetAwsRegionsOk(); ok && ar != nil && ar.AWSRegionsIncludeOnly != nil {
+			includedRegions = toAnyStrings(ar.AWSRegionsIncludeOnly.GetIncludeOnly())
+		}
+
 		res, err := CreateResource(r.MqlRuntime, "datadog.integration.aws", map[string]*llx.RawData{
 			"accountId":                 llx.StringData(attrs.GetAwsAccountId()),
 			"roleName":                  llx.StringData(roleName),
@@ -902,6 +957,7 @@ func (r *mqlDatadog) integrationAwsAccounts() ([]interface{}, error) {
 			"hostTags":                  llx.ArrayData([]interface{}{}, "\x02"),
 			"accountTags":               llx.ArrayData(accountTags, "\x02"),
 			"excludedRegions":           llx.ArrayData([]interface{}{}, "\x02"),
+			"includedRegions":           llx.ArrayData(includedRegions, "\x02"),
 		})
 		if err != nil {
 			return nil, err

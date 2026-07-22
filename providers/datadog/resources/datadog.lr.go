@@ -620,6 +620,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"datadog.integration.aws.excludedRegions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatadogIntegrationAws).GetExcludedRegions()).ToDataRes(types.Array(types.String))
 	},
+	"datadog.integration.aws.includedRegions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationAws).GetIncludedRegions()).ToDataRes(types.Array(types.String))
+	},
 	"datadog.team.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatadogTeam).GetId()).ToDataRes(types.String)
 	},
@@ -1427,6 +1430,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"datadog.integration.aws.excludedRegions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatadogIntegrationAws).ExcludedRegions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.aws.includedRegions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationAws).IncludedRegions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"datadog.team.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3189,6 +3196,7 @@ type mqlDatadogIntegrationAws struct {
 	HostTags                  plugin.TValue[[]any]
 	AccountTags               plugin.TValue[[]any]
 	ExcludedRegions           plugin.TValue[[]any]
+	IncludedRegions           plugin.TValue[[]any]
 }
 
 // createDatadogIntegrationAws creates a new instance of this resource
@@ -3262,6 +3270,10 @@ func (c *mqlDatadogIntegrationAws) GetAccountTags() *plugin.TValue[[]any] {
 
 func (c *mqlDatadogIntegrationAws) GetExcludedRegions() *plugin.TValue[[]any] {
 	return &c.ExcludedRegions
+}
+
+func (c *mqlDatadogIntegrationAws) GetIncludedRegions() *plugin.TValue[[]any] {
+	return &c.IncludedRegions
 }
 
 // mqlDatadogTeam for the datadog.team resource
