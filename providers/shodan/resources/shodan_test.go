@@ -95,10 +95,10 @@ func TestClassifyCVSS(t *testing.T) {
 
 func TestIsWeakCipher(t *testing.T) {
 	tests := []struct {
-		name string
-		ciph string
-		bits int
-		want bool
+		name   string
+		cipher string
+		bits   int
+		want   bool
 	}{
 		{"empty", "", 0, false},
 		{"modern aes-gcm", "TLS_AES_256_GCM_SHA384", 256, false},
@@ -115,7 +115,7 @@ func TestIsWeakCipher(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.want, isWeakCipher(tc.ciph, tc.bits))
+			assert.Equal(t, tc.want, isWeakCipher(tc.cipher, tc.bits))
 		})
 	}
 }
