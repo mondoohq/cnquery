@@ -21,20 +21,22 @@ var Config = plugin.Provider{
 			Short: "an Iru tenant",
 			Long: `Use the Iru provider to query an Iru (formerly Kandji) tenant.
 
-To access the Iru API, you need your tenant API URL and a bearer token
-issued in the Iru admin console. The token's per-endpoint permission flags
+To access the Iru API, you need your tenant subdomain and a bearer token
+issued in the Iru admin console. The subdomain is the first label of your
+tenant API host: pass "mondoo" for a tenant served at
+https://mondoo.api.kandji.io. The token's per-endpoint permission flags
 determine which sub-resources will return data.
 
 Examples:
-  mql shell iru --api-url https://<subdomain>.api.kandji.io --token <api-token>
-  cnspec scan iru --api-url https://<subdomain>.api.kandji.io --token <api-token>
+  mql shell iru --subdomain mondoo --token <api-token>
+  cnspec scan iru --subdomain mondoo --token <api-token>
 `,
 			Flags: []plugin.Flag{
 				{
-					Long:    "api-url",
+					Long:    "subdomain",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Iru tenant API URL (e.g. https://<subdomain>.api.kandji.io)",
+					Desc:    "Iru tenant subdomain (e.g. mondoo for https://mondoo.api.kandji.io)",
 				},
 				{
 					Long:        "token",

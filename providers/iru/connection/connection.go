@@ -15,8 +15,36 @@ import (
 )
 
 const (
-	OptionAPIURL = "api_url"
+	OptionSubdomain = "subdomain"
 )
+
+// iruAPIDomain is the fixed Iru (Kandji) API host suffix. A tenant's API is
+// served at https://<subdomain>.api.kandji.io, so the connection only needs
+// the subdomain from the user.
+const iruAPIDomain = "api.kandji.io"
+
+// normalizeSubdomain reduces user input to the bare tenant subdomain label.
+// It accepts a bare subdomain ("mondoo"), a full host ("mondoo.api.kandji.io"),
+// or a pasted URL ("https://mondoo.api.kandji.io/") and returns "mondoo" in
+// every case, so an operator who supplies the old-style API URL still works.
+func normalizeSubdomain(s string) string {
+	s = strings.TrimSpace(s)
+	if i := strings.Index(s, "://"); i >= 0 {
+		s = s[i+3:]
+	}
+	if i := strings.IndexAny(s, "/?#"); i >= 0 {
+		s = s[:i]
+	}
+	if i := strings.Index(s, "."); i >= 0 {
+		s = s[:i]
+	}
+	return strings.ToLower(s)
+}
+
+// apiURLFromSubdomain builds the tenant API base URL from a subdomain.
+func apiURLFromSubdomain(subdomain string) string {
+	return "https://" + subdomain + "." + iruAPIDomain
+}
 
 // IruConnection holds an authenticated Iru REST client and per-device
 // caches populated as we walk the inventory.
@@ -73,7 +101,7 @@ func NewIruConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 		deviceApps: make(map[string][]client.App),
 	}
 
-	apiURL := conf.Options[OptionAPIURL]
+	subdomain := normalizeSubdomain(conf.Options[OptionSubdomain])
 
 	var token string
 	for _, cred := range conf.Credentials {
@@ -83,11 +111,14 @@ func NewIruConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 		}
 	}
 
-	if apiURL == "" || token == "" {
-		return nil, errors.New("missing required Iru credentials: api-url and token")
+	if subdomain == "" || token == "" {
+		return nil, errors.New("missing required Iru credentials: subdomain and token")
 	}
+	// Persist the normalized subdomain so Identifier and detect read the
+	// canonical label regardless of what form the user supplied.
+	conf.Options[OptionSubdomain] = subdomain
 
-	cl, err := client.New(apiURL, token)
+	cl, err := client.New(apiURLFromSubdomain(subdomain), token)
 	if err != nil {
 		return nil, err
 	}
@@ -112,16 +143,10 @@ func (c *IruConnection) PlatformInfo() *inventory.Platform {
 }
 
 // Identifier returns the stable platform ID for the tenant, derived from
-// the tenant API URL host. It mirrors the Jamf provider's strategy.
+// the tenant subdomain. It mirrors the Jamf provider's strategy.
 func (c *IruConnection) Identifier() string {
-	host := c.Conf.Options[OptionAPIURL]
-	if i := strings.Index(host, "://"); i >= 0 {
-		host = host[i+3:]
-	}
-	if i := strings.IndexAny(host, "/?#"); i >= 0 {
-		host = host[:i]
-	}
-	return "//platformid.api.mondoo.app/runtime/iru/" + strings.ToLower(host)
+	subdomain := normalizeSubdomain(c.Conf.Options[OptionSubdomain])
+	return "//platformid.api.mondoo.app/runtime/iru/" + subdomain
 }
 
 // GetDeviceDetails returns the cached detail payload for a device,

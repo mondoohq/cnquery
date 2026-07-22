@@ -35,13 +35,13 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		flags = map[string]*llx.Primitive{}
 	}
 
-	apiURL := flagOrEnv(flags, "api-url", "IRU_API_URL")
+	subdomain := flagOrEnv(flags, "subdomain", "IRU_SUBDOMAIN")
 	token := flagOrEnv(flags, "token", "IRU_TOKEN")
 
 	conf := &inventory.Config{
 		Type: req.Connector,
 		Options: map[string]string{
-			connection.OptionAPIURL: apiURL,
+			connection.OptionSubdomain: subdomain,
 		},
 	}
 
@@ -127,7 +127,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.IruConnection) {
 	asset.Id = conn.Conf.Type
-	asset.Name = conn.Conf.Options[connection.OptionAPIURL]
+	asset.Name = conn.Conf.Options[connection.OptionSubdomain]
 	asset.Platform = conn.PlatformInfo()
 	asset.PlatformIds = []string{conn.Identifier()}
 }
