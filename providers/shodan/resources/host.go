@@ -38,7 +38,7 @@ func initShodanHost(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	}
 
 	if _, ok := args["ip"]; !ok {
-		return nil, nil, errors.New("missing required argument 'host'")
+		return nil, nil, errors.New("missing required argument 'ip'")
 	}
 
 	return args, nil, nil

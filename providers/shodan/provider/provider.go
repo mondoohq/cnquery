@@ -72,12 +72,12 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	name := ""
 	if len(req.Args) > 0 {
 		switch req.Args[0] {
-		case "host":
+		case "host", "domain":
+			if len(req.Args) < 2 {
+				return nil, errors.New("the Shodan " + req.Args[0] + " sub-command requires a target, for example `shodan " + req.Args[0] + " example.com`")
+			}
 			conf.Host = req.Args[1]
-			conf.Options["search"] = "host"
-		case "domain":
-			conf.Host = req.Args[1]
-			conf.Options["search"] = "domain"
+			conf.Options["search"] = req.Args[0]
 		default:
 			return nil, errors.New("invalid Shodan sub-command, supported are: host or domain")
 		}

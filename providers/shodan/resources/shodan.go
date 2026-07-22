@@ -6,7 +6,6 @@ package resources
 import (
 	"context"
 	"errors"
-	"time"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -32,12 +31,10 @@ func initShodanProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	args["member"] = llx.BoolData(profile.Member)
 	args["credits"] = llx.IntData(profile.Credits)
 	args["displayName"] = llx.StringData(profile.DisplayName)
-	args["createdAt"] = llx.NilData
-
-	t, err := time.Parse(time.RFC3339, profile.Created)
-	if err == nil {
-		args["createdAt"] = llx.TimeData(t)
-	}
+	// Shodan account timestamps come back without a timezone, so use the shared
+	// parser (which also accepts RFC3339) rather than a strict RFC3339 parse
+	// that would silently leave createdAt null.
+	args["createdAt"] = optionalShodanTime(profile.Created)
 
 	return args, nil, nil
 }
