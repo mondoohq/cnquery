@@ -104,33 +104,37 @@ func (r *mqlDigitaloceanSecurityScan) findings() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
+	// GetScan decodes into a struct that carries no pagination links, so
+	// godo never populates resp.Links for this endpoint (unlike ListScans).
+	// Drive pagination off the returned page size instead: keep advancing
+	// while a full page comes back, bounded by maxPages so a misbehaving
+	// cursor can't hang the scan.
+	const perPage = 200
+	const maxPages = 1000
 	var all []interface{}
-	opt := &godo.ScanFindingsOptions{ListOptions: godo.ListOptions{PerPage: 200}}
-	for {
-		scan, resp, err := client.Security.GetScan(context.Background(), r.Id.Data, opt)
+	opt := &godo.ScanFindingsOptions{ListOptions: godo.ListOptions{PerPage: perPage, Page: 1}}
+	for page := 0; page < maxPages; page++ {
+		scan, _, err := client.Security.GetScan(context.Background(), r.Id.Data, opt)
 		if err != nil {
 			return nil, err
 		}
-		if scan != nil {
-			for _, f := range scan.Findings {
-				if f == nil {
-					continue
-				}
-				mqlFinding, err := r.newFinding(f)
-				if err != nil {
-					return nil, err
-				}
-				all = append(all, mqlFinding)
-			}
-		}
-		if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
+		if scan == nil {
 			break
 		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
+		for _, f := range scan.Findings {
+			if f == nil {
+				continue
+			}
+			mqlFinding, err := r.newFinding(f)
+			if err != nil {
+				return nil, err
+			}
+			all = append(all, mqlFinding)
 		}
-		opt.Page = page + 1
+		if len(scan.Findings) < perPage {
+			break
+		}
+		opt.Page++
 	}
 	return all, nil
 }

@@ -257,6 +257,10 @@ func (r *mqlDigitaloceanGradientai) dedicatedInferenceEndpoints() ([]interface{}
 	return all, nil
 }
 
+func (r *mqlDigitaloceanGradientaiDedicatedInferenceEndpoint) id() (string, error) {
+	return "digitalocean.gradientai.dedicatedInferenceEndpoint/" + r.Id.Data, nil
+}
+
 func (r *mqlDigitaloceanGradientaiDedicatedInferenceEndpoint) vpc() (*mqlDigitaloceanVpc, error) {
 	return resolveVpcRef(r.MqlRuntime, &r.Vpc, r.VpcUuid.Data)
 }

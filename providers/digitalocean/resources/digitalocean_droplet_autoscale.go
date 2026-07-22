@@ -114,6 +114,10 @@ func (r *mqlDigitalocean) dropletAutoscalePools() ([]interface{}, error) {
 	return all, nil
 }
 
+func (r *mqlDigitaloceanDropletAutoscalePool) id() (string, error) {
+	return "digitalocean.dropletAutoscalePool/" + r.Id.Data, nil
+}
+
 func (r *mqlDigitaloceanDropletAutoscalePool) members() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()

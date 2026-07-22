@@ -79,6 +79,10 @@ func (r *mqlDigitalocean) nfsShares() ([]interface{}, error) {
 	return all, nil
 }
 
+func (r *mqlDigitaloceanNfs) id() (string, error) {
+	return "digitalocean.nfs/" + r.Id.Data, nil
+}
+
 func (r *mqlDigitaloceanNfs) vpcs() ([]interface{}, error) {
 	uuids := make([]string, 0, len(r.VpcIds.Data))
 	for _, v := range r.VpcIds.Data {

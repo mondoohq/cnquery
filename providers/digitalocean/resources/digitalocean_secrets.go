@@ -95,20 +95,18 @@ func (r *mqlDigitaloceanSecret) versions() ([]interface{}, error) {
 		if v == nil {
 			continue
 		}
-
-		var createdAt, updatedAt *time.Time
-		if t, perr := time.Parse(time.RFC3339, v.CreatedAt); perr == nil {
-			createdAt = &t
-		}
-		if t, perr := time.Parse(time.RFC3339, v.UpdatedAt); perr == nil {
-			updatedAt = &t
-		}
-
-		out = append(out, map[string]interface{}{
-			"version":   int64(v.Version),
-			"createdAt": createdAt,
-			"updatedAt": updatedAt,
-		})
+		out = append(out, secretVersionDict(v))
 	}
 	return out, nil
+}
+
+// secretVersionDict builds the dict for one secret version. dict values
+// must be JSON-native (dict2primitive rejects *time.Time), so the API's
+// RFC3339 timestamps are kept as strings.
+func secretVersionDict(v *godo.SecretVersion) map[string]interface{} {
+	return map[string]interface{}{
+		"version":   int64(v.Version),
+		"createdAt": v.CreatedAt,
+		"updatedAt": v.UpdatedAt,
+	}
 }

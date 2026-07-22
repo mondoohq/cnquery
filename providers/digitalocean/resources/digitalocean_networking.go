@@ -92,6 +92,10 @@ func (r *mqlDigitalocean) vpcNatGateways() ([]interface{}, error) {
 	return all, nil
 }
 
+func (r *mqlDigitaloceanVpcNatGateway) id() (string, error) {
+	return "digitalocean.vpcNatGateway/" + r.Id.Data, nil
+}
+
 func (r *mqlDigitaloceanVpcNatGateway) vpcs() ([]interface{}, error) {
 	return vpcRefsByUUIDs(r.MqlRuntime, r.vpcUUIDs)
 }

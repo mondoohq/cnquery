@@ -9493,7 +9493,12 @@ func createDigitaloceanVectorDatabase(runtime *plugin.Runtime, args map[string]*
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("digitalocean.vectorDatabase", res.__id)
@@ -13510,7 +13515,12 @@ func createDigitaloceanVpcNatGateway(runtime *plugin.Runtime, args map[string]*l
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("digitalocean.vpcNatGateway", res.__id)
@@ -13649,7 +13659,12 @@ func createDigitaloceanNfs(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("digitalocean.nfs", res.__id)
@@ -14055,7 +14070,12 @@ func createDigitaloceanDropletAutoscalePool(runtime *plugin.Runtime, args map[st
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("digitalocean.dropletAutoscalePool", res.__id)
@@ -16046,7 +16066,12 @@ func createDigitaloceanGradientaiDedicatedInferenceEndpoint(runtime *plugin.Runt
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("digitalocean.gradientai.dedicatedInferenceEndpoint", res.__id)

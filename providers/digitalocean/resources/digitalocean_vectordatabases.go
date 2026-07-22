@@ -78,6 +78,10 @@ func (r *mqlDigitalocean) vectorDatabases() ([]interface{}, error) {
 	return all, nil
 }
 
+func (r *mqlDigitaloceanVectorDatabase) id() (string, error) {
+	return "digitalocean.vectorDatabase/" + r.Id.Data, nil
+}
+
 func (r *mqlDigitaloceanVectorDatabaseBackup) id() (string, error) {
 	return "digitalocean.vectorDatabase.backup/" + r.VectorDatabaseId.Data + "/" + r.BackupId.Data, nil
 }

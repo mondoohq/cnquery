@@ -313,14 +313,7 @@ func newSpacesBucket(runtime *plugin.Runtime, client *s3.Client, region string, 
 	corsRules := []interface{}{}
 	if c, err := client.GetBucketCors(ctx, &s3.GetBucketCorsInput{Bucket: aws.String(name)}); err == nil {
 		for _, rule := range c.CORSRules {
-			corsRules = append(corsRules, map[string]interface{}{
-				"id":             aws.ToString(rule.ID),
-				"allowedHeaders": rule.AllowedHeaders,
-				"allowedMethods": rule.AllowedMethods,
-				"allowedOrigins": rule.AllowedOrigins,
-				"exposeHeaders":  rule.ExposeHeaders,
-				"maxAgeSeconds":  rule.MaxAgeSeconds,
-			})
+			corsRules = append(corsRules, spacesCorsRuleDict(rule))
 		}
 	} else if !isNoSuchConfiguration(err) {
 		return nil, err
@@ -329,23 +322,7 @@ func newSpacesBucket(runtime *plugin.Runtime, client *s3.Client, region string, 
 	lifecycleRules := []interface{}{}
 	if l, err := client.GetBucketLifecycleConfiguration(ctx, &s3.GetBucketLifecycleConfigurationInput{Bucket: aws.String(name)}); err == nil {
 		for _, rule := range l.Rules {
-			entry := map[string]interface{}{
-				"id":     aws.ToString(rule.ID),
-				"status": string(rule.Status),
-			}
-			if f := rule.Filter; f != nil {
-				entry["prefix"] = aws.ToString(f.Prefix)
-			}
-			if rule.Expiration != nil {
-				entry["expirationDays"] = rule.Expiration.Days
-			}
-			if rule.NoncurrentVersionExpiration != nil {
-				entry["noncurrentVersionExpirationDays"] = rule.NoncurrentVersionExpiration.NoncurrentDays
-			}
-			if rule.AbortIncompleteMultipartUpload != nil {
-				entry["abortIncompleteMultipartUploadDays"] = rule.AbortIncompleteMultipartUpload.DaysAfterInitiation
-			}
-			lifecycleRules = append(lifecycleRules, entry)
+			lifecycleRules = append(lifecycleRules, spacesLifecycleRuleDict(rule))
 		}
 	} else if !isNoSuchConfiguration(err) {
 		return nil, err
@@ -369,6 +346,46 @@ func newSpacesBucket(runtime *plugin.Runtime, client *s3.Client, region string, 
 		"corsRules":            llx.ArrayData(corsRules, types.Dict),
 		"lifecycleRules":       llx.ArrayData(lifecycleRules, types.Dict),
 	})
+}
+
+// spacesCorsRuleDict builds the dict for one CORS rule. dict values must
+// be JSON-native, so the SDK's []string members are widened to []any and
+// the *int32 max-age is dereferenced to int64 (only when the API set it).
+func spacesCorsRuleDict(rule s3types.CORSRule) map[string]interface{} {
+	entry := map[string]interface{}{
+		"id":             aws.ToString(rule.ID),
+		"allowedHeaders": toStringSlice(rule.AllowedHeaders),
+		"allowedMethods": toStringSlice(rule.AllowedMethods),
+		"allowedOrigins": toStringSlice(rule.AllowedOrigins),
+		"exposeHeaders":  toStringSlice(rule.ExposeHeaders),
+	}
+	if rule.MaxAgeSeconds != nil {
+		entry["maxAgeSeconds"] = int64(*rule.MaxAgeSeconds)
+	}
+	return entry
+}
+
+// spacesLifecycleRuleDict builds the dict for one lifecycle rule. The SDK
+// models the day-counts as *int32; dict values must be JSON-native int64,
+// so each is dereferenced only when the API actually set it.
+func spacesLifecycleRuleDict(rule s3types.LifecycleRule) map[string]interface{} {
+	entry := map[string]interface{}{
+		"id":     aws.ToString(rule.ID),
+		"status": string(rule.Status),
+	}
+	if f := rule.Filter; f != nil {
+		entry["prefix"] = aws.ToString(f.Prefix)
+	}
+	if rule.Expiration != nil && rule.Expiration.Days != nil {
+		entry["expirationDays"] = int64(*rule.Expiration.Days)
+	}
+	if rule.NoncurrentVersionExpiration != nil && rule.NoncurrentVersionExpiration.NoncurrentDays != nil {
+		entry["noncurrentVersionExpirationDays"] = int64(*rule.NoncurrentVersionExpiration.NoncurrentDays)
+	}
+	if rule.AbortIncompleteMultipartUpload != nil && rule.AbortIncompleteMultipartUpload.DaysAfterInitiation != nil {
+		entry["abortIncompleteMultipartUploadDays"] = int64(*rule.AbortIncompleteMultipartUpload.DaysAfterInitiation)
+	}
+	return entry
 }
 
 // noSuchConfigurationCodes are the S3 error codes returned for
