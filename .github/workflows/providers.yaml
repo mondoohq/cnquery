@@ -43,7 +43,7 @@ jobs:
       build_list: ${{ steps.providers.outputs.build_list }}
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
@@ -122,7 +122,7 @@ jobs:
         provider: ${{ fromJSON(needs.scoping.outputs.build_list) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
@@ -130,7 +130,7 @@ jobs:
         run: cat ".github/env" >> $GITHUB_ENV
 
       - name: Set up Go
-        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: ">=${{ env.golang-version }}"
           check-latest: true
@@ -218,7 +218,7 @@ jobs:
           echo "version=$VER" >> $GITHUB_OUTPUT
 
       - name: "Notify Slack on provider release"
-        uses: slackapi/slack-github-action@0d95c9a7becc1e6e297d76df9bc735c44f4cbcbc # v3.0.5
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
         # Only on a real publish that built successfully.
         if: ${{ ! inputs.skip_publish && steps.build-providers.outcome == 'success' }}
         with:
@@ -249,7 +249,7 @@ jobs:
           path: dist
 
       - name: Send Slack notification on failure
-        uses: slackapi/slack-github-action@0d95c9a7becc1e6e297d76df9bc735c44f4cbcbc # v3.0.5
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
         if: ${{ always() && steps.build-providers.outcome != 'success' }}
         with:
           method: chat.postMessage
