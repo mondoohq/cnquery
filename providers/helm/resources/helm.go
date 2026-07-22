@@ -434,6 +434,13 @@ func (c *mqlHelmChart) fetchResources() ([]any, error) {
 			if err != nil {
 				continue
 			}
+			// Wire each resource back to this chart so helm.resource.template
+			// resolves to the real, materialized helm.template (never a husk).
+			for _, r := range resources {
+				if res, ok := r.(*mqlHelmResource); ok {
+					res.ownerChart = c
+				}
+			}
 			c.cachedResources = append(c.cachedResources, resources...)
 		}
 	})

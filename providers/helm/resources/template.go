@@ -130,7 +130,19 @@ func (t *mqlHelmTemplate) resources() ([]any, error) {
 		return []any{}, nil
 	}
 	templateKey := t.chartName + "/" + t.Name.Data
-	return parseK8sResources(t.MqlRuntime, templateKey, t.renderedContent, false)
+	resources, err := parseK8sResources(t.MqlRuntime, templateKey, t.renderedContent, false)
+	if err != nil {
+		return nil, err
+	}
+	// These resources came straight from this template, so link them back to it
+	// directly — helm.resource.template then returns this instance without a
+	// chart round-trip.
+	for _, r := range resources {
+		if res, ok := r.(*mqlHelmResource); ok {
+			res.ownerTemplate = t
+		}
+	}
+	return resources, nil
 }
 
 func (t *mqlHelmTemplate) directives() ([]any, error) {
