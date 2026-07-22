@@ -275,5 +275,11 @@ func (c *mqlVulnCve) id() (string, error) {
 // package created (see mql CreateResource caching), so vulnmgmt.packages would
 // report that one package once per row.
 func (p *mqlVulnPackage) id() (string, error) {
-	return p.Name.Data + "-" + p.Version.Data, p.Name.Error
+	if err := p.Name.Error; err != nil {
+		return "", err
+	}
+	if err := p.Version.Error; err != nil {
+		return "", err
+	}
+	return p.Name.Data + "-" + p.Version.Data, nil
 }
