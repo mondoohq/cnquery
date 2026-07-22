@@ -125,6 +125,12 @@ func initAlicloudWafInstance(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	if resp == nil || resp.Body == nil || tea.StringValue(resp.Body.InstanceId) == "" {
 		return nil, nil, fmt.Errorf("alicloud.waf.instance %q not found in region %q", instanceID, region)
 	}
+	// DescribeInstance returns whichever instance the region hosts rather than
+	// looking up by id, so confirm it is the scoped instance; a stale scope or a
+	// replaced instance would otherwise resolve silently to the wrong resource.
+	if got := tea.StringValue(resp.Body.InstanceId); got != instanceID {
+		return nil, nil, fmt.Errorf("alicloud.waf.instance %q not found in region %q (region hosts %q)", instanceID, region, got)
+	}
 	res, err := newWafInstance(runtime, region, resp.Body)
 	if err != nil {
 		return nil, nil, err
