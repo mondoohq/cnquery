@@ -6,13 +6,13 @@ option go_package = "go.mondoo.com/mql/v13/providers/iru/resources"
 
 // Iru (formerly Kandji)
 //
-// Examine an Iru tenant — the device fleet (hardware, OS, security
-// posture, enrollment state, installed apps and configuration profiles),
-// configuration blueprints, the library item catalog (App Store apps,
-// custom apps, custom profiles, scripts, MDM restrictions, and other
-// policy items), the directory of end-users, and tenant-level settings.
-// Sub-resources are populated from the Iru API and respect the
-// permissions granted to the bearer token used to connect.
+// Tenant of the Iru (formerly Kandji) MDM service, covering the device
+// fleet (hardware, OS, security posture, enrollment state, installed apps
+// and configuration profiles), configuration blueprints, the library item
+// catalog (App Store apps, custom apps, custom profiles, scripts, MDM
+// restrictions, and other policy items), the directory of end-users, and
+// tenant-level settings. Sub-resources are populated from the Iru API and
+// respect the permissions granted to the bearer token used to connect.
 iru {
   // List every device enrolled in the Iru tenant
   devices() []iru.device
@@ -32,7 +32,7 @@ iru {
 
 // Iru device lookup by ID
 //
-// Examine a single device identified by its Iru device ID. The `id`
+// Single device identified by its Iru device ID. The `id`
 // field selects the device, for example
 // `iru.device(id: "abc123") { osVersion filevaultEnabled }`. Use
 // `iru.devices` when iterating the full fleet.
@@ -55,13 +55,13 @@ iru.device @defaults("name serialNumber osVersion platform") {
   // Asset tag assigned in the Iru admin console
   assetTag string
 
-  // Hardware model — for example "MacBook Pro" or "iPhone 15 Pro"
+  // Hardware model, for example "MacBook Pro" or "iPhone 15 Pro"
   model string
 
-  // Apple model identifier — for example "MacBookPro18,1"
+  // Apple model identifier, for example "MacBookPro18,1"
   modelIdentifier() string
 
-  // Device platform — one of `Mac`, `iPad`, `iPhone`, `AppleTV`, `Vision`
+  // Device platform, one of `Mac`, `iPad`, `iPhone`, `AppleTV`, `Vision`
   platform string
 
   // Operating system version installed on the device
@@ -115,7 +115,7 @@ iru.device @defaults("name serialNumber osVersion platform") {
   // Whether the FileVault personal recovery key has been escrowed to Iru
   filevaultRecoveryKeyEscrowed() bool
 
-  // Type of FileVault recovery key in use — typically `personal` or `institutional`
+  // Type of FileVault recovery key in use, typically `personal` or `institutional`
   filevaultRecoveryKeyType() string
 
   // Whether macOS Gatekeeper is enabled
@@ -175,7 +175,7 @@ iru.device @defaults("name serialNumber osVersion platform") {
   // Tags applied to the device in the Iru admin console
   tags []string
 
-  // Storage volumes reported by the device — each entry includes `name`, `identifier`, `size_bytes`, `free_bytes`, `encrypted`, and `boot_volume`
+  // Storage volumes reported by the device; each entry includes `name`, `identifier`, `size_bytes`, `free_bytes`, `encrypted`, and `boot_volume`
   volumes() []dict
 
   // Blueprint assigned to the device
@@ -239,7 +239,7 @@ private iru.profile @defaults("displayName identifier") {
   encrypted bool
 }
 
-// Iru blueprint — bundle of library items assigned to devices
+// Iru blueprint, a bundle of library items assigned to devices
 private iru.blueprint @defaults("name") {
   // Blueprint identifier
   id string
@@ -266,12 +266,12 @@ private iru.blueprint @defaults("name") {
   libraryItems() []iru.libraryItem
 }
 
-// Iru library item — a single entry in the Iru policy/app/profile catalog
+// Iru library item, a single entry in the Iru policy/app/profile catalog
 //
-// Examine one library item — apps, configuration profiles, custom apps,
-// custom profiles, scripts, MDM restrictions, FileVault, Gatekeeper, and
-// other policy items live in the same catalog. The `kind` field
-// discriminates the entry type (for example
+// One entry in the tenant library catalog. Apps, configuration profiles,
+// custom apps, custom profiles, scripts, MDM restrictions, FileVault,
+// Gatekeeper, and other policy items all live in the same catalog. The
+// `kind` field discriminates the entry type (for example
 // `iru.libraryItems.where(kind == "script")`) and `payload` carries the
 // kind-specific configuration: scripts expose `script` / `run_on` /
 // `run_frequency`; App Store apps expose `app_id` / `bundle_id` /
@@ -294,7 +294,7 @@ private iru.libraryItem @defaults("name kind active") {
   // Per-status assignment counts (`installed`, `pending`, `failed`, …) keyed by status name
   counts map[string]int
 
-  // Kind-specific configuration — shape varies by `kind`
+  // Kind-specific configuration; shape varies by `kind`
   payload dict
 
   // Blueprints that reference this library item
@@ -333,8 +333,8 @@ private iru.user @defaults("name email") {
 
 // Iru tenant settings
 //
-// Examine tenant-level metadata — the tenant subdomain, organization
-// name, region, and the minimum and latest Iru agent versions advertised
+// Tenant-level metadata: the tenant subdomain, organization name,
+// region, and the minimum and latest Iru agent versions advertised
 // to managed devices.
 private iru.tenant @defaults("organizationName subdomain region") {
   // Tenant subdomain (the prefix of the `*.api.kandji.io` hostname)

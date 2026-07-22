@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"fmt"
+
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/iru/connection"
@@ -72,7 +74,7 @@ func initIruLibraryItem(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		mqlItem.cacheBlueprintIds = blueprintIds
 		return nil, mqlItem, nil
 	}
-	return args, nil, nil
+	return nil, nil, fmt.Errorf("iru.libraryItem with id %q not found", id)
 }
 
 func libraryItemArgs(li *client.LibraryItem) (map[string]*llx.RawData, []string) {

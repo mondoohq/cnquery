@@ -23,6 +23,11 @@ import (
 const (
 	defaultPageLimit = 300
 	defaultTimeout   = 60 * time.Second
+
+	// maxErrorBodyBytes caps how much of a non-2xx response body we read into
+	// an APIError, so a misbehaving server can't return a huge payload and
+	// exhaust memory.
+	maxErrorBodyBytes = 64 * 1024
 )
 
 // Client talks to a single Iru tenant.
@@ -112,7 +117,9 @@ func (c *Client) do(path string, query url.Values, out any) error {
 		}
 
 		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-			body, _ := io.ReadAll(resp.Body)
+			// Cap the error body so a malformed or adversarial server can't
+			// exhaust memory with a multi-GB 4xx/5xx payload.
+			body, _ := io.ReadAll(io.LimitReader(resp.Body, maxErrorBodyBytes))
 			resp.Body.Close()
 			return &APIError{StatusCode: resp.StatusCode, Path: path, Body: strings.TrimSpace(string(body))}
 		}
