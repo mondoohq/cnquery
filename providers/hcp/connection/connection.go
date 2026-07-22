@@ -104,10 +104,16 @@ func NewHcpConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 }
 
 // clientSecretFromConf extracts the service principal client secret from the
-// connection credentials.
+// connection credentials. The credentials are keyed by their user tag (a
+// routing label, not a secret), so the switch selects the client-secret
+// credential rather than comparing any secret material.
 func clientSecretFromConf(conf *inventory.Config) string {
 	for _, cred := range conf.Credentials {
-		if cred.Type == vault.CredentialType_password && cred.User == CredentialClientSecret {
+		if cred.Type != vault.CredentialType_password {
+			continue
+		}
+		switch cred.User {
+		case CredentialClientSecret:
 			return string(cred.Secret)
 		}
 	}
