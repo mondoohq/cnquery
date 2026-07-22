@@ -200,11 +200,11 @@ slack.userGroup @defaults("handle") {
   // Timestamp when the group was deleted
   deleted time
   // User that created the group
-  createdBy slack.user
+  createdBy() slack.user
   // User that updated the group
-  updatedBy slack.user
+  updatedBy() slack.user
   // User that deleted the group
-  deletedBy slack.user
+  deletedBy() slack.user
   // Total number of users in a group
   userCount int
   // Members of the group

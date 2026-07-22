@@ -41,33 +41,22 @@ func (s *mqlSlack) userGroups() ([]any, error) {
 	return list, nil
 }
 
+// mqlSlackUserGroupInternal caches the user IDs backing the lifecycle
+// createdBy()/updatedBy()/deletedBy() typed references. These IDs are often
+// empty (deletedBy is empty for every group that has not been deleted), so
+// they are resolved lazily and guarded rather than looked up eagerly.
+type mqlSlackUserGroupInternal struct {
+	cacheCreatedBy string
+	cacheUpdatedBy string
+	cacheDeletedBy string
+}
+
 func newMqlSlackUserGroup(runtime *plugin.Runtime, userGroup slack.UserGroup) (any, error) {
 	dateCreate := userGroup.DateCreate.Time()
 	dateUpdate := userGroup.DateUpdate.Time()
 	dateDelete := userGroup.DateDelete.Time()
 
-	createdBy, err := NewResource(runtime, "slack.user", map[string]*llx.RawData{
-		"id": llx.StringData(userGroup.CreatedBy),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	updatedBy, err := NewResource(runtime, "slack.user", map[string]*llx.RawData{
-		"id": llx.StringData(userGroup.UpdatedBy),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	deletedBy, err := NewResource(runtime, "slack.user", map[string]*llx.RawData{
-		"id": llx.StringData(userGroup.DeletedBy),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return CreateResource(runtime, "slack.userGroup", map[string]*llx.RawData{
+	r, err := CreateResource(runtime, "slack.userGroup", map[string]*llx.RawData{
 		"id":          llx.StringData(userGroup.ID),
 		"teamId":      llx.StringData(userGroup.TeamID),
 		"name":        llx.StringData(userGroup.Name),
@@ -77,20 +66,59 @@ func newMqlSlackUserGroup(runtime *plugin.Runtime, userGroup slack.UserGroup) (a
 		"created":     llx.TimeData(dateCreate),
 		"updated":     llx.TimeData(dateUpdate),
 		"deleted":     llx.TimeData(dateDelete),
-		"createdBy":   llx.ResourceData(createdBy, "slack.user"),
-		"updatedBy":   llx.ResourceData(updatedBy, "slack.user"),
-		"deletedBy":   llx.ResourceData(deletedBy, "slack.user"),
 		"userCount":   llx.IntData(int64(userGroup.UserCount)),
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	mqlGroup := r.(*mqlSlackUserGroup)
+	mqlGroup.cacheCreatedBy = userGroup.CreatedBy
+	mqlGroup.cacheUpdatedBy = userGroup.UpdatedBy
+	mqlGroup.cacheDeletedBy = userGroup.DeletedBy
+	return mqlGroup, nil
 }
 
 func (x *mqlSlackUserGroup) id() (string, error) {
 	return "slack.userGroup/" + x.Id.Data, nil
 }
 
+// userRef resolves a slack.user reference for the given ID, or returns a null
+// reference when the ID is empty. deletedBy is empty for every group that has
+// not been deleted, and createdBy/updatedBy can be empty for auto-provisioned
+// groups; resolving an empty ID would fail the whole userGroups listing.
+func (s *mqlSlackUserGroup) userRef(id string, field *plugin.TValue[*mqlSlackUser]) (*mqlSlackUser, error) {
+	if id == "" {
+		*field = plugin.TValue[*mqlSlackUser]{State: plugin.StateIsSet | plugin.StateIsNull}
+		return nil, nil
+	}
+	r, err := NewResource(s.MqlRuntime, "slack.user", map[string]*llx.RawData{
+		"id": llx.StringData(id),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlSlackUser), nil
+}
+
+func (s *mqlSlackUserGroup) createdBy() (*mqlSlackUser, error) {
+	return s.userRef(s.cacheCreatedBy, &s.CreatedBy)
+}
+
+func (s *mqlSlackUserGroup) updatedBy() (*mqlSlackUser, error) {
+	return s.userRef(s.cacheUpdatedBy, &s.UpdatedBy)
+}
+
+func (s *mqlSlackUserGroup) deletedBy() (*mqlSlackUser, error) {
+	return s.userRef(s.cacheDeletedBy, &s.DeletedBy)
+}
+
 func (s *mqlSlackUserGroup) members() ([]any, error) {
 	conn := s.MqlRuntime.Connection.(*connection.SlackConnection)
 	client := conn.Client()
+	if client == nil {
+		return nil, errors.New("cannot retrieve new data while using a mock connection")
+	}
 
 	userID := s.Id.Data
 

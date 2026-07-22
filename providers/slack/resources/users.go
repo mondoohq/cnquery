@@ -92,9 +92,6 @@ func (s *mqlSlackUsers) admins() ([]any, error) {
 		cur := all[i]
 		usr := cur.(*mqlSlackUser)
 		isAdmin := usr.IsAdmin.Data
-		if err != nil {
-			return nil, err
-		}
 		if isAdmin == true {
 			res = append(res, cur)
 		}

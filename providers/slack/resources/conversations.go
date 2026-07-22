@@ -7,6 +7,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/slack-go/slack"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -212,10 +213,21 @@ func (s *mqlSlackConversation) members() ([]any, error) {
 		}
 
 		for i := range members {
-
 			user := findUser(members[i])
 			if user == nil {
-				return nil, errors.New("could not find user " + members[i])
+				// The member is not part of this workspace's user list, which
+				// happens for external participants in Slack Connect / shared
+				// channels. Resolve them directly; skip only if that also fails,
+				// rather than failing the entire members list.
+				ext, err := NewResource(s.MqlRuntime, "slack.user", map[string]*llx.RawData{
+					"id": llx.StringData(members[i]),
+				})
+				if err != nil {
+					log.Warn().Str("user", members[i]).Str("channel", s.Id.Data).
+						Msg("slack: skipping conversation member that could not be resolved")
+					continue
+				}
+				user = ext.(*mqlSlackUser)
 			}
 			list = append(list, user)
 		}

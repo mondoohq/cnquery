@@ -1494,7 +1494,7 @@ func (c *mqlSlackEnterpriseUser) GetIsOwner() *plugin.TValue[bool] {
 type mqlSlackUserGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSlackUserGroupInternal it will be used here
+	mqlSlackUserGroupInternal
 	Id          plugin.TValue[string]
 	TeamId      plugin.TValue[string]
 	Name        plugin.TValue[string]
@@ -1585,15 +1585,51 @@ func (c *mqlSlackUserGroup) GetDeleted() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlSlackUserGroup) GetCreatedBy() *plugin.TValue[*mqlSlackUser] {
-	return &c.CreatedBy
+	return plugin.GetOrCompute[*mqlSlackUser](&c.CreatedBy, func() (*mqlSlackUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("slack.userGroup", c.__id, "createdBy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSlackUser), nil
+			}
+		}
+
+		return c.createdBy()
+	})
 }
 
 func (c *mqlSlackUserGroup) GetUpdatedBy() *plugin.TValue[*mqlSlackUser] {
-	return &c.UpdatedBy
+	return plugin.GetOrCompute[*mqlSlackUser](&c.UpdatedBy, func() (*mqlSlackUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("slack.userGroup", c.__id, "updatedBy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSlackUser), nil
+			}
+		}
+
+		return c.updatedBy()
+	})
 }
 
 func (c *mqlSlackUserGroup) GetDeletedBy() *plugin.TValue[*mqlSlackUser] {
-	return &c.DeletedBy
+	return plugin.GetOrCompute[*mqlSlackUser](&c.DeletedBy, func() (*mqlSlackUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("slack.userGroup", c.__id, "deletedBy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSlackUser), nil
+			}
+		}
+
+		return c.deletedBy()
+	})
 }
 
 func (c *mqlSlackUserGroup) GetUserCount() *plugin.TValue[int64] {
