@@ -105,6 +105,14 @@ type AdminDataResidency struct {
 type FlexibleStringSlice []string
 
 func (f *FlexibleStringSlice) UnmarshalJSON(data []byte) error {
+	// A JSON null (e.g. "allowed_inference_geos": null for an unrestricted
+	// workspace) must decode to an empty slice, not [""]. json.Unmarshal of
+	// null into a string is a no-op that returns no error, so without this
+	// guard the string branch below would win and yield a bogus [""].
+	if string(data) == "null" {
+		*f = nil
+		return nil
+	}
 	var s string
 	if err := json.Unmarshal(data, &s); err == nil {
 		*f = []string{s}

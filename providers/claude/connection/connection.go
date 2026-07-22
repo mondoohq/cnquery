@@ -10,6 +10,7 @@ import (
 
 	"github.com/anthropics/anthropic-sdk-go"
 	"github.com/anthropics/anthropic-sdk-go/option"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
@@ -91,6 +92,11 @@ func NewClaudeConnection(id uint32, asset *inventory.Asset, conf *inventory.Conf
 		if err == nil {
 			conn.orgID = org.ID
 			conn.orgName = org.Name
+		} else {
+			// Without an org identity, asset detection falls back to the
+			// generic host platform and discovery finds no workspaces. Surface
+			// the reason instead of silently coming up empty.
+			log.Warn().Err(err).Msg("claude: could not resolve organization from admin token; workspace discovery will be skipped")
 		}
 	}
 
