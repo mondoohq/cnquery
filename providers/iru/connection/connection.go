@@ -138,14 +138,11 @@ func (c *IruConnection) Asset() *inventory.Asset { return c.asset }
 
 // PlatformInfo returns the asset platform metadata for an Iru tenant.
 func (c *IruConnection) PlatformInfo() *inventory.Platform {
-	return &inventory.Platform{
-		Name:                  "iru",
-		Title:                 "Iru",
-		Family:                []string{"iru"},
-		Kind:                  "api",
-		Runtime:               "iru",
+	p := &inventory.Platform{
 		TechnologyUrlSegments: []string{"saas", "iru"},
 	}
+	PlatformByName("iru").Apply(p)
+	return p
 }
 
 // Identifier returns the stable platform ID for the tenant, derived from

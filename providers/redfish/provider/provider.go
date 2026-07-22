@@ -161,13 +161,9 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.RedfishConnect
 	asset.Name = conn.Conf.Host
 
 	asset.Platform = &inventory.Platform{
-		Name:                  vendor.Platform,
-		Family:                []string{"redfish", "bmc"},
-		Kind:                  "api",
-		Runtime:               "redfish",
-		Title:                 vendor.Name,
 		TechnologyUrlSegments: []string{"network", "redfish"},
 	}
+	connection.PlatformByName(vendor.Platform).Apply(asset.Platform)
 
 	identifier, err := conn.Identifier()
 	if err != nil {

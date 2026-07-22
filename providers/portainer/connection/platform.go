@@ -7,7 +7,33 @@ import (
 	"strconv"
 
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
+
+// Platforms is the static catalog of platforms this provider can emit.
+var Platforms = []*plugin.PlatformInfo{
+	{
+		Name:    "portainer-server",
+		Title:   "Portainer Server",
+		Family:  []string{"portainer"},
+		Kind:    []string{"api"},
+		Runtime: []string{"portainer"},
+	},
+	{
+		Name:    "portainer-environment",
+		Title:   "Portainer Environment",
+		Family:  []string{"portainer"},
+		Kind:    []string{"api"},
+		Runtime: []string{"portainer"},
+	},
+}
+
+var platformsByName = plugin.PlatformsByName(Platforms)
+
+// PlatformByName returns the catalog entry for the given platform name.
+func PlatformByName(name string) *plugin.PlatformInfo {
+	return platformsByName[name]
+}
 
 // Discovery targets
 const (
@@ -132,25 +158,22 @@ func MembershipRole(r int64) string {
 }
 
 func InstancePlatform() *inventory.Platform {
-	return &inventory.Platform{
-		Name:                  "portainer-server",
-		Family:                []string{"portainer"},
-		Kind:                  "api",
-		Runtime:               "portainer",
-		Title:                 "Portainer Server",
+	p := &inventory.Platform{
 		TechnologyUrlSegments: []string{"virtualization", "portainer", "instance"},
 	}
+	PlatformByName("portainer-server").Apply(p)
+	return p
 }
 
 func EnvironmentPlatform(envType int64) *inventory.Platform {
-	return &inventory.Platform{
-		Name:                  "portainer-environment",
-		Family:                []string{"portainer"},
-		Kind:                  "api",
-		Runtime:               "portainer",
+	p := &inventory.Platform{
+		// The specific endpoint type is only known at runtime, so set the
+		// concrete title here; Apply preserves an already-set title.
 		Title:                 "Portainer Environment (" + EnvironmentType(envType) + ")",
 		TechnologyUrlSegments: []string{"virtualization", "portainer", "environment"},
 	}
+	PlatformByName("portainer-environment").Apply(p)
+	return p
 }
 
 func NewInstancePlatformID(instanceID string) string {

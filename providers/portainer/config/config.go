@@ -17,6 +17,7 @@ var Config = plugin.Provider{
 	Version:         "13.1.3",
 	Maturity:        resources.MaturityExperimental,
 	ConnectionTypes: []string{provider.DefaultConnectionType},
+	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "portainer",
