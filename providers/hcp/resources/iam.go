@@ -30,11 +30,12 @@ func (r *mqlHcpOrganization) servicePrincipals() ([]any, error) {
 		params.PaginationNextPageToken = nextToken
 		resp, err := client.ServicePrincipalsServiceListOrganizationServicePrincipals(params, nil)
 		if err != nil {
-			// The service principal may lack IAM read permission on the org;
-			// degrade to no principals (with a warning) rather than failing the
-			// whole query.
+			// The service principal may lack IAM read permission on the org, or
+			// IAM may be unavailable; degrade to whatever was retrieved (with a
+			// warning that reports the count) rather than failing the query.
 			if isServiceUnavailable(err) {
-				log.Warn().Str("org", r.Id.Data).Msg("hcp: cannot list organization service principals (permission denied)")
+				log.Warn().Str("org", r.Id.Data).Int("retrieved", len(out)).
+					Msg("hcp: stopped listing organization service principals (service unavailable or permission denied)")
 				return out, nil
 			}
 			return nil, err
@@ -76,11 +77,12 @@ func (r *mqlHcpProject) servicePrincipals() ([]any, error) {
 		params.PaginationNextPageToken = nextToken
 		resp, err := client.ServicePrincipalsServiceListProjectServicePrincipals(params, nil)
 		if err != nil {
-			// The service principal may lack IAM read permission on the project;
-			// degrade to no principals (with a warning) rather than failing the
-			// whole query.
+			// The service principal may lack IAM read permission on the project,
+			// or IAM may be unavailable; degrade to whatever was retrieved (with
+			// a warning that reports the count) rather than failing the query.
 			if isServiceUnavailable(err) {
-				log.Warn().Str("project", r.Id.Data).Msg("hcp: cannot list project service principals (permission denied)")
+				log.Warn().Str("project", r.Id.Data).Int("retrieved", len(out)).
+					Msg("hcp: stopped listing project service principals (service unavailable or permission denied)")
 				return out, nil
 			}
 			return nil, err
