@@ -23,7 +23,6 @@ const (
 	ResourceIruBlueprint   string = "iru.blueprint"
 	ResourceIruLibraryItem string = "iru.libraryItem"
 	ResourceIruUser        string = "iru.user"
-	ResourceIruTenant      string = "iru.tenant"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -51,16 +50,12 @@ func init() {
 			Create: createIruBlueprint,
 		},
 		"iru.libraryItem": {
-			Init:   initIruLibraryItem,
+			// to override args, implement: initIruLibraryItem(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createIruLibraryItem,
 		},
 		"iru.user": {
 			Init:   initIruUser,
 			Create: createIruUser,
-		},
-		"iru.tenant": {
-			// to override args, implement: initIruTenant(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createIruTenant,
 		},
 	}
 }
@@ -145,9 +140,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"iru.users": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIru).GetUsers()).ToDataRes(types.Array(types.Resource("iru.user")))
 	},
-	"iru.tenant": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIru).GetTenant()).ToDataRes(types.Resource("iru.tenant"))
-	},
 	"iru.device.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruDevice).GetId()).ToDataRes(types.String)
 	},
@@ -166,56 +158,83 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"iru.device.model": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruDevice).GetModel()).ToDataRes(types.String)
 	},
-	"iru.device.modelIdentifier": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetModelIdentifier()).ToDataRes(types.String)
-	},
 	"iru.device.platform": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruDevice).GetPlatform()).ToDataRes(types.String)
 	},
 	"iru.device.osVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruDevice).GetOsVersion()).ToDataRes(types.String)
 	},
+	"iru.device.mdmEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetMdmEnabled()).ToDataRes(types.Bool)
+	},
+	"iru.device.agentInstalled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetAgentInstalled()).ToDataRes(types.Bool)
+	},
+	"iru.device.agentVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetAgentVersion()).ToDataRes(types.String)
+	},
+	"iru.device.blueprintName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetBlueprintName()).ToDataRes(types.String)
+	},
+	"iru.device.lastCheckIn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetLastCheckIn()).ToDataRes(types.Time)
+	},
+	"iru.device.firstEnrollment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetFirstEnrollment()).ToDataRes(types.Time)
+	},
+	"iru.device.lastEnrollment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetLastEnrollment()).ToDataRes(types.Time)
+	},
+	"iru.device.isMissing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetIsMissing()).ToDataRes(types.Bool)
+	},
+	"iru.device.isRemoved": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetIsRemoved()).ToDataRes(types.Bool)
+	},
+	"iru.device.lostModeStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetLostModeStatus()).ToDataRes(types.String)
+	},
+	"iru.device.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"iru.device.systemVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetSystemVersion()).ToDataRes(types.String)
+	},
+	"iru.device.bootVolume": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetBootVolume()).ToDataRes(types.String)
+	},
+	"iru.device.lastUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetLastUser()).ToDataRes(types.String)
+	},
+	"iru.device.timeSinceBoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetTimeSinceBoot()).ToDataRes(types.String)
+	},
+	"iru.device.supervised": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetSupervised()).ToDataRes(types.Bool)
+	},
+	"iru.device.mdmInstallDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetMdmInstallDate()).ToDataRes(types.Time)
+	},
+	"iru.device.modelIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetModelIdentifier()).ToDataRes(types.String)
+	},
 	"iru.device.processor": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruDevice).GetProcessor()).ToDataRes(types.String)
+	},
+	"iru.device.processorSpeed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetProcessorSpeed()).ToDataRes(types.String)
+	},
+	"iru.device.processorCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetProcessorCount()).ToDataRes(types.Int)
 	},
 	"iru.device.coreCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruDevice).GetCoreCount()).ToDataRes(types.Int)
 	},
 	"iru.device.memory": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetMemory()).ToDataRes(types.Int)
+		return (r.(*mqlIruDevice).GetMemory()).ToDataRes(types.String)
 	},
-	"iru.device.appleSilicon": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetAppleSilicon()).ToDataRes(types.Bool)
-	},
-	"iru.device.batteryCycleCount": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetBatteryCycleCount()).ToDataRes(types.Int)
-	},
-	"iru.device.lastCheckIn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetLastCheckIn()).ToDataRes(types.Time)
-	},
-	"iru.device.lastEnrollment": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetLastEnrollment()).ToDataRes(types.Time)
-	},
-	"iru.device.supervised": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetSupervised()).ToDataRes(types.Bool)
-	},
-	"iru.device.mdmEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetMdmEnabled()).ToDataRes(types.Bool)
-	},
-	"iru.device.userApprovedMdm": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetUserApprovedMdm()).ToDataRes(types.Bool)
-	},
-	"iru.device.dep": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetDep()).ToDataRes(types.Bool)
-	},
-	"iru.device.bootstrapTokenEscrowed": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetBootstrapTokenEscrowed()).ToDataRes(types.Bool)
-	},
-	"iru.device.activationLockEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetActivationLockEnabled()).ToDataRes(types.Bool)
-	},
-	"iru.device.activationLockBypassCodePresent": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetActivationLockBypassCodePresent()).ToDataRes(types.Bool)
+	"iru.device.batteryHealth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetBatteryHealth()).ToDataRes(types.String)
 	},
 	"iru.device.filevaultEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruDevice).GetFilevaultEnabled()).ToDataRes(types.Bool)
@@ -226,44 +245,26 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"iru.device.filevaultRecoveryKeyType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruDevice).GetFilevaultRecoveryKeyType()).ToDataRes(types.String)
 	},
-	"iru.device.gatekeeperEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetGatekeeperEnabled()).ToDataRes(types.Bool)
+	"iru.device.filevaultNextRotation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetFilevaultNextRotation()).ToDataRes(types.Time)
 	},
-	"iru.device.sipEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetSipEnabled()).ToDataRes(types.Bool)
+	"iru.device.filevaultRegenRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetFilevaultRegenRequired()).ToDataRes(types.Bool)
 	},
-	"iru.device.firewallEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetFirewallEnabled()).ToDataRes(types.Bool)
+	"iru.device.activationLockSupported": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetActivationLockSupported()).ToDataRes(types.Bool)
 	},
-	"iru.device.firewallStealthMode": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetFirewallStealthMode()).ToDataRes(types.Bool)
+	"iru.device.userActivationLockEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetUserActivationLockEnabled()).ToDataRes(types.Bool)
 	},
-	"iru.device.autoUpdateEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetAutoUpdateEnabled()).ToDataRes(types.Bool)
+	"iru.device.deviceActivationLockEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetDeviceActivationLockEnabled()).ToDataRes(types.Bool)
+	},
+	"iru.device.activationLockAllowedWhileSupervised": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetActivationLockAllowedWhileSupervised()).ToDataRes(types.Bool)
 	},
 	"iru.device.remoteDesktopEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruDevice).GetRemoteDesktopEnabled()).ToDataRes(types.Bool)
-	},
-	"iru.device.screensaverLockEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetScreensaverLockEnabled()).ToDataRes(types.Bool)
-	},
-	"iru.device.findMyEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetFindMyEnabled()).ToDataRes(types.Bool)
-	},
-	"iru.device.secureBootLevel": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetSecureBootLevel()).ToDataRes(types.String)
-	},
-	"iru.device.xprotectVersion": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetXprotectVersion()).ToDataRes(types.String)
-	},
-	"iru.device.mrtVersion": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetMrtVersion()).ToDataRes(types.String)
-	},
-	"iru.device.agentInstalled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetAgentInstalled()).ToDataRes(types.Bool)
-	},
-	"iru.device.agentVersion": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetAgentVersion()).ToDataRes(types.String)
 	},
 	"iru.device.ipAddress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruDevice).GetIpAddress()).ToDataRes(types.String)
@@ -271,32 +272,35 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"iru.device.publicIpAddress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruDevice).GetPublicIpAddress()).ToDataRes(types.String)
 	},
-	"iru.device.wifiMac": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetWifiMac()).ToDataRes(types.String)
+	"iru.device.localHostname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetLocalHostname()).ToDataRes(types.String)
 	},
-	"iru.device.ethernetMac": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetEthernetMac()).ToDataRes(types.String)
+	"iru.device.macAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetMacAddress()).ToDataRes(types.String)
 	},
-	"iru.device.bluetoothMac": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetBluetoothMac()).ToDataRes(types.String)
+	"iru.device.recoveryLockEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetRecoveryLockEnabled()).ToDataRes(types.Bool)
 	},
-	"iru.device.tags": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetTags()).ToDataRes(types.Array(types.String))
+	"iru.device.firmwarePasswordEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetFirmwarePasswordEnabled()).ToDataRes(types.Bool)
 	},
 	"iru.device.volumes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruDevice).GetVolumes()).ToDataRes(types.Array(types.Dict))
 	},
-	"iru.device.blueprint": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetBlueprint()).ToDataRes(types.Resource("iru.blueprint"))
-	},
-	"iru.device.user": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruDevice).GetUser()).ToDataRes(types.Resource("iru.user"))
+	"iru.device.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetParameters()).ToDataRes(types.Array(types.Dict))
 	},
 	"iru.device.apps": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruDevice).GetApps()).ToDataRes(types.Array(types.Resource("iru.app")))
 	},
 	"iru.device.profiles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruDevice).GetProfiles()).ToDataRes(types.Array(types.Resource("iru.profile")))
+	},
+	"iru.device.blueprint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetBlueprint()).ToDataRes(types.Resource("iru.blueprint"))
+	},
+	"iru.device.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruDevice).GetUser()).ToDataRes(types.Resource("iru.user"))
 	},
 	"iru.app.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruApp).GetName()).ToDataRes(types.String)
@@ -307,38 +311,50 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"iru.app.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruApp).GetVersion()).ToDataRes(types.String)
 	},
-	"iru.app.shortVersion": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruApp).GetShortVersion()).ToDataRes(types.String)
+	"iru.app.appId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruApp).GetAppId()).ToDataRes(types.String)
+	},
+	"iru.app.bundleSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruApp).GetBundleSize()).ToDataRes(types.Int)
+	},
+	"iru.app.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruApp).GetSource()).ToDataRes(types.String)
+	},
+	"iru.app.process": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruApp).GetProcess()).ToDataRes(types.String)
+	},
+	"iru.app.signature": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruApp).GetSignature()).ToDataRes(types.String)
 	},
 	"iru.app.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruApp).GetPath()).ToDataRes(types.String)
 	},
-	"iru.app.teamIdentifier": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruApp).GetTeamIdentifier()).ToDataRes(types.String)
+	"iru.app.creationDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruApp).GetCreationDate()).ToDataRes(types.Time)
 	},
-	"iru.app.isAppleApp": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruApp).GetIsAppleApp()).ToDataRes(types.Bool)
+	"iru.app.modificationDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruApp).GetModificationDate()).ToDataRes(types.Time)
 	},
-	"iru.profile.identifier": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruProfile).GetIdentifier()).ToDataRes(types.String)
-	},
-	"iru.profile.displayName": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruProfile).GetDisplayName()).ToDataRes(types.String)
-	},
-	"iru.profile.organization": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruProfile).GetOrganization()).ToDataRes(types.String)
+	"iru.profile.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruProfile).GetName()).ToDataRes(types.String)
 	},
 	"iru.profile.uuid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruProfile).GetUuid()).ToDataRes(types.String)
 	},
-	"iru.profile.installedBy": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruProfile).GetInstalledBy()).ToDataRes(types.String)
+	"iru.profile.identifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruProfile).GetIdentifier()).ToDataRes(types.String)
 	},
-	"iru.profile.removable": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruProfile).GetRemovable()).ToDataRes(types.Bool)
+	"iru.profile.organization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruProfile).GetOrganization()).ToDataRes(types.String)
 	},
-	"iru.profile.encrypted": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruProfile).GetEncrypted()).ToDataRes(types.Bool)
+	"iru.profile.verified": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruProfile).GetVerified()).ToDataRes(types.String)
+	},
+	"iru.profile.installDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruProfile).GetInstallDate()).ToDataRes(types.Time)
+	},
+	"iru.profile.payloadTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruProfile).GetPayloadTypes()).ToDataRes(types.Array(types.String))
 	},
 	"iru.blueprint.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruBlueprint).GetId()).ToDataRes(types.String)
@@ -349,20 +365,29 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"iru.blueprint.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruBlueprint).GetDescription()).ToDataRes(types.String)
 	},
+	"iru.blueprint.icon": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruBlueprint).GetIcon()).ToDataRes(types.String)
+	},
+	"iru.blueprint.color": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruBlueprint).GetColor()).ToDataRes(types.String)
+	},
+	"iru.blueprint.blueprintType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruBlueprint).GetBlueprintType()).ToDataRes(types.String)
+	},
+	"iru.blueprint.computersCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruBlueprint).GetComputersCount()).ToDataRes(types.Int)
+	},
 	"iru.blueprint.enrollmentCode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruBlueprint).GetEnrollmentCode()).ToDataRes(types.String)
 	},
-	"iru.blueprint.devicesCount": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruBlueprint).GetDevicesCount()).ToDataRes(types.Int)
+	"iru.blueprint.enrollmentCodeActive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruBlueprint).GetEnrollmentCodeActive()).ToDataRes(types.Bool)
 	},
 	"iru.blueprint.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruBlueprint).GetCreated()).ToDataRes(types.Time)
 	},
 	"iru.blueprint.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruBlueprint).GetUpdatedAt()).ToDataRes(types.Time)
-	},
-	"iru.blueprint.libraryItems": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruBlueprint).GetLibraryItems()).ToDataRes(types.Array(types.Resource("iru.libraryItem")))
 	},
 	"iru.libraryItem.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruLibraryItem).GetId()).ToDataRes(types.String)
@@ -376,14 +401,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"iru.libraryItem.active": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruLibraryItem).GetActive()).ToDataRes(types.Bool)
 	},
-	"iru.libraryItem.counts": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruLibraryItem).GetCounts()).ToDataRes(types.Map(types.String, types.Int))
-	},
 	"iru.libraryItem.payload": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruLibraryItem).GetPayload()).ToDataRes(types.Dict)
-	},
-	"iru.libraryItem.blueprints": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruLibraryItem).GetBlueprints()).ToDataRes(types.Array(types.Resource("iru.blueprint")))
 	},
 	"iru.libraryItem.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruLibraryItem).GetCreated()).ToDataRes(types.Time)
@@ -400,8 +419,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"iru.user.email": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruUser).GetEmail()).ToDataRes(types.String)
 	},
-	"iru.user.username": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruUser).GetUsername()).ToDataRes(types.String)
+	"iru.user.active": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruUser).GetActive()).ToDataRes(types.Bool)
+	},
+	"iru.user.archived": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruUser).GetArchived()).ToDataRes(types.Bool)
 	},
 	"iru.user.department": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruUser).GetDepartment()).ToDataRes(types.String)
@@ -409,23 +431,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"iru.user.jobTitle": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIruUser).GetJobTitle()).ToDataRes(types.String)
 	},
-	"iru.user.archived": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruUser).GetArchived()).ToDataRes(types.Bool)
+	"iru.user.deviceCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruUser).GetDeviceCount()).ToDataRes(types.Int)
 	},
-	"iru.tenant.subdomain": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruTenant).GetSubdomain()).ToDataRes(types.String)
+	"iru.user.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruUser).GetCreated()).ToDataRes(types.Time)
 	},
-	"iru.tenant.organizationName": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruTenant).GetOrganizationName()).ToDataRes(types.String)
+	"iru.user.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruUser).GetUpdatedAt()).ToDataRes(types.Time)
 	},
-	"iru.tenant.region": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruTenant).GetRegion()).ToDataRes(types.String)
+	"iru.user.integrationName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruUser).GetIntegrationName()).ToDataRes(types.String)
 	},
-	"iru.tenant.agentMinimumVersion": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruTenant).GetAgentMinimumVersion()).ToDataRes(types.String)
-	},
-	"iru.tenant.agentLatestVersion": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIruTenant).GetAgentLatestVersion()).ToDataRes(types.String)
+	"iru.user.integrationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIruUser).GetIntegrationType()).ToDataRes(types.String)
 	},
 }
 
@@ -459,10 +478,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlIru).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"iru.tenant": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIru).Tenant, ok = plugin.RawToTValue[*mqlIruTenant](v.Value, v.Error)
-		return
-	},
 	"iru.device.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIruDevice).__id, ok = v.Value.(string)
 		return
@@ -491,10 +506,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlIruDevice).Model, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"iru.device.modelIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).ModelIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"iru.device.platform": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIruDevice).Platform, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -503,8 +514,88 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlIruDevice).OsVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"iru.device.mdmEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).MdmEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iru.device.agentInstalled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).AgentInstalled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iru.device.agentVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).AgentVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iru.device.blueprintName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).BlueprintName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iru.device.lastCheckIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).LastCheckIn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"iru.device.firstEnrollment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).FirstEnrollment, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"iru.device.lastEnrollment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).LastEnrollment, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"iru.device.isMissing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).IsMissing, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iru.device.isRemoved": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).IsRemoved, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iru.device.lostModeStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).LostModeStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iru.device.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"iru.device.systemVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).SystemVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iru.device.bootVolume": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).BootVolume, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iru.device.lastUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).LastUser, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iru.device.timeSinceBoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).TimeSinceBoot, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iru.device.supervised": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).Supervised, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iru.device.mdmInstallDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).MdmInstallDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"iru.device.modelIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).ModelIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"iru.device.processor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIruDevice).Processor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iru.device.processorSpeed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).ProcessorSpeed, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iru.device.processorCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).ProcessorCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"iru.device.coreCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -512,51 +603,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"iru.device.memory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).Memory, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlIruDevice).Memory, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"iru.device.appleSilicon": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).AppleSilicon, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"iru.device.batteryCycleCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).BatteryCycleCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"iru.device.lastCheckIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).LastCheckIn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
-		return
-	},
-	"iru.device.lastEnrollment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).LastEnrollment, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
-		return
-	},
-	"iru.device.supervised": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).Supervised, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"iru.device.mdmEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).MdmEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"iru.device.userApprovedMdm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).UserApprovedMdm, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"iru.device.dep": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).Dep, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"iru.device.bootstrapTokenEscrowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).BootstrapTokenEscrowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"iru.device.activationLockEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).ActivationLockEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"iru.device.activationLockBypassCodePresent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).ActivationLockBypassCodePresent, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"iru.device.batteryHealth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).BatteryHealth, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"iru.device.filevaultEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -571,56 +622,32 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlIruDevice).FilevaultRecoveryKeyType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"iru.device.gatekeeperEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).GatekeeperEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"iru.device.filevaultNextRotation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).FilevaultNextRotation, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
-	"iru.device.sipEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).SipEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"iru.device.filevaultRegenRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).FilevaultRegenRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"iru.device.firewallEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).FirewallEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"iru.device.activationLockSupported": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).ActivationLockSupported, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"iru.device.firewallStealthMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).FirewallStealthMode, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"iru.device.userActivationLockEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).UserActivationLockEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"iru.device.autoUpdateEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).AutoUpdateEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"iru.device.deviceActivationLockEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).DeviceActivationLockEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iru.device.activationLockAllowedWhileSupervised": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).ActivationLockAllowedWhileSupervised, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"iru.device.remoteDesktopEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIruDevice).RemoteDesktopEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"iru.device.screensaverLockEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).ScreensaverLockEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"iru.device.findMyEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).FindMyEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"iru.device.secureBootLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).SecureBootLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"iru.device.xprotectVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).XprotectVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"iru.device.mrtVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).MrtVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"iru.device.agentInstalled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).AgentInstalled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"iru.device.agentVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).AgentVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"iru.device.ipAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -631,32 +658,28 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlIruDevice).PublicIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"iru.device.wifiMac": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).WifiMac, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"iru.device.localHostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).LocalHostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"iru.device.ethernetMac": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).EthernetMac, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"iru.device.macAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).MacAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"iru.device.bluetoothMac": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).BluetoothMac, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"iru.device.recoveryLockEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).RecoveryLockEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"iru.device.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"iru.device.firmwarePasswordEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).FirmwarePasswordEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"iru.device.volumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIruDevice).Volumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"iru.device.blueprint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).Blueprint, ok = plugin.RawToTValue[*mqlIruBlueprint](v.Value, v.Error)
-		return
-	},
-	"iru.device.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruDevice).User, ok = plugin.RawToTValue[*mqlIruUser](v.Value, v.Error)
+	"iru.device.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).Parameters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"iru.device.apps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -665,6 +688,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"iru.device.profiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIruDevice).Profiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"iru.device.blueprint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).Blueprint, ok = plugin.RawToTValue[*mqlIruBlueprint](v.Value, v.Error)
+		return
+	},
+	"iru.device.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruDevice).User, ok = plugin.RawToTValue[*mqlIruUser](v.Value, v.Error)
 		return
 	},
 	"iru.app.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -683,52 +714,68 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlIruApp).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"iru.app.shortVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruApp).ShortVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"iru.app.appId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruApp).AppId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iru.app.bundleSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruApp).BundleSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"iru.app.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruApp).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iru.app.process": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruApp).Process, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iru.app.signature": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruApp).Signature, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"iru.app.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIruApp).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"iru.app.teamIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruApp).TeamIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"iru.app.creationDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruApp).CreationDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
-	"iru.app.isAppleApp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruApp).IsAppleApp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"iru.app.modificationDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruApp).ModificationDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"iru.profile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIruProfile).__id, ok = v.Value.(string)
 		return
 	},
-	"iru.profile.identifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruProfile).Identifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"iru.profile.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruProfile).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"iru.profile.organization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruProfile).Organization, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"iru.profile.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruProfile).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"iru.profile.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIruProfile).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"iru.profile.installedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruProfile).InstalledBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"iru.profile.identifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruProfile).Identifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"iru.profile.removable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruProfile).Removable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"iru.profile.organization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruProfile).Organization, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"iru.profile.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruProfile).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"iru.profile.verified": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruProfile).Verified, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iru.profile.installDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruProfile).InstallDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"iru.profile.payloadTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruProfile).PayloadTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"iru.blueprint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -747,12 +794,28 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlIruBlueprint).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"iru.blueprint.icon": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruBlueprint).Icon, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iru.blueprint.color": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruBlueprint).Color, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iru.blueprint.blueprintType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruBlueprint).BlueprintType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iru.blueprint.computersCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruBlueprint).ComputersCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"iru.blueprint.enrollmentCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIruBlueprint).EnrollmentCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"iru.blueprint.devicesCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruBlueprint).DevicesCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"iru.blueprint.enrollmentCodeActive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruBlueprint).EnrollmentCodeActive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"iru.blueprint.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -761,10 +824,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"iru.blueprint.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIruBlueprint).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
-		return
-	},
-	"iru.blueprint.libraryItems": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruBlueprint).LibraryItems, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"iru.libraryItem.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -787,16 +846,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlIruLibraryItem).Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"iru.libraryItem.counts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruLibraryItem).Counts, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
-		return
-	},
 	"iru.libraryItem.payload": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIruLibraryItem).Payload, ok = plugin.RawToTValue[any](v.Value, v.Error)
-		return
-	},
-	"iru.libraryItem.blueprints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruLibraryItem).Blueprints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"iru.libraryItem.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -823,8 +874,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlIruUser).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"iru.user.username": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruUser).Username, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"iru.user.active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruUser).Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iru.user.archived": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruUser).Archived, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"iru.user.department": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -835,32 +890,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlIruUser).JobTitle, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"iru.user.archived": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruUser).Archived, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"iru.user.deviceCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruUser).DeviceCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"iru.tenant.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruTenant).__id, ok = v.Value.(string)
+	"iru.user.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruUser).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
-	"iru.tenant.subdomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruTenant).Subdomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"iru.user.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruUser).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
-	"iru.tenant.organizationName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruTenant).OrganizationName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"iru.user.integrationName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruUser).IntegrationName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"iru.tenant.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruTenant).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"iru.tenant.agentMinimumVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruTenant).AgentMinimumVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"iru.tenant.agentLatestVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIruTenant).AgentLatestVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"iru.user.integrationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIruUser).IntegrationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -896,7 +943,6 @@ type mqlIru struct {
 	Blueprints   plugin.TValue[[]any]
 	LibraryItems plugin.TValue[[]any]
 	Users        plugin.TValue[[]any]
-	Tenant       plugin.TValue[*mqlIruTenant]
 }
 
 // createIru creates a new instance of this resource
@@ -1000,77 +1046,65 @@ func (c *mqlIru) GetUsers() *plugin.TValue[[]any] {
 	})
 }
 
-func (c *mqlIru) GetTenant() *plugin.TValue[*mqlIruTenant] {
-	return plugin.GetOrCompute[*mqlIruTenant](&c.Tenant, func() (*mqlIruTenant, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("iru", c.__id, "tenant")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlIruTenant), nil
-			}
-		}
-
-		return c.tenant()
-	})
-}
-
 // mqlIruDevice for the iru.device resource
 type mqlIruDevice struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlIruDeviceInternal
-	Id                              plugin.TValue[string]
-	Name                            plugin.TValue[string]
-	SerialNumber                    plugin.TValue[string]
-	Udid                            plugin.TValue[string]
-	AssetTag                        plugin.TValue[string]
-	Model                           plugin.TValue[string]
-	ModelIdentifier                 plugin.TValue[string]
-	Platform                        plugin.TValue[string]
-	OsVersion                       plugin.TValue[string]
-	Processor                       plugin.TValue[string]
-	CoreCount                       plugin.TValue[int64]
-	Memory                          plugin.TValue[int64]
-	AppleSilicon                    plugin.TValue[bool]
-	BatteryCycleCount               plugin.TValue[int64]
-	LastCheckIn                     plugin.TValue[*time.Time]
-	LastEnrollment                  plugin.TValue[*time.Time]
-	Supervised                      plugin.TValue[bool]
-	MdmEnabled                      plugin.TValue[bool]
-	UserApprovedMdm                 plugin.TValue[bool]
-	Dep                             plugin.TValue[bool]
-	BootstrapTokenEscrowed          plugin.TValue[bool]
-	ActivationLockEnabled           plugin.TValue[bool]
-	ActivationLockBypassCodePresent plugin.TValue[bool]
-	FilevaultEnabled                plugin.TValue[bool]
-	FilevaultRecoveryKeyEscrowed    plugin.TValue[bool]
-	FilevaultRecoveryKeyType        plugin.TValue[string]
-	GatekeeperEnabled               plugin.TValue[bool]
-	SipEnabled                      plugin.TValue[bool]
-	FirewallEnabled                 plugin.TValue[bool]
-	FirewallStealthMode             plugin.TValue[bool]
-	AutoUpdateEnabled               plugin.TValue[bool]
-	RemoteDesktopEnabled            plugin.TValue[bool]
-	ScreensaverLockEnabled          plugin.TValue[bool]
-	FindMyEnabled                   plugin.TValue[bool]
-	SecureBootLevel                 plugin.TValue[string]
-	XprotectVersion                 plugin.TValue[string]
-	MrtVersion                      plugin.TValue[string]
-	AgentInstalled                  plugin.TValue[bool]
-	AgentVersion                    plugin.TValue[string]
-	IpAddress                       plugin.TValue[string]
-	PublicIpAddress                 plugin.TValue[string]
-	WifiMac                         plugin.TValue[string]
-	EthernetMac                     plugin.TValue[string]
-	BluetoothMac                    plugin.TValue[string]
-	Tags                            plugin.TValue[[]any]
-	Volumes                         plugin.TValue[[]any]
-	Blueprint                       plugin.TValue[*mqlIruBlueprint]
-	User                            plugin.TValue[*mqlIruUser]
-	Apps                            plugin.TValue[[]any]
-	Profiles                        plugin.TValue[[]any]
+	Id                                   plugin.TValue[string]
+	Name                                 plugin.TValue[string]
+	SerialNumber                         plugin.TValue[string]
+	Udid                                 plugin.TValue[string]
+	AssetTag                             plugin.TValue[string]
+	Model                                plugin.TValue[string]
+	Platform                             plugin.TValue[string]
+	OsVersion                            plugin.TValue[string]
+	MdmEnabled                           plugin.TValue[bool]
+	AgentInstalled                       plugin.TValue[bool]
+	AgentVersion                         plugin.TValue[string]
+	BlueprintName                        plugin.TValue[string]
+	LastCheckIn                          plugin.TValue[*time.Time]
+	FirstEnrollment                      plugin.TValue[*time.Time]
+	LastEnrollment                       plugin.TValue[*time.Time]
+	IsMissing                            plugin.TValue[bool]
+	IsRemoved                            plugin.TValue[bool]
+	LostModeStatus                       plugin.TValue[string]
+	Tags                                 plugin.TValue[[]any]
+	SystemVersion                        plugin.TValue[string]
+	BootVolume                           plugin.TValue[string]
+	LastUser                             plugin.TValue[string]
+	TimeSinceBoot                        plugin.TValue[string]
+	Supervised                           plugin.TValue[bool]
+	MdmInstallDate                       plugin.TValue[*time.Time]
+	ModelIdentifier                      plugin.TValue[string]
+	Processor                            plugin.TValue[string]
+	ProcessorSpeed                       plugin.TValue[string]
+	ProcessorCount                       plugin.TValue[int64]
+	CoreCount                            plugin.TValue[int64]
+	Memory                               plugin.TValue[string]
+	BatteryHealth                        plugin.TValue[string]
+	FilevaultEnabled                     plugin.TValue[bool]
+	FilevaultRecoveryKeyEscrowed         plugin.TValue[bool]
+	FilevaultRecoveryKeyType             plugin.TValue[string]
+	FilevaultNextRotation                plugin.TValue[*time.Time]
+	FilevaultRegenRequired               plugin.TValue[bool]
+	ActivationLockSupported              plugin.TValue[bool]
+	UserActivationLockEnabled            plugin.TValue[bool]
+	DeviceActivationLockEnabled          plugin.TValue[bool]
+	ActivationLockAllowedWhileSupervised plugin.TValue[bool]
+	RemoteDesktopEnabled                 plugin.TValue[bool]
+	IpAddress                            plugin.TValue[string]
+	PublicIpAddress                      plugin.TValue[string]
+	LocalHostname                        plugin.TValue[string]
+	MacAddress                           plugin.TValue[string]
+	RecoveryLockEnabled                  plugin.TValue[bool]
+	FirmwarePasswordEnabled              plugin.TValue[bool]
+	Volumes                              plugin.TValue[[]any]
+	Parameters                           plugin.TValue[[]any]
+	Apps                                 plugin.TValue[[]any]
+	Profiles                             plugin.TValue[[]any]
+	Blueprint                            plugin.TValue[*mqlIruBlueprint]
+	User                                 plugin.TValue[*mqlIruUser]
 }
 
 // createIruDevice creates a new instance of this resource
@@ -1134,12 +1168,6 @@ func (c *mqlIruDevice) GetModel() *plugin.TValue[string] {
 	return &c.Model
 }
 
-func (c *mqlIruDevice) GetModelIdentifier() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.ModelIdentifier, func() (string, error) {
-		return c.modelIdentifier()
-	})
-}
-
 func (c *mqlIruDevice) GetPlatform() *plugin.TValue[string] {
 	return &c.Platform
 }
@@ -1148,43 +1176,71 @@ func (c *mqlIruDevice) GetOsVersion() *plugin.TValue[string] {
 	return &c.OsVersion
 }
 
-func (c *mqlIruDevice) GetProcessor() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.Processor, func() (string, error) {
-		return c.processor()
-	})
+func (c *mqlIruDevice) GetMdmEnabled() *plugin.TValue[bool] {
+	return &c.MdmEnabled
 }
 
-func (c *mqlIruDevice) GetCoreCount() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.CoreCount, func() (int64, error) {
-		return c.coreCount()
-	})
+func (c *mqlIruDevice) GetAgentInstalled() *plugin.TValue[bool] {
+	return &c.AgentInstalled
 }
 
-func (c *mqlIruDevice) GetMemory() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.Memory, func() (int64, error) {
-		return c.memory()
-	})
+func (c *mqlIruDevice) GetAgentVersion() *plugin.TValue[string] {
+	return &c.AgentVersion
 }
 
-func (c *mqlIruDevice) GetAppleSilicon() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.AppleSilicon, func() (bool, error) {
-		return c.appleSilicon()
-	})
-}
-
-func (c *mqlIruDevice) GetBatteryCycleCount() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.BatteryCycleCount, func() (int64, error) {
-		return c.batteryCycleCount()
-	})
+func (c *mqlIruDevice) GetBlueprintName() *plugin.TValue[string] {
+	return &c.BlueprintName
 }
 
 func (c *mqlIruDevice) GetLastCheckIn() *plugin.TValue[*time.Time] {
 	return &c.LastCheckIn
 }
 
+func (c *mqlIruDevice) GetFirstEnrollment() *plugin.TValue[*time.Time] {
+	return &c.FirstEnrollment
+}
+
 func (c *mqlIruDevice) GetLastEnrollment() *plugin.TValue[*time.Time] {
-	return plugin.GetOrCompute[*time.Time](&c.LastEnrollment, func() (*time.Time, error) {
-		return c.lastEnrollment()
+	return &c.LastEnrollment
+}
+
+func (c *mqlIruDevice) GetIsMissing() *plugin.TValue[bool] {
+	return &c.IsMissing
+}
+
+func (c *mqlIruDevice) GetIsRemoved() *plugin.TValue[bool] {
+	return &c.IsRemoved
+}
+
+func (c *mqlIruDevice) GetLostModeStatus() *plugin.TValue[string] {
+	return &c.LostModeStatus
+}
+
+func (c *mqlIruDevice) GetTags() *plugin.TValue[[]any] {
+	return &c.Tags
+}
+
+func (c *mqlIruDevice) GetSystemVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SystemVersion, func() (string, error) {
+		return c.systemVersion()
+	})
+}
+
+func (c *mqlIruDevice) GetBootVolume() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.BootVolume, func() (string, error) {
+		return c.bootVolume()
+	})
+}
+
+func (c *mqlIruDevice) GetLastUser() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LastUser, func() (string, error) {
+		return c.lastUser()
+	})
+}
+
+func (c *mqlIruDevice) GetTimeSinceBoot() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TimeSinceBoot, func() (string, error) {
+		return c.timeSinceBoot()
 	})
 }
 
@@ -1194,37 +1250,51 @@ func (c *mqlIruDevice) GetSupervised() *plugin.TValue[bool] {
 	})
 }
 
-func (c *mqlIruDevice) GetMdmEnabled() *plugin.TValue[bool] {
-	return &c.MdmEnabled
-}
-
-func (c *mqlIruDevice) GetUserApprovedMdm() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.UserApprovedMdm, func() (bool, error) {
-		return c.userApprovedMdm()
+func (c *mqlIruDevice) GetMdmInstallDate() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.MdmInstallDate, func() (*time.Time, error) {
+		return c.mdmInstallDate()
 	})
 }
 
-func (c *mqlIruDevice) GetDep() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.Dep, func() (bool, error) {
-		return c.dep()
+func (c *mqlIruDevice) GetModelIdentifier() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ModelIdentifier, func() (string, error) {
+		return c.modelIdentifier()
 	})
 }
 
-func (c *mqlIruDevice) GetBootstrapTokenEscrowed() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.BootstrapTokenEscrowed, func() (bool, error) {
-		return c.bootstrapTokenEscrowed()
+func (c *mqlIruDevice) GetProcessor() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Processor, func() (string, error) {
+		return c.processor()
 	})
 }
 
-func (c *mqlIruDevice) GetActivationLockEnabled() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.ActivationLockEnabled, func() (bool, error) {
-		return c.activationLockEnabled()
+func (c *mqlIruDevice) GetProcessorSpeed() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ProcessorSpeed, func() (string, error) {
+		return c.processorSpeed()
 	})
 }
 
-func (c *mqlIruDevice) GetActivationLockBypassCodePresent() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.ActivationLockBypassCodePresent, func() (bool, error) {
-		return c.activationLockBypassCodePresent()
+func (c *mqlIruDevice) GetProcessorCount() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ProcessorCount, func() (int64, error) {
+		return c.processorCount()
+	})
+}
+
+func (c *mqlIruDevice) GetCoreCount() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.CoreCount, func() (int64, error) {
+		return c.coreCount()
+	})
+}
+
+func (c *mqlIruDevice) GetMemory() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Memory, func() (string, error) {
+		return c.memory()
+	})
+}
+
+func (c *mqlIruDevice) GetBatteryHealth() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.BatteryHealth, func() (string, error) {
+		return c.batteryHealth()
 	})
 }
 
@@ -1246,33 +1316,39 @@ func (c *mqlIruDevice) GetFilevaultRecoveryKeyType() *plugin.TValue[string] {
 	})
 }
 
-func (c *mqlIruDevice) GetGatekeeperEnabled() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.GatekeeperEnabled, func() (bool, error) {
-		return c.gatekeeperEnabled()
+func (c *mqlIruDevice) GetFilevaultNextRotation() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.FilevaultNextRotation, func() (*time.Time, error) {
+		return c.filevaultNextRotation()
 	})
 }
 
-func (c *mqlIruDevice) GetSipEnabled() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.SipEnabled, func() (bool, error) {
-		return c.sipEnabled()
+func (c *mqlIruDevice) GetFilevaultRegenRequired() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.FilevaultRegenRequired, func() (bool, error) {
+		return c.filevaultRegenRequired()
 	})
 }
 
-func (c *mqlIruDevice) GetFirewallEnabled() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.FirewallEnabled, func() (bool, error) {
-		return c.firewallEnabled()
+func (c *mqlIruDevice) GetActivationLockSupported() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ActivationLockSupported, func() (bool, error) {
+		return c.activationLockSupported()
 	})
 }
 
-func (c *mqlIruDevice) GetFirewallStealthMode() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.FirewallStealthMode, func() (bool, error) {
-		return c.firewallStealthMode()
+func (c *mqlIruDevice) GetUserActivationLockEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UserActivationLockEnabled, func() (bool, error) {
+		return c.userActivationLockEnabled()
 	})
 }
 
-func (c *mqlIruDevice) GetAutoUpdateEnabled() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.AutoUpdateEnabled, func() (bool, error) {
-		return c.autoUpdateEnabled()
+func (c *mqlIruDevice) GetDeviceActivationLockEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DeviceActivationLockEnabled, func() (bool, error) {
+		return c.deviceActivationLockEnabled()
+	})
+}
+
+func (c *mqlIruDevice) GetActivationLockAllowedWhileSupervised() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ActivationLockAllowedWhileSupervised, func() (bool, error) {
+		return c.activationLockAllowedWhileSupervised()
 	})
 }
 
@@ -1280,44 +1356,6 @@ func (c *mqlIruDevice) GetRemoteDesktopEnabled() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.RemoteDesktopEnabled, func() (bool, error) {
 		return c.remoteDesktopEnabled()
 	})
-}
-
-func (c *mqlIruDevice) GetScreensaverLockEnabled() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.ScreensaverLockEnabled, func() (bool, error) {
-		return c.screensaverLockEnabled()
-	})
-}
-
-func (c *mqlIruDevice) GetFindMyEnabled() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.FindMyEnabled, func() (bool, error) {
-		return c.findMyEnabled()
-	})
-}
-
-func (c *mqlIruDevice) GetSecureBootLevel() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.SecureBootLevel, func() (string, error) {
-		return c.secureBootLevel()
-	})
-}
-
-func (c *mqlIruDevice) GetXprotectVersion() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.XprotectVersion, func() (string, error) {
-		return c.xprotectVersion()
-	})
-}
-
-func (c *mqlIruDevice) GetMrtVersion() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.MrtVersion, func() (string, error) {
-		return c.mrtVersion()
-	})
-}
-
-func (c *mqlIruDevice) GetAgentInstalled() *plugin.TValue[bool] {
-	return &c.AgentInstalled
-}
-
-func (c *mqlIruDevice) GetAgentVersion() *plugin.TValue[string] {
-	return &c.AgentVersion
 }
 
 func (c *mqlIruDevice) GetIpAddress() *plugin.TValue[string] {
@@ -1332,26 +1370,28 @@ func (c *mqlIruDevice) GetPublicIpAddress() *plugin.TValue[string] {
 	})
 }
 
-func (c *mqlIruDevice) GetWifiMac() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.WifiMac, func() (string, error) {
-		return c.wifiMac()
+func (c *mqlIruDevice) GetLocalHostname() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LocalHostname, func() (string, error) {
+		return c.localHostname()
 	})
 }
 
-func (c *mqlIruDevice) GetEthernetMac() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.EthernetMac, func() (string, error) {
-		return c.ethernetMac()
+func (c *mqlIruDevice) GetMacAddress() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MacAddress, func() (string, error) {
+		return c.macAddress()
 	})
 }
 
-func (c *mqlIruDevice) GetBluetoothMac() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.BluetoothMac, func() (string, error) {
-		return c.bluetoothMac()
+func (c *mqlIruDevice) GetRecoveryLockEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RecoveryLockEnabled, func() (bool, error) {
+		return c.recoveryLockEnabled()
 	})
 }
 
-func (c *mqlIruDevice) GetTags() *plugin.TValue[[]any] {
-	return &c.Tags
+func (c *mqlIruDevice) GetFirmwarePasswordEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.FirmwarePasswordEnabled, func() (bool, error) {
+		return c.firmwarePasswordEnabled()
+	})
 }
 
 func (c *mqlIruDevice) GetVolumes() *plugin.TValue[[]any] {
@@ -1360,35 +1400,9 @@ func (c *mqlIruDevice) GetVolumes() *plugin.TValue[[]any] {
 	})
 }
 
-func (c *mqlIruDevice) GetBlueprint() *plugin.TValue[*mqlIruBlueprint] {
-	return plugin.GetOrCompute[*mqlIruBlueprint](&c.Blueprint, func() (*mqlIruBlueprint, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("iru.device", c.__id, "blueprint")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlIruBlueprint), nil
-			}
-		}
-
-		return c.blueprint()
-	})
-}
-
-func (c *mqlIruDevice) GetUser() *plugin.TValue[*mqlIruUser] {
-	return plugin.GetOrCompute[*mqlIruUser](&c.User, func() (*mqlIruUser, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("iru.device", c.__id, "user")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlIruUser), nil
-			}
-		}
-
-		return c.user()
+func (c *mqlIruDevice) GetParameters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Parameters, func() ([]any, error) {
+		return c.parameters()
 	})
 }
 
@@ -1424,18 +1438,54 @@ func (c *mqlIruDevice) GetProfiles() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlIruDevice) GetBlueprint() *plugin.TValue[*mqlIruBlueprint] {
+	return plugin.GetOrCompute[*mqlIruBlueprint](&c.Blueprint, func() (*mqlIruBlueprint, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("iru.device", c.__id, "blueprint")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlIruBlueprint), nil
+			}
+		}
+
+		return c.blueprint()
+	})
+}
+
+func (c *mqlIruDevice) GetUser() *plugin.TValue[*mqlIruUser] {
+	return plugin.GetOrCompute[*mqlIruUser](&c.User, func() (*mqlIruUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("iru.device", c.__id, "user")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlIruUser), nil
+			}
+		}
+
+		return c.user()
+	})
+}
+
 // mqlIruApp for the iru.app resource
 type mqlIruApp struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlIruAppInternal it will be used here
-	Name           plugin.TValue[string]
-	BundleId       plugin.TValue[string]
-	Version        plugin.TValue[string]
-	ShortVersion   plugin.TValue[string]
-	Path           plugin.TValue[string]
-	TeamIdentifier plugin.TValue[string]
-	IsAppleApp     plugin.TValue[bool]
+	Name             plugin.TValue[string]
+	BundleId         plugin.TValue[string]
+	Version          plugin.TValue[string]
+	AppId            plugin.TValue[string]
+	BundleSize       plugin.TValue[int64]
+	Source           plugin.TValue[string]
+	Process          plugin.TValue[string]
+	Signature        plugin.TValue[string]
+	Path             plugin.TValue[string]
+	CreationDate     plugin.TValue[*time.Time]
+	ModificationDate plugin.TValue[*time.Time]
 }
 
 // createIruApp creates a new instance of this resource
@@ -1482,20 +1532,36 @@ func (c *mqlIruApp) GetVersion() *plugin.TValue[string] {
 	return &c.Version
 }
 
-func (c *mqlIruApp) GetShortVersion() *plugin.TValue[string] {
-	return &c.ShortVersion
+func (c *mqlIruApp) GetAppId() *plugin.TValue[string] {
+	return &c.AppId
+}
+
+func (c *mqlIruApp) GetBundleSize() *plugin.TValue[int64] {
+	return &c.BundleSize
+}
+
+func (c *mqlIruApp) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlIruApp) GetProcess() *plugin.TValue[string] {
+	return &c.Process
+}
+
+func (c *mqlIruApp) GetSignature() *plugin.TValue[string] {
+	return &c.Signature
 }
 
 func (c *mqlIruApp) GetPath() *plugin.TValue[string] {
 	return &c.Path
 }
 
-func (c *mqlIruApp) GetTeamIdentifier() *plugin.TValue[string] {
-	return &c.TeamIdentifier
+func (c *mqlIruApp) GetCreationDate() *plugin.TValue[*time.Time] {
+	return &c.CreationDate
 }
 
-func (c *mqlIruApp) GetIsAppleApp() *plugin.TValue[bool] {
-	return &c.IsAppleApp
+func (c *mqlIruApp) GetModificationDate() *plugin.TValue[*time.Time] {
+	return &c.ModificationDate
 }
 
 // mqlIruProfile for the iru.profile resource
@@ -1503,13 +1569,13 @@ type mqlIruProfile struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlIruProfileInternal it will be used here
-	Identifier   plugin.TValue[string]
-	DisplayName  plugin.TValue[string]
-	Organization plugin.TValue[string]
+	Name         plugin.TValue[string]
 	Uuid         plugin.TValue[string]
-	InstalledBy  plugin.TValue[string]
-	Removable    plugin.TValue[bool]
-	Encrypted    plugin.TValue[bool]
+	Identifier   plugin.TValue[string]
+	Organization plugin.TValue[string]
+	Verified     plugin.TValue[string]
+	InstallDate  plugin.TValue[*time.Time]
+	PayloadTypes plugin.TValue[[]any]
 }
 
 // createIruProfile creates a new instance of this resource
@@ -1544,47 +1610,50 @@ func (c *mqlIruProfile) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlIruProfile) GetIdentifier() *plugin.TValue[string] {
-	return &c.Identifier
-}
-
-func (c *mqlIruProfile) GetDisplayName() *plugin.TValue[string] {
-	return &c.DisplayName
-}
-
-func (c *mqlIruProfile) GetOrganization() *plugin.TValue[string] {
-	return &c.Organization
+func (c *mqlIruProfile) GetName() *plugin.TValue[string] {
+	return &c.Name
 }
 
 func (c *mqlIruProfile) GetUuid() *plugin.TValue[string] {
 	return &c.Uuid
 }
 
-func (c *mqlIruProfile) GetInstalledBy() *plugin.TValue[string] {
-	return &c.InstalledBy
+func (c *mqlIruProfile) GetIdentifier() *plugin.TValue[string] {
+	return &c.Identifier
 }
 
-func (c *mqlIruProfile) GetRemovable() *plugin.TValue[bool] {
-	return &c.Removable
+func (c *mqlIruProfile) GetOrganization() *plugin.TValue[string] {
+	return &c.Organization
 }
 
-func (c *mqlIruProfile) GetEncrypted() *plugin.TValue[bool] {
-	return &c.Encrypted
+func (c *mqlIruProfile) GetVerified() *plugin.TValue[string] {
+	return &c.Verified
+}
+
+func (c *mqlIruProfile) GetInstallDate() *plugin.TValue[*time.Time] {
+	return &c.InstallDate
+}
+
+func (c *mqlIruProfile) GetPayloadTypes() *plugin.TValue[[]any] {
+	return &c.PayloadTypes
 }
 
 // mqlIruBlueprint for the iru.blueprint resource
 type mqlIruBlueprint struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlIruBlueprintInternal
-	Id             plugin.TValue[string]
-	Name           plugin.TValue[string]
-	Description    plugin.TValue[string]
-	EnrollmentCode plugin.TValue[string]
-	DevicesCount   plugin.TValue[int64]
-	Created        plugin.TValue[*time.Time]
-	UpdatedAt      plugin.TValue[*time.Time]
-	LibraryItems   plugin.TValue[[]any]
+	// optional: if you define mqlIruBlueprintInternal it will be used here
+	Id                   plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Description          plugin.TValue[string]
+	Icon                 plugin.TValue[string]
+	Color                plugin.TValue[string]
+	BlueprintType        plugin.TValue[string]
+	ComputersCount       plugin.TValue[int64]
+	EnrollmentCode       plugin.TValue[string]
+	EnrollmentCodeActive plugin.TValue[bool]
+	Created              plugin.TValue[*time.Time]
+	UpdatedAt            plugin.TValue[*time.Time]
 }
 
 // createIruBlueprint creates a new instance of this resource
@@ -1636,12 +1705,28 @@ func (c *mqlIruBlueprint) GetDescription() *plugin.TValue[string] {
 	return &c.Description
 }
 
+func (c *mqlIruBlueprint) GetIcon() *plugin.TValue[string] {
+	return &c.Icon
+}
+
+func (c *mqlIruBlueprint) GetColor() *plugin.TValue[string] {
+	return &c.Color
+}
+
+func (c *mqlIruBlueprint) GetBlueprintType() *plugin.TValue[string] {
+	return &c.BlueprintType
+}
+
+func (c *mqlIruBlueprint) GetComputersCount() *plugin.TValue[int64] {
+	return &c.ComputersCount
+}
+
 func (c *mqlIruBlueprint) GetEnrollmentCode() *plugin.TValue[string] {
 	return &c.EnrollmentCode
 }
 
-func (c *mqlIruBlueprint) GetDevicesCount() *plugin.TValue[int64] {
-	return &c.DevicesCount
+func (c *mqlIruBlueprint) GetEnrollmentCodeActive() *plugin.TValue[bool] {
+	return &c.EnrollmentCodeActive
 }
 
 func (c *mqlIruBlueprint) GetCreated() *plugin.TValue[*time.Time] {
@@ -1652,36 +1737,18 @@ func (c *mqlIruBlueprint) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
 }
 
-func (c *mqlIruBlueprint) GetLibraryItems() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.LibraryItems, func() ([]any, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("iru.blueprint", c.__id, "libraryItems")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]any), nil
-			}
-		}
-
-		return c.libraryItems()
-	})
-}
-
 // mqlIruLibraryItem for the iru.libraryItem resource
 type mqlIruLibraryItem struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlIruLibraryItemInternal
-	Id         plugin.TValue[string]
-	Name       plugin.TValue[string]
-	Kind       plugin.TValue[string]
-	Active     plugin.TValue[bool]
-	Counts     plugin.TValue[map[string]any]
-	Payload    plugin.TValue[any]
-	Blueprints plugin.TValue[[]any]
-	Created    plugin.TValue[*time.Time]
-	UpdatedAt  plugin.TValue[*time.Time]
+	// optional: if you define mqlIruLibraryItemInternal it will be used here
+	Id        plugin.TValue[string]
+	Name      plugin.TValue[string]
+	Kind      plugin.TValue[string]
+	Active    plugin.TValue[bool]
+	Payload   plugin.TValue[any]
+	Created   plugin.TValue[*time.Time]
+	UpdatedAt plugin.TValue[*time.Time]
 }
 
 // createIruLibraryItem creates a new instance of this resource
@@ -1737,28 +1804,8 @@ func (c *mqlIruLibraryItem) GetActive() *plugin.TValue[bool] {
 	return &c.Active
 }
 
-func (c *mqlIruLibraryItem) GetCounts() *plugin.TValue[map[string]any] {
-	return &c.Counts
-}
-
 func (c *mqlIruLibraryItem) GetPayload() *plugin.TValue[any] {
 	return &c.Payload
-}
-
-func (c *mqlIruLibraryItem) GetBlueprints() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.Blueprints, func() ([]any, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("iru.libraryItem", c.__id, "blueprints")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]any), nil
-			}
-		}
-
-		return c.blueprints()
-	})
 }
 
 func (c *mqlIruLibraryItem) GetCreated() *plugin.TValue[*time.Time] {
@@ -1774,13 +1821,18 @@ type mqlIruUser struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlIruUserInternal it will be used here
-	Id         plugin.TValue[string]
-	Name       plugin.TValue[string]
-	Email      plugin.TValue[string]
-	Username   plugin.TValue[string]
-	Department plugin.TValue[string]
-	JobTitle   plugin.TValue[string]
-	Archived   plugin.TValue[bool]
+	Id              plugin.TValue[string]
+	Name            plugin.TValue[string]
+	Email           plugin.TValue[string]
+	Active          plugin.TValue[bool]
+	Archived        plugin.TValue[bool]
+	Department      plugin.TValue[string]
+	JobTitle        plugin.TValue[string]
+	DeviceCount     plugin.TValue[int64]
+	Created         plugin.TValue[*time.Time]
+	UpdatedAt       plugin.TValue[*time.Time]
+	IntegrationName plugin.TValue[string]
+	IntegrationType plugin.TValue[string]
 }
 
 // createIruUser creates a new instance of this resource
@@ -1832,8 +1884,12 @@ func (c *mqlIruUser) GetEmail() *plugin.TValue[string] {
 	return &c.Email
 }
 
-func (c *mqlIruUser) GetUsername() *plugin.TValue[string] {
-	return &c.Username
+func (c *mqlIruUser) GetActive() *plugin.TValue[bool] {
+	return &c.Active
+}
+
+func (c *mqlIruUser) GetArchived() *plugin.TValue[bool] {
+	return &c.Archived
 }
 
 func (c *mqlIruUser) GetDepartment() *plugin.TValue[string] {
@@ -1844,75 +1900,22 @@ func (c *mqlIruUser) GetJobTitle() *plugin.TValue[string] {
 	return &c.JobTitle
 }
 
-func (c *mqlIruUser) GetArchived() *plugin.TValue[bool] {
-	return &c.Archived
+func (c *mqlIruUser) GetDeviceCount() *plugin.TValue[int64] {
+	return &c.DeviceCount
 }
 
-// mqlIruTenant for the iru.tenant resource
-type mqlIruTenant struct {
-	MqlRuntime *plugin.Runtime
-	__id       string
-	// optional: if you define mqlIruTenantInternal it will be used here
-	Subdomain           plugin.TValue[string]
-	OrganizationName    plugin.TValue[string]
-	Region              plugin.TValue[string]
-	AgentMinimumVersion plugin.TValue[string]
-	AgentLatestVersion  plugin.TValue[string]
+func (c *mqlIruUser) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
 }
 
-// createIruTenant creates a new instance of this resource
-func createIruTenant(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlIruTenant{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("iru.tenant", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
+func (c *mqlIruUser) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
 }
 
-func (c *mqlIruTenant) MqlName() string {
-	return "iru.tenant"
+func (c *mqlIruUser) GetIntegrationName() *plugin.TValue[string] {
+	return &c.IntegrationName
 }
 
-func (c *mqlIruTenant) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlIruTenant) GetSubdomain() *plugin.TValue[string] {
-	return &c.Subdomain
-}
-
-func (c *mqlIruTenant) GetOrganizationName() *plugin.TValue[string] {
-	return &c.OrganizationName
-}
-
-func (c *mqlIruTenant) GetRegion() *plugin.TValue[string] {
-	return &c.Region
-}
-
-func (c *mqlIruTenant) GetAgentMinimumVersion() *plugin.TValue[string] {
-	return &c.AgentMinimumVersion
-}
-
-func (c *mqlIruTenant) GetAgentLatestVersion() *plugin.TValue[string] {
-	return &c.AgentLatestVersion
+func (c *mqlIruUser) GetIntegrationType() *plugin.TValue[string] {
+	return &c.IntegrationType
 }

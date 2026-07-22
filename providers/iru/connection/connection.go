@@ -56,23 +56,28 @@ type IruConnection struct {
 
 	// deviceDetails caches the rich GET /devices/{id}/details payload
 	// keyed by device ID. It backs most of the iru.device computed
-	// methods (filevault, gatekeeper, volumes, …) so iterating
-	// `iru.devices { … posture fields … }` only triggers one detail
+	// methods (filevault, hardware, volumes, …) so iterating
+	// `iru.devices { … detail fields … }` only triggers one detail
 	// fetch per device rather than one per field.
 	detailsMu sync.Mutex
 	details   map[string]*client.DeviceDetails
 
-	// deviceApps caches the per-device installed-app listing — the apps
+	// deviceApps caches the per-device installed-app listing. The apps
 	// endpoint is its own call, independent of the details payload.
 	// (The profiles list is read straight off DeviceDetails.InstalledProfiles,
 	// so it does not need a second cache layer.)
 	appsMu     sync.Mutex
 	deviceApps map[string][]client.App
 
+	// deviceParams caches the per-device compliance parameters listing
+	// (GET /devices/{id}/parameters), its own call independent of details.
+	paramsMu     sync.Mutex
+	deviceParams map[string][]client.Parameter
+
 	// blueprintsMu / usersMu / libraryItemsMu memoize the tenant-wide listings
-	// so the init functions for typed cross-references (blueprint.libraryItems,
-	// libraryItem.blueprints, device.user) can resolve a single ID without
-	// re-walking the API for every reference.
+	// so the init functions for typed cross-references (device.blueprint,
+	// device.user) can resolve a single ID without re-walking the API for
+	// every reference.
 	blueprintsMu     sync.Mutex
 	blueprintsCached []client.Blueprint
 	blueprintsErr    error
@@ -94,11 +99,12 @@ type IruConnection struct {
 // API; the first request is issued lazily by resource accessors.
 func NewIruConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*IruConnection, error) {
 	conn := &IruConnection{
-		Connection: plugin.NewConnection(id, asset),
-		Conf:       conf,
-		asset:      asset,
-		details:    make(map[string]*client.DeviceDetails),
-		deviceApps: make(map[string][]client.App),
+		Connection:   plugin.NewConnection(id, asset),
+		Conf:         conf,
+		asset:        asset,
+		details:      make(map[string]*client.DeviceDetails),
+		deviceApps:   make(map[string][]client.App),
+		deviceParams: make(map[string][]client.Parameter),
 	}
 
 	subdomain := normalizeSubdomain(conf.Options[OptionSubdomain])
@@ -179,6 +185,22 @@ func (c *IruConnection) GetDeviceApps(id string) ([]client.App, error) {
 	}
 	c.deviceApps[id] = a
 	return a, nil
+}
+
+// GetDeviceParameters returns the cached compliance-parameter list for a
+// device, fetching it on first request. Safe for concurrent use.
+func (c *IruConnection) GetDeviceParameters(id string) ([]client.Parameter, error) {
+	c.paramsMu.Lock()
+	defer c.paramsMu.Unlock()
+	if p, ok := c.deviceParams[id]; ok {
+		return p, nil
+	}
+	p, err := c.Client.GetDeviceParameters(id)
+	if err != nil {
+		return nil, err
+	}
+	c.deviceParams[id] = p
+	return p, nil
 }
 
 // ListBlueprints returns the tenant's blueprints, memoizing the first

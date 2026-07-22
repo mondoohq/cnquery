@@ -5,40 +5,39 @@ package client
 
 import "encoding/json"
 
-// Blueprint is a configuration bundle assigned to devices.
+// Blueprint is a configuration bundle assigned to devices. The /blueprints
+// endpoint does not enumerate a blueprint's library items, so that
+// association is not modeled here.
 type Blueprint struct {
-	ID             string   `json:"id"`
-	Name           string   `json:"name"`
-	Description    string   `json:"description"`
-	EnrollmentCode string   `json:"enrollment_code"`
-	LibraryItems   []string `json:"library_items"`
-	DevicesCount   int      `json:"devices_count"`
-	Created        string   `json:"created"`
-	UpdatedAt      string   `json:"updated_at"`
+	ID             string                  `json:"id"`
+	Name           string                  `json:"name"`
+	Description    string                  `json:"description"`
+	Icon           string                  `json:"icon"`
+	Color          string                  `json:"color"`
+	Type           string                  `json:"type"`
+	ComputersCount int                     `json:"computers_count"`
+	EnrollmentCode BlueprintEnrollmentCode `json:"enrollment_code"`
+	CreatedAt      string                  `json:"created_at"`
+	UpdatedAt      string                  `json:"updated_at"`
 }
 
-// ListBlueprints walks /v1/blueprints.
+// BlueprintEnrollmentCode is the enrollment-code object the API nests on a
+// blueprint (the field is an object, not a bare string).
+type BlueprintEnrollmentCode struct {
+	Code     string `json:"code"`
+	IsActive bool   `json:"is_active"`
+}
+
+// ListBlueprints walks /v1/blueprints (DRF envelope, offset paging).
 func (c *Client) ListBlueprints() ([]Blueprint, error) {
 	var all []Blueprint
-	err := c.paginate("/api/v1/blueprints", func(raw json.RawMessage) (int, error) {
-		// Blueprints can come back either as a bare array or under
-		// {"results": [...]}; tolerate both.
+	err := c.paginateEnvelope("/api/v1/blueprints", func(results json.RawMessage) error {
 		var page []Blueprint
-		if len(raw) > 0 && raw[0] == '[' {
-			if err := json.Unmarshal(raw, &page); err != nil {
-				return 0, err
-			}
-		} else {
-			var envelope struct {
-				Results []Blueprint `json:"results"`
-			}
-			if err := json.Unmarshal(raw, &envelope); err != nil {
-				return 0, err
-			}
-			page = envelope.Results
+		if err := json.Unmarshal(results, &page); err != nil {
+			return err
 		}
 		all = append(all, page...)
-		return len(page), nil
+		return nil
 	})
 	if err != nil {
 		return nil, err

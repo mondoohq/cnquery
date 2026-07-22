@@ -153,10 +153,10 @@ func parseRetryAfter(h string) time.Duration {
 	return 2 * time.Second
 }
 
-// paginate fetches every page of a listing endpoint that uses limit/offset
-// query params and returns a flat JSON array per page. It accumulates into
-// the slice pointer that decode is given.
-func (c *Client) paginate(path string, decode func(raw json.RawMessage) (int, error)) error {
+// paginateArray fetches every page of a listing endpoint that returns a
+// bare JSON array and pages with limit/offset (the /devices endpoint). It
+// stops once a page returns fewer than a full page of rows.
+func (c *Client) paginateArray(path string, decode func(raw json.RawMessage) (int, error)) error {
 	offset := 0
 	for {
 		q := url.Values{}
@@ -175,5 +175,41 @@ func (c *Client) paginate(path string, decode func(raw json.RawMessage) (int, er
 			return nil
 		}
 		offset += n
+	}
+}
+
+// paginateEnvelope walks a listing endpoint that returns a DRF-style
+// envelope, {"results": [...], "next": "<url>"}, and follows the `next`
+// link until it is null. This handles both the offset-paged endpoints
+// (blueprints, library items) and the cursor-paged ones (users), because
+// both hand back the next page as a fully-formed URL. decode receives the
+// raw `results` array for each page.
+func (c *Client) paginateEnvelope(path string, decode func(results json.RawMessage) error) error {
+	q := url.Values{}
+	q.Set("limit", strconv.Itoa(defaultPageLimit))
+	for {
+		var env struct {
+			Next    string          `json:"next"`
+			Results json.RawMessage `json:"results"`
+		}
+		if err := c.do(path, q, &env); err != nil {
+			return err
+		}
+		if len(env.Results) > 0 {
+			if err := decode(env.Results); err != nil {
+				return err
+			}
+		}
+		if env.Next == "" {
+			return nil
+		}
+		// `next` is an absolute URL on the tenant host; reuse its path and
+		// query (offset or cursor) verbatim for the following request.
+		u, err := url.Parse(env.Next)
+		if err != nil {
+			return err
+		}
+		path = u.Path
+		q = u.Query()
 	}
 }
