@@ -1495,6 +1495,9 @@ private gitlab.project.milestone @defaults("internalId title state") {
   // Creation timestamp
   createdAt time
   // Whether the milestone has passed its due date
+  //
+  // Null when GitLab does not report the flag, which is not the same as the
+  // milestone being current.
   expired bool
   // Project this milestone belongs to
   project() gitlab.project

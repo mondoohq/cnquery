@@ -1188,12 +1188,10 @@ func createMilestoneResource(runtime *plugin.Runtime, milestone *gitlab.Mileston
 	milestoneInfo["startDate"] = llx.TimeDataPtr(isoTimePtr(milestone.StartDate))
 	milestoneInfo["dueDate"] = llx.TimeDataPtr(isoTimePtr(milestone.DueDate))
 
-	// Handle expired field (pointer to bool)
-	if milestone.Expired != nil {
-		milestoneInfo["expired"] = llx.BoolData(*milestone.Expired)
-	} else {
-		milestoneInfo["expired"] = llx.BoolData(false)
-	}
+	// A nil Expired means GitLab did not report the flag, which is not the
+	// same as reporting "not expired" — flattening it to false invents a
+	// value the API never sent. BoolDataPtr maps nil to a real MQL null.
+	milestoneInfo["expired"] = llx.BoolDataPtr(milestone.Expired)
 
 	mqlMilestone, err := CreateResource(runtime, "gitlab.project.milestone", milestoneInfo)
 	if err != nil {
@@ -1776,12 +1774,10 @@ func (p *mqlGitlabProject) milestones() ([]any, error) {
 		milestoneInfo["startDate"] = llx.TimeDataPtr(isoTimePtr(milestone.StartDate))
 		milestoneInfo["dueDate"] = llx.TimeDataPtr(isoTimePtr(milestone.DueDate))
 
-		// Handle expired field (pointer to bool)
-		if milestone.Expired != nil {
-			milestoneInfo["expired"] = llx.BoolData(*milestone.Expired)
-		} else {
-			milestoneInfo["expired"] = llx.BoolData(false)
-		}
+		// A nil Expired means GitLab did not report the flag, which is not the
+		// same as reporting "not expired" — flattening it to false invents a
+		// value the API never sent. BoolDataPtr maps nil to a real MQL null.
+		milestoneInfo["expired"] = llx.BoolDataPtr(milestone.Expired)
 
 		mqlMilestone, err := CreateResource(p.MqlRuntime, "gitlab.project.milestone", milestoneInfo)
 		if err != nil {
