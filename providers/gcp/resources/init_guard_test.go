@@ -60,8 +60,12 @@ func TestInitGuardsProjectIdBeforeParentConstruction(t *testing.T) {
 				ast.Inspect(fn.Body, func(n ast.Node) bool {
 					switch node := n.(type) {
 					case *ast.BinaryExpr:
-						// args["projectId"] == nil  (or != nil)
-						if isArgsIndex(node.X, "projectId") && isNilIdent(node.Y) && !guardPos.IsValid() {
+						// args["projectId"] == nil / != nil, either operand order.
+						// Matching only the left-hand form would let a reversed
+						// `nil == args["projectId"]` silently bypass the detector.
+						guarded := (isArgsIndex(node.X, "projectId") && isNilIdent(node.Y)) ||
+							(isArgsIndex(node.Y, "projectId") && isNilIdent(node.X))
+						if guarded && !guardPos.IsValid() {
 							guardPos = node.Pos()
 						}
 					case *ast.CallExpr:
