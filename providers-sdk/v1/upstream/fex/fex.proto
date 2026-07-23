@@ -606,6 +606,12 @@ message NetworkRange {
   string as_name = 3;
   // Optional. Two-letter ISO country code.
   string country = 4;
+  // Optional. City name of the geolocation, e.g. "Council Bluffs".
+  string city = 5;
+  // Optional. Latitude of the geolocation, in decimal degrees.
+  double latitude = 6;
+  // Optional. Longitude of the geolocation, in decimal degrees.
+  double longitude = 7;
 }
 
 // ThreatIntelIndicator captures an artifact — an IP, domain, URL, or file hash

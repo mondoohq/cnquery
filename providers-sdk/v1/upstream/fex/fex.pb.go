@@ -3126,7 +3126,13 @@ type NetworkRange struct {
 	// Optional. Autonomous system or organization name.
 	AsName string `protobuf:"bytes,3,opt,name=as_name,json=asName,proto3" json:"as_name,omitempty"`
 	// Optional. Two-letter ISO country code.
-	Country       string `protobuf:"bytes,4,opt,name=country,proto3" json:"country,omitempty"`
+	Country string `protobuf:"bytes,4,opt,name=country,proto3" json:"country,omitempty"`
+	// Optional. City name of the geolocation, e.g. "Council Bluffs".
+	City string `protobuf:"bytes,5,opt,name=city,proto3" json:"city,omitempty"`
+	// Optional. Latitude of the geolocation, in decimal degrees.
+	Latitude float64 `protobuf:"fixed64,6,opt,name=latitude,proto3" json:"latitude,omitempty"`
+	// Optional. Longitude of the geolocation, in decimal degrees.
+	Longitude     float64 `protobuf:"fixed64,7,opt,name=longitude,proto3" json:"longitude,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -3187,6 +3193,27 @@ func (x *NetworkRange) GetCountry() string {
 		return x.Country
 	}
 	return ""
+}
+
+func (x *NetworkRange) GetCity() string {
+	if x != nil {
+		return x.City
+	}
+	return ""
+}
+
+func (x *NetworkRange) GetLatitude() float64 {
+	if x != nil {
+		return x.Latitude
+	}
+	return 0
+}
+
+func (x *NetworkRange) GetLongitude() float64 {
+	if x != nil {
+		return x.Longitude
+	}
+	return 0
 }
 
 // ThreatIntelIndicator captures an artifact — an IP, domain, URL, or file hash
@@ -4054,12 +4081,15 @@ const file_fex_proto_rawDesc = "" +
 	"\n" +
 	"expires_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\x12!\n" +
 	"\fname_servers\x18\x06 \x03(\tR\vnameServers\x12\x1a\n" +
-	"\bstatuses\x18\a \x03(\tR\bstatuses\"g\n" +
+	"\bstatuses\x18\a \x03(\tR\bstatuses\"\xb5\x01\n" +
 	"\fNetworkRange\x12\x12\n" +
 	"\x04cidr\x18\x01 \x01(\tR\x04cidr\x12\x10\n" +
 	"\x03asn\x18\x02 \x01(\rR\x03asn\x12\x17\n" +
 	"\aas_name\x18\x03 \x01(\tR\x06asName\x12\x18\n" +
-	"\acountry\x18\x04 \x01(\tR\acountry\"\xd9\x01\n" +
+	"\acountry\x18\x04 \x01(\tR\acountry\x12\x12\n" +
+	"\x04city\x18\x05 \x01(\tR\x04city\x12\x1a\n" +
+	"\blatitude\x18\x06 \x01(\x01R\blatitude\x12\x1c\n" +
+	"\tlongitude\x18\a \x01(\x01R\tlongitude\"\xd9\x01\n" +
 	"\x14ThreatIntelIndicator\x12\x12\n" +
 	"\x04type\x18\x01 \x01(\tR\x04type\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value\x12\x1a\n" +
