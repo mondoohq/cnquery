@@ -14,7 +14,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "portainer",
 	ID:              "go.mondoo.com/mql/providers/portainer",
-	Version:         "13.1.4",
+	Version:         "13.1.5",
 	Maturity:        resources.MaturityExperimental,
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       connection.Platforms,
