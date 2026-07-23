@@ -114,9 +114,15 @@ func initOciCompartment(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		CompartmentId: common.String(id),
 	})
 	if err != nil {
-		// Return only the id so the resource is identifiable even when the
-		// caller can't read details (cross-tenancy / IAM denial). entries()
-		// and other deeper lookups will surface the same error if reached.
+		// Keep the resource identifiable by id when the caller can't read its
+		// details (cross-tenancy / IAM denial), but set the remaining fields
+		// explicitly null. Leaving them unset sends a primitive with no type
+		// information across the plugin boundary, which surfaces client-side as
+		// an unattributed coercion warning rather than a readable null.
+		args["name"] = llx.NilData
+		args["description"] = llx.NilData
+		args["created"] = llx.NilData
+		args["state"] = llx.NilData
 		return args, nil, nil
 	}
 	compartment := resp.Compartment

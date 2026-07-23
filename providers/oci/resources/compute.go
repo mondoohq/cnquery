@@ -181,8 +181,12 @@ func (o *mqlOciCompute) getComputeInstances(conn *connection.OciConnection, regi
 					}
 				}
 
-				// Create compartment resource reference
-				compartment, err := CreateResource(o.MqlRuntime, "oci.compartment", map[string]*llx.RawData{
+				// NewResource, not CreateResource: oci.compartment has an
+				// Init that fills name/description/created/state. Skipping it
+				// caches an id-only husk under the compartment's real OCID,
+				// which a later oci.compartments query then receives instead of
+				// the populated resource.
+				compartment, err := NewResource(o.MqlRuntime, "oci.compartment", map[string]*llx.RawData{
 					"id": llx.StringDataPtr(instance.CompartmentId),
 				})
 				if err != nil {
@@ -465,7 +469,7 @@ func (o *mqlOciCompute) getComputeImage(conn *connection.OciConnection, regions 
 				}
 
 				// Create compartment resource reference
-				compartment, err := CreateResource(o.MqlRuntime, "oci.compartment", map[string]*llx.RawData{
+				compartment, err := NewResource(o.MqlRuntime, "oci.compartment", map[string]*llx.RawData{
 					"id": llx.StringDataPtr(image.CompartmentId),
 				})
 				if err != nil {

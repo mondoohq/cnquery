@@ -179,12 +179,11 @@ func (o *mqlOciObjectStorageBucket) id() (string, error) {
 }
 
 func initOciObjectStorageBucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	// Check if id is already populated
-	if id, ok := args["id"]; ok && id.Value != nil {
-		if idStr, ok := id.Value.(string); ok && idStr != "" {
-			return args, nil, nil
-		}
-	}
+	// There is deliberately no id-only fast path. OCI keys GetBucket on
+	// namespace+name, not on the bucket OCID, so an id alone cannot be
+	// resolved - and the resulting resource would take the cache key
+	// "oci.objectStorage.bucket//" (both name parts empty), which every
+	// id-only bucket would share.
 
 	// When cnspec scans a discovered oci-objectstorage-bucket asset the only
 	// context we have is the Conf.PlatformId. Parse out namespace/name so the
@@ -223,14 +222,11 @@ func initOciObjectStorageBucket(runtime *plugin.Runtime, args map[string]*llx.Ra
 	}
 	bucket := obj.(*mqlOciObjectStorageBucket)
 
-	// Fetch bucket details to populate the id field
-	bucketDetails, err := bucket.getBucketDetails()
-	if err != nil {
+	// getBucketDetails sets Id on the resource itself. Writing args["id"] here
+	// would be a no-op: NewResource discards the returned args whenever the
+	// init also returns a resource.
+	if _, err := bucket.getBucketDetails(); err != nil {
 		return nil, nil, err
-	}
-
-	if bucketDetails.Id != nil {
-		args["id"] = llx.StringData(*bucketDetails.Id)
 	}
 
 	return args, bucket, nil
@@ -291,6 +287,12 @@ func (o *mqlOciObjectStorageBucket) getBucketDetails() (*objectstorage.Bucket, e
 	}
 
 	o.bucket = &response.Bucket
+	// ListBuckets returns a BucketSummary, which carries no Id at all, so the
+	// bucket OCID is only knowable from this call. Populate it here so both the
+	// collection path and the single-bucket init resolve `id` identically.
+	if o.bucket.Id != nil {
+		o.Id = plugin.TValue[string]{Data: *o.bucket.Id, State: plugin.StateIsSet}
+	}
 	o.fetched.Store(true)
 	return o.bucket, nil
 }

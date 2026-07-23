@@ -198,7 +198,7 @@ func init() {
 			Create: createOciTenancy,
 		},
 		"oci.region": {
-			// to override args, implement: initOciRegion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOciRegion,
 			Create: createOciRegion,
 		},
 		"oci.compartment": {
@@ -254,7 +254,7 @@ func init() {
 			Create: createOciIdentityDynamicGroup,
 		},
 		"oci.identity.identityProvider": {
-			// to override args, implement: initOciIdentityIdentityProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOciIdentityIdentityProvider,
 			Create: createOciIdentityIdentityProvider,
 		},
 		"oci.identity.networkSource": {
@@ -274,23 +274,23 @@ func init() {
 			Create: createOciNetworkExposure,
 		},
 		"oci.compute.instance": {
-			// to override args, implement: initOciComputeInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOciComputeInstance,
 			Create: createOciComputeInstance,
 		},
 		"oci.compute.vnic": {
-			// to override args, implement: initOciComputeVnic(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOciComputeVnic,
 			Create: createOciComputeVnic,
 		},
 		"oci.compute.image": {
-			// to override args, implement: initOciComputeImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOciComputeImage,
 			Create: createOciComputeImage,
 		},
 		"oci.compute.blockVolume": {
-			// to override args, implement: initOciComputeBlockVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOciComputeBlockVolume,
 			Create: createOciComputeBlockVolume,
 		},
 		"oci.compute.bootVolume": {
-			// to override args, implement: initOciComputeBootVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOciComputeBootVolume,
 			Create: createOciComputeBootVolume,
 		},
 		"oci.network": {
@@ -426,7 +426,7 @@ func init() {
 			Create: createOciFileStorage,
 		},
 		"oci.fileStorage.fileSystem": {
-			// to override args, implement: initOciFileStorageFileSystem(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOciFileStorageFileSystem,
 			Create: createOciFileStorageFileSystem,
 		},
 		"oci.events": {
@@ -598,11 +598,11 @@ func init() {
 			Create: createOciDatabaseAutonomousDatabaseBackup,
 		},
 		"oci.database.dbSystem": {
-			// to override args, implement: initOciDatabaseDbSystem(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOciDatabaseDbSystem,
 			Create: createOciDatabaseDbSystem,
 		},
 		"oci.database.autonomousDatabase": {
-			// to override args, implement: initOciDatabaseAutonomousDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOciDatabaseAutonomousDatabase,
 			Create: createOciDatabaseAutonomousDatabase,
 		},
 		"oci.apigateway": {
@@ -610,7 +610,7 @@ func init() {
 			Create: createOciApigateway,
 		},
 		"oci.apigateway.gateway": {
-			// to override args, implement: initOciApigatewayGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOciApigatewayGateway,
 			Create: createOciApigatewayGateway,
 		},
 		"oci.apigateway.deployment": {

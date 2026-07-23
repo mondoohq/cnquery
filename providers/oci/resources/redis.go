@@ -191,7 +191,7 @@ func initOciRedisCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		}
 	}
 
-	return args, nil, nil
+	return nil, nil, errors.New("oci.redis.cluster not found: " + idVal)
 }
 
 func (o *mqlOciRedisCluster) id() (string, error) {

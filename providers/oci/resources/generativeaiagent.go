@@ -207,7 +207,7 @@ func initOciAiAgentsAgent(runtime *plugin.Runtime, args map[string]*llx.RawData)
 			return args, a, nil
 		}
 	}
-	return args, nil, nil
+	return nil, nil, errors.New("oci.ai.agents.agent not found: " + idVal)
 }
 
 func (o *mqlOciAiAgentsAgent) id() (string, error) {
@@ -353,7 +353,7 @@ func initOciAiAgentsEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawDa
 			return args, e, nil
 		}
 	}
-	return args, nil, nil
+	return nil, nil, errors.New("oci.ai.agents.endpoint not found: " + idVal)
 }
 
 func (o *mqlOciAiAgentsEndpoint) id() (string, error) {
@@ -473,7 +473,7 @@ func initOciAiAgentsKnowledgeBase(runtime *plugin.Runtime, args map[string]*llx.
 			return args, kb, nil
 		}
 	}
-	return args, nil, nil
+	return nil, nil, errors.New("oci.ai.agents.knowledgeBase not found: " + idVal)
 }
 
 func (o *mqlOciAiAgentsKnowledgeBase) id() (string, error) {
@@ -596,7 +596,7 @@ func initOciAiAgentsDataSource(runtime *plugin.Runtime, args map[string]*llx.Raw
 			return args, ds, nil
 		}
 	}
-	return args, nil, nil
+	return nil, nil, errors.New("oci.ai.agents.dataSource not found: " + idVal)
 }
 
 func (o *mqlOciAiAgentsDataSource) id() (string, error) {
@@ -740,7 +740,7 @@ func initOciAiAgentsTool(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 			return args, t, nil
 		}
 	}
-	return args, nil, nil
+	return nil, nil, errors.New("oci.ai.agents.tool not found: " + idVal)
 }
 
 func (o *mqlOciAiAgentsTool) id() (string, error) {

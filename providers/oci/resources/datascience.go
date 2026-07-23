@@ -118,7 +118,7 @@ func (o *mqlOciAiDataScience) fetchProjects(svc *datascience.DataScienceClient) 
 }
 
 func initOciAiDataScienceProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return findOciDataScienceByID(runtime, args, (*mqlOciAiDataScience).GetProjects)
+	return findOciDataScienceByID(runtime, args, "oci.ai.dataScience.project", (*mqlOciAiDataScience).GetProjects)
 }
 
 func (o *mqlOciAiDataScienceProject) id() (string, error) {
@@ -205,7 +205,7 @@ type mqlOciAiDataScienceNotebookSessionInternal struct {
 }
 
 func initOciAiDataScienceNotebookSession(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return findOciDataScienceByID(runtime, args, (*mqlOciAiDataScience).GetNotebookSessions)
+	return findOciDataScienceByID(runtime, args, "oci.ai.dataScience.notebookSession", (*mqlOciAiDataScience).GetNotebookSessions)
 }
 
 func (o *mqlOciAiDataScienceNotebookSession) id() (string, error) {
@@ -297,7 +297,7 @@ type mqlOciAiDataScienceModelInternal struct {
 }
 
 func initOciAiDataScienceModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return findOciDataScienceByID(runtime, args, (*mqlOciAiDataScience).GetModels)
+	return findOciDataScienceByID(runtime, args, "oci.ai.dataScience.model", (*mqlOciAiDataScience).GetModels)
 }
 
 func (o *mqlOciAiDataScienceModel) id() (string, error) {
@@ -382,7 +382,7 @@ type mqlOciAiDataScienceModelVersionSetInternal struct {
 }
 
 func initOciAiDataScienceModelVersionSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return findOciDataScienceByID(runtime, args, (*mqlOciAiDataScience).GetModelVersionSets)
+	return findOciDataScienceByID(runtime, args, "oci.ai.dataScience.modelVersionSet", (*mqlOciAiDataScience).GetModelVersionSets)
 }
 
 func (o *mqlOciAiDataScienceModelVersionSet) id() (string, error) {
@@ -465,7 +465,7 @@ type mqlOciAiDataScienceModelDeploymentInternal struct {
 }
 
 func initOciAiDataScienceModelDeployment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return findOciDataScienceByID(runtime, args, (*mqlOciAiDataScience).GetModelDeployments)
+	return findOciDataScienceByID(runtime, args, "oci.ai.dataScience.modelDeployment", (*mqlOciAiDataScience).GetModelDeployments)
 }
 
 func (o *mqlOciAiDataScienceModelDeployment) id() (string, error) {
@@ -534,7 +534,7 @@ type mqlOciAiDataScienceJobInternal struct {
 }
 
 func initOciAiDataScienceJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return findOciDataScienceByID(runtime, args, (*mqlOciAiDataScience).GetJobs)
+	return findOciDataScienceByID(runtime, args, "oci.ai.dataScience.job", (*mqlOciAiDataScience).GetJobs)
 }
 
 func (o *mqlOciAiDataScienceJob) id() (string, error) {
@@ -604,7 +604,7 @@ type mqlOciAiDataSciencePipelineInternal struct {
 }
 
 func initOciAiDataSciencePipeline(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return findOciDataScienceByID(runtime, args, (*mqlOciAiDataScience).GetPipelines)
+	return findOciDataScienceByID(runtime, args, "oci.ai.dataScience.pipeline", (*mqlOciAiDataScience).GetPipelines)
 }
 
 func (o *mqlOciAiDataSciencePipeline) id() (string, error) {
@@ -624,7 +624,7 @@ func (o *mqlOciAiDataSciencePipeline) project() (*mqlOciAiDataScienceProject, er
 // findOciDataScienceByID powers the init functions for Data Science resources:
 // it lists the requested collection and returns the entry whose id matches the
 // "id" argument, so a resource can be selected directly by OCID.
-func findOciDataScienceByID(runtime *plugin.Runtime, args map[string]*llx.RawData, list func(svc *mqlOciAiDataScience) *plugin.TValue[[]any]) (map[string]*llx.RawData, plugin.Resource, error) {
+func findOciDataScienceByID(runtime *plugin.Runtime, args map[string]*llx.RawData, resourceName string, list func(svc *mqlOciAiDataScience) *plugin.TValue[[]any]) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
@@ -650,7 +650,7 @@ func findOciDataScienceByID(runtime *plugin.Runtime, args map[string]*llx.RawDat
 			return args, res, nil
 		}
 	}
-	return args, nil, nil
+	return nil, nil, errors.New(resourceName + " not found: " + idVal)
 }
 
 // resolveOciDataScienceProject resolves a typed project resource from a project
