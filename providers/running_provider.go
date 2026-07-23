@@ -319,6 +319,9 @@ func (r *RestartableProvider) Disconnect(req *pp.DisconnectReq) (*pp.DisconnectR
 	// (GC kept it in the graph), the Service-layer runtime must stay alive
 	// so children can share its resource cache. GC will disconnect it later
 	// once all children are done.
+	//
+	// The else branch also covers double-disconnect (node absent from graph
+	// entirely); the plugin handles unknown connection IDs as a no-op.
 	var resp *pp.DisconnectRes
 	var err error
 	if keptByChildren {
