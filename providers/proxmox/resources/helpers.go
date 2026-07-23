@@ -82,6 +82,13 @@ func firewallRulesToResources(runtime *plugin.Runtime, rules []connection.Firewa
 	list := make([]any, len(rules))
 	for i, rule := range rules {
 		res, err := CreateResource(runtime, "proxmox.firewall.rule", map[string]*llx.RawData{
+			// Set __id explicitly: `scope` is an Internal-struct field assigned
+			// after CreateResource returns, but the cache key is computed inside
+			// CreateResource. Deriving it from id() there would bake an empty
+			// scope segment, so two identical rules in different scopes (e.g.
+			// vm/100 and vm/101) would collide and alias to the first.
+			"__id": llx.StringData(fmt.Sprintf("proxmox.firewall.rule/%s/%d/%s/%s/%s/%s",
+				scope, rule.Pos, rule.Type, rule.Action, rule.Source, rule.Dest)),
 			"pos":     llx.IntData(int64(rule.Pos)),
 			"type":    llx.StringData(rule.Type),
 			"action":  llx.StringData(rule.Action),
@@ -266,7 +273,10 @@ func parseContainerNetworkConfig(id, val string) map[string]*llx.RawData {
 func parseContainerMountPoint(id, val string) map[string]*llx.RawData {
 	storage, mountPath := "", ""
 	size := int64(0)
-	backup := true
+	// In PVE only rootfs is backed up by default; additional mount points
+	// (mp0..mp254) are EXCLUDED from vzdump unless backup=1 is set explicitly.
+	// (This differs from QEMU disks, where a drive is included unless backup=0.)
+	backup := id == "rootfs"
 	replicate := true
 	readonly := false
 	aclEnabled := false
