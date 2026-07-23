@@ -743,6 +743,17 @@ func TestWolfiLinuxDetector(t *testing.T) {
 	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
 }
 
+func TestWizOSLinuxDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-wizos.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "wizos", di.Name, "os name should be identified")
+	assert.Equal(t, "WizOS", di.Title, "os title should be identified")
+	assert.Equal(t, "1.0", di.Version, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
+}
+
 func TestBusyboxLinuxDetector(t *testing.T) {
 	di, err := detectPlatformFromMock("./testdata/detect-busybox.toml")
 	assert.Nil(t, err, "was able to create the provider")

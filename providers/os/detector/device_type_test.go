@@ -522,6 +522,8 @@ func TestDetectDeviceType_LinuxNoSignals_DefaultServer(t *testing.T) {
 		{"azure linux", "azurelinux", "Microsoft Azure Linux", []string{"linux", "unix", "os"}},
 		// detect-wolfi.toml
 		{"wolfi", "wolfi", "Wolfi", []string{"linux", "unix", "os"}},
+		// detect-wizos.toml
+		{"wizos", "wizos", "WizOS", []string{"linux", "unix", "os"}},
 		// detect-buildroot.toml
 		{"buildroot", "buildroot", "Buildroot 2019.02.9", []string{"linux", "unix", "os"}},
 	}

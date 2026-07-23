@@ -129,7 +129,7 @@ func ResolveSystemPkgManagers(conn shared.Connection) ([]OperatingSystemPkgManag
 		}
 	case asset.Platform.IsFamily("suse"): // suse handling
 		pms = append(pms, &SusePkgManager{RpmPkgManager{conn: conn, platform: asset.Platform}})
-	case asset.Platform.Name == "alpine" || asset.Platform.Name == "wolfi": // alpine & wolfi share apk
+	case asset.Platform.Name == "alpine" || asset.Platform.Name == "wolfi" || asset.Platform.Name == "wizos": // alpine, wolfi & wizos share apk
 		pms = append(pms, &AlpinePkgManager{conn: conn, platform: asset.Platform})
 	case asset.Platform.Name == "macos": // macos family
 		pms = append(pms, &MacOSPkgManager{conn: conn, platform: asset.Platform})
