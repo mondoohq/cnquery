@@ -1230,8 +1230,8 @@ func (*Component_File) isComponent_Details() {}
 func (*Component_CloudResource) isComponent_Details() {}
 
 // CloudResource describes a cloud resource a finding is about — the native
-// object of a cloud provider (an AWS/Azure/GCP resource), captured as structured
-// detail beyond the component's bare id. All fields are optional.
+// object of a cloud provider (an AWS/Azure/GCP resource), captured as
+// structured detail beyond the component's bare id. All fields are optional.
 type CloudResource struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Cloud provider, e.g. "aws", "azure", "gcp".
@@ -1244,7 +1244,8 @@ type CloudResource struct {
 	Region string `protobuf:"bytes,4,opt,name=region,proto3" json:"region,omitempty"`
 	// Owning account, subscription, or project.
 	Account string `protobuf:"bytes,5,opt,name=account,proto3" json:"account,omitempty"`
-	// Provider partition/cloud, e.g. an AWS partition "aws" / "aws-us-gov" / "aws-cn".
+	// Provider partition/cloud, e.g. an AWS partition
+	// "aws" / "aws-us-gov" / "aws-cn".
 	Partition string `protobuf:"bytes,6,opt,name=partition,proto3" json:"partition,omitempty"`
 	// Resource tags / labels.
 	Tags          map[string]string `protobuf:"bytes,7,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`

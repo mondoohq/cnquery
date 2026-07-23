@@ -182,8 +182,8 @@ message Component {
 }
 
 // CloudResource describes a cloud resource a finding is about — the native
-// object of a cloud provider (an AWS/Azure/GCP resource), captured as structured
-// detail beyond the component's bare id. All fields are optional.
+// object of a cloud provider (an AWS/Azure/GCP resource), captured as
+// structured detail beyond the component's bare id. All fields are optional.
 message CloudResource {
   // Cloud provider, e.g. "aws", "azure", "gcp".
   string provider = 1;
@@ -195,7 +195,8 @@ message CloudResource {
   string region = 4;
   // Owning account, subscription, or project.
   string account = 5;
-  // Provider partition/cloud, e.g. an AWS partition "aws" / "aws-us-gov" / "aws-cn".
+  // Provider partition/cloud, e.g. an AWS partition
+  // "aws" / "aws-us-gov" / "aws-cn".
   string partition = 6;
   // Resource tags / labels.
   map<string, string> tags = 7;
