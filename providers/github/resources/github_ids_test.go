@@ -66,25 +66,54 @@ func TestCodeownersRuleID(t *testing.T) {
 }
 
 func TestRunnerID(t *testing.T) {
-	assert.Equal(t, "github.runner/orgs/mondoohq/7", runnerID("orgs/mondoohq", 7))
+	assert.Equal(t, "github.runner/orgs/mondoohq/7", runnerID("orgs/mondoohq", "7"))
 
 	// Organization and repository runners are numbered independently.
 	assert.NotEqual(t,
-		runnerID("orgs/mondoohq", 7),
-		runnerID("repos/mondoohq/cnquery", 7))
+		runnerID("orgs/mondoohq", "7"),
+		runnerID("repos/mondoohq/cnquery", "7"))
+}
+
+func TestRunnerKey(t *testing.T) {
+	id := func(v int64) *int64 { return &v }
+	name := func(v string) *string { return &v }
+
+	assert.Equal(t, "7", runnerKey(&ghRunnerExt{ID: id(7), Name: name("builder-1")}, 0))
+
+	// An absent id falls back to the name, which is unique within the scope.
+	// Keying both on the id's zero value would collapse them onto one resource.
+	assert.NotEqual(t,
+		runnerKey(&ghRunnerExt{Name: name("builder-1")}, 0),
+		runnerKey(&ghRunnerExt{Name: name("builder-2")}, 1))
+
+	// With neither an id nor a name, the listing position keeps them distinct.
+	assert.NotEqual(t,
+		runnerKey(&ghRunnerExt{}, 0),
+		runnerKey(&ghRunnerExt{}, 1))
+
+	// A name-keyed runner must not collide with the runner whose id is that name.
+	assert.NotEqual(t,
+		runnerKey(&ghRunnerExt{Name: name("7")}, 0),
+		runnerKey(&ghRunnerExt{ID: id(7)}, 1))
 }
 
 func TestRunnerLabelID(t *testing.T) {
 	scope := "orgs/mondoohq"
+	name := func(v string) *string { return &v }
 
 	// Read-only labels reuse the same ids on every runner, so the key has to
 	// carry the runner as well as the label name.
 	assert.NotEqual(t,
-		runnerLabelID(scope, 1, "self-hosted"),
-		runnerLabelID(scope, 2, "self-hosted"))
+		runnerLabelID(scope, "1", "self-hosted"),
+		runnerLabelID(scope, "2", "self-hosted"))
 
 	// The API omits the id for some labels; distinct names must still differ.
 	assert.NotEqual(t,
-		runnerLabelID(scope, 0, "gpu"),
-		runnerLabelID(scope, 0, "arm64"))
+		runnerLabelID(scope, "1", "gpu"),
+		runnerLabelID(scope, "1", "arm64"))
+
+	// Labels on two id-less runners stay separate, since the runner key does.
+	assert.NotEqual(t,
+		runnerLabelID(scope, runnerKey(&ghRunnerExt{Name: name("builder-1")}, 0), "self-hosted"),
+		runnerLabelID(scope, runnerKey(&ghRunnerExt{Name: name("builder-2")}, 1), "self-hosted"))
 }

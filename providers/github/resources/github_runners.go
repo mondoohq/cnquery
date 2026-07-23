@@ -128,29 +128,46 @@ func (g *mqlGithubRepository) runners() ([]any, error) {
 	return runnersToMql(g.MqlRuntime, scope, allRunners)
 }
 
+// runnerKey identifies a runner within its scope. The id is the natural key, but
+// it is a pointer in the API payload: falling back to a shared zero would alias
+// every id-less runner onto one resource, so the name (unique per scope) and
+// finally the listing position stand in for it.
+func runnerKey(runner *ghRunnerExt, idx int) string {
+	if id := runner.idValue(); id != 0 {
+		return strconv.FormatInt(id, 10)
+	}
+	if name := runner.Name; name != nil && *name != "" {
+		return "name/" + *name
+	}
+	log.Warn().Int("position", idx).Msg("github runner has neither an id nor a name, keying it by listing position")
+	return "position/" + strconv.Itoa(idx)
+}
+
 // runnerID keys a runner by the scope that registered it. Organization and
 // repository runners are numbered independently, so an unqualified id aliased an
 // org runner with a repository runner that happened to share a number.
-func runnerID(scope string, id int64) string {
-	return "github.runner/" + scope + "/" + strconv.FormatInt(id, 10)
+func runnerID(scope string, key string) string {
+	return "github.runner/" + scope + "/" + key
 }
 
 // runnerLabelID keys a label by runner and name. Read-only labels ("self-hosted",
 // "linux", ...) share fixed ids across every runner, and the API omits the id for
 // some custom labels, which collapsed those labels onto a single resource.
-func runnerLabelID(scope string, runner int64, name string) string {
-	return "github.runnerLabel/" + scope + "/" + strconv.FormatInt(runner, 10) + "/" + name
+func runnerLabelID(scope string, runnerKey string, name string) string {
+	return "github.runnerLabel/" + scope + "/" + runnerKey + "/" + name
 }
 
 // runnersToMql converts a list of GitHub runners to MQL resources. scope is the
 // API path prefix the runners were listed from, used to key them.
 func runnersToMql(runtime *plugin.Runtime, scope string, runners []*ghRunnerExt) ([]any, error) {
 	res := []any{}
-	for _, runner := range runners {
+	for idx, runner := range runners {
+		key := runnerKey(runner, idx)
+
 		labels := []any{}
 		for _, label := range runner.Labels {
 			labelRes, err := CreateResource(runtime, "github.runnerLabel", map[string]*llx.RawData{
-				"__id": llx.StringData(runnerLabelID(scope, runner.idValue(), label.GetName())),
+				"__id": llx.StringData(runnerLabelID(scope, key, label.GetName())),
 				"id":   llx.IntDataDefault(label.ID, 0),
 				"name": llx.StringDataPtr(label.Name),
 				"type": llx.StringDataPtr(label.Type),
@@ -162,7 +179,7 @@ func runnersToMql(runtime *plugin.Runtime, scope string, runners []*ghRunnerExt)
 		}
 
 		r, err := CreateResource(runtime, "github.runner", map[string]*llx.RawData{
-			"__id":         llx.StringData(runnerID(scope, runner.idValue())),
+			"__id":         llx.StringData(runnerID(scope, key)),
 			"id":           llx.IntDataDefault(runner.ID, 0),
 			"name":         llx.StringDataPtr(runner.Name),
 			"os":           llx.StringDataPtr(runner.OS),
