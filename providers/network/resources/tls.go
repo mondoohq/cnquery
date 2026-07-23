@@ -508,8 +508,9 @@ func (s *mqlTls) populateCertificates(socket *mqlSocket, domainName string) erro
 	// The handshake tester performs OCSP and records revocations keyed by
 	// string(cert.Signature); reuse that map so certificate.isRevoked/revokedAt
 	// reflect real revocation status instead of a hardcoded "not revoked".
-	var revocations map[string]*tlsshake.Revocation
-	if s.tester != nil {
+	// Default to an empty (non-nil) map so parseCertificates never receives nil.
+	revocations := map[string]*tlsshake.Revocation{}
+	if s.tester != nil && s.tester.Findings.Revocations != nil {
 		revocations = s.tester.Findings.Revocations
 	}
 

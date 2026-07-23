@@ -399,7 +399,12 @@ func (s *Tester) parseServerHello(data []byte, version string, conf *ScanConfig)
 		extType := string(data[idx : idx+2])
 		extLen := bytes2int(data[idx+2 : idx+4])
 		if idx+4+extLen > len(data) {
-			// extension length runs past the record; stop rather than panic
+			// extension length runs past the record; stop rather than panic,
+			// but surface the truncation so a malformed/misconfigured
+			// ServerHello isn't silently treated as fully parsed.
+			s.sync.Lock()
+			s.Findings.Errors = append(s.Findings.Errors, "malformed ServerHello: extension length runs past the record")
+			s.sync.Unlock()
 			break
 		}
 		extData := data[idx+4 : idx+4+extLen]
