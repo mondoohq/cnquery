@@ -5,6 +5,7 @@ package resources
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/openai/openai-go/v3"
@@ -21,6 +22,45 @@ func unixToTime(ts int64) time.Time {
 		return time.Time{}
 	}
 	return time.Unix(ts, 0)
+}
+
+// unixToNullableTime converts a Unix timestamp to a time pointer, returning nil
+// for a zero timestamp. The OpenAI API surfaces absent times as 0; wrapping the
+// result through llx.TimeDataPtr then emits null instead of a year-1 timestamp.
+func unixToNullableTime(ts int64) *time.Time {
+	if ts == 0 {
+		return nil
+	}
+	t := unixToTime(ts)
+	return &t
+}
+
+// dataPlaneClient returns the project-scoped client used for data-plane
+// collections (models, files, vector stores, fine-tuning). It returns a
+// descriptive error when the connection was built from an admin key (which
+// cannot read data-plane resources), and (nil, nil) when no credentials exist.
+func dataPlaneClient(conn *connection.OpenaiConnection, resource string) (*openai.Client, error) {
+	if c := conn.Client(); c != nil {
+		return c, nil
+	}
+	if conn.AdminClient() != nil {
+		return nil, fmt.Errorf("%s requires a project API key (sk-proj-...); the configured admin key cannot read data-plane resources", resource)
+	}
+	return nil, nil
+}
+
+// adminPlaneClient returns the admin client used for organization collections
+// (users, invites, audit logs, projects). It returns a descriptive error when
+// the connection was built from a project key (which cannot read organization
+// resources), and (nil, nil) when no credentials exist.
+func adminPlaneClient(conn *connection.OpenaiConnection, resource string) (*openai.Client, error) {
+	if c := conn.AdminClient(); c != nil {
+		return c, nil
+	}
+	if conn.Client() != nil {
+		return nil, fmt.Errorf("%s requires an admin API key (sk-admin-...); the configured project key cannot read organization resources", resource)
+	}
+	return nil, nil
 }
 
 func isAccessDenied(err error) bool {

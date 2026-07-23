@@ -6,15 +6,32 @@ package resources
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/openai/openai-go/v3"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
+
+// mapProject builds the resource args for an openai.project. Both the
+// collection path and the single-object init share it so the two paths cannot
+// diverge.
+func mapProject(p openai.Project) map[string]*llx.RawData {
+	return map[string]*llx.RawData{
+		"__id":       llx.StringData(p.ID),
+		"id":         llx.StringData(p.ID),
+		"name":       llx.StringData(p.Name),
+		"status":     llx.StringData(string(p.Status)),
+		"createdAt":  llx.TimeDataPtr(unixToNullableTime(p.CreatedAt)),
+		"archivedAt": llx.TimeDataPtr(unixToNullableTime(p.ArchivedAt)),
+	}
+}
 
 func (r *mqlOpenai) projects() ([]any, error) {
 	conn := openaiConn(r.MqlRuntime)
-	client := conn.AdminClient()
+	client, err := adminPlaneClient(conn, "openai.projects")
+	if err != nil {
+		return nil, err
+	}
 	if client == nil {
 		return []any{}, nil
 	}
@@ -24,22 +41,7 @@ func (r *mqlOpenai) projects() ([]any, error) {
 	var res []any
 	for iter.Next() {
 		p := iter.Current()
-		created := unixToTime(p.CreatedAt)
-
-		var archivedAt *time.Time
-		if p.ArchivedAt != 0 {
-			t := unixToTime(p.ArchivedAt)
-			archivedAt = &t
-		}
-
-		mqlProject, err := CreateResource(r.MqlRuntime, "openai.project", map[string]*llx.RawData{
-			"__id":       llx.StringData(p.ID),
-			"id":         llx.StringData(p.ID),
-			"name":       llx.StringData(p.Name),
-			"status":     llx.StringData(string(p.Status)),
-			"createdAt":  llx.TimeData(created),
-			"archivedAt": llx.TimeDataPtr(archivedAt),
-		})
+		mqlProject, err := CreateResource(r.MqlRuntime, "openai.project", mapProject(p))
 		if err != nil {
 			return nil, err
 		}
@@ -54,9 +56,40 @@ func (r *mqlOpenai) projects() ([]any, error) {
 	return res, nil
 }
 
+func initOpenaiProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	idRaw, ok := args["id"]
+	if !ok || idRaw == nil || idRaw.Value == nil {
+		return args, nil, nil
+	}
+	projectID, ok := idRaw.Value.(string)
+	if !ok || projectID == "" {
+		return args, nil, nil
+	}
+
+	conn := openaiConn(runtime)
+	client, err := adminPlaneClient(conn, "openai.project")
+	if err != nil {
+		return nil, nil, err
+	}
+	if client == nil {
+		return nil, nil, fmt.Errorf("cannot fetch project %s: no admin API key configured", projectID)
+	}
+	p, err := client.Admin.Organization.Projects.Get(context.Background(), projectID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get project %s: %w", projectID, err)
+	}
+	return mapProject(*p), nil, nil
+}
+
 func (r *mqlOpenaiProject) apiKeys() ([]any, error) {
 	conn := openaiConn(r.MqlRuntime)
-	client := conn.AdminClient()
+	client, err := adminPlaneClient(conn, "openai.project.apiKeys")
+	if err != nil {
+		return nil, err
+	}
 	if client == nil {
 		return []any{}, nil
 	}
@@ -66,13 +99,6 @@ func (r *mqlOpenaiProject) apiKeys() ([]any, error) {
 	var res []any
 	for iter.Next() {
 		k := iter.Current()
-		created := unixToTime(k.CreatedAt)
-
-		var lastUsedAt *time.Time
-		if k.LastUsedAt != 0 {
-			t := unixToTime(k.LastUsedAt)
-			lastUsedAt = &t
-		}
 
 		ownerType := k.Owner.Type
 		var ownerName, ownerId string
@@ -90,8 +116,8 @@ func (r *mqlOpenaiProject) apiKeys() ([]any, error) {
 			"id":            llx.StringData(k.ID),
 			"name":          llx.StringData(k.Name),
 			"redactedValue": llx.StringData(k.RedactedValue),
-			"createdAt":     llx.TimeData(created),
-			"lastUsedAt":    llx.TimeDataPtr(lastUsedAt),
+			"createdAt":     llx.TimeDataPtr(unixToNullableTime(k.CreatedAt)),
+			"lastUsedAt":    llx.TimeDataPtr(unixToNullableTime(k.LastUsedAt)),
 			"ownerType":     llx.StringData(ownerType),
 			"ownerName":     llx.StringData(ownerName),
 			"ownerId":       llx.StringData(ownerId),
@@ -112,7 +138,10 @@ func (r *mqlOpenaiProject) apiKeys() ([]any, error) {
 
 func (r *mqlOpenaiProject) serviceAccounts() ([]any, error) {
 	conn := openaiConn(r.MqlRuntime)
-	client := conn.AdminClient()
+	client, err := adminPlaneClient(conn, "openai.project.serviceAccounts")
+	if err != nil {
+		return nil, err
+	}
 	if client == nil {
 		return []any{}, nil
 	}
@@ -122,14 +151,13 @@ func (r *mqlOpenaiProject) serviceAccounts() ([]any, error) {
 	var res []any
 	for iter.Next() {
 		sa := iter.Current()
-		created := unixToTime(sa.CreatedAt)
 
 		mqlSA, err := CreateResource(r.MqlRuntime, "openai.project.serviceAccount", map[string]*llx.RawData{
 			"__id":      llx.StringData(sa.ID),
 			"id":        llx.StringData(sa.ID),
 			"name":      llx.StringData(sa.Name),
 			"role":      llx.StringData(string(sa.Role)),
-			"createdAt": llx.TimeData(created),
+			"createdAt": llx.TimeDataPtr(unixToNullableTime(sa.CreatedAt)),
 		})
 		if err != nil {
 			return nil, err
