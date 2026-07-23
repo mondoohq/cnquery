@@ -19,6 +19,26 @@ func TestConvertLogConfiguration(t *testing.T) {
 		assert.Nil(t, result)
 	})
 
+	t.Run("archiving is carried through", func(t *testing.T) {
+		// Archiving is the third field on the SDK's Configuration and was
+		// dropped entirely, so log-archiving state read as "not configured"
+		// on every log in the tenancy.
+		enabled := true
+		result, err := convertLogConfiguration(&logging.Configuration{
+			Archiving: &logging.Archiving{IsEnabled: &enabled},
+		})
+		require.NoError(t, err)
+		archiving, ok := result["archiving"].(map[string]any)
+		require.True(t, ok, "archiving key must be present")
+		assert.Equal(t, true, archiving["isEnabled"])
+	})
+
+	t.Run("absent archiving omits the key", func(t *testing.T) {
+		result, err := convertLogConfiguration(&logging.Configuration{})
+		require.NoError(t, err)
+		assert.NotContains(t, result, "archiving")
+	})
+
 	t.Run("empty config returns empty map", func(t *testing.T) {
 		cfg := &logging.Configuration{}
 		result, err := convertLogConfiguration(cfg)

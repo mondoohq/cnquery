@@ -4,9 +4,14 @@
 package resources
 
 import (
+	"time"
+
 	"testing"
 
+	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/v13/llx"
 )
 
 func TestStringValue(t *testing.T) {
@@ -109,4 +114,66 @@ func TestOciRouteTargetType(t *testing.T) {
 			assert.Equal(t, tt.want, ociRouteTargetType(tt.ocid))
 		})
 	}
+}
+
+func TestOciRegionFromOCID(t *testing.T) {
+	tests := []struct {
+		name string
+		ocid string
+		want string
+	}{
+		{"short region key", "ocid1.instance.oc1.iad.aaaaaaaa", "iad"},
+		{"full region name", "ocid1.vcn.oc1.us-sanjose-1.aaaaaaaa", "us-sanjose-1"},
+		// Global resources carry an empty region segment; callers must fall
+		// back to a known region rather than build a client for "".
+		{"global ocid", "ocid1.user.oc1..aaaaaaaa", ""},
+		{"too few segments", "ocid1.drg.oc1", ""},
+		{"not an ocid", "ORACLE_MANAGED_KEY", ""},
+		{"empty", "", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, ociRegionFromOCID(tt.ocid))
+		})
+	}
+}
+
+func TestIsOcid(t *testing.T) {
+	// The guard that keeps OCI's placeholder values out of NewResource
+	// lookups, where they surface as a hard "not found" instead of a null.
+	assert.True(t, isOcid("ocid1.vault.oc1.iad.aaaaaaaa"))
+	assert.False(t, isOcid("ORACLE_MANAGED_KEY"))
+	assert.False(t, isOcid(""))
+	assert.False(t, isOcid("ocid2.vault.oc1.iad.aaaa"))
+	assert.False(t, isOcid("my-vault"))
+}
+
+func TestSdkTimeData(t *testing.T) {
+	assert.Equal(t, llx.NilData, sdkTimeData(nil))
+
+	ts := time.Date(2026, 7, 23, 10, 0, 0, 0, time.UTC)
+	got := sdkTimeData(&common.SDKTime{Time: ts})
+	require.NotNil(t, got)
+	assert.Equal(t, ts, *(got.Value.(*time.Time)))
+}
+
+func TestDefinedTagsToAny(t *testing.T) {
+	assert.Empty(t, definedTagsToAny(nil))
+
+	out := definedTagsToAny(map[string]map[string]interface{}{
+		"Operations": {"CostCenter": "42", "Reviewed": true},
+	})
+	ns, ok := out["Operations"].(map[string]any)
+	require.True(t, ok)
+	assert.Equal(t, "42", ns["CostCenter"])
+	// Non-string values pass through unchanged rather than being dropped.
+	assert.Equal(t, true, ns["Reviewed"])
+}
+
+func TestStringsToAnyAndStrMapToAny(t *testing.T) {
+	assert.Equal(t, []any{}, stringsToAny(nil))
+	assert.Equal(t, []any{"a", "b"}, stringsToAny([]string{"a", "b"}))
+
+	assert.Empty(t, strMapToAny(nil))
+	assert.Equal(t, map[string]any{"k": "v"}, strMapToAny(map[string]string{"k": "v"}))
 }
