@@ -1792,12 +1792,10 @@ type mqlAwsIamRoleInternal struct {
 // getRoleDetails fetches and memoizes the full role via GetRole. The account-wide
 // ListRoles call that roles() uses to enumerate never populates RoleLastUsed, so
 // lastUsedAt and lastUsedRegion have to come from GetRole. The result is cached
-// so both fields share a single API call, and the call is only made when one of
-// those fields is actually queried.
+// so both fields share a single API call, and the call is only made when one
+// of those fields is actually queried. The two getters can be evaluated
+// concurrently, so lock unconditionally rather than double-checking the flag.
 func (a *mqlAwsIamRole) getRoleDetails() (*iam.GetRoleOutput, error) {
-	if a.roleFetched {
-		return a.cachedRole, nil
-	}
 	a.roleLock.Lock()
 	defer a.roleLock.Unlock()
 	if a.roleFetched {
