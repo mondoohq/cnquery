@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync"
+	"sync/atomic"
 
 	tsclient "github.com/tailscale/tailscale-client-go/v2"
 	"go.mondoo.com/mql/v13/llx"
@@ -23,7 +24,7 @@ import (
 // is required the first time `raw()` is read.
 type mqlTailscaleAclPolicyInternal struct {
 	rawLock    sync.Mutex
-	rawFetched bool
+	rawFetched atomic.Bool
 	rawValue   string
 }
 
@@ -31,21 +32,33 @@ func (a *mqlTailscaleAclPolicy) id() (string, error) {
 	return "tailscale/tailnet/" + a.Tailnet.Data + "/aclPolicy", nil
 }
 
-func createTailscaleAclPolicyResource(runtime *plugin.Runtime, tailnet string, acl *tsclient.ACL) (plugin.Resource, error) {
-	autoApproverExitNodes := []any{}
-	autoApproverRoutes := map[string]any{}
-	if acl.AutoApprovers != nil {
-		for _, v := range acl.AutoApprovers.ExitNode {
-			autoApproverExitNodes = append(autoApproverExitNodes, v)
-		}
-		for k, owners := range acl.AutoApprovers.Routes {
-			arr := make([]any, 0, len(owners))
-			for _, owner := range owners {
-				arr = append(arr, owner)
-			}
-			autoApproverRoutes[k] = arr
-		}
+// flattenAutoApprovers splits a policy's auto-approver block into the exit-node
+// list and the route-to-owners map the resource exposes. A policy with no
+// autoApprovers section yields empty values rather than nulls, so a query
+// asserting that nothing is auto-approved reads false instead of passing on a
+// null comparison.
+func flattenAutoApprovers(autoApprovers *tsclient.ACLAutoApprovers) (exitNodes []any, routes map[string]any) {
+	exitNodes = []any{}
+	routes = map[string]any{}
+	if autoApprovers == nil {
+		return exitNodes, routes
 	}
+
+	for _, v := range autoApprovers.ExitNode {
+		exitNodes = append(exitNodes, v)
+	}
+	for k, owners := range autoApprovers.Routes {
+		arr := make([]any, 0, len(owners))
+		for _, owner := range owners {
+			arr = append(arr, owner)
+		}
+		routes[k] = arr
+	}
+	return exitNodes, routes
+}
+
+func createTailscaleAclPolicyResource(runtime *plugin.Runtime, tailnet string, acl *tsclient.ACL) (plugin.Resource, error) {
+	autoApproverExitNodes, autoApproverRoutes := flattenAutoApprovers(acl.AutoApprovers)
 
 	acls, err := structSliceToDictSlice(acl.ACLs)
 	if err != nil {
@@ -90,12 +103,12 @@ func createTailscaleAclPolicyResource(runtime *plugin.Runtime, tailnet string, a
 // are independent API calls and may briefly diverge if the policy is edited
 // between them.
 func (a *mqlTailscaleAclPolicy) raw() (string, error) {
-	if a.rawFetched {
+	if a.rawFetched.Load() {
 		return a.rawValue, nil
 	}
 	a.rawLock.Lock()
 	defer a.rawLock.Unlock()
-	if a.rawFetched {
+	if a.rawFetched.Load() {
 		return a.rawValue, nil
 	}
 	conn := a.MqlRuntime.Connection.(*connection.TailscaleConnection)
@@ -104,7 +117,7 @@ func (a *mqlTailscaleAclPolicy) raw() (string, error) {
 		return "", err
 	}
 	a.rawValue = raw.HuJSON
-	a.rawFetched = true
+	a.rawFetched.Store(true)
 	return a.rawValue, nil
 }
 

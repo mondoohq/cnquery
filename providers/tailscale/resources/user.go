@@ -5,7 +5,6 @@ package resources
 
 import (
 	"context"
-	"errors"
 
 	tsclient "github.com/tailscale/tailscale-client-go/v2"
 	"go.mondoo.com/mql/v13/llx"
@@ -18,13 +17,18 @@ func (r *mqlTailscaleUser) id() (string, error) {
 }
 
 func initTailscaleUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	id, ok := args["id"]
-	if !ok {
-		return nil, nil, errors.New("missing required argument 'id'")
+	conn := runtime.Connection.(*connection.TailscaleConnection)
+
+	// On a discovered user asset the user is implied by the asset itself, so a
+	// bare `tailscale.user` resolves without an explicit id argument.
+	args = withDefaultArg(args, "id", connection.UserIdFromAsset(conn.Asset()))
+
+	id, err := requiredStringArg(args, "id")
+	if err != nil {
+		return nil, nil, err
 	}
 
-	conn := runtime.Connection.(*connection.TailscaleConnection)
-	user, err := conn.Client().Users().Get(context.Background(), id.Value.(string))
+	user, err := conn.Client().Users().Get(context.Background(), id)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -20,8 +20,9 @@ func (r *mqlTailscaleAuthKey) id() (string, error) {
 }
 
 // timeIsSet reports whether a Tailscale timestamp represents a real value.
-// Tailscale encodes "unset" timestamps as the zero time (Unix epoch 0 /
-// 0001-01-01), which the resource carries as a nil or zero-valued *time.Time.
+// Tailscale encodes "unset" timestamps as the Go zero time (0001-01-01), which
+// the resource carries as a nil or zero-valued *time.Time. A genuine Unix epoch
+// 0 is a real instant in Go terms and is therefore reported as set.
 func timeIsSet(t *time.Time) bool {
 	return t != nil && !t.IsZero()
 }
@@ -45,13 +46,13 @@ func (r *mqlTailscaleAuthKey) isRevoked() (bool, error) {
 }
 
 func initTailscaleAuthKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	id, ok := args["id"]
-	if !ok {
-		return nil, nil, errors.New("missing required argument 'id'")
+	id, err := requiredStringArg(args, "id")
+	if err != nil {
+		return nil, nil, err
 	}
 
 	conn := runtime.Connection.(*connection.TailscaleConnection)
-	key, err := conn.Client().Keys().Get(context.Background(), id.Value.(string))
+	key, err := conn.Client().Keys().Get(context.Background(), id)
 	if err != nil {
 		return nil, nil, err
 	}

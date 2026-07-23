@@ -101,8 +101,12 @@ func discover(runtime *plugin.Runtime, targets []string) ([]*inventory.Asset, er
 	return assetList, nil
 }
 
+// getMqlTailscale returns the tailnet resource discovery lists devices and
+// users from. It goes through NewResource so the resource's init runs and its
+// tailnet, and therefore its cache key, is populated. Building it with the raw
+// constructor would leave both empty.
 func getMqlTailscale(runtime *plugin.Runtime) (*mqlTailscale, error) {
-	res, err := createTailscale(runtime, map[string]*llx.RawData{})
+	res, err := NewResource(runtime, "tailscale", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
 	}

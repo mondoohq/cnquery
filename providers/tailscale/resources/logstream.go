@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 
+	"github.com/rs/zerolog/log"
 	tsclient "github.com/tailscale/tailscale-client-go/v2"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -30,10 +31,13 @@ func createTailscaleLogstreamResource(runtime *plugin.Runtime, tailnet string, l
 }
 
 // logstreams returns the configured log streams for the tailnet. There are at
-// most two — one for configuration audit logs and one for network flow logs.
+// most two, one for configuration audit logs and one for network flow logs.
 // A 404 from the Tailscale API means no destination is configured for that
-// log type; the API returning an empty struct (DestinationType == "") means
-// the same. Either case is skipped.
+// log type, and a 403 means the tailnet's plan does not include log streaming
+// or the credential lacks the log_streaming:read scope. The API returning an
+// empty struct (DestinationType == "") means the same as a 404. Every such
+// case is skipped so the field degrades to an empty list rather than failing
+// the whole query.
 func (t *mqlTailscale) logstreams() ([]any, error) {
 	conn := t.MqlRuntime.Connection.(*connection.TailscaleConnection)
 	ctx := context.Background()
@@ -47,7 +51,9 @@ func (t *mqlTailscale) logstreams() ([]any, error) {
 	for _, logType := range []tsclient.LogType{tsclient.LogTypeConfig, tsclient.LogTypeNetwork} {
 		cfg, err := conn.Client().Logging().LogstreamConfiguration(ctx, logType)
 		if err != nil {
-			if tsclient.IsNotFound(err) {
+			if connection.IsUnavailable(err) {
+				log.Debug().Err(err).Str("logType", string(logType)).
+					Msg("tailscale> no log stream available for this tailnet")
 				continue
 			}
 			return nil, err

@@ -5,8 +5,8 @@ package resources
 
 import (
 	"context"
-	"errors"
 	"sync"
+	"sync/atomic"
 
 	tsclient "github.com/tailscale/tailscale-client-go/v2"
 	"go.mondoo.com/mql/v13/llx"
@@ -18,9 +18,11 @@ import (
 
 // mqlTailscaleDeviceInternal caches subnet route lookups so the advertised
 // and enabled route accessors share a single SubnetRoutes API call.
+// routesFetched is atomic because those two accessors are distinct MQL fields,
+// which the runtime may resolve concurrently.
 type mqlTailscaleDeviceInternal struct {
 	routesLock    sync.Mutex
-	routesFetched bool
+	routesFetched atomic.Bool
 	routes        *tsclient.DeviceRoutes
 }
 
@@ -29,14 +31,18 @@ func (r *mqlTailscaleDevice) id() (string, error) {
 }
 
 func initTailscaleDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	id, ok := args["id"]
-	if !ok {
-		// TODO try to get the id from the connection
-		return nil, nil, errors.New("missing required argument 'id'")
+	conn := runtime.Connection.(*connection.TailscaleConnection)
+
+	// On a discovered device asset the device is implied by the asset itself, so
+	// a bare `tailscale.device` resolves without an explicit id argument.
+	args = withDefaultArg(args, "id", connection.DeviceIdFromAsset(conn.Asset()))
+
+	id, err := requiredStringArg(args, "id")
+	if err != nil {
+		return nil, nil, err
 	}
 
-	conn := runtime.Connection.(*connection.TailscaleConnection)
-	device, err := conn.Client().Devices().Get(context.Background(), id.Value.(string))
+	device, err := conn.Client().Devices().Get(context.Background(), id)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -75,12 +81,12 @@ func createTailscaleDeviceResource(runtime *plugin.Runtime, device *tsclient.Dev
 }
 
 func (d *mqlTailscaleDevice) fetchRoutes() (*tsclient.DeviceRoutes, error) {
-	if d.routesFetched {
+	if d.routesFetched.Load() {
 		return d.routes, nil
 	}
 	d.routesLock.Lock()
 	defer d.routesLock.Unlock()
-	if d.routesFetched {
+	if d.routesFetched.Load() {
 		return d.routes, nil
 	}
 	conn := d.MqlRuntime.Connection.(*connection.TailscaleConnection)
@@ -89,7 +95,7 @@ func (d *mqlTailscaleDevice) fetchRoutes() (*tsclient.DeviceRoutes, error) {
 		return nil, err
 	}
 	d.routes = routes
-	d.routesFetched = true
+	d.routesFetched.Store(true)
 	return d.routes, nil
 }
 

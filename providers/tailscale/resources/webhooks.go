@@ -5,7 +5,6 @@ package resources
 
 import (
 	"context"
-	"errors"
 
 	tsclient "github.com/tailscale/tailscale-client-go/v2"
 	"go.mondoo.com/mql/v13/llx"
@@ -19,13 +18,13 @@ func (r *mqlTailscaleWebhook) id() (string, error) {
 }
 
 func initTailscaleWebhook(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	id, ok := args["endpointId"]
-	if !ok {
-		return nil, nil, errors.New("missing required argument 'endpointId'")
+	id, err := requiredStringArg(args, "endpointId")
+	if err != nil {
+		return nil, nil, err
 	}
 
 	conn := runtime.Connection.(*connection.TailscaleConnection)
-	wh, err := conn.Client().Webhooks().Get(context.Background(), id.Value.(string))
+	wh, err := conn.Client().Webhooks().Get(context.Background(), id)
 	if err != nil {
 		return nil, nil, err
 	}
