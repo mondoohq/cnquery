@@ -5,6 +5,7 @@ package resources
 
 import (
 	"encoding/json"
+	"errors"
 	"sync"
 
 	"github.com/rs/zerolog/log"
@@ -40,24 +41,18 @@ func (r *mqlRedfish) systems() ([]any, error) {
 
 	res := make([]any, 0, len(systems))
 	for _, s := range systems {
-		secureBoot := false
-		if sb, err := s.SecureBoot(); err == nil && sb != nil {
-			secureBoot = sb.SecureBootEnable
-		}
-
 		o, err := CreateResource(r.MqlRuntime, "redfish.system", map[string]*llx.RawData{
-			"__id":              llx.StringData(s.ODataID),
-			"uuid":              llx.StringData(s.UUID),
-			"name":              llx.StringData(s.Name),
-			"manufacturer":      llx.StringData(s.Manufacturer),
-			"model":             llx.StringData(s.Model),
-			"serialNumber":      llx.StringData(s.SerialNumber),
-			"sku":               llx.StringData(s.SKU),
-			"biosVersion":       llx.StringData(s.BiosVersion),
-			"hostName":          llx.StringData(s.HostName),
-			"powerState":        llx.StringData(string(s.PowerState)),
-			"systemType":        llx.StringData(string(s.SystemType)),
-			"secureBootEnabled": llx.BoolData(secureBoot),
+			"__id":         llx.StringData(s.ODataID),
+			"uuid":         llx.StringData(s.UUID),
+			"name":         llx.StringData(s.Name),
+			"manufacturer": llx.StringData(s.Manufacturer),
+			"model":        llx.StringData(s.Model),
+			"serialNumber": llx.StringData(s.SerialNumber),
+			"sku":          llx.StringData(s.SKU),
+			"biosVersion":  llx.StringData(s.BiosVersion),
+			"hostName":     llx.StringData(s.HostName),
+			"powerState":   llx.StringData(string(s.PowerState)),
+			"systemType":   llx.StringData(string(s.SystemType)),
 		})
 		if err != nil {
 			return nil, err
@@ -195,9 +190,26 @@ type mqlRedfishSystemInternal struct {
 	sys *schemas.ComputerSystem
 }
 
+// secureBootEnabled reports whether UEFI Secure Boot is enabled. It is null
+// when the system exposes no Secure Boot resource or the controller cannot
+// report its state, so an unsupported or unreachable system is not conflated
+// with one where Secure Boot is switched off.
+func (r *mqlRedfishSystem) secureBootEnabled() (bool, error) {
+	if r.sys == nil {
+		r.SecureBootEnabled.State = plugin.StateIsNull | plugin.StateIsSet
+		return false, nil
+	}
+	sb, err := r.sys.SecureBoot()
+	if err != nil || sb == nil {
+		r.SecureBootEnabled.State = plugin.StateIsNull | plugin.StateIsSet
+		return false, nil
+	}
+	return sb.SecureBootEnable, nil
+}
+
 func (r *mqlRedfishSystem) processors() ([]any, error) {
 	if r.sys == nil {
-		return nil, nil
+		return nil, errors.New("redfish.system is missing its source system reference")
 	}
 	processors, err := r.sys.Processors()
 	if err != nil {
@@ -227,7 +239,7 @@ func (r *mqlRedfishSystem) processors() ([]any, error) {
 
 func (r *mqlRedfishSystem) memory() ([]any, error) {
 	if r.sys == nil {
-		return nil, nil
+		return nil, errors.New("redfish.system is missing its source system reference")
 	}
 	memory, err := r.sys.Memory()
 	if err != nil {
@@ -257,7 +269,7 @@ func (r *mqlRedfishSystem) memory() ([]any, error) {
 
 func (r *mqlRedfishSystem) ethernetInterfaces() ([]any, error) {
 	if r.sys == nil {
-		return nil, nil
+		return nil, errors.New("redfish.system is missing its source system reference")
 	}
 	interfaces, err := r.sys.EthernetInterfaces()
 	if err != nil {
@@ -333,6 +345,28 @@ type hpeLicenseWrap struct {
 	} `json:"License"`
 }
 
+// parseHpeManagerLicense extracts the iLO license from a manager's OEM block.
+// Older iLO firmware nests the data under "Hp" rather than "Hpe"; found is
+// false when the block is empty, unparseable, or carries no HPE license.
+func parseHpeManagerLicense(raw json.RawMessage) (licenseType, licenseLabel string, found bool) {
+	if len(raw) == 0 {
+		return "", "", false
+	}
+	var oem hpeManagerOem
+	if err := json.Unmarshal(raw, &oem); err != nil {
+		log.Debug().Err(err).Msg("redfish: could not parse HPE manager OEM block")
+		return "", "", false
+	}
+	wrap := oem.Hpe
+	if wrap == nil {
+		wrap = oem.Hp
+	}
+	if wrap == nil {
+		return "", "", false
+	}
+	return wrap.License.LicenseType, wrap.License.LicenseString, true
+}
+
 // mqlRedfishHpeInternal caches the parsed HPE OEM license data.
 type mqlRedfishHpeInternal struct {
 	once               sync.Once
@@ -352,23 +386,12 @@ func (r *mqlRedfishHpe) load() {
 			return
 		}
 		for _, m := range managers {
-			if len(m.OEM) == 0 {
+			licenseType, licenseLabel, found := parseHpeManagerLicense(m.OEM)
+			if !found {
 				continue
 			}
-			var oem hpeManagerOem
-			if err := json.Unmarshal(m.OEM, &oem); err != nil {
-				log.Debug().Err(err).Msg("redfish: could not parse HPE manager OEM block")
-				continue
-			}
-			wrap := oem.Hpe
-			if wrap == nil {
-				wrap = oem.Hp
-			}
-			if wrap == nil {
-				continue
-			}
-			r.cachedLicenseType = wrap.License.LicenseType
-			r.cachedLicenseLabel = wrap.License.LicenseString
+			r.cachedLicenseType = licenseType
+			r.cachedLicenseLabel = licenseLabel
 			return
 		}
 	})
@@ -395,6 +418,25 @@ type dellSystemOem struct {
 	} `json:"Dell"`
 }
 
+// parseDellSystemOem extracts the Dell system data from a system's OEM block.
+// found is false when the block is empty, unparseable, or carries no Dell
+// system generation or numeric ID (the fields that identify Dell hardware).
+func parseDellSystemOem(raw json.RawMessage) (generation string, systemID int64, biosReleaseDate string, found bool) {
+	if len(raw) == 0 {
+		return "", 0, "", false
+	}
+	var oem dellSystemOem
+	if err := json.Unmarshal(raw, &oem); err != nil {
+		log.Debug().Err(err).Msg("redfish: could not parse Dell system OEM block")
+		return "", 0, "", false
+	}
+	d := oem.Dell.DellSystem
+	if d.SystemGeneration == "" && d.SystemID == 0 {
+		return "", 0, "", false
+	}
+	return d.SystemGeneration, d.SystemID, d.BIOSReleaseDate, true
+}
+
 // mqlRedfishDellInternal caches the parsed Dell OEM system data.
 type mqlRedfishDellInternal struct {
 	once                  sync.Once
@@ -415,20 +457,13 @@ func (r *mqlRedfishDell) load() {
 			return
 		}
 		for _, s := range systems {
-			if len(s.OEM) == 0 {
+			generation, systemID, biosReleaseDate, found := parseDellSystemOem(s.OEM)
+			if !found {
 				continue
 			}
-			var oem dellSystemOem
-			if err := json.Unmarshal(s.OEM, &oem); err != nil {
-				log.Debug().Err(err).Msg("redfish: could not parse Dell system OEM block")
-				continue
-			}
-			if oem.Dell.DellSystem.SystemGeneration == "" && oem.Dell.DellSystem.SystemID == 0 {
-				continue
-			}
-			r.cachedGeneration = oem.Dell.DellSystem.SystemGeneration
-			r.cachedSystemID = oem.Dell.DellSystem.SystemID
-			r.cachedBiosReleaseDate = oem.Dell.DellSystem.BIOSReleaseDate
+			r.cachedGeneration = generation
+			r.cachedSystemID = systemID
+			r.cachedBiosReleaseDate = biosReleaseDate
 			return
 		}
 	})
@@ -469,28 +504,36 @@ func (r *mqlRedfishSupermicro) load() {
 			log.Warn().Err(err).Msg("redfish: could not list managers for Supermicro OEM detection")
 			return
 		}
+		// License data and system-lockdown state can live on different managers,
+		// so accumulate each independently rather than stopping at the first
+		// manager that carries either one.
+		gotLicenses := false
+		gotLockdown := false
 		for _, m := range managers {
 			smcManager, err := smc.FromManager(m)
 			if err != nil {
 				continue
 			}
 
-			found := false
-			if lm, err := smcManager.LicenseManager(); err == nil && lm != nil {
-				if ql, err := lm.QueryLicense(); err == nil && ql != nil {
-					licenses := make([]any, 0, len(ql.Licenses))
-					for _, license := range ql.Licenses {
-						licenses = append(licenses, license)
+			if !gotLicenses {
+				if lm, err := smcManager.LicenseManager(); err == nil && lm != nil {
+					if ql, err := lm.QueryLicense(); err == nil && ql != nil {
+						licenses := make([]any, 0, len(ql.Licenses))
+						for _, license := range ql.Licenses {
+							licenses = append(licenses, license)
+						}
+						r.cachedLicenses = licenses
+						gotLicenses = true
 					}
-					r.cachedLicenses = licenses
-					found = true
 				}
 			}
-			if sl, err := smcManager.SysLockdown(); err == nil && sl != nil {
-				r.cachedLockdown = sl.Enabled
-				found = true
+			if !gotLockdown {
+				if sl, err := smcManager.SysLockdown(); err == nil && sl != nil {
+					r.cachedLockdown = sl.Enabled
+					gotLockdown = true
+				}
 			}
-			if found {
+			if gotLicenses && gotLockdown {
 				return
 			}
 		}

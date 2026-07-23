@@ -34,6 +34,8 @@ type RedfishConnection struct {
 	managersOnce sync.Once
 	managers     []*schemas.Manager
 	managersErr  error
+
+	idOnce sync.Once
 }
 
 // Systems returns the compute systems exposed by the service, fetched once and
@@ -131,35 +133,34 @@ func (c *RedfishConnection) Close() {
 // Identifier derives a stable platform ID from the first system or manager
 // UUID, falling back to the host when neither is available.
 func (c *RedfishConnection) Identifier() (string, error) {
-	if c.id != "" {
-		return c.id, nil
-	}
-
-	uid := ""
-	if systems, err := c.Systems(); err == nil {
-		for _, s := range systems {
-			if s.UUID != "" {
-				uid = s.UUID
-				break
-			}
-		}
-	}
-	if uid == "" {
-		if managers, err := c.Managers(); err == nil {
-			for _, m := range managers {
-				if m.UUID != "" {
-					uid = m.UUID
+	// idOnce guards the read-compute-write of c.id so concurrent callers cannot
+	// race, and ensures the Systems/Managers lookups run at most once even when
+	// they yield no UUID and we fall back to the host.
+	c.idOnce.Do(func() {
+		uid := ""
+		if systems, err := c.Systems(); err == nil {
+			for _, s := range systems {
+				if s.UUID != "" {
+					uid = s.UUID
 					break
 				}
 			}
 		}
-	}
-	if uid == "" {
-		uid = c.Conf.Host
-	}
+		if uid == "" {
+			if managers, err := c.Managers(); err == nil {
+				for _, m := range managers {
+					if m.UUID != "" {
+						uid = m.UUID
+						break
+					}
+				}
+			}
+		}
+		if uid == "" {
+			uid = c.Conf.Host
+		}
 
-	// c.id is cached after the first call, so the Systems/Managers lookups above
-	// run at most once even when they yield no UUID and we fall back to the host.
-	c.id = "//platformid.api.mondoo.app/runtime/redfish/uuid/" + uid
+		c.id = "//platformid.api.mondoo.app/runtime/redfish/uuid/" + uid
+	})
 	return c.id, nil
 }

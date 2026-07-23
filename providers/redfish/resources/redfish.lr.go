@@ -984,7 +984,9 @@ func (c *mqlRedfishSystem) GetSystemType() *plugin.TValue[string] {
 }
 
 func (c *mqlRedfishSystem) GetSecureBootEnabled() *plugin.TValue[bool] {
-	return &c.SecureBootEnabled
+	return plugin.GetOrCompute[bool](&c.SecureBootEnabled, func() (bool, error) {
+		return c.secureBootEnabled()
+	})
 }
 
 func (c *mqlRedfishSystem) GetProcessors() *plugin.TValue[[]any] {

@@ -52,7 +52,11 @@ redfish.system @defaults("model powerState") {
   // Kind of system, such as Physical, Virtual, OS, or PhysicallyPartitioned
   systemType string
   // Whether UEFI Secure Boot is enabled
-  secureBootEnabled bool
+  //
+  // Null when the system does not expose a Secure Boot resource or the
+  // controller cannot report its state, so an audit can tell an unsupported
+  // or unreachable system apart from one where Secure Boot is switched off.
+  secureBootEnabled() bool
   // Installed processors
   processors() []redfish.processor
   // Installed memory modules
