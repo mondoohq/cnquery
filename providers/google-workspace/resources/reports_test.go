@@ -145,3 +145,14 @@ func TestReportActivityID(t *testing.T) {
 		reportActivityID("login", "2026-01-01T00:00:00Z", 42),
 	)
 }
+
+func TestHashActivity(t *testing.T) {
+	a := &reports.Activity{IpAddress: "1.2.3.4", OwnerDomain: "example.com"}
+	b := &reports.Activity{IpAddress: "5.6.7.8", OwnerDomain: "example.com"}
+
+	// Distinct nil-id activities get distinct discriminators.
+	require.NotEqual(t, hashActivity(a), hashActivity(b))
+	// Stable for identical content across calls.
+	require.Equal(t, hashActivity(a), hashActivity(&reports.Activity{IpAddress: "1.2.3.4", OwnerDomain: "example.com"}))
+	require.NotEmpty(t, hashActivity(a))
+}

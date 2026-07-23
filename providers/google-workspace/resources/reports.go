@@ -4,7 +4,9 @@
 package resources
 
 import (
+	"encoding/json"
 	"errors"
+	"hash/fnv"
 	"strconv"
 	"time"
 
@@ -138,19 +140,23 @@ func newMqlGoogleWorkspaceReportActivity(runtime *plugin.Runtime, entry *reports
 	}
 
 	var uniqueQualifier int64
-	var appName, eventTime string
+	var activityID string
 	if entry.Id != nil {
 		uniqueQualifier = entry.Id.UniqueQualifier
-		appName = entry.Id.ApplicationName
-		eventTime = entry.Id.Time
-	}
-
-	return CreateResource(runtime, "googleworkspace.report.activity", map[string]*llx.RawData{
 		// The cache key must include the application name and event time:
 		// uniqueQualifier is only a tiebreaker for events sharing a time (and is
 		// absent for most events), so keying on it alone aliases distinct
 		// activities. The public `id` field keeps the bare uniqueQualifier.
-		"__id":        llx.StringData(reportActivityID(appName, eventTime, uniqueQualifier)),
+		activityID = reportActivityID(entry.Id.ApplicationName, entry.Id.Time, uniqueQualifier)
+	} else {
+		// No id from the API (malformed/partial event): fall back to a content
+		// hash so nil-id activities get distinct, stable keys instead of all
+		// aliasing to a single cache entry.
+		activityID = "googleworkspace.report.activity/nil/" + hashActivity(entry)
+	}
+
+	return CreateResource(runtime, "googleworkspace.report.activity", map[string]*llx.RawData{
+		"__id":        llx.StringData(activityID),
 		"id":          llx.IntData(uniqueQualifier),
 		"ipAddress":   llx.StringData(entry.IpAddress),
 		"ownerDomain": llx.StringData(entry.OwnerDomain),
@@ -164,6 +170,20 @@ func newMqlGoogleWorkspaceReportActivity(runtime *plugin.Runtime, entry *reports
 // it in the Reports API.
 func reportActivityID(appName, eventTime string, uniqueQualifier int64) string {
 	return "googleworkspace.report.activity/" + appName + "/" + eventTime + "/" + strconv.FormatInt(uniqueQualifier, 10)
+}
+
+// hashActivity produces a stable 64-bit content hash of an activity, used as a
+// cache-key discriminator for the rare event that arrives without an id. It is
+// deterministic (same content -> same key across scans) so two distinct
+// nil-id activities don't alias each other.
+func hashActivity(entry *reports.Activity) string {
+	data, err := json.Marshal(entry)
+	if err != nil {
+		return ""
+	}
+	h := fnv.New64a()
+	h.Write(data)
+	return strconv.FormatUint(h.Sum64(), 16)
 }
 
 func (g *mqlGoogleworkspaceReportUsers) id() (string, error) {
