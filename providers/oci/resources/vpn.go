@@ -102,10 +102,10 @@ func initOciNetworkCpe(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	if len(args) > 2 {
 		return args, nil, nil
 	}
-	if args["id"] == nil {
+	idVal := ociArgString(args, "id")
+	if idVal == "" {
 		return nil, nil, errors.New("id required to fetch oci.network.cpe")
 	}
-	idVal := args["id"].Value.(string)
 
 	obj, err := CreateResource(runtime, "oci.network", nil)
 	if err != nil {
@@ -228,10 +228,10 @@ func initOciNetworkIpsecConnection(runtime *plugin.Runtime, args map[string]*llx
 	if len(args) > 2 {
 		return args, nil, nil
 	}
-	if args["id"] == nil {
+	idVal := ociArgString(args, "id")
+	if idVal == "" {
 		return nil, nil, errors.New("id required to fetch oci.network.ipsecConnection")
 	}
-	idVal := args["id"].Value.(string)
 
 	obj, err := CreateResource(runtime, "oci.network", nil)
 	if err != nil {
@@ -608,10 +608,10 @@ func initOciNetworkVirtualCircuit(runtime *plugin.Runtime, args map[string]*llx.
 	if len(args) > 2 {
 		return args, nil, nil
 	}
-	if args["id"] == nil {
+	idVal := ociArgString(args, "id")
+	if idVal == "" {
 		return nil, nil, errors.New("id required to fetch oci.network.virtualCircuit")
 	}
-	idVal := args["id"].Value.(string)
 
 	obj, err := CreateResource(runtime, "oci.network", nil)
 	if err != nil {

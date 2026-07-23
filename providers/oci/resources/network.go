@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -143,10 +144,10 @@ func initOciNetworkVcn(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 		return args, nil, nil
 	}
 
-	if args["id"] == nil {
+	idVal := ociArgString(args, "id")
+	if idVal == "" {
 		return nil, nil, errors.New("id required to fetch oci.network.vcn")
 	}
-	idVal := args["id"].Value.(string)
 
 	obj, err := CreateResource(runtime, "oci.network", nil)
 	if err != nil {
@@ -597,10 +598,10 @@ func initOciNetworkSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return args, nil, nil
 	}
 
-	if args["id"] == nil {
+	idVal := ociArgString(args, "id")
+	if idVal == "" {
 		return nil, nil, errors.New("id required to fetch oci.network.subnet")
 	}
-	idVal := args["id"].Value.(string)
 
 	obj, err := CreateResource(runtime, "oci.network", nil)
 	if err != nil {
@@ -763,7 +764,7 @@ type mqlOciNetworkNetworkSecurityGroupInternal struct {
 	region     string
 	cacheVcnId string
 	fetchLock  sync.Mutex
-	fetched    bool
+	fetched    atomic.Bool
 }
 
 func (o *mqlOciNetworkNetworkSecurityGroup) id() (string, error) {
@@ -904,12 +905,12 @@ func (o *mqlOciNetworkNetworkSecurityGroup) getRulesForNSG(ctx context.Context, 
 }
 
 func (o *mqlOciNetworkNetworkSecurityGroup) fetchSecurityRules() (ingress []any, egress []any, err error) {
-	if o.fetched {
+	if o.fetched.Load() {
 		return nil, nil, nil
 	}
 	o.fetchLock.Lock()
 	defer o.fetchLock.Unlock()
-	if o.fetched {
+	if o.fetched.Load() {
 		return nil, nil, nil
 	}
 
@@ -964,7 +965,7 @@ func (o *mqlOciNetworkNetworkSecurityGroup) fetchSecurityRules() (ingress []any,
 
 	o.IngressSecurityRules = plugin.TValue[[]any]{Data: ingress, State: plugin.StateIsSet}
 	o.EgressSecurityRules = plugin.TValue[[]any]{Data: egress, State: plugin.StateIsSet}
-	o.fetched = true
+	o.fetched.Store(true)
 
 	return ingress, egress, nil
 }
@@ -1500,10 +1501,10 @@ func initOciNetworkRouteTable(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return args, nil, nil
 	}
 
-	if args["id"] == nil {
+	idVal := ociArgString(args, "id")
+	if idVal == "" {
 		return nil, nil, errors.New("id required to fetch oci.network.routeTable")
 	}
-	idVal := args["id"].Value.(string)
 
 	obj, err := CreateResource(runtime, "oci.network", nil)
 	if err != nil {

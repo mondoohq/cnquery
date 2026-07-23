@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -149,7 +150,7 @@ func (o *mqlOciFunctions) getApplications(conn *connection.OciConnection, region
 
 type mqlOciFunctionsApplicationInternal struct {
 	lock           sync.Mutex
-	fetched        bool
+	fetched        atomic.Bool
 	app            *functions.Application
 	region         string
 	cacheSubnetIds []string
@@ -161,12 +162,12 @@ func (o *mqlOciFunctionsApplication) id() (string, error) {
 }
 
 func (o *mqlOciFunctionsApplication) fetchApplication() (*functions.Application, error) {
-	if o.fetched {
+	if o.fetched.Load() {
 		return o.app, nil
 	}
 	o.lock.Lock()
 	defer o.lock.Unlock()
-	if o.fetched {
+	if o.fetched.Load() {
 		return o.app, nil
 	}
 
@@ -185,7 +186,7 @@ func (o *mqlOciFunctionsApplication) fetchApplication() (*functions.Application,
 	}
 
 	o.app = &resp.Application
-	o.fetched = true
+	o.fetched.Store(true)
 	return o.app, nil
 }
 
@@ -324,7 +325,7 @@ func (o *mqlOciFunctionsApplication) functions() ([]any, error) {
 
 type mqlOciFunctionsFunctionInternal struct {
 	lock    sync.Mutex
-	fetched bool
+	fetched atomic.Bool
 	fn      *functions.Function
 	region  string
 }
@@ -334,12 +335,12 @@ func (o *mqlOciFunctionsFunction) id() (string, error) {
 }
 
 func (o *mqlOciFunctionsFunction) fetchFunction() (*functions.Function, error) {
-	if o.fetched {
+	if o.fetched.Load() {
 		return o.fn, nil
 	}
 	o.lock.Lock()
 	defer o.lock.Unlock()
-	if o.fetched {
+	if o.fetched.Load() {
 		return o.fn, nil
 	}
 
@@ -358,7 +359,7 @@ func (o *mqlOciFunctionsFunction) fetchFunction() (*functions.Function, error) {
 	}
 
 	o.fn = &resp.Function
-	o.fetched = true
+	o.fetched.Store(true)
 	return o.fn, nil
 }
 

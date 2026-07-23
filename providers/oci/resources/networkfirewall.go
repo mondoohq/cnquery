@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -276,18 +277,18 @@ func (o *mqlOciNetworkFirewall) getPolicies(conn *connection.OciConnection, regi
 
 type mqlOciNetworkFirewallPolicyInternal struct {
 	region    string
-	fetched   bool
+	fetched   atomic.Bool
 	detail    *networkfirewall.NetworkFirewallPolicy
 	fetchLock sync.Mutex
 }
 
 func (o *mqlOciNetworkFirewallPolicy) fetchDetail() (*networkfirewall.NetworkFirewallPolicy, error) {
-	if o.fetched {
+	if o.fetched.Load() {
 		return o.detail, nil
 	}
 	o.fetchLock.Lock()
 	defer o.fetchLock.Unlock()
-	if o.fetched {
+	if o.fetched.Load() {
 		return o.detail, nil
 	}
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
@@ -302,7 +303,7 @@ func (o *mqlOciNetworkFirewallPolicy) fetchDetail() (*networkfirewall.NetworkFir
 		return nil, err
 	}
 	o.detail = &resp.NetworkFirewallPolicy
-	o.fetched = true
+	o.fetched.Store(true)
 	return o.detail, nil
 }
 
@@ -330,10 +331,10 @@ func initOciNetworkFirewallPolicy(runtime *plugin.Runtime, args map[string]*llx.
 		return args, nil, nil
 	}
 
-	if args["id"] == nil {
+	idVal := ociArgString(args, "id")
+	if idVal == "" {
 		return nil, nil, errors.New("id required to fetch oci.networkFirewall.policy")
 	}
-	idVal := args["id"].Value.(string)
 
 	obj, err := CreateResource(runtime, "oci.networkFirewall", nil)
 	if err != nil {

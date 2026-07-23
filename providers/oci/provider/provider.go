@@ -220,7 +220,10 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.OciConnection)
 	if err != nil {
 		return err
 	}
-	if info != nil {
+	// Tenant() returns a non-nil tenancy whenever err is nil, but Name is
+	// optional on the SDK model and is absent for a tenancy with no display
+	// name, so it needs its own guard.
+	if info != nil && info.Name != nil {
 		asset.Name = fmt.Sprintf("OCI Tenant %s", *info.Name)
 	}
 

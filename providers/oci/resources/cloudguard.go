@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/cloudguard"
@@ -19,10 +20,17 @@ import (
 
 // CloudGuard is a tenancy-level service that only operates in the home region,
 // unlike other OCI services that require per-region iteration.
+//
+// The home region and the configuration are guarded by separate mutexes: the
+// configuration fetch needs the home region to build its client, and a single
+// shared mutex would deadlock because sync.Mutex is not reentrant.
 type mqlOciCloudGuardInternal struct {
-	lock       sync.Mutex
-	config     *cloudguard.Configuration
-	homeRegion string
+	configLock     sync.Mutex
+	configFetched  atomic.Bool
+	config         *cloudguard.Configuration
+	homeRegionLock sync.Mutex
+	homeRegionSet  atomic.Bool
+	homeRegion     string
 }
 
 func (o *mqlOciCloudGuard) id() (string, error) {
@@ -30,12 +38,12 @@ func (o *mqlOciCloudGuard) id() (string, error) {
 }
 
 func (o *mqlOciCloudGuard) getHomeRegion() (string, error) {
-	if o.homeRegion != "" {
+	if o.homeRegionSet.Load() {
 		return o.homeRegion, nil
 	}
-	o.lock.Lock()
-	defer o.lock.Unlock()
-	if o.homeRegion != "" {
+	o.homeRegionLock.Lock()
+	defer o.homeRegionLock.Unlock()
+	if o.homeRegionSet.Load() {
 		return o.homeRegion, nil
 	}
 
@@ -52,25 +60,29 @@ func (o *mqlOciCloudGuard) getHomeRegion() (string, error) {
 	// HomeRegionKey returns the short region key (e.g., "IAD"), not the region name (e.g., "us-ashburn-1").
 	// The OCI SDK's SetRegion() accepts both formats.
 	o.homeRegion = *tenancy.HomeRegionKey
+	o.homeRegionSet.Store(true)
 	return o.homeRegion, nil
 }
 
 func (o *mqlOciCloudGuard) getConfig() (*cloudguard.Configuration, error) {
-	if o.config != nil {
-		return o.config, nil
-	}
-	o.lock.Lock()
-	defer o.lock.Unlock()
-	if o.config != nil {
+	if o.configFetched.Load() {
 		return o.config, nil
 	}
 
-	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-
+	// Resolve the home region before taking configLock: getHomeRegion takes its
+	// own lock, and nesting it inside this critical section would deadlock.
 	homeRegion, err := o.getHomeRegion()
 	if err != nil {
 		return nil, err
 	}
+
+	o.configLock.Lock()
+	defer o.configLock.Unlock()
+	if o.configFetched.Load() {
+		return o.config, nil
+	}
+
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
 	client, err := conn.CloudGuardClient(homeRegion)
 	if err != nil {
@@ -85,6 +97,7 @@ func (o *mqlOciCloudGuard) getConfig() (*cloudguard.Configuration, error) {
 	}
 
 	o.config = &response.Configuration
+	o.configFetched.Store(true)
 	return o.config, nil
 }
 

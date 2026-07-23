@@ -810,10 +810,10 @@ func initOciApigatewayCertificate(runtime *plugin.Runtime, args map[string]*llx.
 	if len(args) > 2 {
 		return args, nil, nil
 	}
-	if args["id"] == nil {
+	idVal := ociArgString(args, "id")
+	if idVal == "" {
 		return nil, nil, errors.New("id required to fetch oci.apigateway.certificate")
 	}
-	idVal := args["id"].Value.(string)
 
 	obj, err := CreateResource(runtime, "oci.apigateway", nil)
 	if err != nil {

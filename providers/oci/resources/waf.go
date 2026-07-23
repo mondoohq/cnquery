@@ -287,10 +287,10 @@ func initOciWafPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 		return args, nil, nil
 	}
 
-	if args["id"] == nil {
+	idVal := ociArgString(args, "id")
+	if idVal == "" {
 		return nil, nil, errors.New("id required to fetch oci.waf.policy")
 	}
-	idVal := args["id"].Value.(string)
 
 	obj, err := CreateResource(runtime, "oci.waf", nil)
 	if err != nil {

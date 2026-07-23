@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -174,7 +175,7 @@ func (o *mqlOciOke) getClusters(conn *connection.OciConnection, regions []any) [
 
 type mqlOciOkeClusterInternal struct {
 	lock       sync.Mutex
-	fetched    bool
+	fetched    atomic.Bool
 	cluster    *containerengine.Cluster
 	cacheVcnId string
 	region     string
@@ -241,12 +242,12 @@ func (o *mqlOciOkeCluster) vcn() (*mqlOciNetworkVcn, error) {
 }
 
 func (o *mqlOciOkeCluster) fetchCluster() (*containerengine.Cluster, error) {
-	if o.fetched {
+	if o.fetched.Load() {
 		return o.cluster, nil
 	}
 	o.lock.Lock()
 	defer o.lock.Unlock()
-	if o.fetched {
+	if o.fetched.Load() {
 		return o.cluster, nil
 	}
 
@@ -265,7 +266,7 @@ func (o *mqlOciOkeCluster) fetchCluster() (*containerengine.Cluster, error) {
 	}
 
 	o.cluster = &resp.Cluster
-	o.fetched = true
+	o.fetched.Store(true)
 	return o.cluster, nil
 }
 

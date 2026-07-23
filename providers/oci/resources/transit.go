@@ -133,10 +133,10 @@ func initOciNetworkDrg(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	if len(args) > 2 {
 		return args, nil, nil
 	}
-	if args["id"] == nil {
+	idVal := ociArgString(args, "id")
+	if idVal == "" {
 		return nil, nil, errors.New("id required to fetch oci.network.drg")
 	}
-	idVal := args["id"].Value.(string)
 
 	obj, err := CreateResource(runtime, "oci.network", nil)
 	if err != nil {
@@ -518,10 +518,10 @@ func initOciNetworkLocalPeeringGateway(runtime *plugin.Runtime, args map[string]
 	if len(args) > 2 {
 		return args, nil, nil
 	}
-	if args["id"] == nil {
+	idVal := ociArgString(args, "id")
+	if idVal == "" {
 		return nil, nil, errors.New("id required to fetch oci.network.localPeeringGateway")
 	}
-	idVal := args["id"].Value.(string)
 
 	obj, err := CreateResource(runtime, "oci.network", nil)
 	if err != nil {
@@ -691,10 +691,10 @@ func initOciNetworkServiceGateway(runtime *plugin.Runtime, args map[string]*llx.
 	if len(args) > 2 {
 		return args, nil, nil
 	}
-	if args["id"] == nil {
+	idVal := ociArgString(args, "id")
+	if idVal == "" {
 		return nil, nil, errors.New("id required to fetch oci.network.serviceGateway")
 	}
-	idVal := args["id"].Value.(string)
 
 	obj, err := CreateResource(runtime, "oci.network", nil)
 	if err != nil {
@@ -905,10 +905,10 @@ func initOciNetworkInternetGateway(runtime *plugin.Runtime, args map[string]*llx
 	if len(args) > 2 {
 		return args, nil, nil
 	}
-	if args["id"] == nil {
+	idVal := ociArgString(args, "id")
+	if idVal == "" {
 		return nil, nil, errors.New("id required to fetch oci.network.internetGateway")
 	}
-	idVal := args["id"].Value.(string)
 
 	obj, err := CreateResource(runtime, "oci.network", nil)
 	if err != nil {
@@ -933,10 +933,10 @@ func initOciNetworkNatGateway(runtime *plugin.Runtime, args map[string]*llx.RawD
 	if len(args) > 2 {
 		return args, nil, nil
 	}
-	if args["id"] == nil {
+	idVal := ociArgString(args, "id")
+	if idVal == "" {
 		return nil, nil, errors.New("id required to fetch oci.network.natGateway")
 	}
-	idVal := args["id"].Value.(string)
 
 	obj, err := CreateResource(runtime, "oci.network", nil)
 	if err != nil {

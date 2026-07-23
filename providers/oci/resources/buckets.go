@@ -7,6 +7,8 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -167,7 +169,9 @@ func (o *mqlOciObjectStorage) getBuckets(conn *connection.OciConnection, namespa
 }
 
 type mqlOciObjectStorageBucketInternal struct {
-	bucket *objectstorage.Bucket
+	lock    sync.Mutex
+	fetched atomic.Bool
+	bucket  *objectstorage.Bucket
 }
 
 func (o *mqlOciObjectStorageBucket) id() (string, error) {
@@ -232,8 +236,17 @@ func initOciObjectStorageBucket(runtime *plugin.Runtime, args map[string]*llx.Ra
 	return args, bucket, nil
 }
 
+// getBucketDetails lazily fetches the full bucket, which carries the fields
+// ListBuckets omits (public access, versioning, encryption, counts). Sixteen
+// accessors share it, and the runtime resolves them concurrently, so the fetch
+// is guarded rather than racing sixteen identical GetBucket calls.
 func (o *mqlOciObjectStorageBucket) getBucketDetails() (*objectstorage.Bucket, error) {
-	if o.bucket != nil {
+	if o.fetched.Load() {
+		return o.bucket, nil
+	}
+	o.lock.Lock()
+	defer o.lock.Unlock()
+	if o.fetched.Load() {
 		return o.bucket, nil
 	}
 
@@ -242,6 +255,10 @@ func (o *mqlOciObjectStorageBucket) getBucketDetails() (*objectstorage.Bucket, e
 	region := o.GetRegion()
 	if region.Error != nil {
 		return nil, region.Error
+	}
+
+	if region.Data == nil {
+		return nil, errors.New("oci.objectStorage.bucket: region is required to fetch bucket details")
 	}
 
 	r := region.Data
@@ -274,6 +291,7 @@ func (o *mqlOciObjectStorageBucket) getBucketDetails() (*objectstorage.Bucket, e
 	}
 
 	o.bucket = &response.Bucket
+	o.fetched.Store(true)
 	return o.bucket, nil
 }
 
@@ -458,6 +476,9 @@ func (o *mqlOciObjectStorageBucket) retentionRules() ([]any, error) {
 	if region.Error != nil {
 		return nil, region.Error
 	}
+	if region.Data == nil {
+		return nil, errors.New("oci.objectStorage.bucket: region is required")
+	}
 
 	client, err := conn.ObjectStorageClient(region.Data.Id.Data)
 	if err != nil {
@@ -545,6 +566,9 @@ func (o *mqlOciObjectStorageBucket) preauthenticatedRequests() ([]any, error) {
 	region := o.GetRegion()
 	if region.Error != nil {
 		return nil, region.Error
+	}
+	if region.Data == nil {
+		return nil, errors.New("oci.objectStorage.bucket: region is required")
 	}
 
 	client, err := conn.ObjectStorageClient(region.Data.Id.Data)
