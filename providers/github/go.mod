@@ -13,7 +13,7 @@ require (
 	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
-	go.mondoo.com/mql/v13 v13.30.0
+	go.mondoo.com/mql/v13 v13.30.1
 	go.mondoo.com/ranger-rpc v0.8.1
 	golang.org/x/oauth2 v0.36.0
 	sigs.k8s.io/yaml v1.6.0
@@ -140,7 +140,7 @@ require (
 	github.com/masterzen/simplexml v0.0.0-20190410153822-31eea3082786 // indirect
 	github.com/masterzen/winrm v0.0.0-20260407182533-5570be7f80cf // indirect
 	github.com/mattn/go-colorable v0.1.15 // indirect
-	github.com/mattn/go-isatty v0.0.23 // indirect
+	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/mattn/go-runewidth v0.0.24 // indirect
 	github.com/miekg/dns v1.1.72 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
@@ -203,7 +203,7 @@ require (
 	github.com/ulikunitz/xz v0.5.16 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	go.mondoo.com/mondoo-go v0.0.0-20260722123108-9429573bd8ad // indirect
+	go.mondoo.com/mondoo-go v0.0.0-20260723123104-e6509982da98 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.69.0 // indirect
 	go.opentelemetry.io/otel v1.44.0 // indirect
@@ -221,7 +221,7 @@ require (
 	golang.org/x/text v0.40.0 // indirect
 	golang.org/x/tools v0.48.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260720211330-0afa2a65878a // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260723164925-7274b71286bd // indirect
 	google.golang.org/grpc v1.82.1 // indirect
 	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
@@ -229,13 +229,13 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	howett.net/plist v1.0.1 // indirect
-	k8s.io/api v0.36.2 // indirect
-	k8s.io/apimachinery v0.36.2 // indirect
-	k8s.io/client-go v0.36.2 // indirect
-	k8s.io/component-base v0.36.2 // indirect
+	k8s.io/api v0.36.3 // indirect
+	k8s.io/apimachinery v0.36.3 // indirect
+	k8s.io/client-go v0.36.3 // indirect
+	k8s.io/component-base v0.36.3 // indirect
 	k8s.io/klog/v2 v2.140.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20260317180543-43fb72c5454a // indirect
-	k8s.io/kubelet v0.36.2 // indirect
+	k8s.io/kubelet v0.36.3 // indirect
 	k8s.io/utils v0.0.0-20260707023825-cf1189d6abe3 // indirect
 	modernc.org/libc v1.74.3 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
@@ -245,5 +245,5 @@ require (
 	sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730 // indirect
 	sigs.k8s.io/randfill v1.0.0 // indirect
 	sigs.k8s.io/release-utils v0.12.4 // indirect
-	sigs.k8s.io/structured-merge-diff/v6 v6.3.2 // indirect
+	sigs.k8s.io/structured-merge-diff/v6 v6.3.3 // indirect
 )

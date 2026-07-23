@@ -60,7 +60,7 @@ require (
 	github.com/lithammer/fuzzysearch v1.1.8
 	github.com/lucasb-eyer/go-colorful v1.4.0 // indirect
 	github.com/masterzen/winrm v0.0.0-20260407182533-5570be7f80cf
-	github.com/mattn/go-isatty v0.0.23
+	github.com/mattn/go-isatty v0.0.24
 	github.com/miekg/dns v1.1.72
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/hashstructure/v2 v2.0.2
@@ -96,7 +96,7 @@ require (
 	github.com/tliron/glsp v0.2.2
 	github.com/toravir/csd v0.0.0-20200911003203-13ae77ad849c
 	github.com/ulikunitz/xz v0.5.16
-	go.mondoo.com/mondoo-go v0.0.0-20260722123108-9429573bd8ad
+	go.mondoo.com/mondoo-go v0.0.0-20260723123104-e6509982da98
 	go.mondoo.com/ranger-rpc v0.8.1
 	go.uber.org/goleak v1.3.0
 	go.uber.org/mock v0.6.0
@@ -115,10 +115,10 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 	howett.net/plist v1.0.1
-	k8s.io/apimachinery v0.36.2
-	k8s.io/client-go v0.36.2
-	k8s.io/component-base v0.36.2
-	k8s.io/kubelet v0.36.2
+	k8s.io/apimachinery v0.36.3
+	k8s.io/client-go v0.36.3
+	k8s.io/component-base v0.36.3
+	k8s.io/kubelet v0.36.3
 	k8s.io/utils v0.0.0-20260707023825-cf1189d6abe3
 	sigs.k8s.io/yaml v1.6.0
 )
@@ -208,7 +208,7 @@ require (
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/renameio v1.0.1 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
-	github.com/googleapis/enterprise-certificate-proxy v0.3.18 // indirect
+	github.com/googleapis/enterprise-certificate-proxy v0.3.19 // indirect
 	github.com/googleapis/gax-go/v2 v2.13.0 // indirect
 	github.com/gopherjs/gopherjs v1.20.1 // indirect
 	github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674 // indirect
@@ -308,11 +308,11 @@ require (
 	google.golang.org/api v0.195.0 // indirect
 	google.golang.org/genproto v0.0.0-20240823204242-4ba0660f739c // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260414002931-afd174a4e478 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260720211330-0afa2a65878a // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260723164925-7274b71286bd // indirect
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.5.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
-	k8s.io/api v0.36.2 // indirect
+	k8s.io/api v0.36.3 // indirect
 	k8s.io/klog/v2 v2.140.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20260317180543-43fb72c5454a // indirect
 	modernc.org/libc v1.74.3 // indirect
@@ -323,7 +323,7 @@ require (
 	sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730 // indirect
 	sigs.k8s.io/randfill v1.0.0 // indirect
 	sigs.k8s.io/release-utils v0.12.4 // indirect
-	sigs.k8s.io/structured-merge-diff/v6 v6.3.2 // indirect
+	sigs.k8s.io/structured-merge-diff/v6 v6.3.3 // indirect
 )
 
 tool (

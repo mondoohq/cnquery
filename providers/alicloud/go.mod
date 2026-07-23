@@ -15,7 +15,7 @@ require (
 	github.com/alibabacloud-go/dds-20151201/v9 v9.2.0
 	github.com/alibabacloud-go/ecs-20140526/v6 v6.1.0
 	github.com/alibabacloud-go/fc-20230330/v4 v4.7.9
-	github.com/alibabacloud-go/kms-20160120/v4 v4.0.0
+	github.com/alibabacloud-go/kms-20160120/v4 v4.1.0
 	github.com/alibabacloud-go/nas-20170626/v4 v4.6.0
 	github.com/alibabacloud-go/nlb-20220430/v4 v4.1.3
 	github.com/alibabacloud-go/polardb-20170801/v7 v7.22.0
@@ -33,7 +33,7 @@ require (
 	github.com/aliyun/credentials-go v1.4.12
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
-	go.mondoo.com/mql/v13 v13.30.0
+	go.mondoo.com/mql/v13 v13.30.1
 )
 
 require (
@@ -106,7 +106,7 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.15 // indirect
-	github.com/mattn/go-isatty v0.0.23 // indirect
+	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/mitchellh/hashstructure/v2 v2.0.2 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.3-0.20250322232337-35a7c28c31ee // indirect
@@ -143,7 +143,7 @@ require (
 	golang.org/x/text v0.40.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/tools v0.48.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260720211330-0afa2a65878a // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260723164925-7274b71286bd // indirect
 	google.golang.org/grpc v1.82.1 // indirect
 	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af // indirect
 	gopkg.in/ini.v1 v1.67.3 // indirect
