@@ -88127,7 +88127,7 @@ func (c *mqlAwsIamPolicyversion) GetCreatedAt() *plugin.TValue[*time.Time] {
 type mqlAwsIamRole struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsIamRoleInternal it will be used here
+	mqlAwsIamRoleInternal
 	Arn                         plugin.TValue[string]
 	Id                          plugin.TValue[string]
 	Name                        plugin.TValue[string]
@@ -88245,11 +88245,15 @@ func (c *mqlAwsIamRole) GetAssumableByExternalAccounts() *plugin.TValue[[]any] {
 }
 
 func (c *mqlAwsIamRole) GetLastUsedAt() *plugin.TValue[*time.Time] {
-	return &c.LastUsedAt
+	return plugin.GetOrCompute[*time.Time](&c.LastUsedAt, func() (*time.Time, error) {
+		return c.lastUsedAt()
+	})
 }
 
 func (c *mqlAwsIamRole) GetLastUsedRegion() *plugin.TValue[string] {
-	return &c.LastUsedRegion
+	return plugin.GetOrCompute[string](&c.LastUsedRegion, func() (string, error) {
+		return c.lastUsedRegion()
+	})
 }
 
 func (c *mqlAwsIamRole) GetMaxSessionDuration() *plugin.TValue[int64] {

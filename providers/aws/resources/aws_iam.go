@@ -659,13 +659,6 @@ func (a *mqlAwsIam) roles() ([]any, error) {
 				json.Unmarshal([]byte(policyDocument), &policyDocumentMap)
 			}
 
-			var lastUsedAt *time.Time
-			var lastUsedRegion string
-			if role.RoleLastUsed != nil {
-				lastUsedAt = role.RoleLastUsed.LastUsedDate
-				lastUsedRegion = convert.ToValue(role.RoleLastUsed.Region)
-			}
-
 			var permBoundaryArn string
 			if role.PermissionsBoundary != nil {
 				permBoundaryArn = convert.ToValue(role.PermissionsBoundary.PermissionsBoundaryArn)
@@ -680,8 +673,6 @@ func (a *mqlAwsIam) roles() ([]any, error) {
 					"tags":                     llx.MapData(iamTagsToMap(role.Tags), types.String),
 					"createdAt":                llx.TimeDataPtr(role.CreateDate),
 					"assumeRolePolicyDocument": llx.MapData(policyDocumentMap, types.Any),
-					"lastUsedAt":               llx.TimeDataPtr(lastUsedAt),
-					"lastUsedRegion":           llx.StringData(lastUsedRegion),
 					"maxSessionDuration":       llx.IntDataDefault(role.MaxSessionDuration, 3600),
 					"permissionsBoundaryArn":   llx.StringData(permBoundaryArn),
 					"path":                     llx.StringDataPtr(role.Path),
@@ -1790,6 +1781,63 @@ func (a *mqlAwsIamRole) permissionsBoundary() (*mqlAwsIamPolicy, error) {
 		return nil, err
 	}
 	return mqlPolicy.(*mqlAwsIamPolicy), nil
+}
+
+type mqlAwsIamRoleInternal struct {
+	cachedRole  *iam.GetRoleOutput
+	roleFetched bool
+	roleLock    sync.Mutex
+}
+
+// getRoleDetails fetches and memoizes the full role via GetRole. The account-wide
+// ListRoles call that roles() uses to enumerate never populates RoleLastUsed, so
+// lastUsedAt and lastUsedRegion have to come from GetRole. The result is cached
+// so both fields share a single API call, and the call is only made when one of
+// those fields is actually queried.
+func (a *mqlAwsIamRole) getRoleDetails() (*iam.GetRoleOutput, error) {
+	if a.roleFetched {
+		return a.cachedRole, nil
+	}
+	a.roleLock.Lock()
+	defer a.roleLock.Unlock()
+	if a.roleFetched {
+		return a.cachedRole, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Iam("")
+	ctx := context.Background()
+
+	roleName := a.Name.Data
+	resp, err := svc.GetRole(ctx, &iam.GetRoleInput{RoleName: &roleName})
+	if err != nil {
+		return nil, err
+	}
+	a.cachedRole = resp
+	a.roleFetched = true
+	return resp, nil
+}
+
+func (a *mqlAwsIamRole) lastUsedAt() (*time.Time, error) {
+	resp, err := a.getRoleDetails()
+	if err != nil {
+		return nil, err
+	}
+	if resp == nil || resp.Role == nil || resp.Role.RoleLastUsed == nil {
+		return nil, nil
+	}
+	return resp.Role.RoleLastUsed.LastUsedDate, nil
+}
+
+func (a *mqlAwsIamRole) lastUsedRegion() (string, error) {
+	resp, err := a.getRoleDetails()
+	if err != nil {
+		return "", err
+	}
+	if resp == nil || resp.Role == nil || resp.Role.RoleLastUsed == nil {
+		return "", nil
+	}
+	return convert.ToValue(resp.Role.RoleLastUsed.Region), nil
 }
 
 func (a *mqlAwsIamRole) attachedPolicies() ([]any, error) {

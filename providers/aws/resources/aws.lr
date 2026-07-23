@@ -2573,9 +2573,9 @@ private aws.iam.role @defaults("arn name") {
   // AWS account IDs outside this account that the trust policy allows to assume the role
   assumableByExternalAccounts() []string
   // Time when the role was last used to make an AWS request
-  lastUsedAt time
+  lastUsedAt() time
   // Region in which the role was last used
-  lastUsedRegion string
+  lastUsedRegion() string
   // Maximum session duration in seconds for the role (3600-43200)
   maxSessionDuration int
   // ARN of the permissions boundary policy attached to the role
