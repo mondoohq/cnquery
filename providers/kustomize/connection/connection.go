@@ -140,6 +140,12 @@ var scanSkipDirs = map[string]struct{}{
 	"build":        {},
 }
 
+// maxScanDepth bounds the recursive subdirectory scan so a path aimed at a
+// large monorepo root (with no kustomization anywhere near the top) can't walk
+// the entire tree. The canonical base/overlays/<env>[/<region>] layouts sit
+// well within this depth.
+const maxScanDepth = 10
+
 // loadKustomizations finds and parses kustomization files from a path.
 func loadKustomizations(kustomizePath string) ([]*KustomizationEntry, error) {
 	fi, err := os.Stat(kustomizePath)
@@ -163,11 +169,37 @@ func loadKustomizations(kustomizePath string) ([]*KustomizationEntry, error) {
 		return nil, err
 	}
 
-	// Otherwise scan subdirectories
+	// Otherwise scan subdirectories recursively. A one-level scan silently
+	// missed the canonical Kustomize layout (base/ next to overlays/<env>/),
+	// where the actual deployment overlays live two levels below the repo
+	// root — the tool would find only the base and drop every overlay.
 	var entries []*KustomizationEntry
-	dirEntries, err := os.ReadDir(kustomizePath)
-	if err != nil {
+	if err := scanForKustomizations(kustomizePath, 0, &entries); err != nil {
 		return nil, err
+	}
+	return entries, nil
+}
+
+// scanForKustomizations walks subdirectories of dir looking for kustomization
+// files. A directory that itself contains a kustomization owns its whole
+// subtree (its resources and overlays are its own concern), so the scan
+// records it and does not descend into it; only kustomization-free glue
+// directories (e.g. overlays/) are recursed through to reach nested overlays.
+func scanForKustomizations(dir string, depth int, entries *[]*KustomizationEntry) error {
+	if depth > maxScanDepth {
+		return nil
+	}
+
+	dirEntries, err := os.ReadDir(dir)
+	if err != nil {
+		// The root directory not being readable is a real failure the caller
+		// should see; a single unreadable subdir deeper in the tree should
+		// not abort discovery of everything else.
+		if depth == 0 {
+			return err
+		}
+		log.Warn().Err(err).Str("path", dir).Msg("failed to read directory during kustomization scan; skipping")
+		return nil
 	}
 
 	for _, de := range dirEntries {
@@ -185,20 +217,25 @@ func loadKustomizations(kustomizePath string) ([]*KustomizationEntry, error) {
 		if _, skip := scanSkipDirs[name]; skip {
 			continue
 		}
-		subPath := filepath.Join(kustomizePath, name)
+		subPath := filepath.Join(dir, name)
 		entry, err := loadSingleKustomization(subPath)
-		if err == nil {
-			entries = append(entries, entry)
-			continue
-		}
-		// Quiet skip when the subdir simply has no kustomization
-		// file; loud warning when a file exists but won't parse.
-		if !errors.Is(err, ErrNoKustomization) {
+		switch {
+		case err == nil:
+			// Found a kustomization here; this directory owns its subtree,
+			// so don't descend further into it.
+			*entries = append(*entries, entry)
+		case errors.Is(err, ErrNoKustomization):
+			// No kustomization at this level; descend to find nested overlays.
+			if err := scanForKustomizations(subPath, depth+1, entries); err != nil {
+				return err
+			}
+		default:
+			// A file exists but won't parse: loud warning, then skip.
 			log.Warn().Err(err).Str("path", subPath).Msg("failed to load kustomization; skipping")
 		}
 	}
 
-	return entries, nil
+	return nil
 }
 
 func loadSingleKustomization(dir string) (*KustomizationEntry, error) {
@@ -215,6 +252,14 @@ func loadSingleKustomization(dir string) (*KustomizationEntry, error) {
 		if err := k.Unmarshal(data); err != nil {
 			return nil, err
 		}
+		// Unmarshal leaves deprecated field aliases in their legacy slots.
+		// FixKustomization reconciles them into the modern fields: bases into
+		// resources, imageTags into images, and the singular env into a
+		// generator's envs. Without it the raw-field accessors (resourceRefs,
+		// images, and a generator's envs) silently omit entries declared with
+		// the older syntax. This only affects our in-memory view; rendering
+		// runs krusty against the filesystem path independently.
+		k.FixKustomization()
 		return &KustomizationEntry{
 			Path:          dir,
 			Kustomization: k,

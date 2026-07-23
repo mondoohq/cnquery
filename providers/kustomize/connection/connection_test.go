@@ -42,6 +42,63 @@ func TestLoadKustomizations_BasicFixtureStillWorks(t *testing.T) {
 	assert.Equal(t, "../testdata/basic", entries[0].Path)
 }
 
+// A one-level subdir scan silently missed the canonical Kustomize layout:
+// base/ alongside overlays/<env>/, where the real deployment overlays live
+// two levels below the root. Pointing at the root found only base/ and
+// dropped every overlay. The scan now recurses, stopping at each directory
+// that owns a kustomization.
+func TestLoadKustomizations_RecursesIntoNestedOverlays(t *testing.T) {
+	entries, err := loadKustomizations("../testdata/nested-overlays")
+	require.NoError(t, err)
+
+	got := map[string]bool{}
+	for _, e := range entries {
+		got[e.Path] = true
+	}
+	assert.Truef(t, got["../testdata/nested-overlays/base"], "base should be discovered, got %v", got)
+	assert.Truef(t, got["../testdata/nested-overlays/overlays/dev"], "dev overlay (depth 2) should be discovered, got %v", got)
+	assert.Truef(t, got["../testdata/nested-overlays/overlays/prod"], "prod overlay (depth 2) should be discovered, got %v", got)
+	assert.Len(t, entries, 3)
+}
+
+// A directory that owns a kustomization owns its whole subtree; the scan must
+// not descend into it and emit a second entry for a nested resources/ dir that
+// happens to carry its own kustomization file.
+func TestLoadKustomizations_DoesNotDescendIntoOwnedSubtree(t *testing.T) {
+	tmp := t.TempDir()
+	// Root has no kustomization, so the scan recurses.
+	overlay := filepath.Join(tmp, "overlay")
+	nested := filepath.Join(overlay, "components", "extra")
+	require.NoError(t, os.MkdirAll(nested, 0o755))
+	kust := []byte("apiVersion: kustomize.config.k8s.io/v1beta1\nkind: Kustomization\n")
+	require.NoError(t, os.WriteFile(filepath.Join(overlay, "kustomization.yaml"), kust, 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(nested, "kustomization.yaml"), kust, 0o644))
+
+	entries, err := loadKustomizations(tmp)
+	require.NoError(t, err)
+	require.Len(t, entries, 1, "only the owning overlay dir should be discovered, not its nested subtree")
+	assert.Equal(t, overlay, entries[0].Path)
+}
+
+// FixKustomization reconciles deprecated field aliases into the modern
+// fields. Without it the raw-field accessors silently omit entries declared
+// with the older syntax (bases, imageTags, singular env).
+func TestLoadSingleKustomization_MergesDeprecatedFields(t *testing.T) {
+	entry, err := loadSingleKustomization("../testdata/deprecated-fields")
+	require.NoError(t, err)
+	k := entry.Kustomization
+
+	assert.Contains(t, k.Resources, "../base", "bases: entry should be merged into resources")
+
+	require.Len(t, k.Images, 1, "imageTags: entry should be merged into images")
+	assert.Equal(t, "nginx", k.Images[0].Name)
+	assert.Equal(t, "1.2.3", k.Images[0].NewTag)
+
+	require.Len(t, k.ConfigMapGenerator, 1)
+	assert.Contains(t, k.ConfigMapGenerator[0].EnvSources, "config.env",
+		"singular env: should be merged into envs")
+}
+
 // NewKustomizeConnection used to deref asset.Connections[0] unconditionally;
 // passing a nil asset or one with no connections now produces a clear error
 // instead of a runtime panic.

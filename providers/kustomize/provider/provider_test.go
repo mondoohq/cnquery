@@ -354,6 +354,28 @@ func TestMultiOverlayDirectory(t *testing.T) {
 	require.Len(t, kustsResp.Data.Array, 2)
 }
 
+// The canonical Kustomize layout puts overlays two levels below the root
+// (base/ next to overlays/<env>/). A one-level scan found only base/ and
+// silently dropped every overlay; the recursive scan discovers all three.
+func TestNestedOverlayDirectory(t *testing.T) {
+	srv, resp := newTestService("../testdata/nested-overlays")
+
+	kustResp := getData(t, srv, resp.Id, "kustomize", "", "")
+	kustID := string(kustResp.Data.Value)
+
+	kustsResp := getData(t, srv, resp.Id, "kustomize", kustID, "kustomizations")
+	require.Len(t, kustsResp.Data.Array, 3, "base plus both nested overlays should be discovered")
+
+	namespaces := map[string]bool{}
+	for _, k := range kustsResp.Data.Array {
+		kID := string(k.Value)
+		nsResp := getData(t, srv, resp.Id, "kustomize.kustomization", kID, "namespace")
+		namespaces[string(nsResp.Data.Value)] = true
+	}
+	assert.True(t, namespaces["dev"], "dev overlay should be present")
+	assert.True(t, namespaces["prod"], "prod overlay should be present")
+}
+
 func TestStagingOverlay(t *testing.T) {
 	// Point directly at the staging overlay which references ../base
 	srv, resp := newTestService("../testdata/multi-overlay/staging")

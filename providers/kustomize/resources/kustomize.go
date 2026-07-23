@@ -20,7 +20,10 @@ func (r *mqlKustomize) id() (string, error) {
 }
 
 func (r *mqlKustomize) kustomizations() ([]any, error) {
-	conn := r.MqlRuntime.Connection.(*connection.KustomizeConnection)
+	conn, ok := r.MqlRuntime.Connection.(*connection.KustomizeConnection)
+	if !ok {
+		return nil, errors.New("kustomize: connection is not a KustomizeConnection")
+	}
 	entries := conn.Kustomizations()
 
 	var mqlKusts []any
