@@ -24,6 +24,8 @@ func newMqlPortainerEnvironmentGroup(runtime *plugin.Runtime, g *models.Portaine
 		"description":        llx.StringData(g.Description),
 		"teamAccessPolicies": llx.DictData(accessPoliciesToDict(g.TeamAccessPolicies)),
 		"userAccessPolicies": llx.DictData(accessPoliciesToDict(g.UserAccessPolicies)),
+		"teamAccessRoles":    llx.DictData(accessRolesToDict(g.TeamAccessPolicies)),
+		"userAccessRoles":    llx.DictData(accessRolesToDict(g.UserAccessPolicies)),
 	})
 	if err != nil {
 		return nil, err

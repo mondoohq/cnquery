@@ -80,8 +80,12 @@ portainer.settings @defaults("authenticationMethod requiredPasswordLength") {
   disableKubeShell bool
   // Whether kubeconfig download is disabled
   disableKubeconfigDownload bool
-  // Whether host-management features are enabled
-  enableHostManagementFeatures bool
+  // Host-management features
+  //
+  // Deprecated in favor of the per-environment securitySettings override of
+  // the same name. Portainer stopped maintaining this instance-wide flag, so
+  // it reads false regardless of how individual environments are configured.
+  enableHostManagementFeatures @maturity("deprecated") bool
   // Whether syncing of built-in Kubernetes roles is disabled
   disableKubeRolesSync bool
   // Custom kubectl shell image used for the Kubernetes web console
@@ -146,6 +150,12 @@ portainer.team @defaults("name") {
   name string
   // Users that are members of this team
   members() []portainer.user
+  // Membership roles keyed by username, with leader or member as the value
+  //
+  // Team leaders may manage the team's roster and see the team in listings
+  // that plain members do not, so the split matters when auditing who can
+  // widen a team's inherited environment access.
+  memberRoles() dict
 }
 
 // Portainer environment
@@ -164,7 +174,7 @@ portainer.environment @defaults("name type status") {
   name string
   // Environment type: docker, agent-docker, azure-aci, edge-agent-docker, kubernetes, agent-kubernetes, or edge-agent-kubernetes
   type string
-  // Connection status: up, down, or unknown
+  // Connection status: up, down, provisioning, error, or unknown
   status string
   // API endpoint URL of the environment
   url string
@@ -172,6 +182,12 @@ portainer.environment @defaults("name type status") {
   publicUrl string
   // Whether the connection to the environment uses TLS
   tlsEnabled bool
+  // Whether verification of the environment's TLS certificate is skipped
+  //
+  // True when Portainer is configured to accept the environment's server
+  // certificate without validating it, which leaves the control-plane
+  // connection open to interception. Only meaningful when tlsEnabled is true.
+  tlsSkipVerify bool
   // Container engine in use, for example docker or podman
   containerEngine string
   // Tags assigned to the environment
@@ -180,6 +196,18 @@ portainer.environment @defaults("name type status") {
   teamAccessPolicies dict
   // User access policies keyed by user id, with the granted role id as the value
   userAccessPolicies dict
+  // Team access roles keyed by team id, with the granted role name as the value
+  //
+  // The same grants as teamAccessPolicies with the role id resolved to its
+  // name: environment_administrator, helpdesk_user, standard_user,
+  // readonly_user, or operator_user. An unrecognized role id maps to unknown.
+  teamAccessRoles dict
+  // User access roles keyed by user id, with the granted role name as the value
+  //
+  // The same grants as userAccessPolicies with the role id resolved to its
+  // name: environment_administrator, helpdesk_user, standard_user,
+  // readonly_user, or operator_user. An unrecognized role id maps to unknown.
+  userAccessRoles dict
   // Environment group (endpoint group) this environment belongs to
   group() portainer.environmentGroup
   // Edge agent identifier, for Edge environments
@@ -236,6 +264,18 @@ portainer.environmentGroup @defaults("name") {
   teamAccessPolicies dict
   // User access policies keyed by user id, with the granted role id as the value
   userAccessPolicies dict
+  // Team access roles keyed by team id, with the granted role name as the value
+  //
+  // The same grants as teamAccessPolicies with the role id resolved to its
+  // name: environment_administrator, helpdesk_user, standard_user,
+  // readonly_user, or operator_user. An unrecognized role id maps to unknown.
+  teamAccessRoles dict
+  // User access roles keyed by user id, with the granted role name as the value
+  //
+  // The same grants as userAccessPolicies with the role id resolved to its
+  // name: environment_administrator, helpdesk_user, standard_user,
+  // readonly_user, or operator_user. An unrecognized role id maps to unknown.
+  userAccessRoles dict
 }
 
 // Portainer edge group
@@ -275,7 +315,7 @@ portainer.edgeStack @defaults("name") {
   edgeGroups() []portainer.edgeGroup
   // Number of environments the stack is deployed to
   numDeployments int
-  // Stack file version
+  // Stack revision, incremented on each update
   version int
   // Time the Edge stack was created (null if unset)
   creationDate time

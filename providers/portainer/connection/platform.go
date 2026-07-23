@@ -96,12 +96,38 @@ func IsEdgeEnvironment(t int64) bool {
 }
 
 // EnvironmentStatus maps the Portainer endpoint status enum to a string.
+// Portainer declares the status as enums 1,2,3,4: the open-source edition only
+// names 1 (up) and 2 (down), while 3 (provisioning) and 4 (error) are reported
+// by cloud-provisioned environments and carry a StatusMessage.
 func EnvironmentStatus(s int64) string {
 	switch s {
 	case 1:
 		return "up"
 	case 2:
 		return "down"
+	case 3:
+		return "provisioning"
+	case 4:
+		return "error"
+	default:
+		return "unknown"
+	}
+}
+
+// AccessPolicyRole maps a Portainer environment role id, as it appears in the
+// team and user access policies, to the role name used by the API.
+func AccessPolicyRole(r int64) string {
+	switch r {
+	case 1:
+		return "environment_administrator"
+	case 2:
+		return "helpdesk_user"
+	case 3:
+		return "standard_user"
+	case 4:
+		return "readonly_user"
+	case 5:
+		return "operator_user"
 	default:
 		return "unknown"
 	}
@@ -199,5 +225,5 @@ func (c *PortainerConnection) SubAssetPlatform() (*inventory.Platform, string, s
 	// The environment type is stored as a connection option at discovery time;
 	// fall back to 0 ("unknown") only if it is missing or malformed.
 	envType, _ := strconv.ParseInt(c.Conf.Options[OptionEnvironmentType], 10, 64)
-	return EnvironmentPlatform(envType), NewEnvironmentPlatformID(c.instanceID, envID), "Portainer environment " + envIDStr
+	return EnvironmentPlatform(envType), NewEnvironmentPlatformID(c.InstanceKey(), envID), "Portainer environment " + envIDStr
 }

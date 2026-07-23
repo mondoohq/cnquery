@@ -66,9 +66,82 @@ func TestMembershipRole(t *testing.T) {
 	}
 }
 
+// TestEnvironmentStatus covers all four states Portainer declares for an
+// endpoint. 3 and 4 are only reachable on cloud-provisioned environments, and
+// mapping them to "unknown" used to hide error-state environments from any
+// audit that filtered on "down".
 func TestEnvironmentStatus(t *testing.T) {
-	cases := map[int64]string{1: "up", 2: "down", 0: "unknown", 99: "unknown"}
+	cases := map[int64]string{
+		1:  "up",
+		2:  "down",
+		3:  "provisioning",
+		4:  "error",
+		0:  "unknown",
+		5:  "unknown",
+		99: "unknown",
+	}
 	for in, want := range cases {
 		assert.Equalf(t, want, EnvironmentStatus(in), "EnvironmentStatus(%d)", in)
 	}
+}
+
+func TestAccessPolicyRole(t *testing.T) {
+	cases := map[int64]string{
+		1:  "environment_administrator",
+		2:  "helpdesk_user",
+		3:  "standard_user",
+		4:  "readonly_user",
+		5:  "operator_user",
+		0:  "unknown",
+		6:  "unknown",
+		-1: "unknown",
+	}
+	for in, want := range cases {
+		assert.Equalf(t, want, AccessPolicyRole(in), "AccessPolicyRole(%d)", in)
+	}
+}
+
+func TestEdgeStackDeploymentType(t *testing.T) {
+	cases := map[int64]string{0: "compose", 1: "kubernetes", 2: "unknown", 99: "unknown"}
+	for in, want := range cases {
+		assert.Equalf(t, want, EdgeStackDeploymentType(in), "EdgeStackDeploymentType(%d)", in)
+	}
+}
+
+// TestInstanceKey pins the platform-id fallback: without it, every instance
+// that reports no instance id would share the platform id ".../instance/" and
+// collapse onto a single asset.
+func TestInstanceKey(t *testing.T) {
+	cases := []struct {
+		name       string
+		instanceID string
+		hostname   string
+		want       string
+	}{
+		{"instance id wins", "inst-1", "portainer.example.com", "inst-1"},
+		{"falls back to hostname", "", "portainer.example.com", "portainer.example.com"},
+		{"falls back to a constant", "", "", "unknown"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			conn := &PortainerConnection{instanceID: tc.instanceID, hostname: tc.hostname}
+			assert.Equal(t, tc.want, conn.InstanceKey())
+		})
+	}
+}
+
+func TestPlatformIDs(t *testing.T) {
+	assert.Equal(t,
+		"//platformid.api.mondoo.app/runtime/portainer/instance/inst-1",
+		NewInstancePlatformID("inst-1"))
+	assert.Equal(t,
+		"//platformid.api.mondoo.app/runtime/portainer/instance/inst-1/environment/7",
+		NewEnvironmentPlatformID("inst-1", 7))
+
+	// two instances without an id must not collide once the key falls back
+	a := &PortainerConnection{hostname: "a.example.com"}
+	b := &PortainerConnection{hostname: "b.example.com"}
+	assert.NotEqual(t,
+		NewInstancePlatformID(a.InstanceKey()),
+		NewInstancePlatformID(b.InstanceKey()))
 }

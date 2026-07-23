@@ -33,7 +33,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 		return nil, err
 	}
 
-	instanceID := conn.InstanceID()
+	instanceID := conn.InstanceKey()
 	assets := []*inventory.Asset{}
 	for _, e := range endpoints {
 		if !matchesEnvironmentTargets(targets, e.Type) {
@@ -41,6 +41,12 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 		}
 
 		cfg := conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.ID()))
+		// Clone preserves a nil options map, which an asset defined in an
+		// inventory file without an options block carries; writing into it
+		// would panic.
+		if cfg.Options == nil {
+			cfg.Options = map[string]string{}
+		}
 		cfg.Options[connection.OptionEnvironmentID] = strconv.FormatInt(e.ID, 10)
 		cfg.Options[connection.OptionEnvironmentType] = strconv.FormatInt(e.Type, 10)
 

@@ -31,10 +31,13 @@ portainer.environment.securitySettings 13.0.0
 portainer.environment.status 13.0.0
 portainer.environment.tags 13.0.0
 portainer.environment.teamAccessPolicies 13.0.0
+portainer.environment.teamAccessRoles 13.1.5
 portainer.environment.tlsEnabled 13.0.0
+portainer.environment.tlsSkipVerify 13.1.5
 portainer.environment.type 13.0.0
 portainer.environment.url 13.0.0
 portainer.environment.userAccessPolicies 13.0.0
+portainer.environment.userAccessRoles 13.1.5
 portainer.environment.userTrusted 13.0.0
 portainer.environmentGroup 13.0.0
 portainer.environmentGroup.description 13.0.0
@@ -42,7 +45,9 @@ portainer.environmentGroup.id 13.0.0
 portainer.environmentGroup.name 13.0.0
 portainer.environmentGroup.tags 13.0.0
 portainer.environmentGroup.teamAccessPolicies 13.0.0
+portainer.environmentGroup.teamAccessRoles 13.1.5
 portainer.environmentGroup.userAccessPolicies 13.0.0
+portainer.environmentGroup.userAccessRoles 13.1.5
 portainer.environmentGroups 13.0.0
 portainer.environments 13.0.0
 portainer.instanceId 13.0.0
@@ -89,6 +94,7 @@ portainer.tag.name 13.0.0
 portainer.tags 13.0.0
 portainer.team 13.0.0
 portainer.team.id 13.0.0
+portainer.team.memberRoles 13.1.5
 portainer.team.members 13.0.0
 portainer.team.name 13.0.0
 portainer.teams 13.0.0

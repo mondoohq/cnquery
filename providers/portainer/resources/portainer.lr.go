@@ -290,6 +290,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"portainer.team.members": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPortainerTeam).GetMembers()).ToDataRes(types.Array(types.Resource("portainer.user")))
 	},
+	"portainer.team.memberRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPortainerTeam).GetMemberRoles()).ToDataRes(types.Dict)
+	},
 	"portainer.environment.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPortainerEnvironment).GetId()).ToDataRes(types.Int)
 	},
@@ -311,6 +314,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"portainer.environment.tlsEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPortainerEnvironment).GetTlsEnabled()).ToDataRes(types.Bool)
 	},
+	"portainer.environment.tlsSkipVerify": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPortainerEnvironment).GetTlsSkipVerify()).ToDataRes(types.Bool)
+	},
 	"portainer.environment.containerEngine": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPortainerEnvironment).GetContainerEngine()).ToDataRes(types.String)
 	},
@@ -322,6 +328,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"portainer.environment.userAccessPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPortainerEnvironment).GetUserAccessPolicies()).ToDataRes(types.Dict)
+	},
+	"portainer.environment.teamAccessRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPortainerEnvironment).GetTeamAccessRoles()).ToDataRes(types.Dict)
+	},
+	"portainer.environment.userAccessRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPortainerEnvironment).GetUserAccessRoles()).ToDataRes(types.Dict)
 	},
 	"portainer.environment.group": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPortainerEnvironment).GetGroup()).ToDataRes(types.Resource("portainer.environmentGroup"))
@@ -364,6 +376,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"portainer.environmentGroup.userAccessPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPortainerEnvironmentGroup).GetUserAccessPolicies()).ToDataRes(types.Dict)
+	},
+	"portainer.environmentGroup.teamAccessRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPortainerEnvironmentGroup).GetTeamAccessRoles()).ToDataRes(types.Dict)
+	},
+	"portainer.environmentGroup.userAccessRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPortainerEnvironmentGroup).GetUserAccessRoles()).ToDataRes(types.Dict)
 	},
 	"portainer.edgeGroup.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPortainerEdgeGroup).GetId()).ToDataRes(types.Int)
@@ -643,6 +661,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlPortainerTeam).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"portainer.team.memberRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPortainerTeam).MemberRoles, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"portainer.environment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPortainerEnvironment).__id, ok = v.Value.(string)
 		return
@@ -675,6 +697,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlPortainerEnvironment).TlsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"portainer.environment.tlsSkipVerify": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPortainerEnvironment).TlsSkipVerify, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"portainer.environment.containerEngine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPortainerEnvironment).ContainerEngine, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -689,6 +715,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"portainer.environment.userAccessPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPortainerEnvironment).UserAccessPolicies, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"portainer.environment.teamAccessRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPortainerEnvironment).TeamAccessRoles, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"portainer.environment.userAccessRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPortainerEnvironment).UserAccessRoles, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"portainer.environment.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -753,6 +787,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"portainer.environmentGroup.userAccessPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPortainerEnvironmentGroup).UserAccessPolicies, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"portainer.environmentGroup.teamAccessRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPortainerEnvironmentGroup).TeamAccessRoles, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"portainer.environmentGroup.userAccessRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPortainerEnvironmentGroup).UserAccessRoles, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"portainer.edgeGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1344,9 +1386,10 @@ type mqlPortainerTeam struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlPortainerTeamInternal it will be used here
-	Id      plugin.TValue[int64]
-	Name    plugin.TValue[string]
-	Members plugin.TValue[[]any]
+	Id          plugin.TValue[int64]
+	Name        plugin.TValue[string]
+	Members     plugin.TValue[[]any]
+	MemberRoles plugin.TValue[any]
 }
 
 // createPortainerTeam creates a new instance of this resource
@@ -1405,6 +1448,12 @@ func (c *mqlPortainerTeam) GetMembers() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlPortainerTeam) GetMemberRoles() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.MemberRoles, func() (any, error) {
+		return c.memberRoles()
+	})
+}
+
 // mqlPortainerEnvironment for the portainer.environment resource
 type mqlPortainerEnvironment struct {
 	MqlRuntime *plugin.Runtime
@@ -1417,10 +1466,13 @@ type mqlPortainerEnvironment struct {
 	Url                  plugin.TValue[string]
 	PublicUrl            plugin.TValue[string]
 	TlsEnabled           plugin.TValue[bool]
+	TlsSkipVerify        plugin.TValue[bool]
 	ContainerEngine      plugin.TValue[string]
 	Tags                 plugin.TValue[[]any]
 	TeamAccessPolicies   plugin.TValue[any]
 	UserAccessPolicies   plugin.TValue[any]
+	TeamAccessRoles      plugin.TValue[any]
+	UserAccessRoles      plugin.TValue[any]
 	Group                plugin.TValue[*mqlPortainerEnvironmentGroup]
 	EdgeId               plugin.TValue[string]
 	Heartbeat            plugin.TValue[bool]
@@ -1489,6 +1541,10 @@ func (c *mqlPortainerEnvironment) GetTlsEnabled() *plugin.TValue[bool] {
 	return &c.TlsEnabled
 }
 
+func (c *mqlPortainerEnvironment) GetTlsSkipVerify() *plugin.TValue[bool] {
+	return &c.TlsSkipVerify
+}
+
 func (c *mqlPortainerEnvironment) GetContainerEngine() *plugin.TValue[string] {
 	return &c.ContainerEngine
 }
@@ -1515,6 +1571,14 @@ func (c *mqlPortainerEnvironment) GetTeamAccessPolicies() *plugin.TValue[any] {
 
 func (c *mqlPortainerEnvironment) GetUserAccessPolicies() *plugin.TValue[any] {
 	return &c.UserAccessPolicies
+}
+
+func (c *mqlPortainerEnvironment) GetTeamAccessRoles() *plugin.TValue[any] {
+	return &c.TeamAccessRoles
+}
+
+func (c *mqlPortainerEnvironment) GetUserAccessRoles() *plugin.TValue[any] {
+	return &c.UserAccessRoles
 }
 
 func (c *mqlPortainerEnvironment) GetGroup() *plugin.TValue[*mqlPortainerEnvironmentGroup] {
@@ -1613,6 +1677,8 @@ type mqlPortainerEnvironmentGroup struct {
 	Tags               plugin.TValue[[]any]
 	TeamAccessPolicies plugin.TValue[any]
 	UserAccessPolicies plugin.TValue[any]
+	TeamAccessRoles    plugin.TValue[any]
+	UserAccessRoles    plugin.TValue[any]
 }
 
 // createPortainerEnvironmentGroup creates a new instance of this resource
@@ -1681,6 +1747,14 @@ func (c *mqlPortainerEnvironmentGroup) GetTeamAccessPolicies() *plugin.TValue[an
 
 func (c *mqlPortainerEnvironmentGroup) GetUserAccessPolicies() *plugin.TValue[any] {
 	return &c.UserAccessPolicies
+}
+
+func (c *mqlPortainerEnvironmentGroup) GetTeamAccessRoles() *plugin.TValue[any] {
+	return &c.TeamAccessRoles
+}
+
+func (c *mqlPortainerEnvironmentGroup) GetUserAccessRoles() *plugin.TValue[any] {
+	return &c.UserAccessRoles
 }
 
 // mqlPortainerEdgeGroup for the portainer.edgeGroup resource

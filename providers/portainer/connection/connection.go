@@ -121,7 +121,7 @@ func NewPortainerConnection(id uint32, asset *inventory.Asset, conf *inventory.C
 
 	cli := client.NewPortainerClient(host, accessToken, opts...)
 
-	// validate credentials early and capture instance metadata for the platform id
+	// reach the instance early and capture its metadata for the platform id
 	status, err := cli.GetSystemStatus()
 	if err != nil {
 		return nil, errors.New("failed to connect to Portainer: " + err.Error())
@@ -131,6 +131,16 @@ func NewPortainerConnection(id uint32, asset *inventory.Asset, conf *inventory.C
 	if status != nil {
 		conn.instanceID = status.InstanceID
 		conn.version = status.Version
+	}
+
+	// The system status endpoint is public, so reaching it proves the address
+	// points at a Portainer instance but says nothing about the access token.
+	// Make one authenticated call so an invalid or expired token fails here,
+	// with a message that names the cause, instead of surfacing later as an
+	// unattributed error on every single resource. The result is memoized on
+	// the connection, so discovery and portainer.environments reuse it.
+	if _, err := conn.Endpoints(); err != nil {
+		return nil, errors.New("failed to authenticate against Portainer, check the access token: " + err.Error())
 	}
 	return conn, nil
 }
@@ -225,6 +235,20 @@ func (c *PortainerConnection) EdgeGroups() ([]*models.EdgegroupsDecoratedEdgeGro
 
 func (c *PortainerConnection) InstanceID() string {
 	return c.instanceID
+}
+
+// InstanceKey returns the identifier platform ids are built from. It prefers
+// the instance id reported by the server and falls back to the hostname, so
+// that instances which report no id do not all collapse onto the same platform
+// id (and therefore onto the same asset).
+func (c *PortainerConnection) InstanceKey() string {
+	if c.instanceID != "" {
+		return c.instanceID
+	}
+	if c.hostname != "" {
+		return c.hostname
+	}
+	return "unknown"
 }
 
 func (c *PortainerConnection) Version() string {

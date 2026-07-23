@@ -156,7 +156,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.PortainerConne
 		}
 	}
 	asset.Platform = connection.InstancePlatform()
-	asset.PlatformIds = []string{connection.NewInstancePlatformID(conn.InstanceID())}
+	asset.PlatformIds = []string{connection.NewInstancePlatformID(conn.InstanceKey())}
 	return nil
 }
 

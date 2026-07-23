@@ -25,6 +25,27 @@ func accessPoliciesToDict(policies map[string]models.PortainerAccessPolicy) map[
 	return res
 }
 
+// accessRolesToDict is accessPoliciesToDict with the role id resolved to the
+// role name the Portainer API uses, so audits do not have to hardcode the
+// numeric ids.
+func accessRolesToDict(policies map[string]models.PortainerAccessPolicy) map[string]any {
+	res := make(map[string]any, len(policies))
+	for k, v := range policies {
+		res[k] = connection.AccessPolicyRole(v.RoleID)
+	}
+	return res
+}
+
+// tlsConfig reads the environment's TLS posture. The top-level TLS field on the
+// endpoint has been deprecated since Portainer's DBVersion 4 and is no longer
+// written by the server, so the live values come from TLSConfig.
+func tlsConfig(e *models.PortainereeEndpoint) (enabled, skipVerify bool) {
+	if e.TLSConfig == nil {
+		return false, false
+	}
+	return e.TLSConfig.TLS, e.TLSConfig.TLSSkipVerify
+}
+
 // securitySettingsToDict flattens the per-environment container-security
 // overrides into a dict keyed by setting name. Returns nil when the endpoint
 // carries no overrides so the field resolves to an empty dict.
@@ -46,6 +67,7 @@ func securitySettingsToDict(s *models.PortainerEndpointSecuritySettings) map[str
 }
 
 func newMqlPortainerEnvironment(runtime *plugin.Runtime, e *models.PortainereeEndpoint) (*mqlPortainerEnvironment, error) {
+	tlsEnabled, tlsSkipVerify := tlsConfig(e)
 	res, err := CreateResource(runtime, "portainer.environment", map[string]*llx.RawData{
 		"__id":                 llx.StringData("portainer.environment/" + strconv.FormatInt(e.ID, 10)),
 		"id":                   llx.IntData(e.ID),
@@ -54,10 +76,13 @@ func newMqlPortainerEnvironment(runtime *plugin.Runtime, e *models.PortainereeEn
 		"status":               llx.StringData(connection.EnvironmentStatus(e.Status)),
 		"url":                  llx.StringData(e.URL),
 		"publicUrl":            llx.StringData(e.PublicURL),
-		"tlsEnabled":           llx.BoolData(e.TLS),
+		"tlsEnabled":           llx.BoolData(tlsEnabled),
+		"tlsSkipVerify":        llx.BoolData(tlsSkipVerify),
 		"containerEngine":      llx.StringData(e.ContainerEngine),
 		"teamAccessPolicies":   llx.DictData(accessPoliciesToDict(e.TeamAccessPolicies)),
 		"userAccessPolicies":   llx.DictData(accessPoliciesToDict(e.UserAccessPolicies)),
+		"teamAccessRoles":      llx.DictData(accessRolesToDict(e.TeamAccessPolicies)),
+		"userAccessRoles":      llx.DictData(accessRolesToDict(e.UserAccessPolicies)),
 		"edgeId":               llx.StringData(e.EdgeID),
 		"heartbeat":            llx.BoolData(e.Heartbeat),
 		"userTrusted":          llx.BoolData(e.UserTrusted),

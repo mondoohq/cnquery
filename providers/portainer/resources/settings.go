@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"errors"
+
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/portainer/connection"
@@ -37,6 +39,9 @@ func (r *mqlPortainer) settings() (*mqlPortainerSettings, error) {
 	settings, err := conn.Client().GetSettings()
 	if err != nil {
 		return nil, err
+	}
+	if settings == nil {
+		return nil, errors.New("Portainer returned no settings")
 	}
 
 	var requiredPasswordLength int64
