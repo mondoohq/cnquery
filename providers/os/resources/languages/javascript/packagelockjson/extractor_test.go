@@ -37,8 +37,8 @@ func TestPackageJsonLockExtractorWithPackages(t *testing.T) {
 	assert.Equal(t, &languages.Package{
 		Name:         "@babel/code-frame",
 		Version:      "7.10.4",
-		Purl:         "pkg:npm/node-modules/%40babel@7.10.4",
-		Cpes:         []string{"cpe:2.3:a:node_modules\\/\\@babel\\/code-frame:node_modules\\/\\@babel\\/code-frame:7.10.4:*:*:*:*:*:*:*"},
+		Purl:         "pkg:npm/%40babel/code-frame@7.10.4",
+		Cpes:         []string{"cpe:2.3:a:\\@babel\\/code-frame:\\@babel\\/code-frame:7.10.4:*:*:*:*:*:*:*"},
 		EvidenceList: []*sbom.Evidence{{Type: sbom.EvidenceType_EVIDENCE_TYPE_FILE, Value: "path/to/package-lock.json"}},
 		Scope:        languages.PackageScopeDev,
 		Hashes:       []languages.PackageHash{{Alg: "SHA-512", Value: "bc6e92bc1ea860486f822b193454664425242f3d7573bae9fad6cd4f29c6a9cea64b577901377fb06c95e96d0a6599d744a313cd90d18104f73aef6386901f52"}},

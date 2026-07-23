@@ -94,10 +94,10 @@ func resolveDepPurl(pkgs map[string]packageLockPackage, fromPath, depName string
 			cand = base + "/node_modules/" + depName
 		}
 		if entry, ok := pkgs[cand]; ok {
-			// Build the ref from the resolved entry's path key, exactly as
+			// Build the ref from the resolved entry's package name, exactly as
 			// Transitive() builds each package's own Purl, so an edge ref matches
 			// its target node's Purl (a self-consistent graph).
-			return javascript.NewPackageUrl(cand, entry.Version)
+			return javascript.NewPackageUrl(packageLockPackageName(cand), entry.Version)
 		}
 		if base == "" {
 			return ""
@@ -172,6 +172,16 @@ func (l *packageLockLicense) UnmarshalJSON(data []byte) (err error) {
 	return nil
 }
 
+// packageLockPackageName extracts the package name from a lockfileVersion 2+
+// `packages` key. Those keys are install paths — "node_modules/<name>", or for a
+// nested (non-hoisted) copy "node_modules/<parent>/node_modules/<name>" — so the
+// real package name is everything after the LAST "node_modules/" segment.
+// Trimming only the prefix left nested packages named by their full path (e.g.
+// "@babel/core/node_modules/ms") and, fed to NewPackageUrl, produced a purl built
+// from the path rather than the name.
 func packageLockPackageName(path string) string {
-	return strings.TrimPrefix(path, "node_modules/")
+	if i := strings.LastIndex(path, "node_modules/"); i >= 0 {
+		return path[i+len("node_modules/"):]
+	}
+	return path
 }

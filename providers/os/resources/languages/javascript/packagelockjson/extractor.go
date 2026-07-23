@@ -79,10 +79,10 @@ func (p *packageLock) Direct() languages.Packages {
 		}
 
 		filteredList = append(filteredList, &languages.Package{
-			Name:         packageLockPackageName(path),
+			Name:         name,
 			Version:      pkg.Version,
-			Purl:         javascript.NewPackageUrl(path, pkg.Version),
-			Cpes:         javascript.NewCpes(path, pkg.Version),
+			Purl:         javascript.NewPackageUrl(name, pkg.Version),
+			Cpes:         javascript.NewCpes(name, pkg.Version),
 			EvidenceList: javascript.NewEvidenceList(p.evidence),
 			DependsOn:    dependsOnRefs(p.Packages, path, pkg.Dependencies),
 			Scope:        scopeOf(pkg),
@@ -97,17 +97,18 @@ func (p *packageLock) Transitive() languages.Packages {
 	var transitive languages.Packages
 	if p.Packages != nil {
 		for k, v := range p.Packages {
-			name := k
-			// skip root package since we have that already
-			if name == "" {
+			// Keys are install paths; the package name is the last node_modules
+			// segment. The root package has key "" and carries its name in v.Name.
+			name := packageLockPackageName(k)
+			if k == "" {
 				name = v.Name
 			}
 
 			transitive = append(transitive, &languages.Package{
-				Name:         packageLockPackageName(name),
+				Name:         name,
 				Version:      v.Version,
-				Purl:         javascript.NewPackageUrl(k, v.Version),
-				Cpes:         javascript.NewCpes(k, v.Version),
+				Purl:         javascript.NewPackageUrl(name, v.Version),
+				Cpes:         javascript.NewCpes(name, v.Version),
 				EvidenceList: javascript.NewEvidenceList(p.evidence),
 				DependsOn:    dependsOnRefs(p.Packages, k, v.Dependencies),
 				Scope:        scopeOf(v),
