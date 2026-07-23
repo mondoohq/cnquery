@@ -269,15 +269,14 @@ func user(runtime *plugin.Runtime, userName string, conn *connection.GithubConne
 	return assetList, nil
 }
 
-// userScopeRepos returns the repositories a user-scoped scan fans out to.
-// GitHub App installation tokens can read the private repositories granted
-// to the installation, but GET /users/{login}/repos only ever returns public
-// repositories for app tokens. So installation tokens enumerate the
-// installation's own grant — exactly the repositories picked in GitHub's
-// install UI, private ones included, and none that were not granted. Other
-// tokens (PATs) get a 403 on the installation listing and fall back to the
-// user listing, which for them includes the private repositories the token
-// can see.
+// userScopeRepos returns the repositories a user-scoped scan fans out to:
+// everything the credential can see on that account. The user listing
+// (GET /users/{login}/repos) is the base — for PATs it includes the private
+// repositories the token can access, but for GitHub App installation tokens
+// it only ever returns public repositories. So for installation tokens the
+// installation's own grant (GET /installation/repositories — the private
+// repositories picked in GitHub's install UI) is merged in on top; other
+// tokens get a 403 on that endpoint and just use the user listing.
 func userScopeRepos(runtime *plugin.Runtime, conn *connection.GithubConnection, user *mqlGithubUser) ([]*mqlGithubRepository, error) {
 	login := user.Login.Data
 	listOpts := &github.ListOptions{PerPage: paginationPerPage}
@@ -285,12 +284,9 @@ func userScopeRepos(runtime *plugin.Runtime, conn *connection.GithubConnection, 
 	for {
 		repos, resp, err := conn.Client().Apps.ListRepos(conn.Context(), listOpts)
 		if err != nil {
-			// not an installation token — fall back to the user listing
-			res := []*mqlGithubRepository{}
-			for _, r := range user.GetRepositories().Data {
-				res = append(res, r.(*mqlGithubRepository))
-			}
-			return res, nil
+			// not an installation token — the user listing alone is complete
+			granted = nil
+			break
 		}
 		granted = append(granted, repos.Repositories...)
 		if resp.NextPage == 0 {
@@ -300,6 +296,7 @@ func userScopeRepos(runtime *plugin.Runtime, conn *connection.GithubConnection, 
 	}
 
 	res := []*mqlGithubRepository{}
+	seen := map[int64]bool{}
 	for _, repo := range granted {
 		// an installation on this user account only grants repos the account
 		// owns; guard anyway so a shared credential never leaks another
@@ -312,6 +309,14 @@ func userScopeRepos(runtime *plugin.Runtime, conn *connection.GithubConnection, 
 			return nil, err
 		}
 		res = append(res, r)
+		seen[repo.GetID()] = true
+	}
+	for _, r := range user.GetRepositories().Data {
+		repo := r.(*mqlGithubRepository)
+		if seen[repo.Id.Data] {
+			continue
+		}
+		res = append(res, repo)
 	}
 	return res, nil
 }
