@@ -162,6 +162,21 @@ func TestInstallSchemaVersion_ExistingFullInstall(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, "1.2.3", provider.Version)
 		assert.True(t, provider.HasBinary)
+
+		// the existing install must be byte-for-byte untouched: nothing
+		// new written, nothing rewritten at the requested version
+		infos, err := afero.ReadDir(config.AppFs, pdir)
+		require.NoError(t, err)
+		names := make([]string, 0, len(infos))
+		for _, fi := range infos {
+			names = append(names, fi.Name())
+		}
+		assert.ElementsMatch(t, []string{"testp", "testp.json", "testp.resources.json"}, names)
+		for name, content := range files {
+			data, err := afero.ReadFile(config.AppFs, filepath.Join(pdir, name))
+			require.NoError(t, err)
+			assert.Equal(t, content, string(data), name)
+		}
 	})
 
 	t.Run("binary with broken config errors", func(t *testing.T) {

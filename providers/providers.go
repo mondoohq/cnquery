@@ -641,6 +641,9 @@ func writeProviderFile(path string, data []byte) error {
 	if err != nil {
 		return err
 	}
+	// don't leave the temp file behind on any failure below; after a
+	// successful rename the file is gone and this is a no-op
+	defer os.Remove(tmp)
 	if _, err := writer.Write(data); err != nil {
 		writer.Close()
 		return err
