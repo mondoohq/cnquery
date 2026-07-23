@@ -231,6 +231,18 @@ func initGithubRepository(runtime *plugin.Runtime, args map[string]*llx.RawData)
 			org = obj.(*mqlGithubOrganization)
 			owner = orgId.Name
 		}
+	} else if userId, uerr := conn.User(); uerr == nil {
+		// User-scoped connections (e.g. repo assets discovered from a
+		// personal-account scan) carry only the user option — there is no
+		// organization/owner to try first.
+		obj, err := CreateResource(runtime, "github.user", map[string]*llx.RawData{
+			"login": llx.StringData(userId.Name),
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+		user = obj.(*mqlGithubUser)
+		owner = userId.Name
 	}
 
 	// gather the repo name or fallback to the repo name defined in the connection
@@ -268,7 +280,7 @@ func initGithubRepository(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	// if the repo is not cached, we fetch it from the github api
 	if owner != "" {
 		// we reach this point if the repo was not cached
-		ghRepo, _, err := conn.Client().Repositories.Get(conn.Context(), orgId.Name, reponame)
+		ghRepo, _, err := conn.Client().Repositories.Get(conn.Context(), owner, reponame)
 		if err != nil {
 			return nil, nil, err
 		}
