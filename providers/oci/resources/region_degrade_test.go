@@ -77,9 +77,18 @@ func TestOciRunRegionPool(t *testing.T) {
 			return jobpool.JobResult(items), nil
 		})
 	}
-	boom := func() *jobpool.Job {
+	// A region where the service has no endpoint. This is what
+	// ociRegionServiceUnavailable recognises, and the only thing the pool is
+	// allowed to skip.
+	unavailable := func() *jobpool.Job {
 		return jobpool.NewJob(func() (jobpool.JobResult, error) {
-			return nil, errors.New("region unavailable")
+			return nil, fakeServiceError{status: 404, code: "NotAuthorizedOrNotFound"}
+		})
+	}
+	// A real problem: an IAM gap, a throttle, a server error.
+	denied := func() *jobpool.Job {
+		return jobpool.NewJob(func() (jobpool.JobResult, error) {
+			return nil, fakeServiceError{status: 403, code: "NotAuthorizedOrNotFound"}
 		})
 	}
 
@@ -89,18 +98,40 @@ func TestOciRunRegionPool(t *testing.T) {
 		assert.ElementsMatch(t, []any{"a", "b", "c"}, res)
 	})
 
-	t.Run("a failing region does not discard the others", func(t *testing.T) {
-		// The whole point of the change: one unentitled or undeployed region
-		// must not sink a tenancy-wide query.
-		res, err := ociRunRegionPool([]*jobpool.Job{ok("a"), boom(), ok("b")})
+	t.Run("an unavailable region does not discard the others", func(t *testing.T) {
+		// The original bug: one undeployed region sank a tenancy-wide query.
+		res, err := ociRunRegionPool([]*jobpool.Job{ok("a"), unavailable(), ok("b")})
 		require.NoError(t, err)
 		assert.ElementsMatch(t, []any{"a", "b"}, res)
 	})
 
-	t.Run("every region failing is still an error", func(t *testing.T) {
-		// Degrading to an empty list here would report a broken scan as a
-		// clean tenancy.
-		res, err := ociRunRegionPool([]*jobpool.Job{boom(), boom()})
+	t.Run("every region unavailable is an empty result, not an error", func(t *testing.T) {
+		// A service deployed in no subscribed region genuinely has nothing to
+		// report; that is an answer, not a failure.
+		res, err := ociRunRegionPool([]*jobpool.Job{unavailable(), unavailable()})
+		require.NoError(t, err)
+		assert.Empty(t, res)
+	})
+
+	t.Run("a denied region is reported, not silently skipped", func(t *testing.T) {
+		// The inverse failure mode: swallowing a 403 would under-report
+		// resources and present the short list as authoritative.
+		res, err := ociRunRegionPool([]*jobpool.Job{ok("a"), denied(), ok("b")})
+		require.Error(t, err)
+		assert.Nil(t, res)
+		assert.Contains(t, err.Error(), "NotAuthorizedOrNotFound")
+	})
+
+	t.Run("a throttled region is reported", func(t *testing.T) {
+		res, err := ociRunRegionPool([]*jobpool.Job{ok("a"), jobpool.NewJob(func() (jobpool.JobResult, error) {
+			return nil, fakeServiceError{status: 429, code: "TooManyRequests"}
+		})})
+		require.Error(t, err)
+		assert.Nil(t, res)
+	})
+
+	t.Run("hard errors are joined across regions", func(t *testing.T) {
+		res, err := ociRunRegionPool([]*jobpool.Job{denied(), denied()})
 		require.Error(t, err)
 		assert.Nil(t, res)
 	})
@@ -111,7 +142,9 @@ func TestOciRunRegionPool(t *testing.T) {
 		assert.Empty(t, res)
 	})
 
-	t.Run("jobErr job is treated as a failed region", func(t *testing.T) {
+	t.Run("jobErr job is reported as a hard error", func(t *testing.T) {
+		// An invalid region type is a programming error, never an expected
+		// absence, so it must not be skipped.
 		res, err := ociRunRegionPool(jobErr(errors.New("bad region type")))
 		require.Error(t, err)
 		assert.Nil(t, res)

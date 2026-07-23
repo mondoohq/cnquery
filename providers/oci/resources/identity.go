@@ -29,7 +29,7 @@ func (o *mqlOciIdentity) users() ([]any, error) {
 	return ociRunRegionPool(o.getUsers(conn))
 }
 
-func (s *mqlOciIdentity) getUsersForRegion(ctx context.Context, identityClient *identity.IdentityClient, compartmentID string) ([]identity.User, error) {
+func (s *mqlOciIdentity) listUsers(ctx context.Context, identityClient identity.IdentityClient, compartmentID string) ([]identity.User, error) {
 	users := []identity.User{}
 	var page *string
 	for {
@@ -63,14 +63,13 @@ func (o *mqlOciIdentity) getUsers(conn *connection.OciConnection) []*jobpool.Job
 	// repeated __id, so the slice held N copies of one pointer and the counts
 	// (and anything filtering them) were inflated N-fold.
 	f := func() (jobpool.JobResult, error) {
-		svcVal, err := conn.IdentityClient()
+		svc, err := conn.IdentityClient()
 		if err != nil {
 			return nil, err
 		}
-		svc := &svcVal
 
 		var res []any
-		users, err := o.getUsersForRegion(ctx, svc, conn.TenantID())
+		users, err := o.listUsers(ctx, svc, conn.TenantID())
 		if err != nil {
 			return nil, err
 		}
@@ -426,7 +425,7 @@ func (o *mqlOciIdentity) groups() ([]any, error) {
 	return ociRunRegionPool(o.getGroups(conn))
 }
 
-func (s *mqlOciIdentity) getGroupsForRegion(ctx context.Context, identityClient *identity.IdentityClient, compartmentID string) ([]identity.Group, error) {
+func (s *mqlOciIdentity) listGroups(ctx context.Context, identityClient identity.IdentityClient, compartmentID string) ([]identity.Group, error) {
 	groups := []identity.Group{}
 	var page *string
 	for {
@@ -460,14 +459,13 @@ func (o *mqlOciIdentity) getGroups(conn *connection.OciConnection) []*jobpool.Jo
 	// repeated __id, so the slice held N copies of one pointer and the counts
 	// (and anything filtering them) were inflated N-fold.
 	f := func() (jobpool.JobResult, error) {
-		svcVal, err := conn.IdentityClient()
+		svc, err := conn.IdentityClient()
 		if err != nil {
 			return nil, err
 		}
-		svc := &svcVal
 
 		var res []any
-		groups, err := o.getGroupsForRegion(ctx, svc, conn.TenantID())
+		groups, err := o.listGroups(ctx, svc, conn.TenantID())
 		if err != nil {
 			return nil, err
 		}
@@ -521,7 +519,7 @@ func (o *mqlOciIdentity) policies() ([]any, error) {
 	return ociRunRegionPool(o.getPolicies(conn))
 }
 
-func (s *mqlOciIdentity) getPoliciesForRegion(ctx context.Context, identityClient *identity.IdentityClient, compartmentID string) ([]identity.Policy, error) {
+func (s *mqlOciIdentity) listPolicies(ctx context.Context, identityClient identity.IdentityClient, compartmentID string) ([]identity.Policy, error) {
 	policies := []identity.Policy{}
 	var page *string
 	for {
@@ -555,14 +553,13 @@ func (o *mqlOciIdentity) getPolicies(conn *connection.OciConnection) []*jobpool.
 	// repeated __id, so the slice held N copies of one pointer and the counts
 	// (and anything filtering them) were inflated N-fold.
 	f := func() (jobpool.JobResult, error) {
-		svcVal, err := conn.IdentityClient()
+		svc, err := conn.IdentityClient()
 		if err != nil {
 			return nil, err
 		}
-		svc := &svcVal
 
 		var res []any
-		policies, err := o.getPoliciesForRegion(ctx, svc, conn.TenantID())
+		policies, err := o.listPolicies(ctx, svc, conn.TenantID())
 		if err != nil {
 			return nil, err
 		}

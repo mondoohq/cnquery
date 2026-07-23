@@ -6,8 +6,6 @@ package resources
 import (
 	"context"
 	"errors"
-	"net"
-	"strings"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/generativeaiagent"
@@ -26,58 +24,6 @@ func (o *mqlOciAi) id() (string, error) {
 
 func (o *mqlOciAiAgents) id() (string, error) {
 	return "oci.ai.agents", nil
-}
-
-// ociRegionServiceUnavailable reports whether the error indicates that an AI
-// service is not reachable in a given region — because the service is not
-// deployed there or the tenancy is not entitled to it. Such regions are skipped
-// so a tenancy-wide query still returns the resources that do exist instead of
-// failing outright. Shared by the Generative AI Agents, Data Science, and
-// Generative AI resources.
-func ociRegionServiceUnavailable(err error) bool {
-	if svcErr, ok := common.IsServiceError(err); ok {
-		// Only a 404 can mean "this service has no endpoint in this region".
-		// 401 is a credential problem and 403 (NotAuthorizedOrNotFound) is the
-		// standard IAM-policy gap, which OCI returns in *every* region -
-		// swallowing either turns an under-scoped token into an authoritative
-		// "this tenancy has no resources", which is worse than an error.
-		if svcErr.GetHTTPStatusCode() == 404 {
-			return true
-		}
-		// A service error carries a real API response, so the transport-level
-		// signatures below cannot apply to it.
-		return false
-	}
-	// Regions where the service is not deployed have no regional endpoint, so
-	// the DNS lookup for the host fails with "no such host".
-	var dnsErr *net.DNSError
-	if errors.As(err, &dnsErr) {
-		return true
-	}
-	// Some regions publish a wildcard DNS record for a service that is not
-	// actually deployed there, so the host resolves but the TCP connection
-	// times out. Treat connection timeouts (and the deadline they surface as)
-	// the same as an absent endpoint.
-	if errors.Is(err, context.DeadlineExceeded) {
-		return true
-	}
-	var netErr net.Error
-	if errors.As(err, &netErr) && netErr.Timeout() {
-		return true
-	}
-	// The OCI SDK wraps transport errors in a type that does not implement
-	// Unwrap, so errors.As/Is above can miss a timeout. Fall back to matching
-	// the message for the unreachable-endpoint signatures.
-	msg := strings.ToLower(err.Error())
-	for _, s := range []string{
-		"timeout", "timed out", "deadline exceeded",
-		"no such host", "connection refused", "no route to host",
-	} {
-		if strings.Contains(msg, s) {
-			return true
-		}
-	}
-	return false
 }
 
 func ociAgentRegions(runtime *plugin.Runtime) ([]any, error) {
