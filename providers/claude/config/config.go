@@ -13,7 +13,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "claude",
 	ID:              "go.mondoo.com/mql/providers/claude",
-	Version:         "13.0.9",
+	Version:         "13.0.10",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{

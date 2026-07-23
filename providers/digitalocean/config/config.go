@@ -12,7 +12,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "digitalocean",
 	ID:              "go.mondoo.com/mql/providers/digitalocean",
-	Version:         "13.14.1",
+	Version:         "13.14.2",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{

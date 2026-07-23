@@ -13,7 +13,7 @@ import (
 var Config = plugin.Provider{
 	Name:      "mongodbatlas",
 	ID:        "go.mondoo.com/mql/providers/mongodbatlas",
-	Version:   "13.1.0",
+	Version:   "13.1.1",
 	Platforms: connection.Platforms,
 	ConnectionTypes: []string{
 		provider.DefaultConnectionType,

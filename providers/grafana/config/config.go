@@ -13,7 +13,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "grafana",
 	ID:              "go.mondoo.com/mql/v13/providers/grafana",
-	Version:         "13.1.16",
+	Version:         "13.1.17",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{

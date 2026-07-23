@@ -12,7 +12,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "activedirectory",
 	ID:              "go.mondoo.com/mql/v13/providers/activedirectory",
-	Version:         "13.1.8",
+	Version:         "13.1.9",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Platforms:       provider.Platforms,
 	Connectors: []plugin.Connector{{

@@ -14,7 +14,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "alicloud",
 	ID:              "go.mondoo.com/mql/providers/alicloud",
-	Version:         "13.2.1",
+	Version:         "13.2.2",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{
 		{

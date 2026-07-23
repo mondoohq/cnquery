@@ -12,7 +12,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "mikrotik",
 	ID:              "go.mondoo.com/mql/providers/mikrotik",
-	Version:         "13.0.5",
+	Version:         "13.0.6",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       provider.Platforms,
 	Connectors: []plugin.Connector{

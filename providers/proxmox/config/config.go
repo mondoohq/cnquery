@@ -12,7 +12,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "proxmox",
 	ID:              "go.mondoo.com/mql/v13/providers/proxmox",
-	Version:         "0.3.2",
+	Version:         "0.3.3",
 	Platforms:       connection.Platforms,
 	ConnectionTypes: []string{"proxmox"},
 	Connectors: []plugin.Connector{
