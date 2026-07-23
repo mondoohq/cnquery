@@ -8,6 +8,8 @@ import (
 	"strings"
 	"sync"
 
+	"golang.org/x/sync/singleflight"
+
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
@@ -167,49 +169,53 @@ func (c *IruConnection) GetDeviceParameters(id string) ([]client.Parameter, erro
 	})
 }
 
-// keyedMemo memoizes one value per string key, running the fetch for a given
-// key exactly once while letting fetches for different keys proceed
-// concurrently. A failed fetch is not cached: the key is dropped so a later
-// call retries, matching how the tenant-wide listings avoid poisoning their
-// cache on a transient error.
+// keyedMemo memoizes one value per string key, collapsing concurrent fetches
+// for the same key into a single call while letting fetches for different keys
+// proceed in parallel. singleflight forgets a key once its call returns, so a
+// failed fetch is never cached and a later call retries, matching how the
+// tenant-wide listings avoid poisoning their cache on a transient error.
 type keyedMemo[V any] struct {
-	mu      sync.Mutex
-	entries map[string]*memoEntry[V]
-}
-
-type memoEntry[V any] struct {
-	once sync.Once
-	val  V
-	err  error
+	mu    sync.Mutex
+	cache map[string]V
+	sf    singleflight.Group
 }
 
 func (m *keyedMemo[V]) get(key string, fetch func() (V, error)) (V, error) {
 	m.mu.Lock()
-	if m.entries == nil {
-		m.entries = make(map[string]*memoEntry[V])
-	}
-	e, ok := m.entries[key]
-	if !ok {
-		e = &memoEntry[V]{}
-		m.entries[key] = e
+	if v, ok := m.cache[key]; ok {
+		m.mu.Unlock()
+		return v, nil
 	}
 	m.mu.Unlock()
 
-	// once.Do serializes only the callers for this one key; other keys run in
-	// parallel. It also establishes the happens-before that makes reading
-	// e.val / e.err below safe.
-	e.once.Do(func() { e.val, e.err = fetch() })
-
-	if e.err != nil {
-		// Drop the failed entry so a later call re-attempts the fetch rather
-		// than serving the cached error for the connection's lifetime.
+	v, err, _ := m.sf.Do(key, func() (any, error) {
+		// Re-check under the lock: a concurrent flight for this key may have
+		// populated the cache between our fast-path miss and entering the call.
 		m.mu.Lock()
-		if m.entries[key] == e {
-			delete(m.entries, key)
+		if val, ok := m.cache[key]; ok {
+			m.mu.Unlock()
+			return val, nil
 		}
 		m.mu.Unlock()
+
+		val, err := fetch()
+		if err != nil {
+			// Return without caching so the key is forgotten and retried.
+			return val, err
+		}
+		m.mu.Lock()
+		if m.cache == nil {
+			m.cache = make(map[string]V)
+		}
+		m.cache[key] = val
+		m.mu.Unlock()
+		return val, nil
+	})
+	if err != nil {
+		var zero V
+		return zero, err
 	}
-	return e.val, e.err
+	return v.(V), nil
 }
 
 // ListBlueprints returns the tenant's blueprints, memoizing the first

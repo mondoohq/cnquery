@@ -457,13 +457,15 @@ func (c *mqlIruDevice) apps() ([]any, error) {
 		return nil, err
 	}
 	res := make([]any, 0, len(apps))
-	for i, a := range apps {
+	for _, a := range apps {
 		// bundle_id is not a reliable per-device key: macOS reports the same
 		// bundle at multiple paths and some rows carry an empty bundle_id, so
-		// keying on it alone collapses distinct apps into one cache entry. The
-		// row index guarantees a unique, stable __id within the fetched list.
+		// keying on it alone collapses distinct apps into one cache entry. Key
+		// on the install's identifying content (bundle + path + name + version)
+		// instead: unique for distinct installs, stable if the API reorders
+		// rows between fetches, and collapsing only genuine duplicate rows.
 		item, err := CreateResource(c.MqlRuntime, "iru.app", map[string]*llx.RawData{
-			"__id":             llx.StringData(fmt.Sprintf("iru.app/%s/%d/%s", c.Id.Data, i, a.BundleID)),
+			"__id":             llx.StringData(fmt.Sprintf("iru.app/%s/%s|%s|%s|%s", c.Id.Data, a.BundleID, a.Path, a.Name, a.Version)),
 			"name":             llx.StringData(a.Name),
 			"bundleId":         llx.StringData(a.BundleID),
 			"version":          llx.StringData(a.Version),
@@ -490,15 +492,16 @@ func (c *mqlIruDevice) profiles() ([]any, error) {
 		return nil, err
 	}
 	res := make([]any, 0, len(d.InstalledProfiles))
-	for i, p := range d.InstalledProfiles {
+	for _, p := range d.InstalledProfiles {
 		payloadTypes := make([]any, 0, len(p.PayloadTypes))
 		for _, pt := range p.PayloadTypes {
 			payloadTypes = append(payloadTypes, pt)
 		}
-		// The row index guarantees a unique __id even if a profile reports an
-		// empty or duplicated uuid, so no profile is silently dropped.
+		// Key on the profile's uuid plus identifier: unique for distinct
+		// profiles, stable if the API reorders rows, and (unlike keying on a
+		// possibly-empty uuid alone) collapsing only genuine duplicate rows.
 		item, err := CreateResource(c.MqlRuntime, "iru.profile", map[string]*llx.RawData{
-			"__id":         llx.StringData(fmt.Sprintf("iru.profile/%s/%d/%s", c.Id.Data, i, p.UUID)),
+			"__id":         llx.StringData(fmt.Sprintf("iru.profile/%s/%s|%s", c.Id.Data, p.UUID, p.Identifier)),
 			"name":         llx.StringData(p.Name),
 			"uuid":         llx.StringData(p.UUID),
 			"identifier":   llx.StringData(p.Identifier),
