@@ -505,14 +505,22 @@ func (s *mqlTls) populateCertificates(socket *mqlSocket, domainName string) erro
 		return err
 	}
 
-	mqlCerts, _, err := parseCertificates(s.MqlRuntime, domainName, certs, map[string]*tlsshake.Revocation{})
+	// The handshake tester performs OCSP and records revocations keyed by
+	// string(cert.Signature); reuse that map so certificate.isRevoked/revokedAt
+	// reflect real revocation status instead of a hardcoded "not revoked".
+	var revocations map[string]*tlsshake.Revocation
+	if s.tester != nil {
+		revocations = s.tester.Findings.Revocations
+	}
+
+	mqlCerts, _, err := parseCertificates(s.MqlRuntime, domainName, certs, revocations)
 	if err != nil {
 		s.Certificates = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet}
 	} else {
 		s.Certificates = plugin.TValue[[]any]{Data: mqlCerts, State: plugin.StateIsSet}
 	}
 
-	mqlNonSniCerts, _, err := parseCertificates(s.MqlRuntime, domainName, nonSniCerts, map[string]*tlsshake.Revocation{})
+	mqlNonSniCerts, _, err := parseCertificates(s.MqlRuntime, domainName, nonSniCerts, revocations)
 	if err != nil {
 		s.NonSniCertificates = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet}
 	} else {

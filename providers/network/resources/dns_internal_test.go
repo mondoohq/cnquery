@@ -90,3 +90,29 @@ func TestDmarcUris(t *testing.T) {
 	assert.Equal(t, []any{}, dmarcUris(""))
 	assert.Equal(t, []any{"mailto:a@x.com"}, dmarcUris("mailto:a@x.com"))
 }
+
+// TestDictTTL guards the JsonToDict key/type contract for a record's TTL: the
+// map comes from json.Marshal/Unmarshal of dnsshake.DnsRecord, so the key is the
+// json tag "ttl" (not "TTL") and the number is float64 (not int64). Reading the
+// wrong key silently dropped the TTL; asserting .(int64) would panic.
+func TestDictTTL(t *testing.T) {
+	t.Run("reads the lowercase json-tag key as float64", func(t *testing.T) {
+		got, ok := dictTTL(map[string]any{"ttl": float64(3600)})
+		assert.True(t, ok)
+		assert.Equal(t, int64(3600), got)
+	})
+	t.Run("uppercase TTL key is absent (the original bug)", func(t *testing.T) {
+		_, ok := dictTTL(map[string]any{"TTL": float64(3600)})
+		assert.False(t, ok)
+	})
+	t.Run("missing key", func(t *testing.T) {
+		_, ok := dictTTL(map[string]any{"name": "example.com."})
+		assert.False(t, ok)
+	})
+	t.Run("does not panic on an int64 value (wrong type)", func(t *testing.T) {
+		assert.NotPanics(t, func() {
+			_, ok := dictTTL(map[string]any{"ttl": int64(3600)})
+			assert.False(t, ok)
+		})
+	})
+}

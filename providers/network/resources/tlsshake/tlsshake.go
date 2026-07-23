@@ -272,6 +272,11 @@ func (s *Tester) addError(msg string) {
 }
 
 func (s *Tester) parseAlert(data []byte, conf *ScanConfig) error {
+	// An Alert record body is 2 bytes (level + description). A hostile or broken
+	// server can send a shorter body; guard before indexing so we don't panic.
+	if len(data) < 2 {
+		return errors.New("malformed TLS/SSL alert (body too short)")
+	}
 	var severity string
 	switch data[0] {
 	case '\x01':
@@ -351,6 +356,12 @@ func hexdump(data []byte) string {
 func (s *Tester) parseServerHello(data []byte, version string, conf *ScanConfig) error {
 	idx := 0
 
+	// version(2) + random(32) + session-ID-length(1) are mandatory fixed fields.
+	// The whole body length is attacker-controlled, so bounds-check before every
+	// read; an unchecked index here panics and takes down the entire scan.
+	if len(data) < idx+35 {
+		return errors.New("malformed ServerHello (too short for random + session-ID length)")
+	}
 	idx += 2
 	random := data[idx : idx+32]
 	isHelloRetryRequest := bytes.Equal(random, helloRetryRequestRandom)
@@ -362,6 +373,10 @@ func (s *Tester) parseServerHello(data []byte, version string, conf *ScanConfig)
 	idx += 1
 	idx += sessionIDlen
 
+	// cipher(2) + compression(1) follow the (variable-length) session ID.
+	if idx+3 > len(data) {
+		return errors.New("malformed ServerHello (truncated before cipher suite)")
+	}
 	cipher, cipherOK := ALL_CIPHERS[string(data[idx:idx+2])]
 	idx += 2
 
@@ -380,9 +395,13 @@ func (s *Tester) parseServerHello(data []byte, version string, conf *ScanConfig)
 	}
 
 	var serverKeyShareGroup []byte
-	for allExtLen > 0 && idx < len(data) {
+	for allExtLen > 0 && idx+4 <= len(data) {
 		extType := string(data[idx : idx+2])
 		extLen := bytes2int(data[idx+2 : idx+4])
+		if idx+4+extLen > len(data) {
+			// extension length runs past the record; stop rather than panic
+			break
+		}
 		extData := data[idx+4 : idx+4+extLen]
 
 		allExtLen -= 4 + extLen
@@ -442,6 +461,9 @@ func (s *Tester) parseServerHello(data []byte, version string, conf *ScanConfig)
 }
 
 func (s *Tester) parseCertificate(data []byte, conf *ScanConfig) error {
+	if len(data) < 3 {
+		return errors.New("malformed certificate response, too little data read from stream to parse certificate")
+	}
 	certsLen := bytes3int(data[0:3])
 	if len(data) < certsLen+3 {
 		return errors.New("malformed certificate response, too little data read from stream to parse certificate")
@@ -450,9 +472,17 @@ func (s *Tester) parseCertificate(data []byte, conf *ScanConfig) error {
 	certs := []*x509.Certificate{}
 	i := 3
 	for i < 3+certsLen {
+		// each cert is prefixed by a 3-byte length; both the prefix and the cert
+		// body it describes are attacker-controlled and must stay within data.
+		if i+3 > len(data) {
+			return errors.New("malformed certificate response, truncated certificate length prefix")
+		}
 		certLen := bytes3int(data[i : i+3])
 		i += 3
 
+		if i+certLen > len(data) {
+			return errors.New("malformed certificate response, certificate length exceeds record")
+		}
 		rawCert := data[i : i+certLen]
 		i += certLen
 
@@ -511,15 +541,28 @@ func (s *Tester) parseCertificate(data []byte, conf *ScanConfig) error {
 //   - There are a few other responses that also signal that we are done
 //     processing handshake responses, like ServerHelloDone or Finished
 func (s *Tester) parseHandshake(data []byte, version string, conf *ScanConfig) (bool, int, error) {
+	// The 4-byte handshake header (type + 3-byte length) and the body it
+	// describes are attacker-controlled; a short record or an oversized length
+	// field must not panic the slice operations below.
+	if len(data) < 4 {
+		return true, 0, errors.New("malformed TLS/SSL handshake (header too short)")
+	}
 	handshakeType := data[0]
 	handshakeLen := bytes3int(data[1:4])
+	bodyEnd := 4 + handshakeLen
 
 	switch handshakeType {
 	case HANDSHAKE_TYPE_ServerHello:
-		err := s.parseServerHello(data[4:4+handshakeLen], version, conf)
+		if bodyEnd > len(data) {
+			return true, 0, errors.New("malformed TLS/SSL handshake (ServerHello body exceeds record)")
+		}
+		err := s.parseServerHello(data[4:bodyEnd], version, conf)
 		return false, handshakeLen, err
 	case HANDSHAKE_TYPE_Certificate:
-		return true, handshakeLen, s.parseCertificate(data[4:4+handshakeLen], conf)
+		if bodyEnd > len(data) {
+			return true, 0, errors.New("malformed TLS/SSL handshake (Certificate body exceeds record)")
+		}
+		return true, handshakeLen, s.parseCertificate(data[4:bodyEnd], conf)
 	case HANDSHAKE_TYPE_ServerKeyExchange:
 		return false, handshakeLen, nil
 	case HANDSHAKE_TYPE_ServerHelloDone:

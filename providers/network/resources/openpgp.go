@@ -5,6 +5,7 @@ package resources
 
 import (
 	"encoding/hex"
+	"strconv"
 	"strings"
 	"time"
 
@@ -142,7 +143,10 @@ type mqlOpenpgpIdentityInternal struct {
 }
 
 func (r *mqlOpenpgpIdentity) id() (string, error) {
-	return "openpgp.identity/" + r.Fingerprint.Data + "/" + r.Name.Data, nil
+	// Use the full UserId (name + comment + email), not just the name: a key can
+	// carry several user IDs that share a name but differ by email/comment, and
+	// keying on Name alone collides so the resource cache drops all but the first.
+	return "openpgp.identity/" + r.Fingerprint.Data + "/" + r.Id.Data, nil
 }
 
 func (r *mqlOpenpgpIdentity) signatures() ([]any, error) {
@@ -203,7 +207,7 @@ func (r *mqlOpenpgpIdentity) signatures() ([]any, error) {
 			ts := llx.DurationToTime(diff)
 			keyExpirationTime = llx.TimeData(ts)
 		} else {
-			expirationTime = llx.NilData
+			keyExpirationTime = llx.NilData
 		}
 
 		o, err := CreateResource(r.MqlRuntime, "openpgp.signature", map[string]*llx.RawData{
@@ -230,5 +234,14 @@ func (r *mqlOpenpgpIdentity) signatures() ([]any, error) {
 }
 
 func (r *mqlOpenpgpSignature) id() (string, error) {
-	return "openpgp.identity/" + r.Fingerprint.Data + "/" + r.IdentityName.Data + "/" + r.Hash.Data, nil
+	// An identity carries several signatures (self-cert, revocation, third-party
+	// certifications) that commonly share the same hash algorithm, so the hash
+	// alone does not disambiguate them. Add the signature type and creation time
+	// so distinct signatures don't collide and get dropped by the resource cache.
+	created := ""
+	if r.CreationTime.Data != nil {
+		created = strconv.FormatInt(r.CreationTime.Data.Unix(), 10)
+	}
+	return "openpgp.signature/" + r.Fingerprint.Data + "/" + r.IdentityName.Data +
+		"/" + r.Hash.Data + "/" + r.SignatureType.Data + "/" + created, nil
 }

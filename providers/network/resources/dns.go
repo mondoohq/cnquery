@@ -90,6 +90,20 @@ func (d *mqlDns) params(fqdn string) (any, error) {
 	return convert.JsonToDict(records)
 }
 
+// dictTTL reads a DNS record's TTL out of a record map produced by
+// convert.JsonToDict (json.Marshal then Unmarshal of a dnsshake.DnsRecord).
+// The map key is therefore the json tag "ttl" (not the Go field name "TTL"),
+// and every JSON number decodes to float64, not int64. Reading "TTL" or
+// asserting .(int64) is why the TTL was silently dropped (and would panic if
+// the key were fixed without the type). Returns (0, false) when absent.
+func dictTTL(m map[string]any) (int64, bool) {
+	v, ok := m["ttl"].(float64)
+	if !ok {
+		return 0, false
+	}
+	return int64(v), true
+}
+
 func (d *mqlDns) records(params any) ([]any, error) {
 	// NOTE: mql does not cache the results of GetRecords since it has an input argument
 	// Iterations over map keys are not deterministic and therefore we need to sort the keys
@@ -113,10 +127,10 @@ func (d *mqlDns) records(params any) ([]any, error) {
 		}
 
 		var ttl *llx.RawData
-		if r["TTL"] == nil {
-			ttl = llx.NilData
+		if v, ok := dictTTL(r); ok {
+			ttl = llx.IntData(v)
 		} else {
-			ttl = llx.IntData(r["TTL"].(int64))
+			ttl = llx.NilData
 		}
 		o, err := CreateResource(d.MqlRuntime, "dns.record", map[string]*llx.RawData{
 			"name":  llx.StringData(r["name"].(string)),
@@ -176,8 +190,8 @@ func (d *mqlDns) mx(params any) ([]any, error) {
 		t = r["type"].(string)
 	}
 
-	if r["TTL"] != nil {
-		ttl = r["TTL"].(int64)
+	if v, ok := dictTTL(r); ok {
+		ttl = v
 	}
 
 	if r["rData"] != nil {
@@ -311,8 +325,8 @@ func (d *mqlDns) dnssec(params any) (*mqlDnsDnssecConfig, error) {
 			if record["class"] != nil {
 				class = record["class"].(string)
 			}
-			if record["TTL"] != nil {
-				ttl = record["TTL"].(int64)
+			if v, ok := dictTTL(record); ok {
+				ttl = v
 			}
 			if record["rData"] != nil {
 				rdata = record["rData"].([]any)

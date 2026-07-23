@@ -54,7 +54,12 @@ func New(fqdn string) (*DnsClient, error) {
 	_, err := os.Stat(resolveFile)
 	if err == nil {
 		rConfig, err := dns.ClientConfigFromFile(resolveFile)
-		if err == nil {
+		// Only adopt the host's resolv.conf if it actually lists a nameserver.
+		// A resolv.conf with only `search`/`options` lines parses without error
+		// but yields an empty Servers slice, and queryDnsType indexes Servers[0]
+		// unconditionally, which would panic. Keeping the default resolver avoids
+		// crashing the scan on such hosts.
+		if err == nil && len(rConfig.Servers) > 0 {
 			config = rConfig
 		}
 	}
@@ -279,9 +284,9 @@ func (d *DnsClient) queryDnsType(fqdn string, t string) (map[string]DnsRecord, e
 		case *dns.GID:
 			rec.RData = append(rec.RData, strconv.FormatInt(int64(v.Gid), 10))
 		case *dns.EUI48:
-			strconv.FormatInt(int64(v.Address), 10)
+			rec.RData = append(rec.RData, strconv.FormatInt(int64(v.Address), 10))
 		case *dns.EUI64:
-			strconv.FormatInt(int64(v.Address), 10)
+			rec.RData = append(rec.RData, strconv.FormatInt(int64(v.Address), 10))
 		case *dns.AVC:
 			rec.RData = append(rec.RData, strings.Join(v.Txt, ""))
 		default:

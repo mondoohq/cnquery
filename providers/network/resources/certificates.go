@@ -457,8 +457,8 @@ func (s *mqlCertificate) sanExtension() (*mqlPkixSanExtension, error) {
 	r, err := CreateResource(s.MqlRuntime, "pkix.sanExtension", map[string]*llx.RawData{
 		"extension":      llx.ResourceData(ext, "pkix.extension"),
 		"dnsNames":       llx.ArrayData(convert.SliceAnyToInterface(dnsNames), types.String),
-		"ipAddresses":    llx.ArrayData(convert.SliceAnyToInterface(emailAddresses), types.String),
-		"emailAddresses": llx.ArrayData(ipAddressesValues, types.String),
+		"ipAddresses":    llx.ArrayData(ipAddressesValues, types.String),
+		"emailAddresses": llx.ArrayData(convert.SliceAnyToInterface(emailAddresses), types.String),
 		"uris":           llx.ArrayData(uriValues, types.String),
 	})
 	if err != nil {
