@@ -65,3 +65,41 @@ func TestSpdxDependencyGraph(t *testing.T) {
 	// SPDX emits a DEPENDS_ON relationship for the edge
 	assert.Contains(t, data, "DEPENDS_ON")
 }
+
+const testHashHex = "c0b1fa47360f400af2aec25a91cf48de4d1a15613f709c96a140fc750cb5f3a8f1c2d2e0790755734f8d7a037269becc20f8bb1ecbfd037871ea5335acf1fde0"
+
+// hashBom builds a one-package SBOM whose component carries an integrity digest,
+// to exercise CycloneDX component.hashes / SPDX checksum rendering.
+func hashBom() *sbom.Sbom {
+	return &sbom.Sbom{
+		Generator: &sbom.Generator{Name: "test", Version: "1", Vendor: "Mondoo"},
+		Asset:     &sbom.Asset{Name: "app", Platform: &sbom.Platform{}},
+		Packages: []*sbom.Package{
+			{
+				Name: "left-pad", Version: "1.3.0", Type: "npm", Purl: "pkg:npm/left-pad@1.3.0",
+				Hashes: []*sbom.Hash{{Alg: "SHA-512", Value: testHashHex}},
+			},
+		},
+	}
+}
+
+func TestCycloneDxHashes(t *testing.T) {
+	out := bytes.Buffer{}
+	require.NoError(t, sbom.New(sbom.FormatCycloneDxJSON).Render(&out, hashBom()))
+	data := out.String()
+
+	// CycloneDX component.hashes: algorithm in CDX spelling, hex in `content`.
+	assert.Contains(t, data, `"hashes"`)
+	assert.Contains(t, data, `"alg": "SHA-512"`)
+	assert.Contains(t, data, `"content": "`+testHashHex+`"`)
+}
+
+func TestSpdxHashes(t *testing.T) {
+	out := bytes.Buffer{}
+	require.NoError(t, sbom.NewSPDX(sbom.FormatSpdxJSON).Render(&out, hashBom()))
+	data := out.String()
+
+	// SPDX package checksum: dash-free algorithm spelling + hex value.
+	assert.Contains(t, data, "SHA512")
+	assert.Contains(t, data, testHashHex)
+}

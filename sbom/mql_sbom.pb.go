@@ -827,7 +827,12 @@ type Package struct {
 	// (development/test-only, e.g. an npm devDependency or its closure), or empty
 	// when the source does not distinguish. Lets a consumer rank/handle a
 	// dev-only component differently from a production one.
-	Scope         string `protobuf:"bytes,29,opt,name=scope,proto3" json:"scope,omitempty"`
+	Scope string `protobuf:"bytes,29,opt,name=scope,proto3" json:"scope,omitempty"`
+	// 'hashes' are the package's declared integrity digests (e.g. an npm
+	// dependency's Subresource-Integrity value). Populated for ecosystems whose
+	// manifest records them (npm today), empty otherwise. Rendered as CycloneDX
+	// `component.hashes` / SPDX package checksums — tamper-evidence.
+	Hashes        []*Hash `protobuf:"bytes,30,rep,name=hashes,proto3" json:"hashes,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -981,6 +986,69 @@ func (x *Package) GetScope() string {
 	return ""
 }
 
+func (x *Package) GetHashes() []*Hash {
+	if x != nil {
+		return x.Hashes
+	}
+	return nil
+}
+
+// Hash is one integrity digest of a package: an algorithm label and its
+// hex-encoded value.
+type Hash struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// 'alg' is the hash algorithm, CycloneDX spelling (e.g. "SHA-512", "SHA-1").
+	Alg string `protobuf:"bytes,1,opt,name=alg,proto3" json:"alg,omitempty"`
+	// 'value' is the lower-case hex-encoded digest.
+	Value         string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Hash) Reset() {
+	*x = Hash{}
+	mi := &file_mql_sbom_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Hash) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Hash) ProtoMessage() {}
+
+func (x *Hash) ProtoReflect() protoreflect.Message {
+	mi := &file_mql_sbom_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Hash.ProtoReflect.Descriptor instead.
+func (*Hash) Descriptor() ([]byte, []int) {
+	return file_mql_sbom_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *Hash) GetAlg() string {
+	if x != nil {
+		return x.Alg
+	}
+	return ""
+}
+
+func (x *Hash) GetValue() string {
+	if x != nil {
+		return x.Value
+	}
+	return ""
+}
+
 type Evidence struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// 'type' indicates the type of evidence, such as a file path.
@@ -995,7 +1063,7 @@ type Evidence struct {
 
 func (x *Evidence) Reset() {
 	*x = Evidence{}
-	mi := &file_mql_sbom_proto_msgTypes[7]
+	mi := &file_mql_sbom_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1007,7 +1075,7 @@ func (x *Evidence) String() string {
 func (*Evidence) ProtoMessage() {}
 
 func (x *Evidence) ProtoReflect() protoreflect.Message {
-	mi := &file_mql_sbom_proto_msgTypes[7]
+	mi := &file_mql_sbom_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1020,7 +1088,7 @@ func (x *Evidence) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Evidence.ProtoReflect.Descriptor instead.
 func (*Evidence) Descriptor() ([]byte, []int) {
-	return file_mql_sbom_proto_rawDescGZIP(), []int{7}
+	return file_mql_sbom_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *Evidence) GetType() EvidenceType {
@@ -1052,7 +1120,7 @@ type Kernel struct {
 
 func (x *Kernel) Reset() {
 	*x = Kernel{}
-	mi := &file_mql_sbom_proto_msgTypes[8]
+	mi := &file_mql_sbom_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1064,7 +1132,7 @@ func (x *Kernel) String() string {
 func (*Kernel) ProtoMessage() {}
 
 func (x *Kernel) ProtoReflect() protoreflect.Message {
-	mi := &file_mql_sbom_proto_msgTypes[8]
+	mi := &file_mql_sbom_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1077,7 +1145,7 @@ func (x *Kernel) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Kernel.ProtoReflect.Descriptor instead.
 func (*Kernel) Descriptor() ([]byte, []int) {
-	return file_mql_sbom_proto_rawDescGZIP(), []int{8}
+	return file_mql_sbom_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *Kernel) GetName() string {
@@ -1149,7 +1217,7 @@ const file_mql_sbom_proto_rawDesc = "" +
 	"\x04cpes\x18\x17 \x03(\tR\x04cpes\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xde\x03\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x8c\x04\n" +
 	"\aPackage\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n" +
 	"\aversion\x18\x02 \x01(\tR\aversion\x12\"\n" +
@@ -1167,7 +1235,11 @@ const file_mql_sbom_proto_rawDesc = "" +
 	"\alicense\x18\x1a \x01(\tR\alicense\x12!\n" +
 	"\finstall_date\x18\x1b \x01(\tR\vinstallDate\x12\x17\n" +
 	"\abom_ref\x18\x1c \x01(\tR\x06bomRef\x12\x14\n" +
-	"\x05scope\x18\x1d \x01(\tR\x05scope\"R\n" +
+	"\x05scope\x18\x1d \x01(\tR\x05scope\x12,\n" +
+	"\x06hashes\x18\x1e \x03(\v2\x14.mondoo.sbom.v1.HashR\x06hashes\".\n" +
+	"\x04Hash\x12\x10\n" +
+	"\x03alg\x18\x01 \x01(\tR\x03alg\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value\"R\n" +
 	"\bEvidence\x120\n" +
 	"\x04type\x18\x01 \x01(\x0e2\x1c.mondoo.sbom.v1.EvidenceTypeR\x04type\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value\"P\n" +
@@ -1205,7 +1277,7 @@ func file_mql_sbom_proto_rawDescGZIP() []byte {
 }
 
 var file_mql_sbom_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_mql_sbom_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_mql_sbom_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_mql_sbom_proto_goTypes = []any{
 	(Status)(0),         // 0: mondoo.sbom.v1.Status
 	(ExternalIDType)(0), // 1: mondoo.sbom.v1.ExternalIDType
@@ -1217,10 +1289,11 @@ var file_mql_sbom_proto_goTypes = []any{
 	(*Asset)(nil),       // 7: mondoo.sbom.v1.Asset
 	(*Platform)(nil),    // 8: mondoo.sbom.v1.Platform
 	(*Package)(nil),     // 9: mondoo.sbom.v1.Package
-	(*Evidence)(nil),    // 10: mondoo.sbom.v1.Evidence
-	(*Kernel)(nil),      // 11: mondoo.sbom.v1.Kernel
-	nil,                 // 12: mondoo.sbom.v1.Asset.LabelsEntry
-	nil,                 // 13: mondoo.sbom.v1.Platform.LabelsEntry
+	(*Hash)(nil),        // 10: mondoo.sbom.v1.Hash
+	(*Evidence)(nil),    // 11: mondoo.sbom.v1.Evidence
+	(*Kernel)(nil),      // 12: mondoo.sbom.v1.Kernel
+	nil,                 // 13: mondoo.sbom.v1.Asset.LabelsEntry
+	nil,                 // 14: mondoo.sbom.v1.Platform.LabelsEntry
 }
 var file_mql_sbom_proto_depIdxs = []int32{
 	5,  // 0: mondoo.sbom.v1.Sbom.generator:type_name -> mondoo.sbom.v1.Generator
@@ -1231,16 +1304,17 @@ var file_mql_sbom_proto_depIdxs = []int32{
 	1,  // 5: mondoo.sbom.v1.ExternalID.type:type_name -> mondoo.sbom.v1.ExternalIDType
 	6,  // 6: mondoo.sbom.v1.Asset.external_ids:type_name -> mondoo.sbom.v1.ExternalID
 	8,  // 7: mondoo.sbom.v1.Asset.platform:type_name -> mondoo.sbom.v1.Platform
-	12, // 8: mondoo.sbom.v1.Asset.labels:type_name -> mondoo.sbom.v1.Asset.LabelsEntry
-	11, // 9: mondoo.sbom.v1.Asset.kernels:type_name -> mondoo.sbom.v1.Kernel
-	13, // 10: mondoo.sbom.v1.Platform.labels:type_name -> mondoo.sbom.v1.Platform.LabelsEntry
-	10, // 11: mondoo.sbom.v1.Package.evidence_list:type_name -> mondoo.sbom.v1.Evidence
-	2,  // 12: mondoo.sbom.v1.Evidence.type:type_name -> mondoo.sbom.v1.EvidenceType
-	13, // [13:13] is the sub-list for method output_type
-	13, // [13:13] is the sub-list for method input_type
-	13, // [13:13] is the sub-list for extension type_name
-	13, // [13:13] is the sub-list for extension extendee
-	0,  // [0:13] is the sub-list for field type_name
+	13, // 8: mondoo.sbom.v1.Asset.labels:type_name -> mondoo.sbom.v1.Asset.LabelsEntry
+	12, // 9: mondoo.sbom.v1.Asset.kernels:type_name -> mondoo.sbom.v1.Kernel
+	14, // 10: mondoo.sbom.v1.Platform.labels:type_name -> mondoo.sbom.v1.Platform.LabelsEntry
+	11, // 11: mondoo.sbom.v1.Package.evidence_list:type_name -> mondoo.sbom.v1.Evidence
+	10, // 12: mondoo.sbom.v1.Package.hashes:type_name -> mondoo.sbom.v1.Hash
+	2,  // 13: mondoo.sbom.v1.Evidence.type:type_name -> mondoo.sbom.v1.EvidenceType
+	14, // [14:14] is the sub-list for method output_type
+	14, // [14:14] is the sub-list for method input_type
+	14, // [14:14] is the sub-list for extension type_name
+	14, // [14:14] is the sub-list for extension extendee
+	0,  // [0:14] is the sub-list for field type_name
 }
 
 func init() { file_mql_sbom_proto_init() }
@@ -1254,7 +1328,7 @@ func file_mql_sbom_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_mql_sbom_proto_rawDesc), len(file_mql_sbom_proto_rawDesc)),
 			NumEnums:      3,
-			NumMessages:   11,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

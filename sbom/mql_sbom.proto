@@ -282,6 +282,20 @@ message Package {
   // when the source does not distinguish. Lets a consumer rank/handle a
   // dev-only component differently from a production one.
   string scope = 29;
+  // 'hashes' are the package's declared integrity digests (e.g. an npm
+  // dependency's Subresource-Integrity value). Populated for ecosystems whose
+  // manifest records them (npm today), empty otherwise. Rendered as CycloneDX
+  // `component.hashes` / SPDX package checksums — tamper-evidence.
+  repeated Hash hashes = 30;
+}
+
+// Hash is one integrity digest of a package: an algorithm label and its
+// hex-encoded value.
+message Hash {
+  // 'alg' is the hash algorithm, CycloneDX spelling (e.g. "SHA-512", "SHA-1").
+  string alg = 1;
+  // 'value' is the lower-case hex-encoded digest.
+  string value = 2;
 }
 
 enum EvidenceType {

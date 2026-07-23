@@ -41,6 +41,7 @@ func TestPackageJsonLockExtractorWithPackages(t *testing.T) {
 		Cpes:         []string{"cpe:2.3:a:node_modules\\/\\@babel\\/code-frame:node_modules\\/\\@babel\\/code-frame:7.10.4:*:*:*:*:*:*:*"},
 		EvidenceList: []*sbom.Evidence{{Type: sbom.EvidenceType_EVIDENCE_TYPE_FILE, Value: "path/to/package-lock.json"}},
 		Scope:        languages.PackageScopeDev,
+		Hashes:       []languages.PackageHash{{Alg: "SHA-512", Value: "bc6e92bc1ea860486f822b193454664425242f3d7573bae9fad6cd4f29c6a9cea64b577901377fb06c95e96d0a6599d744a313cd90d18104f73aef6386901f52"}},
 	}, p)
 
 }
@@ -136,6 +137,7 @@ func TestPackageJsonLockExtractorWithDependencies(t *testing.T) {
 		Purl:         "pkg:npm/%40babel/generator@7.0.0",
 		Cpes:         []string{"cpe:2.3:a:\\@babel\\/generator:\\@babel\\/generator:7.0.0:*:*:*:*:*:*:*"},
 		EvidenceList: []*sbom.Evidence{{Type: sbom.EvidenceType_EVIDENCE_TYPE_FILE, Value: "path/to/package-lock.json"}},
+		Hashes:       []languages.PackageHash{{Alg: "SHA-512", Value: "fc1336beea64a5b657ab6da5d402ceecca972591f693c6ca56ff18fa9001167cd6773b4307f64bbde3f902ddb5bcbcf973662d484ea9ee3d85644b2a69f333e5"}},
 	}, p)
 
 	p = list.Find("@lerna/changed")
@@ -145,5 +147,6 @@ func TestPackageJsonLockExtractorWithDependencies(t *testing.T) {
 		Purl:         "pkg:npm/%40lerna/changed@3.3.2",
 		Cpes:         []string{"cpe:2.3:a:\\@lerna\\/changed:\\@lerna\\/changed:3.3.2:*:*:*:*:*:*:*"},
 		EvidenceList: []*sbom.Evidence{{Type: sbom.EvidenceType_EVIDENCE_TYPE_FILE, Value: "path/to/package-lock.json"}},
+		Hashes:       []languages.PackageHash{{Alg: "SHA-512", Value: "c0b1fa47360f400af2aec25a91cf48de4d1a15613f709c96a140fc750cb5f3a8f1c2d2e0790755734f8d7a037269becc20f8bb1ecbfd037871ea5335acf1fde0"}},
 	}, p)
 }

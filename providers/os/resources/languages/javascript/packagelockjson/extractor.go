@@ -86,6 +86,7 @@ func (p *packageLock) Direct() languages.Packages {
 			EvidenceList: javascript.NewEvidenceList(p.evidence),
 			DependsOn:    dependsOnRefs(p.Packages, path, pkg.Dependencies),
 			Scope:        scopeOf(pkg),
+			Hashes:       hashesFor(pkg.Integrity),
 		})
 	}
 
@@ -110,6 +111,7 @@ func (p *packageLock) Transitive() languages.Packages {
 				EvidenceList: javascript.NewEvidenceList(p.evidence),
 				DependsOn:    dependsOnRefs(p.Packages, k, v.Dependencies),
 				Scope:        scopeOf(v),
+				Hashes:       hashesFor(v.Integrity),
 			})
 		}
 	} else if p.Dependencies != nil {
@@ -120,6 +122,7 @@ func (p *packageLock) Transitive() languages.Packages {
 				Purl:         javascript.NewPackageUrl(k, v.Version),
 				Cpes:         javascript.NewCpes(k, v.Version),
 				EvidenceList: javascript.NewEvidenceList(p.evidence),
+				Hashes:       hashesFor(v.Integrity),
 			})
 		}
 	}

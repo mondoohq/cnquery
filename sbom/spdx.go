@@ -95,6 +95,16 @@ func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
 		id := NewSPDXPackageID(pkg)
 		refToID[BomRefFor(pkg)] = id
 
+		// Integrity digests → SPDX checksums. Alg is CycloneDX spelling
+		// ("SHA-512"); SPDX uses the dash-free form ("SHA512").
+		var checksums []common.Checksum
+		for _, h := range pkg.Hashes {
+			checksums = append(checksums, common.Checksum{
+				Algorithm: common.ChecksumAlgorithm(strings.ReplaceAll(h.Alg, "-", "")),
+				Value:     h.Value,
+			})
+		}
+
 		doc.Packages = append(doc.Packages, &spdx.Package{
 			PackageSPDXIdentifier:     id,
 			PackageName:               pkg.Name,
@@ -103,6 +113,7 @@ func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
 			PackageDescription:        pkg.Description,
 			PackageExternalReferences: refs,
 			PackageFileName:           pkg.Location,
+			PackageChecksums:          checksums,
 		})
 	}
 

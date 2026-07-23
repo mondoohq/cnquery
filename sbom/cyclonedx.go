@@ -121,6 +121,16 @@ func (ccx *CycloneDX) convertToCycloneDx(bom *Sbom) (*cyclonedx.BOM, error) {
 		if pkg.Scope == PackageScopeDev {
 			bomPkg.Scope = cyclonedx.ScopeExcluded
 		}
+		if len(pkg.Hashes) > 0 {
+			hashes := make([]cyclonedx.Hash, 0, len(pkg.Hashes))
+			for _, h := range pkg.Hashes {
+				hashes = append(hashes, cyclonedx.Hash{
+					Algorithm: cyclonedx.HashAlgorithm(h.Alg),
+					Value:     h.Value,
+				})
+			}
+			bomPkg.Hashes = &hashes
+		}
 
 		components = append(components, bomPkg)
 	}

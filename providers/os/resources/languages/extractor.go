@@ -75,6 +75,22 @@ type Package struct {
 	// Lets a consumer rank a CVE in a dev-only tool differently from a runtime
 	// one. Populated by parsers whose lockfile carries the flag (npm today).
 	Scope string `json:"scope,omitempty"`
+	// Hashes are the package's integrity digests — the declared checksums a
+	// lockfile records for tamper-evidence (npm's Subresource-Integrity
+	// `integrity`, `dist.shasum`; …). Populated by parsers whose lockfile carries
+	// them (npm today); nil otherwise. Renderers emit CycloneDX
+	// `component.hashes` and SPDX package checksums.
+	Hashes []PackageHash `json:"hashes,omitempty"`
+}
+
+// PackageHash is one integrity digest of a package: an algorithm label and its
+// hex-encoded value. Alg uses the CycloneDX hash-algorithm spelling (e.g.
+// "SHA-512", "SHA-1", "SHA-256") so renderers can map it straight through.
+type PackageHash struct {
+	// Alg is the hash algorithm in CycloneDX spelling (e.g. "SHA-512", "SHA-1").
+	Alg string `json:"alg,omitempty"`
+	// Value is the lower-case hex-encoded digest.
+	Value string `json:"value,omitempty"`
 }
 
 // Dependency scopes for Package.Scope.
