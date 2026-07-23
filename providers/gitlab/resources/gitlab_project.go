@@ -2074,14 +2074,14 @@ func newMqlGitlabPipelineFromDetail(runtime *plugin.Runtime, pl *gitlab.Pipeline
 	// resolved. This spares the lazy accessors (user(), duration(), …) a
 	// redundant GetPipeline when they're read off a package-file pipeline.
 	//
-	// The write has to happen *inside* the Once: CreateResource can hand back
-	// a cached pipeline that another goroutine is already reading through
+	// The write has to happen *inside* the Once: CreateResource can hand back a
+	// cached pipeline that another goroutine is already reading through
 	// loadDetails, and a bare assignment carries no happens-before edge with
-	// the write in there. Doing it here also clears a stale error from an
-	// earlier failed fetch, which the payload we hold now supersedes.
+	// the write in there. If that Once has already run, this is a no-op and the
+	// existing details stand — which is fine, since a cache hit means the same
+	// pipeline id and therefore the same payload.
 	pipeline.detailsOnce.Do(func() {
 		pipeline.details = pl
-		pipeline.detailsErr = nil
 	})
 	return pipeline, nil
 }
