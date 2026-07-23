@@ -89,3 +89,49 @@ func TestHandleTargets(t *testing.T) {
 		assert.Empty(t, handleTargets([]string{}))
 	})
 }
+
+func TestDiscoverUserRepos(t *testing.T) {
+	conf := func(opts map[string]string) *inventory.Config {
+		return &inventory.Config{Options: opts}
+	}
+
+	t.Run("user scope with auto discovery fans out to the account's repos", func(t *testing.T) {
+		// the server sends discover=auto for GitHub integrations, including
+		// personal-account app installs (user scope)
+		assert.True(t, discoverUserRepos(
+			conf(map[string]string{"user": "some-user"}),
+			[]string{connection.DiscoveryAuto},
+		))
+	})
+
+	t.Run("repos and all targets fan out too", func(t *testing.T) {
+		assert.True(t, discoverUserRepos(
+			conf(map[string]string{"user": "some-user"}),
+			[]string{connection.DiscoveryRepos},
+		))
+		assert.True(t, discoverUserRepos(
+			conf(map[string]string{"user": "some-user"}),
+			[]string{connection.DiscoveryAll},
+		))
+	})
+
+	t.Run("an explicit repository never fans out", func(t *testing.T) {
+		// discover() reaches the user path via the owner fallback of
+		// single-repo scans — those must scan exactly the one repo
+		assert.False(t, discoverUserRepos(
+			conf(map[string]string{"owner": "some-user", "repository": "one-repo"}),
+			[]string{connection.DiscoveryAuto},
+		))
+	})
+
+	t.Run("no repo-ish discovery target means no fan-out", func(t *testing.T) {
+		assert.False(t, discoverUserRepos(
+			conf(map[string]string{"user": "some-user"}),
+			[]string{connection.DiscoveryUsers},
+		))
+		assert.False(t, discoverUserRepos(
+			conf(map[string]string{"user": "some-user"}),
+			nil,
+		))
+	})
+}

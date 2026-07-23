@@ -93,7 +93,7 @@ func discover(runtime *plugin.Runtime, targets []string) ([]*inventory.Asset, er
 		userId = conf.Options["owner"]
 	}
 	if userId != "" {
-		userAssets, err := user(runtime, userId, conn)
+		userAssets, err := user(runtime, userId, conn, targets)
 		if err != nil {
 			return nil, err
 		}
@@ -221,8 +221,9 @@ func getMqlGithubRepo(runtime *plugin.Runtime, repoName string) (*mqlGithubRepos
 	return res.(*mqlGithubRepository), nil
 }
 
-func user(runtime *plugin.Runtime, userName string, conn *connection.GithubConnection) ([]*inventory.Asset, error) {
+func user(runtime *plugin.Runtime, userName string, conn *connection.GithubConnection, targets []string) ([]*inventory.Asset, error) {
 	conf := conn.Asset().Connections[0]
+	reposFilter := NewReposFilter(conf)
 	assetList := []*inventory.Asset{}
 
 	user, err := getMqlGithubUser(runtime, userName)
@@ -238,7 +239,42 @@ func user(runtime *plugin.Runtime, userName string, conn *connection.GithubConne
 		Labels:      make(map[string]string),
 		Connections: []*inventory.Config{cfg},
 	})
+
+	if discoverUserRepos(conf, targets) {
+		for i := range user.GetRepositories().Data {
+			repo := user.GetRepositories().Data[i].(*mqlGithubRepository)
+			if reposFilter.skipRepo(repo.Name.Data) {
+				continue
+			}
+			repoCfg := conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.ID()))
+			repoCfg.Options["repository"] = repo.Name.Data
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{connection.NewGitHubRepoIdentifier(user.Login.Data, repo.Name.Data)},
+				Name:        user.Login.Data + "/" + repo.Name.Data,
+				Platform:    connection.NewGitHubRepoPlatform(user.Login.Data, repo.Name.Data),
+				Labels:      convert.DictToTypedMap[string](repo.CustomProperties.Data),
+				Connections: []*inventory.Config{repoCfg},
+			})
+
+			iacAssets, err := discoverRepoIac(conn, repo, targets)
+			if err != nil {
+				return nil, err
+			}
+			assetList = append(assetList, iacAssets...)
+		}
+	}
 	return assetList, nil
+}
+
+// discoverUserRepos reports whether a user-scoped connection fans out to the
+// account's repositories, mirroring the org path (a personal-account GitHub
+// App install scans through the user scope). It must stay false when an
+// explicit repository is configured: discover() also reaches the user path
+// through the owner fallback of single-repo scans, which must not fan out to
+// every repository the owner has.
+func discoverUserRepos(conf *inventory.Config, targets []string) bool {
+	return conf.Options["repository"] == "" &&
+		stringx.ContainsAnyOf(targets, connection.DiscoveryRepos, connection.DiscoveryAll, connection.DiscoveryAuto)
 }
 
 func getMqlGithubUser(runtime *plugin.Runtime, userName string) (*mqlGithubUser, error) {
