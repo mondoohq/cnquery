@@ -273,18 +273,28 @@ func (r *mqlStackit) volumes() ([]any, error) {
 	return out, nil
 }
 
+// classifyVolumeSource maps a volume's source type onto the correct
+// typed-reference field. VolumeSource.Type is one of image, volume, snapshot,
+// or backup. Snapshots and backups are distinct STACKIT resources, so their
+// UUIDs must not be conflated: a backup UUID surfaced as sourceSnapshotId would
+// resolve against the snapshot API and 404. A "volume" clone source (and any
+// unknown type) has no modeled field and yields all-empty IDs.
+func classifyVolumeSource(sourceType, sourceID string) (imageID, snapshotID, backupID string) {
+	switch sourceType {
+	case "image":
+		imageID = sourceID
+	case "snapshot":
+		snapshotID = sourceID
+	case "backup":
+		backupID = sourceID
+	}
+	return
+}
+
 func buildVolume(runtime *plugin.Runtime, v *iaas.Volume) (plugin.Resource, error) {
-	var (
-		imageID    string
-		snapshotID string
-	)
+	var imageID, snapshotID, backupID string
 	if src, ok := v.GetSourceOk(); ok {
-		switch src.GetType() {
-		case "image":
-			imageID = src.GetId()
-		case "snapshot", "backup":
-			snapshotID = src.GetId()
-		}
+		imageID, snapshotID, backupID = classifyVolumeSource(src.GetType(), src.GetId())
 	}
 	serverID := v.GetServerId()
 
@@ -311,6 +321,7 @@ func buildVolume(runtime *plugin.Runtime, v *iaas.Volume) (plugin.Resource, erro
 		"bootable":             llx.BoolData(v.GetBootable()),
 		"imageId":              llx.StringData(imageID),
 		"sourceSnapshotId":     llx.StringData(snapshotID),
+		"sourceBackupId":       llx.StringData(backupID),
 		"serverId":             llx.StringData(serverID),
 		"encrypted":            llx.BoolData(v.GetEncrypted()),
 		"encryptionKeyId":      llx.StringData(kekKeyID),
@@ -384,6 +395,19 @@ func (r *mqlStackitVolume) sourceSnapshot() (*mqlStackitSnapshot, error) {
 		return nil, err
 	}
 	return res.(*mqlStackitSnapshot), nil
+}
+
+func (r *mqlStackitVolume) sourceBackup() (*mqlStackitBackup, error) {
+	if r.SourceBackupId.Data == "" {
+		return markNull[mqlStackitBackup](&r.SourceBackup)
+	}
+	res, err := NewResource(r.MqlRuntime, "stackit.backup", map[string]*llx.RawData{
+		"id": llx.StringData(r.SourceBackupId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlStackitBackup), nil
 }
 
 // ------------------------- snapshots -------------------------

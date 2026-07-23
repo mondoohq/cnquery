@@ -211,8 +211,8 @@ private stackit.server @defaults("id name status machineType") {
 // `id` (for example `stackit.volume(id: "...")`). Reports the volume's
 // size in GiB, lifecycle status, and availability zone, whether it is
 // encrypted at rest and which key-encryption key wraps its data key, the
-// image or snapshot it was created from, and the server it is attached
-// to. Use it to audit unattached, unencrypted, or oversized volumes.
+// image, snapshot, or backup it was created from, and the server it is
+// attached to. Use it to audit unattached, unencrypted, or oversized volumes.
 private stackit.volume @defaults("id name size status") {
   init(id? string)
   // Volume UUID
@@ -239,6 +239,10 @@ private stackit.volume @defaults("id name size status") {
   sourceSnapshotId string
   // Snapshot the volume was created from (nullable)
   sourceSnapshot() stackit.snapshot
+  // Source backup UUID (empty if not backup-based)
+  sourceBackupId string
+  // Backup the volume was created from (nullable)
+  sourceBackup() stackit.backup
   // Server the volume is attached to (nullable)
   server() stackit.server
   // Attached server UUID (empty if detached)

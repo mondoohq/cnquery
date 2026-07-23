@@ -115,6 +115,12 @@ func (r *mqlStackitAlbWaf) managedRuleSet() (*mqlStackitAlbManagedRuleSet, error
 		"name": llx.StringData(r.ManagedRuleSetName.Data),
 	})
 	if err != nil {
+		// Degrade the auto-traversal from the parent WAF: a token that can list
+		// WAFs but lacks GetManagedRuleSet, or a set that was deleted (404),
+		// should read as null rather than fail the whole query.
+		if isAccessDenied(err) || isNotFound(err) {
+			return markNull[mqlStackitAlbManagedRuleSet](&r.ManagedRuleSet)
+		}
 		return nil, err
 	}
 	return res.(*mqlStackitAlbManagedRuleSet), nil
@@ -128,6 +134,12 @@ func (r *mqlStackitAlbWaf) customRuleGroup() (*mqlStackitAlbCustomRuleGroup, err
 		"name": llx.StringData(r.CustomRuleGroupName.Data),
 	})
 	if err != nil {
+		// Degrade the auto-traversal from the parent WAF: a token that can list
+		// WAFs but lacks GetCustomRuleGroup, or a group that was deleted (404),
+		// should read as null rather than fail the whole query.
+		if isAccessDenied(err) || isNotFound(err) {
+			return markNull[mqlStackitAlbCustomRuleGroup](&r.CustomRuleGroup)
+		}
 		return nil, err
 	}
 	return res.(*mqlStackitAlbCustomRuleGroup), nil

@@ -781,6 +781,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.volume.sourceSnapshot": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitVolume).GetSourceSnapshot()).ToDataRes(types.Resource("stackit.snapshot"))
 	},
+	"stackit.volume.sourceBackupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVolume).GetSourceBackupId()).ToDataRes(types.String)
+	},
+	"stackit.volume.sourceBackup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVolume).GetSourceBackup()).ToDataRes(types.Resource("stackit.backup"))
+	},
 	"stackit.volume.server": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitVolume).GetServer()).ToDataRes(types.Resource("stackit.server"))
 	},
@@ -3107,6 +3113,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.volume.sourceSnapshot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitVolume).SourceSnapshot, ok = plugin.RawToTValue[*mqlStackitSnapshot](v.Value, v.Error)
+		return
+	},
+	"stackit.volume.sourceBackupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVolume).SourceBackupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.volume.sourceBackup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVolume).SourceBackup, ok = plugin.RawToTValue[*mqlStackitBackup](v.Value, v.Error)
 		return
 	},
 	"stackit.volume.server": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7142,6 +7156,8 @@ type mqlStackitVolume struct {
 	Image                plugin.TValue[*mqlStackitImage]
 	SourceSnapshotId     plugin.TValue[string]
 	SourceSnapshot       plugin.TValue[*mqlStackitSnapshot]
+	SourceBackupId       plugin.TValue[string]
+	SourceBackup         plugin.TValue[*mqlStackitBackup]
 	Server               plugin.TValue[*mqlStackitServer]
 	ServerId             plugin.TValue[string]
 	Encrypted            plugin.TValue[bool]
@@ -7258,6 +7274,26 @@ func (c *mqlStackitVolume) GetSourceSnapshot() *plugin.TValue[*mqlStackitSnapsho
 		}
 
 		return c.sourceSnapshot()
+	})
+}
+
+func (c *mqlStackitVolume) GetSourceBackupId() *plugin.TValue[string] {
+	return &c.SourceBackupId
+}
+
+func (c *mqlStackitVolume) GetSourceBackup() *plugin.TValue[*mqlStackitBackup] {
+	return plugin.GetOrCompute[*mqlStackitBackup](&c.SourceBackup, func() (*mqlStackitBackup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.volume", c.__id, "sourceBackup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitBackup), nil
+			}
+		}
+
+		return c.sourceBackup()
 	})
 }
 

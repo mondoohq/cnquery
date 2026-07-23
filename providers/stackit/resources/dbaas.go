@@ -748,6 +748,9 @@ func initStackitOpenSearchInstance(runtime *plugin.Runtime, args map[string]*llx
 	if err != nil {
 		return nil, nil, err
 	}
+	if inst == nil {
+		return nil, nil, fmt.Errorf("stackit.openSearch.instance with id %q not found", id)
+	}
 	lop := inst.GetLastOperation()
 	res, err := CreateResource(runtime, "stackit.openSearch.instance", map[string]*llx.RawData{
 		"id":                 llx.StringData(inst.GetInstanceId()),
@@ -784,6 +787,9 @@ func initStackitMariaDbInstance(runtime *plugin.Runtime, args map[string]*llx.Ra
 	inst, err := client.GetInstanceExecute(bgctx(), c.ProjectID(), c.Region(), id)
 	if err != nil {
 		return nil, nil, err
+	}
+	if inst == nil {
+		return nil, nil, fmt.Errorf("stackit.mariaDb.instance with id %q not found", id)
 	}
 	lop := inst.GetLastOperation()
 	res, err := CreateResource(runtime, "stackit.mariaDb.instance", map[string]*llx.RawData{
@@ -822,6 +828,9 @@ func initStackitRedisInstance(runtime *plugin.Runtime, args map[string]*llx.RawD
 	if err != nil {
 		return nil, nil, err
 	}
+	if inst == nil {
+		return nil, nil, fmt.Errorf("stackit.redis.instance with id %q not found", id)
+	}
 	lop := inst.GetLastOperation()
 	res, err := CreateResource(runtime, "stackit.redis.instance", map[string]*llx.RawData{
 		"id":                 llx.StringData(inst.GetInstanceId()),
@@ -859,6 +868,9 @@ func initStackitRabbitMqInstance(runtime *plugin.Runtime, args map[string]*llx.R
 	if err != nil {
 		return nil, nil, err
 	}
+	if inst == nil {
+		return nil, nil, fmt.Errorf("stackit.rabbitMq.instance with id %q not found", id)
+	}
 	lop := inst.GetLastOperation()
 	res, err := CreateResource(runtime, "stackit.rabbitMq.instance", map[string]*llx.RawData{
 		"id":                 llx.StringData(inst.GetInstanceId()),
@@ -895,6 +907,9 @@ func initStackitSecretsManagerInstance(runtime *plugin.Runtime, args map[string]
 	inst, err := client.GetInstanceExecute(bgctx(), c.ProjectID(), id)
 	if err != nil {
 		return nil, nil, err
+	}
+	if inst == nil {
+		return nil, nil, fmt.Errorf("stackit.secretsManager.instance with id %q not found", id)
 	}
 	res, err := CreateResource(runtime, "stackit.secretsManager.instance", map[string]*llx.RawData{
 		"id":                 llx.StringData(inst.GetId()),
@@ -1008,6 +1023,9 @@ func initStackitLogMeInstance(runtime *plugin.Runtime, args map[string]*llx.RawD
 	inst, err := client.GetInstanceExecute(bgctx(), c.ProjectID(), c.Region(), id)
 	if err != nil {
 		return nil, nil, err
+	}
+	if inst == nil {
+		return nil, nil, fmt.Errorf("stackit.logMe.instance with id %q not found", id)
 	}
 	lop := inst.GetLastOperation()
 	res, err := CreateResource(runtime, "stackit.logMe.instance", map[string]*llx.RawData{
