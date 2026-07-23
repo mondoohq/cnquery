@@ -28,7 +28,7 @@ import (
 	"github.com/stackitcloud/stackit-sdk-go/services/objectstorage"
 	"github.com/stackitcloud/stackit-sdk-go/services/observability"
 	"github.com/stackitcloud/stackit-sdk-go/services/opensearch"
-	"github.com/stackitcloud/stackit-sdk-go/services/postgresflex"
+	postgresflex "github.com/stackitcloud/stackit-sdk-go/services/postgresflex/v2api"
 	"github.com/stackitcloud/stackit-sdk-go/services/rabbitmq"
 	"github.com/stackitcloud/stackit-sdk-go/services/redis"
 	"github.com/stackitcloud/stackit-sdk-go/services/resourcemanager"

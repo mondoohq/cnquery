@@ -10,7 +10,7 @@ import (
 
 	"github.com/stackitcloud/stackit-sdk-go/services/mongodbflex"
 	"github.com/stackitcloud/stackit-sdk-go/services/observability"
-	"github.com/stackitcloud/stackit-sdk-go/services/postgresflex"
+	postgresflex "github.com/stackitcloud/stackit-sdk-go/services/postgresflex/v2api"
 	sqlserverflex "github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex/v2api"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -35,7 +35,7 @@ func (r *mqlStackitPostgresFlex) instances() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListInstancesExecute(bgctx(), c.ProjectID(), c.Region())
+	resp, err := client.DefaultAPI.ListInstances(bgctx(), c.ProjectID(), c.Region()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -82,7 +82,7 @@ func (r *mqlStackitPostgresFlexInstance) fetchDetail() (*postgresflex.Instance, 
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.GetInstanceExecute(bgctx(), c.ProjectID(), c.Region(), r.Id.Data)
+	resp, err := client.DefaultAPI.GetInstance(bgctx(), c.ProjectID(), c.Region(), r.Id.Data).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			r.fetched.Store(true)
@@ -91,7 +91,7 @@ func (r *mqlStackitPostgresFlexInstance) fetchDetail() (*postgresflex.Instance, 
 		return nil, err
 	}
 	if item, ok := resp.GetItemOk(); ok {
-		r.detail = &item
+		r.detail = item
 	}
 	r.fetched.Store(true)
 	return r.detail, nil
@@ -672,7 +672,7 @@ func initStackitPostgresFlexInstance(runtime *plugin.Runtime, args map[string]*l
 	if err != nil {
 		return nil, nil, err
 	}
-	resp, err := client.GetInstanceExecute(bgctx(), c.ProjectID(), c.Region(), id)
+	resp, err := client.DefaultAPI.GetInstance(bgctx(), c.ProjectID(), c.Region(), id).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -690,7 +690,7 @@ func initStackitPostgresFlexInstance(runtime *plugin.Runtime, args map[string]*l
 		return nil, nil, err
 	}
 	r := res.(*mqlStackitPostgresFlexInstance)
-	r.detail = &inst
+	r.detail = inst
 	r.fetched.Store(true)
 	return nil, res, nil
 }
