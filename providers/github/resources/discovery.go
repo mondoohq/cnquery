@@ -241,8 +241,11 @@ func user(runtime *plugin.Runtime, userName string, conn *connection.GithubConne
 	})
 
 	if discoverUserRepos(conf, targets) {
-		for i := range user.GetRepositories().Data {
-			repo := user.GetRepositories().Data[i].(*mqlGithubRepository)
+		repos, err := userScopeRepos(runtime, conn, user)
+		if err != nil {
+			return nil, err
+		}
+		for _, repo := range repos {
 			if reposFilter.skipRepo(repo.Name.Data) {
 				continue
 			}
@@ -264,6 +267,53 @@ func user(runtime *plugin.Runtime, userName string, conn *connection.GithubConne
 		}
 	}
 	return assetList, nil
+}
+
+// userScopeRepos returns the repositories a user-scoped scan fans out to.
+// GitHub App installation tokens can read the private repositories granted
+// to the installation, but GET /users/{login}/repos only ever returns public
+// repositories for app tokens. So installation tokens enumerate the
+// installation's own grant — exactly the repositories picked in GitHub's
+// install UI, private ones included, and none that were not granted. Other
+// tokens (PATs) get a 403 on the installation listing and fall back to the
+// user listing, which for them includes the private repositories the token
+// can see.
+func userScopeRepos(runtime *plugin.Runtime, conn *connection.GithubConnection, user *mqlGithubUser) ([]*mqlGithubRepository, error) {
+	login := user.Login.Data
+	listOpts := &github.ListOptions{PerPage: paginationPerPage}
+	var granted []*github.Repository
+	for {
+		repos, resp, err := conn.Client().Apps.ListRepos(conn.Context(), listOpts)
+		if err != nil {
+			// not an installation token — fall back to the user listing
+			res := []*mqlGithubRepository{}
+			for _, r := range user.GetRepositories().Data {
+				res = append(res, r.(*mqlGithubRepository))
+			}
+			return res, nil
+		}
+		granted = append(granted, repos.Repositories...)
+		if resp.NextPage == 0 {
+			break
+		}
+		listOpts.Page = resp.NextPage
+	}
+
+	res := []*mqlGithubRepository{}
+	for _, repo := range granted {
+		// an installation on this user account only grants repos the account
+		// owns; guard anyway so a shared credential never leaks another
+		// owner's repos into this user's scope
+		if repo.GetOwner().GetLogin() != login {
+			continue
+		}
+		r, err := newMqlGithubRepository(runtime, repo)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, r)
+	}
+	return res, nil
 }
 
 // discoverUserRepos reports whether a user-scoped connection fans out to the
