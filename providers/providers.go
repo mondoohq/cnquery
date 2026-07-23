@@ -534,9 +534,8 @@ func installVersion(ctx context.Context, name string, version string) (*Provider
 
 // InstallSchemaOnly installs only a provider's config and resource schema,
 // without downloading the provider binary. The result is enough to compile
-// queries against the provider's resources; the binary is fetched on demand
-// the first time the provider is actually connected (see
-// (*coordinator).unsafeStartProvider).
+// queries against the provider's resources. It is meant for workflows that
+// never start the provider; connecting to an asset requires a full install.
 func InstallSchemaOnly(name string, version string) (*Provider, error) {
 	ctx := context.Background()
 	if version == "" {

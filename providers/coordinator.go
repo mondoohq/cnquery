@@ -4,7 +4,6 @@
 package providers
 
 import (
-	"context"
 	"math"
 	"os/exec"
 	"strconv"
@@ -293,22 +292,6 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 	provider, ok := c.providers[id]
 	if !ok {
 		return nil, errors.New("cannot find provider " + id)
-	}
-
-	// Schema-only installs have no binary to launch. Fetch the full provider
-	// package at the installed schema's version before starting the plugin.
-	if provider.Path != "" && !provider.HasBinary {
-		if !update.Enabled {
-			return nil, errors.New("provider '" + provider.Name + "' is installed schema-only and updates are disabled; install the provider fully to connect with it")
-		}
-		log.Info().Str("provider", provider.Name).Msg("provider is installed schema-only, downloading its binary")
-		nu, err := installVersion(context.Background(), provider.Name, provider.Version)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to install binary for schema-only provider "+provider.Name)
-		}
-		PrintInstallResults([]*Provider{nu})
-		c.providers.Add(nu)
-		provider = nu
 	}
 
 	if update.Enabled {
