@@ -554,46 +554,63 @@ func InstallSchemaOnly(name string, version string) (*Provider, error) {
 }
 
 func installSchemaVersion(ctx context.Context, name string, version string, dst string) (*Provider, error) {
-	dstPath := filepath.Join(dst, name)
-
 	confJSON, schemaJSON, err := registry.DownloadProviderMetadata(ctx, name, version)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to install schema for "+name+"-"+version)
 	}
 
-	if err := os.MkdirAll(dstPath, 0o755); err != nil {
-		return nil, err
-	}
-	if err := os.WriteFile(filepath.Join(dstPath, name+".json"), confJSON, 0o644); err != nil {
-		return nil, err
-	}
-	if err := os.WriteFile(filepath.Join(dstPath, name+".resources.json"), schemaJSON, 0o644); err != nil {
-		return nil, err
-	}
-
-	provider, err := readProviderDir(dstPath)
+	// Pack the two files into an in-memory tar.xz so the install goes
+	// through the same path as a full provider archive.
+	archive, err := buildTarXz(map[string][]byte{
+		name + ".json":           confJSON,
+		name + ".resources.json": schemaJSON,
+	})
 	if err != nil {
 		return nil, err
 	}
-	if provider == nil {
-		return nil, errors.New("failed to read provider from " + dstPath + " after installing its schema")
-	}
-	if err := provider.LoadJSON(); err != nil {
+
+	installed, err := InstallIO(io.NopCloser(bytes.NewReader(archive)), InstallConf{Dst: dst})
+	if err != nil {
 		return nil, err
 	}
-	if err := provider.LoadResources(); err != nil {
-		return nil, err
+	if len(installed) != 1 {
+		return nil, errors.New("failed to install schema for provider " + name)
 	}
+	provider := installed[0]
 	if provider.Version != version {
 		return nil, errors.New("version for provider didn't match expected install version: expected " + version + ", installed: " + provider.Version)
 	}
-
-	// we need to clear out the cache now, because we installed something new,
-	// otherwise it will load old data
-	CachedProviders = nil
-	LastProviderInstall = time.Now().Unix()
-
 	return provider, nil
+}
+
+// buildTarXz packs the given files into an in-memory tar.xz archive.
+func buildTarXz(files map[string][]byte) ([]byte, error) {
+	var buf bytes.Buffer
+	xzWriter, err := xz.NewWriter(&buf)
+	if err != nil {
+		return nil, err
+	}
+	tarWriter := tar.NewWriter(xzWriter)
+	for name, data := range files {
+		header := &tar.Header{
+			Name: name,
+			Mode: 0o644,
+			Size: int64(len(data)),
+		}
+		if err := tarWriter.WriteHeader(header); err != nil {
+			return nil, err
+		}
+		if _, err := tarWriter.Write(data); err != nil {
+			return nil, err
+		}
+	}
+	if err := tarWriter.Close(); err != nil {
+		return nil, err
+	}
+	if err := xzWriter.Close(); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }
 
 // installDependencies ensures all dependencies of a provider are installed
@@ -776,22 +793,23 @@ func InstallIO(reader io.ReadCloser, conf InstallConf) ([]*Provider, error) {
 	log.Debug().Msg("move provider to destination")
 	providerDirs := []string{}
 	for name := range files {
-		// we only want to identify the binary and then all associated files from it
-		// NOTE: we need special handling for windows since binaries have the .exe extension
-		if !strings.HasSuffix(name, ".exe") && strings.Contains(name, ".") {
+		// Providers are identified by their schema file: every package has
+		// one, with or without a binary (schema-only installs have none).
+		if !strings.HasSuffix(name, ".resources.json") {
 			continue
 		}
-
-		providerName := name
-		if strings.HasSuffix(name, ".exe") {
-			providerName = strings.TrimSuffix(name, ".exe")
-		}
+		providerName := strings.TrimSuffix(name, ".resources.json")
 
 		if _, ok := files[providerName+".json"]; !ok {
 			return nil, errors.New("cannot find " + providerName + ".json in the archive")
 		}
-		if _, ok := files[providerName+".resources.json"]; !ok {
-			return nil, errors.New("cannot find " + providerName + ".resources.json in the archive")
+
+		// NOTE: we need special handling for windows since binaries have the .exe extension
+		binName := ""
+		if _, ok := files[providerName]; ok {
+			binName = providerName
+		} else if _, ok := files[providerName+".exe"]; ok {
+			binName = providerName + ".exe"
 		}
 
 		dstPath := filepath.Join(conf.Dst, providerName)
@@ -799,17 +817,19 @@ func InstallIO(reader io.ReadCloser, conf InstallConf) ([]*Provider, error) {
 			return nil, err
 		}
 
-		// move the binary and the associated files
-		srcBin := filepath.Join(tmpdir, name)
-		dstBin := filepath.Join(dstPath, name)
-		log.Debug().Str("src", srcBin).Str("dst", dstBin).Msg("move provider binary")
-		if err = osRetry(func() error {
-			return os.Rename(srcBin, dstBin)
-		}, maxInstallBinaryRetries); err != nil {
-			return nil, err
-		}
-		if err = os.Chmod(dstBin, 0o755); err != nil {
-			return nil, err
+		// move the binary (if any) and the associated files
+		if binName != "" {
+			srcBin := filepath.Join(tmpdir, binName)
+			dstBin := filepath.Join(dstPath, binName)
+			log.Debug().Str("src", srcBin).Str("dst", dstBin).Msg("move provider binary")
+			if err = osRetry(func() error {
+				return os.Rename(srcBin, dstBin)
+			}, maxInstallBinaryRetries); err != nil {
+				return nil, err
+			}
+			if err = os.Chmod(dstBin, 0o755); err != nil {
+				return nil, err
+			}
 		}
 
 		srcMeta := filepath.Join(tmpdir, providerName)
