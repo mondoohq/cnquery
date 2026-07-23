@@ -146,6 +146,9 @@ func (c *PveConnection) getDnfUpdates(node string, vmid int) ([]UpdateInfo, erro
 	// returning a Go error — so any non-nil err is a real failure.
 	result, err := c.QGAExec(node, vmid, []string{"dnf", "check-update", "--quiet"})
 	if err != nil {
+		if errors.Is(err, ErrQGANotRunning) {
+			return []UpdateInfo{}, nil
+		}
 		return nil, fmt.Errorf("dnf check-update failed: %w", err)
 	}
 	return ParseDnfOutput(result.Stdout), nil
