@@ -33,7 +33,10 @@ func (r *mqlIru) libraryItems() ([]any, error) {
 }
 
 func (l *mqlIruLibraryItem) id() (string, error) {
-	return "iru.libraryItem/" + l.Id.Data, nil
+	// The catalog is aggregated from three separate /library/<type> endpoints,
+	// each with its own id space, so the kind is part of the cache key to keep
+	// an id shared across kinds from collapsing two items into one.
+	return "iru.libraryItem/" + l.Kind.Data + "/" + l.Id.Data, nil
 }
 
 func libraryItemArgs(li *client.LibraryItem) map[string]*llx.RawData {

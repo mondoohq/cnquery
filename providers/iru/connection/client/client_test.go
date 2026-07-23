@@ -4,8 +4,10 @@
 package client
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -115,6 +117,56 @@ func TestListDevices(t *testing.T) {
 	}
 	if u := devs[1].EmbeddedUser(); u != nil {
 		t.Errorf("device 1 EmbeddedUser = %v, want nil (empty-string user)", u)
+	}
+}
+
+func TestPaginateArrayMultiPage(t *testing.T) {
+	// The /devices endpoint is a bare array paged with limit/offset; the loop
+	// must keep requesting until a page returns fewer than a full page and must
+	// advance the offset by the number of rows already seen. Serve 300 (a full
+	// page) then 50 so the second request is exercised and a truncation bug
+	// (stopping after page one, or advancing the offset wrong) would be caught.
+	const total = 350
+	var requests int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/v1/devices" {
+			http.Error(w, "unexpected path "+r.URL.Path, http.StatusNotFound)
+			return
+		}
+		requests++
+		offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
+		limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+		var b strings.Builder
+		b.WriteByte('[')
+		for i := offset; i < offset+limit && i < total; i++ {
+			if i > offset {
+				b.WriteByte(',')
+			}
+			fmt.Fprintf(&b, `{"device_id":"d%d"}`, i)
+		}
+		b.WriteByte(']')
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(b.String()))
+	}))
+	t.Cleanup(srv.Close)
+
+	c, err := New(srv.URL, "test-token")
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+	devs, err := c.ListDevices()
+	if err != nil {
+		t.Fatalf("ListDevices: %v", err)
+	}
+	if len(devs) != total {
+		t.Fatalf("got %d devices across pages, want %d", len(devs), total)
+	}
+	// First and last ids come from different pages, proving the offset advanced.
+	if devs[0].DeviceID != "d0" || devs[total-1].DeviceID != "d349" {
+		t.Errorf("unexpected boundary ids: first=%q last=%q", devs[0].DeviceID, devs[total-1].DeviceID)
+	}
+	if requests != 2 {
+		t.Errorf("made %d requests, want 2 (300 + 50)", requests)
 	}
 }
 

@@ -457,9 +457,13 @@ func (c *mqlIruDevice) apps() ([]any, error) {
 		return nil, err
 	}
 	res := make([]any, 0, len(apps))
-	for _, a := range apps {
+	for i, a := range apps {
+		// bundle_id is not a reliable per-device key: macOS reports the same
+		// bundle at multiple paths and some rows carry an empty bundle_id, so
+		// keying on it alone collapses distinct apps into one cache entry. The
+		// row index guarantees a unique, stable __id within the fetched list.
 		item, err := CreateResource(c.MqlRuntime, "iru.app", map[string]*llx.RawData{
-			"__id":             llx.StringData("iru.app/" + c.Id.Data + "/" + a.BundleID),
+			"__id":             llx.StringData(fmt.Sprintf("iru.app/%s/%d/%s", c.Id.Data, i, a.BundleID)),
 			"name":             llx.StringData(a.Name),
 			"bundleId":         llx.StringData(a.BundleID),
 			"version":          llx.StringData(a.Version),
@@ -486,13 +490,15 @@ func (c *mqlIruDevice) profiles() ([]any, error) {
 		return nil, err
 	}
 	res := make([]any, 0, len(d.InstalledProfiles))
-	for _, p := range d.InstalledProfiles {
+	for i, p := range d.InstalledProfiles {
 		payloadTypes := make([]any, 0, len(p.PayloadTypes))
 		for _, pt := range p.PayloadTypes {
 			payloadTypes = append(payloadTypes, pt)
 		}
+		// The row index guarantees a unique __id even if a profile reports an
+		// empty or duplicated uuid, so no profile is silently dropped.
 		item, err := CreateResource(c.MqlRuntime, "iru.profile", map[string]*llx.RawData{
-			"__id":         llx.StringData("iru.profile/" + c.Id.Data + "/" + p.UUID),
+			"__id":         llx.StringData(fmt.Sprintf("iru.profile/%s/%d/%s", c.Id.Data, i, p.UUID)),
 			"name":         llx.StringData(p.Name),
 			"uuid":         llx.StringData(p.UUID),
 			"identifier":   llx.StringData(p.Identifier),
@@ -511,30 +517,68 @@ func (c *mqlIruDevice) profiles() ([]any, error) {
 
 // --- Typed cross-references -----------------------------------------------
 
+// blueprint resolves the device's assigned blueprint from the memoized
+// tenant-wide listing. It degrades to null (rather than failing the whole
+// `iru.devices` query) when the token can list devices but not blueprints, or
+// when the device points at a blueprint the listing does not return, mirroring
+// how the top-level `iru.blueprints` accessor degrades on access-denied.
 func (c *mqlIruDevice) blueprint() (*mqlIruBlueprint, error) {
 	if c.cacheBlueprintId == "" {
 		c.Blueprint.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	bp, err := NewResource(c.MqlRuntime, "iru.blueprint", map[string]*llx.RawData{
-		"id": llx.StringData(c.cacheBlueprintId),
-	})
+	conn := c.MqlRuntime.Connection.(*connection.IruConnection)
+	bps, err := conn.ListBlueprints()
 	if err != nil {
+		if client.IsAccessDenied(err) {
+			c.Blueprint.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
-	return bp.(*mqlIruBlueprint), nil
+	for i := range bps {
+		if bps[i].ID != c.cacheBlueprintId {
+			continue
+		}
+		bp, err := CreateResource(c.MqlRuntime, "iru.blueprint", blueprintArgs(&bps[i]))
+		if err != nil {
+			return nil, err
+		}
+		return bp.(*mqlIruBlueprint), nil
+	}
+	// Dangling reference: the device names a blueprint absent from the listing.
+	c.Blueprint.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
+// user resolves the device's assigned end-user from the memoized tenant-wide
+// listing, degrading to null on the same access-denied / dangling-reference
+// conditions as blueprint above.
 func (c *mqlIruDevice) user() (*mqlIruUser, error) {
 	if c.cacheUserId == "" {
 		c.User.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	u, err := NewResource(c.MqlRuntime, "iru.user", map[string]*llx.RawData{
-		"id": llx.StringData(c.cacheUserId),
-	})
+	conn := c.MqlRuntime.Connection.(*connection.IruConnection)
+	users, err := conn.ListUsers()
 	if err != nil {
+		if client.IsAccessDenied(err) {
+			c.User.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
-	return u.(*mqlIruUser), nil
+	for i := range users {
+		if users[i].ID != c.cacheUserId {
+			continue
+		}
+		u, err := CreateResource(c.MqlRuntime, "iru.user", userArgs(&users[i]))
+		if err != nil {
+			return nil, err
+		}
+		return u.(*mqlIruUser), nil
+	}
+	// Dangling reference: the device names a user absent from the listing.
+	c.User.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
