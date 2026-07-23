@@ -760,8 +760,8 @@ stackit.volume.performanceClass 13.0.0
 stackit.volume.server 13.0.0
 stackit.volume.serverId 13.0.0
 stackit.volume.size 13.0.0
-stackit.volume.sourceBackup 13.4.2
-stackit.volume.sourceBackupId 13.4.2
+stackit.volume.sourceBackup 13.4.3
+stackit.volume.sourceBackupId 13.4.3
 stackit.volume.sourceSnapshot 13.4.2
 stackit.volume.sourceSnapshotId 13.0.0
 stackit.volume.status 13.0.0
