@@ -5,7 +5,7 @@ package resources
 
 import (
 	"context"
-	"path/filepath"
+	gopath "path"
 	"strings"
 	"time"
 
@@ -587,7 +587,7 @@ func classifyIacTree(entries []*github.TreeEntry) *repoIac {
 			continue
 		}
 
-		base := filepath.Base(path)
+		base := gopath.Base(path)
 		switch {
 		case strings.HasSuffix(path, ".bicep"):
 			out.hasBicep = true
@@ -726,7 +726,7 @@ func cloudformationTemplatePaths(ctx context.Context, client *github.Client, rep
 		if isHiddenPath(path) || seen[path] {
 			continue
 		}
-		switch strings.ToLower(filepath.Ext(path)) {
+		switch strings.ToLower(gopath.Ext(path)) {
 		case ".yaml", ".yml", ".json", ".template":
 			seen[path] = true
 			paths = append(paths, path)
@@ -747,10 +747,12 @@ func isDockerfile(base string) bool {
 }
 
 // iacDir returns the repo-relative directory containing the given file, with a
-// top-level file ("." from filepath.Dir) normalized to "" so it joins onto the
-// clone root cleanly.
-func iacDir(path string) string {
-	if dir := filepath.Dir(path); dir != "." {
+// top-level file (".") normalized to "" so it joins onto the clone root
+// cleanly. Repository paths are always slash-separated, so this uses path
+// rather than path/filepath, which on Windows would treat the whole path as a
+// single segment.
+func iacDir(filePath string) string {
+	if dir := gopath.Dir(filePath); dir != "." {
 		return dir
 	}
 	return ""

@@ -35,6 +35,23 @@ func TestIsKustomization(t *testing.T) {
 func TestIacDir(t *testing.T) {
 	assert.Equal(t, "", iacDir("Chart.yaml"))
 	assert.Equal(t, "charts/app", iacDir("charts/app/Chart.yaml"))
+
+	// Repository paths are slash-separated whatever the scanner runs on. This
+	// fails on Windows if iacDir uses path/filepath, which treats the whole
+	// path as one segment.
+	assert.Equal(t, "a/b/c", iacDir("a/b/c/Chart.yaml"))
+}
+
+// Same concern one level up: the classifier takes a file's base name to match
+// Dockerfile and kustomization.yaml, so it has to split on "/" everywhere.
+func TestClassifyIacTreeSplitsOnSlash(t *testing.T) {
+	got := classifyIacTree([]*github.TreeEntry{
+		blob("services/api/Dockerfile"),
+		blob("overlays/prod/kustomization.yaml"),
+	})
+
+	assert.Equal(t, []string{"services/api/Dockerfile"}, got.dockerfiles)
+	assert.Equal(t, []string{"overlays/prod"}, got.kustomizeDirs)
 }
 
 func TestIsHiddenPath(t *testing.T) {
