@@ -128,3 +128,20 @@ func TestParseUserReports_EmptyAndUnknownParams(t *testing.T) {
 	})
 	require.Nil(t, r.AppUsage.LastImapTime)
 }
+
+func TestReportActivityID(t *testing.T) {
+	// Distinct activities that share a unique qualifier (0 is the common
+	// "absent" value) must still get distinct cache keys via app + time.
+	a := reportActivityID("drive", "2026-01-01T00:00:00Z", 0)
+	b := reportActivityID("admin", "2026-01-01T00:00:00Z", 0)
+	c := reportActivityID("drive", "2026-01-02T00:00:00Z", 0)
+	require.NotEqual(t, a, b, "same qualifier across apps must not collide")
+	require.NotEqual(t, a, c, "same qualifier across times must not collide")
+
+	// Stable for identical inputs, and carries the composed parts.
+	require.Equal(t, a, reportActivityID("drive", "2026-01-01T00:00:00Z", 0))
+	require.Equal(t,
+		"googleworkspace.report.activity/login/2026-01-01T00:00:00Z/42",
+		reportActivityID("login", "2026-01-01T00:00:00Z", 42),
+	)
+}

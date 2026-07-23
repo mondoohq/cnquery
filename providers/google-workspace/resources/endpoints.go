@@ -64,13 +64,24 @@ func (g *mqlGoogleworkspace) endpoints() ([]any, error) {
 }
 
 func newMqlGoogleWorkspaceEndpoint(runtime *plugin.Runtime, entry *cloudidentity.GoogleAppsCloudidentityDevicesV1Device) (any, error) {
-	androidAttrs, err := convert.JsonToDict(entry.AndroidSpecificAttributes)
-	if err != nil {
-		return nil, err
+	// Leave these as a true nil (rendered as null) when the device didn't
+	// report the attribute group. convert.JsonToDict on a nil pointer returns a
+	// non-nil empty map, which would surface as `{}` and defeat `x != null`
+	// audits (the .lr doc promises null on platforms that don't report it).
+	var err error
+	var androidAttrs any
+	if entry.AndroidSpecificAttributes != nil {
+		androidAttrs, err = convert.JsonToDict(entry.AndroidSpecificAttributes)
+		if err != nil {
+			return nil, err
+		}
 	}
-	endpointVerificationAttrs, err := convert.JsonToDict(entry.EndpointVerificationSpecificAttributes)
-	if err != nil {
-		return nil, err
+	var endpointVerificationAttrs any
+	if entry.EndpointVerificationSpecificAttributes != nil {
+		endpointVerificationAttrs, err = convert.JsonToDict(entry.EndpointVerificationSpecificAttributes)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	signals := parseEndpointAdditionalSignals(entry.EndpointVerificationSpecificAttributes)

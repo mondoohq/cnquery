@@ -138,17 +138,32 @@ func newMqlGoogleWorkspaceReportActivity(runtime *plugin.Runtime, entry *reports
 	}
 
 	var uniqueQualifier int64
+	var appName, eventTime string
 	if entry.Id != nil {
 		uniqueQualifier = entry.Id.UniqueQualifier
+		appName = entry.Id.ApplicationName
+		eventTime = entry.Id.Time
 	}
 
 	return CreateResource(runtime, "googleworkspace.report.activity", map[string]*llx.RawData{
+		// The cache key must include the application name and event time:
+		// uniqueQualifier is only a tiebreaker for events sharing a time (and is
+		// absent for most events), so keying on it alone aliases distinct
+		// activities. The public `id` field keeps the bare uniqueQualifier.
+		"__id":        llx.StringData(reportActivityID(appName, eventTime, uniqueQualifier)),
 		"id":          llx.IntData(uniqueQualifier),
 		"ipAddress":   llx.StringData(entry.IpAddress),
 		"ownerDomain": llx.StringData(entry.OwnerDomain),
 		"actor":       llx.MapData(actor, types.Any),
 		"events":      llx.ArrayData(events, types.Any),
 	})
+}
+
+// reportActivityID builds a stable, unique cache key for a report activity from
+// the application name, event time, and unique qualifier that together identify
+// it in the Reports API.
+func reportActivityID(appName, eventTime string, uniqueQualifier int64) string {
+	return "googleworkspace.report.activity/" + appName + "/" + eventTime + "/" + strconv.FormatInt(uniqueQualifier, 10)
 }
 
 func (g *mqlGoogleworkspaceReportUsers) id() (string, error) {

@@ -19,7 +19,11 @@ func (g *mqlGoogleworkspace) orgUnits() ([]any, error) {
 
 	res := []any{}
 
-	orgUnits, err := directoryService.Orgunits.List(conn.CustomerID()).Do()
+	// Type("all") returns the full org-unit subtree. The default ("children")
+	// returns only the immediate children of the root, silently omitting every
+	// nested org unit. The response carries no page token, so a single call
+	// returns the whole hierarchy.
+	orgUnits, err := directoryService.Orgunits.List(conn.CustomerID()).Type("all").Do()
 	if err != nil {
 		return nil, err
 	}
