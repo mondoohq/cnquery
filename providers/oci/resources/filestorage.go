@@ -36,18 +36,7 @@ func (o *mqlOciFileStorage) fileSystems() ([]any, error) {
 		return nil, list.Error
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getFileSystems(conn, list.Data), 5)
-	poolOfJobs.Run()
-
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-
-	return res, nil
+	return ociRunRegionPool(o.getFileSystems(conn, list.Data))
 }
 
 func (o *mqlOciFileStorage) getFileSystemsForAD(ctx context.Context, fsClient *filestorage.FileStorageClient, compartmentID string, availabilityDomain string) ([]filestorage.FileSystemSummary, error) {
@@ -168,7 +157,7 @@ func (o *mqlOciFileStorageFileSystem) id() (string, error) {
 }
 
 func (o *mqlOciFileStorageFileSystem) kmsKey() (*mqlOciKmsKey, error) {
-	if o.cacheKmsKeyId == "" {
+	if o.cacheKmsKeyId == "" || !isOcid(o.cacheKmsKeyId) {
 		o.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}

@@ -38,18 +38,7 @@ func (o *mqlOciDatabase) dbSystems() ([]any, error) {
 		return nil, list.Error
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getDbSystems(conn, list.Data), 5)
-	poolOfJobs.Run()
-
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-
-	return res, nil
+	return ociRunRegionPool(o.getDbSystems(conn, list.Data))
 }
 
 func (o *mqlOciDatabase) getDbSystems(conn *connection.OciConnection, regions []any) []*jobpool.Job {
@@ -172,7 +161,7 @@ func (o *mqlOciDatabaseDbSystem) kmsKey() (*mqlOciKmsKey, error) {
 }
 
 func (o *mqlOciDatabaseDbSystem) subnet() (*mqlOciNetworkSubnet, error) {
-	if o.cacheSubnetId == "" {
+	if o.cacheSubnetId == "" || !isOcid(o.cacheSubnetId) {
 		o.Subnet.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -200,18 +189,7 @@ func (o *mqlOciDatabase) autonomousDatabases() ([]any, error) {
 		return nil, list.Error
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getAutonomousDatabases(conn, list.Data), 5)
-	poolOfJobs.Run()
-
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-
-	return res, nil
+	return ociRunRegionPool(o.getAutonomousDatabases(conn, list.Data))
 }
 
 func (o *mqlOciDatabase) getAutonomousDatabases(conn *connection.OciConnection, regions []any) []*jobpool.Job {
@@ -364,7 +342,7 @@ func (o *mqlOciDatabaseAutonomousDatabase) kmsKey() (*mqlOciKmsKey, error) {
 }
 
 func (o *mqlOciDatabaseAutonomousDatabase) kmsVault() (*mqlOciKmsVault, error) {
-	if o.cacheVaultId == "" {
+	if o.cacheVaultId == "" || !isOcid(o.cacheVaultId) {
 		o.KmsVault.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -378,7 +356,7 @@ func (o *mqlOciDatabaseAutonomousDatabase) kmsVault() (*mqlOciKmsVault, error) {
 }
 
 func (o *mqlOciDatabaseAutonomousDatabase) subnet() (*mqlOciNetworkSubnet, error) {
-	if o.cacheSubnetId == "" {
+	if o.cacheSubnetId == "" || !isOcid(o.cacheSubnetId) {
 		o.Subnet.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -406,17 +384,7 @@ func (o *mqlOciDatabase) backups() ([]any, error) {
 		return nil, list.Error
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getDatabaseBackups(conn, list.Data), 5)
-	poolOfJobs.Run()
-
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-	return res, nil
+	return ociRunRegionPool(o.getDatabaseBackups(conn, list.Data))
 }
 
 func (o *mqlOciDatabase) getDatabaseBackups(conn *connection.OciConnection, regions []any) []*jobpool.Job {
@@ -560,17 +528,7 @@ func (o *mqlOciDatabase) autonomousDatabaseBackups() ([]any, error) {
 		return nil, list.Error
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getAutonomousDatabaseBackups(conn, list.Data), 5)
-	poolOfJobs.Run()
-
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-	return res, nil
+	return ociRunRegionPool(o.getAutonomousDatabaseBackups(conn, list.Data))
 }
 
 // backups on an individual autonomous database returns its backups by
@@ -699,7 +657,7 @@ func (o *mqlOciDatabaseAutonomousDatabaseBackup) id() (string, error) {
 }
 
 func (o *mqlOciDatabaseAutonomousDatabaseBackup) autonomousDatabase() (*mqlOciDatabaseAutonomousDatabase, error) {
-	if o.cacheAutonomousDatabaseId == "" {
+	if o.cacheAutonomousDatabaseId == "" || !isOcid(o.cacheAutonomousDatabaseId) {
 		o.AutonomousDatabase.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}

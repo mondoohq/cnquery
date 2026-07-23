@@ -37,18 +37,7 @@ func (o *mqlOciFunctions) applications() ([]any, error) {
 		return nil, list.Error
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getApplications(conn, list.Data), 5)
-	poolOfJobs.Run()
-
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-
-	return res, nil
+	return ociRunRegionPool(o.getApplications(conn, list.Data))
 }
 
 func (o *mqlOciFunctions) getApplications(conn *connection.OciConnection, regions []any) []*jobpool.Job {

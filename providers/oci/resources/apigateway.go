@@ -39,16 +39,7 @@ func (o *mqlOciApigateway) gateways() ([]any, error) {
 		return nil, list.Error
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getGateways(conn, list.Data), 5)
-	poolOfJobs.Run()
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-	return res, nil
+	return ociRunRegionPool(o.getGateways(conn, list.Data))
 }
 
 func (o *mqlOciApigateway) getGateways(conn *connection.OciConnection, regions []any) []*jobpool.Job {
@@ -292,16 +283,7 @@ func (o *mqlOciApigateway) deployments() ([]any, error) {
 		return nil, list.Error
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getDeployments(conn, list.Data), 5)
-	poolOfJobs.Run()
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-	return res, nil
+	return ociRunRegionPool(o.getDeployments(conn, list.Data))
 }
 
 func (o *mqlOciApigateway) getDeployments(conn *connection.OciConnection, regions []any) []*jobpool.Job {
@@ -712,16 +694,7 @@ func (o *mqlOciApigateway) certificates() ([]any, error) {
 		return nil, list.Error
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getCertificates(conn, list.Data), 5)
-	poolOfJobs.Run()
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-	return res, nil
+	return ociRunRegionPool(o.getCertificates(conn, list.Data))
 }
 
 func (o *mqlOciApigateway) getCertificates(conn *connection.OciConnection, regions []any) []*jobpool.Job {

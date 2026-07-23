@@ -34,18 +34,7 @@ func (o *mqlOciEvents) rules() ([]any, error) {
 		return nil, list.Error
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getEventRules(conn, list.Data), 5)
-	poolOfJobs.Run()
-
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-
-	return res, nil
+	return ociRunRegionPool(o.getEventRules(conn, list.Data))
 }
 
 func (o *mqlOciEvents) getEventRulesForRegion(ctx context.Context, client *events.EventsClient, compartmentID string) ([]events.RuleSummary, error) {

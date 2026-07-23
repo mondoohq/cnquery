@@ -46,16 +46,7 @@ func ociListRegionalAI(runtime *plugin.Runtime, fetch func(region string) ([]any
 			return jobpool.JobResult(items), nil
 		}))
 	}
-	poolOfJobs := jobpool.CreatePool(tasks, 5)
-	poolOfJobs.Run()
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	res := []any{}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-	return res, nil
+	return ociRunRegionPool(tasks)
 }
 
 // ociListRegionalAIClient adds typed per-region client creation to

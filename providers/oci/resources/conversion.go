@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 )
@@ -144,4 +145,39 @@ func definedTagsToAny(in map[string]map[string]interface{}) map[string]any {
 		out[ns] = nsOut
 	}
 	return out
+}
+
+// ociRunRegionPool runs a set of per-region jobs and returns the union of the
+// ones that succeeded.
+//
+// A single failing region no longer discards every other region's results.
+// OCI services are not deployed in every region a tenancy can subscribe to,
+// and a per-region IAM gap is routine, so `HasErrors` -> return nil turned one
+// unentitled region into a hard failure for the whole tenancy. Failures are
+// logged and skipped; the error is surfaced only when no region succeeded, so
+// a genuinely broken scan still reports rather than silently returning [].
+func ociRunRegionPool(jobs []*jobpool.Job) ([]any, error) {
+	poolOfJobs := jobpool.CreatePool(jobs, 5)
+	poolOfJobs.Run()
+
+	res := []any{}
+	failed := 0
+	for i := range poolOfJobs.Jobs {
+		job := poolOfJobs.Jobs[i]
+		if job.Err != nil {
+			failed++
+			log.Debug().Err(job.Err).Msg("skipping oci region that could not be listed")
+			continue
+		}
+		items, ok := job.Result.([]any)
+		if !ok {
+			continue
+		}
+		res = append(res, items...)
+	}
+
+	if failed > 0 && failed == len(poolOfJobs.Jobs) {
+		return nil, poolOfJobs.GetErrors()
+	}
+	return res, nil
 }

@@ -36,18 +36,7 @@ func (o *mqlOciLogging) logGroups() ([]any, error) {
 		return nil, list.Error
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getLogGroups(conn, list.Data), 5)
-	poolOfJobs.Run()
-
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-
-	return res, nil
+	return ociRunRegionPool(o.getLogGroups(conn, list.Data))
 }
 
 func (o *mqlOciLogging) getLogGroupsForRegion(ctx context.Context, client *logging.LoggingManagementClient, compartmentID string) ([]logging.LogGroupSummary, error) {
@@ -307,6 +296,16 @@ func convertLogConfiguration(cfg *logging.Configuration) (map[string]interface{}
 			return nil, err
 		}
 		result["source"] = source
+	}
+
+	// Archiving is the third field on the SDK's Configuration and was dropped
+	// entirely, so log-archiving state read as "not configured" on every log.
+	if cfg.Archiving != nil {
+		archiving, err := convert.JsonToDict(cfg.Archiving)
+		if err != nil {
+			return nil, err
+		}
+		result["archiving"] = archiving
 	}
 
 	return result, nil

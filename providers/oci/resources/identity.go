@@ -26,20 +26,7 @@ func (o *mqlOciIdentity) id() (string, error) {
 func (o *mqlOciIdentity) users() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getUsers(conn), 5)
-	poolOfJobs.Run()
-
-	// check for errors
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	// get all the results
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-
-	return res, nil
+	return ociRunRegionPool(o.getUsers(conn))
 }
 
 func (s *mqlOciIdentity) getUsersForRegion(ctx context.Context, identityClient *identity.IdentityClient, compartmentID string) ([]identity.User, error) {
@@ -70,104 +57,100 @@ func (s *mqlOciIdentity) getUsersForRegion(ctx context.Context, identityClient *
 
 func (o *mqlOciIdentity) getUsers(conn *connection.OciConnection) []*jobpool.Job {
 	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.GetRegions(ctx)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}} // return the error
-	}
-	for _, region := range regions {
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci with region %s", region)
-
-			svc, err := conn.IdentityClientWithRegion(*region.RegionKey)
-			if err != nil {
-				return nil, err
-			}
-
-			var res []any
-			users, err := o.getUsersForRegion(ctx, svc, conn.TenantID())
-			if err != nil {
-				return nil, err
-			}
-
-			for i := range users {
-				user := users[i]
-
-				var created *time.Time
-				if user.TimeCreated != nil {
-					created = &user.TimeCreated.Time
-				}
-
-				var lastLogin *time.Time
-				if user.LastSuccessfulLoginTime != nil {
-					lastLogin = &user.LastSuccessfulLoginTime.Time
-				}
-
-				var previousLogin *time.Time
-				if user.PreviousSuccessfulLoginTime != nil {
-					previousLogin = &user.PreviousSuccessfulLoginTime.Time
-				}
-
-				// Every key is always present: a missing key reads as null, and
-				// `capabilities["a"] && capabilities["b"]` over two nulls
-				// evaluates to true in MQL, so a user whose capabilities the
-				// API omitted would silently pass a credential-capability check.
-				capabilities := map[string]any{
-					"canUseConsolePassword":         false,
-					"canUseApiKeys":                 false,
-					"canUseAuthTokens":              false,
-					"canUseSmtpCredentials":         false,
-					"canUseCustomerSecretKeys":      false,
-					"canUseOAuth2ClientCredentials": false,
-				}
-				if user.Capabilities != nil {
-					capabilities["canUseConsolePassword"] = boolValue(user.Capabilities.CanUseConsolePassword)
-					capabilities["canUseApiKeys"] = boolValue(user.Capabilities.CanUseApiKeys)
-					capabilities["canUseAuthTokens"] = boolValue(user.Capabilities.CanUseAuthTokens)
-					capabilities["canUseSmtpCredentials"] = boolValue(user.Capabilities.CanUseSmtpCredentials)
-					capabilities["canUseCustomerSecretKeys"] = boolValue(user.Capabilities.CanUseCustomerSecretKeys)
-					capabilities["canUseOAuth2ClientCredentials"] = boolValue(user.Capabilities.CanUseOAuth2ClientCredentials)
-				}
-
-				freeformTags := make(map[string]interface{})
-				for k, v := range user.FreeformTags {
-					freeformTags[k] = v
-				}
-
-				definedTags := make(map[string]interface{})
-				for k, v := range user.DefinedTags {
-					definedTags[k] = v
-				}
-
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.user", map[string]*llx.RawData{
-					"id":                 llx.StringDataPtr(user.Id),
-					"name":               llx.StringDataPtr(user.Name),
-					"description":        llx.StringDataPtr(user.Description),
-					"created":            llx.TimeDataPtr(created),
-					"state":              llx.StringData(string(user.LifecycleState)),
-					"mfaActivated":       llx.BoolData(boolValue(user.IsMfaActivated)),
-					"compartmentID":      llx.StringDataPtr(user.CompartmentId),
-					"email":              llx.StringDataPtr(user.Email),
-					"emailVerified":      llx.BoolData(boolValue(user.EmailVerified)),
-					"externalIdentifier": llx.StringDataPtr(user.ExternalIdentifier),
-					"capabilities":       llx.MapData(capabilities, types.Bool),
-					"lastLogin":          llx.TimeDataPtr(lastLogin),
-					"previousLogin":      llx.TimeDataPtr(previousLogin),
-					"freeformTags":       llx.MapData(freeformTags, types.String),
-					"definedTags":        llx.MapData(definedTags, types.Any),
-				})
-				if err != nil {
-					return nil, err
-				}
-				mqlInstance.(*mqlOciIdentityUser).cacheIdentityProviderID = stringValue(user.IdentityProviderId)
-				res = append(res, mqlInstance)
-			}
-
-			return jobpool.JobResult(res), nil
+	// IAM is a global service: every regional identity endpoint serves the same
+	// tenancy-wide set, so fanning out over regions returned each user once per
+	// subscribed region. CreateResource hands back the cached instance for a
+	// repeated __id, so the slice held N copies of one pointer and the counts
+	// (and anything filtering them) were inflated N-fold.
+	f := func() (jobpool.JobResult, error) {
+		svcVal, err := conn.IdentityClient()
+		if err != nil {
+			return nil, err
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
+		svc := &svcVal
+
+		var res []any
+		users, err := o.getUsersForRegion(ctx, svc, conn.TenantID())
+		if err != nil {
+			return nil, err
+		}
+
+		for i := range users {
+			user := users[i]
+
+			var created *time.Time
+			if user.TimeCreated != nil {
+				created = &user.TimeCreated.Time
+			}
+
+			var lastLogin *time.Time
+			if user.LastSuccessfulLoginTime != nil {
+				lastLogin = &user.LastSuccessfulLoginTime.Time
+			}
+
+			var previousLogin *time.Time
+			if user.PreviousSuccessfulLoginTime != nil {
+				previousLogin = &user.PreviousSuccessfulLoginTime.Time
+			}
+
+			// Every key is always present: a missing key reads as null, and
+			// `capabilities["a"] && capabilities["b"]` over two nulls
+			// evaluates to true in MQL, so a user whose capabilities the
+			// API omitted would silently pass a credential-capability check.
+			capabilities := map[string]any{
+				"canUseConsolePassword":         false,
+				"canUseApiKeys":                 false,
+				"canUseAuthTokens":              false,
+				"canUseSmtpCredentials":         false,
+				"canUseCustomerSecretKeys":      false,
+				"canUseOAuth2ClientCredentials": false,
+			}
+			if user.Capabilities != nil {
+				capabilities["canUseConsolePassword"] = boolValue(user.Capabilities.CanUseConsolePassword)
+				capabilities["canUseApiKeys"] = boolValue(user.Capabilities.CanUseApiKeys)
+				capabilities["canUseAuthTokens"] = boolValue(user.Capabilities.CanUseAuthTokens)
+				capabilities["canUseSmtpCredentials"] = boolValue(user.Capabilities.CanUseSmtpCredentials)
+				capabilities["canUseCustomerSecretKeys"] = boolValue(user.Capabilities.CanUseCustomerSecretKeys)
+				capabilities["canUseOAuth2ClientCredentials"] = boolValue(user.Capabilities.CanUseOAuth2ClientCredentials)
+			}
+
+			freeformTags := make(map[string]interface{})
+			for k, v := range user.FreeformTags {
+				freeformTags[k] = v
+			}
+
+			definedTags := make(map[string]interface{})
+			for k, v := range user.DefinedTags {
+				definedTags[k] = v
+			}
+
+			mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.user", map[string]*llx.RawData{
+				"id":                 llx.StringDataPtr(user.Id),
+				"name":               llx.StringDataPtr(user.Name),
+				"description":        llx.StringDataPtr(user.Description),
+				"created":            llx.TimeDataPtr(created),
+				"state":              llx.StringData(string(user.LifecycleState)),
+				"mfaActivated":       llx.BoolData(boolValue(user.IsMfaActivated)),
+				"compartmentID":      llx.StringDataPtr(user.CompartmentId),
+				"email":              llx.StringDataPtr(user.Email),
+				"emailVerified":      llx.BoolData(boolValue(user.EmailVerified)),
+				"externalIdentifier": llx.StringDataPtr(user.ExternalIdentifier),
+				"capabilities":       llx.MapData(capabilities, types.Bool),
+				"lastLogin":          llx.TimeDataPtr(lastLogin),
+				"previousLogin":      llx.TimeDataPtr(previousLogin),
+				"freeformTags":       llx.MapData(freeformTags, types.String),
+				"definedTags":        llx.MapData(definedTags, types.Any),
+			})
+			if err != nil {
+				return nil, err
+			}
+			mqlInstance.(*mqlOciIdentityUser).cacheIdentityProviderID = stringValue(user.IdentityProviderId)
+			res = append(res, mqlInstance)
+		}
+
+		return jobpool.JobResult(res), nil
 	}
-	return tasks
+	return []*jobpool.Job{jobpool.NewJob(f)}
 }
 
 type mqlOciIdentityUserInternal struct {
@@ -440,20 +423,7 @@ func (o *mqlOciIdentityUser) groups() ([]any, error) {
 func (o *mqlOciIdentity) groups() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getGroups(conn), 5)
-	poolOfJobs.Run()
-
-	// check for errors
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	// get all the results
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-
-	return res, nil
+	return ociRunRegionPool(o.getGroups(conn))
 }
 
 func (s *mqlOciIdentity) getGroupsForRegion(ctx context.Context, identityClient *identity.IdentityClient, compartmentID string) ([]identity.Group, error) {
@@ -484,65 +454,61 @@ func (s *mqlOciIdentity) getGroupsForRegion(ctx context.Context, identityClient 
 
 func (o *mqlOciIdentity) getGroups(conn *connection.OciConnection) []*jobpool.Job {
 	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.GetRegions(ctx)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}} // return the error
-	}
-	for _, region := range regions {
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci with region %s", region)
-
-			svc, err := conn.IdentityClientWithRegion(*region.RegionKey)
-			if err != nil {
-				return nil, err
-			}
-
-			var res []any
-			groups, err := o.getGroupsForRegion(ctx, svc, conn.TenantID())
-			if err != nil {
-				return nil, err
-			}
-
-			for i := range groups {
-				grp := groups[i]
-
-				var created *time.Time
-				if grp.TimeCreated != nil {
-					created = &grp.TimeCreated.Time
-				}
-
-				freeformTags := make(map[string]interface{})
-				for k, v := range grp.FreeformTags {
-					freeformTags[k] = v
-				}
-
-				definedTags := make(map[string]interface{})
-				for k, v := range grp.DefinedTags {
-					definedTags[k] = v
-				}
-
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.group", map[string]*llx.RawData{
-					"id":            llx.StringDataPtr(grp.Id),
-					"name":          llx.StringDataPtr(grp.Name),
-					"description":   llx.StringDataPtr(grp.Description),
-					"created":       llx.TimeDataPtr(created),
-					"state":         llx.StringData(string(grp.LifecycleState)),
-					"compartmentID": llx.StringDataPtr(grp.CompartmentId),
-					"freeformTags":  llx.MapData(freeformTags, types.String),
-					"definedTags":   llx.MapData(definedTags, types.Any),
-				})
-				if err != nil {
-					return nil, err
-				}
-				res = append(res, mqlInstance)
-			}
-
-			return jobpool.JobResult(res), nil
+	// IAM is a global service: every regional identity endpoint serves the same
+	// tenancy-wide set, so fanning out over regions returned each group once per
+	// subscribed region. CreateResource hands back the cached instance for a
+	// repeated __id, so the slice held N copies of one pointer and the counts
+	// (and anything filtering them) were inflated N-fold.
+	f := func() (jobpool.JobResult, error) {
+		svcVal, err := conn.IdentityClient()
+		if err != nil {
+			return nil, err
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
+		svc := &svcVal
+
+		var res []any
+		groups, err := o.getGroupsForRegion(ctx, svc, conn.TenantID())
+		if err != nil {
+			return nil, err
+		}
+
+		for i := range groups {
+			grp := groups[i]
+
+			var created *time.Time
+			if grp.TimeCreated != nil {
+				created = &grp.TimeCreated.Time
+			}
+
+			freeformTags := make(map[string]interface{})
+			for k, v := range grp.FreeformTags {
+				freeformTags[k] = v
+			}
+
+			definedTags := make(map[string]interface{})
+			for k, v := range grp.DefinedTags {
+				definedTags[k] = v
+			}
+
+			mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.group", map[string]*llx.RawData{
+				"id":            llx.StringDataPtr(grp.Id),
+				"name":          llx.StringDataPtr(grp.Name),
+				"description":   llx.StringDataPtr(grp.Description),
+				"created":       llx.TimeDataPtr(created),
+				"state":         llx.StringData(string(grp.LifecycleState)),
+				"compartmentID": llx.StringDataPtr(grp.CompartmentId),
+				"freeformTags":  llx.MapData(freeformTags, types.String),
+				"definedTags":   llx.MapData(definedTags, types.Any),
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlInstance)
+		}
+
+		return jobpool.JobResult(res), nil
 	}
-	return tasks
+	return []*jobpool.Job{jobpool.NewJob(f)}
 }
 
 func (o *mqlOciIdentityGroup) id() (string, error) {
@@ -552,20 +518,7 @@ func (o *mqlOciIdentityGroup) id() (string, error) {
 func (o *mqlOciIdentity) policies() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getPolicies(conn), 5)
-	poolOfJobs.Run()
-
-	// check for errors
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	// get all the results
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-
-	return res, nil
+	return ociRunRegionPool(o.getPolicies(conn))
 }
 
 func (s *mqlOciIdentity) getPoliciesForRegion(ctx context.Context, identityClient *identity.IdentityClient, compartmentID string) ([]identity.Policy, error) {
@@ -596,72 +549,68 @@ func (s *mqlOciIdentity) getPoliciesForRegion(ctx context.Context, identityClien
 
 func (o *mqlOciIdentity) getPolicies(conn *connection.OciConnection) []*jobpool.Job {
 	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.GetRegions(ctx)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}} // return the error
-	}
-	for _, region := range regions {
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci with region %s", region)
-
-			svc, err := conn.IdentityClientWithRegion(*region.RegionKey)
-			if err != nil {
-				return nil, err
-			}
-
-			var res []any
-			policies, err := o.getPoliciesForRegion(ctx, svc, conn.TenantID())
-			if err != nil {
-				return nil, err
-			}
-
-			for i := range policies {
-				policy := policies[i]
-
-				var created *time.Time
-				if policy.TimeCreated != nil {
-					created = &policy.TimeCreated.Time
-				}
-
-				var versionDate *time.Time
-				if policy.VersionDate != nil {
-					versionDate = &policy.VersionDate.Date
-				}
-
-				freeformTags := make(map[string]interface{})
-				for k, v := range policy.FreeformTags {
-					freeformTags[k] = v
-				}
-
-				definedTags := make(map[string]interface{})
-				for k, v := range policy.DefinedTags {
-					definedTags[k] = v
-				}
-
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.policy", map[string]*llx.RawData{
-					"id":            llx.StringDataPtr(policy.Id),
-					"name":          llx.StringDataPtr(policy.Name),
-					"description":   llx.StringDataPtr(policy.Description),
-					"created":       llx.TimeDataPtr(created),
-					"state":         llx.StringData(string(policy.LifecycleState)),
-					"compartmentID": llx.StringDataPtr(policy.CompartmentId),
-					"statements":    llx.ArrayData(convert.SliceAnyToInterface(policy.Statements), types.String),
-					"versionDate":   llx.TimeDataPtr(versionDate),
-					"freeformTags":  llx.MapData(freeformTags, types.String),
-					"definedTags":   llx.MapData(definedTags, types.Any),
-				})
-				if err != nil {
-					return nil, err
-				}
-				res = append(res, mqlInstance)
-			}
-
-			return jobpool.JobResult(res), nil
+	// IAM is a global service: every regional identity endpoint serves the same
+	// tenancy-wide set, so fanning out over regions returned each policy once per
+	// subscribed region. CreateResource hands back the cached instance for a
+	// repeated __id, so the slice held N copies of one pointer and the counts
+	// (and anything filtering them) were inflated N-fold.
+	f := func() (jobpool.JobResult, error) {
+		svcVal, err := conn.IdentityClient()
+		if err != nil {
+			return nil, err
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
+		svc := &svcVal
+
+		var res []any
+		policies, err := o.getPoliciesForRegion(ctx, svc, conn.TenantID())
+		if err != nil {
+			return nil, err
+		}
+
+		for i := range policies {
+			policy := policies[i]
+
+			var created *time.Time
+			if policy.TimeCreated != nil {
+				created = &policy.TimeCreated.Time
+			}
+
+			var versionDate *time.Time
+			if policy.VersionDate != nil {
+				versionDate = &policy.VersionDate.Date
+			}
+
+			freeformTags := make(map[string]interface{})
+			for k, v := range policy.FreeformTags {
+				freeformTags[k] = v
+			}
+
+			definedTags := make(map[string]interface{})
+			for k, v := range policy.DefinedTags {
+				definedTags[k] = v
+			}
+
+			mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.policy", map[string]*llx.RawData{
+				"id":            llx.StringDataPtr(policy.Id),
+				"name":          llx.StringDataPtr(policy.Name),
+				"description":   llx.StringDataPtr(policy.Description),
+				"created":       llx.TimeDataPtr(created),
+				"state":         llx.StringData(string(policy.LifecycleState)),
+				"compartmentID": llx.StringDataPtr(policy.CompartmentId),
+				"statements":    llx.ArrayData(convert.SliceAnyToInterface(policy.Statements), types.String),
+				"versionDate":   llx.TimeDataPtr(versionDate),
+				"freeformTags":  llx.MapData(freeformTags, types.String),
+				"definedTags":   llx.MapData(definedTags, types.Any),
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlInstance)
+		}
+
+		return jobpool.JobResult(res), nil
 	}
-	return tasks
+	return []*jobpool.Job{jobpool.NewJob(f)}
 }
 
 func (o *mqlOciIdentityPolicy) id() (string, error) {
@@ -957,7 +906,7 @@ func (o *mqlOciIdentityUser) oauth2ClientCredentials() ([]any, error) {
 				"name":          llx.StringDataPtr(cred.Name),
 				"description":   llx.StringDataPtr(cred.Description),
 				"compartmentID": llx.StringDataPtr(cred.CompartmentId),
-				"scopes":        llx.DictData(scopesDict),
+				"scopes":        llx.ArrayData(scopesDict, types.Dict),
 				"created":       sdkTimeData(cred.TimeCreated),
 				"expires":       sdkTimeData(cred.ExpiresOn),
 				"state":         llx.StringData(string(cred.LifecycleState)),
@@ -1149,7 +1098,7 @@ func (o *mqlOciIdentity) networkSources() ([]any, error) {
 				"name":              llx.StringDataPtr(ns.Name),
 				"description":       llx.StringDataPtr(ns.Description),
 				"publicSourceList":  llx.ArrayData(stringsToAny(ns.PublicSourceList), types.String),
-				"virtualSourceList": llx.DictData(virtualDict),
+				"virtualSourceList": llx.ArrayData(virtualDict, types.Dict),
 				"services":          llx.ArrayData(stringsToAny(ns.Services), types.String),
 				"created":           sdkTimeData(ns.TimeCreated),
 				"state":             llx.StringData(string(ns.LifecycleState)),

@@ -449,7 +449,7 @@ func (o *mqlOciComputeImage) baseImage() (*mqlOciComputeImage, error) {
 }
 
 func (o *mqlOciComputeInstance) bootVolume() (*mqlOciComputeBootVolume, error) {
-	if o.cacheBootVolumeID == "" {
+	if o.cacheBootVolumeID == "" || !isOcid(o.cacheBootVolumeID) {
 		o.BootVolume.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -463,7 +463,7 @@ func (o *mqlOciComputeInstance) bootVolume() (*mqlOciComputeBootVolume, error) {
 }
 
 func (o *mqlOciComputeBlockVolume) sourceVolume() (*mqlOciComputeBlockVolume, error) {
-	if o.cacheSourceVolumeID == "" {
+	if o.cacheSourceVolumeID == "" || !isOcid(o.cacheSourceVolumeID) {
 		o.SourceVolume.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -477,7 +477,7 @@ func (o *mqlOciComputeBlockVolume) sourceVolume() (*mqlOciComputeBlockVolume, er
 }
 
 func (o *mqlOciComputeBootVolume) sourceBootVolume() (*mqlOciComputeBootVolume, error) {
-	if o.cacheSourceBootVolumeID == "" {
+	if o.cacheSourceBootVolumeID == "" || !isOcid(o.cacheSourceBootVolumeID) {
 		o.SourceBootVolume.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -491,7 +491,7 @@ func (o *mqlOciComputeBootVolume) sourceBootVolume() (*mqlOciComputeBootVolume, 
 }
 
 func (o *mqlOciIdentityUser) identityProvider() (*mqlOciIdentityIdentityProvider, error) {
-	if o.cacheIdentityProviderID == "" {
+	if o.cacheIdentityProviderID == "" || !isOcid(o.cacheIdentityProviderID) {
 		o.IdentityProvider.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -505,7 +505,7 @@ func (o *mqlOciIdentityUser) identityProvider() (*mqlOciIdentityIdentityProvider
 }
 
 func (o *mqlOciOkeNodePool) cluster() (*mqlOciOkeCluster, error) {
-	if o.cacheClusterID == "" {
+	if o.cacheClusterID == "" || !isOcid(o.cacheClusterID) {
 		o.Cluster.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -553,7 +553,7 @@ func (o *mqlOciNetworkSubnet) securityLists() ([]any, error) {
 }
 
 func (o *mqlOciFileStorageFileSystem) parentFileSystem() (*mqlOciFileStorageFileSystem, error) {
-	if o.cacheParentFileSystemId == "" {
+	if o.cacheParentFileSystemId == "" || !isOcid(o.cacheParentFileSystemId) {
 		o.ParentFileSystem.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -567,7 +567,7 @@ func (o *mqlOciFileStorageFileSystem) parentFileSystem() (*mqlOciFileStorageFile
 }
 
 func (o *mqlOciDatabaseDbSystem) sourceDbSystem() (*mqlOciDatabaseDbSystem, error) {
-	if o.cacheSourceDbSystemId == "" {
+	if o.cacheSourceDbSystemId == "" || !isOcid(o.cacheSourceDbSystemId) {
 		o.SourceDbSystem.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -581,7 +581,7 @@ func (o *mqlOciDatabaseDbSystem) sourceDbSystem() (*mqlOciDatabaseDbSystem, erro
 }
 
 func (o *mqlOciDatabaseAutonomousDatabase) sourceDatabase() (*mqlOciDatabaseAutonomousDatabase, error) {
-	if o.cacheSourceId == "" {
+	if o.cacheSourceId == "" || !isOcid(o.cacheSourceId) {
 		o.SourceDatabase.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}

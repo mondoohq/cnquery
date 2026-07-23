@@ -37,16 +37,7 @@ func (o *mqlOciCertificates) certificates() ([]any, error) {
 		return nil, list.Error
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getCertificates(conn, list.Data), 5)
-	poolOfJobs.Run()
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-	return res, nil
+	return ociRunRegionPool(o.getCertificates(conn, list.Data))
 }
 
 func (o *mqlOciCertificates) getCertificates(conn *connection.OciConnection, regions []any) []*jobpool.Job {
@@ -256,16 +247,7 @@ func (o *mqlOciCertificates) certificateAuthorities() ([]any, error) {
 		return nil, list.Error
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getCertificateAuthorities(conn, list.Data), 5)
-	poolOfJobs.Run()
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-	return res, nil
+	return ociRunRegionPool(o.getCertificateAuthorities(conn, list.Data))
 }
 
 func (o *mqlOciCertificates) getCertificateAuthorities(conn *connection.OciConnection, regions []any) []*jobpool.Job {
@@ -453,16 +435,7 @@ func (o *mqlOciCertificates) caBundles() ([]any, error) {
 		return nil, list.Error
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getCaBundles(conn, list.Data), 5)
-	poolOfJobs.Run()
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-	return res, nil
+	return ociRunRegionPool(o.getCaBundles(conn, list.Data))
 }
 
 func (o *mqlOciCertificates) getCaBundles(conn *connection.OciConnection, regions []any) []*jobpool.Job {

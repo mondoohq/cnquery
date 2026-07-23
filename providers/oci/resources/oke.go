@@ -38,18 +38,7 @@ func (o *mqlOciOke) clusters() ([]any, error) {
 		return nil, list.Error
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getClusters(conn, list.Data), 5)
-	poolOfJobs.Run()
-
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-
-	return res, nil
+	return ociRunRegionPool(o.getClusters(conn, list.Data))
 }
 
 func (o *mqlOciOke) getClusters(conn *connection.OciConnection, regions []any) []*jobpool.Job {
@@ -237,7 +226,7 @@ func initOciOkeCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 }
 
 func (o *mqlOciOkeCluster) vcn() (*mqlOciNetworkVcn, error) {
-	if o.cacheVcnId == "" {
+	if o.cacheVcnId == "" || !isOcid(o.cacheVcnId) {
 		o.Vcn.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}

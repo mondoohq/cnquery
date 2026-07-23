@@ -35,18 +35,7 @@ func (o *mqlOciBastion) bastions() ([]any, error) {
 		return nil, list.Error
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getBastions(conn, list.Data), 5)
-	poolOfJobs.Run()
-
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-
-	return res, nil
+	return ociRunRegionPool(o.getBastions(conn, list.Data))
 }
 
 func (o *mqlOciBastion) getBastions(conn *connection.OciConnection, regions []any) []*jobpool.Job {

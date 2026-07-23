@@ -33,20 +33,6 @@ func (o *mqlOciNetwork) regionResources() ([]any, error) {
 	return list.Data, nil
 }
 
-// runNetworkPool runs the given jobs and flattens their []any results.
-func runNetworkPool(jobs []*jobpool.Job) ([]any, error) {
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(jobs, 5)
-	poolOfJobs.Run()
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-	return res, nil
-}
-
 // Dynamic Routing Gateways
 
 type mqlOciNetworkDrgInternal struct {
@@ -59,7 +45,7 @@ func (o *mqlOciNetwork) drgs() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return runNetworkPool(o.getDrgs(conn, regions))
+	return ociRunRegionPool(o.getDrgs(conn, regions))
 }
 
 func (o *mqlOciNetwork) getDrgs(conn *connection.OciConnection, regions []any) []*jobpool.Job {
@@ -439,7 +425,7 @@ func (o *mqlOciNetwork) localPeeringGateways() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return runNetworkPool(o.getLocalPeeringGateways(conn, regions))
+	return ociRunRegionPool(o.getLocalPeeringGateways(conn, regions))
 }
 
 func (o *mqlOciNetwork) getLocalPeeringGateways(conn *connection.OciConnection, regions []any) []*jobpool.Job {
@@ -608,7 +594,7 @@ func (o *mqlOciNetwork) serviceGateways() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return runNetworkPool(o.getServiceGateways(conn, regions))
+	return ociRunRegionPool(o.getServiceGateways(conn, regions))
 }
 
 func (o *mqlOciNetwork) getServiceGateways(conn *connection.OciConnection, regions []any) []*jobpool.Job {

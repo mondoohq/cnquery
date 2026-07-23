@@ -38,20 +38,7 @@ func (o *mqlOciCompute) instances() ([]any, error) {
 	}
 
 	// fetch instances
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getComputeInstances(conn, list.Data), 5)
-	poolOfJobs.Run()
-
-	// check for errors
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	// get all the results
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-
-	return res, nil
+	return ociRunRegionPool(o.getComputeInstances(conn, list.Data))
 }
 
 func (o *mqlOciCompute) getComputeInstancesForRegion(ctx context.Context, computeClient *core.ComputeClient, compartmentID string) ([]core.Instance, error) {
@@ -386,20 +373,7 @@ func (o *mqlOciCompute) images() ([]any, error) {
 	}
 
 	// fetch images
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getComputeImage(conn, list.Data), 5)
-	poolOfJobs.Run()
-
-	// check for errors
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	// get all the results
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-
-	return res, nil
+	return ociRunRegionPool(o.getComputeImage(conn, list.Data))
 }
 
 func (o *mqlOciCompute) getComputeImagesForRegion(ctx context.Context, computeClient *core.ComputeClient, compartmentID string) ([]core.Image, error) {
@@ -524,18 +498,7 @@ func (o *mqlOciCompute) blockVolumes() ([]any, error) {
 		return nil, list.Error
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getBlockVolumes(conn, list.Data), 5)
-	poolOfJobs.Run()
-
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-
-	return res, nil
+	return ociRunRegionPool(o.getBlockVolumes(conn, list.Data))
 }
 
 func (o *mqlOciCompute) getBlockVolumesForRegion(ctx context.Context, client *core.BlockstorageClient, compartmentID string) ([]core.Volume, error) {
@@ -668,18 +631,7 @@ func (o *mqlOciCompute) bootVolumes() ([]any, error) {
 		return nil, list.Error
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getBootVolumes(conn, list.Data), 5)
-	poolOfJobs.Run()
-
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-
-	return res, nil
+	return ociRunRegionPool(o.getBootVolumes(conn, list.Data))
 }
 
 func (o *mqlOciCompute) getBootVolumesForRegion(ctx context.Context, client *core.BlockstorageClient, compartmentID string) ([]core.BootVolume, error) {

@@ -82,18 +82,7 @@ func (o *mqlOciDataSafe) gatherResults(jobs []*jobpool.Job, err error) ([]any, e
 	if err != nil {
 		return nil, err
 	}
-	pool := jobpool.CreatePool(jobs, 5)
-	pool.Run()
-	if pool.HasErrors() {
-		return nil, pool.GetErrors()
-	}
-	res := []any{}
-	for i := range pool.Jobs {
-		if pool.Jobs[i].Result != nil {
-			res = append(res, pool.Jobs[i].Result.([]any)...)
-		}
-	}
-	return res, nil
+	return ociRunRegionPool(jobs)
 }
 
 // ============================================================================

@@ -58,16 +58,7 @@ func (o *mqlOciAiGenerativeAi) listRegional(fetch func(svc *generativeai.Generat
 		}))
 	}
 
-	poolOfJobs := jobpool.CreatePool(tasks, 5)
-	poolOfJobs.Run()
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	res := []any{}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-	return res, nil
+	return ociRunRegionPool(tasks)
 }
 
 // ----- dedicated AI clusters -----

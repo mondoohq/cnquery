@@ -28,7 +28,7 @@ func (o *mqlOciNetwork) cpes() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return runNetworkPool(o.getCpes(conn, regions))
+	return ociRunRegionPool(o.getCpes(conn, regions))
 }
 
 func (o *mqlOciNetwork) getCpes(conn *connection.OciConnection, regions []any) []*jobpool.Job {
@@ -148,7 +148,7 @@ func (o *mqlOciNetwork) ipsecConnections() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return runNetworkPool(o.getIpsecConnections(conn, regions))
+	return ociRunRegionPool(o.getIpsecConnections(conn, regions))
 }
 
 func (o *mqlOciNetwork) getIpsecConnections(conn *connection.OciConnection, regions []any) []*jobpool.Job {
@@ -505,7 +505,7 @@ func (o *mqlOciNetwork) virtualCircuits() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return runNetworkPool(o.getVirtualCircuits(conn, regions))
+	return ociRunRegionPool(o.getVirtualCircuits(conn, regions))
 }
 
 func (o *mqlOciNetwork) getVirtualCircuits(conn *connection.OciConnection, regions []any) []*jobpool.Job {
@@ -662,7 +662,7 @@ func (o *mqlOciNetwork) crossConnects() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return runNetworkPool(o.getCrossConnects(conn, regions))
+	return ociRunRegionPool(o.getCrossConnects(conn, regions))
 }
 
 func (o *mqlOciNetwork) getCrossConnects(conn *connection.OciConnection, regions []any) []*jobpool.Job {

@@ -35,18 +35,7 @@ func (o *mqlOciRedis) clusters() ([]any, error) {
 		return nil, regions.Error
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getClusters(conn, regions.Data), 5)
-	poolOfJobs.Run()
-
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-
-	return res, nil
+	return ociRunRegionPool(o.getClusters(conn, regions.Data))
 }
 
 func (o *mqlOciRedis) getClusters(conn *connection.OciConnection, regions []any) []*jobpool.Job {

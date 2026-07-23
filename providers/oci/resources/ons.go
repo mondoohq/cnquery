@@ -34,18 +34,7 @@ func (o *mqlOciOns) topics() ([]any, error) {
 		return nil, list.Error
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getTopics(conn, list.Data), 5)
-	poolOfJobs.Run()
-
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-
-	return res, nil
+	return ociRunRegionPool(o.getTopics(conn, list.Data))
 }
 
 func (o *mqlOciOns) getTopicsForRegion(ctx context.Context, client *ons.NotificationControlPlaneClient, compartmentID string) ([]ons.NotificationTopicSummary, error) {

@@ -35,18 +35,7 @@ func (o *mqlOciContainerInstances) instances() ([]any, error) {
 		return nil, list.Error
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getContainerInstances(conn, list.Data), 5)
-	poolOfJobs.Run()
-
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-
-	return res, nil
+	return ociRunRegionPool(o.getContainerInstances(conn, list.Data))
 }
 
 func (o *mqlOciContainerInstances) getContainerInstances(conn *connection.OciConnection, regions []any) []*jobpool.Job {

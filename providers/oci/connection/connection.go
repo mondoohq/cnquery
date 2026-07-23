@@ -55,7 +55,15 @@ func NewOciConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 		if pkey.Type != vault.CredentialType_private_key {
 			return nil, errors.New("OCI provider does not support credential type: " + pkey.Type.String())
 		}
-		configProvider = common.NewRawConfigurationProvider(tenancyOcid, userOcid, region, fingerprint, string(pkey.Secret), nil)
+		// --key-secret is collected by ParseCLI as the credential password and
+		// is the passphrase for an encrypted private key. Passing nil here made
+		// the documented flag inert, so an encrypted API key failed at connect
+		// with an opaque PEM decryption error no matter what the user supplied.
+		var passphrase *string
+		if pkey.Password != "" {
+			passphrase = &pkey.Password
+		}
+		configProvider = common.NewRawConfigurationProvider(tenancyOcid, userOcid, region, fingerprint, string(pkey.Secret), passphrase)
 	} else {
 		profile := conf.Options["profile"]
 		configFile := conf.Options["config-file"]

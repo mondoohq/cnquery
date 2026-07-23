@@ -144,7 +144,10 @@ func (o *mqlOciCloudGuard) targets() ([]any, error) {
 	for {
 		response, err := client.ListTargets(ctx, cloudguard.ListTargetsRequest{
 			CompartmentId: common.String(conn.TenantID()),
-			Page:          page,
+			// Cloud Guard targets are attached to sub-compartments far more
+			// often than to the tenancy root.
+			CompartmentIdInSubtree: common.Bool(true),
+			Page:                   page,
 		})
 		if err != nil {
 			return nil, err
@@ -205,8 +208,9 @@ func (o *mqlOciCloudGuard) detectorRecipes() ([]any, error) {
 	var page *string
 	for {
 		response, err := client.ListDetectorRecipes(ctx, cloudguard.ListDetectorRecipesRequest{
-			CompartmentId: common.String(conn.TenantID()),
-			Page:          page,
+			CompartmentId:          common.String(conn.TenantID()),
+			CompartmentIdInSubtree: common.Bool(true),
+			Page:                   page,
 		})
 		if err != nil {
 			return nil, err

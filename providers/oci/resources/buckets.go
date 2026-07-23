@@ -74,20 +74,7 @@ func (o *mqlOciObjectStorage) buckets() ([]any, error) {
 		return nil, err
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getBuckets(conn, namespace, list.Data), 5)
-	poolOfJobs.Run()
-
-	// check for errors
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	// get all the results
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-
-	return res, nil
+	return ociRunRegionPool(o.getBuckets(conn, namespace, list.Data))
 }
 
 func (o *mqlOciObjectStorage) getBucketsForRegion(ctx context.Context, objectStorageClient *objectstorage.ObjectStorageClient, compartmentID string, namespace string) ([]objectstorage.BucketSummary, error) {

@@ -101,16 +101,7 @@ func (o *mqlOciAiAgents) agents() ([]any, error) {
 		return nil, err
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getAgents(conn, regions), 5)
-	poolOfJobs.Run()
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-	return res, nil
+	return ociRunRegionPool(o.getAgents(conn, regions))
 }
 
 func (o *mqlOciAiAgents) getAgents(conn *connection.OciConnection, regions []any) []*jobpool.Job {
@@ -227,16 +218,7 @@ func (o *mqlOciAiAgents) agentEndpoints() ([]any, error) {
 		return nil, err
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getAgentEndpoints(conn, regions), 5)
-	poolOfJobs.Run()
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-	return res, nil
+	return ociRunRegionPool(o.getAgentEndpoints(conn, regions))
 }
 
 func (o *mqlOciAiAgents) getAgentEndpoints(conn *connection.OciConnection, regions []any) []*jobpool.Job {
@@ -377,16 +359,7 @@ func (o *mqlOciAiAgents) knowledgeBases() ([]any, error) {
 		return nil, err
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getKnowledgeBases(conn, regions), 5)
-	poolOfJobs.Run()
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-	return res, nil
+	return ociRunRegionPool(o.getKnowledgeBases(conn, regions))
 }
 
 func (o *mqlOciAiAgents) getKnowledgeBases(conn *connection.OciConnection, regions []any) []*jobpool.Job {
@@ -493,16 +466,7 @@ func (o *mqlOciAiAgents) dataSources() ([]any, error) {
 		return nil, err
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getDataSources(conn, regions), 5)
-	poolOfJobs.Run()
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-	return res, nil
+	return ociRunRegionPool(o.getDataSources(conn, regions))
 }
 
 func (o *mqlOciAiAgents) getDataSources(conn *connection.OciConnection, regions []any) []*jobpool.Job {
@@ -630,16 +594,7 @@ func (o *mqlOciAiAgents) tools() ([]any, error) {
 		return nil, err
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getTools(conn, regions), 5)
-	poolOfJobs.Run()
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-	return res, nil
+	return ociRunRegionPool(o.getTools(conn, regions))
 }
 
 func (o *mqlOciAiAgents) getTools(conn *connection.OciConnection, regions []any) []*jobpool.Job {

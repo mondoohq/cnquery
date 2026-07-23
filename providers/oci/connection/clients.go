@@ -422,6 +422,7 @@ func (c *OciConnection) GenerativeAiAgentClient(region string) (*generativeaiage
 		return nil, err
 	}
 	client.SetRegion(region)
+	failFastOnUnreachableRegion(&client.BaseClient)
 	return &client, nil
 }
 
@@ -431,6 +432,7 @@ func (c *OciConnection) DataScienceClient(region string) (*datascience.DataScien
 		return nil, err
 	}
 	client.SetRegion(region)
+	failFastOnUnreachableRegion(&client.BaseClient)
 	return &client, nil
 }
 

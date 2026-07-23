@@ -1700,11 +1700,13 @@ private oci.logging.log @defaults("name") {
   retentionDuration int
   // Log configuration
   //
-  // Keyed by `compartmentId` (OCID of the compartment owning the log)
-  // and `source`, a nested map describing the emitting service. For a
+  // Keyed by `compartmentId` (OCID of the compartment owning the log),
+  // `source`, a nested map describing the emitting service, and
+  // `archiving` when object-storage archiving is configured. For a
   // service log the `source` map carries `sourceType`, `service`,
   // `resource`, and `category`. The `category`, `sourceService`, and
-  // `sourceResource` fields surface those source values directly.
+  // `sourceResource` fields surface those source values directly. The
+  // `archiving` map carries `isEnabled`.
   configuration dict
   // Log category (e.g., all, write, read — depends on service)
   category string

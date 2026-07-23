@@ -33,18 +33,7 @@ func (o *mqlOciMonitoring) alarms() ([]any, error) {
 		return nil, list.Error
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getAlarms(conn, list.Data), 5)
-	poolOfJobs.Run()
-
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-
-	return res, nil
+	return ociRunRegionPool(o.getAlarms(conn, list.Data))
 }
 
 func (o *mqlOciMonitoring) getAlarms(conn *connection.OciConnection, regions []any) []*jobpool.Job {
@@ -68,7 +57,10 @@ func (o *mqlOciMonitoring) getAlarms(conn *connection.OciConnection, regions []a
 			for {
 				response, err := svc.ListAlarms(ctx, monitoring.ListAlarmsRequest{
 					CompartmentId: common.String(conn.TenantID()),
-					Page:          page,
+					// Alarms are normally created in a workload compartment,
+					// not the tenancy root.
+					CompartmentIdInSubtree: common.Bool(true),
+					Page:                   page,
 				})
 				if err != nil {
 					return nil, err

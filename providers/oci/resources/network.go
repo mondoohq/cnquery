@@ -28,20 +28,7 @@ func (o *mqlOciNetwork) id() (string, error) {
 func (o *mqlOciNetwork) vcns() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getVcns(conn), 5)
-	poolOfJobs.Run()
-
-	// check for errors
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	// get all the results
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-
-	return res, nil
+	return ociRunRegionPool(o.getVcns(conn))
 }
 
 func (s *mqlOciNetwork) getVcnsForRegion(ctx context.Context, networkClient *core.VirtualNetworkClient, compartmentID string) ([]core.Vcn, error) {
@@ -177,20 +164,7 @@ func (o *mqlOciNetworkVcn) id() (string, error) {
 func (o *mqlOciNetwork) securityLists() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getSecurityLists(conn), 5)
-	poolOfJobs.Run()
-
-	// check for errors
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	// get all the results
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-
-	return res, nil
+	return ociRunRegionPool(o.getSecurityLists(conn))
 }
 
 func (s *mqlOciNetwork) getSecurityListsForRegion(ctx context.Context, networkClient *core.VirtualNetworkClient, compartmentID string) ([]core.SecurityList, error) {
@@ -345,8 +319,8 @@ func (o *mqlOciNetwork) getSecurityLists(conn *connection.OciConnection) []*jobp
 					"created":              llx.TimeDataPtr(created),
 					"state":                llx.StringData(string(securityList.LifecycleState)),
 					"compartmentID":        llx.StringDataPtr(securityList.CompartmentId),
-					"egressSecurityRules":  llx.DictData(egress),
-					"ingressSecurityRules": llx.DictData(ingress),
+					"egressSecurityRules":  llx.ArrayData(egress, types.Dict),
+					"ingressSecurityRules": llx.ArrayData(ingress, types.Dict),
 					"vcnId":                llx.StringDataPtr(securityList.VcnId),
 					"freeformTags":         llx.MapData(freeformTags, types.String),
 					"definedTags":          llx.MapData(definedTags, types.Any),
@@ -419,7 +393,7 @@ func (o *mqlOciNetworkSecurityList) id() (string, error) {
 }
 
 func (o *mqlOciNetworkSecurityList) vcn() (*mqlOciNetworkVcn, error) {
-	if o.cacheVcnId == "" {
+	if o.cacheVcnId == "" || !isOcid(o.cacheVcnId) {
 		o.Vcn.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -489,18 +463,7 @@ func (o *mqlOciNetwork) subnets() ([]any, error) {
 		return nil, list.Error
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getSubnets(conn, list.Data), 5)
-	poolOfJobs.Run()
-
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-
-	return res, nil
+	return ociRunRegionPool(o.getSubnets(conn, list.Data))
 }
 
 func (o *mqlOciNetwork) getSubnets(conn *connection.OciConnection, regions []any) []*jobpool.Job {
@@ -631,7 +594,7 @@ func (o *mqlOciNetworkSubnet) id() (string, error) {
 }
 
 func (o *mqlOciNetworkSubnet) vcn() (*mqlOciNetworkVcn, error) {
-	if o.cacheVcnId == "" {
+	if o.cacheVcnId == "" || !isOcid(o.cacheVcnId) {
 		o.Vcn.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -657,18 +620,7 @@ func (o *mqlOciNetwork) networkSecurityGroups() ([]any, error) {
 		return nil, list.Error
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getNetworkSecurityGroups(conn, list.Data), 5)
-	poolOfJobs.Run()
-
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-
-	return res, nil
+	return ociRunRegionPool(o.getNetworkSecurityGroups(conn, list.Data))
 }
 
 func (o *mqlOciNetwork) getNSGsForRegion(ctx context.Context, networkClient *core.VirtualNetworkClient, compartmentID string) ([]core.NetworkSecurityGroup, error) {
@@ -852,7 +804,7 @@ func initOciNetworkNetworkSecurityGroup(runtime *plugin.Runtime, args map[string
 }
 
 func (o *mqlOciNetworkNetworkSecurityGroup) vcn() (*mqlOciNetworkVcn, error) {
-	if o.cacheVcnId == "" {
+	if o.cacheVcnId == "" || !isOcid(o.cacheVcnId) {
 		o.Vcn.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -1110,18 +1062,7 @@ func (o *mqlOciNetwork) internetGateways() ([]any, error) {
 		return nil, list.Error
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getInternetGateways(conn, list.Data), 5)
-	poolOfJobs.Run()
-
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-
-	return res, nil
+	return ociRunRegionPool(o.getInternetGateways(conn, list.Data))
 }
 
 func (o *mqlOciNetwork) getInternetGateways(conn *connection.OciConnection, regions []any) []*jobpool.Job {
@@ -1212,7 +1153,7 @@ func (o *mqlOciNetworkInternetGateway) id() (string, error) {
 }
 
 func (o *mqlOciNetworkInternetGateway) vcn() (*mqlOciNetworkVcn, error) {
-	if o.cacheVcnId == "" {
+	if o.cacheVcnId == "" || !isOcid(o.cacheVcnId) {
 		o.Vcn.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -1240,18 +1181,7 @@ func (o *mqlOciNetwork) natGateways() ([]any, error) {
 		return nil, list.Error
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getNatGateways(conn, list.Data), 5)
-	poolOfJobs.Run()
-
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-
-	return res, nil
+	return ociRunRegionPool(o.getNatGateways(conn, list.Data))
 }
 
 func (o *mqlOciNetwork) getNatGateways(conn *connection.OciConnection, regions []any) []*jobpool.Job {
@@ -1343,7 +1273,7 @@ func (o *mqlOciNetworkNatGateway) id() (string, error) {
 }
 
 func (o *mqlOciNetworkNatGateway) vcn() (*mqlOciNetworkVcn, error) {
-	if o.cacheVcnId == "" {
+	if o.cacheVcnId == "" || !isOcid(o.cacheVcnId) {
 		o.Vcn.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -1385,18 +1315,7 @@ func (o *mqlOciNetwork) routeTables() ([]any, error) {
 		return nil, list.Error
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getRouteTables(conn, list.Data), 5)
-	poolOfJobs.Run()
-
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-
-	return res, nil
+	return ociRunRegionPool(o.getRouteTables(conn, list.Data))
 }
 
 func (o *mqlOciNetwork) getRouteTables(conn *connection.OciConnection, regions []any) []*jobpool.Job {
@@ -1473,7 +1392,7 @@ func (o *mqlOciNetwork) getRouteTables(conn *connection.OciConnection, regions [
 					"id":            llx.StringDataPtr(rt.Id),
 					"name":          llx.StringDataPtr(rt.DisplayName),
 					"compartmentID": llx.StringDataPtr(rt.CompartmentId),
-					"routeRules":    llx.DictData(routeRules),
+					"routeRules":    llx.ArrayData(routeRules, types.Dict),
 					"state":         llx.StringData(string(rt.LifecycleState)),
 					"created":       llx.TimeDataPtr(created),
 					"freeformTags":  llx.MapData(freeformTags, types.String),
@@ -1534,7 +1453,7 @@ func (o *mqlOciNetworkRouteTable) id() (string, error) {
 }
 
 func (o *mqlOciNetworkRouteTable) vcn() (*mqlOciNetworkVcn, error) {
-	if o.cacheVcnId == "" {
+	if o.cacheVcnId == "" || !isOcid(o.cacheVcnId) {
 		o.Vcn.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -1550,7 +1469,7 @@ func (o *mqlOciNetworkRouteTable) vcn() (*mqlOciNetworkVcn, error) {
 // Subnet route table reference
 
 func (o *mqlOciNetworkSubnet) routeTable() (*mqlOciNetworkRouteTable, error) {
-	if o.cacheRouteTableId == "" {
+	if o.cacheRouteTableId == "" || !isOcid(o.cacheRouteTableId) {
 		o.RouteTable.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -1576,18 +1495,7 @@ func (o *mqlOciNetwork) publicIps() ([]any, error) {
 		return nil, list.Error
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getPublicIps(conn, list.Data), 5)
-	poolOfJobs.Run()
-
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-
-	return res, nil
+	return ociRunRegionPool(o.getPublicIps(conn, list.Data))
 }
 
 func (o *mqlOciNetwork) getPublicIps(conn *connection.OciConnection, regions []any) []*jobpool.Job {

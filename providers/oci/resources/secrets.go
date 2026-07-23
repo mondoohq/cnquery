@@ -36,18 +36,7 @@ func (o *mqlOciVault) secrets() ([]any, error) {
 		return nil, list.Error
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getSecrets(conn, list.Data), 5)
-	poolOfJobs.Run()
-
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-
-	return res, nil
+	return ociRunRegionPool(o.getSecrets(conn, list.Data))
 }
 
 func (o *mqlOciVault) getSecrets(conn *connection.OciConnection, regions []any) []*jobpool.Job {
