@@ -1908,6 +1908,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.mergeRequest.repoName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubMergeRequest).GetRepoName()).ToDataRes(types.String)
 	},
+	"github.mergeRequest.repoOwnerLogin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubMergeRequest).GetRepoOwnerLogin()).ToDataRes(types.String)
+	},
 	"github.mergeRequest.milestone": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubMergeRequest).GetMilestone()).ToDataRes(types.Resource("github.milestone"))
 	},
@@ -4731,6 +4734,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.mergeRequest.repoName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubMergeRequest).RepoName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.mergeRequest.repoOwnerLogin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubMergeRequest).RepoOwnerLogin, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"github.mergeRequest.milestone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11015,6 +11022,7 @@ type mqlGithubMergeRequest struct {
 	Commits            plugin.TValue[[]any]
 	Reviews            plugin.TValue[[]any]
 	RepoName           plugin.TValue[string]
+	RepoOwnerLogin     plugin.TValue[string]
 	Milestone          plugin.TValue[*mqlGithubMilestone]
 	Merged             plugin.TValue[bool]
 	MergedAt           plugin.TValue[*time.Time]
@@ -11136,6 +11144,10 @@ func (c *mqlGithubMergeRequest) GetReviews() *plugin.TValue[[]any] {
 
 func (c *mqlGithubMergeRequest) GetRepoName() *plugin.TValue[string] {
 	return &c.RepoName
+}
+
+func (c *mqlGithubMergeRequest) GetRepoOwnerLogin() *plugin.TValue[string] {
+	return &c.RepoOwnerLogin
 }
 
 func (c *mqlGithubMergeRequest) GetMilestone() *plugin.TValue[*mqlGithubMilestone] {

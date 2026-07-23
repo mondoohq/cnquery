@@ -30,6 +30,14 @@ type ghRunnerExt struct {
 	Labels       []*github.RunnerLabels `json:"labels,omitempty"`
 }
 
+// idValue returns the runner id, or 0 when the API omitted it.
+func (r *ghRunnerExt) idValue() int64 {
+	if r == nil || r.ID == nil {
+		return 0
+	}
+	return *r.ID
+}
+
 type ghRunnersListResp struct {
 	TotalCount int            `json:"total_count"`
 	Runners    []*ghRunnerExt `json:"runners"`
@@ -79,6 +87,7 @@ func (g *mqlGithubOrganization) runners() ([]any, error) {
 	}
 	orgLogin := g.Login.Data
 
+	scope := "orgs/" + orgLogin
 	allRunners, err := listRunnersRaw(conn.Context(), conn.Client(), fmt.Sprintf("orgs/%s/actions/runners", orgLogin))
 	if err != nil {
 		if strings.Contains(err.Error(), "404") {
@@ -91,28 +100,19 @@ func (g *mqlGithubOrganization) runners() ([]any, error) {
 		return nil, err
 	}
 
-	return runnersToMql(g.MqlRuntime, allRunners)
+	return runnersToMql(g.MqlRuntime, scope, allRunners)
 }
 
 // runners returns the self-hosted runners for a repository.
 func (g *mqlGithubRepository) runners() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
-	if g.Name.Error != nil {
-		return nil, g.Name.Error
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return nil, err
 	}
-	repoName := g.Name.Data
 
-	if g.Owner.Error != nil {
-		return nil, g.Owner.Error
-	}
-	owner := g.Owner.Data
-
-	if owner.Login.Error != nil {
-		return nil, owner.Login.Error
-	}
-	ownerLogin := owner.Login.Data
-
+	scope := "repos/" + ownerLogin + "/" + repoName
 	allRunners, err := listRunnersRaw(conn.Context(), conn.Client(), fmt.Sprintf("repos/%s/%s/actions/runners", ownerLogin, repoName))
 	if err != nil {
 		if strings.Contains(err.Error(), "404") {
@@ -125,16 +125,32 @@ func (g *mqlGithubRepository) runners() ([]any, error) {
 		return nil, err
 	}
 
-	return runnersToMql(g.MqlRuntime, allRunners)
+	return runnersToMql(g.MqlRuntime, scope, allRunners)
 }
 
-// runnersToMql converts a list of GitHub runners to MQL resources.
-func runnersToMql(runtime *plugin.Runtime, runners []*ghRunnerExt) ([]any, error) {
+// runnerID keys a runner by the scope that registered it. Organization and
+// repository runners are numbered independently, so an unqualified id aliased an
+// org runner with a repository runner that happened to share a number.
+func runnerID(scope string, id int64) string {
+	return "github.runner/" + scope + "/" + strconv.FormatInt(id, 10)
+}
+
+// runnerLabelID keys a label by runner and name. Read-only labels ("self-hosted",
+// "linux", ...) share fixed ids across every runner, and the API omits the id for
+// some custom labels, which collapsed those labels onto a single resource.
+func runnerLabelID(scope string, runner int64, name string) string {
+	return "github.runnerLabel/" + scope + "/" + strconv.FormatInt(runner, 10) + "/" + name
+}
+
+// runnersToMql converts a list of GitHub runners to MQL resources. scope is the
+// API path prefix the runners were listed from, used to key them.
+func runnersToMql(runtime *plugin.Runtime, scope string, runners []*ghRunnerExt) ([]any, error) {
 	res := []any{}
 	for _, runner := range runners {
 		labels := []any{}
 		for _, label := range runner.Labels {
 			labelRes, err := CreateResource(runtime, "github.runnerLabel", map[string]*llx.RawData{
+				"__id": llx.StringData(runnerLabelID(scope, runner.idValue(), label.GetName())),
 				"id":   llx.IntDataDefault(label.ID, 0),
 				"name": llx.StringDataPtr(label.Name),
 				"type": llx.StringDataPtr(label.Type),
@@ -146,6 +162,7 @@ func runnersToMql(runtime *plugin.Runtime, runners []*ghRunnerExt) ([]any, error
 		}
 
 		r, err := CreateResource(runtime, "github.runner", map[string]*llx.RawData{
+			"__id":         llx.StringData(runnerID(scope, runner.idValue())),
 			"id":           llx.IntDataDefault(runner.ID, 0),
 			"name":         llx.StringDataPtr(runner.Name),
 			"os":           llx.StringDataPtr(runner.OS),

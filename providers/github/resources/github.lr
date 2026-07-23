@@ -1618,6 +1618,12 @@ private github.mergeRequest @defaults("id state") {
   reviews() []github.review
   // Pull request repository name
   repoName string
+  // Login of the account that owns the pull request's repository
+  //
+  // The organization or user the repository belongs to, which is what
+  // addresses the repository in the API. This is distinct from owner, which
+  // is the account that authored the pull request.
+  repoOwnerLogin string
   // Pull request milestone
   milestone github.milestone
   // Whether the pull request has been merged

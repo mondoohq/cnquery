@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cockroachdb/errors"
 	"github.com/google/go-github/v89/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -606,7 +605,10 @@ func (g *mqlGithubPackage) repository() (*mqlGithubRepository, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.packageRepository == "" {
-		return nil, errors.New("could not load the repository")
+		// Container and other registry packages are not always attached to a
+		// repository; that is a valid empty state, not a failure.
+		g.Repository.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
 
 	repoName := g.packageRepository
@@ -624,6 +626,10 @@ func (g *mqlGithubPackage) repository() (*mqlGithubRepository, error) {
 		return nil, g.Owner.Error
 	}
 	owner := g.Owner.Data
+	if owner == nil {
+		g.Repository.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
 
 	if owner.Login.Error != nil {
 		return nil, owner.Login.Error

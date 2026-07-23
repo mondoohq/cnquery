@@ -254,18 +254,10 @@ func initGithubRepositoryCopilotCloudAgent(runtime *plugin.Runtime, args map[str
 
 func (g *mqlGithubRepository) copilotCloudAgent() (*mqlGithubRepositoryCopilotCloudAgent, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
-	if g.Name.Error != nil {
-		return nil, g.Name.Error
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return nil, err
 	}
-	repoName := g.Name.Data
-	if g.Owner.Error != nil {
-		return nil, g.Owner.Error
-	}
-	owner := g.Owner.Data
-	if owner.Login.Error != nil {
-		return nil, owner.Login.Error
-	}
-	ownerLogin := owner.Login.Data
 
 	cfg, _, err := conn.Client().Copilot.GetCloudAgentConfiguration(conn.Context(), ownerLogin, repoName)
 	if err != nil {

@@ -160,14 +160,20 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 	if stringx.ContainsAnyOf(targets, connection.DiscoveryUsers) {
 		for i := range org.GetMembers().Data {
 			user := org.GetMembers().Data[i].(*mqlGithubUser)
-			if user.Name.Data == "" {
+			if user.Login.Data == "" {
 				continue
+			}
+			// Most GitHub accounts leave the profile name blank; fall back to
+			// the login so those members are still discovered.
+			name := user.Name.Data
+			if name == "" {
+				name = user.Login.Data
 			}
 			cfg := conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.ID()))
 			cfg.Options["user"] = user.Login.Data
 			assetList = append(assetList, &inventory.Asset{
 				PlatformIds: []string{connection.NewGithubUserIdentifier(user.Login.Data)},
-				Name:        user.Name.Data,
+				Name:        name,
 				Platform:    connection.NewGithubUserPlatform(user.Login.Data),
 				Labels:      map[string]string{},
 				Connections: []*inventory.Config{cfg},
@@ -251,6 +257,11 @@ func user(runtime *plugin.Runtime, userName string, conn *connection.GithubConne
 			}
 			repoCfg := conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.ID()))
 			repoCfg.Options["repository"] = repo.Name.Data
+			// The repository resource resolves its owner from the "owner" /
+			// "organization" options; a user-scoped config carries neither, so
+			// without this every repo asset discovered here fails to
+			// initialize github.repository.
+			repoCfg.Options["owner"] = user.Login.Data
 			assetList = append(assetList, &inventory.Asset{
 				PlatformIds: []string{connection.NewGitHubRepoIdentifier(user.Login.Data, repo.Name.Data)},
 				Name:        user.Login.Data + "/" + repo.Name.Data,
@@ -538,7 +549,15 @@ func repoIacFromTree(ctx context.Context, client *github.Client, repo *mqlGithub
 		return out, nil
 	}
 
-	tree, _, err := client.Git.GetTree(ctx, repo.Owner.Data.Login.Data, repo.Name.Data, ref, true)
+	owner, err := repoOwner(repo)
+	if err != nil {
+		return nil, err
+	}
+	if owner.Login.Error != nil {
+		return nil, owner.Login.Error
+	}
+
+	tree, _, err := client.Git.GetTree(ctx, owner.Login.Data, repo.Name.Data, ref, true)
 	if err != nil {
 		return nil, err
 	}
@@ -548,9 +567,18 @@ func repoIacFromTree(ctx context.Context, client *github.Client, repo *mqlGithub
 		log.Warn().Str("project", repo.FullName.Data).Msg("github repository tree is truncated; some IaC files may not be discovered")
 	}
 
+	return classifyIacTree(tree.Entries), nil
+}
+
+// classifyIacTree sorts the blobs of a repository tree into the IaC entry
+// points each detector needs. The switch ordering mirrors the GitLab provider
+// so the two behave identically — notably, Chart.yaml and kustomization.yaml
+// match their own cases and so do not also count as k8s manifests.
+func classifyIacTree(entries []*github.TreeEntry) *repoIac {
+	out := &repoIac{}
 	helmSeen := map[string]bool{}
 	kustomizeSeen := map[string]bool{}
-	for _, entry := range tree.Entries {
+	for _, entry := range entries {
 		if entry.GetType() != "blob" {
 			continue
 		}
@@ -582,7 +610,7 @@ func repoIacFromTree(ctx context.Context, client *github.Client, repo *mqlGithub
 			out.hasYaml = true
 		}
 	}
-	return out, nil
+	return out
 }
 
 // gitAsset builds a child asset that clones the repository and scans it with the
@@ -629,7 +657,15 @@ func discoverTerraform(conn *connection.GithubConnection, repo *mqlGithubReposit
 
 // hasTerraformHcl will check if the repository contains terraform files
 func hasTerraformHcl(ctx context.Context, client *github.Client, repo *mqlGithubRepository) (bool, error) {
-	languages, _, err := client.Repositories.ListLanguages(ctx, repo.Owner.Data.Login.Data, repo.Name.Data)
+	owner, err := repoOwner(repo)
+	if err != nil {
+		return false, err
+	}
+	if owner.Login.Error != nil {
+		return false, owner.Login.Error
+	}
+
+	languages, _, err := client.Repositories.ListLanguages(ctx, owner.Login.Data, repo.Name.Data)
 	if err != nil {
 		return false, err
 	}

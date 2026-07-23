@@ -4,7 +4,9 @@
 package resources
 
 import (
+	"fmt"
 	"io"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -280,6 +282,13 @@ func (g *mqlGithubGistfile) content() (string, error) {
 	resp, err := ranger.DefaultHttpClient().Get(rawUrl)
 	if err != nil {
 		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		// Without this check an error page's body would be handed back as the
+		// file's content.
+		return "", fmt.Errorf("could not fetch gist file %s: %s", rawUrl, resp.Status)
 	}
 
 	data, err := io.ReadAll(resp.Body)

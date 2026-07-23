@@ -217,7 +217,11 @@ func initGithubRepository(runtime *plugin.Runtime, args map[string]*llx.RawData)
 				if err != nil {
 					return nil, nil, err
 				}
-				obj, err = CreateResource(runtime, "github.user", map[string]*llx.RawData{
+				// NewResource so the user's init runs and fills in the id;
+				// CreateResource would cache a bare resource under the
+				// degenerate key "github.user/0" and shadow the real user for
+				// the rest of the scan.
+				obj, err = NewResource(runtime, "github.user", map[string]*llx.RawData{
 					"login": llx.StringData(userId.Name),
 				})
 				if err != nil {
@@ -279,7 +283,10 @@ func initGithubRepository(runtime *plugin.Runtime, args map[string]*llx.RawData)
 
 	// if the repo is not cached, we fetch it from the github api
 	if owner != "" {
-		// we reach this point if the repo was not cached
+		// we reach this point if the repo was not cached. Use the resolved
+		// owner rather than the organization name: when the organization
+		// lookup fell through to the user path, the org name is not the
+		// account that holds the repository.
 		ghRepo, _, err := conn.Client().Repositories.Get(conn.Context(), owner, reponame)
 		if err != nil {
 			return nil, nil, err
@@ -304,18 +311,10 @@ func (g *mqlGithubLicense) id() (string, error) {
 
 func (g *mqlGithubRepository) license() (*mqlGithubLicense, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
-	if g.Name.Error != nil {
-		return nil, g.Name.Error
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return nil, err
 	}
-	repoName := g.Name.Data
-	if g.Owner.Error != nil {
-		return nil, g.Owner.Error
-	}
-	ownerName := g.Owner.Data
-	if ownerName.Login.Error != nil {
-		return nil, ownerName.Login.Error
-	}
-	ownerLogin := ownerName.Login.Data
 
 	repoLicense, _, err := conn.Client().Repositories.License(conn.Context(), ownerLogin, repoName)
 	if err != nil {
@@ -348,18 +347,10 @@ func (g *mqlGithubRepository) license() (*mqlGithubLicense, error) {
 
 func (g *mqlGithubRepository) getMergeRequests(state string) ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
-	if g.Name.Error != nil {
-		return nil, g.Name.Error
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return nil, err
 	}
-	repoName := g.Name.Data
-	if g.Owner.Error != nil {
-		return nil, g.Owner.Error
-	}
-	ownerName := g.Owner.Data
-	if ownerName.Login.Error != nil {
-		return nil, ownerName.Login.Error
-	}
-	ownerLogin := ownerName.Login.Data
 
 	listOpts := &github.PullRequestListOptions{
 		ListOptions: github.ListOptions{PerPage: paginationPerPage},
@@ -448,6 +439,7 @@ func (g *mqlGithubRepository) getMergeRequests(state string) ([]any, error) {
 
 		r, err := CreateResource(g.MqlRuntime, "github.mergeRequest", map[string]*llx.RawData{
 			"id":                 llx.IntDataPtr(pr.ID),
+			"repoOwnerLogin":     llx.StringData(ownerLogin),
 			"number":             llx.IntData(int64(pr.GetNumber())),
 			"state":              llx.StringDataPtr(pr.State),
 			"labels":             llx.ArrayData(labels, types.Any),
@@ -507,19 +499,14 @@ func (g *mqlGithubMergeRequest) id() (string, error) {
 
 func (g *mqlGithubRepository) branches() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
-	if g.Name.Error != nil {
-		return nil, g.Name.Error
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return nil, err
 	}
-	repoName := g.Name.Data
-	if g.Owner.Error != nil {
-		return nil, g.Owner.Error
+	owner, err := repoOwner(g)
+	if err != nil {
+		return nil, err
 	}
-	owner := g.Owner.Data
-
-	if owner.Login.Error != nil {
-		return nil, owner.Login.Error
-	}
-	ownerLogin := owner.Login.Data
 
 	if g.DefaultBranchName.Error != nil {
 		return nil, g.DefaultBranchName.Error
@@ -553,7 +540,7 @@ func (g *mqlGithubRepository) branches() ([]any, error) {
 			defaultBranch = true
 		}
 
-		mqlBranch, err := newMqlBranch(g.MqlRuntime, branch, owner, repoName, defaultBranch)
+		mqlBranch, err := newMqlBranch(g.MqlRuntime, branch, owner, ownerLogin, repoName, defaultBranch)
 		if err != nil {
 			return nil, err
 		}
@@ -562,8 +549,16 @@ func (g *mqlGithubRepository) branches() ([]any, error) {
 	return res, nil
 }
 
-func newMqlBranch(runtime *plugin.Runtime, branch *github.Branch, owner *mqlGithubUser, repoName string, defaultBranch bool) (*mqlGithubBranch, error) {
+// branchID keys a branch by owner as well as repository. Repository names are
+// only unique within an owner, and forks keep the name of the repository they
+// were forked from, so an owner-less key aliased branches across forks.
+func branchID(ownerLogin, repoName, branchName string) string {
+	return "github.branch/" + ownerLogin + "/" + repoName + "/" + branchName
+}
+
+func newMqlBranch(runtime *plugin.Runtime, branch *github.Branch, owner *mqlGithubUser, ownerLogin string, repoName string, defaultBranch bool) (*mqlGithubBranch, error) {
 	mqlBranch, err := CreateResource(runtime, "github.branch", map[string]*llx.RawData{
+		"__id":          llx.StringData(branchID(ownerLogin, repoName, branch.GetName())),
 		"name":          llx.StringData(branch.GetName()),
 		"isProtected":   llx.BoolData(branch.GetProtected()),
 		"headCommitSha": llx.StringData(branch.GetCommit().GetSHA()),
@@ -579,19 +574,14 @@ func newMqlBranch(runtime *plugin.Runtime, branch *github.Branch, owner *mqlGith
 
 func (g *mqlGithubRepository) defaultBranch() (*mqlGithubBranch, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
-	if g.Name.Error != nil {
-		return nil, g.Name.Error
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return nil, err
 	}
-	repoName := g.Name.Data
-	if g.Owner.Error != nil {
-		return nil, g.Owner.Error
+	owner, err := repoOwner(g)
+	if err != nil {
+		return nil, err
 	}
-	owner := g.Owner.Data
-
-	if owner.Login.Error != nil {
-		return nil, owner.Login.Error
-	}
-	ownerLogin := owner.Login.Data
 
 	if g.DefaultBranchName.Error != nil {
 		return nil, g.DefaultBranchName.Error
@@ -609,7 +599,7 @@ func (g *mqlGithubRepository) defaultBranch() (*mqlGithubBranch, error) {
 		return nil, err
 	}
 
-	return newMqlBranch(g.MqlRuntime, branch, owner, repoName, true)
+	return newMqlBranch(g.MqlRuntime, branch, owner, ownerLogin, repoName, true)
 }
 
 type githubDismissalRestrictions struct {
@@ -657,6 +647,10 @@ func (g *mqlGithubBranch) protectionRules() (*mqlGithubBranchprotection, error) 
 		return nil, g.Owner.Error
 	}
 	owner := g.Owner.Data
+	if owner == nil {
+		g.ProtectionRules.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
 	if owner.Login.Error != nil {
 		log.Debug().Err(err).Msg("note: branch protection can only be accessed by admin users")
 		if strings.Contains(owner.Login.Error.Error(), "404") {
@@ -860,8 +854,12 @@ func newMqlGithubCommit(runtime *plugin.Runtime, rc *github.RepositoryCommit, ow
 	var err error
 	conn := runtime.Connection.(*connection.GithubConnection)
 
-	// if the github author is nil, we have to load the commit again
-	if rc.Author == nil || rc.Commit == nil {
+	// If the commit payload is missing we have to load the commit again. A nil
+	// Author is not a reason to refetch: it means the commit's email is not
+	// linked to any GitHub account, and the detail endpoint reports the same
+	// null. Refetching on it cost one extra API call per unlinked commit and
+	// changed nothing.
+	if rc.Commit == nil {
 		rc, _, err = conn.Client().Repositories.GetCommit(conn.Context(), owner, repo, rc.GetSHA(), nil)
 		if err != nil {
 			return nil, err
@@ -917,18 +915,10 @@ func newMqlGithubCommit(runtime *plugin.Runtime, rc *github.RepositoryCommit, ow
 func (g *mqlGithubRepository) commits() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
-	if g.Name.Error != nil {
-		return nil, g.Name.Error
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return nil, err
 	}
-	repoName := g.Name.Data
-	if g.Owner.Error != nil {
-		return nil, g.Owner.Error
-	}
-	ownerName := g.Owner.Data
-	if ownerName.Login.Error != nil {
-		return nil, ownerName.Login.Error
-	}
-	ownerLogin := ownerName.Login.Data
 
 	listOpts := &github.CommitsListOptions{
 		ListOptions: github.ListOptions{PerPage: paginationPerPage},
@@ -965,21 +955,31 @@ func (g *mqlGithubRepository) commits() ([]any, error) {
 	return res, nil
 }
 
+// mergeRequestRepo returns the owner login and name of the repository a pull
+// request belongs to. It reads repoOwnerLogin rather than owner: owner is the
+// account that *authored* the pull request, which for organization
+// repositories is almost never the account that owns the repository. Addressing
+// the API with the author's login used to 404 and, because the callers treat a
+// 404 as "nothing here", silently returned no commits and no reviews.
+func mergeRequestRepo(g *mqlGithubMergeRequest) (string, string, error) {
+	if g.RepoName.Error != nil {
+		return "", "", g.RepoName.Error
+	}
+	if g.RepoOwnerLogin.Error != nil {
+		return "", "", g.RepoOwnerLogin.Error
+	}
+	if g.RepoOwnerLogin.Data == "" {
+		return "", "", errors.New("pull request is missing the owner of its repository")
+	}
+	return g.RepoOwnerLogin.Data, g.RepoName.Data, nil
+}
+
 func (g *mqlGithubMergeRequest) reviews() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
-	var err error
-	if g.RepoName.Error != nil {
-		return nil, g.RepoName.Error
+	ownerLogin, repoName, err := mergeRequestRepo(g)
+	if err != nil {
+		return nil, err
 	}
-	repoName := g.RepoName.Data
-	if g.Owner.Error != nil {
-		return nil, g.Owner.Error
-	}
-	owner := g.Owner.Data
-	if owner.Login.Error != nil {
-		return nil, owner.Login.Error
-	}
-	ownerLogin := owner.Login.Data
 	if g.Number.Error != nil {
 		return nil, g.Number.Error
 	}
@@ -1033,18 +1033,10 @@ func (g *mqlGithubMergeRequest) reviews() ([]any, error) {
 
 func (g *mqlGithubMergeRequest) commits() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
-	if g.RepoName.Error != nil {
-		return nil, g.RepoName.Error
+	ownerLogin, repoName, err := mergeRequestRepo(g)
+	if err != nil {
+		return nil, err
 	}
-	repoName := g.RepoName.Data
-	if g.Owner.Error != nil {
-		return nil, g.Owner.Error
-	}
-	owner := g.Owner.Data
-	if owner.Login.Error != nil {
-		return nil, owner.Login.Error
-	}
-	ownerLogin := owner.Login.Data
 	if g.Number.Error != nil {
 		return nil, g.Number.Error
 	}
@@ -1084,18 +1076,10 @@ func (g *mqlGithubMergeRequest) commits() ([]any, error) {
 func (g *mqlGithubRepository) contributors() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
-	if g.Name.Error != nil {
-		return nil, g.Name.Error
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return nil, err
 	}
-	repoName := g.Name.Data
-	if g.Owner.Error != nil {
-		return nil, g.Owner.Error
-	}
-	ownerName := g.Owner.Data
-	if ownerName.Login.Error != nil {
-		return nil, ownerName.Login.Error
-	}
-	ownerLogin := ownerName.Login.Data
 
 	listOpts := &github.ListContributorsOptions{
 		ListOptions: github.ListOptions{PerPage: paginationPerPage},
@@ -1132,18 +1116,10 @@ func (g *mqlGithubRepository) contributors() ([]any, error) {
 func (g *mqlGithubRepository) collaborators() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
-	if g.Name.Error != nil {
-		return nil, g.Name.Error
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return nil, err
 	}
-	repoName := g.Name.Data
-	if g.Owner.Error != nil {
-		return nil, g.Owner.Error
-	}
-	ownerName := g.Owner.Data
-	if ownerName.Login.Error != nil {
-		return nil, ownerName.Login.Error
-	}
-	ownerLogin := ownerName.Login.Data
 
 	listOpts := &github.ListCollaboratorsOptions{
 		ListOptions: github.ListOptions{PerPage: paginationPerPage},
@@ -1177,6 +1153,7 @@ func (g *mqlGithubRepository) collaborators() ([]any, error) {
 		permissions := permissionsFromUser(contributor)
 
 		mqlContributor, err := CreateResource(g.MqlRuntime, "github.collaborator", map[string]*llx.RawData{
+			"__id":        llx.StringData(collaboratorID(ownerLogin, repoName, contributor.GetID())),
 			"id":          llx.IntDataPtr(contributor.ID),
 			"user":        llx.ResourceData(mqlUser, mqlUser.MqlName()),
 			"permissions": llx.ArrayData(convert.SliceAnyToInterface[string](permissions), types.String),
@@ -1187,6 +1164,21 @@ func (g *mqlGithubRepository) collaborators() ([]any, error) {
 		res = append(res, mqlContributor)
 	}
 	return res, nil
+}
+
+// collaboratorID keys a collaborator by the repository the permissions apply
+// to. The same account collaborates on many repositories with different
+// permission sets, so keying on the user alone made every repository after the
+// first reuse the first one's permissions.
+func collaboratorID(ownerLogin, repoName string, userID int64) string {
+	return "github.collaborator/" + ownerLogin + "/" + repoName + "/" + strconv.FormatInt(userID, 10)
+}
+
+// alertID keys a security alert by repository. Alert numbers are assigned per
+// repository and restart at 1, so an unqualified number aliased alerts across
+// every repository reached in the same scan.
+func alertID(resource, ownerLogin, repoName string, number int64) string {
+	return resource + "/" + ownerLogin + "/" + repoName + "/" + strconv.FormatInt(number, 10)
 }
 
 func permissionsFromUser(u *github.User) []string {
@@ -1215,18 +1207,10 @@ func permissionsFromUser(u *github.User) []string {
 func (g *mqlGithubRepository) adminCollaborators() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
-	if g.Name.Error != nil {
-		return nil, g.Name.Error
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return nil, err
 	}
-	repoName := g.Name.Data
-	if g.Owner.Error != nil {
-		return nil, g.Owner.Error
-	}
-	ownerName := g.Owner.Data
-	if ownerName.Login.Error != nil {
-		return nil, ownerName.Login.Error
-	}
-	ownerLogin := ownerName.Login.Data
 
 	listOpts := &github.ListCollaboratorsOptions{
 		Permission:  "admin",
@@ -1261,6 +1245,7 @@ func (g *mqlGithubRepository) adminCollaborators() ([]any, error) {
 		permissions := permissionsFromUser(contributor)
 
 		mqlContributor, err := CreateResource(g.MqlRuntime, "github.collaborator", map[string]*llx.RawData{
+			"__id":        llx.StringData(collaboratorID(ownerLogin, repoName, contributor.GetID())),
 			"id":          llx.IntDataPtr(contributor.ID),
 			"user":        llx.ResourceData(mqlUser, mqlUser.MqlName()),
 			"permissions": llx.ArrayData(convert.SliceAnyToInterface[string](permissions), types.String),
@@ -1276,18 +1261,10 @@ func (g *mqlGithubRepository) adminCollaborators() ([]any, error) {
 func (g *mqlGithubRepository) releases() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
-	if g.Name.Error != nil {
-		return nil, g.Name.Error
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return nil, err
 	}
-	repoName := g.Name.Data
-	if g.Owner.Error != nil {
-		return nil, g.Owner.Error
-	}
-	ownerName := g.Owner.Data
-	if ownerName.Login.Error != nil {
-		return nil, ownerName.Login.Error
-	}
-	ownerLogin := ownerName.Login.Data
 
 	listOpts := &github.ListOptions{
 		PerPage: paginationPerPage,
@@ -1353,18 +1330,10 @@ func (g *mqlGithubWebhook) id() (string, error) {
 func (g *mqlGithubRepository) webhooks() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
-	if g.Name.Error != nil {
-		return nil, g.Name.Error
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return nil, err
 	}
-	repoName := g.Name.Data
-	if g.Owner.Error != nil {
-		return nil, g.Owner.Error
-	}
-	owner := g.Owner.Data
-	if owner.Login.Error != nil {
-		return nil, owner.Login.Error
-	}
-	ownerLogin := owner.Login.Data
 
 	listOpts := &github.ListOptions{
 		PerPage: paginationPerPage,
@@ -1422,18 +1391,10 @@ type mqlGithubWorkflowInternal struct {
 func (g *mqlGithubRepository) workflows() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
-	if g.Name.Error != nil {
-		return nil, g.Name.Error
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return nil, err
 	}
-	repoName := g.Name.Data
-	if g.Owner.Error != nil {
-		return nil, g.Owner.Error
-	}
-	owner := g.Owner.Data
-	if owner.Login.Error != nil {
-		return nil, owner.Login.Error
-	}
-	ownerLogin := owner.Login.Data
 
 	if g.FullName.Error != nil {
 		return nil, g.FullName.Error
@@ -1495,14 +1456,19 @@ func (g *mqlGithubRepository) workflows() ([]any, error) {
 	return res, nil
 }
 
-func newMqlGithubFile(runtime *plugin.Runtime, ownerName string, repoName string, content *github.RepositoryContent) (*mqlGithubFile, error) {
-	isBinary := false
-	if convert.ToValue(content.Type) == "file" {
-		file := strings.Split(convert.ToValue(content.Path), ".")
-		if len(file) == 2 {
-			isBinary = binaryFileTypes[file[1]]
-		}
+// isBinaryFile reports whether a repository entry is a known binary artifact,
+// based on its file extension. It uses path.Ext rather than splitting the whole
+// path on ".", which misclassified every file living under a directory that has
+// a dot in its name (`v1.2/tool.exe`, `.github/x.exe`).
+func isBinaryFile(fileType, filePath string) bool {
+	if fileType != "file" {
+		return false
 	}
+	return binaryFileTypes[strings.TrimPrefix(path.Ext(filePath), ".")]
+}
+
+func newMqlGithubFile(runtime *plugin.Runtime, ownerName string, repoName string, content *github.RepositoryContent) (*mqlGithubFile, error) {
+	isBinary := isBinaryFile(convert.ToValue(content.Type), convert.ToValue(content.Path))
 	res, err := CreateResource(runtime, "github.file", map[string]*llx.RawData{
 		"path":        llx.StringDataPtr(content.Path),
 		"name":        llx.StringDataPtr(content.Name),
@@ -1543,19 +1509,10 @@ func newMqlGithubFileDoesNotExist(runtime *plugin.Runtime, ownerName string, rep
 func (g *mqlGithubRepository) files() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
-	if g.Name.Error != nil {
-		return nil, g.Name.Error
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return nil, err
 	}
-	repoName := g.Name.Data
-
-	if g.Owner.Error != nil {
-		return nil, g.Owner.Error
-	}
-	owner := g.Owner.Data
-	if owner.Login.Error != nil {
-		return nil, owner.Login.Error
-	}
-	ownerLogin := owner.Login.Data
 	_, dirContent, _, err := conn.Client().Repositories.GetContents(conn.Context(), ownerLogin, repoName, "", &github.RepositoryContentGetOptions{})
 	if err != nil {
 		if strings.Contains(err.Error(), "404") {
@@ -1604,6 +1561,12 @@ var binaryFileTypes = map[string]bool{
 }
 
 func (g *mqlGithubFile) id() (string, error) {
+	// Include the owner: repository names are unique only within an owner, and
+	// forks keep the name of their upstream repository.
+	if g.OwnerName.Error != nil {
+		return "", g.OwnerName.Error
+	}
+	o := g.OwnerName.Data
 	if g.RepoName.Error != nil {
 		return "", g.RepoName.Error
 	}
@@ -1616,7 +1579,7 @@ func (g *mqlGithubFile) id() (string, error) {
 		return "", g.Sha.Error
 	}
 	s := g.Sha.Data
-	return r + "/" + p + "/" + s, nil
+	return o + "/" + r + "/" + p + "/" + s, nil
 }
 
 func (g *mqlGithubFile) files() ([]any, error) {
@@ -1650,22 +1613,10 @@ func (g *mqlGithubFile) files() ([]any, error) {
 	}
 	res := []any{}
 	for i := range dirContent {
-		isBinary := false
-		if convert.ToValue(dirContent[i].Type) == "file" {
-			file := strings.Split(convert.ToValue(dirContent[i].Path), ".")
-			if len(file) == 2 {
-				isBinary = binaryFileTypes[file[1]]
-			}
-		}
-		mqlFile, err := CreateResource(g.MqlRuntime, "github.file", map[string]*llx.RawData{
-			"path":      llx.StringDataPtr(dirContent[i].Path),
-			"name":      llx.StringDataPtr(dirContent[i].Name),
-			"type":      llx.StringDataPtr(dirContent[i].Type),
-			"sha":       llx.StringDataPtr(dirContent[i].SHA),
-			"isBinary":  llx.BoolData(isBinary),
-			"ownerName": llx.StringData(ownerName),
-			"repoName":  llx.StringData(repoName),
-		})
+		// Build through the shared constructor so nested entries carry the same
+		// fields as top-level ones. Setting them here by hand left downloadUrl
+		// and exists unset, which reaches the client as a value with no type.
+		mqlFile, err := newMqlGithubFile(g.MqlRuntime, ownerName, repoName, dirContent[i])
 		if err != nil {
 			return nil, err
 		}
@@ -1721,19 +1672,10 @@ func (g *mqlGithubFile) content() (string, error) {
 
 func (g *mqlGithubRepository) forks() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
-	if g.Name.Error != nil {
-		return nil, g.Name.Error
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return nil, err
 	}
-	repoName := g.Name.Data
-
-	if g.Owner.Error != nil {
-		return nil, g.Owner.Error
-	}
-	owner := g.Owner.Data
-	if owner.Login.Error != nil {
-		return nil, owner.Login.Error
-	}
-	ownerLogin := owner.Login.Data
 
 	listOpts := &github.RepositoryListForksOptions{
 		ListOptions: github.ListOptions{
@@ -1771,19 +1713,10 @@ func (g *mqlGithubRepository) forks() ([]any, error) {
 
 func (g *mqlGithubRepository) stargazers() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
-	if g.Name.Error != nil {
-		return nil, g.Name.Error
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return nil, err
 	}
-	repoName := g.Name.Data
-
-	if g.Owner.Error != nil {
-		return nil, g.Owner.Error
-	}
-	owner := g.Owner.Data
-	if owner.Login.Error != nil {
-		return nil, owner.Login.Error
-	}
-	ownerLogin := owner.Login.Data
 
 	listOpts := &github.ListOptions{
 		PerPage: paginationPerPage,
@@ -1842,19 +1775,10 @@ func (g *mqlGithubRepository) closedIssues() ([]any, error) {
 
 func (g *mqlGithubRepository) getIssues(state string) ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
-	if g.Name.Error != nil {
-		return nil, g.Name.Error
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return nil, err
 	}
-	repoName := g.Name.Data
-
-	if g.Owner.Error != nil {
-		return nil, g.Owner.Error
-	}
-	owner := g.Owner.Data
-	if owner.Login.Error != nil {
-		return nil, owner.Login.Error
-	}
-	ownerLogin := owner.Login.Data
 
 	listOpts := &github.IssueListByRepoOptions{
 		State: state,
@@ -2013,19 +1937,10 @@ func newMqlGithubMilestone(runtime *plugin.Runtime, milestone *github.Milestone)
 
 func (g *mqlGithubRepository) milestones() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
-	if g.Name.Error != nil {
-		return nil, g.Name.Error
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return nil, err
 	}
-	repoName := g.Name.Data
-
-	if g.Owner.Error != nil {
-		return nil, g.Owner.Error
-	}
-	owner := g.Owner.Data
-	if owner.Login.Error != nil {
-		return nil, owner.Login.Error
-	}
-	ownerLogin := owner.Login.Data
 
 	listOpts := &github.MilestoneListOptions{
 		State: "all",
@@ -2104,19 +2019,10 @@ type mqlGithubRepositoryInternal struct {
 func (g *mqlGithubRepository) findSpecialFiles() error {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
-	if g.Name.Error != nil {
-		return g.Name.Error
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return err
 	}
-	repoName := g.Name.Data
-
-	if g.Owner.Error != nil {
-		return g.Owner.Error
-	}
-	owner := g.Owner.Data
-	if owner.Login.Error != nil {
-		return owner.Login.Error
-	}
-	ownerLogin := owner.Login.Data
 
 	specialDirectories := []string{".", ".github"}
 
@@ -2143,11 +2049,14 @@ func (g *mqlGithubRepository) findSpecialFiles() error {
 			if dirContent[i].GetType() != "file" {
 				continue
 			}
-			if _, ok := foundFiles[dirContent[i].GetName()]; ok {
+
+			// foundFiles is keyed lowercase; probe it the same way, otherwise
+			// which copy of a file wins depends on how the second one happens
+			// to be capitalized.
+			name := strings.ToLower(dirContent[i].GetName())
+			if _, ok := foundFiles[name]; ok {
 				continue
 			}
-
-			name := strings.ToLower(dirContent[i].GetName())
 			if _, ok := specialFilesCaseInsensitive[name]; ok {
 				v := specialFilesCaseInsensitive[name]
 				if v != nil {
@@ -2184,19 +2093,10 @@ func (g *mqlGithubDependabotAlert) id() (string, error) {
 
 func (g *mqlGithubRepository) dependabotAlerts() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
-	if g.Name.Error != nil {
-		return nil, g.Name.Error
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return nil, err
 	}
-	repoName := g.Name.Data
-
-	if g.Owner.Error != nil {
-		return nil, g.Owner.Error
-	}
-	owner := g.Owner.Data
-	if owner.Login.Error != nil {
-		return nil, owner.Login.Error
-	}
-	ownerLogin := owner.Login.Data
 
 	listOpts := &github.ListAlertsOptions{
 		ListOptions: github.ListOptions{PerPage: paginationPerPage},
@@ -2253,6 +2153,7 @@ func (g *mqlGithubRepository) dependabotAlerts() ([]any, error) {
 		}
 
 		mqlAlert, err := CreateResource(g.MqlRuntime, "github.dependabotAlert", map[string]*llx.RawData{
+			"__id":                  llx.StringData(alertID("github.dependabotAlert", ownerLogin, repoName, int64(alert.GetNumber()))),
 			"number":                llx.IntData(int64(alert.GetNumber())),
 			"state":                 llx.StringData(alert.GetState()),
 			"severity":              llx.StringData(alert.GetSecurityVulnerability().GetSeverity()),
@@ -2288,19 +2189,10 @@ func (g *mqlGithubSecretScanningAlert) id() (string, error) {
 
 func (g *mqlGithubRepository) secretScanningAlerts() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
-	if g.Name.Error != nil {
-		return nil, g.Name.Error
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return nil, err
 	}
-	repoName := g.Name.Data
-
-	if g.Owner.Error != nil {
-		return nil, g.Owner.Error
-	}
-	owner := g.Owner.Data
-	if owner.Login.Error != nil {
-		return nil, owner.Login.Error
-	}
-	ownerLogin := owner.Login.Data
 
 	listOpts := &github.SecretScanningAlertListOptions{
 		ListOptions: github.ListOptions{PerPage: paginationPerPage},
@@ -2354,6 +2246,7 @@ func (g *mqlGithubRepository) secretScanningAlerts() ([]any, error) {
 		}
 
 		mqlAlert, err := CreateResource(g.MqlRuntime, "github.secretScanningAlert", map[string]*llx.RawData{
+			"__id":                     llx.StringData(alertID("github.secretScanningAlert", ownerLogin, repoName, int64(alert.GetNumber()))),
 			"number":                   llx.IntData(int64(alert.GetNumber())),
 			"state":                    llx.StringData(alert.GetState()),
 			"resolution":               llx.StringData(alert.GetResolution()),
@@ -2392,19 +2285,10 @@ func (g *mqlGithubCodeScanningAlert) id() (string, error) {
 
 func (g *mqlGithubRepository) codeScanningAlerts() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
-	if g.Name.Error != nil {
-		return nil, g.Name.Error
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return nil, err
 	}
-	repoName := g.Name.Data
-
-	if g.Owner.Error != nil {
-		return nil, g.Owner.Error
-	}
-	owner := g.Owner.Data
-	if owner.Login.Error != nil {
-		return nil, owner.Login.Error
-	}
-	ownerLogin := owner.Login.Data
 
 	listOpts := &github.AlertListOptions{
 		ListOptions: github.ListOptions{PerPage: paginationPerPage},
@@ -2473,6 +2357,7 @@ func (g *mqlGithubRepository) codeScanningAlerts() ([]any, error) {
 		}
 
 		mqlAlert, err := CreateResource(g.MqlRuntime, "github.codeScanningAlert", map[string]*llx.RawData{
+			"__id":               llx.StringData(alertID("github.codeScanningAlert", ownerLogin, repoName, int64(alert.GetNumber()))),
 			"number":             llx.IntData(int64(alert.GetNumber())),
 			"state":              llx.StringData(alert.GetState()),
 			"rule":               llx.DictData(rule),
@@ -2502,22 +2387,20 @@ func (g *mqlGithubRepository) codeScanningAlerts() ([]any, error) {
 func (g *mqlGithubRepository) spdxSbom() (*mqlGithubRepositorySbom, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
-	if g.Name.Error != nil {
-		return nil, g.Name.Error
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return nil, err
 	}
-	repoName := g.Name.Data
-
-	if g.Owner.Error != nil {
-		return nil, g.Owner.Error
-	}
-	owner := g.Owner.Data
-	if owner.Login.Error != nil {
-		return nil, owner.Login.Error
-	}
-	ownerLogin := owner.Login.Data
 
 	result, _, err := conn.Client().DependencyGraph.GetSBOM(conn.Context(), ownerLogin, repoName)
 	if err != nil {
+		// The dependency graph is not enabled on every repository, and reading
+		// it needs its own permission; both are a valid empty state.
+		if isAccessDeniedOrNotFound(err) {
+			log.Debug().Err(err).Msg("SPDX SBOM is not accessible for this repository")
+			g.SpdxSbom.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	if result == nil || result.SBOM == nil {
@@ -2609,19 +2492,10 @@ func (g *mqlGithubRepositoryRuleset) id() (string, error) {
 func (g *mqlGithubRepository) rulesets() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
-	if g.Name.Error != nil {
-		return nil, g.Name.Error
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return nil, err
 	}
-	repoName := g.Name.Data
-
-	if g.Owner.Error != nil {
-		return nil, g.Owner.Error
-	}
-	owner := g.Owner.Data
-	if owner.Login.Error != nil {
-		return nil, owner.Login.Error
-	}
-	ownerLogin := owner.Login.Data
 
 	listOpts := &github.RepositoryListRulesetsOptions{
 		ListOptions: github.ListOptions{PerPage: paginationPerPage},
@@ -2702,18 +2576,10 @@ func (g *mqlGithubRepositoryActionsSettings) id() (string, error) {
 func (g *mqlGithubRepository) actionsSettings() (*mqlGithubRepositoryActionsSettings, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
-	if g.Name.Error != nil {
-		return nil, g.Name.Error
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return nil, err
 	}
-	repoName := g.Name.Data
-	if g.Owner.Error != nil {
-		return nil, g.Owner.Error
-	}
-	owner := g.Owner.Data
-	if owner.Login.Error != nil {
-		return nil, owner.Login.Error
-	}
-	ownerLogin := owner.Login.Data
 
 	perms, _, err := conn.Client().Repositories.GetActionsPermissions(conn.Context(), ownerLogin, repoName)
 	if err != nil {

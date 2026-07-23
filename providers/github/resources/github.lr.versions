@@ -288,6 +288,7 @@ github.mergeRequest.milestone 11.4.122
 github.mergeRequest.number 9.0.0
 github.mergeRequest.owner 9.0.0
 github.mergeRequest.repoName 9.0.0
+github.mergeRequest.repoOwnerLogin 13.7.5
 github.mergeRequest.requestedReviewers 13.1.1
 github.mergeRequest.reviews 9.0.0
 github.mergeRequest.state 9.0.0

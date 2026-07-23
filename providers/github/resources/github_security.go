@@ -906,18 +906,10 @@ func (g *mqlGithubDeployKey) repository() (*mqlGithubRepository, error) {
 
 func (g *mqlGithubRepository) deployKeys() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
-	if g.Name.Error != nil {
-		return nil, g.Name.Error
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return nil, err
 	}
-	repoName := g.Name.Data
-	if g.Owner.Error != nil {
-		return nil, g.Owner.Error
-	}
-	owner := g.Owner.Data
-	if owner.Login.Error != nil {
-		return nil, owner.Login.Error
-	}
-	ownerLogin := owner.Login.Data
 
 	listOpts := &github.ListOptions{PerPage: paginationPerPage}
 	var allKeys []*github.Key
@@ -1050,6 +1042,13 @@ func (g *mqlGithubCodeownersRule) id() (string, error) {
 	return fmt.Sprintf("github.codeowners.rule/%s/%d", g.Pattern.Data, g.LineNumber.Data), nil
 }
 
+// codeownersRuleID keys a CODEOWNERS rule by repository. Patterns repeat across
+// repositories (`*` on line 1 is near-universal), so an unqualified key made
+// every repository after the first report the first one's owners.
+func codeownersRuleID(ownerLogin, repoName, pattern string, lineNumber int) string {
+	return fmt.Sprintf("github.codeowners.rule/%s/%s/%s/%d", ownerLogin, repoName, pattern, lineNumber)
+}
+
 // codeownersCandidatePaths returns the locations CODEOWNERS may live at, in
 // resolution priority order.
 var codeownersCandidatePaths = []string{
@@ -1108,18 +1107,10 @@ func parseCodeowners(content string) []codeownersRule {
 
 func (g *mqlGithubRepository) codeowners() (*mqlGithubRepositoryCodeowners, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
-	if g.Name.Error != nil {
-		return nil, g.Name.Error
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return nil, err
 	}
-	repoName := g.Name.Data
-	if g.Owner.Error != nil {
-		return nil, g.Owner.Error
-	}
-	owner := g.Owner.Data
-	if owner.Login.Error != nil {
-		return nil, owner.Login.Error
-	}
-	ownerLogin := owner.Login.Data
 
 	resID := llx.StringData(fmt.Sprintf("github.repository.codeowners/%s/%s", ownerLogin, repoName))
 
@@ -1147,6 +1138,7 @@ func (g *mqlGithubRepository) codeowners() (*mqlGithubRepositoryCodeowners, erro
 	rules := []any{}
 	for _, r := range parseCodeowners(content) {
 		rr, err := CreateResource(g.MqlRuntime, "github.codeowners.rule", map[string]*llx.RawData{
+			"__id":       llx.StringData(codeownersRuleID(ownerLogin, repoName, r.pattern, r.lineNumber)),
 			"pattern":    llx.StringData(r.pattern),
 			"owners":     llx.ArrayData(convert.SliceAnyToInterface[string](r.owners), types.String),
 			"lineNumber": llx.IntData(int64(r.lineNumber)),
