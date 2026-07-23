@@ -13327,6 +13327,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.aksService.cluster.defenderEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetDefenderEnabled()).ToDataRes(types.Bool)
 	},
+	"azure.subscription.aksService.cluster.defenderSecurityGatingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetDefenderSecurityGatingEnabled()).ToDataRes(types.Bool)
+	},
 	"azure.subscription.aksService.cluster.imageCleanerEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetImageCleanerEnabled()).ToDataRes(types.Bool)
 	},
@@ -34782,6 +34785,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.aksService.cluster.defenderEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionAksServiceCluster).DefenderEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.defenderSecurityGatingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceCluster).DefenderSecurityGatingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.aksService.cluster.imageCleanerEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -80929,6 +80936,7 @@ type mqlAzureSubscriptionAksServiceCluster struct {
 	ApiServerAuthorizedIPRanges       plugin.TValue[[]any]
 	PrivateDnsZone                    plugin.TValue[string]
 	DefenderEnabled                   plugin.TValue[bool]
+	DefenderSecurityGatingEnabled     plugin.TValue[bool]
 	ImageCleanerEnabled               plugin.TValue[bool]
 	ImageCleanerIntervalHours         plugin.TValue[int64]
 	WorkloadIdentityEnabled           plugin.TValue[bool]
@@ -81132,6 +81140,10 @@ func (c *mqlAzureSubscriptionAksServiceCluster) GetPrivateDnsZone() *plugin.TVal
 
 func (c *mqlAzureSubscriptionAksServiceCluster) GetDefenderEnabled() *plugin.TValue[bool] {
 	return &c.DefenderEnabled
+}
+
+func (c *mqlAzureSubscriptionAksServiceCluster) GetDefenderSecurityGatingEnabled() *plugin.TValue[bool] {
+	return &c.DefenderSecurityGatingEnabled
 }
 
 func (c *mqlAzureSubscriptionAksServiceCluster) GetImageCleanerEnabled() *plugin.TValue[bool] {

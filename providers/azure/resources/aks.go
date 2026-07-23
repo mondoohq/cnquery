@@ -215,14 +215,19 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 				}
 			}
 
-			var defenderEnabled, imageCleanerEnabled, workloadIdentityEnabled, azureKeyVaultKmsEnabled *bool
+			var defenderEnabled, defenderSecurityGatingEnabled, imageCleanerEnabled, workloadIdentityEnabled, azureKeyVaultKmsEnabled *bool
 			var imageCleanerIntervalHours *int32
 			var azureKeyVaultKmsNetworkAccess *string
 			var azureKeyVaultKmsKeyId string
 			if entry.Properties.SecurityProfile != nil {
 				sp := entry.Properties.SecurityProfile
-				if sp.Defender != nil && sp.Defender.SecurityMonitoring != nil {
-					defenderEnabled = sp.Defender.SecurityMonitoring.Enabled
+				if sp.Defender != nil {
+					if sp.Defender.SecurityMonitoring != nil {
+						defenderEnabled = sp.Defender.SecurityMonitoring.Enabled
+					}
+					if sp.Defender.SecurityGating != nil {
+						defenderSecurityGatingEnabled = sp.Defender.SecurityGating.Enabled
+					}
 				}
 				if sp.ImageCleaner != nil {
 					imageCleanerEnabled = sp.ImageCleaner.Enabled
@@ -341,6 +346,7 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 					"apiServerAuthorizedIPRanges":       llx.ArrayData(apiServerAuthorizedIPRanges, types.String),
 					"privateDnsZone":                    llx.StringDataPtr(privateDnsZone),
 					"defenderEnabled":                   llx.BoolDataPtr(defenderEnabled),
+					"defenderSecurityGatingEnabled":     llx.BoolDataPtr(defenderSecurityGatingEnabled),
 					"imageCleanerEnabled":               llx.BoolDataPtr(imageCleanerEnabled),
 					"imageCleanerIntervalHours":         llx.IntDataDefault(imageCleanerIntervalHours, 0),
 					"workloadIdentityEnabled":           llx.BoolDataPtr(workloadIdentityEnabled),

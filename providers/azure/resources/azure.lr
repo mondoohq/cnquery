@@ -10141,6 +10141,12 @@ azure.subscription.aksService.cluster @defaults("name location kubernetesVersion
   privateDnsZone string
   // Whether Microsoft Defender security monitoring is enabled
   defenderEnabled bool
+  // Whether Microsoft Defender security gating is enabled
+  //
+  // When enabled, Defender for Containers admission control scans container
+  // images and audits or blocks deployment of images that fail the configured
+  // security rules.
+  defenderSecurityGatingEnabled bool
   // Whether Image Cleaner is enabled on the cluster
   imageCleanerEnabled bool
   // Image Cleaner scanning interval in hours
