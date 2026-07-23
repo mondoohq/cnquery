@@ -4,7 +4,11 @@
 package provider
 
 import (
-	"path/filepath"
+	// GitLab tree paths are always "/"-separated, so they must be manipulated
+	// with the "path" package. path/filepath rewrites separators on Windows,
+	// which produced backslash directory options that the chained helm and
+	// kustomize connections then failed to resolve inside the clone.
+	gopath "path"
 	"strconv"
 	"strings"
 
@@ -130,12 +134,17 @@ func (s *Service) discoverGroups(root *inventory.Asset, conn *connection.GitLabC
 		}
 		groups := []*gitlab.Group{group}
 		assets := []*inventory.Asset{}
-		if names := strings.Split(group.Name, "/"); len(names) > 1 {
+		// A subgroup is identified by FullPath having more than one segment;
+		// Group.Name is a display name and never carries the "/", so this
+		// guard used to never fire. FullPath is also what the subgroup
+		// endpoints need — Path is only the leaf slug, which GitLab resolves
+		// at the root namespace and could match an unrelated top-level group.
+		if isSubgroup(group) {
 			log.Debug().Msg("skipping subgroup discovery for subgroup")
 			return assets, groups, nil
 		}
 		// discover subgroups and descendant groups
-		subgroups, err := connection.DiscoverSubAndDescendantGroupsForGroup(conn, group.Path)
+		subgroups, err := connection.DiscoverSubAndDescendantGroupsForGroup(conn, group.FullPath)
 		if err != nil {
 			log.Error().Err(err).Msg("unable to discover sub groups")
 			return []*inventory.Asset{}, []*gitlab.Group{group}, err
@@ -150,7 +159,7 @@ func (s *Service) discoverGroups(root *inventory.Asset, conn *connection.GitLabC
 		return nil, nil, err
 	}
 
-	conf := conn.Conf.Clone(inventory.WithParentConnectionId(conn.ID()))
+	conf := conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.ID()))
 	conf.Type = GitlabGroupConnection
 	conf.Options = map[string]string{
 		"group":    group.FullPath,
@@ -165,12 +174,12 @@ func (s *Service) discoverGroups(root *inventory.Asset, conn *connection.GitLabC
 
 	groups := []*gitlab.Group{group}
 	assets := []*inventory.Asset{asset}
-	if names := strings.Split(group.Name, "/"); len(names) > 1 {
+	if isSubgroup(group) {
 		log.Debug().Msg("skipping subgroup discovery for subgroup")
 		return assets, groups, nil
 	}
 	// discover subgroups and descendant groups
-	subgroups, err := connection.DiscoverSubAndDescendantGroupsForGroup(conn, group.Path)
+	subgroups, err := connection.DiscoverSubAndDescendantGroupsForGroup(conn, group.FullPath)
 	if err != nil {
 		log.Error().Err(err).Msg("unable to discover sub groups")
 		return []*inventory.Asset{}, []*gitlab.Group{group}, err
@@ -199,11 +208,26 @@ func (s *Service) discoverProjects(root *inventory.Asset, conn *connection.GitLa
 
 		for j := range groupProjects {
 			project := groupProjects[j]
-			conf := conn.Conf.Clone(inventory.WithParentConnectionId(conn.ID()))
+			if projects[project.ID] != nil {
+				continue
+			}
+
+			// Attribute the project to the namespace that owns it, not the
+			// group we happened to enumerate. GitLab's group projects endpoint
+			// includes projects merely *shared* into the group, and stamping
+			// those with the sharing group produced a second, disjoint set of
+			// platform ids for the same repository — so it was discovered,
+			// scanned, and reported twice.
+			ownerID, ownerPath := group.ID, group.FullPath
+			if project.Namespace != nil && project.Namespace.ID > 0 {
+				ownerID, ownerPath = project.Namespace.ID, project.Namespace.FullPath
+			}
+
+			conf := conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.ID()))
 			conf.Type = GitlabProjectConnection
 			conf.Options = map[string]string{
-				"group":      group.FullPath,
-				"group-id":   strconv.FormatInt(group.ID, 10),
+				"group":      ownerPath,
+				"group-id":   strconv.FormatInt(ownerID, 10),
 				"project":    project.Name,
 				"project-id": strconv.FormatInt(project.ID, 10),
 				"url":        conn.Conf.Options["url"],
@@ -213,10 +237,7 @@ func (s *Service) discoverProjects(root *inventory.Asset, conn *connection.GitLa
 				Connections: []*inventory.Config{conf},
 			}
 
-			s.detectAsProject(asset, group.ID, group.FullPath, project)
-			if err != nil {
-				return nil, nil, err
-			}
+			s.detectAsProject(asset, ownerID, ownerPath, project)
 
 			assets = append(assets, asset)
 			projects[project.ID] = project
@@ -254,13 +275,16 @@ func (s *Service) convertGitlabGroupsToAssetGroups(groups []*gitlab.Group, conn 
 	var list []*inventory.Asset
 	// convert to assets
 	for _, group := range groups {
-		conf := conn.Conf.Clone(inventory.WithParentConnectionId(conn.ID()))
-		if conf.Options == nil {
-			conf.Options = map[string]string{}
+		conf := conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.ID()))
+		// Replace the map wholesale rather than merging into the parent's: a
+		// root config carrying --project would otherwise leave "project" set on
+		// every discovered group asset, so IsProject() reports true for a group
+		// and the connection resolves the wrong thing entirely.
+		conf.Options = map[string]string{
+			"group":    group.FullPath,
+			"group-id": strconv.FormatInt(group.ID, 10),
+			"url":      conn.Conf.Options["url"],
 		}
-		conf.Options["group"] = group.FullPath
-		conf.Options["group-id"] = strconv.FormatInt(group.ID, 10)
-		conf.Options["url"] = conn.Conf.Options["url"]
 		conf.Type = GitlabGroupConnection
 		asset := &inventory.Asset{
 			Connections: []*inventory.Config{conf},
@@ -472,7 +496,7 @@ func discoverRepoTypes(client *gitlab.Client, pid any) (*discoveredTypes, error)
 			continue
 		}
 
-		base := filepath.Base(node.Path)
+		base := gopath.Base(node.Path)
 		switch {
 		case strings.HasSuffix(node.Path, ".tf"):
 			out.terraform = true
@@ -520,7 +544,7 @@ func cloudformationTemplatePaths(client *gitlab.Client, pid any) ([]string, erro
 			if isHiddenPath(blob.Path) || seen[blob.Path] {
 				continue
 			}
-			switch strings.ToLower(filepath.Ext(blob.Path)) {
+			switch strings.ToLower(gopath.Ext(blob.Path)) {
 			case ".yaml", ".yml", ".json", ".template":
 				seen[blob.Path] = true
 				paths = append(paths, blob.Path)
@@ -560,13 +584,20 @@ func isHiddenPath(p string) bool {
 }
 
 // iacDir returns the repo-relative directory containing the given file, with a
-// top-level file ("." from filepath.Dir) normalized to "" so it joins onto the
+// top-level file ("." from path.Dir) normalized to "" so it joins onto the
 // clone root cleanly.
-func iacDir(path string) string {
-	if dir := filepath.Dir(path); dir != "." {
+func iacDir(p string) string {
+	if dir := gopath.Dir(p); dir != "." {
 		return dir
 	}
 	return ""
+}
+
+// isSubgroup reports whether a group is nested under another group. GitLab
+// group names are display names and never contain a "/", so the nesting has to
+// be read off FullPath.
+func isSubgroup(group *gitlab.Group) bool {
+	return strings.Contains(group.FullPath, "/")
 }
 
 // isDockerfile reports whether a base file name follows a Dockerfile naming

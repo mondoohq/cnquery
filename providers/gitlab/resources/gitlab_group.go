@@ -23,10 +23,6 @@ func (u *mqlGitlabUser) id() (string, error) {
 	return "gitlab.user/" + strconv.FormatInt(u.Id.Data, 10), nil
 }
 
-func (m *mqlGitlabMember) id() (string, error) {
-	return "gitlab.member/" + strconv.FormatInt(m.Id.Data, 10), nil
-}
-
 // mqlGitlabMemberInternal caches source data needed to resolve the member's
 // typed references (createdBy user, custom member role) lazily.
 type mqlGitlabMemberInternal struct {
@@ -109,16 +105,31 @@ func newMqlGitlabMemberRole(runtime *plugin.Runtime, role *gitlab.MemberRole) (*
 func (g *mqlGitlabGroup) memberRoles() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GitLabConnection)
 
-	roles, resp, err := conn.Client().MemberRolesService.ListMemberRoles(int(g.Id.Data))
-	if err != nil {
-		if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
-			return []any{}, nil // not available on this GitLab tier
+	// ListMemberRoles takes no typed options struct, but the endpoint still
+	// paginates and GitLab defaults to 20 per page — a group with more custom
+	// roles than that would silently report only the first 20. gitlab.WithNext
+	// drives the next page for offset, keyset, and cursor styles alike, and is
+	// what samlGroupLinks below already uses for the same SDK shape.
+	var allRoles []*gitlab.MemberRole
+	var nextOpts []gitlab.RequestOptionFunc
+	for {
+		roles, resp, err := conn.Client().MemberRolesService.ListMemberRoles(int(g.Id.Data), nextOpts...)
+		if err != nil {
+			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
+				return []any{}, nil // not available on this GitLab tier
+			}
+			return nil, err
 		}
-		return nil, err
+		allRoles = append(allRoles, roles...)
+		next, hasNext := gitlab.WithNext(resp)
+		if !hasNext {
+			break
+		}
+		nextOpts = []gitlab.RequestOptionFunc{next}
 	}
 
 	var mqlRoles []any
-	for _, role := range roles {
+	for _, role := range allRoles {
 		mqlRole, err := newMqlGitlabMemberRole(g.MqlRuntime, role)
 		if err != nil {
 			return nil, err
@@ -326,6 +337,10 @@ func (g *mqlGitlabGroup) members() ([]any, error) {
 				Page:    page,
 				PerPage: perPage,
 			},
+			// GitLab omits is_using_seat from the members payload unless it is
+			// asked for, and the SDK models it as a plain bool — without this
+			// every member would decode as isUsingSeat=false.
+			ShowSeatInfo: gitlab.Ptr(true),
 		})
 		if err != nil {
 			return nil, err
@@ -363,6 +378,13 @@ func (g *mqlGitlabGroup) members() ([]any, error) {
 		}
 
 		memberInfo := map[string]*llx.RawData{
+			// GroupMember.ID is the *user* id, so it repeats for every group
+			// and project that user belongs to. ListAllGroupMembers also
+			// returns inherited members, which means a parent-group membership
+			// and a subgroup membership for the same user land in the same
+			// runtime — keying on the user id alone made the second one
+			// resolve to the first, hiding a deliberately narrowed role.
+			"__id":        llx.StringData(groupScopedID("gitlab.member/group", g.Id.Data, strconv.FormatInt(member.ID, 10))),
 			"id":          llx.IntData(member.ID),
 			"user":        llx.ResourceData(mqlUser, "gitlab.user"),
 			"role":        llx.StringData(role),
@@ -475,12 +497,16 @@ func (g *mqlGitlabGroup) labels() ([]any, error) {
 	var mqlLabels []any
 	for _, label := range allLabels {
 		labelInfo := map[string]*llx.RawData{
-			"id":                     llx.IntData(label.ID),
-			"name":                   llx.StringData(label.Name),
-			"color":                  llx.StringData(label.Color),
-			"textColor":              llx.StringData(label.TextColor),
-			"description":            llx.StringData(label.Description),
-			"descriptionHtml":        llx.StringData(""), // Not in API response
+			"id":          llx.IntData(label.ID),
+			"name":        llx.StringData(label.Name),
+			"color":       llx.StringData(label.Color),
+			"textColor":   llx.StringData(label.TextColor),
+			"description": llx.StringData(label.Description),
+			// The SDK's Label struct does not model description_html, so we have
+			// no value to report. Null says "unknown"; an empty string would
+			// claim, for every label on every project, that no HTML
+			// description exists.
+			"descriptionHtml":        llx.NilData,
 			"openIssuesCount":        llx.IntData(label.OpenIssuesCount),
 			"closedIssuesCount":      llx.IntData(label.ClosedIssuesCount),
 			"openMergeRequestsCount": llx.IntData(label.OpenMergeRequestsCount),
@@ -702,11 +728,6 @@ type mqlGitlabGroupSamlGroupLinkInternal struct {
 	groupID int64
 }
 
-// id function for gitlab.group.samlGroupLink
-func (s *mqlGitlabGroupSamlGroupLink) id() (string, error) {
-	return "gitlab.group.samlGroupLink/" + strconv.FormatInt(s.groupID, 10) + "/" + s.Provider.Data + "/" + s.Name.Data, nil
-}
-
 // samlGroupLinks fetches SAML group links for the group.
 //
 // SAML group links are a Premium/Ultimate feature. On lower tiers the API
@@ -742,6 +763,11 @@ func (g *mqlGitlabGroup) samlGroupLinks() ([]any, error) {
 	var mqlLinks []any
 	for _, link := range allLinks {
 		linkInfo := map[string]*llx.RawData{
+			// The group id has to be passed here rather than read back out of
+			// the Internal struct by id(): CreateResource computes __id during
+			// construction, so a field assigned afterwards is always still
+			// zero at that point and every link keyed as ".../0/provider/name".
+			"__id":         llx.StringData(groupScopedID("gitlab.group.samlGroupLink", g.Id.Data, link.Provider, link.Name)),
 			"name":         llx.StringData(link.Name),
 			"accessLevel":  llx.IntData(int64(link.AccessLevel)),
 			"memberRoleId": llx.IntData(link.MemberRoleID),
@@ -1005,10 +1031,6 @@ func (g *mqlGitlabGroup) parentGroup() (*mqlGitlabGroup, error) {
 	return res.(*mqlGitlabGroup), nil
 }
 
-func (v *mqlGitlabGroupVariable) id() (string, error) {
-	return "gitlab.group.variable/" + v.Key.Data + "/" + v.EnvironmentScope.Data, nil
-}
-
 // variables lists the group-level CI/CD variables. These are inherited by
 // every project in the group.
 func (g *mqlGitlabGroup) variables() ([]any, error) {
@@ -1042,6 +1064,11 @@ func (g *mqlGitlabGroup) variables() ([]any, error) {
 	var mqlVars []any
 	for _, v := range allVars {
 		varInfo := map[string]*llx.RawData{
+			// Subgroups routinely redefine a parent group's variable at the
+			// same scope (that is the whole point of group-level variables),
+			// so key+scope without the group id aliases the override onto the
+			// parent's row — including its masked/protected flags.
+			"__id":             llx.StringData(groupScopedID("gitlab.group.variable", g.Id.Data, v.Key, v.EnvironmentScope)),
 			"key":              llx.StringData(v.Key),
 			"variableType":     llx.StringData(string(v.VariableType)),
 			"protected":        llx.BoolData(v.Protected),

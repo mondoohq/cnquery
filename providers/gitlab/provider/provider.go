@@ -226,7 +226,19 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.GitLabConnecti
 		if err != nil {
 			return err
 		}
-		s.detectAsProject(asset, conn.GroupID(), conn.GroupName(), project) // TODO fix 0
+		// Resolve the owning group rather than reading it off the CLI options:
+		// ParseCLI never sets group-id, so conn.GroupID() fell back to 0 and
+		// produced platform id ".../group/0/project/<id>". Discovery stamps the
+		// real group id, so the same project scanned both ways split into two
+		// assets with separate history. Prefer the project's own namespace,
+		// which is also correct for a project reached outside its group.
+		groupID, groupFullPath := conn.GroupID(), conn.GroupName()
+		if project.Namespace != nil && project.Namespace.ID > 0 {
+			groupID, groupFullPath = project.Namespace.ID, project.Namespace.FullPath
+		} else if group, gerr := conn.Group(); gerr == nil && group != nil {
+			groupID, groupFullPath = group.ID, group.FullPath
+		}
+		s.detectAsProject(asset, groupID, groupFullPath, project)
 	} else {
 		group, err := conn.Group()
 		if err != nil {

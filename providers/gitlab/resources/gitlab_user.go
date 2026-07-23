@@ -6,6 +6,7 @@ package resources
 import (
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -30,7 +31,11 @@ var gitlabUserScopeWarn sync.Once
 // from the *gitlab.User they already have, so externalIdentities() doesn't need
 // to call GetUser at all - eliminating an N+1 across N members.
 type mqlGitlabUserInternal struct {
-	fetched         bool
+	// fetched is atomic because the unlocked fast-path read below races the
+	// locked writes otherwise: llx resolves fields in separate goroutines, so
+	// the nineteen accessors that funnel through fetchUser can run
+	// concurrently on the same resource.
+	fetched         atomic.Bool
 	user            *gitlab.User
 	cacheIdentities []*gitlab.UserIdentity
 	lock            sync.Mutex
@@ -90,7 +95,7 @@ func initGitlabUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	}
 	mqlUser := res.(*mqlGitlabUser)
 	mqlUser.user = user
-	mqlUser.fetched = true
+	mqlUser.fetched.Store(true)
 	return args, mqlUser, nil
 }
 
@@ -102,12 +107,12 @@ func initGitlabUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 // lastSignInAt, ...) are returning zero values rather than reflecting actual
 // state.
 func (u *mqlGitlabUser) fetchUser() (*gitlab.User, error) {
-	if u.fetched {
+	if u.fetched.Load() {
 		return u.user, nil
 	}
 	u.lock.Lock()
 	defer u.lock.Unlock()
-	if u.fetched {
+	if u.fetched.Load() {
 		return u.user, nil
 	}
 	conn := u.MqlRuntime.Connection.(*connection.GitLabConnection)
@@ -118,13 +123,13 @@ func (u *mqlGitlabUser) fetchUser() (*gitlab.User, error) {
 				log.Warn().Int("status", resp.StatusCode).
 					Msg("gitlab token cannot read /users/:id; admin-scoped user fields (isAdmin, isAuditor, lastSignInAt, ...) will return zero values")
 			})
-			u.fetched = true
+			u.fetched.Store(true)
 			return nil, nil
 		}
 		return nil, err
 	}
 	u.user = user
-	u.fetched = true
+	u.fetched.Store(true)
 	return u.user, nil
 }
 
@@ -297,11 +302,6 @@ func (u *mqlGitlabUser) sharedRunnersMinutesLimit() (int64, error) {
 	return user.SharedRunnersMinutesLimit, nil
 }
 
-// id function for gitlab.user.externalIdentity
-func (i *mqlGitlabUserExternalIdentity) id() (string, error) {
-	return "gitlab.user.externalIdentity/" + i.Provider.Data + "/" + i.ExternUID.Data, nil
-}
-
 // mqlGitlabUserExternalIdentityInternal carries the parent user ID so the
 // `user()` accessor can resolve back to the typed gitlab.user resource.
 type mqlGitlabUserExternalIdentityInternal struct {
@@ -347,6 +347,11 @@ func (u *mqlGitlabUser) externalIdentities() ([]any, error) {
 			continue
 		}
 		identityInfo := map[string]*llx.RawData{
+			// The owning user belongs in the key: provider+externUID alone
+			// aliases whenever a provider reports an empty extern_uid, and the
+			// userID assigned just below would then repoint the first user's
+			// identity resource at this one.
+			"__id":      llx.StringData(userScopedID("gitlab.user.externalIdentity", u.Id.Data, identity.Provider, identity.ExternUID)),
 			"provider":  llx.StringData(identity.Provider),
 			"externUID": llx.StringData(identity.ExternUID),
 		}

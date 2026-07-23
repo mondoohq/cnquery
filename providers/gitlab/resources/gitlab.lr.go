@@ -6770,12 +6770,7 @@ func createGitlabUserExternalIdentity(runtime *plugin.Runtime, args map[string]*
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("gitlab.user.externalIdentity", res.__id)
@@ -7005,12 +7000,7 @@ func createGitlabMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("gitlab.member", res.__id)
@@ -7905,12 +7895,7 @@ func createGitlabGroupSamlGroupLink(runtime *plugin.Runtime, args map[string]*ll
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("gitlab.group.samlGroupLink", res.__id)
@@ -9679,12 +9664,7 @@ func createGitlabProjectCodeowners(runtime *plugin.Runtime, args map[string]*llx
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("gitlab.project.codeowners", res.__id)
@@ -9746,12 +9726,7 @@ func createGitlabProjectCodeownersRule(runtime *plugin.Runtime, args map[string]
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("gitlab.project.codeowners.rule", res.__id)
@@ -9909,12 +9884,7 @@ func createGitlabProjectProtectedBranch(runtime *plugin.Runtime, args map[string
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("gitlab.project.protectedBranch", res.__id)
@@ -10073,12 +10043,7 @@ func createGitlabProjectFile(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("gitlab.project.file", res.__id)
@@ -10762,12 +10727,7 @@ func createGitlabProjectRelease(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("gitlab.project.release", res.__id)
@@ -10870,12 +10830,7 @@ func createGitlabProjectVariable(runtime *plugin.Runtime, args map[string]*llx.R
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("gitlab.project.variable", res.__id)
@@ -11278,12 +11233,7 @@ func createGitlabGroupVariable(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("gitlab.group.variable", res.__id)
@@ -13264,12 +13214,7 @@ func createGitlabProjectContainerExpirationPolicy(runtime *plugin.Runtime, args 
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("gitlab.project.containerExpirationPolicy", res.__id)

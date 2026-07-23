@@ -271,9 +271,16 @@ private gitlab.member @defaults("user role") {
   id int
   // User associated with this membership
   user gitlab.user
-  // Access level of the user within the group or project (e.g., Guest, Reporter, Developer, Maintainer, Owner)
+  // Role name derived from the numeric access level
+  //
+  // One of No access, Minimal Access, Guest, Planner, Reporter, Developer,
+  // Maintainer, Owner, or Admin. Unknown is reported for any access level the
+  // provider does not recognize.
   role string
-  // Numeric access level backing the role (10 Guest, 20 Reporter, 30 Developer, 40 Maintainer, 50 Owner)
+  // Numeric access level backing the role
+  //
+  // One of 0 No access, 5 Minimal Access, 10 Guest, 15 Planner, 20 Reporter,
+  // 30 Developer, 40 Maintainer, 50 Owner, or 60 Admin.
   accessLevel int
   // Membership state (for example active or awaiting)
   state string
@@ -1515,7 +1522,10 @@ private gitlab.project.label @defaults("name color") {
   // Label description
   description string
   // HTML-formatted description
-  descriptionHtml string
+  //
+  // Deprecated in favor of description. The GitLab client library does not
+  // model the API's description_html field, so this always resolves to null.
+  descriptionHtml @maturity("deprecated") string
   // Count of open issues with this label
   openIssuesCount int
   // Count of closed issues with this label
@@ -1543,7 +1553,10 @@ private gitlab.group.label @defaults("name color") {
   // Label description
   description string
   // HTML-formatted description
-  descriptionHtml string
+  //
+  // Deprecated in favor of description. The GitLab client library does not
+  // model the API's description_html field, so this always resolves to null.
+  descriptionHtml @maturity("deprecated") string
   // Count of open issues with this label
   openIssuesCount int
   // Count of closed issues with this label
@@ -2162,6 +2175,10 @@ private gitlab.project.containerRegistryRepository @defaults("path tagsCount sta
   // When the most recent cleanup policy run started for this repository
   cleanupPolicyStartedAt time
   // Tag count snapshot
+  //
+  // Null when the repository was reached through a group rollup, because the
+  // group-level registry listing has no tag-count parameter. Iterate tags for
+  // an exact count in that case.
   tagsCount int
   // Repository delete status
   //

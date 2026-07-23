@@ -14,7 +14,12 @@ import (
 // initGitlabSettings fetches instance-level application settings.
 // Requires an admin-scoped token; returns a permission error otherwise.
 func initGitlabSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 0 {
+	// gitlab.settings is a singleton with no lookup key, so the only reason to
+	// skip the fetch is that a caller already handed us the full field set.
+	// The threshold has to allow for the implicit __id arg — every other init
+	// in this provider uses > 2 for the same reason. At > 0 a single incidental
+	// arg skipped the fetch entirely and left all 33 fields unset.
+	if len(args) > 2 {
 		return args, nil, nil
 	}
 
