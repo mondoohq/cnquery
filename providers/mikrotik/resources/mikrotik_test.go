@@ -114,3 +114,12 @@ func TestSplitList(t *testing.T) {
 	assert.Equal(t, []any{"a", "b", "c"}, splitList("a, b ,c"))
 	assert.Equal(t, []any{"a", "b"}, splitList("a,,b,"))
 }
+
+func TestMasterInterfaceName(t *testing.T) {
+	// RouterOS reports "none" for physical radios with no parent interface;
+	// that sentinel must normalize to empty so the masterInterface accessor
+	// returns null instead of trying to resolve an interface named "none".
+	assert.Equal(t, "", masterInterfaceName("none"))
+	assert.Equal(t, "", masterInterfaceName(""))
+	assert.Equal(t, "wifi1", masterInterfaceName("wifi1"))
+}

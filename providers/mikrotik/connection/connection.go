@@ -25,6 +25,14 @@ const (
 	DefaultAPISSLPort = "8729"
 )
 
+// rosClient is the subset of *routeros.Client the connection depends on.
+// Depending on the interface (rather than the concrete type) lets tests drive
+// Print/PrintOptional with a fake reply source; *routeros.Client satisfies it.
+type rosClient interface {
+	Run(sentences ...string) (*routeros.Reply, error)
+	Close() error
+}
+
 type MikrotikConnection struct {
 	plugin.Connection
 	Conf  *inventory.Config
@@ -33,7 +41,7 @@ type MikrotikConnection struct {
 	// client is the underlying RouterOS API client. The RouterOS API
 	// multiplexes a single TCP connection, so concurrent commands must be
 	// serialized; mu guards every Run call.
-	client *routeros.Client
+	client rosClient
 	mu     sync.Mutex
 
 	// printCache memoizes `<menu>/print` results for the lifetime of the
@@ -132,9 +140,10 @@ func (c *MikrotikConnection) Run(sentences ...string) (*routeros.Reply, error) {
 // Print runs a `<menu>/print` command and returns each reply sentence as a
 // map of attribute names to values. For example Print("/interface") issues
 // `/interface/print` and returns one map per interface. Results are memoized
-// per menu for the connection's lifetime (see printCache), and each map is
-// copied out of the routeros reply so callers can never mutate the library's
-// internal sentence state.
+// per menu for the connection's lifetime (see printCache). Each call returns
+// an independent copy of the cached rows, so a caller mutating a returned map
+// can corrupt neither the cache nor the routeros library's internal sentence
+// state, and repeated callers always observe the original device values.
 func (c *MikrotikConnection) Print(menu string) ([]map[string]string, error) {
 	// Hold cacheMu across the fetch (not just the read and the write): this
 	// makes concurrent callers for the same menu wait for the first fetch and
@@ -149,21 +158,31 @@ func (c *MikrotikConnection) Print(menu string) ([]map[string]string, error) {
 	if c.printCache == nil {
 		c.printCache = map[string][]map[string]string{}
 	}
-	if cached, ok := c.printCache[menu]; ok {
-		return cached, nil
+
+	cached, ok := c.printCache[menu]
+	if !ok {
+		reply, err := c.Run(menu + "/print")
+		if err != nil {
+			return nil, err
+		}
+		cached = make([]map[string]string, 0, len(reply.Re))
+		for _, re := range reply.Re {
+			cached = append(cached, maps.Clone(re.Map))
+		}
+		c.printCache[menu] = cached
 	}
 
-	reply, err := c.Run(menu + "/print")
-	if err != nil {
-		return nil, err
-	}
+	return cloneRows(cached), nil
+}
 
-	out := make([]map[string]string, 0, len(reply.Re))
-	for _, re := range reply.Re {
-		out = append(out, maps.Clone(re.Map))
+// cloneRows returns a deep copy of a slice of attribute maps so callers can
+// freely read or mutate the result without touching the shared print cache.
+func cloneRows(rows []map[string]string) []map[string]string {
+	out := make([]map[string]string, len(rows))
+	for i, row := range rows {
+		out[i] = maps.Clone(row)
 	}
-	c.printCache[menu] = out
-	return out, nil
+	return out
 }
 
 // PrintOptional behaves like Print but treats a menu the device does not
