@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 
+	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -99,6 +100,8 @@ func (g *mqlGoogleworkspace) connectedApps() ([]any, error) {
 			for _, scope := range tk.Scopes.Data {
 				if s, ok := scope.(string); ok {
 					cApp.scopes = append(cApp.scopes, s)
+				} else {
+					log.Warn().Str("clientId", clientID).Msgf("googleworkspace> unexpected scope type %T in connected-app token; dropping", scope)
 				}
 			}
 

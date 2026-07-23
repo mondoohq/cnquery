@@ -177,12 +177,15 @@ func reportActivityID(appName, eventTime string, uniqueQualifier int64) string {
 // deterministic (same content -> same key across scans) so two distinct
 // nil-id activities don't alias each other.
 func hashActivity(entry *reports.Activity) string {
-	data, err := json.Marshal(entry)
-	if err != nil {
-		return ""
-	}
 	h := fnv.New64a()
-	h.Write(data)
+	if data, err := json.Marshal(entry); err == nil {
+		h.Write(data)
+	} else {
+		// json.Marshal of this plain struct effectively never fails, but if it
+		// ever did we still hash the stable scalar fields so distinct events get
+		// distinct keys instead of all collapsing onto one empty discriminator.
+		h.Write([]byte(entry.Etag + "\x00" + entry.IpAddress + "\x00" + entry.OwnerDomain))
+	}
 	return strconv.FormatUint(h.Sum64(), 16)
 }
 
