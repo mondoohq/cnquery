@@ -564,13 +564,12 @@ func installSchemaVersion(ctx context.Context, name string, version string, dst 
 	if err := os.MkdirAll(dstPath, 0o755); err != nil {
 		return nil, err
 	}
-	if err := writeProviderFile(filepath.Join(dstPath, name+".json"), confJSON); err != nil {
+	if err := os.WriteFile(filepath.Join(dstPath, name+".json"), confJSON, 0o644); err != nil {
 		return nil, err
 	}
-	if err := writeProviderFile(filepath.Join(dstPath, name+".resources.json"), schemaJSON); err != nil {
+	if err := os.WriteFile(filepath.Join(dstPath, name+".resources.json"), schemaJSON, 0o644); err != nil {
 		return nil, err
 	}
-	syncDir(dstPath)
 
 	provider, err := readProviderDir(dstPath)
 	if err != nil {
@@ -595,34 +594,6 @@ func installSchemaVersion(ctx context.Context, name string, version string, dst 
 	LastProviderInstall = time.Now().Unix()
 
 	return provider, nil
-}
-
-// writeProviderFile writes data to path via a temporary file, fsync, and
-// rename, so a crash can't leave a half-written (or zeroed, see InstallIO)
-// provider file behind.
-func writeProviderFile(path string, data []byte) error {
-	tmp := path + ".tmp"
-	writer, err := os.Create(tmp)
-	if err != nil {
-		return err
-	}
-	// don't leave the temp file behind on any failure below; after a
-	// successful rename the file is gone and this is a no-op
-	defer os.Remove(tmp)
-	if _, err := writer.Write(data); err != nil {
-		writer.Close()
-		return err
-	}
-	if err := writer.Sync(); err != nil {
-		writer.Close()
-		return err
-	}
-	if err := writer.Close(); err != nil {
-		return err
-	}
-	return osRetry(func() error {
-		return os.Rename(tmp, path)
-	}, maxInstallConfRetries)
 }
 
 // installDependencies ensures all dependencies of a provider are installed
