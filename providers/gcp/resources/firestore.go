@@ -65,6 +65,12 @@ func initGcpProjectFirestoreServiceDatabase(runtime *plugin.Runtime, args map[st
 		}
 	}
 
+	// Guard before building the parent: CreateResource hands args["projectId"]
+	// to the generated setter, which dereferences it, so nil panics the provider.
+	if args["projectId"] == nil {
+		return nil, nil, errors.New("gcp.project.firestoreService.database requires a \"projectId\" argument")
+	}
+
 	obj, err := CreateResource(runtime, "gcp.project.firestoreService", map[string]*llx.RawData{
 		"projectId": args["projectId"],
 	})

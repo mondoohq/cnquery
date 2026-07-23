@@ -843,6 +843,12 @@ func initGcpProjectDataprocServiceCluster(runtime *plugin.Runtime, args map[stri
 		}
 	}
 
+	// Guard before building the parent: CreateResource hands args["projectId"]
+	// to the generated setter, which dereferences it, so nil panics the provider.
+	if args["projectId"] == nil {
+		return nil, nil, errors.New("gcp.project.dataprocService.cluster requires a \"projectId\" argument")
+	}
+
 	obj, err := CreateResource(runtime, "gcp.project.dataprocService", map[string]*llx.RawData{
 		"projectId": args["projectId"],
 		"enabled":   llx.BoolData(true),

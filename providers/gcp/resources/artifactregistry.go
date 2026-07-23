@@ -213,6 +213,12 @@ func initGcpProjectArtifactRegistryServiceRepository(runtime *plugin.Runtime, ar
 		return nil, nil, errors.New("artifact registry repository init requires a \"name\" argument")
 	}
 
+	// Guard before building the parent: CreateResource hands args["projectId"]
+	// to the generated setter, which dereferences it, so nil panics the provider.
+	if args["projectId"] == nil {
+		return nil, nil, errors.New("gcp.project.artifactRegistryService.repository requires a \"projectId\" argument")
+	}
+
 	obj, err := CreateResource(runtime, "gcp.project.artifactRegistryService", map[string]*llx.RawData{
 		"projectId": args["projectId"],
 	})

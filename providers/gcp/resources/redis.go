@@ -104,6 +104,12 @@ func initGcpProjectRedisServiceInstance(runtime *plugin.Runtime, args map[string
 		}
 	}
 
+	// Guard before building the parent: CreateResource hands args["projectId"]
+	// to the generated setter, which dereferences it, so nil panics the provider.
+	if args["projectId"] == nil {
+		return nil, nil, errors.New("gcp.project.redisService.instance requires a \"projectId\" argument")
+	}
+
 	obj, err := CreateResource(runtime, "gcp.project.redisService", map[string]*llx.RawData{
 		"projectId": args["projectId"],
 	})
@@ -509,6 +515,12 @@ func initGcpProjectRedisServiceCluster(runtime *plugin.Runtime, args map[string]
 		} else {
 			return nil, nil, errors.New("no asset identifier found")
 		}
+	}
+
+	// Guard before building the parent: CreateResource hands args["projectId"]
+	// to the generated setter, which dereferences it, so nil panics the provider.
+	if args["projectId"] == nil {
+		return nil, nil, errors.New("gcp.project.redisService.cluster requires a \"projectId\" argument")
 	}
 
 	obj, err := CreateResource(runtime, "gcp.project.redisService", map[string]*llx.RawData{

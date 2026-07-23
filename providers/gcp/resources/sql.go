@@ -61,6 +61,12 @@ func initGcpProjectSqlServiceInstance(runtime *plugin.Runtime, args map[string]*
 	}
 
 	// Create the parent SQL service and find the specific instance
+	// Guard before building the parent: CreateResource hands args["projectId"]
+	// to the generated setter, which dereferences it, so nil panics the provider.
+	if args["projectId"] == nil {
+		return nil, nil, errors.New("gcp.project.sqlService.instance requires a \"projectId\" argument")
+	}
+
 	obj, err := CreateResource(runtime, "gcp.project.sqlService", map[string]*llx.RawData{
 		"projectId": args["projectId"],
 	})

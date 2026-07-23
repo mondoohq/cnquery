@@ -596,6 +596,12 @@ func initGcpProjectLoggingserviceBucket(runtime *plugin.Runtime, args map[string
 	// Use NewResource so initGcpProjectLoggingservice runs and sets serviceEnabled;
 	// CreateResource would skip init and leave serviceEnabled=false, making
 	// GetBuckets() short-circuit to empty even when logging is enabled.
+	// Guard before building the parent: CreateResource hands args["projectId"]
+	// to the generated setter, which dereferences it, so nil panics the provider.
+	if args["projectId"] == nil {
+		return nil, nil, errors.New("gcp.project.loggingservice.bucket requires a \"projectId\" argument")
+	}
+
 	obj, err := NewResource(runtime, "gcp.project.loggingservice", map[string]*llx.RawData{
 		"projectId": args["projectId"],
 	})

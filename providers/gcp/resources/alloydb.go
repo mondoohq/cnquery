@@ -402,6 +402,12 @@ func initGcpProjectAlloydbServiceCluster(runtime *plugin.Runtime, args map[strin
 		}
 	}
 
+	// Guard before building the parent: CreateResource hands args["projectId"]
+	// to the generated setter, which dereferences it, so nil panics the provider.
+	if args["projectId"] == nil {
+		return nil, nil, errors.New("gcp.project.alloydbService.cluster requires a \"projectId\" argument")
+	}
+
 	obj, err := CreateResource(runtime, "gcp.project.alloydbService", map[string]*llx.RawData{
 		"projectId": args["projectId"],
 	})

@@ -406,6 +406,17 @@ func initGcpProjectComputeServiceInstance(runtime *plugin.Runtime, args map[stri
 		}
 	}
 
+	// The instance is matched by (region, name, projectId); without all three we
+	// can't do the lookup. This has to run before the parent computeService is
+	// built: a missing projectId reaches CreateResource as a nil *llx.RawData and
+	// the generated setter dereferences it, panicking before any later guard runs.
+	if args["region"] == nil || args["name"] == nil || args["projectId"] == nil {
+		return nil, nil, errors.New("gcp.project.computeService.instance requires region, name, and projectId")
+	}
+	wantRegion := args["region"]
+	wantName := args["name"]
+	wantProjectId := args["projectId"]
+
 	// Try to find the instance in the MQL cache first
 	obj, err := CreateResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
 		"projectId": args["projectId"],
@@ -417,16 +428,6 @@ func initGcpProjectComputeServiceInstance(runtime *plugin.Runtime, args map[stri
 	instances := computeSvc.GetInstances()
 	if instances.Error != nil {
 		return nil, nil, instances.Error
-	}
-
-	// The instance is matched by (region, name, projectId); without all three we
-	// can't do the lookup. Return an error rather than dereferencing a nil arg
-	// (which would panic) or falling through to build a husk with unset fields.
-	wantRegion := args["region"]
-	wantName := args["name"]
-	wantProjectId := args["projectId"]
-	if wantRegion == nil || wantName == nil || wantProjectId == nil {
-		return nil, nil, errors.New("gcp.project.computeService.instance requires region, name, and projectId")
 	}
 
 	for _, inst := range instances.Data {
@@ -1403,6 +1404,12 @@ func initGcpProjectComputeServiceFirewall(runtime *plugin.Runtime, args map[stri
 		}
 	}
 
+	// Guard before building the parent: a missing projectId would nil-deref
+	// (and blow the type assertion) rather than return an error.
+	if args["projectId"] == nil {
+		return nil, nil, errors.New("gcp.project.computeService.firewall requires a \"projectId\" argument")
+	}
+
 	obj, err := CreateResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
 		"projectId": llx.StringData(args["projectId"].Value.(string)),
 	})
@@ -1643,6 +1650,12 @@ func initGcpProjectComputeServiceImage(runtime *plugin.Runtime, args map[string]
 		} else {
 			return nil, nil, errors.New("no asset identifier found")
 		}
+	}
+
+	// Guard before building the parent: a missing projectId would nil-deref
+	// (and blow the type assertion) rather than return an error.
+	if args["projectId"] == nil {
+		return nil, nil, errors.New("gcp.project.computeService.image requires a \"projectId\" argument")
 	}
 
 	obj, err := CreateResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
@@ -2022,6 +2035,12 @@ func initGcpProjectComputeServiceNetwork(runtime *plugin.Runtime, args map[strin
 	}
 
 	// Try to find the network in the MQL cache first
+	// Guard before building the parent: CreateResource hands args["projectId"]
+	// to the generated setter, which dereferences it, so nil panics the provider.
+	if args["projectId"] == nil {
+		return nil, nil, errors.New("gcp.project.computeService.network requires a \"projectId\" argument")
+	}
+
 	obj, err := CreateResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
 		"projectId": args["projectId"],
 	})
@@ -2207,6 +2226,12 @@ func initGcpProjectComputeServiceSubnetwork(runtime *plugin.Runtime, args map[st
 	}
 
 	// Try to find the subnetwork in the MQL cache first
+	// Guard before building the parent: a missing projectId would nil-deref
+	// (and blow the type assertion) rather than return an error.
+	if args["projectId"] == nil {
+		return nil, nil, errors.New("gcp.project.computeService.subnetwork requires a \"projectId\" argument")
+	}
+
 	obj, err := NewResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
 		"projectId": llx.StringData(args["projectId"].Value.(string)),
 	})

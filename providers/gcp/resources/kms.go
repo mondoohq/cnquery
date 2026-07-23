@@ -69,6 +69,14 @@ func initGcpProjectKmsServiceKeyring(runtime *plugin.Runtime, args map[string]*l
 		}
 	}
 
+	// The keyring is matched by (name, location, projectId); without all three we
+	// can't do the lookup. This has to run before the parent kmsService is built:
+	// a missing projectId reaches CreateResource as a nil *llx.RawData and the
+	// generated setter dereferences it, panicking before any later guard runs.
+	if args["name"] == nil || args["location"] == nil || args["projectId"] == nil {
+		return nil, nil, errors.New("gcp.project.kmsService.keyring requires name, location, and projectId")
+	}
+
 	// Create the parent KMS service and find the specific keyring
 	obj, err := CreateResource(runtime, "gcp.project.kmsService", map[string]*llx.RawData{
 		"projectId": args["projectId"],
@@ -80,13 +88,6 @@ func initGcpProjectKmsServiceKeyring(runtime *plugin.Runtime, args map[string]*l
 	keyrings := kmsSvc.GetKeyrings()
 	if keyrings.Error != nil {
 		return nil, nil, keyrings.Error
-	}
-
-	// The keyring is matched by (name, location, projectId); without all three we
-	// can't do the lookup. Return an error rather than dereferencing a nil arg
-	// (which would panic) or falling through to build a husk with unset fields.
-	if args["name"] == nil || args["location"] == nil || args["projectId"] == nil {
-		return nil, nil, errors.New("gcp.project.kmsService.keyring requires name, location, and projectId")
 	}
 
 	// Find the matching keyring

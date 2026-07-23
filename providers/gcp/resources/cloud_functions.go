@@ -423,6 +423,12 @@ func initGcpProjectCloudFunction(runtime *plugin.Runtime, args map[string]*llx.R
 		}
 	}
 
+	// Guard before building the parent: CreateResource hands args["projectId"]
+	// to the generated setter, which dereferences it, so nil panics the provider.
+	if args["projectId"] == nil {
+		return nil, nil, errors.New("gcp.project.cloudFunction requires a \"projectId\" argument")
+	}
+
 	obj, err := CreateResource(runtime, "gcp.project", map[string]*llx.RawData{
 		"id": args["projectId"],
 	})

@@ -112,6 +112,12 @@ func initGcpProjectPubsubServiceTopic(runtime *plugin.Runtime, args map[string]*
 		}
 	}
 
+	// Guard before building the parent: CreateResource hands args["projectId"]
+	// to the generated setter, which dereferences it, so nil panics the provider.
+	if args["projectId"] == nil {
+		return nil, nil, errors.New("gcp.project.pubsubService.topic requires a \"projectId\" argument")
+	}
+
 	obj, err := CreateResource(runtime, "gcp.project.pubsubService", map[string]*llx.RawData{
 		"projectId": args["projectId"],
 	})
@@ -188,6 +194,12 @@ func initGcpProjectPubsubServiceSubscription(runtime *plugin.Runtime, args map[s
 		}
 	}
 
+	// Guard before building the parent: CreateResource hands args["projectId"]
+	// to the generated setter, which dereferences it, so nil panics the provider.
+	if args["projectId"] == nil {
+		return nil, nil, errors.New("gcp.project.pubsubService.subscription requires a \"projectId\" argument")
+	}
+
 	obj, err := CreateResource(runtime, "gcp.project.pubsubService", map[string]*llx.RawData{
 		"projectId": args["projectId"],
 	})
@@ -259,6 +271,12 @@ func initGcpProjectPubsubServiceSnapshot(runtime *plugin.Runtime, args map[strin
 		} else {
 			return nil, nil, errors.New("no asset identifier found")
 		}
+	}
+
+	// Guard before building the parent: CreateResource hands args["projectId"]
+	// to the generated setter, which dereferences it, so nil panics the provider.
+	if args["projectId"] == nil {
+		return nil, nil, errors.New("gcp.project.pubsubService.snapshot requires a \"projectId\" argument")
 	}
 
 	obj, err := CreateResource(runtime, "gcp.project.pubsubService", map[string]*llx.RawData{

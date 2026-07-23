@@ -119,6 +119,12 @@ func initGcpProjectCloudRunServiceService(runtime *plugin.Runtime, args map[stri
 		}
 	}
 
+	// Guard before building the parent: CreateResource hands args["projectId"]
+	// to the generated setter, which dereferences it, so nil panics the provider.
+	if args["projectId"] == nil {
+		return nil, nil, errors.New("gcp.project.cloudRunService.service requires a \"projectId\" argument")
+	}
+
 	obj, err := CreateResource(runtime, "gcp.project.cloudRunService", map[string]*llx.RawData{
 		"projectId": args["projectId"],
 	})
@@ -182,6 +188,12 @@ func initGcpProjectCloudRunServiceJob(runtime *plugin.Runtime, args map[string]*
 		} else {
 			return nil, nil, errors.New("no asset identifier found")
 		}
+	}
+
+	// Guard before building the parent: CreateResource hands args["projectId"]
+	// to the generated setter, which dereferences it, so nil panics the provider.
+	if args["projectId"] == nil {
+		return nil, nil, errors.New("gcp.project.cloudRunService.job requires a \"projectId\" argument")
 	}
 
 	obj, err := CreateResource(runtime, "gcp.project.cloudRunService", map[string]*llx.RawData{

@@ -85,6 +85,12 @@ func initGcpProjectGkeServiceCluster(runtime *plugin.Runtime, args map[string]*l
 		}
 	}
 
+	// Guard before building the parent: a missing projectId would nil-deref
+	// (and blow the type assertion) rather than return an error.
+	if args["projectId"] == nil {
+		return nil, nil, errors.New("gcp.project.gkeService.cluster requires a \"projectId\" argument")
+	}
+
 	obj, err := CreateResource(runtime, "gcp.project.gkeService", map[string]*llx.RawData{
 		"projectId": llx.StringData(args["projectId"].Value.(string)),
 	})
