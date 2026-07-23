@@ -700,13 +700,7 @@ func updateProviders(binary string, names []string) error {
 			continue
 		}
 
-		// Schema-only installs stay schema-only when updated; their binary
-		// is only fetched when the provider actually connects to an asset.
-		install := providers.Install
-		if !p.HasBinary {
-			install = providers.InstallSchemaOnly
-		}
-		installed, err := install(p.Name, latest)
+		installed, err := providers.Install(p.Name, latest)
 		if err != nil {
 			log.Warn().Err(err).Str("provider", p.Name).Msg("failed to update provider")
 			failed++
