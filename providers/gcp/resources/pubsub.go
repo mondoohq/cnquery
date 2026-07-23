@@ -126,7 +126,7 @@ func initGcpProjectPubsubServiceTopic(runtime *plugin.Runtime, args map[string]*
 
 	nameRaw := args["name"]
 	if nameRaw == nil {
-		return args, nil, nil
+		return nil, nil, errors.New("gcp.project.pubsubService.topic requires a \"name\" argument")
 	}
 	nameVal, _ := nameRaw.Value.(string)
 	for _, t := range topics.Data {

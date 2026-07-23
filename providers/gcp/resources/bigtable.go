@@ -85,7 +85,7 @@ func initGcpProjectBigtableServiceInstance(runtime *plugin.Runtime, args map[str
 
 	nameRaw := args["name"]
 	if nameRaw == nil {
-		return args, nil, nil
+		return nil, nil, errors.New("gcp.project.bigtableService.instance requires a \"name\" argument")
 	}
 	nameVal, _ := nameRaw.Value.(string)
 	for _, i := range instances.Data {

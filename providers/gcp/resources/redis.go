@@ -118,7 +118,7 @@ func initGcpProjectRedisServiceInstance(runtime *plugin.Runtime, args map[string
 
 	nameRaw := args["name"]
 	if nameRaw == nil {
-		return args, nil, nil
+		return nil, nil, errors.New("gcp.project.redisService.instance requires a \"name\" argument")
 	}
 	wantName, _ := nameRaw.Value.(string)
 	for _, inst := range instances.Data {
@@ -525,7 +525,7 @@ func initGcpProjectRedisServiceCluster(runtime *plugin.Runtime, args map[string]
 
 	nameRaw := args["name"]
 	if nameRaw == nil {
-		return args, nil, nil
+		return nil, nil, errors.New("gcp.project.redisService.cluster requires a \"name\" argument")
 	}
 	wantName, _ := nameRaw.Value.(string)
 	for _, c := range clusters.Data {

@@ -38,9 +38,10 @@ func initGcpProjectDnsServiceManagedzone(runtime *plugin.Runtime, args map[strin
 	}
 
 	// The managed zone is matched by (name, projectId); without both we can't do
-	// the lookup, so return a bare resource rather than dereferencing a nil arg.
+	// the lookup. Return an error rather than dereferencing a nil arg (panic) or
+	// falling through to build a husk with unset fields.
 	if args["name"] == nil || args["projectId"] == nil {
-		return args, nil, nil
+		return nil, nil, errors.New("gcp.project.dnsService.managedzone requires name and projectId")
 	}
 
 	// Create the parent DNS service and find the specific managed zone

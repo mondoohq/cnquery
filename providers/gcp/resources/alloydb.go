@@ -416,7 +416,7 @@ func initGcpProjectAlloydbServiceCluster(runtime *plugin.Runtime, args map[strin
 
 	nameRaw := args["name"]
 	if nameRaw == nil {
-		return args, nil, nil
+		return nil, nil, errors.New("gcp.project.alloydbService.cluster requires a \"name\" argument")
 	}
 	nameVal, _ := nameRaw.Value.(string)
 	locationVal := ""

@@ -437,14 +437,14 @@ func initGcpProjectBigqueryServiceDataset(runtime *plugin.Runtime, args map[stri
 	}
 
 	// The dataset is matched by (id, projectId, location); without all three we
-	// can't do the lookup, so return a bare resource rather than dereferencing a
-	// nil arg (which would panic and crash the scan).
+	// can't do the lookup. Return an error rather than dereferencing a nil arg
+	// (which would panic) or falling through to build a husk with unset fields.
 	if args["id"] == nil || args["projectId"] == nil || args["location"] == nil {
-		return args, nil, nil
+		return nil, nil, errors.New("gcp.project.bigqueryService.dataset requires id, projectId, and location")
 	}
 	projectIdArg, ok := args["projectId"].Value.(string)
 	if !ok {
-		return args, nil, nil
+		return nil, nil, errors.New("gcp.project.bigqueryService.dataset projectId must be a string")
 	}
 
 	obj, err := CreateResource(runtime, "gcp.project.bigqueryService", map[string]*llx.RawData{

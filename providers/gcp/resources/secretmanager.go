@@ -239,7 +239,7 @@ func initGcpProjectSecretmanagerServiceSecret(runtime *plugin.Runtime, args map[
 
 	nameRaw := args["name"]
 	if nameRaw == nil {
-		return args, nil, nil
+		return nil, nil, errors.New("gcp.project.secretmanagerService.secret requires a \"name\" argument")
 	}
 	nameVal, _ := nameRaw.Value.(string)
 	for _, s := range secrets.Data {

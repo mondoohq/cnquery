@@ -250,7 +250,7 @@ func initGcpProjectApiKey(runtime *plugin.Runtime, args map[string]*llx.RawData)
 
 	idRaw := args["id"]
 	if idRaw == nil {
-		return args, nil, nil
+		return nil, nil, errors.New("gcp.project.apiKey requires an \"id\" argument")
 	}
 	idVal, _ := idRaw.Value.(string)
 	for _, k := range keys.Data {

@@ -83,10 +83,10 @@ func initGcpProjectKmsServiceKeyring(runtime *plugin.Runtime, args map[string]*l
 	}
 
 	// The keyring is matched by (name, location, projectId); without all three we
-	// can't do the lookup, so return a bare resource rather than dereferencing a
-	// nil arg (which would panic and crash the scan).
+	// can't do the lookup. Return an error rather than dereferencing a nil arg
+	// (which would panic) or falling through to build a husk with unset fields.
 	if args["name"] == nil || args["location"] == nil || args["projectId"] == nil {
-		return args, nil, nil
+		return nil, nil, errors.New("gcp.project.kmsService.keyring requires name, location, and projectId")
 	}
 
 	// Find the matching keyring

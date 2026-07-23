@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
@@ -437,6 +438,12 @@ func getDiskByUrl(diskUrl string, runtime *plugin.Runtime) (*mqlGcpProjectComput
 			}
 			continue
 		}
+		// Regional disk (no zone): the location segment can't be matched against
+		// a zone, so this falls back to a name match within the project. Two
+		// regional disks with the same name in different regions would be
+		// ambiguous; warn so it's visible.
+		log.Warn().Str("disk", diskId.Name).Str("location", diskId.Region).
+			Msg("resolving regional source disk by name only; result may be ambiguous across regions")
 		return disk, nil
 	}
 	return nil, nil

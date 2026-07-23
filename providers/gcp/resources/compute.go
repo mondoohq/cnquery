@@ -420,13 +420,13 @@ func initGcpProjectComputeServiceInstance(runtime *plugin.Runtime, args map[stri
 	}
 
 	// The instance is matched by (region, name, projectId); without all three we
-	// can't do the lookup, so return a bare resource rather than dereferencing a
-	// nil arg (which would panic and crash the scan).
+	// can't do the lookup. Return an error rather than dereferencing a nil arg
+	// (which would panic) or falling through to build a husk with unset fields.
 	wantRegion := args["region"]
 	wantName := args["name"]
 	wantProjectId := args["projectId"]
 	if wantRegion == nil || wantName == nil || wantProjectId == nil {
-		return args, nil, nil
+		return nil, nil, errors.New("gcp.project.computeService.instance requires region, name, and projectId")
 	}
 
 	for _, inst := range instances.Data {
@@ -657,6 +657,10 @@ func (g *mqlGcpProjectComputeServiceAttachedDisk) source() (*mqlGcpProjectComput
 			}
 			continue
 		}
+		// Regional disk (no zone): fall back to a name match within the project.
+		// Same-named regional disks in different regions would be ambiguous.
+		log.Warn().Str("disk", diskId.Name).Str("location", diskId.Region).
+			Msg("resolving regional attached disk by name only; result may be ambiguous across regions")
 		return disk, nil
 	}
 	return nil, errors.New("disk not found")
@@ -1082,7 +1086,15 @@ func (g *mqlGcpProjectComputeServiceDisk) sourceDisk() (*mqlGcpProjectComputeSer
 		g.SourceDisk.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	return getDiskByUrl(g.cacheSourceDiskUrl, g.MqlRuntime)
+	disk, err := getDiskByUrl(g.cacheSourceDiskUrl, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if disk == nil {
+		g.SourceDisk.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return disk, nil
 }
 
 func (g *mqlGcpProjectComputeServiceDisk) sourceImage() (*mqlGcpProjectComputeServiceImage, error) {
@@ -1706,7 +1718,15 @@ func (g *mqlGcpProjectComputeServiceSnapshot) sourceDiskRef() (*mqlGcpProjectCom
 		g.SourceDiskRef.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	return getDiskByUrl(g.cacheSourceDiskUrl, g.MqlRuntime)
+	disk, err := getDiskByUrl(g.cacheSourceDiskUrl, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if disk == nil {
+		g.SourceDiskRef.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return disk, nil
 }
 
 func (g *mqlGcpProjectComputeServiceImage) sourceDisk() (*mqlGcpProjectComputeServiceDisk, error) {
@@ -1714,7 +1734,15 @@ func (g *mqlGcpProjectComputeServiceImage) sourceDisk() (*mqlGcpProjectComputeSe
 		g.SourceDisk.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	return getDiskByUrl(g.cacheSourceDiskUrl, g.MqlRuntime)
+	disk, err := getDiskByUrl(g.cacheSourceDiskUrl, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if disk == nil {
+		g.SourceDisk.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return disk, nil
 }
 
 func (g *mqlGcpProjectComputeServiceImage) sourceImage() (*mqlGcpProjectComputeServiceImage, error) {

@@ -858,12 +858,12 @@ func initGcpProjectDataprocServiceCluster(runtime *plugin.Runtime, args map[stri
 
 	nameRaw := args["name"]
 	if nameRaw == nil {
-		return args, nil, nil
+		return nil, nil, errors.New("gcp.project.dataprocService.cluster requires a \"name\" argument")
 	}
 	nameVal, _ := nameRaw.Value.(string)
 	locationVal := ""
 	if args["location"] != nil {
-		locationVal = args["location"].Value.(string)
+		locationVal, _ = args["location"].Value.(string)
 	}
 	for _, c := range clusters.Data {
 		cluster := c.(*mqlGcpProjectDataprocServiceCluster)
