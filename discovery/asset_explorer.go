@@ -231,9 +231,10 @@ func (e *AssetExplorer) Connect(asset *TrackedAsset) (*TrackedAsset, error) {
 	return asset, nil
 }
 
-// CloseAsset disposes the connection for a specific asset. The caller is
-// responsible for closing all connections, including gateway assets that
-// were connected just to discover children.
+// CloseAsset disposes the connection for a specific asset and breaks
+// inter-asset reference chains so the GC can reclaim memory from completed
+// subtrees. The caller is responsible for closing all connections, including
+// gateway assets that were connected just to discover children.
 func (e *AssetExplorer) CloseAsset(asset *TrackedAsset) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
@@ -251,6 +252,13 @@ func (e *AssetExplorer) CloseAsset(asset *TrackedAsset) error {
 	}
 	asset.Runtime = nil
 	asset.State = AssetClosed
+
+	// Break bidirectional reference chains between TrackedAsset nodes so
+	// completed subtrees become GC-eligible without waiting for the entire
+	// scan to finish. seenPlatformIDs preserves dedup state independently.
+	asset.Children = nil
+	asset.Parent = nil
+
 	return nil
 }
 
@@ -342,7 +350,7 @@ func (e *AssetExplorer) dedup(asset *TrackedAsset) bool {
 		if existing == asset || existing.State != AssetConnected {
 			continue
 		}
-		if len(existing.Asset.PlatformIds) == 0 {
+		if existing.Asset == nil || len(existing.Asset.PlatformIds) == 0 {
 			continue
 		}
 		if slicesx.IsSubsetOf(existing.Asset.PlatformIds, asset.Asset.PlatformIds) {
@@ -353,6 +361,8 @@ func (e *AssetExplorer) dedup(asset *TrackedAsset) bool {
 			}
 			existing.Runtime = nil
 			existing.State = AssetClosed
+			existing.Children = nil
+			existing.Parent = nil
 		}
 	}
 	return false

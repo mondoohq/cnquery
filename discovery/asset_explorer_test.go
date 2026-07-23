@@ -81,17 +81,29 @@ func TestAssetExplorerConnected(t *testing.T) {
 
 func TestAssetExplorerCloseAsset(t *testing.T) {
 	t.Run("close connected asset", func(t *testing.T) {
-		asset := &TrackedAsset{
-			Asset: &inventory.Asset{Name: "root"},
+		child := &TrackedAsset{
+			Asset: &inventory.Asset{Name: "child"},
+			State: AssetDiscovered,
+		}
+		parent := &TrackedAsset{
+			Asset: &inventory.Asset{Name: "parent"},
 			State: AssetConnected,
+		}
+		asset := &TrackedAsset{
+			Asset:    &inventory.Asset{Name: "root"},
+			State:    AssetConnected,
+			Parent:   parent,
+			Children: []*TrackedAsset{child},
 			// Runtime is nil in tests since we don't have a real provider
 		}
-		e := newTestExplorer(asset)
+		e := newTestExplorer(asset, parent, child)
 
 		err := e.CloseAsset(asset)
 		require.NoError(t, err)
 		assert.Equal(t, AssetClosed, asset.State)
 		assert.Nil(t, asset.Runtime)
+		assert.Nil(t, asset.Children, "Children should be nil'd to break reference chains")
+		assert.Nil(t, asset.Parent, "Parent should be nil'd to break reference chains")
 	})
 
 	t.Run("close discovered asset fails", func(t *testing.T) {
@@ -203,9 +215,14 @@ func TestAssetExplorerDedup(t *testing.T) {
 	})
 
 	t.Run("existing asset that is subset of new gets evicted", func(t *testing.T) {
+		child := &TrackedAsset{
+			Asset: &inventory.Asset{Name: "leaf"},
+			State: AssetDiscovered,
+		}
 		existing := &TrackedAsset{
-			Asset: &inventory.Asset{Name: "small", PlatformIds: []string{"id/1"}},
-			State: AssetConnected,
+			Asset:    &inventory.Asset{Name: "small", PlatformIds: []string{"id/1"}},
+			State:    AssetConnected,
+			Children: []*TrackedAsset{child},
 		}
 		newAsset := &TrackedAsset{
 			Asset: &inventory.Asset{Name: "big", PlatformIds: []string{"id/1", "id/2"}},
@@ -216,6 +233,8 @@ func TestAssetExplorerDedup(t *testing.T) {
 		e.dedup(newAsset)
 
 		assert.Equal(t, AssetClosed, existing.State)
+		assert.Nil(t, existing.Children, "evicted asset Children should be nil'd")
+		assert.Nil(t, existing.Parent, "evicted asset Parent should be nil'd")
 		assert.Equal(t, AssetConnected, newAsset.State)
 	})
 
