@@ -111,6 +111,15 @@ func (o *mqlOciOke) getClusters(conn *connection.OciConnection, regions []any) [
 					privateEndpoint = stringValue(cluster.Endpoints.PrivateEndpoint)
 				}
 
+				// endpointConfig.isPublicIpEnabled only exists for clusters using
+				// native VCN networking; it is absent for older clusters that
+				// still serve a reachable public API endpoint. Trust an actual
+				// published public endpoint over the missing flag, otherwise a
+				// publicly reachable control plane reports as private.
+				if publicEndpoint != "" {
+					isPublicEndpointEnabled = true
+				}
+
 				// Extract image policy
 				var isImagePolicyEnabled bool
 				if cluster.ImagePolicyConfig != nil {

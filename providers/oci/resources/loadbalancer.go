@@ -105,9 +105,18 @@ func (o *mqlOciLoadBalancer) getLoadBalancers(conn *connection.OciConnection, re
 
 				ipAddresses := make([]any, 0, len(lb.IpAddresses))
 				for _, ip := range lb.IpAddresses {
+					// isPublic is optional on the SDK model, and exposure()
+					// reads this key back to decide internet reachability. A
+					// missing flag on a non-private load balancer means public,
+					// so falling back to false would clear a genuinely
+					// internet-facing balancer.
+					isPublic := boolValue(ip.IsPublic)
+					if ip.IsPublic == nil {
+						isPublic = !boolValue(lb.IsPrivate)
+					}
 					entry := map[string]any{
 						"ipAddress": stringValue(ip.IpAddress),
-						"isPublic":  boolValue(ip.IsPublic),
+						"isPublic":  isPublic,
 					}
 					if ip.ReservedIp != nil {
 						entry["reservedIpId"] = stringValue(ip.ReservedIp.Id)

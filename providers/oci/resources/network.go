@@ -223,14 +223,15 @@ func (s *mqlOciNetwork) getSecurityListsForRegion(ctx context.Context, networkCl
 type egressSecurityRule struct {
 	// Description of egress rule
 	Description string `json:"description,omitempty"`
-	// Indicates if this is a stateless rule
-	Stateless bool `json:"stateless,omitempty"`
+	// Indicates if this is a stateless rule. No omitempty: a stateful rule
+	// must emit `stateless: false`, not drop the key entirely.
+	Stateless bool `json:"stateless"`
 	// Transport protocol, follows http://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
 	Protocol string `json:"protocol,omitempty"`
 	// Range of allowed IP addresses
 	Destination string `json:"destination,omitempty"`
 	// Type of destination
-	DestinationType string `json:"destination_type,omitempty"`
+	DestinationType string `json:"destinationType,omitempty"`
 	// TCP options
 	TcpOptions *core.TcpOptions `json:"tcpOptions,omitempty"`
 	// Udp options
@@ -243,14 +244,15 @@ type egressSecurityRule struct {
 type ingressSecurityRule struct {
 	// Description of ingress rule
 	Description string `json:"description,omitempty"`
-	// Indicates if this is a stateless rule
-	Stateless bool `json:"stateless,omitempty"`
+	// Indicates if this is a stateless rule. No omitempty: a stateful rule
+	// must emit `stateless: false`, not drop the key entirely.
+	Stateless bool `json:"stateless"`
 	// Transport protocol, follows http://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
 	Protocol string `json:"protocol,omitempty"`
 	// Range of allowed IP addresses
 	Source string `json:"source,omitempty"`
 	// Type of source
-	SourceType string `json:"source_type,omitempty"`
+	SourceType string `json:"sourceType,omitempty"`
 	// TCP options
 	TcpOptions *core.TcpOptions `json:"tcpOptions,omitempty"`
 	// Udp options

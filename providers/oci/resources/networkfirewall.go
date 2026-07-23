@@ -450,12 +450,16 @@ func decryptionProfileFields(dp networkfirewall.DecryptionProfile, summary netwo
 		fields["isUnsupportedCipherBlocked"] = llx.BoolDataPtr(p.IsUnsupportedCipherBlocked)
 		fields["isOutOfCapacityBlocked"] = llx.BoolDataPtr(p.IsOutOfCapacityBlocked)
 	default:
-		// Unknown profile type: surface the summary type, leave booleans null.
+		// Unknown profile type (an inspection type newer than the pinned SDK):
+		// surface the summary type and report the controls as not blocking.
+		// Null would make `isUnsupportedVersionBlocked &&
+		// isUnsupportedCipherBlocked` evaluate to true, so a profile we could
+		// not decode would pass a TLS-hygiene check it was never measured for.
 		fields["type"] = llx.StringData(string(summary.Type))
 		fields["description"] = llx.StringDataPtr(summary.Description)
-		fields["isUnsupportedVersionBlocked"] = llx.BoolDataPtr(nil)
-		fields["isUnsupportedCipherBlocked"] = llx.BoolDataPtr(nil)
-		fields["isOutOfCapacityBlocked"] = llx.BoolDataPtr(nil)
+		fields["isUnsupportedVersionBlocked"] = llx.BoolData(false)
+		fields["isUnsupportedCipherBlocked"] = llx.BoolData(false)
+		fields["isOutOfCapacityBlocked"] = llx.BoolData(false)
 	}
 	return fields
 }

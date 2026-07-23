@@ -81,11 +81,11 @@ func TestOciSecurityListRuleOpensIngress(t *testing.T) {
 		rule map[string]any
 		want bool
 	}{
-		{"any cidr", map[string]any{"source_type": "CIDR_BLOCK", "source": "0.0.0.0/0"}, true},
-		{"any cidr v6", map[string]any{"source_type": "CIDR_BLOCK", "source": "::/0"}, true},
-		{"specific cidr", map[string]any{"source_type": "CIDR_BLOCK", "source": "1.2.3.4/32"}, false},
-		{"service source", map[string]any{"source_type": "SERVICE_CIDR_BLOCK", "source": "all-services"}, false},
-		{"missing source_type but any cidr", map[string]any{"source": "0.0.0.0/0"}, true},
+		{"any cidr", map[string]any{"sourceType": "CIDR_BLOCK", "source": "0.0.0.0/0"}, true},
+		{"any cidr v6", map[string]any{"sourceType": "CIDR_BLOCK", "source": "::/0"}, true},
+		{"specific cidr", map[string]any{"sourceType": "CIDR_BLOCK", "source": "1.2.3.4/32"}, false},
+		{"service source", map[string]any{"sourceType": "SERVICE_CIDR_BLOCK", "source": "all-services"}, false},
+		{"missing sourceType but any cidr", map[string]any{"source": "0.0.0.0/0"}, true},
 		{"empty", map[string]any{}, false},
 	}
 	for _, c := range cases {

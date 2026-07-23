@@ -108,7 +108,18 @@ func (o *mqlOciIdentity) getUsers(conn *connection.OciConnection) []*jobpool.Job
 					previousLogin = &user.PreviousSuccessfulLoginTime.Time
 				}
 
-				capabilities := map[string]any{}
+				// Every key is always present: a missing key reads as null, and
+				// `capabilities["a"] && capabilities["b"]` over two nulls
+				// evaluates to true in MQL, so a user whose capabilities the
+				// API omitted would silently pass a credential-capability check.
+				capabilities := map[string]any{
+					"canUseConsolePassword":         false,
+					"canUseApiKeys":                 false,
+					"canUseAuthTokens":              false,
+					"canUseSmtpCredentials":         false,
+					"canUseCustomerSecretKeys":      false,
+					"canUseOAuth2ClientCredentials": false,
+				}
 				if user.Capabilities != nil {
 					capabilities["canUseConsolePassword"] = boolValue(user.Capabilities.CanUseConsolePassword)
 					capabilities["canUseApiKeys"] = boolValue(user.Capabilities.CanUseApiKeys)
@@ -1175,13 +1186,17 @@ func ociAuthenticationPolicyArgs(client identity.IdentityClient, tenantID string
 	}
 
 	args := map[string]*llx.RawData{
-		"compartmentID":                      llx.StringData(tenantID),
-		"minimumPasswordLength":              llx.IntData(0),
-		"passwordRequiresUppercase":          llx.BoolData(false),
-		"passwordRequiresLowercase":          llx.BoolData(false),
-		"passwordRequiresNumeric":            llx.BoolData(false),
-		"passwordRequiresSpecial":            llx.BoolData(false),
-		"passwordUsernameContainmentAllowed": llx.BoolData(false),
+		"compartmentID":             llx.StringData(tenantID),
+		"minimumPasswordLength":     llx.IntData(0),
+		"passwordRequiresUppercase": llx.BoolData(false),
+		"passwordRequiresLowercase": llx.BoolData(false),
+		"passwordRequiresNumeric":   llx.BoolData(false),
+		"passwordRequiresSpecial":   llx.BoolData(false),
+		// Unlike the passwordRequires* flags, false is the *permissive* value
+		// here, so defaulting to false would let a missing password policy pass
+		// a `passwordUsernameContainmentAllowed == false` check. OCI's own
+		// service default is true, so an absent policy fails the check.
+		"passwordUsernameContainmentAllowed": llx.BoolData(true),
 		"networkSourceIds":                   llx.ArrayData([]any{}, types.String),
 	}
 	if pp := resp.PasswordPolicy; pp != nil {

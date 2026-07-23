@@ -515,11 +515,13 @@ func flattenAuthenticationType(rp *apigateway.ApiSpecificationRequestPolicies) s
 	return "UNKNOWN"
 }
 
-// flattenIsAnonymousAccessAllowed returns the authentication policy's
-// anonymous-access flag, defaulting to false when absent.
+// flattenIsAnonymousAccessAllowed reports whether unauthenticated requests
+// reach the backend. A deployment with no authentication policy at all
+// enforces nothing, so every request is anonymous - reporting false there
+// would clear the most exposed deployment in the tenancy.
 func flattenIsAnonymousAccessAllowed(rp *apigateway.ApiSpecificationRequestPolicies) bool {
 	if rp == nil || rp.Authentication == nil {
-		return false
+		return true
 	}
 	if v := rp.Authentication.GetIsAnonymousAccessAllowed(); v != nil {
 		return *v

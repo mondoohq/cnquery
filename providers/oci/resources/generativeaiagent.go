@@ -36,10 +36,17 @@ func (o *mqlOciAiAgents) id() (string, error) {
 // Generative AI resources.
 func ociRegionServiceUnavailable(err error) bool {
 	if svcErr, ok := common.IsServiceError(err); ok {
-		switch svcErr.GetHTTPStatusCode() {
-		case 401, 403, 404:
+		// Only a 404 can mean "this service has no endpoint in this region".
+		// 401 is a credential problem and 403 (NotAuthorizedOrNotFound) is the
+		// standard IAM-policy gap, which OCI returns in *every* region -
+		// swallowing either turns an under-scoped token into an authoritative
+		// "this tenancy has no resources", which is worse than an error.
+		if svcErr.GetHTTPStatusCode() == 404 {
 			return true
 		}
+		// A service error carries a real API response, so the transport-level
+		// signatures below cannot apply to it.
+		return false
 	}
 	// Regions where the service is not deployed have no regional endpoint, so
 	// the DNS lookup for the host fails with "no such host".

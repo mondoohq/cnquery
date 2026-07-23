@@ -80,8 +80,10 @@ func TestFlattenIsAnonymousAccessAllowed(t *testing.T) {
 		rp   *apigateway.ApiSpecificationRequestPolicies
 		want bool
 	}{
-		{"nil policies", nil, false},
-		{"nil authentication", &apigateway.ApiSpecificationRequestPolicies{}, false},
+		// No authentication policy means nothing is enforced, so every
+		// request reaches the backend unauthenticated.
+		{"nil policies", nil, true},
+		{"nil authentication", &apigateway.ApiSpecificationRequestPolicies{}, true},
 		{
 			name: "JWT with anonymous=true",
 			rp: &apigateway.ApiSpecificationRequestPolicies{

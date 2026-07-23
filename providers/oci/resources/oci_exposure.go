@@ -83,12 +83,11 @@ func ociNsgIngressVerdict(nsgRuleSets [][]map[string]any) ([]any, bool) {
 
 // ociSecurityListRuleOpensIngress reports whether a VCN security-list ingress
 // rule dict admits traffic from any address. Security-list ingress rules are
-// inherently inbound (no direction field), and their source keys are snake_case
-// (source, source_type) unlike NSG rules. NSG and SERVICE_CIDR_BLOCK sources
-// reference internal networks, so only a CIDR_BLOCK (or unset) source can be
-// public.
+// inherently inbound, so they carry no direction field. NSG and
+// SERVICE_CIDR_BLOCK sources reference internal networks, so only a CIDR_BLOCK
+// (or unset) source can be public.
 func ociSecurityListRuleOpensIngress(rule map[string]any) bool {
-	if st, _ := rule["source_type"].(string); st != "" && !strings.EqualFold(st, "CIDR_BLOCK") {
+	if st, _ := rule["sourceType"].(string); st != "" && !strings.EqualFold(st, "CIDR_BLOCK") {
 		return false
 	}
 	source, _ := rule["source"].(string)
@@ -195,12 +194,14 @@ func ociIngressOpen(nsgOpenRuleCount int, securityListAllows bool) bool {
 	return nsgOpenRuleCount > 0 || securityListAllows
 }
 
-// ociSubnetGate captures the two subnet conditions that gate internet
-// reachability: whether the subnet prohibits internet ingress, and whether it
-// routes a default route to an enabled internet gateway.
+// ociSubnetGate captures the subnet conditions that gate internet
+// reachability: whether the subnet prohibits internet ingress, whether it
+// routes a default route to an enabled internet gateway, and whether its own
+// security lists admit ingress from any address.
 type ociSubnetGate struct {
-	prohibitsIngress bool
-	routesToInternet bool
+	prohibitsIngress   bool
+	routesToInternet   bool
+	securityListAllows bool
 }
 
 // ociAnySubnetReachable reports whether any single subnet both permits internet
@@ -211,6 +212,27 @@ type ociSubnetGate struct {
 func ociAnySubnetReachable(gates []ociSubnetGate) bool {
 	for _, g := range gates {
 		if !g.prohibitsIngress && g.routesToInternet {
+			return true
+		}
+	}
+	return false
+}
+
+// ociAnySubnetAdmitsInternet reports whether any single subnet satisfies every
+// condition at once: it permits internet ingress, routes to an internet
+// gateway, and admits ingress from any address through either the NSG layer
+// (which attaches to the resource, not the subnet) or its own security lists.
+//
+// Evaluating the security-list layer per subnet rather than over the union
+// matters for a multi-subnet load balancer: a hardened public subnet paired
+// with a private subnet carrying the wide-open default VCN security list must
+// not combine into a reachable verdict.
+func ociAnySubnetAdmitsInternet(gates []ociSubnetGate, nsgOpenRuleCount int) bool {
+	for _, g := range gates {
+		if g.prohibitsIngress || !g.routesToInternet {
+			continue
+		}
+		if ociIngressOpen(nsgOpenRuleCount, g.securityListAllows) {
 			return true
 		}
 	}
@@ -281,12 +303,18 @@ func (i *mqlOciComputeInstance) exposure() (*mqlOciNetworkExposure, error) {
 		subnetProhibits := false
 		vnicRoutesToInternet := false
 		var slOpenRules []any
+		// Default open so an unresolvable subnet fails toward "reachable"
+		// rather than silently clearing the resource. subnetResolved keeps that
+		// assumption out of the reported securityListAllowsIngress field, which
+		// must not claim a security list admits ingress when none was read.
 		slAllows := true
+		subnetResolved := false
 		subnet := vnic.GetSubnet()
 		if subnet.Error != nil {
 			return nil, subnet.Error
 		}
 		if subnet.Data != nil {
+			subnetResolved = true
 			p := subnet.Data.GetProhibitInternetIngress()
 			if p.Error != nil {
 				return nil, p.Error
@@ -327,7 +355,7 @@ func (i *mqlOciComputeInstance) exposure() (*mqlOciNetworkExposure, error) {
 		if nsgAllows {
 			securityGroupAllowsIngress = true
 		}
-		if slAllows {
+		if subnetResolved && slAllows {
 			securityListAllowsIngress = true
 		}
 		if vnicRoutesToInternet {
@@ -420,7 +448,7 @@ func (l *mqlOciLoadBalancerLoadBalancer) exposure() (*mqlOciNetworkExposure, err
 	// captured per subnet rather than aggregated independently.
 	gates := make([]ociSubnetGate, 0, len(subnets.Data))
 	hasRouteToInternet := false
-	allSecurityLists := []any{}
+	securityListAllowsIngress := false
 	for _, s := range subnets.Data {
 		subnet, ok := s.(*mqlOciNetworkSubnet)
 		if !ok {
@@ -437,26 +465,34 @@ func (l *mqlOciLoadBalancerLoadBalancer) exposure() (*mqlOciNetworkExposure, err
 		if reaches {
 			hasRouteToInternet = true
 		}
-		gates = append(gates, ociSubnetGate{prohibitsIngress: prohibit.Data, routesToInternet: reaches})
 
 		sls := subnet.GetSecurityLists()
 		if sls.Error != nil {
 			return nil, sls.Error
 		}
-		allSecurityLists = append(allSecurityLists, sls.Data...)
+		// Evaluate this subnet's security lists on their own: a rule that is
+		// open on a private subnet must not combine with a different subnet's
+		// internet route into a reachable verdict.
+		slOpenRules, slAllows, err := ociCollectOpenSecurityListRules(sls.Data)
+		if err != nil {
+			return nil, err
+		}
+		openRules = append(openRules, slOpenRules...)
+		if slAllows {
+			securityListAllowsIngress = true
+		}
+
+		gates = append(gates, ociSubnetGate{
+			prohibitsIngress:   prohibit.Data,
+			routesToInternet:   reaches,
+			securityListAllows: slAllows,
+		})
 	}
 
-	slOpenRules, securityListAllowsIngress, err := ociCollectOpenSecurityListRules(allSecurityLists)
-	if err != nil {
-		return nil, err
-	}
-	openRules = append(openRules, slOpenRules...)
-
-	// Union of NSG and security-list rules admits ingress; reachability also
-	// requires a public IP, a listener, and a single subnet that both permits
-	// internet ingress and routes to an internet gateway.
-	ingressOpen := ociIngressOpen(len(nsgOpenRules), securityListAllowsIngress)
-	internetReachable := hasPublicIp && hasListener && ingressOpen && ociAnySubnetReachable(gates)
+	// Reachability requires a public IP, a listener, and a single subnet that
+	// permits internet ingress, routes to an internet gateway, and admits
+	// ingress through the NSG or its own security lists.
+	internetReachable := hasPublicIp && hasListener && ociAnySubnetAdmitsInternet(gates, len(nsgOpenRules))
 
 	res, err := CreateResource(l.MqlRuntime, "oci.network.exposure", map[string]*llx.RawData{
 		"__id":                       llx.StringData("oci.loadBalancer.loadBalancer/" + id.Data + "/exposure"),

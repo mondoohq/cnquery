@@ -156,17 +156,25 @@ func (o *mqlOciCompute) getComputeInstances(conn *connection.OciConnection, regi
 					timeMaintenanceRebootDue = &instance.TimeMaintenanceRebootDue.Time
 				}
 
-				var legacyImdsDisabled *bool
-				if instance.InstanceOptions != nil {
-					legacyImdsDisabled = instance.InstanceOptions.AreLegacyImdsEndpointsDisabled
+				// OCI omits instanceOptions entirely on instances launched
+				// before IMDSv2 existed - exactly the instances where the
+				// legacy /v1 endpoints ARE reachable. Leaving this null would
+				// let `all(legacyImdsEndpointsDisabled && ...)` pass on them,
+				// because MQL evaluates `null && null` as true. Default to the
+				// documented false so a miss fails.
+				legacyImdsDisabled := false
+				if instance.InstanceOptions != nil && instance.InstanceOptions.AreLegacyImdsEndpointsDisabled != nil {
+					legacyImdsDisabled = *instance.InstanceOptions.AreLegacyImdsEndpointsDisabled
 				}
 
-				var monitoringDisabled, managementDisabled, allPluginsDisabled *bool
-				var agentPlugins map[string]any
+				// Same reasoning: an absent agentConfig means the agent
+				// controls are not disabled, which is false, not unknown.
+				monitoringDisabled, managementDisabled, allPluginsDisabled := false, false, false
+				agentPlugins := map[string]any{}
 				if instance.AgentConfig != nil {
-					monitoringDisabled = instance.AgentConfig.IsMonitoringDisabled
-					managementDisabled = instance.AgentConfig.IsManagementDisabled
-					allPluginsDisabled = instance.AgentConfig.AreAllPluginsDisabled
+					monitoringDisabled = boolValue(instance.AgentConfig.IsMonitoringDisabled)
+					managementDisabled = boolValue(instance.AgentConfig.IsManagementDisabled)
+					allPluginsDisabled = boolValue(instance.AgentConfig.AreAllPluginsDisabled)
 					agentPlugins = make(map[string]any, len(instance.AgentConfig.PluginsConfig))
 					for _, p := range instance.AgentConfig.PluginsConfig {
 						agentPlugins[stringValue(p.Name)] = string(p.DesiredState)
@@ -196,10 +204,10 @@ func (o *mqlOciCompute) getComputeInstances(conn *connection.OciConnection, regi
 					"platformConfig":              llx.DictData(platformConfig),
 					"launchOptions":               llx.DictData(launchOptions),
 					"instanceOptions":             llx.DictData(instanceOptions),
-					"legacyImdsEndpointsDisabled": llx.BoolDataPtr(legacyImdsDisabled),
-					"monitoringDisabled":          llx.BoolDataPtr(monitoringDisabled),
-					"managementDisabled":          llx.BoolDataPtr(managementDisabled),
-					"allPluginsDisabled":          llx.BoolDataPtr(allPluginsDisabled),
+					"legacyImdsEndpointsDisabled": llx.BoolData(legacyImdsDisabled),
+					"monitoringDisabled":          llx.BoolData(monitoringDisabled),
+					"managementDisabled":          llx.BoolData(managementDisabled),
+					"allPluginsDisabled":          llx.BoolData(allPluginsDisabled),
 					"agentPlugins":                llx.MapData(agentPlugins, types.String),
 					"shapeConfig":                 llx.DictData(shapeConfig),
 					"sourceDetails":               llx.DictData(sourceDetails),
