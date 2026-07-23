@@ -329,7 +329,7 @@ func (x Remediation_Category) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use Remediation_Category.Descriptor instead.
 func (Remediation_Category) EnumDescriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{11, 0}
+	return file_fex_proto_rawDescGZIP(), []int{12, 0}
 }
 
 type FindingDetail_Category int32
@@ -393,7 +393,7 @@ func (x FindingDetail_Category) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use FindingDetail_Category.Descriptor instead.
 func (FindingDetail_Category) EnumDescriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{13, 0}
+	return file_fex_proto_rawDescGZIP(), []int{14, 0}
 }
 
 // Protocol defines the protocol used in the connection. Decimals are
@@ -452,7 +452,7 @@ func (x Connection_ConnectionProtocol) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use Connection_ConnectionProtocol.Descriptor instead.
 func (Connection_ConnectionProtocol) EnumDescriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{21, 0}
+	return file_fex_proto_rawDescGZIP(), []int{22, 0}
 }
 
 // FindingDocument is a wrapper message that can hold either a
@@ -1131,6 +1131,7 @@ type Component struct {
 	// Types that are valid to be assigned to Details:
 	//
 	//	*Component_File
+	//	*Component_CloudResource
 	Details       isComponent_Details `protobuf_oneof:"details"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1203,6 +1204,15 @@ func (x *Component) GetFile() *FileComponent {
 	return nil
 }
 
+func (x *Component) GetCloudResource() *CloudResource {
+	if x != nil {
+		if x, ok := x.Details.(*Component_CloudResource); ok {
+			return x.CloudResource
+		}
+	}
+	return nil
+}
+
 type isComponent_Details interface {
 	isComponent_Details()
 }
@@ -1211,7 +1221,115 @@ type Component_File struct {
 	File *FileComponent `protobuf:"bytes,21,opt,name=file,proto3,oneof"`
 }
 
+type Component_CloudResource struct {
+	CloudResource *CloudResource `protobuf:"bytes,22,opt,name=cloud_resource,json=cloudResource,proto3,oneof"`
+}
+
 func (*Component_File) isComponent_Details() {}
+
+func (*Component_CloudResource) isComponent_Details() {}
+
+// CloudResource describes a cloud resource a finding is about — the native
+// object of a cloud provider (an AWS/Azure/GCP resource), captured as structured
+// detail beyond the component's bare id. All fields are optional.
+type CloudResource struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Cloud provider, e.g. "aws", "azure", "gcp".
+	Provider string `protobuf:"bytes,1,opt,name=provider,proto3" json:"provider,omitempty"`
+	// Native resource id — an ARN or a provider full resource name.
+	Id string `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
+	// Resource type, e.g. "AwsS3Bucket".
+	Type string `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty"`
+	// Region the resource resides in.
+	Region string `protobuf:"bytes,4,opt,name=region,proto3" json:"region,omitempty"`
+	// Owning account, subscription, or project.
+	Account string `protobuf:"bytes,5,opt,name=account,proto3" json:"account,omitempty"`
+	// Provider partition/cloud, e.g. an AWS partition "aws" / "aws-us-gov" / "aws-cn".
+	Partition string `protobuf:"bytes,6,opt,name=partition,proto3" json:"partition,omitempty"`
+	// Resource tags / labels.
+	Tags          map[string]string `protobuf:"bytes,7,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CloudResource) Reset() {
+	*x = CloudResource{}
+	mi := &file_fex_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CloudResource) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CloudResource) ProtoMessage() {}
+
+func (x *CloudResource) ProtoReflect() protoreflect.Message {
+	mi := &file_fex_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CloudResource.ProtoReflect.Descriptor instead.
+func (*CloudResource) Descriptor() ([]byte, []int) {
+	return file_fex_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *CloudResource) GetProvider() string {
+	if x != nil {
+		return x.Provider
+	}
+	return ""
+}
+
+func (x *CloudResource) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *CloudResource) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *CloudResource) GetRegion() string {
+	if x != nil {
+		return x.Region
+	}
+	return ""
+}
+
+func (x *CloudResource) GetAccount() string {
+	if x != nil {
+		return x.Account
+	}
+	return ""
+}
+
+func (x *CloudResource) GetPartition() string {
+	if x != nil {
+		return x.Partition
+	}
+	return ""
+}
+
+func (x *CloudResource) GetTags() map[string]string {
+	if x != nil {
+		return x.Tags
+	}
+	return nil
+}
 
 // Experimental. File-specific component details
 type FileComponent struct {
@@ -1239,7 +1357,7 @@ type FileComponent struct {
 
 func (x *FileComponent) Reset() {
 	*x = FileComponent{}
-	mi := &file_fex_proto_msgTypes[8]
+	mi := &file_fex_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1251,7 +1369,7 @@ func (x *FileComponent) String() string {
 func (*FileComponent) ProtoMessage() {}
 
 func (x *FileComponent) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[8]
+	mi := &file_fex_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1264,7 +1382,7 @@ func (x *FileComponent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileComponent.ProtoReflect.Descriptor instead.
 func (*FileComponent) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{8}
+	return file_fex_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *FileComponent) GetPath() string {
@@ -1344,7 +1462,7 @@ type Rating struct {
 
 func (x *Rating) Reset() {
 	*x = Rating{}
-	mi := &file_fex_proto_msgTypes[9]
+	mi := &file_fex_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1356,7 +1474,7 @@ func (x *Rating) String() string {
 func (*Rating) ProtoMessage() {}
 
 func (x *Rating) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[9]
+	mi := &file_fex_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1369,7 +1487,7 @@ func (x *Rating) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Rating.ProtoReflect.Descriptor instead.
 func (*Rating) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{9}
+	return file_fex_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *Rating) GetSource() *Source {
@@ -1431,7 +1549,7 @@ type Severity struct {
 
 func (x *Severity) Reset() {
 	*x = Severity{}
-	mi := &file_fex_proto_msgTypes[10]
+	mi := &file_fex_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1443,7 +1561,7 @@ func (x *Severity) String() string {
 func (*Severity) ProtoMessage() {}
 
 func (x *Severity) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[10]
+	mi := &file_fex_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1456,7 +1574,7 @@ func (x *Severity) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Severity.ProtoReflect.Descriptor instead.
 func (*Severity) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{10}
+	return file_fex_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *Severity) GetSource() *Source {
@@ -1522,7 +1640,7 @@ type Remediation struct {
 
 func (x *Remediation) Reset() {
 	*x = Remediation{}
-	mi := &file_fex_proto_msgTypes[11]
+	mi := &file_fex_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1534,7 +1652,7 @@ func (x *Remediation) String() string {
 func (*Remediation) ProtoMessage() {}
 
 func (x *Remediation) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[11]
+	mi := &file_fex_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1547,7 +1665,7 @@ func (x *Remediation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Remediation.ProtoReflect.Descriptor instead.
 func (*Remediation) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{11}
+	return file_fex_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *Remediation) GetCategory() Remediation_Category {
@@ -1632,7 +1750,7 @@ type FindingExchange struct {
 
 func (x *FindingExchange) Reset() {
 	*x = FindingExchange{}
-	mi := &file_fex_proto_msgTypes[12]
+	mi := &file_fex_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1644,7 +1762,7 @@ func (x *FindingExchange) String() string {
 func (*FindingExchange) ProtoMessage() {}
 
 func (x *FindingExchange) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[12]
+	mi := &file_fex_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1657,7 +1775,7 @@ func (x *FindingExchange) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FindingExchange.ProtoReflect.Descriptor instead.
 func (*FindingExchange) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{12}
+	return file_fex_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *FindingExchange) GetId() string {
@@ -1779,7 +1897,7 @@ type FindingDetail struct {
 
 func (x *FindingDetail) Reset() {
 	*x = FindingDetail{}
-	mi := &file_fex_proto_msgTypes[13]
+	mi := &file_fex_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1791,7 +1909,7 @@ func (x *FindingDetail) String() string {
 func (*FindingDetail) ProtoMessage() {}
 
 func (x *FindingDetail) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[13]
+	mi := &file_fex_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1804,7 +1922,7 @@ func (x *FindingDetail) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FindingDetail.ProtoReflect.Descriptor instead.
 func (*FindingDetail) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{13}
+	return file_fex_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *FindingDetail) GetCategory() FindingDetail_Category {
@@ -1888,7 +2006,7 @@ type Evidence struct {
 
 func (x *Evidence) Reset() {
 	*x = Evidence{}
-	mi := &file_fex_proto_msgTypes[14]
+	mi := &file_fex_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1900,7 +2018,7 @@ func (x *Evidence) String() string {
 func (*Evidence) ProtoMessage() {}
 
 func (x *Evidence) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[14]
+	mi := &file_fex_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1913,7 +2031,7 @@ func (x *Evidence) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Evidence.ProtoReflect.Descriptor instead.
 func (*Evidence) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{14}
+	return file_fex_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *Evidence) GetTactic() *AttackTactic {
@@ -2214,7 +2332,7 @@ type File struct {
 
 func (x *File) Reset() {
 	*x = File{}
-	mi := &file_fex_proto_msgTypes[15]
+	mi := &file_fex_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2226,7 +2344,7 @@ func (x *File) String() string {
 func (*File) ProtoMessage() {}
 
 func (x *File) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[15]
+	mi := &file_fex_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2239,7 +2357,7 @@ func (x *File) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use File.ProtoReflect.Descriptor instead.
 func (*File) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{15}
+	return file_fex_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *File) GetPath() string {
@@ -2292,7 +2410,7 @@ type User struct {
 
 func (x *User) Reset() {
 	*x = User{}
-	mi := &file_fex_proto_msgTypes[16]
+	mi := &file_fex_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2304,7 +2422,7 @@ func (x *User) String() string {
 func (*User) ProtoMessage() {}
 
 func (x *User) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[16]
+	mi := &file_fex_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2317,7 +2435,7 @@ func (x *User) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use User.ProtoReflect.Descriptor instead.
 func (*User) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{16}
+	return file_fex_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *User) GetId() string {
@@ -2362,7 +2480,7 @@ type Process struct {
 
 func (x *Process) Reset() {
 	*x = Process{}
-	mi := &file_fex_proto_msgTypes[17]
+	mi := &file_fex_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2374,7 +2492,7 @@ func (x *Process) String() string {
 func (*Process) ProtoMessage() {}
 
 func (x *Process) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[17]
+	mi := &file_fex_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2387,7 +2505,7 @@ func (x *Process) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Process.ProtoReflect.Descriptor instead.
 func (*Process) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{17}
+	return file_fex_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *Process) GetCmdline() string {
@@ -2448,7 +2566,7 @@ type Container struct {
 
 func (x *Container) Reset() {
 	*x = Container{}
-	mi := &file_fex_proto_msgTypes[18]
+	mi := &file_fex_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2460,7 +2578,7 @@ func (x *Container) String() string {
 func (*Container) ProtoMessage() {}
 
 func (x *Container) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[18]
+	mi := &file_fex_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2473,7 +2591,7 @@ func (x *Container) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Container.ProtoReflect.Descriptor instead.
 func (*Container) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{18}
+	return file_fex_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *Container) GetName() string {
@@ -2511,7 +2629,7 @@ type Kubernetes struct {
 
 func (x *Kubernetes) Reset() {
 	*x = Kubernetes{}
-	mi := &file_fex_proto_msgTypes[19]
+	mi := &file_fex_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2523,7 +2641,7 @@ func (x *Kubernetes) String() string {
 func (*Kubernetes) ProtoMessage() {}
 
 func (x *Kubernetes) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[19]
+	mi := &file_fex_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2536,7 +2654,7 @@ func (x *Kubernetes) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Kubernetes.ProtoReflect.Descriptor instead.
 func (*Kubernetes) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{19}
+	return file_fex_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *Kubernetes) GetPods() []*Kubernetes_Pod {
@@ -2568,7 +2686,7 @@ type RegistryKey struct {
 
 func (x *RegistryKey) Reset() {
 	*x = RegistryKey{}
-	mi := &file_fex_proto_msgTypes[20]
+	mi := &file_fex_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2580,7 +2698,7 @@ func (x *RegistryKey) String() string {
 func (*RegistryKey) ProtoMessage() {}
 
 func (x *RegistryKey) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[20]
+	mi := &file_fex_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2593,7 +2711,7 @@ func (x *RegistryKey) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RegistryKey.ProtoReflect.Descriptor instead.
 func (*RegistryKey) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{20}
+	return file_fex_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *RegistryKey) GetPath() string {
@@ -2640,7 +2758,7 @@ type Connection struct {
 
 func (x *Connection) Reset() {
 	*x = Connection{}
-	mi := &file_fex_proto_msgTypes[21]
+	mi := &file_fex_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2652,7 +2770,7 @@ func (x *Connection) String() string {
 func (*Connection) ProtoMessage() {}
 
 func (x *Connection) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[21]
+	mi := &file_fex_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2665,7 +2783,7 @@ func (x *Connection) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Connection.ProtoReflect.Descriptor instead.
 func (*Connection) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{21}
+	return file_fex_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *Connection) GetDestinationAddress() string {
@@ -2735,7 +2853,7 @@ type HttpRequest struct {
 
 func (x *HttpRequest) Reset() {
 	*x = HttpRequest{}
-	mi := &file_fex_proto_msgTypes[22]
+	mi := &file_fex_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2747,7 +2865,7 @@ func (x *HttpRequest) String() string {
 func (*HttpRequest) ProtoMessage() {}
 
 func (x *HttpRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[22]
+	mi := &file_fex_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2760,7 +2878,7 @@ func (x *HttpRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HttpRequest.ProtoReflect.Descriptor instead.
 func (*HttpRequest) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{22}
+	return file_fex_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *HttpRequest) GetMethod() string {
@@ -2836,7 +2954,7 @@ type DnsRecord struct {
 
 func (x *DnsRecord) Reset() {
 	*x = DnsRecord{}
-	mi := &file_fex_proto_msgTypes[23]
+	mi := &file_fex_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2848,7 +2966,7 @@ func (x *DnsRecord) String() string {
 func (*DnsRecord) ProtoMessage() {}
 
 func (x *DnsRecord) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[23]
+	mi := &file_fex_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2861,7 +2979,7 @@ func (x *DnsRecord) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DnsRecord.ProtoReflect.Descriptor instead.
 func (*DnsRecord) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{23}
+	return file_fex_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *DnsRecord) GetName() string {
@@ -2921,7 +3039,7 @@ type Certificate struct {
 
 func (x *Certificate) Reset() {
 	*x = Certificate{}
-	mi := &file_fex_proto_msgTypes[24]
+	mi := &file_fex_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2933,7 +3051,7 @@ func (x *Certificate) String() string {
 func (*Certificate) ProtoMessage() {}
 
 func (x *Certificate) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[24]
+	mi := &file_fex_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2946,7 +3064,7 @@ func (x *Certificate) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Certificate.ProtoReflect.Descriptor instead.
 func (*Certificate) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{24}
+	return file_fex_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *Certificate) GetSubject() string {
@@ -3037,7 +3155,7 @@ type DomainRegistration struct {
 
 func (x *DomainRegistration) Reset() {
 	*x = DomainRegistration{}
-	mi := &file_fex_proto_msgTypes[25]
+	mi := &file_fex_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3049,7 +3167,7 @@ func (x *DomainRegistration) String() string {
 func (*DomainRegistration) ProtoMessage() {}
 
 func (x *DomainRegistration) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[25]
+	mi := &file_fex_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3062,7 +3180,7 @@ func (x *DomainRegistration) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DomainRegistration.ProtoReflect.Descriptor instead.
 func (*DomainRegistration) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{25}
+	return file_fex_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *DomainRegistration) GetDomain() string {
@@ -3139,7 +3257,7 @@ type NetworkRange struct {
 
 func (x *NetworkRange) Reset() {
 	*x = NetworkRange{}
-	mi := &file_fex_proto_msgTypes[26]
+	mi := &file_fex_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3151,7 +3269,7 @@ func (x *NetworkRange) String() string {
 func (*NetworkRange) ProtoMessage() {}
 
 func (x *NetworkRange) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[26]
+	mi := &file_fex_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3164,7 +3282,7 @@ func (x *NetworkRange) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NetworkRange.ProtoReflect.Descriptor instead.
 func (*NetworkRange) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{26}
+	return file_fex_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *NetworkRange) GetCidr() string {
@@ -3242,7 +3360,7 @@ type ThreatIntelIndicator struct {
 
 func (x *ThreatIntelIndicator) Reset() {
 	*x = ThreatIntelIndicator{}
-	mi := &file_fex_proto_msgTypes[27]
+	mi := &file_fex_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3254,7 +3372,7 @@ func (x *ThreatIntelIndicator) String() string {
 func (*ThreatIntelIndicator) ProtoMessage() {}
 
 func (x *ThreatIntelIndicator) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[27]
+	mi := &file_fex_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3267,7 +3385,7 @@ func (x *ThreatIntelIndicator) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ThreatIntelIndicator.ProtoReflect.Descriptor instead.
 func (*ThreatIntelIndicator) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{27}
+	return file_fex_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *ThreatIntelIndicator) GetType() string {
@@ -3331,7 +3449,7 @@ type Malware struct {
 
 func (x *Malware) Reset() {
 	*x = Malware{}
-	mi := &file_fex_proto_msgTypes[28]
+	mi := &file_fex_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3343,7 +3461,7 @@ func (x *Malware) String() string {
 func (*Malware) ProtoMessage() {}
 
 func (x *Malware) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[28]
+	mi := &file_fex_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3356,7 +3474,7 @@ func (x *Malware) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Malware.ProtoReflect.Descriptor instead.
 func (*Malware) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{28}
+	return file_fex_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *Malware) GetName() string {
@@ -3408,7 +3526,7 @@ type AiModel struct {
 
 func (x *AiModel) Reset() {
 	*x = AiModel{}
-	mi := &file_fex_proto_msgTypes[29]
+	mi := &file_fex_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3420,7 +3538,7 @@ func (x *AiModel) String() string {
 func (*AiModel) ProtoMessage() {}
 
 func (x *AiModel) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[29]
+	mi := &file_fex_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3433,7 +3551,7 @@ func (x *AiModel) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AiModel.ProtoReflect.Descriptor instead.
 func (*AiModel) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{29}
+	return file_fex_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *AiModel) GetName() string {
@@ -3490,7 +3608,7 @@ type AiAgent struct {
 
 func (x *AiAgent) Reset() {
 	*x = AiAgent{}
-	mi := &file_fex_proto_msgTypes[30]
+	mi := &file_fex_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3502,7 +3620,7 @@ func (x *AiAgent) String() string {
 func (*AiAgent) ProtoMessage() {}
 
 func (x *AiAgent) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[30]
+	mi := &file_fex_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3515,7 +3633,7 @@ func (x *AiAgent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AiAgent.ProtoReflect.Descriptor instead.
 func (*AiAgent) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{30}
+	return file_fex_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *AiAgent) GetId() string {
@@ -3562,7 +3680,7 @@ type AttackTactic struct {
 
 func (x *AttackTactic) Reset() {
 	*x = AttackTactic{}
-	mi := &file_fex_proto_msgTypes[31]
+	mi := &file_fex_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3574,7 +3692,7 @@ func (x *AttackTactic) String() string {
 func (*AttackTactic) ProtoMessage() {}
 
 func (x *AttackTactic) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[31]
+	mi := &file_fex_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3587,7 +3705,7 @@ func (x *AttackTactic) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AttackTactic.ProtoReflect.Descriptor instead.
 func (*AttackTactic) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{31}
+	return file_fex_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *AttackTactic) GetId() string {
@@ -3627,7 +3745,7 @@ type AttackTechnique struct {
 
 func (x *AttackTechnique) Reset() {
 	*x = AttackTechnique{}
-	mi := &file_fex_proto_msgTypes[32]
+	mi := &file_fex_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3639,7 +3757,7 @@ func (x *AttackTechnique) String() string {
 func (*AttackTechnique) ProtoMessage() {}
 
 func (x *AttackTechnique) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[32]
+	mi := &file_fex_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3652,7 +3770,7 @@ func (x *AttackTechnique) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AttackTechnique.ProtoReflect.Descriptor instead.
 func (*AttackTechnique) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{32}
+	return file_fex_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *AttackTechnique) GetId() string {
@@ -3691,7 +3809,7 @@ type Kubernetes_Pod struct {
 
 func (x *Kubernetes_Pod) Reset() {
 	*x = Kubernetes_Pod{}
-	mi := &file_fex_proto_msgTypes[39]
+	mi := &file_fex_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3703,7 +3821,7 @@ func (x *Kubernetes_Pod) String() string {
 func (*Kubernetes_Pod) ProtoMessage() {}
 
 func (x *Kubernetes_Pod) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[39]
+	mi := &file_fex_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3716,7 +3834,7 @@ func (x *Kubernetes_Pod) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Kubernetes_Pod.ProtoReflect.Descriptor instead.
 func (*Kubernetes_Pod) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{19, 0}
+	return file_fex_proto_rawDescGZIP(), []int{20, 0}
 }
 
 func (x *Kubernetes_Pod) GetName() string {
@@ -3753,7 +3871,7 @@ type Kubernetes_Node struct {
 
 func (x *Kubernetes_Node) Reset() {
 	*x = Kubernetes_Node{}
-	mi := &file_fex_proto_msgTypes[40]
+	mi := &file_fex_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3765,7 +3883,7 @@ func (x *Kubernetes_Node) String() string {
 func (*Kubernetes_Node) ProtoMessage() {}
 
 func (x *Kubernetes_Node) ProtoReflect() protoreflect.Message {
-	mi := &file_fex_proto_msgTypes[40]
+	mi := &file_fex_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3778,7 +3896,7 @@ func (x *Kubernetes_Node) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Kubernetes_Node.ProtoReflect.Descriptor instead.
 func (*Kubernetes_Node) Descriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{19, 1}
+	return file_fex_proto_rawDescGZIP(), []int{20, 1}
 }
 
 func (x *Kubernetes_Node) GetName() string {
@@ -3861,21 +3979,33 @@ const file_fex_proto_rawDesc = "" +
 	"\aupdated\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\aupdated\"|\n" +
 	"\aAffects\x123\n" +
 	"\tcomponent\x18\x01 \x01(\v2\x15.mql.fex.v1.ComponentR\tcomponent\x12<\n" +
-	"\x0esub_components\x18\x02 \x03(\v2\x15.mql.fex.v1.ComponentR\rsubComponents\"\xe7\x02\n" +
+	"\x0esub_components\x18\x02 \x03(\v2\x15.mql.fex.v1.ComponentR\rsubComponents\"\xab\x03\n" +
 	"\tComponent\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12H\n" +
 	"\videntifiers\x18\x02 \x03(\v2&.mql.fex.v1.Component.IdentifiersEntryR\videntifiers\x12E\n" +
 	"\n" +
 	"properties\x18\x03 \x03(\v2%.mql.fex.v1.Component.PropertiesEntryR\n" +
 	"properties\x12/\n" +
-	"\x04file\x18\x15 \x01(\v2\x19.mql.fex.v1.FileComponentH\x00R\x04file\x1a>\n" +
+	"\x04file\x18\x15 \x01(\v2\x19.mql.fex.v1.FileComponentH\x00R\x04file\x12B\n" +
+	"\x0ecloud_resource\x18\x16 \x01(\v2\x19.mql.fex.v1.CloudResourceH\x00R\rcloudResource\x1a>\n" +
 	"\x10IdentifiersEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1a=\n" +
 	"\x0fPropertiesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\t\n" +
-	"\adetails\"\xdf\x01\n" +
+	"\adetails\"\x91\x02\n" +
+	"\rCloudResource\x12\x1a\n" +
+	"\bprovider\x18\x01 \x01(\tR\bprovider\x12\x0e\n" +
+	"\x02id\x18\x02 \x01(\tR\x02id\x12\x12\n" +
+	"\x04type\x18\x03 \x01(\tR\x04type\x12\x16\n" +
+	"\x06region\x18\x04 \x01(\tR\x06region\x12\x18\n" +
+	"\aaccount\x18\x05 \x01(\tR\aaccount\x12\x1c\n" +
+	"\tpartition\x18\x06 \x01(\tR\tpartition\x127\n" +
+	"\x04tags\x18\a \x03(\v2#.mql.fex.v1.CloudResource.TagsEntryR\x04tags\x1a7\n" +
+	"\tTagsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xdf\x01\n" +
 	"\rFileComponent\x12\x12\n" +
 	"\x04path\x18\x01 \x01(\tR\x04path\x12\x12\n" +
 	"\x04hash\x18\x02 \x01(\tR\x04hash\x12\x16\n" +
@@ -4168,7 +4298,7 @@ func file_fex_proto_rawDescGZIP() []byte {
 }
 
 var file_fex_proto_enumTypes = make([]protoimpl.EnumInfo, 7)
-var file_fex_proto_msgTypes = make([]protoimpl.MessageInfo, 41)
+var file_fex_proto_msgTypes = make([]protoimpl.MessageInfo, 43)
 var file_fex_proto_goTypes = []any{
 	(Status)(0),                        // 0: mql.fex.v1.Status
 	(ScoringMethod)(0),                 // 1: mql.fex.v1.ScoringMethod
@@ -4185,127 +4315,131 @@ var file_fex_proto_goTypes = []any{
 	(*VulnerabilityDetails)(nil),       // 12: mql.fex.v1.VulnerabilityDetails
 	(*Affects)(nil),                    // 13: mql.fex.v1.Affects
 	(*Component)(nil),                  // 14: mql.fex.v1.Component
-	(*FileComponent)(nil),              // 15: mql.fex.v1.FileComponent
-	(*Rating)(nil),                     // 16: mql.fex.v1.Rating
-	(*Severity)(nil),                   // 17: mql.fex.v1.Severity
-	(*Remediation)(nil),                // 18: mql.fex.v1.Remediation
-	(*FindingExchange)(nil),            // 19: mql.fex.v1.FindingExchange
-	(*FindingDetail)(nil),              // 20: mql.fex.v1.FindingDetail
-	(*Evidence)(nil),                   // 21: mql.fex.v1.Evidence
-	(*File)(nil),                       // 22: mql.fex.v1.File
-	(*User)(nil),                       // 23: mql.fex.v1.User
-	(*Process)(nil),                    // 24: mql.fex.v1.Process
-	(*Container)(nil),                  // 25: mql.fex.v1.Container
-	(*Kubernetes)(nil),                 // 26: mql.fex.v1.Kubernetes
-	(*RegistryKey)(nil),                // 27: mql.fex.v1.RegistryKey
-	(*Connection)(nil),                 // 28: mql.fex.v1.Connection
-	(*HttpRequest)(nil),                // 29: mql.fex.v1.HttpRequest
-	(*DnsRecord)(nil),                  // 30: mql.fex.v1.DnsRecord
-	(*Certificate)(nil),                // 31: mql.fex.v1.Certificate
-	(*DomainRegistration)(nil),         // 32: mql.fex.v1.DomainRegistration
-	(*NetworkRange)(nil),               // 33: mql.fex.v1.NetworkRange
-	(*ThreatIntelIndicator)(nil),       // 34: mql.fex.v1.ThreatIntelIndicator
-	(*Malware)(nil),                    // 35: mql.fex.v1.Malware
-	(*AiModel)(nil),                    // 36: mql.fex.v1.AiModel
-	(*AiAgent)(nil),                    // 37: mql.fex.v1.AiAgent
-	(*AttackTactic)(nil),               // 38: mql.fex.v1.AttackTactic
-	(*AttackTechnique)(nil),            // 39: mql.fex.v1.AttackTechnique
-	nil,                                // 40: mql.fex.v1.Reference.MetadataEntry
-	nil,                                // 41: mql.fex.v1.Component.IdentifiersEntry
-	nil,                                // 42: mql.fex.v1.Component.PropertiesEntry
-	nil,                                // 43: mql.fex.v1.FindingDetail.PropertiesEntry
-	nil,                                // 44: mql.fex.v1.Evidence.PropertiesEntry
-	nil,                                // 45: mql.fex.v1.User.PropertiesEntry
-	(*Kubernetes_Pod)(nil),             // 46: mql.fex.v1.Kubernetes.Pod
-	(*Kubernetes_Node)(nil),            // 47: mql.fex.v1.Kubernetes.Node
-	(*timestamppb.Timestamp)(nil),      // 48: google.protobuf.Timestamp
-	(*structpb.Struct)(nil),            // 49: google.protobuf.Struct
+	(*CloudResource)(nil),              // 15: mql.fex.v1.CloudResource
+	(*FileComponent)(nil),              // 16: mql.fex.v1.FileComponent
+	(*Rating)(nil),                     // 17: mql.fex.v1.Rating
+	(*Severity)(nil),                   // 18: mql.fex.v1.Severity
+	(*Remediation)(nil),                // 19: mql.fex.v1.Remediation
+	(*FindingExchange)(nil),            // 20: mql.fex.v1.FindingExchange
+	(*FindingDetail)(nil),              // 21: mql.fex.v1.FindingDetail
+	(*Evidence)(nil),                   // 22: mql.fex.v1.Evidence
+	(*File)(nil),                       // 23: mql.fex.v1.File
+	(*User)(nil),                       // 24: mql.fex.v1.User
+	(*Process)(nil),                    // 25: mql.fex.v1.Process
+	(*Container)(nil),                  // 26: mql.fex.v1.Container
+	(*Kubernetes)(nil),                 // 27: mql.fex.v1.Kubernetes
+	(*RegistryKey)(nil),                // 28: mql.fex.v1.RegistryKey
+	(*Connection)(nil),                 // 29: mql.fex.v1.Connection
+	(*HttpRequest)(nil),                // 30: mql.fex.v1.HttpRequest
+	(*DnsRecord)(nil),                  // 31: mql.fex.v1.DnsRecord
+	(*Certificate)(nil),                // 32: mql.fex.v1.Certificate
+	(*DomainRegistration)(nil),         // 33: mql.fex.v1.DomainRegistration
+	(*NetworkRange)(nil),               // 34: mql.fex.v1.NetworkRange
+	(*ThreatIntelIndicator)(nil),       // 35: mql.fex.v1.ThreatIntelIndicator
+	(*Malware)(nil),                    // 36: mql.fex.v1.Malware
+	(*AiModel)(nil),                    // 37: mql.fex.v1.AiModel
+	(*AiAgent)(nil),                    // 38: mql.fex.v1.AiAgent
+	(*AttackTactic)(nil),               // 39: mql.fex.v1.AttackTactic
+	(*AttackTechnique)(nil),            // 40: mql.fex.v1.AttackTechnique
+	nil,                                // 41: mql.fex.v1.Reference.MetadataEntry
+	nil,                                // 42: mql.fex.v1.Component.IdentifiersEntry
+	nil,                                // 43: mql.fex.v1.Component.PropertiesEntry
+	nil,                                // 44: mql.fex.v1.CloudResource.TagsEntry
+	nil,                                // 45: mql.fex.v1.FindingDetail.PropertiesEntry
+	nil,                                // 46: mql.fex.v1.Evidence.PropertiesEntry
+	nil,                                // 47: mql.fex.v1.User.PropertiesEntry
+	(*Kubernetes_Pod)(nil),             // 48: mql.fex.v1.Kubernetes.Pod
+	(*Kubernetes_Node)(nil),            // 49: mql.fex.v1.Kubernetes.Node
+	(*timestamppb.Timestamp)(nil),      // 50: google.protobuf.Timestamp
+	(*structpb.Struct)(nil),            // 51: google.protobuf.Struct
 }
 var file_fex_proto_depIdxs = []int32{
 	9,  // 0: mql.fex.v1.FindingDocument.vex:type_name -> mql.fex.v1.VulnerabilityExchange
-	19, // 1: mql.fex.v1.FindingDocument.fex:type_name -> mql.fex.v1.FindingExchange
+	20, // 1: mql.fex.v1.FindingDocument.fex:type_name -> mql.fex.v1.FindingExchange
 	7,  // 2: mql.fex.v1.FindingsUploadRequest.findings:type_name -> mql.fex.v1.FindingDocument
-	48, // 3: mql.fex.v1.FindingsUploadRequest.import_started_at:type_name -> google.protobuf.Timestamp
+	50, // 3: mql.fex.v1.FindingsUploadRequest.import_started_at:type_name -> google.protobuf.Timestamp
 	12, // 4: mql.fex.v1.VulnerabilityExchange.details:type_name -> mql.fex.v1.VulnerabilityDetails
 	11, // 5: mql.fex.v1.VulnerabilityExchange.source:type_name -> mql.fex.v1.Source
-	16, // 6: mql.fex.v1.VulnerabilityExchange.ratings:type_name -> mql.fex.v1.Rating
-	48, // 7: mql.fex.v1.VulnerabilityExchange.first_seen:type_name -> google.protobuf.Timestamp
-	48, // 8: mql.fex.v1.VulnerabilityExchange.remediated:type_name -> google.protobuf.Timestamp
+	17, // 6: mql.fex.v1.VulnerabilityExchange.ratings:type_name -> mql.fex.v1.Rating
+	50, // 7: mql.fex.v1.VulnerabilityExchange.first_seen:type_name -> google.protobuf.Timestamp
+	50, // 8: mql.fex.v1.VulnerabilityExchange.remediated:type_name -> google.protobuf.Timestamp
 	13, // 9: mql.fex.v1.VulnerabilityExchange.affects:type_name -> mql.fex.v1.Affects
 	0,  // 10: mql.fex.v1.VulnerabilityExchange.status:type_name -> mql.fex.v1.Status
 	10, // 11: mql.fex.v1.VulnerabilityExchange.references:type_name -> mql.fex.v1.Reference
-	18, // 12: mql.fex.v1.VulnerabilityExchange.remediations:type_name -> mql.fex.v1.Remediation
-	49, // 13: mql.fex.v1.VulnerabilityExchange.database_specific:type_name -> google.protobuf.Struct
-	21, // 14: mql.fex.v1.VulnerabilityExchange.evidences:type_name -> mql.fex.v1.Evidence
-	40, // 15: mql.fex.v1.Reference.metadata:type_name -> mql.fex.v1.Reference.MetadataEntry
-	48, // 16: mql.fex.v1.VulnerabilityDetails.created:type_name -> google.protobuf.Timestamp
-	48, // 17: mql.fex.v1.VulnerabilityDetails.published:type_name -> google.protobuf.Timestamp
-	48, // 18: mql.fex.v1.VulnerabilityDetails.updated:type_name -> google.protobuf.Timestamp
+	19, // 12: mql.fex.v1.VulnerabilityExchange.remediations:type_name -> mql.fex.v1.Remediation
+	51, // 13: mql.fex.v1.VulnerabilityExchange.database_specific:type_name -> google.protobuf.Struct
+	22, // 14: mql.fex.v1.VulnerabilityExchange.evidences:type_name -> mql.fex.v1.Evidence
+	41, // 15: mql.fex.v1.Reference.metadata:type_name -> mql.fex.v1.Reference.MetadataEntry
+	50, // 16: mql.fex.v1.VulnerabilityDetails.created:type_name -> google.protobuf.Timestamp
+	50, // 17: mql.fex.v1.VulnerabilityDetails.published:type_name -> google.protobuf.Timestamp
+	50, // 18: mql.fex.v1.VulnerabilityDetails.updated:type_name -> google.protobuf.Timestamp
 	14, // 19: mql.fex.v1.Affects.component:type_name -> mql.fex.v1.Component
 	14, // 20: mql.fex.v1.Affects.sub_components:type_name -> mql.fex.v1.Component
-	41, // 21: mql.fex.v1.Component.identifiers:type_name -> mql.fex.v1.Component.IdentifiersEntry
-	42, // 22: mql.fex.v1.Component.properties:type_name -> mql.fex.v1.Component.PropertiesEntry
-	15, // 23: mql.fex.v1.Component.file:type_name -> mql.fex.v1.FileComponent
-	11, // 24: mql.fex.v1.Rating.source:type_name -> mql.fex.v1.Source
-	1,  // 25: mql.fex.v1.Rating.method:type_name -> mql.fex.v1.ScoringMethod
-	11, // 26: mql.fex.v1.Severity.source:type_name -> mql.fex.v1.Source
-	1,  // 27: mql.fex.v1.Severity.method:type_name -> mql.fex.v1.ScoringMethod
-	3,  // 28: mql.fex.v1.Severity.rating:type_name -> mql.fex.v1.SeverityRating
-	4,  // 29: mql.fex.v1.Remediation.category:type_name -> mql.fex.v1.Remediation.Category
-	20, // 30: mql.fex.v1.FindingExchange.details:type_name -> mql.fex.v1.FindingDetail
-	48, // 31: mql.fex.v1.FindingExchange.first_seen_at:type_name -> google.protobuf.Timestamp
-	48, // 32: mql.fex.v1.FindingExchange.last_seen_at:type_name -> google.protobuf.Timestamp
-	48, // 33: mql.fex.v1.FindingExchange.remediated_at:type_name -> google.protobuf.Timestamp
-	0,  // 34: mql.fex.v1.FindingExchange.status:type_name -> mql.fex.v1.Status
-	11, // 35: mql.fex.v1.FindingExchange.source:type_name -> mql.fex.v1.Source
-	13, // 36: mql.fex.v1.FindingExchange.affects:type_name -> mql.fex.v1.Affects
-	21, // 37: mql.fex.v1.FindingExchange.evidences:type_name -> mql.fex.v1.Evidence
-	18, // 38: mql.fex.v1.FindingExchange.remediations:type_name -> mql.fex.v1.Remediation
-	5,  // 39: mql.fex.v1.FindingDetail.category:type_name -> mql.fex.v1.FindingDetail.Category
-	17, // 40: mql.fex.v1.FindingDetail.severity:type_name -> mql.fex.v1.Severity
-	2,  // 41: mql.fex.v1.FindingDetail.confidence:type_name -> mql.fex.v1.Confidence
-	10, // 42: mql.fex.v1.FindingDetail.references:type_name -> mql.fex.v1.Reference
-	43, // 43: mql.fex.v1.FindingDetail.properties:type_name -> mql.fex.v1.FindingDetail.PropertiesEntry
-	38, // 44: mql.fex.v1.Evidence.tactic:type_name -> mql.fex.v1.AttackTactic
-	39, // 45: mql.fex.v1.Evidence.technique:type_name -> mql.fex.v1.AttackTechnique
-	2,  // 46: mql.fex.v1.Evidence.confidence:type_name -> mql.fex.v1.Confidence
-	23, // 47: mql.fex.v1.Evidence.user:type_name -> mql.fex.v1.User
-	22, // 48: mql.fex.v1.Evidence.file:type_name -> mql.fex.v1.File
-	24, // 49: mql.fex.v1.Evidence.process:type_name -> mql.fex.v1.Process
-	25, // 50: mql.fex.v1.Evidence.container:type_name -> mql.fex.v1.Container
-	26, // 51: mql.fex.v1.Evidence.kubernetes:type_name -> mql.fex.v1.Kubernetes
-	27, // 52: mql.fex.v1.Evidence.registry_key:type_name -> mql.fex.v1.RegistryKey
-	28, // 53: mql.fex.v1.Evidence.connection:type_name -> mql.fex.v1.Connection
-	29, // 54: mql.fex.v1.Evidence.http_request:type_name -> mql.fex.v1.HttpRequest
-	30, // 55: mql.fex.v1.Evidence.dns_record:type_name -> mql.fex.v1.DnsRecord
-	31, // 56: mql.fex.v1.Evidence.certificate:type_name -> mql.fex.v1.Certificate
-	32, // 57: mql.fex.v1.Evidence.domain_registration:type_name -> mql.fex.v1.DomainRegistration
-	33, // 58: mql.fex.v1.Evidence.network_range:type_name -> mql.fex.v1.NetworkRange
-	34, // 59: mql.fex.v1.Evidence.threat_intel_indicator:type_name -> mql.fex.v1.ThreatIntelIndicator
-	35, // 60: mql.fex.v1.Evidence.malware:type_name -> mql.fex.v1.Malware
-	36, // 61: mql.fex.v1.Evidence.ai_model:type_name -> mql.fex.v1.AiModel
-	37, // 62: mql.fex.v1.Evidence.ai_agent:type_name -> mql.fex.v1.AiAgent
-	44, // 63: mql.fex.v1.Evidence.properties:type_name -> mql.fex.v1.Evidence.PropertiesEntry
-	45, // 64: mql.fex.v1.User.properties:type_name -> mql.fex.v1.User.PropertiesEntry
-	22, // 65: mql.fex.v1.Process.binary:type_name -> mql.fex.v1.File
-	22, // 66: mql.fex.v1.Process.script:type_name -> mql.fex.v1.File
-	23, // 67: mql.fex.v1.Process.user:type_name -> mql.fex.v1.User
-	24, // 68: mql.fex.v1.Process.parent:type_name -> mql.fex.v1.Process
-	46, // 69: mql.fex.v1.Kubernetes.pods:type_name -> mql.fex.v1.Kubernetes.Pod
-	47, // 70: mql.fex.v1.Kubernetes.nodes:type_name -> mql.fex.v1.Kubernetes.Node
-	6,  // 71: mql.fex.v1.Connection.protocol:type_name -> mql.fex.v1.Connection.ConnectionProtocol
-	48, // 72: mql.fex.v1.Certificate.not_before:type_name -> google.protobuf.Timestamp
-	48, // 73: mql.fex.v1.Certificate.not_after:type_name -> google.protobuf.Timestamp
-	48, // 74: mql.fex.v1.DomainRegistration.created_at:type_name -> google.protobuf.Timestamp
-	48, // 75: mql.fex.v1.DomainRegistration.updated_at:type_name -> google.protobuf.Timestamp
-	48, // 76: mql.fex.v1.DomainRegistration.expires_at:type_name -> google.protobuf.Timestamp
-	48, // 77: mql.fex.v1.ThreatIntelIndicator.last_observed_at:type_name -> google.protobuf.Timestamp
-	25, // 78: mql.fex.v1.Kubernetes.Pod.containers:type_name -> mql.fex.v1.Container
-	79, // [79:79] is the sub-list for method output_type
-	79, // [79:79] is the sub-list for method input_type
-	79, // [79:79] is the sub-list for extension type_name
-	79, // [79:79] is the sub-list for extension extendee
-	0,  // [0:79] is the sub-list for field type_name
+	42, // 21: mql.fex.v1.Component.identifiers:type_name -> mql.fex.v1.Component.IdentifiersEntry
+	43, // 22: mql.fex.v1.Component.properties:type_name -> mql.fex.v1.Component.PropertiesEntry
+	16, // 23: mql.fex.v1.Component.file:type_name -> mql.fex.v1.FileComponent
+	15, // 24: mql.fex.v1.Component.cloud_resource:type_name -> mql.fex.v1.CloudResource
+	44, // 25: mql.fex.v1.CloudResource.tags:type_name -> mql.fex.v1.CloudResource.TagsEntry
+	11, // 26: mql.fex.v1.Rating.source:type_name -> mql.fex.v1.Source
+	1,  // 27: mql.fex.v1.Rating.method:type_name -> mql.fex.v1.ScoringMethod
+	11, // 28: mql.fex.v1.Severity.source:type_name -> mql.fex.v1.Source
+	1,  // 29: mql.fex.v1.Severity.method:type_name -> mql.fex.v1.ScoringMethod
+	3,  // 30: mql.fex.v1.Severity.rating:type_name -> mql.fex.v1.SeverityRating
+	4,  // 31: mql.fex.v1.Remediation.category:type_name -> mql.fex.v1.Remediation.Category
+	21, // 32: mql.fex.v1.FindingExchange.details:type_name -> mql.fex.v1.FindingDetail
+	50, // 33: mql.fex.v1.FindingExchange.first_seen_at:type_name -> google.protobuf.Timestamp
+	50, // 34: mql.fex.v1.FindingExchange.last_seen_at:type_name -> google.protobuf.Timestamp
+	50, // 35: mql.fex.v1.FindingExchange.remediated_at:type_name -> google.protobuf.Timestamp
+	0,  // 36: mql.fex.v1.FindingExchange.status:type_name -> mql.fex.v1.Status
+	11, // 37: mql.fex.v1.FindingExchange.source:type_name -> mql.fex.v1.Source
+	13, // 38: mql.fex.v1.FindingExchange.affects:type_name -> mql.fex.v1.Affects
+	22, // 39: mql.fex.v1.FindingExchange.evidences:type_name -> mql.fex.v1.Evidence
+	19, // 40: mql.fex.v1.FindingExchange.remediations:type_name -> mql.fex.v1.Remediation
+	5,  // 41: mql.fex.v1.FindingDetail.category:type_name -> mql.fex.v1.FindingDetail.Category
+	18, // 42: mql.fex.v1.FindingDetail.severity:type_name -> mql.fex.v1.Severity
+	2,  // 43: mql.fex.v1.FindingDetail.confidence:type_name -> mql.fex.v1.Confidence
+	10, // 44: mql.fex.v1.FindingDetail.references:type_name -> mql.fex.v1.Reference
+	45, // 45: mql.fex.v1.FindingDetail.properties:type_name -> mql.fex.v1.FindingDetail.PropertiesEntry
+	39, // 46: mql.fex.v1.Evidence.tactic:type_name -> mql.fex.v1.AttackTactic
+	40, // 47: mql.fex.v1.Evidence.technique:type_name -> mql.fex.v1.AttackTechnique
+	2,  // 48: mql.fex.v1.Evidence.confidence:type_name -> mql.fex.v1.Confidence
+	24, // 49: mql.fex.v1.Evidence.user:type_name -> mql.fex.v1.User
+	23, // 50: mql.fex.v1.Evidence.file:type_name -> mql.fex.v1.File
+	25, // 51: mql.fex.v1.Evidence.process:type_name -> mql.fex.v1.Process
+	26, // 52: mql.fex.v1.Evidence.container:type_name -> mql.fex.v1.Container
+	27, // 53: mql.fex.v1.Evidence.kubernetes:type_name -> mql.fex.v1.Kubernetes
+	28, // 54: mql.fex.v1.Evidence.registry_key:type_name -> mql.fex.v1.RegistryKey
+	29, // 55: mql.fex.v1.Evidence.connection:type_name -> mql.fex.v1.Connection
+	30, // 56: mql.fex.v1.Evidence.http_request:type_name -> mql.fex.v1.HttpRequest
+	31, // 57: mql.fex.v1.Evidence.dns_record:type_name -> mql.fex.v1.DnsRecord
+	32, // 58: mql.fex.v1.Evidence.certificate:type_name -> mql.fex.v1.Certificate
+	33, // 59: mql.fex.v1.Evidence.domain_registration:type_name -> mql.fex.v1.DomainRegistration
+	34, // 60: mql.fex.v1.Evidence.network_range:type_name -> mql.fex.v1.NetworkRange
+	35, // 61: mql.fex.v1.Evidence.threat_intel_indicator:type_name -> mql.fex.v1.ThreatIntelIndicator
+	36, // 62: mql.fex.v1.Evidence.malware:type_name -> mql.fex.v1.Malware
+	37, // 63: mql.fex.v1.Evidence.ai_model:type_name -> mql.fex.v1.AiModel
+	38, // 64: mql.fex.v1.Evidence.ai_agent:type_name -> mql.fex.v1.AiAgent
+	46, // 65: mql.fex.v1.Evidence.properties:type_name -> mql.fex.v1.Evidence.PropertiesEntry
+	47, // 66: mql.fex.v1.User.properties:type_name -> mql.fex.v1.User.PropertiesEntry
+	23, // 67: mql.fex.v1.Process.binary:type_name -> mql.fex.v1.File
+	23, // 68: mql.fex.v1.Process.script:type_name -> mql.fex.v1.File
+	24, // 69: mql.fex.v1.Process.user:type_name -> mql.fex.v1.User
+	25, // 70: mql.fex.v1.Process.parent:type_name -> mql.fex.v1.Process
+	48, // 71: mql.fex.v1.Kubernetes.pods:type_name -> mql.fex.v1.Kubernetes.Pod
+	49, // 72: mql.fex.v1.Kubernetes.nodes:type_name -> mql.fex.v1.Kubernetes.Node
+	6,  // 73: mql.fex.v1.Connection.protocol:type_name -> mql.fex.v1.Connection.ConnectionProtocol
+	50, // 74: mql.fex.v1.Certificate.not_before:type_name -> google.protobuf.Timestamp
+	50, // 75: mql.fex.v1.Certificate.not_after:type_name -> google.protobuf.Timestamp
+	50, // 76: mql.fex.v1.DomainRegistration.created_at:type_name -> google.protobuf.Timestamp
+	50, // 77: mql.fex.v1.DomainRegistration.updated_at:type_name -> google.protobuf.Timestamp
+	50, // 78: mql.fex.v1.DomainRegistration.expires_at:type_name -> google.protobuf.Timestamp
+	50, // 79: mql.fex.v1.ThreatIntelIndicator.last_observed_at:type_name -> google.protobuf.Timestamp
+	26, // 80: mql.fex.v1.Kubernetes.Pod.containers:type_name -> mql.fex.v1.Container
+	81, // [81:81] is the sub-list for method output_type
+	81, // [81:81] is the sub-list for method input_type
+	81, // [81:81] is the sub-list for extension type_name
+	81, // [81:81] is the sub-list for extension extendee
+	0,  // [0:81] is the sub-list for field type_name
 }
 
 func init() { file_fex_proto_init() }
@@ -4319,8 +4453,9 @@ func file_fex_proto_init() {
 	}
 	file_fex_proto_msgTypes[7].OneofWrappers = []any{
 		(*Component_File)(nil),
+		(*Component_CloudResource)(nil),
 	}
-	file_fex_proto_msgTypes[14].OneofWrappers = []any{
+	file_fex_proto_msgTypes[15].OneofWrappers = []any{
 		(*Evidence_User)(nil),
 		(*Evidence_File)(nil),
 		(*Evidence_Process)(nil),
@@ -4344,7 +4479,7 @@ func file_fex_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_fex_proto_rawDesc), len(file_fex_proto_rawDesc)),
 			NumEnums:      7,
-			NumMessages:   41,
+			NumMessages:   43,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

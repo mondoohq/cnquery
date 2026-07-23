@@ -177,7 +177,28 @@ message Component {
   // Experimental. Component details based on type
   oneof details {
     FileComponent file = 21;
+    CloudResource cloud_resource = 22;
   }
+}
+
+// CloudResource describes a cloud resource a finding is about — the native
+// object of a cloud provider (an AWS/Azure/GCP resource), captured as structured
+// detail beyond the component's bare id. All fields are optional.
+message CloudResource {
+  // Cloud provider, e.g. "aws", "azure", "gcp".
+  string provider = 1;
+  // Native resource id — an ARN or a provider full resource name.
+  string id = 2;
+  // Resource type, e.g. "AwsS3Bucket".
+  string type = 3;
+  // Region the resource resides in.
+  string region = 4;
+  // Owning account, subscription, or project.
+  string account = 5;
+  // Provider partition/cloud, e.g. an AWS partition "aws" / "aws-us-gov" / "aws-cn".
+  string partition = 6;
+  // Resource tags / labels.
+  map<string, string> tags = 7;
 }
 
 // Experimental. File-specific component details
