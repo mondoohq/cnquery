@@ -256,6 +256,19 @@ func (r *Runtime) setProviderConnection(c *plugin.ConnectRes, err error) {
 	r.mu.Unlock()
 }
 
+// crossProviderAsset returns a clone of the main provider's asset with
+// ParentConnectionId cleared. Parent-child resource cache sharing only
+// applies within the same provider; passing the original parent ID to an
+// unrelated provider triggers a spurious "parent connection not found"
+// warning because that provider never had the parent's runtime.
+func (r *Runtime) crossProviderAsset() *inventory.Asset {
+	asset := r.Provider.Connection.Asset.CloneVT()
+	if len(asset.Connections) > 0 {
+		asset.Connections[0].ParentConnectionId = 0
+	}
+	return asset
+}
+
 func (r *Runtime) addProvider(id string) (*ConnectedProvider, error) {
 	// TODO: we need to detect only the shared running providers
 	running, err := r.coordinator.GetRunningProvider(id, r.AutoUpdate)
@@ -385,7 +398,7 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 		return err
 	}
 	if postProvider.ID != r.Provider.Instance.ID {
-		req.Asset = r.Provider.Connection.Asset
+		req.Asset = r.crossProviderAsset()
 		err = r.UseProvider(postProvider.ID)
 		if err != nil {
 			return err
@@ -972,7 +985,7 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 	res.Connection, res.ConnectionError = res.Instance.Plugin.Connect(&plugin.ConnectReq{
 		Features: r.features,
 		Upstream: r.UpstreamConfig,
-		Asset:    r.Provider.Connection.Asset,
+		Asset:    r.crossProviderAsset(),
 	}, nil)
 	if res.ConnectionError != nil {
 		return nil, nil, res.ConnectionError
@@ -1112,7 +1125,7 @@ func (r *Runtime) lookupFieldProvider(resource string, field string) (*Connected
 	res.Connection, res.ConnectionError = res.Instance.Plugin.Connect(&plugin.ConnectReq{
 		Features: r.features,
 		Upstream: r.UpstreamConfig,
-		Asset:    r.Provider.Connection.Asset,
+		Asset:    r.crossProviderAsset(),
 	}, nil)
 	if res.ConnectionError != nil {
 		return nil, nil, nil, res.ConnectionError

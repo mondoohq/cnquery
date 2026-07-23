@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -303,19 +304,38 @@ func (r *RestartableProvider) Disconnect(req *pp.DisconnectReq) (*pp.DisconnectR
 	r.lock.Lock()
 	r.connectionGraph.markDisconnected(req.Connection)
 	collected := r.connectionGraph.garbageCollect()
+	// Check whether the requested connection survived GC (children keep it
+	// alive). Must be checked under the lock since another goroutine's
+	// Connect/Disconnect can mutate the graph concurrently.
+	requestedCollected := slices.Contains(collected, req.Connection)
+	keptByChildren := false
+	if !requestedCollected {
+		_, keptByChildren = r.connectionGraph.getNode(req.Connection)
+	}
 	r.lock.Unlock()
 
-	resp, err := r.plugin.Disconnect(req)
+	// Only disconnect the requested connection from the provider if GC
+	// actually collected it. When children still reference this connection
+	// (GC kept it in the graph), the Service-layer runtime must stay alive
+	// so children can share its resource cache. GC will disconnect it later
+	// once all children are done.
+	var resp *pp.DisconnectRes
+	var err error
+	if keptByChildren {
+		resp = &pp.DisconnectRes{}
+	} else {
+		resp, err = r.plugin.Disconnect(req)
+	}
 
 	for _, c := range collected {
 		if c == req.Connection {
 			continue
 		}
-		_, err := r.plugin.Disconnect(&pp.DisconnectReq{
+		_, disconnectErr := r.plugin.Disconnect(&pp.DisconnectReq{
 			Connection: c,
 		})
-		if err != nil {
-			log.Warn().Err(err).Uint32("connection", c).Msg("failed to disconnect garbage collected connection")
+		if disconnectErr != nil {
+			log.Warn().Err(disconnectErr).Uint32("connection", c).Msg("failed to disconnect garbage collected connection")
 		}
 	}
 

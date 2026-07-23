@@ -288,6 +288,124 @@ func TestRestartableProvider_ParentReconnectsAfterGC(t *testing.T) {
 	require.True(t, mock.alive(workloadBatch2))
 }
 
+// TestRestartableProvider_ParentDisconnectedWhileChildrenActive reproduces
+// the bug where a parent is disconnected while children still reference it.
+// GC keeps the parent in the graph (children hold it alive), but the
+// unconditional r.plugin.Disconnect call removes its Service-layer runtime.
+// A subsequent child then finds the parent in the graph (no reconnection),
+// but Service.AddRuntime fails to find the parent runtime → warning.
+func TestRestartableProvider_ParentDisconnectedWhileChildrenActive(t *testing.T) {
+	mock := newMockPlugin()
+	rp := &RestartableProvider{
+		plugin:          mock,
+		connectionGraph: newConnectionGraph(),
+	}
+
+	const (
+		nsConn = uint32(2)
+		child1 = uint32(10)
+		child2 = uint32(11)
+		child3 = uint32(12)
+	)
+
+	// Connect namespace.
+	_, err := rp.Connect(connectReqFor(nsConn, 0), nil)
+	require.NoError(t, err)
+	require.True(t, mock.alive(nsConn))
+
+	// Connect first child (workload).
+	_, err = rp.Connect(connectReqFor(child1, nsConn), nil)
+	require.NoError(t, err)
+	require.True(t, mock.alive(child1))
+
+	// Disconnect namespace while child1 is still connected.
+	// GC should keep node nsConn (child1 references it).
+	// The Service-layer runtime for nsConn must stay alive.
+	_, err = rp.Disconnect(&pp.DisconnectReq{Connection: nsConn})
+	require.NoError(t, err)
+	require.True(t, mock.alive(nsConn),
+		"parent runtime must stay alive while children reference it")
+
+	// Connect second child — parent is in graph, no reconnection needed.
+	// This MUST succeed because the parent runtime is still alive.
+	_, err = rp.Connect(connectReqFor(child2, nsConn), nil)
+	require.NoError(t, err, "child2 should connect with parent still alive in Service")
+
+	// Disconnect child1 — parent still needed by child2.
+	_, err = rp.Disconnect(&pp.DisconnectReq{Connection: child1})
+	require.NoError(t, err)
+	require.True(t, mock.alive(nsConn), "parent still needed by child2")
+
+	// Disconnect child2 — parent no longer needed, should be GC'd.
+	_, err = rp.Disconnect(&pp.DisconnectReq{Connection: child2})
+	require.NoError(t, err)
+	require.False(t, mock.alive(nsConn), "parent should be GC'd when all children disconnect")
+
+	// A third child arrives after full GC — should reconnect via collectedNodes.
+	_, err = rp.Connect(connectReqFor(child3, nsConn), nil)
+	require.NoError(t, err, "child3 should connect after parent is re-reconnected from collectedNodes")
+	require.True(t, mock.alive(nsConn))
+}
+
+// TestRestartableProvider_OverlappingBatchesWithParentDisconnect simulates
+// the realistic scanner pattern where batches overlap: some children from
+// batch 1 are still connected when the parent is disconnected, and new
+// children from batch 2 arrive afterward.
+func TestRestartableProvider_OverlappingBatchesWithParentDisconnect(t *testing.T) {
+	mock := newMockPlugin()
+	rp := &RestartableProvider{
+		plugin:          mock,
+		connectionGraph: newConnectionGraph(),
+	}
+
+	const nsConn = uint32(2)
+
+	// Connect namespace.
+	_, err := rp.Connect(connectReqFor(nsConn, 0), nil)
+	require.NoError(t, err)
+
+	// Batch 1: connect children 10, 11, 12.
+	for _, id := range []uint32{10, 11, 12} {
+		_, err := rp.Connect(connectReqFor(id, nsConn), nil)
+		require.NoError(t, err)
+	}
+
+	// Scanner closes namespace (done scanning it as an asset).
+	_, err = rp.Disconnect(&pp.DisconnectReq{Connection: nsConn})
+	require.NoError(t, err)
+	require.True(t, mock.alive(nsConn), "parent kept alive by batch 1 children")
+
+	// Batch 1 children finish one by one.
+	_, err = rp.Disconnect(&pp.DisconnectReq{Connection: 10})
+	require.NoError(t, err)
+	require.True(t, mock.alive(nsConn), "parent kept alive by children 11, 12")
+
+	// Batch 2 arrives while batch 1 isn't fully done yet.
+	for _, id := range []uint32{13, 14} {
+		_, err := rp.Connect(connectReqFor(id, nsConn), nil)
+		require.NoError(t, err, "batch 2 child %d should connect", id)
+	}
+
+	// Finish remaining batch 1 children.
+	_, err = rp.Disconnect(&pp.DisconnectReq{Connection: 11})
+	require.NoError(t, err)
+	_, err = rp.Disconnect(&pp.DisconnectReq{Connection: 12})
+	require.NoError(t, err)
+	require.True(t, mock.alive(nsConn), "parent kept alive by batch 2 children")
+
+	// Finish batch 2.
+	_, err = rp.Disconnect(&pp.DisconnectReq{Connection: 13})
+	require.NoError(t, err)
+	_, err = rp.Disconnect(&pp.DisconnectReq{Connection: 14})
+	require.NoError(t, err)
+	require.False(t, mock.alive(nsConn), "parent GC'd after all children disconnect")
+
+	// Batch 3 arrives after full GC — reconnection from collectedNodes.
+	_, err = rp.Connect(connectReqFor(15, nsConn), nil)
+	require.NoError(t, err, "batch 3 child should reconnect parent from collectedNodes")
+	require.True(t, mock.alive(nsConn))
+}
+
 // TestRestartableProvider_MultiNamespaceMultiBatch simulates a realistic
 // K8s cluster scan: 5 namespaces × 10 workloads each, processed in
 // batches of 15. This catches ordering-dependent bugs that single-pair
