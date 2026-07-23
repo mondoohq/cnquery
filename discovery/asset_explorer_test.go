@@ -38,8 +38,17 @@ func TestMergeConnectionFeatures(t *testing.T) {
 }
 
 func newTestExplorer(assets ...*TrackedAsset) *AssetExplorer {
+	seen := make(map[string]struct{})
+	for _, a := range assets {
+		if a.Asset != nil {
+			for _, id := range a.Asset.PlatformIds {
+				seen[id] = struct{}{}
+			}
+		}
+	}
 	return &AssetExplorer{
-		allAssets: assets,
+		allAssets:       assets,
+		seenPlatformIDs: seen,
 	}
 }
 
@@ -266,6 +275,20 @@ func TestAssetExplorerDedup(t *testing.T) {
 
 		assert.Equal(t, AssetConnected, a.State)
 	})
+}
+
+func TestAssetExplorerHasPlatformID(t *testing.T) {
+	a := &TrackedAsset{
+		Asset: &inventory.Asset{Name: "a", PlatformIds: []string{"id/1", "id/2"}},
+		State: AssetConnected,
+	}
+	e := newTestExplorer(a)
+
+	assert.True(t, e.hasPlatformID([]string{"id/1"}))
+	assert.True(t, e.hasPlatformID([]string{"id/2"}))
+	assert.True(t, e.hasPlatformID([]string{"id/3", "id/1"}))
+	assert.False(t, e.hasPlatformID([]string{"id/3"}))
+	assert.False(t, e.hasPlatformID(nil))
 }
 
 func TestAssetExplorerErrors(t *testing.T) {
