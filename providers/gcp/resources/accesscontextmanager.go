@@ -9,6 +9,7 @@ import (
 
 	accesscontextmanager "cloud.google.com/go/accesscontextmanager/apiv1"
 	acmpb "cloud.google.com/go/accesscontextmanager/apiv1/accesscontextmanagerpb"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -58,6 +59,10 @@ func (g *mqlGcpOrganization) gcpUserAccessBindings() ([]any, error) {
 			break
 		}
 		if err != nil {
+			if isGRPCSkippable(err) {
+				log.Warn().Err(err).Msg("could not list resources (API disabled or access denied), skipping")
+				return nil, nil
+			}
 			return nil, err
 		}
 
@@ -111,6 +116,10 @@ func (g *mqlGcpOrganization) accessPolicies() ([]any, error) {
 			break
 		}
 		if err != nil {
+			if isGRPCSkippable(err) {
+				log.Warn().Err(err).Msg("could not list resources (API disabled or access denied), skipping")
+				return nil, nil
+			}
 			return nil, err
 		}
 
@@ -154,6 +163,10 @@ func (g *mqlGcpAccesscontextmanagerAccessPolicy) accessLevels() ([]any, error) {
 			break
 		}
 		if err != nil {
+			if isGRPCSkippable(err) {
+				log.Warn().Err(err).Msg("could not list resources (API disabled or access denied), skipping")
+				return nil, nil
+			}
 			return nil, err
 		}
 
@@ -208,6 +221,10 @@ func (g *mqlGcpAccesscontextmanagerAccessPolicy) servicePerimeters() ([]any, err
 			break
 		}
 		if err != nil {
+			if isGRPCSkippable(err) {
+				log.Warn().Err(err).Msg("could not list resources (API disabled or access denied), skipping")
+				return nil, nil
+			}
 			return nil, err
 		}
 

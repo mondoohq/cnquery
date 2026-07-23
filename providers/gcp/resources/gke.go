@@ -552,8 +552,8 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 				"enabled":        c.BinaryAuthorization.Enabled,
 				"evaluationMode": c.BinaryAuthorization.EvaluationMode.String(),
 			}
-			// CIS interpretation: Binary Auth is "enabled" when evaluationMode is anything
-			// other than DISABLED. The legacy boolean Enabled field is also honored.
+			// Binary Auth is "enabled" when evaluationMode is anything other than
+			// DISABLED/UNSPECIFIED, or when the legacy boolean Enabled field is set.
 			mode := c.BinaryAuthorization.EvaluationMode
 			binaryAuthorizationEnabled = c.BinaryAuthorization.Enabled ||
 				(mode != containerpb.BinaryAuthorization_EVALUATION_MODE_UNSPECIFIED && mode != containerpb.BinaryAuthorization_DISABLED)
@@ -989,6 +989,12 @@ func (g *mqlGcpProjectGkeServiceClusterNodepoolConfig) serviceAccount() (*mqlGcp
 		return nil, g.ServiceAccountEmail.Error
 	}
 	email := g.ServiceAccountEmail.Data
+	if email == "" {
+		// No SA on the node pool config means it falls back to the project
+		// default; resolve to null rather than a husk keyed on an empty email.
+		g.ServiceAccount.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
 
 	res, err := NewResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
 		"projectId": llx.StringData(projectId),
@@ -1374,17 +1380,24 @@ func (g *mqlGcpProjectGkeServiceClusterNetworkConfig) network() (*mqlGcpProjectC
 		return nil, g.NetworkPath.Error
 	}
 	networkPath := g.NetworkPath.Data
+	if networkPath == "" {
+		g.Network.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
 
-	// Format is projects/project-1/global/networks/net-1
-	params := strings.Split(networkPath, "/")
-	res, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.network", map[string]*llx.RawData{
-		"name":      llx.StringData(params[len(params)-1]),
-		"projectId": llx.StringData(params[1]),
-	})
+	// Format is projects/project-1/global/networks/net-1. getNetworkByUrl uses
+	// NewResource so the network's init runs and every field is populated (a
+	// plain CreateResource here would leave a husk with only name/projectId set),
+	// and it length-guards the path instead of blindly indexing.
+	net, err := getNetworkByUrl(networkPath, g.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGcpProjectComputeServiceNetwork), nil
+	if net == nil {
+		g.Network.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return net, nil
 }
 
 func (g *mqlGcpProjectGkeServiceClusterNetworkConfig) subnetwork() (*mqlGcpProjectComputeServiceSubnetwork, error) {

@@ -3907,6 +3907,7 @@ gcp.project.loggingservice.exclusion.description 13.6.1
 gcp.project.loggingservice.exclusion.disabled 13.6.1
 gcp.project.loggingservice.exclusion.filter 13.6.1
 gcp.project.loggingservice.exclusion.name 13.6.1
+gcp.project.loggingservice.exclusion.projectId 13.33.2
 gcp.project.loggingservice.exclusion.updated 13.6.1
 gcp.project.loggingservice.exclusions 13.6.1
 gcp.project.loggingservice.metric 9.0.0

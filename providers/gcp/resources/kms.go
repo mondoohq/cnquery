@@ -82,6 +82,13 @@ func initGcpProjectKmsServiceKeyring(runtime *plugin.Runtime, args map[string]*l
 		return nil, nil, keyrings.Error
 	}
 
+	// The keyring is matched by (name, location, projectId); without all three we
+	// can't do the lookup, so return a bare resource rather than dereferencing a
+	// nil arg (which would panic and crash the scan).
+	if args["name"] == nil || args["location"] == nil || args["projectId"] == nil {
+		return args, nil, nil
+	}
+
 	// Find the matching keyring
 	for _, kr := range keyrings.Data {
 		keyring := kr.(*mqlGcpProjectKmsServiceKeyring)
@@ -240,7 +247,7 @@ func initGcpProjectKmsServiceKeyringCryptokey(runtime *plugin.Runtime, args map[
 	args["primaryState"] = llx.StringData(primaryState)
 	args["purpose"] = llx.StringData(k.Purpose.String())
 	args["created"] = llx.TimeData(k.CreateTime.AsTime())
-	args["nextRotation"] = llx.TimeData(k.NextRotationTime.AsTime())
+	args["nextRotation"] = llx.TimeDataPtr(timestampAsTimePtr(k.NextRotationTime))
 	args["rotationPeriod"] = llx.TimeDataPtr(mqlRotationPeriod)
 	args["versionTemplate"] = llx.DictData(versionTemplate)
 	args["labels"] = llx.MapData(convert.MapToInterfaceMap(k.Labels), types.String)
@@ -483,7 +490,7 @@ func (g *mqlGcpProjectKmsServiceKeyring) cryptokeys() ([]any, error) {
 			"primaryState":                  llx.StringData(primaryState),
 			"purpose":                       llx.StringData(k.Purpose.String()),
 			"created":                       llx.TimeData(k.CreateTime.AsTime()),
-			"nextRotation":                  llx.TimeData(k.NextRotationTime.AsTime()),
+			"nextRotation":                  llx.TimeDataPtr(timestampAsTimePtr(k.NextRotationTime)),
 			"rotationPeriod":                llx.TimeDataPtr(mqlRotationPeriod),
 			"versionTemplate":               llx.DictData(versionTemplate),
 			"labels":                        llx.MapData(convert.MapToInterfaceMap(k.Labels), types.String),
@@ -664,9 +671,9 @@ func cryptoKeyVersionToMql(runtime *plugin.Runtime, v *kmspb.CryptoKeyVersion) (
 	if v.Attestation != nil {
 		mqlAttestationCertChains, err := CreateResource(runtime, "gcp.project.kmsService.keyring.cryptokey.version.attestation.certificatechains", map[string]*llx.RawData{
 			"cryptoKeyVersionName": llx.StringData(v.Name),
-			"caviumCerts":          llx.ArrayData(convert.SliceAnyToInterface(v.Attestation.CertChains.CaviumCerts), types.String),
-			"googleCardCerts":      llx.ArrayData(convert.SliceAnyToInterface(v.Attestation.CertChains.GoogleCardCerts), types.String),
-			"googlePartitionCerts": llx.ArrayData(convert.SliceAnyToInterface(v.Attestation.CertChains.GooglePartitionCerts), types.String),
+			"caviumCerts":          llx.ArrayData(convert.SliceAnyToInterface(v.Attestation.GetCertChains().GetCaviumCerts()), types.String),
+			"googleCardCerts":      llx.ArrayData(convert.SliceAnyToInterface(v.Attestation.GetCertChains().GetGoogleCardCerts()), types.String),
+			"googlePartitionCerts": llx.ArrayData(convert.SliceAnyToInterface(v.Attestation.GetCertChains().GetGooglePartitionCerts()), types.String),
 		})
 		if err != nil {
 			return nil, err

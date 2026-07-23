@@ -415,6 +415,10 @@ func discoverOrganization(conn *connection.GcpConnection, gcpOrg *mqlGcpOrganiza
 			if folderConf.Options == nil {
 				folderConf.Options = map[string]string{}
 			}
+			// Scope the child connection to this folder: drop the inherited
+			// organization-id so the asset resolves as a folder (not the org),
+			// and set folder-id.
+			delete(folderConf.Options, "organization-id")
 			folderConf.Options["folder-id"] = folder.Id.Data
 
 			assetList = append(assetList, &inventory.Asset{
@@ -431,7 +435,7 @@ func discoverOrganization(conn *connection.GcpConnection, gcpOrg *mqlGcpOrganiza
 				},
 				Labels: map[string]string{},
 				// NOTE: we explicitly do not exclude discovery here, as we want to discover the projects for the folder
-				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithParentConnectionId(conn.Conf.Id))},
+				Connections: []*inventory.Config{folderConf},
 			})
 		}
 	}

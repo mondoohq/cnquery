@@ -7977,6 +7977,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.loggingservice.exclusion.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectLoggingserviceExclusion).GetName()).ToDataRes(types.String)
 	},
+	"gcp.project.loggingservice.exclusion.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectLoggingserviceExclusion).GetProjectId()).ToDataRes(types.String)
+	},
 	"gcp.project.loggingservice.exclusion.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectLoggingserviceExclusion).GetDescription()).ToDataRes(types.String)
 	},
@@ -26067,6 +26070,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.loggingservice.exclusion.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectLoggingserviceExclusion).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.loggingservice.exclusion.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingserviceExclusion).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.loggingservice.exclusion.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -60263,6 +60270,7 @@ type mqlGcpProjectLoggingserviceExclusion struct {
 	__id       string
 	// optional: if you define mqlGcpProjectLoggingserviceExclusionInternal it will be used here
 	Name        plugin.TValue[string]
+	ProjectId   plugin.TValue[string]
 	Description plugin.TValue[string]
 	Filter      plugin.TValue[string]
 	Disabled    plugin.TValue[bool]
@@ -60309,6 +60317,10 @@ func (c *mqlGcpProjectLoggingserviceExclusion) MqlID() string {
 
 func (c *mqlGcpProjectLoggingserviceExclusion) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlGcpProjectLoggingserviceExclusion) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
 }
 
 func (c *mqlGcpProjectLoggingserviceExclusion) GetDescription() *plugin.TValue[string] {

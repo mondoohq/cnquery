@@ -400,31 +400,95 @@ func getDiskByUrl(diskUrl string, runtime *plugin.Runtime) (*mqlGcpProjectComput
 	}
 
 	// URL format: https://www.googleapis.com/compute/v1/projects/{project}/zones/{zone}/disks/{disk}
-	//          or https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/disks/{disk}
-	// Also handles regional disks: .../projects/{project}/regions/{region}/disks/{disk}
-	params := diskUrl
-	switch {
-	case strings.HasPrefix(params, "https://www.googleapis.com/compute/v1/"):
-		params = strings.TrimPrefix(params, "https://www.googleapis.com/compute/v1/")
-	case strings.HasPrefix(params, "https://compute.googleapis.com/compute/v1/"):
-		params = strings.TrimPrefix(params, "https://compute.googleapis.com/compute/v1/")
-	default:
-		return nil, errors.New("unrecognized source disk URL prefix: " + diskUrl)
-	}
-	parts := strings.Split(params, "/")
-	// Expect at least: projects/{project}/{zones|regions}/{loc}/disks/{disk}
-	if len(parts) < 6 {
-		return nil, errors.New("invalid source disk URL: " + diskUrl)
+	//          or https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/disks/{disk}
+	diskId, err := getDiskIdByUrl(diskUrl)
+	if err != nil {
+		return nil, err
 	}
 
-	res, err := NewResource(runtime, "gcp.project.computeService.disk", map[string]*llx.RawData{
-		"name":      llx.StringData(parts[len(parts)-1]),
-		"projectId": llx.StringData(parts[1]),
+	// The gcp.project.computeService.disk resource has no init, so NewResource
+	// would leave a husk whose id() (derived from the unset Id field) collides
+	// with every other url-resolved disk. Instead scan the parent project's
+	// already-populated disks() list and return the real resource, mirroring
+	// attachedDisk.source(). Returns (nil, nil) when the disk isn't in the
+	// scanned project (e.g. a cross-project reference not otherwise scanned).
+	obj, err := CreateResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
+		"projectId": llx.StringData(diskId.Project),
 	})
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGcpProjectComputeServiceDisk), nil
+	computeSvc := obj.(*mqlGcpProjectComputeService)
+	disks := computeSvc.GetDisks()
+	if disks.Error != nil {
+		return nil, disks.Error
+	}
+	for _, d := range disks.Data {
+		disk, ok := d.(*mqlGcpProjectComputeServiceDisk)
+		if !ok || disk.Name.Data != diskId.Name {
+			continue
+		}
+		// Disk names are unique per zone/region, so match the location segment
+		// when the disk is zonal; regional disks carry no Zone, so fall back to
+		// a name match within the project.
+		if zone := disk.Zone.Data; zone != nil {
+			if zone.GetName().Data == diskId.Region {
+				return disk, nil
+			}
+			continue
+		}
+		return disk, nil
+	}
+	return nil, nil
+}
+
+// resolveComputeSnapshotByName returns the fully-populated snapshot with the
+// given name from the project's snapshots() list. The snapshot resource has no
+// init, so a NewResource by-name would collide on an empty __id; scanning the
+// parent list returns the real resource. Returns (nil, nil) when not found.
+func resolveComputeSnapshotByName(runtime *plugin.Runtime, projectId, name string) (*mqlGcpProjectComputeServiceSnapshot, error) {
+	obj, err := CreateResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	computeSvc := obj.(*mqlGcpProjectComputeService)
+	snapshots := computeSvc.GetSnapshots()
+	if snapshots.Error != nil {
+		return nil, snapshots.Error
+	}
+	for _, s := range snapshots.Data {
+		snap, ok := s.(*mqlGcpProjectComputeServiceSnapshot)
+		if ok && snap.Name.Data == name {
+			return snap, nil
+		}
+	}
+	return nil, nil
+}
+
+// resolveComputeStoragePoolByName returns the fully-populated storage pool with
+// the given name from the project's storagePools() list. Same rationale as
+// resolveComputeSnapshotByName. Returns (nil, nil) when not found.
+func resolveComputeStoragePoolByName(runtime *plugin.Runtime, projectId, name string) (*mqlGcpProjectComputeServiceStoragePool, error) {
+	obj, err := CreateResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	computeSvc := obj.(*mqlGcpProjectComputeService)
+	pools := computeSvc.GetStoragePools()
+	if pools.Error != nil {
+		return nil, pools.Error
+	}
+	for _, p := range pools.Data {
+		pool, ok := p.(*mqlGcpProjectComputeServiceStoragePool)
+		if ok && pool.Name.Data == name {
+			return pool, nil
+		}
+	}
+	return nil, nil
 }
 
 // getNetworkByUrl resolves a typed network resource from either of the two
@@ -523,6 +587,9 @@ func getDiskIdByUrl(diskUrl string) (*resourceId, error) {
 	params := strings.TrimPrefix(diskUrl, "https://www.googleapis.com/compute/v1/")
 	params = strings.TrimPrefix(params, "https://compute.googleapis.com/compute/v1/")
 	parts := strings.Split(params, "/")
+	if len(parts) < 6 || parts[0] != "projects" {
+		return nil, errors.New("invalid disk URL: " + diskUrl)
+	}
 	return &resourceId{Project: parts[1], Region: parts[3], Name: parts[5]}, nil
 }
 

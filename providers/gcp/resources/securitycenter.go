@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"go.mondoo.com/mql/v13/types"
 	"google.golang.org/api/iterator"
@@ -221,7 +222,7 @@ func chokepointToDict(cp *sccpb.Chokepoint) map[string]any {
 		return nil
 	}
 	return map[string]any{
-		"relatedFindings": cp.RelatedFindings,
+		"relatedFindings": convert.SliceAnyToInterface(cp.RelatedFindings),
 	}
 }
 
@@ -253,7 +254,7 @@ func toxicCombinationToDict(tc *sccpb.ToxicCombination) map[string]any {
 	}
 	return map[string]any{
 		"attackExposureScore": tc.AttackExposureScore,
-		"relatedFindings":     tc.RelatedFindings,
+		"relatedFindings":     convert.SliceAnyToInterface(tc.RelatedFindings),
 	}
 }
 

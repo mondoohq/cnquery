@@ -199,7 +199,7 @@ func (g *mqlGcpProjectMonitoringService) alertPolicies() ([]any, error) {
 			if matchedLog := c.GetConditionMatchedLog(); matchedLog != nil {
 				mqlMatchedLog = map[string]any{
 					"filter":          matchedLog.Filter,
-					"labelExtractors": matchedLog.LabelExtractors,
+					"labelExtractors": convert.MapToInterfaceMap(matchedLog.LabelExtractors),
 				}
 			}
 
@@ -225,7 +225,7 @@ func (g *mqlGcpProjectMonitoringService) alertPolicies() ([]any, error) {
 		var mqlValidity any
 		if p.Validity != nil {
 			mqlValidity = map[string]any{
-				"code":    p.Validity.Code,
+				"code":    int64(p.Validity.Code),
 				"message": p.Validity.Message,
 			}
 		}

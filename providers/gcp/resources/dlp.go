@@ -874,9 +874,16 @@ func (g *mqlGcpProjectDlpServiceTableDataProfile) bigqueryTable() (*mqlGcpProjec
 		g.BigqueryTable.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	tblId := fmt.Sprintf("%s.%s.%s", projectId, datasetId, tableId)
+	// Key on the same (id, projectId, datasetId) the bigquery table resource is
+	// created with, so the computed __id
+	// (gcp.project.bigqueryService.table/{project}/{dataset}/{table}) matches a
+	// table already resolved via bigqueryService.datasets.tables. Passing a
+	// dotted "proj.dataset.table" id with no project/dataset never matched and
+	// left a husk.
 	mqlTbl, err := NewResource(g.MqlRuntime, "gcp.project.bigqueryService.table", map[string]*llx.RawData{
-		"id": llx.StringData(tblId),
+		"id":        llx.StringData(tableId),
+		"projectId": llx.StringData(projectId),
+		"datasetId": llx.StringData(datasetId),
 	})
 	if err != nil {
 		return nil, err
@@ -1111,8 +1118,11 @@ func (g *mqlGcpProjectDlpServiceFileStoreDataProfile) bucket() (*mqlGcpProjectSt
 		g.Bucket.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
+	// The storage bucket init keys on "name" (it does a Buckets.Get(name) and
+	// populates every field). Passing "id" instead no-ops the init and leaves a
+	// husk, so key it on "name" like the sibling logBucket() ref does.
 	mqlBucket, err := NewResource(g.MqlRuntime, "gcp.project.storageService.bucket", map[string]*llx.RawData{
-		"id": llx.StringData(bucketName),
+		"name": llx.StringData(bucketName),
 	})
 	if err != nil {
 		return nil, err

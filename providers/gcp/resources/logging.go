@@ -593,7 +593,10 @@ func initGcpProjectLoggingserviceBucket(runtime *plugin.Runtime, args map[string
 		}
 	}
 
-	obj, err := CreateResource(runtime, "gcp.project.loggingservice", map[string]*llx.RawData{
+	// Use NewResource so initGcpProjectLoggingservice runs and sets serviceEnabled;
+	// CreateResource would skip init and leave serviceEnabled=false, making
+	// GetBuckets() short-circuit to empty even when logging is enabled.
+	obj, err := NewResource(runtime, "gcp.project.loggingservice", map[string]*llx.RawData{
 		"projectId": args["projectId"],
 	})
 	if err != nil {
@@ -652,6 +655,7 @@ func (g *mqlGcpProjectLoggingservice) exclusions() ([]any, error) {
 		for _, exclusion := range page.Exclusions {
 			mqlExclusion, err := CreateResource(g.MqlRuntime, "gcp.project.loggingservice.exclusion", map[string]*llx.RawData{
 				"name":        llx.StringData(parseResourceName(exclusion.Name)),
+				"projectId":   llx.StringData(projectId),
 				"description": llx.StringData(exclusion.Description),
 				"filter":      llx.StringData(exclusion.Filter),
 				"disabled":    llx.BoolData(exclusion.Disabled),
@@ -671,11 +675,15 @@ func (g *mqlGcpProjectLoggingservice) exclusions() ([]any, error) {
 }
 
 func (g *mqlGcpProjectLoggingserviceExclusion) id() (string, error) {
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
+	}
 	if g.Name.Error != nil {
 		return "", g.Name.Error
 	}
-	name := g.Name.Data
-	return fmt.Sprintf("gcp.project.loggingservice.exclusion/%s", name), nil
+	// Include projectId so identically-named exclusions in different projects
+	// don't collide on the cache key (mirrors sink.id() / metric.id()).
+	return fmt.Sprintf("gcp.project.loggingservice.exclusion/%s/%s", g.ProjectId.Data, g.Name.Data), nil
 }
 
 func (g *mqlGcpProjectLoggingserviceBucket) views() ([]any, error) {

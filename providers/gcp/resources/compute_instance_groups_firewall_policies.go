@@ -390,7 +390,7 @@ func (g *mqlGcpProjectComputeServiceFirewallPolicy) rules() ([]any, error) {
 			"securityProfileGroup":  llx.StringData(r.SecurityProfileGroup),
 			"srcIpRanges":           llx.ArrayData(srcIpRanges, types.String),
 			"destIpRanges":          llx.ArrayData(destIpRanges, types.String),
-			"layer4Configs":         llx.ArrayData(layer4Configs, types.Any),
+			"layer4Configs":         llx.ArrayData(layer4Configs, types.Dict),
 			"srcSecureTags":         llx.MapData(srcSecureTags, types.String),
 			"srcAddressGroups":      llx.ArrayData(srcAddressGroups, types.String),
 			"destAddressGroups":     llx.ArrayData(destAddressGroups, types.String),

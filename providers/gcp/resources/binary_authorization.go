@@ -86,7 +86,7 @@ func (g *mqlGcpProject) binaryAuthorization() (*mqlGcpProjectBinaryAuthorization
 		return nil, err
 	}
 
-	updateTime := resp.GetUpdateTime().AsTime()
+	updateTime := timestampAsTimePtr(resp.GetUpdateTime())
 
 	policy, err := CreateResource(g.MqlRuntime, "gcp.project.binaryAuthorizationControl.policy", map[string]*llx.RawData{
 		"__id":                                   llx.StringData(name),
@@ -98,7 +98,7 @@ func (g *mqlGcpProject) binaryAuthorization() (*mqlGcpProjectBinaryAuthorization
 		"kubernetesServiceAccountAdmissionRules": llx.MapData(kubernetesServiceAccountAdmissionRules, types.Resource("gcp.project.binaryAuthorizationControl.admissionRule")),
 		"istioServiceIdentityAdmissionRules":     llx.MapData(istioServiceIdentityAdmissionRules, types.Resource("gcp.project.binaryAuthorizationControl.admissionRule")),
 		"defaultAdmissionRule":                   llx.ResourceData(defaultAdmissionRule, "gcp.project.binaryAuthorizationControl.admissionRule"),
-		"updated":                                llx.TimeData(updateTime),
+		"updated":                                llx.TimeDataPtr(updateTime),
 	})
 	if err != nil {
 		return nil, err

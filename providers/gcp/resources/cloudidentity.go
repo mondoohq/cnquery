@@ -182,7 +182,9 @@ func (g *mqlGcpCloudIdentityGroup) memberships() ([]any, error) {
 
 			roles := make([]any, 0, len(m.Roles))
 			for _, role := range m.Roles {
-				roles = append(roles, role.Name)
+				if role != nil {
+					roles = append(roles, role.Name)
+				}
 			}
 
 			mqlMembership, err := CreateResource(g.MqlRuntime, "gcp.cloudIdentity.membership", map[string]*llx.RawData{

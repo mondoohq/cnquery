@@ -237,7 +237,11 @@ func initGcpProjectSecretmanagerServiceSecret(runtime *plugin.Runtime, args map[
 		return nil, nil, secrets.Error
 	}
 
-	nameVal := args["name"].Value.(string)
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return args, nil, nil
+	}
+	nameVal, _ := nameRaw.Value.(string)
 	for _, s := range secrets.Data {
 		secret := s.(*mqlGcpProjectSecretmanagerServiceSecret)
 		if secret.Name.Data == nameVal {

@@ -260,8 +260,11 @@ func (g *mqlGcpFolder) projects() (*mqlGcpProjects, error) {
 }
 
 func folderToMql(runtime *plugin.Runtime, f *cloudresourcemanager.Folder) (any, error) {
+	// Store the bare id ("123456"), matching initGcpFolder. folders()/projects()
+	// re-prefix with "folders/", so storing the full "folders/123456" here would
+	// double-prefix and silently break child traversal.
 	return CreateResource(runtime, "gcp.folder", map[string]*llx.RawData{
-		"id":                llx.StringData(f.Name),
+		"id":                llx.StringData(strings.TrimPrefix(f.Name, "folders/")),
 		"name":              llx.StringData(f.DisplayName),
 		"created":           llx.TimeDataPtr(parseTime(f.CreateTime)),
 		"updated":           llx.TimeDataPtr(parseTime(f.UpdateTime)),

@@ -76,8 +76,11 @@ func (g *mqlGcpProjectGkeServiceCluster) controlPlaneInternetReachable() (bool, 
 // firewallRuleOpenIngress reports whether a firewall rule admits inbound traffic
 // from any address — an enabled INGRESS rule whose source ranges include
 // 0.0.0.0/0 or ::/0.
-func firewallRuleOpenIngress(direction string, disabled bool, sourceRanges []any) bool {
-	if disabled || !strings.EqualFold(direction, "INGRESS") {
+func firewallRuleOpenIngress(isAllow bool, direction string, disabled bool, sourceRanges []any) bool {
+	// A GCP VPC firewall rule is exclusively an allow rule or a deny rule. Only
+	// allow rules can open ingress; a broad-source INGRESS deny rule (a common
+	// "block all" pattern) must not be counted as reachable exposure.
+	if !isAllow || disabled || !strings.EqualFold(direction, "INGRESS") {
 		return false
 	}
 	for _, s := range sourceRanges {
@@ -215,7 +218,12 @@ func (g *mqlGcpProjectComputeServiceInstance) exposure() (*mqlGcpProjectComputeS
 		if sourceRanges.Error != nil {
 			return nil, sourceRanges.Error
 		}
-		if !firewallRuleOpenIngress(direction.Data, disabled.Data, sourceRanges.Data) {
+		allowed := fw.GetAllowed()
+		if allowed.Error != nil {
+			return nil, allowed.Error
+		}
+		isAllow := len(allowed.Data) > 0
+		if !firewallRuleOpenIngress(isAllow, direction.Data, disabled.Data, sourceRanges.Data) {
 			continue
 		}
 		if !instanceNetworks[networkNameFromUrl(fw.cacheNetworkUrl)] {

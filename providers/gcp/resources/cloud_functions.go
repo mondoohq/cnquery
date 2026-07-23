@@ -174,7 +174,7 @@ func (g *mqlGcpProject) cloudFunctions() ([]any, error) {
 			"status":              llx.StringData(f.Status.String()),
 			"entryPoint":          llx.StringData(f.EntryPoint),
 			"runtime":             llx.StringData(f.Runtime),
-			"timeout":             llx.TimeData(llx.DurationToTime(int64(f.Timeout.Seconds))),
+			"timeout":             llx.TimeData(llx.DurationToTime(f.GetTimeout().GetSeconds())),
 			"availableMemoryMb":   llx.IntData(int64(f.AvailableMemoryMb)),
 			"serviceAccountEmail": llx.StringData(f.ServiceAccountEmail),
 			"updated":             llx.TimeData(f.UpdateTime.AsTime()),

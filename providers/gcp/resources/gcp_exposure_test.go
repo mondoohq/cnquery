@@ -98,23 +98,26 @@ func TestGkeControlPlaneInternetReachable(t *testing.T) {
 func TestFirewallRuleOpenIngress(t *testing.T) {
 	cases := []struct {
 		name      string
+		isAllow   bool
 		direction string
 		disabled  bool
 		sources   []any
 		want      bool
 	}{
-		{"ingress any v4", "INGRESS", false, []any{"0.0.0.0/0"}, true},
-		{"ingress any v6", "INGRESS", false, []any{"::/0"}, true},
-		{"ingress lowercase", "ingress", false, []any{"0.0.0.0/0"}, true},
-		{"disabled", "INGRESS", true, []any{"0.0.0.0/0"}, false},
-		{"egress", "EGRESS", false, []any{"0.0.0.0/0"}, false},
-		{"scoped source", "INGRESS", false, []any{"10.0.0.0/8"}, false},
-		{"no sources", "INGRESS", false, []any{}, false},
+		{"allow ingress any v4", true, "INGRESS", false, []any{"0.0.0.0/0"}, true},
+		{"allow ingress any v6", true, "INGRESS", false, []any{"::/0"}, true},
+		{"allow ingress lowercase", true, "ingress", false, []any{"0.0.0.0/0"}, true},
+		{"deny ingress any v4 is not open", false, "INGRESS", false, []any{"0.0.0.0/0"}, false},
+		{"deny ingress any v6 is not open", false, "INGRESS", false, []any{"::/0"}, false},
+		{"allow disabled", true, "INGRESS", true, []any{"0.0.0.0/0"}, false},
+		{"allow egress", true, "EGRESS", false, []any{"0.0.0.0/0"}, false},
+		{"allow scoped source", true, "INGRESS", false, []any{"10.0.0.0/8"}, false},
+		{"allow no sources", true, "INGRESS", false, []any{}, false},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			if got := firewallRuleOpenIngress(c.direction, c.disabled, c.sources); got != c.want {
-				t.Errorf("firewallRuleOpenIngress(%q,%v,%v) = %v, want %v", c.direction, c.disabled, c.sources, got, c.want)
+			if got := firewallRuleOpenIngress(c.isAllow, c.direction, c.disabled, c.sources); got != c.want {
+				t.Errorf("firewallRuleOpenIngress(%v,%q,%v,%v) = %v, want %v", c.isAllow, c.direction, c.disabled, c.sources, got, c.want)
 			}
 		})
 	}

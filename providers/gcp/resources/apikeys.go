@@ -248,7 +248,11 @@ func initGcpProjectApiKey(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return nil, nil, keys.Error
 	}
 
-	idVal := args["id"].Value.(string)
+	idRaw := args["id"]
+	if idRaw == nil {
+		return args, nil, nil
+	}
+	idVal, _ := idRaw.Value.(string)
 	for _, k := range keys.Data {
 		key := k.(*mqlGcpProjectApiKey)
 		if key.Id.Data == idVal {

@@ -83,7 +83,11 @@ func initGcpProjectBigtableServiceInstance(runtime *plugin.Runtime, args map[str
 		return nil, nil, instances.Error
 	}
 
-	nameVal := args["name"].Value.(string)
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return args, nil, nil
+	}
+	nameVal, _ := nameRaw.Value.(string)
 	for _, i := range instances.Data {
 		instance := i.(*mqlGcpProjectBigtableServiceInstance)
 		// Bigtable instance name from the SDK is the short ID; it may also

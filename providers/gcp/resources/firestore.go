@@ -77,7 +77,11 @@ func initGcpProjectFirestoreServiceDatabase(runtime *plugin.Runtime, args map[st
 		return nil, nil, databases.Error
 	}
 
-	nameVal := args["name"].Value.(string)
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return args, nil, nil
+	}
+	nameVal, _ := nameRaw.Value.(string)
 	for _, d := range databases.Data {
 		database := d.(*mqlGcpProjectFirestoreServiceDatabase)
 		// Firestore database name is a full resource path:

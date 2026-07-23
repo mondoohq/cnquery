@@ -124,7 +124,11 @@ func initGcpProjectPubsubServiceTopic(runtime *plugin.Runtime, args map[string]*
 		return nil, nil, topics.Error
 	}
 
-	nameVal := args["name"].Value.(string)
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return args, nil, nil
+	}
+	nameVal, _ := nameRaw.Value.(string)
 	for _, t := range topics.Data {
 		topic := t.(*mqlGcpProjectPubsubServiceTopic)
 		if topic.Name.Data == nameVal {
@@ -512,8 +516,14 @@ func (g *mqlGcpProjectPubsubServiceSubscription) config() (*mqlGcpProjectPubsubS
 		return nil, err
 	}
 
+	// A subscription may reference a topic in a different project; key the topic
+	// ref on the topic's own project (from its resource path), not the local one.
+	topicProjectId := projectFromResourceName(cfg.Topic)
+	if topicProjectId == "" {
+		topicProjectId = projectId
+	}
 	topic, err := CreateResource(g.MqlRuntime, "gcp.project.pubsubService.topic", map[string]*llx.RawData{
-		"projectId": llx.StringData(projectId),
+		"projectId": llx.StringData(topicProjectId),
 		"name":      llx.StringData(lastPathSegment(cfg.Topic)),
 	})
 	if err != nil {
@@ -681,8 +691,14 @@ func (g *mqlGcpProjectPubsubService) snapshots() ([]any, error) {
 		snapshotName := lastPathSegment(s.Name)
 		topicName := lastPathSegment(s.Topic)
 
+		// A snapshot may reference a topic in a different project; key the topic
+		// ref on the topic's own project (from its resource path).
+		topicProjectId := projectFromResourceName(s.Topic)
+		if topicProjectId == "" {
+			topicProjectId = projectId
+		}
 		topic, err := CreateResource(g.MqlRuntime, "gcp.project.pubsubService.topic", map[string]*llx.RawData{
-			"projectId": llx.StringData(projectId),
+			"projectId": llx.StringData(topicProjectId),
 			"name":      llx.StringData(topicName),
 		})
 		if err != nil {

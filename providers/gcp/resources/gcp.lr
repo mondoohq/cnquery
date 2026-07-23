@@ -5993,6 +5993,8 @@ private gcp.project.loggingservice.sink @defaults("destination") {
 private gcp.project.loggingservice.exclusion @defaults("name disabled") {
   // Exclusion name
   name string
+  // Project ID
+  projectId string
   // Human-readable description of the resource
   description string
   // Advanced logs filter that matches log entries to be excluded

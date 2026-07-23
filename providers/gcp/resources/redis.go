@@ -116,6 +116,11 @@ func initGcpProjectRedisServiceInstance(runtime *plugin.Runtime, args map[string
 		return nil, nil, instances.Error
 	}
 
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return args, nil, nil
+	}
+	wantName, _ := nameRaw.Value.(string)
 	for _, inst := range instances.Data {
 		instance := inst.(*mqlGcpProjectRedisServiceInstance)
 		// Redis instance name is a full resource path:
@@ -123,7 +128,7 @@ func initGcpProjectRedisServiceInstance(runtime *plugin.Runtime, args map[string
 		nameParts := strings.Split(instance.Name.Data, "/")
 		instanceName := nameParts[len(nameParts)-1]
 
-		if instanceName == args["name"].Value.(string) {
+		if instanceName == wantName {
 			return args, instance, nil
 		}
 	}
@@ -518,12 +523,17 @@ func initGcpProjectRedisServiceCluster(runtime *plugin.Runtime, args map[string]
 		return nil, nil, clusters.Error
 	}
 
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return args, nil, nil
+	}
+	wantName, _ := nameRaw.Value.(string)
 	for _, c := range clusters.Data {
 		cluster := c.(*mqlGcpProjectRedisServiceCluster)
 		nameParts := strings.Split(cluster.Name.Data, "/")
 		clusterName := nameParts[len(nameParts)-1]
 
-		if clusterName == args["name"].Value.(string) {
+		if clusterName == wantName {
 			return args, cluster, nil
 		}
 	}

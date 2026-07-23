@@ -638,6 +638,9 @@ func (g *mqlGcpProjectCloudRunServiceService) iamPolicy() ([]any, error) {
 	resourcePath := fmt.Sprintf("projects/%s/locations/%s/services/%s", projectId, region, name)
 	policy, err := runSvc.Projects.Locations.Services.GetIamPolicy(resourcePath).OptionsRequestedPolicyVersion(3).Context(ctx).Do()
 	if err != nil {
+		if isHTTPSkippable(err) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return cloudRunIamBindings(g.MqlRuntime, resourcePath, policy.Bindings)
@@ -672,6 +675,9 @@ func (g *mqlGcpProjectCloudRunServiceJob) iamPolicy() ([]any, error) {
 	resourcePath := fmt.Sprintf("projects/%s/locations/%s/jobs/%s", projectId, region, name)
 	policy, err := runSvc.Projects.Locations.Jobs.GetIamPolicy(resourcePath).OptionsRequestedPolicyVersion(3).Context(ctx).Do()
 	if err != nil {
+		if isHTTPSkippable(err) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return cloudRunIamBindings(g.MqlRuntime, resourcePath, policy.Bindings)
@@ -687,6 +693,12 @@ func (g *mqlGcpProjectCloudRunServiceServiceRevisionTemplate) serviceAccount() (
 		return nil, g.ServiceAccountEmail.Error
 	}
 	email := g.ServiceAccountEmail.Data
+	if email == "" {
+		// No SA on the template means it falls back to the compute/project
+		// default; resolve to null rather than a husk keyed on an empty email.
+		g.ServiceAccount.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
 
 	res, err := NewResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
 		"projectId": llx.StringData(projectId),
@@ -708,6 +720,12 @@ func (g *mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate) serviceAc
 		return nil, g.ServiceAccountEmail.Error
 	}
 	email := g.ServiceAccountEmail.Data
+	if email == "" {
+		// No SA on the template means it falls back to the compute/project
+		// default; resolve to null rather than a husk keyed on an empty email.
+		g.ServiceAccount.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
 
 	res, err := NewResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
 		"projectId": llx.StringData(projectId),

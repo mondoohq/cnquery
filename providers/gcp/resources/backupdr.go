@@ -362,11 +362,32 @@ func (g *mqlGcpProjectBackupdrServiceBackupPlan) backupVault() (*mqlGcpProjectBa
 		g.BackupVault.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	res, err := NewResource(g.MqlRuntime, "gcp.project.backupdrService.backupVault", map[string]*llx.RawData{
-		"name": llx.StringData(g.cacheBackupVaultName),
+	// The backupVault resource has no init, so a NewResource by-name would leave
+	// a husk (only name populated). Scan the parent service's backupVaults()
+	// list and return the real, fully-populated resource. The vault name is a
+	// full resource path, so derive the project from it.
+	projectId := projectFromResourceName(g.cacheBackupVaultName)
+	if projectId == "" {
+		g.BackupVault.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	obj, err := CreateResource(g.MqlRuntime, "gcp.project.backupdrService", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
 	})
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGcpProjectBackupdrServiceBackupVault), nil
+	svc := obj.(*mqlGcpProjectBackupdrService)
+	vaults := svc.GetBackupVaults()
+	if vaults.Error != nil {
+		return nil, vaults.Error
+	}
+	for _, v := range vaults.Data {
+		vault, ok := v.(*mqlGcpProjectBackupdrServiceBackupVault)
+		if ok && vault.Name.Data == g.cacheBackupVaultName {
+			return vault, nil
+		}
+	}
+	g.BackupVault.State = plugin.StateIsNull | plugin.StateIsSet
+	return nil, nil
 }

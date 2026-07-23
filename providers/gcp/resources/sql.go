@@ -357,7 +357,13 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 				mqlIpAddresses = append(mqlIpAddresses, mqlIpAddress)
 			}
 
+			// Settings is nil for instances that are mid-provisioning or in a
+			// failed state; fall back to an empty struct so a single such
+			// instance doesn't panic (and take down) the whole instances() list.
 			s := instance.Settings
+			if s == nil {
+				s = &sqladmin.Settings{}
+			}
 			dbFlags := make(map[string]string)
 			for _, f := range s.DatabaseFlags {
 				dbFlags[f.Name] = f.Value
@@ -393,12 +399,15 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 					RetainedBackups int64  `json:"retainedBackups"`
 					RetentionUnit   string `json:"retentionUnit"`
 				}
-				mqlRetention, err := convert.JsonToDict(mqlRetentionSettings{
-					RetainedBackups: s.BackupConfiguration.BackupRetentionSettings.RetainedBackups,
-					RetentionUnit:   s.BackupConfiguration.BackupRetentionSettings.RetentionUnit,
-				})
-				if err != nil {
-					return err
+				var mqlRetention map[string]any
+				if brs := s.BackupConfiguration.BackupRetentionSettings; brs != nil {
+					mqlRetention, err = convert.JsonToDict(mqlRetentionSettings{
+						RetainedBackups: brs.RetainedBackups,
+						RetentionUnit:   brs.RetentionUnit,
+					})
+					if err != nil {
+						return err
+					}
 				}
 
 				mqlBackupCfg, err = CreateResource(g.MqlRuntime, "gcp.project.sqlService.instance.settings.backupconfiguration", map[string]*llx.RawData{

@@ -419,6 +419,16 @@ func initGcpProjectComputeServiceInstance(runtime *plugin.Runtime, args map[stri
 		return nil, nil, instances.Error
 	}
 
+	// The instance is matched by (region, name, projectId); without all three we
+	// can't do the lookup, so return a bare resource rather than dereferencing a
+	// nil arg (which would panic and crash the scan).
+	wantRegion := args["region"]
+	wantName := args["name"]
+	wantProjectId := args["projectId"]
+	if wantRegion == nil || wantName == nil || wantProjectId == nil {
+		return args, nil, nil
+	}
+
 	for _, inst := range instances.Data {
 		instance := inst.(*mqlGcpProjectComputeServiceInstance)
 		name := instance.GetName()
@@ -433,8 +443,11 @@ func initGcpProjectComputeServiceInstance(runtime *plugin.Runtime, args map[stri
 		if instanceZone.Error != nil {
 			return nil, nil, instanceZone.Error
 		}
+		if instanceZone.Data == nil {
+			continue
+		}
 
-		if instanceZone.Data.Name.Data == args["region"].Value && name.Data == args["name"].Value && projectId.Data == args["projectId"].Value {
+		if instanceZone.Data.Name.Data == wantRegion.Value && name.Data == wantName.Value && projectId.Data == wantProjectId.Value {
 			return args, instance, nil
 		}
 	}
@@ -635,10 +648,16 @@ func (g *mqlGcpProjectComputeServiceAttachedDisk) source() (*mqlGcpProjectComput
 
 	for _, d := range disks.Data {
 		disk := d.(*mqlGcpProjectComputeServiceDisk)
-		if disk.Zone.Data.GetName().Data == diskId.Region && disk.Name.Data == diskId.Name {
-			return disk, nil
+		if disk.Name.Data != diskId.Name {
+			continue
 		}
-
+		if zone := disk.Zone.Data; zone != nil {
+			if zone.GetName().Data == diskId.Region {
+				return disk, nil
+			}
+			continue
+		}
+		return disk, nil
 	}
 	return nil, errors.New("disk not found")
 }
@@ -1103,16 +1122,18 @@ func (g *mqlGcpProjectComputeServiceDisk) sourceSnapshot() (*mqlGcpProjectComput
 		return nil, errors.New("invalid source snapshot URL: " + url)
 	}
 	parts := strings.Split(strings.TrimPrefix(url, computePrefix), "/")
-	if len(parts) < 5 {
+	if len(parts) < 5 || parts[0] != "projects" {
 		return nil, errors.New("invalid source snapshot URL: " + url)
 	}
-	res, err := NewResource(g.MqlRuntime, "gcp.project.computeService.snapshot", map[string]*llx.RawData{
-		"name": llx.StringData(parts[len(parts)-1]),
-	})
+	snap, err := resolveComputeSnapshotByName(g.MqlRuntime, parts[1], parts[len(parts)-1])
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGcpProjectComputeServiceSnapshot), nil
+	if snap == nil {
+		g.SourceSnapshot.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return snap, nil
 }
 
 func (g *mqlGcpProjectComputeServiceDisk) storagePool() (*mqlGcpProjectComputeServiceStoragePool, error) {
@@ -1127,16 +1148,18 @@ func (g *mqlGcpProjectComputeServiceDisk) storagePool() (*mqlGcpProjectComputeSe
 		return nil, errors.New("invalid storage pool URL: " + url)
 	}
 	parts := strings.Split(strings.TrimPrefix(url, computePrefix), "/")
-	if len(parts) < 6 {
+	if len(parts) < 6 || parts[0] != "projects" {
 		return nil, errors.New("invalid storage pool URL: " + url)
 	}
-	res, err := NewResource(g.MqlRuntime, "gcp.project.computeService.storagePool", map[string]*llx.RawData{
-		"name": llx.StringData(parts[5]),
-	})
+	pool, err := resolveComputeStoragePoolByName(g.MqlRuntime, parts[1], parts[5])
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGcpProjectComputeServiceStoragePool), nil
+	if pool == nil {
+		g.StoragePool.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return pool, nil
 }
 
 // customerEncryptionKeyToDict converts a Compute Engine CustomerEncryptionKey to a dict
@@ -1731,16 +1754,18 @@ func (g *mqlGcpProjectComputeServiceImage) sourceSnapshot() (*mqlGcpProjectCompu
 		return nil, errors.New("invalid source snapshot URL: " + url)
 	}
 	parts := strings.Split(strings.TrimPrefix(url, computePrefix), "/")
-	if len(parts) < 5 {
+	if len(parts) < 5 || parts[0] != "projects" {
 		return nil, errors.New("invalid source snapshot URL: " + url)
 	}
-	res, err := NewResource(g.MqlRuntime, "gcp.project.computeService.snapshot", map[string]*llx.RawData{
-		"name": llx.StringData(parts[len(parts)-1]),
-	})
+	snap, err := resolveComputeSnapshotByName(g.MqlRuntime, parts[1], parts[len(parts)-1])
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGcpProjectComputeServiceSnapshot), nil
+	if snap == nil {
+		g.SourceSnapshot.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return snap, nil
 }
 
 func (g *mqlGcpProjectComputeService) images() ([]any, error) {
@@ -2804,7 +2829,7 @@ func (g *mqlGcpProjectComputeService) backendServices() ([]any, error) {
 					"id":                              llx.StringData(backendServiceId),
 					"affinityCookieTtlSec":            llx.IntData(b.AffinityCookieTtlSec),
 					"backends":                        llx.ArrayData(mqlBackends, types.Resource("gcp.project.computeService.backendService.backend")),
-					"cdnPolicy":                       llx.ResourceData(cdnPolicy, " gcp.project.computeService.backendService.cdnPolicy"),
+					"cdnPolicy":                       llx.ResourceData(cdnPolicy, "gcp.project.computeService.backendService.cdnPolicy"),
 					"circuitBreakers":                 llx.DictData(mqlCircuitBreakers),
 					"compressionMode":                 llx.StringData(b.CompressionMode),
 					"connectionDraining":              llx.DictData(mqlConnectionDraining),
@@ -2977,6 +3002,13 @@ func (g *mqlGcpProjectComputeServiceAddress) id() (string, error) {
 }
 
 func (g *mqlGcpProjectComputeService) forwardingRules() ([]any, error) {
+	// when the service is not enabled, we return nil (mirrors the other 19
+	// compute list accessors so an API-disabled project degrades to empty
+	// rather than hard-failing this one query).
+	if !g.GetEnabled().Data {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
