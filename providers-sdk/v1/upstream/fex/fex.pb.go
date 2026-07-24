@@ -2325,6 +2325,13 @@ type File struct {
 	Md5 string `protobuf:"bytes,3,opt,name=md5,proto3" json:"md5,omitempty"`
 	// SHA256 hash of file
 	Sha256 string `protobuf:"bytes,4,opt,name=sha256,proto3" json:"sha256,omitempty"`
+	// Optional. Human-readable label or identifier for this file evidence,
+	// used when a finding carries several file evidences, or when a UI needs
+	// a title for the document rather than a raw path.
+	Label string `protobuf:"bytes,5,opt,name=label,proto3" json:"label,omitempty"`
+	// Optional. MIME / content type of the file (e.g. "application/json"), so
+	// consumers can interpret or render `contents` correctly.
+	MimeType string `protobuf:"bytes,6,opt,name=mime_type,json=mimeType,proto3" json:"mime_type,omitempty"`
 	// Optional. File content.
 	Contents      string `protobuf:"bytes,20,opt,name=contents,proto3" json:"contents,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -2385,6 +2392,20 @@ func (x *File) GetMd5() string {
 func (x *File) GetSha256() string {
 	if x != nil {
 		return x.Sha256
+	}
+	return ""
+}
+
+func (x *File) GetLabel() string {
+	if x != nil {
+		return x.Label
+	}
+	return ""
+}
+
+func (x *File) GetMimeType() string {
+	if x != nil {
+		return x.MimeType
 	}
 	return ""
 }
@@ -4120,12 +4141,14 @@ const file_fex_proto_rawDesc = "" +
 	"\x0fPropertiesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\t\n" +
-	"\adetails\"t\n" +
+	"\adetails\"\xa7\x01\n" +
 	"\x04File\x12\x12\n" +
 	"\x04path\x18\x01 \x01(\tR\x04path\x12\x12\n" +
 	"\x04size\x18\x02 \x01(\x03R\x04size\x12\x10\n" +
 	"\x03md5\x18\x03 \x01(\tR\x03md5\x12\x16\n" +
-	"\x06sha256\x18\x04 \x01(\tR\x06sha256\x12\x1a\n" +
+	"\x06sha256\x18\x04 \x01(\tR\x06sha256\x12\x14\n" +
+	"\x05label\x18\x05 \x01(\tR\x05label\x12\x1b\n" +
+	"\tmime_type\x18\x06 \x01(\tR\bmimeType\x12\x1a\n" +
 	"\bcontents\x18\x14 \x01(\tR\bcontents\"\xab\x01\n" +
 	"\x04User\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
