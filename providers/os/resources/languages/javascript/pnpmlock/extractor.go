@@ -80,6 +80,7 @@ func (l *pnpmLock) Transitive() languages.Packages {
 			EvidenceList: javascript.NewEvidenceList(l.evidence),
 			DependsOn:    dependsOnRefs(entry.Dependencies),
 			Scope:        scopeOf(entry, ver),
+			Hashes:       javascript.NewHashes(entry.Resolution.Integrity),
 		})
 	}
 

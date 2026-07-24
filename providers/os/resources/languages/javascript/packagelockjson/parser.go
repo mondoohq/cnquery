@@ -4,8 +4,6 @@
 package packagelockjson
 
 import (
-	"encoding/base64"
-	"encoding/hex"
 	"encoding/json"
 	"sort"
 	"strings"
@@ -13,43 +11,6 @@ import (
 	"go.mondoo.com/mql/v13/providers/os/resources/languages"
 	"go.mondoo.com/mql/v13/providers/os/resources/languages/javascript"
 )
-
-// sriAlgToCycloneDX maps a Subresource-Integrity algorithm token (as it appears
-// in an npm lockfile's `integrity`) to the CycloneDX hash-algorithm spelling.
-var sriAlgToCycloneDX = map[string]string{
-	"sha512": "SHA-512",
-	"sha384": "SHA-384",
-	"sha256": "SHA-256",
-	"sha1":   "SHA-1",
-	"md5":    "MD5",
-}
-
-// hashesFor parses an npm Subresource-Integrity string — one or more
-// space-separated `<alg>-<base64>` entries, e.g. "sha512-vG6…" — into
-// languages.PackageHash values with lower-case hex-encoded digests. Unknown
-// algorithms and malformed entries are skipped; returns nil when nothing parses.
-func hashesFor(integrity string) []languages.PackageHash {
-	if strings.TrimSpace(integrity) == "" {
-		return nil
-	}
-	var hashes []languages.PackageHash
-	for _, entry := range strings.Fields(integrity) {
-		dash := strings.IndexByte(entry, '-')
-		if dash <= 0 {
-			continue
-		}
-		alg, ok := sriAlgToCycloneDX[strings.ToLower(entry[:dash])]
-		if !ok {
-			continue
-		}
-		raw, err := base64.StdEncoding.DecodeString(entry[dash+1:])
-		if err != nil || len(raw) == 0 {
-			continue
-		}
-		hashes = append(hashes, languages.PackageHash{Alg: alg, Value: hex.EncodeToString(raw)})
-	}
-	return hashes
-}
 
 // scopeOf maps an npm lock package entry to a languages package scope: a dev-only
 // package reports PackageScopeDev, everything else (including devOptional, which

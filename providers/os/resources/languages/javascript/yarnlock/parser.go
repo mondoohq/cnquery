@@ -60,6 +60,7 @@ type yarnLock map[string]yarnLockEntry
 type yarnLockEntry struct {
 	Version      string
 	Resolved     string
+	Integrity    string
 	Dependencies map[string]string
 }
 

@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"io"
 	"regexp"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/providers/os/resources/languages"
@@ -35,17 +36,32 @@ func (p *Extractor) Name() string {
 func (p *Extractor) Parse(r io.Reader, filename string) (languages.Bom, error) {
 	var b bytes.Buffer
 
-	// iterate and convert the format to yaml on the fly
+	// Convert the yarn.lock v1 (classic) pseudo-YAML to real YAML on the fly. The
+	// classic format writes indented entries as `key value` (space-separated), not
+	// `key: value` — and the value may be quoted (`version "1.3.8"`, `resolved
+	// "url"`) OR unquoted (`integrity sha512-…`). Rewrite both forms to
+	// `key: "value"`; pass through blank lines, comments, and mapping headers
+	// (spec lines / `dependencies:` that already end in ":") untouched.
+	kv := regexp.MustCompile(`^(\s+)(\S+)\s+(.+?)\s*$`)
 	scanner := bufio.NewScanner(r)
+	// yarn.lock integrity/resolved lines can be long; grow the scanner buffer.
+	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
 	for scanner.Scan() {
 		line := scanner.Text()
-
-		reStr := regexp.MustCompile(`^(\s*.*)\s\"(.*)$`)
-		repStr := "${1}: \"$2"
-		line = reStr.ReplaceAllString(line, repStr)
-
-		b.Write([]byte(line))
-		b.Write([]byte("\n"))
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") || strings.HasSuffix(strings.TrimRight(line, " "), ":") {
+			b.WriteString(line + "\n")
+			continue
+		}
+		if m := kv.FindStringSubmatch(line); m != nil {
+			val := m[3]
+			if !(strings.HasPrefix(val, `"`) && strings.HasSuffix(val, `"`)) {
+				val = `"` + val + `"`
+			}
+			b.WriteString(m[1] + m[2] + ": " + val + "\n")
+			continue
+		}
+		b.WriteString(line + "\n")
 	}
 	if err := scanner.Err(); err != nil {
 		return nil, err
@@ -94,6 +110,7 @@ func (p *yarnLockBom) Transitive() languages.Packages {
 			Cpes:         javascript.NewCpes(name, v.Version),
 			EvidenceList: javascript.NewEvidenceList(p.evidence),
 			DependsOn:    dependsOnRefs(idx, v.Dependencies),
+			Hashes:       javascript.NewHashes(v.Integrity),
 		})
 	}
 
