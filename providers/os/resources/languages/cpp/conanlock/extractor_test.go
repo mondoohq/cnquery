@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/v13/providers/os/resources/languages"
 )
 
 func TestParseV1(t *testing.T) {
@@ -56,14 +57,18 @@ func TestParseV2(t *testing.T) {
 	require.NotNil(t, boost)
 	assert.Equal(t, "1.84.0", boost.Version)
 	assert.Equal(t, "pkg:conan/boost@1.84.0", boost.Purl)
+	assert.Equal(t, languages.PackageScopeProd, boost.Scope, "requires are production")
 
+	// build_requires and python_requires are build-time tooling → dev scope
 	cmake := pkgs.Find("cmake")
 	require.NotNil(t, cmake)
 	assert.Equal(t, "3.28.1", cmake.Version)
+	assert.Equal(t, languages.PackageScopeDev, cmake.Scope)
 
 	conanTools := pkgs.Find("conan-tools")
 	require.NotNil(t, conanTools)
 	assert.Equal(t, "1.0.0", conanTools.Version)
+	assert.Equal(t, languages.PackageScopeDev, conanTools.Scope)
 }
 
 func TestParseConanReference(t *testing.T) {

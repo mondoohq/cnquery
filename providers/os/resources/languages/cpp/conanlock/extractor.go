@@ -92,25 +92,30 @@ func (l *conanLock) parseV1() languages.Packages {
 func (l *conanLock) parseV2() languages.Packages {
 	var packages languages.Packages
 
-	allRefs := make([]string, 0, len(l.Requires)+len(l.BuildRequires)+len(l.PythonRequires))
-	allRefs = append(allRefs, l.Requires...)
-	allRefs = append(allRefs, l.BuildRequires...)
-	allRefs = append(allRefs, l.PythonRequires...)
-
-	for _, ref := range allRefs {
-		parsed, ok := parseConanReference(ref)
-		if !ok {
-			log.Warn().Str("ref", ref).Msg("cannot parse conan reference")
-			continue
+	add := func(refs []string, scope string) {
+		for _, ref := range refs {
+			parsed, ok := parseConanReference(ref)
+			if !ok {
+				log.Warn().Str("ref", ref).Msg("cannot parse conan reference")
+				continue
+			}
+			packages = append(packages, &languages.Package{
+				Name:         parsed.Name,
+				Version:      parsed.Version,
+				Purl:         cpp.NewPackageUrl(parsed.Name, parsed.Version),
+				EvidenceList: cpp.NewEvidenceList(l.evidence),
+				Scope:        scope,
+			})
 		}
-
-		packages = append(packages, &languages.Package{
-			Name:         parsed.Name,
-			Version:      parsed.Version,
-			Purl:         cpp.NewPackageUrl(parsed.Name, parsed.Version),
-			EvidenceList: cpp.NewEvidenceList(l.evidence),
-		})
 	}
+
+	// `requires` are runtime/production dependencies; `build_requires` and
+	// `python_requires` are build-time tooling (compilers, cmake, conan
+	// extensions) that isn't in the produced artifact — reported as dev scope so
+	// consumers can drop them from a production view.
+	add(l.Requires, languages.PackageScopeProd)
+	add(l.BuildRequires, languages.PackageScopeDev)
+	add(l.PythonRequires, languages.PackageScopeDev)
 
 	return packages
 }
