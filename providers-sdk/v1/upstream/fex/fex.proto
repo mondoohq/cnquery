@@ -423,6 +423,13 @@ message File {
   string md5 = 3;
   // SHA256 hash of file
   string sha256 = 4;
+  // Optional. Human-readable label or identifier for this file evidence, used
+  // when a finding carries several file evidences or when a UI needs a title for
+  // the document rather than a raw path.
+  string label = 5;
+  // Optional. MIME / content type of the file (e.g. "application/json",
+  // "text/plain"), so consumers can interpret or render `contents` correctly.
+  string mime_type = 6;
   // Optional. File content.
   string contents = 20;
 }
