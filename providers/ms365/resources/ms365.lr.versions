@@ -1124,6 +1124,7 @@ microsoft.tenant.formsSettings 11.0.29
 microsoft.tenant.id 11.0.29
 microsoft.tenant.name 11.0.29
 microsoft.tenant.onPremisesSyncEnabled 11.0.29
+microsoft.tenant.paidLicenses 13.9.3
 microsoft.tenant.preferredLanguage 11.0.29
 microsoft.tenant.privacyProfile 11.0.29
 microsoft.tenant.provisionedPlans 11.0.29

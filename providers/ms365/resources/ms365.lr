@@ -243,6 +243,12 @@ microsoft.tenant @defaults("name") {
   // `servicePlans` (each with `servicePlanId`, `servicePlanName`,
   // `provisioningStatus`, and `appliesTo`).
   subscriptions() []dict
+  // Total billed license seats
+  //
+  // Sum of `totalLicenses` across non-trial subscriptions that are still
+  // being billed (status `Enabled` or `Warning`, the post-expiry grace
+  // period). Suspended, deleted, and locked-out subscriptions are excluded.
+  paidLicenses() int
   // Company-wide settings for apps and services.
   settings() microsoft.tenantSettings
   // Company-wide settings for Microsoft Forms
