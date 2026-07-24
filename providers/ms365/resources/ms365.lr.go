@@ -1186,6 +1186,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.tenant.subscriptions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenant).GetSubscriptions()).ToDataRes(types.Array(types.Dict))
 	},
+	"microsoft.tenant.paidLicenses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenant).GetPaidLicenses()).ToDataRes(types.Int)
+	},
 	"microsoft.tenant.settings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenant).GetSettings()).ToDataRes(types.Resource("microsoft.tenantSettings"))
 	},
@@ -6080,6 +6083,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.tenant.subscriptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftTenant).Subscriptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.tenant.paidLicenses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenant).PaidLicenses, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"microsoft.tenant.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13763,6 +13770,7 @@ type mqlMicrosoftTenant struct {
 	CreatedAt                            plugin.TValue[*time.Time]
 	Type                                 plugin.TValue[string]
 	Subscriptions                        plugin.TValue[[]any]
+	PaidLicenses                         plugin.TValue[int64]
 	Settings                             plugin.TValue[*mqlMicrosoftTenantSettings]
 	FormsSettings                        plugin.TValue[*mqlMicrosoftTenantFormsSettings]
 	PrivacyProfile                       plugin.TValue[any]
@@ -13857,6 +13865,12 @@ func (c *mqlMicrosoftTenant) GetType() *plugin.TValue[string] {
 func (c *mqlMicrosoftTenant) GetSubscriptions() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Subscriptions, func() ([]any, error) {
 		return c.subscriptions()
+	})
+}
+
+func (c *mqlMicrosoftTenant) GetPaidLicenses() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.PaidLicenses, func() (int64, error) {
+		return c.paidLicenses()
 	})
 }
 

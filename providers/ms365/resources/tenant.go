@@ -25,8 +25,11 @@ import (
 )
 
 type mqlMicrosoftTenantInternal struct {
-	lock             sync.Mutex
-	realmDataFetched bool
+	lock              sync.Mutex
+	realmDataFetched  bool
+	subscriptionsOnce sync.Once
+	subscriptionsData []companySubscription
+	subscriptionsErr  error
 }
 
 type userRealmResponse struct {
@@ -210,28 +213,67 @@ func (a *mqlMicrosoftTenant) enabledServicePlans() ([]any, error) {
 }
 
 // https://learn.microsoft.com/en-us/entra/identity/users/licensing-service-plan-reference
+// getCompanySubscriptions fetches the tenant's commercial subscriptions once
+// and caches the result so subscriptions() and paidLicenses() share one call.
+func (a *mqlMicrosoftTenant) getCompanySubscriptions() ([]companySubscription, error) {
+	a.subscriptionsOnce.Do(func() {
+		conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+		graphClient, err := conn.GraphClient()
+		if err != nil {
+			a.subscriptionsErr = err
+			return
+		}
+		ctx := context.Background()
+		resp, err := graphClient.Directory().Subscriptions().Get(ctx, &directory.SubscriptionsRequestBuilderGetRequestConfiguration{})
+		if err != nil {
+			a.subscriptionsErr = transformError(err)
+			return
+		}
+		subs, err := iterate[models.CompanySubscriptionable](ctx, resp, graphClient.GetAdapter(), models.CreateCompanySubscriptionCollectionResponseFromDiscriminatorValue)
+		if err != nil {
+			a.subscriptionsErr = err
+			return
+		}
+
+		res := make([]companySubscription, 0, len(subs))
+		for _, sub := range subs {
+			res = append(res, newCompanySubscription(sub))
+		}
+		a.subscriptionsData = res
+	})
+	return a.subscriptionsData, a.subscriptionsErr
+}
+
 func (a *mqlMicrosoftTenant) subscriptions() ([]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
-	graphClient, err := conn.GraphClient()
-	if err != nil {
-		return nil, err
-	}
-	ctx := context.Background()
-	resp, err := graphClient.Directory().Subscriptions().Get(ctx, &directory.SubscriptionsRequestBuilderGetRequestConfiguration{})
-	if err != nil {
-		return nil, transformError(err)
-	}
-	subs, err := iterate[models.CompanySubscriptionable](ctx, resp, graphClient.GetAdapter(), models.CreateCompanySubscriptionCollectionResponseFromDiscriminatorValue)
+	subs, err := a.getCompanySubscriptions()
 	if err != nil {
 		return nil, err
 	}
 
-	res := []any{}
+	res := make([]any, 0, len(subs))
 	for _, sub := range subs {
-		res = append(res, newCompanySubscription(sub))
+		res = append(res, sub)
 	}
 
 	return convert.JsonToDictSlice(res)
+}
+
+func (a *mqlMicrosoftTenant) paidLicenses() (int64, error) {
+	subs, err := a.getCompanySubscriptions()
+	if err != nil {
+		return 0, err
+	}
+
+	var total int64
+	for _, sub := range subs {
+		if sub.IsTrial != nil && *sub.IsTrial {
+			continue
+		}
+		if sub.TotalLicenses != nil {
+			total += int64(*sub.TotalLicenses)
+		}
+	}
+	return total, nil
 }
 
 func (a *mqlMicrosoft) tenantDomainName() (string, error) {

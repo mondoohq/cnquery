@@ -243,6 +243,10 @@ microsoft.tenant @defaults("name") {
   // `servicePlans` (each with `servicePlanId`, `servicePlanName`,
   // `provisioningStatus`, and `appliesTo`).
   subscriptions() []dict
+  // Total purchased license seats
+  //
+  // Sum of `totalLicenses` across all non-trial subscriptions.
+  paidLicenses() int
   // Company-wide settings for apps and services.
   settings() microsoft.tenantSettings
   // Company-wide settings for Microsoft Forms
