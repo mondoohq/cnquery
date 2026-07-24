@@ -1,0 +1,18 @@
+{
+  "name": "my-app",
+  "version-string": "1.2.0",
+  "builtin-baseline": "9b75e789ece3f942159b8500584e35aafe3979ff",
+  "dependencies": [
+    "fmt",
+    "zlib",
+    {
+      "name": "boost-system",
+      "version>=": "1.84.0",
+      "features": ["threading"]
+    },
+    "fmt"
+  ],
+  "overrides": [
+    { "name": "zlib", "version": "1.3.1" }
+  ]
+}
