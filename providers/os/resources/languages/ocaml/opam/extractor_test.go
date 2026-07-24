@@ -80,6 +80,32 @@ func TestParsePlain(t *testing.T) {
 	assert.Equal(t, "", ocaml.Version, "constraint-only dep has no pinned version")
 }
 
+// TestParseDependsDisjunction verifies that an opam `|` disjunction keeps only
+// the first alternative and that brackets/braces inside quoted strings do not
+// throw off the tokenizer.
+func TestParseDependsDisjunction(t *testing.T) {
+	content := `opam-version: "2.0"
+name: "disj"
+depends: [
+  "ocaml" {>= "4.08"}
+  "alt-a" | "alt-b"
+  "conf-pkg" {= "1.0"}
+]
+`
+	f := parseOpam(content)
+	f.name = packageName(f.declaredName, "disj.opam")
+	deps := f.Direct()
+
+	names := map[string]bool{}
+	for _, d := range deps {
+		names[d.Name] = true
+	}
+	assert.True(t, names["ocaml"], "ocaml kept")
+	assert.True(t, names["alt-a"], "first disjunction branch kept")
+	assert.False(t, names["alt-b"], "second disjunction branch dropped")
+	assert.True(t, names["conf-pkg"], "dependency after a disjunction still parsed")
+}
+
 func TestName(t *testing.T) {
 	e := &Extractor{}
 	assert.Equal(t, "opam", e.Name())

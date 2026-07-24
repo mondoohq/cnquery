@@ -83,8 +83,9 @@ func parseOpam(content string) *opamFile {
 	return f
 }
 
-// dependsBlock returns the text inside the `depends: [ ... ]` list, tracking
-// bracket depth so nested disjunction groups (`[ "a" | "b" ]`) are included.
+// dependsBlock returns the text inside the `depends: [ ... ]` list. Bracket
+// counting skips over quoted strings so a `[` or `]` byte inside a string
+// literal does not throw off the depth.
 func dependsBlock(content string) (string, bool) {
 	idx := regexp.MustCompile(`(?m)^depends:`).FindStringIndex(content)
 	if idx == nil {
@@ -96,49 +97,57 @@ func dependsBlock(content string) (string, bool) {
 		return "", false
 	}
 	depth := 0
-	for i := open; i < len(rest); i++ {
+	for i := open; i < len(rest); {
 		switch rest[i] {
+		case '"':
+			i = skipQuoted(rest, i)
 		case '[':
 			depth++
+			i++
 		case ']':
 			depth--
 			if depth == 0 {
 				return rest[open+1 : i], true
 			}
+			i++
+		default:
+			i++
 		}
 	}
 	return "", false
 }
 
-// parseDepends tokenizes a depends block into dependencies. At brace depth 0 a
-// quoted string is a dependency name; a following `{...}` filter (consumed
-// whole, so quotes inside it — like version strings — are never mistaken for
-// names) supplies the pinned version and test/doc scope.
+// parseDepends tokenizes a depends block into dependencies. A quoted string is a
+// dependency name; a following `{...}` filter (consumed whole and quote-aware,
+// so braces or quotes inside it — like version strings — are never mistaken for
+// structure) supplies the pinned version and test/doc scope. A `|` marks an
+// opam disjunction ("a or b"): the first alternative is kept and the rest
+// skipped, so a one-of group is not counted as several dependencies.
 func parseDepends(block string) []opamDep {
 	var deps []opamDep
 	cur := -1
+	skipAlternative := false
 	for i := 0; i < len(block); {
 		switch block[i] {
 		case '"':
-			j := strings.IndexByte(block[i+1:], '"')
-			if j < 0 {
-				return deps
+			end := skipQuoted(block, i)
+			name := block[i+1 : end-1]
+			if skipAlternative {
+				// Second (or later) branch of a disjunction — ignore it.
+				skipAlternative = false
+				cur = -1
+			} else {
+				deps = append(deps, opamDep{name: name})
+				cur = len(deps) - 1
 			}
-			name := block[i+1 : i+1+j]
-			deps = append(deps, opamDep{name: name})
-			cur = len(deps) - 1
-			i = i + 1 + j + 1
+			i = end
+		case '|':
+			// Disjunction separator: drop the following alternative.
+			skipAlternative = true
+			i++
 		case '{':
-			depth := 1
-			k := i + 1
-			for ; k < len(block) && depth > 0; k++ {
-				if block[k] == '{' {
-					depth++
-				} else if block[k] == '}' {
-					depth--
-				}
-			}
-			filter := block[i+1 : k-1]
+			end := skipFilter(block, i)
+			filter := block[i+1 : end-1]
 			if cur >= 0 {
 				if m := pinnedVersionRe.FindStringSubmatch(filter); m != nil {
 					deps[cur].version = m[1]
@@ -147,12 +156,52 @@ func parseDepends(block string) []opamDep {
 					deps[cur].dev = true
 				}
 			}
-			i = k
+			i = end
 		default:
 			i++
 		}
 	}
 	return deps
+}
+
+// skipQuoted returns the index just past the closing quote of the double-quoted
+// string starting at s[i] (i points at the opening quote). Backslash escapes are
+// honored. If unterminated, it returns len(s).
+func skipQuoted(s string, i int) int {
+	for j := i + 1; j < len(s); j++ {
+		switch s[j] {
+		case '\\':
+			j++ // skip the escaped byte
+		case '"':
+			return j + 1
+		}
+	}
+	return len(s)
+}
+
+// skipFilter returns the index just past the closing brace of the `{...}` filter
+// starting at s[i] (i points at the opening brace), tracking nested braces and
+// skipping quoted strings so braces inside a string literal do not miscount.
+func skipFilter(s string, i int) int {
+	depth := 0
+	for j := i; j < len(s); {
+		switch s[j] {
+		case '"':
+			j = skipQuoted(s, j)
+		case '{':
+			depth++
+			j++
+		case '}':
+			depth--
+			if depth == 0 {
+				return j + 1
+			}
+			j++
+		default:
+			j++
+		}
+	}
+	return len(s)
 }
 
 // packageName resolves the package name: the declared `name:` field wins;

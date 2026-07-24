@@ -297,6 +297,10 @@ const (
 	ResourcePrologPackage                                 string = "prolog.package"
 	ResourceCondaPackages                                 string = "conda.packages"
 	ResourceCondaPackage                                  string = "conda.package"
+	ResourceVcpkgPackages                                 string = "vcpkg.packages"
+	ResourceVcpkgPackage                                  string = "vcpkg.package"
+	ResourceOpamPackages                                  string = "opam.packages"
+	ResourceOpamPackage                                   string = "opam.package"
 	ResourceJuliaPackages                                 string = "julia.packages"
 	ResourceJuliaPackage                                  string = "julia.package"
 	ResourceRPackages                                     string = "r.packages"
@@ -1630,6 +1634,22 @@ func init() {
 		"conda.package": {
 			// to override args, implement: initCondaPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createCondaPackage,
+		},
+		"vcpkg.packages": {
+			Init:   initVcpkgPackages,
+			Create: createVcpkgPackages,
+		},
+		"vcpkg.package": {
+			// to override args, implement: initVcpkgPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVcpkgPackage,
+		},
+		"opam.packages": {
+			Init:   initOpamPackages,
+			Create: createOpamPackages,
+		},
+		"opam.package": {
+			// to override args, implement: initOpamPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOpamPackage,
 		},
 		"julia.packages": {
 			Init:   initJuliaPackages,
@@ -7695,6 +7715,54 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"conda.package.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCondaPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"vcpkg.packages.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVcpkgPackages).GetPath()).ToDataRes(types.String)
+	},
+	"vcpkg.packages.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVcpkgPackages).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"vcpkg.packages.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVcpkgPackages).GetList()).ToDataRes(types.Array(types.Resource("vcpkg.package")))
+	},
+	"vcpkg.package.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVcpkgPackage).GetId()).ToDataRes(types.String)
+	},
+	"vcpkg.package.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVcpkgPackage).GetName()).ToDataRes(types.String)
+	},
+	"vcpkg.package.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVcpkgPackage).GetVersion()).ToDataRes(types.String)
+	},
+	"vcpkg.package.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVcpkgPackage).GetPurl()).ToDataRes(types.String)
+	},
+	"vcpkg.package.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVcpkgPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"opam.packages.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpamPackages).GetPath()).ToDataRes(types.String)
+	},
+	"opam.packages.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpamPackages).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"opam.packages.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpamPackages).GetList()).ToDataRes(types.Array(types.Resource("opam.package")))
+	},
+	"opam.package.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpamPackage).GetId()).ToDataRes(types.String)
+	},
+	"opam.package.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpamPackage).GetName()).ToDataRes(types.String)
+	},
+	"opam.package.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpamPackage).GetVersion()).ToDataRes(types.String)
+	},
+	"opam.package.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpamPackage).GetPurl()).ToDataRes(types.String)
+	},
+	"opam.package.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpamPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
 	},
 	"julia.packages.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJuliaPackages).GetPath()).ToDataRes(types.String)
@@ -19967,6 +20035,86 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"conda.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCondaPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vcpkg.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVcpkgPackages).__id, ok = v.Value.(string)
+		return
+	},
+	"vcpkg.packages.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVcpkgPackages).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vcpkg.packages.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVcpkgPackages).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vcpkg.packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVcpkgPackages).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vcpkg.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVcpkgPackage).__id, ok = v.Value.(string)
+		return
+	},
+	"vcpkg.package.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVcpkgPackage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vcpkg.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVcpkgPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vcpkg.package.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVcpkgPackage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vcpkg.package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVcpkgPackage).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vcpkg.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVcpkgPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"opam.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpamPackages).__id, ok = v.Value.(string)
+		return
+	},
+	"opam.packages.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpamPackages).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"opam.packages.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpamPackages).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"opam.packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpamPackages).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"opam.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpamPackage).__id, ok = v.Value.(string)
+		return
+	},
+	"opam.package.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpamPackage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"opam.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpamPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"opam.package.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpamPackage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"opam.package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpamPackage).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"opam.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpamPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"julia.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -52259,6 +52407,346 @@ func (c *mqlCondaPackage) GetFiles() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("conda.package", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+// mqlVcpkgPackages for the vcpkg.packages resource
+type mqlVcpkgPackages struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlVcpkgPackagesInternal
+	Path  plugin.TValue[string]
+	Files plugin.TValue[[]any]
+	List  plugin.TValue[[]any]
+}
+
+// createVcpkgPackages creates a new instance of this resource
+func createVcpkgPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVcpkgPackages{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vcpkg.packages", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVcpkgPackages) MqlName() string {
+	return "vcpkg.packages"
+}
+
+func (c *mqlVcpkgPackages) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVcpkgPackages) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlVcpkgPackages) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vcpkg.packages", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlVcpkgPackages) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vcpkg.packages", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlVcpkgPackage for the vcpkg.package resource
+type mqlVcpkgPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVcpkgPackageInternal it will be used here
+	Id      plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Version plugin.TValue[string]
+	Purl    plugin.TValue[string]
+	Files   plugin.TValue[[]any]
+}
+
+// createVcpkgPackage creates a new instance of this resource
+func createVcpkgPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVcpkgPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vcpkg.package", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVcpkgPackage) MqlName() string {
+	return "vcpkg.package"
+}
+
+func (c *mqlVcpkgPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVcpkgPackage) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlVcpkgPackage) GetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
+}
+
+func (c *mqlVcpkgPackage) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlVcpkgPackage) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
+	})
+}
+
+func (c *mqlVcpkgPackage) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vcpkg.package", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+// mqlOpamPackages for the opam.packages resource
+type mqlOpamPackages struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOpamPackagesInternal
+	Path  plugin.TValue[string]
+	Files plugin.TValue[[]any]
+	List  plugin.TValue[[]any]
+}
+
+// createOpamPackages creates a new instance of this resource
+func createOpamPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpamPackages{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("opam.packages", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpamPackages) MqlName() string {
+	return "opam.packages"
+}
+
+func (c *mqlOpamPackages) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpamPackages) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlOpamPackages) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("opam.packages", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlOpamPackages) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("opam.packages", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlOpamPackage for the opam.package resource
+type mqlOpamPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpamPackageInternal it will be used here
+	Id      plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Version plugin.TValue[string]
+	Purl    plugin.TValue[string]
+	Files   plugin.TValue[[]any]
+}
+
+// createOpamPackage creates a new instance of this resource
+func createOpamPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpamPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("opam.package", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpamPackage) MqlName() string {
+	return "opam.package"
+}
+
+func (c *mqlOpamPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpamPackage) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpamPackage) GetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
+}
+
+func (c *mqlOpamPackage) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlOpamPackage) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
+	})
+}
+
+func (c *mqlOpamPackage) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("opam.package", c.__id, "files")
 			if err != nil {
 				return nil, err
 			}

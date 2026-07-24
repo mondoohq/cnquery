@@ -7,6 +7,7 @@ package vcpkg
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 
 	"go.mondoo.com/mql/v13/providers/os/resources/languages"
@@ -70,7 +71,7 @@ func (d *vcpkgDependency) UnmarshalJSON(b []byte) error {
 		Name string `json:"name"`
 	}
 	if err := json.Unmarshal(b, &obj); err != nil {
-		return err
+		return fmt.Errorf("vcpkg dependency: expected string or object: %w", err)
 	}
 	d.Name = obj.Name
 	return nil
