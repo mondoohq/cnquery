@@ -269,6 +269,12 @@ func (a *mqlMicrosoftTenant) paidLicenses() (int64, error) {
 		if sub.IsTrial != nil && *sub.IsTrial {
 			continue
 		}
+		// Only active subscriptions are still billed. "Warning" is the
+		// post-expiry grace period (still live); Suspended/LockedOut/Deleted
+		// are past grace with the service off.
+		if sub.Status != nil && *sub.Status != "Enabled" && *sub.Status != "Warning" {
+			continue
+		}
 		if sub.TotalLicenses != nil {
 			total += int64(*sub.TotalLicenses)
 		}
