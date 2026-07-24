@@ -23,6 +23,7 @@ import (
 	"go.mondoo.com/mql/v13/providers/os/fsutil"
 	"go.mondoo.com/mql/v13/providers/os/resources/languages"
 	"go.mondoo.com/mql/v13/providers/os/resources/languages/javascript/bunlock"
+	"go.mondoo.com/mql/v13/providers/os/resources/languages/javascript/denolock"
 	"go.mondoo.com/mql/v13/providers/os/resources/languages/javascript/packagejson"
 	"go.mondoo.com/mql/v13/providers/os/resources/languages/javascript/packagelockjson"
 	"go.mondoo.com/mql/v13/providers/os/resources/languages/javascript/pnpmlock"
@@ -211,11 +212,13 @@ func hasLockfile(runtime *plugin.Runtime, fs afero.Fs, path string) bool {
 			filepath.Join(path, "/pnpm-lock.yaml"),
 			filepath.Join(path, "/yarn.lock"),
 			filepath.Join(path, "/bun.lock"),
+			filepath.Join(path, "/deno.lock"),
 		)
 	} else if strings.HasSuffix(path, "package-lock.json") ||
 		strings.HasSuffix(path, "pnpm-lock.yaml") ||
 		strings.HasSuffix(path, "yarn.lock") ||
-		strings.HasSuffix(path, "bun.lock") {
+		strings.HasSuffix(path, "bun.lock") ||
+		strings.HasSuffix(path, "deno.lock") {
 		searchPaths = append(searchPaths, path)
 	}
 
@@ -246,6 +249,7 @@ func collectNpmPackages(runtime *plugin.Runtime, fs afero.Fs, path string) (lang
 			filepath.Join(path, "/pnpm-lock.yaml"),
 			filepath.Join(path, "/yarn.lock"),
 			filepath.Join(path, "/bun.lock"),
+			filepath.Join(path, "/deno.lock"),
 			filepath.Join(path, "/package.json"),
 		)
 	} else if strings.HasSuffix(path, "package-lock.json") {
@@ -255,6 +259,8 @@ func collectNpmPackages(runtime *plugin.Runtime, fs afero.Fs, path string) (lang
 	} else if strings.HasSuffix(path, "yarn.lock") {
 		searchPaths = append(searchPaths, path)
 	} else if strings.HasSuffix(path, "bun.lock") {
+		searchPaths = append(searchPaths, path)
+	} else if strings.HasSuffix(path, "deno.lock") {
 		searchPaths = append(searchPaths, path)
 	} else if strings.HasSuffix(path, "package.json") {
 		searchPaths = append(searchPaths, path)
@@ -295,6 +301,8 @@ func collectNpmPackages(runtime *plugin.Runtime, fs afero.Fs, path string) (lang
 			extractor = &yarnlock.Extractor{}
 		} else if strings.HasSuffix(searchPath, "bun.lock") {
 			extractor = &bunlock.Extractor{}
+		} else if strings.HasSuffix(searchPath, "deno.lock") {
+			extractor = &denolock.Extractor{}
 		} else if strings.HasSuffix(searchPath, "package.json") {
 			extractor = &packagejson.Extractor{}
 		}

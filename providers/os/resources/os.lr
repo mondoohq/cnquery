@@ -6573,6 +6573,80 @@ private conda.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
+// vcpkg package inventory
+//
+// C/C++ dependencies declared in a `vcpkg.json` manifest. With no
+// `path` set, scans common application directories; pass `path` to
+// target a specific project directory or manifest file. Each entry
+// exposes name, version, and a `purl` for SBOM and vulnerability
+// matching.
+vcpkg.packages {
+  []vcpkg.package
+
+  init(path? string)
+
+  // Filesystem path searched for vcpkg.json (empty scans the default application locations)
+  path string
+
+  // Manifest files used to build the package list
+  files() []pkgFileInfo
+}
+
+// vcpkg package
+//
+// Single vcpkg dependency with its `name`, `version`, and `purl`
+// (Package URL) for SBOM and vulnerability matching, plus the `files`
+// that declared it.
+private vcpkg.package @defaults("name version purl") {
+  // Unique identifier of the package
+  id string
+  // Package name
+  name() string
+  // Package version
+  version() string
+  // Package URL (purl) identifying the package for SBOM and vulnerability matching
+  purl() string
+  // Files that declared the package
+  files() []pkgFileInfo
+}
+
+// opam package inventory
+//
+// OCaml dependencies declared in opam files (`*.opam` and their
+// `*.opam.locked` lock variants). With no `path` set, scans common
+// application directories; pass `path` to target a specific project
+// directory or opam file. Each entry exposes name, version, and a
+// `purl` for SBOM and vulnerability matching.
+opam.packages {
+  []opam.package
+
+  init(path? string)
+
+  // Filesystem path searched for *.opam files (empty scans the default application locations)
+  path string
+
+  // Manifest files used to build the package list
+  files() []pkgFileInfo
+}
+
+// opam package
+//
+// Single opam dependency with its `name`, `version`, and `purl`
+// (Package URL) for SBOM and vulnerability matching, plus the `files`
+// that declared it.
+private opam.package @defaults("name version purl") {
+  // Unique identifier of the package
+  id string
+  // Package name
+  name() string
+  // Package version
+  version() string
+  // Package URL (purl) identifying the package for SBOM and vulnerability matching
+  purl() string
+  // Files that declared the package
+  files() []pkgFileInfo
+}
+
 // Julia package inventory
 //
 // Locked Julia packages read from `Manifest.toml` with their

@@ -20,6 +20,19 @@ func NewPackageUrl(name string, version string) string {
 		"").String()
 }
 
+// NewVcpkgPackageUrl creates a vcpkg package URL for a given package name and
+// version. vcpkg has no registered purl type in the spec; the de-facto
+// convention (as used by common SBOM tooling) is the literal type "vcpkg".
+func NewVcpkgPackageUrl(name string, version string) string {
+	return packageurl.NewPackageURL(
+		"vcpkg",
+		"",
+		name,
+		version,
+		nil,
+		"").String()
+}
+
 // NewEvidenceList converts a list of file paths to evidence entries.
 func NewEvidenceList(evidence []string) []*sbom.Evidence {
 	evidenceList := make([]*sbom.Evidence, len(evidence))
