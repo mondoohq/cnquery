@@ -79,6 +79,7 @@ func TestSbomGeneration(t *testing.T) {
 				},
 			},
 			Purl:    "pkg:npm/npm@10.2.4",
+			BomRef:  "pkg:npm/npm@10.2.4",
 			Version: "10.2.4",
 		}, pkg)
 
@@ -96,6 +97,7 @@ func TestSbomGeneration(t *testing.T) {
 				},
 			},
 			Purl:    "pkg:pypi/pip@21.2.4",
+			BomRef:  "pkg:pypi/pip@21.2.4",
 			Version: "21.2.4",
 		}, pkg)
 	})
@@ -129,6 +131,7 @@ func TestSbomGeneration(t *testing.T) {
 				},
 			},
 			Purl:    "pkg:apk/alpine/apk-tools@1684120357%3A2.14.0-r5?arch=aarch64\u0026distro=alpine-3.19.0\u0026epoch=1684120357",
+			BomRef:  "pkg:apk/alpine/apk-tools@1684120357%3A2.14.0-r5?arch=aarch64\u0026distro=alpine-3.19.0\u0026epoch=1684120357",
 			Version: "1684120357:2.14.0-r5",
 		}, pkg)
 
@@ -146,6 +149,7 @@ func TestSbomGeneration(t *testing.T) {
 				},
 			},
 			Purl:    "pkg:pypi/pip@21.2.4",
+			BomRef:  "pkg:pypi/pip@21.2.4",
 			Version: "21.2.4",
 		}, pkg)
 	})
@@ -179,6 +183,7 @@ func TestSbomGeneration(t *testing.T) {
 				},
 			},
 			Purl:    "pkg:apk/alpine/apk-tools@1684120357%3A2.14.0-r5?arch=aarch64\u0026distro=alpine-3.19.0\u0026epoch=1684120357",
+			BomRef:  "pkg:apk/alpine/apk-tools@1684120357%3A2.14.0-r5?arch=aarch64\u0026distro=alpine-3.19.0\u0026epoch=1684120357",
 			Version: "1684120357:2.14.0-r5",
 		}, pkg)
 
@@ -196,6 +201,7 @@ func TestSbomGeneration(t *testing.T) {
 				},
 			},
 			Purl:    "pkg:npm/npm@10.2.4",
+			BomRef:  "pkg:npm/npm@10.2.4",
 			Version: "10.2.4",
 		}, pkg)
 	})

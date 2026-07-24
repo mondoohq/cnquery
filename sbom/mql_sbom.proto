@@ -79,6 +79,24 @@ message Sbom {
   // 'error_message' is and optional field that describes the error from a
   // failed scan
   string error_message = 6;
+
+  // 'dependencies' is the package→package dependency graph: for each
+  // component, the components it directly depends on, both referenced by
+  // Package.bom_ref. Populated for ecosystems whose manifest resolves the
+  // dependency tree (npm, Cargo, …); empty for those that do not (e.g. Go
+  // go.mod's flat require list). This is the CycloneDX `dependencies` / SPDX
+  // `DEPENDS_ON` graph, which lets a consumer reason about which components a
+  // given component pulls in rather than just a flat inventory.
+  repeated Dependency dependencies = 7;
+}
+
+// Dependency is one node of the dependency graph: a component and the
+// components it directly depends on, all referenced by Package.bom_ref.
+message Dependency {
+  // 'ref' is the bom_ref of the dependent component.
+  string ref = 1;
+  // 'dependency_refs' are the bom_refs of the directly depended-on components.
+  repeated string dependency_refs = 2;
 }
 
 // Source describes the provider of the BOM data, which in this case is the
@@ -252,6 +270,32 @@ message Package {
   // surface install time (dpkg without log parsing, apk, pacman,
   // macOS).
   string install_date = 27;
+  // 'bom_ref' is a stable, document-internal identifier for this component
+  // (a CycloneDX bom-ref). Deterministic: the purl when present, else a
+  // synthesized id. It is the endpoint the dependency graph
+  // (Sbom.dependencies) references, and the value the CycloneDX/SPDX renderers
+  // use — so the rendered BOM is reproducible (previously a random UUID was
+  // minted per render).
+  string bom_ref = 28;
+  // 'scope' is the dependency scope: "prod" (production/runtime), "dev"
+  // (development/test-only, e.g. an npm devDependency or its closure), or empty
+  // when the source does not distinguish. Lets a consumer rank/handle a
+  // dev-only component differently from a production one.
+  string scope = 29;
+  // 'hashes' are the package's declared integrity digests (e.g. an npm
+  // dependency's Subresource-Integrity value). Populated for ecosystems whose
+  // manifest records them (npm today), empty otherwise. Rendered as CycloneDX
+  // `component.hashes` / SPDX package checksums — tamper-evidence.
+  repeated Hash hashes = 30;
+}
+
+// Hash is one integrity digest of a package: an algorithm label and its
+// hex-encoded value.
+message Hash {
+  // 'alg' is the hash algorithm, CycloneDX spelling (e.g. "SHA-512", "SHA-1").
+  string alg = 1;
+  // 'value' is the lower-case hex-encoded digest.
+  string value = 2;
 }
 
 enum EvidenceType {

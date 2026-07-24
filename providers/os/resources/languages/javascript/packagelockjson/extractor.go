@@ -63,19 +63,31 @@ func (p *packageLock) Direct() languages.Packages {
 		return nil
 	}
 
+	idx := p.purlIndex()
 	filteredList := []*languages.Package{}
-	for k := range rootPkg.Dependencies {
-		pkg, ok := p.Packages[k]
+	for name := range rootPkg.Dependencies {
+		// The root's declared dependencies are keyed in `packages` by their
+		// install path, node_modules/<name> (npm hoists direct deps to the root
+		// node_modules), not by bare name. Look them up there; keying by bare
+		// name matched nothing for lockfileVersion 2+, so Direct() returned an
+		// empty set. Build Name/Purl/Cpes from the path key exactly as
+		// Transitive() does, so a package's Direct and Transitive representations
+		// (and their refs) are identical.
+		path := "node_modules/" + name
+		pkg, ok := p.Packages[path]
 		if !ok {
 			continue
 		}
 
 		filteredList = append(filteredList, &languages.Package{
-			Name:         packageLockPackageName(k),
+			Name:         name,
 			Version:      pkg.Version,
-			Purl:         javascript.NewPackageUrl(k, pkg.Version),
-			Cpes:         javascript.NewCpes(k, pkg.Version),
+			Purl:         idx[path],
+			Cpes:         javascript.NewCpes(name, pkg.Version),
 			EvidenceList: javascript.NewEvidenceList(p.evidence),
+			DependsOn:    dependsOnRefs(p.Packages, idx, path, pkg.Dependencies),
+			Scope:        scopeOf(pkg),
+			Hashes:       javascript.NewHashes(pkg.Integrity),
 		})
 	}
 
@@ -85,19 +97,24 @@ func (p *packageLock) Direct() languages.Packages {
 func (p *packageLock) Transitive() languages.Packages {
 	var transitive languages.Packages
 	if p.Packages != nil {
+		idx := p.purlIndex()
 		for k, v := range p.Packages {
-			name := k
-			// skip root package since we have that already
-			if name == "" {
+			// Keys are install paths; the package name is the last node_modules
+			// segment. The root package has key "" and carries its name in v.Name.
+			name := packageLockPackageName(k)
+			if k == "" {
 				name = v.Name
 			}
 
 			transitive = append(transitive, &languages.Package{
-				Name:         packageLockPackageName(name),
+				Name:         name,
 				Version:      v.Version,
-				Purl:         javascript.NewPackageUrl(k, v.Version),
-				Cpes:         javascript.NewCpes(k, v.Version),
+				Purl:         idx[k],
+				Cpes:         javascript.NewCpes(name, v.Version),
 				EvidenceList: javascript.NewEvidenceList(p.evidence),
+				DependsOn:    dependsOnRefs(p.Packages, idx, k, v.Dependencies),
+				Scope:        scopeOf(v),
+				Hashes:       javascript.NewHashes(v.Integrity),
 			})
 		}
 	} else if p.Dependencies != nil {
@@ -108,6 +125,7 @@ func (p *packageLock) Transitive() languages.Packages {
 				Purl:         javascript.NewPackageUrl(k, v.Version),
 				Cpes:         javascript.NewCpes(k, v.Version),
 				EvidenceList: javascript.NewEvidenceList(p.evidence),
+				Hashes:       javascript.NewHashes(v.Integrity),
 			})
 		}
 	}

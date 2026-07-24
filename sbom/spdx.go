@@ -15,6 +15,7 @@ import (
 	"github.com/package-url/packageurl-go"
 	"github.com/spdx/tools-golang/convert"
 	"github.com/spdx/tools-golang/spdx"
+	"github.com/spdx/tools-golang/spdx/v2/common"
 	"github.com/spdx/tools-golang/spdx/v2/v2_1"
 	"github.com/spdx/tools-golang/spdx/v2/v2_2"
 	"github.com/spdx/tools-golang/spdx/v2/v2_3"
@@ -64,8 +65,23 @@ func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
 		},
 	}
 
+	// bom_ref → SPDX element id, so the dependency graph (which references
+	// components by bom_ref) can be translated to SPDX DEPENDS_ON relationships.
+	refToID := map[string]spdx.ElementID{}
+	// emitted dedups by bom-ref: a package present at multiple install locations
+	// shares a purl, so emit it once (matching the CycloneDX renderer). Without
+	// this, duplicate SPDX packages are written and refToID is silently
+	// overwritten (with a possibly different id, since Hash() may differ).
+	emitted := map[string]bool{}
+
 	for i := range bom.Packages {
 		pkg := bom.Packages[i]
+
+		ref := BomRefFor(pkg)
+		if emitted[ref] {
+			continue
+		}
+		emitted[ref] = true
 
 		refs := []*spdx.PackageExternalReference{}
 
@@ -87,15 +103,49 @@ func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
 			})
 		}
 
+		id := NewSPDXPackageID(pkg)
+		refToID[ref] = id
+
+		// Integrity digests → SPDX checksums. Alg is CycloneDX spelling
+		// ("SHA-512"); SPDX uses the dash-free form ("SHA512").
+		var checksums []common.Checksum
+		for _, h := range pkg.Hashes {
+			checksums = append(checksums, common.Checksum{
+				Algorithm: common.ChecksumAlgorithm(strings.ReplaceAll(h.Alg, "-", "")),
+				Value:     h.Value,
+			})
+		}
+
 		doc.Packages = append(doc.Packages, &spdx.Package{
-			PackageSPDXIdentifier:     NewSPDXPackageID(pkg),
+			PackageSPDXIdentifier:     id,
 			PackageName:               pkg.Name,
 			PackageVersion:            pkg.Version,
-			PackageLicenseDeclared:    pkg.Version,
+			PackageLicenseDeclared:    pkg.License,
 			PackageDescription:        pkg.Description,
 			PackageExternalReferences: refs,
 			PackageFileName:           pkg.Location,
+			PackageChecksums:          checksums,
 		})
+	}
+
+	// Emit the package→package dependency graph as SPDX DEPENDS_ON relationships,
+	// skipping any edge whose endpoints are not in this document.
+	for _, dep := range bom.Dependencies {
+		fromID, ok := refToID[dep.Ref]
+		if !ok {
+			continue
+		}
+		for _, to := range dep.DependencyRefs {
+			toID, ok := refToID[to]
+			if !ok {
+				continue
+			}
+			doc.Relationships = append(doc.Relationships, &spdx.Relationship{
+				RefA:         common.MakeDocElementID("", string(fromID)),
+				RefB:         common.MakeDocElementID("", string(toID)),
+				Relationship: spdx.RelationshipDependsOn,
+			})
+		}
 	}
 
 	return doc
@@ -109,7 +159,10 @@ func NewSPDXPackageID(pkg *Package) spdx.ElementID {
 	hash, _ := pkg.Hash()
 
 	id := fmt.Sprintf("Package-%s-%s-%s", pkg.Type, pkg.Name, hash)
-	expr.ReplaceAllString(id, "-")
+	// Scrub anything outside the SPDX ID charset. This must assign the result
+	// back: an unsanitized name (e.g. one containing a newline) would otherwise
+	// inject tags into SPDX tag-value output.
+	id = expr.ReplaceAllString(id, "-")
 	return spdx.ElementID(id)
 }
 
