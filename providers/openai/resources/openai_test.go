@@ -6,8 +6,12 @@ package resources
 import (
 	"testing"
 
+	"github.com/openai/openai-go/v3"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/openai/connection"
 )
 
 func TestUnixToTime(t *testing.T) {
@@ -20,6 +24,105 @@ func TestUnixToTime(t *testing.T) {
 	got := unixToTime(ts)
 	assert.False(t, got.IsZero())
 	assert.Equal(t, ts, got.Unix())
+}
+
+func TestUnixToNullableTime(t *testing.T) {
+	// A zero timestamp must become a nil pointer so llx.TimeDataPtr emits null
+	// rather than a year-1 timestamp.
+	assert.Nil(t, unixToNullableTime(0))
+
+	ts := int64(1719878400)
+	got := unixToNullableTime(ts)
+	require.NotNil(t, got)
+	assert.Equal(t, ts, got.Unix())
+}
+
+func TestIsAccessDenied(t *testing.T) {
+	assert.False(t, isAccessDenied(nil))
+	assert.True(t, isAccessDenied(&openai.Error{StatusCode: 401}))
+	assert.True(t, isAccessDenied(&openai.Error{StatusCode: 403}))
+	assert.False(t, isAccessDenied(&openai.Error{StatusCode: 404}))
+	assert.False(t, isAccessDenied(&openai.Error{StatusCode: 500}))
+	assert.False(t, isAccessDenied(assert.AnError))
+}
+
+func newTestConn(t *testing.T, token string) *connection.OpenaiConnection {
+	t.Helper()
+	// Clear env so an ambient key can't leak into the no-token case, and set an
+	// organization so the constructor skips its best-effort /v1/me network call.
+	t.Setenv("OPENAI_API_KEY", "")
+	t.Setenv("OPENAI_ORG_ID", "")
+	t.Setenv("OPENAI_PROJECT_ID", "")
+	conf := &inventory.Config{Options: map[string]string{
+		connection.OrganizationOption: "org-test",
+	}}
+	if token != "" {
+		conf.Options[connection.TokenOption] = token
+	}
+	conn, err := connection.NewOpenaiConnection(0, &inventory.Asset{}, conf)
+	require.NoError(t, err)
+	return conn
+}
+
+func TestDataPlaneClient(t *testing.T) {
+	// A project key can read data-plane resources.
+	c, err := dataPlaneClient(newTestConn(t, "sk-proj-abc"), "openai.models")
+	assert.NoError(t, err)
+	assert.NotNil(t, c)
+
+	// An admin key cannot; it must surface a descriptive error rather than an
+	// empty result that looks like "no models".
+	c, err = dataPlaneClient(newTestConn(t, "sk-admin-abc"), "openai.models")
+	assert.Error(t, err)
+	assert.Nil(t, c)
+
+	// No credentials degrades to (nil, nil) so the collection returns empty.
+	c, err = dataPlaneClient(newTestConn(t, ""), "openai.models")
+	assert.NoError(t, err)
+	assert.Nil(t, c)
+}
+
+func TestAdminPlaneClient(t *testing.T) {
+	// An admin key can read organization resources.
+	c, err := adminPlaneClient(newTestConn(t, "sk-admin-abc"), "openai.users")
+	assert.NoError(t, err)
+	assert.NotNil(t, c)
+
+	// A project key cannot; it must surface a descriptive error.
+	c, err = adminPlaneClient(newTestConn(t, "sk-proj-abc"), "openai.users")
+	assert.Error(t, err)
+	assert.Nil(t, c)
+
+	// No credentials degrades to (nil, nil).
+	c, err = adminPlaneClient(newTestConn(t, ""), "openai.users")
+	assert.NoError(t, err)
+	assert.Nil(t, c)
+}
+
+func TestAuditLogActor(t *testing.T) {
+	session := openai.AdminOrganizationAuditLogListResponseActor{
+		Type: "session",
+		Session: openai.AdminOrganizationAuditLogListResponseActorSession{
+			User: openai.AdminOrganizationAuditLogListResponseActorSessionUser{Email: "user@example.com"},
+		},
+	}
+	at, id := auditLogActor(session)
+	assert.Equal(t, "session", at)
+	assert.Equal(t, "user@example.com", id)
+
+	apiKey := openai.AdminOrganizationAuditLogListResponseActor{
+		Type:   "api_key",
+		APIKey: openai.AdminOrganizationAuditLogListResponseActorAPIKey{ID: "key_123"},
+	}
+	at, id = auditLogActor(apiKey)
+	assert.Equal(t, "api_key", at)
+	assert.Equal(t, "key_123", id)
+
+	// Unknown actor types fall back to the type string.
+	other := openai.AdminOrganizationAuditLogListResponseActor{Type: "scim"}
+	at, id = auditLogActor(other)
+	assert.Equal(t, "scim", at)
+	assert.Equal(t, "scim", id)
 }
 
 func newTestModel(id string) *mqlOpenaiModel {

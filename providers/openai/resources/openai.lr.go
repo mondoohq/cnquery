@@ -38,7 +38,7 @@ func init() {
 			Create: createOpenai,
 		},
 		"openai.model": {
-			// to override args, implement: initOpenaiModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOpenaiModel,
 			Create: createOpenaiModel,
 		},
 		"openai.file": {
@@ -46,15 +46,15 @@ func init() {
 			Create: createOpenaiFile,
 		},
 		"openai.fineTuningJob": {
-			// to override args, implement: initOpenaiFineTuningJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOpenaiFineTuningJob,
 			Create: createOpenaiFineTuningJob,
 		},
 		"openai.vectorStore": {
-			// to override args, implement: initOpenaiVectorStore(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOpenaiVectorStore,
 			Create: createOpenaiVectorStore,
 		},
 		"openai.project": {
-			// to override args, implement: initOpenaiProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOpenaiProject,
 			Create: createOpenaiProject,
 		},
 		"openai.project.apiKey": {

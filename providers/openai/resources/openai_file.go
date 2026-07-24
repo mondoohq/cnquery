@@ -12,9 +12,26 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
+// mapFile builds the resource args for an openai.file. Both the collection path
+// and the single-object init share it so the two paths cannot diverge.
+func mapFile(f openai.FileObject) map[string]*llx.RawData {
+	return map[string]*llx.RawData{
+		"__id":      llx.StringData(f.ID),
+		"id":        llx.StringData(f.ID),
+		"filename":  llx.StringData(f.Filename),
+		"bytes":     llx.IntData(f.Bytes),
+		"createdAt": llx.TimeDataPtr(unixToNullableTime(f.CreatedAt)),
+		"purpose":   llx.StringData(string(f.Purpose)),
+		"status":    llx.StringData(string(f.Status)),
+	}
+}
+
 func (r *mqlOpenai) files() ([]any, error) {
 	conn := openaiConn(r.MqlRuntime)
-	client := conn.Client()
+	client, err := dataPlaneClient(conn, "openai.files")
+	if err != nil {
+		return nil, err
+	}
 	if client == nil {
 		return []any{}, nil
 	}
@@ -24,16 +41,7 @@ func (r *mqlOpenai) files() ([]any, error) {
 	var res []any
 	for iter.Next() {
 		f := iter.Current()
-		created := unixToTime(f.CreatedAt)
-		mqlFile, err := CreateResource(r.MqlRuntime, "openai.file", map[string]*llx.RawData{
-			"__id":      llx.StringData(f.ID),
-			"id":        llx.StringData(f.ID),
-			"filename":  llx.StringData(f.Filename),
-			"bytes":     llx.IntData(f.Bytes),
-			"createdAt": llx.TimeData(created),
-			"purpose":   llx.StringData(string(f.Purpose)),
-			"status":    llx.StringData(string(f.Status)),
-		})
+		mqlFile, err := CreateResource(r.MqlRuntime, "openai.file", mapFile(f))
 		if err != nil {
 			return nil, err
 		}
@@ -63,26 +71,21 @@ func initOpenaiFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	}
 
 	conn := openaiConn(runtime)
-	client := conn.Client()
+	client, err := dataPlaneClient(conn, "openai.file")
+	if err != nil {
+		return nil, nil, err
+	}
 	if client == nil {
 		return nil, nil, fmt.Errorf("cannot fetch file %s: no project API key configured", fileID)
 	}
 	f, err := client.Files.Get(context.Background(), fileID)
 	if err != nil {
-		if isAccessDenied(err) {
-			return args, nil, nil
-		}
+		// Returning (args, nil, nil) here would let the runtime build a husk
+		// resource from just the id, leaving every other field unset and
+		// surfacing as "primitive with no type information" on access. Report
+		// the failure instead.
 		return nil, nil, fmt.Errorf("failed to get file %s: %w", fileID, err)
 	}
 
-	created := unixToTime(f.CreatedAt)
-	args["__id"] = llx.StringData(f.ID)
-	args["id"] = llx.StringData(f.ID)
-	args["filename"] = llx.StringData(f.Filename)
-	args["bytes"] = llx.IntData(f.Bytes)
-	args["createdAt"] = llx.TimeData(created)
-	args["purpose"] = llx.StringData(string(f.Purpose))
-	args["status"] = llx.StringData(string(f.Status))
-
-	return args, nil, nil
+	return mapFile(*f), nil, nil
 }
