@@ -2325,12 +2325,12 @@ type File struct {
 	Md5 string `protobuf:"bytes,3,opt,name=md5,proto3" json:"md5,omitempty"`
 	// SHA256 hash of file
 	Sha256 string `protobuf:"bytes,4,opt,name=sha256,proto3" json:"sha256,omitempty"`
-	// Optional. Human-readable label or identifier for this file evidence, used
-	// when a finding carries several file evidences or when a UI needs a title for
-	// the document rather than a raw path.
+	// Optional. Human-readable label or identifier for this file evidence,
+	// used when a finding carries several file evidences, or when a UI needs
+	// a title for the document rather than a raw path.
 	Label string `protobuf:"bytes,5,opt,name=label,proto3" json:"label,omitempty"`
-	// Optional. MIME / content type of the file (e.g. "application/json",
-	// "text/plain"), so consumers can interpret or render `contents` correctly.
+	// Optional. MIME / content type of the file (e.g. "application/json"), so
+	// consumers can interpret or render `contents` correctly.
 	MimeType string `protobuf:"bytes,6,opt,name=mime_type,json=mimeType,proto3" json:"mime_type,omitempty"`
 	// Optional. File content.
 	Contents      string `protobuf:"bytes,20,opt,name=contents,proto3" json:"contents,omitempty"`
