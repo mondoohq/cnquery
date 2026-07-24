@@ -55,7 +55,7 @@ func (p *Extractor) Parse(r io.Reader, filename string) (languages.Bom, error) {
 		}
 		if m := kv.FindStringSubmatch(line); m != nil {
 			val := m[3]
-			if !(strings.HasPrefix(val, `"`) && strings.HasSuffix(val, `"`)) {
+			if !strings.HasPrefix(val, `"`) || !strings.HasSuffix(val, `"`) {
 				val = `"` + val + `"`
 			}
 			b.WriteString(m[1] + m[2] + ": " + val + "\n")
