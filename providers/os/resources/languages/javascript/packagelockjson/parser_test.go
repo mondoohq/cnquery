@@ -10,7 +10,18 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/v13/providers/os/resources/languages"
 )
+
+func TestScopeOf(t *testing.T) {
+	// strictly dev-only
+	assert.Equal(t, languages.PackageScopeDev, scopeOf(packageLockPackage{Dev: true}))
+	// plain production
+	assert.Equal(t, languages.PackageScopeProd, scopeOf(packageLockPackage{}))
+	// devOptional can appear in the prod tree → prod, even when dev is also set
+	assert.Equal(t, languages.PackageScopeProd, scopeOf(packageLockPackage{Dev: true, DevOptional: true}))
+	assert.Equal(t, languages.PackageScopeProd, scopeOf(packageLockPackage{DevOptional: true}))
+}
 
 func TestResolveDepPurlDepthCapped(t *testing.T) {
 	pkgs := map[string]packageLockPackage{"node_modules/target": {Version: "1.0.0"}}

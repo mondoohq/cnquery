@@ -111,6 +111,21 @@ func TestCycloneDxDedupsSharedBomRef(t *testing.T) {
 	assert.Equal(t, 1, strings.Count(out.String(), `"bom-ref": "pkg:npm/left-pad@1.3.0"`))
 }
 
+func TestSpdxDedupsSharedBomRef(t *testing.T) {
+	// Two entries sharing a purl must render as one SPDX package (like CycloneDX).
+	bom := &sbom.Sbom{
+		Generator: &sbom.Generator{Name: "test", Version: "1", Vendor: "Mondoo"},
+		Asset:     &sbom.Asset{Name: "app", Platform: &sbom.Platform{}},
+		Packages: []*sbom.Package{
+			{Name: "left-pad", Version: "1.3.0", Type: "npm", Purl: "pkg:npm/left-pad@1.3.0"},
+			{Name: "left-pad", Version: "1.3.0", Type: "npm", Purl: "pkg:npm/left-pad@1.3.0"},
+		},
+	}
+	out := bytes.Buffer{}
+	require.NoError(t, sbom.NewSPDX(sbom.FormatSpdxJSON).Render(&out, bom))
+	assert.Equal(t, 1, strings.Count(out.String(), `"name": "left-pad"`))
+}
+
 func TestNewSPDXPackageIDSanitizesName(t *testing.T) {
 	// A package name with a newline must not leak into the SPDX id (tag-value
 	// injection). The scrub replaces any non [a-zA-Z0-9.-] with "-".

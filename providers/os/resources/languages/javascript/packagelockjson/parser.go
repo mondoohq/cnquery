@@ -12,9 +12,18 @@ import (
 	"go.mondoo.com/mql/v13/providers/os/resources/languages/javascript"
 )
 
-// scopeOf maps an npm lock package entry to a languages package scope: a dev-only
-// package reports PackageScopeDev, everything else (including devOptional, which
-// can appear in the production tree) PackageScopeProd.
+// scopeOf maps an npm lock package entry to a languages package scope, from
+// npm's per-package flags (lockfileVersion 2+):
+//
+//   - dev=true, devOptional=false → PackageScopeDev (strictly dev-only)
+//   - devOptional=true (with or without dev) → PackageScopeProd: npm sets this
+//     when a package is reachable both as a devDependency and as an optional
+//     production dependency, so it can be in the deployed tree — we keep it.
+//   - dev=false → PackageScopeProd
+//
+// Reporting devOptional as prod is deliberately conservative: it never hides a
+// package that might ship in production (an under-report would be worse than the
+// occasional dev-and-optional package counted as prod).
 func scopeOf(pkg packageLockPackage) string {
 	if pkg.Dev && !pkg.DevOptional {
 		return languages.PackageScopeDev

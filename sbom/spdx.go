@@ -68,9 +68,20 @@ func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
 	// bom_ref → SPDX element id, so the dependency graph (which references
 	// components by bom_ref) can be translated to SPDX DEPENDS_ON relationships.
 	refToID := map[string]spdx.ElementID{}
+	// emitted dedups by bom-ref: a package present at multiple install locations
+	// shares a purl, so emit it once (matching the CycloneDX renderer). Without
+	// this, duplicate SPDX packages are written and refToID is silently
+	// overwritten (with a possibly different id, since Hash() may differ).
+	emitted := map[string]bool{}
 
 	for i := range bom.Packages {
 		pkg := bom.Packages[i]
+
+		ref := BomRefFor(pkg)
+		if emitted[ref] {
+			continue
+		}
+		emitted[ref] = true
 
 		refs := []*spdx.PackageExternalReference{}
 
@@ -93,7 +104,7 @@ func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
 		}
 
 		id := NewSPDXPackageID(pkg)
-		refToID[BomRefFor(pkg)] = id
+		refToID[ref] = id
 
 		// Integrity digests → SPDX checksums. Alg is CycloneDX spelling
 		// ("SHA-512"); SPDX uses the dash-free form ("SHA512").
@@ -109,7 +120,7 @@ func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
 			PackageSPDXIdentifier:     id,
 			PackageName:               pkg.Name,
 			PackageVersion:            pkg.Version,
-			PackageLicenseDeclared:    pkg.Version,
+			PackageLicenseDeclared:    pkg.License,
 			PackageDescription:        pkg.Description,
 			PackageExternalReferences: refs,
 			PackageFileName:           pkg.Location,
