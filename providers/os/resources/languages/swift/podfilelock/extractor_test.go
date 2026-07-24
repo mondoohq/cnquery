@@ -45,3 +45,20 @@ func TestPodfileLockExtractor(t *testing.T) {
 	require.NotNil(t, p)
 	assert.Equal(t, "5.0.1", p.Version)
 }
+
+func TestParsePodEntryQuotedName(t *testing.T) {
+	// CocoaPods quotes names with special characters; the quotes must be stripped.
+	e := parsePodEntry(`"Artsy+UIColors (3.1.0)"`)
+	assert.Equal(t, "Artsy+UIColors", e.Name)
+	assert.Equal(t, "3.1.0", e.Version)
+
+	// A quoted name with a trailing colon (has sub-dependencies).
+	e = parsePodEntry(`"Artsy+UIFonts (3.1.3)":`)
+	assert.Equal(t, "Artsy+UIFonts", e.Name)
+	assert.Equal(t, "3.1.3", e.Version)
+
+	// Unquoted names are unchanged.
+	e = parsePodEntry("Alamofire (5.8.1)")
+	assert.Equal(t, "Alamofire", e.Name)
+	assert.Equal(t, "5.8.1", e.Version)
+}
