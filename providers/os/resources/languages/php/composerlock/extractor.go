@@ -48,24 +48,25 @@ func (l *composerLock) Root() *languages.Package {
 func (l *composerLock) Direct() languages.Packages {
 	var direct languages.Packages
 	for _, pkg := range l.Packages {
-		direct = append(direct, makePackage(pkg, l.evidence))
+		direct = append(direct, makePackage(pkg, l.evidence, languages.PackageScopeProd))
 	}
 	return direct
 }
 
-// Transitive returns all packages (production + dev).
+// Transitive returns all packages: the "packages" section as production scope
+// and "packages-dev" as development scope (composer.lock separates the two).
 func (l *composerLock) Transitive() languages.Packages {
 	var all languages.Packages
 	for _, pkg := range l.Packages {
-		all = append(all, makePackage(pkg, l.evidence))
+		all = append(all, makePackage(pkg, l.evidence, languages.PackageScopeProd))
 	}
 	for _, pkg := range l.PackagesDev {
-		all = append(all, makePackage(pkg, l.evidence))
+		all = append(all, makePackage(pkg, l.evidence, languages.PackageScopeDev))
 	}
 	return all
 }
 
-func makePackage(pkg composerPackage, evidence []string) *languages.Package {
+func makePackage(pkg composerPackage, evidence []string, scope string) *languages.Package {
 	// Note: License and Description are available in composer.lock but not yet
 	// exposed via the php.package MQL resource. When license support is added
 	// to the .lr schema, populate them here.
@@ -75,5 +76,6 @@ func makePackage(pkg composerPackage, evidence []string) *languages.Package {
 		Purl:         php.NewPackageUrl(pkg.Name, pkg.Version),
 		Cpes:         php.NewCpes(pkg.Name, pkg.Version),
 		EvidenceList: php.NewEvidenceList(evidence),
+		Scope:        scope,
 	}
 }
