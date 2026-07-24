@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/v13/providers/os/resources/languages"
 	"go.mondoo.com/mql/v13/sbom"
 )
 
@@ -39,9 +40,10 @@ func TestComposerLockExtractor(t *testing.T) {
 	// Dev packages should NOT be in direct
 	assert.Nil(t, direct.Find("phpunit/phpunit"))
 
-	// Transitive = all packages
+	// Transitive = all packages, scoped: "packages" → prod, "packages-dev" → dev.
 	transitive := info.Transitive()
 	assert.Equal(t, 5, len(transitive))
-	assert.NotNil(t, transitive.Find("phpunit/phpunit"))
-	assert.NotNil(t, transitive.Find("mockery/mockery"))
+	assert.Equal(t, languages.PackageScopeProd, transitive.Find("monolog/monolog").Scope)
+	assert.Equal(t, languages.PackageScopeDev, transitive.Find("phpunit/phpunit").Scope)
+	assert.Equal(t, languages.PackageScopeDev, transitive.Find("mockery/mockery").Scope)
 }
