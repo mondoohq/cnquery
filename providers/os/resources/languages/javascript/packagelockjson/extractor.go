@@ -63,6 +63,7 @@ func (p *packageLock) Direct() languages.Packages {
 		return nil
 	}
 
+	idx := p.purlIndex()
 	filteredList := []*languages.Package{}
 	for name := range rootPkg.Dependencies {
 		// The root's declared dependencies are keyed in `packages` by their
@@ -81,10 +82,10 @@ func (p *packageLock) Direct() languages.Packages {
 		filteredList = append(filteredList, &languages.Package{
 			Name:         name,
 			Version:      pkg.Version,
-			Purl:         javascript.NewPackageUrl(name, pkg.Version),
+			Purl:         idx[path],
 			Cpes:         javascript.NewCpes(name, pkg.Version),
 			EvidenceList: javascript.NewEvidenceList(p.evidence),
-			DependsOn:    dependsOnRefs(p.Packages, path, pkg.Dependencies),
+			DependsOn:    dependsOnRefs(p.Packages, idx, path, pkg.Dependencies),
 			Scope:        scopeOf(pkg),
 			Hashes:       hashesFor(pkg.Integrity),
 		})
@@ -96,6 +97,7 @@ func (p *packageLock) Direct() languages.Packages {
 func (p *packageLock) Transitive() languages.Packages {
 	var transitive languages.Packages
 	if p.Packages != nil {
+		idx := p.purlIndex()
 		for k, v := range p.Packages {
 			// Keys are install paths; the package name is the last node_modules
 			// segment. The root package has key "" and carries its name in v.Name.
@@ -107,10 +109,10 @@ func (p *packageLock) Transitive() languages.Packages {
 			transitive = append(transitive, &languages.Package{
 				Name:         name,
 				Version:      v.Version,
-				Purl:         javascript.NewPackageUrl(name, v.Version),
+				Purl:         idx[k],
 				Cpes:         javascript.NewCpes(name, v.Version),
 				EvidenceList: javascript.NewEvidenceList(p.evidence),
-				DependsOn:    dependsOnRefs(p.Packages, k, v.Dependencies),
+				DependsOn:    dependsOnRefs(p.Packages, idx, k, v.Dependencies),
 				Scope:        scopeOf(v),
 				Hashes:       hashesFor(v.Integrity),
 			})

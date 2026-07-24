@@ -148,7 +148,10 @@ func NewSPDXPackageID(pkg *Package) spdx.ElementID {
 	hash, _ := pkg.Hash()
 
 	id := fmt.Sprintf("Package-%s-%s-%s", pkg.Type, pkg.Name, hash)
-	expr.ReplaceAllString(id, "-")
+	// Scrub anything outside the SPDX ID charset. This must assign the result
+	// back: an unsanitized name (e.g. one containing a newline) would otherwise
+	// inject tags into SPDX tag-value output.
+	id = expr.ReplaceAllString(id, "-")
 	return spdx.ElementID(id)
 }
 

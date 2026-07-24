@@ -79,7 +79,7 @@ func (l *pnpmLock) Transitive() languages.Packages {
 			Cpes:         javascript.NewCpes(name, version),
 			EvidenceList: javascript.NewEvidenceList(l.evidence),
 			DependsOn:    dependsOnRefs(entry.Dependencies),
-			Scope:        scopeOf(entry),
+			Scope:        scopeOf(entry, ver),
 		})
 	}
 

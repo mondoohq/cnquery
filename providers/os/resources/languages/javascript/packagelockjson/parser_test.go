@@ -31,6 +31,22 @@ func TestHashesFor(t *testing.T) {
 	assert.Nil(t, hashesFor("sha512-!!!not base64!!!"))
 }
 
+func TestResolveDepPurlDepthCapped(t *testing.T) {
+	pkgs := map[string]packageLockPackage{"node_modules/target": {Version: "1.0.0"}}
+	idx := map[string]string{"node_modules/target": "pkg:npm/target@1.0.0"}
+
+	// Within the cap, a dep that only resolves at the root still resolves.
+	assert.Equal(t, "pkg:npm/target@1.0.0", resolveDepPurl(pkgs, idx, "node_modules/a", "target"))
+
+	// A pathologically deep path (beyond the cap) short-circuits to "" rather than
+	// walking unbounded — the DoS guard.
+	deep := "node_modules/a"
+	for i := 0; i < maxNodeModulesDepth+5; i++ {
+		deep += "/node_modules/a"
+	}
+	assert.Equal(t, "", resolveDepPurl(pkgs, idx, deep, "target"))
+}
+
 func TestPackageLock(t *testing.T) {
 	tests := []struct {
 		Fixture  string

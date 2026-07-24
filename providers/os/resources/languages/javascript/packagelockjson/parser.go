@@ -61,19 +61,41 @@ func scopeOf(pkg packageLockPackage) string {
 	return languages.PackageScopeProd
 }
 
+// maxNodeModulesDepth bounds the resolveDepPurl walk-up. Real npm trees nest only
+// a handful of levels (hoisting flattens most to the root); this ceiling stops a
+// crafted lockfile with a pathologically deep `.../node_modules/x/node_modules/x`
+// key from turning edge resolution into superlinear CPU (a per-scan DoS on
+// untrusted repos). Edges that would resolve only below the ceiling are dropped.
+const maxNodeModulesDepth = 64
+
+// purlIndex maps every `packages` install-path key to its component purl, built
+// once per lockfile so edge resolution can reference a target's purl without
+// rebuilding it per incoming edge.
+func (p *packageLock) purlIndex() map[string]string {
+	idx := make(map[string]string, len(p.Packages))
+	for k, v := range p.Packages {
+		name := packageLockPackageName(k)
+		if k == "" {
+			name = v.Name
+		}
+		idx[k] = javascript.NewPackageUrl(name, v.Version)
+	}
+	return idx
+}
+
 // dependsOnRefs resolves a package entry's `dependencies` (name→version-range)
 // to the refs (purls) of the resolved packages, following npm's hoisting rules
 // from fromPath. Returns sorted, deduplicated purls; skips deps that do not
 // resolve to a `packages` entry. This yields the package→package edges the
 // lockfile encodes (lockfileVersion 2+).
-func dependsOnRefs(pkgs map[string]packageLockPackage, fromPath string, deps map[string]string) []string {
+func dependsOnRefs(pkgs map[string]packageLockPackage, pathToPurl map[string]string, fromPath string, deps map[string]string) []string {
 	if len(deps) == 0 {
 		return nil
 	}
 	seen := map[string]bool{}
 	var refs []string
 	for name := range deps {
-		if ref := resolveDepPurl(pkgs, fromPath, name); ref != "" && !seen[ref] {
+		if ref := resolveDepPurl(pkgs, pathToPurl, fromPath, name); ref != "" && !seen[ref] {
 			seen[ref] = true
 			refs = append(refs, ref)
 		}
@@ -84,20 +106,18 @@ func dependsOnRefs(pkgs map[string]packageLockPackage, fromPath string, deps map
 
 // resolveDepPurl finds the package entry that satisfies depName as required from
 // fromPath, per npm resolution: try fromPath/node_modules/depName, then walk up
-// the node_modules chain to the root. Returns the resolved package's purl, or ""
-// when no entry is found.
-func resolveDepPurl(pkgs map[string]packageLockPackage, fromPath, depName string) string {
+// the node_modules chain to the root. Returns the resolved package's purl (from
+// the prebuilt index, matching the target node's own Purl for a self-consistent
+// graph), or "" when no entry is found within maxNodeModulesDepth levels.
+func resolveDepPurl(pkgs map[string]packageLockPackage, pathToPurl map[string]string, fromPath, depName string) string {
 	base := fromPath
-	for {
+	for depth := 0; depth <= maxNodeModulesDepth; depth++ {
 		cand := "node_modules/" + depName
 		if base != "" {
 			cand = base + "/node_modules/" + depName
 		}
-		if entry, ok := pkgs[cand]; ok {
-			// Build the ref from the resolved entry's package name, exactly as
-			// Transitive() builds each package's own Purl, so an edge ref matches
-			// its target node's Purl (a self-consistent graph).
-			return javascript.NewPackageUrl(packageLockPackageName(cand), entry.Version)
+		if _, ok := pkgs[cand]; ok {
+			return pathToPurl[cand]
 		}
 		if base == "" {
 			return ""
@@ -108,6 +128,7 @@ func resolveDepPurl(pkgs map[string]packageLockPackage, fromPath, depName string
 			base = ""
 		}
 	}
+	return ""
 }
 
 // packageLock is the struct to represent the package.lock file

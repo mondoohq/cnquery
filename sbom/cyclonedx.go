@@ -50,7 +50,9 @@ func (ccx *CycloneDX) convertToCycloneDx(bom *Sbom) (*cyclonedx.BOM, error) {
 			},
 		},
 		Component: &cyclonedx.Component{
-			BOMRef: uuid.New().String(),
+			// Deterministic (was a per-render UUID) so the document's root
+			// component id is stable across renders.
+			BOMRef: "root:" + bom.Asset.Name,
 			// TODO: understand the device type
 			// Type: cyclonedx.ComponentTypeContainer,
 			Type: cyclonedx.ComponentTypeDevice,
@@ -59,6 +61,10 @@ func (ccx *CycloneDX) convertToCycloneDx(bom *Sbom) (*cyclonedx.BOM, error) {
 	}
 
 	components := []cyclonedx.Component{}
+	// emitted tracks the component bom-refs already added, so a document never
+	// contains a duplicate bom-ref (invalid CycloneDX) when two packages share a
+	// purl, and so the dependency graph below can drop edges to absent components.
+	emitted := map[string]bool{}
 
 	// add os as component
 	cpe := ""
@@ -66,8 +72,10 @@ func (ccx *CycloneDX) convertToCycloneDx(bom *Sbom) (*cyclonedx.BOM, error) {
 		cpe = bom.Asset.Platform.Cpes[0]
 	}
 
+	osRef := "os:" + bom.Asset.Platform.Name
+	emitted[osRef] = true
 	components = append(components, cyclonedx.Component{
-		BOMRef:  uuid.New().String(),
+		BOMRef:  osRef,
 		Type:    cyclonedx.ComponentTypeOS,
 		Name:    bom.Asset.Platform.Name,
 		Version: bom.Asset.Platform.Version,
@@ -109,8 +117,16 @@ func (ccx *CycloneDX) convertToCycloneDx(bom *Sbom) (*cyclonedx.BOM, error) {
 			}
 		}
 
+		ref := BomRefFor(pkg)
+		if emitted[ref] {
+			// Same purl already emitted (a package present at multiple install
+			// locations) — dedup so bom-refs stay unique.
+			continue
+		}
+		emitted[ref] = true
+
 		bomPkg := cyclonedx.Component{
-			BOMRef:     BomRefFor(pkg),
+			BOMRef:     ref,
 			Type:       cyclonedx.ComponentTypeLibrary,
 			Name:       pkg.Name,
 			Version:    pkg.Version,
@@ -142,7 +158,18 @@ func (ccx *CycloneDX) convertToCycloneDx(bom *Sbom) (*cyclonedx.BOM, error) {
 	if len(bom.Dependencies) > 0 {
 		deps := make([]cyclonedx.Dependency, 0, len(bom.Dependencies))
 		for _, d := range bom.Dependencies {
-			dependsOn := append([]string(nil), d.DependencyRefs...)
+			// Skip edges whose source isn't an emitted component, and prune
+			// targets that aren't — a document must not reference an absent
+			// bom-ref (matches the SPDX renderer's defensive behavior).
+			if !emitted[d.Ref] {
+				continue
+			}
+			dependsOn := make([]string, 0, len(d.DependencyRefs))
+			for _, r := range d.DependencyRefs {
+				if emitted[r] {
+					dependsOn = append(dependsOn, r)
+				}
+			}
 			deps = append(deps, cyclonedx.Dependency{
 				Ref:          d.Ref,
 				Dependencies: &dependsOn,

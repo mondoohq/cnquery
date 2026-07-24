@@ -14,10 +14,15 @@ import (
 
 // scopeOf maps a pnpm lock entry to a languages package scope. pnpm marks a
 // dev-only package with `dev: true` in the packages map (v5/v6); v9 does not
-// carry the flag per entry, so those report PackageScopeProd.
-func scopeOf(entry pnpmPackageEntry) string {
+// carry the flag per entry. So a flag-less entry means "production" only when the
+// lockfile version actually distinguishes dev (v5/v6); on v9 it means "unknown",
+// and we return "" rather than mislabel a dev-only package as production.
+func scopeOf(entry pnpmPackageEntry, lockfileVersion float64) string {
 	if entry.Dev {
 		return languages.PackageScopeDev
+	}
+	if lockfileVersion >= 7 {
+		return ""
 	}
 	return languages.PackageScopeProd
 }

@@ -5,6 +5,7 @@ package sbom_test
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -92,6 +93,35 @@ func TestCycloneDxHashes(t *testing.T) {
 	assert.Contains(t, data, `"hashes"`)
 	assert.Contains(t, data, `"alg": "SHA-512"`)
 	assert.Contains(t, data, `"content": "`+testHashHex+`"`)
+}
+
+func TestCycloneDxDedupsSharedBomRef(t *testing.T) {
+	// The same package present at two install locations shares a purl → must
+	// render as one component, not a duplicate bom-ref (invalid CycloneDX).
+	bom := &sbom.Sbom{
+		Generator: &sbom.Generator{Name: "test", Version: "1", Vendor: "Mondoo"},
+		Asset:     &sbom.Asset{Name: "app", Platform: &sbom.Platform{}},
+		Packages: []*sbom.Package{
+			{Name: "left-pad", Version: "1.3.0", Type: "npm", Purl: "pkg:npm/left-pad@1.3.0"},
+			{Name: "left-pad", Version: "1.3.0", Type: "npm", Purl: "pkg:npm/left-pad@1.3.0"},
+		},
+	}
+	out := bytes.Buffer{}
+	require.NoError(t, sbom.New(sbom.FormatCycloneDxJSON).Render(&out, bom))
+	assert.Equal(t, 1, strings.Count(out.String(), `"bom-ref": "pkg:npm/left-pad@1.3.0"`))
+}
+
+func TestNewSPDXPackageIDSanitizesName(t *testing.T) {
+	// A package name with a newline must not leak into the SPDX id (tag-value
+	// injection). The scrub replaces any non [a-zA-Z0-9.-] with "-".
+	id := string(sbom.NewSPDXPackageID(&sbom.Package{
+		Type:    "npm",
+		Name:    "evil\nSPDXID: SPDXRef-Injected\nRelationship:",
+		Version: "1.0.0",
+	}))
+	assert.NotContains(t, id, "\n")
+	assert.NotContains(t, id, " ")
+	assert.NotContains(t, id, ":")
 }
 
 func TestSpdxHashes(t *testing.T) {
