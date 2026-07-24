@@ -39,6 +39,12 @@ func BuildFilesFindCmd(from string, xdev bool, fileType string, regex string, pe
 		}
 	}
 
+	// -L makes find stat() (not lstat()) every entry and follow symlinked
+	// directories, which is only needed to resolve link targets for a
+	// type: "link" search. Emitting it unconditionally forces every other
+	// search to pay for symlink resolution it doesn't need, and lets the
+	// walk hang on a symlink pointing at a stale/unresponsive mount.
+	//
 	// GNU find: -L -xtype l follows all symlinks AND finds symlinks.
 	// BSD find: -xtype is absent; fall back to -H -type l which
 	// follows only the start path but still detects symlinks.
@@ -46,10 +52,13 @@ func BuildFilesFindCmd(from string, xdev bool, fileType string, regex string, pe
 	// misses FreeBSD with GNU findutils and BusyBox find on Linux,
 	// but both are rare in mql's target environments; the -H fallback
 	// still finds symlinks, just without following symlink-dirs.
-	if isLinkSearch && !hasGNUFind {
-		call.WriteString("find -H ")
-	} else {
+	switch {
+	case isLinkSearch && hasGNUFind:
 		call.WriteString("find -L ")
+	case isLinkSearch && !hasGNUFind:
+		call.WriteString("find -H ")
+	default:
+		call.WriteString("find ")
 	}
 	call.WriteString(strconv.Quote(from))
 
