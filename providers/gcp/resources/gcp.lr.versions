@@ -3817,6 +3817,7 @@ gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions.
 gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions.externalKeyUri 9.0.0
 gcp.project.kmsService.keyring.cryptokey.version.generated 9.0.0
 gcp.project.kmsService.keyring.cryptokey.version.generationFailureReason 13.32.1
+gcp.project.kmsService.keyring.cryptokey.version.hsmTrusted 13.33.3
 gcp.project.kmsService.keyring.cryptokey.version.importFailureReason 9.0.0
 gcp.project.kmsService.keyring.cryptokey.version.importJob 9.0.0
 gcp.project.kmsService.keyring.cryptokey.version.importTime 9.0.0
@@ -3825,6 +3826,7 @@ gcp.project.kmsService.keyring.cryptokey.version.protectionLevel 9.0.0
 gcp.project.kmsService.keyring.cryptokey.version.reimportEligible 9.0.0
 gcp.project.kmsService.keyring.cryptokey.version.resourcePath 9.0.0
 gcp.project.kmsService.keyring.cryptokey.version.state 9.0.0
+gcp.project.kmsService.keyring.cryptokey.version.trustedWrappingEnabled 13.33.3
 gcp.project.kmsService.keyring.cryptokey.versionTemplate 9.0.0
 gcp.project.kmsService.keyring.cryptokey.versions 9.0.0
 gcp.project.kmsService.keyring.cryptokeys 9.0.0
@@ -4062,6 +4064,17 @@ gcp.project.memorystoreService.instance.serverCaPool 13.11.2
 gcp.project.memorystoreService.instance.shardCount 13.11.2
 gcp.project.memorystoreService.instance.state 13.11.2
 gcp.project.memorystoreService.instance.stateInfo 13.11.2
+gcp.project.memorystoreService.instance.tokenAuthUser 13.33.3
+gcp.project.memorystoreService.instance.tokenAuthUser.authToken 13.33.3
+gcp.project.memorystoreService.instance.tokenAuthUser.authToken.createTime 13.33.3
+gcp.project.memorystoreService.instance.tokenAuthUser.authToken.name 13.33.3
+gcp.project.memorystoreService.instance.tokenAuthUser.authToken.projectId 13.33.3
+gcp.project.memorystoreService.instance.tokenAuthUser.authToken.state 13.33.3
+gcp.project.memorystoreService.instance.tokenAuthUser.authTokens 13.33.3
+gcp.project.memorystoreService.instance.tokenAuthUser.name 13.33.3
+gcp.project.memorystoreService.instance.tokenAuthUser.projectId 13.33.3
+gcp.project.memorystoreService.instance.tokenAuthUser.state 13.33.3
+gcp.project.memorystoreService.instance.tokenAuthUsers 13.33.3
 gcp.project.memorystoreService.instance.transitEncryptionMode 13.11.2
 gcp.project.memorystoreService.instance.uid 13.11.2
 gcp.project.memorystoreService.instance.updateTime 13.11.2
@@ -4379,6 +4392,7 @@ gcp.project.recommendations 9.0.0
 gcp.project.redis 11.0.79
 gcp.project.redisService 11.0.79
 gcp.project.redisService.cluster 11.1.0
+gcp.project.redisService.cluster.asyncClusterEndpointsDeletionEnabled 13.33.3
 gcp.project.redisService.cluster.authorizationMode 11.1.0
 gcp.project.redisService.cluster.automatedBackupConfig 11.1.0
 gcp.project.redisService.cluster.backup 11.1.0

@@ -226,6 +226,7 @@ digitalocean.droplet.dropletSize 13.13.2
 digitalocean.droplet.exposure 13.7.1
 digitalocean.droplet.features 13.0.1
 digitalocean.droplet.firewalls 13.0.2
+digitalocean.droplet.gpuPartitionMode 13.14.4
 digitalocean.droplet.id 13.0.1
 digitalocean.droplet.image 13.0.1
 digitalocean.droplet.kernel 13.6.2

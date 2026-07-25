@@ -212,6 +212,7 @@ func (r *mqlDigitalocean) droplets() ([]interface{}, error) {
 				"disk":                  llx.IntData(int64(d.Disk)),
 				"region":                llx.StringData(regionSlug),
 				"size":                  llx.StringData(sizeSlug),
+				"gpuPartitionMode":      llx.StringData(d.GPUPartitionMode),
 				"status":                llx.StringData(d.Status),
 				"locked":                llx.BoolData(d.Locked),
 				"createdAt":             llx.TimeDataPtr(parseDoTime(d.Created)),

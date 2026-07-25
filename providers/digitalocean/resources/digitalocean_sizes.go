@@ -37,6 +37,13 @@ func newMqlDigitaloceanSize(runtime *plugin.Runtime, size godo.Size) (*mqlDigita
 				"unit":   size.GPUInfo.VRAM.Unit,
 			}
 		}
+		if len(size.GPUInfo.SupportedPartitionModes) > 0 {
+			modes := make([]interface{}, len(size.GPUInfo.SupportedPartitionModes))
+			for i, m := range size.GPUInfo.SupportedPartitionModes {
+				modes[i] = m
+			}
+			gi["supportedPartitionModes"] = modes
+		}
 		gpuInfo = gi
 	}
 

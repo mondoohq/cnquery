@@ -8,6 +8,7 @@ import (
 	"errors"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	bacctypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
@@ -607,8 +608,110 @@ func (a *mqlAwsBedrockAgentCore) browsers() ([]any, error) {
 	}))
 }
 
+type mqlAwsBedrockAgentCoreBrowserInternal struct {
+	fetchLock sync.Mutex
+	fetched   atomic.Bool
+	detail    *bedrockagentcorecontrol.GetBrowserOutput
+}
+
 func (a *mqlAwsBedrockAgentCoreBrowser) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsBedrockAgentCoreBrowser) fetchDetail() (*bedrockagentcorecontrol.GetBrowserOutput, error) {
+	if a.fetched.Load() {
+		return a.detail, nil
+	}
+	a.fetchLock.Lock()
+	defer a.fetchLock.Unlock()
+	if a.fetched.Load() {
+		return a.detail, nil
+	}
+	if a.Id.Error != nil {
+		return nil, a.Id.Error
+	}
+	if a.Region.Error != nil {
+		return nil, a.Region.Error
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.BedrockAgentCoreControl(a.Region.Data)
+	browserId := a.Id.Data
+	detail, err := svc.GetBrowser(context.Background(), &bedrockagentcorecontrol.GetBrowserInput{BrowserId: &browserId})
+	if err != nil {
+		return nil, err
+	}
+	a.detail = detail
+	a.fetched.Store(true)
+	return a.detail, nil
+}
+
+type mqlAwsBedrockAgentCoreFilesystemConfigurationInternal struct {
+	cacheEfsFilesystemArn string
+}
+
+func (a *mqlAwsBedrockAgentCoreFilesystemConfiguration) fileSystem() (*mqlAwsEfsFilesystem, error) {
+	if a.cacheEfsFilesystemArn == "" {
+		a.FileSystem.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.efs.filesystem", map[string]*llx.RawData{
+		"arn": llx.StringData(a.cacheEfsFilesystemArn),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEfsFilesystem), nil
+}
+
+// newAgentCoreFilesystemConfigurations flattens the EFS / S3 Files union that
+// AgentCore returns for a sandbox's mounts into one resource per mount.
+func newAgentCoreFilesystemConfigurations(runtime *plugin.Runtime, parentArn string, configs []bacctypes.ToolsFileSystemConfiguration) ([]any, error) {
+	res := []any{}
+	for _, cfg := range configs {
+		var kind, accessPointArn, fileSystemArn, mountPath string
+		switch v := cfg.(type) {
+		case *bacctypes.ToolsFileSystemConfigurationMemberEfsConfiguration:
+			kind = "EFS"
+			accessPointArn = convert.ToValue(v.Value.AccessPointArn)
+			fileSystemArn = convert.ToValue(v.Value.FileSystemArn)
+			mountPath = convert.ToValue(v.Value.MountPath)
+		case *bacctypes.ToolsFileSystemConfigurationMemberS3FilesConfiguration:
+			kind = "S3_FILES"
+			accessPointArn = convert.ToValue(v.Value.AccessPointArn)
+			fileSystemArn = convert.ToValue(v.Value.FileSystemArn)
+			mountPath = convert.ToValue(v.Value.MountPath)
+		default:
+			// A mount type this SDK version does not model yet.
+			continue
+		}
+
+		mqlCfg, err := CreateResource(runtime, "aws.bedrock.agentCore.filesystemConfiguration", map[string]*llx.RawData{
+			"__id":           llx.StringData(parentArn + "/filesystemConfigurations/" + mountPath),
+			"type":           llx.StringData(kind),
+			"accessPointArn": llx.StringData(accessPointArn),
+			"fileSystemArn":  llx.StringData(fileSystemArn),
+			"mountPath":      llx.StringData(mountPath),
+		})
+		if err != nil {
+			return nil, err
+		}
+		if kind == "EFS" {
+			mqlCfg.(*mqlAwsBedrockAgentCoreFilesystemConfiguration).cacheEfsFilesystemArn = fileSystemArn
+		}
+		res = append(res, mqlCfg)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsBedrockAgentCoreBrowser) filesystemConfigurations() ([]any, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return nil, err
+	}
+	if detail == nil {
+		return []any{}, nil
+	}
+	return newAgentCoreFilesystemConfigurations(a.MqlRuntime, a.Arn.Data, detail.FilesystemConfigurations)
 }
 
 // --- Code interpreters ---
@@ -646,8 +749,54 @@ func (a *mqlAwsBedrockAgentCore) codeInterpreters() ([]any, error) {
 	}))
 }
 
+type mqlAwsBedrockAgentCoreCodeInterpreterInternal struct {
+	fetchLock sync.Mutex
+	fetched   atomic.Bool
+	detail    *bedrockagentcorecontrol.GetCodeInterpreterOutput
+}
+
 func (a *mqlAwsBedrockAgentCoreCodeInterpreter) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsBedrockAgentCoreCodeInterpreter) fetchDetail() (*bedrockagentcorecontrol.GetCodeInterpreterOutput, error) {
+	if a.fetched.Load() {
+		return a.detail, nil
+	}
+	a.fetchLock.Lock()
+	defer a.fetchLock.Unlock()
+	if a.fetched.Load() {
+		return a.detail, nil
+	}
+	if a.Id.Error != nil {
+		return nil, a.Id.Error
+	}
+	if a.Region.Error != nil {
+		return nil, a.Region.Error
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.BedrockAgentCoreControl(a.Region.Data)
+	codeInterpreterId := a.Id.Data
+	detail, err := svc.GetCodeInterpreter(context.Background(), &bedrockagentcorecontrol.GetCodeInterpreterInput{
+		CodeInterpreterId: &codeInterpreterId,
+	})
+	if err != nil {
+		return nil, err
+	}
+	a.detail = detail
+	a.fetched.Store(true)
+	return a.detail, nil
+}
+
+func (a *mqlAwsBedrockAgentCoreCodeInterpreter) filesystemConfigurations() ([]any, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return nil, err
+	}
+	if detail == nil {
+		return []any{}, nil
+	}
+	return newAgentCoreFilesystemConfigurations(a.MqlRuntime, a.Arn.Data, detail.FilesystemConfigurations)
 }
 
 // --- Identity: OAuth2 credential providers ---

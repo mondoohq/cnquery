@@ -905,6 +905,7 @@ const (
 	ResourceAwsBedrockAgentCoreMemory                                           string = "aws.bedrock.agentCore.memory"
 	ResourceAwsBedrockAgentCoreBrowser                                          string = "aws.bedrock.agentCore.browser"
 	ResourceAwsBedrockAgentCoreCodeInterpreter                                  string = "aws.bedrock.agentCore.codeInterpreter"
+	ResourceAwsBedrockAgentCoreFilesystemConfiguration                          string = "aws.bedrock.agentCore.filesystemConfiguration"
 	ResourceAwsBedrockAgentCoreOauth2CredentialProvider                         string = "aws.bedrock.agentCore.oauth2CredentialProvider"
 	ResourceAwsBedrockAgentCoreApiKeyCredentialProvider                         string = "aws.bedrock.agentCore.apiKeyCredentialProvider"
 	ResourceAwsBedrockAgentCoreWorkloadIdentity                                 string = "aws.bedrock.agentCore.workloadIdentity"
@@ -4509,6 +4510,10 @@ func init() {
 		"aws.bedrock.agentCore.codeInterpreter": {
 			// to override args, implement: initAwsBedrockAgentCoreCodeInterpreter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsBedrockAgentCoreCodeInterpreter,
+		},
+		"aws.bedrock.agentCore.filesystemConfiguration": {
+			// to override args, implement: initAwsBedrockAgentCoreFilesystemConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockAgentCoreFilesystemConfiguration,
 		},
 		"aws.bedrock.agentCore.oauth2CredentialProvider": {
 			// to override args, implement: initAwsBedrockAgentCoreOauth2CredentialProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -33865,6 +33870,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.bedrock.agentCore.browser.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockAgentCoreBrowser).GetDescription()).ToDataRes(types.String)
 	},
+	"aws.bedrock.agentCore.browser.filesystemConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreBrowser).GetFilesystemConfigurations()).ToDataRes(types.Array(types.Resource("aws.bedrock.agentCore.filesystemConfiguration")))
+	},
 	"aws.bedrock.agentCore.browser.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockAgentCoreBrowser).GetCreatedAt()).ToDataRes(types.Time)
 	},
@@ -33889,11 +33897,29 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.bedrock.agentCore.codeInterpreter.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockAgentCoreCodeInterpreter).GetDescription()).ToDataRes(types.String)
 	},
+	"aws.bedrock.agentCore.codeInterpreter.filesystemConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCodeInterpreter).GetFilesystemConfigurations()).ToDataRes(types.Array(types.Resource("aws.bedrock.agentCore.filesystemConfiguration")))
+	},
 	"aws.bedrock.agentCore.codeInterpreter.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockAgentCoreCodeInterpreter).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"aws.bedrock.agentCore.codeInterpreter.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockAgentCoreCodeInterpreter).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.agentCore.filesystemConfiguration.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreFilesystemConfiguration).GetType()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.filesystemConfiguration.accessPointArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreFilesystemConfiguration).GetAccessPointArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.filesystemConfiguration.fileSystemArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreFilesystemConfiguration).GetFileSystemArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.filesystemConfiguration.mountPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreFilesystemConfiguration).GetMountPath()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.filesystemConfiguration.fileSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreFilesystemConfiguration).GetFileSystem()).ToDataRes(types.Resource("aws.efs.filesystem"))
 	},
 	"aws.bedrock.agentCore.oauth2CredentialProvider.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockAgentCoreOauth2CredentialProvider).GetArn()).ToDataRes(types.String)
@@ -77406,6 +77432,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsBedrockAgentCoreBrowser).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.bedrock.agentCore.browser.filesystemConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreBrowser).FilesystemConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.bedrock.agentCore.browser.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBedrockAgentCoreBrowser).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -77442,12 +77472,40 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsBedrockAgentCoreCodeInterpreter).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.bedrock.agentCore.codeInterpreter.filesystemConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCodeInterpreter).FilesystemConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.bedrock.agentCore.codeInterpreter.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBedrockAgentCoreCodeInterpreter).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.bedrock.agentCore.codeInterpreter.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBedrockAgentCoreCodeInterpreter).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.filesystemConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreFilesystemConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.agentCore.filesystemConfiguration.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreFilesystemConfiguration).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.filesystemConfiguration.accessPointArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreFilesystemConfiguration).AccessPointArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.filesystemConfiguration.fileSystemArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreFilesystemConfiguration).FileSystemArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.filesystemConfiguration.mountPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreFilesystemConfiguration).MountPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.filesystemConfiguration.fileSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreFilesystemConfiguration).FileSystem, ok = plugin.RawToTValue[*mqlAwsEfsFilesystem](v.Value, v.Error)
 		return
 	},
 	"aws.bedrock.agentCore.oauth2CredentialProvider.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -187988,15 +188046,16 @@ func (c *mqlAwsBedrockAgentCoreMemory) GetUpdatedAt() *plugin.TValue[*time.Time]
 type mqlAwsBedrockAgentCoreBrowser struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsBedrockAgentCoreBrowserInternal it will be used here
-	Id          plugin.TValue[string]
-	Arn         plugin.TValue[string]
-	Name        plugin.TValue[string]
-	Region      plugin.TValue[string]
-	Status      plugin.TValue[string]
-	Description plugin.TValue[string]
-	CreatedAt   plugin.TValue[*time.Time]
-	UpdatedAt   plugin.TValue[*time.Time]
+	mqlAwsBedrockAgentCoreBrowserInternal
+	Id                       plugin.TValue[string]
+	Arn                      plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	Region                   plugin.TValue[string]
+	Status                   plugin.TValue[string]
+	Description              plugin.TValue[string]
+	FilesystemConfigurations plugin.TValue[[]any]
+	CreatedAt                plugin.TValue[*time.Time]
+	UpdatedAt                plugin.TValue[*time.Time]
 }
 
 // createAwsBedrockAgentCoreBrowser creates a new instance of this resource
@@ -188060,6 +188119,22 @@ func (c *mqlAwsBedrockAgentCoreBrowser) GetDescription() *plugin.TValue[string] 
 	return &c.Description
 }
 
+func (c *mqlAwsBedrockAgentCoreBrowser) GetFilesystemConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FilesystemConfigurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.agentCore.browser", c.__id, "filesystemConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.filesystemConfigurations()
+	})
+}
+
 func (c *mqlAwsBedrockAgentCoreBrowser) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
@@ -188072,15 +188147,16 @@ func (c *mqlAwsBedrockAgentCoreBrowser) GetUpdatedAt() *plugin.TValue[*time.Time
 type mqlAwsBedrockAgentCoreCodeInterpreter struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsBedrockAgentCoreCodeInterpreterInternal it will be used here
-	Id          plugin.TValue[string]
-	Arn         plugin.TValue[string]
-	Name        plugin.TValue[string]
-	Region      plugin.TValue[string]
-	Status      plugin.TValue[string]
-	Description plugin.TValue[string]
-	CreatedAt   plugin.TValue[*time.Time]
-	UpdatedAt   plugin.TValue[*time.Time]
+	mqlAwsBedrockAgentCoreCodeInterpreterInternal
+	Id                       plugin.TValue[string]
+	Arn                      plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	Region                   plugin.TValue[string]
+	Status                   plugin.TValue[string]
+	Description              plugin.TValue[string]
+	FilesystemConfigurations plugin.TValue[[]any]
+	CreatedAt                plugin.TValue[*time.Time]
+	UpdatedAt                plugin.TValue[*time.Time]
 }
 
 // createAwsBedrockAgentCoreCodeInterpreter creates a new instance of this resource
@@ -188144,12 +188220,104 @@ func (c *mqlAwsBedrockAgentCoreCodeInterpreter) GetDescription() *plugin.TValue[
 	return &c.Description
 }
 
+func (c *mqlAwsBedrockAgentCoreCodeInterpreter) GetFilesystemConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FilesystemConfigurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.agentCore.codeInterpreter", c.__id, "filesystemConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.filesystemConfigurations()
+	})
+}
+
 func (c *mqlAwsBedrockAgentCoreCodeInterpreter) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
 
 func (c *mqlAwsBedrockAgentCoreCodeInterpreter) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
+}
+
+// mqlAwsBedrockAgentCoreFilesystemConfiguration for the aws.bedrock.agentCore.filesystemConfiguration resource
+type mqlAwsBedrockAgentCoreFilesystemConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsBedrockAgentCoreFilesystemConfigurationInternal
+	Type           plugin.TValue[string]
+	AccessPointArn plugin.TValue[string]
+	FileSystemArn  plugin.TValue[string]
+	MountPath      plugin.TValue[string]
+	FileSystem     plugin.TValue[*mqlAwsEfsFilesystem]
+}
+
+// createAwsBedrockAgentCoreFilesystemConfiguration creates a new instance of this resource
+func createAwsBedrockAgentCoreFilesystemConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockAgentCoreFilesystemConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.agentCore.filesystemConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockAgentCoreFilesystemConfiguration) MqlName() string {
+	return "aws.bedrock.agentCore.filesystemConfiguration"
+}
+
+func (c *mqlAwsBedrockAgentCoreFilesystemConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockAgentCoreFilesystemConfiguration) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsBedrockAgentCoreFilesystemConfiguration) GetAccessPointArn() *plugin.TValue[string] {
+	return &c.AccessPointArn
+}
+
+func (c *mqlAwsBedrockAgentCoreFilesystemConfiguration) GetFileSystemArn() *plugin.TValue[string] {
+	return &c.FileSystemArn
+}
+
+func (c *mqlAwsBedrockAgentCoreFilesystemConfiguration) GetMountPath() *plugin.TValue[string] {
+	return &c.MountPath
+}
+
+func (c *mqlAwsBedrockAgentCoreFilesystemConfiguration) GetFileSystem() *plugin.TValue[*mqlAwsEfsFilesystem] {
+	return plugin.GetOrCompute[*mqlAwsEfsFilesystem](&c.FileSystem, func() (*mqlAwsEfsFilesystem, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.agentCore.filesystemConfiguration", c.__id, "fileSystem")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEfsFilesystem), nil
+			}
+		}
+
+		return c.fileSystem()
+	})
 }
 
 // mqlAwsBedrockAgentCoreOauth2CredentialProvider for the aws.bedrock.agentCore.oauth2CredentialProvider resource

@@ -471,6 +471,8 @@ const (
 	ResourceGcpProjectMemorystoreService                                               string = "gcp.project.memorystoreService"
 	ResourceGcpProjectMemorystoreServiceInstance                                       string = "gcp.project.memorystoreService.instance"
 	ResourceGcpProjectMemorystoreServiceInstancePscAttachmentDetail                    string = "gcp.project.memorystoreService.instance.pscAttachmentDetail"
+	ResourceGcpProjectMemorystoreServiceInstanceTokenAuthUser                          string = "gcp.project.memorystoreService.instance.tokenAuthUser"
+	ResourceGcpProjectMemorystoreServiceInstanceTokenAuthUserAuthToken                 string = "gcp.project.memorystoreService.instance.tokenAuthUser.authToken"
 	ResourceGcpProjectMemorystoreServiceBackupCollection                               string = "gcp.project.memorystoreService.backupCollection"
 	ResourceGcpProjectMemorystoreServiceBackup                                         string = "gcp.project.memorystoreService.backup"
 	ResourceGcpProjectMemorystoreServiceBackupBackupFile                               string = "gcp.project.memorystoreService.backup.backupFile"
@@ -2304,6 +2306,14 @@ func init() {
 			// to override args, implement: initGcpProjectMemorystoreServiceInstancePscAttachmentDetail(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectMemorystoreServiceInstancePscAttachmentDetail,
 		},
+		"gcp.project.memorystoreService.instance.tokenAuthUser": {
+			// to override args, implement: initGcpProjectMemorystoreServiceInstanceTokenAuthUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectMemorystoreServiceInstanceTokenAuthUser,
+		},
+		"gcp.project.memorystoreService.instance.tokenAuthUser.authToken": {
+			// to override args, implement: initGcpProjectMemorystoreServiceInstanceTokenAuthUserAuthToken(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectMemorystoreServiceInstanceTokenAuthUserAuthToken,
+		},
 		"gcp.project.memorystoreService.backupCollection": {
 			Init:   initGcpProjectMemorystoreServiceBackupCollection,
 			Create: createGcpProjectMemorystoreServiceBackupCollection,
@@ -2894,6 +2904,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.redisService.cluster.pscServiceAttachments": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectRedisServiceCluster).GetPscServiceAttachments()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.redisService.cluster.asyncClusterEndpointsDeletionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetAsyncClusterEndpointsDeletionEnabled()).ToDataRes(types.Bool)
 	},
 	"gcp.project.redisService.cluster.pscConfig.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectRedisServiceClusterPscConfig).GetProjectId()).ToDataRes(types.String)
@@ -7607,6 +7620,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.kmsService.keyring.cryptokey.version.reimportEligible": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersion).GetReimportEligible()).ToDataRes(types.Bool)
+	},
+	"gcp.project.kmsService.keyring.cryptokey.version.trustedWrappingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersion).GetTrustedWrappingEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.kmsService.keyring.cryptokey.version.hsmTrusted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersion).GetHsmTrusted()).ToDataRes(types.Bool)
 	},
 	"gcp.project.kmsService.keyring.cryptokey.version.attestation.cryptoKeyVersionName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersionAttestation).GetCryptoKeyVersionName()).ToDataRes(types.String)
@@ -17787,6 +17806,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.memorystoreService.instance.authorizationMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetAuthorizationMode()).ToDataRes(types.String)
 	},
+	"gcp.project.memorystoreService.instance.tokenAuthUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetTokenAuthUsers()).ToDataRes(types.Array(types.Resource("gcp.project.memorystoreService.instance.tokenAuthUser")))
+	},
 	"gcp.project.memorystoreService.instance.serverCaMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetServerCaMode()).ToDataRes(types.String)
 	},
@@ -17867,6 +17889,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.memorystoreService.instance.pscAttachmentDetail.connectionType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectMemorystoreServiceInstancePscAttachmentDetail).GetConnectionType()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.tokenAuthUser.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstanceTokenAuthUser).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.tokenAuthUser.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstanceTokenAuthUser).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.tokenAuthUser.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstanceTokenAuthUser).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.tokenAuthUser.authTokens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstanceTokenAuthUser).GetAuthTokens()).ToDataRes(types.Array(types.Resource("gcp.project.memorystoreService.instance.tokenAuthUser.authToken")))
+	},
+	"gcp.project.memorystoreService.instance.tokenAuthUser.authToken.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstanceTokenAuthUserAuthToken).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.tokenAuthUser.authToken.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstanceTokenAuthUserAuthToken).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.tokenAuthUser.authToken.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstanceTokenAuthUserAuthToken).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.tokenAuthUser.authToken.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstanceTokenAuthUserAuthToken).GetCreateTime()).ToDataRes(types.Time)
 	},
 	"gcp.project.memorystoreService.backupCollection.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectMemorystoreServiceBackupCollection).GetProjectId()).ToDataRes(types.String)
@@ -18754,6 +18800,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.redisService.cluster.pscServiceAttachments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectRedisServiceCluster).PscServiceAttachments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.asyncClusterEndpointsDeletionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).AsyncClusterEndpointsDeletionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.redisService.cluster.pscConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25514,6 +25564,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.kmsService.keyring.cryptokey.version.reimportEligible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersion).ReimportEligible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.keyring.cryptokey.version.trustedWrappingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersion).TrustedWrappingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.keyring.cryptokey.version.hsmTrusted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersion).HsmTrusted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.kmsService.keyring.cryptokey.version.attestation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -40376,6 +40434,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectMemorystoreServiceInstance).AuthorizationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.memorystoreService.instance.tokenAuthUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).TokenAuthUsers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.memorystoreService.instance.serverCaMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectMemorystoreServiceInstance).ServerCaMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -40486,6 +40548,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.memorystoreService.instance.pscAttachmentDetail.connectionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectMemorystoreServiceInstancePscAttachmentDetail).ConnectionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.tokenAuthUser.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstanceTokenAuthUser).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.memorystoreService.instance.tokenAuthUser.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstanceTokenAuthUser).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.tokenAuthUser.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstanceTokenAuthUser).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.tokenAuthUser.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstanceTokenAuthUser).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.tokenAuthUser.authTokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstanceTokenAuthUser).AuthTokens, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.tokenAuthUser.authToken.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstanceTokenAuthUserAuthToken).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.memorystoreService.instance.tokenAuthUser.authToken.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstanceTokenAuthUserAuthToken).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.tokenAuthUser.authToken.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstanceTokenAuthUserAuthToken).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.tokenAuthUser.authToken.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstanceTokenAuthUserAuthToken).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.tokenAuthUser.authToken.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstanceTokenAuthUserAuthToken).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"gcp.project.memorystoreService.backupCollection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -42334,39 +42436,40 @@ type mqlGcpProjectRedisServiceCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlGcpProjectRedisServiceClusterInternal
-	Name                          plugin.TValue[string]
-	ProjectId                     plugin.TValue[string]
-	Uid                           plugin.TValue[string]
-	CreateTime                    plugin.TValue[*time.Time]
-	State                         plugin.TValue[string]
-	StateInfo                     plugin.TValue[any]
-	AuthorizationMode             plugin.TValue[string]
-	TransitEncryptionMode         plugin.TValue[string]
-	NodeType                      plugin.TValue[string]
-	ShardCount                    plugin.TValue[int64]
-	ReplicaCount                  plugin.TValue[int64]
-	SizeGb                        plugin.TValue[int64]
-	PreciseSizeGb                 plugin.TValue[float64]
-	DeletionProtectionEnabled     plugin.TValue[bool]
-	KmsKey                        plugin.TValue[string]
-	CryptoKey                     plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
-	BackupCollection              plugin.TValue[string]
-	RedisConfigs                  plugin.TValue[map[string]any]
-	PersistenceConfig             plugin.TValue[any]
-	ZoneDistributionConfig        plugin.TValue[any]
-	MaintenancePolicy             plugin.TValue[any]
-	MaintenanceSchedule           plugin.TValue[any]
-	EncryptionInfo                plugin.TValue[any]
-	AutomatedBackupConfig         plugin.TValue[any]
-	CrossClusterReplicationConfig plugin.TValue[any]
-	PscConfigs                    plugin.TValue[[]any]
-	DiscoveryEndpoints            plugin.TValue[[]any]
-	PscConnections                plugin.TValue[[]any]
-	Backups                       plugin.TValue[[]any]
-	ClusterEndpoints              plugin.TValue[[]any]
-	ServerCaMode                  plugin.TValue[string]
-	ServerCaPool                  plugin.TValue[string]
-	PscServiceAttachments         plugin.TValue[[]any]
+	Name                                 plugin.TValue[string]
+	ProjectId                            plugin.TValue[string]
+	Uid                                  plugin.TValue[string]
+	CreateTime                           plugin.TValue[*time.Time]
+	State                                plugin.TValue[string]
+	StateInfo                            plugin.TValue[any]
+	AuthorizationMode                    plugin.TValue[string]
+	TransitEncryptionMode                plugin.TValue[string]
+	NodeType                             plugin.TValue[string]
+	ShardCount                           plugin.TValue[int64]
+	ReplicaCount                         plugin.TValue[int64]
+	SizeGb                               plugin.TValue[int64]
+	PreciseSizeGb                        plugin.TValue[float64]
+	DeletionProtectionEnabled            plugin.TValue[bool]
+	KmsKey                               plugin.TValue[string]
+	CryptoKey                            plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	BackupCollection                     plugin.TValue[string]
+	RedisConfigs                         plugin.TValue[map[string]any]
+	PersistenceConfig                    plugin.TValue[any]
+	ZoneDistributionConfig               plugin.TValue[any]
+	MaintenancePolicy                    plugin.TValue[any]
+	MaintenanceSchedule                  plugin.TValue[any]
+	EncryptionInfo                       plugin.TValue[any]
+	AutomatedBackupConfig                plugin.TValue[any]
+	CrossClusterReplicationConfig        plugin.TValue[any]
+	PscConfigs                           plugin.TValue[[]any]
+	DiscoveryEndpoints                   plugin.TValue[[]any]
+	PscConnections                       plugin.TValue[[]any]
+	Backups                              plugin.TValue[[]any]
+	ClusterEndpoints                     plugin.TValue[[]any]
+	ServerCaMode                         plugin.TValue[string]
+	ServerCaPool                         plugin.TValue[string]
+	PscServiceAttachments                plugin.TValue[[]any]
+	AsyncClusterEndpointsDeletionEnabled plugin.TValue[bool]
 }
 
 // createGcpProjectRedisServiceCluster creates a new instance of this resource
@@ -42560,6 +42663,10 @@ func (c *mqlGcpProjectRedisServiceCluster) GetServerCaPool() *plugin.TValue[stri
 
 func (c *mqlGcpProjectRedisServiceCluster) GetPscServiceAttachments() *plugin.TValue[[]any] {
 	return &c.PscServiceAttachments
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetAsyncClusterEndpointsDeletionEnabled() *plugin.TValue[bool] {
+	return &c.AsyncClusterEndpointsDeletionEnabled
 }
 
 // mqlGcpProjectRedisServiceClusterPscConfig for the gcp.project.redisService.cluster.pscConfig resource
@@ -58727,6 +58834,8 @@ type mqlGcpProjectKmsServiceKeyringCryptokeyVersion struct {
 	ExternalDestructionFailureReason plugin.TValue[string]
 	ExternalProtectionLevelOptions   plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOptions]
 	ReimportEligible                 plugin.TValue[bool]
+	TrustedWrappingEnabled           plugin.TValue[bool]
+	HsmTrusted                       plugin.TValue[bool]
 }
 
 // createGcpProjectKmsServiceKeyringCryptokeyVersion creates a new instance of this resource
@@ -58832,6 +58941,14 @@ func (c *mqlGcpProjectKmsServiceKeyringCryptokeyVersion) GetExternalProtectionLe
 
 func (c *mqlGcpProjectKmsServiceKeyringCryptokeyVersion) GetReimportEligible() *plugin.TValue[bool] {
 	return &c.ReimportEligible
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringCryptokeyVersion) GetTrustedWrappingEnabled() *plugin.TValue[bool] {
+	return &c.TrustedWrappingEnabled
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringCryptokeyVersion) GetHsmTrusted() *plugin.TValue[bool] {
+	return &c.HsmTrusted
 }
 
 // mqlGcpProjectKmsServiceKeyringCryptokeyVersionAttestation for the gcp.project.kmsService.keyring.cryptokey.version.attestation resource
@@ -94594,6 +94711,7 @@ type mqlGcpProjectMemorystoreServiceInstance struct {
 	EngineVersion                  plugin.TValue[string]
 	EngineConfigs                  plugin.TValue[map[string]any]
 	AuthorizationMode              plugin.TValue[string]
+	TokenAuthUsers                 plugin.TValue[[]any]
 	ServerCaMode                   plugin.TValue[string]
 	ServerCaPool                   plugin.TValue[string]
 	TransitEncryptionMode          plugin.TValue[string]
@@ -94710,6 +94828,22 @@ func (c *mqlGcpProjectMemorystoreServiceInstance) GetEngineConfigs() *plugin.TVa
 
 func (c *mqlGcpProjectMemorystoreServiceInstance) GetAuthorizationMode() *plugin.TValue[string] {
 	return &c.AuthorizationMode
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetTokenAuthUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TokenAuthUsers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.memorystoreService.instance", c.__id, "tokenAuthUsers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tokenAuthUsers()
+	})
 }
 
 func (c *mqlGcpProjectMemorystoreServiceInstance) GetServerCaMode() *plugin.TValue[string] {
@@ -94892,6 +95026,146 @@ func (c *mqlGcpProjectMemorystoreServiceInstancePscAttachmentDetail) GetServiceA
 
 func (c *mqlGcpProjectMemorystoreServiceInstancePscAttachmentDetail) GetConnectionType() *plugin.TValue[string] {
 	return &c.ConnectionType
+}
+
+// mqlGcpProjectMemorystoreServiceInstanceTokenAuthUser for the gcp.project.memorystoreService.instance.tokenAuthUser resource
+type mqlGcpProjectMemorystoreServiceInstanceTokenAuthUser struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectMemorystoreServiceInstanceTokenAuthUserInternal it will be used here
+	ProjectId  plugin.TValue[string]
+	Name       plugin.TValue[string]
+	State      plugin.TValue[string]
+	AuthTokens plugin.TValue[[]any]
+}
+
+// createGcpProjectMemorystoreServiceInstanceTokenAuthUser creates a new instance of this resource
+func createGcpProjectMemorystoreServiceInstanceTokenAuthUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectMemorystoreServiceInstanceTokenAuthUser{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.memorystoreService.instance.tokenAuthUser", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstanceTokenAuthUser) MqlName() string {
+	return "gcp.project.memorystoreService.instance.tokenAuthUser"
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstanceTokenAuthUser) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstanceTokenAuthUser) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstanceTokenAuthUser) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstanceTokenAuthUser) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstanceTokenAuthUser) GetAuthTokens() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AuthTokens, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.memorystoreService.instance.tokenAuthUser", c.__id, "authTokens")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.authTokens()
+	})
+}
+
+// mqlGcpProjectMemorystoreServiceInstanceTokenAuthUserAuthToken for the gcp.project.memorystoreService.instance.tokenAuthUser.authToken resource
+type mqlGcpProjectMemorystoreServiceInstanceTokenAuthUserAuthToken struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectMemorystoreServiceInstanceTokenAuthUserAuthTokenInternal it will be used here
+	ProjectId  plugin.TValue[string]
+	Name       plugin.TValue[string]
+	State      plugin.TValue[string]
+	CreateTime plugin.TValue[*time.Time]
+}
+
+// createGcpProjectMemorystoreServiceInstanceTokenAuthUserAuthToken creates a new instance of this resource
+func createGcpProjectMemorystoreServiceInstanceTokenAuthUserAuthToken(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectMemorystoreServiceInstanceTokenAuthUserAuthToken{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.memorystoreService.instance.tokenAuthUser.authToken", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstanceTokenAuthUserAuthToken) MqlName() string {
+	return "gcp.project.memorystoreService.instance.tokenAuthUser.authToken"
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstanceTokenAuthUserAuthToken) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstanceTokenAuthUserAuthToken) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstanceTokenAuthUserAuthToken) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstanceTokenAuthUserAuthToken) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstanceTokenAuthUserAuthToken) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
 }
 
 // mqlGcpProjectMemorystoreServiceBackupCollection for the gcp.project.memorystoreService.backupCollection resource

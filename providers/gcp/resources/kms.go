@@ -720,6 +720,8 @@ func cryptoKeyVersionToMql(runtime *plugin.Runtime, v *kmspb.CryptoKeyVersion) (
 		"externalDestructionFailureReason": llx.StringData(v.ExternalDestructionFailureReason),
 		"externalProtectionLevelOptions":   llx.ResourceData(mqlExtProtOpts, "gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions"),
 		"reimportEligible":                 llx.BoolData(v.ReimportEligible),
+		"trustedWrappingEnabled":           llx.BoolData(v.TrustedWrappingEnabled),
+		"hsmTrusted":                       llx.BoolData(v.HsmTrusted),
 	})
 }
 

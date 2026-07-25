@@ -646,6 +646,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.droplet.dropletSize": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanDroplet).GetDropletSize()).ToDataRes(types.Resource("digitalocean.size"))
 	},
+	"digitalocean.droplet.gpuPartitionMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDroplet).GetGpuPartitionMode()).ToDataRes(types.String)
+	},
 	"digitalocean.droplet.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanDroplet).GetStatus()).ToDataRes(types.String)
 	},
@@ -3490,6 +3493,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.droplet.dropletSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanDroplet).DropletSize, ok = plugin.RawToTValue[*mqlDigitaloceanSize](v.Value, v.Error)
+		return
+	},
+	"digitalocean.droplet.gpuPartitionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDroplet).GpuPartitionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"digitalocean.droplet.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8073,6 +8080,7 @@ type mqlDigitaloceanDroplet struct {
 	Region                plugin.TValue[string]
 	Size                  plugin.TValue[string]
 	DropletSize           plugin.TValue[*mqlDigitaloceanSize]
+	GpuPartitionMode      plugin.TValue[string]
 	Status                plugin.TValue[string]
 	Locked                plugin.TValue[bool]
 	CreatedAt             plugin.TValue[*time.Time]
@@ -8177,6 +8185,10 @@ func (c *mqlDigitaloceanDroplet) GetDropletSize() *plugin.TValue[*mqlDigitalocea
 
 		return c.dropletSize()
 	})
+}
+
+func (c *mqlDigitaloceanDroplet) GetGpuPartitionMode() *plugin.TValue[string] {
+	return &c.GpuPartitionMode
 }
 
 func (c *mqlDigitaloceanDroplet) GetStatus() *plugin.TValue[string] {

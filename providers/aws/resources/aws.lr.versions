@@ -1190,6 +1190,7 @@ aws.bedrock.agentCore.browser 13.31.2
 aws.bedrock.agentCore.browser.arn 13.31.2
 aws.bedrock.agentCore.browser.createdAt 13.31.2
 aws.bedrock.agentCore.browser.description 13.31.2
+aws.bedrock.agentCore.browser.filesystemConfigurations 13.50.4
 aws.bedrock.agentCore.browser.id 13.31.2
 aws.bedrock.agentCore.browser.name 13.31.2
 aws.bedrock.agentCore.browser.region 13.31.2
@@ -1200,12 +1201,19 @@ aws.bedrock.agentCore.codeInterpreter 13.31.2
 aws.bedrock.agentCore.codeInterpreter.arn 13.31.2
 aws.bedrock.agentCore.codeInterpreter.createdAt 13.31.2
 aws.bedrock.agentCore.codeInterpreter.description 13.31.2
+aws.bedrock.agentCore.codeInterpreter.filesystemConfigurations 13.50.4
 aws.bedrock.agentCore.codeInterpreter.id 13.31.2
 aws.bedrock.agentCore.codeInterpreter.name 13.31.2
 aws.bedrock.agentCore.codeInterpreter.region 13.31.2
 aws.bedrock.agentCore.codeInterpreter.status 13.31.2
 aws.bedrock.agentCore.codeInterpreter.updatedAt 13.31.2
 aws.bedrock.agentCore.codeInterpreters 13.31.2
+aws.bedrock.agentCore.filesystemConfiguration 13.50.4
+aws.bedrock.agentCore.filesystemConfiguration.accessPointArn 13.50.4
+aws.bedrock.agentCore.filesystemConfiguration.fileSystem 13.50.4
+aws.bedrock.agentCore.filesystemConfiguration.fileSystemArn 13.50.4
+aws.bedrock.agentCore.filesystemConfiguration.mountPath 13.50.4
+aws.bedrock.agentCore.filesystemConfiguration.type 13.50.4
 aws.bedrock.agentCore.gateway 13.31.2
 aws.bedrock.agentCore.gateway.arn 13.31.2
 aws.bedrock.agentCore.gateway.authorizerType 13.31.2

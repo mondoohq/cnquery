@@ -712,9 +712,10 @@ func (g *mqlGcpProjectRedisService) clusters() ([]any, error) {
 				clusterConvertClusterEndpoints(g.MqlRuntime, projectId, cluster.Name, cluster.ClusterEndpoints),
 				types.Resource("gcp.project.redisService.cluster.clusterEndpoint"),
 			),
-			"serverCaMode":          llx.StringData(serverCaMode),
-			"serverCaPool":          llx.StringData(serverCaPool),
-			"pscServiceAttachments": llx.ArrayData(pscServiceAttachments, types.Dict),
+			"serverCaMode":                         llx.StringData(serverCaMode),
+			"serverCaPool":                         llx.StringData(serverCaPool),
+			"pscServiceAttachments":                llx.ArrayData(pscServiceAttachments, types.Dict),
+			"asyncClusterEndpointsDeletionEnabled": llx.BoolDataPtr(cluster.AsyncClusterEndpointsDeletionEnabled),
 		})
 		if err != nil {
 			return nil, err

@@ -158,6 +158,14 @@ digitalocean.droplet @defaults("id name status") {
   size string
   // Hardware tier the droplet runs on, resolved from the size slug
   dropletSize() digitalocean.size
+  // GPU partition mode
+  //
+  // Partition layout the GPU is split into on a GPU droplet, either
+  // PARTITION_MODE_SPX_NPS1 or PARTITION_MODE_DPX_NPS2. Empty on droplets
+  // that do not partition their GPU and on non-GPU droplets. The partition
+  // modes a hardware tier offers are listed in `supportedPartitionModes`
+  // on the size returned by `dropletSize`.
+  gpuPartitionMode string
   // Status (new, active, off, archive)
   status string
   // Whether the droplet is locked while an action is in progress
@@ -1681,8 +1689,12 @@ digitalocean.size @defaults("slug vcpus memory priceMonthly") {
   // GPU details for GPU sizes
   //
   // Null on non-GPU sizes. On GPU sizes the dict carries `count`
-  // (number of GPUs), `model` (GPU model name), and a nested `vram`
-  // dict with `amount` and `unit` describing the video memory per GPU.
+  // (number of GPUs), `model` (GPU model name), a nested `vram`
+  // dict with `amount` and `unit` describing the video memory per GPU,
+  // and `supportedPartitionModes` listing the GPU partition modes the
+  // size offers. DigitalOcean returns `supportedPartitionModes` only to
+  // callers with access to GPU partitioning, so it is absent for
+  // accounts without the feature.
   gpuInfo dict
 }
 
