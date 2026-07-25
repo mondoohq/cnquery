@@ -11,6 +11,7 @@ import (
 
 	memorystore "cloud.google.com/go/memorystore/apiv1"
 	"cloud.google.com/go/memorystore/apiv1/memorystorepb"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -18,6 +19,8 @@ import (
 	"go.mondoo.com/mql/v13/types"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (g *mqlGcpProject) memorystore() (*mqlGcpProjectMemorystoreService, error) {
@@ -371,6 +374,155 @@ func buildMemorystorePscAttachmentDetails(runtime *plugin.Runtime, projectId, in
 		}
 		res = append(res, mqlDetail)
 	}
+	return res, nil
+}
+
+// =====================
+// TokenAuthUser
+// =====================
+
+// isMemorystoreAuthSkippable reports gRPC errors that mean the instance simply
+// does not carry token-based authentication, rather than a real failure. An
+// instance using AUTH_DISABLED or IAM_AUTH has no token auth users to list, and
+// a caller without the auth-config permissions must not fail the whole query.
+func isMemorystoreAuthSkippable(err error) bool {
+	if isGRPCSkippable(err) {
+		return true
+	}
+	if s, ok := status.FromError(err); ok {
+		switch s.Code() {
+		case codes.FailedPrecondition, codes.InvalidArgument:
+			return true
+		}
+	}
+	return false
+}
+
+func (g *mqlGcpProjectMemorystoreServiceInstanceTokenAuthUser) id() (string, error) {
+	if g.Name.Error != nil {
+		return "", g.Name.Error
+	}
+	return g.Name.Data, nil
+}
+
+func (g *mqlGcpProjectMemorystoreServiceInstance) tokenAuthUsers() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	projectId := g.ProjectId.Data
+	instanceName := g.Name.Data
+
+	conn, ok := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
+	creds, err := conn.Credentials(memorystore.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+	client, err := memorystore.NewRESTClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	it := client.ListTokenAuthUsers(ctx, &memorystorepb.ListTokenAuthUsersRequest{Parent: instanceName})
+
+	res := []any{}
+	for {
+		user, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			if isMemorystoreAuthSkippable(err) {
+				log.Debug().Err(err).Str("instance", instanceName).Msg("gcp> skipping memorystore token auth users")
+				return res, nil
+			}
+			return nil, err
+		}
+		mqlUser, err := CreateResource(g.MqlRuntime, "gcp.project.memorystoreService.instance.tokenAuthUser", map[string]*llx.RawData{
+			"projectId": llx.StringData(projectId),
+			"name":      llx.StringData(user.Name),
+			"state":     llx.StringData(user.State.String()),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlUser)
+	}
+
+	return res, nil
+}
+
+// =====================
+// AuthToken
+// =====================
+
+func (g *mqlGcpProjectMemorystoreServiceInstanceTokenAuthUserAuthToken) id() (string, error) {
+	if g.Name.Error != nil {
+		return "", g.Name.Error
+	}
+	return g.Name.Data, nil
+}
+
+func (g *mqlGcpProjectMemorystoreServiceInstanceTokenAuthUser) authTokens() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	projectId := g.ProjectId.Data
+	userName := g.Name.Data
+
+	conn, ok := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
+	creds, err := conn.Credentials(memorystore.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+	client, err := memorystore.NewRESTClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	it := client.ListAuthTokens(ctx, &memorystorepb.ListAuthTokensRequest{Parent: userName})
+
+	res := []any{}
+	for {
+		token, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			if isMemorystoreAuthSkippable(err) {
+				log.Debug().Err(err).Str("tokenAuthUser", userName).Msg("gcp> skipping memorystore auth tokens")
+				return res, nil
+			}
+			return nil, err
+		}
+		// The secret token value (token.Token) is deliberately not modeled.
+		mqlToken, err := CreateResource(g.MqlRuntime, "gcp.project.memorystoreService.instance.tokenAuthUser.authToken", map[string]*llx.RawData{
+			"projectId":  llx.StringData(projectId),
+			"name":       llx.StringData(token.Name),
+			"state":      llx.StringData(token.State.String()),
+			"createTime": llx.TimeDataPtr(timestampAsTimePtr(token.CreateTime)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlToken)
+	}
+
 	return res, nil
 }
 

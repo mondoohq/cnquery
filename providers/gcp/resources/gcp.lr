@@ -576,6 +576,12 @@ private gcp.project.redisService.cluster @defaults("name") {
   // Each entry has `serviceAttachment` (the service attachment resource)
   // and `connectionType`.
   pscServiceAttachments []dict
+  // Whether customer-registered cluster endpoints can be deleted asynchronously
+  //
+  // When true, a cluster endpoint that was created and registered by the
+  // customer can be de-registered before the forwarding rules it contains
+  // are deleted. Null when the cluster does not set the option.
+  asyncClusterEndpointsDeletionEnabled bool
 }
 
 // Google Cloud (GCP) Redis Cluster PSC configuration
@@ -5517,6 +5523,18 @@ private gcp.project.kmsService.keyring.cryptokey.version @defaults("name state")
   externalProtectionLevelOptions gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions
   // Whether the crypto key version is eligible for reimport
   reimportEligible bool
+  // Whether key material may be wrapped by a trusted key-wrapping key
+  //
+  // Set at creation or import time and only meaningful on versions with
+  // the HSM_SINGLE_TENANT protection level. False on every other
+  // protection level.
+  trustedWrappingEnabled bool
+  // Whether the key-wrapping key is trusted
+  //
+  // Only meaningful on versions whose key has the AES_256_WRAPPING
+  // purpose and the HSM_SINGLE_TENANT protection level. False on every
+  // other purpose or protection level.
+  hsmTrusted bool
 }
 
 // Google Cloud (GCP) KMS crypto key version attestation
@@ -17031,6 +17049,11 @@ private gcp.project.memorystoreService.instance @defaults("name state mode") {
   engineConfigs map[string]string
   // Authorization mode: AUTH_DISABLED | IAM_AUTH
   authorizationMode string
+  // Token-based authentication users configured on the instance
+  //
+  // Empty when the instance does not use token-based authentication or
+  // when the caller cannot read the instance's auth configuration.
+  tokenAuthUsers() []gcp.project.memorystoreService.instance.tokenAuthUser
   // Server CA certificate authority mode
   serverCaMode string
   // Server CA pool resource name
@@ -17098,6 +17121,46 @@ private gcp.project.memorystoreService.instance.pscAttachmentDetail @defaults("s
   serviceAttachment string
   // Connection type: PRIVATE_SERVICE_CONNECT | PUBLIC_ENDPOINT
   connectionType string
+}
+
+// Google Cloud (GCP) Memorystore token auth user
+//
+// Token-based authentication user on a Memorystore instance. Clients
+// authenticate as this user by presenting one of the auth tokens issued
+// to it, so `authTokens` is where token age and lifecycle state are
+// audited, and the presence of any user at all shows the instance
+// accepts token authentication alongside whatever `authorizationMode`
+// the instance reports. The `state` field distinguishes a settled ACTIVE
+// user from one still moving through CREATING, UPDATING, or DELETING.
+// The `name` field selects a user, for example
+// `projects/p/locations/us-central1/instances/i/tokenAuthUsers/u`.
+private gcp.project.memorystoreService.instance.tokenAuthUser @defaults("name state") {
+  // Project ID
+  projectId string
+  // Full resource name (projects/P/locations/L/instances/I/tokenAuthUsers/U)
+  name string
+  // Current state: ACTIVE | CREATING | UPDATING | DELETING
+  state string
+  // Auth tokens issued to the user
+  authTokens() []gcp.project.memorystoreService.instance.tokenAuthUser.authToken
+}
+
+// Google Cloud (GCP) Memorystore auth token
+//
+// Authentication token issued to a Memorystore token auth user. The
+// `createTime` field dates the token, which is what a credential
+// rotation audit measures, and `state` distinguishes a usable ACTIVE
+// token from one still CREATING or on its way out through DELETING. The
+// secret token value itself is not exposed.
+private gcp.project.memorystoreService.instance.tokenAuthUser.authToken @defaults("name state createTime") {
+  // Project ID
+  projectId string
+  // Full resource name (projects/P/locations/L/instances/I/tokenAuthUsers/U/authTokens/T)
+  name string
+  // Current state: ACTIVE | CREATING | DELETING
+  state string
+  // Creation time
+  createTime time
 }
 
 // Google Cloud (GCP) Memorystore backup collection

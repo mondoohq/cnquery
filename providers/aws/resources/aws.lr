@@ -28218,6 +28218,10 @@ private aws.bedrock.agentCore.browser @defaults("name status") {
   status string
   // Description of the browser
   description string
+  // File systems mounted into browser sessions
+  //
+  // Empty when the browser mounts no external storage.
+  filesystemConfigurations() []aws.bedrock.agentCore.filesystemConfiguration
   // Time the browser was created
   createdAt time
   // Time the browser was last updated
@@ -28242,10 +28246,41 @@ private aws.bedrock.agentCore.codeInterpreter @defaults("name status") {
   status string
   // Description of the code interpreter
   description string
+  // File systems mounted into code interpreter sessions
+  //
+  // Empty when the code interpreter mounts no external storage.
+  filesystemConfigurations() []aws.bedrock.agentCore.filesystemConfiguration
   // Time the code interpreter was created
   createdAt time
   // Time the code interpreter was last updated
   updatedAt time
+}
+
+// Amazon Bedrock AgentCore sandbox file system mount
+//
+// Access point mounted into an AgentCore browser or code interpreter
+// session and the path it appears at inside that session. The `type`
+// field separates an Elastic File System access point from an S3 Files
+// access point, `accessPointArn` names the access point itself,
+// `fileSystemArn` names the file system that owns it, and `mountPath`
+// gives the absolute in-session path the mount appears at, for example
+// /mnt/efs. On Elastic File System mounts `fileSystem` traverses to the
+// backing file system, which is how the storage an agent sandbox can
+// read and write is traced back to its source and its encryption and
+// backup posture.
+private aws.bedrock.agentCore.filesystemConfiguration @defaults("type mountPath accessPointArn") {
+  // Mount type: EFS or S3_FILES
+  type string
+  // ARN of the access point mounted into the session
+  accessPointArn string
+  // ARN of the file system that owns the access point
+  fileSystemArn string
+  // Absolute path within the session at which the access point is mounted
+  mountPath string
+  // Elastic File System backing the access point
+  //
+  // Null on S3 Files mounts, which are not backed by an Elastic File System.
+  fileSystem() aws.efs.filesystem
 }
 
 // Amazon Bedrock AgentCore OAuth2 credential provider

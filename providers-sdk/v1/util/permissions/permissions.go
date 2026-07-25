@@ -1286,6 +1286,14 @@ var gcpPermissionOverrides = map[string]map[string]string{
 	"memorystore": {
 		"GetInstance":         "memorystore.instances.get",
 		"GetBackupCollection": "memorystore.backupCollections.get",
+		// Token auth users and their auth tokens are sub-resources of an
+		// instance, and GCP publishes no memorystore.tokenAuthUsers.* or
+		// memorystore.authTokens.* permission — reading them is governed by
+		// read access on the parent instance. The derived plural forms would
+		// be rejected by IAM if a customer built a custom role from our
+		// manifest, so map both onto the documented instance permission.
+		"ListTokenAuthUsers": "memorystore.instances.get",
+		"ListAuthTokens":     "memorystore.instances.get",
 	},
 	"memcache": {
 		// CloudMemcacheClient.GetInstance → singular "instance" by default;
