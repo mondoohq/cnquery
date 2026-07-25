@@ -19,7 +19,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.42.0
-	github.com/aws/aws-sdk-go-v2/service/appstream v1.63.0
+	github.com/aws/aws-sdk-go-v2/service/appstream v1.64.0
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.56.0
 	github.com/aws/aws-sdk-go-v2/service/athena v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.70.0
@@ -27,7 +27,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/batch v1.68.0
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.66.0
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.58.0
-	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.50.0
+	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.46.0
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.75.0
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.67.0
@@ -40,7 +40,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.49.0
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.36.0
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.66.0
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.67.0
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.68.0
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.67.0
@@ -53,7 +53,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/drs v1.42.1
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.16.0
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.61.0
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.62.0
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.317.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.41.0
@@ -97,12 +97,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ram v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/rds v1.123.0
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.65.0
-	github.com/aws/aws-sdk-go-v2/service/route53 v1.65.1
+	github.com/aws/aws-sdk-go-v2/service/route53 v1.65.2
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.106.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.73.0
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.260.0
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.261.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.75.0

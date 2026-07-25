@@ -11,13 +11,13 @@ require (
 	cloud.google.com/go/alloydb v1.28.0
 	cloud.google.com/go/artifactregistry v1.26.0
 	cloud.google.com/go/asset v1.28.0
-	cloud.google.com/go/backupdr v1.15.0
-	cloud.google.com/go/batch v1.20.0
+	cloud.google.com/go/backupdr v1.16.0
+	cloud.google.com/go/batch v1.21.0
 	cloud.google.com/go/bigquery v1.79.0
-	cloud.google.com/go/bigtable v1.50.0
+	cloud.google.com/go/bigtable v1.51.0
 	cloud.google.com/go/certificatemanager v1.15.0
 	cloud.google.com/go/cloudbuild v1.32.0
-	cloud.google.com/go/cloudtasks v1.18.0
+	cloud.google.com/go/cloudtasks v1.19.0
 	cloud.google.com/go/compute v1.65.0
 	cloud.google.com/go/container v1.53.0
 	cloud.google.com/go/containeranalysis v0.19.0
@@ -34,16 +34,16 @@ require (
 	cloud.google.com/go/iam v1.12.0
 	cloud.google.com/go/iap v1.17.0
 	cloud.google.com/go/ids v1.11.0
-	cloud.google.com/go/kms v1.32.0
+	cloud.google.com/go/kms v1.33.0
 	cloud.google.com/go/longrunning v1.2.0
 	cloud.google.com/go/memcache v1.17.0
-	cloud.google.com/go/memorystore v1.2.0
+	cloud.google.com/go/memorystore v1.3.0
 	cloud.google.com/go/modelarmor v1.2.0
 	cloud.google.com/go/monitoring v1.30.0
 	cloud.google.com/go/orgpolicy v1.20.0
 	cloud.google.com/go/pubsub/v2 v2.6.1
 	cloud.google.com/go/recommender v1.19.0
-	cloud.google.com/go/redis v1.24.0
+	cloud.google.com/go/redis v1.25.0
 	cloud.google.com/go/run v1.22.0
 	cloud.google.com/go/scheduler v1.16.0
 	cloud.google.com/go/security v1.26.0
