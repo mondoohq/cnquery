@@ -176,6 +176,10 @@ func (c *mqlPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Runtim
 		shellOptions = append(shellOptions, shell.WithOnClose(onCloseHandler))
 		shellOptions = append(shellOptions, shell.WithFeatures(conf.Features))
 		shellOptions = append(shellOptions, shell.WithOutput(out))
+		// `run` is meant for non-interactive/scripted use, so we don't cap the
+		// output like the interactive shell does. Users piping or processing the
+		// full result set should get everything.
+		shellOptions = append(shellOptions, shell.WithMaxLines(0))
 
 		if upstreamConfig != nil {
 			shellOptions = append(shellOptions, shell.WithUpstreamConfig(upstreamConfig))
