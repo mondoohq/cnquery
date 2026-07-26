@@ -91,7 +91,7 @@ azure.subscription @defaults ("name") {
   // Advisor resources in the subscription
   advisor() azure.subscription.advisorService
   // Policy service in the subscription
-  policy azure.subscription.policy
+  policy() azure.subscription.policy
   // IoT resources in the subscription
   iot() azure.subscription.iotService
   // Cache resources in the subscription
@@ -1495,8 +1495,18 @@ azure.subscription.batchService.account.pool @defaults("id name") {
   hostEndpointProtectionMode string
   // Whether proxy agent is enabled on pool VMs
   proxyAgentEnabled bool
-  // Security encryption type for confidential computing (e.g., "DiskWithVMGuestState")
+  // Encryption applied to the pool's OS disk for confidential computing
+  //
+  // One of VMGuestStateOnly (only the VM guest state is encrypted) or
+  // DiskWithVMGuestState (the full OS disk and the guest state are
+  // encrypted). Null when the pool does not use a confidential or
+  // trusted-launch VM.
   securityEncryptionType string
+  // Security type of the pool's virtual machines
+  //
+  // One of confidentialVM or trustedLaunch. Null when the pool uses
+  // standard VMs with no additional platform security profile.
+  securityType string
   // When the pool was created
   creationTime time
   // Creation and last-modification provenance recorded by Azure Resource Manager
@@ -2371,6 +2381,48 @@ private azure.subscription.networkService.virtualNetworkGateway.ipConfig @defaul
   publicIpAddress() azure.subscription.networkService.ipAddress
 }
 
+// Azure Virtual Network (VNet) gateway NAT rule
+//
+// A single NAT rule on a VPN gateway, used to translate overlapping
+// on-premises and Azure address spaces so a site-to-site tunnel can be
+// established between networks that share a CIDR. Surfaces the NAT
+// direction in mode ("EgressSnat" or "IngressSnat"), the allocation
+// natRuleType ("Static" or "Dynamic"), the address-space and port-range
+// mappings in internalMappings and externalMappings, and the gateway IP
+// configuration the rule is bound to.
+private azure.subscription.networkService.virtualNetworkGateway.natRule @defaults("name mode natRuleType") {
+  // VNet gateway NAT rule ID
+  id string
+  // VNet gateway NAT rule name
+  name string
+  // VNet gateway NAT rule etag
+  etag string
+  // Raw NAT rule properties
+  properties dict
+  // Source NAT direction
+  //
+  // One of EgressSnat (translates the Azure address space on the way out)
+  // or IngressSnat (translates the on-premises address space on the way in).
+  mode string
+  // NAT rule allocation type
+  //
+  // One of Static (a one-to-one address mapping) or Dynamic (addresses are
+  // allocated from the pool as connections are established).
+  natRuleType string
+  // Private address spaces and port ranges translated on the internal side
+  //
+  // Each entry has an `addressSpace` CIDR and an optional `portRange`.
+  internalMappings []dict
+  // Address spaces and port ranges the internal mappings are translated to
+  //
+  // Each entry has an `addressSpace` CIDR and an optional `portRange`.
+  externalMappings []dict
+  // Gateway IP configuration this NAT rule applies to
+  ipConfigurationId string
+  // Provisioning state of the NAT rule
+  provisioningState string
+}
+
 // Azure Virtual Network (VNet) gateway connection
 private azure.subscription.networkService.virtualNetworkGateway.connection @defaults("id name connectionType connectionStatus") {
   // VNet gateway connection ID
@@ -3205,7 +3257,21 @@ private azure.subscription.networkService.exposure {
   // Whether the resource has at least one public IP address assigned
   hasPublicIp bool
   // Whether the effective NSG chain (NIC and subnet NSGs, resolved by priority) admits inbound traffic from any internet source
+  //
+  // A resource whose network interfaces have no NSG attached at all admits
+  // every inbound flow, so this is true in that case. Check
+  // securityGroupsEvaluated before trusting a false: an unreadable effective
+  // rule set also yields false.
   securityGroupAllowsIngress bool
+  // Whether Azure returned an authoritative effective rule set for every network interface
+  //
+  // False when the effective-security-rules call was denied, throttled, or
+  // unavailable for at least one interface (for example a deallocated VM, or
+  // a caller without the effectiveNetworkSecurityGroups action). When false,
+  // internetReachable and securityGroupAllowsIngress reflect only the
+  // interfaces that could be evaluated and must not be read as proof that
+  // the resource is closed.
+  securityGroupsEvaluated bool
   // Effective inbound rules that admit traffic from any internet source
   //
   // The priority-resolved inbound Allow rules that survive shadowing by any
@@ -5899,6 +5965,11 @@ private azure.subscription.privateEndpointConnection @defaults("id name type") {
   // Private endpoint connection type
   type string
   // Private endpoint connection IP addresses
+  //
+  // Addresses allocated to the connection, when the owning service reports
+  // them. Most Azure services omit them from the connection read model and
+  // return an empty list; the addresses are always available through
+  // privateEndpoint and its network interfaces.
   ipAddresses []string
   // Raw private endpoint resource ID
   //
@@ -10178,7 +10249,7 @@ azure.subscription.aksService.cluster @defaults("name location kubernetesVersion
   // Kubernetes support plan ("KubernetesOfficial" or "AKSLongTermSupport")
   supportPlan string
   // Advanced networking configuration for the cluster
-  advancedNetworking azure.subscription.aksService.cluster.advancedNetworking
+  advancedNetworking() azure.subscription.aksService.cluster.advancedNetworking
   // Azure Active Directory configuration for the cluster
   aadProfile() azure.subscription.aksService.cluster.aadProfile
   // Auto-upgrade configuration for the cluster
@@ -10896,8 +10967,13 @@ azure.subscription.cacheService.redisInstance @defaults("id hostName") {
   principalId string
   // User-assigned managed identities attached to the cache
   userAssignedIdentities() []azure.subscription.managedIdentity
-  // Key Vault key used for customer-managed encryption (null if platform-managed)
-  encryptionKey() azure.subscription.keyVaultService.key
+  // Key Vault key used for customer-managed encryption
+  //
+  // Deprecated in favor of the Redis Enterprise resources. Always null:
+  // customer-managed key encryption is not available on Azure Cache for
+  // Redis, only on Redis Enterprise / Azure Managed Redis, and the Redis
+  // management API exposes no encryption model on this resource.
+  encryptionKey() @maturity("deprecated") azure.subscription.keyVaultService.key
   // Private endpoint connections for the Redis cache
   privateEndpointConnections() []azure.subscription.cacheService.redisInstance.privateEndpointConnection
   // Firewall rules for the Redis cache

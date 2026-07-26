@@ -11,6 +11,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	hybridcompute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/hybridcompute/armhybridcompute/v2"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -37,6 +38,10 @@ func (a *mqlAzureSubscriptionComputeService) hybridMachines() ([]any, error) {
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure hybridMachines, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, m := range page.Value {
@@ -190,6 +195,10 @@ func (a *mqlAzureSubscriptionComputeServiceHybridMachine) extensions() ([]any, e
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure extensions, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, ext := range page.Value {
@@ -270,7 +279,7 @@ func initAzureSubscriptionComputeServiceHybridMachine(runtime *plugin.Runtime, a
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
 			args["id"] = llx.StringData(ids.id)
 		}
 	}
@@ -295,10 +304,16 @@ func initAzureSubscriptionComputeServiceHybridMachine(runtime *plugin.Runtime, a
 	if machines.Error != nil {
 		return nil, nil, machines.Error
 	}
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	wantID := strings.ToLower(id)
 	for _, entry := range machines.Data {
-		machine := entry.(*mqlAzureSubscriptionComputeServiceHybridMachine)
+		machine, ok := entry.(*mqlAzureSubscriptionComputeServiceHybridMachine)
+		if !ok {
+			continue
+		}
 		if strings.ToLower(machine.Id.Data) == wantID {
 			return args, machine, nil
 		}

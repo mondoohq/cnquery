@@ -737,6 +737,9 @@ func (a *mqlAzureSubscriptionCloudDefenderService) securityContacts() ([]any, er
 			return nil, err
 		}
 		for _, contact := range page.ContactList.Value {
+			if contact == nil {
+				continue
+			}
 			args := argsFromContactProperties(contact.Properties)
 			args["id"] = llx.StringDataPtr(contact.ID)
 			args["name"] = llx.StringDataPtr(contact.Name)
@@ -995,6 +998,9 @@ func (a *mqlAzureSubscriptionCloudDefenderService) secureScores() ([]any, error)
 			return nil, err
 		}
 		for _, item := range page.Value {
+			if item == nil {
+				continue
+			}
 			var displayName string
 			var currentScore float64
 			var maxScore int64
@@ -1068,6 +1074,9 @@ func (a *mqlAzureSubscriptionCloudDefenderService) secureScoreControls() ([]any,
 			return nil, err
 		}
 		for _, item := range page.Value {
+			if item == nil {
+				continue
+			}
 			var displayName string
 			var description string
 			var currentScore float64
@@ -1161,6 +1170,9 @@ func (a *mqlAzureSubscriptionCloudDefenderService) regulatoryComplianceStandards
 			return nil, err
 		}
 		for _, item := range page.Value {
+			if item == nil {
+				continue
+			}
 			var state string
 			var passedControls int64
 			var failedControls int64
@@ -1243,6 +1255,9 @@ func (a *mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard) c
 			return nil, err
 		}
 		for _, item := range page.Value {
+			if item == nil {
+				continue
+			}
 			var state string
 			var description string
 			var passedAssessments int64
@@ -1460,6 +1475,9 @@ func (a *mqlAzureSubscriptionCloudDefenderService) assessments() ([]any, error) 
 			return nil, err
 		}
 		for _, item := range page.Value {
+			if item == nil {
+				continue
+			}
 			var displayName, status, statusCause, statusDescription string
 			var firstEvaluationDate, statusChangeDate *time.Time
 			additionalData := map[string]any{}
@@ -1510,9 +1528,27 @@ func (a *mqlAzureSubscriptionCloudDefenderService) assessments() ([]any, error) 
 			}
 			resourceId := strings.SplitN(id, "/providers/Microsoft.Security/assessments/", 2)[0]
 
-			meta := assessmentMetadata{}
+			// The catalogue lookup can miss because metadata was never fetched
+			// (the list call was denied or throttled) as well as because the
+			// assessment genuinely has none. Report the catalogue-derived
+			// fields as null in that case rather than as "" / [] / false:
+			// severity is a @defaults field, and a blank severity on every
+			// finding silently breaks `where(severity == "High")`.
+			meta, metaKnown := assessmentMetadata{}, false
 			if item.Name != nil {
-				meta = metaByName[*item.Name]
+				meta, metaKnown = metaByName[*item.Name]
+			}
+			strOrNull := func(v string) *llx.RawData {
+				if !metaKnown {
+					return llx.NilData
+				}
+				return llx.StringData(v)
+			}
+			arrOrNull := func(v []any) *llx.RawData {
+				if !metaKnown {
+					return llx.NilData
+				}
+				return llx.ArrayData(v, types.String)
 			}
 
 			mqlResource, err := CreateResource(a.MqlRuntime,
@@ -1527,7 +1563,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) assessments() ([]any, error) 
 					"statusDescription":        llx.StringData(statusDescription),
 					"firstEvaluationDate":      llx.TimeDataPtr(firstEvaluationDate),
 					"statusChangeDate":         llx.TimeDataPtr(statusChangeDate),
-					"severity":                 llx.StringData(meta.severity),
+					"severity":                 strOrNull(meta.severity),
 					"resourceId":               llx.StringData(resourceId),
 					"additionalData":           llx.DictData(additionalData),
 					"riskLevel":                llx.StringData(riskLevel),
@@ -1535,16 +1571,16 @@ func (a *mqlAzureSubscriptionCloudDefenderService) assessments() ([]any, error) 
 					"riskAttackPathReferences": llx.ArrayData(riskAttackPathRefs, types.String),
 					"riskAttackPaths":          llx.ArrayData(riskAttackPaths, types.Dict),
 					"riskIsContextual":         llx.BoolData(riskIsContextual),
-					"assessmentType":           llx.StringData(meta.assessmentType),
-					"categories":               llx.ArrayData(meta.categories, types.String),
-					"threats":                  llx.ArrayData(meta.threats, types.String),
-					"tactics":                  llx.ArrayData(meta.tactics, types.String),
-					"techniques":               llx.ArrayData(meta.techniques, types.String),
-					"implementationEffort":     llx.StringData(meta.implementationEffort),
-					"userImpact":               llx.StringData(meta.userImpact),
-					"remediationDescription":   llx.StringData(meta.remediationDescription),
+					"assessmentType":           strOrNull(meta.assessmentType),
+					"categories":               arrOrNull(meta.categories),
+					"threats":                  arrOrNull(meta.threats),
+					"tactics":                  arrOrNull(meta.tactics),
+					"techniques":               arrOrNull(meta.techniques),
+					"implementationEffort":     strOrNull(meta.implementationEffort),
+					"userImpact":               strOrNull(meta.userImpact),
+					"remediationDescription":   strOrNull(meta.remediationDescription),
 					"preview":                  llx.BoolData(meta.preview),
-					"description":              llx.StringData(meta.description),
+					"description":              strOrNull(meta.description),
 				})
 			if err != nil {
 				return nil, err
@@ -1586,6 +1622,9 @@ func (a *mqlAzureSubscriptionCloudDefenderService) alerts() ([]any, error) {
 			return nil, err
 		}
 		for _, item := range page.Value {
+			if item == nil {
+				continue
+			}
 			var displayName, severity, status, description, alertType string
 			var intent, vendorName, compromisedEntity string
 			var startTime, endTime, timeGenerated *time.Time

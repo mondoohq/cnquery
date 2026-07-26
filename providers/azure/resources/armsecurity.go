@@ -163,19 +163,14 @@ type PolicyAssignment struct {
 			Category string `json:"category"`
 		} `json:"metadata"`
 		PolicyDefinitionID string `json:"policyDefinitionId"`
-		Parameters         struct {
-			AllowedSkus struct {
-				Value string `json:"value"`
-			} `json:"allowedSkus"`
-			Effect struct {
-				Value string `json:"value"`
-			} `json:"effect"`
-			ApprovedExtensions struct {
-				Value []string `json:"value"`
-			} `json:"approvedExtensions"`
-		} `json:"parameters"`
-		Scope     string `json:"scope"`
-		NotScopes []any  `json:"notScopes"`
+		// Parameters is an open map keyed by parameter name, each value an
+		// object of the form {"value": <any>}. It must not be modeled as a
+		// closed struct: the parameter set differs per policy definition, and
+		// naming a fixed subset both drops every other parameter and reports
+		// the named ones as present-but-empty on assignments that lack them.
+		Parameters map[string]any `json:"parameters"`
+		Scope      string         `json:"scope"`
+		NotScopes  []any          `json:"notScopes"`
 	} `json:"properties"`
 }
 

@@ -224,6 +224,10 @@ func (a *mqlAzureSubscriptionAutomationServiceAccount) variables() ([]any, error
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure variables, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, v := range page.Value {
@@ -281,6 +285,10 @@ func (a *mqlAzureSubscriptionAutomationServiceAccount) credentials() ([]any, err
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure credentials, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, c := range page.Value {
@@ -337,6 +345,10 @@ func (a *mqlAzureSubscriptionAutomationServiceAccount) certificates() ([]any, er
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure certificates, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, c := range page.Value {

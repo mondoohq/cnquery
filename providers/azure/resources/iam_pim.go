@@ -7,6 +7,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -26,13 +28,26 @@ func scopeForSubscription(subID string) string {
 	return "/subscriptions/" + subID
 }
 
-// pimUnavailable reports whether a PIM list error is a 4xx — most commonly
-// AadPremiumLicenseRequired on tenants without Entra ID P2 / Governance, but
-// also access-denied. Such tenants simply have no PIM data, so callers treat it
-// as an empty result rather than failing the whole authorization query.
+// pimUnavailable reports whether a PIM list error means the tenant genuinely
+// has no PIM data — most commonly AadPremiumLicenseRequired on tenants without
+// Entra ID P2 / Governance, but also access-denied and not-found. Callers turn
+// those into an empty result rather than failing the whole authorization query.
+//
+// The status codes are matched individually rather than as a 4xx range. A 429
+// means Microsoft.Authorization throttled us, which is likely on a tenant-wide
+// scan and says nothing about PIM: treating it as "no PIM data" would report
+// zero standing Owner eligibilities on a tenant that has dozens, and let
+// `roleEligibilitySchedules.none(...)` pass vacuously.
 func pimUnavailable(err error) bool {
 	var respErr *azcore.ResponseError
-	return errors.As(err, &respErr) && respErr.StatusCode >= 400 && respErr.StatusCode < 500
+	if !errors.As(err, &respErr) {
+		return false
+	}
+	switch respErr.StatusCode {
+	case http.StatusBadRequest, http.StatusUnauthorized, http.StatusForbidden, http.StatusNotFound:
+		return true
+	}
+	return false
 }
 
 type mqlAzureSubscriptionAuthorizationServiceRoleEligibilityScheduleInternal struct {
@@ -392,12 +407,17 @@ func resolveRoleDefinition(runtime *plugin.Runtime, roleDefinitionId string, fie
 		field.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	subId, err := extractSubscriptionID(roleDefinitionId)
-	if err != nil {
-		return nil, err
+	// Resolve against the connected subscription. A PIM eligibility can name a
+	// role defined at a management group, whose ID has no "subscriptions"
+	// segment to parse; the subscription-scoped listing already includes
+	// MG-inherited definitions, so it covers that case.
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not an Azure connection")
 	}
-	r, err := CreateResource(runtime, "azure.subscription", map[string]*llx.RawData{
-		"subscriptionId": llx.StringData(subId),
+	r, err := CreateResource(runtime, ResourceAzureSubscription, map[string]*llx.RawData{
+		"__id":           llx.StringData("/subscriptions/" + conn.SubId()),
+		"subscriptionId": llx.StringData(conn.SubId()),
 	})
 	if err != nil {
 		return nil, err
@@ -406,13 +426,19 @@ func resolveRoleDefinition(runtime *plugin.Runtime, roleDefinitionId string, fie
 	if iam.Error != nil {
 		return nil, iam.Error
 	}
+	if iam.Data == nil {
+		return nil, errors.New("cannot resolve the authorization service for the subscription")
+	}
 	rolesVal := iam.Data.GetRoles()
 	if rolesVal.Error != nil {
 		return nil, rolesVal.Error
 	}
 	for i := range rolesVal.Data {
-		role := rolesVal.Data[i].(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition)
-		if role.__id == roleDefinitionId {
+		role, ok := rolesVal.Data[i].(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition)
+		if !ok {
+			continue
+		}
+		if strings.EqualFold(role.__id, roleDefinitionId) {
 			return role, nil
 		}
 	}

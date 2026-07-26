@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -23,6 +24,10 @@ import (
 	"go.mondoo.com/mql/v13/providers/azure/connection"
 	"go.mondoo.com/mql/v13/types"
 )
+
+func (a *mqlAzureSubscriptionPolicy) id() (string, error) {
+	return "azure.subscription.policy/" + a.SubscriptionId.Data, nil
+}
 
 func initAzureSubscriptionPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 0 {
@@ -267,6 +272,9 @@ func (a *mqlAzureSubscriptionPolicy) setDefinitions() ([]any, error) {
 			return nil, err
 		}
 		for _, setDef := range page.Value {
+			if setDef == nil {
+				continue
+			}
 			props := setDef.Properties
 			if props == nil {
 				props = &armpolicy.SetDefinitionProperties{}
@@ -640,7 +648,7 @@ func (a *mqlAzureSubscriptionPolicy) complianceSummary() (*mqlAzureSubscriptionP
 // mqlAzureSubscriptionPolicyComplianceSummaryInternal caches the single
 // SummarizeForSubscription response so every compliance field shares one call.
 type mqlAzureSubscriptionPolicyComplianceSummaryInternal struct {
-	fetched                     bool
+	fetched                     atomic.Bool
 	lock                        sync.Mutex
 	cachedNonCompliantResources int64
 	cachedNonCompliantPolicies  int64
@@ -650,12 +658,12 @@ type mqlAzureSubscriptionPolicyComplianceSummaryInternal struct {
 }
 
 func (a *mqlAzureSubscriptionPolicyComplianceSummary) fetchSummary() error {
-	if a.fetched {
+	if a.fetched.Load() {
 		return nil
 	}
 	a.lock.Lock()
 	defer a.lock.Unlock()
-	if a.fetched {
+	if a.fetched.Load() {
 		return nil
 	}
 
@@ -704,7 +712,7 @@ func (a *mqlAzureSubscriptionPolicyComplianceSummary) fetchSummary() error {
 		}
 	}
 
-	a.fetched = true
+	a.fetched.Store(true)
 	return nil
 }
 

@@ -37,6 +37,9 @@ func (a *mqlAzureSubscription) resourceGroups() ([]any, error) {
 			return nil, err
 		}
 		for _, rg := range page.Value {
+			if rg == nil {
+				continue
+			}
 			var provisioningState *string
 			if rg.Properties != nil {
 				provisioningState = rg.Properties.ProvisioningState

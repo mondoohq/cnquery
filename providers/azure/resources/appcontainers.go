@@ -15,6 +15,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	apps "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appcontainers/armappcontainers/v4"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -202,7 +203,7 @@ func initAzureSubscriptionContainerAppServiceContainerApp(runtime *plugin.Runtim
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
 			args["id"] = llx.StringData(ids.id)
 		}
 	}
@@ -278,7 +279,7 @@ func initAzureSubscriptionContainerAppServiceManagedEnvironment(runtime *plugin.
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
 			args["id"] = llx.StringData(ids.id)
 		}
 	}
@@ -364,6 +365,10 @@ func (a *mqlAzureSubscriptionContainerAppService) managedEnvironments() ([]any, 
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure managedEnvironments, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, entry := range page.Value {
@@ -543,6 +548,9 @@ func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) daprComponen
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			var componentType, version, provisioningState, deploymentErrors string
 			var ignoreErrors *bool
 			secretNames := []any{}
@@ -637,6 +645,9 @@ func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) certificates
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			var subject, thumbprint, provisioningState, deploymentErrors, issuer, publicKeyHash string
 			var issueDate, notAfter *time.Time
 			var validPtr *bool
@@ -726,6 +737,10 @@ func (a *mqlAzureSubscriptionContainerAppService) containerApps() ([]any, error)
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure containerApps, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, entry := range page.Value {
@@ -1091,6 +1106,9 @@ func (a *mqlAzureSubscriptionContainerAppServiceContainerApp) revisions() ([]any
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			var active *bool
 			var trafficWeight, replicas *int32
 			var provisioningState, healthState, runningState, provisioningError string
@@ -1190,6 +1208,9 @@ func (a *mqlAzureSubscriptionContainerAppServiceContainerApp) authConfigs() ([]a
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			enabled := false
 			var unauth string
 			providers := []any{}
@@ -1286,9 +1307,16 @@ func (a *mqlAzureSubscriptionContainerAppService) jobs() ([]any, error) {
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure jobs, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			var managedEnvId, provisioningState, triggerType, cron, workloadProfile, eventStreamEndpoint string
 			var replicaTimeout, replicaRetry *int32
 			eventTrigger := map[string]any{}
@@ -1432,6 +1460,9 @@ func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) privateEndpo
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			var status, description, actionsRequired, provisioningState, privateEndpointId string
 			groupIds := []any{}
 			if entry.Properties != nil {
@@ -1521,6 +1552,9 @@ func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) httpRouteCon
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			var fqdn, provisioningState string
 			customDomains := []any{}
 			rules := []any{}
@@ -1615,6 +1649,9 @@ func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) maintenanceC
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			entries := []any{}
 			if entry.Properties != nil && len(entry.Properties.ScheduledEntries) > 0 {
 				d, err := convert.JsonToDictSlice(entry.Properties.ScheduledEntries)

@@ -312,10 +312,10 @@ func nspAccessRuleFields(props *network.NspAccessRuleProperties) (direction, pro
 	if props.ProvisioningState != nil {
 		provisioningState = string(*props.ProvisioningState)
 	}
-	addressPrefixes = convert.SliceStrPtrToInterface(props.AddressPrefixes)
-	fqdns = convert.SliceStrPtrToInterface(props.FullyQualifiedDomainNames)
-	serviceTags = convert.SliceStrPtrToInterface(props.ServiceTags)
-	emailAddresses = convert.SliceStrPtrToInterface(props.EmailAddresses)
+	addressPrefixes = strPtrsToAny(props.AddressPrefixes)
+	fqdns = strPtrsToAny(props.FullyQualifiedDomainNames)
+	serviceTags = strPtrsToAny(props.ServiceTags)
+	emailAddresses = strPtrsToAny(props.EmailAddresses)
 	for _, sub := range props.Subscriptions {
 		if sub != nil && sub.ID != nil {
 			subscriptions = append(subscriptions, *sub.ID)

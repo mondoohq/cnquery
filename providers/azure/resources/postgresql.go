@@ -66,6 +66,9 @@ func (a *mqlAzureSubscriptionPostgreSqlService) servers() ([]any, error) {
 			return nil, err
 		}
 		for _, dbServer := range page.Value {
+			if dbServer == nil {
+				continue
+			}
 			properties := make(map[string](any))
 
 			data, err := json.Marshal(dbServer.Properties)
@@ -174,6 +177,9 @@ func (a *mqlAzureSubscriptionPostgreSqlService) flexibleServers() ([]any, error)
 			return nil, err
 		}
 		for _, dbServer := range page.Value {
+			if dbServer == nil {
+				continue
+			}
 			properties := make(map[string](any))
 
 			data, err := json.Marshal(dbServer.Properties)
@@ -303,6 +309,9 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceServer) databases() ([]any, error)
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			mqlAzureDatabase, err := CreateResource(a.MqlRuntime, "azure.subscription.postgreSqlService.database",
 				map[string]*llx.RawData{
 					"id":        llx.StringDataPtr(entry.ID),
@@ -350,6 +359,9 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) databases() ([]any
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			mqlAzureDatabase, err := CreateResource(a.MqlRuntime, "azure.subscription.postgreSqlService.database",
 				map[string]*llx.RawData{
 					"id":        llx.StringDataPtr(entry.ID),
@@ -397,6 +409,9 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceServer) firewallRules() ([]any, er
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			mqlFireWallRule, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.firewallrule",
 				map[string]*llx.RawData{
 					"id":             llx.StringDataPtr(entry.ID),
@@ -443,6 +458,9 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) firewallRules() ([
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			mqlFireWallRule, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.firewallrule",
 				map[string]*llx.RawData{
 					"id":             llx.StringDataPtr(entry.ID),
@@ -490,6 +508,9 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceServer) configuration() ([]any, er
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			mqlAzureConfiguration, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.configuration",
 				map[string]*llx.RawData{
 					"id":            llx.StringDataPtr(entry.ID),
@@ -542,6 +563,9 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) configuration() ([
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			mqlAzureConfiguration, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.configuration",
 				map[string]*llx.RawData{
 					"id":            llx.StringDataPtr(entry.ID),
@@ -570,7 +594,7 @@ func initAzureSubscriptionPostgreSqlServiceServer(runtime *plugin.Runtime, args 
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
 			args["id"] = llx.StringData(ids.id)
 		}
 	}
@@ -593,7 +617,10 @@ func initAzureSubscriptionPostgreSqlServiceServer(runtime *plugin.Runtime, args 
 	if servers.Error != nil {
 		return nil, nil, servers.Error
 	}
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	for _, entry := range servers.Data {
 		vm := entry.(*mqlAzureSubscriptionPostgreSqlServiceServer)
 		if vm.Id.Data == id {
@@ -610,7 +637,7 @@ func initAzureSubscriptionPostgreSqlServiceFlexibleServer(runtime *plugin.Runtim
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
 			args["id"] = llx.StringData(ids.id)
 		}
 	}
@@ -633,7 +660,10 @@ func initAzureSubscriptionPostgreSqlServiceFlexibleServer(runtime *plugin.Runtim
 	if servers.Error != nil {
 		return nil, nil, servers.Error
 	}
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	for _, entry := range servers.Data {
 		vm := entry.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer)
 		if vm.Id.Data == id {
@@ -709,17 +739,10 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) privateEndpointCon
 					args["provisioningState"] = llx.StringData(string(*pec.Properties.ProvisioningState))
 				}
 				if pec.Properties.PrivateLinkServiceConnectionState != nil {
-					stateArgs := map[string]*llx.RawData{}
-					if pec.Properties.PrivateLinkServiceConnectionState.ActionsRequired != nil {
-						stateArgs["actionsRequired"] = llx.StringDataPtr(pec.Properties.PrivateLinkServiceConnectionState.ActionsRequired)
-					}
-					if pec.Properties.PrivateLinkServiceConnectionState.Description != nil {
-						stateArgs["description"] = llx.StringDataPtr(pec.Properties.PrivateLinkServiceConnectionState.Description)
-					}
-					if pec.Properties.PrivateLinkServiceConnectionState.Status != nil {
-						stateArgs["status"] = llx.StringData(string(*pec.Properties.PrivateLinkServiceConnectionState.Status))
-					}
-					stateRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState, stateArgs)
+					stateRes, err := newPrivateLinkServiceConnectionState(a.MqlRuntime, convert.ToValue(pec.ID),
+						stringEnumPtr(pec.Properties.PrivateLinkServiceConnectionState.ActionsRequired),
+						pec.Properties.PrivateLinkServiceConnectionState.Description,
+						stringEnumPtr(pec.Properties.PrivateLinkServiceConnectionState.Status))
 					if err != nil {
 						return nil, err
 					}

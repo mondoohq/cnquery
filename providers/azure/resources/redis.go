@@ -23,10 +23,6 @@ func (a *mqlAzureSubscriptionCacheService) id() (string, error) {
 }
 
 type mqlAzureSubscriptionCacheServiceRedisInstanceInternal struct {
-	// cacheEncryptionKeyURI stores the customer-managed key URI for encryption.
-	// Note: armredis/v3 does not expose encryption fields on Properties.
-	// This will be populated when the SDK adds support for CMK encryption configuration.
-	cacheEncryptionKeyURI           string
 	cachePrivateEndpointConnections []*armredis.PrivateEndpointConnection
 	cacheUserAssignedIdentityIds    []string
 	cacheSystemData                 any
@@ -73,7 +69,7 @@ func initAzureSubscriptionCacheServiceRedisInstance(runtime *plugin.Runtime, arg
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
 			args["id"] = llx.StringData(ids.id)
 		}
 	}
@@ -471,12 +467,15 @@ func (a *mqlAzureSubscriptionCacheServiceRedisInstance) patchSchedules() ([]any,
 	return res, nil
 }
 
+// encryptionKey always resolves to null for Azure Cache for Redis. Customer-
+// managed key encryption is a Redis Enterprise / Azure Managed Redis feature
+// (Microsoft.Cache/redisEnterprise), and armredis/v4 exposes no encryption or
+// customer-managed-key model on the classic Redis resource at all, so there is
+// nothing to read. Null is the truthful answer rather than a stub, but the
+// field is marked deprecated so no new audit is written against it.
 func (a *mqlAzureSubscriptionCacheServiceRedisInstance) encryptionKey() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
-	if a.cacheEncryptionKeyURI == "" {
-		a.EncryptionKey.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
-	}
-	return newKeyVaultKeyResource(a.MqlRuntime, a.cacheEncryptionKeyURI)
+	a.EncryptionKey.State = plugin.StateIsNull | plugin.StateIsSet
+	return nil, nil
 }
 
 func (a *mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule) id() (string, error) {

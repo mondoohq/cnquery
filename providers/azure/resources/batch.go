@@ -9,6 +9,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	armbatch "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/batch/armbatch/v4"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -44,7 +45,7 @@ func initAzureSubscriptionBatchServiceAccount(runtime *plugin.Runtime, args map[
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
 			args["id"] = llx.StringData(ids.id)
 		}
 	}
@@ -100,6 +101,10 @@ func (a *mqlAzureSubscriptionBatchService) accounts() ([]any, error) {
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure accounts, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 
@@ -412,6 +417,10 @@ func (a *mqlAzureSubscriptionBatchServiceAccount) pools() ([]any, error) {
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure pools, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, entry := range page.Value {
@@ -465,6 +474,7 @@ func createBatchPoolRawData(pool *armbatch.Pool) (map[string]*llx.RawData, error
 		hostEndpointProtectionMode      = llx.NilData
 		proxyAgentEnabled               = llx.NilData
 		securityEncryptionType          = llx.NilData
+		securityType                    = llx.NilData
 		creationTimeData                = llx.NilData
 	)
 
@@ -538,8 +548,18 @@ func createBatchPoolRawData(pool *armbatch.Pool) (map[string]*llx.RawData, error
 					}
 				}
 				if sp.SecurityType != nil {
-					securityEncryptionType = llx.StringData(string(*sp.SecurityType))
+					securityType = llx.StringData(string(*sp.SecurityType))
 				}
+			}
+
+			// securityEncryptionType lives on the managed OS disk's own
+			// security profile, not on the VM security profile: SecurityType
+			// is confidentialVM/trustedLaunch, while the encryption type is
+			// VMGuestStateOnly/DiskWithVMGuestState.
+			if osDisk := vmConfig.OSDisk; osDisk != nil && osDisk.ManagedDisk != nil &&
+				osDisk.ManagedDisk.SecurityProfile != nil &&
+				osDisk.ManagedDisk.SecurityProfile.SecurityEncryptionType != nil {
+				securityEncryptionType = llx.StringData(string(*osDisk.ManagedDisk.SecurityProfile.SecurityEncryptionType))
 			}
 		}
 	}
@@ -560,6 +580,7 @@ func createBatchPoolRawData(pool *armbatch.Pool) (map[string]*llx.RawData, error
 		"hostEndpointProtectionMode":    hostEndpointProtectionMode,
 		"proxyAgentEnabled":             proxyAgentEnabled,
 		"securityEncryptionType":        securityEncryptionType,
+		"securityType":                  securityType,
 		"creationTime":                  creationTimeData,
 	}, nil
 }

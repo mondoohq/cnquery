@@ -497,10 +497,22 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) fileProperties() (*mqlAzureS
 		return nil, err
 	}
 
+	// The inner FileServiceProperties pointer is nullable, exactly like the
+	// blob-side one guarded above: an account that never had file-service
+	// settings written returns an empty body. Dereferencing it bare would
+	// panic, and a provider panic is unrecoverable - it kills the whole scan.
+	var fileProps *storage.FileServicePropertiesProperties
+	if properties.FileServiceProperties.FileServiceProperties != nil {
+		fileProps = properties.FileServiceProperties.FileServiceProperties
+	}
+
 	// Build share delete retention policy
 	var shareDeleteRetentionPolicyEnabled bool
 	var shareDeleteRetentionPolicyDays *int32
-	policyFromClient := properties.FileServiceProperties.FileServiceProperties.ShareDeleteRetentionPolicy
+	var policyFromClient *storage.DeleteRetentionPolicy
+	if fileProps != nil {
+		policyFromClient = fileProps.ShareDeleteRetentionPolicy
+	}
 	if policyFromClient != nil {
 		shareDeleteRetentionPolicyEnabled = convert.ToValue(policyFromClient.Enabled)
 		shareDeleteRetentionPolicyDays = policyFromClient.Days
@@ -518,7 +530,10 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) fileProperties() (*mqlAzureS
 
 	// Build protocol settings SMB
 	var smbVersions, smbChannelEncryption, smbAuthenticationMethods, smbKerberosTicketEncryption *string
-	protocolSettingsFromClient := properties.FileServiceProperties.FileServiceProperties.ProtocolSettings
+	var protocolSettingsFromClient *storage.ProtocolSettings
+	if fileProps != nil {
+		protocolSettingsFromClient = fileProps.ProtocolSettings
+	}
 	if protocolSettingsFromClient != nil && protocolSettingsFromClient.Smb != nil {
 		smb := protocolSettingsFromClient.Smb
 		smbVersions = smb.Versions
@@ -1122,7 +1137,7 @@ func initAzureSubscriptionStorageServiceAccount(runtime *plugin.Runtime, args ma
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
 			args["id"] = llx.StringData(ids.id)
 		}
 	}
@@ -1146,7 +1161,10 @@ func initAzureSubscriptionStorageServiceAccount(runtime *plugin.Runtime, args ma
 	if accs.Error != nil {
 		return nil, nil, accs.Error
 	}
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	for _, entry := range accs.Data {
 		storageAcc := entry.(*mqlAzureSubscriptionStorageServiceAccount)
 		if storageAcc.Id.Data == id {
@@ -1163,7 +1181,7 @@ func initAzureSubscriptionStorageServiceAccountContainer(runtime *plugin.Runtime
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
 			args["id"] = llx.StringData(ids.id)
 		}
 	}
@@ -1187,7 +1205,10 @@ func initAzureSubscriptionStorageServiceAccountContainer(runtime *plugin.Runtime
 	if accs.Error != nil {
 		return nil, nil, accs.Error
 	}
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	for _, entry := range accs.Data {
 		storageAcc := entry.(*mqlAzureSubscriptionStorageServiceAccount)
 		containers := storageAcc.GetContainers()

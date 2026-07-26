@@ -69,6 +69,7 @@ const (
 	ResourceAzureSubscriptionNetworkServiceServiceEndpointPolicy                                      string = "azure.subscription.networkService.serviceEndpointPolicy"
 	ResourceAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition                            string = "azure.subscription.networkService.serviceEndpointPolicy.definition"
 	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig                              string = "azure.subscription.networkService.virtualNetworkGateway.ipConfig"
+	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule                               string = "azure.subscription.networkService.virtualNetworkGateway.natRule"
 	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection                            string = "azure.subscription.networkService.virtualNetworkGateway.connection"
 	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnectionIpsecPolicy                 string = "azure.subscription.networkService.virtualNetworkGateway.connection.ipsecPolicy"
 	ResourceAzureSubscriptionNetworkServiceLocalNetworkGateway                                        string = "azure.subscription.networkService.localNetworkGateway"
@@ -709,6 +710,10 @@ func init() {
 		"azure.subscription.networkService.virtualNetworkGateway.ipConfig": {
 			// to override args, implement: initAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig,
+		},
+		"azure.subscription.networkService.virtualNetworkGateway.natRule": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule,
 		},
 		"azure.subscription.networkService.virtualNetworkGateway.connection": {
 			// to override args, implement: initAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4048,6 +4053,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.batchService.account.pool.securityEncryptionType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionBatchServiceAccountPool).GetSecurityEncryptionType()).ToDataRes(types.String)
 	},
+	"azure.subscription.batchService.account.pool.securityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionBatchServiceAccountPool).GetSecurityType()).ToDataRes(types.String)
+	},
 	"azure.subscription.batchService.account.pool.creationTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionBatchServiceAccountPool).GetCreationTime()).ToDataRes(types.Time)
 	},
@@ -4990,6 +4998,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.virtualNetworkGateway.ipConfig.publicIpAddress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig).GetPublicIpAddress()).ToDataRes(types.Resource("azure.subscription.networkService.ipAddress"))
 	},
+	"azure.subscription.networkService.virtualNetworkGateway.natRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.natRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.natRule.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.natRule.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.natRule.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule).GetMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.natRule.natRuleType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule).GetNatRuleType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.natRule.internalMappings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule).GetInternalMappings()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.natRule.externalMappings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule).GetExternalMappings()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.natRule.ipConfigurationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule).GetIpConfigurationId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.natRule.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule).GetProvisioningState()).ToDataRes(types.String)
+	},
 	"azure.subscription.networkService.virtualNetworkGateway.connection.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).GetId()).ToDataRes(types.String)
 	},
@@ -5865,6 +5903,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.exposure.securityGroupAllowsIngress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceExposure).GetSecurityGroupAllowsIngress()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.exposure.securityGroupsEvaluated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExposure).GetSecurityGroupsEvaluated()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.networkService.exposure.openIngressRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceExposure).GetOpenIngressRules()).ToDataRes(types.Array(types.Dict))
@@ -21335,6 +21376,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionBatchServiceAccountPool).SecurityEncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.batchService.account.pool.securityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionBatchServiceAccountPool).SecurityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.batchService.account.pool.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionBatchServiceAccountPool).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -22691,6 +22736,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig).PublicIpAddress, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceIpAddress](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.virtualNetworkGateway.natRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.natRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.natRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.natRule.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.natRule.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.natRule.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.natRule.natRuleType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule).NatRuleType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.natRule.internalMappings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule).InternalMappings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.natRule.externalMappings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule).ExternalMappings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.natRule.ipConfigurationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule).IpConfigurationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.natRule.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.virtualNetworkGateway.connection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).__id, ok = v.Value.(string)
 		return
@@ -23969,6 +24058,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.exposure.securityGroupAllowsIngress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceExposure).SecurityGroupAllowsIngress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.exposure.securityGroupsEvaluated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExposure).SecurityGroupsEvaluated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.exposure.openIngressRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -43716,7 +43809,19 @@ func (c *mqlAzureSubscription) GetAdvisor() *plugin.TValue[*mqlAzureSubscription
 }
 
 func (c *mqlAzureSubscription) GetPolicy() *plugin.TValue[*mqlAzureSubscriptionPolicy] {
-	return &c.Policy
+	return plugin.GetOrCompute[*mqlAzureSubscriptionPolicy](&c.Policy, func() (*mqlAzureSubscriptionPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription", c.__id, "policy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionPolicy), nil
+			}
+		}
+
+		return c.policy()
+	})
 }
 
 func (c *mqlAzureSubscription) GetIot() *plugin.TValue[*mqlAzureSubscriptionIotService] {
@@ -48280,6 +48385,7 @@ type mqlAzureSubscriptionBatchServiceAccountPool struct {
 	HostEndpointProtectionMode    plugin.TValue[string]
 	ProxyAgentEnabled             plugin.TValue[bool]
 	SecurityEncryptionType        plugin.TValue[string]
+	SecurityType                  plugin.TValue[string]
 	CreationTime                  plugin.TValue[*time.Time]
 	SystemMetadata                plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
@@ -48379,6 +48485,10 @@ func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetProxyAgentEnabled() *pl
 
 func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetSecurityEncryptionType() *plugin.TValue[string] {
 	return &c.SecurityEncryptionType
+}
+
+func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetSecurityType() *plugin.TValue[string] {
+	return &c.SecurityType
 }
 
 func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetCreationTime() *plugin.TValue[*time.Time] {
@@ -52039,6 +52149,100 @@ func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig) GetPub
 	})
 }
 
+// mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule for the azure.subscription.networkService.virtualNetworkGateway.natRule resource
+type mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRuleInternal it will be used here
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Etag              plugin.TValue[string]
+	Properties        plugin.TValue[any]
+	Mode              plugin.TValue[string]
+	NatRuleType       plugin.TValue[string]
+	InternalMappings  plugin.TValue[[]any]
+	ExternalMappings  plugin.TValue[[]any]
+	IpConfigurationId plugin.TValue[string]
+	ProvisioningState plugin.TValue[string]
+}
+
+// createAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.virtualNetworkGateway.natRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule) MqlName() string {
+	return "azure.subscription.networkService.virtualNetworkGateway.natRule"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule) GetNatRuleType() *plugin.TValue[string] {
+	return &c.NatRuleType
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule) GetInternalMappings() *plugin.TValue[[]any] {
+	return &c.InternalMappings
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule) GetExternalMappings() *plugin.TValue[[]any] {
+	return &c.ExternalMappings
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule) GetIpConfigurationId() *plugin.TValue[string] {
+	return &c.IpConfigurationId
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
 // mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection for the azure.subscription.networkService.virtualNetworkGateway.connection resource
 type mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection struct {
 	MqlRuntime *plugin.Runtime
@@ -55204,6 +55408,7 @@ type mqlAzureSubscriptionNetworkServiceExposure struct {
 	InternetReachable          plugin.TValue[bool]
 	HasPublicIp                plugin.TValue[bool]
 	SecurityGroupAllowsIngress plugin.TValue[bool]
+	SecurityGroupsEvaluated    plugin.TValue[bool]
 	OpenIngressRules           plugin.TValue[[]any]
 }
 
@@ -55249,6 +55454,10 @@ func (c *mqlAzureSubscriptionNetworkServiceExposure) GetHasPublicIp() *plugin.TV
 
 func (c *mqlAzureSubscriptionNetworkServiceExposure) GetSecurityGroupAllowsIngress() *plugin.TValue[bool] {
 	return &c.SecurityGroupAllowsIngress
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExposure) GetSecurityGroupsEvaluated() *plugin.TValue[bool] {
+	return &c.SecurityGroupsEvaluated
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceExposure) GetOpenIngressRules() *plugin.TValue[[]any] {
@@ -65371,7 +65580,12 @@ func createAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction(runtime
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("azure.subscription.webService.appsiteconfig.ipSecurityRestriction", res.__id)
@@ -65474,7 +65688,12 @@ func createAzureSubscriptionWebServiceHostingEnvironment(runtime *plugin.Runtime
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("azure.subscription.webService.hostingEnvironment", res.__id)
@@ -65625,7 +65844,12 @@ func createAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork(runtime *
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("azure.subscription.webService.hostingEnvironment.virtualNetwork", res.__id)
@@ -81219,7 +81443,19 @@ func (c *mqlAzureSubscriptionAksServiceCluster) GetSupportPlan() *plugin.TValue[
 }
 
 func (c *mqlAzureSubscriptionAksServiceCluster) GetAdvancedNetworking() *plugin.TValue[*mqlAzureSubscriptionAksServiceClusterAdvancedNetworking] {
-	return &c.AdvancedNetworking
+	return plugin.GetOrCompute[*mqlAzureSubscriptionAksServiceClusterAdvancedNetworking](&c.AdvancedNetworking, func() (*mqlAzureSubscriptionAksServiceClusterAdvancedNetworking, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.aksService.cluster", c.__id, "advancedNetworking")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionAksServiceClusterAdvancedNetworking), nil
+			}
+		}
+
+		return c.advancedNetworking()
+	})
 }
 
 func (c *mqlAzureSubscriptionAksServiceCluster) GetAadProfile() *plugin.TValue[*mqlAzureSubscriptionAksServiceClusterAadProfile] {
@@ -82358,7 +82594,12 @@ func createAzureSubscriptionPolicy(runtime *plugin.Runtime, args map[string]*llx
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("azure.subscription.policy", res.__id)
@@ -83153,7 +83394,12 @@ func createAzureSubscriptionIotService(runtime *plugin.Runtime, args map[string]
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("azure.subscription.iotService", res.__id)

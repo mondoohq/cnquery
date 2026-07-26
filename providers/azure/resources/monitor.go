@@ -339,14 +339,14 @@ func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]any, error) 
 					mqlAnyOfLeaf := mqlAlertLeafCondition{
 						FieldName:   convert.ToValue(leaf.Field),
 						Equals:      convert.ToValue(leaf.Equals),
-						ContainsAny: convert.SliceStrPtrToStr(leaf.ContainsAny),
+						ContainsAny: azureStrPtrsToStr(leaf.ContainsAny),
 					}
 					anyOf = append(anyOf, mqlAnyOfLeaf)
 				}
 				mqlCondition := mqlAlertCondition{
 					FieldName:   convert.ToValue(cond.Field),
 					Equals:      convert.ToValue(cond.Equals),
-					ContainsAny: convert.SliceStrPtrToStr(cond.ContainsAny),
+					ContainsAny: azureStrPtrsToStr(cond.ContainsAny),
 					AnyOf:       anyOf,
 				}
 				conditions = append(conditions, mqlCondition)
@@ -375,7 +375,7 @@ func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]any, error) 
 					"actions":     llx.DictData(actionsDict),
 					"conditions":  llx.DictData(conditionsDict),
 					"description": llx.StringDataPtr(entry.Properties.Description),
-					"scopes":      llx.ArrayData(convert.SliceStrPtrToInterface(entry.Properties.Scopes), types.String),
+					"scopes":      llx.ArrayData(strPtrsToAny(entry.Properties.Scopes), types.String),
 					"type":        llx.StringDataPtr(entry.Type),
 					"tags":        llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
 					"location":    llx.StringDataPtr(entry.Location),
@@ -902,31 +902,29 @@ func newMqlActivityLogEntry(runtime *plugin.Runtime, entry *monitor.EventData) (
 }
 
 func (a *mqlAzureSubscriptionMonitorServiceLogprofile) storageAccount() (*mqlAzureSubscriptionStorageServiceAccount, error) {
-	if a.StorageAccountId.IsNull() {
-		return nil, errors.New("diagnostic settings has no storage account")
-	}
 	if a.StorageAccountId.Error != nil {
 		return nil, a.StorageAccountId.Error
 	}
-	storageAccId := a.StorageAccountId.Data
-	if storageAccId == "" {
-		return nil, errors.New("diagnostic settings has no storage account")
+	// Most diagnostic settings route to Log Analytics or Event Hub and have no
+	// storage destination at all, so an absent account is the common case.
+	if a.StorageAccountId.IsNull() || a.StorageAccountId.Data == "" {
+		a.StorageAccount.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
-	return getStorageAccount(storageAccId, a.MqlRuntime, a.MqlRuntime.Connection.(*connection.AzureConnection))
+	return getStorageAccount(a.StorageAccountId.Data, a.MqlRuntime, a.MqlRuntime.Connection.(*connection.AzureConnection))
 }
 
 func (a *mqlAzureSubscriptionMonitorServiceDiagnosticsetting) storageAccount() (*mqlAzureSubscriptionStorageServiceAccount, error) {
-	if a.StorageAccountId.IsNull() {
-		return nil, errors.New("diagnostic settings has no storage account")
-	}
 	if a.StorageAccountId.Error != nil {
 		return nil, a.StorageAccountId.Error
 	}
-	storageAccId := a.StorageAccountId.Data
-	if storageAccId == "" {
-		return nil, errors.New("diagnostic settings has no storage account")
+	// Most diagnostic settings route to Log Analytics or Event Hub and have no
+	// storage destination at all, so an absent account is the common case.
+	if a.StorageAccountId.IsNull() || a.StorageAccountId.Data == "" {
+		a.StorageAccount.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
-	return getStorageAccount(storageAccId, a.MqlRuntime, a.MqlRuntime.Connection.(*connection.AzureConnection))
+	return getStorageAccount(a.StorageAccountId.Data, a.MqlRuntime, a.MqlRuntime.Connection.(*connection.AzureConnection))
 }
 
 // diagnosticLogSettings normalizes a diagnostic setting's log categories into

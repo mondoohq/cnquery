@@ -43,7 +43,7 @@ func initAzureSubscriptionCosmosDbServiceAccount(runtime *plugin.Runtime, args m
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
 			args["id"] = llx.StringData(ids.id)
 		}
 	}
@@ -667,17 +667,10 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccount) privateEndpointConnections(
 					args["provisioningState"] = llx.StringDataPtr(pec.Properties.ProvisioningState)
 				}
 				if pec.Properties.PrivateLinkServiceConnectionState != nil {
-					stateArgs := map[string]*llx.RawData{}
-					if pec.Properties.PrivateLinkServiceConnectionState.ActionsRequired != nil {
-						stateArgs["actionsRequired"] = llx.StringDataPtr(pec.Properties.PrivateLinkServiceConnectionState.ActionsRequired)
-					}
-					if pec.Properties.PrivateLinkServiceConnectionState.Description != nil {
-						stateArgs["description"] = llx.StringDataPtr(pec.Properties.PrivateLinkServiceConnectionState.Description)
-					}
-					if pec.Properties.PrivateLinkServiceConnectionState.Status != nil {
-						stateArgs["status"] = llx.StringDataPtr(pec.Properties.PrivateLinkServiceConnectionState.Status)
-					}
-					stateRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState, stateArgs)
+					stateRes, err := newPrivateLinkServiceConnectionState(a.MqlRuntime, convert.ToValue(pec.ID),
+						stringEnumPtr(pec.Properties.PrivateLinkServiceConnectionState.ActionsRequired),
+						pec.Properties.PrivateLinkServiceConnectionState.Description,
+						stringEnumPtr(pec.Properties.PrivateLinkServiceConnectionState.Status))
 					if err != nil {
 						return nil, err
 					}

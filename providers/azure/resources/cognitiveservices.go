@@ -52,7 +52,7 @@ func initAzureSubscriptionCognitiveServicesServiceAccount(runtime *plugin.Runtim
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
 			args["id"] = llx.StringData(ids.id)
 		}
 	}
@@ -66,7 +66,10 @@ func initAzureSubscriptionCognitiveServicesServiceAccount(runtime *plugin.Runtim
 		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
 	}
 
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	resourceID, err := ParseResourceID(id)
 	if err != nil {
 		return nil, nil, err
@@ -829,7 +832,10 @@ func initAzureSubscriptionCognitiveServicesServiceAccountRaiTopic(runtime *plugi
 	if !ok {
 		return args, nil, nil
 	}
-	id := idArg.Value.(string)
+	id, ok := idArg.Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 
 	conn, ok := runtime.Connection.(*connection.AzureConnection)
 	if !ok {

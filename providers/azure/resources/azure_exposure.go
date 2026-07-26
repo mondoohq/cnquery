@@ -174,7 +174,14 @@ func rulePortIntervals(rule map[string]any) []portInterval {
 	var out []portInterval
 	add := func(s string) {
 		s = strings.TrimSpace(s)
-		if s == "" || s == "*" {
+		// An empty string means "this form is not in use" (Azure populates
+		// destinationPortRanges and leaves the singular empty, or vice versa),
+		// not "all ports". Let the len(out) == 0 fallback below decide, so an
+		// empty singular can't widen a deny rule to cover every port.
+		if s == "" {
+			return
+		}
+		if s == "*" {
 			out = append(out, portInterval{0, 65535})
 			return
 		}
@@ -225,10 +232,14 @@ func portsCover(deny, allow []portInterval) bool {
 }
 
 // protocolCovers reports whether a deny rule's protocol covers an allow rule's
-// protocol. "*"/"Any"/empty on the deny side covers every protocol.
+// protocol. "All"/"*"/"Any"/empty on the deny side covers every protocol.
+//
+// The effective-rules API emits "All" (armnetwork.EffectiveSecurityRuleProtocol
+// is one of All, Tcp, Udp); the "*" and "Any" spellings come from the raw NSG
+// rule model. Both are accepted so the helper works against either shape.
 func protocolCovers(deny, allow string) bool {
 	deny = strings.TrimSpace(deny)
-	if deny == "" || deny == "*" || strings.EqualFold(deny, "Any") {
+	if deny == "" || deny == "*" || strings.EqualFold(deny, "Any") || strings.EqualFold(deny, "All") {
 		return true
 	}
 	return strings.EqualFold(deny, strings.TrimSpace(allow))
@@ -372,10 +383,12 @@ func nsgAllowsInternetIngress(rules []map[string]any) (bool, []map[string]any) {
 // Inbound internet traffic must be admitted by every NSG in a NIC's effective
 // chain (the subnet-level NSG and the NIC-level NSG are evaluated in sequence),
 // so each NIC is evaluated per-NSG: the NIC admits internet ingress only when
-// all of its effective NSGs do. The VM is exposed when any NIC admits it. NICs
-// with no effective NSG (stopped/detached, or the API could not compute rules)
-// contribute nothing. Resolving effective rules is a live Azure call per NIC;
-// it is only paid when exposure is queried.
+// all of its effective NSGs do. The VM is exposed when any NIC admits it. A NIC
+// that Azure reports as having no NSG at all admits every inbound flow and so
+// counts as exposed; a NIC whose rules could not be computed (stopped VM,
+// access denied) is skipped and clears securityGroupsEvaluated instead, so a
+// "closed" verdict is never inferred from a failed lookup. Resolving effective
+// rules is a live Azure call per NIC; it is only paid when exposure is queried.
 //
 // Rule priority is honored: within an NSG a higher-priority (lower-numbered)
 // Deny rule shadows a lower-priority Allow-from-internet rule when it covers the
@@ -396,17 +409,37 @@ func (a *mqlAzureSubscriptionComputeServiceVm) exposure() (*mqlAzureSubscription
 	}
 
 	securityGroupAllowsIngress := false
+	// Every NIC must be evaluated authoritatively before a "closed" verdict
+	// means anything; one degraded fetch makes the whole verdict provisional.
+	allEvaluated := true
 	openRules := []any{}
 	for _, n := range nics.Data {
 		nic, ok := n.(*mqlAzureSubscriptionNetworkServiceInterface)
 		if !ok {
 			continue
 		}
-		groups, err := nic.effectiveNsgGroupsCached()
+		groups, evaluated, err := nic.effectiveNsgGroupsCached()
 		if err != nil {
 			return nil, err
 		}
+		if !evaluated {
+			allEvaluated = false
+			continue
+		}
 		if len(groups) == 0 {
+			// Azure answered, and the NIC has no NSG on itself or its subnet.
+			// Nothing filters inbound traffic, so this is the most exposed
+			// configuration there is — not an absence of evidence.
+			securityGroupAllowsIngress = true
+			openRules = append(openRules, map[string]any{
+				"name":                     "NoNetworkSecurityGroup",
+				"access":                   "Allow",
+				"direction":                "Inbound",
+				"protocol":                 "All",
+				"sourceAddressPrefix":      "*",
+				"destinationAddressPrefix": "*",
+				"destinationPortRange":     "0-65535",
+			})
 			continue
 		}
 		nicAdmits := true
@@ -429,11 +462,12 @@ func (a *mqlAzureSubscriptionComputeServiceVm) exposure() (*mqlAzureSubscription
 
 	internetReachable := hasPublicIp && securityGroupAllowsIngress
 
-	res, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.exposure", map[string]*llx.RawData{
+	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionNetworkServiceExposure, map[string]*llx.RawData{
 		"__id":                       llx.StringData("azure.subscription.computeService.vm/" + a.Id.Data + "/exposure"),
 		"internetReachable":          llx.BoolData(internetReachable),
 		"hasPublicIp":                llx.BoolData(hasPublicIp),
 		"securityGroupAllowsIngress": llx.BoolData(securityGroupAllowsIngress),
+		"securityGroupsEvaluated":    llx.BoolData(allEvaluated),
 		"openIngressRules":           llx.ArrayData(openRules, types.Dict),
 	})
 	if err != nil {

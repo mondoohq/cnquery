@@ -203,6 +203,10 @@ func (a *mqlAzureSubscriptionSentinelServiceWorkspace) alertRules() ([]any, erro
 func sentinelAlertRuleToMql(runtime *plugin.Runtime, raw armsecurityinsights.AlertRuleClassification) (*mqlAzureSubscriptionSentinelServiceAlertRule, error) {
 	base := raw.GetAlertRule()
 	var kind, displayName, description, severity string
+	// modeled tracks whether the SDK gave us a concrete rule type. For kinds it
+	// cannot model, none of the scalars below are knowable, so they are
+	// reported as null instead of a fabricated zero value.
+	modeled := true
 	var enabled bool
 	tactics := []any{}
 
@@ -280,27 +284,32 @@ func sentinelAlertRuleToMql(runtime *plugin.Runtime, raw armsecurityinsights.Ale
 			propsDict = d
 		}
 	default:
-		// Kinds without a dedicated concrete type in the SDK
-		// (e.g. NRT, MLBehaviorAnalytics, ThreatIntelligence)
-		// deserialize as *armsecurityinsights.AlertRule, which
-		// carries only kind/id/name. Marshal the raw payload so
-		// kind-specific fields remain queryable via `properties`.
-		d, err := convert.JsonToDict(raw)
-		if err != nil {
-			return nil, err
-		}
-		propsDict = d
+		// Kinds without a dedicated concrete type in this SDK version (NRT,
+		// MLBehaviorAnalytics, ThreatIntelligence, ...) deserialize as
+		// *armsecurityinsights.AlertRule, which has no Properties field at
+		// all -- the wire payload is discarded during unmarshal, so there is
+		// nothing left to marshal back out. Report the scalars as null rather
+		// than claiming the rule is disabled: an NRT detection that is in fact
+		// running must not read as `enabled: false`.
+		modeled = false
 	}
 
-	res, err := CreateResource(runtime, "azure.subscription.sentinelService.alertRule", map[string]*llx.RawData{
+	enabledData, displayNameData := llx.BoolData(enabled), llx.StringData(displayName)
+	severityData, descriptionData := llx.StringData(severity), llx.StringData(description)
+	if !modeled {
+		enabledData, displayNameData = llx.NilData, llx.NilData
+		severityData, descriptionData = llx.NilData, llx.NilData
+	}
+
+	res, err := CreateResource(runtime, ResourceAzureSubscriptionSentinelServiceAlertRule, map[string]*llx.RawData{
 		"id":          llx.StringDataPtr(base.ID),
 		"name":        llx.StringDataPtr(base.Name),
 		"kind":        llx.StringData(kind),
-		"enabled":     llx.BoolData(enabled),
-		"displayName": llx.StringData(displayName),
-		"severity":    llx.StringData(severity),
+		"enabled":     enabledData,
+		"displayName": displayNameData,
+		"severity":    severityData,
 		"tactics":     llx.ArrayData(tactics, types.String),
-		"description": llx.StringData(description),
+		"description": descriptionData,
 		"properties":  llx.DictData(propsDict),
 	})
 	if err != nil {

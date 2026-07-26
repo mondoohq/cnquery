@@ -8,6 +8,7 @@ import (
 	"errors"
 	"net/http"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -257,6 +258,9 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) privateEndpointConnections()
 			return nil, err
 		}
 		for _, c := range page.Value {
+			if c == nil {
+				continue
+			}
 			var privateEndpointId, status, description, actionsRequired, provisioningState string
 			if p := c.Properties; p != nil {
 				if p.PrivateEndpoint != nil && p.PrivateEndpoint.ID != nil {
@@ -331,6 +335,9 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) objectReplicationPolicies() 
 			return nil, err
 		}
 		for _, pol := range page.Value {
+			if pol == nil {
+				continue
+			}
 			var policyId, sourceAccount, destinationAccount string
 			var enabledTime *time.Time
 			var tagsReplicationEnabled bool
@@ -471,7 +478,7 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) networkSecurityPerimeterConf
 					if profile.DiagnosticSettingsVersion != nil {
 						args["diagnosticSettingsVersion"] = llx.IntData(int64(*profile.DiagnosticSettingsVersion))
 					}
-					args["enabledLogCategories"] = llx.ArrayData(convert.SliceStrPtrToInterface(profile.EnabledLogCategories), types.String)
+					args["enabledLogCategories"] = llx.ArrayData(strPtrsToAny(profile.EnabledLogCategories), types.String)
 					var rules []any
 					for _, rule := range profile.AccessRules {
 						if rule == nil {
@@ -783,7 +790,7 @@ func (a *mqlAzureSubscriptionStorageServiceAccountTable) systemMetadata() (*mqlA
 type mqlAzureSubscriptionStorageServiceAccountQueueInternal struct {
 	cacheSystemData any
 	cacheAccountId  string
-	countFetched    bool
+	countFetched    atomic.Bool
 	count           int64
 	countLock       sync.Mutex
 }
@@ -855,12 +862,12 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) queues() ([]any, error) {
 }
 
 func (a *mqlAzureSubscriptionStorageServiceAccountQueue) approximateMessageCount() (int64, error) {
-	if a.countFetched {
+	if a.countFetched.Load() {
 		return a.count, nil
 	}
 	a.countLock.Lock()
 	defer a.countLock.Unlock()
-	if a.countFetched {
+	if a.countFetched.Load() {
 		return a.count, nil
 	}
 
@@ -887,7 +894,7 @@ func (a *mqlAzureSubscriptionStorageServiceAccountQueue) approximateMessageCount
 	if resp.QueueProperties != nil && resp.QueueProperties.ApproximateMessageCount != nil {
 		a.count = int64(*resp.QueueProperties.ApproximateMessageCount)
 	}
-	a.countFetched = true
+	a.countFetched.Store(true)
 	return a.count, nil
 }
 

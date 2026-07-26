@@ -51,7 +51,10 @@ func initAzureSubscriptionComputeServiceVmScaleSet(runtime *plugin.Runtime, args
 	if scaleSets.Error != nil {
 		return nil, nil, scaleSets.Error
 	}
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	if vmss := findVmScaleSetByID(scaleSets.Data, id); vmss != nil {
 		return args, vmss, nil
 	}
@@ -147,7 +150,7 @@ func vmScaleSetToMql(runtime *plugin.Runtime, vmss compute.VirtualMachineScaleSe
 		"location":    llx.StringDataPtr(vmss.Location),
 		"tags":        llx.MapData(convert.PtrMapStrToInterface(vmss.Tags), types.String),
 		"type":        llx.StringDataPtr(vmss.Type),
-		"zones":       llx.ArrayData(convert.SliceStrPtrToInterface(vmss.Zones), types.String),
+		"zones":       llx.ArrayData(strPtrsToAny(vmss.Zones), types.String),
 		"sku":         llx.DictData(sku),
 		"properties":  llx.DictData(properties),
 		"systemData":  llx.DictData(systemData),
@@ -310,7 +313,7 @@ func vmScaleSetInstanceToMql(runtime *plugin.Runtime, inst compute.VirtualMachin
 		"name":       llx.StringDataPtr(inst.Name),
 		"location":   llx.StringDataPtr(inst.Location),
 		"tags":       llx.MapData(convert.PtrMapStrToInterface(inst.Tags), types.String),
-		"zones":      llx.ArrayData(convert.SliceStrPtrToInterface(inst.Zones), types.String),
+		"zones":      llx.ArrayData(strPtrsToAny(inst.Zones), types.String),
 		"properties": llx.DictData(properties),
 		"sku":        llx.DictData(sku),
 	}

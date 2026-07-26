@@ -11,6 +11,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -72,6 +73,9 @@ func (a *mqlAzureSubscriptionMySqlService) servers() ([]any, error) {
 			return nil, err
 		}
 		for _, dbServer := range page.Value {
+			if dbServer == nil {
+				continue
+			}
 			properties, err := convert.JsonToDict(dbServer.Properties)
 			if err != nil {
 				return nil, err
@@ -151,6 +155,9 @@ func (a *mqlAzureSubscriptionMySqlService) flexibleServers() ([]any, error) {
 			return nil, err
 		}
 		for _, dbServer := range page.Value {
+			if dbServer == nil {
+				continue
+			}
 			properties, err := convert.JsonToDict(dbServer.Properties)
 			if err != nil {
 				return nil, err
@@ -304,12 +311,14 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) sslEnforcement() (bool,
 
 	resp, err := dbConfClient.Get(ctx, resourceID.ResourceGroup, server, "require_secure_transport", nil)
 	if err != nil {
-		// Only tolerate access-denied / not-found: swallowing every error would
-		// report a transient/permission failure as SSL enforced, masking the real
-		// state of a security-relevant setting. MySQL flexible servers enforce SSL
-		// by default, so on those two cases we fall back to that default.
+		// A 404 means the parameter is genuinely absent on this SKU, and MySQL
+		// flexible servers enforce SSL by default, so the default is the honest
+		// answer there. A 403 is different: it means we were not allowed to
+		// look. Reporting the *passing* value for an unread setting would let
+		// `flexibleServers.all(sslEnforcement)` pass across a whole fleet with
+		// nothing actually verified, so that case must surface as an error.
 		var rerr *azcore.ResponseError
-		if errors.As(err, &rerr) && (rerr.StatusCode == http.StatusForbidden || rerr.StatusCode == http.StatusNotFound) {
+		if errors.As(err, &rerr) && rerr.StatusCode == http.StatusNotFound {
 			return true, nil
 		}
 		return false, err
@@ -351,6 +360,9 @@ func (a *mqlAzureSubscriptionMySqlServiceServer) databases() ([]any, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			mqlAzureDatabase, err := CreateResource(a.MqlRuntime, "azure.subscription.mySqlService.database",
 				map[string]*llx.RawData{
 					"id":        llx.StringDataPtr(entry.ID),
@@ -398,6 +410,9 @@ func (a *mqlAzureSubscriptionMySqlServiceServer) firewallRules() ([]any, error) 
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			mqlFireWallRule, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.firewallrule",
 				map[string]*llx.RawData{
 					"id":             llx.StringDataPtr(entry.ID),
@@ -445,6 +460,9 @@ func (a *mqlAzureSubscriptionMySqlServiceServer) configuration() ([]any, error) 
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			mqlAzureConfiguration, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.configuration",
 				map[string]*llx.RawData{
 					"id":            llx.StringDataPtr(entry.ID),
@@ -495,6 +513,9 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) databases() ([]any, err
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			mqlAzureDatabase, err := CreateResource(a.MqlRuntime, "azure.subscription.mySqlService.database",
 				map[string]*llx.RawData{
 					"id":        llx.StringDataPtr(entry.ID),
@@ -541,6 +562,9 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) firewallRules() ([]any,
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			mqlFireWallRule, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.firewallrule",
 				map[string]*llx.RawData{
 					"id":             llx.StringDataPtr(entry.ID),
@@ -588,6 +612,9 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) configuration() ([]any,
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			mqlAzureConfiguration, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.configuration",
 				map[string]*llx.RawData{
 					"id":            llx.StringDataPtr(entry.ID),
@@ -742,6 +769,13 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) privateEndpointConnecti
 	if err != nil {
 		return nil, err
 	}
+	// armmysqlflexibleservers/v2 models this as a single call even though the
+	// response carries a NextLink, so there is no pager to loop. Truncation is
+	// unlikely in practice (a server rarely has enough private endpoints to
+	// fill a page) but must not be silent if it ever happens.
+	if resp.NextLink != nil && *resp.NextLink != "" {
+		log.Warn().Str("server", server).Msg("mysql private endpoint connection list is paginated; only the first page is reported")
+	}
 	for _, pec := range resp.Value {
 		if pec == nil {
 			continue
@@ -765,17 +799,10 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) privateEndpointConnecti
 				args["provisioningState"] = llx.StringData(string(*pec.Properties.ProvisioningState))
 			}
 			if pec.Properties.PrivateLinkServiceConnectionState != nil {
-				stateArgs := map[string]*llx.RawData{}
-				if pec.Properties.PrivateLinkServiceConnectionState.ActionsRequired != nil {
-					stateArgs["actionsRequired"] = llx.StringDataPtr(pec.Properties.PrivateLinkServiceConnectionState.ActionsRequired)
-				}
-				if pec.Properties.PrivateLinkServiceConnectionState.Description != nil {
-					stateArgs["description"] = llx.StringDataPtr(pec.Properties.PrivateLinkServiceConnectionState.Description)
-				}
-				if pec.Properties.PrivateLinkServiceConnectionState.Status != nil {
-					stateArgs["status"] = llx.StringData(string(*pec.Properties.PrivateLinkServiceConnectionState.Status))
-				}
-				stateRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState, stateArgs)
+				stateRes, err := newPrivateLinkServiceConnectionState(a.MqlRuntime, convert.ToValue(pec.ID),
+					stringEnumPtr(pec.Properties.PrivateLinkServiceConnectionState.ActionsRequired),
+					pec.Properties.PrivateLinkServiceConnectionState.Description,
+					stringEnumPtr(pec.Properties.PrivateLinkServiceConnectionState.Status))
 				if err != nil {
 					return nil, err
 				}
@@ -817,7 +844,7 @@ func initAzureSubscriptionMySqlServiceServer(runtime *plugin.Runtime, args map[s
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
 			args["id"] = llx.StringData(ids.id)
 		}
 	}
@@ -840,7 +867,10 @@ func initAzureSubscriptionMySqlServiceServer(runtime *plugin.Runtime, args map[s
 	if servers.Error != nil {
 		return nil, nil, servers.Error
 	}
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	for _, entry := range servers.Data {
 		vm := entry.(*mqlAzureSubscriptionMySqlServiceServer)
 		if vm.Id.Data == id {
@@ -857,7 +887,7 @@ func initAzureSubscriptionMySqlServiceFlexibleServer(runtime *plugin.Runtime, ar
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
 			args["id"] = llx.StringData(ids.id)
 		}
 	}
@@ -880,7 +910,10 @@ func initAzureSubscriptionMySqlServiceFlexibleServer(runtime *plugin.Runtime, ar
 	if servers.Error != nil {
 		return nil, nil, servers.Error
 	}
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	for _, entry := range servers.Data {
 		vm := entry.(*mqlAzureSubscriptionMySqlServiceFlexibleServer)
 		if vm.Id.Data == id {

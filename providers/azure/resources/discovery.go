@@ -254,37 +254,42 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 		}
 	}
 
+	// A failure in one discovery target must not zero the whole inventory. The
+	// compute path in particular has no access-denied degrade of its own, so a
+	// subscription the caller cannot read VMs in would otherwise take down
+	// discovery of every other resource type with it.
+	discover := func(target string, fn func() ([]*inventory.Asset, error)) {
+		found, err := fn()
+		if err != nil {
+			log.Warn().Err(err).Str("target", target).Msg("could not discover azure assets for target, skipping")
+			return
+		}
+		assets = append(assets, found...)
+	}
+
 	// FIXME: do not discover instances as OSes right now, only discover as API representations.
 	if stringx.ContainsAnyOf(targets, DiscoveryInstances) {
-		vms, err := discoverInstances(runtime, subsWithConfigs)
-		if err != nil {
-			return nil, err
-		}
-		assets = append(assets, vms...)
+		discover(DiscoveryInstances, func() ([]*inventory.Asset, error) {
+			return discoverInstances(runtime, subsWithConfigs)
+		})
 	}
 	if stringx.ContainsAnyOf(targets, DiscoveryInstancesApi) {
-		vms, err := discoverInstancesApi(runtime, subsWithConfigs)
-		if err != nil {
-			return nil, err
-		}
-		assets = append(assets, vms...)
+		discover(DiscoveryInstancesApi, func() ([]*inventory.Asset, error) {
+			return discoverInstancesApi(runtime, subsWithConfigs)
+		})
 	}
 	// FIXME: bring back the storage containers as as part of FF scanning once we can do parallel scanning
 	if stringx.ContainsAnyOf(targets, DiscoveryStorageContainers) {
-		containers, err := discoverStorageAccountsContainers(runtime, subsWithConfigs)
-		if err != nil {
-			return nil, err
-		}
-		assets = append(assets, containers...)
+		discover(DiscoveryStorageContainers, func() ([]*inventory.Asset, error) {
+			return discoverStorageAccountsContainers(runtime, subsWithConfigs)
+		})
 	}
 
 	// Discover all other resource types via a single ARM generic list call per
 	// subscription, replacing 13 individual service-specific API calls.
-	genericAssets, err := discoverGeneric(conn, subsWithConfigs, targets)
-	if err != nil {
-		return nil, err
-	}
-	assets = append(assets, genericAssets...)
+	discover("generic", func() ([]*inventory.Asset, error) {
+		return discoverGeneric(conn, subsWithConfigs, targets)
+	})
 
 	if conn.Filters.PropagateSubscriptionTags {
 		applySubscriptionTags(conn.Filters.SubscriptionTags, subsWithConfigs, assets)
@@ -455,9 +460,15 @@ func discoverGeneric(conn *connection.AzureConnection, subsWithConfigs []subWith
 		for pager.More() {
 			page, err := pager.NextPage(context.Background())
 			if err != nil {
-				return nil, err
+				// One inaccessible or disabled subscription must not zero the
+				// inventory for every other subscription in the tenant.
+				log.Warn().Err(err).Str("subscription", subId).Msg("could not list azure resources in subscription, skipping")
+				break
 			}
 			for _, resource := range page.Value {
+				if resource == nil {
+					continue
+				}
 				resType := strings.ToLower(derefStr(resource.Type))
 				kind := derefStr(resource.Kind)
 				spec, ok := matchSpec(specsByType[resType], kind)

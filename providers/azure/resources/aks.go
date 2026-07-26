@@ -13,6 +13,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	clusters "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v9"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -64,7 +65,7 @@ func initAzureSubscriptionAksServiceCluster(runtime *plugin.Runtime, args map[st
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
 			args["id"] = llx.StringData(ids.id)
 		}
 	}
@@ -117,6 +118,101 @@ func (a *mqlAzureSubscriptionAksServiceClusterAdvancedNetworking) id() (string, 
 	return a.Id.Data, nil
 }
 
+// aksSecurityFlags are the cluster security-profile toggles flattened out of
+// the deeply nested ARM securityProfile block.
+type aksSecurityFlags struct {
+	defenderEnabled               bool
+	defenderSecurityGatingEnabled bool
+	imageCleanerEnabled           bool
+	imageCleanerIntervalHours     *int32
+	workloadIdentityEnabled       bool
+	azureKeyVaultKmsEnabled       bool
+	azureKeyVaultKmsNetworkAccess *string
+	azureKeyVaultKmsKeyID         string
+}
+
+// aksSecurityProfileFlags flattens the cluster security profile.
+//
+// Azure omits each sub-block entirely when its feature is switched off, so an
+// absent block means "disabled", not "unknown". These are reported as explicit
+// false rather than null: MQL's three-valued logic makes `null && null` true,
+// so a null here would let `clusters.all(defenderEnabled && workloadIdentityEnabled)`
+// pass on precisely the clusters it is meant to fail.
+func aksSecurityProfileFlags(sp *clusters.ManagedClusterSecurityProfile) aksSecurityFlags {
+	var f aksSecurityFlags
+	if sp == nil {
+		return f
+	}
+	if sp.Defender != nil {
+		if sp.Defender.SecurityMonitoring != nil {
+			f.defenderEnabled = convert.ToValue(sp.Defender.SecurityMonitoring.Enabled)
+		}
+		if sp.Defender.SecurityGating != nil {
+			f.defenderSecurityGatingEnabled = convert.ToValue(sp.Defender.SecurityGating.Enabled)
+		}
+	}
+	if sp.ImageCleaner != nil {
+		f.imageCleanerEnabled = convert.ToValue(sp.ImageCleaner.Enabled)
+		f.imageCleanerIntervalHours = sp.ImageCleaner.IntervalHours
+	}
+	if sp.WorkloadIdentity != nil {
+		f.workloadIdentityEnabled = convert.ToValue(sp.WorkloadIdentity.Enabled)
+	}
+	if sp.AzureKeyVaultKms != nil {
+		f.azureKeyVaultKmsEnabled = convert.ToValue(sp.AzureKeyVaultKms.Enabled)
+		f.azureKeyVaultKmsNetworkAccess = (*string)(sp.AzureKeyVaultKms.KeyVaultNetworkAccess)
+		f.azureKeyVaultKmsKeyID = convert.ToValue(sp.AzureKeyVaultKms.KeyID)
+	}
+	return f
+}
+
+// advancedNetworkingFields flattens the nested Advanced Networking (Cilium)
+// profile into the scalars the resource exposes. Absent sub-blocks mean the
+// feature is off, so every value defaults to its disabled state rather than
+// null: a null would let `{ securityEnabled && ... }` pass vacuously.
+func advancedNetworkingFields(an *clusters.AdvancedNetworking) (enabled bool, transitEncryptionType string, accelerationMode string, securityEnabled bool) {
+	transitEncryptionType = string(clusters.TransitEncryptionTypeNone)
+	accelerationMode = string(clusters.AccelerationModeNone)
+	if an == nil {
+		return false, transitEncryptionType, accelerationMode, false
+	}
+	enabled = convert.ToValue(an.Enabled)
+	if an.Performance != nil && an.Performance.AccelerationMode != nil {
+		accelerationMode = string(*an.Performance.AccelerationMode)
+	}
+	if an.Security != nil {
+		securityEnabled = convert.ToValue(an.Security.Enabled)
+		if an.Security.TransitEncryption != nil && an.Security.TransitEncryption.Type != nil {
+			transitEncryptionType = string(*an.Security.TransitEncryption.Type)
+		}
+	}
+	return enabled, transitEncryptionType, accelerationMode, securityEnabled
+}
+
+// advancedNetworking exposes the cluster's Advanced Networking (Cilium)
+// profile. Returns null when the cluster does not use Azure CNI powered by
+// Cilium, in which case the profile is absent from the ARM response.
+func (a *mqlAzureSubscriptionAksServiceCluster) advancedNetworking() (*mqlAzureSubscriptionAksServiceClusterAdvancedNetworking, error) {
+	if a.cacheProperties == nil || a.cacheProperties.NetworkProfile == nil || a.cacheProperties.NetworkProfile.AdvancedNetworking == nil {
+		a.AdvancedNetworking.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	enabled, transitEncryptionType, accelerationMode, securityEnabled := advancedNetworkingFields(a.cacheProperties.NetworkProfile.AdvancedNetworking)
+	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionAksServiceClusterAdvancedNetworking,
+		map[string]*llx.RawData{
+			"id":                    llx.StringData(a.Id.Data + "/advancedNetworking"),
+			"enabled":               llx.BoolData(enabled),
+			"transitEncryptionType": llx.StringData(transitEncryptionType),
+			"accelerationMode":      llx.StringData(accelerationMode),
+			"securityEnabled":       llx.BoolData(securityEnabled),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionAksServiceClusterAdvancedNetworking), nil
+}
+
 func (a *mqlAzureSubscriptionAksServiceClusterNodePool) id() (string, error) {
 	return a.Id.Data, nil
 }
@@ -137,9 +233,16 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure clusters, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			// Normalize a nil Properties to an empty struct so the many early
 			// accesses below are nil-safe; the later blocks already guard it.
 			if entry.Properties == nil {
@@ -215,35 +318,8 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 				}
 			}
 
-			var defenderEnabled, defenderSecurityGatingEnabled, imageCleanerEnabled, workloadIdentityEnabled, azureKeyVaultKmsEnabled *bool
-			var imageCleanerIntervalHours *int32
-			var azureKeyVaultKmsNetworkAccess *string
-			var azureKeyVaultKmsKeyId string
-			if entry.Properties.SecurityProfile != nil {
-				sp := entry.Properties.SecurityProfile
-				if sp.Defender != nil {
-					if sp.Defender.SecurityMonitoring != nil {
-						defenderEnabled = sp.Defender.SecurityMonitoring.Enabled
-					}
-					if sp.Defender.SecurityGating != nil {
-						defenderSecurityGatingEnabled = sp.Defender.SecurityGating.Enabled
-					}
-				}
-				if sp.ImageCleaner != nil {
-					imageCleanerEnabled = sp.ImageCleaner.Enabled
-					imageCleanerIntervalHours = sp.ImageCleaner.IntervalHours
-				}
-				if sp.WorkloadIdentity != nil {
-					workloadIdentityEnabled = sp.WorkloadIdentity.Enabled
-				}
-				if sp.AzureKeyVaultKms != nil {
-					azureKeyVaultKmsEnabled = sp.AzureKeyVaultKms.Enabled
-					azureKeyVaultKmsNetworkAccess = (*string)(sp.AzureKeyVaultKms.KeyVaultNetworkAccess)
-					if sp.AzureKeyVaultKms.KeyID != nil {
-						azureKeyVaultKmsKeyId = *sp.AzureKeyVaultKms.KeyID
-					}
-				}
-			}
+			secFlags := aksSecurityProfileFlags(entry.Properties.SecurityProfile)
+			azureKeyVaultKmsKeyId := secFlags.azureKeyVaultKmsKeyID
 
 			var networkPlugin, networkPolicy *string
 			if entry.Properties.NetworkProfile != nil {
@@ -340,28 +416,28 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 					"diskCsiDriverEnabled":              llx.BoolDataPtr(diskCsiDriverEnabled),
 					"workloadAutoScalerProfile":         llx.DictData(workloadAutoScalerProfile),
 					"apiServerAccessProfile":            llx.DictData(apiServerAccessProfile),
-					"enablePrivateCluster":              llx.BoolDataPtr(enablePrivateCluster),
-					"enablePrivateClusterPublicFQDN":    llx.BoolDataPtr(enablePrivateClusterPublicFQDN),
-					"disableRunCommand":                 llx.BoolDataPtr(disableRunCommand),
+					"enablePrivateCluster":              llx.BoolData(convert.ToValue(enablePrivateCluster)),
+					"enablePrivateClusterPublicFQDN":    llx.BoolData(convert.ToValue(enablePrivateClusterPublicFQDN)),
+					"disableRunCommand":                 llx.BoolData(convert.ToValue(disableRunCommand)),
 					"apiServerAuthorizedIPRanges":       llx.ArrayData(apiServerAuthorizedIPRanges, types.String),
 					"privateDnsZone":                    llx.StringDataPtr(privateDnsZone),
-					"defenderEnabled":                   llx.BoolDataPtr(defenderEnabled),
-					"defenderSecurityGatingEnabled":     llx.BoolDataPtr(defenderSecurityGatingEnabled),
-					"imageCleanerEnabled":               llx.BoolDataPtr(imageCleanerEnabled),
-					"imageCleanerIntervalHours":         llx.IntDataDefault(imageCleanerIntervalHours, 0),
-					"workloadIdentityEnabled":           llx.BoolDataPtr(workloadIdentityEnabled),
-					"azureKeyVaultKmsEnabled":           llx.BoolDataPtr(azureKeyVaultKmsEnabled),
-					"azureKeyVaultKmsNetworkAccess":     llx.StringDataPtr(azureKeyVaultKmsNetworkAccess),
-					"disableLocalAccounts":              llx.BoolDataPtr(entry.Properties.DisableLocalAccounts),
+					"defenderEnabled":                   llx.BoolData(secFlags.defenderEnabled),
+					"defenderSecurityGatingEnabled":     llx.BoolData(secFlags.defenderSecurityGatingEnabled),
+					"imageCleanerEnabled":               llx.BoolData(secFlags.imageCleanerEnabled),
+					"imageCleanerIntervalHours":         llx.IntDataDefault(secFlags.imageCleanerIntervalHours, 0),
+					"workloadIdentityEnabled":           llx.BoolData(secFlags.workloadIdentityEnabled),
+					"azureKeyVaultKmsEnabled":           llx.BoolData(secFlags.azureKeyVaultKmsEnabled),
+					"azureKeyVaultKmsNetworkAccess":     llx.StringDataPtr(secFlags.azureKeyVaultKmsNetworkAccess),
+					"disableLocalAccounts":              llx.BoolData(convert.ToValue(entry.Properties.DisableLocalAccounts)),
 					"publicNetworkAccess":               llx.StringDataPtr((*string)(entry.Properties.PublicNetworkAccess)),
 					"skuTier":                           llx.StringData(skuTier),
 					"networkPlugin":                     llx.StringDataPtr(networkPlugin),
 					"networkPolicy":                     llx.StringDataPtr(networkPolicy),
-					"oidcIssuerEnabled":                 llx.BoolDataPtr(oidcIssuerEnabled),
+					"oidcIssuerEnabled":                 llx.BoolData(convert.ToValue(oidcIssuerEnabled)),
 					"nodeResourceGroupRestrictionLevel": llx.StringDataPtr(nodeResourceGroupRestrictionLevel),
 					"serviceMeshMode":                   llx.StringDataPtr(serviceMeshMode),
 					"supportPlan":                       llx.StringDataPtr((*string)(entry.Properties.SupportPlan)),
-					"controlPlaneMetricsEnabled":        llx.BoolDataPtr(controlPlaneMetricsEnabled),
+					"controlPlaneMetricsEnabled":        llx.BoolData(convert.ToValue(controlPlaneMetricsEnabled)),
 					"identity":                          llx.DictData(identityDict),
 					"principalId":                       llx.StringDataPtr(principalId),
 					"servicePrincipalClientId":          llx.StringData(servicePrincipalClientId),
@@ -717,7 +793,7 @@ func (a *mqlAzureSubscriptionAksServiceCluster) diskEncryptionSet() (*mqlAzureSu
 		return nil, nil
 	}
 	res, err := NewResource(a.MqlRuntime, "azure.subscription.computeService.diskEncryptionSet",
-		map[string]*llx.RawData{"id": llx.StringData(strings.ToLower(a.cacheDiskEncryptionSetId))})
+		map[string]*llx.RawData{"id": llx.StringData(a.cacheDiskEncryptionSetId)})
 	if err != nil {
 		return nil, err
 	}

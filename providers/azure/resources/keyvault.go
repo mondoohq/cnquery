@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -181,6 +182,9 @@ func (a *mqlAzureSubscriptionKeyVaultService) vaults() ([]any, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.vault",
 				map[string]*llx.RawData{
 					"id":        llx.StringDataPtr(entry.ID),
@@ -358,21 +362,35 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) keys() ([]any, error) {
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure keys, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
+			// Attributes is optional on the data-plane list response. A bare
+			// deref panics, and a provider panic is unrecoverable: it kills the
+			// whole scan, not just this query.
+			attrs := entry.Attributes
+			if attrs == nil {
+				attrs = &azkeys.KeyAttributes{}
+			}
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.key",
 				map[string]*llx.RawData{
 					"kid":           llx.StringDataPtr((*string)(entry.KID)),
 					"managed":       llx.BoolDataPtr(entry.Managed),
 					"tags":          llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-					"enabled":       llx.BoolDataPtr(entry.Attributes.Enabled),
-					"created":       llx.TimeDataPtr(entry.Attributes.Created),
-					"updated":       llx.TimeDataPtr(entry.Attributes.Updated),
-					"expires":       llx.TimeDataPtr(entry.Attributes.Expires),
-					"notBefore":     llx.TimeDataPtr(entry.Attributes.NotBefore),
-					"recoveryLevel": llx.StringDataPtr((*string)(entry.Attributes.RecoveryLevel)),
+					"enabled":       llx.BoolDataPtr(attrs.Enabled),
+					"created":       llx.TimeDataPtr(attrs.Created),
+					"updated":       llx.TimeDataPtr(attrs.Updated),
+					"expires":       llx.TimeDataPtr(attrs.Expires),
+					"notBefore":     llx.TimeDataPtr(attrs.NotBefore),
+					"recoveryLevel": llx.StringDataPtr((*string)(attrs.RecoveryLevel)),
 				})
 			if err != nil {
 				return nil, err
@@ -423,6 +441,9 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) autorotation() ([]any, error)
 		g, gctx := errgroup.WithContext(ctx)
 		g.SetLimit(10)
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			if entry.KID == nil {
 				continue
 			}
@@ -451,6 +472,9 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) autorotation() ([]any, error)
 		_ = g.Wait()
 
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			autoRotationEnabled := false
 			if entry.KID != nil {
 				autoRotationEnabled = enabledByKid[string(*entry.KID)]
@@ -487,21 +511,35 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) secrets() ([]any, error) {
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure secrets, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
+			// Attributes is optional on the data-plane list response. A bare
+			// deref panics, and a provider panic is unrecoverable: it kills the
+			// whole scan, not just this query.
+			attrs := entry.Attributes
+			if attrs == nil {
+				attrs = &azsecrets.SecretAttributes{}
+			}
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.secret",
 				map[string]*llx.RawData{
 					"id":          llx.StringDataPtr((*string)(entry.ID)),
 					"tags":        llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
 					"contentType": llx.StringDataPtr(entry.ContentType),
 					"managed":     llx.BoolDataPtr(entry.Managed),
-					"enabled":     llx.BoolDataPtr(entry.Attributes.Enabled),
-					"created":     llx.TimeDataPtr(entry.Attributes.Created),
-					"updated":     llx.TimeDataPtr(entry.Attributes.Updated),
-					"expires":     llx.TimeDataPtr(entry.Attributes.Expires),
-					"notBefore":   llx.TimeDataPtr(entry.Attributes.NotBefore),
+					"enabled":     llx.BoolDataPtr(attrs.Enabled),
+					"created":     llx.TimeDataPtr(attrs.Created),
+					"updated":     llx.TimeDataPtr(attrs.Updated),
+					"expires":     llx.TimeDataPtr(attrs.Expires),
+					"notBefore":   llx.TimeDataPtr(attrs.NotBefore),
 				})
 			if err != nil {
 				return nil, err
@@ -529,20 +567,34 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) certificates() ([]any, error)
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure certificates, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
+			// Attributes is optional on the data-plane list response. A bare
+			// deref panics, and a provider panic is unrecoverable: it kills the
+			// whole scan, not just this query.
+			attrs := entry.Attributes
+			if attrs == nil {
+				attrs = &azcertificates.CertificateAttributes{}
+			}
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.certificate",
 				map[string]*llx.RawData{
 					"id":            llx.StringDataPtr((*string)(entry.ID)),
 					"tags":          llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-					"enabled":       llx.BoolDataPtr(entry.Attributes.Enabled),
-					"created":       llx.TimeDataPtr(entry.Attributes.Created),
-					"updated":       llx.TimeDataPtr(entry.Attributes.Updated),
-					"expires":       llx.TimeDataPtr(entry.Attributes.Expires),
-					"notBefore":     llx.TimeDataPtr(entry.Attributes.NotBefore),
-					"recoveryLevel": llx.StringDataPtr((*string)(entry.Attributes.RecoveryLevel)),
+					"enabled":       llx.BoolDataPtr(attrs.Enabled),
+					"created":       llx.TimeDataPtr(attrs.Created),
+					"updated":       llx.TimeDataPtr(attrs.Updated),
+					"expires":       llx.TimeDataPtr(attrs.Expires),
+					"notBefore":     llx.TimeDataPtr(attrs.NotBefore),
+					"recoveryLevel": llx.StringDataPtr((*string)(attrs.RecoveryLevel)),
 					"x5t":           llx.StringData(hex.EncodeToString(entry.X509Thumbprint)),
 				})
 			if err != nil {
@@ -628,17 +680,10 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) privateEndpointConnections() 
 				privateEndpoint["privateEndpointId"] = llx.StringDataPtr(props.PrivateEndpoint.ID)
 			}
 			if props.PrivateLinkServiceConnectionState != nil {
-				stateArgs := map[string]*llx.RawData{}
-				if props.PrivateLinkServiceConnectionState.ActionsRequired != nil {
-					stateArgs["actionsRequired"] = llx.StringData(string(*props.PrivateLinkServiceConnectionState.ActionsRequired))
-				}
-				if props.PrivateLinkServiceConnectionState.Description != nil {
-					stateArgs["description"] = llx.StringDataPtr(props.PrivateLinkServiceConnectionState.Description)
-				}
-				if props.PrivateLinkServiceConnectionState.Status != nil {
-					stateArgs["status"] = llx.StringData(string(*props.PrivateLinkServiceConnectionState.Status))
-				}
-				stateRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState, stateArgs)
+				stateRes, err := newPrivateLinkServiceConnectionState(a.MqlRuntime, convert.ToValue(entry.ID),
+					stringEnumPtr(props.PrivateLinkServiceConnectionState.ActionsRequired),
+					props.PrivateLinkServiceConnectionState.Description,
+					stringEnumPtr(props.PrivateLinkServiceConnectionState.Status))
 				if err != nil {
 					return nil, err
 				}
@@ -929,20 +974,34 @@ func (a *mqlAzureSubscriptionKeyVaultServiceKey) versions() ([]any, error) {
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure versions, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
+			// Attributes is optional on the data-plane list response. A bare
+			// deref panics, and a provider panic is unrecoverable: it kills the
+			// whole scan, not just this query.
+			attrs := entry.Attributes
+			if attrs == nil {
+				attrs = &azkeys.KeyAttributes{}
+			}
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.key",
 				map[string]*llx.RawData{
 					"kid":           llx.StringDataPtr((*string)(entry.KID)),
 					"managed":       llx.BoolDataPtr(entry.Managed),
 					"tags":          llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-					"enabled":       llx.BoolDataPtr(entry.Attributes.Enabled),
-					"created":       llx.TimeDataPtr(entry.Attributes.Created),
-					"updated":       llx.TimeDataPtr(entry.Attributes.Updated),
-					"expires":       llx.TimeDataPtr(entry.Attributes.Expires),
-					"notBefore":     llx.TimeDataPtr(entry.Attributes.NotBefore),
-					"recoveryLevel": llx.StringDataPtr((*string)(entry.Attributes.RecoveryLevel)),
+					"enabled":       llx.BoolDataPtr(attrs.Enabled),
+					"created":       llx.TimeDataPtr(attrs.Created),
+					"updated":       llx.TimeDataPtr(attrs.Updated),
+					"expires":       llx.TimeDataPtr(attrs.Expires),
+					"notBefore":     llx.TimeDataPtr(attrs.NotBefore),
+					"recoveryLevel": llx.StringDataPtr((*string)(attrs.RecoveryLevel)),
 				})
 			if err != nil {
 				return nil, err
@@ -1085,19 +1144,33 @@ func (a *mqlAzureSubscriptionKeyVaultServiceCertificate) versions() ([]any, erro
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure versions, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
+			// Attributes is optional on the data-plane list response. A bare
+			// deref panics, and a provider panic is unrecoverable: it kills the
+			// whole scan, not just this query.
+			attrs := entry.Attributes
+			if attrs == nil {
+				attrs = &azcertificates.CertificateAttributes{}
+			}
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.certificate",
 				map[string]*llx.RawData{
 					"id":            llx.StringDataPtr((*string)(entry.ID)),
 					"tags":          llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-					"enabled":       llx.BoolDataPtr(entry.Attributes.Enabled),
-					"created":       llx.TimeDataPtr(entry.Attributes.Created),
-					"updated":       llx.TimeDataPtr(entry.Attributes.Updated),
-					"expires":       llx.TimeDataPtr(entry.Attributes.Expires),
-					"notBefore":     llx.TimeDataPtr(entry.Attributes.NotBefore),
-					"recoveryLevel": llx.StringDataPtr((*string)(entry.Attributes.RecoveryLevel)),
+					"enabled":       llx.BoolDataPtr(attrs.Enabled),
+					"created":       llx.TimeDataPtr(attrs.Created),
+					"updated":       llx.TimeDataPtr(attrs.Updated),
+					"expires":       llx.TimeDataPtr(attrs.Expires),
+					"notBefore":     llx.TimeDataPtr(attrs.NotBefore),
+					"recoveryLevel": llx.StringDataPtr((*string)(attrs.RecoveryLevel)),
 					"x5t":           llx.StringData(hex.EncodeToString(entry.X509Thumbprint)),
 				})
 			if err != nil {
@@ -1236,11 +1309,11 @@ func (a *mqlAzureSubscriptionKeyVaultServiceCertificate) policy() (*mqlAzureSubs
 			}
 		}
 		if san := policyResp.X509CertificateProperties.SubjectAlternativeNames; san != nil {
-			sanDnsNames = convert.SliceStrPtrToInterface(san.DNSNames)
-			sanEmails = convert.SliceStrPtrToInterface(san.Emails)
-			sanUpns = convert.SliceStrPtrToInterface(san.UserPrincipalNames)
-			sanIpAddresses = convert.SliceStrPtrToInterface(san.IPAddresses)
-			sanUris = convert.SliceStrPtrToInterface(san.URIs)
+			sanDnsNames = strPtrsToAny(san.DNSNames)
+			sanEmails = strPtrsToAny(san.Emails)
+			sanUpns = strPtrsToAny(san.UserPrincipalNames)
+			sanIpAddresses = strPtrsToAny(san.IPAddresses)
+			sanUris = strPtrsToAny(san.URIs)
 		}
 	}
 
@@ -1451,20 +1524,34 @@ func (a *mqlAzureSubscriptionKeyVaultServiceSecret) versions() ([]any, error) {
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure versions, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
+			// Attributes is optional on the data-plane list response. A bare
+			// deref panics, and a provider panic is unrecoverable: it kills the
+			// whole scan, not just this query.
+			attrs := entry.Attributes
+			if attrs == nil {
+				attrs = &azsecrets.SecretAttributes{}
+			}
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.secret",
 				map[string]*llx.RawData{
 					"id":          llx.StringDataPtr((*string)(entry.ID)),
 					"tags":        llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
 					"contentType": llx.StringDataPtr(entry.ContentType),
 					"managed":     llx.BoolDataPtr(entry.Managed),
-					"enabled":     llx.BoolDataPtr(entry.Attributes.Enabled),
-					"created":     llx.TimeDataPtr(entry.Attributes.Created),
-					"updated":     llx.TimeDataPtr(entry.Attributes.Updated),
-					"expires":     llx.TimeDataPtr(entry.Attributes.Expires),
-					"notBefore":   llx.TimeDataPtr(entry.Attributes.NotBefore),
+					"enabled":     llx.BoolDataPtr(attrs.Enabled),
+					"created":     llx.TimeDataPtr(attrs.Created),
+					"updated":     llx.TimeDataPtr(attrs.Updated),
+					"expires":     llx.TimeDataPtr(attrs.Expires),
+					"notBefore":   llx.TimeDataPtr(attrs.NotBefore),
 				})
 			if err != nil {
 				return nil, err
@@ -1537,7 +1624,7 @@ func initAzureSubscriptionKeyVaultServiceVault(runtime *plugin.Runtime, args map
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
 			args["id"] = llx.StringData(ids.id)
 		}
 	}
@@ -1551,7 +1638,10 @@ func initAzureSubscriptionKeyVaultServiceVault(runtime *plugin.Runtime, args map
 		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
 	}
 
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	resourceID, err := ParseResourceID(id)
 	if err != nil {
 		return nil, nil, err
@@ -1617,7 +1707,7 @@ func initAzureSubscriptionKeyVaultServiceManagedHsm(runtime *plugin.Runtime, arg
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
 			args["id"] = llx.StringData(ids.id)
 		}
 	}
@@ -1642,7 +1732,10 @@ func initAzureSubscriptionKeyVaultServiceManagedHsm(runtime *plugin.Runtime, arg
 	if hsms.Error != nil {
 		return nil, nil, hsms.Error
 	}
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	for _, entry := range hsms.Data {
 		hsm := entry.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm)
 		if hsm.Id.Data == id {
@@ -1698,6 +1791,9 @@ func (a *mqlAzureSubscriptionKeyVaultServiceManagedHsm) keys() ([]any, error) {
 		}
 
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			fields := map[string]*llx.RawData{
 				"kid":           llx.StringDataPtr((*string)(entry.KID)),
 				"managed":       llx.BoolDataPtr(entry.Managed),
@@ -1772,6 +1868,8 @@ func (a *mqlAzureSubscriptionKeyVaultService) managedHsms() ([]any, error) {
 			var initialAdminObjectIds []any
 			var networkAcls map[string]any
 			var privateEndpointConns []*keyvault.MHSMPrivateEndpointConnectionItem
+			var scheduledPurgeDate *time.Time
+			regions := []any{}
 
 			if hsm.Properties != nil {
 				props := hsm.Properties
@@ -1802,6 +1900,17 @@ func (a *mqlAzureSubscriptionKeyVaultService) managedHsms() ([]any, error) {
 					}
 				}
 				privateEndpointConns = props.PrivateEndpointConnections
+				scheduledPurgeDate = props.ScheduledPurgeDate
+				for _, r := range props.Regions {
+					if r == nil {
+						continue
+					}
+					d, err := convert.JsonToDict(r)
+					if err != nil {
+						return nil, err
+					}
+					regions = append(regions, d)
+				}
 			}
 
 			mqlHsm, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionKeyVaultServiceManagedHsm,
@@ -1821,6 +1930,8 @@ func (a *mqlAzureSubscriptionKeyVaultService) managedHsms() ([]any, error) {
 					"publicNetworkAccess":       llx.StringData(publicNetworkAccess),
 					"provisioningState":         llx.StringData(provisioningState),
 					"networkAcls":               llx.DictData(networkAcls),
+					"scheduledPurgeDate":        llx.TimeDataPtr(scheduledPurgeDate),
+					"regions":                   llx.ArrayData(regions, types.Dict),
 				})
 			if err != nil {
 				return nil, err
@@ -1899,17 +2010,10 @@ func (a *mqlAzureSubscriptionKeyVaultServiceManagedHsm) privateEndpointConnectio
 				privateEndpoint["privateEndpointId"] = llx.StringDataPtr(props.PrivateEndpoint.ID)
 			}
 			if props.PrivateLinkServiceConnectionState != nil {
-				stateArgs := map[string]*llx.RawData{}
-				if props.PrivateLinkServiceConnectionState.ActionsRequired != nil {
-					stateArgs["actionsRequired"] = llx.StringData(string(*props.PrivateLinkServiceConnectionState.ActionsRequired))
-				}
-				if props.PrivateLinkServiceConnectionState.Description != nil {
-					stateArgs["description"] = llx.StringDataPtr(props.PrivateLinkServiceConnectionState.Description)
-				}
-				if props.PrivateLinkServiceConnectionState.Status != nil {
-					stateArgs["status"] = llx.StringData(string(*props.PrivateLinkServiceConnectionState.Status))
-				}
-				stateRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState, stateArgs)
+				stateRes, err := newPrivateLinkServiceConnectionState(a.MqlRuntime, convert.ToValue(entry.ID),
+					stringEnumPtr(props.PrivateLinkServiceConnectionState.ActionsRequired),
+					props.PrivateLinkServiceConnectionState.Description,
+					stringEnumPtr(props.PrivateLinkServiceConnectionState.Status))
 				if err != nil {
 					return nil, err
 				}

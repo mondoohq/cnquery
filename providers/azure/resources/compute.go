@@ -54,17 +54,26 @@ func vmOsType(props *compute.VirtualMachineProperties) *string {
 	return stringEnumPtr(props.StorageProfile.OSDisk.OSType)
 }
 
+// powerStatePrefix marks the instance-view status codes that carry the VM's
+// power state. The same status list also carries ProvisioningState/* codes,
+// which must not be mistaken for it.
+const powerStatePrefix = "PowerState/"
+
+// getState returns the VM's power state as reported by its instance view, or
+// "unknown" when no PowerState status is present.
+//
+// Azure emits six power states: starting, running, stopping, stopped,
+// deallocating, and deallocated. "stopped" and "deallocated" are distinct — a
+// stopped VM still holds its compute reservation and public IP and is still
+// billed — so they are reported verbatim rather than collapsed together.
 func getState(vm compute.VirtualMachineInstanceView) string {
-	if vm.Statuses == nil {
-		return "unknown"
-	}
 	state := "unknown"
 	for _, s := range vm.Statuses {
-		if s.Code != nil && *s.Code == "PowerState/running" {
-			state = "running"
+		if s == nil || s.Code == nil {
+			continue
 		}
-		if s.Code != nil && *s.Code == "PowerState/deallocated" {
-			state = "stopped"
+		if rest, ok := strings.CutPrefix(*s.Code, powerStatePrefix); ok && rest != "" {
+			state = rest
 		}
 	}
 	return state
@@ -263,7 +272,7 @@ func vmToMql(runtime *plugin.Runtime, vm compute.VirtualMachine) (*mqlAzureSubsc
 			"id":                            llx.StringDataPtr(id),
 			"name":                          llx.StringDataPtr(vm.Name),
 			"location":                      llx.StringDataPtr(vm.Location),
-			"zones":                         llx.ArrayData(convert.SliceStrPtrToInterface(vm.Zones), types.String),
+			"zones":                         llx.ArrayData(strPtrsToAny(vm.Zones), types.String),
 			"tags":                          llx.MapData(convert.PtrMapStrToInterface(vm.Tags), types.String),
 			"type":                          llx.StringDataPtr(vm.Type),
 			"properties":                    llx.DictData(properties),
@@ -330,9 +339,6 @@ func (a *mqlAzureSubscriptionComputeServiceVm) state() (string, error) {
 
 	ctx := context.Background()
 	token := conn.Token()
-	if err != nil {
-		return "", err
-	}
 
 	client, err := compute.NewVirtualMachinesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
@@ -514,6 +520,9 @@ func (a *mqlAzureSubscriptionComputeService) disks() ([]any, error) {
 			return nil, err
 		}
 		for _, disk := range disks.Value {
+			if disk == nil {
+				continue
+			}
 			mqlAzureDisk, err := diskToMql(a.MqlRuntime, *disk)
 			if err != nil {
 				return nil, err
@@ -628,8 +637,12 @@ func (a *mqlAzureSubscriptionComputeServiceVm) osDisk() (*mqlAzureSubscriptionCo
 		return nil, err
 	}
 
+	// A VM on unmanaged (page-blob VHD) storage has an OS disk but no managed
+	// disk resource to point at, so there is nothing to resolve. Report null
+	// rather than failing the field.
 	if properties.StorageProfile == nil || properties.StorageProfile.OSDisk == nil || properties.StorageProfile.OSDisk.ManagedDisk == nil || properties.StorageProfile.OSDisk.ManagedDisk.ID == nil {
-		return nil, errors.New("could not determine os disk from vm storage profile")
+		a.OsDisk.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
 
 	resourceID, err := ParseResourceID(*properties.StorageProfile.OSDisk.ManagedDisk.ID)
@@ -675,8 +688,10 @@ func (a *mqlAzureSubscriptionComputeServiceVm) dataDisks() ([]any, error) {
 		return nil, err
 	}
 
+	// A VM with no data disks omits the array entirely; that is an empty list,
+	// not a failure.
 	if properties.StorageProfile == nil || properties.StorageProfile.DataDisks == nil {
-		return nil, errors.New("could not determine data disks from vm storage profile")
+		return []any{}, nil
 	}
 
 	dataDisks := properties.StorageProfile.DataDisks
@@ -865,7 +880,10 @@ func (a *mqlAzureSubscriptionComputeServiceVm) publicIpAddresses() ([]any, error
 		return nil, props.Error
 	}
 
-	propsDict := (props.Data).(map[string]any)
+	propsDict, ok := props.Data.(map[string]any)
+	if !ok {
+		return []any{}, nil
+	}
 	networkInterface, ok := propsDict["networkProfile"]
 	if !ok {
 		return nil, errors.New("cannot find network profile on vm, not retrieving ip addresses")
@@ -997,7 +1015,7 @@ func initAzureSubscriptionComputeServiceVm(runtime *plugin.Runtime, args map[str
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
 			args["id"] = llx.StringData(ids.id)
 		}
 	}
@@ -1010,7 +1028,10 @@ func initAzureSubscriptionComputeServiceVm(runtime *plugin.Runtime, args map[str
 		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
 	}
 
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	resourceID, err := ParseResourceID(id)
 	if err != nil {
 		return nil, nil, err
@@ -1289,17 +1310,10 @@ func (a *mqlAzureSubscriptionComputeServiceDiskAccess) privateEndpointConnection
 				privateEndpoint["privateEndpointId"] = llx.StringDataPtr(props.PrivateEndpoint.ID)
 			}
 			if props.PrivateLinkServiceConnectionState != nil {
-				stateArgs := map[string]*llx.RawData{}
-				if props.PrivateLinkServiceConnectionState.ActionsRequired != nil {
-					stateArgs["actionsRequired"] = llx.StringDataPtr(props.PrivateLinkServiceConnectionState.ActionsRequired)
-				}
-				if props.PrivateLinkServiceConnectionState.Description != nil {
-					stateArgs["description"] = llx.StringDataPtr(props.PrivateLinkServiceConnectionState.Description)
-				}
-				if props.PrivateLinkServiceConnectionState.Status != nil {
-					stateArgs["status"] = llx.StringData(string(*props.PrivateLinkServiceConnectionState.Status))
-				}
-				stateRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState, stateArgs)
+				stateRes, err := newPrivateLinkServiceConnectionState(a.MqlRuntime, convert.ToValue(entry.ID),
+					stringEnumPtr(props.PrivateLinkServiceConnectionState.ActionsRequired),
+					props.PrivateLinkServiceConnectionState.Description,
+					stringEnumPtr(props.PrivateLinkServiceConnectionState.Status))
 				if err != nil {
 					return nil, err
 				}
@@ -1333,7 +1347,10 @@ func initAzureSubscriptionComputeServiceDisk(runtime *plugin.Runtime, args map[s
 		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
 	}
 
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	resourceID, err := ParseResourceID(id)
 	if err != nil {
 		return nil, nil, err
@@ -1373,7 +1390,10 @@ func initAzureSubscriptionComputeServiceDiskEncryptionSet(runtime *plugin.Runtim
 		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
 	}
 
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	resourceID, err := ParseResourceID(id)
 	if err != nil {
 		return nil, nil, err

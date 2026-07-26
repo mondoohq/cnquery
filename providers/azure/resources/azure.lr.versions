@@ -442,6 +442,7 @@ azure.subscription.batchService.account.pool.properties 11.4.0
 azure.subscription.batchService.account.pool.provisioningState 11.4.0
 azure.subscription.batchService.account.pool.proxyAgentEnabled 13.1.8
 azure.subscription.batchService.account.pool.securityEncryptionType 13.1.8
+azure.subscription.batchService.account.pool.securityType 13.33.3
 azure.subscription.batchService.account.pool.systemMetadata 13.22.1
 azure.subscription.batchService.account.pool.type 11.4.0
 azure.subscription.batchService.account.pool.virtualMachineConfiguration 11.4.0
@@ -3483,6 +3484,7 @@ azure.subscription.networkService.exposure.hasPublicIp 13.20.1
 azure.subscription.networkService.exposure.internetReachable 13.20.1
 azure.subscription.networkService.exposure.openIngressRules 13.20.1
 azure.subscription.networkService.exposure.securityGroupAllowsIngress 13.20.1
+azure.subscription.networkService.exposure.securityGroupsEvaluated 13.33.3
 azure.subscription.networkService.expressRouteCircuit 13.12.2
 azure.subscription.networkService.expressRouteCircuit.allowClassicOperations 13.12.2
 azure.subscription.networkService.expressRouteCircuit.authorization 13.12.2
@@ -4354,6 +4356,17 @@ azure.subscription.networkService.virtualNetworkGateway.ipConfig.publicIpAddress
 azure.subscription.networkService.virtualNetworkGateway.ipConfigurations 9.0.8
 azure.subscription.networkService.virtualNetworkGateway.location 9.0.8
 azure.subscription.networkService.virtualNetworkGateway.name 9.0.8
+azure.subscription.networkService.virtualNetworkGateway.natRule 13.33.3
+azure.subscription.networkService.virtualNetworkGateway.natRule.etag 13.33.3
+azure.subscription.networkService.virtualNetworkGateway.natRule.externalMappings 13.33.3
+azure.subscription.networkService.virtualNetworkGateway.natRule.id 13.33.3
+azure.subscription.networkService.virtualNetworkGateway.natRule.internalMappings 13.33.3
+azure.subscription.networkService.virtualNetworkGateway.natRule.ipConfigurationId 13.33.3
+azure.subscription.networkService.virtualNetworkGateway.natRule.mode 13.33.3
+azure.subscription.networkService.virtualNetworkGateway.natRule.name 13.33.3
+azure.subscription.networkService.virtualNetworkGateway.natRule.natRuleType 13.33.3
+azure.subscription.networkService.virtualNetworkGateway.natRule.properties 13.33.3
+azure.subscription.networkService.virtualNetworkGateway.natRule.provisioningState 13.33.3
 azure.subscription.networkService.virtualNetworkGateway.natRules 9.0.8
 azure.subscription.networkService.virtualNetworkGateway.properties 9.0.8
 azure.subscription.networkService.virtualNetworkGateway.provisioningState 9.0.8
