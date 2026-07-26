@@ -457,7 +457,10 @@ func initAzureSubscriptionNetworkServiceVirtualWan(runtime *plugin.Runtime, args
 	if !ok {
 		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
 	}
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	azureId, err := ParseResourceID(id)
 	if err != nil {
 		return nil, nil, err
@@ -792,7 +795,7 @@ func initAzureSubscriptionNetworkServiceFirewall(runtime *plugin.Runtime, args m
 		return args, nil, nil
 	}
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
 			args["id"] = llx.StringData(ids.id)
 		}
 	}
@@ -1537,7 +1540,10 @@ func initAzureSubscriptionNetworkServiceVirtualHub(runtime *plugin.Runtime, args
 	if !ok {
 		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
 	}
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	azureId, err := ParseResourceID(id)
 	if err != nil {
 		return nil, nil, err
@@ -1574,7 +1580,10 @@ func initAzureSubscriptionNetworkServiceVpnSite(runtime *plugin.Runtime, args ma
 	if !ok {
 		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
 	}
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	azureId, err := ParseResourceID(id)
 	if err != nil {
 		return nil, nil, err

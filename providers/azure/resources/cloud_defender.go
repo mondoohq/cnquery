@@ -737,6 +737,9 @@ func (a *mqlAzureSubscriptionCloudDefenderService) securityContacts() ([]any, er
 			return nil, err
 		}
 		for _, contact := range page.ContactList.Value {
+			if contact == nil {
+				continue
+			}
 			args := argsFromContactProperties(contact.Properties)
 			args["id"] = llx.StringDataPtr(contact.ID)
 			args["name"] = llx.StringDataPtr(contact.Name)
@@ -995,6 +998,9 @@ func (a *mqlAzureSubscriptionCloudDefenderService) secureScores() ([]any, error)
 			return nil, err
 		}
 		for _, item := range page.Value {
+			if item == nil {
+				continue
+			}
 			var displayName string
 			var currentScore float64
 			var maxScore int64
@@ -1068,6 +1074,9 @@ func (a *mqlAzureSubscriptionCloudDefenderService) secureScoreControls() ([]any,
 			return nil, err
 		}
 		for _, item := range page.Value {
+			if item == nil {
+				continue
+			}
 			var displayName string
 			var description string
 			var currentScore float64
@@ -1161,6 +1170,9 @@ func (a *mqlAzureSubscriptionCloudDefenderService) regulatoryComplianceStandards
 			return nil, err
 		}
 		for _, item := range page.Value {
+			if item == nil {
+				continue
+			}
 			var state string
 			var passedControls int64
 			var failedControls int64
@@ -1243,6 +1255,9 @@ func (a *mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard) c
 			return nil, err
 		}
 		for _, item := range page.Value {
+			if item == nil {
+				continue
+			}
 			var state string
 			var description string
 			var passedAssessments int64
@@ -1460,6 +1475,9 @@ func (a *mqlAzureSubscriptionCloudDefenderService) assessments() ([]any, error) 
 			return nil, err
 		}
 		for _, item := range page.Value {
+			if item == nil {
+				continue
+			}
 			var displayName, status, statusCause, statusDescription string
 			var firstEvaluationDate, statusChangeDate *time.Time
 			additionalData := map[string]any{}
@@ -1604,6 +1622,9 @@ func (a *mqlAzureSubscriptionCloudDefenderService) alerts() ([]any, error) {
 			return nil, err
 		}
 		for _, item := range page.Value {
+			if item == nil {
+				continue
+			}
 			var displayName, severity, status, description, alertType string
 			var intent, vendorName, compromisedEntity string
 			var startTime, endTime, timeGenerated *time.Time

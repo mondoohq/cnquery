@@ -339,14 +339,14 @@ func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]any, error) 
 					mqlAnyOfLeaf := mqlAlertLeafCondition{
 						FieldName:   convert.ToValue(leaf.Field),
 						Equals:      convert.ToValue(leaf.Equals),
-						ContainsAny: convert.SliceStrPtrToStr(leaf.ContainsAny),
+						ContainsAny: azureStrPtrsToStr(leaf.ContainsAny),
 					}
 					anyOf = append(anyOf, mqlAnyOfLeaf)
 				}
 				mqlCondition := mqlAlertCondition{
 					FieldName:   convert.ToValue(cond.Field),
 					Equals:      convert.ToValue(cond.Equals),
-					ContainsAny: convert.SliceStrPtrToStr(cond.ContainsAny),
+					ContainsAny: azureStrPtrsToStr(cond.ContainsAny),
 					AnyOf:       anyOf,
 				}
 				conditions = append(conditions, mqlCondition)
@@ -375,7 +375,7 @@ func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]any, error) 
 					"actions":     llx.DictData(actionsDict),
 					"conditions":  llx.DictData(conditionsDict),
 					"description": llx.StringDataPtr(entry.Properties.Description),
-					"scopes":      llx.ArrayData(convert.SliceStrPtrToInterface(entry.Properties.Scopes), types.String),
+					"scopes":      llx.ArrayData(strPtrsToAny(entry.Properties.Scopes), types.String),
 					"type":        llx.StringDataPtr(entry.Type),
 					"tags":        llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
 					"location":    llx.StringDataPtr(entry.Location),

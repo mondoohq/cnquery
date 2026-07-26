@@ -466,6 +466,9 @@ func discoverGeneric(conn *connection.AzureConnection, subsWithConfigs []subWith
 				break
 			}
 			for _, resource := range page.Value {
+				if resource == nil {
+					continue
+				}
 				resType := strings.ToLower(derefStr(resource.Type))
 				kind := derefStr(resource.Kind)
 				spec, ok := matchSpec(specsByType[resType], kind)

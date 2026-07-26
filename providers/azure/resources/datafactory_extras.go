@@ -268,6 +268,9 @@ func (a *mqlAzureSubscriptionDataFactoryServiceFactory) integrationRuntimes() ([
 			return nil, err
 		}
 		for _, ir := range page.Value {
+			if ir == nil {
+				continue
+			}
 			var runtimeType, description string
 			typeProps := map[string]any{}
 			if ir.Properties != nil {
@@ -338,6 +341,9 @@ func (a *mqlAzureSubscriptionDataFactoryServiceFactory) managedVirtualNetwork() 
 			return nil, err
 		}
 		for _, mvn := range page.Value {
+			if mvn == nil {
+				continue
+			}
 			var alias, vnetID string
 			if mvn.Properties != nil {
 				if mvn.Properties.Alias != nil {
@@ -410,6 +416,9 @@ func (a *mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork) pri
 			return nil, err
 		}
 		for _, ep := range page.Value {
+			if ep == nil {
+				continue
+			}
 			var groupId, privateLinkResourceId string
 			var connectionStatus, description, actionsRequired, provisioningState string
 			fqdns := []any{}

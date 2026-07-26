@@ -65,7 +65,7 @@ func initAzureSubscriptionAksServiceCluster(runtime *plugin.Runtime, args map[st
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
 			args["id"] = llx.StringData(ids.id)
 		}
 	}
@@ -240,6 +240,9 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			// Normalize a nil Properties to an empty struct so the many early
 			// accesses below are nil-safe; the later blocks already guard it.
 			if entry.Properties == nil {
@@ -790,7 +793,7 @@ func (a *mqlAzureSubscriptionAksServiceCluster) diskEncryptionSet() (*mqlAzureSu
 		return nil, nil
 	}
 	res, err := NewResource(a.MqlRuntime, "azure.subscription.computeService.diskEncryptionSet",
-		map[string]*llx.RawData{"id": llx.StringData(strings.ToLower(a.cacheDiskEncryptionSetId))})
+		map[string]*llx.RawData{"id": llx.StringData(a.cacheDiskEncryptionSetId)})
 	if err != nil {
 		return nil, err
 	}

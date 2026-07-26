@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -20,6 +21,10 @@ type mqlAzureSubscriptionIotServiceIotHubInternal struct {
 	cacheSystemData                 any
 	cacheUserAssignedIdentityIds    []string
 	cachePrivateEndpointConnections []*armiothub.PrivateEndpointConnection
+}
+
+func (a *mqlAzureSubscriptionIotService) id() (string, error) {
+	return "azure.subscription.iot/" + a.SubscriptionId.Data, nil
 }
 
 func (a *mqlAzureSubscriptionIotServiceIotHub) userAssignedIdentities() ([]any, error) {
@@ -72,7 +77,7 @@ func initAzureSubscriptionIotServiceIotHub(runtime *plugin.Runtime, args map[str
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
 			args["id"] = llx.StringData(ids.id)
 		}
 	}
@@ -97,7 +102,10 @@ func initAzureSubscriptionIotServiceIotHub(runtime *plugin.Runtime, args map[str
 	if hubs.Error != nil {
 		return nil, nil, hubs.Error
 	}
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	for _, entry := range hubs.Data {
 		hub := entry.(*mqlAzureSubscriptionIotServiceIotHub)
 		if hub.Id.Data == id {

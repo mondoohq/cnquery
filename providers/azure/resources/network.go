@@ -68,6 +68,9 @@ func (a *mqlAzureSubscriptionNetworkService) interfaces() ([]any, error) {
 			return nil, err
 		}
 		for _, iface := range page.Value {
+			if iface == nil {
+				continue
+			}
 			if iface != nil {
 				mqlAzure, err := azureInterfaceToMql(a.MqlRuntime, *iface)
 				if err != nil {
@@ -101,6 +104,9 @@ func (a *mqlAzureSubscriptionNetworkService) securityGroups() ([]any, error) {
 			return nil, err
 		}
 		for _, secgrp := range page.Value {
+			if secgrp == nil {
+				continue
+			}
 			if secgrp != nil {
 				mqlAzure, err := azureSecGroupToMql(a.MqlRuntime, *secgrp)
 				if err != nil {
@@ -134,6 +140,9 @@ func (a *mqlAzureSubscriptionNetworkService) watchers() ([]any, error) {
 			return nil, err
 		}
 		for _, watcher := range page.Value {
+			if watcher == nil {
+				continue
+			}
 			properties, err := convert.JsonToDict(watcher.Properties)
 			if err != nil {
 				return nil, err
@@ -180,6 +189,9 @@ func (a *mqlAzureSubscriptionNetworkService) publicIpAddresses() ([]any, error) 
 			return nil, err
 		}
 		for _, ip := range page.Value {
+			if ip == nil {
+				continue
+			}
 			if ip != nil {
 				mqlAzure, err := azureIpToMql(a.MqlRuntime, *ip)
 				if err != nil {
@@ -213,6 +225,9 @@ func (a *mqlAzureSubscriptionNetworkService) bastionHosts() ([]any, error) {
 			return nil, err
 		}
 		for _, bh := range page.Value {
+			if bh == nil {
+				continue
+			}
 			properties, err := convert.JsonToDict(bh.Properties)
 			if err != nil {
 				return nil, err
@@ -632,6 +647,9 @@ func (a *mqlAzureSubscriptionNetworkService) loadBalancers() ([]any, error) {
 			return nil, err
 		}
 		for _, lb := range page.Value {
+			if lb == nil {
+				continue
+			}
 			lbProps, err := convert.JsonToDict(lb.Properties)
 			if err != nil {
 				return nil, err
@@ -674,6 +692,9 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) probes() ([]any, error)
 	}
 	res := []any{}
 	for _, p := range a.cacheProperties.Probes {
+		if p == nil {
+			continue
+		}
 		props, err := convert.JsonToDict(p.Properties)
 		if err != nil {
 			return nil, err
@@ -700,6 +721,9 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) backendPools() ([]any, 
 	}
 	res := []any{}
 	for _, bap := range a.cacheProperties.BackendAddressPools {
+		if bap == nil {
+			continue
+		}
 		props, err := convert.JsonToDict(bap.Properties)
 		if err != nil {
 			return nil, err
@@ -726,6 +750,9 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) frontendIpConfigs() ([]
 	}
 	res := []any{}
 	for _, ipConfig := range a.cacheProperties.FrontendIPConfigurations {
+		if ipConfig == nil {
+			continue
+		}
 		props, err := convert.JsonToDict(ipConfig.Properties)
 		if err != nil {
 			return nil, err
@@ -758,7 +785,7 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) frontendIpConfigs() ([]
 				"type":               llx.StringDataPtr(ipConfig.Type),
 				"name":               llx.StringDataPtr(ipConfig.Name),
 				"etag":               llx.StringDataPtr(ipConfig.Etag),
-				"zones":              llx.ArrayData(convert.SliceStrPtrToInterface(ipConfig.Zones), types.String),
+				"zones":              llx.ArrayData(strPtrsToAny(ipConfig.Zones), types.String),
 				"properties":         llx.DictData(props),
 				"isPublic":           llx.BoolData(isPublic),
 				"publicIpAddressId":  llx.StringData(publicIpAddressId),
@@ -782,6 +809,9 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) inboundNatPools() ([]an
 	}
 	res := []any{}
 	for _, natPool := range a.cacheProperties.InboundNatPools {
+		if natPool == nil {
+			continue
+		}
 		props, err := convert.JsonToDict(natPool.Properties)
 		if err != nil {
 			return nil, err
@@ -808,6 +838,9 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) inboundNatRules() ([]an
 	}
 	res := []any{}
 	for _, natRule := range a.cacheProperties.InboundNatRules {
+		if natRule == nil {
+			continue
+		}
 		props, err := convert.JsonToDict(natRule.Properties)
 		if err != nil {
 			return nil, err
@@ -834,6 +867,9 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) outboundRules() ([]any,
 	}
 	res := []any{}
 	for _, outboundRule := range a.cacheProperties.OutboundRules {
+		if outboundRule == nil {
+			continue
+		}
 		props, err := convert.JsonToDict(outboundRule.Properties)
 		if err != nil {
 			return nil, err
@@ -860,6 +896,9 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) loadBalancerRules() ([]
 	}
 	res := []any{}
 	for _, lbRule := range a.cacheProperties.LoadBalancingRules {
+		if lbRule == nil {
+			continue
+		}
 		props, err := convert.JsonToDict(lbRule.Properties)
 		if err != nil {
 			return nil, err
@@ -901,6 +940,9 @@ func (a *mqlAzureSubscriptionNetworkService) natGateways() ([]any, error) {
 			return nil, err
 		}
 		for _, ng := range page.Value {
+			if ng == nil {
+				continue
+			}
 			if ng != nil {
 				mqlNg, err := azureNatGatewayToMql(a.MqlRuntime, *ng)
 				if err != nil {
@@ -933,6 +975,9 @@ func (a *mqlAzureSubscriptionNetworkService) firewalls() ([]any, error) {
 			return nil, err
 		}
 		for _, fw := range page.Value {
+			if fw == nil {
+				continue
+			}
 			if fw != nil {
 				mqlFw, err := azureFirewallToMql(a.MqlRuntime, *fw)
 				if err != nil {
@@ -1130,6 +1175,9 @@ func (a *mqlAzureSubscriptionNetworkService) firewallPolicies() ([]any, error) {
 			return nil, err
 		}
 		for _, fwp := range page.Value {
+			if fwp == nil {
+				continue
+			}
 			if fwp != nil {
 				mqlFw, err := azureFirewallPolicyToMql(a.MqlRuntime, *fwp)
 				if err != nil {
@@ -1175,7 +1223,7 @@ func azureVirtualNetworkToMql(runtime *plugin.Runtime, vn network.VirtualNetwork
 		args["provisioningState"] = llx.StringDataPtr((*string)(vn.Properties.ProvisioningState))
 		args["flowTimeoutInMinutes"] = llx.IntDataPtr(vn.Properties.FlowTimeoutInMinutes)
 		if vn.Properties.AddressSpace != nil {
-			args["addressPrefixes"] = llx.ArrayData(convert.SliceStrPtrToInterface(vn.Properties.AddressSpace.AddressPrefixes), types.String)
+			args["addressPrefixes"] = llx.ArrayData(strPtrsToAny(vn.Properties.AddressSpace.AddressPrefixes), types.String)
 		} else {
 			args["addressPrefixes"] = llx.ArrayData([]any{}, types.String)
 		}
@@ -1191,7 +1239,7 @@ func azureVirtualNetworkToMql(runtime *plugin.Runtime, vn network.VirtualNetwork
 			dhcpOpts, err := CreateResource(runtime, "azure.subscription.networkService.virtualNetwork.dhcpOptions",
 				map[string]*llx.RawData{
 					"id":         llx.StringData(id),
-					"dnsServers": llx.ArrayData(convert.SliceStrPtrToInterface(vn.Properties.DhcpOptions.DNSServers), types.String),
+					"dnsServers": llx.ArrayData(strPtrsToAny(vn.Properties.DhcpOptions.DNSServers), types.String),
 				})
 			if err != nil {
 				return nil, err
@@ -1331,6 +1379,9 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworks() ([]any, error) {
 			return nil, err
 		}
 		for _, vn := range page.Value {
+			if vn == nil {
+				continue
+			}
 			mqlVn, err := azureVirtualNetworkToMql(a.MqlRuntime, *vn)
 			if err != nil {
 				return nil, err
@@ -1347,7 +1398,7 @@ func initAzureSubscriptionNetworkServiceVirtualNetwork(runtime *plugin.Runtime, 
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
 			args["id"] = llx.StringData(ids.id)
 		}
 	}
@@ -1371,7 +1422,10 @@ func initAzureSubscriptionNetworkServiceVirtualNetwork(runtime *plugin.Runtime, 
 	if vnets.Error != nil {
 		return nil, nil, vnets.Error
 	}
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	for _, entry := range vnets.Data {
 		vnet := entry.(*mqlAzureSubscriptionNetworkServiceVirtualNetwork)
 		if vnet.Id.Data == id {
@@ -1420,6 +1474,9 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetwork) peerings() ([]any, er
 			return nil, err
 		}
 		for _, p := range page.Value {
+			if p == nil {
+				continue
+			}
 			if p.Properties == nil {
 				continue
 			}
@@ -1568,6 +1625,9 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworkGateways() ([]any, er
 				return nil, err
 			}
 			for _, vng := range page.Value {
+				if vng == nil {
+					continue
+				}
 				// Properties and the nested SKU are nullable pointers; a gateway
 				// in a transient/failed state can return either as nil. The args
 				// map below dereferences them throughout, so normalize to empty
@@ -1605,7 +1665,7 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworkGateways() ([]any, er
 					"gatewayType":                     llx.StringDataPtr((*string)(vng.Properties.GatewayType)),
 				}
 				if vng.Properties.CustomRoutes != nil {
-					args["addressPrefixes"] = llx.ArrayData(convert.SliceStrPtrToInterface(vng.Properties.CustomRoutes.AddressPrefixes), types.String)
+					args["addressPrefixes"] = llx.ArrayData(strPtrsToAny(vng.Properties.CustomRoutes.AddressPrefixes), types.String)
 				} else {
 					args["addressPrefixes"] = llx.ArrayData([]any{}, types.String)
 				}
@@ -1630,7 +1690,7 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworkGateways() ([]any, er
 						}
 					}
 					if vc.VPNClientAddressPool != nil {
-						vpnClientAddressPool = convert.SliceStrPtrToInterface(vc.VPNClientAddressPool.AddressPrefixes)
+						vpnClientAddressPool = strPtrsToAny(vc.VPNClientAddressPool.AddressPrefixes)
 					}
 					aadTenant = convert.ToValue(vc.AADTenant)
 					aadAudience = convert.ToValue(vc.AADAudience)
@@ -1678,9 +1738,9 @@ func mqlBgpSettingsFromSdk(runtime *plugin.Runtime, parentId string, bgp *networ
 		mqlBpa, err := CreateResource(runtime, "azure.subscription.networkService.bgpSettings.ipConfigurationBgpPeeringAddress",
 			map[string]*llx.RawData{
 				"id":                    llx.StringData(bpaId),
-				"customBgpIpAddresses":  llx.ArrayData(convert.SliceStrPtrToInterface(bpa.CustomBgpIPAddresses), types.String),
-				"defaultBgpIpAddresses": llx.ArrayData(convert.SliceStrPtrToInterface(bpa.DefaultBgpIPAddresses), types.String),
-				"tunnelIpAddresses":     llx.ArrayData(convert.SliceStrPtrToInterface(bpa.TunnelIPAddresses), types.String),
+				"customBgpIpAddresses":  llx.ArrayData(strPtrsToAny(bpa.CustomBgpIPAddresses), types.String),
+				"defaultBgpIpAddresses": llx.ArrayData(strPtrsToAny(bpa.DefaultBgpIPAddresses), types.String),
+				"tunnelIpAddresses":     llx.ArrayData(strPtrsToAny(bpa.TunnelIPAddresses), types.String),
 				"ipConfigurationId":     llx.StringDataPtr(bpa.IPConfigurationID),
 			})
 		if err != nil {
@@ -1708,6 +1768,9 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) ipConfiguratio
 	}
 	res := []any{}
 	for _, ipc := range a.cacheProperties.IPConfigurations {
+		if ipc == nil {
+			continue
+		}
 		props, err := convert.JsonToDict(ipc.Properties)
 		if err != nil {
 			return nil, err
@@ -1825,6 +1888,9 @@ func (a *mqlAzureSubscriptionNetworkService) applicationGateways() ([]any, error
 			return nil, err
 		}
 		for _, ag := range page.Value {
+			if ag == nil {
+				continue
+			}
 			if ag != nil {
 				mqlAg, err := azureAppGatewayToMql(a.MqlRuntime, *ag)
 				if err != nil {
@@ -1894,6 +1960,9 @@ func (a *mqlAzureSubscriptionNetworkService) applicationFirewallPolicies() ([]an
 			return nil, err
 		}
 		for _, waf := range page.Value {
+			if waf == nil {
+				continue
+			}
 			if waf != nil {
 				mqlWaf, err := azureAppFirewallPolicyToMql(a.MqlRuntime, *waf)
 				if err != nil {
@@ -2101,7 +2170,10 @@ func initAzureSubscriptionNetworkServicePrivateEndpoint(runtime *plugin.Runtime,
 	if !ok {
 		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
 	}
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	resourceID, err := ParseResourceID(id)
 	if err != nil {
 		return nil, nil, err
@@ -2409,7 +2481,10 @@ func initAzureSubscriptionNetworkServicePrivateLinkService(runtime *plugin.Runti
 	if !ok {
 		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
 	}
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	resourceID, err := ParseResourceID(id)
 	if err != nil {
 		return nil, nil, err
@@ -2638,7 +2713,7 @@ func azureRouteToMql(runtime *plugin.Runtime, route *network.Route) (*mqlAzureSu
 			provisioningState = string(*route.Properties.ProvisioningState)
 		}
 		if route.Properties.NextHop != nil {
-			ecmpNextHopIpAddresses = convert.SliceStrPtrToInterface(route.Properties.NextHop.NextHopIPAddresses)
+			ecmpNextHopIpAddresses = strPtrsToAny(route.Properties.NextHop.NextHopIPAddresses)
 		}
 	}
 
@@ -2853,6 +2928,9 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) connections() 
 			return nil, err
 		}
 		for _, c := range page.Value {
+			if c == nil {
+				continue
+			}
 			if c.Properties == nil {
 				continue
 			}
@@ -4225,6 +4303,9 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewall) ipConfigurations() ([]any, 
 	}
 	res := []any{}
 	for _, ipConfig := range a.cacheProperties.IPConfigurations {
+		if ipConfig == nil {
+			continue
+		}
 		props, err := convert.JsonToDict(ipConfig.Properties)
 		if err != nil {
 			return nil, err
@@ -4283,6 +4364,9 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewall) natRules() ([]any, error) {
 	}
 	res := []any{}
 	for _, natRule := range a.cacheProperties.NatRuleCollections {
+		if natRule == nil {
+			continue
+		}
 		props, err := convert.JsonToDict(natRule.Properties)
 		if err != nil {
 			return nil, err
@@ -4327,6 +4411,9 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewall) networkRules() ([]any, erro
 	}
 	res := []any{}
 	for _, networkRule := range a.cacheProperties.NetworkRuleCollections {
+		if networkRule == nil {
+			continue
+		}
 		props, err := convert.JsonToDict(networkRule.Properties)
 		if err != nil {
 			return nil, err
@@ -4371,6 +4458,9 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewall) applicationRules() ([]any, 
 	}
 	res := []any{}
 	for _, appRule := range a.cacheProperties.ApplicationRuleCollections {
+		if appRule == nil {
+			continue
+		}
 		props, err := convert.JsonToDict(appRule.Properties)
 		if err != nil {
 			return nil, err
@@ -4617,7 +4707,7 @@ func azureNatGatewayToMql(runtime *plugin.Runtime, ng network.NatGateway) (*mqlA
 			"location":     llx.StringDataPtr(ng.Location),
 			"tags":         llx.MapData(convert.PtrMapStrToInterface(ng.Tags), types.String),
 			"etag":         llx.StringDataPtr(ng.Etag),
-			"zones":        llx.ArrayData(convert.SliceStrPtrToInterface(ng.Zones), types.String),
+			"zones":        llx.ArrayData(strPtrsToAny(ng.Zones), types.String),
 			"nat64Enabled": llx.BoolData(nat64Enabled),
 			"properties":   llx.DictData(props),
 		})
@@ -5197,6 +5287,9 @@ func (a *mqlAzureSubscriptionNetworkServiceSecurityGroup) interfaces() ([]any, e
 	}
 	res := []any{}
 	for _, iface := range a.cacheProperties.NetworkInterfaces {
+		if iface == nil {
+			continue
+		}
 		if iface != nil {
 			mqlIface, err := azureInterfaceToMql(a.MqlRuntime, *iface)
 			if err != nil {
@@ -5233,6 +5326,9 @@ func (a *mqlAzureSubscriptionNetworkServiceSecurityGroup) securityRules() ([]any
 	}
 	res := []any{}
 	for _, secRule := range a.cacheProperties.SecurityRules {
+		if secRule == nil {
+			continue
+		}
 		if secRule != nil {
 			mqlRule, err := azureSecurityRuleToMql(a.MqlRuntime, *secRule)
 			if err != nil {
@@ -5250,6 +5346,9 @@ func (a *mqlAzureSubscriptionNetworkServiceSecurityGroup) defaultSecurityRules()
 	}
 	res := []any{}
 	for _, secRule := range a.cacheProperties.DefaultSecurityRules {
+		if secRule == nil {
+			continue
+		}
 		if secRule != nil {
 			mqlRule, err := azureSecurityRuleToMql(a.MqlRuntime, *secRule)
 			if err != nil {
@@ -5466,7 +5565,7 @@ func initAzureSubscriptionNetworkServiceSecurityGroup(runtime *plugin.Runtime, a
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
 			args["id"] = llx.StringData(ids.id)
 		}
 	}
@@ -5490,7 +5589,10 @@ func initAzureSubscriptionNetworkServiceSecurityGroup(runtime *plugin.Runtime, a
 	if secGrps.Error != nil {
 		return nil, nil, secGrps.Error
 	}
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	for _, entry := range secGrps.Data {
 		secGrp := entry.(*mqlAzureSubscriptionNetworkServiceSecurityGroup)
 		if secGrp.Id.Data == id {
@@ -5525,7 +5627,10 @@ func initAzureSubscriptionNetworkServiceRouteTable(runtime *plugin.Runtime, args
 	if tables.Error != nil {
 		return nil, nil, tables.Error
 	}
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	for _, entry := range tables.Data {
 		rt := entry.(*mqlAzureSubscriptionNetworkServiceRouteTable)
 		if rt.Id.Data == id {
@@ -5768,7 +5873,7 @@ func (a *mqlAzureSubscriptionNetworkService) serviceEndpointPolicies() ([]any, e
 						if def.Properties.ProvisioningState != nil {
 							defProvisioningState = string(*def.Properties.ProvisioningState)
 						}
-						defServiceResources = convert.SliceStrPtrToInterface(def.Properties.ServiceResources)
+						defServiceResources = strPtrsToAny(def.Properties.ServiceResources)
 					}
 					mqlDef, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition,
 						map[string]*llx.RawData{
@@ -5899,11 +6004,11 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) intrusionDetectionByp
 				"name":                 llx.StringDataPtr(rule.Name),
 				"description":          llx.StringDataPtr(rule.Description),
 				"protocol":             llx.StringData(protocol),
-				"sourceAddresses":      llx.ArrayData(convert.SliceStrPtrToInterface(rule.SourceAddresses), types.String),
-				"sourceIpGroups":       llx.ArrayData(convert.SliceStrPtrToInterface(rule.SourceIPGroups), types.String),
-				"destinationAddresses": llx.ArrayData(convert.SliceStrPtrToInterface(rule.DestinationAddresses), types.String),
-				"destinationIpGroups":  llx.ArrayData(convert.SliceStrPtrToInterface(rule.DestinationIPGroups), types.String),
-				"destinationPorts":     llx.ArrayData(convert.SliceStrPtrToInterface(rule.DestinationPorts), types.String),
+				"sourceAddresses":      llx.ArrayData(strPtrsToAny(rule.SourceAddresses), types.String),
+				"sourceIpGroups":       llx.ArrayData(strPtrsToAny(rule.SourceIPGroups), types.String),
+				"destinationAddresses": llx.ArrayData(strPtrsToAny(rule.DestinationAddresses), types.String),
+				"destinationIpGroups":  llx.ArrayData(strPtrsToAny(rule.DestinationIPGroups), types.String),
+				"destinationPorts":     llx.ArrayData(strPtrsToAny(rule.DestinationPorts), types.String),
 			})
 		if err != nil {
 			return nil, err
@@ -6201,7 +6306,7 @@ func newMqlLocalNetworkGateway(runtime *plugin.Runtime, lng *network.LocalNetwor
 		args["provisioningState"] = llx.StringDataPtr((*string)(lng.Properties.ProvisioningState))
 		args["resourceGuid"] = llx.StringDataPtr(lng.Properties.ResourceGUID)
 		if lng.Properties.LocalNetworkAddressSpace != nil {
-			addressPrefixes = convert.SliceStrPtrToInterface(lng.Properties.LocalNetworkAddressSpace.AddressPrefixes)
+			addressPrefixes = strPtrsToAny(lng.Properties.LocalNetworkAddressSpace.AddressPrefixes)
 		}
 	}
 	args["localNetworkAddressSpacePrefixes"] = llx.ArrayData(addressPrefixes, types.String)
@@ -6243,7 +6348,10 @@ func initAzureSubscriptionNetworkServiceLocalNetworkGateway(runtime *plugin.Runt
 	if !ok {
 		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
 	}
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	azureId, err := ParseResourceID(id)
 	if err != nil {
 		return nil, nil, err
@@ -6279,7 +6387,7 @@ func initAzureSubscriptionNetworkServiceApplicationGateway(runtime *plugin.Runti
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
 			args["id"] = llx.StringData(ids.id)
 		}
 	}

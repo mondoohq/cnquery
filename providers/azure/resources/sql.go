@@ -199,6 +199,9 @@ func (a *mqlAzureSubscriptionSqlService) servers() ([]any, error) {
 			return nil, err
 		}
 		for _, dbServer := range page.Value {
+			if dbServer == nil {
+				continue
+			}
 			properties, err := convert.JsonToDict(dbServer.Properties)
 			if err != nil {
 				return nil, err
@@ -291,6 +294,9 @@ func (a *mqlAzureSubscriptionSqlServiceServer) databases() ([]any, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			// Properties is a nullable pointer; the args map below dereferences
 			// it throughout, so normalize to an empty struct to avoid a panic.
 			if entry.Properties == nil {
@@ -366,6 +372,9 @@ func (a *mqlAzureSubscriptionSqlServiceServer) firewallRules() ([]any, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			mqlFireWallRule, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.firewallrule",
 				map[string]*llx.RawData{
 					"id":             llx.StringDataPtr(entry.ID),
@@ -413,6 +422,9 @@ func (a *mqlAzureSubscriptionSqlServiceServer) virtualNetworkRules() ([]any, err
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			properties, err := convert.JsonToDict(entry)
 			if err != nil {
 				return nil, err
@@ -463,6 +475,9 @@ func (a *mqlAzureSubscriptionSqlServiceServer) azureAdAdministrators() ([]any, e
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			mqlAzureSqlAdministrator, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.server.administrator",
 				map[string]*llx.RawData{
 					"id":                llx.StringDataPtr(entry.ID),
@@ -1123,6 +1138,9 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) usage() ([]any, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			mqlAzureSqlUsage, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.databaseusage",
 				map[string]*llx.RawData{
 					"id":           llx.StringDataPtr(entry.ID),
@@ -1149,7 +1167,7 @@ func initAzureSubscriptionSqlServiceServer(runtime *plugin.Runtime, args map[str
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
 			args["id"] = llx.StringData(ids.id)
 		}
 	}
@@ -1172,7 +1190,10 @@ func initAzureSubscriptionSqlServiceServer(runtime *plugin.Runtime, args map[str
 	if servers.Error != nil {
 		return nil, nil, servers.Error
 	}
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	for _, entry := range servers.Data {
 		vm := entry.(*mqlAzureSubscriptionSqlServiceServer)
 		if vm.Id.Data == id {
@@ -1190,7 +1211,10 @@ func initAzureSubscriptionSqlServiceDatabase(runtime *plugin.Runtime, args map[s
 	if args["id"] == nil {
 		return args, nil, nil
 	}
-	dbId := args["id"].Value.(string)
+	dbId, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	rid, err := ParseResourceID(dbId)
 	if err != nil {
 		return args, nil, nil
@@ -1718,6 +1742,9 @@ func (a *mqlAzureSubscriptionSqlServiceServer) keys() ([]any, error) {
 			return nil, err
 		}
 		for _, k := range page.Value {
+			if k == nil {
+				continue
+			}
 			var (
 				kind, serverKeyType, uri, thumbprint, subregion string
 				creation                                        *time.Time
@@ -1795,6 +1822,9 @@ func (a *mqlAzureSubscriptionSqlServiceServer) outboundFirewallRules() ([]any, e
 			return nil, err
 		}
 		for _, r := range page.Value {
+			if r == nil {
+				continue
+			}
 			provisioningState := ""
 			if r.Properties != nil && r.Properties.ProvisioningState != nil {
 				provisioningState = string(*r.Properties.ProvisioningState)
@@ -1845,6 +1875,9 @@ func (a *mqlAzureSubscriptionSqlServiceServer) privateEndpointConnections() ([]a
 			return nil, err
 		}
 		for _, pec := range page.Value {
+			if pec == nil {
+				continue
+			}
 			args := map[string]*llx.RawData{
 				"__id": llx.StringDataPtr(pec.ID),
 				"id":   llx.StringDataPtr(pec.ID),
@@ -1915,6 +1948,9 @@ func (a *mqlAzureSubscriptionSqlServiceServer) failoverGroups() ([]any, error) {
 			return nil, err
 		}
 		for _, fg := range page.Value {
+			if fg == nil {
+				continue
+			}
 			var (
 				replicationRole, replicationState string
 				partnerServers                    []any
@@ -2010,6 +2046,9 @@ func (a *mqlAzureSubscriptionSqlServiceServer) replicationLinks() ([]any, error)
 			return nil, err
 		}
 		for _, link := range page.Value {
+			if link == nil {
+				continue
+			}
 			var (
 				partnerLocation, partnerServer, partnerDatabase, partnerRole string
 				replicationMode, replicationState, role, linkType            string
@@ -2539,6 +2578,9 @@ func (a *mqlAzureSubscriptionSqlServiceDatabaseDataMaskingPolicy) rules() ([]any
 			return nil, err
 		}
 		for _, rule := range page.Value {
+			if rule == nil {
+				continue
+			}
 			var (
 				ruleID, aliasName, ruleState, schemaName, tableName, columnName string
 				maskingFunction                                                 string

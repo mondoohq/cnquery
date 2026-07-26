@@ -10967,8 +10967,13 @@ azure.subscription.cacheService.redisInstance @defaults("id hostName") {
   principalId string
   // User-assigned managed identities attached to the cache
   userAssignedIdentities() []azure.subscription.managedIdentity
-  // Key Vault key used for customer-managed encryption (null if platform-managed)
-  encryptionKey() azure.subscription.keyVaultService.key
+  // Key Vault key used for customer-managed encryption
+  //
+  // Deprecated in favor of the Redis Enterprise resources. Always null:
+  // customer-managed key encryption is not available on Azure Cache for
+  // Redis, only on Redis Enterprise / Azure Managed Redis, and the Redis
+  // management API exposes no encryption model on this resource.
+  encryptionKey() @maturity("deprecated") azure.subscription.keyVaultService.key
   // Private endpoint connections for the Redis cache
   privateEndpointConnections() []azure.subscription.cacheService.redisInstance.privateEndpointConnection
   // Firewall rules for the Redis cache

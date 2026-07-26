@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -137,7 +138,7 @@ type throughputCache struct {
 	autoEn     bool
 	sharedAway bool
 
-	fetched bool
+	fetched atomic.Bool
 	lock    sync.Mutex
 }
 
@@ -160,12 +161,12 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) systemM
 }
 
 func (a *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) loadThroughput() error {
-	if a.throughput.fetched {
+	if a.throughput.fetched.Load() {
 		return nil
 	}
 	a.throughput.lock.Lock()
 	defer a.throughput.lock.Unlock()
-	if a.throughput.fetched {
+	if a.throughput.fetched.Load() {
 		return nil
 	}
 
@@ -183,7 +184,7 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) loadThroughput()
 	}
 	a.throughput.manual, a.throughput.autoMax, a.throughput.autoEn, a.throughput.sharedAway =
 		fetchSqlDatabaseThroughput(ctx, client, rg, account, a.Name.Data)
-	a.throughput.fetched = true
+	a.throughput.fetched.Store(true)
 	return nil
 }
 
@@ -410,12 +411,12 @@ func sqlContainerToMQL(runtime *plugin.Runtime, c *cosmos.SQLContainerGetResults
 }
 
 func (a *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) loadThroughput() error {
-	if a.throughput.fetched {
+	if a.throughput.fetched.Load() {
 		return nil
 	}
 	a.throughput.lock.Lock()
 	defer a.throughput.lock.Unlock()
-	if a.throughput.fetched {
+	if a.throughput.fetched.Load() {
 		return nil
 	}
 
@@ -433,7 +434,7 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) loadThr
 	}
 	a.throughput.manual, a.throughput.autoMax, a.throughput.autoEn, a.throughput.sharedAway =
 		fetchSqlContainerThroughput(ctx, client, rg, account, dbName, a.Name.Data)
-	a.throughput.fetched = true
+	a.throughput.fetched.Store(true)
 	return nil
 }
 

@@ -82594,7 +82594,12 @@ func createAzureSubscriptionPolicy(runtime *plugin.Runtime, args map[string]*llx
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("azure.subscription.policy", res.__id)
@@ -83389,7 +83394,12 @@ func createAzureSubscriptionIotService(runtime *plugin.Runtime, args map[string]
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("azure.subscription.iotService", res.__id)

@@ -43,7 +43,7 @@ func initAzureSubscriptionCosmosDbServiceAccount(runtime *plugin.Runtime, args m
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
 			args["id"] = llx.StringData(ids.id)
 		}
 	}

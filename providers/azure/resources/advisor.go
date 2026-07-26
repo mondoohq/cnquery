@@ -211,7 +211,10 @@ func (a *mqlAzureSubscriptionAdvisorService) averageScore() (float64, error) {
 	}
 	values := make([]*float64, 0, len(scores.Data))
 	for _, s := range scores.Data {
-		score := s.(*mqlAzureSubscriptionAdvisorServiceScore)
+		score, ok := s.(*mqlAzureSubscriptionAdvisorServiceScore)
+		if !ok {
+			continue
+		}
 		if score.CurrentScore.Data == nil {
 			continue
 		}

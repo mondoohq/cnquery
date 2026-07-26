@@ -41,6 +41,9 @@ func (a *mqlAzureSubscription) resources() ([]any, error) {
 			return nil, err
 		}
 		for _, resource := range page.Value {
+			if resource == nil {
+				continue
+			}
 			// NOTE: properties not not properly filled, therefore you would need to ask each individual resource:
 			// https://learn.microsoft.com/en-us/rest/api/resources/resources/getbyid
 			// In order to make it happen you need to support each individual type and their api version. Therefore

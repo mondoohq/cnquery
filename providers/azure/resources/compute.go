@@ -272,7 +272,7 @@ func vmToMql(runtime *plugin.Runtime, vm compute.VirtualMachine) (*mqlAzureSubsc
 			"id":                            llx.StringDataPtr(id),
 			"name":                          llx.StringDataPtr(vm.Name),
 			"location":                      llx.StringDataPtr(vm.Location),
-			"zones":                         llx.ArrayData(convert.SliceStrPtrToInterface(vm.Zones), types.String),
+			"zones":                         llx.ArrayData(strPtrsToAny(vm.Zones), types.String),
 			"tags":                          llx.MapData(convert.PtrMapStrToInterface(vm.Tags), types.String),
 			"type":                          llx.StringDataPtr(vm.Type),
 			"properties":                    llx.DictData(properties),
@@ -339,9 +339,6 @@ func (a *mqlAzureSubscriptionComputeServiceVm) state() (string, error) {
 
 	ctx := context.Background()
 	token := conn.Token()
-	if err != nil {
-		return "", err
-	}
 
 	client, err := compute.NewVirtualMachinesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
@@ -523,6 +520,9 @@ func (a *mqlAzureSubscriptionComputeService) disks() ([]any, error) {
 			return nil, err
 		}
 		for _, disk := range disks.Value {
+			if disk == nil {
+				continue
+			}
 			mqlAzureDisk, err := diskToMql(a.MqlRuntime, *disk)
 			if err != nil {
 				return nil, err
@@ -880,7 +880,10 @@ func (a *mqlAzureSubscriptionComputeServiceVm) publicIpAddresses() ([]any, error
 		return nil, props.Error
 	}
 
-	propsDict := (props.Data).(map[string]any)
+	propsDict, ok := props.Data.(map[string]any)
+	if !ok {
+		return []any{}, nil
+	}
 	networkInterface, ok := propsDict["networkProfile"]
 	if !ok {
 		return nil, errors.New("cannot find network profile on vm, not retrieving ip addresses")
@@ -1012,7 +1015,7 @@ func initAzureSubscriptionComputeServiceVm(runtime *plugin.Runtime, args map[str
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
 			args["id"] = llx.StringData(ids.id)
 		}
 	}
@@ -1025,7 +1028,10 @@ func initAzureSubscriptionComputeServiceVm(runtime *plugin.Runtime, args map[str
 		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
 	}
 
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	resourceID, err := ParseResourceID(id)
 	if err != nil {
 		return nil, nil, err
@@ -1341,7 +1347,10 @@ func initAzureSubscriptionComputeServiceDisk(runtime *plugin.Runtime, args map[s
 		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
 	}
 
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	resourceID, err := ParseResourceID(id)
 	if err != nil {
 		return nil, nil, err
@@ -1381,7 +1390,10 @@ func initAzureSubscriptionComputeServiceDiskEncryptionSet(runtime *plugin.Runtim
 		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
 	}
 
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	resourceID, err := ParseResourceID(id)
 	if err != nil {
 		return nil, nil, err

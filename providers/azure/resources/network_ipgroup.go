@@ -70,7 +70,7 @@ func azureIpGroupToMql(runtime *plugin.Runtime, ipg network.IPGroup) (*mqlAzureS
 		if ipg.Properties.ProvisioningState != nil {
 			provisioningState = string(*ipg.Properties.ProvisioningState)
 		}
-		ipAddresses = convert.SliceStrPtrToInterface(ipg.Properties.IPAddresses)
+		ipAddresses = strPtrsToAny(ipg.Properties.IPAddresses)
 		firewallIds = azureNetworkSubResourceIDs(ipg.Properties.Firewalls)
 		firewallPolicyIds = azureNetworkSubResourceIDs(ipg.Properties.FirewallPolicies)
 	}

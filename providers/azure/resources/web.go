@@ -111,7 +111,7 @@ func createWebAppResourceFromSite(runtime *plugin.Runtime, resourceType string, 
 		args["enabled"] = llx.BoolDataPtr(site.Properties.Enabled)
 		args["state"] = llx.StringDataPtr(site.Properties.State)
 		args["defaultHostName"] = llx.StringDataPtr(site.Properties.DefaultHostName)
-		args["enabledHostNames"] = llx.ArrayData(convert.SliceStrPtrToInterface(site.Properties.EnabledHostNames), types.String)
+		args["enabledHostNames"] = llx.ArrayData(strPtrsToAny(site.Properties.EnabledHostNames), types.String)
 		args["endToEndEncryptionEnabled"] = llx.BoolDataPtr(site.Properties.EndToEndEncryptionEnabled)
 		args["sshEnabled"] = llx.BoolDataPtr(site.Properties.SSHEnabled)
 		args["keyVaultReferenceIdentity"] = llx.StringDataPtr(site.Properties.KeyVaultReferenceIdentity)
@@ -466,7 +466,7 @@ func initAzureSubscriptionWebServiceAppsite(runtime *plugin.Runtime, args map[st
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
 			args["id"] = llx.StringData(ids.id)
 		}
 	}
@@ -626,6 +626,9 @@ func (a *mqlAzureSubscriptionWebService) availableRuntimes() ([]any, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			majorVersions := entry.Properties.MajorVersions
 			stackName := convert.ToValue(entry.Name)
 			for _, major := range majorVersions {
@@ -769,7 +772,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) configuration() (*mqlAzureSubscr
 func siteConfigCorsAllowedOrigins(props *web.SiteConfig) []any {
 	origins := []any{}
 	if props != nil && props.Cors != nil {
-		origins = convert.SliceStrPtrToInterface(props.Cors.AllowedOrigins)
+		origins = strPtrsToAny(props.Cors.AllowedOrigins)
 	}
 	return origins
 }
@@ -1166,6 +1169,9 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) functions() ([]any, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			props, err := convert.JsonToDict(entry.Properties)
 			if err != nil {
 				return nil, err
@@ -1454,6 +1460,9 @@ func (a *mqlAzureSubscriptionWebServiceAppslot) functions() ([]any, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			props, err := convert.JsonToDict(entry.Properties)
 			if err != nil {
 				return nil, err
@@ -1889,7 +1898,7 @@ func (a *mqlAzureSubscriptionWebService) certificates() ([]any, error) {
 				args["issuer"] = llx.StringDataPtr(cert.Properties.Issuer)
 				args["issueDate"] = llx.TimeDataPtr(cert.Properties.IssueDate)
 				args["expirationDate"] = llx.TimeDataPtr(cert.Properties.ExpirationDate)
-				args["hostNames"] = llx.ArrayData(convert.SliceStrPtrToInterface(cert.Properties.HostNames), types.String)
+				args["hostNames"] = llx.ArrayData(strPtrsToAny(cert.Properties.HostNames), types.String)
 				args["valid"] = llx.BoolDataPtr(cert.Properties.Valid)
 			} else {
 				args["thumbprint"] = llx.NilData
@@ -2105,7 +2114,7 @@ func (a *mqlAzureSubscriptionWebService) hostingEnvironments() ([]any, error) {
 				args["suspended"] = llx.BoolDataPtr(props.Suspended)
 				args["hasLinuxWorkers"] = llx.BoolDataPtr(props.HasLinuxWorkers)
 				args["zoneRedundant"] = llx.BoolDataPtr(props.ZoneRedundant)
-				args["userWhitelistedIpRanges"] = llx.ArrayData(convert.SliceStrPtrToInterface(props.UserWhitelistedIPRanges), types.String)
+				args["userWhitelistedIpRanges"] = llx.ArrayData(strPtrsToAny(props.UserWhitelistedIPRanges), types.String)
 
 				// Handle enum fields (need to convert to string)
 				if props.Status != nil {

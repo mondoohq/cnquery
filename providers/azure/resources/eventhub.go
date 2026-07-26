@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -21,7 +22,7 @@ import (
 )
 
 type mqlAzureSubscriptionEventHubServiceNamespaceInternal struct {
-	networkRuleSetFetched           bool
+	networkRuleSetFetched           atomic.Bool
 	networkRuleSetProps             *armeventhub.NetworkRuleSetProperties
 	networkRuleSetLock              sync.Mutex
 	cacheSystemData                 any
@@ -531,12 +532,12 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespace) networkRules() (*mqlAzure
 }
 
 func (a *mqlAzureSubscriptionEventHubServiceNamespace) fetchNetworkRuleSetProperties() (*armeventhub.NetworkRuleSetProperties, error) {
-	if a.networkRuleSetFetched {
+	if a.networkRuleSetFetched.Load() {
 		return a.networkRuleSetProps, nil
 	}
 	a.networkRuleSetLock.Lock()
 	defer a.networkRuleSetLock.Unlock()
-	if a.networkRuleSetFetched {
+	if a.networkRuleSetFetched.Load() {
 		return a.networkRuleSetProps, nil
 	}
 
@@ -561,7 +562,7 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespace) fetchNetworkRuleSetProper
 		return nil, err
 	}
 	a.networkRuleSetProps = resp.NetworkRuleSet.Properties
-	a.networkRuleSetFetched = true
+	a.networkRuleSetFetched.Store(true)
 	return a.networkRuleSetProps, nil
 }
 

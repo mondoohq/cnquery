@@ -279,7 +279,7 @@ func initAzureSubscriptionComputeServiceHybridMachine(runtime *plugin.Runtime, a
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
 			args["id"] = llx.StringData(ids.id)
 		}
 	}
@@ -304,10 +304,16 @@ func initAzureSubscriptionComputeServiceHybridMachine(runtime *plugin.Runtime, a
 	if machines.Error != nil {
 		return nil, nil, machines.Error
 	}
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	wantID := strings.ToLower(id)
 	for _, entry := range machines.Data {
-		machine := entry.(*mqlAzureSubscriptionComputeServiceHybridMachine)
+		machine, ok := entry.(*mqlAzureSubscriptionComputeServiceHybridMachine)
+		if !ok {
+			continue
+		}
 		if strings.ToLower(machine.Id.Data) == wantID {
 			return args, machine, nil
 		}
