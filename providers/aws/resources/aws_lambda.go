@@ -719,8 +719,8 @@ func hasWildcardPrincipal(principals any) bool {
 }
 
 // hasSourceScopingCondition reports whether a statement condition map scopes
-// access with a non-wildcard aws:SourceArn, aws:SourceAccount, or
-// aws:PrincipalOrgID value.
+// access with a non-wildcard aws:SourceArn, aws:SourceAccount,
+// aws:SourceOwner, or aws:PrincipalOrgID value.
 func hasSourceScopingCondition(conditions any) bool {
 	m, ok := conditions.(map[string]any)
 	if !ok {
@@ -740,9 +740,13 @@ func hasSourceScopingCondition(conditions any) bool {
 	return false
 }
 
+// isSourceScopingKey reports whether a condition key pins a wildcard principal
+// to a specific caller. aws:SourceOwner is the account-ID form SNS uses, and is
+// what the AWS-generated default topic policy carries; it scopes a grant
+// exactly as aws:SourceAccount does.
 func isSourceScopingKey(key string) bool {
 	switch strings.ToLower(key) {
-	case "aws:sourcearn", "aws:sourceaccount", "aws:principalorgid":
+	case "aws:sourcearn", "aws:sourceaccount", "aws:sourceowner", "aws:principalorgid":
 		return true
 	}
 	return false

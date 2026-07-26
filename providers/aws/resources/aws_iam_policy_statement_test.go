@@ -59,6 +59,11 @@ func TestStatementsAllowPublic(t *testing.T) {
 	// A condition that does NOT scope the principal (region) leaves the grant
 	// effectively public — this is the behaviour shared with allowsPublicAccess.
 	regionCondition := map[string]any{"StringEquals": map[string]any{"aws:RequestedRegion": "us-east-1"}}
+	// The AWS-generated default SNS topic policy: a wildcard principal pinned to
+	// the owning account with aws:SourceOwner. Every default topic carries it.
+	sourceOwnerCondition := map[string]any{"StringEquals": map[string]any{"AWS:SourceOwner": "123456789012"}}
+	// A wildcard aws:SourceOwner pins nothing and stays public.
+	wildcardSourceOwnerCondition := map[string]any{"StringEquals": map[string]any{"AWS:SourceOwner": "*"}}
 
 	newStmt := func(effect string, principals map[string]any, conditions any) *mqlAwsIamPolicyStatement {
 		return &mqlAwsIamPolicyStatement{
@@ -76,6 +81,8 @@ func TestStatementsAllowPublic(t *testing.T) {
 		{"public, no conditions", []any{newStmt("Allow", wildcard, nil)}, true},
 		{"public scoped by source condition", []any{newStmt("Allow", wildcard, scopingCondition)}, false},
 		{"public with non-scoping region condition", []any{newStmt("Allow", wildcard, regionCondition)}, true},
+		{"default sns topic policy scoped by source owner", []any{newStmt("Allow", wildcard, sourceOwnerCondition)}, false},
+		{"public with wildcard source owner", []any{newStmt("Allow", wildcard, wildcardSourceOwnerCondition)}, true},
 		{"wildcard but denied", []any{newStmt("Deny", wildcard, nil)}, false},
 		{"specific principal", []any{newStmt("Allow", specific, nil)}, false},
 		{"no statements", []any{}, false},
