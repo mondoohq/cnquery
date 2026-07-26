@@ -945,23 +945,41 @@ func (a *mqlAzureSubscriptionNetworkService) firewalls() ([]any, error) {
 	return res, nil
 }
 
+// nestedResourceID extracts a nested ARM reference's id from a resource's
+// decoded properties dict, e.g. properties.firewallPolicy.id.
+//
+// Returns "" when the reference is absent or the dict has an unexpected shape.
+// Callers must treat that as a legitimate null: these references are optional
+// on most resources (a firewall with classic rules has no policy, a
+// forced-tunneling gateway ipconfig has no public IP), so an absent reference
+// is the common case rather than an error. Every lookup is comma-ok because
+// this walks JSON-decoded runtime data, where a bare assertion would panic and
+// take the whole scan down with it.
+func nestedResourceID(props any, key string) string {
+	propsDict, ok := props.(map[string]any)
+	if !ok {
+		return ""
+	}
+	ref, ok := propsDict[key].(map[string]any)
+	if !ok {
+		return ""
+	}
+	id, _ := ref["id"].(string)
+	return id
+}
+
 func (a *mqlAzureSubscriptionNetworkServiceFirewall) policy() (*mqlAzureSubscriptionNetworkServiceFirewallPolicy, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
-	props := a.Properties.Data
-	propsDict, ok := props.(map[string]any)
-	if !ok {
-		return nil, errors.New("unexpected type for properties")
+	// A firewall using classic rule collections has no policy attached; that
+	// is the normal state, not an error.
+	strId := nestedResourceID(a.Properties.Data, "firewallPolicy")
+	if strId == "" {
+		a.Policy.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
-	fwp := propsDict["firewallPolicy"]
-	if fwp == nil {
-		return nil, errors.New("no firewall policy is associated with the ip configuration")
-	}
-	fwpDict := fwp.(map[string]any)
-	id := fwpDict["id"]
-	if id != nil {
-		strId := id.(string)
+	{
 		azureId, err := ParseResourceID(strId)
 		if err != nil {
 			return nil, err
@@ -983,26 +1001,20 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewall) policy() (*mqlAzureSubscrip
 
 		return azureFirewallPolicyToMql(a.MqlRuntime, fwp.FirewallPolicy)
 	}
-	return nil, errors.New("no firewall policy is associated with the ip configuration")
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceFirewallIpConfig) publicIpAddress() (*mqlAzureSubscriptionNetworkServiceIpAddress, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
-	props := a.Properties.Data
-	propsDict, ok := props.(map[string]any)
-	if !ok {
-		return nil, errors.New("unexpected type for properties")
+	// Management-only and forced-tunneling ip configurations carry no public
+	// IP; report null rather than failing the field.
+	strId := nestedResourceID(a.Properties.Data, "publicIPAddress")
+	if strId == "" {
+		a.PublicIpAddress.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
-	publicIpAddress := propsDict["publicIPAddress"]
-	if publicIpAddress == nil {
-		return nil, errors.New("no public ip address is associated with the ip configuration")
-	}
-	ipAddressDict := publicIpAddress.(map[string]any)
-	id := ipAddressDict["id"]
-	if id != nil {
-		strId := id.(string)
+	{
 		azureId, err := ParseResourceID(strId)
 		if err != nil {
 			return nil, err
@@ -1024,26 +1036,20 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallIpConfig) publicIpAddress() (
 
 		return azureIpToMql(a.MqlRuntime, ipAddress.PublicIPAddress)
 	}
-	return nil, errors.New("no public ip address is associated with the ip configuration")
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig) publicIpAddress() (*mqlAzureSubscriptionNetworkServiceIpAddress, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
-	props := a.Properties.Data
-	propsDict, ok := props.(map[string]any)
-	if !ok {
-		return nil, errors.New("unexpected type for properties")
+	// Management-only and forced-tunneling ip configurations carry no public
+	// IP; report null rather than failing the field.
+	strId := nestedResourceID(a.Properties.Data, "publicIPAddress")
+	if strId == "" {
+		a.PublicIpAddress.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
-	publicIpAddress := propsDict["publicIPAddress"]
-	if publicIpAddress == nil {
-		return nil, errors.New("no public ip address is associated with the ip configuration")
-	}
-	ipAddressDict := publicIpAddress.(map[string]any)
-	id := ipAddressDict["id"]
-	if id != nil {
-		strId := id.(string)
+	{
 		azureId, err := ParseResourceID(strId)
 		if err != nil {
 			return nil, err
@@ -1065,26 +1071,18 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig) public
 
 		return azureIpToMql(a.MqlRuntime, ipAddress.PublicIPAddress)
 	}
-	return nil, errors.New("no public ip address is associated with the ip configuration")
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceFirewallIpConfig) subnet() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
-	props := a.Properties.Data
-	propsDict, ok := props.(map[string]any)
-	if !ok {
-		return nil, errors.New("unexpected type for properties")
+	strId := nestedResourceID(a.Properties.Data, "subnet")
+	if strId == "" {
+		a.Subnet.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
-	subnet := propsDict["subnet"]
-	if subnet == nil {
-		return nil, errors.New("no subnet is associated with the ip configuration")
-	}
-	subnetDict := subnet.(map[string]any)
-	id := subnetDict["id"]
-	if id != nil {
-		strId := id.(string)
+	{
 		azureId, err := ParseResourceID(strId)
 		if err != nil {
 			return nil, err
@@ -1110,7 +1108,6 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallIpConfig) subnet() (*mqlAzure
 
 		return azureSubnetToMql(a.MqlRuntime, subnet.Subnet)
 	}
-	return nil, errors.New("no subnet is associated with the ip configuration")
 }
 
 func (a *mqlAzureSubscriptionNetworkService) firewallPolicies() ([]any, error) {
@@ -2667,16 +2664,13 @@ func (a *mqlAzureSubscriptionNetworkServiceApplicationGateway) policy() (*mqlAzu
 	if props.Error != nil {
 		return nil, props.Error
 	}
-	propsDict := props.Data.(map[string]any)
-	fwDict := propsDict["firewallPolicy"]
-	if fwDict == nil {
-		return nil, errors.New("no firewall policy is associated with the application gateway")
+	// Gateways that are not WAF-enabled, or that use the legacy inline
+	// wafConfiguration, have no standalone policy attached.
+	strId := nestedResourceID(props.Data, "firewallPolicy")
+	if strId == "" {
+		a.Policy.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
-	fwId := fwDict.(map[string]any)["id"]
-	if fwId == nil {
-		return nil, errors.New("no firewall policy is associated with the application gateway")
-	}
-	strId := fwId.(string)
 	azureId, err := ParseResourceID(strId)
 	if err != nil {
 		return nil, err
@@ -3006,18 +3000,13 @@ func (a *mqlAzureSubscriptionNetworkServiceSubnet) natGateway() (*mqlAzureSubscr
 	if err != nil {
 		return nil, err
 	}
-	props := a.Properties.Data
-	propsDict, ok := props.(map[string]any)
-	if !ok {
-		return nil, errors.New("unexpected type for properties")
+	// NAT gateways are opt-in, so the overwhelming majority of subnets have
+	// none. That is a null, not an error.
+	natGatewayId := nestedResourceID(a.Properties.Data, "natGateway")
+	if natGatewayId == "" {
+		a.NatGateway.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
-	natGatewayDict := propsDict["natGateway"]
-	if natGatewayDict == nil {
-		// TODO: Preslav: how do we define a 'nil' resource here? if i return nil, it panics
-		return nil, errors.New("subnet has no NAT gateway associated with it")
-	}
-	natGatewayFields := natGatewayDict.(map[string]any)
-	natGatewayId := natGatewayFields["id"].(string)
 	resourceID, err := ParseResourceID(natGatewayId)
 	if err != nil {
 		return nil, err
@@ -3097,18 +3086,13 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) basePolicy() (*mqlAzu
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
-	props := a.Properties.Data
-	propsDict, ok := props.(map[string]any)
-	if !ok {
-		return nil, errors.New("unexpected type for properties")
+	// Only child policies have a base policy; a standalone or root policy
+	// legitimately has none.
+	basePolicyId := nestedResourceID(a.Properties.Data, "basePolicy")
+	if basePolicyId == "" {
+		a.BasePolicy.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
-	basePolicy := propsDict["basePolicy"]
-	if basePolicy == nil {
-		// TODO: find a way to return nil instead of err here, nil currently panics
-		return nil, errors.New("no base policy found")
-	}
-	basePolicyDict := basePolicy.(map[string]any)
-	basePolicyId := basePolicyDict["id"].(string)
 	resourceID, err := ParseResourceID(basePolicyId)
 	if err != nil {
 		return nil, err

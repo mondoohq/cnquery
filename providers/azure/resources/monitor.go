@@ -902,31 +902,29 @@ func newMqlActivityLogEntry(runtime *plugin.Runtime, entry *monitor.EventData) (
 }
 
 func (a *mqlAzureSubscriptionMonitorServiceLogprofile) storageAccount() (*mqlAzureSubscriptionStorageServiceAccount, error) {
-	if a.StorageAccountId.IsNull() {
-		return nil, errors.New("diagnostic settings has no storage account")
-	}
 	if a.StorageAccountId.Error != nil {
 		return nil, a.StorageAccountId.Error
 	}
-	storageAccId := a.StorageAccountId.Data
-	if storageAccId == "" {
-		return nil, errors.New("diagnostic settings has no storage account")
+	// Most diagnostic settings route to Log Analytics or Event Hub and have no
+	// storage destination at all, so an absent account is the common case.
+	if a.StorageAccountId.IsNull() || a.StorageAccountId.Data == "" {
+		a.StorageAccount.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
-	return getStorageAccount(storageAccId, a.MqlRuntime, a.MqlRuntime.Connection.(*connection.AzureConnection))
+	return getStorageAccount(a.StorageAccountId.Data, a.MqlRuntime, a.MqlRuntime.Connection.(*connection.AzureConnection))
 }
 
 func (a *mqlAzureSubscriptionMonitorServiceDiagnosticsetting) storageAccount() (*mqlAzureSubscriptionStorageServiceAccount, error) {
-	if a.StorageAccountId.IsNull() {
-		return nil, errors.New("diagnostic settings has no storage account")
-	}
 	if a.StorageAccountId.Error != nil {
 		return nil, a.StorageAccountId.Error
 	}
-	storageAccId := a.StorageAccountId.Data
-	if storageAccId == "" {
-		return nil, errors.New("diagnostic settings has no storage account")
+	// Most diagnostic settings route to Log Analytics or Event Hub and have no
+	// storage destination at all, so an absent account is the common case.
+	if a.StorageAccountId.IsNull() || a.StorageAccountId.Data == "" {
+		a.StorageAccount.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
-	return getStorageAccount(storageAccId, a.MqlRuntime, a.MqlRuntime.Connection.(*connection.AzureConnection))
+	return getStorageAccount(a.StorageAccountId.Data, a.MqlRuntime, a.MqlRuntime.Connection.(*connection.AzureConnection))
 }
 
 // diagnosticLogSettings normalizes a diagnostic setting's log categories into

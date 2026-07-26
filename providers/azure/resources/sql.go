@@ -514,6 +514,9 @@ func (a *mqlAzureSubscriptionSqlServiceServer) securityAlertPolicy() (any, error
 	}
 	policy, err := secAlertClient.Get(ctx, resourceID.ResourceGroup, server, sql.SecurityAlertPolicyNameDefault, &sql.ServerSecurityAlertPoliciesClientGetOptions{})
 	if err != nil {
+		if isAzureNotConfigured(err) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -542,6 +545,9 @@ func (a *mqlAzureSubscriptionSqlServiceServer) auditingPolicy() (any, error) {
 	}
 	policy, err := auditClient.Get(ctx, resourceID.ResourceGroup, server, &sql.ServerBlobAuditingPoliciesClientGetOptions{})
 	if err != nil {
+		if isAzureNotConfigured(err) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -571,6 +577,9 @@ func (a *mqlAzureSubscriptionSqlServiceServer) threatDetectionPolicy() (any, err
 	}
 	threatPolicy, err := serverClient.Get(ctx, resourceID.ResourceGroup, server, sql.AdvancedThreatProtectionNameDefault, &sql.ServerAdvancedThreatProtectionSettingsClientGetOptions{})
 	if err != nil {
+		if isAzureNotConfigured(err) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -674,6 +683,10 @@ func (a *mqlAzureSubscriptionSqlServiceServer) vulnerabilityAssessmentSettings()
 	}
 	vaSettings, err := serverClient.Get(ctx, resourceID.ResourceGroup, server, sql.VulnerabilityAssessmentNameDefault, &sql.ServerVulnerabilityAssessmentsClientGetOptions{})
 	if err != nil {
+		if isAzureNotConfigured(err) {
+			a.VulnerabilityAssessmentSettings.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	// Properties and the nested RecurringScans are nullable; a server with VA
@@ -732,6 +745,9 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) transparentDataEncryption() (an
 
 	policy, err := client.Get(ctx, resourceID.ResourceGroup, server, database, sql.TransparentDataEncryptionNameCurrent, &sql.TransparentDataEncryptionsClientGetOptions{})
 	if err != nil {
+		if isAzureNotConfigured(err) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -812,6 +828,9 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) threatDetectionPolicy() (any, e
 
 	policy, err := client.Get(ctx, resourceID.ResourceGroup, server, database, sql.SecurityAlertPolicyNameDefault, &sql.DatabaseSecurityAlertPoliciesClientGetOptions{})
 	if err != nil {
+		if isAzureNotConfigured(err) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -872,6 +891,9 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) auditingPolicy() (any, error) {
 
 	policy, err := auditClient.Get(ctx, resourceID.ResourceGroup, server, database, &sql.DatabaseBlobAuditingPoliciesClientGetOptions{})
 	if err != nil {
+		if isAzureNotConfigured(err) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -915,6 +937,10 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) advancedThreatProtection() (*mq
 
 	policy, err := client.Get(ctx, resourceID.ResourceGroup, server, database, sql.AdvancedThreatProtectionNameDefault, &sql.DatabaseAdvancedThreatProtectionSettingsClientGetOptions{})
 	if err != nil {
+		if isAzureNotConfigured(err) {
+			a.AdvancedThreatProtection.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -973,6 +999,10 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) backupShortTermRetentionPolicy(
 
 	policy, err := client.Get(ctx, resourceID.ResourceGroup, server, database, sql.ShortTermRetentionPolicyNameDefault, &sql.BackupShortTermRetentionPoliciesClientGetOptions{})
 	if err != nil {
+		if isAzureNotConfigured(err) {
+			a.BackupShortTermRetentionPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -1027,6 +1057,10 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) longTermRetentionPolicy() (*mql
 
 	policy, err := client.Get(ctx, resourceID.ResourceGroup, server, database, sql.LongTermRetentionPolicyNameDefault, &sql.LongTermRetentionPoliciesClientGetOptions{})
 	if err != nil {
+		if isAzureNotConfigured(err) {
+			a.LongTermRetentionPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -1343,6 +1377,10 @@ func (a *mqlAzureSubscriptionSqlServiceServer) blobAuditingPolicy() (*mqlAzureSu
 	}
 	resp, err := client.Get(ctx, rid.ResourceGroup, server, nil)
 	if err != nil {
+		if isAzureNotConfigured(err) {
+			a.BlobAuditingPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -1474,6 +1512,10 @@ func (a *mqlAzureSubscriptionSqlServiceServer) securityAlertPolicyConfig() (*mql
 	}
 	resp, err := client.Get(ctx, rid.ResourceGroup, server, sql.SecurityAlertPolicyNameDefault, nil)
 	if err != nil {
+		if isAzureNotConfigured(err) {
+			a.SecurityAlertPolicyConfig.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -1543,6 +1585,10 @@ func (a *mqlAzureSubscriptionSqlServiceServer) advancedThreatProtectionSetting()
 	}
 	resp, err := client.Get(ctx, rid.ResourceGroup, server, sql.AdvancedThreatProtectionNameDefault, nil)
 	if err != nil {
+		if isAzureNotConfigured(err) {
+			a.AdvancedThreatProtectionSetting.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -1597,6 +1643,10 @@ func (a *mqlAzureSubscriptionSqlServiceServer) devOpsAuditingSetting() (*mqlAzur
 	}
 	resp, err := client.Get(ctx, rid.ResourceGroup, server, "default", nil)
 	if err != nil {
+		if isAzureNotConfigured(err) {
+			a.DevOpsAuditingSetting.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -2086,6 +2136,10 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) blobAuditingPolicy() (*mqlAzure
 	}
 	resp, err := client.Get(ctx, rid.ResourceGroup, server, database, nil)
 	if err != nil {
+		if isAzureNotConfigured(err) {
+			a.BlobAuditingPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -2171,6 +2225,10 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) securityAlertPolicy() (*mqlAzur
 	}
 	resp, err := client.Get(ctx, rid.ResourceGroup, server, database, sql.SecurityAlertPolicyNameDefault, nil)
 	if err != nil {
+		if isAzureNotConfigured(err) {
+			a.SecurityAlertPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -2248,6 +2306,10 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) vulnerabilityAssessment() (*mql
 	}
 	resp, err := client.Get(ctx, rid.ResourceGroup, server, database, sql.VulnerabilityAssessmentNameDefault, nil)
 	if err != nil {
+		if isAzureNotConfigured(err) {
+			a.VulnerabilityAssessment.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 

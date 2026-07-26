@@ -349,14 +349,18 @@ func (a *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) role() (*mqlAzu
 		return nil, nil
 	}
 
-	// extract subscription id from role definition id
-	subId, err := extractSubscriptionID(a.roleDefinitionId)
-	if err != nil {
-		return nil, err
+	// Resolve against the connected subscription's role definitions. The
+	// listing at subscription scope already includes definitions inherited
+	// from parent management groups, so it covers assignments whose
+	// roleDefinitionId is management-group scoped -- those carry no
+	// "subscriptions" segment and cannot be parsed for one.
+	conn, ok := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not an Azure connection")
 	}
-
-	r, err := CreateResource(a.MqlRuntime, "azure.subscription", map[string]*llx.RawData{
-		"subscriptionId": llx.StringData(subId),
+	r, err := CreateResource(a.MqlRuntime, ResourceAzureSubscription, map[string]*llx.RawData{
+		"__id":           llx.StringData("/subscriptions/" + conn.SubId()),
+		"subscriptionId": llx.StringData(conn.SubId()),
 	})
 	if err != nil {
 		return nil, err
@@ -365,19 +369,31 @@ func (a *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) role() (*mqlAzu
 	if iam.Error != nil {
 		return nil, iam.Error
 	}
+	if iam.Data == nil {
+		return nil, errors.New("cannot resolve the authorization service for the subscription")
+	}
 	rolesVal := iam.Data.GetRoles()
 	if rolesVal.Error != nil {
 		return nil, rolesVal.Error
 	}
 	roles := rolesVal.Data
 	for i := range roles {
-		role := roles[i].(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition)
-		if role.__id == a.roleDefinitionId {
+		role, ok := roles[i].(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition)
+		if !ok {
+			continue
+		}
+		// ARM resource IDs are case-insensitive.
+		if strings.EqualFold(role.__id, a.roleDefinitionId) {
 			return role, nil
 		}
 	}
 
-	return nil, errors.New("role definition not found")
+	// A role defined at a child scope this listing does not cover. Report the
+	// grant as unresolved rather than failing the whole assignment listing --
+	// role.name is in the resource's @defaults, so an error here would break
+	// the default rendering of every role assignment in the subscription.
+	a.Role.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (a *mqlAzureSubscriptionAuthorizationService) managedIdentities() ([]any, error) {
@@ -525,16 +541,27 @@ func roleAssignmentsForPrincipal(runtime *plugin.Runtime, principalId string) ([
 		return []any{}, nil
 	}
 	conn := runtime.Connection.(*connection.AzureConnection)
-	r, err := CreateResource(runtime, "azure.subscription", map[string]*llx.RawData{
+	// azure.subscription has no id() fallback here (only subscriptionId is
+	// known), so pass __id explicitly; otherwise every synthesized subscription
+	// shares the empty cache key.
+	r, err := CreateResource(runtime, ResourceAzureSubscription, map[string]*llx.RawData{
+		"__id":           llx.StringData("/subscriptions/" + conn.SubId()),
 		"subscriptionId": llx.StringData(conn.SubId()),
 	})
 	if err != nil {
 		return nil, err
 	}
 	sub := r.(*mqlAzureSubscription)
-	iam := sub.GetIam().Data
+	// Surface a failure to resolve IAM. Returning an empty list would report
+	// "this identity holds no roles", which is the most dangerous possible
+	// wrong answer for a privilege audit.
+	iamVal := sub.GetIam()
+	if iamVal.Error != nil {
+		return nil, iamVal.Error
+	}
+	iam := iamVal.Data
 	if iam == nil {
-		return []any{}, nil
+		return nil, errors.New("cannot resolve the authorization service for the subscription")
 	}
 	all := iam.GetRoleAssignments()
 	if all.Error != nil {

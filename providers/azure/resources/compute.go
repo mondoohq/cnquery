@@ -637,8 +637,12 @@ func (a *mqlAzureSubscriptionComputeServiceVm) osDisk() (*mqlAzureSubscriptionCo
 		return nil, err
 	}
 
+	// A VM on unmanaged (page-blob VHD) storage has an OS disk but no managed
+	// disk resource to point at, so there is nothing to resolve. Report null
+	// rather than failing the field.
 	if properties.StorageProfile == nil || properties.StorageProfile.OSDisk == nil || properties.StorageProfile.OSDisk.ManagedDisk == nil || properties.StorageProfile.OSDisk.ManagedDisk.ID == nil {
-		return nil, errors.New("could not determine os disk from vm storage profile")
+		a.OsDisk.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
 
 	resourceID, err := ParseResourceID(*properties.StorageProfile.OSDisk.ManagedDisk.ID)
@@ -684,8 +688,10 @@ func (a *mqlAzureSubscriptionComputeServiceVm) dataDisks() ([]any, error) {
 		return nil, err
 	}
 
+	// A VM with no data disks omits the array entirely; that is an empty list,
+	// not a failure.
 	if properties.StorageProfile == nil || properties.StorageProfile.DataDisks == nil {
-		return nil, errors.New("could not determine data disks from vm storage profile")
+		return []any{}, nil
 	}
 
 	dataDisks := properties.StorageProfile.DataDisks

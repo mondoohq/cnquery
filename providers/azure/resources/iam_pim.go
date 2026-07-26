@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -392,12 +393,17 @@ func resolveRoleDefinition(runtime *plugin.Runtime, roleDefinitionId string, fie
 		field.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	subId, err := extractSubscriptionID(roleDefinitionId)
-	if err != nil {
-		return nil, err
+	// Resolve against the connected subscription. A PIM eligibility can name a
+	// role defined at a management group, whose ID has no "subscriptions"
+	// segment to parse; the subscription-scoped listing already includes
+	// MG-inherited definitions, so it covers that case.
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not an Azure connection")
 	}
-	r, err := CreateResource(runtime, "azure.subscription", map[string]*llx.RawData{
-		"subscriptionId": llx.StringData(subId),
+	r, err := CreateResource(runtime, ResourceAzureSubscription, map[string]*llx.RawData{
+		"__id":           llx.StringData("/subscriptions/" + conn.SubId()),
+		"subscriptionId": llx.StringData(conn.SubId()),
 	})
 	if err != nil {
 		return nil, err
@@ -406,13 +412,19 @@ func resolveRoleDefinition(runtime *plugin.Runtime, roleDefinitionId string, fie
 	if iam.Error != nil {
 		return nil, iam.Error
 	}
+	if iam.Data == nil {
+		return nil, errors.New("cannot resolve the authorization service for the subscription")
+	}
 	rolesVal := iam.Data.GetRoles()
 	if rolesVal.Error != nil {
 		return nil, rolesVal.Error
 	}
 	for i := range rolesVal.Data {
-		role := rolesVal.Data[i].(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition)
-		if role.__id == roleDefinitionId {
+		role, ok := rolesVal.Data[i].(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition)
+		if !ok {
+			continue
+		}
+		if strings.EqualFold(role.__id, roleDefinitionId) {
 			return role, nil
 		}
 	}
