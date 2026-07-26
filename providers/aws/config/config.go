@@ -114,6 +114,8 @@ Notes:
 				resources.DiscoveryBatchJobDefinitions,
 				resources.DiscoveryDirectoryServiceDirectories,
 				resources.DiscoveryDocumentDBInstances,
+				resources.DiscoverySnsTopics,
+				resources.DiscoverySqsQueues,
 				resources.DiscoveryVPCs,
 			},
 			Flags: []plugin.Flag{

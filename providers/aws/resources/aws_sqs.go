@@ -7,7 +7,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -29,6 +31,105 @@ func (a *mqlAwsSqs) id() (string, error) {
 
 func (a *mqlAwsSqsQueue) id() (string, error) {
 	return a.Url.Data, nil
+}
+
+// sqsQueueName returns the queue name carried by an SQS queue URL, which is
+// always its last path segment. For
+// "https://sqs.us-east-1.amazonaws.com/123456789012/MyQueue" that is
+// "MyQueue".
+func sqsQueueName(queueURL string) string {
+	if i := strings.LastIndex(queueURL, "/"); i >= 0 {
+		return queueURL[i+1:]
+	}
+	return queueURL
+}
+
+// regionFromSqsQueueURL returns the region encoded in an SQS queue URL host.
+// It covers the standard "sqs.<region>.amazonaws.com" host, its FIPS
+// "sqs-fips.<region>.amazonaws.com" variant, and the legacy
+// "<region>.queue.amazonaws.com" host. It returns "" when the host carries no
+// region, such as the region-less legacy "queue.amazonaws.com".
+func regionFromSqsQueueURL(queueURL string) string {
+	u, err := url.Parse(queueURL)
+	if err != nil {
+		return ""
+	}
+	parts := strings.Split(u.Hostname(), ".")
+	if len(parts) < 3 {
+		return ""
+	}
+	switch {
+	case parts[0] == "sqs" || parts[0] == "sqs-fips":
+		return parts[1]
+	case parts[1] == "queue":
+		return parts[0]
+	}
+	return ""
+}
+
+// initAwsSqsQueue resolves a single SQS queue. Queues are keyed by their URL,
+// which is also what every queue API call takes. A queue requested by ARN
+// alone (from a discovered aws-sqs-queue asset, or from another resource that
+// only holds the ARN) is resolved through GetQueueUrl using the queue name and
+// owner account the ARN carries.
+func initAwsSqsQueue(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
+		}
+	}
+
+	// A URL already identifies the queue, so only the region it implies is
+	// still missing.
+	if args["url"] != nil {
+		if args["region"] == nil {
+			queueURL, ok := args["url"].Value.(string)
+			if !ok {
+				return nil, nil, fmt.Errorf("wrong type for 'url' in aws.sqs.queue initialization, it must be a string")
+			}
+			region := regionFromSqsQueueURL(queueURL)
+			if region == "" {
+				return nil, nil, fmt.Errorf("unable to determine region from sqs queue url %q", queueURL)
+			}
+			args["region"] = llx.StringData(region)
+		}
+		return args, nil, nil
+	}
+
+	if args["arn"] == nil {
+		return nil, nil, fmt.Errorf("arn or url required to fetch sqs queue")
+	}
+	arnVal, ok := args["arn"].Value.(string)
+	if !ok {
+		return nil, nil, fmt.Errorf("wrong type for 'arn' in aws.sqs.queue initialization, it must be a string")
+	}
+	parsedArn, err := arn.Parse(arnVal)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Sqs(parsedArn.Region)
+	resp, err := svc.GetQueueUrl(context.Background(), &sqs.GetQueueUrlInput{
+		QueueName:              aws.String(parsedArn.Resource),
+		QueueOwnerAWSAccountId: aws.String(parsedArn.AccountID),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	// Returning here without a URL would leave the resource with an empty
+	// __id, so treat a missing URL as a lookup failure.
+	if resp.QueueUrl == nil || *resp.QueueUrl == "" {
+		return nil, nil, fmt.Errorf("aws.sqs.queue with arn %q not found", arnVal)
+	}
+
+	args["url"] = llx.StringDataPtr(resp.QueueUrl)
+	args["region"] = llx.StringData(parsedArn.Region)
+	return args, nil, nil
 }
 
 func (a *mqlAwsSqs) queues() ([]any, error) {

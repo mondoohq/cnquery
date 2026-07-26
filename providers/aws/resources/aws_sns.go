@@ -50,22 +50,35 @@ func (a *mqlAwsSns) topics() ([]any, error) {
 	return res, nil
 }
 
-func (a *mqlAwsSnsTopic) init(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+// initAwsSnsTopic resolves a single SNS topic. Topics are keyed by ARN, and
+// every topic API call needs the region that ARN carries, so the region is
+// always derived from it. When the resource is requested for a discovered
+// asset (aws-sns-topic platform) no args are passed and the ARN comes from the
+// connection's asset identifier.
+func initAwsSnsTopic(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
+		}
 	}
 
 	if args["arn"] == nil {
 		return nil, nil, errors.New("arn required to fetch sns topic")
 	}
-	arnVal := args["arn"].Value.(string)
-	arn, err := arn.Parse(arnVal)
+	arnVal, ok := args["arn"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("wrong type for 'arn' in aws.sns.topic initialization, it must be a string")
+	}
+	parsedArn, err := arn.Parse(arnVal)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	args["arn"] = llx.StringData(arnVal)
-	args["region"] = llx.StringData(arn.Region)
+	args["region"] = llx.StringData(parsedArn.Region)
 	return args, nil, nil
 }
 

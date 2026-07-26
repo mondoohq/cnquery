@@ -1752,7 +1752,7 @@ func init() {
 			Create: createAwsSns,
 		},
 		"aws.sns.topic": {
-			// to override args, implement: initAwsSnsTopic(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsSnsTopic,
 			Create: createAwsSnsTopic,
 		},
 		"aws.sns.subscription": {
@@ -2760,7 +2760,7 @@ func init() {
 			Create: createAwsSqs,
 		},
 		"aws.sqs.queue": {
-			// to override args, implement: initAwsSqsQueue(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsSqsQueue,
 			Create: createAwsSqsQueue,
 		},
 		"aws.rds": {

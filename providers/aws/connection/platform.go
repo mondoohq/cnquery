@@ -141,6 +141,10 @@ func getServiceName(platformName string) string {
 		return "ds"
 	case "aws-documentdb-instance":
 		return "documentdb"
+	case "aws-sns-topic":
+		return "sns"
+	case "aws-sqs-queue":
+		return "sqs"
 	}
 	return "other"
 }

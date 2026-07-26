@@ -301,6 +301,14 @@ func getPlatformName(awsObject awsObject) string {
 		if awsObject.objectType == "directory" {
 			return "aws-directoryservice-directory"
 		}
+	case "sns":
+		if awsObject.objectType == "topic" {
+			return "aws-sns-topic"
+		}
+	case "sqs":
+		if awsObject.objectType == "queue" {
+			return "aws-sqs-queue"
+		}
 	}
 	return ""
 }

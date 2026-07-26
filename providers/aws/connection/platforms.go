@@ -64,6 +64,8 @@ var Platforms = []*plugin.PlatformInfo{
 	{Name: "aws-batch-jobdefinition", Title: "AWS Batch Job Definition", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
 	{Name: "aws-directoryservice-directory", Title: "AWS Directory Service Directory", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
 	{Name: "aws-documentdb-instance", Title: "AWS DocumentDB Instance", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
+	{Name: "aws-sns-topic", Title: "AWS SNS Topic", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
+	{Name: "aws-sqs-queue", Title: "AWS SQS Queue", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
 }
 
 var platformsByName = plugin.PlatformsByName(Platforms)
