@@ -150,9 +150,16 @@ func IsMacieNotEnabledError(err error) bool {
 		if respErr.HTTPStatusCode() == 401 && strings.Contains(respErr.Error(), "AccessDeniedException: Macie is not enabled") {
 			return true
 		}
-		// Also catch general access denied cases for Macie
+		// Also catch general access denied cases for Macie, but only when the
+		// message actually names Macie. Matching a bare AccessDenied swallowed
+		// genuine macie2:* permission gaps and reported them as "Macie is not
+		// enabled", so every Macie resource degraded to empty and any
+		// data-classification policy passed vacuously.
 		if (respErr.HTTPStatusCode() == 400 || respErr.HTTPStatusCode() == 401 || respErr.HTTPStatusCode() == 403) &&
-			(strings.Contains(respErr.Error(), "AccessDeniedException") || strings.Contains(respErr.Error(), "AccessDenied")) {
+			(strings.Contains(respErr.Error(), "AccessDeniedException") || strings.Contains(respErr.Error(), "AccessDenied")) &&
+			(strings.Contains(respErr.Error(), "Macie is not enabled") ||
+				strings.Contains(respErr.Error(), "Macie isn't enabled") ||
+				strings.Contains(respErr.Error(), "not enabled for your account")) {
 			return true
 		}
 		// GetClassificationExportConfiguration / GetAutomatedDiscoveryConfiguration

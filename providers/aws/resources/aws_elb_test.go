@@ -51,3 +51,28 @@ func TestListenerForwardTargetGroupsNoForwardAction(t *testing.T) {
 	require.NoError(t, err)
 	assert.Empty(t, result)
 }
+
+// TestIsV1LoadBalancerArn guards the classic-vs-v2 dispatch. A substring match
+// on "classic" also caught ALB/NLB ARNs whose *name* contains it, sending them
+// to the v1 API: listeners() then returned an empty list and enforcesTls()
+// passed vacuously on an unencrypted ALB.
+func TestIsV1LoadBalancerArn(t *testing.T) {
+	tests := []struct {
+		name string
+		arn  string
+		want bool
+	}{
+		{"classic", "arn:aws:elasticloadbalancing:us-east-1:1:loadbalancer/classic/my-elb", true},
+		{"alb named classic-migration", "arn:aws:elasticloadbalancing:us-east-1:1:loadbalancer/app/classic-migration-alb/50dc", false},
+		{"alb named prod-classic-api", "arn:aws:elasticloadbalancing:us-east-1:1:loadbalancer/app/prod-classic-api/abc", false},
+		{"nlb", "arn:aws:elasticloadbalancing:us-east-1:1:loadbalancer/net/my-nlb/abc", false},
+		{"gwlb", "arn:aws:elasticloadbalancing:us-east-1:1:loadbalancer/gwy/my-gwlb/abc", false},
+		{"not an arn", "my-elb", false},
+		{"empty", "", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, isV1LoadBalancerArn(tt.arn))
+		})
+	}
+}

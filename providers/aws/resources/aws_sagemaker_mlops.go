@@ -249,6 +249,7 @@ func (a *mqlAwsSagemakerExperiment) source() (*mqlAwsSagemakerExperimentSource, 
 	}
 	mqlRes, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerExperimentSource,
 		map[string]*llx.RawData{
+			"__id":       llx.StringData(a.Arn.Data + "/source"),
 			"sourceArn":  llx.StringDataPtr(a.cacheSourceArn),
 			"sourceType": llx.StringData(a.cacheSourceType),
 		})
@@ -434,6 +435,7 @@ func (a *mqlAwsSagemakerTrial) source() (*mqlAwsSagemakerTrialSource, error) {
 	}
 	mqlRes, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerTrialSource,
 		map[string]*llx.RawData{
+			"__id":       llx.StringData(a.Arn.Data + "/source"),
 			"sourceArn":  llx.StringDataPtr(a.cacheSourceArn),
 			"sourceType": llx.StringData(a.cacheSourceType),
 		})
@@ -662,6 +664,7 @@ func (a *mqlAwsSagemakerTrialComponent) fetchDetails() error {
 		}
 		mqlMetric, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerTrialComponentMetricSummary,
 			map[string]*llx.RawData{
+				"__id":       llx.StringData(a.Arn.Data + "/metric/" + convert.ToValue(m.MetricName)),
 				"metricName": llx.StringDataPtr(m.MetricName),
 				"sourceArn":  llx.StringDataPtr(m.SourceArn),
 				"min":        llx.FloatData(minVal),
@@ -693,6 +696,7 @@ func (a *mqlAwsSagemakerTrialComponent) source() (*mqlAwsSagemakerTrialComponent
 	}
 	mqlRes, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerTrialComponentSource,
 		map[string]*llx.RawData{
+			"__id":       llx.StringData(a.Arn.Data + "/source"),
 			"sourceArn":  llx.StringDataPtr(a.cacheSourceArn),
 			"sourceType": llx.StringData(a.cacheSourceType),
 		})
@@ -864,6 +868,7 @@ func (a *mqlAwsSagemakerProject) fetchDetails() error {
 		for _, p := range resp.ServiceCatalogProvisioningDetails.ProvisioningParameters {
 			mqlParam, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerProjectProvisioningParameter,
 				map[string]*llx.RawData{
+					"__id":  llx.StringData(a.Arn.Data + "/provisioningParam/" + convert.ToValue(p.Key)),
 					"key":   llx.StringDataPtr(p.Key),
 					"value": llx.StringDataPtr(p.Value),
 				})
@@ -894,6 +899,7 @@ func (a *mqlAwsSagemakerProject) serviceCatalogProvisioningDetails() (*mqlAwsSag
 	}
 	mqlRes, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerProjectProvisioningDetails,
 		map[string]*llx.RawData{
+			"__id":                   llx.StringData(a.Arn.Data + "/provisioningDetails"),
 			"productId":              llx.StringData(a.cacheProvisioningProductId),
 			"provisioningArtifactId": llx.StringData(a.cacheProvisioningArtifactId),
 			"pathId":                 llx.StringData(a.cacheProvisioningPathId),
@@ -917,6 +923,7 @@ func (a *mqlAwsSagemakerProject) serviceCatalogProvisionedProductDetails() (*mql
 	}
 	mqlRes, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerProjectProvisionedProductDetails,
 		map[string]*llx.RawData{
+			"__id":                            llx.StringData(a.Arn.Data + "/provisionedProductDetails"),
 			"provisionedProductId":            llx.StringData(a.cacheProvisionedProductId),
 			"provisionedProductStatusMessage": llx.StringData(a.cacheProvisionedProductStatusMessage),
 		})
@@ -1117,6 +1124,7 @@ func (a *mqlAwsSagemakerHyperParameterTuningJob) fetchDetails() error {
 			for _, r := range pr.ContinuousParameterRanges {
 				mqlRange, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerHyperParameterTuningJobParameterRange,
 					map[string]*llx.RawData{
+						"__id":        llx.StringData(a.Arn.Data + "/parameterRange/" + convert.ToValue(r.Name)),
 						"name":        llx.StringDataPtr(r.Name),
 						"type":        llx.StringData("Continuous"),
 						"minValue":    llx.StringDataPtr(r.MinValue),
@@ -1134,6 +1142,7 @@ func (a *mqlAwsSagemakerHyperParameterTuningJob) fetchDetails() error {
 			for _, r := range pr.IntegerParameterRanges {
 				mqlRange, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerHyperParameterTuningJobParameterRange,
 					map[string]*llx.RawData{
+						"__id":        llx.StringData(a.Arn.Data + "/parameterRange/" + convert.ToValue(r.Name)),
 						"name":        llx.StringDataPtr(r.Name),
 						"type":        llx.StringData("Integer"),
 						"minValue":    llx.StringDataPtr(r.MinValue),
@@ -1155,6 +1164,7 @@ func (a *mqlAwsSagemakerHyperParameterTuningJob) fetchDetails() error {
 				}
 				mqlRange, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerHyperParameterTuningJobParameterRange,
 					map[string]*llx.RawData{
+						"__id":        llx.StringData(a.Arn.Data + "/parameterRange/" + convert.ToValue(r.Name)),
 						"name":        llx.StringDataPtr(r.Name),
 						"type":        llx.StringData("Categorical"),
 						"minValue":    llx.StringData(""),
@@ -1215,6 +1225,7 @@ func (a *mqlAwsSagemakerHyperParameterTuningJob) objectiveMetric() (*mqlAwsSagem
 	}
 	mqlRes, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerHyperParameterTuningJobObjective,
 		map[string]*llx.RawData{
+			"__id":       llx.StringData(a.Arn.Data + "/objective"),
 			"type":       llx.StringData(a.cacheObjectiveType),
 			"metricName": llx.StringData(a.cacheObjectiveMetricName),
 		})
@@ -1232,6 +1243,7 @@ func (a *mqlAwsSagemakerHyperParameterTuningJob) resourceLimits() (*mqlAwsSagema
 	}
 	mqlRes, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerHyperParameterTuningJobResourceLimits,
 		map[string]*llx.RawData{
+			"__id":                    llx.StringData(a.Arn.Data + "/resourceLimits"),
 			"maxNumberOfTrainingJobs": llx.IntData(a.cacheMaxTrainingJobs),
 			"maxParallelTrainingJobs": llx.IntData(a.cacheMaxParallelJobs),
 			"maxRuntimeInSeconds":     llx.IntData(a.cacheMaxRuntimeInSeconds),
@@ -1257,6 +1269,7 @@ func (a *mqlAwsSagemakerHyperParameterTuningJob) trainingJobStatusCounters() (*m
 	}
 	mqlRes, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerHyperParameterTuningJobStatusCounters,
 		map[string]*llx.RawData{
+			"__id":              llx.StringData(a.Arn.Data + "/statusCounters"),
 			"completed":         llx.IntData(a.cacheCompleted),
 			"inProgress":        llx.IntData(a.cacheInProgress),
 			"retryableError":    llx.IntData(a.cacheRetryableError),
@@ -1573,6 +1586,7 @@ func (a *mqlAwsSagemakerTransformJob) transformInput() (*mqlAwsSagemakerTransfor
 	}
 	mqlRes, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerTransformJobInput,
 		map[string]*llx.RawData{
+			"__id":            llx.StringData(a.Arn.Data + "/transformInput"),
 			"s3Uri":           llx.StringData(a.cacheInputS3Uri),
 			"dataSource":      llx.StringData(a.cacheInputDataSource),
 			"contentType":     llx.StringData(a.cacheInputContentType),
@@ -1597,6 +1611,7 @@ func (a *mqlAwsSagemakerTransformJob) transformOutput() (*mqlAwsSagemakerTransfo
 	}
 	mqlRes, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerTransformJobOutput,
 		map[string]*llx.RawData{
+			"__id":         llx.StringData(a.Arn.Data + "/transformOutput"),
 			"s3Uri":        llx.StringData(a.cacheOutputS3Uri),
 			"accept":       llx.StringData(a.cacheOutputAccept),
 			"assembleWith": llx.StringData(a.cacheOutputAssembleWith),
@@ -1620,6 +1635,7 @@ func (a *mqlAwsSagemakerTransformJob) transformResources() (*mqlAwsSagemakerTran
 	}
 	mqlRes, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerTransformJobResources,
 		map[string]*llx.RawData{
+			"__id":          llx.StringData(a.Arn.Data + "/transformResources"),
 			"instanceType":  llx.StringData(a.cacheResourceInstanceType),
 			"instanceCount": llx.IntData(a.cacheResourceInstanceCount),
 		})
@@ -1824,6 +1840,7 @@ func (a *mqlAwsSagemakerAutoMLJob) fetchDetails() error {
 		}
 		mqlCh, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerAutoMLJobInputChannel,
 			map[string]*llx.RawData{
+				"__id":                llx.StringData(a.Arn.Data + "/inputChannel/" + convert.ToValue(ch.TargetAttributeName)),
 				"targetAttributeName": llx.StringDataPtr(ch.TargetAttributeName),
 				"contentType":         llx.StringDataPtr(ch.ContentType),
 				"compressionType":     llx.StringData(string(ch.CompressionType)),
@@ -1879,6 +1896,7 @@ func (a *mqlAwsSagemakerAutoMLJob) outputDataConfig() (*mqlAwsSagemakerAutoMLJob
 	}
 	mqlRes, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerAutoMLJobOutputConfig,
 		map[string]*llx.RawData{
+			"__id":  llx.StringData(a.Arn.Data + "/outputConfig"),
 			"s3Uri": llx.StringData(a.cacheOutputS3Uri),
 		})
 	if err != nil {
@@ -1916,6 +1934,7 @@ func (a *mqlAwsSagemakerAutoMLJob) bestCandidate() (*mqlAwsSagemakerAutoMLJobCan
 	}
 	mqlRes, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerAutoMLJobCandidate,
 		map[string]*llx.RawData{
+			"__id":                 llx.StringData(a.Arn.Data + "/bestCandidate"),
 			"candidateName":        llx.StringData(a.cacheCandidateName),
 			"candidateStatus":      llx.StringData(a.cacheCandidateStatus),
 			"objectiveMetricName":  llx.StringData(a.cacheObjMetricName),

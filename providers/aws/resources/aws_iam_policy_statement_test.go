@@ -100,3 +100,95 @@ func TestStatementsAllowPublic(t *testing.T) {
 		})
 	}
 }
+
+// TestPolicyStatementHasPublicPrincipalNotPrincipal covers Allow + NotPrincipal,
+// which grants everyone *except* the listed principals and is therefore public
+// by construction. Only Principal was consulted before, so a bucket policy of
+// this shape reported not-public.
+func TestPolicyStatementHasPublicPrincipalNotPrincipal(t *testing.T) {
+	tests := []struct {
+		name          string
+		effect        string
+		principals    map[string]any
+		notPrincipals map[string]any
+		want          bool
+	}{
+		{
+			name:          "allow with notPrincipal is public",
+			effect:        "Allow",
+			notPrincipals: map[string]any{"AWS": []any{"arn:aws:iam::111111111111:role/Admin"}},
+			want:          true,
+		},
+		{
+			name:          "deny with notPrincipal is not public",
+			effect:        "Deny",
+			notPrincipals: map[string]any{"AWS": []any{"arn:aws:iam::111111111111:role/Admin"}},
+			want:          false,
+		},
+		{
+			name:          "empty notPrincipal falls back to principal",
+			effect:        "Allow",
+			principals:    map[string]any{"AWS": []any{"arn:aws:iam::111111111111:root"}},
+			notPrincipals: map[string]any{},
+			want:          false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stmt := &mqlAwsIamPolicyStatement{
+				Effect:        setString(tt.effect),
+				Principals:    setMap(tt.principals),
+				NotPrincipals: setMap(tt.notPrincipals),
+			}
+			got, err := stmt.hasPublicPrincipal()
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+// TestStatementsAllowPublicNegatedCondition covers the operator gate through
+// the public-facing predicate: a wildcard principal scoped by a *negated*
+// operator is not scoped at all, and must still report public.
+func TestStatementsAllowPublicNegatedCondition(t *testing.T) {
+	wildcard := map[string]any{"AWS": []any{"*"}}
+
+	tests := []struct {
+		name      string
+		condition map[string]any
+		want      bool
+	}{
+		{
+			name:      "StringEquals on a scoping key is scoped",
+			condition: map[string]any{"StringEquals": map[string]any{"aws:PrincipalOrgID": "o-123"}},
+			want:      false,
+		},
+		{
+			name:      "StringNotEquals on a scoping key is NOT scoped",
+			condition: map[string]any{"StringNotEquals": map[string]any{"aws:PrincipalOrgID": "o-123"}},
+			want:      true,
+		},
+		{
+			name:      "Null on a scoping key is NOT scoped",
+			condition: map[string]any{"Null": map[string]any{"aws:PrincipalOrgID": "true"}},
+			want:      true,
+		},
+		{
+			name:      "kms:CallerAccount is scoped",
+			condition: map[string]any{"StringEquals": map[string]any{"kms:CallerAccount": "111111111111"}},
+			want:      false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stmt := &mqlAwsIamPolicyStatement{
+				Effect:     setString("Allow"),
+				Principals: setMap(wildcard),
+				Conditions: setDict(any(tt.condition)),
+			}
+			got, err := statementsAllowPublic([]any{stmt})
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}

@@ -314,8 +314,12 @@ func (a *mqlAwsEcsCluster) containerInstances() ([]any, error) {
 		}
 		nextToken = containerInstances.NextToken
 	}
-	if len(allContainerInstanceArns) > 0 {
-		containerInstancesDetail, err := svc.DescribeContainerInstances(ctx, &ecsservice.DescribeContainerInstancesInput{Cluster: &clustera, ContainerInstances: allContainerInstanceArns, Include: []ecstypes.ContainerInstanceField{ecstypes.ContainerInstanceFieldTags}})
+	// DescribeContainerInstances accepts at most 100 entries per request, so a
+	// cluster with more registered instances than that used to fail the call
+	// outright -- and the error was only logged, so the cluster reported zero
+	// container instances.
+	for _, batch := range slicesx.Batch(allContainerInstanceArns, 100) {
+		containerInstancesDetail, err := svc.DescribeContainerInstances(ctx, &ecsservice.DescribeContainerInstancesInput{Cluster: &clustera, ContainerInstances: batch, Include: []ecstypes.ContainerInstanceField{ecstypes.ContainerInstanceFieldTags}})
 		if err == nil {
 			for _, ci := range containerInstancesDetail.ContainerInstances {
 				versionInfo, err := convert.JsonToDict(ci.VersionInfo)
@@ -916,7 +920,7 @@ func createTaskDefinitionResource(runtime *plugin.Runtime, region string, td *ec
 	// Create volumes
 	volumes := []any{}
 	for i := range td.Volumes {
-		mqlVolume, err := createVolumeResource(runtime, region, &td.Volumes[i])
+		mqlVolume, err := createVolumeResource(runtime, region, convert.ToValue(td.TaskDefinitionArn), &td.Volumes[i])
 		if err != nil {
 			return nil, err
 		}
@@ -1212,11 +1216,16 @@ func createContainerDefinitionResource(runtime *plugin.Runtime, taskDefArn strin
 		})
 }
 
-func createVolumeResource(runtime *plugin.Runtime, region string, vol *ecstypes.Volume) (any, error) {
+// createVolumeResource builds one task-definition volume. taskDefArn qualifies
+// every cache key below: volume names are unique only within a single task
+// definition revision, so keying on the bare name collapses same-named volumes
+// (data, tmp, config) across every revision in the account onto the first one.
+func createVolumeResource(runtime *plugin.Runtime, region string, taskDefArn string, vol *ecstypes.Volume) (any, error) {
 	volName := ""
 	if vol.Name != nil {
 		volName = *vol.Name
 	}
+	volKey := taskDefArn + "/volume/" + volName
 
 	// Create EFS volume configuration
 	var efsVolConfig any
@@ -1246,7 +1255,7 @@ func createVolumeResource(runtime *plugin.Runtime, region string, vol *ecstypes.
 			iam := string(efsConfig.AuthorizationConfig.Iam)
 			mqlAuthConfig, err := CreateResource(runtime, "aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig",
 				map[string]*llx.RawData{
-					"__id":          llx.StringData(volName + "/efs/auth"),
+					"__id":          llx.StringData(volKey + "/efs/auth"),
 					"accessPointId": llx.StringData(accessPointId),
 					"iam":           llx.StringData(iam),
 				})
@@ -1258,7 +1267,7 @@ func createVolumeResource(runtime *plugin.Runtime, region string, vol *ecstypes.
 			// Create empty authorization config
 			mqlAuthConfig, err := CreateResource(runtime, "aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig",
 				map[string]*llx.RawData{
-					"__id":          llx.StringData(volName + "/efs/auth"),
+					"__id":          llx.StringData(volKey + "/efs/auth"),
 					"accessPointId": llx.StringData(""),
 					"iam":           llx.StringData(""),
 				})
@@ -1275,7 +1284,7 @@ func createVolumeResource(runtime *plugin.Runtime, region string, vol *ecstypes.
 		}
 		mqlEfsConfig, err := CreateResource(runtime, "aws.ecs.taskDefinition.volume.efsVolumeConfiguration",
 			map[string]*llx.RawData{
-				"__id":                  llx.StringData(volName + "/efs"),
+				"__id":                  llx.StringData(volKey + "/efs"),
 				"fileSystemId":          llx.StringData(fileSystemId),
 				"rootDirectory":         llx.StringData(rootDirectory),
 				"transitEncryption":     llx.StringData(transitEncryption),
@@ -1292,7 +1301,7 @@ func createVolumeResource(runtime *plugin.Runtime, region string, vol *ecstypes.
 		// Create empty authorization config for empty EFS config
 		emptyAuthConfig, err := CreateResource(runtime, "aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig",
 			map[string]*llx.RawData{
-				"__id":          llx.StringData(volName + "/efs/auth"),
+				"__id":          llx.StringData(volKey + "/efs/auth"),
 				"accessPointId": llx.StringData(""),
 				"iam":           llx.StringData(""),
 			})
@@ -1301,7 +1310,7 @@ func createVolumeResource(runtime *plugin.Runtime, region string, vol *ecstypes.
 		}
 		mqlEfsConfig, err := CreateResource(runtime, "aws.ecs.taskDefinition.volume.efsVolumeConfiguration",
 			map[string]*llx.RawData{
-				"__id":                  llx.StringData(volName + "/efs"),
+				"__id":                  llx.StringData(volKey + "/efs"),
 				"fileSystemId":          llx.StringData(""),
 				"rootDirectory":         llx.StringData(""),
 				"transitEncryption":     llx.StringData(""),
@@ -1323,7 +1332,7 @@ func createVolumeResource(runtime *plugin.Runtime, region string, vol *ecstypes.
 		}
 		mqlHost, err := CreateResource(runtime, "aws.ecs.taskDefinition.volume.host",
 			map[string]*llx.RawData{
-				"__id":       llx.StringData(volName + "/host"),
+				"__id":       llx.StringData(volKey + "/host"),
 				"sourcePath": llx.StringData(sourcePath),
 			})
 		if err != nil {
@@ -1334,7 +1343,7 @@ func createVolumeResource(runtime *plugin.Runtime, region string, vol *ecstypes.
 		// Create empty host config
 		mqlHost, err := CreateResource(runtime, "aws.ecs.taskDefinition.volume.host",
 			map[string]*llx.RawData{
-				"__id":       llx.StringData(volName + "/host"),
+				"__id":       llx.StringData(volKey + "/host"),
 				"sourcePath": llx.StringData(""),
 			})
 		if err != nil {
@@ -1370,7 +1379,7 @@ func createVolumeResource(runtime *plugin.Runtime, region string, vol *ecstypes.
 		}
 		mqlDocker, err := CreateResource(runtime, "aws.ecs.taskDefinition.volume.dockerVolumeConfiguration",
 			map[string]*llx.RawData{
-				"__id":          llx.StringData(volName + "/docker"),
+				"__id":          llx.StringData(volKey + "/docker"),
 				"scope":         llx.StringData(scope),
 				"autoprovision": llx.BoolData(autoprovision),
 				"driver":        llx.StringData(driver),
@@ -1385,7 +1394,7 @@ func createVolumeResource(runtime *plugin.Runtime, region string, vol *ecstypes.
 		// Create empty docker config
 		mqlDocker, err := CreateResource(runtime, "aws.ecs.taskDefinition.volume.dockerVolumeConfiguration",
 			map[string]*llx.RawData{
-				"__id":          llx.StringData(volName + "/docker"),
+				"__id":          llx.StringData(volKey + "/docker"),
 				"scope":         llx.StringData(""),
 				"autoprovision": llx.BoolData(false),
 				"driver":        llx.StringData(""),
@@ -1420,7 +1429,7 @@ func createVolumeResource(runtime *plugin.Runtime, region string, vol *ecstypes.
 		}
 		mqlS3files, err := CreateResource(runtime, "aws.ecs.taskDefinition.volume.s3filesVolumeConfiguration",
 			map[string]*llx.RawData{
-				"__id":                  llx.StringData(volName + "/s3files"),
+				"__id":                  llx.StringData(volKey + "/s3files"),
 				"fileSystemArn":         llx.StringData(fileSystemArn),
 				"accessPointArn":        llx.StringData(accessPointArn),
 				"rootDirectory":         llx.StringData(rootDirectory),
@@ -1433,7 +1442,7 @@ func createVolumeResource(runtime *plugin.Runtime, region string, vol *ecstypes.
 	} else {
 		mqlS3files, err := CreateResource(runtime, "aws.ecs.taskDefinition.volume.s3filesVolumeConfiguration",
 			map[string]*llx.RawData{
-				"__id":                  llx.StringData(volName + "/s3files"),
+				"__id":                  llx.StringData(volKey + "/s3files"),
 				"fileSystemArn":         llx.StringData(""),
 				"accessPointArn":        llx.StringData(""),
 				"rootDirectory":         llx.StringData(""),
@@ -1465,7 +1474,7 @@ func createVolumeResource(runtime *plugin.Runtime, region string, vol *ecstypes.
 
 	return CreateResource(runtime, "aws.ecs.taskDefinition.volume",
 		map[string]*llx.RawData{
-			"__id":                       llx.StringData(volName),
+			"__id":                       llx.StringData(volKey),
 			"name":                       llx.StringData(volName),
 			"efsVolumeConfiguration":     llx.ResourceData(efsVolConfigResource, "aws.ecs.taskDefinition.volume.efsVolumeConfiguration"),
 			"host":                       llx.ResourceData(hostConfigResource, "aws.ecs.taskDefinition.volume.host"),
@@ -1776,7 +1785,7 @@ func (a *mqlAwsEcsTaskDefinition) volumes() ([]any, error) {
 	}
 	volumes := []any{}
 	for i := range td.Volumes {
-		mqlVolume, err := createVolumeResource(a.MqlRuntime, a.Region.Data, &td.Volumes[i])
+		mqlVolume, err := createVolumeResource(a.MqlRuntime, a.Region.Data, a.Arn.Data, &td.Volumes[i])
 		if err != nil {
 			return nil, err
 		}
@@ -1896,8 +1905,10 @@ func (a *mqlAwsEcsTaskDefinitionVolume) s3filesVolumeConfiguration() (*mqlAwsEcs
 	return a.S3filesVolumeConfiguration.Data, nil
 }
 
+// id returns the task-definition-qualified cache key set at construction.
+// `name` alone is unique only within one task definition revision.
 func (a *mqlAwsEcsTaskDefinitionVolume) id() (string, error) {
-	return a.Name.Data, nil
+	return a.__id, nil
 }
 
 func (a *mqlAwsEcsTaskDefinitionEphemeralStorage) id() (string, error) {

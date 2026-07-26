@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
@@ -143,7 +144,7 @@ func (a *mqlAwsIdentitycenterInstance) permissionSets() ([]any, error) {
 
 type mqlAwsIdentitycenterPermissionSetInternal struct {
 	cacheInstanceArn string
-	fetched          bool
+	fetched          atomic.Bool
 	lock             sync.Mutex
 	descResp         *ssoadmin.DescribePermissionSetOutput
 }
@@ -153,12 +154,12 @@ func (a *mqlAwsIdentitycenterPermissionSet) id() (string, error) {
 }
 
 func (a *mqlAwsIdentitycenterPermissionSet) fetchDetail() (*ssoadmin.DescribePermissionSetOutput, error) {
-	if a.fetched {
+	if a.fetched.Load() {
 		return a.descResp, nil
 	}
 	a.lock.Lock()
 	defer a.lock.Unlock()
-	if a.fetched {
+	if a.fetched.Load() {
 		return a.descResp, nil
 	}
 
@@ -175,8 +176,11 @@ func (a *mqlAwsIdentitycenterPermissionSet) fetchDetail() (*ssoadmin.DescribePer
 	if err != nil {
 		return nil, err
 	}
-	a.fetched = true
+	// Publish the value before the flag: a reader on the lock-free fast path
+	// that observes fetched==true must never see a nil descResp, or the
+	// accessors below nil-deref and kill the scan.
 	a.descResp = resp
+	a.fetched.Store(true)
 	return resp, nil
 }
 
@@ -184,6 +188,9 @@ func (a *mqlAwsIdentitycenterPermissionSet) name() (string, error) {
 	resp, err := a.fetchDetail()
 	if err != nil {
 		return "", err
+	}
+	if resp == nil || resp.PermissionSet == nil {
+		return "", nil
 	}
 	return convert.ToValue(resp.PermissionSet.Name), nil
 }
@@ -193,6 +200,9 @@ func (a *mqlAwsIdentitycenterPermissionSet) description() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	if resp == nil || resp.PermissionSet == nil {
+		return "", nil
+	}
 	return convert.ToValue(resp.PermissionSet.Description), nil
 }
 
@@ -200,6 +210,9 @@ func (a *mqlAwsIdentitycenterPermissionSet) sessionDuration() (string, error) {
 	resp, err := a.fetchDetail()
 	if err != nil {
 		return "", err
+	}
+	if resp == nil || resp.PermissionSet == nil {
+		return "", nil
 	}
 	return convert.ToValue(resp.PermissionSet.SessionDuration), nil
 }
@@ -209,6 +222,9 @@ func (a *mqlAwsIdentitycenterPermissionSet) relayState() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	if resp == nil || resp.PermissionSet == nil {
+		return "", nil
+	}
 	return convert.ToValue(resp.PermissionSet.RelayState), nil
 }
 
@@ -216,6 +232,9 @@ func (a *mqlAwsIdentitycenterPermissionSet) createdAt() (*time.Time, error) {
 	resp, err := a.fetchDetail()
 	if err != nil {
 		return nil, err
+	}
+	if resp == nil || resp.PermissionSet == nil {
+		return nil, nil
 	}
 	return resp.PermissionSet.CreatedDate, nil
 }

@@ -76,7 +76,11 @@ func initAwsEc2Eip(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 
 	if len(address.Addresses) > 0 {
 		add := address.Addresses[0]
-		attached := add.AllocationId != nil
+		// AssociationId, not AllocationId: AllocationId is the allocation handle
+		// present on every VPC Elastic IP whether or not it is associated (it was
+		// only absent for EC2-Classic, retired in 2022), so keying on it made
+		// `attached` unconditionally true and `where(attached == false)` empty.
+		attached := add.AssociationId != nil
 		args["publicIp"] = llx.StringDataPtr(add.PublicIp)
 		args["attached"] = llx.BoolData(attached) // this is false if allocationId is null and true otherwise
 		args["networkInterfaceId"] = llx.StringDataPtr(add.NetworkInterfaceId)
@@ -195,7 +199,11 @@ func (a *mqlAwsEc2) getEIPs(conn *connection.AwsConnection) []*jobpool.Job {
 					continue
 				}
 
-				attached := add.AllocationId != nil
+				// AssociationId, not AllocationId: AllocationId is the allocation handle
+				// present on every VPC Elastic IP whether or not it is associated (it was
+				// only absent for EC2-Classic, retired in 2022), so keying on it made
+				// `attached` unconditionally true and `where(attached == false)` empty.
+				attached := add.AssociationId != nil
 				args := map[string]*llx.RawData{
 					"publicIp":                llx.StringDataPtr(add.PublicIp),
 					"attached":                llx.BoolData(attached), // this is false if allocationId is null and true otherwise
@@ -793,8 +801,14 @@ func initAwsEc2Keypair(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 		if errors.As(err, &ae) {
 			if ae.ErrorCode() == "InvalidKeyPair.NotFound" {
 				log.Warn().Msgf("key %s does not exist in %s region", n, r)
-				args["fingerprint"] = llx.StringData("")
-				args["type"] = llx.StringData("")
+				// A deleted keypair is a legitimate empty state, but it still
+				// needs a unique cache key: id() falls back to arn, which this
+				// path leaves empty, so every deleted keypair in the account
+				// aliased to whichever one resolved first. Unknown attributes
+				// are null rather than "" so they read as unknown, not empty.
+				args["__id"] = llx.StringData("aws.ec2.keypair/" + r + "/" + n)
+				args["fingerprint"] = llx.NilData
+				args["type"] = llx.NilData
 				args["tags"] = llx.MapData(map[string]any{}, types.String)
 				args["arn"] = llx.StringData("")
 				args["createdAt"] = llx.NilData
@@ -817,8 +831,10 @@ func initAwsEc2Keypair(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 
 		return args, nil, nil
 	}
-	args["fingerprint"] = llx.StringData("")
-	args["type"] = llx.StringData("")
+	// Same as the InvalidKeyPair.NotFound path above: unique key, null unknowns.
+	args["__id"] = llx.StringData("aws.ec2.keypair/" + r + "/" + n)
+	args["fingerprint"] = llx.NilData
+	args["type"] = llx.NilData
 	args["tags"] = llx.MapData(map[string]any{}, types.String)
 	args["arn"] = llx.StringData("")
 	args["createdAt"] = llx.NilData
@@ -1981,6 +1997,9 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		return nil, nil, err
 	}
 	resource := strings.Split(arn.Resource, "/")
+	if len(resource) < 2 {
+		return nil, nil, fmt.Errorf("not a valid ec2 image arn %q", arnVal)
+	}
 	conn := runtime.Connection.(*connection.AwsConnection)
 	svc := conn.Ec2(arn.Region)
 	ctx := context.Background()
@@ -2308,11 +2327,19 @@ func (a *mqlAwsEc2Instance) id() (string, error) {
 
 func (a *mqlAwsEc2Instance) vpc() (*mqlAwsVpc, error) {
 	vpcArn := a.VpcArn
-	if vpcArn.State == plugin.StateIsNull {
-		return nil, errors.New("ec2 instance has no vpc associated with it")
-	} else if vpcArn.Error != nil {
+	if vpcArn.Error != nil {
 		return nil, vpcArn.Error
-	} else {
+	}
+	// RawToTValue stamps a nil value as StateIsNull|StateIsSet, so the old
+	// `State == plugin.StateIsNull` comparison could never match. Instances
+	// without a VPC (terminated instances drop VpcId) therefore fell through
+	// with arn:"" and triggered an account-wide VPC scan that ended in a
+	// misleading "vpc does not exist" error. A missing VPC is a null field.
+	if !vpcArn.IsSet() || vpcArn.IsNull() || vpcArn.Data == "" {
+		a.Vpc.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	{
 		res, err := NewResource(a.MqlRuntime, "aws.vpc", map[string]*llx.RawData{"arn": llx.StringData(vpcArn.Data)})
 		if err != nil {
 			return nil, err
@@ -4082,13 +4109,17 @@ func initAwsEc2Launchtemplate(runtime *plugin.Runtime, args map[string]*llx.RawD
 	svc := conn.Ec2(region)
 	resp, err := svc.DescribeLaunchTemplates(context.Background(), input)
 	if err != nil {
+		// Falling through with `args, nil, nil` built a husk: args holds only
+		// region plus id/name, arn is never set, so id() returned "" and every
+		// unresolvable launch template shared the empty cache key while its
+		// other fields stayed unset (not null).
 		if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
-			return args, nil, nil
+			return nil, nil, errors.Wrap(err, "could not access aws ec2 launch template")
 		}
 		return nil, nil, err
 	}
 	if len(resp.LaunchTemplates) == 0 {
-		return args, nil, nil
+		return nil, nil, errors.New("aws ec2 launch template does not exist")
 	}
 	mqlLt, err := buildLaunchTemplateResource(runtime, region, conn.AccountId(), resp.LaunchTemplates[0])
 	if err != nil {

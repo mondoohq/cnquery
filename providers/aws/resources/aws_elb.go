@@ -1019,10 +1019,11 @@ func isV1LoadBalancerArn(a string) bool {
 	if err != nil {
 		return false
 	}
-	if strings.Contains(arnVal.Resource, "classic") {
-		return true
-	}
-	return false
+	// Must be a prefix match on the synthesized classic path. A substring match
+	// also caught ALB/NLB ARNs whose *name* contains "classic"
+	// (loadbalancer/app/prod-classic-api/...), dispatching them to the v1 API:
+	// listeners() then returned [] and enforcesTls() passed vacuously.
+	return strings.HasPrefix(arnVal.Resource, "loadbalancer/classic/")
 }
 
 func elbv2TagsToMap(tags []elbtypes.Tag) map[string]any {

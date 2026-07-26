@@ -146,7 +146,13 @@ func (a *mqlAwsEfsFilesystem) kmsKey() (*mqlAwsKmsKey, error) {
 		mqlKeyResource, err := NewResource(a.MqlRuntime, "aws.kms.key", map[string]*llx.RawData{
 			"arn": llx.StringDataPtr(a.cacheKmsKeyID),
 		})
-		return mqlKeyResource.(*mqlAwsKmsKey), err
+		// initAwsKmsKey returns (nil, err) on an unparseable ARN or a denied
+		// DescribeKey; asserting on the nil interface would panic and, because
+		// blocks run in goroutines, take down the whole scan.
+		if err != nil {
+			return nil, err
+		}
+		return mqlKeyResource.(*mqlAwsKmsKey), nil
 	}
 	a.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
 

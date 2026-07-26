@@ -495,8 +495,12 @@ func (a *mqlAwsApprunner) getAutoScalingConfigurations(conn *connection.AwsConne
 
 			var nextToken *string
 			for {
+				// LatestOnly defaults to true server-side when the field is
+				// omitted, which hid every non-latest revision -- including
+				// revisions that services are actively pinned to.
 				resp, err := svc.ListAutoScalingConfigurations(ctx, &apprunner.ListAutoScalingConfigurationsInput{
-					NextToken: nextToken,
+					NextToken:  nextToken,
+					LatestOnly: false,
 				})
 				if err != nil {
 					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
@@ -973,7 +977,12 @@ func (a *mqlAwsApprunner) getObservabilityConfigurations(conn *connection.AwsCon
 
 			var nextToken *string
 			for {
-				resp, err := svc.ListObservabilityConfigurations(ctx, &apprunner.ListObservabilityConfigurationsInput{NextToken: nextToken})
+				// See the note on ListAutoScalingConfigurations: LatestOnly defaults to
+				// true when omitted.
+				resp, err := svc.ListObservabilityConfigurations(ctx, &apprunner.ListObservabilityConfigurationsInput{
+					NextToken:  nextToken,
+					LatestOnly: false,
+				})
 				if err != nil {
 					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 						log.Debug().Str("region", region).Msg("error accessing region for App Runner ListObservabilityConfigurations")

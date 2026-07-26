@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/detective"
 	detectivetypes "github.com/aws/aws-sdk-go-v2/service/detective/types"
@@ -152,7 +153,9 @@ func newMqlAwsDetectiveGraphMember(runtime *plugin.Runtime, region string, m det
 			entry["volumeUsageInBytes"] = *info.VolumeUsageInBytes
 		}
 		if info.VolumeUsageUpdateTime != nil {
-			entry["volumeUsageUpdateTime"] = *info.VolumeUsageUpdateTime
+			// dict values must be JSON-native; a time.Time fails conversion at
+			// query time with "unsupported child type: time.Time".
+			entry["volumeUsageUpdateTime"] = info.VolumeUsageUpdateTime.Format(time.RFC3339)
 		}
 		volumeUsage[string(pkg)] = entry
 	}

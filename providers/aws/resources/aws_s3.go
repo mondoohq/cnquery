@@ -803,93 +803,138 @@ const (
 	s3AllUsersGroup           = "http://acs.amazonaws.com/groups/global/AllUsers"
 )
 
+// s3BucketIsPublic applies AWS's actual Block Public Access semantics to a
+// policy signal and an ACL signal.
+//
+// BlockPublicAcls and BlockPublicPolicy only reject *new* public ACLs and
+// policies; AWS documents that enabling them does not affect grants that
+// already exist. Only IgnorePublicAcls neutralizes an existing public ACL, and
+// only RestrictPublicBuckets neutralizes an existing public policy. Treating
+// any of the four as "not public" reported a world-readable bucket as private
+// whenever, say, BlockPublicAcls was on and a `Principal: "*"` policy was
+// attached -- the standard static-site/CDN configuration.
+func s3BucketIsPublic(pab *s3types.PublicAccessBlockConfiguration, policyIsPublic, aclIsPublic bool) bool {
+	ignorePublicAcls := pab != nil && pab.IgnorePublicAcls != nil && *pab.IgnorePublicAcls
+	restrictPublicBuckets := pab != nil && pab.RestrictPublicBuckets != nil && *pab.RestrictPublicBuckets
+
+	if policyIsPublic && !restrictPublicBuckets {
+		return true
+	}
+	if aclIsPublic && !ignorePublicAcls {
+		return true
+	}
+	return false
+}
+
+// s3PolicyGrantsPublicAccess reports whether any Allow statement names the
+// wildcard principal.
+func s3PolicyGrantsPublicAccess(policy *awspolicy.S3BucketPolicy) bool {
+	if policy == nil {
+		return false
+	}
+	for _, statement := range policy.Statements {
+		if !strings.EqualFold(statement.Effect, "Allow") {
+			continue
+		}
+		if awsPrincipal, ok := statement.Principal["AWS"]; ok {
+			if slices.Contains(awsPrincipal, "*") {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// s3GrantsArePublic reports whether any ACL grant targets the AllUsers or
+// AuthenticatedUsers group.
+func s3GrantsArePublic(grants []s3types.Grant) bool {
+	for i := range grants {
+		grant := grants[i]
+		if grant.Grantee == nil {
+			continue
+		}
+		if grant.Grantee.Type == s3types.TypeGroup &&
+			(convert.ToValue(grant.Grantee.URI) == s3AuthenticatedUsersGroup ||
+				convert.ToValue(grant.Grantee.URI) == s3AllUsersGroup) {
+			return true
+		}
+	}
+	return false
+}
+
 func (a *mqlAwsS3Bucket) public() (bool, error) {
+	// markUnknown reports null rather than a confident `false` when neither the
+	// policy nor the ACL could be read. `false` here is indistinguishable from
+	// "verified not public", which is the dangerous direction for an exposure
+	// check on an under-scoped token.
+	markUnknown := func() (bool, error) {
+		a.Public.State = plugin.StateIsSet | plugin.StateIsNull
+		return false, nil
+	}
+
 	region, ok, err := a.bucketRegion()
-	if err != nil || !ok {
+	if err != nil {
 		return false, err
+	}
+	if !ok {
+		return markUnknown()
 	}
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	bucketname := a.Name.Data
 	svc := conn.S3(region)
 	ctx := context.Background()
 
-	// Check Public Access Block settings first (reuses cached result)
 	accessBlock, err := a.fetchPublicAccessBlock()
 	if err != nil {
 		return false, err
 	}
 
-	notPublic := false
-	if accessBlock != nil {
-		if accessBlock.BlockPublicAcls != nil && *accessBlock.BlockPublicAcls {
-			notPublic = true
-		}
-		if accessBlock.BlockPublicPolicy != nil && *accessBlock.BlockPublicPolicy {
-			notPublic = true
-		}
-		if accessBlock.IgnorePublicAcls != nil && *accessBlock.IgnorePublicAcls {
-			notPublic = true
-		}
-		if accessBlock.RestrictPublicBuckets != nil && *accessBlock.RestrictPublicBuckets {
-			notPublic = true
-		}
-	}
-	if notPublic {
-		return false, nil // Public access is restricted
-	}
+	policyIsPublic := false
+	policyKnown := false
 
-	// Then, use GetBucketPolicyStatus to determine public access
+	// GetBucketPolicyStatus is AWS's own verdict on the policy. A `false` here
+	// is a real answer about the *policy*, but it says nothing about the ACL --
+	// so it must not short-circuit the ACL check below.
 	statusOutput, err := svc.GetBucketPolicyStatus(ctx, &s3.GetBucketPolicyStatusInput{
 		Bucket: &bucketname,
 	})
 	if err != nil && !isS3BucketInaccessible(err) {
 		return false, err
 	}
-	if statusOutput != nil &&
-		statusOutput.PolicyStatus != nil &&
-		statusOutput.PolicyStatus.IsPublic != nil {
-		return *statusOutput.PolicyStatus.IsPublic, nil
+	if statusOutput != nil && statusOutput.PolicyStatus != nil && statusOutput.PolicyStatus.IsPublic != nil {
+		policyIsPublic = *statusOutput.PolicyStatus.IsPublic
+		policyKnown = true
 	}
 
-	// If that didn't work, fetch the bucket policy manually and parse it
-	bucketPolicyResource := a.GetPolicy()
-	if bucketPolicyResource.State == plugin.StateIsSet && bucketPolicyResource.Data != nil {
-		bucketPolicy, err := bucketPolicyResource.Data.parsePolicyDocument()
-		if err != nil {
-			return false, err
-		}
-
-		for _, statement := range bucketPolicy.Statements {
-			if statement.Effect != "Allow" {
-				continue
+	// Fall back to parsing the policy ourselves when the status call was denied.
+	if !policyKnown {
+		bucketPolicyResource := a.GetPolicy()
+		if bucketPolicyResource.State == plugin.StateIsSet && bucketPolicyResource.Data != nil {
+			bucketPolicy, err := bucketPolicyResource.Data.parsePolicyDocument()
+			if err != nil {
+				return false, err
 			}
-			if awsPrincipal, ok := statement.Principal["AWS"]; ok {
-				if slices.Contains(awsPrincipal, "*") {
-					return true, nil
-				}
-			}
+			policyIsPublic = s3PolicyGrantsPublicAccess(bucketPolicy)
+			policyKnown = true
 		}
 	}
 
-	// Finally check for bucket ACLs
+	aclIsPublic := false
+	aclKnown := false
 	acl, err := a.gatherAcl()
 	if err != nil {
 		return false, err
 	}
-	if acl == nil {
-		return false, nil
+	if acl != nil {
+		aclIsPublic = s3GrantsArePublic(acl.Grants)
+		aclKnown = true
 	}
 
-	for i := range acl.Grants {
-		grant := acl.Grants[i]
-		if grant.Grantee == nil {
-			continue
-		}
-		if grant.Grantee.Type == s3types.TypeGroup && (convert.ToValue(grant.Grantee.URI) == s3AuthenticatedUsersGroup || convert.ToValue(grant.Grantee.URI) == s3AllUsersGroup) {
-			return true, nil
-		}
+	if !policyKnown && !aclKnown {
+		return markUnknown()
 	}
-	return false, nil
+
+	return s3BucketIsPublic(accessBlock, policyIsPublic, aclIsPublic), nil
 }
 
 func (a *mqlAwsS3Bucket) cors() ([]any, error) {
@@ -917,6 +962,7 @@ func (a *mqlAwsS3Bucket) cors() ([]any, error) {
 		corsrule := cors.CORSRules[i]
 		mqlBucketCors, err := CreateResource(a.MqlRuntime, "aws.s3.bucket.corsrule",
 			map[string]*llx.RawData{
+				"__id":           llx.StringData(fmt.Sprintf("%s/cors/%d", a.Arn.Data, i)),
 				"name":           llx.StringData(bucketname),
 				"allowedHeaders": llx.ArrayData(toInterfaceArr(corsrule.AllowedHeaders), types.String),
 				"allowedMethods": llx.ArrayData(toInterfaceArr(corsrule.AllowedMethods), types.String),
@@ -1459,6 +1505,7 @@ func (a *mqlAwsS3Bucket) website() (*mqlAwsS3BucketWebsiteConfiguration, error) 
 	}
 
 	args := map[string]*llx.RawData{
+		"__id":                  llx.StringData(a.Arn.Data + "/website"),
 		"errorDocument":         llx.NilData,
 		"indexDocument":         llx.NilData,
 		"redirectAllRequestsTo": llx.NilData,
@@ -1471,6 +1518,7 @@ func (a *mqlAwsS3Bucket) website() (*mqlAwsS3BucketWebsiteConfiguration, error) 
 	}
 	if website.RedirectAllRequestsTo != nil {
 		res, err := CreateResource(a.MqlRuntime, ResourceAwsS3BucketWebsiteConfigurationRedirectAllRequestsToConf, map[string]*llx.RawData{
+			"__id":     llx.StringData(a.Arn.Data + "/website/redirectAllRequestsTo"),
 			"hostname": llx.StringData(convert.ToValue(website.RedirectAllRequestsTo.HostName)),
 			"protocol": llx.StringData(string(website.RedirectAllRequestsTo.Protocol)),
 		})
@@ -1481,10 +1529,12 @@ func (a *mqlAwsS3Bucket) website() (*mqlAwsS3BucketWebsiteConfiguration, error) 
 	}
 
 	routingRules := []any{}
-	for _, rule := range website.RoutingRules {
-		args := map[string]*llx.RawData{}
+	for i, rule := range website.RoutingRules {
+		ruleID := fmt.Sprintf("%s/website/routingRule/%d", a.Arn.Data, i)
+		args := map[string]*llx.RawData{"__id": llx.StringData(ruleID)}
 		if rule.Redirect != nil {
 			redirectRes, err := CreateResource(a.MqlRuntime, ResourceAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf, map[string]*llx.RawData{
+				"__id":                 llx.StringData(ruleID + "/redirect"),
 				"hostname":             llx.StringData(convert.ToValue(rule.Redirect.HostName)),
 				"httpRedirectCode":     llx.StringData(convert.ToValue(rule.Redirect.HttpRedirectCode)),
 				"protocol":             llx.StringData(string(rule.Redirect.Protocol)),
@@ -1499,6 +1549,7 @@ func (a *mqlAwsS3Bucket) website() (*mqlAwsS3BucketWebsiteConfiguration, error) 
 
 		if rule.Condition != nil {
 			condition, err := CreateResource(a.MqlRuntime, ResourceAwsS3BucketWebsiteConfigurationRoutingRuleConditionConf, map[string]*llx.RawData{
+				"__id":                        llx.StringData(ruleID + "/condition"),
 				"httpErrorCodeReturnedEquals": llx.StringData(convert.ToValue(rule.Condition.HttpErrorCodeReturnedEquals)),
 				"keyPrefixEquals":             llx.StringData(convert.ToValue(rule.Condition.KeyPrefixEquals)),
 			})
@@ -1529,8 +1580,11 @@ func (a *mqlAwsS3BucketGrant) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+// id returns the bucket-and-index qualified cache key set at construction.
+// `name` is the bucket name, which every CORS rule on a bucket shares, so it
+// cannot be the key on its own.
 func (a *mqlAwsS3BucketCorsrule) id() (string, error) {
-	return "s3.bucket.corsrule " + a.Name.Data, nil
+	return a.__id, nil
 }
 
 func (a *mqlAwsS3BucketPolicy) id() (string, error) {

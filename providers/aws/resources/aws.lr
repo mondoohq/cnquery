@@ -2401,7 +2401,7 @@ private aws.iam.user @defaults("arn name createdAt") {
   // Time when password was last used
   passwordLastUsed time
   // Tags for the IAM user
-  tags map[string]string
+  tags() map[string]string
   // Infrastructure-management system that owns this user
   //
   // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the user is unmanaged or managed by a tool that leaves no recognizable tag.
@@ -2467,7 +2467,7 @@ private aws.iam.instanceProfile @defaults("instanceProfileId instanceProfileName
   // Name of the instance profile
   instanceProfileName string
   // Tags for the instance profile
-  tags map[string]string
+  tags() map[string]string
   // Role attached to the instanceProfile
   iamRoles() []aws.iam.role
 }
@@ -2604,7 +2604,7 @@ private aws.iam.role @defaults("arn name") {
   // Description of the role
   description string
   // Tags associated with the role
-  tags map[string]string
+  tags() map[string]string
   // Time when the role was created
   createdAt time
   // Policy document that grants an entity permission to assume the role
@@ -11729,10 +11729,14 @@ private aws.s3.bucket @defaults("name location public") {
   // Whether the bucket allows public access
   //
   // True when the bucket policy or an access control grant exposes the bucket
-  // to everyone (the AllUsers or AuthenticatedUsers groups). Returns false
-  // whenever any Block Public Access setting is on, since that access is then
-  // blocked regardless of the policy or ACLs. Read the four `blockPublic*`
-  // fields to see the underlying settings.
+  // to everyone (the AllUsers or AuthenticatedUsers groups) and the relevant
+  // Block Public Access setting does not neutralize it. `restrictPublicBuckets`
+  // suppresses a public policy and `ignorePublicAcls` suppresses a public ACL;
+  // `blockPublicAcls` and `blockPublicPolicy` only reject new public grants and
+  // therefore do not change the answer for grants that already exist. Null when
+  // neither the policy nor the ACL could be read, so an under-scoped token is
+  // distinguishable from a bucket that is verified private. Read the four
+  // `blockPublic*` fields to see the underlying settings.
   public() bool
   // List of CORS information for the bucket
   cors() []aws.s3.bucket.corsrule
@@ -17211,7 +17215,7 @@ aws.ec2 {
 private aws.ec2.eip @defaults("publicIp attached privateIpAddress") {
   // Public IP address of the EIP
   publicIp string
-  // Whether the Elastic IP is associated with an instance (false if no allocationId is present)
+  // Whether the Elastic IP is associated with a network interface or instance
   attached bool
   // EC2 instance associated with the EIP
   instance() aws.ec2.instance

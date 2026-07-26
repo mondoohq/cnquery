@@ -759,7 +759,10 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 				name: f.Name.Data, labels: map[string]string{},
 				awsObject: awsObject{
 					account: accountId, region: "us-east-1", arn: f.Arn.Data,
-					id: f.Name.Data, service: "dynamodb", objectType: "table",
+					// Distinct from the regular table objectType: a global table
+					// and its us-east-1 replica share a name, so both mapped to
+					// the same platform id and merged into one asset.
+					id: f.Name.Data, service: "dynamodb", objectType: "globaltable",
 				},
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))

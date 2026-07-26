@@ -100,9 +100,13 @@ func (a *mqlAwsIam) credentialReport() ([]any, error) {
 			}
 		}
 
-		// if we have an error and it is not 500 we generate a report
+		// if we have an error and it is not 500 we generate a report.
+		// ReportExpired (410) needs the same treatment as ReportNotPresent:
+		// AWS expires cached credential reports and the only way forward is to
+		// regenerate. Without this branch the whole credentialReport field --
+		// and every root-MFA / key-rotation check built on it -- hard-errors.
 		if errors.As(err, &ae) {
-			if ae.ErrorCode() == "ReportNotPresent" {
+			if code := ae.ErrorCode(); code == "ReportNotPresent" || code == "ReportExpired" {
 				// generate a new report
 				_, err := svc.GenerateCredentialReport(ctx, &iam.GenerateCredentialReportInput{})
 				if err != nil {
@@ -341,6 +345,77 @@ func (a *mqlAwsIam) users() ([]any, error) {
 	return res, nil
 }
 
+// tags for IAM users/roles/instance profiles must be fetched separately: the
+// ListUsers / ListRoles / ListInstanceProfiles responses explicitly omit Tags
+// (the SDK documents this on each operation), so the collection path used to
+// report {} for every principal while the single-object path returned the real
+// tags. Fetching lazily keeps queries that don't select tags free of the call.
+// The init paths (GetUser/GetRole/GetInstanceProfile) already populate the
+// field eagerly, so GetOrCompute short-circuits and these never fire there.
+
+func (a *mqlAwsIamUser) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Iam("")
+	ctx := context.Background()
+
+	userName := a.Name.Data
+	res := []iamtypes.Tag{}
+	paginator := iam.NewListUserTagsPaginator(svc, &iam.ListUserTagsInput{UserName: &userName})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return map[string]any{}, nil
+			}
+			return nil, err
+		}
+		res = append(res, page.Tags...)
+	}
+	return iamTagsToMap(res), nil
+}
+
+func (a *mqlAwsIamRole) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Iam("")
+	ctx := context.Background()
+
+	roleName := a.Name.Data
+	res := []iamtypes.Tag{}
+	paginator := iam.NewListRoleTagsPaginator(svc, &iam.ListRoleTagsInput{RoleName: &roleName})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return map[string]any{}, nil
+			}
+			return nil, err
+		}
+		res = append(res, page.Tags...)
+	}
+	return iamTagsToMap(res), nil
+}
+
+func (a *mqlAwsIamInstanceProfile) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Iam("")
+	ctx := context.Background()
+
+	name := a.InstanceProfileName.Data
+	res := []iamtypes.Tag{}
+	paginator := iam.NewListInstanceProfileTagsPaginator(svc, &iam.ListInstanceProfileTagsInput{InstanceProfileName: &name})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return map[string]any{}, nil
+			}
+			return nil, err
+		}
+		res = append(res, page.Tags...)
+	}
+	return iamTagsToMap(res), nil
+}
+
 func iamTagsToMap(tags []iamtypes.Tag) map[string]any {
 	return tagsToMap(tags, func(t iamtypes.Tag) *string { return t.Key }, func(t iamtypes.Tag) *string { return t.Value })
 }
@@ -382,7 +457,6 @@ func (a *mqlAwsIam) createInstanceProfile(instanceProfile *iamtypes.InstanceProf
 			"instanceProfileId":   llx.StringDataPtr(instanceProfile.InstanceProfileId),
 			"instanceProfileName": llx.StringDataPtr(instanceProfile.InstanceProfileName),
 			// "roles":               llx.MapDataPtr(instanceProfile.Roles),
-			"tags": llx.MapData(iamTagsToMap(instanceProfile.Tags), types.String),
 		},
 	)
 	if err != nil {
@@ -427,7 +501,6 @@ func (a *mqlAwsIam) createIamUser(usr *iamtypes.User) (plugin.Resource, error) {
 			"name":             llx.StringDataPtr(usr.UserName),
 			"createdAt":        llx.TimeDataPtr(usr.CreateDate),
 			"passwordLastUsed": llx.TimeDataPtr(usr.PasswordLastUsed),
-			"tags":             llx.MapData(iamTagsToMap(usr.Tags), types.String),
 			"path":             llx.StringDataPtr(usr.Path),
 		},
 	)
@@ -568,7 +641,6 @@ func (a *mqlAwsIam) mqlPolicies(policies []iamtypes.Policy) ([]any, error) {
 				"arn":             llx.StringDataPtr(policy.Arn),
 				"policyId":        llx.StringDataPtr(policy.PolicyId),
 				"name":            llx.StringDataPtr(policy.PolicyName),
-				"description":     llx.StringDataPtr(policy.Description),
 				"isAttachable":    llx.BoolData(policy.IsAttachable),
 				"attachmentCount": llx.IntDataDefault(policy.AttachmentCount, 0),
 				"createdAt":       llx.TimeDataPtr(policy.CreateDate),
@@ -670,7 +742,6 @@ func (a *mqlAwsIam) roles() ([]any, error) {
 					"id":                       llx.StringDataPtr(role.RoleId),
 					"name":                     llx.StringDataPtr(role.RoleName),
 					"description":              llx.StringDataPtr(role.Description),
-					"tags":                     llx.MapData(iamTagsToMap(role.Tags), types.String),
 					"createdAt":                llx.TimeDataPtr(role.CreateDate),
 					"assumeRolePolicyDocument": llx.MapData(policyDocumentMap, types.Any),
 					"maxSessionDuration":       llx.IntDataDefault(role.MaxSessionDuration, 3600),
@@ -720,7 +791,13 @@ func (a *mqlAwsIam) groups() ([]any, error) {
 func (p *mqlAwsIamUsercredentialreportentry) id() (string, error) {
 	props := p.Properties.Data
 
-	userid := props["arn"].(string)
+	// The credential report is a hand-parsed CSV; a ragged row yields a map
+	// without "arn". A bare assertion here panics inside an executor goroutine
+	// and takes the whole scan with it.
+	userid, ok := props["arn"].(string)
+	if !ok {
+		return "", errors.New("aws iam credential report entry has no arn")
+	}
 
 	return "aws/iam/credentialreport/" + userid, nil
 }
@@ -897,9 +974,13 @@ func (a *mqlAwsIamUsercredentialreportentry) user() (*mqlAwsIamUser, error) {
 		return nil, errors.New("root user does not exist")
 	}
 
+	userName, ok := props["user"].(string)
+	if !ok {
+		return nil, errors.New("aws iam credential report entry has no user")
+	}
 	mqlUser, err := NewResource(a.MqlRuntime, ResourceAwsIamUser,
 		map[string]*llx.RawData{
-			"name": llx.StringData(props["user"].(string)),
+			"name": llx.StringData(userName),
 		},
 	)
 	if err != nil {
@@ -1289,6 +1370,13 @@ type mqlAwsIamPolicyInternal struct {
 	cachedVersions  []iamtypes.PolicyVersion
 	versionsFetched atomic.Bool
 	versionsLock    sync.Mutex
+}
+
+// id keys the resource on the policy ARN. Without it every aws.iam.policy
+// shares the empty cache key, so CreateResource returns the first-created
+// policy for every subsequent one.
+func (a *mqlAwsIamPolicy) id() (string, error) {
+	return a.Arn.Data, nil
 }
 
 func (a *mqlAwsIamPolicy) loadPolicy(arn string) (*iamtypes.Policy, error) {
@@ -1747,28 +1835,26 @@ func (a *mqlAwsIamRole) id() (string, error) {
 }
 
 func (a *mqlAwsIamRole) permissionsBoundary() (*mqlAwsIamPolicy, error) {
-	// roles() populates permissionsBoundaryArn directly from ListRoles, so prefer
-	// the cached value to avoid an extra GetRole per role. Only fall back to
-	// GetRole when this resource was constructed via NewResource without eager
-	// population (in which case the field's state flag will not be set).
-	boundaryArn := ""
-	if a.PermissionsBoundaryArn.IsSet() {
-		boundaryArn = a.PermissionsBoundaryArn.Data
-	} else {
-		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-		svc := conn.Iam("")
-		ctx := context.Background()
-
-		roleName := a.Name.Data
-		resp, err := svc.GetRole(ctx, &iam.GetRoleInput{RoleName: &roleName})
+	// ListRoles explicitly does not return PermissionsBoundary (see the SDK docs
+	// on ListRoles), so roles() always wrote "" into permissionsBoundaryArn.
+	// Because llx.StringData("") still marks the field StateIsSet, gating on
+	// PermissionsBoundaryArn.IsSet() made the GetRole fallback unreachable and
+	// every role reported "no permissions boundary". Track provenance with a
+	// dedicated flag instead, exactly as aws.iam.user does.
+	if !a.permissionsBoundaryArnSet {
+		// getRoleDetails memoizes GetRole, so this shares one call with
+		// lastUsedAt/lastUsedRegion instead of issuing a second one.
+		resp, err := a.getRoleDetails()
 		if err != nil {
 			return nil, err
 		}
-		if resp.Role != nil && resp.Role.PermissionsBoundary != nil {
-			boundaryArn = convert.ToValue(resp.Role.PermissionsBoundary.PermissionsBoundaryArn)
+		if resp != nil && resp.Role != nil && resp.Role.PermissionsBoundary != nil {
+			a.permissionsBoundaryArn = convert.ToValue(resp.Role.PermissionsBoundary.PermissionsBoundaryArn)
 		}
-		a.PermissionsBoundaryArn = plugin.TValue[string]{Data: boundaryArn, State: plugin.StateIsSet}
+		a.permissionsBoundaryArnSet = true
+		a.PermissionsBoundaryArn = plugin.TValue[string]{Data: a.permissionsBoundaryArn, State: plugin.StateIsSet}
 	}
+	boundaryArn := a.permissionsBoundaryArn
 
 	if boundaryArn == "" {
 		a.PermissionsBoundary.State = plugin.StateIsNull | plugin.StateIsSet
@@ -1787,6 +1873,11 @@ type mqlAwsIamRoleInternal struct {
 	cachedRole  *iam.GetRoleOutput
 	roleFetched bool
 	roleLock    sync.Mutex
+	// permissionsBoundaryArn/-Set mirror the aws.iam.user pattern: ListRoles
+	// never returns PermissionsBoundary, so the eager value is meaningless and
+	// only a GetRole-sourced value may be trusted.
+	permissionsBoundaryArn    string
+	permissionsBoundaryArnSet bool
 }
 
 // getRoleDetails fetches and memoizes the full role via GetRole. The account-wide
@@ -2230,6 +2321,7 @@ func (a *mqlAwsIamUser) loginProfile() (*mqlAwsIamLoginProfile, error) {
 	}
 
 	o, err := CreateResource(a.MqlRuntime, ResourceAwsIamLoginProfile, map[string]*llx.RawData{
+		"__id":                  llx.StringData(a.Arn.Data + "/loginProfile"),
 		"createdAt":             llx.TimeData(*date),
 		"passwordResetRequired": llx.BoolData(profile.LoginProfile.PasswordResetRequired),
 	})
@@ -2241,14 +2333,12 @@ func (a *mqlAwsIamUser) loginProfile() (*mqlAwsIamLoginProfile, error) {
 	return a.loginProfileCache, nil
 }
 
-func (a *mqlAwsIamLoginProfile) init() (string, error) {
-	date := a.CreatedAt.Data
-	if date == nil {
-		return "", nil
-	}
-	// Note: the precision of AWS logins is in seconds. Current AWS docs don't
-	// specify a precision. Using seconds is reasonable.
-	return strconv.FormatInt(date.Unix(), 10), nil
+// id returns the user-qualified cache key set at construction. This was
+// previously named `init`, which the code generator never registers, so the
+// resource had an empty __id and every user shared one login profile. Keying on
+// the creation timestamp would also collide for users created in the same second.
+func (a *mqlAwsIamLoginProfile) id() (string, error) {
+	return a.__id, nil
 }
 
 func initAwsIamInstanceProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
