@@ -621,7 +621,7 @@ func initGcpProjectLoggingserviceBucket(runtime *plugin.Runtime, args map[string
 	nameVal, _ := nameRaw.Value.(string)
 	locationVal := ""
 	if args["location"] != nil {
-		locationVal = args["location"].Value.(string)
+		locationVal, _ = args["location"].Value.(string)
 	}
 	for _, b := range buckets.Data {
 		bucket := b.(*mqlGcpProjectLoggingserviceBucket)

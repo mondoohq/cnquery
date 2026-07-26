@@ -92,7 +92,7 @@ func initGcpProjectGkeServiceCluster(runtime *plugin.Runtime, args map[string]*l
 	}
 
 	obj, err := CreateResource(runtime, "gcp.project.gkeService", map[string]*llx.RawData{
-		"projectId": llx.StringData(args["projectId"].Value.(string)),
+		"projectId": args["projectId"],
 	})
 	if err != nil {
 		return nil, nil, err

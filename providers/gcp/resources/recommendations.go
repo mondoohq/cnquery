@@ -160,6 +160,9 @@ func (g *mqlGcpProject) recommendations() ([]any, error) {
 		location := locations[i]
 		// we run a worker routine per location
 		go func(locationValue string) {
+			// Deferred so an early return or a panic in the body can never leave
+			// wg.Wait() blocked forever.
+			defer wg.Done()
 			sem <- struct{}{}
 			defer func() { <-sem }()
 			for j := range recommenders {
@@ -190,7 +193,6 @@ func (g *mqlGcpProject) recommendations() ([]any, error) {
 					mux.Unlock()
 				}
 			}
-			wg.Done()
 		}(location)
 	}
 	wg.Wait()

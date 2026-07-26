@@ -118,7 +118,7 @@ func initGcpProjectComputeServiceRegion(runtime *plugin.Runtime, args map[string
 	if !ok || name == "" {
 		return args, nil, nil
 	}
-	projectId := args["projectId"].Value.(string)
+	projectId, _ := args["projectId"].Value.(string)
 
 	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, compute.ComputeReadonlyScope)
 	if err != nil {
@@ -161,7 +161,7 @@ func initGcpProjectComputeServiceZone(runtime *plugin.Runtime, args map[string]*
 	if !ok || name == "" {
 		return args, nil, nil
 	}
-	projectId := args["projectId"].Value.(string)
+	projectId, _ := args["projectId"].Value.(string)
 
 	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, compute.ComputeReadonlyScope)
 	if err != nil {
@@ -1418,7 +1418,7 @@ func initGcpProjectComputeServiceFirewall(runtime *plugin.Runtime, args map[stri
 	}
 
 	obj, err := CreateResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
-		"projectId": llx.StringData(args["projectId"].Value.(string)),
+		"projectId": args["projectId"],
 	})
 	if err != nil {
 		return nil, nil, err
@@ -1672,7 +1672,7 @@ func initGcpProjectComputeServiceImage(runtime *plugin.Runtime, args map[string]
 	}
 
 	obj, err := CreateResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
-		"projectId": llx.StringData(args["projectId"].Value.(string)),
+		"projectId": args["projectId"],
 	})
 	if err != nil {
 		return nil, nil, err
@@ -2096,7 +2096,7 @@ func initGcpProjectComputeServiceNetwork(runtime *plugin.Runtime, args map[strin
 
 	// Fallback: fetch directly from the GCP API
 	networkName, _ := args["name"].Value.(string)
-	projectId := args["projectId"].Value.(string)
+	projectId, _ := args["projectId"].Value.(string)
 
 	conn := runtime.Connection.(*connection.GcpConnection)
 	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
@@ -2246,7 +2246,8 @@ func initGcpProjectComputeServiceSubnetwork(runtime *plugin.Runtime, args map[st
 		}
 	} else {
 		if args["regionUrl"] != nil {
-			region = RegionNameFromRegionUrl(args["regionUrl"].Value.(string))
+			regionUrlVal, _ := args["regionUrl"].Value.(string)
+			region = RegionNameFromRegionUrl(regionUrlVal)
 		}
 	}
 
@@ -2258,7 +2259,7 @@ func initGcpProjectComputeServiceSubnetwork(runtime *plugin.Runtime, args map[st
 	}
 
 	obj, err := NewResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
-		"projectId": llx.StringData(args["projectId"].Value.(string)),
+		"projectId": args["projectId"],
 	})
 	if err != nil {
 		return nil, nil, err
@@ -2298,7 +2299,7 @@ func initGcpProjectComputeServiceSubnetwork(runtime *plugin.Runtime, args map[st
 
 	// Fallback: fetch directly from the GCP API
 	subnetworkName, _ := args["name"].Value.(string)
-	projectId := args["projectId"].Value.(string)
+	projectId, _ := args["projectId"].Value.(string)
 
 	conn := runtime.Connection.(*connection.GcpConnection)
 	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)

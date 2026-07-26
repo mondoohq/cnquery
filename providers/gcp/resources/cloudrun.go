@@ -144,7 +144,7 @@ func initGcpProjectCloudRunServiceService(runtime *plugin.Runtime, args map[stri
 	nameVal, _ := nameRaw.Value.(string)
 	regionVal := ""
 	if args["region"] != nil {
-		regionVal = args["region"].Value.(string)
+		regionVal, _ = args["region"].Value.(string)
 	}
 	for _, s := range services.Data {
 		service := s.(*mqlGcpProjectCloudRunServiceService)
@@ -219,7 +219,7 @@ func initGcpProjectCloudRunServiceJob(runtime *plugin.Runtime, args map[string]*
 	nameVal, _ := nameRaw.Value.(string)
 	regionVal := ""
 	if args["region"] != nil {
-		regionVal = args["region"].Value.(string)
+		regionVal, _ = args["region"].Value.(string)
 	}
 	for _, j := range jobs.Data {
 		job := j.(*mqlGcpProjectCloudRunServiceJob)

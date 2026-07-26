@@ -81,7 +81,7 @@ func initGcpFolder(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 
 	folderId := conn.ResourceID()
 	if args["id"] != nil {
-		folderId = args["id"].Value.(string)
+		folderId, _ = args["id"].Value.(string)
 	}
 
 	folderPath := fmt.Sprintf("folders/%s", folderId)

@@ -454,7 +454,7 @@ func initGcpProjectCloudFunction(runtime *plugin.Runtime, args map[string]*llx.R
 	nameVal, _ := nameRaw.Value.(string)
 	locationVal := ""
 	if args["location"] != nil {
-		locationVal = args["location"].Value.(string)
+		locationVal, _ = args["location"].Value.(string)
 	}
 	for _, f := range funcs.Data {
 		fn := f.(*mqlGcpProjectCloudFunction)
