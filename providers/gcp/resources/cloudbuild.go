@@ -102,25 +102,25 @@ func (g *mqlGcpProjectCloudBuildService) triggers() ([]any, error) {
 		}
 
 		// Build GitHub events config sub-resource
-		github, err := buildTriggerGithubConfig(g.MqlRuntime, trigger.Name, trigger.GetGithub())
+		github, err := buildTriggerGithubConfig(g.MqlRuntime, trigger.Id, trigger.GetGithub())
 		if err != nil {
 			return nil, err
 		}
 
 		// Build Pub/Sub config sub-resource
-		pubsubConfig, err := buildTriggerPubsubConfig(g.MqlRuntime, trigger.Name, projectId, trigger.GetPubsubConfig())
+		pubsubConfig, err := buildTriggerPubsubConfig(g.MqlRuntime, trigger.Id, projectId, trigger.GetPubsubConfig())
 		if err != nil {
 			return nil, err
 		}
 
 		// Build webhook config sub-resource
-		webhookConfig, err := buildTriggerWebhookConfig(g.MqlRuntime, trigger.Name, trigger.GetWebhookConfig())
+		webhookConfig, err := buildTriggerWebhookConfig(g.MqlRuntime, trigger.Id, trigger.GetWebhookConfig())
 		if err != nil {
 			return nil, err
 		}
 
 		// Build repository event config sub-resource
-		repoEventConfig, err := buildTriggerRepoEventConfig(g.MqlRuntime, trigger.Name, trigger.GetRepositoryEventConfig())
+		repoEventConfig, err := buildTriggerRepoEventConfig(g.MqlRuntime, trigger.Id, trigger.GetRepositoryEventConfig())
 		if err != nil {
 			return nil, err
 		}
@@ -182,10 +182,14 @@ func (g *mqlGcpProjectCloudBuildServiceTrigger) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
 	}
-	if g.Name.Error != nil {
-		return "", g.Name.Error
+	// BuildTrigger.Name is user-assigned, optional, and unique only within a
+	// project; Id is the service-generated unique identifier. Keying on the
+	// name aliased same-named triggers across projects (and collapsed every
+	// unnamed, Terraform-created trigger onto one row).
+	if g.TriggerId.Error != nil {
+		return "", g.TriggerId.Error
 	}
-	return fmt.Sprintf("gcp.project/%s/cloudBuildService.trigger/%s", g.ProjectId.Data, g.Name.Data), nil
+	return fmt.Sprintf("gcp.project/%s/cloudBuildService.trigger/%s", g.ProjectId.Data, g.TriggerId.Data), nil
 }
 
 type mqlGcpProjectCloudBuildServiceTriggerInternal struct {

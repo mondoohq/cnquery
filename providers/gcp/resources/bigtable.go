@@ -657,6 +657,12 @@ func (g *mqlGcpProjectBigtableServiceInstance) backups() ([]any, error) {
 			}
 
 			mqlBackup, err := CreateResource(g.MqlRuntime, "gcp.project.bigtableService.backup", map[string]*llx.RawData{
+				// Cluster ids are unique only within an instance, so the key
+				// must name the instance -- matching table/appProfile/cluster.
+				// cacheInstanceName is assigned after CreateResource returns and
+				// so is not visible to id(); pass the key explicitly instead.
+				"__id": llx.StringData(fmt.Sprintf("gcp.project/%s/bigtableService/%s/cluster/%s/backup/%s",
+					projectId, instanceName, c.Name, backup.Name)),
 				"projectId":      llx.StringData(projectId),
 				"clusterName":    llx.StringData(c.Name),
 				"name":           llx.StringData(backup.Name),

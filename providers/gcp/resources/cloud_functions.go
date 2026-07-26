@@ -402,7 +402,13 @@ func (g *mqlGcpProjectCloudFunction) id() (string, error) {
 		return "", g.Name.Error
 	}
 	name := g.Name.Data
-	return fmt.Sprintf("%s/%s", projectId, name), nil
+	if g.Location.Error != nil {
+		return "", g.Location.Error
+	}
+	// Cloud Functions v1 names are unique within a location, not within a
+	// project, and this resource's own init matches on name + location. Without
+	// the location a function deployed to two regions collapses onto one row.
+	return fmt.Sprintf("%s/%s/%s", projectId, g.Location.Data, name), nil
 }
 
 func initGcpProjectCloudFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

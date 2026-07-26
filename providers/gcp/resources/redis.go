@@ -289,11 +289,11 @@ func (g *mqlGcpProjectRedisService) instances() ([]any, error) {
 				convert.SliceAnyToInterface(instance.AvailableMaintenanceVersions), types.String,
 			),
 			"nodes": llx.ArrayData(
-				redisInstanceNodesToArrayInterface(g.MqlRuntime, projectId, instance.Nodes),
+				redisInstanceNodesToArrayInterface(g.MqlRuntime, projectId, instance.Name, instance.Nodes),
 				types.Resource("gcp.project.redisService.instance.nodeInfo"),
 			),
 			"serverCaCerts": llx.ArrayData(
-				redisConvertServerCaCerts(g.MqlRuntime, projectId, instance.ServerCaCerts),
+				redisConvertServerCaCerts(g.MqlRuntime, projectId, instance.Name, instance.ServerCaCerts),
 				types.Resource("gcp.project.redisService.instance.serverCaCert"),
 			),
 		})
@@ -316,13 +316,18 @@ func (n *mqlGcpProjectRedisServiceInstanceNodeInfo) id() (string, error) {
 	), nil
 }
 
-func redisInstanceNodesToArrayInterface(runtime *plugin.Runtime, projectId string, nodes []*redispb.NodeInfo) (list []any) {
+// redisInstanceNodesToArrayInterface keys each node on its parent instance:
+// NodeInfo.Id is only "node-0", "node-1", ... which is unique within one
+// instance, so a project-scoped key aliased every instance's nodes onto the
+// first instance's.
+func redisInstanceNodesToArrayInterface(runtime *plugin.Runtime, projectId, instanceName string, nodes []*redispb.NodeInfo) (list []any) {
 	for _, node := range nodes {
 		if node == nil {
 			continue
 		}
 
 		r, err := CreateResource(runtime, "gcp.project.redisService.instance.nodeInfo", map[string]*llx.RawData{
+			"__id":      llx.StringData(instanceName + "/nodes/" + node.Id),
 			"projectId": llx.StringData(projectId),
 			"id":        llx.StringData(node.Id),
 			"zone":      llx.StringData(node.Zone),
@@ -345,7 +350,11 @@ func (c *mqlGcpProjectRedisServiceInstanceServerCaCert) id() (string, error) {
 	), nil
 }
 
-func redisConvertServerCaCerts(runtime *plugin.Runtime, projectId string, certs []*redispb.TlsCertificate) (list []any) {
+// redisConvertServerCaCerts keys each certificate on its parent instance:
+// Memorystore issues a per-instance server CA whose serial numbers start at
+// "1", so a project-scoped key made instance B render instance A's PEM and
+// expiry -- silently evaluating a CA-expiry audit against the wrong cert.
+func redisConvertServerCaCerts(runtime *plugin.Runtime, projectId, instanceName string, certs []*redispb.TlsCertificate) (list []any) {
 	for _, cert := range certs {
 		if cert == nil {
 			continue
@@ -360,6 +369,7 @@ func redisConvertServerCaCerts(runtime *plugin.Runtime, projectId string, certs 
 		}
 
 		r, err := CreateResource(runtime, "gcp.project.redisService.instance.serverCaCert", map[string]*llx.RawData{
+			"__id":            llx.StringData(instanceName + "/serverCaCerts/" + cert.SerialNumber),
 			"projectId":       llx.StringData(projectId),
 			"serialNumber":    llx.StringData(cert.SerialNumber),
 			"cert":            llx.StringData(cert.Cert),

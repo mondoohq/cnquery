@@ -40,6 +40,37 @@ func initGcpProjectBigqueryService(runtime *plugin.Runtime, args map[string]*llx
 
 type mqlGcpProjectBigqueryServiceInternal struct {
 	serviceEnabled bool
+	serviceOnce    sync.Once
+	serviceErr     error
+}
+
+// isEnabled resolves the service-enabled gate lazily.
+//
+// The flag is only set by the gcp.project.<service>() accessor, but this
+// resource is reachable without going through it: gcp.bigquery is an
+// alias for it, and resource inits build it with CreateResource. On those paths
+// the Go zero value `false` made every collection return an empty list with no
+// error -- an authoritative "there is nothing here" that makes an audit pass
+// vacuously. Resolving it here makes every construction path agree.
+func (g *mqlGcpProjectBigqueryService) isEnabled() (bool, error) {
+	g.serviceOnce.Do(func() {
+		if g.serviceEnabled {
+			return // already set by the parent accessor
+		}
+		if g.ProjectId.Error != nil {
+			g.serviceErr = g.ProjectId.Error
+			return
+		}
+		proj, err := CreateResource(g.MqlRuntime, "gcp.project", map[string]*llx.RawData{
+			"id": llx.StringData(g.ProjectId.Data),
+		})
+		if err != nil {
+			g.serviceErr = err
+			return
+		}
+		g.serviceEnabled, g.serviceErr = proj.(*mqlGcpProject).isServiceEnabled(service_bigquery)
+	})
+	return g.serviceEnabled, g.serviceErr
 }
 
 func (g *mqlGcpProjectBigqueryService) id() (string, error) {
@@ -78,7 +109,11 @@ func (g *mqlGcpProject) bigquery() (*mqlGcpProjectBigqueryService, error) {
 
 func (g *mqlGcpProjectBigqueryService) datasets() ([]any, error) {
 	// when the service is not enabled, we return nil
-	if !g.serviceEnabled {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 

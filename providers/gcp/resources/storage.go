@@ -57,6 +57,37 @@ func initGcpProjectStorageService(runtime *plugin.Runtime, args map[string]*llx.
 
 type mqlGcpProjectStorageServiceInternal struct {
 	serviceEnabled bool
+	serviceOnce    sync.Once
+	serviceErr     error
+}
+
+// isEnabled resolves the service-enabled gate lazily.
+//
+// The flag is only set by the gcp.project.<service>() accessor, but this
+// resource is reachable without going through it: gcp.storage / gcloud.storage is an
+// alias for it, and resource inits build it with CreateResource. On those paths
+// the Go zero value `false` made every collection return an empty list with no
+// error -- an authoritative "there is nothing here" that makes an audit pass
+// vacuously. Resolving it here makes every construction path agree.
+func (g *mqlGcpProjectStorageService) isEnabled() (bool, error) {
+	g.serviceOnce.Do(func() {
+		if g.serviceEnabled {
+			return // already set by the parent accessor
+		}
+		if g.ProjectId.Error != nil {
+			g.serviceErr = g.ProjectId.Error
+			return
+		}
+		proj, err := CreateResource(g.MqlRuntime, "gcp.project", map[string]*llx.RawData{
+			"id": llx.StringData(g.ProjectId.Data),
+		})
+		if err != nil {
+			g.serviceErr = err
+			return
+		}
+		g.serviceEnabled, g.serviceErr = proj.(*mqlGcpProject).isServiceEnabled(service_storage)
+	})
+	return g.serviceEnabled, g.serviceErr
 }
 
 func (g *mqlGcpProject) storage() (*mqlGcpProjectStorageService, error) {
@@ -87,7 +118,11 @@ func (g *mqlGcpProject) storage() (*mqlGcpProjectStorageService, error) {
 }
 
 func (g *mqlGcpProjectStorageService) buckets() ([]any, error) {
-	if !g.serviceEnabled {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 

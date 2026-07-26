@@ -3255,6 +3255,17 @@ func (g *mqlGcpProjectComputeServiceRouterNat) id() (string, error) {
 
 // Cloud Armor security policies
 
+// mqlGcpProjectComputeServiceSecurityPolicyInternal carries what rules() needs
+// to re-fetch the policy. The schema has no projectId field, and the policy's
+// project is not derivable from the connection: on an organization or folder
+// connection ResourceID() is not a project id, and `gcp.projects` walks many
+// projects in one runtime. cacheRegion distinguishes global from regional
+// policies, which live behind different endpoints.
+type mqlGcpProjectComputeServiceSecurityPolicyInternal struct {
+	cacheProjectId string
+	cacheRegion    string
+}
+
 func (g *mqlGcpProjectComputeServiceSecurityPolicy) id() (string, error) {
 	return g.Id.Data, g.Id.Error
 }
@@ -3337,6 +3348,9 @@ func (g *mqlGcpProjectComputeService) securityPolicies() ([]any, error) {
 				if err != nil {
 					return err
 				}
+				sp := mqlPolicy.(*mqlGcpProjectComputeServiceSecurityPolicy)
+				sp.cacheProjectId = projectId
+				sp.cacheRegion = RegionNameFromRegionUrl(policy.Region)
 				res = append(res, mqlPolicy)
 			}
 		}
@@ -3372,11 +3386,28 @@ func (g *mqlGcpProjectComputeServiceSecurityPolicy) rules() ([]any, error) {
 	}
 	policyName := g.Name.Data
 
-	// We need the project ID from the connection since the policy doesn't store it
-	projectId := conn.ResourceID()
+	// Use the project the policy was listed from. conn.ResourceID() is the
+	// connection scope, which is an organization or folder id on a non-project
+	// connection and the wrong project when `gcp.projects` walks many projects.
+	projectId := g.cacheProjectId
+	if projectId == "" {
+		projectId = conn.ResourceID()
+	}
 
-	policy, err := computeSvc.SecurityPolicies.Get(projectId, policyName).Context(ctx).Do()
+	// securityPolicies() lists via AggregatedList, which returns regional
+	// policies too. Those are served by RegionSecurityPolicies; asking the
+	// global endpoint for them 404s.
+	var policy *compute.SecurityPolicy
+	if g.cacheRegion != "" {
+		policy, err = computeSvc.RegionSecurityPolicies.Get(projectId, g.cacheRegion, policyName).Context(ctx).Do()
+	} else {
+		policy, err = computeSvc.SecurityPolicies.Get(projectId, policyName).Context(ctx).Do()
+	}
 	if err != nil {
+		if isHTTPSkippable(err) {
+			log.Warn().Str("policy", policyName).Err(err).Msg("could not fetch security policy rules")
+			return nil, nil
+		}
 		return nil, err
 	}
 
