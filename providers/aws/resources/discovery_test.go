@@ -64,6 +64,8 @@ func TestAllResolvedResources(t *testing.T) {
 		DiscoveryBatchJobDefinitions,
 		DiscoveryDirectoryServiceDirectories,
 		DiscoveryDocumentDBInstances,
+		DiscoverySnsTopics,
+		DiscoverySqsQueues,
 		DiscoveryInstances,
 		DiscoverySSMInstances,
 		DiscoveryECR,
@@ -123,6 +125,8 @@ func TestAutoResolvedResources(t *testing.T) {
 		DiscoveryBatchJobDefinitions,
 		DiscoveryDirectoryServiceDirectories,
 		DiscoveryDocumentDBInstances,
+		DiscoverySnsTopics,
+		DiscoverySqsQueues,
 	}
 	require.ElementsMatch(t, expected, Auto)
 }

@@ -82,6 +82,8 @@ const (
 	DiscoveryBatchJobDefinitions         = "batch-jobdefinitions"
 	DiscoveryDirectoryServiceDirectories = "directoryservice-directories"
 	DiscoveryDocumentDBInstances         = "documentdb-instances"
+	DiscoverySnsTopics                   = "sns-topics"
+	DiscoverySqsQueues                   = "sqs-queues"
 )
 
 var AllAPIResources = []string{
@@ -137,6 +139,8 @@ var AllAPIResources = []string{
 	DiscoveryBatchJobDefinitions,
 	DiscoveryDirectoryServiceDirectories,
 	DiscoveryDocumentDBInstances,
+	DiscoverySnsTopics,
+	DiscoverySqsQueues,
 }
 
 var Auto = append(
@@ -1764,6 +1768,80 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 				awsObject: awsObject{
 					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
 					id: f.Arn.Data, service: "documentdb", objectType: "instance",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, obj, conn))
+		}
+	case DiscoverySnsTopics:
+		res, err := NewResource(runtime, "aws.sns", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		s := res.(*mqlAwsSns)
+
+		topics := s.GetTopics()
+		if topics == nil {
+			return assetList, nil
+		}
+		if topics.Error != nil {
+			return nil, topics.Error
+		}
+
+		for i := range topics.Data {
+			f := topics.Data[i].(*mqlAwsSnsTopic)
+
+			// The resource segment of an SNS topic ARN is the bare topic name.
+			topicArn, err := arn.Parse(f.Arn.Data)
+			if err != nil {
+				log.Error().Err(err).Str("arn", f.Arn.Data).Msg("unable to parse sns topic arn")
+				continue
+			}
+
+			tags := mapStringInterfaceToStringString(f.GetTags().Data)
+			obj := mqlObject{
+				name: topicArn.Resource, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Arn.Data, service: "sns", objectType: "topic",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, obj, conn))
+		}
+	case DiscoverySqsQueues:
+		res, err := NewResource(runtime, "aws.sqs", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		s := res.(*mqlAwsSqs)
+
+		queues := s.GetQueues()
+		if queues == nil {
+			return assetList, nil
+		}
+		if queues.Error != nil {
+			return nil, queues.Error
+		}
+
+		for i := range queues.Data {
+			f := queues.Data[i].(*mqlAwsSqsQueue)
+
+			// Queues are listed by URL only; the ARN comes from the queue
+			// attributes, so skip any queue whose attributes are unreadable
+			// rather than emitting an asset with no platform id.
+			queueArn := f.GetArn()
+			if queueArn.Error != nil {
+				log.Error().Err(queueArn.Error).Str("url", f.Url.Data).Msg("unable to fetch sqs queue arn")
+				continue
+			}
+
+			tags := mapStringInterfaceToStringString(f.GetTags().Data)
+			obj := mqlObject{
+				name: sqsQueueName(f.Url.Data), labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: queueArn.Data,
+					id: queueArn.Data, service: "sqs", objectType: "queue",
 				},
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, obj, conn))
