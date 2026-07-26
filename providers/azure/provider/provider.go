@@ -73,9 +73,25 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 			Password:       string(certificateSecret),
 		})
 	}
+	filterOpts := parseFlagsToFiltersOpts(flags)
+
+	// A caller who named exactly one subscription is scoping the whole run to it,
+	// so the root asset has to carry it as well.
+	//
+	// Only discovery ever set subscription-id (getSubConfig, per discovered
+	// subscription). The root asset therefore connected with no subscription at
+	// all, and every azure.subscription.* query against it failed with the SDK's
+	// "parameter subscriptionID cannot be empty" -- one guaranteed broken asset on
+	// every scan, whose empty PlatformId ("...:/subscriptions/") is also not
+	// unique. Naming several subscriptions stays a discovery-only filter: there is
+	// no single subscription to scope the root asset to.
+	if id, ok := singleSubscriptionFilter(filterOpts); ok {
+		opts[connection.OptionSubscriptionID] = id
+	}
+
 	config := &inventory.Config{
 		Type:        "azure",
-		Discover:    parseDiscover(flags, parseFlagsToFiltersOpts(flags)),
+		Discover:    parseDiscover(flags, filterOpts),
 		Credentials: creds,
 		Options:     opts,
 	}
@@ -93,6 +109,26 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	return &plugin.ParseCLIRes{Asset: &asset}, nil
+}
+
+// singleSubscriptionFilter returns the subscription id when the caller scoped the
+// run to exactly one, so the root asset can be scoped to it too. A list of
+// subscriptions has no single answer and stays a discovery-only filter.
+func singleSubscriptionFilter(filterOpts map[string]string) (string, bool) {
+	raw, ok := filterOpts["subscriptions"]
+	if !ok {
+		return "", false
+	}
+	var ids []string
+	for _, part := range strings.Split(raw, ",") {
+		if id := strings.TrimSpace(part); id != "" {
+			ids = append(ids, id)
+		}
+	}
+	if len(ids) != 1 {
+		return "", false
+	}
+	return ids[0], true
 }
 
 func parseDiscover(flags map[string]*llx.Primitive, filterOpts map[string]string) *inventory.Discovery {
