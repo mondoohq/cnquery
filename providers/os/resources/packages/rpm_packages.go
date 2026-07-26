@@ -31,7 +31,31 @@ const (
 	RpmPkgFormat = "rpm"
 )
 
-var RPM_REGEX = regexp.MustCompile(`^([\w-+]*)\s(\d*|\(none\)):([\w\d-+.:]+)\s([\w\d]*|\(none\))__([\w\d\s,/<>:\.|\(none\)]+?)__(.*?)__(.*?)__(\d+|\(none\))(?:__(.+))?$`)
+// RPM_REGEX splits one line of the queryFormat() output documented on
+// ParseRpmPackages below.
+//
+// NAME, EPOCH:VERSION-RELEASE and ARCH are space-separated and none of them
+// can contain whitespace, so they are matched as runs of non-space rather than
+// by enumerating the characters they may contain. Enumerating is what broke
+// here before: the name class was `[\w-+]`, which has no dot, so every package
+// whose name contains one — java-1.8.0-openjdk, python3.11, dotnet-sdk-8.0,
+// libstdc++ via the missing `+` in other positions — failed to match and was
+// silently dropped from the inventory.
+//
+// For reference, rpm itself places almost no restriction on these fields:
+// names and version/release strings may contain letters, digits and any of
+// `. _ + - ~ ^` (`~` since rpm 4.10, `^` since 4.15), and vendor/summary/
+// license are free-form text. The only structural invariants are that the
+// first three fields contain no whitespace and that the remaining fields are
+// delimited by `__`.
+//
+// Arch is matched non-greedily on purpose. Arch itself contains underscores
+// (x86_64), so a greedy run of word characters happily spans the `__`
+// separator: on `x86_64__Microsoft__dotnet sdk__MIT__1704067200__(none)` it
+// takes `x86_64__Microsoft` as the arch and every later field shifts by one,
+// yielding a license of `1704067200`. Non-greedy stops arch at the first
+// separator, which is the only correct reading.
+var RPM_REGEX = regexp.MustCompile(`^(\S+)\s(\d*|\(none\)):(\S+)\s(\S*?)__(.*?)__(.*?)__(.*?)__(\d+|\(none\))(?:__(.*))?$`)
 
 // ParseRpmPackages parses output from:
 // %{MODULARITYLABEL} is only added on supported systems
@@ -86,7 +110,18 @@ func ParseRpmPackages(pf *inventory.Platform, input io.Reader) []Package {
 			pkg.FilesAvailable = PkgFilesAsync // when we use commands we need to fetch the files async
 			pkgs = append(pkgs, pkg)
 
+		} else if strings.TrimSpace(line) != "" {
+			// A package that does not match is dropped from the inventory
+			// entirely, and an absent package is exactly what a vulnerability
+			// scan cannot detect. Log it so format drift is visible instead of
+			// showing up as a quietly shorter package list.
+			log.Debug().Str("line", line).Msg("mql[rpm]> could not parse package line")
 		}
+	}
+	if err := scanner.Err(); err != nil {
+		// A line longer than the scanner's buffer ends the scan early, which
+		// truncates the package list silently. Surface it for the same reason.
+		log.Warn().Err(err).Msg("mql[rpm]> package list was truncated while scanning")
 	}
 	return pkgs
 }
