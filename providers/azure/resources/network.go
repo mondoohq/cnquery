@@ -71,13 +71,11 @@ func (a *mqlAzureSubscriptionNetworkService) interfaces() ([]any, error) {
 			if iface == nil {
 				continue
 			}
-			if iface != nil {
-				mqlAzure, err := azureInterfaceToMql(a.MqlRuntime, *iface)
-				if err != nil {
-					return nil, err
-				}
-				res = append(res, mqlAzure)
+			mqlAzure, err := azureInterfaceToMql(a.MqlRuntime, *iface)
+			if err != nil {
+				return nil, err
 			}
+			res = append(res, mqlAzure)
 		}
 	}
 	return res, nil
@@ -107,13 +105,11 @@ func (a *mqlAzureSubscriptionNetworkService) securityGroups() ([]any, error) {
 			if secgrp == nil {
 				continue
 			}
-			if secgrp != nil {
-				mqlAzure, err := azureSecGroupToMql(a.MqlRuntime, *secgrp)
-				if err != nil {
-					return nil, err
-				}
-				res = append(res, mqlAzure)
+			mqlAzure, err := azureSecGroupToMql(a.MqlRuntime, *secgrp)
+			if err != nil {
+				return nil, err
 			}
+			res = append(res, mqlAzure)
 		}
 	}
 	return res, nil
@@ -147,6 +143,12 @@ func (a *mqlAzureSubscriptionNetworkService) watchers() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			// Properties is nullable on a transient or failed watcher; the
+			// provisioning-state read below would deref it bare.
+			var watcherProvisioningState *string
+			if watcher.Properties != nil {
+				watcherProvisioningState = (*string)(watcher.Properties.ProvisioningState)
+			}
 
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.watcher",
 				map[string]*llx.RawData{
@@ -157,7 +159,7 @@ func (a *mqlAzureSubscriptionNetworkService) watchers() ([]any, error) {
 					"type":              llx.StringDataPtr(watcher.Type),
 					"etag":              llx.StringDataPtr(watcher.Etag),
 					"properties":        llx.DictData(properties),
-					"provisioningState": llx.StringDataPtr((*string)(watcher.Properties.ProvisioningState)),
+					"provisioningState": llx.StringDataPtr(watcherProvisioningState),
 				})
 			if err != nil {
 				return nil, err
@@ -192,13 +194,11 @@ func (a *mqlAzureSubscriptionNetworkService) publicIpAddresses() ([]any, error) 
 			if ip == nil {
 				continue
 			}
-			if ip != nil {
-				mqlAzure, err := azureIpToMql(a.MqlRuntime, *ip)
-				if err != nil {
-					return nil, err
-				}
-				res = append(res, mqlAzure)
+			mqlAzure, err := azureIpToMql(a.MqlRuntime, *ip)
+			if err != nil {
+				return nil, err
 			}
+			res = append(res, mqlAzure)
 		}
 	}
 	return res, nil
@@ -943,13 +943,11 @@ func (a *mqlAzureSubscriptionNetworkService) natGateways() ([]any, error) {
 			if ng == nil {
 				continue
 			}
-			if ng != nil {
-				mqlNg, err := azureNatGatewayToMql(a.MqlRuntime, *ng)
-				if err != nil {
-					return nil, err
-				}
-				res = append(res, mqlNg)
+			mqlNg, err := azureNatGatewayToMql(a.MqlRuntime, *ng)
+			if err != nil {
+				return nil, err
 			}
+			res = append(res, mqlNg)
 		}
 	}
 	return res, nil
@@ -978,13 +976,11 @@ func (a *mqlAzureSubscriptionNetworkService) firewalls() ([]any, error) {
 			if fw == nil {
 				continue
 			}
-			if fw != nil {
-				mqlFw, err := azureFirewallToMql(a.MqlRuntime, *fw)
-				if err != nil {
-					return nil, err
-				}
-				res = append(res, mqlFw)
+			mqlFw, err := azureFirewallToMql(a.MqlRuntime, *fw)
+			if err != nil {
+				return nil, err
 			}
+			res = append(res, mqlFw)
 		}
 	}
 	return res, nil
@@ -1178,13 +1174,11 @@ func (a *mqlAzureSubscriptionNetworkService) firewallPolicies() ([]any, error) {
 			if fwp == nil {
 				continue
 			}
-			if fwp != nil {
-				mqlFw, err := azureFirewallPolicyToMql(a.MqlRuntime, *fwp)
-				if err != nil {
-					return nil, err
-				}
-				res = append(res, mqlFw)
+			mqlFw, err := azureFirewallPolicyToMql(a.MqlRuntime, *fwp)
+			if err != nil {
+				return nil, err
 			}
+			res = append(res, mqlFw)
 		}
 	}
 	return res, nil
@@ -1891,13 +1885,11 @@ func (a *mqlAzureSubscriptionNetworkService) applicationGateways() ([]any, error
 			if ag == nil {
 				continue
 			}
-			if ag != nil {
-				mqlAg, err := azureAppGatewayToMql(a.MqlRuntime, *ag)
-				if err != nil {
-					return nil, err
-				}
-				res = append(res, mqlAg)
+			mqlAg, err := azureAppGatewayToMql(a.MqlRuntime, *ag)
+			if err != nil {
+				return nil, err
 			}
+			res = append(res, mqlAg)
 		}
 	}
 	return res, nil
@@ -1963,13 +1955,11 @@ func (a *mqlAzureSubscriptionNetworkService) applicationFirewallPolicies() ([]an
 			if waf == nil {
 				continue
 			}
-			if waf != nil {
-				mqlWaf, err := azureAppFirewallPolicyToMql(a.MqlRuntime, *waf)
-				if err != nil {
-					return nil, err
-				}
-				res = append(res, mqlWaf)
+			mqlWaf, err := azureAppFirewallPolicyToMql(a.MqlRuntime, *waf)
+			if err != nil {
+				return nil, err
 			}
+			res = append(res, mqlWaf)
 		}
 	}
 	return res, nil
@@ -5290,13 +5280,11 @@ func (a *mqlAzureSubscriptionNetworkServiceSecurityGroup) interfaces() ([]any, e
 		if iface == nil {
 			continue
 		}
-		if iface != nil {
-			mqlIface, err := azureInterfaceToMql(a.MqlRuntime, *iface)
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, mqlIface)
+		mqlIface, err := azureInterfaceToMql(a.MqlRuntime, *iface)
+		if err != nil {
+			return nil, err
 		}
+		res = append(res, mqlIface)
 	}
 	return res, nil
 }
@@ -5329,13 +5317,11 @@ func (a *mqlAzureSubscriptionNetworkServiceSecurityGroup) securityRules() ([]any
 		if secRule == nil {
 			continue
 		}
-		if secRule != nil {
-			mqlRule, err := azureSecurityRuleToMql(a.MqlRuntime, *secRule)
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, mqlRule)
+		mqlRule, err := azureSecurityRuleToMql(a.MqlRuntime, *secRule)
+		if err != nil {
+			return nil, err
 		}
+		res = append(res, mqlRule)
 	}
 	return res, nil
 }
@@ -5349,13 +5335,11 @@ func (a *mqlAzureSubscriptionNetworkServiceSecurityGroup) defaultSecurityRules()
 		if secRule == nil {
 			continue
 		}
-		if secRule != nil {
-			mqlRule, err := azureSecurityRuleToMql(a.MqlRuntime, *secRule)
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, mqlRule)
+		mqlRule, err := azureSecurityRuleToMql(a.MqlRuntime, *secRule)
+		if err != nil {
+			return nil, err
 		}
+		res = append(res, mqlRule)
 	}
 	return res, nil
 }
