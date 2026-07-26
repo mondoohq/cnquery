@@ -765,17 +765,10 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) privateEndpointConnecti
 				args["provisioningState"] = llx.StringData(string(*pec.Properties.ProvisioningState))
 			}
 			if pec.Properties.PrivateLinkServiceConnectionState != nil {
-				stateArgs := map[string]*llx.RawData{}
-				if pec.Properties.PrivateLinkServiceConnectionState.ActionsRequired != nil {
-					stateArgs["actionsRequired"] = llx.StringDataPtr(pec.Properties.PrivateLinkServiceConnectionState.ActionsRequired)
-				}
-				if pec.Properties.PrivateLinkServiceConnectionState.Description != nil {
-					stateArgs["description"] = llx.StringDataPtr(pec.Properties.PrivateLinkServiceConnectionState.Description)
-				}
-				if pec.Properties.PrivateLinkServiceConnectionState.Status != nil {
-					stateArgs["status"] = llx.StringData(string(*pec.Properties.PrivateLinkServiceConnectionState.Status))
-				}
-				stateRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState, stateArgs)
+				stateRes, err := newPrivateLinkServiceConnectionState(a.MqlRuntime, convert.ToValue(pec.ID),
+					stringEnumPtr(pec.Properties.PrivateLinkServiceConnectionState.ActionsRequired),
+					pec.Properties.PrivateLinkServiceConnectionState.Description,
+					stringEnumPtr(pec.Properties.PrivateLinkServiceConnectionState.Status))
 				if err != nil {
 					return nil, err
 				}

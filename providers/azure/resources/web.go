@@ -1673,10 +1673,17 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) privateEndpointConnections() ([]
 				continue
 			}
 
+			// A connection with no ARM ID has no stable cache key; skip it
+			// rather than letting ID-less entries collide on an empty __id.
+			if entry.ID == nil || *entry.ID == "" {
+				continue
+			}
 			privateEndpoint := map[string]*llx.RawData{
-				"id":   llx.StringDataPtr(entry.ID),
-				"name": llx.StringDataPtr(entry.Name),
-				"type": llx.StringDataPtr(entry.Type),
+				"__id":        llx.StringDataPtr(entry.ID),
+				"id":          llx.StringDataPtr(entry.ID),
+				"name":        llx.StringDataPtr(entry.Name),
+				"type":        llx.StringDataPtr(entry.Type),
+				"ipAddresses": llx.ArrayData([]any{}, types.String),
 			}
 
 			if entry.Properties != nil {
@@ -1688,19 +1695,15 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) privateEndpointConnections() ([]
 
 				privateEndpoint["properties"] = llx.DictData(propsMap)
 
-				if len(props.IPAddresses) > 0 {
-					privateEndpoint["ipAddresses"] = llx.ArrayData(convert.SliceStrPtrToInterface(props.IPAddresses), types.String)
-				}
+				privateEndpoint["ipAddresses"] = llx.ArrayData(strPtrsToAny(props.IPAddresses), types.String)
 				if props.PrivateEndpoint != nil {
 					privateEndpoint["privateEndpointId"] = llx.StringDataPtr(props.PrivateEndpoint.ID)
 				}
 				if props.PrivateLinkServiceConnectionState != nil {
-					stateArgs := map[string]*llx.RawData{
-						"actionsRequired": llx.StringDataPtr(props.PrivateLinkServiceConnectionState.ActionsRequired),
-						"description":     llx.StringDataPtr(props.PrivateLinkServiceConnectionState.Description),
-						"status":          llx.StringDataPtr(props.PrivateLinkServiceConnectionState.Status),
-					}
-					stateRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState, stateArgs)
+					stateRes, err := newPrivateLinkServiceConnectionState(a.MqlRuntime, convert.ToValue(entry.ID),
+						props.PrivateLinkServiceConnectionState.ActionsRequired,
+						props.PrivateLinkServiceConnectionState.Description,
+						props.PrivateLinkServiceConnectionState.Status)
 					if err != nil {
 						return nil, err
 					}
@@ -1724,6 +1727,21 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) privateEndpointConnections() ([]
 }
 
 func (a *mqlAzureSubscriptionWebServiceAppServicePlan) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionWebServiceHostingEnvironment) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+// id keys the restriction on the synthesized <configId>/ipSecurityRestrictions/<index>
+// value built in ipSecurityRestrictionsToMql. Without it every restriction in
+// the scan shares an empty cache key and reports the first rule's action.
+func (a *mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork) id() (string, error) {
 	return a.Id.Data, nil
 }
 

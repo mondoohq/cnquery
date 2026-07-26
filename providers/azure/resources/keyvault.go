@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -628,17 +629,10 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) privateEndpointConnections() 
 				privateEndpoint["privateEndpointId"] = llx.StringDataPtr(props.PrivateEndpoint.ID)
 			}
 			if props.PrivateLinkServiceConnectionState != nil {
-				stateArgs := map[string]*llx.RawData{}
-				if props.PrivateLinkServiceConnectionState.ActionsRequired != nil {
-					stateArgs["actionsRequired"] = llx.StringData(string(*props.PrivateLinkServiceConnectionState.ActionsRequired))
-				}
-				if props.PrivateLinkServiceConnectionState.Description != nil {
-					stateArgs["description"] = llx.StringDataPtr(props.PrivateLinkServiceConnectionState.Description)
-				}
-				if props.PrivateLinkServiceConnectionState.Status != nil {
-					stateArgs["status"] = llx.StringData(string(*props.PrivateLinkServiceConnectionState.Status))
-				}
-				stateRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState, stateArgs)
+				stateRes, err := newPrivateLinkServiceConnectionState(a.MqlRuntime, convert.ToValue(entry.ID),
+					stringEnumPtr(props.PrivateLinkServiceConnectionState.ActionsRequired),
+					props.PrivateLinkServiceConnectionState.Description,
+					stringEnumPtr(props.PrivateLinkServiceConnectionState.Status))
 				if err != nil {
 					return nil, err
 				}
@@ -1772,6 +1766,8 @@ func (a *mqlAzureSubscriptionKeyVaultService) managedHsms() ([]any, error) {
 			var initialAdminObjectIds []any
 			var networkAcls map[string]any
 			var privateEndpointConns []*keyvault.MHSMPrivateEndpointConnectionItem
+			var scheduledPurgeDate *time.Time
+			regions := []any{}
 
 			if hsm.Properties != nil {
 				props := hsm.Properties
@@ -1802,6 +1798,17 @@ func (a *mqlAzureSubscriptionKeyVaultService) managedHsms() ([]any, error) {
 					}
 				}
 				privateEndpointConns = props.PrivateEndpointConnections
+				scheduledPurgeDate = props.ScheduledPurgeDate
+				for _, r := range props.Regions {
+					if r == nil {
+						continue
+					}
+					d, err := convert.JsonToDict(r)
+					if err != nil {
+						return nil, err
+					}
+					regions = append(regions, d)
+				}
 			}
 
 			mqlHsm, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionKeyVaultServiceManagedHsm,
@@ -1821,6 +1828,8 @@ func (a *mqlAzureSubscriptionKeyVaultService) managedHsms() ([]any, error) {
 					"publicNetworkAccess":       llx.StringData(publicNetworkAccess),
 					"provisioningState":         llx.StringData(provisioningState),
 					"networkAcls":               llx.DictData(networkAcls),
+					"scheduledPurgeDate":        llx.TimeDataPtr(scheduledPurgeDate),
+					"regions":                   llx.ArrayData(regions, types.Dict),
 				})
 			if err != nil {
 				return nil, err
@@ -1899,17 +1908,10 @@ func (a *mqlAzureSubscriptionKeyVaultServiceManagedHsm) privateEndpointConnectio
 				privateEndpoint["privateEndpointId"] = llx.StringDataPtr(props.PrivateEndpoint.ID)
 			}
 			if props.PrivateLinkServiceConnectionState != nil {
-				stateArgs := map[string]*llx.RawData{}
-				if props.PrivateLinkServiceConnectionState.ActionsRequired != nil {
-					stateArgs["actionsRequired"] = llx.StringData(string(*props.PrivateLinkServiceConnectionState.ActionsRequired))
-				}
-				if props.PrivateLinkServiceConnectionState.Description != nil {
-					stateArgs["description"] = llx.StringDataPtr(props.PrivateLinkServiceConnectionState.Description)
-				}
-				if props.PrivateLinkServiceConnectionState.Status != nil {
-					stateArgs["status"] = llx.StringData(string(*props.PrivateLinkServiceConnectionState.Status))
-				}
-				stateRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState, stateArgs)
+				stateRes, err := newPrivateLinkServiceConnectionState(a.MqlRuntime, convert.ToValue(entry.ID),
+					stringEnumPtr(props.PrivateLinkServiceConnectionState.ActionsRequired),
+					props.PrivateLinkServiceConnectionState.Description,
+					stringEnumPtr(props.PrivateLinkServiceConnectionState.Status))
 				if err != nil {
 					return nil, err
 				}

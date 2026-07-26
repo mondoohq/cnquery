@@ -54,17 +54,26 @@ func vmOsType(props *compute.VirtualMachineProperties) *string {
 	return stringEnumPtr(props.StorageProfile.OSDisk.OSType)
 }
 
+// powerStatePrefix marks the instance-view status codes that carry the VM's
+// power state. The same status list also carries ProvisioningState/* codes,
+// which must not be mistaken for it.
+const powerStatePrefix = "PowerState/"
+
+// getState returns the VM's power state as reported by its instance view, or
+// "unknown" when no PowerState status is present.
+//
+// Azure emits six power states: starting, running, stopping, stopped,
+// deallocating, and deallocated. "stopped" and "deallocated" are distinct — a
+// stopped VM still holds its compute reservation and public IP and is still
+// billed — so they are reported verbatim rather than collapsed together.
 func getState(vm compute.VirtualMachineInstanceView) string {
-	if vm.Statuses == nil {
-		return "unknown"
-	}
 	state := "unknown"
 	for _, s := range vm.Statuses {
-		if s.Code != nil && *s.Code == "PowerState/running" {
-			state = "running"
+		if s == nil || s.Code == nil {
+			continue
 		}
-		if s.Code != nil && *s.Code == "PowerState/deallocated" {
-			state = "stopped"
+		if rest, ok := strings.CutPrefix(*s.Code, powerStatePrefix); ok && rest != "" {
+			state = rest
 		}
 	}
 	return state
@@ -1289,17 +1298,10 @@ func (a *mqlAzureSubscriptionComputeServiceDiskAccess) privateEndpointConnection
 				privateEndpoint["privateEndpointId"] = llx.StringDataPtr(props.PrivateEndpoint.ID)
 			}
 			if props.PrivateLinkServiceConnectionState != nil {
-				stateArgs := map[string]*llx.RawData{}
-				if props.PrivateLinkServiceConnectionState.ActionsRequired != nil {
-					stateArgs["actionsRequired"] = llx.StringDataPtr(props.PrivateLinkServiceConnectionState.ActionsRequired)
-				}
-				if props.PrivateLinkServiceConnectionState.Description != nil {
-					stateArgs["description"] = llx.StringDataPtr(props.PrivateLinkServiceConnectionState.Description)
-				}
-				if props.PrivateLinkServiceConnectionState.Status != nil {
-					stateArgs["status"] = llx.StringData(string(*props.PrivateLinkServiceConnectionState.Status))
-				}
-				stateRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState, stateArgs)
+				stateRes, err := newPrivateLinkServiceConnectionState(a.MqlRuntime, convert.ToValue(entry.ID),
+					stringEnumPtr(props.PrivateLinkServiceConnectionState.ActionsRequired),
+					props.PrivateLinkServiceConnectionState.Description,
+					stringEnumPtr(props.PrivateLinkServiceConnectionState.Status))
 				if err != nil {
 					return nil, err
 				}

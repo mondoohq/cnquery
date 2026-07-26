@@ -465,6 +465,7 @@ func createBatchPoolRawData(pool *armbatch.Pool) (map[string]*llx.RawData, error
 		hostEndpointProtectionMode      = llx.NilData
 		proxyAgentEnabled               = llx.NilData
 		securityEncryptionType          = llx.NilData
+		securityType                    = llx.NilData
 		creationTimeData                = llx.NilData
 	)
 
@@ -538,8 +539,18 @@ func createBatchPoolRawData(pool *armbatch.Pool) (map[string]*llx.RawData, error
 					}
 				}
 				if sp.SecurityType != nil {
-					securityEncryptionType = llx.StringData(string(*sp.SecurityType))
+					securityType = llx.StringData(string(*sp.SecurityType))
 				}
+			}
+
+			// securityEncryptionType lives on the managed OS disk's own
+			// security profile, not on the VM security profile: SecurityType
+			// is confidentialVM/trustedLaunch, while the encryption type is
+			// VMGuestStateOnly/DiskWithVMGuestState.
+			if osDisk := vmConfig.OSDisk; osDisk != nil && osDisk.ManagedDisk != nil &&
+				osDisk.ManagedDisk.SecurityProfile != nil &&
+				osDisk.ManagedDisk.SecurityProfile.SecurityEncryptionType != nil {
+				securityEncryptionType = llx.StringData(string(*osDisk.ManagedDisk.SecurityProfile.SecurityEncryptionType))
 			}
 		}
 	}
@@ -560,6 +571,7 @@ func createBatchPoolRawData(pool *armbatch.Pool) (map[string]*llx.RawData, error
 		"hostEndpointProtectionMode":    hostEndpointProtectionMode,
 		"proxyAgentEnabled":             proxyAgentEnabled,
 		"securityEncryptionType":        securityEncryptionType,
+		"securityType":                  securityType,
 		"creationTime":                  creationTimeData,
 	}, nil
 }

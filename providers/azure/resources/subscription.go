@@ -242,6 +242,17 @@ func (a *mqlAzureSubscription) advisor() (*mqlAzureSubscriptionAdvisorService, e
 	return advisorSvc, nil
 }
 
+func (a *mqlAzureSubscription) policy() (*mqlAzureSubscriptionPolicy, error) {
+	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionPolicy, map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	policySvc := svc.(*mqlAzureSubscriptionPolicy)
+	return policySvc, nil
+}
+
 func (a *mqlAzureSubscription) iot() (*mqlAzureSubscriptionIotService, error) {
 	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionIotService, map[string]*llx.RawData{
 		"subscriptionId": llx.StringData(a.SubscriptionId.Data),

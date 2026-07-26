@@ -332,26 +332,32 @@ type effectiveNsgGroup struct {
 // computation. Only successful fetches are cached: the effective-NSG call is a
 // bounded Azure long-poll that can fail transiently (timeout), so an error is
 // returned without being memoized, letting a later caller retry.
-func (a *mqlAzureSubscriptionNetworkServiceInterface) effectiveNsgGroupsCached() ([]effectiveNsgGroup, error) {
+// The second return value reports whether Azure answered authoritatively. It
+// is false when the effective-rules call degraded (denied, unavailable, or the
+// NIC is not attached to a running VM), which must not be confused with an
+// authoritative "this NIC has no NSG attached" — the latter means every inbound
+// flow is admitted.
+func (a *mqlAzureSubscriptionNetworkServiceInterface) effectiveNsgGroupsCached() ([]effectiveNsgGroup, bool, error) {
 	a.effNsgMu.Lock()
 	defer a.effNsgMu.Unlock()
 	if a.effNsgLoaded {
-		return a.effNsgGroups, nil
+		return a.effNsgGroups, a.effNsgEvaluated, nil
 	}
-	groups, err := a.fetchEffectiveNsgGroups()
+	groups, evaluated, err := a.fetchEffectiveNsgGroups()
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	a.effNsgGroups = groups
+	a.effNsgEvaluated = evaluated
 	a.effNsgLoaded = true
-	return a.effNsgGroups, nil
+	return a.effNsgGroups, a.effNsgEvaluated, nil
 }
 
 // effectiveSecurityRules computes the merged NSG rules effective on this NIC
 // (NSG attached to NIC + ASG + NSG attached to subnet), flattened across the
 // effective-NSG chain. Lazily called per NIC.
 func (a *mqlAzureSubscriptionNetworkServiceInterface) effectiveSecurityRules() ([]any, error) {
-	groups, err := a.effectiveNsgGroupsCached()
+	groups, _, err := a.effectiveNsgGroupsCached()
 	if err != nil {
 		return nil, err
 	}
@@ -369,7 +375,7 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) effectiveSecurityRules() (
 // attached to a running VM; for detached or stopped NICs the API returns
 // NicNotAssociatedWithVm or similar 400/404 errors. We treat those as "no
 // effective NSGs" rather than failing the whole interfaces query.
-func (a *mqlAzureSubscriptionNetworkServiceInterface) fetchEffectiveNsgGroups() ([]effectiveNsgGroup, error) {
+func (a *mqlAzureSubscriptionNetworkServiceInterface) fetchEffectiveNsgGroups() ([]effectiveNsgGroup, bool, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	// Bound the long-poll so a stuck operation doesn't hang the interfaces query.
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
@@ -378,11 +384,11 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) fetchEffectiveNsgGroups() 
 	id := a.Id.Data
 	resourceID, err := ParseResourceID(id)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	nicName, err := resourceID.Component("networkInterfaces")
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	// armnetwork v9 misshaped EffectiveNetworkSecurityGroup.TagMap (declared *string
@@ -394,7 +400,7 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) fetchEffectiveNsgGroups() 
 		Scopes: []string{"https://management.azure.com/.default"},
 	})
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	url := fmt.Sprintf(
@@ -403,7 +409,7 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) fetchEffectiveNsgGroups() 
 	)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	req.Header.Set("Authorization", "Bearer "+tok.Token)
 	req.Header.Set("Accept", "application/json")
@@ -411,7 +417,7 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) fetchEffectiveNsgGroups() 
 	httpClient := &http.Client{Timeout: 60 * time.Second}
 	httpResp, err := httpClient.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	defer httpResp.Body.Close()
 
@@ -423,23 +429,23 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) fetchEffectiveNsgGroups() 
 		loc := httpResp.Header.Get("Location")
 		if loc == "" {
 			io.Copy(io.Discard, httpResp.Body)
-			return nil, fmt.Errorf("effective NSG list returned 202 without a Location header")
+			return nil, false, fmt.Errorf("effective NSG list returned 202 without a Location header")
 		}
 		// Sleep a beat then poll.
 		select {
 		case <-ctx.Done():
-			return nil, ctx.Err()
+			return nil, false, ctx.Err()
 		case <-time.After(2 * time.Second):
 		}
 		pollReq, perr := http.NewRequestWithContext(ctx, http.MethodGet, loc, nil)
 		if perr != nil {
-			return nil, perr
+			return nil, false, perr
 		}
 		pollReq.Header.Set("Authorization", "Bearer "+tok.Token)
 		pollReq.Header.Set("Accept", "application/json")
 		newResp, perr := httpClient.Do(pollReq)
 		if perr != nil {
-			return nil, perr
+			return nil, false, perr
 		}
 		httpResp.Body.Close()
 		httpResp = newResp
@@ -449,11 +455,11 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) fetchEffectiveNsgGroups() 
 		httpResp.StatusCode == http.StatusNotFound ||
 		httpResp.StatusCode == http.StatusForbidden {
 		log.Warn().Str("nic", nicName).Int("status", httpResp.StatusCode).Msg("effective security rules unavailable for NIC")
-		return []effectiveNsgGroup{}, nil
+		return nil, false, nil
 	}
 	if httpResp.StatusCode >= 400 {
 		body, _ := io.ReadAll(httpResp.Body)
-		return nil, fmt.Errorf("effective NSG list returned %d: %s", httpResp.StatusCode, string(body))
+		return nil, false, fmt.Errorf("effective NSG list returned %d: %s", httpResp.StatusCode, string(body))
 	}
 
 	var payload struct {
@@ -465,7 +471,7 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) fetchEffectiveNsgGroups() 
 		} `json:"value"`
 	}
 	if err := json.NewDecoder(httpResp.Body).Decode(&payload); err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	groups := make([]effectiveNsgGroup, 0, len(payload.Value))
@@ -479,7 +485,7 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) fetchEffectiveNsgGroups() 
 		}
 		groups = append(groups, effectiveNsgGroup{nsgID: ensg.NetworkSecurityGroup.ID, rules: rules})
 	}
-	return groups, nil
+	return groups, true, nil
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceWatcher) flowLogs() ([]any, error) {
@@ -1734,15 +1740,43 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) natRules() ([]
 	}
 	res := []any{}
 	for _, nr := range a.cacheProperties.NatRules {
+		if nr == nil {
+			continue
+		}
 		props, err := convert.JsonToDict(nr.Properties)
 		if err != nil {
 			return nil, err
 		}
-		mqlNr, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.virtualNetworkGateway.natRule", map[string]*llx.RawData{
-			"id":         llx.StringDataPtr(nr.ID),
-			"name":       llx.StringDataPtr(nr.Name),
-			"etag":       llx.StringDataPtr(nr.Etag),
-			"properties": llx.DictData(props),
+
+		var mode, natRuleType, ipConfigurationID, provisioningState *string
+		internalMappings := []any{}
+		externalMappings := []any{}
+		if p := nr.Properties; p != nil {
+			mode = stringEnumPtr(p.Mode)
+			natRuleType = stringEnumPtr(p.Type)
+			provisioningState = stringEnumPtr(p.ProvisioningState)
+			ipConfigurationID = p.IPConfigurationID
+			internalMappings, err = vpnNatRuleMappingsToDict(p.InternalMappings)
+			if err != nil {
+				return nil, err
+			}
+			externalMappings, err = vpnNatRuleMappingsToDict(p.ExternalMappings)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		mqlNr, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule, map[string]*llx.RawData{
+			"id":                llx.StringDataPtr(nr.ID),
+			"name":              llx.StringDataPtr(nr.Name),
+			"etag":              llx.StringDataPtr(nr.Etag),
+			"properties":        llx.DictData(props),
+			"mode":              llx.StringDataPtr(mode),
+			"natRuleType":       llx.StringDataPtr(natRuleType),
+			"internalMappings":  llx.ArrayData(internalMappings, types.Dict),
+			"externalMappings":  llx.ArrayData(externalMappings, types.Dict),
+			"ipConfigurationId": llx.StringDataPtr(ipConfigurationID),
+			"provisioningState": llx.StringDataPtr(provisioningState),
 		})
 		if err != nil {
 			return nil, err
@@ -1750,6 +1784,27 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) natRules() ([]
 		res = append(res, mqlNr)
 	}
 	return res, nil
+}
+
+// vpnNatRuleMappingsToDict converts VPN NAT rule address-space/port-range
+// mappings into dicts, skipping nil entries.
+func vpnNatRuleMappingsToDict(mappings []*network.VPNNatRuleMapping) ([]any, error) {
+	res := []any{}
+	for _, m := range mappings {
+		if m == nil {
+			continue
+		}
+		d, err := convert.JsonToDict(m)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, d)
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule) id() (string, error) {
+	return a.Id.Data, nil
 }
 
 func (a *mqlAzureSubscriptionNetworkService) applicationGateways() ([]any, error) {
@@ -1789,50 +1844,35 @@ func (a *mqlAzureSubscriptionNetworkServiceWafConfig) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+// wafConfiguration returns the legacy WAF configuration attached directly to
+// the application gateway (v1 SKUs). The configuration is an inline block on
+// the gateway itself, so at most one entry is ever returned; gateways using a
+// standalone WAF policy return an empty list and expose it through policy()
+// instead.
 func (a *mqlAzureSubscriptionNetworkServiceApplicationGateway) wafConfiguration() ([]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-	id := a.Id.Data
-	resourceID, err := ParseResourceID(id)
-	if err != nil {
-		return nil, err
-	}
-	client, err := network.NewClientFactory(resourceID.SubscriptionID, token, &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
-	if err != nil {
-		return nil, err
-	}
-	c := client.NewApplicationGatewayWafDynamicManifestsClient()
-
 	res := []any{}
-	pager := c.NewGetPager(a.Location.Data, &network.ApplicationGatewayWafDynamicManifestsClientGetOptions{})
-	for pager.More() {
-		page, err := pager.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-		for _, entry := range page.Value {
-			if entry != nil {
-				props, err := convert.JsonToDict(entry.Properties)
-				if err != nil {
-					return nil, err
-				}
-				mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.applicationGateway.wafconfig",
-					map[string]*llx.RawData{
-						"id":         llx.StringDataPtr(entry.ID),
-						"name":       llx.StringDataPtr(entry.Name),
-						"type":       llx.StringDataPtr(entry.Type),
-						"properties": llx.AnyData(props),
-					})
-				if err != nil {
-					return nil, err
-				}
-				res = append(res, mqlAzure)
-			}
-		}
+	if a.cacheWafConfiguration == nil {
+		return res, nil
 	}
+
+	props, err := convert.JsonToDict(a.cacheWafConfiguration)
+	if err != nil {
+		return nil, err
+	}
+	mqlAzure, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionNetworkServiceWafConfig,
+		map[string]*llx.RawData{
+			// The WAF configuration is an inline block with no ARM identity of
+			// its own; key it off the parent gateway.
+			"id":         llx.StringData(a.Id.Data + "/webApplicationFirewallConfiguration"),
+			"name":       llx.NilData,
+			"type":       llx.NilData,
+			"kind":       llx.NilData,
+			"properties": llx.DictData(props),
+		})
+	if err != nil {
+		return nil, err
+	}
+	res = append(res, mqlAzure)
 	return res, nil
 }
 
@@ -3579,6 +3619,7 @@ func azureAppGatewayToMql(runtime *plugin.Runtime, ag network.ApplicationGateway
 	res.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 	if ag.Properties != nil {
 		res.cacheGatewayIPConfigs = ag.Properties.GatewayIPConfigurations
+		res.cacheWafConfiguration = ag.Properties.WebApplicationFirewallConfiguration
 	}
 	return res, nil
 }
@@ -3586,6 +3627,7 @@ func azureAppGatewayToMql(runtime *plugin.Runtime, ag network.ApplicationGateway
 type mqlAzureSubscriptionNetworkServiceApplicationGatewayInternal struct {
 	cacheUserAssignedIdentityIds []string
 	cacheGatewayIPConfigs        []*network.ApplicationGatewayIPConfiguration
+	cacheWafConfiguration        *network.ApplicationGatewayWebApplicationFirewallConfiguration
 }
 
 // userAssignedIdentities resolves the typed user-assigned managed identities
@@ -4997,6 +5039,11 @@ type mqlAzureSubscriptionNetworkServiceInterfaceInternal struct {
 	effNsgMu     sync.Mutex
 	effNsgLoaded bool
 	effNsgGroups []effectiveNsgGroup
+	// effNsgEvaluated records whether Azure answered authoritatively. An
+	// authoritative empty group list means the NIC has no NSG at all (every
+	// inbound flow is admitted); a degraded fetch also yields an empty list
+	// but proves nothing, and the two must not be conflated.
+	effNsgEvaluated bool
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceInterface) networkSecurityGroup() (*mqlAzureSubscriptionNetworkServiceSecurityGroup, error) {
