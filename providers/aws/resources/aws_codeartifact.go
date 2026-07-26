@@ -192,7 +192,11 @@ func (a *mqlAwsCodeartifactDomain) id() (string, error) {
 }
 
 func initAwsCodeartifactDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 2 {
+	// Only skip the lookup when the caller already supplied the identity we
+	// would resolve. repository.domain() passes name+owner+region (3 args), so a
+	// bare `len(args) > 2` fast path skipped the fetch and produced a husk whose
+	// id() (the unset arn) was empty, aliasing every repository's domain.
+	if args["arn"] != nil {
 		return args, nil, nil
 	}
 	name := rawStringArg(args["name"])

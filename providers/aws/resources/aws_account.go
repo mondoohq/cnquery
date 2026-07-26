@@ -96,7 +96,10 @@ func (a *mqlAwsAccount) organization() (*mqlAwsOrganization, error) {
 			"masterAccountArn":   llx.StringDataPtr(org.Organization.MasterAccountArn),
 			"masterAccountEmail": llx.StringDataPtr(org.Organization.MasterAccountEmail),
 		})
-	return res.(*mqlAwsOrganization), err
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsOrganization), nil
 }
 
 func (a *mqlAwsOrganization) accounts() ([]any, error) {

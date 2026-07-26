@@ -30,8 +30,11 @@ func wafRegionForScope(scope string) string {
 	return ""
 }
 
+// id includes the scope: aws.waf is parameterized on it, so a constant key made
+// aws.waf(scope: "REGIONAL") return the cached CLOUDFRONT instance (or vice
+// versa) whenever both were queried in one scan.
 func (a *mqlAwsWaf) id() (string, error) {
-	return "aws.waf", nil
+	return "aws.waf/" + a.Scope.Data, nil
 }
 
 // wafTagsForArn lists the tags on a WAF resource, resolving the WAF endpoint
@@ -504,7 +507,7 @@ func (a *mqlAwsWafRulegroup) rules() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		ruleAction, err := createActionResource(a.MqlRuntime, rule.Action, rule.Name)
+		ruleAction, err := createActionResource(a.MqlRuntime, rule.Action, rule.Name, ruleID)
 		if err != nil {
 			return nil, err
 		}
@@ -620,7 +623,7 @@ func (a *mqlAwsWafAcl) rules() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		ruleAction, err := createActionResource(a.MqlRuntime, rule.Action, rule.Name)
+		ruleAction, err := createActionResource(a.MqlRuntime, rule.Action, rule.Name, ruleID)
 		if err != nil {
 			return nil, err
 		}
@@ -645,7 +648,7 @@ func (a *mqlAwsWafAcl) rules() ([]any, error) {
 	return rules, nil
 }
 
-func createActionResource(runtime *plugin.Runtime, ruleAction *waftypes.RuleAction, ruleName *string) (plugin.Resource, error) {
+func createActionResource(runtime *plugin.Runtime, ruleAction *waftypes.RuleAction, ruleName *string, ruleID string) (plugin.Resource, error) {
 	var mqlAction plugin.Resource
 	var err error
 
@@ -676,6 +679,7 @@ func createActionResource(runtime *plugin.Runtime, ruleAction *waftypes.RuleActi
 		}
 	}
 	mqlAction, err = CreateResource(runtime, "aws.waf.rule.action", map[string]*llx.RawData{
+		"__id":         llx.StringData(ruleID + "/action"),
 		"ruleName":     llx.StringDataPtr(ruleName),
 		"action":       llx.StringData(action),
 		"responseCode": llx.StringData(responseCode),
@@ -796,6 +800,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			var IPSetForwardedIPConfig plugin.Resource
 			if statement.IPSetReferenceStatement.IPSetForwardedIPConfig != nil {
 				IPSetForwardedIPConfig, err = CreateResource(runtime, "aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig", map[string]*llx.RawData{
+					"__id":             llx.StringData(mqlStatementID + "/ipsetforwardedipconfig"),
 					"statementID":      llx.StringData(mqlStatementID),
 					"ruleName":         llx.StringDataPtr(ruleName),
 					"headerName":       llx.StringDataPtr(statement.IPSetReferenceStatement.IPSetForwardedIPConfig.HeaderName),
@@ -1034,7 +1039,8 @@ func createFieldToMatchResource(runtime *plugin.Runtime, fieldToMatch *waftypes.
 	}
 	if fieldToMatch.HeaderOrder != nil {
 		target = "HeaderOrder"
-		headerOrder, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.headerOrder", map[string]*llx.RawData{
+		headerOrder, err = CreateResource(runtime, ResourceAwsWafRuleFieldtomatchHeaderorder, map[string]*llx.RawData{
+			"__id":             llx.StringData(mqlStatementID + "/headerOrder"),
 			"statementID":      llx.StringData(mqlStatementID),
 			"ruleName":         llx.StringDataPtr(ruleName),
 			"overSizeHandling": llx.StringData(string(fieldToMatch.HeaderOrder.OversizeHandling)),
@@ -1061,7 +1067,8 @@ func createFieldToMatchResource(runtime *plugin.Runtime, fieldToMatch *waftypes.
 		if fieldToMatch.Headers.MatchPattern != nil {
 			includeHeaders := convert.SliceAnyToInterface(fieldToMatch.Headers.MatchPattern.IncludedHeaders)
 			excludeHeaders := convert.SliceAnyToInterface(fieldToMatch.Headers.MatchPattern.ExcludedHeaders)
-			matchPattern, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.jsonbody.matchpattern", map[string]*llx.RawData{
+			matchPattern, err = CreateResource(runtime, ResourceAwsWafRuleFieldtomatchHeadersMatchpattern, map[string]*llx.RawData{
+				"__id":           llx.StringData(mqlStatementID + "/headers/matchPattern"),
 				"statementID":    llx.StringData(mqlStatementID),
 				"ruleName":       llx.StringDataPtr(ruleName),
 				"all":            llx.BoolData(fieldToMatch.Headers.MatchPattern.All != nil),
@@ -1072,10 +1079,11 @@ func createFieldToMatchResource(runtime *plugin.Runtime, fieldToMatch *waftypes.
 				return nil, err
 			}
 		}
-		headers, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.headers", map[string]*llx.RawData{
+		headers, err = CreateResource(runtime, ResourceAwsWafRuleFieldtomatchHeaders, map[string]*llx.RawData{
+			"__id":             llx.StringData(mqlStatementID + "/headers"),
 			"statementID":      llx.StringData(mqlStatementID),
 			"ruleName":         llx.StringDataPtr(ruleName),
-			"matchPattern":     llx.ResourceData(matchPattern, "aws.waf.rule.fieldtomatch.headers.matchpatern"),
+			"matchPattern":     llx.ResourceData(matchPattern, ResourceAwsWafRuleFieldtomatchHeadersMatchpattern),
 			"overSizeHandling": llx.StringData(string(fieldToMatch.Headers.OversizeHandling)),
 			"matchScope":       llx.StringData(string(fieldToMatch.Headers.MatchScope)),
 		})

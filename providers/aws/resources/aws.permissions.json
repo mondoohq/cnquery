@@ -494,16 +494,19 @@
     "iam:ListGroupPolicies",
     "iam:ListGroups",
     "iam:ListGroupsForUser",
+    "iam:ListInstanceProfileTags",
     "iam:ListInstanceProfiles",
     "iam:ListMFADevices",
     "iam:ListOpenIDConnectProviders",
     "iam:ListPolicies",
     "iam:ListPolicyVersions",
     "iam:ListRolePolicies",
+    "iam:ListRoleTags",
     "iam:ListRoles",
     "iam:ListSAMLProviders",
     "iam:ListServerCertificates",
     "iam:ListUserPolicies",
+    "iam:ListUserTags",
     "iam:ListUsers",
     "iam:ListVirtualMFADevices",
     "identitystore:ListGroups",
@@ -3994,6 +3997,12 @@
       "source_file": "aws_iam.go"
     },
     {
+      "permission": "iam:ListInstanceProfileTags",
+      "service": "iam",
+      "action": "ListInstanceProfileTags",
+      "source_file": "aws_iam.go"
+    },
+    {
       "permission": "iam:ListInstanceProfiles",
       "service": "iam",
       "action": "ListInstanceProfiles",
@@ -4030,6 +4039,12 @@
       "source_file": "aws_iam.go"
     },
     {
+      "permission": "iam:ListRoleTags",
+      "service": "iam",
+      "action": "ListRoleTags",
+      "source_file": "aws_iam.go"
+    },
+    {
       "permission": "iam:ListRoles",
       "service": "iam",
       "action": "ListRoles",
@@ -4051,6 +4066,12 @@
       "permission": "iam:ListUserPolicies",
       "service": "iam",
       "action": "ListUserPolicies",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:ListUserTags",
+      "service": "iam",
+      "action": "ListUserTags",
       "source_file": "aws_iam.go"
     },
     {

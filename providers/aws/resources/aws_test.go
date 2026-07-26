@@ -6,8 +6,10 @@ package resources
 import (
 	"errors"
 	"fmt"
+	nethttp "net/http"
 	"testing"
 
+	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -75,5 +77,38 @@ func TestIsServiceNotAvailableInRegionError(t *testing.T) {
 		// not enough — both phrases must be present together.
 		err := fmt.Errorf("operation error EC2: DescribeInstances, https response error StatusCode: 0, request send failed, Get \"https://ec2.amazonaws.com/\": net/http: TLS handshake timeout")
 		assert.False(t, IsServiceNotAvailableInRegionError(err))
+	})
+}
+
+// macieHTTPError builds a Macie-style error carrying an HTTP status code.
+func macieHTTPError(code int, msg string) error {
+	return &smithyhttp.ResponseError{
+		Response: &smithyhttp.Response{Response: &nethttp.Response{StatusCode: code}},
+		Err:      errors.New(msg),
+	}
+}
+
+// TestIsMacieNotEnabledError guards the over-broad branch: matching a bare
+// AccessDenied with no Macie-specific message swallowed genuine macie2:*
+// permission gaps across 15 call sites, so every Macie resource degraded to
+// empty and any data-classification policy passed with nothing to fail on.
+func TestIsMacieNotEnabledError(t *testing.T) {
+	t.Run("nil error", func(t *testing.T) {
+		assert.False(t, IsMacieNotEnabledError(nil))
+	})
+
+	t.Run("bare permission denial is not a not-enabled signal", func(t *testing.T) {
+		assert.False(t, IsMacieNotEnabledError(macieHTTPError(403,
+			"AccessDeniedException: User is not authorized to perform macie2:ListFindings")))
+	})
+
+	t.Run("401 with Macie message", func(t *testing.T) {
+		assert.True(t, IsMacieNotEnabledError(macieHTTPError(401,
+			"AccessDeniedException: Macie is not enabled")))
+	})
+
+	t.Run("404 with Macie message", func(t *testing.T) {
+		assert.True(t, IsMacieNotEnabledError(macieHTTPError(404,
+			"ResourceNotFoundException: Amazon Macie isn't enabled for your account")))
 	})
 }

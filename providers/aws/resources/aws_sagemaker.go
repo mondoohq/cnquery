@@ -544,6 +544,7 @@ func (a *mqlAwsSagemakerEndpoint) dataCaptureConfig() (*mqlAwsSagemakerEndpointD
 	}
 	mqlRes, err := CreateResource(a.MqlRuntime, "aws.sagemaker.endpoint.dataCaptureConfig",
 		map[string]*llx.RawData{
+			"__id":                      llx.StringData(a.Arn.Data + "/dataCaptureConfig"),
 			"enableCapture":             llx.BoolDataPtr(dcc.EnableCapture),
 			"captureStatus":             llx.StringData(string(dcc.CaptureStatus)),
 			"currentSamplingPercentage": llx.IntData(samplingPct),
@@ -717,6 +718,7 @@ func sagemakerBuildProductionVariants(runtime *plugin.Runtime, parentId string, 
 
 		mqlPV, err := CreateResource(runtime, "aws.sagemaker.endpoint.productionVariant",
 			map[string]*llx.RawData{
+				"__id":                 llx.StringData(parentId + "/" + convert.ToValue(v.VariantName)),
 				"variantName":          llx.StringDataPtr(v.VariantName),
 				"currentInstanceCount": llx.IntData(currentCount),
 				"desiredInstanceCount": llx.IntData(desiredCount),
@@ -740,6 +742,7 @@ func sagemakerBuildProductionVariants(runtime *plugin.Runtime, parentId string, 
 		for _, vs := range v.VariantStatus {
 			mqlVS, err := CreateResource(runtime, "aws.sagemaker.endpoint.productionVariant.status",
 				map[string]*llx.RawData{
+					"__id":          llx.StringData(variantId + "/status/" + string(vs.Status)),
 					"status":        llx.StringData(string(vs.Status)),
 					"statusMessage": llx.StringDataPtr(vs.StatusMessage),
 					"startTime":     llx.TimeDataPtr(vs.StartTime),
@@ -1329,9 +1332,10 @@ func (a *mqlAwsSagemakerTrainingjob) secondaryStatusTransitions() ([]any, error)
 		return nil, err
 	}
 	res := make([]any, 0, len(a.cacheSecondaryStatusTransitions))
-	for _, t := range a.cacheSecondaryStatusTransitions {
+	for i, t := range a.cacheSecondaryStatusTransitions {
 		mqlT, err := CreateResource(a.MqlRuntime, "aws.sagemaker.trainingjob.statusTransition",
 			map[string]*llx.RawData{
+				"__id":          llx.StringData(fmt.Sprintf("%s/statusTransition/%d/%s", a.Arn.Data, i, string(t.Status))),
 				"status":        llx.StringData(string(t.Status)),
 				"startTime":     llx.TimeDataPtr(t.StartTime),
 				"endTime":       llx.TimeDataPtr(t.EndTime),
@@ -1352,13 +1356,14 @@ func (a *mqlAwsSagemakerTrainingjob) finalMetrics() ([]any, error) {
 		return nil, err
 	}
 	res := make([]any, 0, len(a.cacheFinalMetrics))
-	for _, m := range a.cacheFinalMetrics {
+	for i, m := range a.cacheFinalMetrics {
 		var value float64
 		if m.Value != nil {
 			value = float64(*m.Value)
 		}
 		mqlM, err := CreateResource(a.MqlRuntime, "aws.sagemaker.trainingjob.metricData",
 			map[string]*llx.RawData{
+				"__id":       llx.StringData(fmt.Sprintf("%s/metric/%d/%s", a.Arn.Data, i, convert.ToValue(m.MetricName))),
 				"metricName": llx.StringDataPtr(m.MetricName),
 				"value":      llx.FloatData(value),
 				"timestamp":  llx.TimeDataPtr(m.Timestamp),
@@ -2816,6 +2821,7 @@ func (a *mqlAwsSagemakerCluster) instanceGroups() ([]any, error) {
 			}
 			mqlITD, err := CreateResource(a.MqlRuntime, "aws.sagemaker.clusterInstanceGroup.instanceTypeDetail",
 				map[string]*llx.RawData{
+					"__id":           llx.StringData(a.Region.Data + "/" + a.Name.Data + "/" + igName + "/instanceTypeDetail/" + string(itd.InstanceType)),
 					"instanceType":   llx.StringData(string(itd.InstanceType)),
 					"currentCount":   llx.IntData(itdCurrentCount),
 					"threadsPerCore": llx.IntData(itdThreadsPerCore),
@@ -2833,6 +2839,7 @@ func (a *mqlAwsSagemakerCluster) instanceGroups() ([]any, error) {
 		}
 		mqlIG, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerClusterInstanceGroup,
 			map[string]*llx.RawData{
+				"__id":                 llx.StringData(a.Region.Data + "/" + a.Name.Data + "/" + convert.ToValue(ig.InstanceGroupName)),
 				"instanceGroupName":    llx.StringDataPtr(ig.InstanceGroupName),
 				"instanceType":         llx.StringData(string(ig.InstanceType)),
 				"region":               llx.StringData(a.Region.Data),
@@ -2929,6 +2936,7 @@ func (a *mqlAwsSagemakerCluster) nodes() ([]any, error) {
 
 			mqlNode, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerClusterNode,
 				map[string]*llx.RawData{
+					"__id":               llx.StringData(a.Region.Data + "/" + clusterName + "/" + convert.ToValue(node.InstanceGroupName) + "/" + convert.ToValue(node.InstanceId)),
 					"instanceId":         llx.StringDataPtr(node.InstanceId),
 					"instanceGroupName":  llx.StringDataPtr(node.InstanceGroupName),
 					"instanceType":       llx.StringData(string(node.InstanceType)),
@@ -3017,6 +3025,7 @@ func (a *mqlAwsSagemakerCluster) restrictedInstanceGroups() ([]any, error) {
 
 		mqlRIG, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerClusterRestrictedInstanceGroup,
 			map[string]*llx.RawData{
+				"__id":                              llx.StringData(a.Region.Data + "/" + a.Name.Data + "/" + convert.ToValue(rig.InstanceGroupName)),
 				"instanceGroupName":                 llx.StringDataPtr(rig.InstanceGroupName),
 				"instanceType":                      llx.StringData(string(rig.InstanceType)),
 				"region":                            llx.StringData(a.Region.Data),
@@ -3322,6 +3331,7 @@ func (a *mqlAwsSagemakerFeatureGroup) featureDefinitions() ([]any, error) {
 	for _, fd := range resp.FeatureDefinitions {
 		mqlFD, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerFeatureDefinition,
 			map[string]*llx.RawData{
+				"__id":           llx.StringData(a.Arn.Data + "/" + convert.ToValue(fd.FeatureName) + "/" + string(fd.FeatureType)),
 				"featureName":    llx.StringDataPtr(fd.FeatureName),
 				"featureType":    llx.StringData(string(fd.FeatureType)),
 				"collectionType": llx.StringData(string(fd.CollectionType)),

@@ -88410,7 +88410,9 @@ func (c *mqlAwsIamUser) GetPasswordLastUsed() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlAwsIamUser) GetTags() *plugin.TValue[map[string]any] {
-	return &c.Tags
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
 }
 
 func (c *mqlAwsIamUser) GetManagedBy() *plugin.TValue[string] {
@@ -88652,7 +88654,9 @@ func (c *mqlAwsIamInstanceProfile) GetInstanceProfileName() *plugin.TValue[strin
 }
 
 func (c *mqlAwsIamInstanceProfile) GetTags() *plugin.TValue[map[string]any] {
-	return &c.Tags
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
 }
 
 func (c *mqlAwsIamInstanceProfile) GetIamRoles() *plugin.TValue[[]any] {
@@ -88691,7 +88695,12 @@ func createAwsIamLoginProfile(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.iam.loginProfile", res.__id)
@@ -88859,7 +88868,12 @@ func createAwsIamPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.iam.policy", res.__id)
@@ -89204,7 +89218,9 @@ func (c *mqlAwsIamRole) GetDescription() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsIamRole) GetTags() *plugin.TValue[map[string]any] {
-	return &c.Tags
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
 }
 
 func (c *mqlAwsIamRole) GetCreatedAt() *plugin.TValue[*time.Time] {

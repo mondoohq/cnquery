@@ -22,7 +22,6 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
-	"go.mondoo.com/mql/v13/providers/aws/resources/awspolicy"
 	"go.mondoo.com/mql/v13/types"
 	"golang.org/x/sync/errgroup"
 )
@@ -673,13 +672,18 @@ func (a *mqlAwsLambdaFunction) policy() (any, error) {
 		}
 		return nil, err
 	}
-	if functionPolicy != nil {
-		var policy lambdaPolicyDocument
-		err = json.Unmarshal([]byte(*functionPolicy.Policy), &policy)
-		if err != nil {
+	if functionPolicy != nil && functionPolicy.Policy != nil {
+		// Unmarshal into a plain any, matching SNS/SQS/ECR. Decoding into a
+		// hand-written struct dropped Condition, NotPrincipal, NotAction and
+		// NotResource, so isPublic/allowsPublicAccess could never see a scoping
+		// condition -- an org-scoped Function URL read as fully public. The
+		// struct also typed Action as a string, so any array-valued Action
+		// failed to unmarshal and errored the whole field.
+		var policyDoc any
+		if err := json.Unmarshal([]byte(*functionPolicy.Policy), &policyDoc); err != nil {
 			return nil, err
 		}
-		return convert.JsonToDict(policy)
+		return policyDoc, nil
 	}
 
 	return nil, nil
@@ -726,7 +730,15 @@ func hasSourceScopingCondition(conditions any) bool {
 	if !ok {
 		return false
 	}
-	for _, opVal := range m {
+	for op, opVal := range m {
+		// The operator decides whether a condition narrows or widens the grant.
+		// StringNotEquals on aws:PrincipalOrgID means "allow everyone OUTSIDE my
+		// org" and Null means "allow principals for which the key is absent" --
+		// both strictly worse than an unconditional public grant, yet the
+		// operator-blind version read them as "scoped" and reported not-public.
+		if !isRestrictingConditionOperator(op) {
+			continue
+		}
 		keys, ok := opVal.(map[string]any)
 		if !ok {
 			continue
@@ -740,13 +752,38 @@ func hasSourceScopingCondition(conditions any) bool {
 	return false
 }
 
+// isRestrictingConditionOperator reports whether an IAM condition operator
+// narrows a grant. Negated forms (StringNotEquals, ArnNotLike, ...) and Null
+// widen it, so a scoping key under one of those must not count as scoped.
+// The ForAllValues:/ForAnyValue: set qualifiers and the IfExists suffix are
+// stripped first; IfExists still restricts when the key is present.
+func isRestrictingConditionOperator(op string) bool {
+	o := strings.ToLower(op)
+	o = strings.TrimPrefix(o, "forallvalues:")
+	o = strings.TrimPrefix(o, "foranyvalue:")
+	o = strings.TrimSuffix(o, "ifexists")
+	switch o {
+	case "stringequals", "stringlike", "stringequalsignorecase",
+		"arnequals", "arnlike":
+		return true
+	}
+	return false
+}
+
 // isSourceScopingKey reports whether a condition key pins a wildcard principal
 // to a specific caller. aws:SourceOwner is the account-ID form SNS uses, and is
 // what the AWS-generated default topic policy carries; it scopes a grant
 // exactly as aws:SourceAccount does.
 func isSourceScopingKey(key string) bool {
 	switch strings.ToLower(key) {
-	case "aws:sourcearn", "aws:sourceaccount", "aws:sourceowner", "aws:principalorgid":
+	case "aws:sourcearn", "aws:sourceaccount", "aws:sourceowner", "aws:principalorgid",
+		// Additional keys that genuinely confine a wildcard principal. Without
+		// these, AWS's own service-linked KMS grants (kms:CallerAccount +
+		// kms:ViaService) and VPC-endpoint-restricted buckets reported public.
+		"aws:principalorgpaths", "aws:principalaccount", "aws:principalarn",
+		"aws:sourceorgid", "aws:sourceorgpaths", "aws:resourceorgid",
+		"aws:sourcevpc", "aws:sourcevpce",
+		"kms:calleraccount":
 		return true
 	}
 	return false
@@ -1402,19 +1439,6 @@ func (a *mqlAwsLambdaFunction) runtimeManagementConfig() (any, error) {
 }
 
 // ==================== Types ====================
-
-type lambdaPolicyDocument struct {
-	Version   string                  `json:"Version,omitempty"`
-	Statement []lambdaPolicyStatement `json:"Statement,omitempty"`
-}
-
-type lambdaPolicyStatement struct {
-	Sid       string              `json:"Sid,omitempty"`
-	Effect    string              `json:"Effect,omitempty"`
-	Action    string              `json:"Action,omitempty"`
-	Resource  string              `json:"Resource,omitempty"`
-	Principal awspolicy.Principal `json:"Principal,omitempty"`
-}
 
 // ==================== Per-Function Versions ====================
 

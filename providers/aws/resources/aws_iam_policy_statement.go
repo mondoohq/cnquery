@@ -239,7 +239,14 @@ func (a *mqlAwsSnsTopic) policyStatements() ([]any, error) {
 }
 
 func (a *mqlAwsSqsQueue) policyStatements() ([]any, error) {
-	return policyStatementsFromDict(a.MqlRuntime, a.Arn.Data, a.GetPolicy())
+	// aws.sqs.queue.arn is a computed field; reading a.Arn.Data directly yields
+	// "" unless something already resolved it, which made every queue's
+	// statements share the cache key "/statement/N".
+	arn := a.GetArn()
+	if arn.Error != nil {
+		return nil, arn.Error
+	}
+	return policyStatementsFromDict(a.MqlRuntime, arn.Data, a.GetPolicy())
 }
 
 func (a *mqlAwsEcrRepository) policyStatements() ([]any, error) {
@@ -278,6 +285,17 @@ func (a *mqlAwsIamPolicyStatement) hasPublicPrincipal() (bool, error) {
 	if !strings.EqualFold(effect.Data, "Allow") {
 		return false, nil
 	}
+	// An Allow with NotPrincipal grants everyone *except* the listed principals,
+	// so it is public by construction. Only Principal was consulted before, so
+	// `{"Effect":"Allow","NotPrincipal":{...}}` on a bucket read as not-public.
+	notPrincipals := a.GetNotPrincipals()
+	if notPrincipals.Error != nil {
+		return false, notPrincipals.Error
+	}
+	if len(notPrincipals.Data) > 0 {
+		return true, nil
+	}
+
 	principals := a.GetPrincipals()
 	if principals.Error != nil {
 		return false, principals.Error

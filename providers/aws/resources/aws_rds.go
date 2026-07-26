@@ -441,7 +441,7 @@ func (a mqlAwsRdsClusterParameterGroup) parameters() ([]any, error) {
 			return nil, err
 		}
 		for _, parameter := range parameters.Parameters {
-			mqlParameter, err := newMqlAwsRdsParameterGroupParameter(a.MqlRuntime, parameter)
+			mqlParameter, err := newMqlAwsRdsParameterGroupParameter(a.MqlRuntime, a.Arn.Data, parameter)
 			if err != nil {
 				return nil, err
 			}
@@ -467,7 +467,7 @@ func (a *mqlAwsRdsParameterGroup) parameters() ([]any, error) {
 			return nil, err
 		}
 		for _, parameter := range parameters.Parameters {
-			mqlParameter, err := newMqlAwsRdsParameterGroupParameter(a.MqlRuntime, parameter)
+			mqlParameter, err := newMqlAwsRdsParameterGroupParameter(a.MqlRuntime, a.Arn.Data, parameter)
 			if err != nil {
 				return nil, err
 			}
@@ -477,7 +477,11 @@ func (a *mqlAwsRdsParameterGroup) parameters() ([]any, error) {
 	return res, nil
 }
 
-func newMqlAwsRdsParameterGroupParameter(runtime *plugin.Runtime, parameter rds_types.Parameter) (*mqlAwsRdsParameterGroupParameter, error) {
+// newMqlAwsRdsParameterGroupParameter builds a single parameter row. groupArn
+// qualifies the cache key: parameter names are unique only within one parameter
+// group, so keying on the bare name collapses every group in the account onto
+// whichever group resolved first.
+func newMqlAwsRdsParameterGroupParameter(runtime *plugin.Runtime, groupArn string, parameter rds_types.Parameter) (*mqlAwsRdsParameterGroupParameter, error) {
 	engineModes := []any{}
 	for _, engineMode := range parameter.SupportedEngineModes {
 		engineModes = append(engineModes, engineMode)
@@ -485,7 +489,7 @@ func newMqlAwsRdsParameterGroupParameter(runtime *plugin.Runtime, parameter rds_
 
 	resource, err := CreateResource(runtime, ResourceAwsRdsParameterGroupParameter,
 		map[string]*llx.RawData{
-			"__id":                 llx.StringDataPtr(parameter.ParameterName),
+			"__id":                 llx.StringData(groupArn + "/parameter/" + convert.ToValue(parameter.ParameterName)),
 			"name":                 llx.StringDataPtr(parameter.ParameterName),
 			"value":                llx.StringDataPtr(parameter.ParameterValue),
 			"allowedValues":        llx.StringDataPtr(parameter.AllowedValues),
@@ -1458,8 +1462,11 @@ func (a *mqlAwsRdsSnapshot) kmsKey() (*mqlAwsKmsKey, error) {
 	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
+// id returns the parent-qualified cache key set at construction. It must not
+// fall back to `target`, which is the backup *location* ("region" for almost
+// every instance) and therefore identical across the whole account.
 func (a *mqlAwsRdsBackupsetting) id() (string, error) {
-	return a.Target.Data, nil
+	return a.__id, nil
 }
 
 type mqlAwsRdsBackupsettingInternal struct {
@@ -1511,6 +1518,7 @@ func (a *mqlAwsRdsDbinstance) backupSettings() ([]any, error) {
 			}
 			mqlRdsBackup, err := CreateResource(a.MqlRuntime, ResourceAwsRdsBackupsetting,
 				map[string]*llx.RawData{
+					"__id":                     llx.StringData(a.Arn.Data + "/backupsetting/" + convert.ToValue(backup.DbiResourceId)),
 					"target":                   llx.StringDataPtr(backup.BackupTarget),
 					"retentionPeriod":          llx.IntDataPtr(backup.BackupRetentionPeriod),
 					"dedicatedLogVolume":       llx.BoolDataPtr(backup.DedicatedLogVolume),
@@ -1562,6 +1570,7 @@ func (a *mqlAwsRdsDbcluster) backupSettings() ([]any, error) {
 			}
 			mqlRdsBackup, err := CreateResource(a.MqlRuntime, ResourceAwsRdsBackupsetting,
 				map[string]*llx.RawData{
+					"__id":                     llx.StringData(a.Arn.Data + "/backupsetting/" + convert.ToValue(backup.DbClusterResourceId)),
 					"target":                   llx.StringDataPtr(backup.DBClusterIdentifier),
 					"retentionPeriod":          llx.IntDataPtr(backup.BackupRetentionPeriod),
 					"dedicatedLogVolume":       llx.NilData,
@@ -1595,11 +1604,17 @@ func (a *mqlAwsRdsSnapshot) attributes() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		if snapshotAttributes == nil || snapshotAttributes.DBClusterSnapshotAttributesResult == nil {
+			return []any{}, nil
+		}
 		return convert.JsonToDictSlice(snapshotAttributes.DBClusterSnapshotAttributesResult.DBClusterSnapshotAttributes)
 	}
 	snapshotAttributes, err := svc.DescribeDBSnapshotAttributes(ctx, &rds.DescribeDBSnapshotAttributesInput{DBSnapshotIdentifier: &snapshotId})
 	if err != nil {
 		return nil, err
+	}
+	if snapshotAttributes == nil || snapshotAttributes.DBSnapshotAttributesResult == nil {
+		return []any{}, nil
 	}
 	return convert.JsonToDictSlice(snapshotAttributes.DBSnapshotAttributesResult.DBSnapshotAttributes)
 }
