@@ -36,6 +36,8 @@ certificates 9.0.0
 certificates.list 9.0.0
 certificates.pem 9.0.0
 dns 9.0.1
+dns.authoritativeParams 13.2.9
+dns.authoritativeRecords 13.2.9
 dns.dkim 9.0.1
 dns.dkimRecord 9.0.1
 dns.dkimRecord.dnsTxt 9.0.1

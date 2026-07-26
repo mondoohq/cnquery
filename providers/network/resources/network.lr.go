@@ -699,8 +699,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"dns.params": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDns).GetParams()).ToDataRes(types.Dict)
 	},
+	"dns.authoritativeParams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDns).GetAuthoritativeParams()).ToDataRes(types.Dict)
+	},
 	"dns.records": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDns).GetRecords()).ToDataRes(types.Array(types.Resource("dns.record")))
+	},
+	"dns.authoritativeRecords": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDns).GetAuthoritativeRecords()).ToDataRes(types.Array(types.Resource("dns.record")))
 	},
 	"dns.mx": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDns).GetMx()).ToDataRes(types.Array(types.Resource("dns.mxRecord")))
@@ -1552,8 +1558,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDns).Params, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"dns.authoritativeParams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDns).AuthoritativeParams, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"dns.records": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDns).Records, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"dns.authoritativeRecords": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDns).AuthoritativeRecords, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"dns.mx": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3861,16 +3875,18 @@ type mqlDns struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlDnsInternal it will be used here
-	Fqdn           plugin.TValue[string]
-	Params         plugin.TValue[any]
-	Records        plugin.TValue[[]any]
-	Mx             plugin.TValue[[]any]
-	Dkim           plugin.TValue[[]any]
-	Dnssec         plugin.TValue[*mqlDnsDnssecConfig]
-	Spf            plugin.TValue[[]any]
-	Dmarc          plugin.TValue[*mqlDnsDmarcRecord]
-	Reverse        plugin.TValue[[]any]
-	ReverseRecords plugin.TValue[[]any]
+	Fqdn                 plugin.TValue[string]
+	Params               plugin.TValue[any]
+	AuthoritativeParams  plugin.TValue[any]
+	Records              plugin.TValue[[]any]
+	AuthoritativeRecords plugin.TValue[[]any]
+	Mx                   plugin.TValue[[]any]
+	Dkim                 plugin.TValue[[]any]
+	Dnssec               plugin.TValue[*mqlDnsDnssecConfig]
+	Spf                  plugin.TValue[[]any]
+	Dmarc                plugin.TValue[*mqlDnsDmarcRecord]
+	Reverse              plugin.TValue[[]any]
+	ReverseRecords       plugin.TValue[[]any]
 }
 
 // createDns creates a new instance of this resource
@@ -3925,6 +3941,17 @@ func (c *mqlDns) GetParams() *plugin.TValue[any] {
 	})
 }
 
+func (c *mqlDns) GetAuthoritativeParams() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.AuthoritativeParams, func() (any, error) {
+		vargFqdn := c.GetFqdn()
+		if vargFqdn.Error != nil {
+			return nil, vargFqdn.Error
+		}
+
+		return c.authoritativeParams(vargFqdn.Data)
+	})
+}
+
 func (c *mqlDns) GetRecords() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Records, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -3943,6 +3970,27 @@ func (c *mqlDns) GetRecords() *plugin.TValue[[]any] {
 		}
 
 		return c.records(vargParams.Data)
+	})
+}
+
+func (c *mqlDns) GetAuthoritativeRecords() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AuthoritativeRecords, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("dns", c.__id, "authoritativeRecords")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargAuthoritativeParams := c.GetAuthoritativeParams()
+		if vargAuthoritativeParams.Error != nil {
+			return nil, vargAuthoritativeParams.Error
+		}
+
+		return c.authoritativeRecords(vargAuthoritativeParams.Data)
 	})
 }
 

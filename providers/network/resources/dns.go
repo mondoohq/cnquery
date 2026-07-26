@@ -100,6 +100,32 @@ func (d *mqlDns) params(fqdn string) (any, error) {
 	return convert.JsonToDict(records)
 }
 
+// authoritativeParams resolves the same records as params, but against the
+// nameservers authoritative for the zone instead of a caching resolver.
+//
+// The answers are identical except for the TTL, which is the point: a caching
+// resolver reports the time left on its cached entry, so a record configured
+// with a TTL of 300 answers 300, then 208, then 144 as that entry ages. Any
+// check asserting on a TTL has to read it from here, or it flaps purely on when
+// the scan happened to run.
+func (d *mqlDns) authoritativeParams(fqdn string) (any, error) {
+	if fqdn == "" {
+		return nil, nil
+	}
+
+	dnsShaker, err := dnsshake.New(fqdn)
+	if err != nil {
+		return nil, err
+	}
+
+	records, err := dnsShaker.QueryAuthoritative()
+	if err != nil {
+		return nil, err
+	}
+
+	return convert.JsonToDict(records)
+}
+
 // dictTTL reads a DNS record's TTL out of a record map produced by
 // convert.JsonToDict (json.Marshal then Unmarshal of a dnsshake.DnsRecord).
 // The map key is therefore the json tag "ttl" (not the Go field name "TTL"),
@@ -115,6 +141,17 @@ func dictTTL(m map[string]any) (int64, bool) {
 }
 
 func (d *mqlDns) records(params any) ([]any, error) {
+	return d.recordsFromParams(params)
+}
+
+// authoritativeRecords parses the same shape as records, from answers the
+// authoritative nameservers gave rather than a caching resolver. The records
+// are the same; their TTLs are the configured values.
+func (d *mqlDns) authoritativeRecords(authoritativeParams any) ([]any, error) {
+	return d.recordsFromParams(authoritativeParams)
+}
+
+func (d *mqlDns) recordsFromParams(params any) ([]any, error) {
 	// NOTE: mql does not cache the results of GetRecords since it has an input argument
 	// Iterations over map keys are not deterministic and therefore we need to sort the keys
 
