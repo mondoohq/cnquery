@@ -118,7 +118,7 @@ func initGcpProjectComputeServiceRegion(runtime *plugin.Runtime, args map[string
 	if !ok || name == "" {
 		return args, nil, nil
 	}
-	projectId := args["projectId"].Value.(string)
+	projectId, _ := args["projectId"].Value.(string)
 
 	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, compute.ComputeReadonlyScope)
 	if err != nil {
@@ -132,7 +132,7 @@ func initGcpProjectComputeServiceRegion(runtime *plugin.Runtime, args map[string
 	if err != nil {
 		return nil, nil, err
 	}
-	mqlRegion, err := newMqlRegion(runtime, region)
+	mqlRegion, err := newMqlRegion(runtime, projectId, region)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -161,7 +161,7 @@ func initGcpProjectComputeServiceZone(runtime *plugin.Runtime, args map[string]*
 	if !ok || name == "" {
 		return args, nil, nil
 	}
-	projectId := args["projectId"].Value.(string)
+	projectId, _ := args["projectId"].Value.(string)
 
 	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, compute.ComputeReadonlyScope)
 	if err != nil {
@@ -217,17 +217,18 @@ func (g *mqlGcpProjectComputeService) regions() ([]any, error) {
 		return nil, err
 	}
 
-	req, err := computeSvc.Regions.List(projectId).Do()
-	if err != nil {
-		return nil, err
-	}
-	res := make([]any, 0, len(req.Items))
-	for _, r := range req.Items {
-		mqlRegion, err := newMqlRegion(g.MqlRuntime, r)
-		if err != nil {
-			return nil, err
+	res := []any{}
+	if err := computeSvc.Regions.List(projectId).Pages(ctx, func(page *compute.RegionList) error {
+		for _, r := range page.Items {
+			mqlRegion, err := newMqlRegion(g.MqlRuntime, projectId, r)
+			if err != nil {
+				return err
+			}
+			res = append(res, mqlRegion)
 		}
-		res = append(res, mqlRegion)
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 
 	log.Debug().Str("project", projectId).Int("regions", len(res)).Msg("gcp.compute> listed regions")
@@ -572,8 +573,14 @@ func (g *mqlGcpProjectComputeServiceInstance) machineType() (*mqlGcpProjectCompu
 	return newMqlMachineType(g.MqlRuntime, machineType, projectId, zone.Data)
 }
 
-func newMqlServiceAccount(runtime *plugin.Runtime, sa *compute.ServiceAccount) (any, error) {
+// newMqlServiceAccount builds the per-instance service account binding. The
+// resource carries the OAuth `scopes` granted to one VM, which differ between
+// VMs sharing the same service account, so the cache key has to include the
+// instance. Keying on the email alone made every VM using the default compute
+// service account report the first VM's scopes.
+func newMqlServiceAccount(runtime *plugin.Runtime, instanceId uint64, sa *compute.ServiceAccount) (any, error) {
 	return CreateResource(runtime, "gcp.project.computeService.serviceaccount", map[string]*llx.RawData{
+		"__id":   llx.StringData(fmt.Sprintf("gcp.project.computeService.instance/%d/serviceaccount/%s", instanceId, sa.Email)),
 		"email":  llx.StringData(sa.Email),
 		"scopes": llx.ArrayData(convert.SliceAnyToInterface(sa.Scopes), types.String),
 	})
@@ -692,7 +699,7 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 	for i := range instance.ServiceAccounts {
 		sa := instance.ServiceAccounts[i]
 
-		mqlServiceAccount, err := newMqlServiceAccount(runtime, sa)
+		mqlServiceAccount, err := newMqlServiceAccount(runtime, instance.Id, sa)
 		if err != nil {
 			log.Error().Err(err).Send()
 		} else {
@@ -1411,7 +1418,7 @@ func initGcpProjectComputeServiceFirewall(runtime *plugin.Runtime, args map[stri
 	}
 
 	obj, err := CreateResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
-		"projectId": llx.StringData(args["projectId"].Value.(string)),
+		"projectId": args["projectId"],
 	})
 	if err != nil {
 		return nil, nil, err
@@ -1422,6 +1429,12 @@ func initGcpProjectComputeServiceFirewall(runtime *plugin.Runtime, args map[stri
 		return nil, nil, firewalls.Error
 	}
 
+	// Guard every arg this lookup dereferences: args["x"] on an absent key is a
+	// nil *llx.RawData, and dereferencing it panics the provider, which kills
+	// the whole scan rather than failing one query.
+	if args["name"] == nil {
+		return nil, nil, errors.New("gcp.project.computeService.firewall requires a \"name\" argument")
+	}
 	for _, f := range firewalls.Data {
 		firewall := f.(*mqlGcpProjectComputeServiceFirewall)
 		name := firewall.GetName()
@@ -1659,7 +1672,7 @@ func initGcpProjectComputeServiceImage(runtime *plugin.Runtime, args map[string]
 	}
 
 	obj, err := CreateResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
-		"projectId": llx.StringData(args["projectId"].Value.(string)),
+		"projectId": args["projectId"],
 	})
 	if err != nil {
 		return nil, nil, err
@@ -1670,6 +1683,12 @@ func initGcpProjectComputeServiceImage(runtime *plugin.Runtime, args map[string]
 		return nil, nil, images.Error
 	}
 
+	// Guard every arg this lookup dereferences: args["x"] on an absent key is a
+	// nil *llx.RawData, and dereferencing it panics the provider, which kills
+	// the whole scan rather than failing one query.
+	if args["name"] == nil {
+		return nil, nil, errors.New("gcp.project.computeService.image requires a \"name\" argument")
+	}
 	for _, i := range images.Data {
 		image := i.(*mqlGcpProjectComputeServiceImage)
 		if image.Name.Error != nil {
@@ -2053,6 +2072,12 @@ func initGcpProjectComputeServiceNetwork(runtime *plugin.Runtime, args map[strin
 		return nil, nil, networks.Error
 	}
 
+	// Guard every arg this lookup dereferences: args["x"] on an absent key is a
+	// nil *llx.RawData, and dereferencing it panics the provider, which kills
+	// the whole scan rather than failing one query.
+	if args["name"] == nil {
+		return nil, nil, errors.New("gcp.project.computeService.network requires a \"name\" argument")
+	}
 	for _, n := range networks.Data {
 		network := n.(*mqlGcpProjectComputeServiceNetwork)
 		name := network.GetName()
@@ -2070,8 +2095,8 @@ func initGcpProjectComputeServiceNetwork(runtime *plugin.Runtime, args map[strin
 	}
 
 	// Fallback: fetch directly from the GCP API
-	networkName := args["name"].Value.(string)
-	projectId := args["projectId"].Value.(string)
+	networkName, _ := args["name"].Value.(string)
+	projectId, _ := args["projectId"].Value.(string)
 
 	conn := runtime.Connection.(*connection.GcpConnection)
 	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
@@ -2221,7 +2246,8 @@ func initGcpProjectComputeServiceSubnetwork(runtime *plugin.Runtime, args map[st
 		}
 	} else {
 		if args["regionUrl"] != nil {
-			region = RegionNameFromRegionUrl(args["regionUrl"].Value.(string))
+			regionUrlVal, _ := args["regionUrl"].Value.(string)
+			region = RegionNameFromRegionUrl(regionUrlVal)
 		}
 	}
 
@@ -2233,7 +2259,7 @@ func initGcpProjectComputeServiceSubnetwork(runtime *plugin.Runtime, args map[st
 	}
 
 	obj, err := NewResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
-		"projectId": llx.StringData(args["projectId"].Value.(string)),
+		"projectId": args["projectId"],
 	})
 	if err != nil {
 		return nil, nil, err
@@ -2244,6 +2270,12 @@ func initGcpProjectComputeServiceSubnetwork(runtime *plugin.Runtime, args map[st
 		return nil, nil, subnetworks.Error
 	}
 
+	// Guard every arg this lookup dereferences: args["x"] on an absent key is a
+	// nil *llx.RawData, and dereferencing it panics the provider, which kills
+	// the whole scan rather than failing one query.
+	if args["name"] == nil {
+		return nil, nil, errors.New("gcp.project.computeService.subnetwork requires a \"name\" argument")
+	}
 	for _, n := range subnetworks.Data {
 		subnetwork := n.(*mqlGcpProjectComputeServiceSubnetwork)
 		name := subnetwork.GetName()
@@ -2266,8 +2298,8 @@ func initGcpProjectComputeServiceSubnetwork(runtime *plugin.Runtime, args map[st
 	}
 
 	// Fallback: fetch directly from the GCP API
-	subnetworkName := args["name"].Value.(string)
-	projectId := args["projectId"].Value.(string)
+	subnetworkName, _ := args["name"].Value.(string)
+	projectId, _ := args["projectId"].Value.(string)
 
 	conn := runtime.Connection.(*connection.GcpConnection)
 	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
@@ -2364,7 +2396,7 @@ func (g *mqlGcpProjectComputeServiceSubnetwork) network() (*mqlGcpProjectCompute
 	return net, nil
 }
 
-func newMqlRegion(runtime *plugin.Runtime, r *compute.Region) (any, error) {
+func newMqlRegion(runtime *plugin.Runtime, projectId string, r *compute.Region) (any, error) {
 	deprecated, err := convert.JsonToDict(r.Deprecated)
 	if err != nil {
 		return nil, err
@@ -2377,6 +2409,10 @@ func newMqlRegion(runtime *plugin.Runtime, r *compute.Region) (any, error) {
 	}
 
 	return CreateResource(runtime, "gcp.project.computeService.region", map[string]*llx.RawData{
+		// A region resource carries per-project quotas, so the cache key must
+		// include the project. Keying on the region name alone made every
+		// project after the first report the first project's quota limits.
+		"__id":        llx.StringData("gcp.project.computeService.region/" + projectId + "/" + r.Name),
 		"id":          llx.StringData(strconv.FormatInt(int64(r.Id), 10)),
 		"name":        llx.StringData(r.Name),
 		"description": llx.StringData(r.Description),
@@ -2804,7 +2840,10 @@ func (g *mqlGcpProjectComputeService) backendServices() ([]any, error) {
 							"path": b.ConsistentHash.HttpCookie.Path,
 						}
 						if b.ConsistentHash.HttpCookie.Ttl != nil {
-							cookieMap["ttl"] = llx.TimeData(llx.DurationToTime(b.ConsistentHash.HttpCookie.Ttl.Seconds))
+							// Dict values must be JSON-native; an *llx.RawData
+							// (what llx.TimeData returns) fails dict2primitive at
+							// query time.
+							cookieMap["ttlSeconds"] = b.ConsistentHash.HttpCookie.Ttl.Seconds
 						}
 						consistentHashMap["httpCookie"] = cookieMap
 					}
@@ -3217,6 +3256,17 @@ func (g *mqlGcpProjectComputeServiceRouterNat) id() (string, error) {
 
 // Cloud Armor security policies
 
+// mqlGcpProjectComputeServiceSecurityPolicyInternal carries what rules() needs
+// to re-fetch the policy. The schema has no projectId field, and the policy's
+// project is not derivable from the connection: on an organization or folder
+// connection ResourceID() is not a project id, and `gcp.projects` walks many
+// projects in one runtime. cacheRegion distinguishes global from regional
+// policies, which live behind different endpoints.
+type mqlGcpProjectComputeServiceSecurityPolicyInternal struct {
+	cacheProjectId string
+	cacheRegion    string
+}
+
 func (g *mqlGcpProjectComputeServiceSecurityPolicy) id() (string, error) {
 	return g.Id.Data, g.Id.Error
 }
@@ -3299,6 +3349,9 @@ func (g *mqlGcpProjectComputeService) securityPolicies() ([]any, error) {
 				if err != nil {
 					return err
 				}
+				sp := mqlPolicy.(*mqlGcpProjectComputeServiceSecurityPolicy)
+				sp.cacheProjectId = projectId
+				sp.cacheRegion = RegionNameFromRegionUrl(policy.Region)
 				res = append(res, mqlPolicy)
 			}
 		}
@@ -3334,11 +3387,28 @@ func (g *mqlGcpProjectComputeServiceSecurityPolicy) rules() ([]any, error) {
 	}
 	policyName := g.Name.Data
 
-	// We need the project ID from the connection since the policy doesn't store it
-	projectId := conn.ResourceID()
+	// Use the project the policy was listed from. conn.ResourceID() is the
+	// connection scope, which is an organization or folder id on a non-project
+	// connection and the wrong project when `gcp.projects` walks many projects.
+	projectId := g.cacheProjectId
+	if projectId == "" {
+		projectId = conn.ResourceID()
+	}
 
-	policy, err := computeSvc.SecurityPolicies.Get(projectId, policyName).Context(ctx).Do()
+	// securityPolicies() lists via AggregatedList, which returns regional
+	// policies too. Those are served by RegionSecurityPolicies; asking the
+	// global endpoint for them 404s.
+	var policy *compute.SecurityPolicy
+	if g.cacheRegion != "" {
+		policy, err = computeSvc.RegionSecurityPolicies.Get(projectId, g.cacheRegion, policyName).Context(ctx).Do()
+	} else {
+		policy, err = computeSvc.SecurityPolicies.Get(projectId, policyName).Context(ctx).Do()
+	}
 	if err != nil {
+		if isHTTPSkippable(err) {
+			log.Warn().Str("policy", policyName).Err(err).Msg("could not fetch security policy rules")
+			return nil, nil
+		}
 		return nil, err
 	}
 

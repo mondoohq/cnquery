@@ -70316,7 +70316,7 @@ func (c *mqlGcpProjectAlloydbServiceBackup) GetKmsKey() *plugin.TValue[*mqlGcpPr
 type mqlGcpProjectComputeServiceSecurityPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectComputeServiceSecurityPolicyInternal it will be used here
+	mqlGcpProjectComputeServiceSecurityPolicyInternal
 	Id                       plugin.TValue[string]
 	Name                     plugin.TValue[string]
 	Description              plugin.TValue[string]

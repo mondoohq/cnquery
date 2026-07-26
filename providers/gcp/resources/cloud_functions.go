@@ -402,7 +402,13 @@ func (g *mqlGcpProjectCloudFunction) id() (string, error) {
 		return "", g.Name.Error
 	}
 	name := g.Name.Data
-	return fmt.Sprintf("%s/%s", projectId, name), nil
+	if g.Location.Error != nil {
+		return "", g.Location.Error
+	}
+	// Cloud Functions v1 names are unique within a location, not within a
+	// project, and this resource's own init matches on name + location. Without
+	// the location a function deployed to two regions collapses onto one row.
+	return fmt.Sprintf("%s/%s/%s", projectId, g.Location.Data, name), nil
 }
 
 func initGcpProjectCloudFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -441,10 +447,14 @@ func initGcpProjectCloudFunction(runtime *plugin.Runtime, args map[string]*llx.R
 		return nil, nil, funcs.Error
 	}
 
-	nameVal := args["name"].Value.(string)
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return nil, nil, errors.New("gcp.project.cloudFunction requires a \"name\" argument")
+	}
+	nameVal, _ := nameRaw.Value.(string)
 	locationVal := ""
 	if args["location"] != nil {
-		locationVal = args["location"].Value.(string)
+		locationVal, _ = args["location"].Value.(string)
 	}
 	for _, f := range funcs.Data {
 		fn := f.(*mqlGcpProjectCloudFunction)

@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -56,6 +57,37 @@ func initGcpProjectStorageService(runtime *plugin.Runtime, args map[string]*llx.
 
 type mqlGcpProjectStorageServiceInternal struct {
 	serviceEnabled bool
+	serviceOnce    sync.Once
+	serviceErr     error
+}
+
+// isEnabled resolves the service-enabled gate lazily.
+//
+// The flag is only set by the gcp.project.<service>() accessor, but this
+// resource is reachable without going through it: gcp.storage / gcloud.storage is an
+// alias for it, and resource inits build it with CreateResource. On those paths
+// the Go zero value `false` made every collection return an empty list with no
+// error -- an authoritative "there is nothing here" that makes an audit pass
+// vacuously. Resolving it here makes every construction path agree.
+func (g *mqlGcpProjectStorageService) isEnabled() (bool, error) {
+	g.serviceOnce.Do(func() {
+		if g.serviceEnabled {
+			return // already set by the parent accessor
+		}
+		if g.ProjectId.Error != nil {
+			g.serviceErr = g.ProjectId.Error
+			return
+		}
+		proj, err := CreateResource(g.MqlRuntime, "gcp.project", map[string]*llx.RawData{
+			"id": llx.StringData(g.ProjectId.Data),
+		})
+		if err != nil {
+			g.serviceErr = err
+			return
+		}
+		g.serviceEnabled, g.serviceErr = proj.(*mqlGcpProject).isServiceEnabled(service_storage)
+	})
+	return g.serviceEnabled, g.serviceErr
 }
 
 func (g *mqlGcpProject) storage() (*mqlGcpProjectStorageService, error) {
@@ -86,7 +118,11 @@ func (g *mqlGcpProject) storage() (*mqlGcpProjectStorageService, error) {
 }
 
 func (g *mqlGcpProjectStorageService) buckets() ([]any, error) {
-	if !g.serviceEnabled {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -108,9 +144,12 @@ func (g *mqlGcpProjectStorageService) buckets() ([]any, error) {
 		return nil, err
 	}
 
-	projectID := conn.ResourceID()
+	// List the buckets of the project this service resource belongs to, not the
+	// project the connection happens to be scoped to: `gcp.projects` materializes
+	// every accessible project in one runtime, and on an organization or folder
+	// connection ResourceID() is not a project id at all.
 	var res []any
-	if err := storageSvc.Buckets.List(projectID).Pages(ctx, func(page *storage.Buckets) error {
+	if err := storageSvc.Buckets.List(projectId).Pages(ctx, func(page *storage.Buckets) error {
 		for _, bucket := range page.Items {
 			if conn.Filters.Storage.IsFilteredOut(bucket.Name) {
 				continue
@@ -293,8 +332,11 @@ type mqlGcpProjectStorageServiceBucketInternal struct {
 	cacheDefaultKmsKeyName string
 	cacheLogBucket         string
 
-	aclLock            sync.Mutex
-	aclFetched         bool
+	aclLock sync.Mutex
+	// atomic: acl(), defaultObjectAcl() and public() all call fetchAcls() and
+	// the executor runs block members concurrently, so the fast-path read
+	// races the write with a plain bool.
+	aclFetched         atomic.Bool
 	cacheAcl           []*storage.BucketAccessControl
 	cacheDefaultObjAcl []*storage.ObjectAccessControl
 }
@@ -619,12 +661,12 @@ func (g *mqlGcpProjectStorageServiceBucket) iamPolicy() ([]any, error) {
 // follow-up Buckets.Get with projection=full. They're also nil when uniform
 // bucket-level access is enabled.
 func (g *mqlGcpProjectStorageServiceBucket) fetchAcls() error {
-	if g.aclFetched {
+	if g.aclFetched.Load() {
 		return nil
 	}
 	g.aclLock.Lock()
 	defer g.aclLock.Unlock()
-	if g.aclFetched {
+	if g.aclFetched.Load() {
 		return nil
 	}
 
@@ -651,7 +693,7 @@ func (g *mqlGcpProjectStorageServiceBucket) fetchAcls() error {
 
 	g.cacheAcl = bucket.Acl
 	g.cacheDefaultObjAcl = bucket.DefaultObjectAcl
-	g.aclFetched = true
+	g.aclFetched.Store(true)
 	return nil
 }
 

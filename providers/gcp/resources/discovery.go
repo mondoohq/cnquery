@@ -1958,14 +1958,18 @@ func (a *GcrImages) Name() string {
 
 // lists a repository like "gcr.io/mondoo-base-infra"
 func (a *GcrImages) ListRepository(repository string, recursive bool) ([]*inventory.Asset, error) {
+	// Both of these are reachable with user-supplied input (the repository is
+	// built from the connection's project-id and an optional --repository
+	// option), so they must return an error rather than exit: log.Fatal calls
+	// os.Exit and would take the whole provider process down.
 	repo, err := name.NewRepository(repository)
 	if err != nil {
-		log.Fatal().Err(err).Str("repository", repository).Msg("could not create repository")
+		return nil, errors.Join(errors.New("could not create repository "+repository), err)
 	}
 
 	auth, err := google.Keychain.Resolve(repo.Registry)
 	if err != nil {
-		log.Fatal().Err(err).Str("repository", repository).Msg("failed to get auth for repository")
+		return nil, errors.Join(errors.New("failed to get auth for repository "+repository), err)
 	}
 
 	imgs := []*inventory.Asset{}

@@ -511,13 +511,18 @@ func (g *mqlGcpProjects) list() ([]any, error) {
 		return nil, folders.Error
 	}
 
+	// Project.Parent is always a prefixed reference ("folders/876",
+	// "organizations/123"), while gcp.folder stores the bare id ("876"), so both
+	// sides have to be normalized to the "folders/{id}" resource name before
+	// they are compared. Without this, only the direct children of parentId
+	// match and every project nested in a subfolder is silently dropped.
 	foldersMap := map[string]struct{}{parentId: {}}
 	for _, f := range folders.Data {
 		id := f.(*mqlGcpFolder).GetId()
 		if id.Error != nil {
 			return nil, id.Error
 		}
-		foldersMap[id.Data] = struct{}{}
+		foldersMap[folderResourceName(id.Data)] = struct{}{}
 	}
 
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)

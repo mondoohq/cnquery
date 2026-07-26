@@ -427,7 +427,7 @@ func initGcpProjectAlloydbServiceCluster(runtime *plugin.Runtime, args map[strin
 	nameVal, _ := nameRaw.Value.(string)
 	locationVal := ""
 	if args["location"] != nil {
-		locationVal = args["location"].Value.(string)
+		locationVal, _ = args["location"].Value.(string)
 	}
 	for _, c := range clusters.Data {
 		cluster := c.(*mqlGcpProjectAlloydbServiceCluster)

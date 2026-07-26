@@ -176,7 +176,7 @@ func initGcpProjectIamServiceServiceAccount(runtime *plugin.Runtime, args map[st
 	// zero value, which short-circuits serviceAccounts() to nil and makes the
 	// SA lookup miss every typed-ref query.
 	projObj, err := CreateResource(runtime, "gcp.project", map[string]*llx.RawData{
-		"id": llx.StringData(args["projectId"].Value.(string)),
+		"id": args["projectId"],
 	})
 	if err != nil {
 		return nil, nil, err

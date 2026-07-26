@@ -137,10 +137,14 @@ func initGcpProjectCloudRunServiceService(runtime *plugin.Runtime, args map[stri
 		return nil, nil, services.Error
 	}
 
-	nameVal := args["name"].Value.(string)
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return nil, nil, errors.New("gcp.project.cloudRunService.service requires a \"name\" argument")
+	}
+	nameVal, _ := nameRaw.Value.(string)
 	regionVal := ""
 	if args["region"] != nil {
-		regionVal = args["region"].Value.(string)
+		regionVal, _ = args["region"].Value.(string)
 	}
 	for _, s := range services.Data {
 		service := s.(*mqlGcpProjectCloudRunServiceService)
@@ -208,10 +212,14 @@ func initGcpProjectCloudRunServiceJob(runtime *plugin.Runtime, args map[string]*
 		return nil, nil, jobs.Error
 	}
 
-	nameVal := args["name"].Value.(string)
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return nil, nil, errors.New("gcp.project.cloudRunService.job requires a \"name\" argument")
+	}
+	nameVal, _ := nameRaw.Value.(string)
 	regionVal := ""
 	if args["region"] != nil {
-		regionVal = args["region"].Value.(string)
+		regionVal, _ = args["region"].Value.(string)
 	}
 	for _, j := range jobs.Data {
 		job := j.(*mqlGcpProjectCloudRunServiceJob)
@@ -941,7 +949,8 @@ func mqlContainerProbe(runtime *plugin.Runtime, probe *runpb.Probe, containerId 
 	var mqlTcpSocket map[string]any
 	if tcpSocket := probe.GetTcpSocket(); tcpSocket != nil {
 		mqlTcpSocket = map[string]any{
-			"port": tcpSocket.Port,
+			// int32 is not JSON-native inside a dict.
+			"port": int64(tcpSocket.Port),
 		}
 	}
 
@@ -1045,12 +1054,13 @@ func mqlContainers(runtime *plugin.Runtime, containers []*runpb.Container, templ
 		mqlPorts := make([]any, 0, len(c.Ports))
 		for _, p := range c.Ports {
 			mqlPorts = append(mqlPorts, map[string]any{
-				"name":          p.Name,
-				"containerPort": p.ContainerPort,
+				"name": p.Name,
+				// int32 is not JSON-native inside a dict.
+				"containerPort": int64(p.ContainerPort),
 			})
 		}
 
-		mqlVolumeMounts := make([]any, 0, len(c.Ports))
+		mqlVolumeMounts := make([]any, 0, len(c.VolumeMounts))
 		for _, v := range c.VolumeMounts {
 			mqlVolumeMounts = append(mqlVolumeMounts, map[string]any{
 				"name":      v.Name,

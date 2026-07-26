@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	iampb "cloud.google.com/go/iam/apiv1/iampb"
 	iap "cloud.google.com/go/iap/apiv1"
@@ -67,9 +68,13 @@ func (g *mqlGcpProjectIapService) iamPolicy() ([]any, error) {
 	}
 
 	res := make([]any, 0, len(policy.Bindings))
-	for _, b := range policy.Bindings {
+	// Index-suffixed, matching every other IAM binding creator in the provider.
+	// An IAM v3 policy may carry several bindings for the same role that differ
+	// only by condition -- and this call asks for version 3 -- so keying on the
+	// role alone silently collapses them onto the first one.
+	for i, b := range policy.Bindings {
 		mqlBinding, err := CreateResource(g.MqlRuntime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
-			"id":                   llx.StringData(resource + "/" + b.Role),
+			"id":                   llx.StringData(resource + "-" + strconv.Itoa(i)),
 			"role":                 llx.StringData(b.Role),
 			"members":              llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
 			"conditionTitle":       llx.StringData(b.GetCondition().GetTitle()),

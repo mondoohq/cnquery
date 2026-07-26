@@ -235,11 +235,13 @@ func (g *mqlGcpProjectBigtableServiceInstance) clusters() ([]any, error) {
 	for _, c := range clusters {
 		var autoscalingConfig map[string]any
 		if c.AutoscalingConfig != nil {
+			// The SDK models these as Go `int`, which is not JSON-native and so
+			// fails dict2primitive at query time; widen to int64.
 			autoscalingConfig = map[string]any{
-				"minNodes":                  c.AutoscalingConfig.MinNodes,
-				"maxNodes":                  c.AutoscalingConfig.MaxNodes,
-				"cpuTargetPercent":          c.AutoscalingConfig.CPUTargetPercent,
-				"storageUtilizationPerNode": c.AutoscalingConfig.StorageUtilizationPerNode,
+				"minNodes":                  int64(c.AutoscalingConfig.MinNodes),
+				"maxNodes":                  int64(c.AutoscalingConfig.MaxNodes),
+				"cpuTargetPercent":          int64(c.AutoscalingConfig.CPUTargetPercent),
+				"storageUtilizationPerNode": int64(c.AutoscalingConfig.StorageUtilizationPerNode),
 			}
 		}
 
@@ -435,7 +437,8 @@ func (g *mqlGcpProjectBigtableServiceInstance) tables() ([]any, error) {
 			automatedBackupPolicy = map[string]any{
 				"retentionPeriod": fmt.Sprintf("%v", abp.RetentionPeriod),
 				"frequency":       fmt.Sprintf("%v", abp.Frequency),
-				"locations":       abp.Locations,
+				// []string is not JSON-native inside a dict.
+				"locations": convert.SliceAnyToInterface(abp.Locations),
 			}
 		}
 
@@ -654,6 +657,12 @@ func (g *mqlGcpProjectBigtableServiceInstance) backups() ([]any, error) {
 			}
 
 			mqlBackup, err := CreateResource(g.MqlRuntime, "gcp.project.bigtableService.backup", map[string]*llx.RawData{
+				// Cluster ids are unique only within an instance, so the key
+				// must name the instance -- matching table/appProfile/cluster.
+				// cacheInstanceName is assigned after CreateResource returns and
+				// so is not visible to id(); pass the key explicitly instead.
+				"__id": llx.StringData(fmt.Sprintf("gcp.project/%s/bigtableService/%s/cluster/%s/backup/%s",
+					projectId, instanceName, c.Name, backup.Name)),
 				"projectId":      llx.StringData(projectId),
 				"clusterName":    llx.StringData(c.Name),
 				"name":           llx.StringData(backup.Name),

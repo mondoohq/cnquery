@@ -132,7 +132,7 @@ func (g *mqlGcpProjectLoggingservice) buckets() ([]any, error) {
 
 			indexConfigs := make([]any, 0, len(bucket.IndexConfigs))
 			for _, cfg := range bucket.IndexConfigs {
-				mqlIndexConfig, err := CreateResource(g.MqlRuntime, "gcp.project.loggingservice.bucket.indexConfigs", map[string]*llx.RawData{
+				mqlIndexConfig, err := CreateResource(g.MqlRuntime, "gcp.project.loggingservice.bucket.indexConfig", map[string]*llx.RawData{
 					"id":        llx.StringData(fmt.Sprintf("%s/indexConfigs/%s", bucket.Name, cfg.FieldPath)),
 					"created":   llx.TimeDataPtr(parseTime(cfg.CreateTime)),
 					"fieldPath": llx.StringData(cfg.FieldPath),
@@ -614,10 +614,14 @@ func initGcpProjectLoggingserviceBucket(runtime *plugin.Runtime, args map[string
 		return nil, nil, buckets.Error
 	}
 
-	nameVal := args["name"].Value.(string)
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return nil, nil, errors.New("gcp.project.loggingservice.bucket requires a \"name\" argument")
+	}
+	nameVal, _ := nameRaw.Value.(string)
 	locationVal := ""
 	if args["location"] != nil {
-		locationVal = args["location"].Value.(string)
+		locationVal, _ = args["location"].Value.(string)
 	}
 	for _, b := range buckets.Data {
 		bucket := b.(*mqlGcpProjectLoggingserviceBucket)

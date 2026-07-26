@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.33.2",
-  "generated_at": "2026-07-25T13:09:40-07:00",
+  "generated_at": "2026-07-25T20:59:25-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.batchPredictionJobs.list",
@@ -117,6 +117,7 @@
     "compute.packetMirrorings.list",
     "compute.projects.get",
     "compute.publicAdvertisedPrefixes.list",
+    "compute.regionSecurityPolicies.get",
     "compute.regions.get",
     "compute.regions.list",
     "compute.routers.list",
@@ -589,7 +590,7 @@
     {
       "permission": "binaryauthorization.policy.get",
       "service": "binaryauthorization",
-      "action": "GetSystemPolicy",
+      "action": "GetPolicy",
       "source_file": "binary_authorization.go"
     },
     {
@@ -983,6 +984,12 @@
       "source_file": "compute_networking.go"
     },
     {
+      "permission": "compute.regionSecurityPolicies.get",
+      "service": "compute",
+      "action": "RegionSecurityPolicies.Get",
+      "source_file": "compute.go"
+    },
+    {
       "permission": "compute.regions.get",
       "service": "compute",
       "action": "Regions.Get",
@@ -1011,6 +1018,12 @@
       "service": "compute",
       "action": "Regions.List",
       "source_file": "dataproc.go"
+    },
+    {
+      "permission": "compute.regions.list",
+      "service": "compute",
+      "action": "Regions.List",
+      "source_file": "recommendations.go"
     },
     {
       "permission": "compute.routers.list",

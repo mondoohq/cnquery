@@ -182,6 +182,11 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]any, error) {
 		go func(projectId, regionName string) {
 			defer wg.Done()
 			err := dataprocSvc.Projects.Regions.Clusters.List(projectId, regionName).Pages(ctx, func(clusters *dataproc.ListClustersResponse) error {
+				// A `:=` variable is not in scope inside its own initializer, so
+				// without this declaration every `err = ...` in the closure below
+				// would write the function-scope `err` that all region goroutines
+				// share -- a data race, and misattributed error logs.
+				var err error
 				for _, c := range clusters.Clusters {
 					var mqlConfig plugin.Resource
 					if c.Config != nil {

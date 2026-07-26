@@ -110,11 +110,26 @@ func (g *mqlGcpProject) recommendations() ([]any, error) {
 		return nil, err
 	}
 
-	zones := []*compute.Zone{}
+	// Recommenders are published at three location scopes: global (IAM policy,
+	// project utilization, error reporting, ...), regional (Cloud Run identity
+	// and security, Cloud SQL, commitments, ...) and zonal (idle compute
+	// resources). Querying zones alone means every global and regional
+	// recommender — including google.iam.policy.Recommender — returns nothing,
+	// forever, with no error.
+	locations := []string{"global"}
+	if err := computeSvc.Regions.List(projectId).Pages(ctx, func(page *compute.RegionList) error {
+		for _, region := range page.Items {
+			locations = append(locations, region.Name)
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
 	req := computeSvc.Zones.List(projectId)
 	if err := req.Pages(ctx, func(page *compute.ZoneList) error {
 		for _, zone := range page.Items {
-			zones = append(zones, zone)
+			locations = append(locations, zone.Name)
 		}
 		return nil
 	}); err != nil {
@@ -135,17 +150,25 @@ func (g *mqlGcpProject) recommendations() ([]any, error) {
 
 	res := []any{}
 	var wg sync.WaitGroup
-	wg.Add(len(zones))
+	wg.Add(len(locations))
 	mux := &sync.Mutex{}
+	// Bound the fan-out: the location set now spans global + regions + zones, so
+	// an unbounded goroutine per location would open ~90 concurrent workers.
+	sem := make(chan struct{}, 10)
 
-	for i := range zones {
-		zoneName := zones[i].Name
-		// we run a worker routine per zone
-		go func(zoneNameValue string) {
+	for i := range locations {
+		location := locations[i]
+		// we run a worker routine per location
+		go func(locationValue string) {
+			// Deferred so an early return or a panic in the body can never leave
+			// wg.Wait() blocked forever.
+			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
 			for j := range recommenders {
 				recommender := recommenders[j]
 
-				parent := fmt.Sprintf("projects/%s/locations/%s/recommenders/%s", projectId, zoneNameValue, recommender)
+				parent := fmt.Sprintf("projects/%s/locations/%s/recommenders/%s", projectId, locationValue, recommender)
 				it := c.ListRecommendations(ctx, &recommenderpb.ListRecommendationsRequest{
 					Parent: parent,
 				})
@@ -170,8 +193,7 @@ func (g *mqlGcpProject) recommendations() ([]any, error) {
 					mux.Unlock()
 				}
 			}
-			wg.Done()
-		}(zoneName)
+		}(location)
 	}
 	wg.Wait()
 	return res, nil
