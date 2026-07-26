@@ -372,7 +372,15 @@ func getAssetIdentifier(runtime *plugin.Runtime) *assetIdentifier {
 	if !ok {
 		return nil
 	}
-	id := conn.Asset().PlatformIds[0]
+	// The root asset and any inventory-file asset without a platform_ids block
+	// carry no platform ids, so this must not index blindly: a panic here is
+	// unrecoverable and takes down the whole scan. Every caller already handles
+	// a nil return.
+	asset := conn.Asset()
+	if asset == nil || len(asset.PlatformIds) == 0 {
+		return nil
+	}
+	id := asset.PlatformIds[0]
 
 	if strings.HasPrefix(id, "//platformid.api.mondoo.app/runtime/gcp/") {
 		// "//platformid.api.mondoo.app/runtime/gcp/{o.service}/v1/projects/{project}/regions/{region}/{objectType}/{name}"

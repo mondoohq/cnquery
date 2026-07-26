@@ -941,7 +941,8 @@ func mqlContainerProbe(runtime *plugin.Runtime, probe *runpb.Probe, containerId 
 	var mqlTcpSocket map[string]any
 	if tcpSocket := probe.GetTcpSocket(); tcpSocket != nil {
 		mqlTcpSocket = map[string]any{
-			"port": tcpSocket.Port,
+			// int32 is not JSON-native inside a dict.
+			"port": int64(tcpSocket.Port),
 		}
 	}
 
@@ -1045,12 +1046,13 @@ func mqlContainers(runtime *plugin.Runtime, containers []*runpb.Container, templ
 		mqlPorts := make([]any, 0, len(c.Ports))
 		for _, p := range c.Ports {
 			mqlPorts = append(mqlPorts, map[string]any{
-				"name":          p.Name,
-				"containerPort": p.ContainerPort,
+				"name": p.Name,
+				// int32 is not JSON-native inside a dict.
+				"containerPort": int64(p.ContainerPort),
 			})
 		}
 
-		mqlVolumeMounts := make([]any, 0, len(c.Ports))
+		mqlVolumeMounts := make([]any, 0, len(c.VolumeMounts))
 		for _, v := range c.VolumeMounts {
 			mqlVolumeMounts = append(mqlVolumeMounts, map[string]any{
 				"name":      v.Name,

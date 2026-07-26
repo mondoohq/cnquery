@@ -132,7 +132,7 @@ func initGcpProjectComputeServiceRegion(runtime *plugin.Runtime, args map[string
 	if err != nil {
 		return nil, nil, err
 	}
-	mqlRegion, err := newMqlRegion(runtime, region)
+	mqlRegion, err := newMqlRegion(runtime, projectId, region)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -217,17 +217,18 @@ func (g *mqlGcpProjectComputeService) regions() ([]any, error) {
 		return nil, err
 	}
 
-	req, err := computeSvc.Regions.List(projectId).Do()
-	if err != nil {
-		return nil, err
-	}
-	res := make([]any, 0, len(req.Items))
-	for _, r := range req.Items {
-		mqlRegion, err := newMqlRegion(g.MqlRuntime, r)
-		if err != nil {
-			return nil, err
+	res := []any{}
+	if err := computeSvc.Regions.List(projectId).Pages(ctx, func(page *compute.RegionList) error {
+		for _, r := range page.Items {
+			mqlRegion, err := newMqlRegion(g.MqlRuntime, projectId, r)
+			if err != nil {
+				return err
+			}
+			res = append(res, mqlRegion)
 		}
-		res = append(res, mqlRegion)
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 
 	log.Debug().Str("project", projectId).Int("regions", len(res)).Msg("gcp.compute> listed regions")
@@ -572,8 +573,14 @@ func (g *mqlGcpProjectComputeServiceInstance) machineType() (*mqlGcpProjectCompu
 	return newMqlMachineType(g.MqlRuntime, machineType, projectId, zone.Data)
 }
 
-func newMqlServiceAccount(runtime *plugin.Runtime, sa *compute.ServiceAccount) (any, error) {
+// newMqlServiceAccount builds the per-instance service account binding. The
+// resource carries the OAuth `scopes` granted to one VM, which differ between
+// VMs sharing the same service account, so the cache key has to include the
+// instance. Keying on the email alone made every VM using the default compute
+// service account report the first VM's scopes.
+func newMqlServiceAccount(runtime *plugin.Runtime, instanceId uint64, sa *compute.ServiceAccount) (any, error) {
 	return CreateResource(runtime, "gcp.project.computeService.serviceaccount", map[string]*llx.RawData{
+		"__id":   llx.StringData(fmt.Sprintf("gcp.project.computeService.instance/%d/serviceaccount/%s", instanceId, sa.Email)),
 		"email":  llx.StringData(sa.Email),
 		"scopes": llx.ArrayData(convert.SliceAnyToInterface(sa.Scopes), types.String),
 	})
@@ -692,7 +699,7 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 	for i := range instance.ServiceAccounts {
 		sa := instance.ServiceAccounts[i]
 
-		mqlServiceAccount, err := newMqlServiceAccount(runtime, sa)
+		mqlServiceAccount, err := newMqlServiceAccount(runtime, instance.Id, sa)
 		if err != nil {
 			log.Error().Err(err).Send()
 		} else {
@@ -2364,7 +2371,7 @@ func (g *mqlGcpProjectComputeServiceSubnetwork) network() (*mqlGcpProjectCompute
 	return net, nil
 }
 
-func newMqlRegion(runtime *plugin.Runtime, r *compute.Region) (any, error) {
+func newMqlRegion(runtime *plugin.Runtime, projectId string, r *compute.Region) (any, error) {
 	deprecated, err := convert.JsonToDict(r.Deprecated)
 	if err != nil {
 		return nil, err
@@ -2377,6 +2384,10 @@ func newMqlRegion(runtime *plugin.Runtime, r *compute.Region) (any, error) {
 	}
 
 	return CreateResource(runtime, "gcp.project.computeService.region", map[string]*llx.RawData{
+		// A region resource carries per-project quotas, so the cache key must
+		// include the project. Keying on the region name alone made every
+		// project after the first report the first project's quota limits.
+		"__id":        llx.StringData("gcp.project.computeService.region/" + projectId + "/" + r.Name),
 		"id":          llx.StringData(strconv.FormatInt(int64(r.Id), 10)),
 		"name":        llx.StringData(r.Name),
 		"description": llx.StringData(r.Description),
@@ -2804,7 +2815,10 @@ func (g *mqlGcpProjectComputeService) backendServices() ([]any, error) {
 							"path": b.ConsistentHash.HttpCookie.Path,
 						}
 						if b.ConsistentHash.HttpCookie.Ttl != nil {
-							cookieMap["ttl"] = llx.TimeData(llx.DurationToTime(b.ConsistentHash.HttpCookie.Ttl.Seconds))
+							// Dict values must be JSON-native; an *llx.RawData
+							// (what llx.TimeData returns) fails dict2primitive at
+							// query time.
+							cookieMap["ttlSeconds"] = b.ConsistentHash.HttpCookie.Ttl.Seconds
 						}
 						consistentHashMap["httpCookie"] = cookieMap
 					}

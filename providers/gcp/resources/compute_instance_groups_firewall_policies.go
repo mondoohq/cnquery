@@ -265,9 +265,13 @@ func (g *mqlGcpProjectComputeService) firewallPolicies() ([]any, error) {
 			associations, _ := convert.JsonToDictSlice(fp.Associations)
 
 			mqlFP, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.firewallPolicy", map[string]*llx.RawData{
-				"id":             llx.StringData(strconv.FormatUint(fp.Id, 10)),
-				"projectId":      llx.StringData(projectId),
-				"name":           llx.StringData(fp.ShortName),
+				"id":        llx.StringData(strconv.FormatUint(fp.Id, 10)),
+				"projectId": llx.StringData(projectId),
+				// ShortName and DisplayName are documented "not applicable to
+				// network firewall policies" and always come back empty from
+				// NetworkFirewallPolicies.List; Name carries the user-provided
+				// name for this policy kind.
+				"name":           llx.StringData(fp.Name),
 				"displayName":    llx.StringData(fp.DisplayName),
 				"description":    llx.StringData(fp.Description),
 				"selfLink":       llx.StringData(fp.SelfLink),

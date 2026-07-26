@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -108,9 +109,12 @@ func (g *mqlGcpProjectStorageService) buckets() ([]any, error) {
 		return nil, err
 	}
 
-	projectID := conn.ResourceID()
+	// List the buckets of the project this service resource belongs to, not the
+	// project the connection happens to be scoped to: `gcp.projects` materializes
+	// every accessible project in one runtime, and on an organization or folder
+	// connection ResourceID() is not a project id at all.
 	var res []any
-	if err := storageSvc.Buckets.List(projectID).Pages(ctx, func(page *storage.Buckets) error {
+	if err := storageSvc.Buckets.List(projectId).Pages(ctx, func(page *storage.Buckets) error {
 		for _, bucket := range page.Items {
 			if conn.Filters.Storage.IsFilteredOut(bucket.Name) {
 				continue
@@ -293,8 +297,11 @@ type mqlGcpProjectStorageServiceBucketInternal struct {
 	cacheDefaultKmsKeyName string
 	cacheLogBucket         string
 
-	aclLock            sync.Mutex
-	aclFetched         bool
+	aclLock sync.Mutex
+	// atomic: acl(), defaultObjectAcl() and public() all call fetchAcls() and
+	// the executor runs block members concurrently, so the fast-path read
+	// races the write with a plain bool.
+	aclFetched         atomic.Bool
 	cacheAcl           []*storage.BucketAccessControl
 	cacheDefaultObjAcl []*storage.ObjectAccessControl
 }
@@ -619,12 +626,12 @@ func (g *mqlGcpProjectStorageServiceBucket) iamPolicy() ([]any, error) {
 // follow-up Buckets.Get with projection=full. They're also nil when uniform
 // bucket-level access is enabled.
 func (g *mqlGcpProjectStorageServiceBucket) fetchAcls() error {
-	if g.aclFetched {
+	if g.aclFetched.Load() {
 		return nil
 	}
 	g.aclLock.Lock()
 	defer g.aclLock.Unlock()
-	if g.aclFetched {
+	if g.aclFetched.Load() {
 		return nil
 	}
 
@@ -651,7 +658,7 @@ func (g *mqlGcpProjectStorageServiceBucket) fetchAcls() error {
 
 	g.cacheAcl = bucket.Acl
 	g.cacheDefaultObjAcl = bucket.DefaultObjectAcl
-	g.aclFetched = true
+	g.aclFetched.Store(true)
 	return nil
 }
 

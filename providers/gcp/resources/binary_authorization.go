@@ -41,7 +41,12 @@ func (g *mqlGcpProject) binaryAuthorization() (*mqlGcpProjectBinaryAuthorization
 	}
 
 	ctx := context.Background()
-	c, err := binaryauthorization.NewSystemPolicyClient(ctx, option.WithCredentials(credentials), connection.GRPCClientTraceOption(), option.WithQuotaProject(projectId))
+	// The project's own Binary Authorization policy comes from the management
+	// client's GetPolicy ("projects/*/policy"). GetSystemPolicy is a different
+	// API: it takes "locations/*/policy" and returns Google's system policy,
+	// which is not associated with a project and carries none of the project's
+	// cluster/namespace admission rules.
+	c, err := binaryauthorization.NewBinauthzManagementClient(ctx, option.WithCredentials(credentials), connection.GRPCClientTraceOption(), option.WithQuotaProject(projectId))
 	if err != nil {
 		return nil, err
 	}
@@ -49,10 +54,14 @@ func (g *mqlGcpProject) binaryAuthorization() (*mqlGcpProjectBinaryAuthorization
 	defer c.Close()
 
 	name := fmt.Sprintf("projects/%s/policy", projectId)
-	resp, err := c.GetSystemPolicy(ctx, &binaryauthorizationpb.GetSystemPolicyRequest{
+	resp, err := c.GetPolicy(ctx, &binaryauthorizationpb.GetPolicyRequest{
 		Name: name,
 	})
 	if err != nil {
+		if isGRPCSkippable(err) {
+			g.BinaryAuthorization.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -136,6 +145,7 @@ func (g *mqlGcpProject) toMqlBinaryAuthzAdmissionRule(rule *binaryauthorizationp
 	return CreateResource(g.MqlRuntime, "gcp.project.binaryAuthorizationControl.admissionRule", map[string]*llx.RawData{
 		"__id":                  llx.StringData(mqlId),
 		"evaluationMode":        llx.StringData(rule.GetEvaluationMode().String()),
+		"enforcementMode":       llx.StringData(rule.GetEnforcementMode().String()),
 		"requireAttestationsBy": llx.ArrayData(requiresAttestationsBy, types.String),
 	})
 }

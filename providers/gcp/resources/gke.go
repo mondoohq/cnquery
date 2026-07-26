@@ -853,7 +853,11 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			}
 		}
 
-		notificationConfig, err := buildGKENotificationConfig(g.MqlRuntime, c.Name, c.NotificationConfig)
+		// Key on the cluster's server-assigned unique Id, not its name: cluster
+		// names are unique only within a project+location, so two clusters named
+		// "prod" in different projects would share one notificationConfig cache
+		// entry. Every other cluster sub-resource in this file uses c.Id.
+		notificationConfig, err := buildGKENotificationConfig(g.MqlRuntime, c.Id, c.NotificationConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -1412,18 +1416,24 @@ func (g *mqlGcpProjectGkeServiceClusterNetworkConfig) subnetwork() (*mqlGcpProje
 	}
 	subnetPath := g.SubnetworkPath.Data
 
-	// Format is projects/project-1/regions/us-central1/subnetworks/subnet-1
-	params := strings.Split(subnetPath, "/")
-	regionUrl := strings.SplitN(subnetPath, "/subnetworks", 2)
-	res, err := NewResource(g.MqlRuntime, "gcp.project.computeService.subnetwork", map[string]*llx.RawData{
-		"name":      llx.StringData(params[len(params)-1]),
-		"projectId": llx.StringData(params[1]),
-		"regionUrl": llx.StringData(regionUrl[0]),
-	})
+	// NetworkConfig.Subnetwork is not a required field: it is empty for
+	// routes-based clusters on a legacy (subnet-less) network. Blindly indexing
+	// the split path panics there, and a panic in a provider accessor is
+	// unrecoverable because the executor runs blocks in goroutines. Delegate to
+	// getSubnetworkByUrl, which length-guards the path, and degrade to null.
+	if subnetPath == "" {
+		g.Subnetwork.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	subnet, err := getSubnetworkByUrl(subnetPath, g.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGcpProjectComputeServiceSubnetwork), nil
+	if subnet == nil {
+		g.Subnetwork.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return subnet, nil
 }
 
 func (g *mqlGcpProjectGkeServiceClusterMaintenancePolicy) id() (string, error) {

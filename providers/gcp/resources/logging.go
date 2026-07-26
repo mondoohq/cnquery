@@ -132,7 +132,7 @@ func (g *mqlGcpProjectLoggingservice) buckets() ([]any, error) {
 
 			indexConfigs := make([]any, 0, len(bucket.IndexConfigs))
 			for _, cfg := range bucket.IndexConfigs {
-				mqlIndexConfig, err := CreateResource(g.MqlRuntime, "gcp.project.loggingservice.bucket.indexConfigs", map[string]*llx.RawData{
+				mqlIndexConfig, err := CreateResource(g.MqlRuntime, "gcp.project.loggingservice.bucket.indexConfig", map[string]*llx.RawData{
 					"id":        llx.StringData(fmt.Sprintf("%s/indexConfigs/%s", bucket.Name, cfg.FieldPath)),
 					"created":   llx.TimeDataPtr(parseTime(cfg.CreateTime)),
 					"fieldPath": llx.StringData(cfg.FieldPath),

@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
 	asset "cloud.google.com/go/asset/apiv1"
 	"cloud.google.com/go/asset/apiv1/assetpb"
@@ -197,9 +198,11 @@ func (g *mqlGcpProjectAssetService) iamPolicies() ([]any, error) {
 		}
 
 		bindings := make([]any, 0, len(r.GetPolicy().GetBindings()))
-		for _, b := range r.GetPolicy().GetBindings() {
+		// Index-suffixed: a policy can hold several bindings for the same role
+		// that differ only by condition, so a role-keyed id collapses them.
+		for i, b := range r.GetPolicy().GetBindings() {
 			mqlBinding, err := CreateResource(g.MqlRuntime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
-				"id":                   llx.StringData(r.Resource + "/" + b.GetRole()),
+				"id":                   llx.StringData(r.Resource + "-" + strconv.Itoa(i)),
 				"role":                 llx.StringData(b.GetRole()),
 				"members":              llx.ArrayData(convert.SliceAnyToInterface(b.GetMembers()), types.String),
 				"conditionTitle":       llx.StringData(b.GetCondition().GetTitle()),

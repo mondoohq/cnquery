@@ -156,9 +156,10 @@ func (g *mqlGcpProjectBigqueryService) datasets() ([]any, error) {
 			var datasetRef any
 			if a.Dataset != nil {
 				datasetRef = map[string]any{
-					"projectId":   a.Dataset.Dataset.ProjectID,
-					"datasetId":   a.Dataset.Dataset.DatasetID,
-					"targetTypes": a.Dataset.TargetTypes,
+					"projectId": a.Dataset.Dataset.ProjectID,
+					"datasetId": a.Dataset.Dataset.DatasetID,
+					// []string is not JSON-native inside a dict.
+					"targetTypes": convert.SliceAnyToInterface(a.Dataset.TargetTypes),
 				}
 			}
 			mqlA, err := CreateResource(g.MqlRuntime, "gcp.project.bigqueryService.dataset.accessEntry", map[string]*llx.RawData{
@@ -380,8 +381,11 @@ func (g *mqlGcpProjectBigqueryServiceDataset) getClient() (*bigquery.Client, err
 			return
 		}
 		ctx := context.Background()
-		projectID := conn.ResourceID()
-		g.client, g.clientErr = bigquery.NewClient(ctx, projectID, option.WithHTTPClient(httpClient))
+		// The client's project decides which project `Dataset(id)` resolves in, so
+		// it must be the dataset's own project. ResourceID() is the connection
+		// scope (an org or folder id on a non-project connection), which would
+		// resolve every dataset's tables/models/routines in the wrong project.
+		g.client, g.clientErr = bigquery.NewClient(ctx, g.ProjectId.Data, option.WithHTTPClient(httpClient))
 	})
 	return g.client, g.clientErr
 }
