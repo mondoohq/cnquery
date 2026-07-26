@@ -720,6 +720,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"dns.reverse": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDns).GetReverse()).ToDataRes(types.Array(types.Resource("dns.record")))
 	},
+	"dns.reverseRecords": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDns).GetReverseRecords()).ToDataRes(types.Array(types.Resource("dns.record")))
+	},
 	"dns.record.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDnsRecord).GetName()).ToDataRes(types.String)
 	},
@@ -1575,6 +1578,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"dns.reverse": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDns).Reverse, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"dns.reverseRecords": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDns).ReverseRecords, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"dns.record.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3854,15 +3861,16 @@ type mqlDns struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlDnsInternal it will be used here
-	Fqdn    plugin.TValue[string]
-	Params  plugin.TValue[any]
-	Records plugin.TValue[[]any]
-	Mx      plugin.TValue[[]any]
-	Dkim    plugin.TValue[[]any]
-	Dnssec  plugin.TValue[*mqlDnsDnssecConfig]
-	Spf     plugin.TValue[[]any]
-	Dmarc   plugin.TValue[*mqlDnsDmarcRecord]
-	Reverse plugin.TValue[[]any]
+	Fqdn           plugin.TValue[string]
+	Params         plugin.TValue[any]
+	Records        plugin.TValue[[]any]
+	Mx             plugin.TValue[[]any]
+	Dkim           plugin.TValue[[]any]
+	Dnssec         plugin.TValue[*mqlDnsDnssecConfig]
+	Spf            plugin.TValue[[]any]
+	Dmarc          plugin.TValue[*mqlDnsDmarcRecord]
+	Reverse        plugin.TValue[[]any]
+	ReverseRecords plugin.TValue[[]any]
 }
 
 // createDns creates a new instance of this resource
@@ -4056,6 +4064,27 @@ func (c *mqlDns) GetReverse() *plugin.TValue[[]any] {
 		}
 
 		return c.reverse(vargParams.Data)
+	})
+}
+
+func (c *mqlDns) GetReverseRecords() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ReverseRecords, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("dns", c.__id, "reverseRecords")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFqdn := c.GetFqdn()
+		if vargFqdn.Error != nil {
+			return nil, vargFqdn.Error
+		}
+
+		return c.reverseRecords(vargFqdn.Data)
 	})
 }
 

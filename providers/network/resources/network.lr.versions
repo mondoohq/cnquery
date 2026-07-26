@@ -85,6 +85,7 @@ dns.record.ttl 9.0.1
 dns.record.type 9.0.1
 dns.records 9.0.1
 dns.reverse 13.0.8
+dns.reverseRecords 13.2.9
 dns.spf 13.1.1
 dns.spfRecord 13.1.1
 dns.spfRecord.allQualifier 13.1.1
