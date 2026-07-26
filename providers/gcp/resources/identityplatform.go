@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -21,6 +22,8 @@ import (
 
 type mqlGcpProjectIdentityPlatformServiceInternal struct {
 	serviceEnabled bool
+	serviceOnce    sync.Once
+	serviceErr     error
 }
 
 func (g *mqlGcpProject) identityPlatform() (*mqlGcpProjectIdentityPlatformService, error) {
@@ -83,7 +86,11 @@ func (g *mqlGcpProjectIdentityPlatformService) identityPlatformClient() (*identi
 }
 
 func (g *mqlGcpProjectIdentityPlatformService) config() (*mqlGcpProjectIdentityPlatformServiceConfig, error) {
-	if !g.serviceEnabled {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		g.Config.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -244,7 +251,11 @@ func (g *mqlGcpProjectIdentityPlatformServiceTenant) id() (string, error) {
 }
 
 func (g *mqlGcpProjectIdentityPlatformService) tenants() ([]any, error) {
-	if !g.serviceEnabled {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 	if g.ProjectId.Error != nil {
@@ -323,4 +334,33 @@ func newMqlIdentityPlatformTenant(runtime *plugin.Runtime, t *identitytoolkit.Go
 	}
 
 	return CreateResource(runtime, "gcp.project.identityPlatformService.tenant", args)
+}
+
+// isEnabled resolves the service-enabled gate lazily.
+//
+// serviceEnabled is only set by the gcp.project.<service>() accessor, but this
+// resource is reachable without going through it: it can be addressed by its own
+// type name and resource inits build it with CreateResource. On those paths the
+// Go zero value `false` made every collection return an empty list with no error
+// -- an authoritative "there is nothing here" that makes an audit pass
+// vacuously. Resolving it here makes every construction path agree.
+func (g *mqlGcpProjectIdentityPlatformService) isEnabled() (bool, error) {
+	g.serviceOnce.Do(func() {
+		if g.serviceEnabled {
+			return // already set by the parent accessor
+		}
+		if g.ProjectId.Error != nil {
+			g.serviceErr = g.ProjectId.Error
+			return
+		}
+		proj, err := CreateResource(g.MqlRuntime, "gcp.project", map[string]*llx.RawData{
+			"id": llx.StringData(g.ProjectId.Data),
+		})
+		if err != nil {
+			g.serviceErr = err
+			return
+		}
+		g.serviceEnabled, g.serviceErr = proj.(*mqlGcpProject).isServiceEnabled(service_identityplatform)
+	})
+	return g.serviceEnabled, g.serviceErr
 }

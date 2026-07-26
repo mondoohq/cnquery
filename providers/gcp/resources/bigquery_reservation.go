@@ -17,7 +17,11 @@ import (
 )
 
 func (g *mqlGcpProjectBigqueryService) reservations() ([]any, error) {
-	if !g.serviceEnabled {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 	if g.ProjectId.Error != nil {

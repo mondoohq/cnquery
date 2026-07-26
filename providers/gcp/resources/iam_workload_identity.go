@@ -29,7 +29,11 @@ func wifPoolHostsProviders(mode string) bool {
 }
 
 func (g *mqlGcpProjectIamService) workloadIdentityPools() ([]any, error) {
-	if !g.serviceEnabled {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 

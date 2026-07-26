@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 
 	gkebackup "cloud.google.com/go/gkebackup/apiv1"
 	"cloud.google.com/go/gkebackup/apiv1/gkebackuppb"
@@ -22,6 +23,8 @@ import (
 
 type mqlGcpProjectGkeBackupServiceInternal struct {
 	serviceEnabled bool
+	serviceOnce    sync.Once
+	serviceErr     error
 }
 
 func (g *mqlGcpProject) gkeBackup() (*mqlGcpProjectGkeBackupService, error) {
@@ -83,7 +86,11 @@ func (g *mqlGcpProjectGkeBackupServiceBackupPlan) id() (string, error) {
 }
 
 func (g *mqlGcpProjectGkeBackupService) backupPlans() ([]any, error) {
-	if !g.serviceEnabled {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -173,7 +180,11 @@ func (g *mqlGcpProjectGkeBackupServiceRestorePlan) id() (string, error) {
 }
 
 func (g *mqlGcpProjectGkeBackupService) restorePlans() ([]any, error) {
-	if !g.serviceEnabled {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -257,4 +268,33 @@ func (g *mqlGcpProjectGkeBackupServiceRestorePlan) backupPlan() (*mqlGcpProjectG
 		return nil, err
 	}
 	return res.(*mqlGcpProjectGkeBackupServiceBackupPlan), nil
+}
+
+// isEnabled resolves the service-enabled gate lazily.
+//
+// serviceEnabled is only set by the gcp.project.<service>() accessor, but this
+// resource is reachable without going through it: it can be addressed by its own
+// type name and resource inits build it with CreateResource. On those paths the
+// Go zero value `false` made every collection return an empty list with no error
+// -- an authoritative "there is nothing here" that makes an audit pass
+// vacuously. Resolving it here makes every construction path agree.
+func (g *mqlGcpProjectGkeBackupService) isEnabled() (bool, error) {
+	g.serviceOnce.Do(func() {
+		if g.serviceEnabled {
+			return // already set by the parent accessor
+		}
+		if g.ProjectId.Error != nil {
+			g.serviceErr = g.ProjectId.Error
+			return
+		}
+		proj, err := CreateResource(g.MqlRuntime, "gcp.project", map[string]*llx.RawData{
+			"id": llx.StringData(g.ProjectId.Data),
+		})
+		if err != nil {
+			g.serviceErr = err
+			return
+		}
+		g.serviceEnabled, g.serviceErr = proj.(*mqlGcpProject).isServiceEnabled(service_gkebackup)
+	})
+	return g.serviceEnabled, g.serviceErr
 }

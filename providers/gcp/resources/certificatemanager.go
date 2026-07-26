@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 
 	certificatemanager "cloud.google.com/go/certificatemanager/apiv1"
 	"cloud.google.com/go/certificatemanager/apiv1/certificatemanagerpb"
@@ -48,6 +49,8 @@ func (g *mqlGcpProject) certificateManager() (*mqlGcpProjectCertificateManagerSe
 
 type mqlGcpProjectCertificateManagerServiceInternal struct {
 	serviceEnabled bool
+	serviceOnce    sync.Once
+	serviceErr     error
 }
 
 type mqlGcpProjectCertificateManagerServiceCertificateInternal struct {
@@ -79,7 +82,11 @@ func (g *mqlGcpProjectCertificateManagerService) id() (string, error) {
 }
 
 func (g *mqlGcpProjectCertificateManagerService) certificates() ([]any, error) {
-	if !g.serviceEnabled {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 	if g.ProjectId.Error != nil {
@@ -188,7 +195,11 @@ func (g *mqlGcpProjectCertificateManagerServiceCertificate) daysUntilExpiry() (i
 }
 
 func (g *mqlGcpProjectCertificateManagerService) certificateMaps() ([]any, error) {
-	if !g.serviceEnabled {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 	if g.ProjectId.Error != nil {
@@ -324,7 +335,11 @@ func (g *mqlGcpProjectCertificateManagerServiceCertificateMapEntry) id() (string
 }
 
 func (g *mqlGcpProjectCertificateManagerService) dnsAuthorizations() ([]any, error) {
-	if !g.serviceEnabled {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 	if g.ProjectId.Error != nil {
@@ -397,7 +412,11 @@ func (g *mqlGcpProjectCertificateManagerServiceDnsAuthorization) id() (string, e
 }
 
 func (g *mqlGcpProjectCertificateManagerService) certificateIssuanceConfigs() ([]any, error) {
-	if !g.serviceEnabled {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 	if g.ProjectId.Error != nil {
@@ -471,7 +490,11 @@ func (g *mqlGcpProjectCertificateManagerServiceCertificateIssuanceConfig) id() (
 }
 
 func (g *mqlGcpProjectCertificateManagerService) trustConfigs() ([]any, error) {
-	if !g.serviceEnabled {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 	if g.ProjectId.Error != nil {
@@ -854,4 +877,33 @@ func initGcpProjectCertificateManagerServiceCertificateIssuanceConfig(runtime *p
 		return nil, nil, err
 	}
 	return args, res, nil
+}
+
+// isEnabled resolves the service-enabled gate lazily.
+//
+// serviceEnabled is only set by the gcp.project.<service>() accessor, but this
+// resource is reachable without going through it: it can be addressed by its own
+// type name and resource inits build it with CreateResource. On those paths the
+// Go zero value `false` made every collection return an empty list with no error
+// -- an authoritative "there is nothing here" that makes an audit pass
+// vacuously. Resolving it here makes every construction path agree.
+func (g *mqlGcpProjectCertificateManagerService) isEnabled() (bool, error) {
+	g.serviceOnce.Do(func() {
+		if g.serviceEnabled {
+			return // already set by the parent accessor
+		}
+		if g.ProjectId.Error != nil {
+			g.serviceErr = g.ProjectId.Error
+			return
+		}
+		proj, err := CreateResource(g.MqlRuntime, "gcp.project", map[string]*llx.RawData{
+			"id": llx.StringData(g.ProjectId.Data),
+		})
+		if err != nil {
+			g.serviceErr = err
+			return
+		}
+		g.serviceEnabled, g.serviceErr = proj.(*mqlGcpProject).isServiceEnabled(service_certificatemanager)
+	})
+	return g.serviceEnabled, g.serviceErr
 }
