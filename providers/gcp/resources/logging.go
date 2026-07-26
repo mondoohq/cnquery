@@ -614,7 +614,11 @@ func initGcpProjectLoggingserviceBucket(runtime *plugin.Runtime, args map[string
 		return nil, nil, buckets.Error
 	}
 
-	nameVal := args["name"].Value.(string)
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return nil, nil, errors.New("gcp.project.loggingservice.bucket requires a \"name\" argument")
+	}
+	nameVal, _ := nameRaw.Value.(string)
 	locationVal := ""
 	if args["location"] != nil {
 		locationVal = args["location"].Value.(string)

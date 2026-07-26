@@ -441,7 +441,11 @@ func initGcpProjectCloudFunction(runtime *plugin.Runtime, args map[string]*llx.R
 		return nil, nil, funcs.Error
 	}
 
-	nameVal := args["name"].Value.(string)
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return nil, nil, errors.New("gcp.project.cloudFunction requires a \"name\" argument")
+	}
+	nameVal, _ := nameRaw.Value.(string)
 	locationVal := ""
 	if args["location"] != nil {
 		locationVal = args["location"].Value.(string)

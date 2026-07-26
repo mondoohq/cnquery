@@ -137,7 +137,11 @@ func initGcpProjectCloudRunServiceService(runtime *plugin.Runtime, args map[stri
 		return nil, nil, services.Error
 	}
 
-	nameVal := args["name"].Value.(string)
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return nil, nil, errors.New("gcp.project.cloudRunService.service requires a \"name\" argument")
+	}
+	nameVal, _ := nameRaw.Value.(string)
 	regionVal := ""
 	if args["region"] != nil {
 		regionVal = args["region"].Value.(string)
@@ -208,7 +212,11 @@ func initGcpProjectCloudRunServiceJob(runtime *plugin.Runtime, args map[string]*
 		return nil, nil, jobs.Error
 	}
 
-	nameVal := args["name"].Value.(string)
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return nil, nil, errors.New("gcp.project.cloudRunService.job requires a \"name\" argument")
+	}
+	nameVal, _ := nameRaw.Value.(string)
 	regionVal := ""
 	if args["region"] != nil {
 		regionVal = args["region"].Value.(string)

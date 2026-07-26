@@ -1429,6 +1429,12 @@ func initGcpProjectComputeServiceFirewall(runtime *plugin.Runtime, args map[stri
 		return nil, nil, firewalls.Error
 	}
 
+	// Guard every arg this lookup dereferences: args["x"] on an absent key is a
+	// nil *llx.RawData, and dereferencing it panics the provider, which kills
+	// the whole scan rather than failing one query.
+	if args["name"] == nil {
+		return nil, nil, errors.New("gcp.project.computeService.firewall requires a \"name\" argument")
+	}
 	for _, f := range firewalls.Data {
 		firewall := f.(*mqlGcpProjectComputeServiceFirewall)
 		name := firewall.GetName()
@@ -1677,6 +1683,12 @@ func initGcpProjectComputeServiceImage(runtime *plugin.Runtime, args map[string]
 		return nil, nil, images.Error
 	}
 
+	// Guard every arg this lookup dereferences: args["x"] on an absent key is a
+	// nil *llx.RawData, and dereferencing it panics the provider, which kills
+	// the whole scan rather than failing one query.
+	if args["name"] == nil {
+		return nil, nil, errors.New("gcp.project.computeService.image requires a \"name\" argument")
+	}
 	for _, i := range images.Data {
 		image := i.(*mqlGcpProjectComputeServiceImage)
 		if image.Name.Error != nil {
@@ -2060,6 +2072,12 @@ func initGcpProjectComputeServiceNetwork(runtime *plugin.Runtime, args map[strin
 		return nil, nil, networks.Error
 	}
 
+	// Guard every arg this lookup dereferences: args["x"] on an absent key is a
+	// nil *llx.RawData, and dereferencing it panics the provider, which kills
+	// the whole scan rather than failing one query.
+	if args["name"] == nil {
+		return nil, nil, errors.New("gcp.project.computeService.network requires a \"name\" argument")
+	}
 	for _, n := range networks.Data {
 		network := n.(*mqlGcpProjectComputeServiceNetwork)
 		name := network.GetName()
@@ -2077,7 +2095,7 @@ func initGcpProjectComputeServiceNetwork(runtime *plugin.Runtime, args map[strin
 	}
 
 	// Fallback: fetch directly from the GCP API
-	networkName := args["name"].Value.(string)
+	networkName, _ := args["name"].Value.(string)
 	projectId := args["projectId"].Value.(string)
 
 	conn := runtime.Connection.(*connection.GcpConnection)
@@ -2251,6 +2269,12 @@ func initGcpProjectComputeServiceSubnetwork(runtime *plugin.Runtime, args map[st
 		return nil, nil, subnetworks.Error
 	}
 
+	// Guard every arg this lookup dereferences: args["x"] on an absent key is a
+	// nil *llx.RawData, and dereferencing it panics the provider, which kills
+	// the whole scan rather than failing one query.
+	if args["name"] == nil {
+		return nil, nil, errors.New("gcp.project.computeService.subnetwork requires a \"name\" argument")
+	}
 	for _, n := range subnetworks.Data {
 		subnetwork := n.(*mqlGcpProjectComputeServiceSubnetwork)
 		name := subnetwork.GetName()
@@ -2273,7 +2297,7 @@ func initGcpProjectComputeServiceSubnetwork(runtime *plugin.Runtime, args map[st
 	}
 
 	// Fallback: fetch directly from the GCP API
-	subnetworkName := args["name"].Value.(string)
+	subnetworkName, _ := args["name"].Value.(string)
 	projectId := args["projectId"].Value.(string)
 
 	conn := runtime.Connection.(*connection.GcpConnection)

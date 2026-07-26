@@ -212,7 +212,11 @@ func initGcpProjectPubsubServiceSubscription(runtime *plugin.Runtime, args map[s
 		return nil, nil, subs.Error
 	}
 
-	nameVal := args["name"].Value.(string)
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return nil, nil, errors.New("gcp.project.pubsubService.subscription requires a \"name\" argument")
+	}
+	nameVal, _ := nameRaw.Value.(string)
 	for _, s := range subs.Data {
 		sub := s.(*mqlGcpProjectPubsubServiceSubscription)
 		if sub.Name.Data == nameVal {
@@ -291,7 +295,11 @@ func initGcpProjectPubsubServiceSnapshot(runtime *plugin.Runtime, args map[strin
 		return nil, nil, snapshots.Error
 	}
 
-	nameVal := args["name"].Value.(string)
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return nil, nil, errors.New("gcp.project.pubsubService.snapshot requires a \"name\" argument")
+	}
+	nameVal, _ := nameRaw.Value.(string)
 	for _, s := range snapshots.Data {
 		snap := s.(*mqlGcpProjectPubsubServiceSnapshot)
 		if snap.Name.Data == nameVal {

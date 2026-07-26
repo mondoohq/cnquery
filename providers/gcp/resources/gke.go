@@ -103,6 +103,19 @@ func initGcpProjectGkeServiceCluster(runtime *plugin.Runtime, args map[string]*l
 		return nil, nil, clusters.Error
 	}
 
+	// args["name"] on an absent key is a nil *llx.RawData; dereferencing it
+	// panics the provider and kills the whole scan. `location` narrows the
+	// match when supplied but is optional, so a two-arg lookup still resolves.
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return nil, nil, errors.New("gcp.project.gkeService.cluster requires a \"name\" argument")
+	}
+	nameVal, _ := nameRaw.Value.(string)
+	locationVal := ""
+	if args["location"] != nil {
+		locationVal, _ = args["location"].Value.(string)
+	}
+
 	for _, c := range clusters.Data {
 		cluster := c.(*mqlGcpProjectGkeServiceCluster)
 		name := cluster.GetName()
@@ -118,7 +131,8 @@ func initGcpProjectGkeServiceCluster(runtime *plugin.Runtime, args map[string]*l
 			return nil, nil, location.Error
 		}
 
-		if name.Data == args["name"].Value && projectId.Data == args["projectId"].Value && location.Data == args["location"].Value {
+		if name.Data == nameVal && projectId.Data == args["projectId"].Value &&
+			(locationVal == "" || location.Data == locationVal) {
 			return args, cluster, nil
 		}
 	}

@@ -79,6 +79,19 @@ func initGcpProjectSqlServiceInstance(runtime *plugin.Runtime, args map[string]*
 		return nil, nil, instances.Error
 	}
 
+	// args["name"] on an absent key is a nil *llx.RawData; dereferencing it
+	// panics the provider and kills the whole scan. `region` narrows the match
+	// when supplied but is optional, so a two-arg lookup still resolves.
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return nil, nil, errors.New("gcp.project.sqlService.instance requires a \"name\" argument")
+	}
+	nameVal, _ := nameRaw.Value.(string)
+	regionVal := ""
+	if args["region"] != nil {
+		regionVal, _ = args["region"].Value.(string)
+	}
+
 	// Find the matching instance
 	for _, inst := range instances.Data {
 		instance := inst.(*mqlGcpProjectSqlServiceInstance)
@@ -95,7 +108,8 @@ func initGcpProjectSqlServiceInstance(runtime *plugin.Runtime, args map[string]*
 			return nil, nil, instanceRegion.Error
 		}
 
-		if instanceRegion.Data == args["region"].Value && name.Data == args["name"].Value && projectId.Data == args["projectId"].Value {
+		if name.Data == nameVal && projectId.Data == args["projectId"].Value &&
+			(regionVal == "" || instanceRegion.Data == regionVal) {
 			return args, instance, nil
 		}
 	}
