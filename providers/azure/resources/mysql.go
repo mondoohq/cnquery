@@ -304,12 +304,14 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) sslEnforcement() (bool,
 
 	resp, err := dbConfClient.Get(ctx, resourceID.ResourceGroup, server, "require_secure_transport", nil)
 	if err != nil {
-		// Only tolerate access-denied / not-found: swallowing every error would
-		// report a transient/permission failure as SSL enforced, masking the real
-		// state of a security-relevant setting. MySQL flexible servers enforce SSL
-		// by default, so on those two cases we fall back to that default.
+		// A 404 means the parameter is genuinely absent on this SKU, and MySQL
+		// flexible servers enforce SSL by default, so the default is the honest
+		// answer there. A 403 is different: it means we were not allowed to
+		// look. Reporting the *passing* value for an unread setting would let
+		// `flexibleServers.all(sslEnforcement)` pass across a whole fleet with
+		// nothing actually verified, so that case must surface as an error.
 		var rerr *azcore.ResponseError
-		if errors.As(err, &rerr) && (rerr.StatusCode == http.StatusForbidden || rerr.StatusCode == http.StatusNotFound) {
+		if errors.As(err, &rerr) && rerr.StatusCode == http.StatusNotFound {
 			return true, nil
 		}
 		return false, err

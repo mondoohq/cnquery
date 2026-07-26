@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -27,13 +28,26 @@ func scopeForSubscription(subID string) string {
 	return "/subscriptions/" + subID
 }
 
-// pimUnavailable reports whether a PIM list error is a 4xx — most commonly
-// AadPremiumLicenseRequired on tenants without Entra ID P2 / Governance, but
-// also access-denied. Such tenants simply have no PIM data, so callers treat it
-// as an empty result rather than failing the whole authorization query.
+// pimUnavailable reports whether a PIM list error means the tenant genuinely
+// has no PIM data — most commonly AadPremiumLicenseRequired on tenants without
+// Entra ID P2 / Governance, but also access-denied and not-found. Callers turn
+// those into an empty result rather than failing the whole authorization query.
+//
+// The status codes are matched individually rather than as a 4xx range. A 429
+// means Microsoft.Authorization throttled us, which is likely on a tenant-wide
+// scan and says nothing about PIM: treating it as "no PIM data" would report
+// zero standing Owner eligibilities on a tenant that has dozens, and let
+// `roleEligibilitySchedules.none(...)` pass vacuously.
 func pimUnavailable(err error) bool {
 	var respErr *azcore.ResponseError
-	return errors.As(err, &respErr) && respErr.StatusCode >= 400 && respErr.StatusCode < 500
+	if !errors.As(err, &respErr) {
+		return false
+	}
+	switch respErr.StatusCode {
+	case http.StatusBadRequest, http.StatusUnauthorized, http.StatusForbidden, http.StatusNotFound:
+		return true
+	}
+	return false
 }
 
 type mqlAzureSubscriptionAuthorizationServiceRoleEligibilityScheduleInternal struct {

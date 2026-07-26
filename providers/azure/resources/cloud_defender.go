@@ -1510,9 +1510,27 @@ func (a *mqlAzureSubscriptionCloudDefenderService) assessments() ([]any, error) 
 			}
 			resourceId := strings.SplitN(id, "/providers/Microsoft.Security/assessments/", 2)[0]
 
-			meta := assessmentMetadata{}
+			// The catalogue lookup can miss because metadata was never fetched
+			// (the list call was denied or throttled) as well as because the
+			// assessment genuinely has none. Report the catalogue-derived
+			// fields as null in that case rather than as "" / [] / false:
+			// severity is a @defaults field, and a blank severity on every
+			// finding silently breaks `where(severity == "High")`.
+			meta, metaKnown := assessmentMetadata{}, false
 			if item.Name != nil {
-				meta = metaByName[*item.Name]
+				meta, metaKnown = metaByName[*item.Name]
+			}
+			strOrNull := func(v string) *llx.RawData {
+				if !metaKnown {
+					return llx.NilData
+				}
+				return llx.StringData(v)
+			}
+			arrOrNull := func(v []any) *llx.RawData {
+				if !metaKnown {
+					return llx.NilData
+				}
+				return llx.ArrayData(v, types.String)
 			}
 
 			mqlResource, err := CreateResource(a.MqlRuntime,
@@ -1527,7 +1545,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) assessments() ([]any, error) 
 					"statusDescription":        llx.StringData(statusDescription),
 					"firstEvaluationDate":      llx.TimeDataPtr(firstEvaluationDate),
 					"statusChangeDate":         llx.TimeDataPtr(statusChangeDate),
-					"severity":                 llx.StringData(meta.severity),
+					"severity":                 strOrNull(meta.severity),
 					"resourceId":               llx.StringData(resourceId),
 					"additionalData":           llx.DictData(additionalData),
 					"riskLevel":                llx.StringData(riskLevel),
@@ -1535,16 +1553,16 @@ func (a *mqlAzureSubscriptionCloudDefenderService) assessments() ([]any, error) 
 					"riskAttackPathReferences": llx.ArrayData(riskAttackPathRefs, types.String),
 					"riskAttackPaths":          llx.ArrayData(riskAttackPaths, types.Dict),
 					"riskIsContextual":         llx.BoolData(riskIsContextual),
-					"assessmentType":           llx.StringData(meta.assessmentType),
-					"categories":               llx.ArrayData(meta.categories, types.String),
-					"threats":                  llx.ArrayData(meta.threats, types.String),
-					"tactics":                  llx.ArrayData(meta.tactics, types.String),
-					"techniques":               llx.ArrayData(meta.techniques, types.String),
-					"implementationEffort":     llx.StringData(meta.implementationEffort),
-					"userImpact":               llx.StringData(meta.userImpact),
-					"remediationDescription":   llx.StringData(meta.remediationDescription),
+					"assessmentType":           strOrNull(meta.assessmentType),
+					"categories":               arrOrNull(meta.categories),
+					"threats":                  arrOrNull(meta.threats),
+					"tactics":                  arrOrNull(meta.tactics),
+					"techniques":               arrOrNull(meta.techniques),
+					"implementationEffort":     strOrNull(meta.implementationEffort),
+					"userImpact":               strOrNull(meta.userImpact),
+					"remediationDescription":   strOrNull(meta.remediationDescription),
 					"preview":                  llx.BoolData(meta.preview),
-					"description":              llx.StringData(meta.description),
+					"description":              strOrNull(meta.description),
 				})
 			if err != nil {
 				return nil, err

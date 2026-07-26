@@ -9,6 +9,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	eventgrid "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/eventgrid/armeventgrid/v2"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -107,6 +108,10 @@ func (a *mqlAzureSubscriptionEventGridService) topics() ([]any, error) {
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure topics, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, t := range page.Value {
@@ -200,6 +205,10 @@ func (a *mqlAzureSubscriptionEventGridService) systemTopics() ([]any, error) {
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure systemTopics, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, st := range page.Value {
@@ -261,6 +270,10 @@ func (a *mqlAzureSubscriptionEventGridService) domains() ([]any, error) {
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure domains, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, d := range page.Value {

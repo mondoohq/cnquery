@@ -9,6 +9,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	armbatch "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/batch/armbatch/v4"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -100,6 +101,10 @@ func (a *mqlAzureSubscriptionBatchService) accounts() ([]any, error) {
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure accounts, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 
@@ -412,6 +417,10 @@ func (a *mqlAzureSubscriptionBatchServiceAccount) pools() ([]any, error) {
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure pools, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, entry := range page.Value {

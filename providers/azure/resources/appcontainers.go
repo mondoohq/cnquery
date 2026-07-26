@@ -15,6 +15,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	apps "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appcontainers/armappcontainers/v4"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -364,6 +365,10 @@ func (a *mqlAzureSubscriptionContainerAppService) managedEnvironments() ([]any, 
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure managedEnvironments, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, entry := range page.Value {
@@ -726,6 +731,10 @@ func (a *mqlAzureSubscriptionContainerAppService) containerApps() ([]any, error)
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure containerApps, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, entry := range page.Value {
@@ -1286,6 +1295,10 @@ func (a *mqlAzureSubscriptionContainerAppService) jobs() ([]any, error) {
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure jobs, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, entry := range page.Value {

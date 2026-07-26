@@ -359,6 +359,10 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) keys() ([]any, error) {
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure keys, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 
@@ -488,6 +492,10 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) secrets() ([]any, error) {
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure secrets, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 
@@ -530,6 +538,10 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) certificates() ([]any, error)
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure certificates, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 
@@ -923,6 +935,10 @@ func (a *mqlAzureSubscriptionKeyVaultServiceKey) versions() ([]any, error) {
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure versions, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, entry := range page.Value {
@@ -1079,6 +1095,10 @@ func (a *mqlAzureSubscriptionKeyVaultServiceCertificate) versions() ([]any, erro
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure versions, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, entry := range page.Value {
@@ -1445,6 +1465,10 @@ func (a *mqlAzureSubscriptionKeyVaultServiceSecret) versions() ([]any, error) {
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure versions, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, entry := range page.Value {

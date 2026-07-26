@@ -11,6 +11,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	hybridcompute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/hybridcompute/armhybridcompute/v2"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -37,6 +38,10 @@ func (a *mqlAzureSubscriptionComputeService) hybridMachines() ([]any, error) {
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure hybridMachines, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, m := range page.Value {
@@ -190,6 +195,10 @@ func (a *mqlAzureSubscriptionComputeServiceHybridMachine) extensions() ([]any, e
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure extensions, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, ext := range page.Value {
