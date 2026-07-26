@@ -719,12 +719,7 @@ func (s *mqlApache2ConfEnvvars) params(file *mqlFile) (map[string]any, error) {
 }
 
 func (s *mqlApache2Conf) listenAddresses(params map[string]any) ([]any, error) {
-	raw, ok := params["Listen"]
-	if !ok {
-		return nil, nil
-	}
-
-	str, ok := raw.(string)
+	str, ok := apache2.ParamValue(params, "Listen")
 	if !ok {
 		return nil, nil
 	}
