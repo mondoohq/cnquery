@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -20,6 +21,8 @@ import (
 
 type mqlGcpProjectNetworkSecurityServiceInternal struct {
 	serviceEnabled bool
+	serviceOnce    sync.Once
+	serviceErr     error
 }
 
 func (g *mqlGcpProject) networkSecurity() (*mqlGcpProjectNetworkSecurityService, error) {
@@ -121,7 +124,11 @@ func (g *mqlGcpProjectNetworkSecurityService) networkSecurityHTTPClient() (*conn
 }
 
 func (g *mqlGcpProjectNetworkSecurityService) authorizationPolicies() ([]any, error) {
-	if !g.serviceEnabled {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 	conn, parent, err := g.networkSecurityHTTPClient()
@@ -172,7 +179,11 @@ func (g *mqlGcpProjectNetworkSecurityService) authorizationPolicies() ([]any, er
 }
 
 func (g *mqlGcpProjectNetworkSecurityService) serverTlsPolicies() ([]any, error) {
-	if !g.serviceEnabled {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 	conn, parent, err := g.networkSecurityHTTPClient()
@@ -233,7 +244,11 @@ func (g *mqlGcpProjectNetworkSecurityService) serverTlsPolicies() ([]any, error)
 }
 
 func (g *mqlGcpProjectNetworkSecurityService) clientTlsPolicies() ([]any, error) {
-	if !g.serviceEnabled {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 	conn, parent, err := g.networkSecurityHTTPClient()
@@ -289,7 +304,11 @@ func (g *mqlGcpProjectNetworkSecurityService) clientTlsPolicies() ([]any, error)
 }
 
 func (g *mqlGcpProjectNetworkSecurityService) tlsInspectionPolicies() ([]any, error) {
-	if !g.serviceEnabled {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 	conn, parent, err := g.networkSecurityHTTPClient()
@@ -343,7 +362,11 @@ func (g *mqlGcpProjectNetworkSecurityService) tlsInspectionPolicies() ([]any, er
 }
 
 func (g *mqlGcpProjectNetworkSecurityService) addressGroups() ([]any, error) {
-	if !g.serviceEnabled {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 	conn, parent, err := g.networkSecurityHTTPClient()
@@ -400,7 +423,11 @@ func (g *mqlGcpProjectNetworkSecurityService) addressGroups() ([]any, error) {
 }
 
 func (g *mqlGcpProjectNetworkSecurityService) urlLists() ([]any, error) {
-	if !g.serviceEnabled {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 	conn, parent, err := g.networkSecurityHTTPClient()
@@ -571,4 +598,33 @@ func (g *mqlGcpOrganization) networkSecurityProfileGroups() ([]any, error) {
 		return nil, err
 	}
 	return res, nil
+}
+
+// isEnabled resolves the service-enabled gate lazily.
+//
+// serviceEnabled is only set by the gcp.project.<service>() accessor, but this
+// resource is reachable without going through it: it can be addressed by its own
+// type name and resource inits build it with CreateResource. On those paths the
+// Go zero value `false` made every collection return an empty list with no error
+// -- an authoritative "there is nothing here" that makes an audit pass
+// vacuously. Resolving it here makes every construction path agree.
+func (g *mqlGcpProjectNetworkSecurityService) isEnabled() (bool, error) {
+	g.serviceOnce.Do(func() {
+		if g.serviceEnabled {
+			return // already set by the parent accessor
+		}
+		if g.ProjectId.Error != nil {
+			g.serviceErr = g.ProjectId.Error
+			return
+		}
+		proj, err := CreateResource(g.MqlRuntime, "gcp.project", map[string]*llx.RawData{
+			"id": llx.StringData(g.ProjectId.Data),
+		})
+		if err != nil {
+			g.serviceErr = err
+			return
+		}
+		g.serviceEnabled, g.serviceErr = proj.(*mqlGcpProject).isServiceEnabled(service_networksecurity)
+	})
+	return g.serviceEnabled, g.serviceErr
 }

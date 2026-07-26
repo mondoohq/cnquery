@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -30,6 +31,8 @@ func (g *mqlGcpProjectLoggingservice) id() (string, error) {
 
 type mqlGcpProjectLoggingserviceInternal struct {
 	serviceEnabled bool
+	serviceOnce    sync.Once
+	serviceErr     error
 }
 
 func (g *mqlGcpProject) logging() (*mqlGcpProjectLoggingservice, error) {
@@ -85,7 +88,11 @@ func initGcpProjectLoggingservice(runtime *plugin.Runtime, args map[string]*llx.
 }
 
 func (g *mqlGcpProjectLoggingservice) buckets() ([]any, error) {
-	if !g.serviceEnabled {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -180,7 +187,11 @@ func (g *mqlGcpProjectLoggingservice) buckets() ([]any, error) {
 }
 
 func (g *mqlGcpProjectLoggingservice) metrics() ([]any, error) {
-	if !g.serviceEnabled {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -299,7 +310,11 @@ func parseAlertPolicyConditionFilterMetricName(condition map[string]any) string 
 }
 
 func (g *mqlGcpProjectLoggingservice) sinks() ([]any, error) {
-	if !g.serviceEnabled {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -361,7 +376,11 @@ func (g *mqlGcpProjectLoggingservice) sinks() ([]any, error) {
 }
 
 func (g *mqlGcpProjectLoggingservice) cmekKmsKeyName() (string, error) {
-	if !g.serviceEnabled {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return "", err
+	}
+	if !enabled {
 		return "", nil
 	}
 
@@ -638,7 +657,11 @@ func (g *mqlGcpProjectLoggingserviceBucketIndexConfig) id() (string, error) {
 }
 
 func (g *mqlGcpProjectLoggingservice) exclusions() ([]any, error) {
-	if !g.serviceEnabled {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -881,4 +904,33 @@ func (g *mqlGcpFolderLoggingService) sinks() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 	return scopedSinks(g.MqlRuntime, conn, g.FolderName.Data,
 		"gcp.folder.loggingService.sink", "folderName")
+}
+
+// isEnabled resolves the service-enabled gate lazily.
+//
+// serviceEnabled is only set by the gcp.project.<service>() accessor, but this
+// resource is reachable without going through it: it can be addressed by its own
+// type name and resource inits build it with CreateResource. On those paths the
+// Go zero value `false` made every collection return an empty list with no error
+// -- an authoritative "there is nothing here" that makes an audit pass
+// vacuously. Resolving it here makes every construction path agree.
+func (g *mqlGcpProjectLoggingservice) isEnabled() (bool, error) {
+	g.serviceOnce.Do(func() {
+		if g.serviceEnabled {
+			return // already set by the parent accessor
+		}
+		if g.ProjectId.Error != nil {
+			g.serviceErr = g.ProjectId.Error
+			return
+		}
+		proj, err := CreateResource(g.MqlRuntime, "gcp.project", map[string]*llx.RawData{
+			"id": llx.StringData(g.ProjectId.Data),
+		})
+		if err != nil {
+			g.serviceErr = err
+			return
+		}
+		g.serviceEnabled, g.serviceErr = proj.(*mqlGcpProject).isServiceEnabled(service_logging)
+	})
+	return g.serviceEnabled, g.serviceErr
 }

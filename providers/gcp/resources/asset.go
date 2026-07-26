@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"sync"
 
 	asset "cloud.google.com/go/asset/apiv1"
 	"cloud.google.com/go/asset/apiv1/assetpb"
@@ -23,6 +24,8 @@ import (
 
 type mqlGcpProjectAssetServiceInternal struct {
 	serviceEnabled bool
+	serviceOnce    sync.Once
+	serviceErr     error
 }
 
 func (g *mqlGcpProject) assetInventory() (*mqlGcpProjectAssetService, error) {
@@ -85,7 +88,11 @@ func (g *mqlGcpProjectAssetServiceIamPolicy) id() (string, error) {
 }
 
 func (g *mqlGcpProjectAssetService) resources() ([]any, error) {
-	if !g.serviceEnabled {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 	if g.ProjectId.Error != nil {
@@ -157,7 +164,11 @@ func (g *mqlGcpProjectAssetService) resources() ([]any, error) {
 }
 
 func (g *mqlGcpProjectAssetService) iamPolicies() ([]any, error) {
-	if !g.serviceEnabled {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 	if g.ProjectId.Error != nil {
@@ -230,4 +241,33 @@ func (g *mqlGcpProjectAssetService) iamPolicies() ([]any, error) {
 	}
 
 	return res, nil
+}
+
+// isEnabled resolves the service-enabled gate lazily.
+//
+// serviceEnabled is only set by the gcp.project.<service>() accessor, but this
+// resource is reachable without going through it: it can be addressed by its own
+// type name and resource inits build it with CreateResource. On those paths the
+// Go zero value `false` made every collection return an empty list with no error
+// -- an authoritative "there is nothing here" that makes an audit pass
+// vacuously. Resolving it here makes every construction path agree.
+func (g *mqlGcpProjectAssetService) isEnabled() (bool, error) {
+	g.serviceOnce.Do(func() {
+		if g.serviceEnabled {
+			return // already set by the parent accessor
+		}
+		if g.ProjectId.Error != nil {
+			g.serviceErr = g.ProjectId.Error
+			return
+		}
+		proj, err := CreateResource(g.MqlRuntime, "gcp.project", map[string]*llx.RawData{
+			"id": llx.StringData(g.ProjectId.Data),
+		})
+		if err != nil {
+			g.serviceErr = err
+			return
+		}
+		g.serviceEnabled, g.serviceErr = proj.(*mqlGcpProject).isServiceEnabled(service_cloudasset)
+	})
+	return g.serviceEnabled, g.serviceErr
 }
