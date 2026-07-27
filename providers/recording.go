@@ -183,7 +183,13 @@ func (s *recordingProvider) GetData(req *plugin.DataReq) (*plugin.DataRes, error
 	id := req.GetResourceId()
 	field := req.GetField()
 	lookup := llx.AssetRecordingLookup{}
-	if s.selectedAsset != nil {
+	if connID := req.GetConnection(); connID != 0 {
+		// The runtime sets the connection on every request. Scope the lookup to
+		// that connection's asset: one static provider instance serves all
+		// assets of a multi-asset recording, so routing by the shared
+		// selectedAsset would cross-read between assets.
+		lookup.ConnectionId = connID
+	} else if s.selectedAsset != nil {
 		if s.selectedAsset.GetMrn() != "" {
 			lookup.Mrn = s.selectedAsset.GetMrn()
 		}
@@ -207,14 +213,19 @@ func (s *recordingProvider) GetData(req *plugin.DataReq) (*plugin.DataRes, error
 }
 
 func (s *recordingProvider) StoreData(req *plugin.StoreReq) (*plugin.StoreRes, error) {
-	if s.selectedAsset == nil {
-		return nil, errors.New("no asset selected, cannot store data")
+	// The runtime sets the connection on every request; store under that
+	// connection's asset (see GetData). Fall back to the selected asset for
+	// programmatic callers that don't set a connection.
+	connID := req.GetConnection()
+	if connID == 0 {
+		if s.selectedAsset == nil {
+			return nil, errors.New("no asset selected, cannot store data")
+		}
+		if len(s.selectedAsset.Connections) == 0 {
+			return nil, errors.New("selected asset has no connections, cannot store data")
+		}
+		connID = s.selectedAsset.Connections[0].Id
 	}
-	if len(s.selectedAsset.Connections) == 0 {
-		return nil, errors.New("selected asset has no connections, cannot store data")
-	}
-
-	connID := s.selectedAsset.Connections[0].Id
 	for _, info := range req.Resources {
 		for field, result := range info.Fields {
 			s.recording.AddData(llx.AddDataReq{
