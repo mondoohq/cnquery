@@ -110,6 +110,20 @@ var wolfi = &PlatformResolver{
 	},
 }
 
+// WizOS is an Alpine-lineage distro (ID_LIKE=alpine) that ships its own
+// ID=wizos in /etc/os-release and uses apk. It is resolved before alpine so
+// its exact-name match wins over alpine's /etc/alpine-release fallback.
+var wizos = &PlatformResolver{
+	Name:     "wizos",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		if pf.Name == "wizos" {
+			return true, nil
+		}
+		return false, nil
+	},
+}
+
 var arch = &PlatformResolver{
 	Name:     "arch",
 	IsFamily: false,
@@ -1298,7 +1312,7 @@ var eulerFamily = &PlatformResolver{
 var linuxFamily = &PlatformResolver{
 	Name:     inventory.FAMILY_LINUX,
 	IsFamily: true,
-	Children: []*PlatformResolver{archFamily, redhatFamily, debianFamily, suseFamily, eulerFamily, bottlerocket, amazonlinux, alpine, wolfi, nixos, gentoo, busybox, photon, windriver, lede, openwrt, plcnext, mageia, azurelinux, flatcar, cirros, defaultLinux},
+	Children: []*PlatformResolver{archFamily, redhatFamily, debianFamily, suseFamily, eulerFamily, bottlerocket, amazonlinux, wizos, alpine, wolfi, nixos, gentoo, busybox, photon, windriver, lede, openwrt, plcnext, mageia, azurelinux, flatcar, cirros, defaultLinux},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		detected := false
 		osrd := NewOSReleaseDetector(conn)
