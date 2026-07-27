@@ -28,22 +28,54 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
+// defaultPythonPaths lists the directories that *contain* a site-packages or
+// dist-packages directory; collectPythonPackagesInPaths appends those names.
+//
+// These are glob patterns evaluated by afero.Glob, which supports "*" but not
+// "**", so every directory level has to be spelled out. Note that, unlike shell
+// globbing, "*" here does match dot-directories, so "/app/*/lib/python*" picks
+// up "/app/.venv/lib/python3.13".
 var defaultPythonPaths = []string{
 	// Linux
 	"/usr/local/lib/python*",
 	"/usr/local/lib64/python*",
 	"/usr/lib/python*",
 	"/usr/lib64/python*",
+	// Virtualenvs. Applications -- container images especially -- commonly
+	// install their dependencies into a venv instead of the system paths above,
+	// so without these the application's own packages are missing entirely.
+	// The venv directory name varies (.venv, venv, env, ...), hence the "*".
+	"/venv/lib/python*",
+	"/.venv/lib/python*",
+	"/app/*/lib/python*",
+	"/code/*/lib/python*",
+	"/workspace/*/lib/python*",
+	"/srv/*/lib/python*",
+	"/opt/*/lib/python*",
+	"/usr/src/*/*/lib/python*",
+	// per-user venvs, including the virtualenvwrapper/poetry layout that nests
+	// one directory deeper
+	"/root/*/lib/python*",
+	"/root/.virtualenvs/*/lib/python*",
+	"/home/*/.venv/lib/python*",
+	"/home/*/.virtualenvs/*/lib/python*",
 	// Windows
 	"C:\\Python*\\Lib",
 	"C:\\Program Files\\Python*\\Lib",
 	// per-user installs across all profiles
 	"C:\\Users\\*\\AppData\\Local\\Programs\\Python\\Python*\\Lib",
+	// Windows venvs put site-packages directly under Lib, with no pythonX.Y level
+	"C:\\venv\\Lib",
+	"C:\\.venv\\Lib",
+	"C:\\Users\\*\\.venv\\Lib",
+	"C:\\Users\\*\\*\\.venv\\Lib",
 	// macOS
 	"/opt/homebrew/lib/python*",
 	"/System/Library/Frameworks/Python.framework/Versions/*/lib/python*",
 	// we use 3.x to exclude the macOS 'Current' symlink
 	"/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.*/lib/python*",
+	"/Users/*/.venv/lib/python*",
+	"/Users/*/.virtualenvs/*/lib/python*",
 }
 
 func initPython(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -178,7 +210,12 @@ func collectPythonPackagesInPaths(runtime *plugin.Runtime, fs afero.Fs, paths []
 			pythonPackageDir := filepath.Join(walkPath, packageDir)
 			results, err := collectPythonPackages(runtime, fs, pythonPackageDir)
 			if err != nil {
-				return err
+				// Skip this directory rather than abandoning the whole search.
+				// The default paths are broad globs, so a single match that is
+				// unreadable, or is a file rather than a directory, must not
+				// cost us every other venv on the system.
+				log.Debug().Err(err).Str("dir", pythonPackageDir).Msg("skipping unreadable python package directory")
+				continue
 			}
 			allResults = append(allResults, results...)
 		}
