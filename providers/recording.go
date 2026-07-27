@@ -287,7 +287,7 @@ func (s *recordingProvider) StoreData(req *plugin.StoreReq) (*plugin.StoreRes, e
 	// connection's asset (see GetData). Fall back to the selected asset for
 	// programmatic callers that don't set a connection.
 	connID := req.GetConnection()
-	lookup := llx.AssetRecordingLookup{}
+	var lookup llx.AssetRecordingLookup
 	if connID != 0 {
 		lookup = s.lookupFor(connID)
 	} else {
