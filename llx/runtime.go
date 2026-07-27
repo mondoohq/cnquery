@@ -34,6 +34,11 @@ type AssetRecordingLookup struct {
 type AddDataReq struct {
 	// the id of the connection that was used to fetch the data
 	ConnectionID uint32
+	// optionally identifies the asset this data belongs to. Preferred over
+	// ConnectionID when it carries an Mrn or platform ids, because connection
+	// ids in a recording that was loaded from disk are not guaranteed to be
+	// unique across its assets.
+	Lookup AssetRecordingLookup
 	// the resource type name
 	Resource string
 	// the id of the resource as returned by the connection

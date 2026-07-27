@@ -403,7 +403,15 @@ func (r *recording) resyncAsset(recordingAsset *Asset) {
 }
 
 func (r *recording) AddData(req llx.AddDataReq) {
-	asset, ok := r.resolveAsset(llx.AssetRecordingLookup{ConnectionId: req.ConnectionID})
+	// The connection id is only the last resort: resolveAsset prefers the mrn
+	// and platform ids the caller may have supplied, which identify the asset
+	// unambiguously even when a loaded recording reuses one connection id across
+	// several of its assets.
+	lookup := req.Lookup
+	if lookup.ConnectionId == 0 {
+		lookup.ConnectionId = req.ConnectionID
+	}
+	asset, ok := r.resolveAsset(lookup)
 	if !ok {
 		return
 	}

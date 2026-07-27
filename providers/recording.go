@@ -5,6 +5,7 @@ package providers
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/cockroachdb/errors"
 	"go.mondoo.com/mql/v13"
@@ -75,8 +76,39 @@ func NewRecordingProvider(opts ...RecordingProviderOpt) *recordingProvider {
 }
 
 type recordingProvider struct {
+	// mu guards selectedAsset and connections: one static provider instance
+	// serves every asset of a multi-asset recording, and those assets are
+	// connected and scanned concurrently.
+	mu            sync.Mutex
 	selectedAsset *inventory.Asset
-	recording     llx.Recording
+	// the asset each connection was established for, so requests can be routed
+	// to that asset's section of the recording
+	connections map[uint32]*inventory.Asset
+	recording   llx.Recording
+}
+
+// asset returns the asset selected by the most recent connect. It only serves
+// callers that don't set a connection on their requests; anything that does is
+// routed by connection instead.
+func (s *recordingProvider) asset() *inventory.Asset {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.selectedAsset
+}
+
+func (s *recordingProvider) selectAsset(asset *inventory.Asset) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.selectedAsset = asset
+}
+
+func (s *recordingProvider) addConnection(connID uint32, asset *inventory.Asset) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.connections == nil {
+		s.connections = map[uint32]*inventory.Asset{}
+	}
+	s.connections[connID] = asset
 }
 
 func (s *recordingProvider) Heartbeat(req *plugin.HeartbeatReq) (*plugin.HeartbeatRes, error) {
@@ -130,6 +162,23 @@ func (s *recordingProvider) Connect(req *plugin.ConnectReq, callback plugin.Prov
 		Inventory: inv,
 	}
 
+	// A concrete asset was connected (as opposed to the discovery pass, which
+	// returns the inventory above): remember which asset this connection serves
+	// and report the connection id back to the runtime, which then sends it on
+	// every GetData/StoreData request. One provider instance serves every asset
+	// of a multi-asset recording, so routing by connection is what keeps assets
+	// from reading and writing each other's data. Without an id, requests fall
+	// back to the shared selectedAsset (see GetData).
+	if asset := req.GetAsset(); asset.GetPlatform() != nil && len(asset.GetConnections()) > 0 &&
+		(asset.GetMrn() != "" || len(asset.GetPlatformIds()) > 0) {
+		conf := asset.Connections[0]
+		if conf.Id == 0 {
+			conf.Id = Coordinator.NextConnectionId()
+		}
+		s.addConnection(conf.Id, asset)
+		res.Id = conf.Id
+	}
+
 	return res, nil
 }
 
@@ -139,7 +188,7 @@ func (s *recordingProvider) detect(asset *inventory.Asset) (*inventory.Inventory
 			if asset.GetMrn() == "" && len(asset.GetPlatformIds()) == 0 {
 				return nil, errors.New("missing mrn or platform ids for asset selection")
 			}
-			s.selectedAsset = asset
+			s.selectAsset(asset)
 		}
 		return nil, nil
 	}
@@ -150,13 +199,16 @@ func (s *recordingProvider) detect(asset *inventory.Asset) (*inventory.Inventory
 		if len(a.Connections) == 0 {
 			continue
 		}
-		id := a.Connections[0].Id
+		// Assign a fresh connection id per asset. The id carried by the recording
+		// file is not guaranteed to be unique across its assets — every asset of
+		// a synthesized recording may share id 1 — and connections are what
+		// requests are routed by, so two assets sharing an id would collapse onto
+		// one of them.
 		a.Connections = []*inventory.Config{
 			{
 				Type:           "recording",
 				DelayDiscovery: true,
-				// preserve conn id so it can consistently be looked up from the recording
-				Id: id,
+				Id:             Coordinator.NextConnectionId(),
 			},
 		}
 		assets = append(assets, a)
@@ -178,6 +230,29 @@ func (s *recordingProvider) Shutdown(req *plugin.ShutdownReq) (*plugin.ShutdownR
 	return nil, nil
 }
 
+// lookupFor identifies the recording section a request belongs to. The mrn and
+// platform ids of the connection's asset take precedence over the connection id
+// itself: a recording loaded from disk may reuse one connection id across
+// several of its assets, in which case the recording's connection index only
+// resolves to whichever asset claimed the id last.
+func (s *recordingProvider) lookupFor(connID uint32) llx.AssetRecordingLookup {
+	s.mu.Lock()
+	asset, ok := s.connections[connID]
+	s.mu.Unlock()
+	if !ok {
+		return llx.AssetRecordingLookup{ConnectionId: connID}
+	}
+	return assetLookup(asset, connID)
+}
+
+func assetLookup(asset *inventory.Asset, connID uint32) llx.AssetRecordingLookup {
+	return llx.AssetRecordingLookup{
+		ConnectionId: connID,
+		Mrn:          asset.GetMrn(),
+		PlatformIds:  asset.GetPlatformIds(),
+	}
+}
+
 func (s *recordingProvider) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {
 	resource := req.GetResource()
 	id := req.GetResourceId()
@@ -188,14 +263,9 @@ func (s *recordingProvider) GetData(req *plugin.DataReq) (*plugin.DataRes, error
 		// that connection's asset: one static provider instance serves all
 		// assets of a multi-asset recording, so routing by the shared
 		// selectedAsset would cross-read between assets.
-		lookup.ConnectionId = connID
-	} else if s.selectedAsset != nil {
-		if s.selectedAsset.GetMrn() != "" {
-			lookup.Mrn = s.selectedAsset.GetMrn()
-		}
-		if len(s.selectedAsset.GetPlatformIds()) > 0 {
-			lookup.PlatformIds = s.selectedAsset.GetPlatformIds()
-		}
+		lookup = s.lookupFor(connID)
+	} else if asset := s.asset(); asset != nil {
+		lookup = assetLookup(asset, 0)
 	}
 	data, ok := s.recording.GetData(lookup, resource, id, field)
 	if !ok {
@@ -217,19 +287,25 @@ func (s *recordingProvider) StoreData(req *plugin.StoreReq) (*plugin.StoreRes, e
 	// connection's asset (see GetData). Fall back to the selected asset for
 	// programmatic callers that don't set a connection.
 	connID := req.GetConnection()
-	if connID == 0 {
-		if s.selectedAsset == nil {
+	lookup := llx.AssetRecordingLookup{}
+	if connID != 0 {
+		lookup = s.lookupFor(connID)
+	} else {
+		asset := s.asset()
+		if asset == nil {
 			return nil, errors.New("no asset selected, cannot store data")
 		}
-		if len(s.selectedAsset.Connections) == 0 {
+		if len(asset.Connections) == 0 {
 			return nil, errors.New("selected asset has no connections, cannot store data")
 		}
-		connID = s.selectedAsset.Connections[0].Id
+		connID = asset.Connections[0].Id
+		lookup = assetLookup(asset, connID)
 	}
 	for _, info := range req.Resources {
 		for field, result := range info.Fields {
 			s.recording.AddData(llx.AddDataReq{
 				ConnectionID:      connID,
+				Lookup:            lookup,
 				Resource:          info.Name,
 				ResourceID:        info.Id,
 				Field:             field,
