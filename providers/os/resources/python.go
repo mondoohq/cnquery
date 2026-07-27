@@ -45,6 +45,12 @@ var defaultPythonPaths = []string{
 	// install their dependencies into a venv instead of the system paths above,
 	// so without these the application's own packages are missing entirely.
 	// The venv directory name varies (.venv, venv, env, ...), hence the "*".
+	//
+	// Known limitation: because there is no "**", these reach a venv sitting
+	// directly in one of these roots and one directory deeper (a project
+	// checkout that carries its own venv). A venv buried deeper than that --
+	// /app/myproject/backend/.venv, say -- is still missed. Set the python
+	// resource's `path` argument explicitly to cover such a layout.
 	"/venv/lib/python*",
 	"/.venv/lib/python*",
 	"/app/*/lib/python*",
@@ -53,11 +59,18 @@ var defaultPythonPaths = []string{
 	"/srv/*/lib/python*",
 	"/opt/*/lib/python*",
 	"/usr/src/*/*/lib/python*",
-	// per-user venvs, including the virtualenvwrapper/poetry layout that nests
-	// one directory deeper
+	// a project directory under one of the roots above holding its own venv
+	"/app/*/*/lib/python*",
+	"/code/*/*/lib/python*",
+	"/workspace/*/*/lib/python*",
+	"/srv/*/*/lib/python*",
+	"/opt/*/*/lib/python*",
+	// per-user venvs. The "*" covers .venv, venv and env alike; virtualenvwrapper
+	// and poetry instead collect them under a dedicated directory.
 	"/root/*/lib/python*",
+	"/root/*/*/lib/python*",
 	"/root/.virtualenvs/*/lib/python*",
-	"/home/*/.venv/lib/python*",
+	"/home/*/*/lib/python*",
 	"/home/*/.virtualenvs/*/lib/python*",
 	// Windows
 	"C:\\Python*\\Lib",
@@ -74,7 +87,7 @@ var defaultPythonPaths = []string{
 	"/System/Library/Frameworks/Python.framework/Versions/*/lib/python*",
 	// we use 3.x to exclude the macOS 'Current' symlink
 	"/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.*/lib/python*",
-	"/Users/*/.venv/lib/python*",
+	"/Users/*/*/lib/python*",
 	"/Users/*/.virtualenvs/*/lib/python*",
 }
 

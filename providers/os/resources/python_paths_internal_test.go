@@ -58,6 +58,14 @@ func TestDefaultPythonPaths_VirtualenvLayouts(t *testing.T) {
 		{"root home", "/root/.venv/lib/python3.12/site-packages", "/root/.venv/lib/python3.12"},
 		{"virtualenvwrapper", "/home/dev/.virtualenvs/proj/lib/python3.12/site-packages", "/home/dev/.virtualenvs/proj/lib/python3.12"},
 		{"user venv", "/home/dev/.venv/lib/python3.12/site-packages", "/home/dev/.venv/lib/python3.12"},
+		// non-dotted venv names must work wherever dotted ones do
+		{"user plain venv", "/home/dev/venv/lib/python3.12/site-packages", "/home/dev/venv/lib/python3.12"},
+		{"user env", "/home/dev/env/lib/python3.12/site-packages", "/home/dev/env/lib/python3.12"},
+		{"macos user venv", "/Users/dev/venv/lib/python3.12/site-packages", "/Users/dev/venv/lib/python3.12"},
+		// a project checkout carrying its own venv, one level below a known root
+		{"project under app", "/app/myservice/.venv/lib/python3.12/site-packages", "/app/myservice/.venv/lib/python3.12"},
+		{"project under workspace", "/workspace/proj/.venv/lib/python3.12/site-packages", "/workspace/proj/.venv/lib/python3.12"},
+		{"project under opt", "/opt/myservice/.venv/lib/python3.12/site-packages", "/opt/myservice/.venv/lib/python3.12"},
 		// dist-packages is resolved by the caller, so the walk only needs the parent
 		{"debian dist-packages", "/usr/lib/python3/dist-packages", "/usr/lib/python3"},
 	}
@@ -69,6 +77,22 @@ func TestDefaultPythonPaths_VirtualenvLayouts(t *testing.T) {
 			assert.Contains(t, walkedPaths(t, fs), tc.want)
 		})
 	}
+}
+
+// Documents where the glob list deliberately stops. Without "**" the depth has
+// to be bounded, and under user homes -- where a shared machine can have many
+// users each with many project directories -- an extra level costs a ReadDir per
+// directory. Container roots like /app are shallow and purpose-built, so they do
+// get the extra level (see "project under app" above).
+//
+// If this test starts failing because a deeper pattern was added, that is a
+// deliberate trade-off, not a bug: update it and note the scan-cost impact.
+func TestDefaultPythonPaths_DeepUserProjectVenvNotCovered(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	require.NoError(t, fs.MkdirAll("/home/dev/proj/.venv/lib/python3.12/site-packages", 0o755))
+
+	assert.NotContains(t, walkedPaths(t, fs), "/home/dev/proj/.venv/lib/python3.12",
+		"a venv nested under a project directory in a user home is a known gap; use the python resource's path argument")
 }
 
 // The system paths must keep working exactly as before.
