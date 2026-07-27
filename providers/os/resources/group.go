@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
@@ -90,13 +91,29 @@ func (x *mqlGroup) members() ([]any, error) {
 		return nil, err
 	}
 
-	res := make([]any, len(x.membersArr))
-	for i, name := range x.membersArr {
+	// Skip member names that do not resolve to a user instead of erroring the field.
+	// A name can be unresolvable for several reasons: it is a stale /etc/group entry for
+	// an account that was deleted, the member field had a trailing comma, or this
+	// connection simply cannot see the account — the users list falls back to parsing
+	// /etc/passwd whenever `getent passwd` is unavailable (image, snapshot and tar scans
+	// have no command execution) or does not enumerate directory accounts (SSSD leaves
+	// enumerate=FALSE by default). Erroring is strictly worse than degrading: it discards
+	// the entire member list, so a single stale entry fails every check that reads
+	// group.members on an otherwise compliant host. Resolve what we can, and log what we
+	// drop so a missing member is diagnosable. Same rationale as file.user/file.group on
+	// an unknown uid/gid.
+	res := make([]any, 0, len(x.membersArr))
+	for _, name := range x.membersArr {
 		user, ok := users.usersByName[name]
 		if !ok {
-			return nil, errors.New("cannot find user with name '" + name + "'")
+			// A trailing comma parses to an empty name and means nothing was there.
+			if name != "" {
+				log.Warn().Str("group", x.Name.Data).Str("member", name).
+					Msg("cannot resolve group member to a user, skipping it")
+			}
+			continue
 		}
-		res[i] = user
+		res = append(res, user)
 	}
 
 	return res, nil
