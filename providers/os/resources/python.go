@@ -277,8 +277,14 @@ func collectPythonPackages(runtime *plugin.Runtime, fs afero.Fs, path string) ([
 			pythonPackageDir := filepath.Join(path, packagePayload)
 			packageDirFiles, err := afs.ReadDir(pythonPackageDir)
 			if err != nil {
-				log.Warn().Err(err).Str("dir", pythonPackageDir).Msg("error while walking through files in directory")
-				return nil, err
+				// Skip this package and keep the rest of the directory.
+				// Container images routinely list entries that cannot be read:
+				// a dist-info removed in a later layer still appears in the
+				// merged listing but fails to open. Aborting here discarded
+				// every other package in the same site-packages, so one stale
+				// entry cost an image its entire Python inventory.
+				log.Debug().Err(err).Str("dir", pythonPackageDir).Msg("skipping unreadable python package directory")
+				continue
 			}
 
 			foundMeta := false
