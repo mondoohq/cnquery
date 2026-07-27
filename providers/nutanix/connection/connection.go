@@ -85,11 +85,20 @@ func NewNutanixConnection(id uint32, asset *inventory.Asset, conf *inventory.Con
 
 	var password string
 	for _, cred := range conf.Credentials {
-		if cred.Type == vault.CredentialType_password {
+		switch cred.Type {
+		case vault.CredentialType_password:
 			if cred.User != "" {
 				user = cred.User
 			}
 			password = string(cred.Secret)
+		case vault.CredentialType_bearer:
+			if apiKey == "" {
+				if len(cred.Secret) > 0 {
+					apiKey = string(cred.Secret)
+				} else {
+					apiKey = cred.Password
+				}
+			}
 		}
 	}
 
