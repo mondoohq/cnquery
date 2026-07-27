@@ -89,7 +89,6 @@ func TestAutoResolvedResources(t *testing.T) {
 		DiscoverSecretManager,
 		DiscoverPubSubTopics,
 		DiscoverPubSubSubscriptions,
-		DiscoverPubSubSnapshots,
 		DiscoverCloudRunServices,
 		DiscoverCloudRunJobs,
 		DiscoverCloudFunctions,
@@ -112,6 +111,25 @@ func TestAutoResolvedResources(t *testing.T) {
 		DiscoverDatastreamProfiles,
 	}
 	require.ElementsMatch(t, expected, Auto)
+}
+
+// Additional resources must stay out of the default set but remain reachable,
+// both through "all" and by naming them explicitly.
+func TestAdditionalResourcesAreNotDiscoveredByDefault(t *testing.T) {
+	for _, target := range AdditionalResources {
+		require.NotContains(t, Auto, target, "%s must not be in the auto set", target)
+		require.Contains(t, All, target, "%s must still be in the all set", target)
+
+		auto := getDiscoveryTargets(&inventoryv1.Config{
+			Discover: &inventoryv1.Discovery{Targets: []string{DiscoveryAuto}},
+		})
+		require.NotContains(t, auto, target)
+
+		explicit := getDiscoveryTargets(&inventoryv1.Config{
+			Discover: &inventoryv1.Discovery{Targets: []string{target}},
+		})
+		require.Contains(t, explicit, target)
+	}
 }
 
 func TestGetDiscoveryTargets(t *testing.T) {

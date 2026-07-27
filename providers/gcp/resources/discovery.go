@@ -74,9 +74,20 @@ const (
 	DiscoverDatastreamProfiles               = "datastream-connectionprofiles"
 )
 
-// All includes every discovery target: Auto covers all of them for GCP.
-var All = slices.Clone(Auto)
+// AdditionalResources holds the discovery targets that are not part of the
+// default (auto) set. They remain selectable by name and are covered by "all".
+//
+// Pub/Sub snapshots expire after at most seven days, so discovering them by
+// default churns the asset inventory with short-lived assets.
+var AdditionalResources = []string{
+	DiscoverPubSubSnapshots,
+}
 
+// All includes every discovery target: the default set plus the additional
+// resources that are not discovered by default.
+var All = append(slices.Clone(Auto), AdditionalResources...)
+
+// Auto is the default discovery set, used when no explicit targets are given.
 var Auto = []string{
 	DiscoveryOrganization,
 	DiscoveryFolders,
@@ -99,7 +110,6 @@ var Auto = []string{
 	DiscoverSecretManager,
 	DiscoverPubSubTopics,
 	DiscoverPubSubSubscriptions,
-	DiscoverPubSubSnapshots,
 	DiscoverCloudRunServices,
 	DiscoverCloudRunJobs,
 	DiscoverCloudFunctions,
