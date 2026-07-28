@@ -85,7 +85,12 @@ func NewAzureSnapshotConnection(id uint32, conf *inventory.Config, asset *invent
 	if len(conf.Credentials) > 0 {
 		cred = conf.Credentials[0]
 	}
-	token, err := azauth.GetTokenFromCredential(cred, conf.Options["tenant-id"], conf.Options["client-id"])
+	methods, err := azauth.ParseCredentialMethods(conf.Options["auth-method"])
+	if err != nil {
+		return nil, err
+	}
+	token, err := azauth.GetTokenFromCredential(cred, conf.Options["tenant-id"], conf.Options["client-id"],
+		&azauth.ChainedTokenOptions{Methods: methods})
 	if err != nil {
 		return nil, err
 	}

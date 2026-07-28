@@ -26,6 +26,10 @@ const (
 	OptionSubscriptionID     = "subscription-id"
 	OptionPlatformOverride   = "platform-override"
 	OptionFederatedTokenFile = "azure-federated-token-file"
+	// OptionAuthMethod names the sign-in method(s) to use when no client secret
+	// or certificate is supplied, as a comma-separated list of
+	// azauth.CredentialMethod values. Unset means try all of them.
+	OptionAuthMethod = "auth-method"
 )
 
 type AzureConnection struct {
@@ -45,9 +49,20 @@ type AzureConnection struct {
 // option or env var) and no explicit vault credential is present, it returns a
 // WorkloadIdentityCredential for keyless auth. Otherwise it falls through to
 // the standard cert/secret/default-chain path.
+//
+// The default chain is the expensive branch: it probes every sign-in method in
+// turn, and the managed identity probe alone burns ~15s before giving up. That
+// cost is paid per asset, since every discovered asset gets its own connection.
+// A caller that knows how it authenticates can say so with OptionAuthMethod and
+// skip straight to the method that works.
 func selectAzureCredential(conf *inventory.Config) (azcore.TokenCredential, error) {
 	tenantId := conf.Options[OptionTenantID]
 	clientId := conf.Options[OptionClientID]
+
+	methods, err := azauth.ParseCredentialMethods(conf.Options[OptionAuthMethod])
+	if err != nil {
+		return nil, err
+	}
 
 	var cred *vault.Credential
 	if len(conf.Credentials) != 0 {
@@ -59,10 +74,17 @@ func selectAzureCredential(conf *inventory.Config) (azcore.TokenCredential, erro
 		federatedTokenFile = os.Getenv("AZURE_FEDERATED_TOKEN_FILE")
 	}
 
-	if cred == nil && federatedTokenFile != "" {
+	// A token file with no method selection is unambiguously workload identity
+	// federation, so there is nothing to probe. Once a selection exists it
+	// decides instead: the file can be a leftover env var from the pod spec,
+	// and a selection that rules workload identity out has to be honored.
+	if cred == nil && federatedTokenFile != "" && len(methods) == 0 {
 		return azauth.GetWorkloadIdentityToken(tenantId, clientId, federatedTokenFile)
 	}
-	return azauth.GetTokenFromCredential(cred, tenantId, clientId)
+	return azauth.GetTokenFromCredential(cred, tenantId, clientId, &azauth.ChainedTokenOptions{
+		FederatedTokenFile: federatedTokenFile,
+		Methods:            methods,
+	})
 }
 
 func NewAzureConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*AzureConnection, error) {

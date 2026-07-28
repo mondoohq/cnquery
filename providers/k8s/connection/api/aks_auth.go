@@ -44,8 +44,10 @@ func attemptKubeloginAuthFlow(asset *inventory.Asset, config *rest.Config) error
 	log.Debug().Msg("attempting to get a bearer token using the kubelogin flow")
 
 	// the managed identity token credential is used for AKS authentication
-	chainedToken, err := azauth.GetDefaultChainedToken(&azidentity.DefaultAzureCredentialOptions{
-		ClientOptions: azcore.ClientOptions{Cloud: cloud.AzurePublic},
+	chainedToken, err := azauth.GetDefaultChainedToken(&azauth.ChainedTokenOptions{
+		DefaultAzureCredentialOptions: azidentity.DefaultAzureCredentialOptions{
+			ClientOptions: azcore.ClientOptions{Cloud: cloud.AzurePublic},
+		},
 	})
 	if err != nil {
 		return errors.Wrap(err, "failed to get chained token credential for Azure AKS authentication")

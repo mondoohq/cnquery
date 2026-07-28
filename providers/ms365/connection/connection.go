@@ -76,7 +76,7 @@ func NewMs365Connection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 	if len(tenantId) == 0 {
 		return nil, errors.New("ms365 provider requires a tenant-id")
 	}
-	token, err := azauth.GetTokenFromCredential(cred, tenantId, clientId)
+	token, err := azauth.GetTokenFromCredential(cred, tenantId, clientId, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot fetch credentials for ms365 provider")
 	}
