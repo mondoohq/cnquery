@@ -647,8 +647,26 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"databricks.cluster.customTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksCluster).GetCustomTags()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"databricks.cluster.initScripts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksCluster).GetInitScripts()).ToDataRes(types.Array(types.Dict))
+	},
+	"databricks.cluster.dockerImageUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksCluster).GetDockerImageUrl()).ToDataRes(types.String)
+	},
+	"databricks.cluster.sshPublicKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksCluster).GetSshPublicKeys()).ToDataRes(types.Array(types.String))
+	},
+	"databricks.cluster.dependencyMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksCluster).GetDependencyMode()).ToDataRes(types.String)
+	},
+	"databricks.cluster.googleServiceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksCluster).GetGoogleServiceAccount()).ToDataRes(types.String)
+	},
 	"databricks.cluster.policy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksCluster).GetPolicy()).ToDataRes(types.Resource("databricks.clusterPolicy"))
+	},
+	"databricks.cluster.instanceProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksCluster).GetInstanceProfile()).ToDataRes(types.Resource("databricks.instanceProfile"))
 	},
 	"databricks.warehouse.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksWarehouse).GetId()).ToDataRes(types.String)
@@ -1796,8 +1814,32 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDatabricksCluster).CustomTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"databricks.cluster.initScripts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksCluster).InitScripts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.cluster.dockerImageUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksCluster).DockerImageUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.cluster.sshPublicKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksCluster).SshPublicKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.cluster.dependencyMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksCluster).DependencyMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.cluster.googleServiceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksCluster).GoogleServiceAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"databricks.cluster.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatabricksCluster).Policy, ok = plugin.RawToTValue[*mqlDatabricksClusterPolicy](v.Value, v.Error)
+		return
+	},
+	"databricks.cluster.instanceProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksCluster).InstanceProfile, ok = plugin.RawToTValue[*mqlDatabricksInstanceProfile](v.Value, v.Error)
 		return
 	},
 	"databricks.warehouse.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4124,7 +4166,13 @@ type mqlDatabricksCluster struct {
 	AutoterminationMinutes     plugin.TValue[int64]
 	CreatorUserName            plugin.TValue[string]
 	CustomTags                 plugin.TValue[map[string]any]
+	InitScripts                plugin.TValue[[]any]
+	DockerImageUrl             plugin.TValue[string]
+	SshPublicKeys              plugin.TValue[[]any]
+	DependencyMode             plugin.TValue[string]
+	GoogleServiceAccount       plugin.TValue[string]
 	Policy                     plugin.TValue[*mqlDatabricksClusterPolicy]
+	InstanceProfile            plugin.TValue[*mqlDatabricksInstanceProfile]
 }
 
 // createDatabricksCluster creates a new instance of this resource
@@ -4211,6 +4259,26 @@ func (c *mqlDatabricksCluster) GetCustomTags() *plugin.TValue[map[string]any] {
 	return &c.CustomTags
 }
 
+func (c *mqlDatabricksCluster) GetInitScripts() *plugin.TValue[[]any] {
+	return &c.InitScripts
+}
+
+func (c *mqlDatabricksCluster) GetDockerImageUrl() *plugin.TValue[string] {
+	return &c.DockerImageUrl
+}
+
+func (c *mqlDatabricksCluster) GetSshPublicKeys() *plugin.TValue[[]any] {
+	return &c.SshPublicKeys
+}
+
+func (c *mqlDatabricksCluster) GetDependencyMode() *plugin.TValue[string] {
+	return &c.DependencyMode
+}
+
+func (c *mqlDatabricksCluster) GetGoogleServiceAccount() *plugin.TValue[string] {
+	return &c.GoogleServiceAccount
+}
+
 func (c *mqlDatabricksCluster) GetPolicy() *plugin.TValue[*mqlDatabricksClusterPolicy] {
 	return plugin.GetOrCompute[*mqlDatabricksClusterPolicy](&c.Policy, func() (*mqlDatabricksClusterPolicy, error) {
 		if c.MqlRuntime.HasRecording {
@@ -4224,6 +4292,22 @@ func (c *mqlDatabricksCluster) GetPolicy() *plugin.TValue[*mqlDatabricksClusterP
 		}
 
 		return c.policy()
+	})
+}
+
+func (c *mqlDatabricksCluster) GetInstanceProfile() *plugin.TValue[*mqlDatabricksInstanceProfile] {
+	return plugin.GetOrCompute[*mqlDatabricksInstanceProfile](&c.InstanceProfile, func() (*mqlDatabricksInstanceProfile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks.cluster", c.__id, "instanceProfile")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDatabricksInstanceProfile), nil
+			}
+		}
+
+		return c.instanceProfile()
 	})
 }
 

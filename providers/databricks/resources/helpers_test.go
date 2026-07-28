@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 )
 
@@ -194,5 +195,155 @@ func TestSseEncryption(t *testing.T) {
 				t.Fatalf("sseEncryption() kmsKeyArn = %q, want %q", arn, tc.wantKmsArn)
 			}
 		})
+	}
+}
+
+func TestInitScriptsToDict(t *testing.T) {
+	tests := []struct {
+		name            string
+		scripts         []compute.InitScriptInfo
+		wantType        string
+		wantDestination string
+	}{
+		{
+			name:            "workspace script",
+			scripts:         []compute.InitScriptInfo{{Workspace: &compute.WorkspaceStorageInfo{Destination: "/Shared/init.sh"}}},
+			wantType:        "workspace",
+			wantDestination: "/Shared/init.sh",
+		},
+		{
+			name:            "volumes script",
+			scripts:         []compute.InitScriptInfo{{Volumes: &compute.VolumesStorageInfo{Destination: "/Volumes/my-init.sh"}}},
+			wantType:        "volumes",
+			wantDestination: "/Volumes/my-init.sh",
+		},
+		{
+			name:            "abfss script",
+			scripts:         []compute.InitScriptInfo{{Abfss: &compute.Adlsgen2Info{Destination: "abfss://c@a.dfs.core.windows.net/i.sh"}}},
+			wantType:        "abfss",
+			wantDestination: "abfss://c@a.dfs.core.windows.net/i.sh",
+		},
+		{
+			name:            "gcs script",
+			scripts:         []compute.InitScriptInfo{{Gcs: &compute.GcsStorageInfo{Destination: "gs://bucket/i.sh"}}},
+			wantType:        "gcs",
+			wantDestination: "gs://bucket/i.sh",
+		},
+		{
+			name:            "dbfs script",
+			scripts:         []compute.InitScriptInfo{{Dbfs: &compute.DbfsStorageInfo{Destination: "dbfs:/i.sh"}}},
+			wantType:        "dbfs",
+			wantDestination: "dbfs:/i.sh",
+		},
+		{
+			name:            "local file script",
+			scripts:         []compute.InitScriptInfo{{File: &compute.LocalFileInfo{Destination: "file:/local/i.sh"}}},
+			wantType:        "file",
+			wantDestination: "file:/local/i.sh",
+		},
+		{
+			// An entry with no storage field set must still be reported, so the
+			// list never silently under-reports the number of init scripts.
+			name:            "unknown storage type still reported",
+			scripts:         []compute.InitScriptInfo{{}},
+			wantType:        "",
+			wantDestination: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := initScriptsToDict(tc.scripts)
+			if len(got) != 1 {
+				t.Fatalf("initScriptsToDict() returned %d entries, want 1", len(got))
+			}
+			entry, ok := got[0].(map[string]any)
+			if !ok {
+				t.Fatalf("entry is %T, want map[string]any", got[0])
+			}
+			if entry["type"] != tc.wantType {
+				t.Fatalf("type = %v, want %q", entry["type"], tc.wantType)
+			}
+			if entry["destination"] != tc.wantDestination {
+				t.Fatalf("destination = %v, want %q", entry["destination"], tc.wantDestination)
+			}
+		})
+	}
+}
+
+func TestInitScriptsToDictS3CarriesExtras(t *testing.T) {
+	got := initScriptsToDict([]compute.InitScriptInfo{{
+		S3: &compute.S3StorageInfo{
+			Destination:      "s3://bucket/i.sh",
+			Region:           "us-west-2",
+			Endpoint:         "https://s3.us-west-2.amazonaws.com",
+			EnableEncryption: true,
+		},
+	}})
+	if len(got) != 1 {
+		t.Fatalf("returned %d entries, want 1", len(got))
+	}
+	entry := got[0].(map[string]any)
+	for k, want := range map[string]any{
+		"type":             "s3",
+		"destination":      "s3://bucket/i.sh",
+		"region":           "us-west-2",
+		"endpoint":         "https://s3.us-west-2.amazonaws.com",
+		"enableEncryption": true,
+	} {
+		if entry[k] != want {
+			t.Fatalf("%s = %v, want %v", k, entry[k], want)
+		}
+	}
+}
+
+func TestInitScriptsToDictPreservesOrder(t *testing.T) {
+	got := initScriptsToDict([]compute.InitScriptInfo{
+		{Workspace: &compute.WorkspaceStorageInfo{Destination: "/first.sh"}},
+		{Dbfs: &compute.DbfsStorageInfo{Destination: "dbfs:/second.sh"}},
+		{Volumes: &compute.VolumesStorageInfo{Destination: "/Volumes/third.sh"}},
+	})
+	want := []string{"/first.sh", "dbfs:/second.sh", "/Volumes/third.sh"}
+	if len(got) != len(want) {
+		t.Fatalf("returned %d entries, want %d", len(got), len(want))
+	}
+	for i, w := range want {
+		if d := got[i].(map[string]any)["destination"]; d != w {
+			t.Fatalf("entry %d destination = %v, want %q", i, d, w)
+		}
+	}
+}
+
+func TestInitScriptsToDictEmpty(t *testing.T) {
+	got := initScriptsToDict(nil)
+	if got == nil {
+		t.Fatal("initScriptsToDict(nil) = nil, want empty non-nil slice")
+	}
+	if len(got) != 0 {
+		t.Fatalf("initScriptsToDict(nil) returned %d entries, want 0", len(got))
+	}
+}
+
+func TestDockerImageUrl(t *testing.T) {
+	if got := dockerImageUrl(nil); got != "" {
+		t.Fatalf("dockerImageUrl(nil) = %q, want empty", got)
+	}
+	// The basic-auth password must never leak into the exposed value.
+	img := &compute.DockerImage{
+		Url:       "example.io/repo/image:1.2.3",
+		BasicAuth: &compute.DockerBasicAuth{Username: "u", Password: "hunter2"},
+	}
+	if got := dockerImageUrl(img); got != "example.io/repo/image:1.2.3" {
+		t.Fatalf("dockerImageUrl() = %q", got)
+	}
+}
+
+func TestGoogleServiceAccount(t *testing.T) {
+	if got := googleServiceAccount(nil); got != "" {
+		t.Fatalf("googleServiceAccount(nil) = %q, want empty", got)
+	}
+	attrs := &compute.GcpAttributes{GoogleServiceAccount: "sa@project.iam.gserviceaccount.com"}
+	if got := googleServiceAccount(attrs); got != "sa@project.iam.gserviceaccount.com" {
+		t.Fatalf("googleServiceAccount() = %q", got)
 	}
 }

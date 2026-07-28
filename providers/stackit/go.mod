@@ -7,7 +7,7 @@ go 1.26.5
 require (
 	github.com/rs/zerolog v1.35.1
 	github.com/stackitcloud/stackit-sdk-go/core v0.26.0
-	github.com/stackitcloud/stackit-sdk-go/services/alb v0.16.0
+	github.com/stackitcloud/stackit-sdk-go/services/alb v0.17.0
 	github.com/stackitcloud/stackit-sdk-go/services/albwaf v0.10.0
 	github.com/stackitcloud/stackit-sdk-go/services/authorization v0.15.2
 	github.com/stackitcloud/stackit-sdk-go/services/certificates v1.9.0
@@ -17,7 +17,7 @@ require (
 	github.com/stackitcloud/stackit-sdk-go/services/loadbalancer v1.15.0
 	github.com/stackitcloud/stackit-sdk-go/services/logme v1.0.1
 	github.com/stackitcloud/stackit-sdk-go/services/mariadb v1.0.1
-	github.com/stackitcloud/stackit-sdk-go/services/modelserving v0.11.0
+	github.com/stackitcloud/stackit-sdk-go/services/modelserving v0.12.0
 	github.com/stackitcloud/stackit-sdk-go/services/mongodbflex v1.12.0
 	github.com/stackitcloud/stackit-sdk-go/services/objectstorage v1.9.0
 	github.com/stackitcloud/stackit-sdk-go/services/observability v0.24.0
@@ -33,8 +33,8 @@ require (
 	github.com/stackitcloud/stackit-sdk-go/services/sfs v0.11.0
 	github.com/stackitcloud/stackit-sdk-go/services/ske v1.20.0
 	github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex v1.16.1
-	github.com/stackitcloud/stackit-sdk-go/services/telemetrylink v0.4.0
-	github.com/stackitcloud/stackit-sdk-go/services/telemetryrouter v0.4.0
+	github.com/stackitcloud/stackit-sdk-go/services/telemetrylink v0.5.0
+	github.com/stackitcloud/stackit-sdk-go/services/telemetryrouter v0.5.0
 	github.com/stackitcloud/stackit-sdk-go/services/vpn v0.14.0
 	github.com/stretchr/testify v1.11.1
 	go.mondoo.com/mql/v13 v13.30.1
@@ -71,7 +71,7 @@ require (
 	github.com/fatih/color v1.19.0 // indirect
 	github.com/getsentry/sentry-go v0.48.0 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
-	github.com/go-git/go-billy/v5 v5.9.0 // indirect
+	github.com/go-git/go-billy/v5 v5.9.1 // indirect
 	github.com/go-git/go-git/v5 v5.19.1 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.5 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
@@ -126,7 +126,7 @@ require (
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/text v0.40.0 // indirect
 	golang.org/x/tools v0.48.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260723164925-7274b71286bd // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260724162435-b2f20204f0df // indirect
 	google.golang.org/grpc v1.82.1 // indirect
 	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect

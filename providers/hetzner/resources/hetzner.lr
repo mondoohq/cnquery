@@ -646,8 +646,19 @@ private hetzner.loadBalancerType @defaults("id name") {
   maxTargets int
   // Maximum assigned certificates
   maxAssignedCertificates int
-  // Deprecation timestamp (nullable)
-  deprecated time
+  // Announcement timestamp
+  //
+  // Deprecated in favor of deprecation, which carries the retirement date
+  // as well. Holds the timestamp the deprecation was announced, and is null
+  // while the load balancer type is current.
+  deprecated @maturity("deprecated") time
+  // Deprecation schedule
+  //
+  // Empty when the load balancer type is not deprecated. When present it
+  // carries `announced` (timestamp the deprecation was announced) and
+  // `unavailableAfter` (timestamp after which load balancers of this type
+  // can no longer be created).
+  deprecation dict
 }
 
 // Hetzner Cloud firewall

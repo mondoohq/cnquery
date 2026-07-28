@@ -438,8 +438,33 @@ databricks.cluster @defaults("clusterName dataSecurityMode state") {
   creatorUserName string
   // Custom tags applied to the cluster
   customTags map[string]string
+  // Init scripts run on every node at cluster startup
+  //
+  // Scripts executed on each node as the cluster starts, in the order
+  // configured. Each entry carries a `type` naming the storage backing the
+  // script (`workspace`, `volumes`, `s3`, `abfss`, `gcs`, `dbfs`, or `file`)
+  // and a `destination` path. Entries of type `s3` additionally carry
+  // `region`, `endpoint`, and `enableEncryption`. Init scripts execute with
+  // cluster privileges before any workload runs, so a destination that is
+  // writable outside the workspace is worth review.
+  initScripts []dict
+  // URL of the custom Docker image the cluster nodes boot from
+  dockerImageUrl string
+  // SSH public keys authorized for direct access to the cluster nodes
+  sshPublicKeys []string
+  // Dependency configuration mode
+  //
+  // One of DEPENDENCY_MODE_AUTO, DEPENDENCY_MODE_ENVIRONMENTS, or
+  // DEPENDENCY_MODE_CLUSTER_LIBRARIES. The cluster libraries mode is the
+  // legacy behavior, in which dependencies come from cluster libraries and
+  // init scripts rather than a declared environment.
+  dependencyMode string
+  // Google service account the cluster impersonates when reaching Google Cloud services
+  googleServiceAccount string
   // Policy the cluster was created against
   policy() databricks.clusterPolicy
+  // AWS instance profile the cluster nodes assume
+  instanceProfile() databricks.instanceProfile
 }
 
 // Databricks SQL warehouse

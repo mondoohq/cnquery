@@ -29,6 +29,10 @@ type mqlDatabricksInternal struct {
 	policiesByID map[string]compute.Policy
 	policiesErr  error
 
+	instanceProfilesOnce  sync.Once
+	instanceProfilesByARN map[string]compute.InstanceProfile
+	instanceProfilesErr   error
+
 	networksOnce sync.Once
 	networksByID map[string]provisioning.Network
 	networksErr  error
