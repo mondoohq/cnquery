@@ -231,13 +231,6 @@ together.cluster @defaults("name gpuType numGpus region status") @maturity("prev
   reservationStartTime time
   // Reservation end time
   reservationEndTime time
-  // Storage volumes reachable from this cluster
-  //
-  // Deprecated in favor of the top-level together.clusterStorageVolumes.
-  // The Together storage API is project-scoped and returns no cluster
-  // association, so the volumes listed here are the account's project-wide
-  // volumes rather than volumes owned by this specific cluster.
-  storageVolumes() @maturity("deprecated") []together.clusterStorageVolume
 }
 
 // Together AI managed secret
