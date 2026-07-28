@@ -38,6 +38,19 @@ var SupportedAuthMethods = []string{
 	authMethodSecurityToken,
 }
 
+// usesPrincipalAuth reports whether the caller selected one of the keyless
+// principal flows rather than the default API-key path. The argument is the
+// --auth-method flag value, already validated against SupportedAuthMethods by
+// ParseCLI - it names an authentication method, and carries no secret material.
+func usesPrincipalAuth(method string) bool {
+	switch method {
+	case "", authMethodAPIKey:
+		return false
+	default:
+		return true
+	}
+}
+
 // defaultOciConfigPath reports the SDK's default configuration file location.
 func defaultOciConfigPath() (string, error) {
 	home, err := os.UserHomeDir()

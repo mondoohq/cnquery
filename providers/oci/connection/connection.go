@@ -64,7 +64,7 @@ func NewOciConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 			passphrase = &pkey.Password
 		}
 		configProvider = common.NewRawConfigurationProvider(tenancyOcid, userOcid, region, fingerprint, string(pkey.Secret), passphrase)
-	} else if authMethod := conf.Options["auth-method"]; authMethod != "" && authMethod != authMethodAPIKey {
+	} else if authMethod := conf.Options["auth-method"]; usesPrincipalAuth(authMethod) {
 		configProvider, err = principalConfigProvider(authMethod, conf.Options["profile"])
 		if err != nil {
 			return nil, err
