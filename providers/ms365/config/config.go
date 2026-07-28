@@ -77,6 +77,12 @@ Notes:
 					Default: "",
 					Desc:    "Passphrase for the authentication certificate file",
 				},
+				{
+					Long:    "auth-method",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Comma-separated sign-in methods to use when no client secret or certificate is given: cli, env, managed-identity, workload-identity (default: try all)",
+				},
 			},
 		},
 	},
