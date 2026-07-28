@@ -419,12 +419,57 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 }
 
 func (r *Runtime) AssetUpdated(asset *inventory.Asset) {
+	// Discovery hands each asset out as an independent clone of the connection asset
+	// (see discovery.CreateAssetWithRuntime), so metadata a caller adds to that clone
+	// after connecting is invisible to the providers: every provider connect derives
+	// its asset from r.Provider.Connection.Asset (crossProviderAsset), and the core
+	// provider snapshots that into the `asset` resource once, at Connect. Copy the two
+	// fields the `asset` resource exposes back onto the connection asset so a later
+	// provider start observes them.
+	//
+	// This is what makes upstream-synced annotations reach MQL. cnspec merges the
+	// annotations returned by SynchronizeAssets onto the scanned asset and calls this
+	// method; without the copy, asset.annotations keeps only the locally supplied set
+	// and any policy or risk factor keyed on a server-side annotation never matches.
+	syncAssetMetadata(r.Provider, asset)
+
 	rec := r.Recording()
 	rec.EnsureAsset(
 		asset,
 		r.Provider.Instance.ID,
 		r.Provider.Connection.Id,
 		asset.Connections[0])
+}
+
+// syncAssetMetadata copies the mutable metadata of an updated asset onto the
+// provider's connection asset. Only labels and annotations are copied: they are the
+// fields CreateAssetResourceArgs reads that a caller may legitimately change after
+// connecting, whereas platform data and connections describe how the connection was
+// established and must not be rewritten underneath it.
+//
+// This works by getting ahead of the provider start rather than by refreshing an
+// already-built resource, which is deliberate: the generated CreateResource discards a
+// newly built resource when one is already cached under the same id
+// (`if x, ok := runtime.Resources.Get(id); ok { return x, nil }`), so re-creating
+// `asset` returns the stale instance. Providers are started lazily on first use of one
+// of their resources and the connection is then cached, and no MQL runs before the
+// caller that updates the asset, so the copy lands before the snapshot is taken. If
+// that ever stops holding, the fix is to make resource creation replace a cached
+// instance, not to call CreateResource again here.
+func syncAssetMetadata(provider *ConnectedProvider, asset *inventory.Asset) {
+	if provider == nil || provider.Connection == nil || asset == nil {
+		return
+	}
+	connAsset := provider.Connection.Asset
+	if connAsset == nil || connAsset == asset {
+		return
+	}
+	if asset.Labels != nil {
+		connAsset.Labels = asset.Labels
+	}
+	if asset.Annotations != nil {
+		connAsset.Annotations = asset.Annotations
+	}
 }
 
 func (r *Runtime) CreateResource(name string, args map[string]*llx.Primitive) (llx.Resource, error) {
