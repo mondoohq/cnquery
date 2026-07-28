@@ -200,8 +200,18 @@ func (a *mqlAwsTimestreamLiveanalytics) getTables(conn *connection.AwsConnection
 					return nil, err
 				}
 				for _, table := range resp.Tables {
-					magneticStoreProperties, _ := convert.JsonToDictSlice(table.MagneticStoreWriteProperties)
-					retentionProperties, _ := convert.JsonToDictSlice(table.RetentionProperties)
+					// Both are struct pointers, not slices: JsonToDictSlice marshals
+					// them to a JSON object and then fails to unmarshal it into a
+					// []any, so the discarded error left both fields permanently
+					// null even though the .lr docs enumerate the keys to query.
+					magneticStoreProperties, err := convert.JsonToDict(table.MagneticStoreWriteProperties)
+					if err != nil {
+						return nil, err
+					}
+					retentionProperties, err := convert.JsonToDict(table.RetentionProperties)
+					if err != nil {
+						return nil, err
+					}
 
 					mqlCluster, err := CreateResource(a.MqlRuntime, "aws.timestream.liveanalytics.table",
 						map[string]*llx.RawData{
