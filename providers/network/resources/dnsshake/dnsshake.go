@@ -197,6 +197,131 @@ func (d *DnsClient) Query(dnsTypes ...string) (map[string]DnsRecord, error) {
 }
 
 func (d *DnsClient) queryDnsType(fqdn string, t string) (map[string]DnsRecord, error) {
+	return d.queryDnsTypeAt(d.config.Servers[0], true, fqdn, t)
+}
+
+// QueryAuthoritative resolves the requested types against the nameservers that
+// are authoritative for the zone, rather than through a caching resolver.
+//
+// Use it when the answer's TTL matters. A caching resolver returns the time
+// remaining on its cached entry, so a record configured with a TTL of 300
+// answers 300, then 208, then 144 as the entry ages. Only the authoritative
+// server reports the configured value, which is the one worth asserting on.
+//
+// Returns an error when the zone's nameservers cannot be determined, rather
+// than silently falling back to the caching resolver: a caller that asked for
+// authoritative data should not be handed cached data instead.
+func (d *DnsClient) QueryAuthoritative(dnsTypes ...string) (map[string]DnsRecord, error) {
+	servers, err := d.authoritativeNameservers()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(dnsTypes) == 0 {
+		for k := range stringToType {
+			dnsTypes = append(dnsTypes, k)
+		}
+	}
+
+	var workers sync.WaitGroup
+	var errs multierr.Errors
+
+	res := map[string]DnsRecord{}
+	for i := range dnsTypes {
+		dnsType := dnsTypes[i]
+
+		workers.Add(1)
+		go func() {
+			defer workers.Done()
+
+			// Try each nameserver in turn: an individual one may refuse, be
+			// unreachable, or lag behind its peers, and any authoritative server
+			// for the zone is an equally valid source for the record.
+			var lastErr error
+			for _, server := range servers {
+				records, err := d.queryDnsTypeAt(server, false, d.fqdn, dnsType)
+				if err != nil {
+					lastErr = err
+					continue
+				}
+
+				d.sync.Lock()
+				for k := range records {
+					res[k] = records[k]
+				}
+				d.sync.Unlock()
+				return
+			}
+
+			if lastErr != nil {
+				d.sync.Lock()
+				errs.Add(lastErr)
+				d.sync.Unlock()
+			}
+		}()
+	}
+
+	workers.Wait()
+	return res, errs.Deduplicate()
+}
+
+// authoritativeNameservers finds the addresses of the nameservers serving the
+// zone that contains the client's fqdn.
+//
+// The NS records live at the zone apex, not at every name within it, so this
+// walks up the labels until a delegation is found: a query for
+// "www.example.com" finds nothing at that name and succeeds at "example.com".
+// The walk stops before the root so a name that resolves nowhere fails rather
+// than returning the root servers, which would answer referrals instead of the
+// records the caller wants.
+func (d *DnsClient) authoritativeNameservers() ([]string, error) {
+	name := dns.Fqdn(d.fqdn)
+	if name == "." {
+		return nil, errors.New("cannot determine authoritative nameservers without a domain name")
+	}
+
+	for labels := dns.SplitDomainName(name); len(labels) > 0; labels = labels[1:] {
+		zone := strings.Join(labels, ".")
+
+		records, err := d.queryDnsTypeAt(d.config.Servers[0], true, zone, "NS")
+		if err != nil {
+			return nil, err
+		}
+
+		ns, ok := records["NS"]
+		if !ok || ns.RCode != dns.RcodeToString[dns.RcodeSuccess] || len(ns.RData) == 0 {
+			continue
+		}
+
+		addrs := []string{}
+		for _, host := range ns.RData {
+			// Nameservers are named, so each one needs resolving to an address
+			// before it can be queried. Skip any that do not resolve; as long as
+			// one does, the zone is reachable.
+			ips, err := net.LookupHost(strings.TrimSuffix(host, "."))
+			if err != nil {
+				continue
+			}
+			addrs = append(addrs, ips...)
+		}
+
+		if len(addrs) > 0 {
+			return addrs, nil
+		}
+	}
+
+	return nil, errors.New("no authoritative nameserver found for " + d.fqdn)
+}
+
+// queryDnsTypeAt performs the lookup against a named server.
+//
+// recursion decides who resolves the name: true asks a caching resolver to do
+// the work, false requires the server to answer from its own zone data. The
+// distinction matters for TTLs. A caching resolver reports the time remaining
+// on its cached entry, counting down toward zero, so the same query returns a
+// different TTL depending on when it is asked. An authoritative server reports
+// the value configured in the zone.
+func (d *DnsClient) queryDnsTypeAt(server string, recursion bool, fqdn string, t string) (map[string]DnsRecord, error) {
 	dnsType, ok := stringToType[t]
 	if !ok {
 		return nil, errors.New("unknown dns type")
@@ -209,9 +334,9 @@ func (d *DnsClient) queryDnsType(fqdn string, t string) (map[string]DnsRecord, e
 	m := &dns.Msg{}
 	m.SetEdns0(4096, false)
 	m.SetQuestion(dns.Fqdn(fqdn), dnsType)
-	m.RecursionDesired = true
+	m.RecursionDesired = recursion
 
-	r, _, err := c.Exchange(m, net.JoinHostPort(d.config.Servers[0], d.config.Port))
+	r, _, err := c.Exchange(m, net.JoinHostPort(server, d.config.Port))
 	if err != nil {
 		res[dnsTypText] = DnsRecord{
 			Type:  dnsTypText,
