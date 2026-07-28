@@ -637,11 +637,21 @@ func buildEcrPublicRepositoryResource(runtime *plugin.Runtime, r ecrpublic_types
 			"registryId": llx.StringDataPtr(r.RegistryId),
 			"public":     llx.BoolData(true),
 			"region":     llx.StringData("us-east-1"),
-			// Public ECR does not support scan-on-push, uses immutable tags,
-			// and always uses AES256 encryption. These are platform-enforced
-			// defaults (not returned by the public ECR DescribeRepositories API).
+			// None of these three are returned by the public ECR API --
+			// ecrpublic's Repository carries only CreatedAt, RegistryId,
+			// RepositoryArn, RepositoryName and RepositoryUri.
+			//
+			// imageScanOnPush and encryptionType are reported as platform
+			// behaviour and both fail safe (no scan-on-push flags the
+			// repository; AES256 matches ECR Public's at-rest encryption).
+			//
+			// imageTagMutability was not: ECR Public has no tag-mutability
+			// control at all and permits re-pushing an existing tag, so
+			// asserting "IMMUTABLE" made every public repository pass an
+			// "image tags must be immutable" policy on fabricated evidence.
+			// Report it as unknown rather than inventing a compliant value.
 			"imageScanOnPush":    llx.BoolData(false),
-			"imageTagMutability": llx.StringData("IMMUTABLE"),
+			"imageTagMutability": llx.NilData,
 			"encryptionType":     llx.StringData("AES256"),
 			"createdAt":          llx.TimeDataPtr(r.CreatedAt),
 		})

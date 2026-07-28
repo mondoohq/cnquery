@@ -12,6 +12,17 @@ import (
 )
 
 func TestNaclAllowsPublicIngress(t *testing.T) {
+	// allowAll / denyAll are the rule shapes AWS creates by default.
+	allowAll := func(n int) naclIngressRule {
+		return naclIngressRule{ruleNumber: n, allow: true, public: true, protocol: "-1", allPorts: true}
+	}
+	denyAll := func(n int) naclIngressRule {
+		return naclIngressRule{ruleNumber: n, allow: false, public: true, protocol: "-1", allPorts: true}
+	}
+	tcp := func(n int, allow bool, from, to int64) naclIngressRule {
+		return naclIngressRule{ruleNumber: n, allow: allow, public: true, protocol: "6", fromPort: from, toPort: to}
+	}
+
 	tests := []struct {
 		name  string
 		rules []naclIngressRule
@@ -19,31 +30,51 @@ func TestNaclAllowsPublicIngress(t *testing.T) {
 	}{
 		{
 			name:  "default nacl allows all",
-			rules: []naclIngressRule{{ruleNumber: 100, allow: true, public: true}},
+			rules: []naclIngressRule{allowAll(100)},
 			want:  true,
 		},
 		{
-			name: "lower-numbered deny shadows allow",
-			rules: []naclIngressRule{
-				{ruleNumber: 90, allow: false, public: true},
-				{ruleNumber: 100, allow: true, public: true},
-			},
-			want: false,
+			// The regression this test previously encoded as want:false. A deny
+			// scoped to one port does not shadow a broad allow -- the host is
+			// still reachable on every other port.
+			name:  "narrow deny does not shadow a broad allow",
+			rules: []naclIngressRule{tcp(90, false, 3389, 3389), allowAll(100)},
+			want:  true,
 		},
 		{
-			name: "lower-numbered allow wins over later deny",
-			rules: []naclIngressRule{
-				{ruleNumber: 200, allow: false, public: true},
-				{ruleNumber: 100, allow: true, public: true},
-			},
-			want: true,
+			name:  "deny-all genuinely shadows a later allow",
+			rules: []naclIngressRule{denyAll(90), allowAll(100)},
+			want:  false,
 		},
 		{
-			name: "only specific-cidr allow, no public rule",
-			rules: []naclIngressRule{
-				{ruleNumber: 100, allow: true, public: false},
-			},
-			want: false,
+			name:  "deny on a different protocol does not shadow",
+			rules: []naclIngressRule{tcp(90, false, 0, 65535), {ruleNumber: 100, allow: true, public: true, protocol: "17", allPorts: true}},
+			want:  true,
+		},
+		{
+			name:  "deny covering the exact allowed range shadows it",
+			rules: []naclIngressRule{tcp(90, false, 0, 65535), tcp(100, true, 443, 443)},
+			want:  false,
+		},
+		{
+			name:  "deny partially overlapping the allowed range does not shadow",
+			rules: []naclIngressRule{tcp(90, false, 400, 500), tcp(100, true, 443, 8443)},
+			want:  true,
+		},
+		{
+			name:  "bounded deny cannot shadow an all-ports allow on the same protocol",
+			rules: []naclIngressRule{tcp(90, false, 443, 443), {ruleNumber: 100, allow: true, public: true, protocol: "6", allPorts: true}},
+			want:  true,
+		},
+		{
+			name:  "lower-numbered allow wins over later deny",
+			rules: []naclIngressRule{denyAll(200), allowAll(100)},
+			want:  true,
+		},
+		{
+			name:  "only specific-cidr allow, no public rule",
+			rules: []naclIngressRule{{ruleNumber: 100, allow: true, public: false, protocol: "-1", allPorts: true}},
+			want:  false,
 		},
 		{
 			name:  "no rules",
@@ -51,12 +82,14 @@ func TestNaclAllowsPublicIngress(t *testing.T) {
 			want:  false,
 		},
 		{
-			name: "non-public rules ignored, public deny decides",
-			rules: []naclIngressRule{
-				{ruleNumber: 50, allow: true, public: false},
-				{ruleNumber: 100, allow: false, public: true},
-			},
-			want: false,
+			name:  "non-public rules ignored, public deny decides",
+			rules: []naclIngressRule{{ruleNumber: 50, allow: true, public: false, protocol: "-1", allPorts: true}, denyAll(100)},
+			want:  false,
+		},
+		{
+			name:  "input order does not matter",
+			rules: []naclIngressRule{allowAll(100), tcp(90, false, 22, 22)},
+			want:  true,
 		},
 	}
 	for _, tt := range tests {

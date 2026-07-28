@@ -45,20 +45,46 @@ func openIngressRulesFromSecurityGroups(sgs *plugin.TValue[[]any]) ([]any, error
 	return rules, nil
 }
 
+// securityGroupCount reports how many security groups are attached, and is used
+// to tell "no security group opens this" apart from "security groups do not
+// constrain this resource at all".
+func securityGroupCount(sgs *plugin.TValue[[]any]) int {
+	if sgs == nil {
+		return 0
+	}
+	return len(sgs.Data)
+}
+
 // buildNetworkExposure creates a shared aws.network.exposure from a resource's
-// public-access toggle and its attached security groups. internetReachable is
-// true only when the resource is publicly accessible and a security group opens
-// it.
+// public-access toggle and its attached security groups.
+//
+// internetReachable requires the resource to be publicly accessible, and -- when
+// security groups apply to it -- for one of them to open it. When no security
+// group is attached, security groups are not what stands between the resource
+// and the internet, so publiclyAccessible alone decides.
+//
+// That distinction matters most for load balancers: Network Load Balancers only
+// support security groups when one was attached at creation (they cannot be
+// added later) and Gateway Load Balancers never support them, so most NLBs
+// report an empty list. Requiring sgAllows there made every internet-facing NLB
+// -- including one with a world-open listener -- report internetReachable:false.
+// It is also the safe direction when the group list could not be enumerated.
 func buildNetworkExposure(runtime *plugin.Runtime, id string, publiclyAccessible bool, sgs *plugin.TValue[[]any]) (*mqlAwsNetworkExposure, error) {
 	openRules, err := openIngressRulesFromSecurityGroups(sgs)
 	if err != nil {
 		return nil, err
 	}
 	sgAllows := len(openRules) > 0
+	sgsApply := securityGroupCount(sgs) > 0
+
+	internetReachable := publiclyAccessible
+	if sgsApply {
+		internetReachable = publiclyAccessible && sgAllows
+	}
 
 	res, err := CreateResource(runtime, "aws.network.exposure", map[string]*llx.RawData{
 		"__id":                       llx.StringData(id),
-		"internetReachable":          llx.BoolData(publiclyAccessible && sgAllows),
+		"internetReachable":          llx.BoolData(internetReachable),
 		"publiclyAccessible":         llx.BoolData(publiclyAccessible),
 		"securityGroupAllowsIngress": llx.BoolData(sgAllows),
 		"openIngressRules":           llx.ArrayData(openRules, types.Resource("aws.ec2.securitygroup.ippermission")),
