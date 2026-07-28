@@ -352,19 +352,8 @@ func (g *mqlGcpProjectComputeServiceInstance) inventory() (*mqlGcpProjectCompute
 		return nil, err
 	}
 
-	osInfo, err := convert.JsonToDict(inv.OsInfo)
-	if err != nil {
-		return nil, err
-	}
-	items := make([]any, 0, len(inv.Items))
 	inventoryItems := make([]any, 0, len(inv.Items))
 	for _, item := range inv.Items {
-		dict, err := convert.JsonToDict(item)
-		if err != nil {
-			return nil, err
-		}
-		items = append(items, dict)
-
 		mqlItem, err := newMqlOsInventoryItem(g.MqlRuntime, inv.Name, &item)
 		if err != nil {
 			return nil, err
@@ -386,8 +375,6 @@ func (g *mqlGcpProjectComputeServiceInstance) inventory() (*mqlGcpProjectCompute
 
 	res, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.instance.osInventory", map[string]*llx.RawData{
 		"name":                 llx.StringData(inv.Name),
-		"osInfo":               llx.DictData(osInfo),
-		"items":                llx.ArrayData(items, types.Dict),
 		"osHostname":           llx.StringData(osHostname),
 		"osLongName":           llx.StringData(osLongName),
 		"osShortName":          llx.StringData(osShortName),
@@ -489,11 +476,6 @@ func (g *mqlGcpProjectComputeServiceInstance) vulnerabilityReport() (*mqlGcpProj
 		return nil, err
 	}
 
-	vulnerabilities, err := convert.JsonToDictSlice(report.Vulnerabilities)
-	if err != nil {
-		return nil, err
-	}
-
 	vulnDetails := make([]any, 0, len(report.Vulnerabilities))
 	for i, v := range report.Vulnerabilities {
 		mqlVuln, err := newMqlVulnerabilityReportVulnerability(g.MqlRuntime, report.Name, i, v)
@@ -505,7 +487,6 @@ func (g *mqlGcpProjectComputeServiceInstance) vulnerabilityReport() (*mqlGcpProj
 
 	res, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.instance.vulnerabilityReport", map[string]*llx.RawData{
 		"name":                         llx.StringData(report.Name),
-		"vulnerabilities":              llx.ArrayData(vulnerabilities, types.Dict),
 		"vulnerabilityDetails":         llx.ArrayData(vulnDetails, types.Resource("gcp.project.computeService.instance.vulnerabilityReport.vulnerability")),
 		"highestUpgradableCveSeverity": llx.StringData(report.HighestUpgradableCveSeverity),
 		"updateTime":                   llx.TimeDataPtr(parseTime(report.UpdateTime)),

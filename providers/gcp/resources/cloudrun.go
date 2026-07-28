@@ -477,11 +477,6 @@ func (g *mqlGcpProjectCloudRunService) services() ([]any, error) {
 						}
 					}
 
-					vpcCfg, err := mqlVpcAccess(s.Template.VpcAccess)
-					if err != nil {
-						log.Error().Err(err).Send()
-					}
-
 					templateId := fmt.Sprintf("gcp.project.cloudRunService.service/%s/%s/revisionTemplate", projectId, s.Name)
 					mqlVpcAccessCfg, err := mqlVpcAccessConfig(g.MqlRuntime, templateId+"/vpcAccess", s.Template.VpcAccess)
 					if err != nil {
@@ -500,7 +495,6 @@ func (g *mqlGcpProjectCloudRunService) services() ([]any, error) {
 						"labels":                        llx.MapData(convert.MapToInterfaceMap(s.Template.Labels), types.String),
 						"annotations":                   llx.MapData(convert.MapToInterfaceMap(s.Template.Annotations), types.String),
 						"scaling":                       llx.DictData(scalingCfg),
-						"vpcAccess":                     llx.DictData(vpcCfg),
 						"vpcAccessConfig":               llx.ResourceData(mqlVpcAccessCfg, "gcp.project.cloudRunService.vpcAccessConfig"),
 						"timeout":                       llx.TimeData(llx.DurationToTime(s.Template.GetTimeout().GetSeconds())),
 						"serviceAccountEmail":           llx.StringData(s.Template.ServiceAccount),
@@ -834,12 +828,6 @@ func (g *mqlGcpProjectCloudRunService) jobs() ([]any, error) {
 					templateId := fmt.Sprintf("%s/executionTemplate", j.Name)
 					var mqlTaskTemplate plugin.Resource
 					if j.Template.Template != nil {
-						vpcAccess, err := mqlVpcAccess(j.Template.Template.VpcAccess)
-						if err != nil {
-							log.Error().Err(err).Send()
-							return
-						}
-
 						taskTemplateId := fmt.Sprintf("%s/template", templateId)
 						mqlVpcAccessCfg, err := mqlVpcAccessConfig(g.MqlRuntime, taskTemplateId+"/vpcAccess", j.Template.Template.VpcAccess)
 						if err != nil {
@@ -856,7 +844,6 @@ func (g *mqlGcpProjectCloudRunService) jobs() ([]any, error) {
 						mqlTaskTemplate, err = CreateResource(g.MqlRuntime, "gcp.project.cloudRunService.job.executionTemplate.taskTemplate", map[string]*llx.RawData{
 							"id":                   llx.StringData(taskTemplateId),
 							"projectId":            llx.StringData(projectId),
-							"vpcAccess":            llx.DictData(vpcAccess),
 							"vpcAccessConfig":      llx.ResourceData(mqlVpcAccessCfg, "gcp.project.cloudRunService.vpcAccessConfig"),
 							"timeout":              llx.TimeData(llx.DurationToTime(j.Template.Template.GetTimeout().GetSeconds())),
 							"serviceAccountEmail":  llx.StringData(j.Template.Template.ServiceAccount),
@@ -996,20 +983,6 @@ func mqlCondition(runtime *plugin.Runtime, c *runpb.Condition, parentId, suffix 
 		"message":            llx.StringData(c.Message),
 		"lastTransitionTime": llx.TimeDataPtr(timestampAsTimePtr(c.LastTransitionTime)),
 		"severity":           llx.StringData(c.Severity.String()),
-	})
-}
-
-func mqlVpcAccess(vpcAccess *runpb.VpcAccess) (map[string]any, error) {
-	type mqlVpcAccess struct {
-		Connector string `json:"connector"`
-		Egress    string `json:"egress"`
-	}
-	if vpcAccess == nil {
-		return nil, nil
-	}
-	return convert.JsonToDict(mqlVpcAccess{
-		Connector: vpcAccess.Connector,
-		Egress:    vpcAccess.Egress.String(),
 	})
 }
 

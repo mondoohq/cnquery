@@ -552,11 +552,12 @@ func getSubnetworkByUrl(subnetUrl string, runtime *plugin.Runtime) (*mqlGcpProje
 	res, err := NewResource(runtime, "gcp.project.computeService.subnetwork", map[string]*llx.RawData{
 		"name":      llx.StringData(name),
 		"projectId": llx.StringData(project),
-		"regionUrl": llx.StringData(regionUrl),
 	})
 	if err != nil {
 		return nil, err
 	}
+	mqlRef := res.(*mqlGcpProjectComputeServiceSubnetwork)
+	mqlRef.cacheRegionUrl = regionUrl
 	return res.(*mqlGcpProjectComputeServiceSubnetwork), nil
 }
 

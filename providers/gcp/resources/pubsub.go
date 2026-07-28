@@ -27,6 +27,10 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
+type mqlGcpProjectPubsubServiceTopicConfigInternal struct {
+	cacheKmsKeyName string
+}
+
 func (g *mqlGcpProjectPubsubService) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
@@ -439,7 +443,6 @@ func (g *mqlGcpProjectPubsubServiceTopic) config() (*mqlGcpProjectPubsubServiceT
 		"projectId":                   llx.StringData(projectId),
 		"topicName":                   llx.StringData(name),
 		"labels":                      llx.MapData(convert.MapToInterfaceMap(cfg.Labels), types.String),
-		"kmsKeyName":                  llx.StringData(cfg.KmsKeyName),
 		"messageStoragePolicy":        llx.ResourceData(messageStoragePolicy, "gcp.project.pubsubService.topic.config.messagestoragepolicy"),
 		"state":                       llx.StringData(topicStateToString(cfg.State)),
 		"retentionDuration":           llx.TimeData(pbDurationToTime(cfg.MessageRetentionDuration)),
@@ -455,6 +458,7 @@ func (g *mqlGcpProjectPubsubServiceTopic) config() (*mqlGcpProjectPubsubServiceT
 		return nil, err
 	}
 	tc := res.(*mqlGcpProjectPubsubServiceTopicConfig)
+	tc.cacheKmsKeyName = cfg.KmsKeyName
 	if schemaSettings == nil {
 		tc.SchemaSettings.State = plugin.StateIsNull | plugin.StateIsSet
 	}
@@ -1227,15 +1231,12 @@ func (g *mqlGcpProjectPubsubServiceSnapshot) managedBy() (string, error) {
 }
 
 func (g *mqlGcpProjectPubsubServiceTopicConfig) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
-	if g.KmsKeyName.Error != nil {
-		return nil, g.KmsKeyName.Error
-	}
-	if g.KmsKeyName.Data == "" {
+	if g.cacheKmsKeyName == "" {
 		g.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
 	res, err := NewResource(g.MqlRuntime, "gcp.project.kmsService.keyring.cryptokey",
-		map[string]*llx.RawData{"resourcePath": llx.StringData(g.KmsKeyName.Data)})
+		map[string]*llx.RawData{"resourcePath": llx.StringData(g.cacheKmsKeyName)})
 	if err != nil {
 		return nil, err
 	}

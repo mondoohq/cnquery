@@ -202,7 +202,6 @@ func (g *mqlGcpProjectBigqueryService) datasets() ([]any, error) {
 			"created":                      llx.TimeData(metadata.CreationTime),
 			"modified":                     llx.TimeData(metadata.LastModifiedTime),
 			"tags":                         llx.MapData(convert.MapToInterfaceMap(tags), types.String),
-			"kmsName":                      llx.StringData(kmsName),
 			"access":                       llx.ArrayData(access, types.Resource("gcp.project.bigqueryService.dataset.accessEntry")),
 			"defaultTableExpirationMs":     llx.IntData(metadata.DefaultTableExpiration.Milliseconds()),
 			"maxTimeTravelHours":           llx.IntData(int64(metadata.MaxTimeTravel / time.Hour)),
@@ -598,7 +597,6 @@ func (g *mqlGcpProjectBigqueryServiceDataset) tables() ([]any, error) {
 			"numRows":                llx.IntData(int64(metadata.NumRows)),
 			"type":                   llx.StringData(string(metadata.Type)),
 			"expirationTime":         llx.TimeData(metadata.ExpirationTime),
-			"kmsName":                llx.StringData(kmsName),
 			"snapshotTime":           llx.TimeDataPtr(snapshotTime),
 			"cloneTime":              llx.TimeDataPtr(cloneTime),
 			"viewQuery":              llx.StringData(metadata.ViewQuery),
@@ -694,7 +692,6 @@ func (g *mqlGcpProjectBigqueryServiceDataset) models() ([]any, error) {
 			"modified":       llx.TimeData(metadata.LastModifiedTime),
 			"type":           llx.StringData(string(metadata.Type)),
 			"expirationTime": llx.TimeData(metadata.ExpirationTime),
-			"kmsName":        llx.StringData(kmsName),
 		})
 		if err != nil {
 			return nil, err

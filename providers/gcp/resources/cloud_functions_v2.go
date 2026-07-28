@@ -22,6 +22,11 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+type mqlGcpProjectCloudFunctionV2BuildConfigInternal struct {
+	cacheDockerRepository string
+	cacheServiceAccount   string
+}
+
 func (g *mqlGcpProject) cloudFunctionsV2() ([]any, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
@@ -246,8 +251,6 @@ func fnV2BuildConfig(runtime *plugin.Runtime, parentName string, cfg *functionsp
 		"source":               llx.DictData(sourceDict),
 		"buildWorkerPool":      llx.StringData(cfg.WorkerPool),
 		"environmentVariables": llx.MapData(envVars, types.String),
-		"dockerRepository":     llx.StringData(cfg.DockerRepository),
-		"serviceAccount":       llx.StringData(cfg.ServiceAccount),
 		"build":                llx.StringData(cfg.Build),
 		"sourceProvenance":     llx.DictData(sourceProvenanceDict),
 		"gitUri":               llx.StringData(gitUri),
@@ -255,16 +258,16 @@ func fnV2BuildConfig(runtime *plugin.Runtime, parentName string, cfg *functionsp
 	if err != nil {
 		return nil, err
 	}
+	mqlRef := res.(*mqlGcpProjectCloudFunctionV2BuildConfig)
+	mqlRef.cacheDockerRepository = cfg.DockerRepository
+	mqlRef.cacheServiceAccount = cfg.ServiceAccount
 	return res.(*mqlGcpProjectCloudFunctionV2BuildConfig), nil
 }
 
 func (g *mqlGcpProjectCloudFunctionV2BuildConfig) serviceAccountRef() (*mqlGcpProjectIamServiceServiceAccount, error) {
-	if g.ServiceAccount.Error != nil {
-		return nil, g.ServiceAccount.Error
-	}
 	// buildConfig.serviceAccount is a full "projects/{p}/serviceAccounts/{email}"
 	// path, so resolveServiceAccountRef derives the project — no fallback needed.
-	sa, err := resolveServiceAccountRef(g.MqlRuntime, g.ServiceAccount.Data, "")
+	sa, err := resolveServiceAccountRef(g.MqlRuntime, g.cacheServiceAccount, "")
 	if err != nil {
 		return nil, err
 	}
@@ -279,10 +282,7 @@ func (g *mqlGcpProjectCloudFunctionV2BuildConfig) id() (string, error) {
 }
 
 func (g *mqlGcpProjectCloudFunctionV2BuildConfig) dockerRepositoryRef() (*mqlGcpProjectArtifactRegistryServiceRepository, error) {
-	if g.DockerRepository.Error != nil {
-		return nil, g.DockerRepository.Error
-	}
-	project, location, repo := artifactRegistryRepoFromPath(g.DockerRepository.Data)
+	project, location, repo := artifactRegistryRepoFromPath(g.cacheDockerRepository)
 	ref, err := resolveArtifactRegistryRepoRef(g.MqlRuntime, project, location, repo)
 	if err != nil {
 		return nil, err

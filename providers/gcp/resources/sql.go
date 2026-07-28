@@ -26,6 +26,10 @@ import (
 	"google.golang.org/api/sqladmin/v1"
 )
 
+type mqlGcpProjectSqlServiceInstanceSettingsIpConfigurationInternal struct {
+	cachePrivateNetwork string
+}
+
 func initGcpProjectSqlService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 0 {
 		return args, nil, nil
@@ -393,18 +397,8 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 				dbFlags[f.Name] = f.Value
 			}
 
-			type mqlActiveDirectoryCfg struct {
-				Domain string `json:"domain,omitempty"`
-			}
-			var mqlADCfg map[string]any
 			var mqlActiveDirectory plugin.Resource
 			if s.ActiveDirectoryConfig != nil {
-				mqlADCfg, err = convert.JsonToDict(mqlActiveDirectoryCfg{
-					Domain: s.ActiveDirectoryConfig.Domain,
-				})
-				if err != nil {
-					return err
-				}
 				mqlActiveDirectory, err = CreateResource(g.MqlRuntime, "gcp.project.sqlService.instance.settings.activeDirectory", map[string]*llx.RawData{
 					"__id":                      llx.StringData(fmt.Sprintf("%s/settings/activeDirectory", instanceId)),
 					"domain":                    llx.StringData(s.ActiveDirectoryConfig.Domain),
@@ -534,7 +528,6 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 					"enablePrivatePathForGoogleCloudServices": llx.BoolData(s.IpConfiguration.EnablePrivatePathForGoogleCloudServices),
 					"id":                            llx.StringData(fmt.Sprintf("%s/settings/ipConfiguration", instanceId)),
 					"ipv4Enabled":                   llx.BoolData(s.IpConfiguration.Ipv4Enabled),
-					"privateNetwork":                llx.StringData(s.IpConfiguration.PrivateNetwork),
 					"requireSsl":                    llx.BoolData(s.IpConfiguration.RequireSsl),
 					"sslMode":                       llx.StringData(s.IpConfiguration.SslMode),
 					"serverCaMode":                  llx.StringData(s.IpConfiguration.ServerCaMode),
@@ -545,6 +538,8 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 				if err != nil {
 					return err
 				}
+				mqlRef := mqlIpCfg.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration)
+				mqlRef.cachePrivateNetwork = s.IpConfiguration.PrivateNetwork
 			}
 
 			type mqlLocationPref struct {
@@ -640,7 +635,6 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 
 			mqlSettings, err := CreateResource(g.MqlRuntime, "gcp.project.sqlService.instance.settings", map[string]*llx.RawData{
 				"activationPolicy":            llx.StringData(s.ActivationPolicy),
-				"activeDirectoryConfig":       llx.DictData(mqlADCfg),
 				"activeDirectory":             llx.ResourceData(mqlActiveDirectory, "gcp.project.sqlService.instance.settings.activeDirectory"),
 				"availabilityType":            llx.StringData(s.AvailabilityType),
 				"backupConfiguration":         llx.DictData(mqlBackupCfg),
@@ -780,7 +774,6 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 				"diskEncryptionConfiguration":  llx.DictData(mqlEncCfg),
 				"diskEncryptionStatus":         llx.DictData(mqlEncStatus),
 				"failoverReplica":              llx.DictData(mqlFailoverReplica),
-				"gceZone":                      llx.StringData(instance.GceZone),
 				"instanceType":                 llx.StringData(instance.InstanceType),
 				"ipAddresses":                  llx.ArrayData(mqlIpAddresses, types.Resource("gcp.project.sqlService.instance.ipMapping")),
 				"maintenanceVersion":           llx.StringData(instance.MaintenanceVersion),
@@ -790,7 +783,6 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 				"projectId":                    llx.StringData(projectId),
 				"region":                       llx.StringData(instance.Region),
 				"replicaNames":                 llx.ArrayData(convert.SliceAnyToInterface(instance.ReplicaNames), types.String),
-				"serviceAccountEmailAddress":   llx.StringData(instance.ServiceAccountEmailAddress),
 				"settings":                     llx.ResourceData(mqlSettings, "gcp.project.sqlService.instance.settings"),
 				"state":                        llx.StringData(instance.State),
 				"satisfiesPzi":                 llx.BoolData(instance.SatisfiesPzi),
@@ -814,6 +806,9 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 			if err != nil {
 				return err
 			}
+			mqlRef := mqlInstance.(*mqlGcpProjectSqlServiceInstance)
+			mqlRef.cacheGceZone = instance.GceZone
+			mqlRef.cacheServiceAccountEmailAddress = instance.ServiceAccountEmailAddress
 			mqlSqlInstance := mqlInstance.(*mqlGcpProjectSqlServiceInstance)
 			mqlSqlInstance.cacheSecondaryGceZone = instance.SecondaryGceZone
 			if instance.DiskEncryptionConfiguration != nil {
@@ -906,10 +901,12 @@ func (g *mqlGcpProjectSqlServiceInstance) databases() ([]any, error) {
 }
 
 type mqlGcpProjectSqlServiceInstanceInternal struct {
-	cacheSecondaryGceZone    string
-	cacheKmsKeyName          string
-	cacheFailoverReplicaName string
-	cacheDrReplicaName       string
+	cacheSecondaryGceZone           string
+	cacheKmsKeyName                 string
+	cacheFailoverReplicaName        string
+	cacheDrReplicaName              string
+	cacheGceZone                    string
+	cacheServiceAccountEmailAddress string
 }
 
 func (g *mqlGcpProjectSqlServiceInstance) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
@@ -926,10 +923,7 @@ func (g *mqlGcpProjectSqlServiceInstance) kmsKey() (*mqlGcpProjectKmsServiceKeyr
 }
 
 func (g *mqlGcpProjectSqlServiceInstance) serviceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
-	if g.ServiceAccountEmailAddress.Error != nil {
-		return nil, g.ServiceAccountEmailAddress.Error
-	}
-	sa, err := resolveServiceAccountRef(g.MqlRuntime, g.ServiceAccountEmailAddress.Data, g.ProjectId.Data)
+	sa, err := resolveServiceAccountRef(g.MqlRuntime, g.cacheServiceAccountEmailAddress, g.ProjectId.Data)
 	if err != nil {
 		return nil, err
 	}
@@ -940,10 +934,7 @@ func (g *mqlGcpProjectSqlServiceInstance) serviceAccount() (*mqlGcpProjectIamSer
 }
 
 func (g *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) network() (*mqlGcpProjectComputeServiceNetwork, error) {
-	if g.PrivateNetwork.Error != nil {
-		return nil, g.PrivateNetwork.Error
-	}
-	n, err := getNetworkByUrl(g.PrivateNetwork.Data, g.MqlRuntime)
+	n, err := getNetworkByUrl(g.cachePrivateNetwork, g.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -966,10 +957,7 @@ func (g *mqlGcpProjectSqlServiceInstance) id() (string, error) {
 }
 
 func (g *mqlGcpProjectSqlServiceInstance) zone() (*mqlGcpProjectComputeServiceZone, error) {
-	if g.GceZone.Error != nil {
-		return nil, g.GceZone.Error
-	}
-	zoneName := g.GceZone.Data
+	zoneName := g.cacheGceZone
 	if zoneName == "" {
 		g.Zone.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
