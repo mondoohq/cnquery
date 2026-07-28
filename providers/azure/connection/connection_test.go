@@ -223,10 +223,10 @@ func TestSelectAzureCredential_AuthMethodBeatsTokenFile(t *testing.T) {
 
 func TestSelectAzureCredential_InvalidAuthMethod(t *testing.T) {
 	conf := &inventory.Config{
-		Options: map[string]string{"auth-method": "workload-identiy"},
+		Options: map[string]string{"auth-method": "service-principal"},
 	}
 
 	_, err := selectAzureCredential(conf)
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "workload-identiy")
+	require.Contains(t, err.Error(), "service-principal")
 }

@@ -67,10 +67,12 @@ func TestParseCredentialMethods(t *testing.T) {
 		assert.Equal(t, []CredentialMethod{CredentialMethodWorkloadIdentity}, methods)
 	})
 
+	// a real Azure auth concept that is simply not one of ours, which is the
+	// likelier mistake than a misspelling
 	t.Run("unknown method is an error, not a silent full chain", func(t *testing.T) {
-		_, err := ParseCredentialMethods("managed_identiy")
+		_, err := ParseCredentialMethods("service-principal")
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "managed_identiy")
+		assert.Contains(t, err.Error(), "service-principal")
 		assert.Contains(t, err.Error(), "workload-identity")
 	})
 }
