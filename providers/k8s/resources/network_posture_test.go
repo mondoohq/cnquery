@@ -1901,3 +1901,181 @@ func coverageArgsWithPolicyRef(t *testing.T, args []map[string]*llx.RawData, wan
 	require.Failf(t, "coverage policyRef not found", "wanted policyRef %q", want)
 	return nil
 }
+
+func TestClassifyAddressInternalCloudLoadBalancerHostname(t *testing.T) {
+	// AWS names an internal ALB/CLB with an internal- prefix and never applies it
+	// to an internet-facing one, so the prefix is a safe negative signal.
+	assert.Equal(t, "internalHostname",
+		classifyAddress("internal-bba-prod-ptp-2120307359.eu-central-1.elb.amazonaws.com"))
+	// An internet-facing load balancer of the same shape stays internet-reachable.
+	assert.Equal(t, "hostname",
+		classifyAddress("bba-prod-ptp-2120307359.eu-central-1.elb.amazonaws.com"))
+	// NLB DNS layout puts the region after .elb.; the prefix rule still applies.
+	assert.Equal(t, "internalHostname",
+		classifyAddress("internal-sftpgo-sftp-e4600cc5.elb.eu-central-1.amazonaws.com"))
+	// The prefix alone must not be enough outside AWS load balancer domains.
+	assert.Equal(t, "hostname", classifyAddress("internal-tools.example.com"))
+}
+
+func TestServiceNetworkExposureArgsInternalSchemeAnnotation(t *testing.T) {
+	// An internal NLB's DNS name is indistinguishable from an internet-facing one,
+	// so only the declared scheme reveals that it is VPC-only.
+	svc := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        "sftpgo-sftp",
+			Namespace:   "sftpgo",
+			Annotations: map[string]string{"service.beta.kubernetes.io/aws-load-balancer-scheme": "internal"},
+		},
+		Spec: corev1.ServiceSpec{
+			Type:  corev1.ServiceTypeLoadBalancer,
+			Ports: []corev1.ServicePort{{Port: 22, Protocol: corev1.ProtocolTCP}},
+		},
+		Status: corev1.ServiceStatus{
+			LoadBalancer: corev1.LoadBalancerStatus{
+				Ingress: []corev1.LoadBalancerIngress{{
+					Hostname: "sftpgo-sftp-e4600cc5a973d130.elb.eu-central-1.amazonaws.com",
+				}},
+			},
+		},
+	}
+
+	args := serviceNetworkExposureArgs(svc, nil)
+	require.Len(t, args, 1)
+
+	assert.Equal(t, false, args[0]["internetExposed"].Value)
+	assert.Equal(t, "internalLoadBalancerScheme", args[0]["exposureReason"].Value)
+}
+
+func TestServiceNetworkExposureArgsInternetFacingSchemeStaysExposed(t *testing.T) {
+	// Guard against the annotation check over-reaching: an explicitly
+	// internet-facing scheme must remain flagged.
+	svc := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        "sftpgo-sftp",
+			Namespace:   "sftpgo",
+			Annotations: map[string]string{"service.beta.kubernetes.io/aws-load-balancer-scheme": "internet-facing"},
+		},
+		Spec: corev1.ServiceSpec{
+			Type:  corev1.ServiceTypeLoadBalancer,
+			Ports: []corev1.ServicePort{{Port: 22, Protocol: corev1.ProtocolTCP}},
+		},
+		Status: corev1.ServiceStatus{
+			LoadBalancer: corev1.LoadBalancerStatus{
+				Ingress: []corev1.LoadBalancerIngress{{
+					Hostname: "sftpgo-sftp-e4600cc5a973d130.elb.eu-central-1.amazonaws.com",
+				}},
+			},
+		},
+	}
+
+	args := serviceNetworkExposureArgs(svc, nil)
+	require.Len(t, args, 1)
+
+	assert.Equal(t, true, args[0]["internetExposed"].Value)
+	assert.Equal(t, "publicLoadBalancerAddress", args[0]["exposureReason"].Value)
+}
+
+func TestIngressNetworkExposureArgsInternalSchemeAnnotation(t *testing.T) {
+	// The published address is an internal ALB and the rule host is an ordinary
+	// public-looking name; the declared scheme must keep this off the exposed list.
+	ing := &networkingv1.Ingress{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        "bba-prod-ptp",
+			Namespace:   "bba-prod-ptp",
+			Annotations: map[string]string{"alb.ingress.kubernetes.io/scheme": "internal"},
+		},
+		Spec: networkingv1.IngressSpec{
+			Rules: []networkingv1.IngressRule{{Host: "plan.example.com"}},
+		},
+		Status: networkingv1.IngressStatus{
+			LoadBalancer: networkingv1.IngressLoadBalancerStatus{
+				Ingress: []networkingv1.IngressLoadBalancerIngress{{
+					Hostname: "internal-bba-prod-ptp-2120307359.eu-central-1.elb.amazonaws.com",
+				}},
+			},
+		},
+	}
+
+	args := ingressNetworkExposureArgs(ing)
+	require.Len(t, args, 1)
+
+	assert.Equal(t, false, args[0]["internetExposed"].Value)
+	assert.Equal(t, "internalLoadBalancerScheme", args[0]["exposureReason"].Value)
+}
+
+func TestIngressNetworkExposureArgsUnannotatedInternalAlbNotExposed(t *testing.T) {
+	// The AWS Load Balancer Controller defaults to an internal scheme, so an
+	// unannotated Ingress on an internal- ALB must be classified from its address.
+	// The rule host is a public-looking name on purpose: an Ingress essentially
+	// always defines one, and it must not override the published internal address.
+	ing := &networkingv1.Ingress{
+		ObjectMeta: metav1.ObjectMeta{Name: "atp-prod-ptp", Namespace: "atp-prod-ptp"},
+		Spec: networkingv1.IngressSpec{
+			Rules: []networkingv1.IngressRule{{Host: "plan.atp.example.com"}},
+		},
+		Status: networkingv1.IngressStatus{
+			LoadBalancer: networkingv1.IngressLoadBalancerStatus{
+				Ingress: []networkingv1.IngressLoadBalancerIngress{{
+					Hostname: "internal-atp-prod-ptp-1954117370.eu-central-1.elb.amazonaws.com",
+				}},
+			},
+		},
+	}
+
+	args := ingressNetworkExposureArgs(ing)
+	require.Len(t, args, 1)
+
+	assert.Equal(t, false, args[0]["internetExposed"].Value)
+	assert.Equal(t, "privateIngressAddress", args[0]["exposureReason"].Value)
+	// The reported address set still unions both, so the evidence stays complete.
+	assert.Equal(t, []any{
+		"internal-atp-prod-ptp-1954117370.eu-central-1.elb.amazonaws.com",
+		"plan.atp.example.com",
+	}, args[0]["addresses"].Value)
+}
+
+func TestIngressNetworkExposureArgsPublicAlbWithRuleHostStaysExposed(t *testing.T) {
+	// Mirror of the test above: a genuinely internet-facing ALB must remain flagged
+	// once reachability is read from the published address instead of the rule host.
+	ing := &networkingv1.Ingress{
+		ObjectMeta: metav1.ObjectMeta{Name: "nbe-prod-public", Namespace: "nbe-prod-ptp"},
+		Spec: networkingv1.IngressSpec{
+			Rules: []networkingv1.IngressRule{{Host: "plan.nbe.example.com"}},
+		},
+		Status: networkingv1.IngressStatus{
+			LoadBalancer: networkingv1.IngressLoadBalancerStatus{
+				Ingress: []networkingv1.IngressLoadBalancerIngress{{
+					Hostname: "nbe-prod-public-795082853.eu-central-1.elb.amazonaws.com",
+				}},
+			},
+		},
+	}
+
+	args := ingressNetworkExposureArgs(ing)
+	require.Len(t, args, 1)
+
+	assert.Equal(t, true, args[0]["internetExposed"].Value)
+	assert.Equal(t, "publicIngressAddress", args[0]["exposureReason"].Value)
+}
+
+func TestIngressNetworkExposureArgsPrivateIpWithPublicRuleHost(t *testing.T) {
+	// Not AWS-specific: an Ingress published on a private IP is internal, however
+	// public its rule hostnames look.
+	ing := &networkingv1.Ingress{
+		ObjectMeta: metav1.ObjectMeta{Name: "onprem", Namespace: "prod"},
+		Spec: networkingv1.IngressSpec{
+			Rules: []networkingv1.IngressRule{{Host: "app.example.com"}},
+		},
+		Status: networkingv1.IngressStatus{
+			LoadBalancer: networkingv1.IngressLoadBalancerStatus{
+				Ingress: []networkingv1.IngressLoadBalancerIngress{{IP: "10.0.0.5"}},
+			},
+		},
+	}
+
+	args := ingressNetworkExposureArgs(ing)
+	require.Len(t, args, 1)
+
+	assert.Equal(t, false, args[0]["internetExposed"].Value)
+	assert.Equal(t, "privateIngressAddress", args[0]["exposureReason"].Value)
+}
