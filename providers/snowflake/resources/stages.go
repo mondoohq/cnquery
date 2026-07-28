@@ -48,7 +48,6 @@ func newMqlSnowflakeStage(runtime *plugin.Runtime, user sdk.Stage) (*mqlSnowflak
 		"url":              llx.StringData(user.Url),
 		"type":             llx.StringData(user.Type),
 		"cloud":            llx.StringDataPtr(user.Cloud),
-		"storeIntegration": llx.StringDataPtr(user.StorageIntegration),
 		"endpoint":         llx.StringDataPtr(user.Endpoint),
 		"ownerRoleType":    llx.StringDataPtr(user.OwnerRoleType),
 		"directoryEnabled": llx.BoolData(user.DirectoryEnabled),
@@ -57,6 +56,9 @@ func newMqlSnowflakeStage(runtime *plugin.Runtime, user sdk.Stage) (*mqlSnowflak
 		return nil, err
 	}
 	mqlResource := r.(*mqlSnowflakeStage)
+	if user.StorageIntegration != nil {
+		mqlResource.cacheStoreIntegration = *user.StorageIntegration
+	}
 	return mqlResource, nil
 }
 
@@ -92,8 +94,14 @@ func resolveStageRef(runtime *plugin.Runtime, fqn string, field *plugin.TValue[*
 	return nil, nil
 }
 
+// mqlSnowflakeStageInternal holds the backing storage-integration name that
+// storageIntegration() resolves.
+type mqlSnowflakeStageInternal struct {
+	cacheStoreIntegration string
+}
+
 func (r *mqlSnowflakeStage) storageIntegration() (*mqlSnowflakeStorageIntegration, error) {
-	name := r.StoreIntegration.Data
+	name := r.cacheStoreIntegration
 	if name == "" {
 		r.StorageIntegration.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil

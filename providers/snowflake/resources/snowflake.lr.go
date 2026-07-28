@@ -528,17 +528,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"snowflake.user.comment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeUser).GetComment()).ToDataRes(types.String)
 	},
-	"snowflake.user.defaultWarehouse": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlSnowflakeUser).GetDefaultWarehouse()).ToDataRes(types.String)
-	},
 	"snowflake.user.defaultWarehouseRef": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeUser).GetDefaultWarehouseRef()).ToDataRes(types.Resource("snowflake.warehouse"))
 	},
 	"snowflake.user.defaultNamespace": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeUser).GetDefaultNamespace()).ToDataRes(types.String)
-	},
-	"snowflake.user.defaultRole": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlSnowflakeUser).GetDefaultRole()).ToDataRes(types.String)
 	},
 	"snowflake.user.defaultRoleRef": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeUser).GetDefaultRoleRef()).ToDataRes(types.Resource("snowflake.role"))
@@ -630,9 +624,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"snowflake.role.grantedRoles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeRole).GetGrantedRoles()).ToDataRes(types.Int)
 	},
-	"snowflake.role.owner": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlSnowflakeRole).GetOwner()).ToDataRes(types.String)
-	},
 	"snowflake.role.ownerRole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeRole).GetOwnerRole()).ToDataRes(types.Resource("snowflake.role"))
 	},
@@ -713,9 +704,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"snowflake.passwordPolicy.kind": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakePasswordPolicy).GetKind()).ToDataRes(types.String)
-	},
-	"snowflake.passwordPolicy.owner": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlSnowflakePasswordPolicy).GetOwner()).ToDataRes(types.String)
 	},
 	"snowflake.passwordPolicy.ownerRole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakePasswordPolicy).GetOwnerRole()).ToDataRes(types.Resource("snowflake.role"))
@@ -879,9 +867,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"snowflake.stage.cloud": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeStage).GetCloud()).ToDataRes(types.String)
 	},
-	"snowflake.stage.storeIntegration": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlSnowflakeStage).GetStoreIntegration()).ToDataRes(types.String)
-	},
 	"snowflake.stage.storageIntegration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeStage).GetStorageIntegration()).ToDataRes(types.Resource("snowflake.storageIntegration"))
 	},
@@ -905,9 +890,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"snowflake.database.origin": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeDatabase).GetOrigin()).ToDataRes(types.String)
-	},
-	"snowflake.database.owner": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlSnowflakeDatabase).GetOwner()).ToDataRes(types.String)
 	},
 	"snowflake.database.ownerRole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeDatabase).GetOwnerRole()).ToDataRes(types.Resource("snowflake.role"))
@@ -1053,9 +1035,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"snowflake.warehouse.queryAccelerationMaxScaleFactor": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeWarehouse).GetQueryAccelerationMaxScaleFactor()).ToDataRes(types.Int)
 	},
-	"snowflake.warehouse.resourceMonitor": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlSnowflakeWarehouse).GetResourceMonitor()).ToDataRes(types.String)
-	},
 	"snowflake.warehouse.resourceMonitorRef": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeWarehouse).GetResourceMonitorRef()).ToDataRes(types.Resource("snowflake.resourceMonitor"))
 	},
@@ -1143,17 +1122,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"snowflake.share.kind": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeShare).GetKind()).ToDataRes(types.String)
 	},
-	"snowflake.share.databaseName": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlSnowflakeShare).GetDatabaseName()).ToDataRes(types.String)
-	},
 	"snowflake.share.database": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeShare).GetDatabase()).ToDataRes(types.Resource("snowflake.database"))
 	},
 	"snowflake.share.to": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeShare).GetTo()).ToDataRes(types.Array(types.String))
-	},
-	"snowflake.share.owner": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlSnowflakeShare).GetOwner()).ToDataRes(types.String)
 	},
 	"snowflake.share.ownerRole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeShare).GetOwnerRole()).ToDataRes(types.Resource("snowflake.role"))
@@ -1265,9 +1238,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"snowflake.failoverGroup.snowflakeRegion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeFailoverGroup).GetSnowflakeRegion()).ToDataRes(types.String)
-	},
-	"snowflake.failoverGroup.owner": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlSnowflakeFailoverGroup).GetOwner()).ToDataRes(types.String)
 	},
 	"snowflake.failoverGroup.ownerRole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeFailoverGroup).GetOwnerRole()).ToDataRes(types.Resource("snowflake.role"))
@@ -1382,9 +1352,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"snowflake.resourceMonitor.endTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeResourceMonitor).GetEndTime()).ToDataRes(types.String)
-	},
-	"snowflake.resourceMonitor.owner": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlSnowflakeResourceMonitor).GetOwner()).ToDataRes(types.String)
 	},
 	"snowflake.resourceMonitor.ownerRole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeResourceMonitor).GetOwnerRole()).ToDataRes(types.Resource("snowflake.role"))
@@ -2862,20 +2829,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlSnowflakeUser).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"snowflake.user.defaultWarehouse": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeUser).DefaultWarehouse, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"snowflake.user.defaultWarehouseRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeUser).DefaultWarehouseRef, ok = plugin.RawToTValue[*mqlSnowflakeWarehouse](v.Value, v.Error)
 		return
 	},
 	"snowflake.user.defaultNamespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeUser).DefaultNamespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"snowflake.user.defaultRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeUser).DefaultRole, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"snowflake.user.defaultRoleRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3002,10 +2961,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlSnowflakeRole).GrantedRoles, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"snowflake.role.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeRole).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"snowflake.role.ownerRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeRole).OwnerRole, ok = plugin.RawToTValue[*mqlSnowflakeRole](v.Value, v.Error)
 		return
@@ -3120,10 +3075,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"snowflake.passwordPolicy.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakePasswordPolicy).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"snowflake.passwordPolicy.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakePasswordPolicy).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"snowflake.passwordPolicy.ownerRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3358,10 +3309,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlSnowflakeStage).Cloud, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"snowflake.stage.storeIntegration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeStage).StoreIntegration, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"snowflake.stage.storageIntegration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeStage).StorageIntegration, ok = plugin.RawToTValue[*mqlSnowflakeStorageIntegration](v.Value, v.Error)
 		return
@@ -3396,10 +3343,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"snowflake.database.origin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeDatabase).Origin, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"snowflake.database.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeDatabase).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"snowflake.database.ownerRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3598,10 +3541,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlSnowflakeWarehouse).QueryAccelerationMaxScaleFactor, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"snowflake.warehouse.resourceMonitor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeWarehouse).ResourceMonitor, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"snowflake.warehouse.resourceMonitorRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeWarehouse).ResourceMonitorRef, ok = plugin.RawToTValue[*mqlSnowflakeResourceMonitor](v.Value, v.Error)
 		return
@@ -3730,20 +3669,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlSnowflakeShare).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"snowflake.share.databaseName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeShare).DatabaseName, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"snowflake.share.database": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeShare).Database, ok = plugin.RawToTValue[*mqlSnowflakeDatabase](v.Value, v.Error)
 		return
 	},
 	"snowflake.share.to": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeShare).To, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"snowflake.share.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeShare).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"snowflake.share.ownerRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3904,10 +3835,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"snowflake.failoverGroup.snowflakeRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeFailoverGroup).SnowflakeRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"snowflake.failoverGroup.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeFailoverGroup).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"snowflake.failoverGroup.ownerRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4072,10 +3999,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"snowflake.resourceMonitor.endTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeResourceMonitor).EndTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"snowflake.resourceMonitor.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeResourceMonitor).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"snowflake.resourceMonitor.ownerRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6779,10 +6702,8 @@ type mqlSnowflakeUser struct {
 	LastName              plugin.TValue[string]
 	Email                 plugin.TValue[string]
 	Comment               plugin.TValue[string]
-	DefaultWarehouse      plugin.TValue[string]
 	DefaultWarehouseRef   plugin.TValue[*mqlSnowflakeWarehouse]
 	DefaultNamespace      plugin.TValue[string]
-	DefaultRole           plugin.TValue[string]
 	DefaultRoleRef        plugin.TValue[*mqlSnowflakeRole]
 	Disabled              plugin.TValue[bool]
 	HasPassword           plugin.TValue[bool]
@@ -6868,10 +6789,6 @@ func (c *mqlSnowflakeUser) GetComment() *plugin.TValue[string] {
 	return &c.Comment
 }
 
-func (c *mqlSnowflakeUser) GetDefaultWarehouse() *plugin.TValue[string] {
-	return &c.DefaultWarehouse
-}
-
 func (c *mqlSnowflakeUser) GetDefaultWarehouseRef() *plugin.TValue[*mqlSnowflakeWarehouse] {
 	return plugin.GetOrCompute[*mqlSnowflakeWarehouse](&c.DefaultWarehouseRef, func() (*mqlSnowflakeWarehouse, error) {
 		if c.MqlRuntime.HasRecording {
@@ -6890,10 +6807,6 @@ func (c *mqlSnowflakeUser) GetDefaultWarehouseRef() *plugin.TValue[*mqlSnowflake
 
 func (c *mqlSnowflakeUser) GetDefaultNamespace() *plugin.TValue[string] {
 	return &c.DefaultNamespace
-}
-
-func (c *mqlSnowflakeUser) GetDefaultRole() *plugin.TValue[string] {
-	return &c.DefaultRole
 }
 
 func (c *mqlSnowflakeUser) GetDefaultRoleRef() *plugin.TValue[*mqlSnowflakeRole] {
@@ -7078,7 +6991,7 @@ func (c *mqlSnowflakeUser) GetEffectiveGrants() *plugin.TValue[[]any] {
 type mqlSnowflakeRole struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSnowflakeRoleInternal it will be used here
+	mqlSnowflakeRoleInternal
 	Name            plugin.TValue[string]
 	IsDefault       plugin.TValue[bool]
 	IsCurrent       plugin.TValue[bool]
@@ -7086,7 +6999,6 @@ type mqlSnowflakeRole struct {
 	AssignedToUsers plugin.TValue[int64]
 	GrantedToRoles  plugin.TValue[int64]
 	GrantedRoles    plugin.TValue[int64]
-	Owner           plugin.TValue[string]
 	OwnerRole       plugin.TValue[*mqlSnowflakeRole]
 	Comment         plugin.TValue[string]
 	Grants          plugin.TValue[[]any]
@@ -7157,10 +7069,6 @@ func (c *mqlSnowflakeRole) GetGrantedToRoles() *plugin.TValue[int64] {
 
 func (c *mqlSnowflakeRole) GetGrantedRoles() *plugin.TValue[int64] {
 	return &c.GrantedRoles
-}
-
-func (c *mqlSnowflakeRole) GetOwner() *plugin.TValue[string] {
-	return &c.Owner
 }
 
 func (c *mqlSnowflakeRole) GetOwnerRole() *plugin.TValue[*mqlSnowflakeRole] {
@@ -7433,12 +7341,11 @@ func (c *mqlSnowflakeSecurityIntegration) GetSaml2ForceAuthn() *plugin.TValue[bo
 type mqlSnowflakePasswordPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSnowflakePasswordPolicyInternal it will be used here
+	mqlSnowflakePasswordPolicyInternal
 	Name                      plugin.TValue[string]
 	DatabaseName              plugin.TValue[string]
 	SchemaName                plugin.TValue[string]
 	Kind                      plugin.TValue[string]
-	Owner                     plugin.TValue[string]
 	OwnerRole                 plugin.TValue[*mqlSnowflakeRole]
 	Comment                   plugin.TValue[string]
 	CreatedAt                 plugin.TValue[*time.Time]
@@ -7501,10 +7408,6 @@ func (c *mqlSnowflakePasswordPolicy) GetSchemaName() *plugin.TValue[string] {
 
 func (c *mqlSnowflakePasswordPolicy) GetKind() *plugin.TValue[string] {
 	return &c.Kind
-}
-
-func (c *mqlSnowflakePasswordPolicy) GetOwner() *plugin.TValue[string] {
-	return &c.Owner
 }
 
 func (c *mqlSnowflakePasswordPolicy) GetOwnerRole() *plugin.TValue[*mqlSnowflakeRole] {
@@ -7871,7 +7774,7 @@ func (c *mqlSnowflakeParameter) GetLevel() *plugin.TValue[string] {
 type mqlSnowflakeStage struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSnowflakeStageInternal it will be used here
+	mqlSnowflakeStageInternal
 	Name               plugin.TValue[string]
 	DatabaseName       plugin.TValue[string]
 	SchemaName         plugin.TValue[string]
@@ -7883,7 +7786,6 @@ type mqlSnowflakeStage struct {
 	Url                plugin.TValue[string]
 	Type               plugin.TValue[string]
 	Cloud              plugin.TValue[string]
-	StoreIntegration   plugin.TValue[string]
 	StorageIntegration plugin.TValue[*mqlSnowflakeStorageIntegration]
 	Endpoint           plugin.TValue[string]
 	OwnerRoleType      plugin.TValue[string]
@@ -7966,10 +7868,6 @@ func (c *mqlSnowflakeStage) GetCloud() *plugin.TValue[string] {
 	return &c.Cloud
 }
 
-func (c *mqlSnowflakeStage) GetStoreIntegration() *plugin.TValue[string] {
-	return &c.StoreIntegration
-}
-
 func (c *mqlSnowflakeStage) GetStorageIntegration() *plugin.TValue[*mqlSnowflakeStorageIntegration] {
 	return plugin.GetOrCompute[*mqlSnowflakeStorageIntegration](&c.StorageIntegration, func() (*mqlSnowflakeStorageIntegration, error) {
 		if c.MqlRuntime.HasRecording {
@@ -8002,12 +7900,11 @@ func (c *mqlSnowflakeStage) GetDirectoryEnabled() *plugin.TValue[bool] {
 type mqlSnowflakeDatabase struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSnowflakeDatabaseInternal it will be used here
+	mqlSnowflakeDatabaseInternal
 	Name              plugin.TValue[string]
 	IsDefault         plugin.TValue[bool]
 	IsCurrent         plugin.TValue[bool]
 	Origin            plugin.TValue[string]
-	Owner             plugin.TValue[string]
 	OwnerRole         plugin.TValue[*mqlSnowflakeRole]
 	Comment           plugin.TValue[string]
 	Options           plugin.TValue[string]
@@ -8083,10 +7980,6 @@ func (c *mqlSnowflakeDatabase) GetIsCurrent() *plugin.TValue[bool] {
 
 func (c *mqlSnowflakeDatabase) GetOrigin() *plugin.TValue[string] {
 	return &c.Origin
-}
-
-func (c *mqlSnowflakeDatabase) GetOwner() *plugin.TValue[string] {
-	return &c.Owner
 }
 
 func (c *mqlSnowflakeDatabase) GetOwnerRole() *plugin.TValue[*mqlSnowflakeRole] {
@@ -8441,7 +8334,7 @@ func (c *mqlSnowflakeDatabase) GetStreamlits() *plugin.TValue[[]any] {
 type mqlSnowflakeWarehouse struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSnowflakeWarehouseInternal it will be used here
+	mqlSnowflakeWarehouseInternal
 	Name                            plugin.TValue[string]
 	State                           plugin.TValue[string]
 	Type                            plugin.TValue[string]
@@ -8463,7 +8356,6 @@ type mqlSnowflakeWarehouse struct {
 	Comment                         plugin.TValue[string]
 	EnableQueryAcceleration         plugin.TValue[bool]
 	QueryAccelerationMaxScaleFactor plugin.TValue[int64]
-	ResourceMonitor                 plugin.TValue[string]
 	ResourceMonitorRef              plugin.TValue[*mqlSnowflakeResourceMonitor]
 	ScalingPolicy                   plugin.TValue[string]
 	OwnerRoleType                   plugin.TValue[string]
@@ -8586,10 +8478,6 @@ func (c *mqlSnowflakeWarehouse) GetEnableQueryAcceleration() *plugin.TValue[bool
 
 func (c *mqlSnowflakeWarehouse) GetQueryAccelerationMaxScaleFactor() *plugin.TValue[int64] {
 	return &c.QueryAccelerationMaxScaleFactor
-}
-
-func (c *mqlSnowflakeWarehouse) GetResourceMonitor() *plugin.TValue[string] {
-	return &c.ResourceMonitor
 }
 
 func (c *mqlSnowflakeWarehouse) GetResourceMonitorRef() *plugin.TValue[*mqlSnowflakeResourceMonitor] {
@@ -8855,17 +8743,15 @@ func (c *mqlSnowflakeSessionPolicy) GetSessionUiIdleTimeoutMins() *plugin.TValue
 type mqlSnowflakeShare struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSnowflakeShareInternal it will be used here
-	Name         plugin.TValue[string]
-	Kind         plugin.TValue[string]
-	DatabaseName plugin.TValue[string]
-	Database     plugin.TValue[*mqlSnowflakeDatabase]
-	To           plugin.TValue[[]any]
-	Owner        plugin.TValue[string]
-	OwnerRole    plugin.TValue[*mqlSnowflakeRole]
-	Comment      plugin.TValue[string]
-	CreatedAt    plugin.TValue[*time.Time]
-	Grants       plugin.TValue[[]any]
+	mqlSnowflakeShareInternal
+	Name      plugin.TValue[string]
+	Kind      plugin.TValue[string]
+	Database  plugin.TValue[*mqlSnowflakeDatabase]
+	To        plugin.TValue[[]any]
+	OwnerRole plugin.TValue[*mqlSnowflakeRole]
+	Comment   plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
+	Grants    plugin.TValue[[]any]
 }
 
 // createSnowflakeShare creates a new instance of this resource
@@ -8908,10 +8794,6 @@ func (c *mqlSnowflakeShare) GetKind() *plugin.TValue[string] {
 	return &c.Kind
 }
 
-func (c *mqlSnowflakeShare) GetDatabaseName() *plugin.TValue[string] {
-	return &c.DatabaseName
-}
-
 func (c *mqlSnowflakeShare) GetDatabase() *plugin.TValue[*mqlSnowflakeDatabase] {
 	return plugin.GetOrCompute[*mqlSnowflakeDatabase](&c.Database, func() (*mqlSnowflakeDatabase, error) {
 		if c.MqlRuntime.HasRecording {
@@ -8930,10 +8812,6 @@ func (c *mqlSnowflakeShare) GetDatabase() *plugin.TValue[*mqlSnowflakeDatabase] 
 
 func (c *mqlSnowflakeShare) GetTo() *plugin.TValue[[]any] {
 	return &c.To
-}
-
-func (c *mqlSnowflakeShare) GetOwner() *plugin.TValue[string] {
-	return &c.Owner
 }
 
 func (c *mqlSnowflakeShare) GetOwnerRole() *plugin.TValue[*mqlSnowflakeRole] {
@@ -9190,7 +9068,6 @@ type mqlSnowflakeFailoverGroup struct {
 	NextScheduledRefresh    plugin.TValue[string]
 	RegionGroup             plugin.TValue[string]
 	SnowflakeRegion         plugin.TValue[string]
-	Owner                   plugin.TValue[string]
 	OwnerRole               plugin.TValue[*mqlSnowflakeRole]
 	Comment                 plugin.TValue[string]
 	CreatedAt               plugin.TValue[*time.Time]
@@ -9276,10 +9153,6 @@ func (c *mqlSnowflakeFailoverGroup) GetRegionGroup() *plugin.TValue[string] {
 
 func (c *mqlSnowflakeFailoverGroup) GetSnowflakeRegion() *plugin.TValue[string] {
 	return &c.SnowflakeRegion
-}
-
-func (c *mqlSnowflakeFailoverGroup) GetOwner() *plugin.TValue[string] {
-	return &c.Owner
 }
 
 func (c *mqlSnowflakeFailoverGroup) GetOwnerRole() *plugin.TValue[*mqlSnowflakeRole] {
@@ -9549,7 +9422,7 @@ func (c *mqlSnowflakeView) GetChangeTracking() *plugin.TValue[string] {
 type mqlSnowflakeResourceMonitor struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSnowflakeResourceMonitorInternal it will be used here
+	mqlSnowflakeResourceMonitorInternal
 	Name               plugin.TValue[string]
 	Level              plugin.TValue[string]
 	CreditQuota        plugin.TValue[float64]
@@ -9558,7 +9431,6 @@ type mqlSnowflakeResourceMonitor struct {
 	Frequency          plugin.TValue[string]
 	StartTime          plugin.TValue[string]
 	EndTime            plugin.TValue[string]
-	Owner              plugin.TValue[string]
 	OwnerRole          plugin.TValue[*mqlSnowflakeRole]
 	Comment            plugin.TValue[string]
 	NotifyAt           plugin.TValue[[]any]
@@ -9630,10 +9502,6 @@ func (c *mqlSnowflakeResourceMonitor) GetStartTime() *plugin.TValue[string] {
 
 func (c *mqlSnowflakeResourceMonitor) GetEndTime() *plugin.TValue[string] {
 	return &c.EndTime
-}
-
-func (c *mqlSnowflakeResourceMonitor) GetOwner() *plugin.TValue[string] {
-	return &c.Owner
 }
 
 func (c *mqlSnowflakeResourceMonitor) GetOwnerRole() *plugin.TValue[*mqlSnowflakeRole] {

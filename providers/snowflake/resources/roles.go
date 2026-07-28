@@ -111,14 +111,19 @@ func newMqlSnowflakeRole(runtime *plugin.Runtime, role sdk.Role) (*mqlSnowflakeR
 		"assignedToUsers": llx.IntData(role.AssignedToUsers),
 		"grantedToRoles":  llx.IntData(role.GrantedToRoles),
 		"grantedRoles":    llx.IntData(role.GrantedRoles),
-		"owner":           llx.StringData(role.Owner),
 		"comment":         llx.StringData(role.Comment),
 	})
 	if err != nil {
 		return nil, err
 	}
 	mqlResource := r.(*mqlSnowflakeRole)
+	mqlResource.cacheOwner = role.Owner
 	return mqlResource, nil
+}
+
+// mqlSnowflakeRoleInternal holds the owning role name that ownerRole() resolves.
+type mqlSnowflakeRoleInternal struct {
+	cacheOwner string
 }
 
 // resolveOwnerRole resolves an account role name to a typed snowflake.role,
@@ -143,5 +148,5 @@ func resolveOwnerRole(runtime *plugin.Runtime, name string, field *plugin.TValue
 }
 
 func (r *mqlSnowflakeRole) ownerRole() (*mqlSnowflakeRole, error) {
-	return resolveOwnerRole(r.MqlRuntime, r.Owner.Data, &r.OwnerRole)
+	return resolveOwnerRole(r.MqlRuntime, r.cacheOwner, &r.OwnerRole)
 }
