@@ -127,25 +127,42 @@ func TestBuildProductionVariantsWithData(t *testing.T) {
 
 // ---- Model sub-resource tests ----
 
+// TestModelContainerId exercises sagemakerModelContainerID directly -- the
+// helper buildContainer actually uses. The previous version of this test
+// hand-primed cacheModelArn and called id(), asserting a state the production
+// path can never reach (cacheModelArn is assigned after CreateResource
+// returns), so it passed while every container in an account collided.
 func TestModelContainerId(t *testing.T) {
+	const modelArn = "arn:aws:sagemaker:us-east-1:123456789012:model/my-model"
+
 	t.Run("uses containerHostname when set", func(t *testing.T) {
-		c := &mqlAwsSagemakerModelContainer{}
-		c.cacheModelArn = "arn:aws:sagemaker:us-east-1:123456789012:model/my-model"
-		c.ContainerHostname = plugin.TValue[string]{Data: "my-container", State: plugin.StateIsSet}
-		c.Image = plugin.TValue[string]{Data: "image-uri", State: plugin.StateIsSet}
-		id, err := c.id()
-		require.NoError(t, err)
-		assert.Equal(t, "arn:aws:sagemaker:us-east-1:123456789012:model/my-model/container/my-container", id)
+		assert.Equal(t,
+			modelArn+"/container/my-container",
+			sagemakerModelContainerID(modelArn, "my-container", "image-uri"))
 	})
 
 	t.Run("falls back to image when hostname is empty", func(t *testing.T) {
-		c := &mqlAwsSagemakerModelContainer{}
-		c.cacheModelArn = "arn:aws:sagemaker:us-east-1:123456789012:model/my-model"
-		c.ContainerHostname = plugin.TValue[string]{Data: "", State: plugin.StateIsSet}
-		c.Image = plugin.TValue[string]{Data: "123456789012.dkr.ecr.us-east-1.amazonaws.com/my-image:latest", State: plugin.StateIsSet}
-		id, err := c.id()
-		require.NoError(t, err)
-		assert.Equal(t, "arn:aws:sagemaker:us-east-1:123456789012:model/my-model/container/123456789012.dkr.ecr.us-east-1.amazonaws.com/my-image:latest", id)
+		image := "123456789012.dkr.ecr.us-east-1.amazonaws.com/my-image:latest"
+		assert.Equal(t,
+			modelArn+"/container/"+image,
+			sagemakerModelContainerID(modelArn, "", image))
+	})
+
+	// The regression: two models sharing a base inference image (the common
+	// case, since ContainerHostname is nil unless a model has multiple
+	// containers) must not produce the same cache key.
+	t.Run("models sharing a base image get distinct keys", func(t *testing.T) {
+		image := "123456789012.dkr.ecr.us-east-1.amazonaws.com/huggingface-pytorch-inference:2.1-cpu"
+		a := sagemakerModelContainerID("arn:aws:sagemaker:us-east-1:123456789012:model/model-a", "", image)
+		b := sagemakerModelContainerID("arn:aws:sagemaker:us-east-1:123456789012:model/model-b", "", image)
+		assert.NotEqual(t, a, b)
+	})
+
+	// An inference-pipeline model has several containers; they must stay distinct.
+	t.Run("pipeline containers within one model get distinct keys", func(t *testing.T) {
+		a := sagemakerModelContainerID(modelArn, "preprocess", "img")
+		b := sagemakerModelContainerID(modelArn, "predict", "img")
+		assert.NotEqual(t, a, b)
 	})
 }
 

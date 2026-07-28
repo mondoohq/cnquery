@@ -271,8 +271,14 @@ func (a *mqlAwsEcrRepository) images() ([]any, error) {
 					log.Debug().Str("repository", name).Strs("tags", image.ImageTags).Msg("skipping ecr public image due to tag filters")
 					continue
 				}
+				imageArn := ecrImageArn(ImageInfo{Region: region, RegistryId: convert.ToValue(image.RegistryId), RepoName: name, Digest: convert.ToValue(image.ImageDigest)})
 				mqlImage, err := CreateResource(a.MqlRuntime, ResourceAwsEcrImage,
 					map[string]*llx.RawData{
+						// The public registry always reports region us-east-1 and the
+						// account as its registry id, so a same-named private repo would
+						// otherwise share this key -- and the cachePublic write below
+						// would then flip the private image to "NOT_SCANNED".
+						"__id":              llx.StringData(imageArn + "/public"),
 						"digest":            llx.StringDataPtr(image.ImageDigest),
 						"mediaType":         llx.StringDataPtr(image.ImageManifestMediaType),
 						"artifactMediaType": llx.StringDataPtr(image.ArtifactMediaType),
@@ -280,7 +286,7 @@ func (a *mqlAwsEcrRepository) images() ([]any, error) {
 						"registryId":        llx.StringDataPtr(image.RegistryId),
 						"repoName":          llx.StringData(name),
 						"region":            llx.StringData(region),
-						"arn":               llx.StringData(ecrImageArn(ImageInfo{Region: region, RegistryId: convert.ToValue(image.RegistryId), RepoName: name, Digest: convert.ToValue(image.ImageDigest)})),
+						"arn":               llx.StringData(imageArn),
 						"uri":               llx.StringData(uri),
 					})
 				if err != nil {
@@ -310,9 +316,14 @@ func (a *mqlAwsEcrRepository) images() ([]any, error) {
 				log.Debug().Str("repository", name).Strs("tags", image.ImageTags).Msg("skipping ecr private image due to tag filters")
 				continue
 			}
+			imageArn := ecrImageArn(ImageInfo{Region: region, RegistryId: convert.ToValue(image.RegistryId), RepoName: name, Digest: convert.ToValue(image.ImageDigest)})
 			mqlImage, err := CreateResource(a.MqlRuntime, ResourceAwsEcrImage,
 				map[string]*llx.RawData{
-					"arn":                  llx.StringData(ecrImageArn(ImageInfo{Region: region, RegistryId: convert.ToValue(image.RegistryId), RepoName: name, Digest: convert.ToValue(image.ImageDigest)})),
+					// region-qualified via the ARN: cross-region replication puts the
+					// same registryId/repoName/digest in several regions, which the
+					// id() fallback cannot tell apart.
+					"__id":                 llx.StringData(imageArn),
+					"arn":                  llx.StringData(imageArn),
 					"digest":               llx.StringDataPtr(image.ImageDigest),
 					"lastRecordedPullTime": llx.TimeDataPtr(image.LastRecordedPullTime),
 					"mediaType":            llx.StringDataPtr(image.ImageManifestMediaType),

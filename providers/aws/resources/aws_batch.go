@@ -2057,8 +2057,16 @@ func (a *mqlAwsBatchJob) jobQueue() (*mqlAwsBatchJobQueue, error) {
 		a.JobQueue.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
+	// aws.batch.jobQueue has neither an id() method nor an init, so without an
+	// explicit "__id" every queue reached this way lands on the empty cache key
+	// and each job returns the first job's queue. The ARN matches the key the
+	// collection path (getJobQueues) stores under, so this also lets the lookup
+	// hit the fully-populated resource instead of building a bare one.
 	res, err := NewResource(a.MqlRuntime, "aws.batch.jobQueue",
-		map[string]*llx.RawData{"arn": llx.StringData(a.JobQueueArn.Data)})
+		map[string]*llx.RawData{
+			"__id": llx.StringData(a.JobQueueArn.Data),
+			"arn":  llx.StringData(a.JobQueueArn.Data),
+		})
 	if err != nil {
 		return nil, err
 	}

@@ -5,8 +5,11 @@ package connection
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"maps"
 	"net/http"
@@ -46,10 +49,35 @@ type AwsConnection struct {
 	opts awsConnectionOptions
 }
 
+// awsConnectionOptions carries everything that distinguishes one AWS
+// connection from another. Every field must be exported: hashstructure skips
+// unexported fields, so an unexported field contributes nothing to Hash() and
+// two connections for different accounts would collide.
 type awsConnectionOptions struct {
-	scope   string
-	profile string
-	options map[string]string
+	Scope   string
+	Profile string
+	Options map[string]string
+	// CredentialFingerprint distinguishes connections whose options are
+	// identical but whose credentials resolve to different accounts.
+	CredentialFingerprint string
+}
+
+// credentialFingerprint derives a stable, non-reversible identifier for a set
+// of credentials so that two connections using different credentials hash
+// differently. The secret is hashed, never retained.
+func credentialFingerprint(creds []*vault.Credential) string {
+	if len(creds) == 0 {
+		return ""
+	}
+	h := sha256.New()
+	for _, cred := range creds {
+		if cred == nil {
+			continue
+		}
+		fmt.Fprintf(h, "%s\x00%d\x00%s\x00", cred.SecretId, cred.Type, cred.User)
+		h.Write(cred.Secret)
+	}
+	return hex.EncodeToString(h.Sum(nil))
 }
 
 func NewMockConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) *AwsConnection {
@@ -97,9 +125,10 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	c.Conf = conf
 	c.asset = asset
 	c.cfg = cfg
-	c.opts.profile = asset.Options["profile"]
-	c.opts.scope = asset.Options["scope"]
-	c.opts.options = asset.Options
+	c.opts.Profile = asset.Options["profile"]
+	c.opts.Scope = asset.Options["scope"]
+	c.opts.Options = asset.Options
+	c.opts.CredentialFingerprint = credentialFingerprint(conf.GetCredentials())
 	c.Filters = DiscoveryFiltersFromOpts(conf.Discover.GetFilter())
 	return c, nil
 }
@@ -273,15 +302,15 @@ func (p *AwsConnection) UpdateAsset(asset *inventory.Asset) {
 }
 
 func (p *AwsConnection) Profile() string {
-	return p.opts.profile
+	return p.opts.Profile
 }
 
 func (p *AwsConnection) Scope() string {
-	return p.opts.scope
+	return p.opts.Scope
 }
 
 func (p *AwsConnection) ConnectionOptions() map[string]string {
-	return p.opts.options
+	return p.opts.Options
 }
 
 func (p *AwsConnection) RunCommand(command string) (*shared.Command, error) {

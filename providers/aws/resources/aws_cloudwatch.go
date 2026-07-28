@@ -8,6 +8,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -91,6 +92,8 @@ func (a *mqlAwsCloudwatch) getMetrics(conn *connection.AwsConnection) []*jobpool
 
 					mqlMetric, err := CreateResource(a.MqlRuntime, "aws.cloudwatch.metric",
 						map[string]*llx.RawData{
+							"__id": llx.StringData(cloudwatchMetricID(
+								region, convert.ToValue(metric.Namespace), convert.ToValue(metric.MetricName), metric.Dimensions)),
 							"name":       llx.StringDataPtr(metric.MetricName),
 							"namespace":  llx.StringDataPtr(metric.Namespace),
 							"region":     llx.StringData(region),
@@ -952,7 +955,30 @@ func (a *mqlAwsCloudwatchMetricsalarm) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+// cloudwatchMetricID builds the cache key for a CloudWatch metric. ListMetrics
+// returns one entry per (Namespace, MetricName, Dimensions) tuple, so the
+// dimensions are part of the metric's identity: without them every
+// AWS/EC2 CPUUtilization metric in a region collapses onto one resource and
+// each instance reports the first instance's dimensions and statistics.
+// Dimensions are sorted so the key is stable regardless of API ordering.
+func cloudwatchMetricID(region, namespace, name string, dimensions []cloudwatchtypes.Dimension) string {
+	pairs := make([]string, 0, len(dimensions))
+	for _, d := range dimensions {
+		pairs = append(pairs, convert.ToValue(d.Name)+"="+convert.ToValue(d.Value))
+	}
+	sort.Strings(pairs)
+
+	id := region + "/" + namespace + "/" + name
+	if len(pairs) > 0 {
+		id += "/" + strings.Join(pairs, ",")
+	}
+	return id
+}
+
 func (a *mqlAwsCloudwatchMetric) id() (string, error) {
+	// Dimensions are resources rather than raw values here, so the collection
+	// path passes an explicit "__id" built by cloudwatchMetricID (which wins
+	// over this method). This remains as the codegen-required fallback.
 	region := a.Region.Data
 	namespace := a.Namespace.Data
 	name := a.Name.Data
