@@ -303,16 +303,6 @@ func newMqlGoogleWorkspaceUsageReport(runtime *plugin.Runtime, entry *reports.Us
 
 	r := parseUserReports(entry.Parameters)
 
-	accountUsage, err := convert.JsonToDict(r.Account)
-	if err != nil {
-		return nil, err
-	}
-
-	securityUsage, err := convert.JsonToDict(r.Security)
-	if err != nil {
-		return nil, err
-	}
-
 	appUsage, err := convert.JsonToDict(r.AppUsage)
 	if err != nil {
 		return nil, err
@@ -335,8 +325,6 @@ func newMqlGoogleWorkspaceUsageReport(runtime *plugin.Runtime, entry *reports.Us
 		"userEmail":  llx.StringData(userEmail),
 		"date":       llx.TimeDataPtr(date),
 		"parameters": llx.ArrayData(parameters, types.Any),
-		"account":    llx.MapData(accountUsage, types.Any),
-		"security":   llx.MapData(securityUsage, types.Any),
 		"appUsage":   llx.MapData(appUsage, types.Any),
 		// Typed promotions of the account/security dicts (already parsed into
 		// r above) so audits can assert on them directly.
@@ -502,16 +490,6 @@ func parseUserReports(params []*reports.UsageReportParameters) *userReport {
 	}
 
 	return r
-}
-
-func (g *mqlGoogleworkspaceReportUsage) account() (any, error) {
-	// is auto-computed during creation time
-	return nil, errors.New("not implemented")
-}
-
-func (g *mqlGoogleworkspaceReportUsage) security() (any, error) {
-	// is auto-computed during creation time
-	return nil, errors.New("not implemented")
 }
 
 func (g *mqlGoogleworkspaceReportUsage) appUsage() (any, error) {

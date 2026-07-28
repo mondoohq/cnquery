@@ -517,11 +517,6 @@ private googleworkspace.group @defaults("email") {
   adminCreated bool
   // Retrieve members of the group
   members() []googleworkspace.member
-  // Group settings as a raw dict
-  //
-  // Deprecated in favor of groupSettings, which exposes the same Groups
-  // Settings API data as typed, queryable fields.
-  settings() @maturity("deprecated") dict
   // Group security settings
   //
   // Membership restrictions from the Cloud Identity Groups API. The
@@ -807,18 +802,6 @@ private googleworkspace.report.usage {
   // are also promoted to the typed fields on this resource (isDisabled,
   // is2svEnrolled, usedQuotaInMb, and so on).
   parameters []dict
-  // Account Settings as a raw dict
-  //
-  // Deprecated in favor of the typed isDisabled, isSuperAdmin, is2svEnrolled,
-  // is2svEnforced, passwordStrength, passwordLengthCompliance, and quota
-  // fields on this resource.
-  account() @maturity("deprecated") dict
-  // Security Settings as a raw dict
-  //
-  // Deprecated in favor of the typed is2svEnrolled, is2svEnforced,
-  // isLessSecureAppsAccessAllowed, numAuthorizedApps, and numSecurityKeys
-  // fields on this resource.
-  security() @maturity("deprecated") dict
   // Per-application usage counters for the account
   //
   // Keys include `gmailUsedQuotaInMb`, `driveUsedQuotaInMb`,
