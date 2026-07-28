@@ -14,7 +14,98 @@ import (
 )
 
 type mqlDatabricksClusterInternal struct {
-	cachePolicyId string
+	cachePolicyId           string
+	cacheInstanceProfileArn string
+}
+
+// initScriptsToDict normalizes the cluster init scripts into a list of dicts,
+// one per script, preserving the configured order. InitScriptInfo is a union in
+// which exactly one storage field is set, so each entry is flattened to the
+// storage type plus its destination. Only JSON-native values are used, as llx
+// dicts accept nothing else.
+func initScriptsToDict(scripts []compute.InitScriptInfo) []any {
+	out := make([]any, 0, len(scripts))
+	for i := range scripts {
+		s := scripts[i]
+		var entry map[string]any
+		switch {
+		case s.Workspace != nil:
+			entry = map[string]any{"type": "workspace", "destination": s.Workspace.Destination}
+		case s.Volumes != nil:
+			entry = map[string]any{"type": "volumes", "destination": s.Volumes.Destination}
+		case s.S3 != nil:
+			entry = map[string]any{
+				"type":             "s3",
+				"destination":      s.S3.Destination,
+				"region":           s.S3.Region,
+				"endpoint":         s.S3.Endpoint,
+				"enableEncryption": s.S3.EnableEncryption,
+			}
+		case s.Abfss != nil:
+			entry = map[string]any{"type": "abfss", "destination": s.Abfss.Destination}
+		case s.Gcs != nil:
+			entry = map[string]any{"type": "gcs", "destination": s.Gcs.Destination}
+		case s.Dbfs != nil:
+			entry = map[string]any{"type": "dbfs", "destination": s.Dbfs.Destination}
+		case s.File != nil:
+			entry = map[string]any{"type": "file", "destination": s.File.Destination}
+		default:
+			// A script whose storage type this SDK version does not model still
+			// needs to appear, otherwise the list silently under-reports.
+			entry = map[string]any{"type": "", "destination": ""}
+		}
+		out = append(out, entry)
+	}
+	return out
+}
+
+// dockerImageUrl returns the custom container image URL, or an empty string when
+// the cluster boots a stock runtime. The basic-auth credentials that may
+// accompany the image are deliberately not exposed, as they include a password.
+func dockerImageUrl(img *compute.DockerImage) string {
+	if img == nil {
+		return ""
+	}
+	return img.Url
+}
+
+// googleServiceAccount returns the service account a GCP cluster impersonates,
+// or an empty string on clusters that are not on GCP or that use no account.
+func googleServiceAccount(attrs *compute.GcpAttributes) string {
+	if attrs == nil {
+		return ""
+	}
+	return attrs.GoogleServiceAccount
+}
+
+// cachedInstanceProfiles lists the workspace instance profiles at most once per
+// scan, caching them on the root databricks resource keyed by ARN so that
+// per-cluster resolutions (databricks.clusters { instanceProfile }) share a
+// single ListAll rather than one lookup per cluster.
+func cachedInstanceProfiles(runtime *plugin.Runtime) (map[string]compute.InstanceProfile, error) {
+	rootRes, err := NewResource(runtime, "databricks", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	root := rootRes.(*mqlDatabricks)
+	root.instanceProfilesOnce.Do(func() {
+		ws, err := workspaceClient(runtime)
+		if err != nil {
+			root.instanceProfilesErr = err
+			return
+		}
+		profiles, err := ws.InstanceProfiles.ListAll(context.Background())
+		if err != nil {
+			root.instanceProfilesErr = err
+			return
+		}
+		byARN := make(map[string]compute.InstanceProfile, len(profiles))
+		for i := range profiles {
+			byARN[profiles[i].InstanceProfileArn] = profiles[i]
+		}
+		root.instanceProfilesByARN = byARN
+	})
+	return root.instanceProfilesByARN, root.instanceProfilesErr
 }
 
 // cachedClusterPolicies lists the workspace cluster policies at most once per
@@ -115,12 +206,20 @@ func (r *mqlDatabricks) clusters() ([]any, error) {
 			"autoterminationMinutes":     llx.IntData(c.AutoterminationMinutes),
 			"creatorUserName":            llx.StringData(c.CreatorUserName),
 			"customTags":                 llx.MapData(strMap(c.CustomTags), types.String),
+			"initScripts":                llx.ArrayData(initScriptsToDict(c.InitScripts), types.Dict),
+			"dockerImageUrl":             llx.StringData(dockerImageUrl(c.DockerImage)),
+			"sshPublicKeys":              llx.ArrayData(strSlice(c.SshPublicKeys), types.String),
+			"dependencyMode":             llx.StringData(string(c.DependencyMode)),
+			"googleServiceAccount":       llx.StringData(googleServiceAccount(c.GcpAttributes)),
 		})
 		if err != nil {
 			return nil, err
 		}
 		mqlCluster := res.(*mqlDatabricksCluster)
 		mqlCluster.cachePolicyId = c.PolicyId
+		if c.AwsAttributes != nil {
+			mqlCluster.cacheInstanceProfileArn = c.AwsAttributes.InstanceProfileArn
+		}
 		out = append(out, mqlCluster)
 	}
 	return out, nil
@@ -141,6 +240,34 @@ func (r *mqlDatabricksCluster) policy() (*mqlDatabricksClusterPolicy, error) {
 		return nil, nil
 	}
 	return newMqlDatabricksClusterPolicy(r.MqlRuntime, p)
+}
+
+func (r *mqlDatabricksCluster) instanceProfile() (*mqlDatabricksInstanceProfile, error) {
+	// Only AWS clusters carry an instance profile, so a workspace on another
+	// cloud never reaches the lookup below.
+	if r.cacheInstanceProfileArn == "" {
+		r.InstanceProfile.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	byARN, err := cachedInstanceProfiles(r.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	p, ok := byARN[r.cacheInstanceProfileArn]
+	if !ok {
+		r.InstanceProfile.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := CreateResource(r.MqlRuntime, "databricks.instanceProfile", map[string]*llx.RawData{
+		"__id":                  llx.StringData("databricks.instanceProfile/" + p.InstanceProfileArn),
+		"instanceProfileArn":    llx.StringData(p.InstanceProfileArn),
+		"iamRoleArn":            llx.StringData(p.IamRoleArn),
+		"isMetaInstanceProfile": llx.BoolData(p.IsMetaInstanceProfile),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlDatabricksInstanceProfile), nil
 }
 
 func (r *mqlDatabricks) warehouses() ([]any, error) {

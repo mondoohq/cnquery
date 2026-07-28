@@ -19,7 +19,12 @@ databricks.cluster.clusterName 13.0.0
 databricks.cluster.creatorUserName 13.0.0
 databricks.cluster.customTags 13.0.0
 databricks.cluster.dataSecurityMode 13.0.0
+databricks.cluster.dependencyMode 13.1.3
+databricks.cluster.dockerImageUrl 13.1.3
+databricks.cluster.googleServiceAccount 13.1.3
 databricks.cluster.id 13.0.0
+databricks.cluster.initScripts 13.1.3
+databricks.cluster.instanceProfile 13.1.3
 databricks.cluster.localDiskEncryptionEnabled 13.0.0
 databricks.cluster.policy 13.0.0
 databricks.cluster.runtimeEngine 13.0.0
@@ -27,6 +32,7 @@ databricks.cluster.singleUserName 13.0.0
 databricks.cluster.sparkConf 13.0.0
 databricks.cluster.sparkEnvVars 13.0.0
 databricks.cluster.sparkVersion 13.0.0
+databricks.cluster.sshPublicKeys 13.1.3
 databricks.cluster.state 13.0.0
 databricks.clusterPolicies 13.0.0
 databricks.clusterPolicy 13.0.0
