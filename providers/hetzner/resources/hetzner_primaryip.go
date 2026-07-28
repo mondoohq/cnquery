@@ -86,14 +86,6 @@ func initHetznerPrimaryIp(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	return args, res, err
 }
 
-func (m *mqlHetznerPrimaryIp) datacenter() (*mqlHetznerDatacenter, error) {
-	// Hetzner removed the datacenter association from primary IPs; the API now
-	// reports only the location. The field is retained (deprecated) and always
-	// resolves to null.
-	m.Datacenter.State = plugin.StateIsSet | plugin.StateIsNull
-	return nil, nil
-}
-
 func (m *mqlHetznerPrimaryIp) location() (*mqlHetznerLocation, error) {
 	return resolveTypedResource(&m.Location, m.cacheLocation, func(l *hcloud.Location) (*mqlHetznerLocation, error) {
 		return newMqlHetznerLocation(m.MqlRuntime, l)

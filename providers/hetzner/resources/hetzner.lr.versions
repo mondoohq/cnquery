@@ -32,7 +32,6 @@ hetzner.datacenter.id 13.0.1
 hetzner.datacenter.location 13.0.1
 hetzner.datacenter.name 13.0.1
 hetzner.datacenter.serverTypesAvailableForMigration 13.0.1
-hetzner.datacenter.servers 13.5.2
 hetzner.datacenter.supportedServerTypes 13.0.1
 hetzner.datacenters 13.0.1
 hetzner.firewall 13.0.1
@@ -132,7 +131,6 @@ hetzner.loadBalancer.target.type 13.0.1
 hetzner.loadBalancer.target.usePrivateIp 13.0.1
 hetzner.loadBalancer.targets 13.0.1
 hetzner.loadBalancerType 13.0.1
-hetzner.loadBalancerType.deprecated 13.0.1
 hetzner.loadBalancerType.deprecation 13.7.5
 hetzner.loadBalancerType.description 13.0.1
 hetzner.loadBalancerType.id 13.0.1
@@ -186,7 +184,6 @@ hetzner.primaryIp.assigneeType 13.0.1
 hetzner.primaryIp.autoDelete 13.0.1
 hetzner.primaryIp.blocked 13.0.1
 hetzner.primaryIp.created 13.0.1
-hetzner.primaryIp.datacenter 13.0.1
 hetzner.primaryIp.dnsPtr 13.0.1
 hetzner.primaryIp.id 13.0.1
 hetzner.primaryIp.ip 13.0.1
@@ -201,7 +198,6 @@ hetzner.server 13.0.1
 hetzner.server.backupWindow 13.0.1
 hetzner.server.backupsEnabled 13.5.2
 hetzner.server.created 13.0.1
-hetzner.server.datacenter 13.0.1
 hetzner.server.dnsRecords 13.7.7
 hetzner.server.exposure 13.3.1
 hetzner.server.firewallBinding 13.1.2

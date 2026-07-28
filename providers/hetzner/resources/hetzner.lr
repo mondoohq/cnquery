@@ -81,11 +81,6 @@ private hetzner.server @defaults("id name status") {
   primaryDiskSize int
   // Server type (VM size)
   serverType() hetzner.serverType
-  // Datacenter the server runs in
-  //
-  // Deprecated, please use location. Hetzner removed the datacenter
-  // association from servers, so this always resolves to null.
-  datacenter() @maturity("deprecated") hetzner.datacenter
   // Location the server runs in
   location() hetzner.location
   // Image the server was created from (nullable)
@@ -513,11 +508,6 @@ private hetzner.primaryIp @defaults("id ip type") {
   autoDelete bool
   // Whether the IP is blocked
   blocked bool
-  // Datacenter the IP belongs to
-  //
-  // Deprecated, please use location. Hetzner removed the datacenter
-  // association from primary IPs, so this always resolves to null.
-  datacenter() @maturity("deprecated") hetzner.datacenter
   // Location the IP belongs to
   location() hetzner.location
   // Server the IP is assigned to (nullable)
@@ -676,7 +666,7 @@ private hetzner.loadBalancer.target @defaults("type") {
 // maximum concurrent connections, services, targets, and assigned TLS
 // certificates. Use it to confirm a load balancer is provisioned on a
 // class that fits its expected traffic, or to spot classes that are
-// scheduled for retirement through the `deprecated` timestamp. Select a
+// scheduled for retirement through the `deprecation` schedule. Select a
 // type by id with `hetzner.loadBalancerType(id: 1)`.
 private hetzner.loadBalancerType @defaults("id name") {
   init(id? int)
@@ -694,12 +684,6 @@ private hetzner.loadBalancerType @defaults("id name") {
   maxTargets int
   // Maximum assigned certificates
   maxAssignedCertificates int
-  // Announcement timestamp
-  //
-  // Deprecated in favor of deprecation, which carries the retirement date
-  // as well. Holds the timestamp the deprecation was announced, and is null
-  // while the load balancer type is current.
-  deprecated @maturity("deprecated") time
   // Deprecation schedule
   //
   // Empty when the load balancer type is not deprecated. When present it
@@ -922,8 +906,7 @@ private hetzner.location @defaults("id name city") {
 // hetzner.datacenter(id: 4). Reports the location it belongs to, the
 // server types it supports, which of those are currently available for
 // new servers, and which are open for migration, so you can plan
-// placement and capacity. The servers field lists the servers running
-// in this datacenter.
+// placement and capacity.
 private hetzner.datacenter @defaults("id name") {
   init(id? int)
   // Datacenter ID
@@ -940,12 +923,6 @@ private hetzner.datacenter @defaults("id name") {
   availableServerTypes() []hetzner.serverType
   // Server types available for migration into this datacenter
   serverTypesAvailableForMigration() []hetzner.serverType
-  // Servers running in this datacenter
-  //
-  // Hetzner removed the datacenter association from servers, so servers can
-  // no longer be mapped back to a datacenter. This field is deprecated and
-  // always resolves to an empty list.
-  servers() @maturity("deprecated") []hetzner.server
 }
 
 // Hetzner Cloud Storage Box (managed backup/file storage)
