@@ -129,6 +129,7 @@ hetzner.loadBalancer.target.usePrivateIp 13.0.1
 hetzner.loadBalancer.targets 13.0.1
 hetzner.loadBalancerType 13.0.1
 hetzner.loadBalancerType.deprecated 13.0.1
+hetzner.loadBalancerType.deprecation 13.7.5
 hetzner.loadBalancerType.description 13.0.1
 hetzner.loadBalancerType.id 13.0.1
 hetzner.loadBalancerType.maxAssignedCertificates 13.0.1

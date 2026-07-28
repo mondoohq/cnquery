@@ -858,6 +858,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"hetzner.loadBalancerType.deprecated": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerLoadBalancerType).GetDeprecated()).ToDataRes(types.Time)
 	},
+	"hetzner.loadBalancerType.deprecation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerLoadBalancerType).GetDeprecation()).ToDataRes(types.Dict)
+	},
 	"hetzner.firewall.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerFirewall).GetId()).ToDataRes(types.Int)
 	},
@@ -2168,6 +2171,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"hetzner.loadBalancerType.deprecated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerLoadBalancerType).Deprecated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"hetzner.loadBalancerType.deprecation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerLoadBalancerType).Deprecation, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"hetzner.firewall.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5247,6 +5254,7 @@ type mqlHetznerLoadBalancerType struct {
 	MaxTargets              plugin.TValue[int64]
 	MaxAssignedCertificates plugin.TValue[int64]
 	Deprecated              plugin.TValue[*time.Time]
+	Deprecation             plugin.TValue[any]
 }
 
 // createHetznerLoadBalancerType creates a new instance of this resource
@@ -5316,6 +5324,10 @@ func (c *mqlHetznerLoadBalancerType) GetMaxAssignedCertificates() *plugin.TValue
 
 func (c *mqlHetznerLoadBalancerType) GetDeprecated() *plugin.TValue[*time.Time] {
 	return &c.Deprecated
+}
+
+func (c *mqlHetznerLoadBalancerType) GetDeprecation() *plugin.TValue[any] {
+	return &c.Deprecation
 }
 
 // mqlHetznerFirewall for the hetzner.firewall resource
