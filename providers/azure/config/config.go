@@ -118,6 +118,12 @@ Examples run in the Azure CLI:
 					Desc:    "Path to a file containing an OIDC token to exchange via Azure workload identity federation",
 				},
 				{
+					Long:    "auth-method",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Comma-separated sign-in methods to use when no client secret or certificate is given: cli, env, managed-identity, workload-identity (default: try all)",
+				},
+				{
 					Long:    "filters",
 					Type:    plugin.FlagType_KeyValue,
 					Default: "",

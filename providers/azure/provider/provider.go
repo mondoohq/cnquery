@@ -53,6 +53,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	certificatePath := flagBytes(flags, "certificate-path")
 	certificateSecret := flagBytes(flags, "certificate-secret")
 	federatedTokenFile := flagBytes(flags, "federated-token-file")
+	authMethod := flagBytes(flags, "auth-method")
 	opts := map[string]string{}
 	creds := []*vault.Credential{}
 
@@ -60,6 +61,9 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	opts["client-id"] = string(clientId)
 	if len(federatedTokenFile) > 0 {
 		opts[connection.OptionFederatedTokenFile] = string(federatedTokenFile)
+	}
+	if len(authMethod) > 0 {
+		opts[connection.OptionAuthMethod] = string(authMethod)
 	}
 	if len(clientSecret) > 0 {
 		creds = append(creds, &vault.Credential{

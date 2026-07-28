@@ -85,7 +85,17 @@ func NewAzureSnapshotConnection(id uint32, conf *inventory.Config, asset *invent
 	if len(conf.Credentials) > 0 {
 		cred = conf.Credentials[0]
 	}
-	token, err := azauth.GetTokenFromCredential(cred, conf.Options["tenant-id"], conf.Options["client-id"])
+	methods, err := azauth.ParseCredentialMethods(conf.Options["auth-method"])
+	if err != nil {
+		return nil, err
+	}
+	// an empty token file leaves azidentity to fall back to
+	// AZURE_FEDERATED_TOKEN_FILE, so only the option needs forwarding here
+	token, err := azauth.GetTokenFromCredential(cred, conf.Options["tenant-id"], conf.Options["client-id"],
+		&azauth.ChainedTokenOptions{
+			FederatedTokenFile: conf.Options["azure-federated-token-file"],
+			Methods:            methods,
+		})
 	if err != nil {
 		return nil, err
 	}
