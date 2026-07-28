@@ -542,6 +542,12 @@ func serviceNetworkExposureArgs(svc *corev1.Service, publicNodeAddresses []strin
 		if len(addresses) == 0 {
 			exposureReason = "loadBalancerPending"
 			confidence = "low"
+		} else if internetExposed && hasInternalLoadBalancerAnnotation(svc.Annotations) {
+			// The declared scheme wins over the published address. An internal AWS
+			// NLB's DNS name looks exactly like an internet-facing one, so without
+			// this the address classification reports it as internet-reachable.
+			internetExposed = false
+			exposureReason = "internalLoadBalancerScheme"
 		} else if internetExposed && len(svc.Spec.LoadBalancerSourceRanges) > 0 && !contains(sourceRangeClassifications, "publicSourceRange") {
 			internetExposed = false
 			exposureReason = "restrictedLoadBalancerSourceRange"
@@ -610,10 +616,30 @@ func ingressNetworkExposureArgs(ing *networkingv1.Ingress) []map[string]*llx.Raw
 	specHostnames := ingressSpecHostnames(ing)
 	addresses := ingressExposureAddresses(ing)
 	classifications := classifyAddresses(addresses)
-	internetExposed := contains(classifications, "internet") || contains(classifications, "hostname")
+
+	// Reachability follows the address the controller actually published, not the
+	// rule hostnames. A rule host only matches the Host header of a request that
+	// already reached the load balancer, so an internal load balancer fronting
+	// public-looking names stays reachable only inside the VPC. The rule hostnames
+	// are consulted solely while no address has been published, where they are the
+	// one available signal of what the Ingress intends to serve.
+	reachabilityAddresses := statusAddresses
+	if len(reachabilityAddresses) == 0 {
+		reachabilityAddresses = specHostnames
+	}
+	reachability := classifyAddresses(reachabilityAddresses)
+	internetExposed := contains(reachability, "internet") || contains(reachability, "hostname")
+
 	exposureReason := "ingressNoPublishedAddress"
 	confidence := "low"
-	if internetExposed && len(statusAddresses) > 0 {
+	if hasInternalLoadBalancerAnnotation(ing.Annotations) {
+		// A declared scheme is authoritative and is reported as the reason in its own
+		// right: the controller provisions the load balancer from it, so it settles
+		// reachability whatever the published address or rule hostnames suggest.
+		internetExposed = false
+		exposureReason = "internalLoadBalancerScheme"
+		confidence = "high"
+	} else if internetExposed && len(statusAddresses) > 0 {
 		exposureReason = "publicIngressAddress"
 		confidence = "high"
 	} else if internetExposed && len(specHostnames) > 0 {
@@ -3268,7 +3294,61 @@ func isInternalHostname(hostname string) bool {
 		strings.HasSuffix(hostname, ".cluster.local") ||
 		strings.HasSuffix(hostname, ".local") ||
 		strings.HasSuffix(hostname, ".internal") ||
-		strings.Contains(hostname, ".svc.")
+		strings.Contains(hostname, ".svc.") ||
+		isInternalCloudLoadBalancerHostname(hostname)
+}
+
+// isInternalCloudLoadBalancerHostname reports whether a cloud load balancer's DNS
+// name identifies it as internal (reachable only inside the VPC) rather than
+// internet-facing.
+//
+// A Service or Ingress usually publishes its load balancer as a hostname, not an
+// IP, and an unrecognized hostname is otherwise classified as internet-reachable.
+// That is the safe default for an arbitrary name, but it misreads AWS load
+// balancer DNS: an internal Application or Classic Load Balancer is always named
+// internal-<name>-<id>.<region>.elb.amazonaws.com, and AWS never applies that
+// prefix to an internet-facing one, so treating the prefix as internal removes a
+// large class of false positives without risking a false negative.
+//
+// Network Load Balancers carry no equivalent marker in their DNS name, so an
+// internal NLB is not detectable here; those are classified from the load
+// balancer scheme annotation instead (see hasInternalLoadBalancerAnnotation).
+func isInternalCloudLoadBalancerHostname(hostname string) bool {
+	return strings.HasPrefix(hostname, "internal-") &&
+		strings.HasSuffix(hostname, ".amazonaws.com") &&
+		strings.Contains(hostname, ".elb.")
+}
+
+// internalLoadBalancerAnnotations maps the cloud controller annotations that
+// explicitly request an internal load balancer to the value that means internal.
+// The AWS NLB case is the reason this exists: unlike an ALB, an internal NLB's DNS
+// name is indistinguishable from an internet-facing one, so the declared scheme is
+// the only signal available.
+var internalLoadBalancerAnnotations = map[string]string{
+	// AWS Load Balancer Controller, Ingress (ALB) and Service (NLB)
+	"alb.ingress.kubernetes.io/scheme":                      "internal",
+	"service.beta.kubernetes.io/aws-load-balancer-scheme":   "internal",
+	"service.beta.kubernetes.io/aws-load-balancer-internal": "true",
+	// Azure cloud provider
+	"service.beta.kubernetes.io/azure-load-balancer-internal": "true",
+	// GKE, current and legacy annotation
+	"networking.gke.io/load-balancer-type": "internal",
+	"cloud.google.com/load-balancer-type":  "internal",
+}
+
+// hasInternalLoadBalancerAnnotation reports whether the object explicitly requests
+// an internal load balancer through a cloud controller annotation. A declared
+// scheme is authoritative: the controller provisions the load balancer from it, so
+// it outranks any inference drawn from the published address.
+func hasInternalLoadBalancerAnnotation(annotations map[string]string) bool {
+	for key, internalValue := range internalLoadBalancerAnnotations {
+		if value, ok := annotations[key]; ok {
+			if strings.EqualFold(strings.TrimSpace(value), internalValue) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func filterNetworkObjectsByNamespace(runtime *plugin.Runtime, namespace string, list func(k8s *mqlK8s) *plugin.TValue[[]any]) ([]any, error) {
