@@ -179,6 +179,19 @@ func (r *RegistryHandler) GetRegistryItemValue(registryId string, path, key stri
 	return GetNativeRegistryKeyItem(regPath, key)
 }
 
+// GetNativeRegistryKeyItems returns all values of the key at `path` (relative to
+// the hive root) for a previously loaded hive. Prefer it over repeated
+// GetRegistryItemValue calls when reading several values of the same key: that
+// one re-enumerates and decodes the whole key per lookup, and it matches value
+// names case-sensitively.
+func (r *RegistryHandler) GetNativeRegistryKeyItems(registryId string, path string) ([]RegistryKeyItem, error) {
+	regPath, err := r.getRegistryKeyPath(registryId, path)
+	if err != nil {
+		return nil, err
+	}
+	return GetNativeRegistryKeyItems(regPath)
+}
+
 func (r *RegistryHandler) GetNativeRegistryKeyChildren(registryId string, path string) ([]RegistryKeyChild, error) {
 	regPath, err := r.getRegistryKeyPath(registryId, path)
 	if err != nil {

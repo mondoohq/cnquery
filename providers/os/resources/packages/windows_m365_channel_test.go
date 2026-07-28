@@ -4,6 +4,8 @@
 package packages
 
 import (
+	"errors"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -14,37 +16,38 @@ import (
 	"go.mondoo.com/mql/v13/providers/os/resources/powershell"
 )
 
-func TestNormalizeM365Channel(t *testing.T) {
+func TestM365ChannelFromValue(t *testing.T) {
 	tests := []struct {
-		value    string
-		expected string
+		value     string
+		channel   string
+		isChannel bool
 	}{
 		// CDN urls, the common form of CDNBaseUrl / UpdateChannel
-		{"http://officecdn.microsoft.com/pr/492350f6-3a01-4f97-b9c0-c7c6ddf67d60", "current"},
-		{"https://officecdn.microsoft.com/pr/55336b82-a18d-4dd6-b5f6-9e5095c314a6", "monthly-enterprise"},
-		{"http://officecdn.microsoft.com/pr/7ffbc6bf-bc32-4f92-8982-f9dd17fd3114/", "semi-annual-enterprise"},
-		{"http://officecdn.microsoft.com/pr/b8f9b850-328d-4355-9145-c59439a0c4cf", "semi-annual-enterprise-preview"},
-		{"http://officecdn.microsoft.com/pr/64256afe-f5d9-4f86-8936-8840a6a4f5be", "current-preview"},
-		{"http://officecdn.microsoft.com/pr/5440fd1f-7ecb-4221-8110-145efaa6372f", "beta"},
-		// bare audience guids, including the mixed-case form
-		{"492350f6-3a01-4f97-b9c0-c7c6ddf67d60", "current"},
-		{"55336B82-A18D-4DD6-B5F6-9E5095C314A6", "monthly-enterprise"},
-		// ODT / group policy channel names
-		{"Current", "current"},
-		{"MonthlyEnterprise", "monthly-enterprise"},
-		{"SemiAnnual", "semi-annual-enterprise"},
-		{"Deferred", "semi-annual-enterprise"},
-		{"PerpetualVL2024", "perpetual-vl-2024"},
-		// values that carry no channel: an internal update share, an unknown
-		// guid, and empty input all degrade to the unqualified purl
-		{"\\\\fileserver\\office\\updates", ""},
-		{"http://officecdn.microsoft.com/pr/00000000-0000-0000-0000-000000000000", ""},
-		{"   ", ""},
-		{"", ""},
+		{"http://officecdn.microsoft.com/pr/492350f6-3a01-4f97-b9c0-c7c6ddf67d60", "current", true},
+		{"https://officecdn.microsoft.com/pr/55336b82-a18d-4dd6-b5f6-9e5095c314a6", "monthly-enterprise", true},
+		{"http://officecdn.microsoft.com/pr/7ffbc6bf-bc32-4f92-8982-f9dd17fd3114/", "semi-annual-enterprise", true},
+		{"http://officecdn.microsoft.com/pr/b8f9b850-328d-4355-9145-c59439a0c4cf", "semi-annual-enterprise-preview", true},
+		{"http://officecdn.microsoft.com/pr/64256afe-f5d9-4f86-8936-8840a6a4f5be", "current-preview", true},
+		{"http://officecdn.microsoft.com/pr/5440fd1f-7ecb-4221-8110-145efaa6372f", "beta", true},
+		// bare audience ids, including the mixed-case form
+		{"492350f6-3a01-4f97-b9c0-c7c6ddf67d60", "current", true},
+		{"55336B82-A18D-4DD6-B5F6-9E5095C314A6", "monthly-enterprise", true},
+		// an audience we don't know still NAMES a channel: no qualifier, and
+		// the caller must not fall back to a lower-priority value
+		{"http://officecdn.microsoft.com/pr/00000000-0000-0000-0000-000000000000", "", true},
+		{"00000000-0000-0000-0000-000000000000", "", true},
+		// values that name no channel at all — the caller keeps looking
+		{"\\\\fileserver\\office\\updates", "", false},
+		{"http://sccm.corp.example.com/office/updates", "", false},
+		{"Current", "", false},
+		{"   ", "", false},
+		{"", "", false},
 	}
 
 	for _, test := range tests {
-		assert.Equal(t, test.expected, normalizeM365Channel(test.value), test.value)
+		channel, isChannel := m365ChannelFromValue(test.value)
+		assert.Equal(t, test.channel, channel, test.value)
+		assert.Equal(t, test.isChannel, isChannel, test.value)
 	}
 }
 
@@ -55,6 +58,8 @@ func TestIsM365AppsPackage(t *testing.T) {
 		"Microsoft 365 - en-us",
 		"Microsoft Office 365 ProPlus - en-us",
 		"Microsoft Office 365 Business - en-us",
+		// retail / consumer Click-to-Run, which registers without a SKU word
+		"Microsoft Office 365 - en-us",
 	}
 	for _, name := range clickToRun {
 		assert.True(t, isM365AppsPackage(name), name)
@@ -105,9 +110,64 @@ func TestM365ChannelFromRegistryItems(t *testing.T) {
 		assert.Equal(t, "beta", m365ChannelFromRegistryItems(items))
 	})
 
+	t.Run("an unknown audience does not fall through to the assigned channel", func(t *testing.T) {
+		// the installed bits came from a channel this build doesn't know;
+		// reporting the policy-assigned Current Channel instead would claim a
+		// channel the build never came from
+		items := []registry.RegistryKeyItem{
+			item("CDNBaseUrl", "http://officecdn.microsoft.com/pr/00000000-0000-0000-0000-000000000000"),
+			item("UpdateChannel", "http://officecdn.microsoft.com/pr/492350f6-3a01-4f97-b9c0-c7c6ddf67d60"),
+		}
+		assert.Equal(t, "", m365ChannelFromRegistryItems(items))
+	})
+
+	t.Run("value names are matched case-insensitively", func(t *testing.T) {
+		items := []registry.RegistryKeyItem{
+			item("cdnbaseurl", "http://officecdn.microsoft.com/pr/492350f6-3a01-4f97-b9c0-c7c6ddf67d60"),
+		}
+		assert.Equal(t, "current", m365ChannelFromRegistryItems(items))
+	})
+
 	t.Run("no ClickToRun values at all", func(t *testing.T) {
 		assert.Equal(t, "", m365ChannelFromRegistryItems(nil))
 	})
+}
+
+func TestM365ChannelFromKeys(t *testing.T) {
+	current := []registry.RegistryKeyItem{
+		{Key: "CDNBaseUrl", Value: registry.RegistryKeyValue{String: "http://officecdn.microsoft.com/pr/492350f6-3a01-4f97-b9c0-c7c6ddf67d60"}},
+	}
+
+	t.Run("reads each key exactly once", func(t *testing.T) {
+		reads := []string{}
+		channel := m365ChannelFromKeys(officeC2RConfigKeys, func(path string) ([]registry.RegistryKeyItem, error) {
+			reads = append(reads, path)
+			return nil, nil
+		})
+
+		assert.Equal(t, "", channel)
+		assert.Equal(t, officeC2RConfigKeys, reads)
+	})
+
+	t.Run("falls through to the Wow6432Node view", func(t *testing.T) {
+		channel := m365ChannelFromKeys(officeC2RConfigKeys, func(path string) ([]registry.RegistryKeyItem, error) {
+			if strings.Contains(path, "WOW6432Node") {
+				return current, nil
+			}
+			return nil, errors.New("registry key not found")
+		})
+
+		assert.Equal(t, "current", channel)
+	})
+}
+
+func TestOfficeC2RConfigKeys(t *testing.T) {
+	// the live-registry paths are derived from the hive-relative ones, so the
+	// two readers can never probe different keys
+	assert.Equal(t, []string{
+		"HKLM\\SOFTWARE\\Microsoft\\Office\\ClickToRun\\Configuration",
+		"HKLM\\SOFTWARE\\WOW6432Node\\Microsoft\\Office\\ClickToRun\\Configuration",
+	}, officeC2RConfigKeys)
 }
 
 func TestApplyM365ChannelQualifier(t *testing.T) {

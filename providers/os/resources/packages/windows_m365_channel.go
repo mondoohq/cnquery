@@ -33,23 +33,28 @@ import (
 // consumes it separately, and until it does the extra qualifier is inert.
 const m365ChannelQualifier = "channel"
 
-// Click-to-Run writes its configuration to the 64-bit view on 64-bit Windows,
-// and to the Wow6432Node view when 32-bit Office is installed on a 64-bit OS.
-// Probe both, in that order.
-var (
-	// full paths, used against the native registry API and PowerShell
-	officeC2RConfigKeys = []string{
-		"HKLM\\SOFTWARE\\Microsoft\\Office\\ClickToRun\\Configuration",
-		"HKLM\\SOFTWARE\\WOW6432Node\\Microsoft\\Office\\ClickToRun\\Configuration",
-	}
-	// hive-relative paths, used when a SOFTWARE hive is mounted from a filesystem
-	officeC2RConfigHivePaths = []string{
-		"Microsoft\\Office\\ClickToRun\\Configuration",
-		"WOW6432Node\\Microsoft\\Office\\ClickToRun\\Configuration",
-	}
-)
+// officeC2RConfigHivePaths are the Click-to-Run configuration keys, relative to
+// the SOFTWARE hive root. Click-to-Run writes its configuration to the 64-bit
+// view on 64-bit Windows, and to the Wow6432Node view when 32-bit Office is
+// installed on a 64-bit OS, so both are probed in that order.
+var officeC2RConfigHivePaths = []string{
+	"Microsoft\\Office\\ClickToRun\\Configuration",
+	"WOW6432Node\\Microsoft\\Office\\ClickToRun\\Configuration",
+}
 
-// m365ChannelValueNames are the ClickToRun\Configuration values that can carry
+// officeC2RConfigKeys are the same keys as fully-qualified paths, for the
+// readers that address the live registry rather than a mounted hive. Derived
+// from the list above so the two can't drift apart and make the channel depend
+// on how the asset was scanned.
+var officeC2RConfigKeys = func() []string {
+	keys := make([]string, len(officeC2RConfigHivePaths))
+	for i := range officeC2RConfigHivePaths {
+		keys[i] = "HKLM\\SOFTWARE\\" + officeC2RConfigHivePaths[i]
+	}
+	return keys
+}()
+
+// m365ChannelValueNames are the ClickToRun\Configuration values that can name
 // the update channel, in the order we trust them for the build that is actually
 // INSTALLED:
 //
@@ -75,13 +80,13 @@ var m365ChannelValueNames = []string{
 	"UnmanagedUpdateURL",
 }
 
-// m365ChannelByGUID maps Microsoft's stable per-channel audience GUIDs to the
-// normalized channel token used in the purl qualifier. The same GUIDs key the
-// server-side channel list (officeCdnServicedChannels), so both sides agree on
-// what a channel is without exchanging display names.
+// m365ChannelByAudience maps Microsoft's stable per-channel audience IDs to the
+// normalized channel token used in the purl qualifier. The same IDs key the
+// server-side channel list, so both sides agree on what a channel is without
+// exchanging display names.
 //
 // Ref: https://learn.microsoft.com/intune/configmgr/sum/deploy-use/manage-office-365-proplus-updates#update-channels-for-microsoft-365-apps
-var m365ChannelByGUID = map[string]string{
+var m365ChannelByAudience = map[string]string{
 	"492350f6-3a01-4f97-b9c0-c7c6ddf67d60": "current",
 	"64256afe-f5d9-4f86-8936-8840a6a4f5be": "current-preview",
 	"55336b82-a18d-4dd6-b5f6-9e5095c314a6": "monthly-enterprise",
@@ -90,37 +95,20 @@ var m365ChannelByGUID = map[string]string{
 	"5440fd1f-7ecb-4221-8110-145efaa6372f": "beta",
 }
 
-// m365ChannelByName maps the channel names the Office Deployment Tool and the
-// Update Channel group policy accept to the same normalized tokens. The
-// ClickToRun values we read normally hold a CDN URL, but a policy-driven install
-// can leave a bare channel name behind, so accept both forms.
-//
-// Ref: https://learn.microsoft.com/microsoft-365-apps/deploy/office-deployment-tool-configuration-options#updates-element
-var m365ChannelByName = map[string]string{
-	"current":              "current",
-	"monthly":              "current",
-	"currentpreview":       "current-preview",
-	"firstreleasecurrent":  "current-preview",
-	"insiderslow":          "current-preview",
-	"monthlyenterprise":    "monthly-enterprise",
-	"semiannual":           "semi-annual-enterprise",
-	"deferred":             "semi-annual-enterprise",
-	"broad":                "semi-annual-enterprise",
-	"semiannualpreview":    "semi-annual-enterprise-preview",
-	"firstreleasedeferred": "semi-annual-enterprise-preview",
-	"targeted":             "semi-annual-enterprise-preview",
-	"betachannel":          "beta",
-	"insiderfast":          "beta",
-	"perpetualvl2019":      "perpetual-vl-2019",
-	"perpetualvl2021":      "perpetual-vl-2021",
-	"perpetualvl2024":      "perpetual-vl-2024",
-}
+// m365AudienceRegExp matches a bare audience id (a GUID). The ClickToRun values
+// we read hold either an Office CDN url ending in one, or the id by itself.
+var m365AudienceRegExp = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
 
-// m365AppsNameRegExp matches the Click-to-Run subscription SKUs, the ones that
-// have a per-device update channel. MSI-installed Office (Office 2016 and
-// earlier, and the volume-licensed Professional Plus SKUs) has none, so it is
-// deliberately not matched: an unqualified purl is the correct output there.
-var m365AppsNameRegExp = regexp.MustCompile(`(?i)^Microsoft (365 Apps\b|365 - |Office 365 (ProPlus|Business)\b)`)
+// m365AppsNameRegExp matches the Click-to-Run Microsoft 365 Apps SKUs, which is
+// the product family the channel-scoped advisory data covers.
+//
+// Deliberately not matched: MSI-installed Office (Office 2016 and earlier),
+// which has no update channel at all, and the Click-to-Run Perpetual VL SKUs
+// (Office LTSC 2019/2021/2024). The LTSC SKUs do have a channel, but their
+// PerpetualVL audience ids aren't in m365ChannelByAudience, so recognizing them
+// here would only produce packages we resolve no channel for. Extending to LTSC
+// means adding those ids first.
+var m365AppsNameRegExp = regexp.MustCompile(`(?i)^Microsoft (365 Apps\b|365 - |Office 365\b)`)
 
 // isM365AppsPackage reports whether a Windows app display name is a
 // Click-to-Run Microsoft 365 Apps SKU.
@@ -128,63 +116,71 @@ func isM365AppsPackage(name string) bool {
 	return m365AppsNameRegExp.MatchString(name)
 }
 
-// normalizeM365Channel turns a raw ClickToRun configuration value into the
-// normalized channel token. It accepts a CDN URL
-// ("http://officecdn.microsoft.com/pr/<guid>"), a bare audience GUID, and the
-// ODT/group-policy channel names.
+// m365ChannelFromValue resolves one raw ClickToRun value to a normalized channel
+// token. It accepts an Office CDN url ("http://officecdn.microsoft.com/pr/<id>")
+// and a bare audience id.
 //
-// An unrecognized value returns the empty string on purpose. A channel Microsoft
-// introduces after this build ships would otherwise be stamped as an opaque GUID
-// that no consumer can interpret; falling back to no qualifier keeps the package
-// on the plain-purl match path, which is the documented degradation tier. The
-// same is true for a value that isn't a channel at all, e.g. an UpdateUrl
-// pointing at an internal file share.
-func normalizeM365Channel(value string) string {
-	value = strings.TrimSpace(value)
-	value = strings.Trim(value, "/")
+// The second return reports whether the value names a channel AT ALL, which is
+// not the same as resolving one. It is false for an absent value and for a value
+// that points at something other than a channel, e.g. an UpdateUrl pointing at
+// an internal update share — those carry no channel information and the caller
+// should keep looking. It is true with an empty channel for an audience id we
+// don't know (one Microsoft introduces after this build ships): that value does
+// name a channel, we just can't name it, and the caller must not fall back to a
+// lower-priority value, which would report a channel the installed build did not
+// come from. No qualifier is the correct answer there.
+func m365ChannelFromValue(value string) (string, bool) {
+	value = strings.Trim(strings.TrimSpace(value), "/")
 	if value == "" {
-		return ""
+		return "", false
 	}
 
-	// a CDN URL carries the audience GUID in its last path segment
-	guid := value
-	if idx := strings.LastIndex(guid, "/"); idx >= 0 {
-		guid = guid[idx+1:]
+	// a CDN url carries the audience id in its last path segment
+	audience := value
+	if idx := strings.LastIndex(audience, "/"); idx >= 0 {
+		audience = audience[idx+1:]
 	}
-	if channel, ok := m365ChannelByGUID[strings.ToLower(guid)]; ok {
-		return channel
-	}
-
-	if channel, ok := m365ChannelByName[strings.ToLower(strings.ReplaceAll(value, " ", ""))]; ok {
-		return channel
+	audience = strings.ToLower(audience)
+	if !m365AudienceRegExp.MatchString(audience) {
+		return "", false
 	}
 
+	return m365ChannelByAudience[audience], true
+}
+
+// m365ChannelFromRegistryItems resolves the update channel from the values of a
+// ClickToRun\Configuration key. Value names are matched case-insensitively, the
+// way the registry itself treats them.
+func m365ChannelFromRegistryItems(items []registry.RegistryKeyItem) string {
+	for _, name := range m365ChannelValueNames {
+		for i := range items {
+			if !strings.EqualFold(items[i].Key, name) {
+				continue
+			}
+			if channel, isChannel := m365ChannelFromValue(items[i].Value.String); isChannel {
+				return channel
+			}
+			break
+		}
+	}
 	return ""
 }
 
-// m365ChannelFromValues resolves the update channel by asking `read` for each
-// candidate ClickToRun value in priority order. `read` returns the raw registry
-// value, or the empty string when it is absent.
-func m365ChannelFromValues(read func(valueName string) string) string {
-	for _, name := range m365ChannelValueNames {
-		if channel := normalizeM365Channel(read(name)); channel != "" {
+// m365ChannelFromKeys probes the Click-to-Run configuration keys with `read` and
+// returns the first channel it resolves. `read` returns all values of one key,
+// so each key costs a single read.
+func m365ChannelFromKeys(paths []string, read func(path string) ([]registry.RegistryKeyItem, error)) string {
+	for _, path := range paths {
+		items, err := read(path)
+		if err != nil {
+			log.Debug().Err(err).Str("path", path).Msg("could not read the ClickToRun configuration")
+			continue
+		}
+		if channel := m365ChannelFromRegistryItems(items); channel != "" {
 			return channel
 		}
 	}
 	return ""
-}
-
-// m365ChannelFromRegistryItems resolves the update channel from the values of an
-// already-read ClickToRun\Configuration key.
-func m365ChannelFromRegistryItems(items []registry.RegistryKeyItem) string {
-	return m365ChannelFromValues(func(valueName string) string {
-		for i := range items {
-			if strings.EqualFold(items[i].Key, valueName) {
-				return items[i].Value.String
-			}
-		}
-		return ""
-	})
 }
 
 // applyM365ChannelQualifier stamps the `channel` purl qualifier onto every
@@ -223,49 +219,19 @@ func applyM365ChannelQualifier(pkgs []Package, platform *inventory.Platform, res
 // m365ChannelFromNativeRegistry reads the Click-to-Run update channel via the
 // native registry API. Only valid on a local Windows host.
 func (w *WinPkgManager) m365ChannelFromNativeRegistry() string {
-	for _, path := range officeC2RConfigKeys {
-		items, err := registry.GetNativeRegistryKeyItems(path)
-		if err != nil {
-			log.Debug().Err(err).Str("path", path).Msg("could not read the ClickToRun configuration")
-			continue
-		}
-		if channel := m365ChannelFromRegistryItems(items); channel != "" {
-			return channel
-		}
-	}
-	return ""
+	return m365ChannelFromKeys(officeC2RConfigKeys, registry.GetNativeRegistryKeyItems)
 }
 
 // m365ChannelFromPowershell reads the Click-to-Run update channel over the
 // active connection, so it works for remote connections such as SSH and WinRM.
 func (w *WinPkgManager) m365ChannelFromPowershell() string {
-	for _, path := range officeC2RConfigKeys {
-		items, err := w.readRegistryItems(path)
-		if err != nil {
-			log.Debug().Err(err).Str("path", path).Msg("could not read the ClickToRun configuration")
-			continue
-		}
-		if channel := m365ChannelFromRegistryItems(items); channel != "" {
-			return channel
-		}
-	}
-	return ""
+	return m365ChannelFromKeys(officeC2RConfigKeys, w.readRegistryItems)
 }
 
 // m365ChannelFromHive reads the Click-to-Run update channel from a mounted
 // SOFTWARE hive. The handler must already have that hive loaded.
 func (w *WinPkgManager) m365ChannelFromHive(rh *registry.RegistryHandler) string {
-	for _, path := range officeC2RConfigHivePaths {
-		channel := m365ChannelFromValues(func(valueName string) string {
-			item, err := rh.GetRegistryItemValue(registry.Software, path, valueName)
-			if err != nil {
-				return ""
-			}
-			return item.Value.String
-		})
-		if channel != "" {
-			return channel
-		}
-	}
-	return ""
+	return m365ChannelFromKeys(officeC2RConfigHivePaths, func(path string) ([]registry.RegistryKeyItem, error) {
+		return rh.GetNativeRegistryKeyItems(registry.Software, path)
+	})
 }
