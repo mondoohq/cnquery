@@ -291,6 +291,8 @@ func (w *WinPkgManager) getLocalInstalledApps() ([]Package, error) {
 		}
 	}
 
+	applyM365ChannelQualifier(packages, w.platform, w.m365ChannelFromNativeRegistry)
+
 	// These are the .NET Framework packages
 	// They do not show up in the general apps or features list, so we need to discover them separately
 	dotNetFramework, err := w.getDotNetFramework()
@@ -487,6 +489,8 @@ func (w *WinPkgManager) getInstalledApps() ([]Package, error) {
 		return nil, err
 	}
 
+	applyM365ChannelQualifier(packages, w.platform, w.m365ChannelFromPowershell)
+
 	// The .NET Framework runtimes don't appear in the Uninstall registry keys,
 	// so we discover them separately here as well (the local path does the same
 	// in getLocalInstalledApps).
@@ -568,6 +572,10 @@ func (w *WinPkgManager) getFsInstalledApps() ([]Package, error) {
 			packages = append(packages, *p)
 		}
 	}
+
+	applyM365ChannelQualifier(packages, w.platform, func() string {
+		return w.m365ChannelFromHive(rh)
+	})
 
 	msSqlHotfixes := findMsSqlHotfixes(packages)
 	if len(msSqlHotfixes) > 0 {
