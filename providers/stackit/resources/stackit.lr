@@ -178,20 +178,8 @@ private stackit.server @defaults("id name status machineType") {
   securityGroups() []stackit.securityGroup
   // Internet-exposure breakdown (public IP combined with security group ingress)
   exposure() stackit.network.exposure
-  // Service account mail addresses
-  //
-  // Deprecated in favor of serviceAccounts, which resolves each mail to a
-  // resource exposing the service account's email and project.
-  serviceAccountMails @maturity("deprecated") []string
   // Service accounts attached to the server
   serviceAccounts() []stackit.serviceAccount
-  // Network interface summaries
-  //
-  // Deprecated in favor of networkInterfaces, which exposes each interface
-  // as a resource with network and security-group references. Each entry
-  // has {nicId, networkId, networkName, ipv4, ipv6, mac, securityGroups,
-  // allowedAddresses, publicIp, nicSecurity}.
-  nics @maturity("deprecated") []dict
   // Network interfaces attached to the server
   networkInterfaces() []stackit.nic
   // Point-in-time backups taken from the server by the Server Backup service

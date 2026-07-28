@@ -52,11 +52,7 @@ func (s *mqlStackitServer) exposure() (*mqlStackitNetworkExposure, error) {
 		return nil, id.Error
 	}
 
-	nics := s.GetNics()
-	if nics.Error != nil {
-		return nil, nics.Error
-	}
-	hasPublicIp := nicsHavePublicIp(nics.Data)
+	hasPublicIp := nicsHavePublicIp(s.cacheNics)
 
 	openRules := []any{}
 	sgs := s.GetSecurityGroups()
