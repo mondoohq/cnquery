@@ -39,6 +39,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	certificateSecret := flags["certificate-secret"]
 	organization := flags["organization"]
 	sharepointUrl := flags["sharepoint-url"]
+	authMethod := flags["auth-method"]
 
 	opts := map[string]string{}
 	creds := []*vault.Credential{}
@@ -47,6 +48,9 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	opts[connection.OptionClientID] = string(clientId.Value)
 	opts[connection.OptionOrganization] = string(organization.Value)
 	opts[connection.OptionSharepointUrl] = string(sharepointUrl.Value)
+	if authMethod != nil && len(authMethod.Value) > 0 {
+		opts[connection.OptionAuthMethod] = string(authMethod.Value)
+	}
 
 	if len(clientSecret.Value) > 0 {
 		creds = append(creds, &vault.Credential{
