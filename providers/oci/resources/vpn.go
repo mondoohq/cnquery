@@ -408,54 +408,82 @@ func (o *mqlOciNetworkIpsecConnectionTunnel) fetchDetails() error {
 	return nil
 }
 
+// ociTunnelCryptoValue reports a tunnel crypto parameter, marking the field
+// explicitly null when OCI has no value for it.
+//
+// The negotiated parameters exist only once the tunnel establishes its security
+// association, so a DOWN tunnel - the state a mismatched-proposal tunnel sits in,
+// and precisely the one an audit needs to catch - has none. Returning "" for that
+// made the natural denylist assertion (`phase1DhGroup != "GROUP2" && ...`) pass
+// trivially on an unmeasured tunnel. Null makes those comparisons null instead.
+func ociTunnelCryptoValue(field *plugin.TValue[string], v *string) (string, error) {
+	if v == nil || *v == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return "", nil
+	}
+	return *v, nil
+}
+
+// ociTunnelCryptoFlag is the boolean counterpart. Unlike the strings it resolves
+// an absent value to false rather than null, because false is the failing
+// direction for every flag here (PFS off, IKE/ESP not established).
+func ociTunnelCryptoFlag(v *bool) bool {
+	return v != nil && *v
+}
+
 func (o *mqlOciNetworkIpsecConnectionTunnel) phase1EncryptionAlgorithm() (string, error) {
 	if err := o.fetchDetails(); err != nil {
 		return "", err
 	}
-	if o.phaseOne == nil {
-		return "", nil
+	var v *string
+	if o.phaseOne != nil {
+		v = o.phaseOne.NegotiatedEncryptionAlgorithm
 	}
-	return convert.ToValue(o.phaseOne.NegotiatedEncryptionAlgorithm), nil
+	return ociTunnelCryptoValue(&o.Phase1EncryptionAlgorithm, v)
 }
 
 func (o *mqlOciNetworkIpsecConnectionTunnel) phase1AuthenticationAlgorithm() (string, error) {
 	if err := o.fetchDetails(); err != nil {
 		return "", err
 	}
-	if o.phaseOne == nil {
-		return "", nil
+	var v *string
+	if o.phaseOne != nil {
+		v = o.phaseOne.NegotiatedAuthenticationAlgorithm
 	}
-	return convert.ToValue(o.phaseOne.NegotiatedAuthenticationAlgorithm), nil
+	return ociTunnelCryptoValue(&o.Phase1AuthenticationAlgorithm, v)
 }
 
 func (o *mqlOciNetworkIpsecConnectionTunnel) phase1DhGroup() (string, error) {
 	if err := o.fetchDetails(); err != nil {
 		return "", err
 	}
-	if o.phaseOne == nil {
-		return "", nil
+	var v *string
+	if o.phaseOne != nil {
+		v = o.phaseOne.NegotiatedDhGroup
 	}
-	return convert.ToValue(o.phaseOne.NegotiatedDhGroup), nil
+	return ociTunnelCryptoValue(&o.Phase1DhGroup, v)
 }
 
 func (o *mqlOciNetworkIpsecConnectionTunnel) phase2EncryptionAlgorithm() (string, error) {
 	if err := o.fetchDetails(); err != nil {
 		return "", err
 	}
-	if o.phaseTwo == nil {
-		return "", nil
+	var v *string
+	if o.phaseTwo != nil {
+		v = o.phaseTwo.NegotiatedEncryptionAlgorithm
 	}
-	return convert.ToValue(o.phaseTwo.NegotiatedEncryptionAlgorithm), nil
+	return ociTunnelCryptoValue(&o.Phase2EncryptionAlgorithm, v)
 }
 
 func (o *mqlOciNetworkIpsecConnectionTunnel) phase2AuthenticationAlgorithm() (string, error) {
 	if err := o.fetchDetails(); err != nil {
 		return "", err
 	}
-	if o.phaseTwo == nil {
-		return "", nil
+	var v *string
+	if o.phaseTwo != nil {
+		v = o.phaseTwo.NegotiatedAuthenticationAlgorithm
 	}
-	return convert.ToValue(o.phaseTwo.NegotiatedAuthenticationAlgorithm), nil
+	return ociTunnelCryptoValue(&o.Phase2AuthenticationAlgorithm, v)
 }
 
 func (o *mqlOciNetworkIpsecConnectionTunnel) phase2PfsEnabled() (bool, error) {
@@ -465,17 +493,160 @@ func (o *mqlOciNetworkIpsecConnectionTunnel) phase2PfsEnabled() (bool, error) {
 	if o.phaseTwo == nil {
 		return false, nil
 	}
-	return convert.ToValue(o.phaseTwo.IsPfsEnabled), nil
+	return ociTunnelCryptoFlag(o.phaseTwo.IsPfsEnabled), nil
 }
 
 func (o *mqlOciNetworkIpsecConnectionTunnel) phase2DhGroup() (string, error) {
 	if err := o.fetchDetails(); err != nil {
 		return "", err
 	}
-	if o.phaseTwo == nil {
-		return "", nil
+	var v *string
+	if o.phaseTwo != nil {
+		v = o.phaseTwo.NegotiatedDhGroup
 	}
-	return convert.ToValue(o.phaseTwo.NegotiatedDhGroup), nil
+	return ociTunnelCryptoValue(&o.Phase2DhGroup, v)
+}
+
+// The configured parameters, unlike the negotiated ones above, are present even
+// while the tunnel is down, so they are the only way to audit the crypto of a
+// tunnel that never came up.
+
+func (o *mqlOciNetworkIpsecConnectionTunnel) phase1ConfiguredEncryptionAlgorithm() (string, error) {
+	if err := o.fetchDetails(); err != nil {
+		return "", err
+	}
+	var v *string
+	if o.phaseOne != nil {
+		v = o.phaseOne.CustomEncryptionAlgorithm
+	}
+	return ociTunnelCryptoValue(&o.Phase1ConfiguredEncryptionAlgorithm, v)
+}
+
+func (o *mqlOciNetworkIpsecConnectionTunnel) phase1ConfiguredAuthenticationAlgorithm() (string, error) {
+	if err := o.fetchDetails(); err != nil {
+		return "", err
+	}
+	var v *string
+	if o.phaseOne != nil {
+		v = o.phaseOne.CustomAuthenticationAlgorithm
+	}
+	return ociTunnelCryptoValue(&o.Phase1ConfiguredAuthenticationAlgorithm, v)
+}
+
+func (o *mqlOciNetworkIpsecConnectionTunnel) phase1ConfiguredDhGroup() (string, error) {
+	if err := o.fetchDetails(); err != nil {
+		return "", err
+	}
+	var v *string
+	if o.phaseOne != nil {
+		v = o.phaseOne.CustomDhGroup
+	}
+	return ociTunnelCryptoValue(&o.Phase1ConfiguredDhGroup, v)
+}
+
+func (o *mqlOciNetworkIpsecConnectionTunnel) phase2ConfiguredEncryptionAlgorithm() (string, error) {
+	if err := o.fetchDetails(); err != nil {
+		return "", err
+	}
+	var v *string
+	if o.phaseTwo != nil {
+		v = o.phaseTwo.CustomEncryptionAlgorithm
+	}
+	return ociTunnelCryptoValue(&o.Phase2ConfiguredEncryptionAlgorithm, v)
+}
+
+func (o *mqlOciNetworkIpsecConnectionTunnel) phase2ConfiguredAuthenticationAlgorithm() (string, error) {
+	if err := o.fetchDetails(); err != nil {
+		return "", err
+	}
+	var v *string
+	if o.phaseTwo != nil {
+		v = o.phaseTwo.CustomAuthenticationAlgorithm
+	}
+	return ociTunnelCryptoValue(&o.Phase2ConfiguredAuthenticationAlgorithm, v)
+}
+
+func (o *mqlOciNetworkIpsecConnectionTunnel) phase2ConfiguredDhGroup() (string, error) {
+	if err := o.fetchDetails(); err != nil {
+		return "", err
+	}
+	var v *string
+	if o.phaseTwo != nil {
+		v = o.phaseTwo.DhGroup
+	}
+	return ociTunnelCryptoValue(&o.Phase2ConfiguredDhGroup, v)
+}
+
+func (o *mqlOciNetworkIpsecConnectionTunnel) isCustomPhase1Config() (bool, error) {
+	if err := o.fetchDetails(); err != nil {
+		return false, err
+	}
+	if o.phaseOne == nil {
+		return false, nil
+	}
+	return ociTunnelCryptoFlag(o.phaseOne.IsCustomPhaseOneConfig), nil
+}
+
+func (o *mqlOciNetworkIpsecConnectionTunnel) isCustomPhase2Config() (bool, error) {
+	if err := o.fetchDetails(); err != nil {
+		return false, err
+	}
+	if o.phaseTwo == nil {
+		return false, nil
+	}
+	return ociTunnelCryptoFlag(o.phaseTwo.IsCustomPhaseTwoConfig), nil
+}
+
+func (o *mqlOciNetworkIpsecConnectionTunnel) isIkeEstablished() (bool, error) {
+	if err := o.fetchDetails(); err != nil {
+		return false, err
+	}
+	if o.phaseOne == nil {
+		return false, nil
+	}
+	return ociTunnelCryptoFlag(o.phaseOne.IsIkeEstablished), nil
+}
+
+func (o *mqlOciNetworkIpsecConnectionTunnel) isEspEstablished() (bool, error) {
+	if err := o.fetchDetails(); err != nil {
+		return false, err
+	}
+	if o.phaseTwo == nil {
+		return false, nil
+	}
+	return ociTunnelCryptoFlag(o.phaseTwo.IsEspEstablished), nil
+}
+
+func (o *mqlOciNetworkIpsecConnectionTunnel) phase1Lifetime() (int64, error) {
+	if err := o.fetchDetails(); err != nil {
+		return 0, err
+	}
+	if o.phaseOne == nil {
+		o.Phase1Lifetime.State = plugin.StateIsSet | plugin.StateIsNull
+		return 0, nil
+	}
+	return ociTunnelLifetime(&o.Phase1Lifetime, o.phaseOne.Lifetime)
+}
+
+func (o *mqlOciNetworkIpsecConnectionTunnel) phase2Lifetime() (int64, error) {
+	if err := o.fetchDetails(); err != nil {
+		return 0, err
+	}
+	if o.phaseTwo == nil {
+		o.Phase2Lifetime.State = plugin.StateIsSet | plugin.StateIsNull
+		return 0, nil
+	}
+	return ociTunnelLifetime(&o.Phase2Lifetime, o.phaseTwo.Lifetime)
+}
+
+// ociTunnelLifetime marks the field null rather than reporting 0 seconds, which
+// would read as an absurdly short - and therefore passing - rekey interval.
+func ociTunnelLifetime(field *plugin.TValue[int64], v *int64) (int64, error) {
+	if v == nil {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return 0, nil
+	}
+	return *v, nil
 }
 
 func (o *mqlOciNetworkIpsecConnectionTunnel) compartment() (*mqlOciCompartment, error) {

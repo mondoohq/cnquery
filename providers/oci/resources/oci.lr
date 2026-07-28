@@ -667,6 +667,13 @@ private oci.compute.vnic @defaults("name") {
   privateIp string
   // Public IP address (empty if none assigned)
   publicIp string
+  // IPv6 addresses assigned to the VNIC
+  //
+  // Global unicast addresses assigned from the subnet's IPv6 CIDR. OCI routes
+  // these publicly once the VCN has an IPv6 CIDR and the route table forwards
+  // ::/0 to an internet gateway, so a VNIC can be internet-reachable over IPv6
+  // while `publicIp`, which only carries IPv4, is empty.
+  ipv6Addresses []string
   // MAC address
   macAddress string
   // Hostname label for DNS
@@ -1523,9 +1530,10 @@ private oci.network.ipsecConnectionTunnel @defaults("name status ikeVersion") {
   bgpState string
   // Negotiated IKE (ISAKMP) key-exchange encryption algorithm
   //
-  // Empty until the tunnel negotiates its security association, and while
-  // the tunnel is down or its negotiated crypto is unavailable; the other
-  // negotiated crypto fields behave the same way.
+  // Null until the tunnel negotiates its security association, and while the
+  // tunnel is down; the other negotiated crypto fields behave the same way.
+  // Audit the configured counterparts below when the tunnel may not be up,
+  // since those carry a value regardless.
   phase1EncryptionAlgorithm() string
   // Negotiated IKE (ISAKMP) key-exchange authentication algorithm
   phase1AuthenticationAlgorithm() string
@@ -1547,6 +1555,41 @@ private oci.network.ipsecConnectionTunnel @defaults("name status ikeVersion") {
   phase2PfsEnabled() bool
   // Diffie-Hellman group for IPSec (ESP) perfect forward secrecy
   phase2DhGroup() string
+  // Configured IKE (ISAKMP) key-exchange encryption algorithm
+  //
+  // The custom proposal set on the tunnel, present whether or not the tunnel
+  // has come up, so a tunnel that never negotiated is still auditable. Null
+  // when the tunnel uses Oracle's default proposal set rather than a custom
+  // one; `isCustomPhase1Config` distinguishes the two.
+  phase1ConfiguredEncryptionAlgorithm() string
+  // Configured IKE (ISAKMP) key-exchange authentication algorithm
+  phase1ConfiguredAuthenticationAlgorithm() string
+  // Configured IKE (ISAKMP) key-exchange Diffie-Hellman group
+  phase1ConfiguredDhGroup() string
+  // Configured IPSec (ESP) data-channel encryption algorithm
+  phase2ConfiguredEncryptionAlgorithm() string
+  // Configured IPSec (ESP) data-channel authentication algorithm
+  phase2ConfiguredAuthenticationAlgorithm() string
+  // Configured IPSec (ESP) data-channel Diffie-Hellman group
+  phase2ConfiguredDhGroup() string
+  // Whether the tunnel uses a custom IKE (ISAKMP) proposal set
+  isCustomPhase1Config() bool
+  // Whether the tunnel uses a custom IPSec (ESP) proposal set
+  isCustomPhase2Config() bool
+  // Whether the IKE (ISAKMP) security association is established
+  //
+  // False when the key exchange has not completed, which is also why the
+  // negotiated phase 1 fields read null.
+  isIkeEstablished() bool
+  // Whether the IPSec (ESP) security association is established
+  isEspEstablished() bool
+  // IKE (ISAKMP) security association lifetime in seconds
+  //
+  // Null when OCI reports no lifetime. Shorter lifetimes force more frequent
+  // rekeying.
+  phase1Lifetime() int
+  // IPSec (ESP) security association lifetime in seconds
+  phase2Lifetime() int
   // Lifecycle state (e.g., PROVISIONING, AVAILABLE, TERMINATING, TERMINATED)
   state string
   // Creation time
@@ -1891,7 +1934,18 @@ private oci.objectStorage.bucket {
   // Whether the bucket is configured as a replication source
   replicationEnabled() bool
   // Bucket OCID
-  id string
+  //
+  // Deprecated in favor of ocid. ListBuckets returns no OCID, so this is null
+  // on the listing path unless a detail-backed field happened to be resolved
+  // first in the same query, which made its presence depend on what else the
+  // query selected.
+  id @maturity("deprecated") string
+  // Bucket OCID
+  //
+  // Resolved from the bucket detail call, so it reports the same value whether
+  // the bucket came from `oci.objectStorage.buckets` or from
+  // `oci.objectStorage.bucket(namespace:, name:)`.
+  ocid() string
   // Whether the bucket is read-only (true when configured as replication destination)
   isReadOnly() bool
   // Entity tag (ETag) for change detection
@@ -2343,6 +2397,26 @@ private oci.bastion.instance @defaults("name") {
   targetVcn() oci.network.vcn
   // Target subnet
   targetSubnet() oci.network.subnet
+  // CIDR blocks allowed to connect to the bastion
+  //
+  // The source addresses permitted to open a session. A bastion allowing
+  // 0.0.0.0/0 accepts session attempts from anywhere on the internet. Empty
+  // when no allow list is configured.
+  clientCidrBlockAllowList() []string
+  // Maximum session lifetime in seconds
+  //
+  // The longest a session may stay open before it must be recreated. Null
+  // when the bastion reports no limit.
+  maxSessionTtlInSeconds() int
+  // Maximum number of concurrent sessions
+  maxSessionsAllowed() int
+  // Fixed private IP addresses the bastion connects from
+  //
+  // The jump-host addresses that appear as the source of bastion traffic, for
+  // writing narrower target security rules.
+  staticJumpHostIpAddresses() []string
+  // Private endpoint IP address of the bastion in the target subnet
+  privateEndpointIpAddress() string
   // Lifecycle state (e.g., CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED)
   state string
   // DNS proxy status (DISABLED, ENABLED)
@@ -2727,6 +2801,17 @@ private oci.networkFirewall.policy @defaults("name") {
   // untrusted certificates). Audit these to confirm that legacy TLS and
   // non-compliant ciphers are refused in transit.
   decryptionProfiles() []oci.networkFirewall.policy.decryptionProfile
+  // Security rules the policy enforces
+  //
+  // The ordered rule set deciding which traffic the attached firewalls allow,
+  // drop, reject or inspect. An empty list means the policy enforces nothing,
+  // which is not the same as a policy that denies.
+  securityRules() []oci.networkFirewall.policy.securityRule
+  // Decryption rules the policy enforces
+  //
+  // The rules deciding which TLS sessions are decrypted for inspection, and
+  // under which decryption profile.
+  decryptionRules() []oci.networkFirewall.policy.decryptionRule
 }
 
 // Oracle Cloud Infrastructure (OCI) network firewall decryption profile
@@ -2739,6 +2824,52 @@ private oci.networkFirewall.policy @defaults("name") {
 // versions, unsupported cipher suites, and out-of-capacity conditions
 // apply to both types, while the certificate-validation controls apply
 // only to forward-proxy profiles.
+// Network firewall policy security rule
+//
+// Single rule in a network firewall policy's ordered rule set, deciding what
+// the attached firewalls do with matching traffic. `action` is the verdict and
+// `priorityOrder` fixes the position in the evaluation order, so a permissive
+// rule early in the set overrides stricter rules after it.
+private oci.networkFirewall.policy.securityRule @defaults("name action inspection priorityOrder") {
+  // Unique name of the rule within its policy
+  name string
+  // Verdict applied to matching traffic
+  //
+  // One of ALLOW, DROP, REJECT or INSPECT. DROP discards silently while
+  // REJECT answers the sender.
+  action string
+  // Inspection applied to matching traffic
+  //
+  // INTRUSION_DETECTION logs a match, INTRUSION_PREVENTION blocks it. Empty
+  // when the rule performs no inspection.
+  inspection string
+  // Position in the policy's evaluation order
+  priorityOrder int
+  // Rule description
+  description string
+}
+
+// Network firewall policy decryption rule
+//
+// Single rule deciding which TLS sessions a network firewall policy decrypts
+// for inspection. `action` selects DECRYPT or NO_DECRYPT, and
+// `decryptionProfile` names the profile whose controls apply to the decrypted
+// session.
+private oci.networkFirewall.policy.decryptionRule @defaults("name action decryptionProfile priorityOrder") {
+  // Unique name of the rule within its policy
+  name string
+  // Whether matching sessions are decrypted (DECRYPT, NO_DECRYPT)
+  action string
+  // Name of the decryption profile applied to matching sessions
+  decryptionProfile string
+  // Name of the mapped secret holding the certificate used to decrypt
+  secret string
+  // Position in the policy's evaluation order
+  priorityOrder int
+  // Rule description
+  description string
+}
+
 private oci.networkFirewall.policy.decryptionProfile @defaults("name type isUnsupportedVersionBlocked isUnsupportedCipherBlocked") {
   // Unique name of the decryption profile within its policy
   name string
@@ -2895,7 +3026,21 @@ private oci.oke.nodePool @defaults("name") {
   // memory in gigabytes.
   nodeShapeConfig dict
   // Node image name
-  nodeImageName string
+  //
+  // Deprecated in favor of nodeImage. OCI leaves this empty on node pools
+  // created through nodeSourceDetails, which is every node pool provisioned by
+  // current tooling.
+  nodeImageName @maturity("deprecated") string
+  // Image the nodes boot from
+  //
+  // Resolved from the node pool's node source, so it is populated on modern
+  // node pools where nodeImageName is empty. Null when the node pool boots
+  // from a source that is not an image.
+  nodeImage() oci.compute.image
+  // Boot volume size in GB for each node
+  //
+  // Null when the node pool does not override the image's default size.
+  bootVolumeSizeInGBs int
   // SSH public key on nodes (should be empty for security)
   sshPublicKey string
   // Subnets where Kubernetes nodes are placed (per-placement-config on newer node pools; node-pool-level fallback on older ones)
@@ -3220,6 +3365,28 @@ private oci.containerInstances.container @defaults("name") {
   // (fractional vCPUs) and `memoryLimitInGBs`. Absent when the container
   // inherits the instance defaults.
   resourceConfig dict
+  // UID the container process runs as
+  //
+  // Null when the container declares no security context, in which case the
+  // effective user comes from the image. 0 means the process runs as root.
+  runAsUser int
+  // GID the container process runs as
+  runAsGroup int
+  // Whether the container is checked for running as a non-root user
+  //
+  // False also when the container declares no security context, since an
+  // unchecked container is not protected either way.
+  isNonRootUserCheckEnabled bool
+  // Whether the container's root filesystem is mounted read-only
+  isRootFileSystemReadonly bool
+  // Linux capabilities added to the container beyond the default set
+  //
+  // Capabilities granted on top of the runtime default, for example
+  // CAP_NET_ADMIN or CAP_SYS_ADMIN. A non-empty list widens what the container
+  // can do on the host.
+  addedCapabilities []string
+  // Linux capabilities dropped from the container's default set
+  droppedCapabilities []string
   // Creation time
   created time
   // Last update time
@@ -4459,6 +4626,13 @@ private oci.vulnerabilityScanning.hostAgentScanResult @defaults("name instanceId
   state string
   // Per-CVE findings from the scan
   problems() []oci.vulnerabilityScanning.hostAgentScanResult.problem
+  // Time the scan started
+  //
+  // Distinguishes a scan that never ran from one that ran and found
+  // nothing, and lets an audit require a recent result.
+  scanStarted time
+  // Time the scan finished
+  scanFinished time
 }
 
 // Host agent scan problem
@@ -4488,6 +4662,10 @@ private oci.vulnerabilityScanning.hostAgentScanResult.problem @defaults("name se
   // `cveFixVersion` (empty when no fix is available), and
   // `locations` (file paths where the package is installed).
   vulnerablePackages []dict
+  // Time the problem was first detected
+  firstDetected time
+  // Time the problem was last detected
+  lastDetected time
 }
 
 // Host port scan result
@@ -4516,6 +4694,13 @@ private oci.vulnerabilityScanning.hostPortScanResult @defaults("name instanceId 
   state string
   // Per-port findings from the scan
   openPorts() []oci.vulnerabilityScanning.hostPortScanResult.openPort
+  // Time the scan started
+  //
+  // Distinguishes a scan that never ran from one that ran and found
+  // nothing, and lets an audit require a recent result.
+  scanStarted time
+  // Time the scan finished
+  scanFinished time
 }
 
 // Host port scan open port
@@ -4568,6 +4753,13 @@ private oci.vulnerabilityScanning.hostCisBenchmarkScanResult @defaults("name ins
   // `description` (the control statement), and `score` (PASS or
   // FAIL).
   scores []dict
+  // Time the scan started
+  //
+  // Distinguishes a scan that never ran from one that ran and found
+  // nothing, and lets an audit require a recent result.
+  scanStarted time
+  // Time the scan finished
+  scanFinished time
 }
 
 // Host endpoint protection scan result
@@ -4600,6 +4792,13 @@ private oci.vulnerabilityScanning.hostEndpointProtectionScanResult @defaults("na
   // `configurationFinding` (the misconfiguration, if any), and
   // `severity`.
   endpointProtections []dict
+  // Time the scan started
+  //
+  // Distinguishes a scan that never ran from one that ran and found
+  // nothing, and lets an audit require a recent result.
+  scanStarted time
+  // Time the scan finished
+  scanFinished time
 }
 
 // Container vulnerability scan result
@@ -4632,6 +4831,13 @@ private oci.vulnerabilityScanning.containerScanResult @defaults("repository imag
   problemCount int
   // Per-CVE findings from the scan
   problems() []oci.vulnerabilityScanning.containerScanResult.problem
+  // Time the scan started
+  //
+  // Distinguishes a scan that never ran from one that ran and found
+  // nothing, and lets an audit require a recent result.
+  scanStarted time
+  // Time the scan finished
+  scanFinished time
 }
 
 // Container scan problem
@@ -4659,6 +4865,10 @@ private oci.vulnerabilityScanning.containerScanResult.problem @defaults("name se
   // `locations` (file paths inside the image where the package
   // resides).
   vulnerablePackages []dict
+  // Time the problem was first detected
+  firstDetected time
+  // Time the problem was last detected
+  lastDetected time
 }
 
 // Vulnerability rollup
@@ -4706,6 +4916,16 @@ private oci.vulnerabilityScanning.vulnerability @defaults("name severity vulnera
   cveRelatedReference string
   // Upstream URL with full vulnerability details
   cveReferenceUrl string
+  // CVSS v3 base score
+  //
+  // Reported by OCI as a string, so compare it as a number with
+  // `cvss3.float`. Empty when the upstream reference carries no CVSS v3
+  // score, which is common for non-CVE findings.
+  cvss3 string
+  // Time the CVE was published upstream
+  cvePublished time
+  // Time the CVE record was last updated upstream
+  cveUpdated time
   // Number of compute instances affected
   impactedHostsCount int
   // Number of container images affected

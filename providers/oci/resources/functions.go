@@ -207,7 +207,10 @@ func (o *mqlOciFunctionsApplication) subnets() ([]any, error) {
 			"id": llx.StringData(id),
 		})
 		if err != nil {
-			return nil, err
+			// Skip an element we cannot resolve rather than failing the
+			// whole list and losing the ones that did resolve.
+			log.Debug().Err(err).Str("subnet", id).Msg("skipping unresolvable oci reference")
+			continue
 		}
 		res = append(res, mqlSubnet)
 	}
@@ -221,7 +224,10 @@ func (o *mqlOciFunctionsApplication) networkSecurityGroups() ([]any, error) {
 			"id": llx.StringData(id),
 		})
 		if err != nil {
-			return nil, err
+			// Skip an element we cannot resolve rather than failing the
+			// whole list and losing the ones that did resolve.
+			log.Debug().Err(err).Str("nsg", id).Msg("skipping unresolvable oci reference")
+			continue
 		}
 		res = append(res, mqlNsg)
 	}

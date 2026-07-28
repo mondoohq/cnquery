@@ -7,6 +7,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
+	"strings"
 
 	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
 
@@ -80,6 +82,16 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	configFile := ""
 	if x, ok := flags["config-file"]; ok && len(x.Value) != 0 {
 		configFile = string(x.Value)
+	}
+
+	authMethod := ""
+	if x, ok := flags["auth-method"]; ok && len(x.Value) != 0 {
+		authMethod = string(x.Value)
+		if !slices.Contains(connection.SupportedAuthMethods, authMethod) {
+			return nil, errors.New("unsupported --auth-method " + authMethod +
+				"; supported methods are " + strings.Join(connection.SupportedAuthMethods, ", "))
+		}
+		conf.Options["auth-method"] = authMethod
 	}
 
 	if tenancy != "" {

@@ -64,10 +64,25 @@ func NewOciConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 			passphrase = &pkey.Password
 		}
 		configProvider = common.NewRawConfigurationProvider(tenancyOcid, userOcid, region, fingerprint, string(pkey.Secret), passphrase)
+	} else if authMethod := conf.Options["auth-method"]; authMethod != "" && authMethod != authMethodAPIKey {
+		configProvider, err = principalConfigProvider(authMethod, conf.Options["profile"])
+		if err != nil {
+			return nil, err
+		}
 	} else {
 		profile := conf.Options["profile"]
 		configFile := conf.Options["config-file"]
 		if profile != "" || configFile != "" {
+			if configFile == "" {
+				// ConfigurationProviderFromFileWithProfile rejects an empty
+				// path outright, so --profile on its own used to fail with
+				// "config file path can not be empty" - naming a flag the user
+				// never set. Fall back to the SDK's own default location.
+				configFile, err = defaultOciConfigPath()
+				if err != nil {
+					return nil, err
+				}
+			}
 			if profile == "" {
 				profile = "DEFAULT"
 			}

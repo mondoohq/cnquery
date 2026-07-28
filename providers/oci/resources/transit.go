@@ -169,10 +169,16 @@ func (o *mqlOciNetworkDrg) attachments() ([]any, error) {
 	atts := []core.DrgAttachment{}
 	var page *string
 	for {
+		// AttachmentType defaults to VCN server-side, so leaving it unset hid
+		// every IPSec tunnel, FastConnect virtual circuit and remote peering
+		// attachment - exactly the hybrid-connectivity edges this resource
+		// exists to expose, and the reason the ipsecConnection/virtualCircuit
+		// accessors below could never resolve.
 		response, err := svc.ListDrgAttachments(ctx, core.ListDrgAttachmentsRequest{
-			CompartmentId: common.String(conn.TenantID()),
-			DrgId:         common.String(o.Id.Data),
-			Page:          page,
+			CompartmentId:  common.String(conn.TenantID()),
+			DrgId:          common.String(o.Id.Data),
+			AttachmentType: core.ListDrgAttachmentsAttachmentTypeAll,
+			Page:           page,
 		})
 		if err != nil {
 			return nil, err

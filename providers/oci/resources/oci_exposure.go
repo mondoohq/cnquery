@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"net/netip"
 	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -12,10 +13,69 @@ import (
 
 // ociCidrIsAny reports whether a CIDR string admits any address — the IPv4
 // default route 0.0.0.0/0 or the IPv6 default route ::/0. Surrounding
-// whitespace is tolerated.
+// whitespace is tolerated. The prefix is parsed rather than string-compared so
+// a non-canonical spelling of the default route is still recognised.
 func ociCidrIsAny(cidr string) bool {
-	c := strings.TrimSpace(cidr)
-	return c == "0.0.0.0/0" || c == "::/0"
+	p, err := netip.ParsePrefix(strings.TrimSpace(cidr))
+	if err != nil {
+		return false
+	}
+	return p.Bits() == 0
+}
+
+// ociCidrIsInternetWide reports whether a CIDR covers so much public address
+// space that it is an internet-wide opening rather than a deliberate allow-list
+// entry. A pair of /1 rules (0.0.0.0/1 plus 128.0.0.0/1), or a single one, spans
+// the whole or half the internet while matching neither default route, so an
+// exact comparison against 0.0.0.0/0 read them as closed.
+//
+// Private, loopback, link-local, multicast and unique-local ranges are excluded:
+// they are wide but not reachable from the internet.
+func ociCidrIsInternetWide(cidr string) bool {
+	p, err := netip.ParsePrefix(strings.TrimSpace(cidr))
+	if err != nil {
+		return false
+	}
+	addr := p.Addr()
+	if addr.IsPrivate() || addr.IsLoopback() || addr.IsLinkLocalUnicast() ||
+		addr.IsLinkLocalMulticast() || addr.IsMulticast() {
+		return false
+	}
+	if addr.Is4() {
+		return p.Bits() <= 8
+	}
+	return p.Bits() <= 32
+}
+
+// ociCidrOpensInternet reports whether a CIDR admits traffic from the public
+// internet, either because it admits any address at all or because it is wide
+// enough to amount to the same thing.
+func ociCidrOpensInternet(cidr string) bool {
+	return ociCidrIsAny(cidr) || ociCidrIsInternetWide(cidr)
+}
+
+// ociUniqueLocalV6 is the fc00::/7 unique-local range, the IPv6 equivalent of
+// RFC1918 space. netip's IsGlobalUnicast reports true for it, so it has to be
+// excluded separately.
+var ociUniqueLocalV6 = netip.MustParsePrefix("fc00::/7")
+
+// ociAnyPublicIpv6 reports whether any of the given addresses is a globally
+// routable IPv6 address, meaning the VNIC is reachable over IPv6.
+func ociAnyPublicIpv6(addresses []any) bool {
+	for _, raw := range addresses {
+		s, ok := raw.(string)
+		if !ok {
+			continue
+		}
+		addr, err := netip.ParseAddr(strings.TrimSpace(s))
+		if err != nil || !addr.Is6() {
+			continue
+		}
+		if addr.IsGlobalUnicast() && !ociUniqueLocalV6.Contains(addr) {
+			return true
+		}
+	}
+	return false
 }
 
 // ociNsgRuleOpensIngress reports whether an OCI network-security-group rule dict
@@ -30,7 +90,7 @@ func ociNsgRuleOpensIngress(rule map[string]any) bool {
 		return false
 	}
 	source, _ := rule["source"].(string)
-	return ociCidrIsAny(source)
+	return ociCidrOpensInternet(source)
 }
 
 // ociCollectOpenNsgRules inspects the INGRESS rules of the given network
@@ -91,7 +151,7 @@ func ociSecurityListRuleOpensIngress(rule map[string]any) bool {
 		return false
 	}
 	source, _ := rule["source"].(string)
-	return ociCidrIsAny(source)
+	return ociCidrOpensInternet(source)
 }
 
 // ociCollectOpenSecurityListRules inspects the ingress rules of the security
@@ -146,7 +206,7 @@ func ociRouteTableReachesInternet(rt *mqlOciNetworkRouteTable) (bool, error) {
 		if dest.Error != nil {
 			return false, dest.Error
 		}
-		if !ociCidrIsAny(dest.Data) {
+		if !ociCidrOpensInternet(dest.Data) {
 			continue
 		}
 		targetType := route.GetTargetType()
@@ -251,7 +311,7 @@ func ociWhitelistOpensInternet(ranges []any) bool {
 			continue
 		}
 		c := strings.TrimSpace(s)
-		if c == "0.0.0.0" || ociCidrIsAny(c) {
+		if c == "0.0.0.0" || ociCidrOpensInternet(c) {
 			return true
 		}
 	}
@@ -292,7 +352,15 @@ func (i *mqlOciComputeInstance) exposure() (*mqlOciNetworkExposure, error) {
 		if pub.Error != nil {
 			return nil, pub.Error
 		}
-		vnicHasPublicIp := strings.TrimSpace(pub.Data) != ""
+		// publicIp carries only IPv4. OCI IPv6 global unicast addresses are
+		// publicly routed once the route table forwards ::/0 to an internet
+		// gateway, so a dual-stack or IPv6-only VNIC with no IPv4 public address
+		// is still internet-facing and must not read as private.
+		v6 := vnic.GetIpv6Addresses()
+		if v6.Error != nil {
+			return nil, v6.Error
+		}
+		vnicHasPublicIp := strings.TrimSpace(pub.Data) != "" || ociAnyPublicIpv6(v6.Data)
 		if vnicHasPublicIp {
 			hasPublicIp = true
 		}
@@ -523,18 +591,25 @@ func (a *mqlOciDatabaseAutonomousDatabase) internetReachable() (bool, error) {
 		return false, nil
 	}
 
-	accessControl := a.GetIsAccessControlEnabled()
-	if accessControl.Error != nil {
-		return false, accessControl.Error
-	}
-	if !accessControl.Data {
-		// Public endpoint with no network ACL — reachable from anywhere.
-		return true, nil
-	}
-
+	// isAccessControlEnabled governs only Exadata Cloud@Customer databases; for
+	// Autonomous Database Serverless - the default, and the great majority of
+	// deployments - OCI ignores it and enforces whitelistedIps instead. Gating
+	// on the flag first therefore reported every correctly restricted serverless
+	// database as reachable from anywhere, without ever reading its allow list.
+	// So the allow list decides whenever there is one, for either platform.
 	whitelist := a.GetWhitelistedIps()
 	if whitelist.Error != nil {
 		return false, whitelist.Error
 	}
-	return ociWhitelistOpensInternet(whitelist.Data), nil
+	if len(whitelist.Data) > 0 {
+		return ociWhitelistOpensInternet(whitelist.Data), nil
+	}
+
+	accessControl := a.GetIsAccessControlEnabled()
+	if accessControl.Error != nil {
+		return false, accessControl.Error
+	}
+	// An empty allow list means "no ACL at all" on serverless (reachable), but
+	// on Exadata Cloud@Customer with access control enabled it denies everyone.
+	return !accessControl.Data, nil
 }

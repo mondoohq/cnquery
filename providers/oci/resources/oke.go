@@ -341,17 +341,30 @@ func (o *mqlOciOkeCluster) nodePools() ([]any, error) {
 			subnetIds = append(subnetIds, np.SubnetIds...)
 		}
 
+		// nodeImageName and nodeImageId are both deprecated in the SDK in favour
+		// of nodeSourceDetails, and OCI leaves them empty on node pools created
+		// through the modern path - which is every Terraform-provisioned pool.
+		// Read the image from nodeSourceDetails so "which image do the workers
+		// run" has an answer on current node pools.
+		var nodeImageId string
+		var bootVolumeSizeInGBs *int64
+		if src, ok := np.NodeSourceDetails.(containerengine.NodeSourceViaImageDetails); ok {
+			nodeImageId = stringValue(src.ImageId)
+			bootVolumeSizeInGBs = src.BootVolumeSizeInGBs
+		}
+
 		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.oke.nodePool", map[string]*llx.RawData{
-			"id":                llx.StringDataPtr(np.Id),
-			"name":              llx.StringDataPtr(np.Name),
-			"compartmentID":     llx.StringDataPtr(np.CompartmentId),
-			"kubernetesVersion": llx.StringDataPtr(np.KubernetesVersion),
-			"nodeShape":         llx.StringDataPtr(np.NodeShape),
-			"nodeShapeConfig":   llx.DictData(nodeShapeConfig),
-			"nodeImageName":     llx.StringDataPtr(np.NodeImageName),
-			"sshPublicKey":      llx.StringDataPtr(np.SshPublicKey),
-			"state":             llx.StringData(string(np.LifecycleState)),
-			"systemTags":        llx.MapData(definedTagsToAny(np.SystemTags), types.Dict),
+			"id":                  llx.StringDataPtr(np.Id),
+			"name":                llx.StringDataPtr(np.Name),
+			"compartmentID":       llx.StringDataPtr(np.CompartmentId),
+			"kubernetesVersion":   llx.StringDataPtr(np.KubernetesVersion),
+			"nodeShape":           llx.StringDataPtr(np.NodeShape),
+			"nodeShapeConfig":     llx.DictData(nodeShapeConfig),
+			"nodeImageName":       llx.StringDataPtr(np.NodeImageName),
+			"bootVolumeSizeInGBs": llx.IntDataPtr(bootVolumeSizeInGBs),
+			"sshPublicKey":        llx.StringDataPtr(np.SshPublicKey),
+			"state":               llx.StringData(string(np.LifecycleState)),
+			"systemTags":          llx.MapData(definedTagsToAny(np.SystemTags), types.Dict),
 		})
 		if err != nil {
 			return nil, err
@@ -360,6 +373,7 @@ func (o *mqlOciOkeCluster) nodePools() ([]any, error) {
 		mqlPool.cacheSubnetIds = subnetIds
 		mqlPool.cacheNsgIds = nsgIds
 		mqlPool.cacheClusterID = stringValue(np.ClusterId)
+		mqlPool.cacheNodeImageId = nodeImageId
 		res = append(res, mqlPool)
 	}
 
@@ -367,13 +381,18 @@ func (o *mqlOciOkeCluster) nodePools() ([]any, error) {
 }
 
 type mqlOciOkeNodePoolInternal struct {
-	cacheSubnetIds []string
-	cacheNsgIds    []string
-	cacheClusterID string
+	cacheSubnetIds   []string
+	cacheNsgIds      []string
+	cacheClusterID   string
+	cacheNodeImageId string
 }
 
 func (o *mqlOciOkeNodePool) id() (string, error) {
 	return "oci.oke.nodePool/" + o.Id.Data, nil
+}
+
+func (o *mqlOciOkeNodePool) nodeImage() (*mqlOciComputeImage, error) {
+	return resolveOciImage(o.MqlRuntime, o.cacheNodeImageId, &o.NodeImage)
 }
 
 func (o *mqlOciOkeNodePool) subnets() ([]any, error) {
@@ -383,7 +402,10 @@ func (o *mqlOciOkeNodePool) subnets() ([]any, error) {
 			"id": llx.StringData(id),
 		})
 		if err != nil {
-			return nil, err
+			// Skip an element we cannot resolve rather than failing the
+			// whole list and losing the ones that did resolve.
+			log.Debug().Err(err).Str("subnet", id).Msg("skipping unresolvable oci reference")
+			continue
 		}
 		res = append(res, mqlSubnet)
 	}
@@ -397,7 +419,10 @@ func (o *mqlOciOkeNodePool) networkSecurityGroups() ([]any, error) {
 			"id": llx.StringData(id),
 		})
 		if err != nil {
-			return nil, err
+			// Skip an element we cannot resolve rather than failing the
+			// whole list and losing the ones that did resolve.
+			log.Debug().Err(err).Str("nsg", id).Msg("skipping unresolvable oci reference")
+			continue
 		}
 		res = append(res, mqlNsg)
 	}
