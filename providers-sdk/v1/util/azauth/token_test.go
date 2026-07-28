@@ -77,12 +77,12 @@ func TestParseCredentialMethods(t *testing.T) {
 	})
 }
 
-func TestGetDefaultChainedToken_RestrictsChain(t *testing.T) {
+func TestNewChainedToken_RestrictsChain(t *testing.T) {
 	t.Run("workload identity uses the configured client id", func(t *testing.T) {
 		// NewWorkloadIdentityCredential errors without a client id, so a
 		// credential coming back at all proves ClientID was passed through
 		// rather than left to AZURE_CLIENT_ID.
-		cred, err := GetDefaultChainedToken(&ChainedTokenOptions{
+		cred, err := NewChainedToken(&ChainedTokenOptions{
 			DefaultAzureCredentialOptions: azidentity.DefaultAzureCredentialOptions{
 				TenantID: "aba673d8-12f8-4315-90c1-848f09d747f1",
 			},
@@ -98,7 +98,7 @@ func TestGetDefaultChainedToken_RestrictsChain(t *testing.T) {
 		// nothing to build the credential from, so the chain comes back empty
 		// and we report the constructor error instead of the SDK's bare
 		// "at least one credential required"
-		_, err := GetDefaultChainedToken(&ChainedTokenOptions{
+		_, err := NewChainedToken(&ChainedTokenOptions{
 			Methods: []CredentialMethod{CredentialMethodWorkloadIdentity},
 		})
 		require.Error(t, err)
@@ -107,7 +107,7 @@ func TestGetDefaultChainedToken_RestrictsChain(t *testing.T) {
 	})
 
 	t.Run("unknown method is rejected", func(t *testing.T) {
-		_, err := GetDefaultChainedToken(&ChainedTokenOptions{Methods: []CredentialMethod{"nope"}})
+		_, err := NewChainedToken(&ChainedTokenOptions{Methods: []CredentialMethod{"nope"}})
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "nope")
 	})

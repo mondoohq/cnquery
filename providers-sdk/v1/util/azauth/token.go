@@ -181,7 +181,9 @@ func BuildChainedToken(opts ...TokenResolverFn) (*azidentity.ChainedTokenCredent
 	return azidentity.NewChainedTokenCredential(chain, nil)
 }
 
-func GetDefaultChainedToken(options *ChainedTokenOptions) (*azidentity.ChainedTokenCredential, error) {
+// NewChainedToken builds the sign-in chain described by options, restricted to
+// options.Methods when it names any.
+func NewChainedToken(options *ChainedTokenOptions) (*azidentity.ChainedTokenCredential, error) {
 	if options == nil {
 		options = &ChainedTokenOptions{}
 	}
@@ -305,7 +307,7 @@ func GetTokenFromCredential(credential *vault.Credential, tenantId, clientId str
 	if credential == nil {
 		log.Info().Str("methods", credentialMethodNames(chainOpts.Methods)).
 			Msg("no Azure credentials were provided, trying the configured sign-in methods")
-		azCred, err = GetDefaultChainedToken(&chainOpts)
+		azCred, err = NewChainedToken(&chainOpts)
 		if err != nil {
 			return nil, errors.Wrap(err, "error creating CLI credentials")
 		}
