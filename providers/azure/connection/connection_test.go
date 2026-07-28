@@ -174,6 +174,30 @@ func TestSelectAzureCredential_AuthMethodWorkloadIdentity(t *testing.T) {
 	require.NotNil(t, cred)
 }
 
+// TestSelectAzureCredential_AuthMethodWorkloadIdentity_TokenFileFromOption is
+// the version of the test above that actually proves the plumbing. With
+// AZURE_FEDERATED_TOKEN_FILE unset, the only way to build the credential is for
+// the option to be forwarded as ChainedTokenOptions.FederatedTokenFile: drop
+// that and the chain comes back empty. The env-var version passes either way,
+// because azidentity reads that variable itself.
+func TestSelectAzureCredential_AuthMethodWorkloadIdentity_TokenFileFromOption(t *testing.T) {
+	unsetFederatedTokenFile(t)
+
+	conf := &inventory.Config{
+		Options: map[string]string{
+			"tenant-id":                  "tid",
+			"client-id":                  "cid",
+			"azure-federated-token-file": "/tmp/x.jwt",
+			"auth-method":                "workload-identity",
+		},
+		Credentials: nil,
+	}
+
+	cred, err := selectAzureCredential(conf)
+	require.NoError(t, err)
+	require.NotNil(t, cred)
+}
+
 // TestSelectAzureCredential_AuthMethodBeatsTokenFile asserts that an explicit
 // method selection wins over a federated token file. The file can be a leftover
 // env var from the pod spec, so it must not silently override what the
