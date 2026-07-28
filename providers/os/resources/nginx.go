@@ -265,8 +265,11 @@ func (s *mqlNginxConf) parse(file *mqlFile) error {
 		errMap := plugin.TValue[map[string]any]{Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
 		s.Params = errMap
 		s.HttpParams = errMap
+		s.StreamParams = errMap
 		s.Servers = errSlice
 		s.Upstreams = errSlice
+		s.StreamServers = errSlice
+		s.StreamUpstreams = errSlice
 		s.ListenAddresses = errSlice
 		s.Files = errSlice
 		return err
@@ -274,14 +277,19 @@ func (s *mqlNginxConf) parse(file *mqlFile) error {
 
 	mainParams := map[string]any{}
 	httpParams := map[string]any{}
+	streamParams := map[string]any{}
 	var servers []nginxServer
 	var upstreams []nginxUpstream
+	var streamServers []nginxServer
+	var streamUpstreams []nginxUpstream
 	var allListenAddrs []string
 
 	for _, d := range cfg.Directives {
 		switch d.Name {
 		case "http":
 			walkHTTPBlock(d.Block, httpParams, &servers, &upstreams, &allListenAddrs)
+		case "stream":
+			walkStreamBlock(d.Block, streamParams, &streamServers, &streamUpstreams)
 		case "events":
 			for _, ed := range d.Block {
 				if !ed.IsBlock() {
@@ -306,6 +314,7 @@ func (s *mqlNginxConf) parse(file *mqlFile) error {
 
 	s.Params = plugin.TValue[map[string]any]{Data: mergedParams, State: plugin.StateIsSet}
 	s.HttpParams = plugin.TValue[map[string]any]{Data: httpParams, State: plugin.StateIsSet}
+	s.StreamParams = plugin.TValue[map[string]any]{Data: streamParams, State: plugin.StateIsSet}
 
 	serverResources, err := nginxServers2Resources(servers, s.MqlRuntime, s.__id)
 	if err != nil {
@@ -318,6 +327,24 @@ func (s *mqlNginxConf) parse(file *mqlFile) error {
 		return err
 	}
 	s.Upstreams = plugin.TValue[[]any]{Data: upstreamResources, State: plugin.StateIsSet}
+
+	// Stream resources take a distinct owner ID: server IDs are built from a
+	// positional index and upstream IDs from the pool name, both of which
+	// restart inside stream{} and would otherwise collide with their http{}
+	// counterparts in the resource cache.
+	streamOwnerID := s.__id + "/stream"
+
+	streamServerResources, err := nginxServers2Resources(streamServers, s.MqlRuntime, streamOwnerID)
+	if err != nil {
+		return err
+	}
+	s.StreamServers = plugin.TValue[[]any]{Data: streamServerResources, State: plugin.StateIsSet}
+
+	streamUpstreamResources, err := nginxUpstreams2Resources(streamUpstreams, s.MqlRuntime, streamOwnerID)
+	if err != nil {
+		return err
+	}
+	s.StreamUpstreams = plugin.TValue[[]any]{Data: streamUpstreamResources, State: plugin.StateIsSet}
 
 	// Deduplicate listen addresses in first-seen order.
 	seen := map[string]bool{}
@@ -365,6 +392,18 @@ func (s *mqlNginxConf) servers(file *mqlFile) ([]any, error) {
 }
 
 func (s *mqlNginxConf) upstreams(file *mqlFile) ([]any, error) {
+	return nil, s.parse(file)
+}
+
+func (s *mqlNginxConf) streamParams(file *mqlFile) (map[string]any, error) {
+	return nil, s.parse(file)
+}
+
+func (s *mqlNginxConf) streamServers(file *mqlFile) ([]any, error) {
+	return nil, s.parse(file)
+}
+
+func (s *mqlNginxConf) streamUpstreams(file *mqlFile) ([]any, error) {
 	return nil, s.parse(file)
 }
 
@@ -429,6 +468,7 @@ type nginxListen struct {
 	Port          int64  // numeric port; 0 if the directive used a unix:/path target
 	SSL           bool   // `ssl` flag present
 	HTTP2         bool   // `http2` flag present
+	UDP           bool   // `udp` flag present (stream listeners only)
 	DefaultServer bool   // `default_server` flag present
 	ProxyProtocol bool   // `proxy_protocol` flag present
 }
@@ -490,6 +530,16 @@ func walkHTTPBlock(directives []nginx.Directive, httpParams map[string]any, serv
 			}
 		}
 	}
+}
+
+// walkStreamBlock processes the stream{} block's directives. A stream server
+// proxies TCP or UDP rather than HTTP, but the block's grammar is identical to
+// http{} — flat directives, server{}, and upstream{} — so the same walker
+// handles both. Stream listeners are deliberately kept out of listenAddresses,
+// which reports the http server blocks.
+func walkStreamBlock(directives []nginx.Directive, streamParams map[string]any, servers *[]nginxServer, upstreams *[]nginxUpstream) {
+	var listenAddrs []string
+	walkHTTPBlock(directives, streamParams, servers, upstreams, &listenAddrs)
 }
 
 // parseNginxServerBlock extracts structured data from a server{} block.
@@ -603,6 +653,8 @@ func parseNginxListen(args []string) nginxListen {
 			l.SSL = true
 		case "http2":
 			l.HTTP2 = true
+		case "udp":
+			l.UDP = true
 		case "default_server", "default":
 			l.DefaultServer = true
 		case "proxy_protocol":
@@ -817,6 +869,7 @@ func nginxServers2Resources(servers []nginxServer, runtime *plugin.Runtime, owne
 				"port":          l.Port,
 				"ssl":           l.SSL,
 				"http2":         l.HTTP2,
+				"udp":           l.UDP,
 				"defaultServer": l.DefaultServer,
 				"proxyProtocol": l.ProxyProtocol,
 			}

@@ -1853,6 +1853,9 @@ nginx.conf.server.sslProtocols 13.16.10
 nginx.conf.server.sslSessionTickets 13.16.10
 nginx.conf.server.sslSessionTimeout 13.16.10
 nginx.conf.servers 13.14.1
+nginx.conf.streamParams 13.38.1
+nginx.conf.streamServers 13.38.1
+nginx.conf.streamUpstreams 13.38.1
 nginx.conf.upstream 13.14.1
 nginx.conf.upstream.keepalive 13.16.10
 nginx.conf.upstream.loadBalancingMethod 13.16.10

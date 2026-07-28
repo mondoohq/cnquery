@@ -1574,8 +1574,10 @@ nginx {
 // Parsed Nginx configuration covering flat directives, per-server
 // blocks, upstream backend pools, and listen addresses, merged across
 // the main config and every include fragment. Surfaces TLS settings and
-// response headers per server block for hardening audits. Pass
-// `init(path: "...")` to point at a non-default config file.
+// response headers per server block for hardening audits. TCP and UDP
+// proxying declared in the stream block is covered by streamParams,
+// streamServers, and streamUpstreams. Pass `init(path: "...")` to point
+// at a non-default config file.
 nginx.conf {
   init(path? string)
   // Primary configuration file
@@ -1590,7 +1592,7 @@ nginx.conf {
   workerProcesses(params) string
   // Error log path
   errorLog(params) string
-  // Listen addresses/ports across all server blocks
+  // Listen addresses/ports across the http server blocks
   listenAddresses(file) []string
   // HTTP-level directives (inside http block, outside server blocks)
   httpParams(file) map[string]string
@@ -1598,6 +1600,20 @@ nginx.conf {
   servers(file) []nginx.conf.server
   // Upstream blocks
   upstreams(file) []nginx.conf.upstream
+  // Stream-level directives (inside stream block, outside server blocks)
+  streamParams(file) map[string]string
+  // Server blocks inside the stream block
+  //
+  // TCP and UDP proxy listeners. Each carries its own listen address and
+  // TLS settings, so protocol and cipher checks reach mail, database, and
+  // other non-HTTP traffic that Nginx terminates.
+  streamServers(file) []nginx.conf.server
+  // Upstream blocks inside the stream block
+  //
+  // Backend pools for TCP and UDP proxying, with the load-balancing
+  // method and the per-backend weight, failure threshold, and backup or
+  // down state of each member.
+  streamUpstreams(file) []nginx.conf.upstream
 }
 
 // Nginx server block
@@ -1606,7 +1622,7 @@ private nginx.conf.server @defaults("serverName ssl") {
   serverName string
   // Listen directives (comma-separated if multiple)
   listen string
-  // Listen directives broken out per declaration (port, ssl, http2, defaultServer, proxyProtocol, address, raw)
+  // Listen directives broken out per declaration (port, ssl, http2, udp, defaultServer, proxyProtocol, address, raw)
   listens []dict
   // Document root
   root string
