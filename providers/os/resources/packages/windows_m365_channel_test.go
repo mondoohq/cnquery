@@ -274,7 +274,7 @@ func TestGetInstalledAppsM365Channel(t *testing.T) {
 			require.NoError(t, err)
 			require.Len(t, pkgs, 2)
 
-			m365 := findPkg(pkgs, "Microsoft 365 Apps for enterprise - en-us")
+			m365 := findPkgByName(pkgs, "Microsoft 365 Apps for enterprise - en-us")
 			require.NotNil(t, m365)
 			if tt.wantChannel == "" {
 				assert.NotContains(t, m365.PUrl, "channel=")
@@ -282,7 +282,7 @@ func TestGetInstalledAppsM365Channel(t *testing.T) {
 				assert.Contains(t, m365.PUrl, "channel="+tt.wantChannel)
 			}
 
-			edge := findPkg(pkgs, "Microsoft Edge")
+			edge := findPkgByName(pkgs, "Microsoft Edge")
 			require.NotNil(t, edge)
 			assert.NotContains(t, edge.PUrl, "channel=")
 		})
