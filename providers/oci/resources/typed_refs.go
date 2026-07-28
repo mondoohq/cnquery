@@ -6,6 +6,7 @@ package resources
 import (
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
@@ -55,7 +56,11 @@ func resolveOciSecurityGroups(runtime *plugin.Runtime, ids []any) ([]any, error)
 			"id": llx.StringData(id),
 		})
 		if err != nil {
-			return nil, err
+			// A group that cannot be resolved - deleted between the list and
+			// this call, or outside the compartments we enumerate - must not
+			// take the rest of the list with it.
+			log.Debug().Err(err).Str("nsg", id).Msg("skipping unresolvable oci network security group")
+			continue
 		}
 		out = append(out, res)
 	}
@@ -76,7 +81,8 @@ func resolveOciCertificates(runtime *plugin.Runtime, ids []any) ([]any, error) {
 			"id": llx.StringData(id),
 		})
 		if err != nil {
-			return nil, err
+			log.Debug().Err(err).Str("certificate", id).Msg("skipping unresolvable oci certificate")
+			continue
 		}
 		out = append(out, res)
 	}
@@ -100,7 +106,9 @@ func resolveOciCertRefsByType(runtime *plugin.Runtime, ids []any, ocidType, reso
 			"id": llx.StringData(id),
 		})
 		if err != nil {
-			return nil, err
+			log.Debug().Err(err).Str("id", id).Str("resource", resourceName).
+				Msg("skipping unresolvable oci reference")
+			continue
 		}
 		out = append(out, res)
 	}
@@ -108,20 +116,26 @@ func resolveOciCertRefsByType(runtime *plugin.Runtime, ids []any, ocidType, reso
 }
 
 // resolveOciTopics resolves a list of typed ONS topic resources from a list of
-// topic OCIDs. Non-topic OCIDs (alarms can target other destination types in
-// the future) are skipped silently.
+// destination OCIDs. Monitoring alarms accept both ONS topics and Streaming
+// streams, so non-topic OCIDs are filtered out by prefix. Without that filter a
+// stream destination reached initOciOnsTopic, which reports a not-found error,
+// and because the loop aborted on the first error the alarm's valid topics were
+// lost along with it.
 func resolveOciTopics(runtime *plugin.Runtime, ids []any) ([]any, error) {
 	out := make([]any, 0, len(ids))
 	for _, raw := range ids {
 		id, ok := raw.(string)
-		if !ok || id == "" {
+		if !ok || !strings.HasPrefix(id, "ocid1.onstopic.") {
 			continue
 		}
 		res, err := NewResource(runtime, "oci.ons.topic", map[string]*llx.RawData{
 			"id": llx.StringData(id),
 		})
 		if err != nil {
-			return nil, err
+			// A topic that cannot be resolved (deleted, or in a compartment the
+			// token cannot read) must not take the alarm's other topics with it.
+			log.Debug().Err(err).Str("topic", id).Msg("skipping unresolvable oci ons topic")
+			continue
 		}
 		out = append(out, res)
 	}

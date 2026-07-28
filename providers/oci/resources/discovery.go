@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"errors"
+	"fmt"
 	"slices"
 	"strings"
 
@@ -72,13 +74,27 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 	}}
 
 	targets := getDiscoveryTargets(conn.Conf)
+	var (
+		discoveryErr error
+		succeeded    int
+	)
 	for _, target := range targets {
 		list, err := discover(runtime, conn, target)
 		if err != nil {
 			log.Error().Err(err).Str("target", target).Msg("error during OCI discovery")
+			discoveryErr = errors.Join(discoveryErr, fmt.Errorf("%s: %w", target, err))
 			continue
 		}
+		succeeded++
 		in.Spec.Assets = append(in.Spec.Assets, list...)
+	}
+
+	// One failing target among several is a partial result worth keeping, but
+	// every target failing means discovery learned nothing - almost always an
+	// under-scoped token. Returning a clean empty inventory there reported a
+	// successful scan that had silently discovered nothing.
+	if succeeded == 0 && discoveryErr != nil {
+		return nil, discoveryErr
 	}
 
 	return in, nil

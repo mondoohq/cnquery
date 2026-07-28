@@ -390,6 +390,96 @@ func (o *mqlOciNetworkFirewallPolicy) decryptionProfiles() ([]any, error) {
 	return res, nil
 }
 
+// securityRules lists the policy's security rules, which decide what traffic
+// the attached firewalls allow, drop, reject or inspect. Without them a policy
+// with no rules at all was indistinguishable from a restrictive one.
+func (o *mqlOciNetworkFirewallPolicy) securityRules() ([]any, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+	svc, err := conn.NetworkFirewallClient(o.region)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	res := []any{}
+	var page *string
+	for {
+		resp, err := svc.ListSecurityRules(ctx, networkfirewall.ListSecurityRulesRequest{
+			NetworkFirewallPolicyId: common.String(o.Id.Data),
+			Page:                    page,
+		})
+		if err != nil {
+			return nil, err
+		}
+		for i := range resp.Items {
+			r := resp.Items[i]
+			name := stringValue(r.Name)
+			mqlRule, err := CreateResource(o.MqlRuntime, "oci.networkFirewall.policy.securityRule", map[string]*llx.RawData{
+				"__id":          llx.StringData(o.Id.Data + "/securityRule/" + name),
+				"name":          llx.StringData(name),
+				"action":        llx.StringData(string(r.Action)),
+				"inspection":    llx.StringData(string(r.Inspection)),
+				"priorityOrder": llx.IntDataPtr(r.PriorityOrder),
+				"description":   llx.StringDataPtr(r.Description),
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlRule)
+		}
+		if resp.OpcNextPage == nil {
+			break
+		}
+		page = resp.OpcNextPage
+	}
+	return res, nil
+}
+
+// decryptionRules lists the policy's decryption rules, which decide which TLS
+// sessions are decrypted for inspection and under which profile.
+func (o *mqlOciNetworkFirewallPolicy) decryptionRules() ([]any, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+	svc, err := conn.NetworkFirewallClient(o.region)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	res := []any{}
+	var page *string
+	for {
+		resp, err := svc.ListDecryptionRules(ctx, networkfirewall.ListDecryptionRulesRequest{
+			NetworkFirewallPolicyId: common.String(o.Id.Data),
+			Page:                    page,
+		})
+		if err != nil {
+			return nil, err
+		}
+		for i := range resp.Items {
+			r := resp.Items[i]
+			name := stringValue(r.Name)
+			mqlRule, err := CreateResource(o.MqlRuntime, "oci.networkFirewall.policy.decryptionRule", map[string]*llx.RawData{
+				"__id":              llx.StringData(o.Id.Data + "/decryptionRule/" + name),
+				"name":              llx.StringData(name),
+				"action":            llx.StringData(string(r.Action)),
+				"decryptionProfile": llx.StringDataPtr(r.DecryptionProfile),
+				"secret":            llx.StringDataPtr(r.Secret),
+				"priorityOrder":     llx.IntDataPtr(r.PriorityOrder),
+				"description":       llx.StringDataPtr(r.Description),
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlRule)
+		}
+		if resp.OpcNextPage == nil {
+			break
+		}
+		page = resp.OpcNextPage
+	}
+	return res, nil
+}
+
 // decryptionProfileFields maps an OCI decryption profile to its MQL fields.
 // Forward-proxy profiles carry all ten blocking controls; inbound-inspection
 // profiles carry only the three shared ones, so the certificate-validation
@@ -433,11 +523,21 @@ func decryptionProfileFields(dp networkfirewall.DecryptionProfile, summary netwo
 		// Null would make `isUnsupportedVersionBlocked &&
 		// isUnsupportedCipherBlocked` evaluate to true, so a profile we could
 		// not decode would pass a TLS-hygiene check it was never measured for.
+		// That reasoning applies to every control, so the forward-proxy-only
+		// fields seeded null above are overwritten here too - leaving them null
+		// let `isExpiredCertificateBlocked && isUntrustedIssuerBlocked` pass for
+		// exactly the profile we failed to decode.
 		fields["type"] = llx.StringData(string(summary.Type))
 		fields["description"] = llx.StringDataPtr(summary.Description)
 		fields["isUnsupportedVersionBlocked"] = llx.BoolData(false)
 		fields["isUnsupportedCipherBlocked"] = llx.BoolData(false)
 		fields["isOutOfCapacityBlocked"] = llx.BoolData(false)
+		fields["isExpiredCertificateBlocked"] = llx.BoolData(false)
+		fields["isUntrustedIssuerBlocked"] = llx.BoolData(false)
+		fields["isRevocationStatusTimeoutBlocked"] = llx.BoolData(false)
+		fields["isUnknownRevocationStatusBlocked"] = llx.BoolData(false)
+		fields["areCertificateExtensionsRestricted"] = llx.BoolData(false)
+		fields["isAutoIncludeAltName"] = llx.BoolData(false)
 	}
 	return fields
 }

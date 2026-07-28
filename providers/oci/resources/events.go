@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -121,22 +122,28 @@ func (o *mqlOciEvents) getEventRules(conn *connection.OciConnection, regions []a
 }
 
 type mqlOciEventsRuleInternal struct {
-	lock   sync.Mutex
-	rule   *events.Rule
-	region string
+	lock    sync.Mutex
+	fetched atomic.Bool
+	rule    *events.Rule
+	region  string
 }
 
 func (o *mqlOciEventsRule) id() (string, error) {
 	return "oci.events.rule/" + o.Id.Data, nil
 }
 
+// getRuleDetails lazily loads the rule detail, which carries the actions the
+// list call omits. The lock-free fast path reads an atomic.Bool rather than the
+// pointer itself: the executor resolves fields concurrently, and a plain
+// pointer read racing the locked write has no happens-before edge, so a reader
+// could observe a non-nil rule whose fields were not yet visible.
 func (o *mqlOciEventsRule) getRuleDetails() (*events.Rule, error) {
-	if o.rule != nil {
+	if o.fetched.Load() {
 		return o.rule, nil
 	}
 	o.lock.Lock()
 	defer o.lock.Unlock()
-	if o.rule != nil {
+	if o.fetched.Load() {
 		return o.rule, nil
 	}
 
@@ -155,6 +162,7 @@ func (o *mqlOciEventsRule) getRuleDetails() (*events.Rule, error) {
 	}
 
 	o.rule = &response.Rule
+	o.fetched.Store(true)
 	return o.rule, nil
 }
 
@@ -170,6 +178,13 @@ func (o *mqlOciEventsRule) actions() ([]any, error) {
 
 	res := make([]any, 0, len(rule.Actions.Actions))
 	for _, action := range rule.Actions.Actions {
+		// The SDK stores a nil entry for any action whose JSON is null
+		// (events/action_list.go), and calling a method on that nil interface
+		// panics - which in a provider accessor takes down the whole scan.
+		if action == nil {
+			continue
+		}
+
 		m := map[string]any{
 			"id":        stringValue(action.GetId()),
 			"isEnabled": boolValue(action.GetIsEnabled()),
@@ -189,6 +204,12 @@ func (o *mqlOciEventsRule) actions() ([]any, error) {
 			m["actionType"] = "FAAS"
 			m["functionId"] = stringValue(a.FunctionId)
 			m["description"] = stringValue(a.Description)
+		default:
+			// An action type newer than the pinned SDK. Without this branch the
+			// entry carried no actionType at all and silently dropped out of
+			// any `actions.where(actionType == ...)` filter.
+			m["actionType"] = "UNKNOWN"
+			m["description"] = stringValue(action.GetDescription())
 		}
 
 		res = append(res, m)

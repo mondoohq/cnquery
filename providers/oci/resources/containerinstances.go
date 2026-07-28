@@ -18,6 +18,49 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
+// ociContainerSecurityView is the flattened Linux security context of a
+// container.
+type ociContainerSecurityView struct {
+	runAsUser        *int
+	runAsGroup       *int
+	nonRootUserCheck bool
+	readonlyRootFs   bool
+	added            []any
+	dropped          []any
+}
+
+// ociContainerSecurityContext flattens a container's polymorphic security
+// context. The booleans resolve to false when there is no security context,
+// because false is the insecure reading for both and MQL's three-valued logic
+// makes `a && b` over two nulls evaluate to true - a container with no security
+// context would otherwise pass a hardening check it was never measured for.
+//
+// runAsUser and runAsGroup stay null instead: OCI falls back to whatever the
+// image declares, so reporting 0 would assert the container runs as root when
+// that is simply unknown.
+func ociContainerSecurityContext(sc containerinstances.SecurityContext) ociContainerSecurityView {
+	view := ociContainerSecurityView{added: []any{}, dropped: []any{}}
+
+	linux, ok := sc.(containerinstances.LinuxSecurityContext)
+	if !ok {
+		return view
+	}
+	view.runAsUser = linux.RunAsUser
+	view.runAsGroup = linux.RunAsGroup
+	view.nonRootUserCheck = boolValue(linux.IsNonRootUserCheckEnabled)
+	view.readonlyRootFs = boolValue(linux.IsRootFileSystemReadonly)
+
+	if linux.Capabilities != nil {
+		for _, c := range linux.Capabilities.AddCapabilities {
+			view.added = append(view.added, string(c))
+		}
+		for _, c := range linux.Capabilities.DropCapabilities {
+			view.dropped = append(view.dropped, string(c))
+		}
+	}
+	return view
+}
+
 func (o *mqlOciContainerInstances) id() (string, error) {
 	return "oci.containerInstances", nil
 }
@@ -197,6 +240,8 @@ func (o *mqlOciContainerInstancesInstance) containers() ([]any, error) {
 			definedTags[k] = v
 		}
 
+		sec := ociContainerSecurityContext(c.SecurityContext)
+
 		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.containerInstances.container", map[string]*llx.RawData{
 			"id":                          llx.StringDataPtr(c.Id),
 			"name":                        llx.StringDataPtr(c.DisplayName),
@@ -207,6 +252,12 @@ func (o *mqlOciContainerInstancesInstance) containers() ([]any, error) {
 			"imageUrl":                    llx.StringDataPtr(c.ImageUrl),
 			"isResourcePrincipalDisabled": llx.BoolDataPtr(c.IsResourcePrincipalDisabled),
 			"resourceConfig":              llx.DictData(resourceConfig),
+			"runAsUser":                   llx.IntDataPtr(sec.runAsUser),
+			"runAsGroup":                  llx.IntDataPtr(sec.runAsGroup),
+			"isNonRootUserCheckEnabled":   llx.BoolData(sec.nonRootUserCheck),
+			"isRootFileSystemReadonly":    llx.BoolData(sec.readonlyRootFs),
+			"addedCapabilities":           llx.ArrayData(sec.added, types.String),
+			"droppedCapabilities":         llx.ArrayData(sec.dropped, types.String),
 			"created":                     llx.TimeDataPtr(created),
 			"timeUpdated":                 llx.TimeDataPtr(timeUpdated),
 			"freeformTags":                llx.MapData(freeformTags, types.String),

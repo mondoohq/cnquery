@@ -211,7 +211,10 @@ func (o *mqlOciRedisCluster) networkSecurityGroups() ([]any, error) {
 			"id": llx.StringData(nsgId),
 		})
 		if err != nil {
-			return nil, err
+			// Skip an element we cannot resolve rather than failing the whole
+			// list and losing the ones that did resolve.
+			log.Debug().Err(err).Str("nsg", nsgId).Msg("skipping unresolvable oci reference")
+			continue
 		}
 		res = append(res, mqlNsg)
 	}

@@ -436,17 +436,43 @@ func (c *OciConnection) DataScienceClient(region string) (*datascience.DataScien
 	return &client, nil
 }
 
-// failFastOnUnreachableRegion caps the per-request timeout and disables the
-// SDK's default retry policy on a region-limited AI client. Several AI services
-// publish a wildcard DNS record in regions where they are not deployed, so calls
-// there resolve but the connection times out; without this the SDK would retry
-// the timeout ~8 times with backoff and hang for minutes. With it, unavailable
+// failFastOnUnreachableRegion caps the per-request timeout and narrows the
+// retry policy on a region-limited AI client. Several AI services publish a
+// wildcard DNS record in regions where they are not deployed, so calls there
+// resolve but the connection times out; without this the SDK would retry the
+// timeout ~8 times with backoff and hang for minutes. With it, unavailable
 // regions fail fast and are skipped (see ociRegionServiceUnavailable).
+//
+// The client is cloned rather than replaced. Replacing it dropped the SDK's
+// OciHTTPTransportWrapper, and with it the TLS configuration built from
+// OCI_DEFAULT_CERTS_PATH and the client-certificate environment variables - so
+// in a custom realm or behind a TLS-inspecting proxy every AI call failed with
+// an unknown-authority error while every other service worked.
+//
+// Retries are bounded rather than disabled: NoRetryPolicy meant a single 429
+// from OCI's throttling failed the whole collection, and these calls fan out
+// across regions and pages, which is exactly the shape that gets throttled.
 func failFastOnUnreachableRegion(bc *common.BaseClient) {
-	bc.HTTPClient = &http.Client{Timeout: 15 * time.Second}
-	noRetry := common.NoRetryPolicy()
-	bc.SetCustomClientConfiguration(common.CustomClientConfiguration{RetryPolicy: &noRetry})
+	if hc, ok := bc.HTTPClient.(*http.Client); ok {
+		clone := *hc
+		clone.Timeout = unreachableRegionTimeout
+		bc.HTTPClient = &clone
+	} else {
+		bc.HTTPClient = &http.Client{Timeout: unreachableRegionTimeout}
+	}
+	retry := common.NewRetryPolicyWithOptions(
+		common.WithMaximumNumberAttempts(2),
+		common.WithShouldRetryOperation(common.DefaultShouldRetryOperation),
+	)
+	bc.SetCustomClientConfiguration(common.CustomClientConfiguration{RetryPolicy: &retry})
 }
+
+// unreachableRegionTimeout bounds a single request to a region-limited AI
+// service. It has to stay well above a healthy region's slowest page - a
+// timeout is classified as an absent endpoint and silently skips the region -
+// while staying short enough that an undeployed wildcard-DNS region does not
+// stall the scan.
+const unreachableRegionTimeout = 45 * time.Second
 
 func (c *OciConnection) GenerativeAiClient(region string) (*generativeai.GenerativeAiClient, error) {
 	client, err := generativeai.NewGenerativeAiClientWithConfigurationProvider(c.config)

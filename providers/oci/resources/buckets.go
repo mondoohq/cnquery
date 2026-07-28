@@ -136,6 +136,13 @@ func (o *mqlOciObjectStorage) getBuckets(conn *connection.OciConnection, namespa
 				}
 
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.objectStorage.bucket", map[string]*llx.RawData{
+					"__id": llx.StringData(ociBucketCacheKey(stringValue(bucket.Namespace), stringValue(bucket.Name))),
+					// ListBuckets carries no OCID. Set the deprecated id field
+					// explicitly null so it reads as a null rather than crossing
+					// the plugin boundary unset, which surfaced client-side as an
+					// unattributed "primitive with no type information" warning.
+					// Use ocid for a value that resolves on both paths.
+					"id":            llx.NilData,
 					"namespace":     llx.StringDataPtr(bucket.Namespace),
 					"name":          llx.StringDataPtr(bucket.Name),
 					"compartmentID": llx.StringDataPtr(bucket.CompartmentId),
@@ -161,8 +168,24 @@ type mqlOciObjectStorageBucketInternal struct {
 	bucket  *objectstorage.Bucket
 }
 
-func (o *mqlOciObjectStorageBucket) id() (string, error) {
-	return "oci.objectStorage.bucket/" + o.Namespace.Data + "/" + o.Name.Data, nil
+// ociBucketCacheKey is the bucket's cache key. It is passed explicitly as
+// "__id" at every construction site rather than derived from an id() method,
+// because id() now reports the real bucket OCID, which is only knowable from
+// the detail call - deriving the cache key from it would make constructing a
+// bucket resource issue an API request.
+func ociBucketCacheKey(namespace, name string) string {
+	return "oci.objectStorage.bucket/" + namespace + "/" + name
+}
+
+// ocid reports the bucket OCID, which ListBuckets does not return. The
+// deprecated `id` field is left as-is for compatibility; this accessor resolves
+// identically on the listing and single-bucket paths.
+func (o *mqlOciObjectStorageBucket) ocid() (string, error) {
+	bucketInfo, err := o.getBucketDetails()
+	if err != nil {
+		return "", err
+	}
+	return stringValue(bucketInfo.Id), nil
 }
 
 func initOciObjectStorageBucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -201,6 +224,16 @@ func initOciObjectStorageBucket(runtime *plugin.Runtime, args map[string]*llx.Ra
 				}
 			}
 		}
+	}
+
+	// The cache key must be supplied explicitly: id() reports the bucket OCID
+	// from the detail call, so letting the generated Create fall back to it
+	// would issue an API request just to key the resource.
+	if ns, name := ociArgString(args, "namespace"), ociArgString(args, "name"); ns != "" || name != "" {
+		if args == nil {
+			args = map[string]*llx.RawData{}
+		}
+		args["__id"] = llx.StringData(ociBucketCacheKey(ns, name))
 	}
 
 	obj, err := CreateResource(runtime, "oci.objectStorage.bucket", args)

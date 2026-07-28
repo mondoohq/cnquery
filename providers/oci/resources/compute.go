@@ -292,44 +292,12 @@ func (o *mqlOciComputeInstance) vnics() ([]any, error) {
 			log.Debug().Err(err).Msgf("failed to get VNIC %s", *att.VnicId)
 			continue
 		}
-		vnic := vnicResp.Vnic
-
-		var created *time.Time
-		if vnic.TimeCreated != nil {
-			created = &vnic.TimeCreated.Time
-		}
-
-		freeformTags := make(map[string]interface{}, len(vnic.FreeformTags))
-		for k, v := range vnic.FreeformTags {
-			freeformTags[k] = v
-		}
-
-		definedTags := make(map[string]interface{}, len(vnic.DefinedTags))
-		for k, v := range vnic.DefinedTags {
-			definedTags[k] = v
-		}
-
-		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.compute.vnic", map[string]*llx.RawData{
-			"id":                  llx.StringDataPtr(vnic.Id),
-			"name":                llx.StringDataPtr(vnic.DisplayName),
-			"compartmentID":       llx.StringDataPtr(vnic.CompartmentId),
-			"isPrimary":           llx.BoolDataPtr(vnic.IsPrimary),
-			"privateIp":           llx.StringDataPtr(vnic.PrivateIp),
-			"publicIp":            llx.StringDataPtr(vnic.PublicIp),
-			"macAddress":          llx.StringDataPtr(vnic.MacAddress),
-			"hostnameLabel":       llx.StringDataPtr(vnic.HostnameLabel),
-			"nsgIds":              llx.ArrayData(convert.SliceAnyToInterface(vnic.NsgIds), types.String),
-			"skipSourceDestCheck": llx.BoolDataPtr(vnic.SkipSourceDestCheck),
-			"state":               llx.StringData(string(vnic.LifecycleState)),
-			"created":             llx.TimeDataPtr(created),
-			"freeformTags":        llx.MapData(freeformTags, types.String),
-			"definedTags":         llx.MapData(definedTags, types.Any),
-		})
+		// Shared with initOciComputeVnic so the collection path and the
+		// single-VNIC lookup cannot drift apart field by field.
+		mqlVnic, err := ociVnicToMql(o.MqlRuntime, vnicResp.Vnic)
 		if err != nil {
 			return nil, err
 		}
-		mqlVnic := mqlInstance.(*mqlOciComputeVnic)
-		mqlVnic.cacheSubnetId = stringValue(vnic.SubnetId)
 		res = append(res, mqlVnic)
 	}
 

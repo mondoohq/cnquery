@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/apigateway"
@@ -137,7 +138,7 @@ type mqlOciApigatewayGatewayInternal struct {
 	// details fetched lazily from GetGateway (ip addresses, CA bundles,
 	// response cache) — not in the list summary.
 	detailsLock sync.Mutex
-	detailsDone bool
+	detailsDone atomic.Bool
 }
 
 func (o *mqlOciApigatewayGateway) id() (string, error) {
@@ -193,12 +194,12 @@ func (o *mqlOciApigatewayGateway) certificate() (*mqlOciApigatewayCertificate, e
 // does not return: ipAddresses, caBundles, responseCacheDetails. Safe for
 // concurrent callers.
 func (o *mqlOciApigatewayGateway) fetchDetails() error {
-	if o.detailsDone {
+	if o.detailsDone.Load() {
 		return nil
 	}
 	o.detailsLock.Lock()
 	defer o.detailsLock.Unlock()
-	if o.detailsDone {
+	if o.detailsDone.Load() {
 		return nil
 	}
 
@@ -243,7 +244,7 @@ func (o *mqlOciApigatewayGateway) fetchDetails() error {
 	}
 	o.HasResponseCache = plugin.TValue[bool]{Data: hasCache, State: plugin.StateIsSet}
 
-	o.detailsDone = true
+	o.detailsDone.Store(true)
 	return nil
 }
 
@@ -375,7 +376,7 @@ type mqlOciApigatewayDeploymentInternal struct {
 
 	// specFetched + spec populate the request-policy-derived fields.
 	specLock    sync.Mutex
-	specFetched bool
+	specFetched atomic.Bool
 	spec        *apigateway.ApiSpecification
 }
 
@@ -444,12 +445,12 @@ func (o *mqlOciApigatewayDeployment) gateway() (*mqlOciApigatewayGateway, error)
 // use the cached spec. The request is intentionally serialized behind a
 // mutex to avoid N concurrent GetDeployment calls on first access.
 func (o *mqlOciApigatewayDeployment) fetchSpec() error {
-	if o.specFetched {
+	if o.specFetched.Load() {
 		return nil
 	}
 	o.specLock.Lock()
 	defer o.specLock.Unlock()
-	if o.specFetched {
+	if o.specFetched.Load() {
 		return nil
 	}
 
@@ -465,7 +466,7 @@ func (o *mqlOciApigatewayDeployment) fetchSpec() error {
 		return err
 	}
 	o.spec = resp.Specification
-	o.specFetched = true
+	o.specFetched.Store(true)
 	return nil
 }
 

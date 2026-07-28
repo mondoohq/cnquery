@@ -270,9 +270,13 @@ func (o *mqlOciCloudGuard) securityZones() ([]any, error) {
 	zones := []cloudguard.SecurityZoneSummary{}
 	var page *string
 	for {
+		// Security zones are attached to compartments and practically never to
+		// the tenancy root, so without the subtree flag a correctly zoned
+		// tenancy reported none at all.
 		response, err := client.ListSecurityZones(ctx, cloudguard.ListSecurityZonesRequest{
-			CompartmentId: common.String(conn.TenantID()),
-			Page:          page,
+			CompartmentId:                    common.String(conn.TenantID()),
+			IsRequiredSecurityZonesInSubtree: common.Bool(true),
+			Page:                             page,
 		})
 		if err != nil {
 			return nil, err
