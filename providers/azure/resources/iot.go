@@ -116,44 +116,6 @@ func initAzureSubscriptionIotServiceIotHub(runtime *plugin.Runtime, args map[str
 	return nil, nil, fmt.Errorf("azure iot hub does not exist")
 }
 
-func (a *mqlAzureSubscriptionIotService) hubs() ([]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-
-	subscriptionID := a.SubscriptionId.Data
-
-	clientFactory, err := armiothub.NewClientFactory(subscriptionID, token, &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	client := clientFactory.NewResourceClient()
-	hubsPager := client.NewListBySubscriptionPager(nil)
-	var hubs []any
-
-	for hubsPager.More() {
-		page, err := hubsPager.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-		for _, hub := range page.Value {
-			if hub == nil {
-				continue
-			}
-			hubData, err := convert.JsonToDict(hub)
-			if err != nil {
-				return nil, err
-			}
-			hubs = append(hubs, hubData)
-		}
-	}
-
-	return hubs, nil
-}
-
 // iotHubs returns typed IoT hub resources with security-relevant fields populated.
 func (a *mqlAzureSubscriptionIotService) iotHubs() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)

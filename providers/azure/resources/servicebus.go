@@ -617,19 +617,6 @@ func (a *mqlAzureSubscriptionServiceBusServiceNamespaceTopic) authorizationRules
 	return serviceBusAuthorizationRulesToMql(a.MqlRuntime, rules)
 }
 
-// networkRuleSet fetches the namespace-level network rule set (default action, public network access,
-// IP rules, virtual-network rules, trusted-service-access).
-func (a *mqlAzureSubscriptionServiceBusServiceNamespace) networkRuleSet() (any, error) {
-	props, err := a.fetchNetworkRuleSetProperties()
-	if err != nil {
-		return nil, err
-	}
-	if props == nil {
-		return nil, nil
-	}
-	return convert.JsonToDict(props)
-}
-
 func (a *mqlAzureSubscriptionServiceBusServiceNamespace) networkRules() (*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules, error) {
 	props, err := a.fetchNetworkRuleSetProperties()
 	if err != nil {

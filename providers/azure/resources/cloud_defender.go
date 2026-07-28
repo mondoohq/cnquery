@@ -191,17 +191,6 @@ func (a *mqlAzureSubscriptionCloudDefenderService) cachedPolicyAssignments(ctx c
 	return a.policyAssignments, a.policyAssignmentsErr
 }
 
-func (a *mqlAzureSubscriptionCloudDefenderService) defenderForServers() (any, error) {
-	typed := a.GetForServers()
-	if typed.Error != nil {
-		return nil, typed.Error
-	}
-	return map[string]any{
-		"enabled":                         typed.Data.GetEnabled().Data,
-		"vulnerabilityManagementToolName": typed.Data.GetVulnerabilityManagementToolName().Data,
-	}, nil
-}
-
 func (a *mqlAzureSubscriptionCloudDefenderService) forServers() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
@@ -276,28 +265,12 @@ func simpleDefenderDict(enabled *plugin.TValue[bool]) (any, error) {
 	return map[string]any{"enabled": enabled.Data}, nil
 }
 
-func (a *mqlAzureSubscriptionCloudDefenderService) defenderForAppServices() (any, error) {
-	typed := a.GetForAppServices()
-	if typed.Error != nil {
-		return nil, typed.Error
-	}
-	return simpleDefenderDict(typed.Data.GetEnabled())
-}
-
 func (a *mqlAzureSubscriptionCloudDefenderService) forAppServices() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices, error) {
 	resource, err := a.getSimpleDefenderPricing("AppServices", ResourceAzureSubscriptionCloudDefenderServiceDefenderForAppServices)
 	if err != nil {
 		return nil, err
 	}
 	return resource.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices), nil
-}
-
-func (a *mqlAzureSubscriptionCloudDefenderService) defenderForSqlServersOnMachines() (any, error) {
-	typed := a.GetForSqlServersOnMachines()
-	if typed.Error != nil {
-		return nil, typed.Error
-	}
-	return simpleDefenderDict(typed.Data.GetEnabled())
 }
 
 func (a *mqlAzureSubscriptionCloudDefenderService) forSqlServersOnMachines() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines, error) {
@@ -308,28 +281,12 @@ func (a *mqlAzureSubscriptionCloudDefenderService) forSqlServersOnMachines() (*m
 	return resource.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines), nil
 }
 
-func (a *mqlAzureSubscriptionCloudDefenderService) defenderForSqlDatabases() (any, error) {
-	typed := a.GetForSqlDatabases()
-	if typed.Error != nil {
-		return nil, typed.Error
-	}
-	return simpleDefenderDict(typed.Data.GetEnabled())
-}
-
 func (a *mqlAzureSubscriptionCloudDefenderService) forSqlDatabases() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases, error) {
 	resource, err := a.getSimpleDefenderPricing("SqlServers", ResourceAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases)
 	if err != nil {
 		return nil, err
 	}
 	return resource.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases), nil
-}
-
-func (a *mqlAzureSubscriptionCloudDefenderService) defenderForOpenSourceDatabases() (any, error) {
-	typed := a.GetForOpenSourceDatabases()
-	if typed.Error != nil {
-		return nil, typed.Error
-	}
-	return simpleDefenderDict(typed.Data.GetEnabled())
 }
 
 func (a *mqlAzureSubscriptionCloudDefenderService) forOpenSourceDatabases() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases, error) {
@@ -340,28 +297,12 @@ func (a *mqlAzureSubscriptionCloudDefenderService) forOpenSourceDatabases() (*mq
 	return resource.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases), nil
 }
 
-func (a *mqlAzureSubscriptionCloudDefenderService) defenderForCosmosDb() (any, error) {
-	typed := a.GetForCosmosDb()
-	if typed.Error != nil {
-		return nil, typed.Error
-	}
-	return simpleDefenderDict(typed.Data.GetEnabled())
-}
-
 func (a *mqlAzureSubscriptionCloudDefenderService) forCosmosDb() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb, error) {
 	resource, err := a.getSimpleDefenderPricing("CosmosDbs", ResourceAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb)
 	if err != nil {
 		return nil, err
 	}
 	return resource.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb), nil
-}
-
-func (a *mqlAzureSubscriptionCloudDefenderService) defenderForStorageAccounts() (any, error) {
-	typed := a.GetForStorageAccounts()
-	if typed.Error != nil {
-		return nil, typed.Error
-	}
-	return simpleDefenderDict(typed.Data.GetEnabled())
 }
 
 func (a *mqlAzureSubscriptionCloudDefenderService) forStorageAccounts() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts, error) {
@@ -372,28 +313,12 @@ func (a *mqlAzureSubscriptionCloudDefenderService) forStorageAccounts() (*mqlAzu
 	return resource.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts), nil
 }
 
-func (a *mqlAzureSubscriptionCloudDefenderService) defenderForKeyVaults() (any, error) {
-	typed := a.GetForKeyVaults()
-	if typed.Error != nil {
-		return nil, typed.Error
-	}
-	return simpleDefenderDict(typed.Data.GetEnabled())
-}
-
 func (a *mqlAzureSubscriptionCloudDefenderService) forKeyVaults() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults, error) {
 	resource, err := a.getSimpleDefenderPricing("KeyVaults", ResourceAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults)
 	if err != nil {
 		return nil, err
 	}
 	return resource.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults), nil
-}
-
-func (a *mqlAzureSubscriptionCloudDefenderService) defenderForResourceManager() (any, error) {
-	typed := a.GetForResourceManager()
-	if typed.Error != nil {
-		return nil, typed.Error
-	}
-	return simpleDefenderDict(typed.Data.GetEnabled())
 }
 
 func (a *mqlAzureSubscriptionCloudDefenderService) forResourceManager() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager, error) {
@@ -485,35 +410,6 @@ func (a *mqlAzureSubscriptionCloudDefenderService) monitoringAgentAutoProvision(
 		return false, nil
 	}
 	return *setting.Properties.AutoProvision == security.AutoProvisionOn, nil
-}
-
-func (a *mqlAzureSubscriptionCloudDefenderService) defenderForContainers() (any, error) {
-	typed := a.GetForContainers()
-	if typed.Error != nil {
-		return nil, typed.Error
-	}
-
-	rawExts, err := typed.Data.fetchRawExtensions()
-	if err != nil {
-		return nil, err
-	}
-	exts := make([]map[string]any, 0, len(rawExts))
-	for _, ext := range rawExts {
-		if ext.IsEnabled == nil || ext.Name == nil {
-			continue
-		}
-		exts = append(exts, map[string]any{
-			"name":      *ext.Name,
-			"isEnabled": *ext.IsEnabled == security.IsEnabledTrue,
-		})
-	}
-
-	return map[string]any{
-		"defenderDaemonSet":        typed.Data.GetDefenderDaemonSet().Data,
-		"azurePolicyForKubernetes": typed.Data.GetAzurePolicyForKubernetes().Data,
-		"enabled":                  typed.Data.GetEnabled().Data,
-		"extensions":               exts,
-	}, nil
 }
 
 func (a *mqlAzureSubscriptionCloudDefenderService) forContainers() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers, error) {

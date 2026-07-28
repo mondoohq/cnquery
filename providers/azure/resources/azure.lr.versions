@@ -77,7 +77,6 @@ azure.subscription.aksService.cluster.advancedNetworking.enabled 13.1.8
 azure.subscription.aksService.cluster.advancedNetworking.id 13.1.8
 azure.subscription.aksService.cluster.advancedNetworking.securityEnabled 13.1.8
 azure.subscription.aksService.cluster.advancedNetworking.transitEncryptionType 13.1.8
-azure.subscription.aksService.cluster.agentPoolProfiles 9.0.1
 azure.subscription.aksService.cluster.apiServerAccessProfile 11.0.22
 azure.subscription.aksService.cluster.apiServerAuthorizedIPRanges 11.4.28
 azure.subscription.aksService.cluster.autoUpgradeProfile 11.4.28
@@ -250,7 +249,6 @@ azure.subscription.apiManagementService.service.platformVersion 13.10.2
 azure.subscription.apiManagementService.service.policyXml 13.33.8
 azure.subscription.apiManagementService.service.portalUrl 13.10.2
 azure.subscription.apiManagementService.service.principalId 13.24.1
-azure.subscription.apiManagementService.service.privateEndpointConnectionCount 13.10.2
 azure.subscription.apiManagementService.service.privateEndpointConnections 13.24.1
 azure.subscription.apiManagementService.service.privateIpAddresses 13.10.2
 azure.subscription.apiManagementService.service.product 13.33.8
@@ -356,7 +354,6 @@ azure.subscription.authorizationService.roleAssignment.principalId 11.2.1
 azure.subscription.authorizationService.roleAssignment.principalType 13.16.2
 azure.subscription.authorizationService.roleAssignment.role 11.2.1
 azure.subscription.authorizationService.roleAssignment.scope 11.2.1
-azure.subscription.authorizationService.roleAssignment.type 11.2.1
 azure.subscription.authorizationService.roleAssignment.updatedAt 11.2.1
 azure.subscription.authorizationService.roleAssignmentSchedule 13.25.1
 azure.subscription.authorizationService.roleAssignmentSchedule.assignmentType 13.25.1
@@ -489,19 +486,15 @@ azure.subscription.batchService.account 11.4.0
 azure.subscription.batchService.account.accountEndpoint 11.4.0
 azure.subscription.batchService.account.activeJobAndJobScheduleQuota 11.4.0
 azure.subscription.batchService.account.allowedAuthenticationModes 11.4.0
-azure.subscription.batchService.account.autoStorage 11.4.0
 azure.subscription.batchService.account.autoStorageAccount 13.23.1
 azure.subscription.batchService.account.dedicatedCoreQuota 11.4.0
 azure.subscription.batchService.account.dedicatedCoreQuotaPerVmFamily 11.4.0
 azure.subscription.batchService.account.dedicatedCoreQuotaPerVmFamilyEnforced 11.4.0
 azure.subscription.batchService.account.diagnosticSettings 11.4.0
 azure.subscription.batchService.account.diagnosticSettingsCategories 13.30.1
-azure.subscription.batchService.account.encryption 11.4.0
 azure.subscription.batchService.account.encryptionKey 13.23.1
 azure.subscription.batchService.account.id 11.4.0
-azure.subscription.batchService.account.identity 11.4.0
 azure.subscription.batchService.account.keyVault 13.23.1
-azure.subscription.batchService.account.keyVaultReference 11.4.0
 azure.subscription.batchService.account.location 11.4.0
 azure.subscription.batchService.account.lowPriorityCoreQuota 11.4.0
 azure.subscription.batchService.account.name 11.4.0
@@ -545,7 +538,6 @@ azure.subscription.cacheService 11.4.4
 azure.subscription.cacheService.redis 11.4.28
 azure.subscription.cacheService.redisInstance 11.4.4
 azure.subscription.cacheService.redisInstance.enableNonSslPort 11.4.4
-azure.subscription.cacheService.redisInstance.encryptionKey 13.1.8
 azure.subscription.cacheService.redisInstance.firewallRule 11.4.32
 azure.subscription.cacheService.redisInstance.firewallRule.endIpAddress 11.4.32
 azure.subscription.cacheService.redisInstance.firewallRule.id 11.4.32
@@ -575,7 +567,6 @@ azure.subscription.cacheService.redisInstance.privateEndpointConnection.groupIds
 azure.subscription.cacheService.redisInstance.privateEndpointConnection.id 11.4.32
 azure.subscription.cacheService.redisInstance.privateEndpointConnection.name 11.4.32
 azure.subscription.cacheService.redisInstance.privateEndpointConnection.privateEndpoint 13.9.3
-azure.subscription.cacheService.redisInstance.privateEndpointConnection.privateEndpointId 11.4.32
 azure.subscription.cacheService.redisInstance.privateEndpointConnection.provisioningState 11.4.32
 azure.subscription.cacheService.redisInstance.privateEndpointConnection.status 11.4.32
 azure.subscription.cacheService.redisInstance.privateEndpointConnection.systemMetadata 13.28.1
@@ -1148,7 +1139,6 @@ azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef.source 13
 azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef.topic 13.12.2
 azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef.topicName 13.12.2
 azure.subscription.cognitiveServicesService.account.raiTopic 13.12.2
-azure.subscription.cognitiveServicesService.account.raiTopic.createdAt 13.12.2
 azure.subscription.cognitiveServicesService.account.raiTopic.creationTime 13.22.1
 azure.subscription.cognitiveServicesService.account.raiTopic.description 13.12.2
 azure.subscription.cognitiveServicesService.account.raiTopic.failedReason 13.12.2
@@ -1242,7 +1232,6 @@ azure.subscription.computeService.disk.provisioningState 11.6.2
 azure.subscription.computeService.disk.publicNetworkAccess 11.4.28
 azure.subscription.computeService.disk.sku 9.0.1
 azure.subscription.computeService.disk.supportsHibernation 11.6.2
-azure.subscription.computeService.disk.systemData 13.8.2
 azure.subscription.computeService.disk.systemMetadata 13.19.2
 azure.subscription.computeService.disk.tags 9.0.1
 azure.subscription.computeService.disk.tier 11.6.2
@@ -1351,7 +1340,6 @@ azure.subscription.computeService.hybridMachine.extension.name 13.10.1
 azure.subscription.computeService.hybridMachine.extension.provisioningState 13.10.1
 azure.subscription.computeService.hybridMachine.extension.publisher 13.10.1
 azure.subscription.computeService.hybridMachine.extension.settings 13.10.1
-azure.subscription.computeService.hybridMachine.extension.systemData 13.10.1
 azure.subscription.computeService.hybridMachine.extension.systemMetadata 13.19.2
 azure.subscription.computeService.hybridMachine.extension.tags 13.10.1
 azure.subscription.computeService.hybridMachine.extension.type 13.10.1
@@ -1373,7 +1361,6 @@ azure.subscription.computeService.hybridMachine.privateLinkScopeResourceId 13.10
 azure.subscription.computeService.hybridMachine.properties 13.10.0
 azure.subscription.computeService.hybridMachine.provisioningState 13.10.0
 azure.subscription.computeService.hybridMachine.status 13.10.0
-azure.subscription.computeService.hybridMachine.systemData 13.10.0
 azure.subscription.computeService.hybridMachine.systemMetadata 13.19.2
 azure.subscription.computeService.hybridMachine.tags 13.10.0
 azure.subscription.computeService.hybridMachine.type 13.10.0
@@ -1438,7 +1425,6 @@ azure.subscription.computeService.snapshot.sku 13.7.1
 azure.subscription.computeService.snapshot.snapshotAccessState 13.8.2
 azure.subscription.computeService.snapshot.sourceDisk 13.7.1
 azure.subscription.computeService.snapshot.supportsHibernation 13.7.1
-azure.subscription.computeService.snapshot.systemData 13.8.2
 azure.subscription.computeService.snapshot.systemMetadata 13.19.2
 azure.subscription.computeService.snapshot.tags 13.7.1
 azure.subscription.computeService.snapshot.timeCreated 13.7.1
@@ -1498,7 +1484,6 @@ azure.subscription.computeService.vm.securityType 11.4.28
 azure.subscription.computeService.vm.sshPublicKeys 13.5.1
 azure.subscription.computeService.vm.state 9.0.1
 azure.subscription.computeService.vm.systemAssignedIdentity 13.26.1
-azure.subscription.computeService.vm.systemData 13.8.2
 azure.subscription.computeService.vm.systemMetadata 13.19.2
 azure.subscription.computeService.vm.tags 9.0.1
 azure.subscription.computeService.vm.timeCreated 11.6.2
@@ -1550,7 +1535,6 @@ azure.subscription.computeService.vmScaleSet.sku 13.7.1
 azure.subscription.computeService.vmScaleSet.skuProfile 13.8.2
 azure.subscription.computeService.vmScaleSet.spotRestorePolicy 13.8.2
 azure.subscription.computeService.vmScaleSet.systemAssignedIdentity 13.26.1
-azure.subscription.computeService.vmScaleSet.systemData 13.8.2
 azure.subscription.computeService.vmScaleSet.systemMetadata 13.19.2
 azure.subscription.computeService.vmScaleSet.tags 13.7.1
 azure.subscription.computeService.vmScaleSet.timeCreated 13.7.1
@@ -1594,7 +1578,6 @@ azure.subscription.containerAppService.containerApp.corsAllowedOrigins 13.10.2
 azure.subscription.containerAppService.containerApp.eventStreamEndpoint 13.11.3
 azure.subscription.containerAppService.containerApp.httpsOnly 13.10.2
 azure.subscription.containerAppService.containerApp.id 13.10.2
-azure.subscription.containerAppService.containerApp.identity 13.10.2
 azure.subscription.containerAppService.containerApp.ingressEnabled 13.10.2
 azure.subscription.containerAppService.containerApp.ingressExternal 13.10.2
 azure.subscription.containerAppService.containerApp.initContainers 13.10.2
@@ -1769,7 +1752,6 @@ azure.subscription.containerInstanceService.containerGroup.container.restartCoun
 azure.subscription.containerInstanceService.containerGroup.container.runAsGroup 13.16.2
 azure.subscription.containerInstanceService.containerGroup.container.runAsUser 13.16.2
 azure.subscription.containerInstanceService.containerGroup.container.seccompProfile 13.16.2
-azure.subscription.containerInstanceService.containerGroup.container.securityContext 13.10.2
 azure.subscription.containerInstanceService.containerGroup.container.volumeMounts 13.10.2
 azure.subscription.containerInstanceService.containerGroup.containers 13.10.2
 azure.subscription.containerInstanceService.containerGroup.dnsConfig 13.10.2
@@ -1864,7 +1846,6 @@ azure.subscription.containerRegistryService.registry.encryption.keyVaultKeyIdent
 azure.subscription.containerRegistryService.registry.encryption.lastKeyRotationTimestamp 13.3.3
 azure.subscription.containerRegistryService.registry.encryption.status 13.3.3
 azure.subscription.containerRegistryService.registry.id 13.3.3
-azure.subscription.containerRegistryService.registry.identity 13.3.3
 azure.subscription.containerRegistryService.registry.location 13.3.3
 azure.subscription.containerRegistryService.registry.loginServer 13.3.3
 azure.subscription.containerRegistryService.registry.name 13.3.3
@@ -2180,12 +2161,7 @@ azure.subscription.dataFactoryService.factories 13.3.0
 azure.subscription.dataFactoryService.factory 13.3.0
 azure.subscription.dataFactoryService.factory.cmkIdentity 13.23.1
 azure.subscription.dataFactoryService.factory.cmkKey 13.23.1
-azure.subscription.dataFactoryService.factory.cmkKeyName 13.16.2
-azure.subscription.dataFactoryService.factory.cmkKeyVaultUri 13.16.2
-azure.subscription.dataFactoryService.factory.cmkKeyVersion 13.16.2
-azure.subscription.dataFactoryService.factory.cmkUserAssignedIdentity 13.16.2
 azure.subscription.dataFactoryService.factory.created 13.3.0
-azure.subscription.dataFactoryService.factory.encryption 13.3.0
 azure.subscription.dataFactoryService.factory.id 13.3.0
 azure.subscription.dataFactoryService.factory.identity 13.3.0
 azure.subscription.dataFactoryService.factory.integrationRuntime 13.10.2
@@ -2496,7 +2472,6 @@ azure.subscription.eventHubService.namespace.location 13.3.3
 azure.subscription.eventHubService.namespace.maximumThroughputUnits 13.3.3
 azure.subscription.eventHubService.namespace.minimumTlsVersion 13.3.3
 azure.subscription.eventHubService.namespace.name 13.3.3
-azure.subscription.eventHubService.namespace.networkRuleSet 13.5.1
 azure.subscription.eventHubService.namespace.networkRules 13.12.2
 azure.subscription.eventHubService.namespace.networkRules.defaultAction 13.12.2
 azure.subscription.eventHubService.namespace.networkRules.ipRules 13.12.2
@@ -2684,7 +2659,6 @@ azure.subscription.functionsService.functionApp.id 13.3.3
 azure.subscription.functionsService.functionApp.keyVaultReferenceIdentity 13.11.3
 azure.subscription.functionsService.functionApp.kind 13.3.3
 azure.subscription.functionsService.functionApp.location 13.3.3
-azure.subscription.functionsService.functionApp.managedServiceIdentityId 13.3.3
 azure.subscription.functionsService.functionApp.name 13.3.3
 azure.subscription.functionsService.functionApp.principalId 13.23.1
 azure.subscription.functionsService.functionApp.properties 13.3.3
@@ -2702,7 +2676,6 @@ azure.subscription.iam 11.4.28
 azure.subscription.id 11.4.28
 azure.subscription.iot 11.4.28
 azure.subscription.iotService 11.3.0
-azure.subscription.iotService.hubs 11.3.0
 azure.subscription.iotService.iotHub 13.5.1
 azure.subscription.iotService.iotHub.allowedFqdnList 13.5.1
 azure.subscription.iotService.iotHub.diagnosticSettings 13.16.2
@@ -3634,7 +3607,6 @@ azure.subscription.networkService.applicationFirewallPolicy.customRule.state 13.
 azure.subscription.networkService.applicationFirewallPolicy.customRules 13.33.8
 azure.subscription.networkService.applicationFirewallPolicy.customRulesCount 13.16.2
 azure.subscription.networkService.applicationFirewallPolicy.enabled 13.25.1
-azure.subscription.networkService.applicationFirewallPolicy.enabledState 13.16.2
 azure.subscription.networkService.applicationFirewallPolicy.etag 9.0.13
 azure.subscription.networkService.applicationFirewallPolicy.exclusions 13.33.8
 azure.subscription.networkService.applicationFirewallPolicy.fileUploadLimitInMb 13.16.2
@@ -3722,7 +3694,6 @@ azure.subscription.networkService.applicationGateway.sslCertificate 13.12.2
 azure.subscription.networkService.applicationGateway.sslCertificate.hsmKey 13.25.1
 azure.subscription.networkService.applicationGateway.sslCertificate.id 13.12.2
 azure.subscription.networkService.applicationGateway.sslCertificate.keyVaultSecret 13.25.1
-azure.subscription.networkService.applicationGateway.sslCertificate.keyVaultSecretId 13.12.2
 azure.subscription.networkService.applicationGateway.sslCertificate.name 13.12.2
 azure.subscription.networkService.applicationGateway.sslCertificate.provisioningState 13.12.2
 azure.subscription.networkService.applicationGateway.sslCertificate.publicCertData 13.12.2
@@ -3956,7 +3927,6 @@ azure.subscription.networkService.firewall.applicationRule.etag 9.0.8
 azure.subscription.networkService.firewall.applicationRule.id 9.0.8
 azure.subscription.networkService.firewall.applicationRule.name 9.0.8
 azure.subscription.networkService.firewall.applicationRule.priority 13.16.2
-azure.subscription.networkService.firewall.applicationRule.properties 9.0.8
 azure.subscription.networkService.firewall.applicationRule.rules 13.16.2
 azure.subscription.networkService.firewall.applicationRules 9.0.8
 azure.subscription.networkService.firewall.etag 9.0.8
@@ -3979,7 +3949,6 @@ azure.subscription.networkService.firewall.natRule.etag 9.0.8
 azure.subscription.networkService.firewall.natRule.id 9.0.8
 azure.subscription.networkService.firewall.natRule.name 9.0.8
 azure.subscription.networkService.firewall.natRule.priority 13.16.2
-azure.subscription.networkService.firewall.natRule.properties 9.0.8
 azure.subscription.networkService.firewall.natRule.rules 13.16.2
 azure.subscription.networkService.firewall.natRules 9.0.8
 azure.subscription.networkService.firewall.networkRule 9.0.8
@@ -3988,7 +3957,6 @@ azure.subscription.networkService.firewall.networkRule.etag 9.0.8
 azure.subscription.networkService.firewall.networkRule.id 9.0.8
 azure.subscription.networkService.firewall.networkRule.name 9.0.8
 azure.subscription.networkService.firewall.networkRule.priority 13.16.2
-azure.subscription.networkService.firewall.networkRule.properties 9.0.8
 azure.subscription.networkService.firewall.networkRule.rules 13.16.2
 azure.subscription.networkService.firewall.networkRules 9.0.8
 azure.subscription.networkService.firewall.policy 9.0.8
@@ -4010,14 +3978,12 @@ azure.subscription.networkService.firewallPolicy.idpsBypassRule 13.3.3
 azure.subscription.networkService.firewallPolicy.idpsBypassRule.description 13.3.3
 azure.subscription.networkService.firewallPolicy.idpsBypassRule.destinationAddresses 13.3.3
 azure.subscription.networkService.firewallPolicy.idpsBypassRule.destinationIpGroupRefs 13.25.1
-azure.subscription.networkService.firewallPolicy.idpsBypassRule.destinationIpGroups 13.3.3
 azure.subscription.networkService.firewallPolicy.idpsBypassRule.destinationPorts 13.3.3
 azure.subscription.networkService.firewallPolicy.idpsBypassRule.id 13.3.3
 azure.subscription.networkService.firewallPolicy.idpsBypassRule.name 13.3.3
 azure.subscription.networkService.firewallPolicy.idpsBypassRule.protocol 13.3.3
 azure.subscription.networkService.firewallPolicy.idpsBypassRule.sourceAddresses 13.3.3
 azure.subscription.networkService.firewallPolicy.idpsBypassRule.sourceIpGroupRefs 13.25.1
-azure.subscription.networkService.firewallPolicy.idpsBypassRule.sourceIpGroups 13.3.3
 azure.subscription.networkService.firewallPolicy.intrusionDetectionBypassRules 13.3.3
 azure.subscription.networkService.firewallPolicy.intrusionDetectionMode 13.3.3
 azure.subscription.networkService.firewallPolicy.intrusionDetectionProfile 13.3.3
@@ -4046,7 +4012,6 @@ azure.subscription.networkService.frontendIpConfig.name 9.0.8
 azure.subscription.networkService.frontendIpConfig.privateIpAddress 9.0.8
 azure.subscription.networkService.frontendIpConfig.properties 9.0.8
 azure.subscription.networkService.frontendIpConfig.publicIpAddress 13.25.1
-azure.subscription.networkService.frontendIpConfig.publicIpAddressId 9.0.8
 azure.subscription.networkService.frontendIpConfig.subnet 13.25.1
 azure.subscription.networkService.frontendIpConfig.type 9.0.8
 azure.subscription.networkService.frontendIpConfig.zones 9.0.8
@@ -4113,11 +4078,9 @@ azure.subscription.networkService.interface.ipConfiguration.provisioningState 13
 azure.subscription.networkService.interface.ipConfiguration.publicIpAddress 13.25.1
 azure.subscription.networkService.interface.ipConfiguration.subnet 13.25.1
 azure.subscription.networkService.interface.ipConfiguration.virtualNetworkTaps 13.25.1
-azure.subscription.networkService.interface.ipConfigurations 13.1.8
 azure.subscription.networkService.interface.location 9.0.1
 azure.subscription.networkService.interface.name 9.0.1
 azure.subscription.networkService.interface.networkSecurityGroup 13.12.2
-azure.subscription.networkService.interface.networkSecurityGroupId 11.6.1
 azure.subscription.networkService.interface.primary 11.4.28
 azure.subscription.networkService.interface.properties 9.0.1
 azure.subscription.networkService.interface.tags 9.0.1
@@ -4326,10 +4289,8 @@ azure.subscription.networkService.privateEndpoint.serviceconnection.groupIds 11.
 azure.subscription.networkService.privateEndpoint.serviceconnection.id 11.4.28
 azure.subscription.networkService.privateEndpoint.serviceconnection.name 11.4.28
 azure.subscription.networkService.privateEndpoint.serviceconnection.privateLinkService 13.9.3
-azure.subscription.networkService.privateEndpoint.serviceconnection.privateLinkServiceId 11.4.28
 azure.subscription.networkService.privateEndpoint.serviceconnection.requestMessage 11.4.28
 azure.subscription.networkService.privateEndpoint.subnet 13.26.1
-azure.subscription.networkService.privateEndpoint.subnetId 11.4.28
 azure.subscription.networkService.privateEndpoint.tags 11.4.28
 azure.subscription.networkService.privateEndpoint.type 11.4.28
 azure.subscription.networkService.privateEndpoints 11.4.28
@@ -4564,7 +4525,6 @@ azure.subscription.networkService.trafficManagerProfile.endpoint.alwaysServe 13.
 azure.subscription.networkService.trafficManagerProfile.endpoint.customHeaders 13.12.2
 azure.subscription.networkService.trafficManagerProfile.endpoint.endpointLocation 13.12.2
 azure.subscription.networkService.trafficManagerProfile.endpoint.endpointMonitorStatus 13.12.2
-azure.subscription.networkService.trafficManagerProfile.endpoint.endpointStatus 13.12.2
 azure.subscription.networkService.trafficManagerProfile.endpoint.geoMapping 13.12.2
 azure.subscription.networkService.trafficManagerProfile.endpoint.id 13.12.2
 azure.subscription.networkService.trafficManagerProfile.endpoint.minChildEndpoints 13.12.2
@@ -4585,7 +4545,6 @@ azure.subscription.networkService.trafficManagerProfile.location 13.12.2
 azure.subscription.networkService.trafficManagerProfile.maxReturn 13.12.2
 azure.subscription.networkService.trafficManagerProfile.monitorConfig 13.12.2
 azure.subscription.networkService.trafficManagerProfile.name 13.12.2
-azure.subscription.networkService.trafficManagerProfile.profileStatus 13.12.2
 azure.subscription.networkService.trafficManagerProfile.properties 13.12.2
 azure.subscription.networkService.trafficManagerProfile.status 13.25.1
 azure.subscription.networkService.trafficManagerProfile.tags 13.12.2
@@ -4680,7 +4639,6 @@ azure.subscription.networkService.virtualNetwork.peering.provisioningState 13.0.
 azure.subscription.networkService.virtualNetwork.peering.remoteVirtualNetwork 13.23.1
 azure.subscription.networkService.virtualNetwork.peering.remoteVirtualNetworkEncryptionEnabled 13.5.1
 azure.subscription.networkService.virtualNetwork.peering.remoteVirtualNetworkEncryptionEnforcement 13.5.1
-azure.subscription.networkService.virtualNetwork.peering.remoteVirtualNetworkId 13.0.2
 azure.subscription.networkService.virtualNetwork.peering.useRemoteGateways 13.0.2
 azure.subscription.networkService.virtualNetwork.peerings 13.0.2
 azure.subscription.networkService.virtualNetwork.properties 9.0.8
@@ -4771,7 +4729,6 @@ azure.subscription.networkService.virtualNetworkGateway.tags 9.0.8
 azure.subscription.networkService.virtualNetworkGateway.type 9.0.8
 azure.subscription.networkService.virtualNetworkGateway.vpnClientAddressPool 13.16.2
 azure.subscription.networkService.virtualNetworkGateway.vpnClientAuthenticationTypes 13.16.2
-azure.subscription.networkService.virtualNetworkGateway.vpnClientConfiguration 9.0.8
 azure.subscription.networkService.virtualNetworkGateway.vpnClientIpsecPolicies 13.29.1
 azure.subscription.networkService.virtualNetworkGateway.vpnGatewayGeneration 9.0.8
 azure.subscription.networkService.virtualNetworkGateway.vpnType 9.0.8
@@ -4909,7 +4866,6 @@ azure.subscription.networkService.watcher.connectionMonitors 13.12.2
 azure.subscription.networkService.watcher.etag 9.0.1
 azure.subscription.networkService.watcher.flowLogs 9.0.1
 azure.subscription.networkService.watcher.flowlog 9.0.1
-azure.subscription.networkService.watcher.flowlog.analytics 9.0.1
 azure.subscription.networkService.watcher.flowlog.enabled 9.0.1
 azure.subscription.networkService.watcher.flowlog.etag 9.0.1
 azure.subscription.networkService.watcher.flowlog.format 9.0.1
@@ -4919,7 +4875,6 @@ azure.subscription.networkService.watcher.flowlog.name 9.0.1
 azure.subscription.networkService.watcher.flowlog.provisioningState 9.0.1
 azure.subscription.networkService.watcher.flowlog.retentionDays 13.16.2
 azure.subscription.networkService.watcher.flowlog.retentionEnabled 13.16.2
-azure.subscription.networkService.watcher.flowlog.retentionPolicy 9.0.1
 azure.subscription.networkService.watcher.flowlog.storageAccountId 9.0.1
 azure.subscription.networkService.watcher.flowlog.tags 9.0.1
 azure.subscription.networkService.watcher.flowlog.targetResourceGuid 9.0.1
@@ -5095,7 +5050,6 @@ azure.subscription.privateEndpointConnection.id 11.4.4
 azure.subscription.privateEndpointConnection.ipAddresses 11.4.4
 azure.subscription.privateEndpointConnection.name 11.4.4
 azure.subscription.privateEndpointConnection.privateEndpoint 13.9.3
-azure.subscription.privateEndpointConnection.privateEndpointId 11.4.4
 azure.subscription.privateEndpointConnection.privateLinkServiceConnectionState 11.4.4
 azure.subscription.privateEndpointConnection.properties 11.4.4
 azure.subscription.privateEndpointConnection.provisioningState 11.4.4
@@ -5354,7 +5308,6 @@ azure.subscription.serviceBusService.namespace.disableLocalAuth 13.3.3
 azure.subscription.serviceBusService.namespace.id 13.3.3
 azure.subscription.serviceBusService.namespace.location 13.3.3
 azure.subscription.serviceBusService.namespace.name 13.3.3
-azure.subscription.serviceBusService.namespace.networkRuleSet 13.5.1
 azure.subscription.serviceBusService.namespace.networkRules 13.12.2
 azure.subscription.serviceBusService.namespace.networkRules.defaultAction 13.12.2
 azure.subscription.serviceBusService.namespace.networkRules.ipRules 13.12.2
@@ -5462,7 +5415,6 @@ azure.subscription.sqlService.database.advancedthreatprotection.id 11.4.28
 azure.subscription.sqlService.database.advancedthreatprotection.state 11.4.28
 azure.subscription.sqlService.database.advancedthreatprotection.systemMetadata 13.28.1
 azure.subscription.sqlService.database.advisor 9.0.1
-azure.subscription.sqlService.database.auditingPolicy 9.0.1
 azure.subscription.sqlService.database.backupShortTermRetentionPolicy 11.4.28
 azure.subscription.sqlService.database.backupshorttermretentionpolicy 11.4.28
 azure.subscription.sqlService.database.backupshorttermretentionpolicy.diffBackupIntervalInHours 11.4.28
@@ -5480,7 +5432,6 @@ azure.subscription.sqlService.database.blobAuditingPolicy.state 13.8.2
 azure.subscription.sqlService.database.blobAuditingPolicy.storageAccountSubscriptionId 13.8.2
 azure.subscription.sqlService.database.blobAuditingPolicy.storageEndpoint 13.8.2
 azure.subscription.sqlService.database.collation 9.0.1
-azure.subscription.sqlService.database.connectionPolicy 9.0.1
 azure.subscription.sqlService.database.createMode 9.0.1
 azure.subscription.sqlService.database.creationDate 9.0.1
 azure.subscription.sqlService.database.dataMaskingPolicy 13.8.2
@@ -5556,8 +5507,6 @@ azure.subscription.sqlService.database.sourceDatabaseDeletionDate 9.0.1
 azure.subscription.sqlService.database.sourceDatabaseId 9.0.1
 azure.subscription.sqlService.database.status 9.0.1
 azure.subscription.sqlService.database.tags 13.34.1
-azure.subscription.sqlService.database.threatDetectionPolicy 9.0.1
-azure.subscription.sqlService.database.transparentDataEncryption 9.0.1
 azure.subscription.sqlService.database.transparentDataEncryptionEnabled 13.8.2
 azure.subscription.sqlService.database.type 9.0.1
 azure.subscription.sqlService.database.usage 9.0.1
@@ -5646,7 +5595,6 @@ azure.subscription.sqlService.server.advancedThreatProtectionSetting.creationTim
 azure.subscription.sqlService.server.advancedThreatProtectionSetting.id 13.8.2
 azure.subscription.sqlService.server.advancedThreatProtectionSetting.state 13.8.2
 azure.subscription.sqlService.server.advancedThreatProtectionSetting.systemMetadata 13.28.1
-azure.subscription.sqlService.server.auditingPolicy 9.0.1
 azure.subscription.sqlService.server.azureAdAdministrators 9.0.1
 azure.subscription.sqlService.server.azureAdOnlyAuthentication 13.1.8
 azure.subscription.sqlService.server.blobAuditingPolicy 13.8.2
@@ -5660,7 +5608,6 @@ azure.subscription.sqlService.server.blobAuditingPolicy.retentionDays 13.8.2
 azure.subscription.sqlService.server.blobAuditingPolicy.state 13.8.2
 azure.subscription.sqlService.server.blobAuditingPolicy.storageAccountSubscriptionId 13.8.2
 azure.subscription.sqlService.server.blobAuditingPolicy.storageEndpoint 13.8.2
-azure.subscription.sqlService.server.connectionPolicy 9.0.1
 azure.subscription.sqlService.server.connectionType 13.8.2
 azure.subscription.sqlService.server.databases 9.0.1
 azure.subscription.sqlService.server.devOpsAuditingSetting 13.8.2
@@ -5670,7 +5617,6 @@ azure.subscription.sqlService.server.devOpsAuditingSetting.state 13.8.2
 azure.subscription.sqlService.server.devOpsAuditingSetting.storageAccountSubscriptionId 13.8.2
 azure.subscription.sqlService.server.devOpsAuditingSetting.storageEndpoint 13.8.2
 azure.subscription.sqlService.server.devOpsAuditingSetting.systemMetadata 13.28.1
-azure.subscription.sqlService.server.encryptionProtector 9.0.1
 azure.subscription.sqlService.server.encryptionProtectorConfig 13.8.2
 azure.subscription.sqlService.server.encryptionProtectorConfig.autoRotationEnabled 13.8.2
 azure.subscription.sqlService.server.encryptionProtectorConfig.id 13.8.2
@@ -5741,7 +5687,6 @@ azure.subscription.sqlService.server.replicationLink.role 13.8.2
 azure.subscription.sqlService.server.replicationLink.startTime 13.8.2
 azure.subscription.sqlService.server.replicationLinks 13.8.2
 azure.subscription.sqlService.server.restrictOutboundNetworkAccess 11.4.28
-azure.subscription.sqlService.server.securityAlertPolicy 9.0.1
 azure.subscription.sqlService.server.securityAlertPolicyConfig 13.8.2
 azure.subscription.sqlService.server.securityAlertPolicyConfig.creationTime 13.8.2
 azure.subscription.sqlService.server.securityAlertPolicyConfig.disabledAlerts 13.8.2
@@ -5755,7 +5700,6 @@ azure.subscription.sqlService.server.securityAlertPolicyConfig.systemMetadata 13
 azure.subscription.sqlService.server.state 11.4.28
 azure.subscription.sqlService.server.tags 9.0.1
 azure.subscription.sqlService.server.tenantId 13.23.1
-azure.subscription.sqlService.server.threatDetectionPolicy 9.0.1
 azure.subscription.sqlService.server.type 9.0.1
 azure.subscription.sqlService.server.version 11.4.28
 azure.subscription.sqlService.server.virtualNetworkRules 9.0.1
@@ -5909,7 +5853,6 @@ azure.subscription.storageService.account.fileShare.systemMetadata 13.28.1
 azure.subscription.storageService.account.fileShare.type 13.10.2
 azure.subscription.storageService.account.fileShares 13.10.2
 azure.subscription.storageService.account.id 9.0.1
-azure.subscription.storageService.account.identity 9.0.1
 azure.subscription.storageService.account.immutableStorageEnabled 13.10.2
 azure.subscription.storageService.account.immutableStoragePolicyAllowProtectedAppendWrites 13.10.2
 azure.subscription.storageService.account.immutableStoragePolicyPeriodDays 13.10.2
@@ -5999,7 +5942,6 @@ azure.subscription.storageService.account.privateEndpointConnection.description 
 azure.subscription.storageService.account.privateEndpointConnection.id 13.10.2
 azure.subscription.storageService.account.privateEndpointConnection.name 13.10.2
 azure.subscription.storageService.account.privateEndpointConnection.privateEndpoint 13.26.1
-azure.subscription.storageService.account.privateEndpointConnection.privateEndpointId 13.10.2
 azure.subscription.storageService.account.privateEndpointConnection.provisioningState 13.10.2
 azure.subscription.storageService.account.privateEndpointConnection.status 13.10.2
 azure.subscription.storageService.account.privateEndpointConnection.systemMetadata 13.28.1
@@ -6220,7 +6162,6 @@ azure.subscription.webService.appsite.hostNameBinding.virtualIP 11.4.32
 azure.subscription.webService.appsite.hostNameBindings 11.4.32
 azure.subscription.webService.appsite.httpsOnly 11.4.28
 azure.subscription.webService.appsite.id 9.0.1
-azure.subscription.webService.appsite.identity 9.0.1
 azure.subscription.webService.appsite.identityType 13.1.8
 azure.subscription.webService.appsite.ipMode 13.1.8
 azure.subscription.webService.appsite.keyVaultReferenceIdentity 13.5.1

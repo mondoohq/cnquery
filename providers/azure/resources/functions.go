@@ -161,7 +161,7 @@ func functionAppSiteToMql(runtime *plugin.Runtime, site *web.Site) (plugin.Resou
 		return nil, err
 	}
 
-	var state, defaultHostName, clientCertMode, managedServiceIdentityId string
+	var state, defaultHostName, clientCertMode string
 	var keyVaultReferenceIdentity, virtualNetworkSubnetId string
 	var httpsOnly, clientCertEnabled bool
 	publicNetworkAccess := functionAppPublicNetworkAccess(site.Properties)
@@ -193,7 +193,6 @@ func functionAppSiteToMql(runtime *plugin.Runtime, site *web.Site) (plugin.Resou
 	if site.Identity != nil {
 		principalId = site.Identity.PrincipalID
 		if principalId != nil {
-			managedServiceIdentityId = *principalId
 		}
 		userAssignedIdentityIds = sortedUserAssignedIdentityIDs(site.Identity.UserAssignedIdentities)
 	}
@@ -209,7 +208,6 @@ func functionAppSiteToMql(runtime *plugin.Runtime, site *web.Site) (plugin.Resou
 		"httpsOnly":                 llx.BoolData(httpsOnly),
 		"clientCertEnabled":         llx.BoolData(clientCertEnabled),
 		"clientCertMode":            llx.StringData(clientCertMode),
-		"managedServiceIdentityId":  llx.StringData(managedServiceIdentityId),
 		"principalId":               llx.StringDataPtr(principalId),
 		"keyVaultReferenceIdentity": llx.StringData(keyVaultReferenceIdentity),
 		"publicNetworkAccess":       llx.StringData(publicNetworkAccess),

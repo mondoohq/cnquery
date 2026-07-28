@@ -652,6 +652,7 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccount) privateEndpointConnections(
 			if pec == nil {
 				continue
 			}
+			var pecPrivateEndpointID string
 			args := map[string]*llx.RawData{
 				"__id": llx.StringDataPtr(pec.ID),
 				"id":   llx.StringDataPtr(pec.ID),
@@ -665,7 +666,7 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccount) privateEndpointConnections(
 				}
 				args["properties"] = llx.DictData(propsMap)
 				if pec.Properties.PrivateEndpoint != nil {
-					args["privateEndpointId"] = llx.StringDataPtr(pec.Properties.PrivateEndpoint.ID)
+					pecPrivateEndpointID = convert.ToValue(pec.Properties.PrivateEndpoint.ID)
 				}
 				if pec.Properties.ProvisioningState != nil {
 					args["provisioningState"] = llx.StringDataPtr(pec.Properties.ProvisioningState)
@@ -681,7 +682,7 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccount) privateEndpointConnections(
 					args["privateLinkServiceConnectionState"] = llx.ResourceData(stateRes, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState)
 				}
 			}
-			mqlConn, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnection, args)
+			mqlConn, err := newAzurePrivateEndpointConnection(a.MqlRuntime, args, pecPrivateEndpointID)
 			if err != nil {
 				return nil, err
 			}

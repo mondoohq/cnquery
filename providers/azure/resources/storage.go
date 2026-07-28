@@ -974,10 +974,6 @@ func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mq
 		}
 	}
 
-	identity, err := convert.JsonToDict(account.Identity)
-	if err != nil {
-		return nil, err
-	}
 	var accountPrincipalId, accountTenantId *string
 	var userAssignedIdentityIds []string
 	if account.Identity != nil {
@@ -1003,7 +999,6 @@ func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mq
 			"tags":                               llx.MapData(convert.PtrMapStrToInterface(account.Tags), types.String),
 			"type":                               llx.StringDataPtr(account.Type),
 			"properties":                         llx.DictData(properties),
-			"identity":                           llx.DictData(identity),
 			"principalId":                        llx.StringDataPtr(accountPrincipalId),
 			"tenantId":                           llx.StringDataPtr(accountTenantId),
 			"sku":                                llx.DictData(sku),

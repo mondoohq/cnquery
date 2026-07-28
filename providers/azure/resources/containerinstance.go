@@ -345,18 +345,12 @@ func aciContainersToMQL(runtime *plugin.Runtime, parentId string, specs []*aci.C
 			}
 			readiness = d
 		}
-		secCtx := map[string]any{}
 		var privileged, allowPrivilegeEscalation *bool
 		var runAsUser, runAsGroup *int64
 		var seccompProfile *string
 		addedCapabilities := []any{}
 		droppedCapabilities := []any{}
 		if sc := c.Properties.SecurityContext; sc != nil {
-			d, err := convert.JsonToDict(sc)
-			if err != nil {
-				return nil, err
-			}
-			secCtx = d
 			privileged = sc.Privileged
 			allowPrivilegeEscalation = sc.AllowPrivilegeEscalation
 			seccompProfile = sc.SeccompProfile
@@ -410,7 +404,6 @@ func aciContainersToMQL(runtime *plugin.Runtime, parentId string, specs []*aci.C
 				"volumeMounts":             llx.ArrayData(mounts, types.Dict),
 				"livenessProbe":            llx.DictData(liveness),
 				"readinessProbe":           llx.DictData(readiness),
-				"securityContext":          llx.DictData(secCtx),
 				"privileged":               llx.BoolDataPtr(privileged),
 				"allowPrivilegeEscalation": llx.BoolDataPtr(allowPrivilegeEscalation),
 				"runAsUser":                llx.IntDataPtr(runAsUser),

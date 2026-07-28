@@ -144,11 +144,11 @@ func (a *mqlAzureSubscriptionComputeService) hybridMachines() ([]any, error) {
 					"cloudMetadata":              llx.DictData(cloudMetadataDict),
 					"licenseProfile":             llx.DictData(licenseProfileDict),
 					"properties":                 llx.DictData(properties),
-					"systemData":                 llx.DictData(systemDataDict),
 				})
 			if err != nil {
 				return nil, err
 			}
+			mqlMachine.(*mqlAzureSubscriptionComputeServiceHybridMachine).cacheSystemData = systemDataDict
 			res = append(res, mqlMachine)
 		}
 	}
@@ -264,13 +264,22 @@ func hybridMachineExtensionToMql(runtime *plugin.Runtime, ext *hybridcompute.Mac
 			"provisioningState":       llx.StringDataPtr(provisioningState),
 			"settings":                llx.DictData(settingsDict),
 			"forceUpdateTag":          llx.StringDataPtr(forceUpdateTag),
-			"systemData":              llx.DictData(systemData),
 			"instanceView":            llx.DictData(instanceViewDict),
 		})
 	if err != nil {
 		return nil, err
 	}
-	return mqlExt.(*mqlAzureSubscriptionComputeServiceHybridMachineExtension), nil
+	mqlExtension := mqlExt.(*mqlAzureSubscriptionComputeServiceHybridMachineExtension)
+	mqlExtension.cacheSystemData = systemData
+	return mqlExtension, nil
+}
+
+type mqlAzureSubscriptionComputeServiceHybridMachineInternal struct {
+	cacheSystemData any
+}
+
+type mqlAzureSubscriptionComputeServiceHybridMachineExtensionInternal struct {
+	cacheSystemData any
 }
 
 func initAzureSubscriptionComputeServiceHybridMachine(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
