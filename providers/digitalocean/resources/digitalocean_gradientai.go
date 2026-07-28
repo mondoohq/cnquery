@@ -137,6 +137,9 @@ type mqlDigitaloceanGradientaiAgentInternal struct {
 	cachedOpenAIKey    *godo.OpenAiApiKey
 	childUUIDs         []string
 	parentUUIDs        []string
+	// cacheVPCUUID holds the UUID of the VPC the agent runs in so the typed
+	// vpc() accessor can resolve it without a refetch.
+	cacheVPCUUID string
 }
 
 func (r *mqlDigitaloceanGradientai) agents() ([]interface{}, error) {
@@ -223,7 +226,6 @@ func newMqlGradientaiAgent(runtime *plugin.Runtime, a *godo.Agent) (*mqlDigitalo
 		"userId":                  llx.StringData(a.UserId),
 		"versionHash":             llx.StringData(a.VersionHash),
 		"projectId":               llx.StringData(a.ProjectId),
-		"vpcUuid":                 llx.StringData(a.VPCUuid),
 		"vpcEgressIps":            llx.ArrayData(egressIPs, types.String),
 		"tags":                    llx.ArrayData(tags, types.String),
 		"deploymentName":          llx.StringData(deploymentName),
@@ -240,6 +242,7 @@ func newMqlGradientaiAgent(runtime *plugin.Runtime, a *godo.Agent) (*mqlDigitalo
 	}
 
 	agent := res.(*mqlDigitaloceanGradientaiAgent)
+	agent.cacheVPCUUID = a.VPCUuid
 	agent.cachedModel = a.Model
 	agent.cachedKnowledgeB = a.KnowledgeBases
 	agent.cachedGuardrails = a.Guardrails
@@ -344,7 +347,7 @@ func (r *mqlDigitaloceanGradientaiAgent) project() (*mqlDigitaloceanProject, err
 }
 
 func (r *mqlDigitaloceanGradientaiAgent) vpc() (*mqlDigitaloceanVpc, error) {
-	return resolveVpcRef(r.MqlRuntime, &r.Vpc, r.VpcUuid.Data)
+	return resolveVpcRef(r.MqlRuntime, &r.Vpc, r.cacheVPCUUID)
 }
 
 func (r *mqlDigitaloceanGradientaiAgent) anthropicApiKey() (*mqlDigitaloceanGradientaiAnthropicApiKey, error) {
