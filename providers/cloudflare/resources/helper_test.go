@@ -96,11 +96,9 @@ func createTestZone(t *testing.T, env *testEnv) *mqlCloudflareZone {
 
 	// First create the account resource (needed by zone methods that call c.GetAccount())
 	acc, err := CreateResource(env.Runtime, "cloudflare.zone.account", map[string]*llx.RawData{
-		"__id":  llx.StringData("cloudflare.zone.account@" + testAccountID),
-		"id":    llx.StringData(testAccountID),
-		"name":  llx.StringData("Test Account"),
-		"type":  llx.StringData("standard"),
-		"email": llx.StringData(""),
+		"__id": llx.StringData("cloudflare.zone.account@" + testAccountID),
+		"id":   llx.StringData(testAccountID),
+		"name": llx.StringData("Test Account"),
 	})
 	if err != nil {
 		t.Fatalf("failed to create test account: %v", err)
@@ -118,7 +116,6 @@ func createTestZone(t *testing.T, env *testEnv) *mqlCloudflareZone {
 		"modifiedOn":          llx.TimeData(llx.DurationToTime(0)),
 		"account":             llx.ResourceData(acc, acc.MqlName()),
 		"owner":               llx.NilData,
-		"plan":                llx.NilData,
 	})
 	if err != nil {
 		t.Fatalf("failed to create test zone: %v", err)
