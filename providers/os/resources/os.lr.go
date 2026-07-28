@@ -3693,6 +3693,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"nginx.conf.upstreams": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNginxConf).GetUpstreams()).ToDataRes(types.Array(types.Resource("nginx.conf.upstream")))
 	},
+	"nginx.conf.streamParams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConf).GetStreamParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"nginx.conf.streamServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConf).GetStreamServers()).ToDataRes(types.Array(types.Resource("nginx.conf.server")))
+	},
+	"nginx.conf.streamUpstreams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConf).GetStreamUpstreams()).ToDataRes(types.Array(types.Resource("nginx.conf.upstream")))
+	},
 	"nginx.conf.server.serverName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNginxConfServer).GetServerName()).ToDataRes(types.String)
 	},
@@ -13859,6 +13868,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"nginx.conf.upstreams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNginxConf).Upstreams, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.streamParams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConf).StreamParams, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.streamServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConf).StreamServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.streamUpstreams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConf).StreamUpstreams, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"nginx.conf.server.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33196,6 +33217,9 @@ type mqlNginxConf struct {
 	HttpParams      plugin.TValue[map[string]any]
 	Servers         plugin.TValue[[]any]
 	Upstreams       plugin.TValue[[]any]
+	StreamParams    plugin.TValue[map[string]any]
+	StreamServers   plugin.TValue[[]any]
+	StreamUpstreams plugin.TValue[[]any]
 }
 
 // createNginxConf creates a new instance of this resource
@@ -33377,6 +33401,59 @@ func (c *mqlNginxConf) GetUpstreams() *plugin.TValue[[]any] {
 		}
 
 		return c.upstreams(vargFile.Data)
+	})
+}
+
+func (c *mqlNginxConf) GetStreamParams() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.StreamParams, func() (map[string]any, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.streamParams(vargFile.Data)
+	})
+}
+
+func (c *mqlNginxConf) GetStreamServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.StreamServers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nginx.conf", c.__id, "streamServers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.streamServers(vargFile.Data)
+	})
+}
+
+func (c *mqlNginxConf) GetStreamUpstreams() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.StreamUpstreams, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nginx.conf", c.__id, "streamUpstreams")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.streamUpstreams(vargFile.Data)
 	})
 }
 

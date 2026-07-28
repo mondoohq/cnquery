@@ -151,6 +151,69 @@ func TestWalkHTTPBlock(t *testing.T) {
 	assert.Equal(t, "443 ssl", listenAddrs[1])
 }
 
+func TestWalkStreamBlock(t *testing.T) {
+	// Parse real config text rather than hand-built directives so the test
+	// also covers the tokenizer dropping the trailing comment.
+	directives, err := nginx.Parse(`
+stream {
+    log_format basic '$remote_addr $protocol';
+    upstream postgres {
+        least_conn;
+        server 10.0.0.1:5432 weight=2;
+        server 10.0.0.2:5432 backup;
+    }
+    server {
+        listen 5432 ssl;
+        ssl_protocols TLSv1.2 TLSv1.3; # Dropping SSLv3 (POODLE), TLS 1.0, 1.1
+        ssl_certificate /etc/ssl/db.pem;
+        proxy_pass postgres;
+    }
+    server {
+        listen 53 udp;
+        proxy_pass dns_backend;
+    }
+}
+`)
+	require.NoError(t, err)
+	require.Len(t, directives, 1)
+	require.Equal(t, "stream", directives[0].Name)
+
+	streamParams := map[string]any{}
+	var servers []nginxServer
+	var upstreams []nginxUpstream
+	walkStreamBlock(directives[0].Block, streamParams, &servers, &upstreams)
+
+	assert.Equal(t, "basic $remote_addr $protocol", streamParams["log_format"])
+
+	require.Len(t, upstreams, 1)
+	assert.Equal(t, "postgres", upstreams[0].Name)
+	assert.Equal(t, "least_conn", upstreams[0].LoadBalancingMethod)
+	require.Len(t, upstreams[0].ServerDetails, 2)
+	assert.Equal(t, int64(2), upstreams[0].ServerDetails[0].Weight)
+	assert.True(t, upstreams[0].ServerDetails[1].Backup)
+
+	require.Len(t, servers, 2)
+
+	// The TLS listener: the trailing comment must not reach the value.
+	assert.True(t, servers[0].SSL)
+	assert.Equal(t, "TLSv1.2 TLSv1.3", servers[0].SSLProtocols)
+	assert.Equal(t, "/etc/ssl/db.pem", servers[0].SSLCertificate)
+	assert.Equal(t, "postgres", servers[0].Params["proxy_pass"])
+	require.Len(t, servers[0].Listens, 1)
+	assert.Equal(t, int64(5432), servers[0].Listens[0].Port)
+	assert.False(t, servers[0].Listens[0].UDP)
+
+	// The UDP listener.
+	require.Len(t, servers[1].Listens, 1)
+	assert.Equal(t, int64(53), servers[1].Listens[0].Port)
+	assert.True(t, servers[1].Listens[0].UDP)
+	assert.False(t, servers[1].SSL)
+
+	// Directives that only exist in an http server block stay unset.
+	assert.Empty(t, servers[1].ServerName)
+	assert.Empty(t, servers[1].Locations)
+}
+
 func TestSetNginxParam(t *testing.T) {
 	t.Run("simple param overwrites", func(t *testing.T) {
 		m := map[string]any{}
@@ -407,6 +470,10 @@ func TestParseNginxListen(t *testing.T) {
 		}},
 		{"unix socket", []string{"unix:/var/run/nginx.sock"}, nginxListen{
 			Raw: "unix:/var/run/nginx.sock", Address: "unix:/var/run/nginx.sock",
+		}},
+		{"stream udp", []string{"53", "udp"}, nginxListen{Raw: "53 udp", Port: 53, UDP: true}},
+		{"stream udp on an address", []string{"127.0.0.1:53", "udp", "reuseport"}, nginxListen{
+			Raw: "127.0.0.1:53 udp reuseport", Address: "127.0.0.1", Port: 53, UDP: true,
 		}},
 	}
 	for _, tc := range cases {
