@@ -48,13 +48,18 @@ var DefaultCredentialMethods = []CredentialMethod{
 	CredentialMethodWorkloadIdentity,
 }
 
-// credentialMethodDescriptions renders each method the way we talk about it in
-// user-facing sign-in guidance.
-var credentialMethodDescriptions = map[CredentialMethod]string{
-	CredentialMethodCLI:              "your local Azure CLI session",
-	CredentialMethodEnv:              "Azure environment variables",
-	CredentialMethodManagedIdentity:  "a managed identity",
-	CredentialMethodWorkloadIdentity: "workload identity federation",
+// credentialMethodNames renders a method selection as a plain list; an empty
+// selection renders the full default chain. These are the names auth-method
+// accepts, so a message built from them doubles as a usage hint.
+func credentialMethodNames(methods []CredentialMethod) string {
+	if len(methods) == 0 {
+		methods = DefaultCredentialMethods
+	}
+	names := make([]string, 0, len(methods))
+	for _, m := range methods {
+		names = append(names, string(m))
+	}
+	return strings.Join(names, ", ")
 }
 
 // ParseCredentialMethods reads a comma-separated method list, e.g.
@@ -77,23 +82,15 @@ func ParseCredentialMethods(s string) ([]CredentialMethod, error) {
 		}
 
 		method := CredentialMethod(name)
-		if _, ok := credentialMethodDescriptions[method]; !ok {
+		if !slices.Contains(DefaultCredentialMethods, method) {
 			return nil, fmt.Errorf("unknown Azure credential method %q, expected one of %s",
-				strings.TrimSpace(part), strings.Join(credentialMethodNames(), ", "))
+				strings.TrimSpace(part), credentialMethodNames(nil))
 		}
 		if !slices.Contains(methods, method) {
 			methods = append(methods, method)
 		}
 	}
 	return methods, nil
-}
-
-func credentialMethodNames() []string {
-	names := make([]string, 0, len(DefaultCredentialMethods))
-	for _, m := range DefaultCredentialMethods {
-		names = append(names, string(m))
-	}
-	return names
 }
 
 // AllowsMethod reports whether m is permitted by the selection. An empty
@@ -214,7 +211,7 @@ func GetDefaultChainedToken(options *ChainedTokenOptions) (*azidentity.ChainedTo
 		resolver, ok := resolvers[method]
 		if !ok {
 			return nil, fmt.Errorf("unknown Azure credential method %q, expected one of %s",
-				method, strings.Join(credentialMethodNames(), ", "))
+				method, credentialMethodNames(nil))
 		}
 		opts = append(opts, resolver)
 	}
@@ -306,7 +303,8 @@ func GetTokenFromCredential(credential *vault.Credential, tenantId, clientId str
 	}
 	// fallback to default authorizer if no credentials are specified
 	if credential == nil {
-		log.Info().Msg("no Azure credentials were provided; trying to sign in with " + describeMethods(chainOpts.Methods))
+		log.Info().Str("methods", credentialMethodNames(chainOpts.Methods)).
+			Msg("no Azure credentials were provided, trying the configured sign-in methods")
 		azCred, err = GetDefaultChainedToken(&chainOpts)
 		if err != nil {
 			return nil, errors.Wrap(err, "error creating CLI credentials")
@@ -332,33 +330,6 @@ func GetTokenFromCredential(credential *vault.Credential, tenantId, clientId str
 		}
 	}
 	return &guidedCredential{inner: azCred, usedDefaultChain: usedDefaultChain, methods: chainOpts.Methods}, nil
-}
-
-// describeMethods renders a method selection as an English list, so sign-in
-// guidance names what we actually tried rather than the full chain. An empty
-// selection describes the default chain.
-func describeMethods(methods []CredentialMethod) string {
-	if len(methods) == 0 {
-		methods = DefaultCredentialMethods
-	}
-
-	parts := make([]string, 0, len(methods))
-	for _, m := range methods {
-		desc, ok := credentialMethodDescriptions[m]
-		if !ok {
-			desc = string(m)
-		}
-		parts = append(parts, desc)
-	}
-
-	switch len(parts) {
-	case 1:
-		return parts[0]
-	case 2:
-		return parts[0] + " or " + parts[1]
-	default:
-		return strings.Join(parts[:len(parts)-1], ", ") + ", or " + parts[len(parts)-1]
-	}
 }
 
 // guidedCredential decorates an azcore.TokenCredential so that a failed sign-in
@@ -391,8 +362,8 @@ func enrichTokenError(err error, usedDefaultChain bool, methods []CredentialMeth
 		return errors.Wrap(err, "Azure sign-in with the provided credentials failed; double-check the tenant ID, client ID, and the certificate or client secret")
 	}
 
-	msg := "Azure sign-in failed. No credentials were provided, so we tried to sign in using " +
-		describeMethods(methods) + ", and none of them worked. "
+	msg := "Azure sign-in failed. No credentials were provided, so we tried these sign-in methods: " +
+		credentialMethodNames(methods) + ". None of them worked. "
 	if AllowsMethod(methods, CredentialMethodCLI) {
 		msg += "Run `az login` and confirm `az account get-access-token` returns a token, or provide credentials "
 	} else {

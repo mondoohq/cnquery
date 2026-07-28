@@ -111,13 +111,10 @@ func TestGetDefaultChainedToken_RestrictsChain(t *testing.T) {
 	})
 }
 
-func TestDescribeMethods(t *testing.T) {
-	assert.Equal(t, "workload identity federation", describeMethods([]CredentialMethod{CredentialMethodWorkloadIdentity}))
-	assert.Equal(t, "a managed identity or workload identity federation",
-		describeMethods([]CredentialMethod{CredentialMethodManagedIdentity, CredentialMethodWorkloadIdentity}))
-	assert.Equal(t,
-		"your local Azure CLI session, Azure environment variables, a managed identity, or workload identity federation",
-		describeMethods(nil))
+func TestCredentialMethodNames(t *testing.T) {
+	assert.Equal(t, "workload-identity", credentialMethodNames([]CredentialMethod{CredentialMethodWorkloadIdentity}))
+	// an empty selection stands for the whole chain
+	assert.Equal(t, "cli, env, managed-identity, workload-identity", credentialMethodNames(nil))
 }
 
 func TestGuidedCredential_EnrichesErrors(t *testing.T) {
@@ -152,10 +149,10 @@ func TestGuidedCredential_EnrichesErrors(t *testing.T) {
 		}
 		_, err := cred.GetToken(context.Background(), policy.TokenRequestOptions{})
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "workload identity federation")
+		assert.Contains(t, err.Error(), "workload-identity")
 		// no CLI in the chain, so no point telling anyone to run az login
 		assert.NotContains(t, err.Error(), "az login")
-		assert.NotContains(t, err.Error(), "managed identity")
+		assert.NotContains(t, err.Error(), "managed-identity")
 	})
 
 	t.Run("explicit credentials failure", func(t *testing.T) {
