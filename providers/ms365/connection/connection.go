@@ -26,6 +26,10 @@ const (
 	OptionClientID      = "client-id"
 	OptionOrganization  = "organization"
 	OptionSharepointUrl = "sharepoint-url"
+	// OptionAuthMethod names the sign-in method(s) to use when no client secret
+	// or certificate is supplied, as a comma-separated list of
+	// azauth.CredentialMethod values. Unset means try all of them.
+	OptionAuthMethod = "auth-method"
 )
 
 type Ms365Connection struct {
@@ -76,7 +80,17 @@ func NewMs365Connection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 	if len(tenantId) == 0 {
 		return nil, errors.New("ms365 provider requires a tenant-id")
 	}
-	token, err := azauth.GetTokenFromCredential(cred, tenantId, clientId, nil)
+
+	// Without a client secret or certificate we fall back to the sign-in chain,
+	// which probes every method in turn; the managed identity probe alone burns
+	// ~15s before giving up. A keyless connection that knows how it
+	// authenticates can name the method and skip straight to it.
+	methods, err := azauth.ParseCredentialMethods(conf.Options[OptionAuthMethod])
+	if err != nil {
+		return nil, err
+	}
+	token, err := azauth.GetTokenFromCredential(cred, tenantId, clientId,
+		&azauth.ChainedTokenOptions{Methods: methods})
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot fetch credentials for ms365 provider")
 	}
