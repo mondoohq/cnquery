@@ -33,12 +33,6 @@ func initProxmoxUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		if u.UserID != userID {
 			continue
 		}
-		var groups []any
-		if u.Groups != "" {
-			for _, g := range strings.Split(u.Groups, ",") {
-				groups = append(groups, g)
-			}
-		}
 		realm := ""
 		if parts := strings.SplitN(u.UserID, "@", 2); len(parts) == 2 {
 			realm = parts[1]
@@ -48,11 +42,19 @@ func initProxmoxUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		args["expire"] = llx.IntData(u.Expire)
 		args["firstname"] = llx.StringData(u.Firstname)
 		args["lastname"] = llx.StringData(u.Lastname)
-		args["groups"] = llx.ArrayData(groups, "\x02")
 		args["realm"] = llx.StringData(realm)
 		args["realmType"] = llx.StringData(u.RealmType)
 		args["tfaLockedUntil"] = llx.IntData(u.TFALockedUntil)
-		return args, nil, nil
+		// Build the resource here rather than returning args: group membership
+		// arrives inline on /access/users and groupRefs() reads it from the
+		// internal cache, which can only be set on a resource we hold.
+		res, err := CreateResource(runtime, "proxmox.user", args)
+		if err != nil {
+			return nil, nil, err
+		}
+		mqlUser := res.(*mqlProxmoxUser)
+		mqlUser.cachedGroups = splitProxmoxGroups(u.Groups)
+		return nil, res, nil
 	}
 	// User referenced by ACL no longer exists — return the bare resource
 	// so audits can still see the dangling reference rather than erroring.
