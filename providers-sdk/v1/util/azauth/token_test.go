@@ -36,7 +36,7 @@ func TestParseCredentialMethods(t *testing.T) {
 		methods, err := ParseCredentialMethods("")
 		require.NoError(t, err)
 		assert.Nil(t, methods)
-		assert.True(t, AllowsMethod(methods, CredentialMethodManagedIdentity))
+		assert.True(t, methods.Allows(CredentialMethodManagedIdentity))
 	})
 
 	t.Run("default and auto also mean every method", func(t *testing.T) {
@@ -50,20 +50,20 @@ func TestParseCredentialMethods(t *testing.T) {
 	t.Run("single method", func(t *testing.T) {
 		methods, err := ParseCredentialMethods("workload-identity")
 		require.NoError(t, err)
-		assert.Equal(t, []CredentialMethod{CredentialMethodWorkloadIdentity}, methods)
-		assert.False(t, AllowsMethod(methods, CredentialMethodManagedIdentity))
+		assert.Equal(t, CredentialMethods{CredentialMethodWorkloadIdentity}, methods)
+		assert.False(t, methods.Allows(CredentialMethodManagedIdentity))
 	})
 
 	t.Run("list keeps the caller's order", func(t *testing.T) {
 		methods, err := ParseCredentialMethods("workload-identity,cli")
 		require.NoError(t, err)
-		assert.Equal(t, []CredentialMethod{CredentialMethodWorkloadIdentity, CredentialMethodCLI}, methods)
+		assert.Equal(t, CredentialMethods{CredentialMethodWorkloadIdentity, CredentialMethodCLI}, methods)
 	})
 
 	t.Run("normalizes case, spacing, underscores, and duplicates", func(t *testing.T) {
 		methods, err := ParseCredentialMethods(" Workload_Identity , workload-identity ")
 		require.NoError(t, err)
-		assert.Equal(t, []CredentialMethod{CredentialMethodWorkloadIdentity}, methods)
+		assert.Equal(t, CredentialMethods{CredentialMethodWorkloadIdentity}, methods)
 	})
 
 	// a real Azure auth concept that is simply not one of ours, which is the
@@ -85,7 +85,7 @@ func TestGetDefaultChainedToken_RestrictsChain(t *testing.T) {
 			TenantID:           "aba673d8-12f8-4315-90c1-848f09d747f1",
 			ClientID:           "f424bc0b-7f95-4270-8ffc-694a52e60b9f",
 			FederatedTokenFile: "/var/run/secrets/azure/tokens/azure-identity-token",
-			Methods:            []CredentialMethod{CredentialMethodWorkloadIdentity},
+			Methods:            CredentialMethods{CredentialMethodWorkloadIdentity},
 		})
 		require.NoError(t, err)
 		require.NotNil(t, cred)
@@ -96,7 +96,7 @@ func TestGetDefaultChainedToken_RestrictsChain(t *testing.T) {
 		// and we report the constructor error instead of the SDK's bare
 		// "at least one credential required"
 		_, err := GetDefaultChainedToken(&ChainedTokenOptions{
-			Methods: []CredentialMethod{CredentialMethodWorkloadIdentity},
+			Methods: CredentialMethods{CredentialMethodWorkloadIdentity},
 		})
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "no Azure credential source could be configured")
@@ -104,7 +104,7 @@ func TestGetDefaultChainedToken_RestrictsChain(t *testing.T) {
 	})
 
 	t.Run("unknown method is rejected", func(t *testing.T) {
-		_, err := GetDefaultChainedToken(&ChainedTokenOptions{Methods: []CredentialMethod{"nope"}})
+		_, err := GetDefaultChainedToken(&ChainedTokenOptions{Methods: CredentialMethods{"nope"}})
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "nope")
 	})
@@ -120,7 +120,7 @@ func TestDefaultCredentialMethods_ManagedIdentityIsLast(t *testing.T) {
 	require.NotEmpty(t, DefaultCredentialMethods)
 	assert.Equal(t, CredentialMethodManagedIdentity, DefaultCredentialMethods[len(DefaultCredentialMethods)-1])
 	assert.ElementsMatch(t,
-		[]CredentialMethod{
+		CredentialMethods{
 			CredentialMethodCLI, CredentialMethodEnv,
 			CredentialMethodWorkloadIdentity, CredentialMethodManagedIdentity,
 		},
@@ -147,20 +147,27 @@ func TestHasFederatedTokenFile(t *testing.T) {
 	})
 }
 
-func TestEffectiveMethods(t *testing.T) {
-	assert.Equal(t, DefaultCredentialMethods, effectiveMethods(nil))
-	assert.Equal(t, DefaultCredentialMethods, effectiveMethods([]CredentialMethod{}))
+func TestCredentialMethods_Effective(t *testing.T) {
+	assert.Equal(t, DefaultCredentialMethods, CredentialMethods(nil).Effective())
+	assert.Equal(t, DefaultCredentialMethods, CredentialMethods{}.Effective())
 	assert.Equal(t,
-		[]CredentialMethod{CredentialMethodWorkloadIdentity},
-		effectiveMethods([]CredentialMethod{CredentialMethodWorkloadIdentity}))
+		CredentialMethods{CredentialMethodWorkloadIdentity},
+		CredentialMethods{CredentialMethodWorkloadIdentity}.Effective())
 }
 
-func TestCredentialMethodNames(t *testing.T) {
-	assert.Equal(t, "workload-identity", credentialMethodNames([]CredentialMethod{CredentialMethodWorkloadIdentity}))
-	assert.Equal(t, "cli, env, workload-identity, managed-identity", credentialMethodNames(DefaultCredentialMethods))
+func TestCredentialMethods_Allows(t *testing.T) {
+	// an empty selection is not yet resolved, so it permits everything
+	assert.True(t, CredentialMethods(nil).Allows(CredentialMethodManagedIdentity))
+	assert.True(t, DefaultCredentialMethods.Allows(CredentialMethodCLI))
+	assert.False(t, CredentialMethods{CredentialMethodWorkloadIdentity}.Allows(CredentialMethodCLI))
+}
+
+func TestCredentialMethods_Names(t *testing.T) {
+	assert.Equal(t, "workload-identity", CredentialMethods{CredentialMethodWorkloadIdentity}.Names())
+	assert.Equal(t, "cli, env, workload-identity, managed-identity", DefaultCredentialMethods.Names())
 	// it renders what it is given: resolving an empty selection is the caller's
 	// job, done once, rather than something this quietly repeats
-	assert.Equal(t, "", credentialMethodNames(nil))
+	assert.Equal(t, "", CredentialMethods(nil).Names())
 }
 
 func TestGuidedCredential_EnrichesErrors(t *testing.T) {
@@ -191,7 +198,7 @@ func TestGuidedCredential_EnrichesErrors(t *testing.T) {
 		cred := &guidedCredential{
 			inner:            &fakeCredential{err: errors.New("boom")},
 			usedDefaultChain: true,
-			methods:          []CredentialMethod{CredentialMethodWorkloadIdentity},
+			methods:          CredentialMethods{CredentialMethodWorkloadIdentity},
 		}
 		_, err := cred.GetToken(context.Background(), policy.TokenRequestOptions{})
 		require.Error(t, err)

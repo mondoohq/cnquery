@@ -46,6 +46,10 @@ func (c CredentialMethod) Name() string {
 	return string(c)
 }
 
+// CredentialMethods is a sign-in chain: the methods to try, in the order they
+// are tried. Empty means the default chain, which Effective resolves.
+type CredentialMethods []CredentialMethod
+
 // DefaultCredentialMethods is the chain we try when the caller does not name
 // any method, in order.
 //
@@ -61,35 +65,41 @@ func (c CredentialMethod) Name() string {
 //
 // This also matches azidentity's own DefaultAzureCredential, which orders
 // workload identity ahead of managed identity for the same reason.
-var DefaultCredentialMethods = []CredentialMethod{
+var DefaultCredentialMethods = CredentialMethods{
 	CredentialMethodCLI,
 	CredentialMethodEnv,
 	CredentialMethodWorkloadIdentity,
 	CredentialMethodManagedIdentity,
 }
 
-// effectiveMethods resolves a selection to the chain that will actually be
-// tried: empty means the default chain. Callers resolve once, at the point they
-// take the options, so that everything downstream -- the chain we build, the
-// line we log, the guidance we give when it fails -- is talking about the same
-// list rather than each re-deriving it.
-func effectiveMethods(methods []CredentialMethod) []CredentialMethod {
-	if len(methods) == 0 {
+// Effective resolves a selection to the chain that will actually be tried:
+// empty means the default chain. Callers resolve once, at the point they take
+// the options, so that everything downstream -- the chain we build, the line we
+// log, the guidance we give when it fails -- is talking about the same list
+// rather than each re-deriving it.
+func (c CredentialMethods) Effective() CredentialMethods {
+	if len(c) == 0 {
 		return DefaultCredentialMethods
 	}
-	return methods
+	return c
 }
 
-// credentialMethodNames renders a method selection as a plain list. These are
-// the names auth-method accepts, so a message built from them doubles as a
-// usage hint. It renders what it is given: an unresolved selection is an empty
-// list, not the default chain.
-func credentialMethodNames(methods []CredentialMethod) string {
-	names := make([]string, 0, len(methods))
-	for _, m := range methods {
+// Names renders the selection as a plain list. These are the names auth-method
+// accepts, so a message built from them doubles as a usage hint. It renders
+// what it is given: an unresolved selection is an empty list, not the default
+// chain.
+func (c CredentialMethods) Names() string {
+	names := make([]string, 0, len(c))
+	for _, m := range c {
 		names = append(names, m.Name())
 	}
 	return strings.Join(names, ", ")
+}
+
+// Allows reports whether m is permitted by the selection. An empty selection
+// permits everything.
+func (c CredentialMethods) Allows(m CredentialMethod) bool {
+	return len(c) == 0 || slices.Contains(c, m)
 }
 
 // credentialSource renders a caller name for the logs. Callers that do not name
@@ -111,8 +121,8 @@ func credentialSource(source string) string {
 // chain: the whole point of naming a method is to avoid the slow probing, so a
 // typo that quietly reinstates it would be invisible in exactly the deployment
 // that asked not to have it.
-func ParseCredentialMethods(s string) ([]CredentialMethod, error) {
-	var methods []CredentialMethod
+func ParseCredentialMethods(s string) (CredentialMethods, error) {
+	var methods CredentialMethods
 	for part := range strings.SplitSeq(s, ",") {
 		name := strings.ToLower(strings.TrimSpace(part))
 		name = strings.ReplaceAll(name, "_", "-")
@@ -124,19 +134,13 @@ func ParseCredentialMethods(s string) ([]CredentialMethod, error) {
 		method := CredentialMethod(name)
 		if !slices.Contains(DefaultCredentialMethods, method) {
 			return nil, fmt.Errorf("unknown Azure credential method %q, expected one of %s",
-				strings.TrimSpace(part), credentialMethodNames(DefaultCredentialMethods))
+				strings.TrimSpace(part), DefaultCredentialMethods.Names())
 		}
 		if !slices.Contains(methods, method) {
 			methods = append(methods, method)
 		}
 	}
 	return methods, nil
-}
-
-// AllowsMethod reports whether m is permitted by the selection. An empty
-// selection permits everything.
-func AllowsMethod(methods []CredentialMethod, m CredentialMethod) bool {
-	return len(methods) == 0 || slices.Contains(methods, m)
 }
 
 // ChainedTokenOptions configures the sign-in chain we fall back to when no
@@ -171,7 +175,7 @@ type ChainedTokenOptions struct {
 
 	// Methods restricts the chain to these sources, tried in the given order.
 	// Empty means DefaultCredentialMethods.
-	Methods []CredentialMethod
+	Methods CredentialMethods
 
 	// Source names the caller, e.g. "azure-connection". Sign-in happens in
 	// several places -- one per provider connection, plus helpers that
@@ -273,9 +277,9 @@ func GetDefaultChainedToken(options *ChainedTokenOptions) (*azidentity.ChainedTo
 		}),
 	}
 
-	methods := effectiveMethods(options.Methods)
+	methods := options.Methods.Effective()
 	log.Debug().
-		Str("methods", credentialMethodNames(methods)).
+		Str("methods", methods.Names()).
 		Str("source", credentialSource(options.Source)).
 		Bool("federated-token-file", hasFederatedTokenFile(options)).
 		Msg("building the Azure sign-in chain")
@@ -286,7 +290,7 @@ func GetDefaultChainedToken(options *ChainedTokenOptions) (*azidentity.ChainedTo
 		resolver, ok := resolvers[method]
 		if !ok {
 			return nil, fmt.Errorf("unknown Azure credential method %q, expected one of %s",
-				method, credentialMethodNames(DefaultCredentialMethods))
+				method, DefaultCredentialMethods.Names())
 		}
 		opts = append(opts, resolver)
 	}
@@ -379,11 +383,11 @@ func GetTokenFromCredential(credential *vault.Credential, options *ChainedTokenO
 	clientId := chainOpts.ClientID
 	// resolved here, once, so the chain we build, the line we log and the
 	// guidance a failure gives all name the same methods
-	chainOpts.Methods = effectiveMethods(chainOpts.Methods)
+	chainOpts.Methods = chainOpts.Methods.Effective()
 	// fallback to default authorizer if no credentials are specified
 	if credential == nil {
 		log.Info().
-			Str("methods", credentialMethodNames(chainOpts.Methods)).
+			Str("methods", chainOpts.Methods.Names()).
 			Str("source", credentialSource(chainOpts.Source)).
 			Str("tenant-id", tenantId).
 			Str("client-id", clientId).
@@ -427,7 +431,7 @@ type guidedCredential struct {
 	usedDefaultChain bool
 	// methods records which sign-in sources the chain was restricted to, so the
 	// guidance names what we actually tried. Empty means the full chain.
-	methods []CredentialMethod
+	methods CredentialMethods
 }
 
 func (c *guidedCredential) GetToken(ctx context.Context, opts policy.TokenRequestOptions) (azcore.AccessToken, error) {
@@ -441,7 +445,7 @@ func (c *guidedCredential) GetToken(ctx context.Context, opts policy.TokenReques
 // enrichTokenError wraps a sign-in failure with guidance tailored to how the
 // credential was configured. The original error is always preserved so no
 // diagnostic detail is lost.
-func enrichTokenError(err error, usedDefaultChain bool, methods []CredentialMethod) error {
+func enrichTokenError(err error, usedDefaultChain bool, methods CredentialMethods) error {
 	if !usedDefaultChain {
 		return errors.Wrap(err, "Azure sign-in with the provided credentials failed; double-check the tenant ID, client ID, and the certificate or client secret")
 	}
@@ -450,11 +454,11 @@ func enrichTokenError(err error, usedDefaultChain bool, methods []CredentialMeth
 	// credential, so this is normally already the concrete chain. Resolving again
 	// costs nothing and keeps the guidance honest for a credential assembled some
 	// other way, which would otherwise claim we tried nothing at all.
-	methods = effectiveMethods(methods)
+	methods = methods.Effective()
 
 	msg := "Azure sign-in failed. No credentials were provided, so we tried these sign-in methods: " +
-		credentialMethodNames(methods) + ". None of them worked. "
-	if AllowsMethod(methods, CredentialMethodCLI) {
+		methods.Names() + ". None of them worked. "
+	if methods.Allows(CredentialMethodCLI) {
 		msg += "Run `az login` and confirm `az account get-access-token` returns a token, or provide credentials "
 	} else {
 		msg += "Provide credentials "
