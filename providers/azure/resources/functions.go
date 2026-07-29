@@ -69,7 +69,7 @@ func initAzureSubscriptionFunctionsServiceFunctionApp(runtime *plugin.Runtime, a
 	}
 
 	if args["id"] == nil {
-		return args, nil, nil
+		return nil, nil, missingResourceID("azure.subscription.functionsService.functionApp")
 	}
 
 	conn, ok := runtime.Connection.(*connection.AzureConnection)

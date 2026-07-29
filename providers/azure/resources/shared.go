@@ -5,6 +5,7 @@ package resources
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -48,6 +49,31 @@ func isAzureNotConfigured(err error) bool {
 		return false
 	}
 	return respErr.StatusCode == http.StatusNotFound || respErr.StatusCode == http.StatusForbidden
+}
+
+// missingResourceID reports that a resource was asked for without an id, and
+// the scanned asset could not supply one either.
+//
+// An init in that position used to fall through with `return args, nil, nil`,
+// which is not the harmless no-op it reads as: the runtime takes it as
+// permission to build the resource from the args it has, so it creates one with
+// no id and no fields set. Every field then crosses the plugin boundary as an
+// empty DataRes and surfaces client-side as
+//
+//	provider returned no data and no error for a field ... field=tags id=
+//	llx: encountered a primitive with no type information, coercing to null
+//
+// once per field, per asset, with an empty id to identify it by. An error says
+// what actually happened and says it once.
+//
+// This is reachable whenever one of these resources is queried bare against an
+// asset that is not itself that resource -- a subscription asset, for instance,
+// whose platform ids carry only the //platformid.api.mondoo.app form and never
+// the /subscriptions/... ARM id getAssetIdentifier looks for.
+func missingResourceID(resourceName string) error {
+	return fmt.Errorf(
+		"%s requires an id: reach it from the list it belongs to, or scan the %s itself",
+		resourceName, resourceName)
 }
 
 type assetIdentifier struct {
