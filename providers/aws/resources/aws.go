@@ -5,12 +5,14 @@ package resources
 
 import (
 	"bytes"
+	"context"
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
 	"fmt"
 	"io"
 	"strings"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	smithy "github.com/aws/smithy-go"
@@ -22,6 +24,7 @@ import (
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 	"go.mondoo.com/mql/v13/providers/network/resources/certificates"
 	"go.mondoo.com/mql/v13/types"
+	"golang.org/x/sync/errgroup"
 	"k8s.io/client-go/util/cert"
 )
 
@@ -349,6 +352,65 @@ func mapStringInterfaceToStringString(m map[string]any) map[string]string {
 		newM[k] = v.(string)
 	}
 	return newM
+}
+
+// fetchTagsConcurrency bounds the in-flight per-item tag calls made by
+// fetchTagsConcurrently. It is deliberately small: tag lookups are a means to
+// evaluate discovery filters, not the workload, and every provider job already
+// runs inside a region-level worker pool.
+const fetchTagsConcurrency = 10
+
+// fetchTagsConcurrently resolves tags for a set of keys and returns them keyed by
+// the same value. It exists for services whose tags can only be read one resource
+// at a time (SQS, SNS, and Lambda have no batch tags endpoint), where evaluating
+// a tag filter would otherwise serialize one round trip per resource. Services
+// that do offer a plural tags endpoint should call that instead; see
+// batchFetchTags in aws_route53.go.
+//
+// Per-item failures are tolerated rather than fatal, and presence in the result
+// map is what distinguishes them from a resource that simply has no tags:
+//
+//   - key present, map non-nil (possibly empty) - tags were read successfully
+//   - key absent - the fetch failed for that resource
+//
+// Callers must use the comma-ok form to tell those apart. A resource whose tags
+// could not be read yields a nil map, which
+// GeneralDiscoveryFilters.IsFilteredOutByTags treats the same as an empty tag
+// set: it is dropped when an include filter is set and kept when only exclude
+// filters are set. That is the established behavior across the provider - an
+// unreadable tag set cannot prove a match, so we do not claim one. Callers that
+// seed the fetched tags onto a resource must only do so for keys that are
+// present, or an unreadable tag set gets published as an authoritative empty one.
+func fetchTagsConcurrently[K comparable](ctx context.Context, keys []K, fetch func(context.Context, K) (map[string]string, error)) map[K]map[string]string {
+	result := make(map[K]map[string]string, len(keys))
+	if len(keys) == 0 {
+		return result
+	}
+
+	var mu sync.Mutex
+	g, gctx := errgroup.WithContext(ctx)
+	g.SetLimit(fetchTagsConcurrency)
+	for _, key := range keys {
+		g.Go(func() error {
+			tags, err := fetch(gctx, key)
+			if err != nil {
+				log.Debug().Err(err).Interface("key", key).Msg("could not fetch tags for filter evaluation")
+				return nil
+			}
+			if tags == nil {
+				// Normalize so a successful fetch is always a non-nil map and
+				// absence unambiguously means failure.
+				tags = map[string]string{}
+			}
+			mu.Lock()
+			defer mu.Unlock()
+			result[key] = tags
+			return nil
+		})
+	}
+	// The worker func never returns an error, so Wait only drains the pool.
+	_ = g.Wait()
+	return result
 }
 
 // securityGroupIdHandler is a helper struct to handle security group ids and convert them to resources

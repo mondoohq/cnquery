@@ -18,6 +18,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
+	mqltypes "go.mondoo.com/mql/v13/types"
 )
 
 func (a *mqlAwsSns) id() (string, error) {
@@ -106,14 +107,50 @@ func (a *mqlAwsSns) getTopics(conn *connection.AwsConnection) []*jobpool.Job {
 					}
 					return nil, err
 				}
+				// Pre-fetch tags in parallel when tag-based filters are configured.
+				// SNS has no batch tags endpoint, so this turns a sequential
+				// per-topic call into bounded concurrent calls.
+				var tagsByArn map[string]map[string]string
+				if conn.Filters.General.HasTags() {
+					arns := make([]string, 0, len(topics.Topics))
+					for _, topic := range topics.Topics {
+						if topic.TopicArn != nil {
+							arns = append(arns, *topic.TopicArn)
+						}
+					}
+					tagsByArn = fetchTagsConcurrently(ctx, arns, func(ctx context.Context, topicArn string) (map[string]string, error) {
+						tags, err := getSNSTags(ctx, svc, &topicArn)
+						if err != nil {
+							return nil, err
+						}
+						return mapStringInterfaceToStringString(tags), nil
+					})
+				}
+
 				for _, topic := range topics.Topics {
-					mqlTopic, err := CreateResource(a.MqlRuntime, "aws.sns.topic",
-						map[string]*llx.RawData{
-							"__id":   llx.StringDataPtr(topic.TopicArn),
-							"arn":    llx.StringDataPtr(topic.TopicArn),
-							"region": llx.StringData(region),
-						},
-					)
+					args := map[string]*llx.RawData{
+						"__id":   llx.StringDataPtr(topic.TopicArn),
+						"arn":    llx.StringDataPtr(topic.TopicArn),
+						"region": llx.StringData(region),
+					}
+					if conn.Filters.General.HasTags() {
+						tags, fetched := tagsByArn[convert.ToValue(topic.TopicArn)]
+						if conn.Filters.General.IsFilteredOutByTags(tags) {
+							log.Debug().Interface("topic", topic.TopicArn).Msg("excluding sns topic due to filters")
+							continue
+						}
+						// Seed the tags we already paid for; discovery reads them
+						// back immediately and would otherwise re-fetch. Only seed
+						// a tag set we actually read - publishing an empty map for
+						// a topic whose ListTagsForResource call failed would
+						// report "no tags" as fact. Leaving it unset keeps the
+						// field lazy.
+						if fetched {
+							args["tags"] = llx.MapData(stringMapToAny(tags), mqltypes.String)
+						}
+					}
+
+					mqlTopic, err := CreateResource(a.MqlRuntime, "aws.sns.topic", args)
 					if err != nil {
 						return nil, err
 					}

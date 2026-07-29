@@ -281,6 +281,34 @@ Multiple computed methods can share the same fetch function to batch-load relate
   ```
   The asset name is a display name (often a `Name` tag), never a resource key — don't use it for lookups. The one exception: when an init's underlying API call is name-driven (e.g. IAM `GetUser`/`GetGroup`) and discovery sets the asset name to the resource's own name, use `getAssetName(runtime)` to inject `args["name"]` instead.
 
+### Step 3.5: Discovery-filter gate (do this whenever you add a discovery target)
+
+**If a resource becomes a discovery target, its lister must consult `conn.Filters`.** Wiring the `case Discovery<Thing>:` branch in `discovery.go` and wiring the filters are separate edits in separate files, and only the first one is what the ticket asks for — so the second is the one that gets forgotten. Adding a discovery target without filter support ships a service that accepts `--filters tag:...` and silently ignores it.
+
+Apply filters in the **lister** (`get<Thing>`), never in `discovery.go`. Discovery reaches assets through the same `GetQueues()`/`GetTopics()` accessor a plain MQL query uses, so one check covers both paths and keeps them consistent.
+
+```go
+// gate the tag lookup so it stays lazy when no tag filter is set
+if conn.Filters.General.HasTags() {
+    tags := /* fetch tags for this resource */
+    if conn.Filters.General.IsFilteredOutByTags(tags) {
+        continue
+    }
+}
+```
+
+- **Cheap shape** (tags already in hand, or one call): copy `aws_s3.go`.
+- **No batch tags endpoint** (one call per resource): use `fetchTagsConcurrently` in `aws.go` — bounded concurrency, per-item failures tolerated. Seed the fetched tags onto the resource so discovery's immediate read doesn't re-fetch, but **only for a tag set you actually read**; publishing an empty map for a resource whose tag call failed reports "no tags" as fact. Use the comma-ok form on the result map: present means read, absent means failed.
+- **Region filters need nothing** — `conn.Regions()` already applies them.
+- Services with a service-specific filter struct (`conn.Filters.Ecr`, `conn.Filters.S3`) consult that instead; that's correct.
+
+This is a manual gate, not a build-time one. Because the bug is an *absence*, you can't spot it by reading — grep for listers that never mention `conn.Filters` and intersect with the discovery targets:
+
+```bash
+grep -rL "conn\.Filters" providers/<provider>/resources/*.go | grep -v _test
+grep -n "case Discovery" providers/<provider>/resources/discovery.go
+```
+
 ### Step 4: Verification (Interactive)
 Automated tests are rare for MQL resources (thin wrappers). **Interactive testing is standard.**
 

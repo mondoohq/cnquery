@@ -23,7 +23,6 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 	"go.mondoo.com/mql/v13/types"
-	"golang.org/x/sync/errgroup"
 )
 
 func (a *mqlAwsLambda) id() (string, error) {
@@ -79,16 +78,33 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 				// per-function call into bounded concurrent calls.
 				var tagsByArn map[string]map[string]string
 				if conn.Filters.General.HasTags() {
-					tagsByArn = batchFetchLambdaTags(ctx, svc, functionsResp.Functions)
+					arns := make([]string, 0, len(functionsResp.Functions))
+					for _, function := range functionsResp.Functions {
+						if function.FunctionArn != nil {
+							arns = append(arns, *function.FunctionArn)
+						}
+					}
+					tagsByArn = fetchTagsConcurrently(ctx, arns, func(ctx context.Context, functionArn string) (map[string]string, error) {
+						resp, err := svc.ListTags(ctx, &lambda.ListTagsInput{Resource: &functionArn})
+						if err != nil {
+							return nil, err
+						}
+						if resp == nil {
+							return nil, errors.New("empty ListTags response")
+						}
+						return resp.Tags, nil
+					})
 				}
 				for _, function := range functionsResp.Functions {
 					var tags map[string]string
+					var fetched bool
 					if conn.Filters.General.HasTags() {
-						// nil means batchFetchLambdaTags hit a per-function error;
-						// IsFilteredOutByTags treats nil identically to an empty map
-						// (no include-filter match → drop), preserving the
-						// pre-parallelization best-effort behavior.
-						tags = tagsByArn[convert.ToValue(function.FunctionArn)]
+						// An absent entry means the ListTags call failed for this
+						// function; IsFilteredOutByTags treats the resulting nil
+						// identically to an empty map (no include-filter match →
+						// drop), preserving the pre-parallelization best-effort
+						// behavior.
+						tags, fetched = tagsByArn[convert.ToValue(function.FunctionArn)]
 						if conn.Filters.General.IsFilteredOutByTags(tags) {
 							log.Debug().Interface("function", function.FunctionArn).Msg("excluding function due to filters")
 							continue
@@ -99,7 +115,11 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 					if err != nil {
 						return nil, err
 					}
-					if tags != nil {
+					// Only cache a tag set we actually read. Caching for a function
+					// whose ListTags call failed would report "no tags" as fact;
+					// leaving tagsFetched false lets the accessor retry and surface
+					// the real error.
+					if fetched {
 						f.cacheTags = tags
 						f.tagsFetched = true
 					}
@@ -111,40 +131,6 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
-}
-
-// batchFetchLambdaTags resolves tags for a slice of Lambda functions concurrently.
-// Lambda's API has no batch tags endpoint, so this bounds the per-function ListTags
-// calls with a small worker pool. Errors and missing tag responses are tolerated:
-// the resulting map will simply not contain an entry for those ARNs, matching the
-// previous best-effort sequential behavior.
-func batchFetchLambdaTags(ctx context.Context, svc *lambda.Client, fns []lambdatypes.FunctionConfiguration) map[string]map[string]string {
-	result := make(map[string]map[string]string, len(fns))
-	if len(fns) == 0 {
-		return result
-	}
-	var mu sync.Mutex
-	g, gctx := errgroup.WithContext(ctx)
-	g.SetLimit(10)
-	for _, fn := range fns {
-		if fn.FunctionArn == nil {
-			continue
-		}
-		arnVal := *fn.FunctionArn
-		input := &lambda.ListTagsInput{Resource: fn.FunctionArn}
-		g.Go(func() error {
-			resp, err := svc.ListTags(gctx, input)
-			if err != nil || resp == nil {
-				return nil
-			}
-			mu.Lock()
-			result[arnVal] = resp.Tags
-			mu.Unlock()
-			return nil
-		})
-	}
-	_ = g.Wait()
-	return result
 }
 
 func getLambdaArn(name string, region string, accountId string) string {
