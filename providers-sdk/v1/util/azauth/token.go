@@ -332,22 +332,23 @@ func GetWorkloadIdentityToken(tenantId, clientId, federatedTokenFile string) (az
 
 // GetTokenFromCredential builds a credential from an explicit client secret or
 // certificate. When there is none, it falls back to the sign-in chain described
-// by options (nil means the full default chain). tenantId and clientId are the
-// authoritative values for the connection and override anything options carries.
-func GetTokenFromCredential(credential *vault.Credential, tenantId, clientId string, options *ChainedTokenOptions) (azcore.TokenCredential, error) {
+// by options (nil means the full default chain).
+//
+// The tenant and client come from options.TenantID and options.ClientID, which
+// both branches read. They used to arrive as positional arguments as well, so
+// the same two values had two homes and the ones passed alongside the options
+// quietly overrode the ones inside them -- a caller that set only the options
+// got them ignored on some paths and honored on others.
+func GetTokenFromCredential(credential *vault.Credential, options *ChainedTokenOptions) (azcore.TokenCredential, error) {
 	var azCred azcore.TokenCredential
 	var err error
 	usedDefaultChain := credential == nil
-	chainOpts := ChainedTokenOptions{}
+	chainOpts := &ChainedTokenOptions{}
 	if options != nil {
-		chainOpts = *options
+		chainOpts = options
 	}
-	if tenantId != "" {
-		chainOpts.TenantID = tenantId
-	}
-	if clientId != "" {
-		chainOpts.ClientID = clientId
-	}
+	tenantId := chainOpts.TenantID
+	clientId := chainOpts.ClientID
 	// fallback to default authorizer if no credentials are specified
 	if credential == nil {
 		log.Info().
@@ -355,9 +356,9 @@ func GetTokenFromCredential(credential *vault.Credential, tenantId, clientId str
 			Str("source", credentialSource(chainOpts.Source)).
 			Str("tenant-id", tenantId).
 			Str("client-id", clientId).
-			Bool("federated-token-file", hasFederatedTokenFile(&chainOpts)).
+			Bool("federated-token-file", hasFederatedTokenFile(chainOpts)).
 			Msg("no Azure credentials were provided, trying the configured sign-in methods")
-		azCred, err = GetDefaultChainedToken(&chainOpts)
+		azCred, err = GetDefaultChainedToken(chainOpts)
 		if err != nil {
 			return nil, errors.Wrap(err, "error creating CLI credentials")
 		}

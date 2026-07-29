@@ -85,11 +85,14 @@ func selectAzureCredential(conf *inventory.Config) (azcore.TokenCredential, erro
 	// The chain is cheap to walk now that the managed identity probe sits at the
 	// end of it (see azauth.DefaultCredentialMethods), so there is nothing left
 	// to shortcut past.
-	return azauth.GetTokenFromCredential(cred, tenantId, clientId, &azauth.ChainedTokenOptions{
+	chainOpts := &azauth.ChainedTokenOptions{
+		ClientID:           clientId,
 		FederatedTokenFile: federatedTokenFile,
 		Methods:            methods,
 		Source:             "azure-connection",
-	})
+	}
+	chainOpts.TenantID = tenantId
+	return azauth.GetTokenFromCredential(cred, chainOpts)
 }
 
 func NewAzureConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*AzureConnection, error) {
