@@ -42,11 +42,24 @@ const (
 
 // DefaultCredentialMethods is the chain we try when the caller does not name
 // any method, in order.
+//
+// Managed identity goes last because it is the only method that cannot tell us
+// it will not work. The others self-select: NewEnvironmentCredential and
+// NewWorkloadIdentityCredential fail to construct when their configuration is
+// absent, so BuildChainedToken drops them, and the CLI credential fails in
+// milliseconds when `az` is not on PATH. NewManagedIdentityCredential always
+// constructs, and only discovers there is no instance metadata endpoint by
+// asking it -- 5 seconds a try, three tries. Ahead of a method that would have
+// answered, that is 15 seconds burned per connection, which a scan pays once
+// per asset. Behind them, nothing reaches it unless nothing else worked.
+//
+// This also matches azidentity's own DefaultAzureCredential, which orders
+// workload identity ahead of managed identity for the same reason.
 var DefaultCredentialMethods = []CredentialMethod{
 	CredentialMethodCLI,
 	CredentialMethodEnv,
-	CredentialMethodManagedIdentity,
 	CredentialMethodWorkloadIdentity,
+	CredentialMethodManagedIdentity,
 }
 
 // credentialMethodNames renders a method selection as a plain list; an empty
@@ -137,40 +150,15 @@ type ChainedTokenOptions struct {
 	Source string
 }
 
-// federatedTokenFile returns the OIDC token file the options name, falling back
-// to the variable azidentity itself reads. Its presence is what tells us a
-// deployment is set up for workload identity federation.
-func federatedTokenFile(opts *ChainedTokenOptions) string {
+// hasFederatedTokenFile reports whether an OIDC token file is available, from
+// the options or from the variable azidentity itself reads. It is only reported
+// in the logs: a sign-in that walked the whole chain reads very differently
+// depending on whether workload identity federation was even set up here.
+func hasFederatedTokenFile(opts *ChainedTokenOptions) bool {
 	if opts != nil && opts.FederatedTokenFile != "" {
-		return opts.FederatedTokenFile
+		return true
 	}
-	return os.Getenv("AZURE_FEDERATED_TOKEN_FILE")
-}
-
-// resolveMethods decides which sources to try, and in which order. An explicit
-// selection is always honored as given.
-//
-// Without one, a federated token file is unambiguous evidence that this
-// deployment signs in with workload identity federation, so we try that first
-// instead of walking the chain in its default order. The managed identity probe
-// that sits ahead of it retries for up to 15 seconds before giving up, and every
-// connection in a scan pays that -- per asset -- for a source that was never
-// going to answer. The remaining methods stay in the chain behind it, so a
-// deployment that has a stale token file still falls back rather than failing.
-func resolveMethods(opts *ChainedTokenOptions) []CredentialMethod {
-	if opts != nil && len(opts.Methods) > 0 {
-		return opts.Methods
-	}
-	if federatedTokenFile(opts) == "" {
-		return nil
-	}
-	methods := []CredentialMethod{CredentialMethodWorkloadIdentity}
-	for _, m := range DefaultCredentialMethods {
-		if m != CredentialMethodWorkloadIdentity {
-			methods = append(methods, m)
-		}
-	}
-	return methods
+	return os.Getenv("AZURE_FEDERATED_TOKEN_FILE") != ""
 }
 
 type TokenResolverFn (func() (azcore.TokenCredential, error))
@@ -254,14 +242,14 @@ func GetDefaultChainedToken(options *ChainedTokenOptions) (*azidentity.ChainedTo
 		}),
 	}
 
-	methods := resolveMethods(options)
+	methods := options.Methods
 	if len(methods) == 0 {
 		methods = DefaultCredentialMethods
 	}
 	log.Debug().
 		Str("methods", credentialMethodNames(methods)).
 		Str("source", credentialSource(options.Source)).
-		Bool("federated-token-file", federatedTokenFile(options) != "").
+		Bool("federated-token-file", hasFederatedTokenFile(options)).
 		Msg("building the Azure sign-in chain")
 
 	// iterate the selection, not the map, so the chain keeps the caller's order
@@ -362,17 +350,12 @@ func GetTokenFromCredential(credential *vault.Credential, tenantId, clientId str
 	}
 	// fallback to default authorizer if no credentials are specified
 	if credential == nil {
-		// log what will actually be tried, not what was asked for: with no
-		// explicit selection a federated token file moves workload identity to
-		// the front, and a line that still named the default order would send
-		// anyone reading it after the wrong problem
-		chainOpts.Methods = resolveMethods(&chainOpts)
 		log.Info().
 			Str("methods", credentialMethodNames(chainOpts.Methods)).
 			Str("source", credentialSource(chainOpts.Source)).
 			Str("tenant-id", tenantId).
 			Str("client-id", clientId).
-			Bool("federated-token-file", federatedTokenFile(&chainOpts) != "").
+			Bool("federated-token-file", hasFederatedTokenFile(&chainOpts)).
 			Msg("no Azure credentials were provided, trying the configured sign-in methods")
 		azCred, err = GetDefaultChainedToken(&chainOpts)
 		if err != nil {

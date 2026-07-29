@@ -113,39 +113,22 @@ func TestGetDefaultChainedToken_RestrictsChain(t *testing.T) {
 	})
 }
 
-func TestResolveMethods(t *testing.T) {
-	t.Run("an explicit selection is honored as given", func(t *testing.T) {
-		t.Setenv("AZURE_FEDERATED_TOKEN_FILE", "/tmp/x.jwt")
-		methods := resolveMethods(&ChainedTokenOptions{
-			Methods: []CredentialMethod{CredentialMethodManagedIdentity},
-		})
-		assert.Equal(t, []CredentialMethod{CredentialMethodManagedIdentity}, methods)
-	})
-
-	t.Run("no token file anywhere keeps the default order", func(t *testing.T) {
-		t.Setenv("AZURE_FEDERATED_TOKEN_FILE", "")
-		assert.Nil(t, resolveMethods(&ChainedTokenOptions{}))
-		assert.Nil(t, resolveMethods(nil))
-	})
-
-	// the deployment this exists for: a WIF pod whose inventory never named a
-	// method. Probing our way down to workload identity costs ~15s on the
-	// managed identity step alone, once per connection, so it goes first.
-	t.Run("a token file in the options puts workload identity first", func(t *testing.T) {
-		t.Setenv("AZURE_FEDERATED_TOKEN_FILE", "")
-		methods := resolveMethods(&ChainedTokenOptions{FederatedTokenFile: "/tmp/x.jwt"})
-		require.NotEmpty(t, methods)
-		assert.Equal(t, CredentialMethodWorkloadIdentity, methods[0])
-		// the rest stay as fallbacks, so a stale token file still degrades
-		assert.ElementsMatch(t, DefaultCredentialMethods, methods)
-	})
-
-	t.Run("the env var counts as a token file too", func(t *testing.T) {
-		t.Setenv("AZURE_FEDERATED_TOKEN_FILE", "/var/run/secrets/azure/tokens/azure-identity-token")
-		methods := resolveMethods(&ChainedTokenOptions{})
-		require.NotEmpty(t, methods)
-		assert.Equal(t, CredentialMethodWorkloadIdentity, methods[0])
-	})
+// Managed identity is the only method that cannot fail fast: the others drop
+// out of the chain at construction (env, workload identity) or in milliseconds
+// (cli), while this one asks the instance metadata endpoint and waits 5s a try,
+// three tries. Anywhere but last, a connection that had a working credential
+// further down the chain still pays those 15 seconds -- once per asset, all
+// scan long.
+func TestDefaultCredentialMethods_ManagedIdentityIsLast(t *testing.T) {
+	require.NotEmpty(t, DefaultCredentialMethods)
+	assert.Equal(t, CredentialMethodManagedIdentity, DefaultCredentialMethods[len(DefaultCredentialMethods)-1])
+	assert.ElementsMatch(t,
+		[]CredentialMethod{
+			CredentialMethodCLI, CredentialMethodEnv,
+			CredentialMethodWorkloadIdentity, CredentialMethodManagedIdentity,
+		},
+		DefaultCredentialMethods,
+		"every method still has to be in the default chain, only the order changed")
 }
 
 func TestCredentialSource(t *testing.T) {
@@ -153,10 +136,24 @@ func TestCredentialSource(t *testing.T) {
 	assert.Equal(t, "unknown", credentialSource(""))
 }
 
+func TestHasFederatedTokenFile(t *testing.T) {
+	t.Run("from the options", func(t *testing.T) {
+		t.Setenv("AZURE_FEDERATED_TOKEN_FILE", "")
+		assert.True(t, hasFederatedTokenFile(&ChainedTokenOptions{FederatedTokenFile: "/tmp/x.jwt"}))
+		assert.False(t, hasFederatedTokenFile(&ChainedTokenOptions{}))
+		assert.False(t, hasFederatedTokenFile(nil))
+	})
+
+	t.Run("from the environment azidentity reads", func(t *testing.T) {
+		t.Setenv("AZURE_FEDERATED_TOKEN_FILE", "/var/run/secrets/azure/tokens/azure-identity-token")
+		assert.True(t, hasFederatedTokenFile(&ChainedTokenOptions{}))
+	})
+}
+
 func TestCredentialMethodNames(t *testing.T) {
 	assert.Equal(t, "workload-identity", credentialMethodNames([]CredentialMethod{CredentialMethodWorkloadIdentity}))
-	// an empty selection stands for the whole chain
-	assert.Equal(t, "cli, env, managed-identity, workload-identity", credentialMethodNames(nil))
+	// an empty selection stands for the whole chain, in the order it is tried
+	assert.Equal(t, "cli, env, workload-identity, managed-identity", credentialMethodNames(nil))
 }
 
 func TestGuidedCredential_EnrichesErrors(t *testing.T) {
