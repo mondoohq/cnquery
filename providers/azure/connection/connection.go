@@ -65,7 +65,7 @@ func selectAzureCredential(conf *inventory.Config) (azcore.TokenCredential, erro
 	}
 
 	var cred *vault.Credential
-	if len(conf.Credentials) != 0 {
+	if len(conf.Credentials) > 0 {
 		cred = conf.Credentials[0]
 	}
 
@@ -74,16 +74,23 @@ func selectAzureCredential(conf *inventory.Config) (azcore.TokenCredential, erro
 		federatedTokenFile = os.Getenv("AZURE_FEDERATED_TOKEN_FILE")
 	}
 
-	// A token file with no method selection is unambiguously workload identity
-	// federation, so there is nothing to probe. Once a selection exists it
-	// decides instead: the file can be a leftover env var from the pod spec,
-	// and a selection that rules workload identity out has to be honored.
-	if cred == nil && federatedTokenFile != "" && len(methods) == 0 {
-		return azauth.GetWorkloadIdentityToken(tenantId, clientId, federatedTokenFile)
-	}
-	return azauth.GetTokenFromCredential(cred, tenantId, clientId, &azauth.ChainedTokenOptions{
+	// A token file with no method selection used to shortcut straight to a bare
+	// workload identity credential here, on the grounds that there was nothing
+	// left to probe. It cost more than it saved: the shortcut logged nothing, so
+	// a connection that authenticated this way was invisible and the only
+	// sign-ins in the logs were the ones configured some other way -- and the
+	// credential it returned had no chain behind it, so a stale token file was
+	// the end of the road rather than a fall back to the remaining methods.
+	//
+	// The chain is cheap to walk now that the managed identity probe sits at the
+	// end of it (see azauth.DefaultCredentialMethods), so there is nothing left
+	// to shortcut past.
+	return azauth.GetTokenFromCredential(cred, &azauth.ChainedTokenOptions{
+		TenantID:           tenantId,
+		ClientID:           clientId,
 		FederatedTokenFile: federatedTokenFile,
 		Methods:            methods,
+		Source:             "azure-connection",
 	})
 }
 

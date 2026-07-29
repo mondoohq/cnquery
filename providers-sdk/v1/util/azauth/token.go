@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"slices"
 	"strings"
 	"time"
@@ -39,27 +40,76 @@ const (
 	CredentialMethodWorkloadIdentity CredentialMethod = "workload-identity"
 )
 
-// DefaultCredentialMethods is the chain we try when the caller does not name
-// any method, in order.
-var DefaultCredentialMethods = []CredentialMethod{
-	CredentialMethodCLI,
-	CredentialMethodEnv,
-	CredentialMethodManagedIdentity,
-	CredentialMethodWorkloadIdentity,
+// Name is the method's canonical name, which is both what auth-method accepts
+// and what the logs and error messages print.
+func (c CredentialMethod) Name() string {
+	return string(c)
 }
 
-// credentialMethodNames renders a method selection as a plain list; an empty
-// selection renders the full default chain. These are the names auth-method
-// accepts, so a message built from them doubles as a usage hint.
-func credentialMethodNames(methods []CredentialMethod) string {
-	if len(methods) == 0 {
-		methods = DefaultCredentialMethods
+// CredentialMethods is a sign-in chain: the methods to try, in the order they
+// are tried. Empty means the default chain, which Effective resolves.
+type CredentialMethods []CredentialMethod
+
+// DefaultCredentialMethods is the chain we try when the caller does not name
+// any method, in order.
+//
+// Managed identity goes last because it is the only method that cannot tell us
+// it will not work. The others self-select: NewEnvironmentCredential and
+// NewWorkloadIdentityCredential fail to construct when their configuration is
+// absent, so BuildChainedToken drops them, and the CLI credential fails in
+// milliseconds when `az` is not on PATH. NewManagedIdentityCredential always
+// constructs, and only discovers there is no instance metadata endpoint by
+// asking it -- 5 seconds a try, three tries. Ahead of a method that would have
+// answered, that is 15 seconds burned per connection, which a scan pays once
+// per asset. Behind them, nothing reaches it unless nothing else worked.
+//
+// This also matches azidentity's own DefaultAzureCredential, which orders
+// workload identity ahead of managed identity for the same reason.
+var DefaultCredentialMethods = CredentialMethods{
+	CredentialMethodCLI,
+	CredentialMethodEnv,
+	CredentialMethodWorkloadIdentity,
+	CredentialMethodManagedIdentity,
+}
+
+// Effective resolves a selection to the chain that will actually be tried:
+// empty means the default chain. Callers resolve once, at the point they take
+// the options, so that everything downstream -- the chain we build, the line we
+// log, the guidance we give when it fails -- is talking about the same list
+// rather than each re-deriving it.
+func (c CredentialMethods) Effective() CredentialMethods {
+	if len(c) == 0 {
+		return DefaultCredentialMethods
 	}
-	names := make([]string, 0, len(methods))
-	for _, m := range methods {
-		names = append(names, string(m))
+	return c
+}
+
+// Names renders the selection as a plain list. These are the names auth-method
+// accepts, so a message built from them doubles as a usage hint. It renders
+// what it is given: an unresolved selection is an empty list, not the default
+// chain.
+func (c CredentialMethods) Names() string {
+	names := make([]string, 0, len(c))
+	for _, m := range c {
+		names = append(names, m.Name())
 	}
 	return strings.Join(names, ", ")
+}
+
+// Allows reports whether m is permitted by the selection. An empty selection
+// permits everything.
+func (c CredentialMethods) Allows(m CredentialMethod) bool {
+	return len(c) == 0 || slices.Contains(c, m)
+}
+
+// credentialSource renders a caller name for the logs. Callers that do not name
+// themselves are reported as unknown rather than as an empty field, so a line
+// missing its source reads as a gap to fill instead of a value we chose.
+func credentialSource(source string) string {
+	if source == "" {
+		return "unknown"
+	}
+	return source
 }
 
 // ParseCredentialMethods reads a comma-separated method list, e.g.
@@ -71,8 +121,8 @@ func credentialMethodNames(methods []CredentialMethod) string {
 // chain: the whole point of naming a method is to avoid the slow probing, so a
 // typo that quietly reinstates it would be invisible in exactly the deployment
 // that asked not to have it.
-func ParseCredentialMethods(s string) ([]CredentialMethod, error) {
-	var methods []CredentialMethod
+func ParseCredentialMethods(s string) (CredentialMethods, error) {
+	var methods CredentialMethods
 	for part := range strings.SplitSeq(s, ",") {
 		name := strings.ToLower(strings.TrimSpace(part))
 		name = strings.ReplaceAll(name, "_", "-")
@@ -84,7 +134,7 @@ func ParseCredentialMethods(s string) ([]CredentialMethod, error) {
 		method := CredentialMethod(name)
 		if !slices.Contains(DefaultCredentialMethods, method) {
 			return nil, fmt.Errorf("unknown Azure credential method %q, expected one of %s",
-				strings.TrimSpace(part), credentialMethodNames(nil))
+				strings.TrimSpace(part), DefaultCredentialMethods.Names())
 		}
 		if !slices.Contains(methods, method) {
 			methods = append(methods, method)
@@ -93,20 +143,29 @@ func ParseCredentialMethods(s string) ([]CredentialMethod, error) {
 	return methods, nil
 }
 
-// AllowsMethod reports whether m is permitted by the selection. An empty
-// selection permits everything.
-func AllowsMethod(methods []CredentialMethod, m CredentialMethod) bool {
-	return len(methods) == 0 || slices.Contains(methods, m)
-}
-
 // ChainedTokenOptions configures the sign-in chain we fall back to when no
 // explicit credential (client secret or certificate) is available.
+//
+// This used to embed azidentity.DefaultAzureCredentialOptions, of which we only
+// ever read three fields, and the embed put TenantID a level down from the
+// ClientID sitting right beside it -- so callers set the two halves of one
+// identity in two different places, and only one of them could be written in
+// the struct literal.
 type ChainedTokenOptions struct {
-	azidentity.DefaultAzureCredentialOptions
+	// ClientOptions carries the cloud and transport configuration to give every
+	// credential in the chain, e.g. a sovereign cloud endpoint.
+	ClientOptions azcore.ClientOptions
+
+	// DisableInstanceDiscovery skips the Entra metadata request that validates
+	// the authority, for tenants in private clouds that cannot reach it.
+	DisableInstanceDiscovery bool
+
+	// TenantID of the Entra tenant to sign in to. Empty leaves each credential
+	// to its own default, which for workload identity is AZURE_TENANT_ID.
+	TenantID string
 
 	// ClientID of the service principal to sign in as. Workload identity needs
-	// it and errors out without one; empty falls back to AZURE_CLIENT_ID. The
-	// tenant comes from the embedded DefaultAzureCredentialOptions.TenantID.
+	// it and errors out without one; empty falls back to AZURE_CLIENT_ID.
 	ClientID string
 
 	// FederatedTokenFile is the path to the OIDC token that workload identity
@@ -116,7 +175,25 @@ type ChainedTokenOptions struct {
 
 	// Methods restricts the chain to these sources, tried in the given order.
 	// Empty means DefaultCredentialMethods.
-	Methods []CredentialMethod
+	Methods CredentialMethods
+
+	// Source names the caller, e.g. "azure-connection". Sign-in happens in
+	// several places -- one per provider connection, plus helpers that
+	// authenticate alongside them -- and the log line they share otherwise
+	// cannot be attributed to any of them, which matters most in a scan where
+	// one connection is configured correctly and another is not.
+	Source string
+}
+
+// hasFederatedTokenFile reports whether an OIDC token file is available, from
+// the options or from the variable azidentity itself reads. It is only reported
+// in the logs: a sign-in that walked the whole chain reads very differently
+// depending on whether workload identity federation was even set up here.
+func hasFederatedTokenFile(opts *ChainedTokenOptions) bool {
+	if opts != nil && opts.FederatedTokenFile != "" {
+		return true
+	}
+	return os.Getenv("AZURE_FEDERATED_TOKEN_FILE") != ""
 }
 
 type TokenResolverFn (func() (azcore.TokenCredential, error))
@@ -200,10 +277,12 @@ func GetDefaultChainedToken(options *ChainedTokenOptions) (*azidentity.ChainedTo
 		}),
 	}
 
-	methods := options.Methods
-	if len(methods) == 0 {
-		methods = DefaultCredentialMethods
-	}
+	methods := options.Methods.Effective()
+	log.Debug().
+		Str("methods", methods.Names()).
+		Str("source", credentialSource(options.Source)).
+		Bool("federated-token-file", hasFederatedTokenFile(options)).
+		Msg("building the Azure sign-in chain")
 
 	// iterate the selection, not the map, so the chain keeps the caller's order
 	opts := make([]TokenResolverFn, 0, len(methods))
@@ -211,7 +290,7 @@ func GetDefaultChainedToken(options *ChainedTokenOptions) (*azidentity.ChainedTo
 		resolver, ok := resolvers[method]
 		if !ok {
 			return nil, fmt.Errorf("unknown Azure credential method %q, expected one of %s",
-				method, credentialMethodNames(nil))
+				method, DefaultCredentialMethods.Names())
 		}
 		opts = append(opts, resolver)
 	}
@@ -285,27 +364,36 @@ func GetWorkloadIdentityToken(tenantId, clientId, federatedTokenFile string) (az
 
 // GetTokenFromCredential builds a credential from an explicit client secret or
 // certificate. When there is none, it falls back to the sign-in chain described
-// by options (nil means the full default chain). tenantId and clientId are the
-// authoritative values for the connection and override anything options carries.
-func GetTokenFromCredential(credential *vault.Credential, tenantId, clientId string, options *ChainedTokenOptions) (azcore.TokenCredential, error) {
+// by options (nil means the full default chain).
+//
+// The tenant and client come from options.TenantID and options.ClientID, which
+// both branches read. They used to arrive as positional arguments as well, so
+// the same two values had two homes and the ones passed alongside the options
+// quietly overrode the ones inside them -- a caller that set only the options
+// got them ignored on some paths and honored on others.
+func GetTokenFromCredential(credential *vault.Credential, options *ChainedTokenOptions) (azcore.TokenCredential, error) {
 	var azCred azcore.TokenCredential
 	var err error
 	usedDefaultChain := credential == nil
-	chainOpts := ChainedTokenOptions{}
+	chainOpts := &ChainedTokenOptions{}
 	if options != nil {
-		chainOpts = *options
+		chainOpts = options
 	}
-	if tenantId != "" {
-		chainOpts.TenantID = tenantId
-	}
-	if clientId != "" {
-		chainOpts.ClientID = clientId
-	}
+	tenantId := chainOpts.TenantID
+	clientId := chainOpts.ClientID
+	// resolved here, once, so the chain we build, the line we log and the
+	// guidance a failure gives all name the same methods
+	chainOpts.Methods = chainOpts.Methods.Effective()
 	// fallback to default authorizer if no credentials are specified
 	if credential == nil {
-		log.Info().Str("methods", credentialMethodNames(chainOpts.Methods)).
+		log.Info().
+			Str("methods", chainOpts.Methods.Names()).
+			Str("source", credentialSource(chainOpts.Source)).
+			Str("tenant-id", tenantId).
+			Str("client-id", clientId).
+			Bool("federated-token-file", hasFederatedTokenFile(chainOpts)).
 			Msg("no Azure credentials were provided, trying the configured sign-in methods")
-		azCred, err = GetDefaultChainedToken(&chainOpts)
+		azCred, err = GetDefaultChainedToken(chainOpts)
 		if err != nil {
 			return nil, errors.Wrap(err, "error creating CLI credentials")
 		}
@@ -343,7 +431,7 @@ type guidedCredential struct {
 	usedDefaultChain bool
 	// methods records which sign-in sources the chain was restricted to, so the
 	// guidance names what we actually tried. Empty means the full chain.
-	methods []CredentialMethod
+	methods CredentialMethods
 }
 
 func (c *guidedCredential) GetToken(ctx context.Context, opts policy.TokenRequestOptions) (azcore.AccessToken, error) {
@@ -357,14 +445,20 @@ func (c *guidedCredential) GetToken(ctx context.Context, opts policy.TokenReques
 // enrichTokenError wraps a sign-in failure with guidance tailored to how the
 // credential was configured. The original error is always preserved so no
 // diagnostic detail is lost.
-func enrichTokenError(err error, usedDefaultChain bool, methods []CredentialMethod) error {
+func enrichTokenError(err error, usedDefaultChain bool, methods CredentialMethods) error {
 	if !usedDefaultChain {
 		return errors.Wrap(err, "Azure sign-in with the provided credentials failed; double-check the tenant ID, client ID, and the certificate or client secret")
 	}
 
+	// GetTokenFromCredential resolves the selection before it builds the
+	// credential, so this is normally already the concrete chain. Resolving again
+	// costs nothing and keeps the guidance honest for a credential assembled some
+	// other way, which would otherwise claim we tried nothing at all.
+	methods = methods.Effective()
+
 	msg := "Azure sign-in failed. No credentials were provided, so we tried these sign-in methods: " +
-		credentialMethodNames(methods) + ". None of them worked. "
-	if AllowsMethod(methods, CredentialMethodCLI) {
+		methods.Names() + ". None of them worked. "
+	if methods.Allows(CredentialMethodCLI) {
 		msg += "Run `az login` and confirm `az account get-access-token` returns a token, or provide credentials "
 	} else {
 		msg += "Provide credentials "

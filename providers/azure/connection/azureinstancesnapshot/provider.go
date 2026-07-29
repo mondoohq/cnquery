@@ -91,11 +91,13 @@ func NewAzureSnapshotConnection(id uint32, conf *inventory.Config, asset *invent
 	}
 	// an empty token file leaves azidentity to fall back to
 	// AZURE_FEDERATED_TOKEN_FILE, so only the option needs forwarding here
-	token, err := azauth.GetTokenFromCredential(cred, conf.Options["tenant-id"], conf.Options["client-id"],
-		&azauth.ChainedTokenOptions{
-			FederatedTokenFile: conf.Options["azure-federated-token-file"],
-			Methods:            methods,
-		})
+	token, err := azauth.GetTokenFromCredential(cred, &azauth.ChainedTokenOptions{
+		TenantID:           conf.Options["tenant-id"],
+		ClientID:           conf.Options["client-id"],
+		FederatedTokenFile: conf.Options["azure-federated-token-file"],
+		Methods:            methods,
+		Source:             "azure-snapshot-connection",
+	})
 	if err != nil {
 		return nil, err
 	}

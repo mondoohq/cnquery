@@ -73,7 +73,7 @@ func NewMs365Connection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 	organization := conf.Options[OptionOrganization]
 	sharepointUrl := conf.Options[OptionSharepointUrl]
 	var cred *vault.Credential
-	if len(conf.Credentials) != 0 {
+	if len(conf.Credentials) > 0 {
 		cred = conf.Credentials[0]
 	}
 
@@ -89,8 +89,12 @@ func NewMs365Connection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 	if err != nil {
 		return nil, err
 	}
-	token, err := azauth.GetTokenFromCredential(cred, tenantId, clientId,
-		&azauth.ChainedTokenOptions{Methods: methods})
+	token, err := azauth.GetTokenFromCredential(cred, &azauth.ChainedTokenOptions{
+		TenantID: tenantId,
+		ClientID: clientId,
+		Methods:  methods,
+		Source:   "ms365-connection",
+	})
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot fetch credentials for ms365 provider")
 	}

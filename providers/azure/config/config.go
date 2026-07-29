@@ -121,7 +121,7 @@ Examples run in the Azure CLI:
 					Long:    "auth-method",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Comma-separated sign-in methods to use when no client secret or certificate is given: cli, env, managed-identity, workload-identity (default: try all)",
+					Desc:    "Comma-separated sign-in methods to use when no client secret or certificate is given: cli, env, workload-identity, managed-identity (default: try all, in that order)",
 				},
 				{
 					Long:    "filters",
