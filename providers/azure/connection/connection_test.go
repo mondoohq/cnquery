@@ -14,6 +14,7 @@ import (
 )
 
 func TestSelectAzureCredential_WorkloadIdentity(t *testing.T) {
+	resetCredentialCache()
 	// Set up an env var pointing to a (non-existent) token file.
 	// Construction of WorkloadIdentityCredential does not read the file —
 	// it is read lazily at GetToken time — so the file need not exist.
@@ -34,6 +35,7 @@ func TestSelectAzureCredential_WorkloadIdentity(t *testing.T) {
 }
 
 func TestSelectAzureCredential_WorkloadIdentity_ViaOption(t *testing.T) {
+	resetCredentialCache()
 	// Ensure env var is not set so we test the option path exclusively.
 	// Save and restore to avoid permanently clobbering the env for later tests.
 	prev, ok := os.LookupEnv("AZURE_FEDERATED_TOKEN_FILE")
@@ -66,6 +68,7 @@ func TestSelectAzureCredential_WorkloadIdentity_ViaOption(t *testing.T) {
 // AZURE_FEDERATED_TOKEN_FILE is set, the vault credential path must be taken,
 // so the returned credential must not be a WorkloadIdentityCredential.
 func TestSelectAzureCredential_VaultCredWins(t *testing.T) {
+	resetCredentialCache()
 	t.Setenv("AZURE_FEDERATED_TOKEN_FILE", "/tmp/x.jwt")
 
 	conf := &inventory.Config{
@@ -90,6 +93,7 @@ func TestSelectAzureCredential_VaultCredWins(t *testing.T) {
 // falls through to the default credential chain — which must not be a
 // WorkloadIdentityCredential.
 func TestSelectAzureCredential_DefaultChain(t *testing.T) {
+	resetCredentialCache()
 	// Unset the env var and restore it after the test.
 	prev, ok := os.LookupEnv("AZURE_FEDERATED_TOKEN_FILE")
 	os.Unsetenv("AZURE_FEDERATED_TOKEN_FILE")
@@ -116,6 +120,14 @@ func TestSelectAzureCredential_DefaultChain(t *testing.T) {
 	require.False(t, isWIF, "no vault cred + no token file must fall through to the default chain, not WorkloadIdentityCredential")
 }
 
+// resetCredentialCache drops every cached credential. Tests need it because the
+// cache outlives any one of them.
+func resetCredentialCache() {
+	credentialMu.Lock()
+	defer credentialMu.Unlock()
+	clear(credentialCache)
+}
+
 // unsetFederatedTokenFile clears AZURE_FEDERATED_TOKEN_FILE for the duration of
 // the test and restores whatever was there before.
 func unsetFederatedTokenFile(t *testing.T) {
@@ -138,6 +150,7 @@ func unsetFederatedTokenFile(t *testing.T) {
 // A chain that had quietly kept the CLI and managed identity probes would have
 // succeeded instead — and gone on to burn ~15s per asset probing them.
 func TestSelectAzureCredential_AuthMethodRestrictsChain(t *testing.T) {
+	resetCredentialCache()
 	unsetFederatedTokenFile(t)
 
 	conf := &inventory.Config{
@@ -158,6 +171,7 @@ func TestSelectAzureCredential_AuthMethodRestrictsChain(t *testing.T) {
 // this option exists for: the inventory names workload identity, the pod's
 // webhook supplies the token file, and no client secret is in play.
 func TestSelectAzureCredential_AuthMethodWorkloadIdentity(t *testing.T) {
+	resetCredentialCache()
 	t.Setenv("AZURE_FEDERATED_TOKEN_FILE", "/tmp/x.jwt")
 
 	conf := &inventory.Config{
@@ -181,6 +195,7 @@ func TestSelectAzureCredential_AuthMethodWorkloadIdentity(t *testing.T) {
 // that and the chain comes back empty. The env-var version passes either way,
 // because azidentity reads that variable itself.
 func TestSelectAzureCredential_AuthMethodWorkloadIdentity_TokenFileFromOption(t *testing.T) {
+	resetCredentialCache()
 	unsetFederatedTokenFile(t)
 
 	conf := &inventory.Config{
@@ -227,6 +242,107 @@ func TestSelectAzureCredential_InvalidAuthMethod(t *testing.T) {
 	}
 
 	_, err := selectAzureCredential(conf)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "service-principal")
+}
+
+// The credential is built once and shared: every discovered asset gets its own
+// connection, and one credential per connection means one token request per
+// asset for an identity that already had a token.
+func TestSelectAzureCredential_CachesAcrossConnections(t *testing.T) {
+	resetCredentialCache()
+	t.Setenv("AZURE_FEDERATED_TOKEN_FILE", "/tmp/x.jwt")
+
+	conf := &inventory.Config{
+		Options: map[string]string{"tenant-id": "tid", "client-id": "cid"},
+	}
+	first, err := selectAzureCredential(conf)
+	require.NoError(t, err)
+
+	// a discovered asset: same identity, its own config
+	child := &inventory.Config{
+		Options: map[string]string{"tenant-id": "tid", "client-id": "cid", "subscription-id": "sub"},
+	}
+	second, err := selectAzureCredential(child)
+	require.NoError(t, err)
+	require.Same(t, first, second, "an asset under the same identity must reuse the credential")
+}
+
+// An inventory can hold Azure assets under different tenants. Reusing the first
+// tenant's credential for the second would not fail -- it would quietly scan as
+// the wrong principal -- so each identity gets its own entry, and each of those
+// is reused the same way.
+func TestSelectAzureCredential_CachesPerIdentity(t *testing.T) {
+	resetCredentialCache()
+	t.Setenv("AZURE_FEDERATED_TOKEN_FILE", "/tmp/x.jwt")
+
+	first, err := selectAzureCredential(&inventory.Config{
+		Options: map[string]string{"tenant-id": "tenant-a", "client-id": "cid"},
+	})
+	require.NoError(t, err)
+
+	second, err := selectAzureCredential(&inventory.Config{
+		Options: map[string]string{"tenant-id": "tenant-b", "client-id": "cid"},
+	})
+	require.NoError(t, err)
+	require.NotSame(t, first, second, "a different tenant must get its own credential")
+
+	// both entries survive each other, and both are reused
+	againA, err := selectAzureCredential(&inventory.Config{
+		Options: map[string]string{"tenant-id": "tenant-a", "client-id": "cid"},
+	})
+	require.NoError(t, err)
+	require.Same(t, first, againA)
+
+	againB, err := selectAzureCredential(&inventory.Config{
+		Options: map[string]string{"tenant-id": "tenant-b", "client-id": "cid"},
+	})
+	require.NoError(t, err)
+	require.Same(t, second, againB)
+}
+
+// A build that fails must not be remembered as the answer for that identity.
+func TestSelectAzureCredential_DoesNotCacheFailures(t *testing.T) {
+	resetCredentialCache()
+	unsetFederatedTokenFile(t)
+
+	conf := &inventory.Config{
+		Options: map[string]string{
+			"tenant-id":   "tid",
+			"client-id":   "cid",
+			"auth-method": "workload-identity",
+		},
+	}
+	_, err := selectAzureCredential(conf)
+	require.Error(t, err)
+
+	// with a token file in place the same identity builds fine, which it could
+	// not do if the failure had been cached
+	t.Setenv("AZURE_FEDERATED_TOKEN_FILE", "/tmp/x.jwt")
+	cred, err := selectAzureCredential(conf)
+	require.NoError(t, err)
+	require.NotNil(t, cred)
+}
+
+// An unusable auth-method belongs to the connection that named it. Consulting
+// the cache first would let a typo through on every connection after the one
+// that built the credential.
+func TestSelectAzureCredential_RejectsBadAuthMethodEvenWhenCached(t *testing.T) {
+	resetCredentialCache()
+	t.Setenv("AZURE_FEDERATED_TOKEN_FILE", "/tmp/x.jwt")
+
+	_, err := selectAzureCredential(&inventory.Config{
+		Options: map[string]string{"tenant-id": "tid", "client-id": "cid"},
+	})
+	require.NoError(t, err)
+
+	_, err = selectAzureCredential(&inventory.Config{
+		Options: map[string]string{
+			"tenant-id":   "tid",
+			"client-id":   "cid",
+			"auth-method": "service-principal",
+		},
+	})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "service-principal")
 }
