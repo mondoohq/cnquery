@@ -1545,6 +1545,8 @@ var aix = &PlatformResolver{
 			pf.Build = strings.TrimSpace(buildversion)
 		}
 
+		detectAixHardware(pf, osrd)
+
 		return true, nil
 	},
 }

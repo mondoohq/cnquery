@@ -930,6 +930,38 @@ func TestSolaris11Detector(t *testing.T) {
 	assert.Equal(t, []string{"unix", "os"}, di.Family)
 }
 
+func TestAix72Detector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-aix72.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "aix", di.Name, "os name should be identified")
+	assert.Equal(t, "AIX", di.Title, "os title should be identified")
+	assert.Equal(t, "7.2", di.Version, "os version should be identified")
+	assert.Equal(t, "powerpc", di.Arch, "os arch should be identified")
+	assert.Equal(t, "7200-05-02-2114", di.Build, "os build should be identified")
+	assert.Equal(t, []string{"unix", "os"}, di.Family)
+
+	// hardware facts required to scope POWER-gated security advisories
+	assert.Equal(t, "IBM,9009-42A", di.Labels[AixLabelSystemModel])
+	assert.Equal(t, "PowerPC_POWER9", di.Labels[AixLabelProcessorType])
+}
+
+func TestAixDetectorWithoutHardwareFacts(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-aix71-no-hardware.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "aix", di.Name, "os name should be identified")
+	assert.Equal(t, "7.1", di.Version, "os version should be identified")
+
+	// uname -M and lsattr are unavailable here. The labels must stay absent rather
+	// than be recorded as empty, so that consumers can tell "unknown" apart from a
+	// value that genuinely does not match.
+	_, hasModel := di.Labels[AixLabelSystemModel]
+	assert.False(t, hasModel, "system model label should be absent")
+	_, hasProcType := di.Labels[AixLabelProcessorType]
+	assert.False(t, hasProcType, "processor type label should be absent")
+}
+
 func TestNetbsd8Detector(t *testing.T) {
 	di, err := detectPlatformFromMock("./testdata/detect-netbsd8.toml")
 	assert.Nil(t, err, "was able to create the provider")
