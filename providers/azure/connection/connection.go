@@ -65,7 +65,7 @@ func selectAzureCredential(conf *inventory.Config) (azcore.TokenCredential, erro
 	}
 
 	var cred *vault.Credential
-	if len(conf.Credentials) != 0 {
+	if len(conf.Credentials) > 0 {
 		cred = conf.Credentials[0]
 	}
 
