@@ -68,13 +68,23 @@ var DefaultCredentialMethods = []CredentialMethod{
 	CredentialMethodManagedIdentity,
 }
 
-// credentialMethodNames renders a method selection as a plain list; an empty
-// selection renders the full default chain. These are the names auth-method
-// accepts, so a message built from them doubles as a usage hint.
-func credentialMethodNames(methods []CredentialMethod) string {
+// effectiveMethods resolves a selection to the chain that will actually be
+// tried: empty means the default chain. Callers resolve once, at the point they
+// take the options, so that everything downstream -- the chain we build, the
+// line we log, the guidance we give when it fails -- is talking about the same
+// list rather than each re-deriving it.
+func effectiveMethods(methods []CredentialMethod) []CredentialMethod {
 	if len(methods) == 0 {
-		methods = DefaultCredentialMethods
+		return DefaultCredentialMethods
 	}
+	return methods
+}
+
+// credentialMethodNames renders a method selection as a plain list. These are
+// the names auth-method accepts, so a message built from them doubles as a
+// usage hint. It renders what it is given: an unresolved selection is an empty
+// list, not the default chain.
+func credentialMethodNames(methods []CredentialMethod) string {
 	names := make([]string, 0, len(methods))
 	for _, m := range methods {
 		names = append(names, m.Name())
@@ -114,7 +124,7 @@ func ParseCredentialMethods(s string) ([]CredentialMethod, error) {
 		method := CredentialMethod(name)
 		if !slices.Contains(DefaultCredentialMethods, method) {
 			return nil, fmt.Errorf("unknown Azure credential method %q, expected one of %s",
-				strings.TrimSpace(part), credentialMethodNames(nil))
+				strings.TrimSpace(part), credentialMethodNames(DefaultCredentialMethods))
 		}
 		if !slices.Contains(methods, method) {
 			methods = append(methods, method)
@@ -263,10 +273,7 @@ func GetDefaultChainedToken(options *ChainedTokenOptions) (*azidentity.ChainedTo
 		}),
 	}
 
-	methods := options.Methods
-	if len(methods) == 0 {
-		methods = DefaultCredentialMethods
-	}
+	methods := effectiveMethods(options.Methods)
 	log.Debug().
 		Str("methods", credentialMethodNames(methods)).
 		Str("source", credentialSource(options.Source)).
@@ -279,7 +286,7 @@ func GetDefaultChainedToken(options *ChainedTokenOptions) (*azidentity.ChainedTo
 		resolver, ok := resolvers[method]
 		if !ok {
 			return nil, fmt.Errorf("unknown Azure credential method %q, expected one of %s",
-				method, credentialMethodNames(nil))
+				method, credentialMethodNames(DefaultCredentialMethods))
 		}
 		opts = append(opts, resolver)
 	}
@@ -370,6 +377,9 @@ func GetTokenFromCredential(credential *vault.Credential, options *ChainedTokenO
 	}
 	tenantId := chainOpts.TenantID
 	clientId := chainOpts.ClientID
+	// resolved here, once, so the chain we build, the line we log and the
+	// guidance a failure gives all name the same methods
+	chainOpts.Methods = effectiveMethods(chainOpts.Methods)
 	// fallback to default authorizer if no credentials are specified
 	if credential == nil {
 		log.Info().
@@ -435,6 +445,12 @@ func enrichTokenError(err error, usedDefaultChain bool, methods []CredentialMeth
 	if !usedDefaultChain {
 		return errors.Wrap(err, "Azure sign-in with the provided credentials failed; double-check the tenant ID, client ID, and the certificate or client secret")
 	}
+
+	// GetTokenFromCredential resolves the selection before it builds the
+	// credential, so this is normally already the concrete chain. Resolving again
+	// costs nothing and keeps the guidance honest for a credential assembled some
+	// other way, which would otherwise claim we tried nothing at all.
+	methods = effectiveMethods(methods)
 
 	msg := "Azure sign-in failed. No credentials were provided, so we tried these sign-in methods: " +
 		credentialMethodNames(methods) + ". None of them worked. "

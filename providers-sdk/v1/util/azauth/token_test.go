@@ -147,10 +147,20 @@ func TestHasFederatedTokenFile(t *testing.T) {
 	})
 }
 
+func TestEffectiveMethods(t *testing.T) {
+	assert.Equal(t, DefaultCredentialMethods, effectiveMethods(nil))
+	assert.Equal(t, DefaultCredentialMethods, effectiveMethods([]CredentialMethod{}))
+	assert.Equal(t,
+		[]CredentialMethod{CredentialMethodWorkloadIdentity},
+		effectiveMethods([]CredentialMethod{CredentialMethodWorkloadIdentity}))
+}
+
 func TestCredentialMethodNames(t *testing.T) {
 	assert.Equal(t, "workload-identity", credentialMethodNames([]CredentialMethod{CredentialMethodWorkloadIdentity}))
-	// an empty selection stands for the whole chain, in the order it is tried
-	assert.Equal(t, "cli, env, workload-identity, managed-identity", credentialMethodNames(nil))
+	assert.Equal(t, "cli, env, workload-identity, managed-identity", credentialMethodNames(DefaultCredentialMethods))
+	// it renders what it is given: resolving an empty selection is the caller's
+	// job, done once, rather than something this quietly repeats
+	assert.Equal(t, "", credentialMethodNames(nil))
 }
 
 func TestGuidedCredential_EnrichesErrors(t *testing.T) {
