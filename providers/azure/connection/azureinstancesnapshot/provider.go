@@ -95,6 +95,7 @@ func NewAzureSnapshotConnection(id uint32, conf *inventory.Config, asset *invent
 		&azauth.ChainedTokenOptions{
 			FederatedTokenFile: conf.Options["azure-federated-token-file"],
 			Methods:            methods,
+			Source:             "azure-snapshot-connection",
 		})
 	if err != nil {
 		return nil, err

@@ -42,7 +42,7 @@ func NewAcrAuthHelperFromToken(tokenFn azauth.TokenResolverFn) *acrAuthHelper {
 
 func NewAcrAuthHelper() *acrAuthHelper {
 	fn := func() (azcore.TokenCredential, error) {
-		return azauth.GetDefaultChainedToken(nil)
+		return azauth.GetDefaultChainedToken(&azauth.ChainedTokenOptions{Source: "acr-auth-helper"})
 	}
 	return NewAcrAuthHelperFromToken(fn)
 }

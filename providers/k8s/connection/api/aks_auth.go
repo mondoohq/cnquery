@@ -48,6 +48,7 @@ func attemptKubeloginAuthFlow(asset *inventory.Asset, config *rest.Config) error
 		DefaultAzureCredentialOptions: azidentity.DefaultAzureCredentialOptions{
 			ClientOptions: azcore.ClientOptions{Cloud: cloud.AzurePublic},
 		},
+		Source: "k8s-aks-kubelogin",
 	})
 	if err != nil {
 		return errors.Wrap(err, "failed to get chained token credential for Azure AKS authentication")

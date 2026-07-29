@@ -75,15 +75,17 @@ func selectAzureCredential(conf *inventory.Config) (azcore.TokenCredential, erro
 	}
 
 	// A token file with no method selection is unambiguously workload identity
-	// federation, so there is nothing to probe. Once a selection exists it
-	// decides instead: the file can be a leftover env var from the pod spec,
-	// and a selection that rules workload identity out has to be honored.
-	if cred == nil && federatedTokenFile != "" && len(methods) == 0 {
-		return azauth.GetWorkloadIdentityToken(tenantId, clientId, federatedTokenFile)
-	}
+	// federation; azauth puts that method first rather than probing its way
+	// down to it. This used to shortcut straight to a bare workload identity
+	// credential here, which skipped the sign-in log line entirely -- so a
+	// connection that authenticated this way was invisible, and the only
+	// connections that showed up in the logs were the ones configured
+	// differently. Every path now goes through GetTokenFromCredential and says
+	// who it was.
 	return azauth.GetTokenFromCredential(cred, tenantId, clientId, &azauth.ChainedTokenOptions{
 		FederatedTokenFile: federatedTokenFile,
 		Methods:            methods,
+		Source:             "azure-connection",
 	})
 }
 

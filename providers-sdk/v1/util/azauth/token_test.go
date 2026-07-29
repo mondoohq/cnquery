@@ -113,6 +113,46 @@ func TestGetDefaultChainedToken_RestrictsChain(t *testing.T) {
 	})
 }
 
+func TestResolveMethods(t *testing.T) {
+	t.Run("an explicit selection is honored as given", func(t *testing.T) {
+		t.Setenv("AZURE_FEDERATED_TOKEN_FILE", "/tmp/x.jwt")
+		methods := resolveMethods(&ChainedTokenOptions{
+			Methods: []CredentialMethod{CredentialMethodManagedIdentity},
+		})
+		assert.Equal(t, []CredentialMethod{CredentialMethodManagedIdentity}, methods)
+	})
+
+	t.Run("no token file anywhere keeps the default order", func(t *testing.T) {
+		t.Setenv("AZURE_FEDERATED_TOKEN_FILE", "")
+		assert.Nil(t, resolveMethods(&ChainedTokenOptions{}))
+		assert.Nil(t, resolveMethods(nil))
+	})
+
+	// the deployment this exists for: a WIF pod whose inventory never named a
+	// method. Probing our way down to workload identity costs ~15s on the
+	// managed identity step alone, once per connection, so it goes first.
+	t.Run("a token file in the options puts workload identity first", func(t *testing.T) {
+		t.Setenv("AZURE_FEDERATED_TOKEN_FILE", "")
+		methods := resolveMethods(&ChainedTokenOptions{FederatedTokenFile: "/tmp/x.jwt"})
+		require.NotEmpty(t, methods)
+		assert.Equal(t, CredentialMethodWorkloadIdentity, methods[0])
+		// the rest stay as fallbacks, so a stale token file still degrades
+		assert.ElementsMatch(t, DefaultCredentialMethods, methods)
+	})
+
+	t.Run("the env var counts as a token file too", func(t *testing.T) {
+		t.Setenv("AZURE_FEDERATED_TOKEN_FILE", "/var/run/secrets/azure/tokens/azure-identity-token")
+		methods := resolveMethods(&ChainedTokenOptions{})
+		require.NotEmpty(t, methods)
+		assert.Equal(t, CredentialMethodWorkloadIdentity, methods[0])
+	})
+}
+
+func TestCredentialSource(t *testing.T) {
+	assert.Equal(t, "azure-connection", credentialSource("azure-connection"))
+	assert.Equal(t, "unknown", credentialSource(""))
+}
+
 func TestCredentialMethodNames(t *testing.T) {
 	assert.Equal(t, "workload-identity", credentialMethodNames([]CredentialMethod{CredentialMethodWorkloadIdentity}))
 	// an empty selection stands for the whole chain
