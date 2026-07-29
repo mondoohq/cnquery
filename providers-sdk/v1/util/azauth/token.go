@@ -40,6 +40,12 @@ const (
 	CredentialMethodWorkloadIdentity CredentialMethod = "workload-identity"
 )
 
+// Name is the method's canonical name, which is both what auth-method accepts
+// and what the logs and error messages print.
+func (c CredentialMethod) Name() string {
+	return string(c)
+}
+
 // DefaultCredentialMethods is the chain we try when the caller does not name
 // any method, in order.
 //
@@ -71,7 +77,7 @@ func credentialMethodNames(methods []CredentialMethod) string {
 	}
 	names := make([]string, 0, len(methods))
 	for _, m := range methods {
-		names = append(names, string(m))
+		names = append(names, m.Name())
 	}
 	return strings.Join(names, ", ")
 }
