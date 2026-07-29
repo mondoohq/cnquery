@@ -660,3 +660,114 @@ func TestRpmQueryFormatRoundTrip(t *testing.T) {
 		})
 	}
 }
+
+func TestNormalizeRpmEpoch(t *testing.T) {
+	tests := []struct {
+		epoch    string
+		expected string
+	}{
+		// rpm's three spellings of "no epoch"
+		{"0", ""},
+		{"(none)", ""},
+		{" (none) ", ""},
+		{"", ""},
+		// a real epoch survives
+		{"1", "1"},
+		{"2", "2"},
+		{"10", "10"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.epoch, func(t *testing.T) {
+			assert.Equal(t, test.expected, normalizeRpmEpoch(test.epoch))
+		})
+	}
+}
+
+// The rpmdb path (container images, filesystem scans) and the rpm command path
+// (live hosts) must render identical versions and purls for the same package.
+//
+// They did not: the rpmdb path prefixed the epoch unconditionally, so a package
+// with no epoch — the overwhelming majority — came out as "0:3.9.25-7.el9_8.2"
+// from an image and "3.9.25-7.el9_8.2" from a live host. The purl differed with
+// it, so the same package looked like two different packages depending on how
+// the asset was scanned. Consumers that match a version by prefix rather than
+// by rpm version comparison found nothing at all for rpm images.
+//
+// Verified against registry.access.redhat.com/ubi9/ubi:latest, scanned both as
+// `docker image` (rpmdb) and `docker container` (rpm command).
+func TestRpmEpochParityAcrossCollectionPaths(t *testing.T) {
+	pf := &inventory.Platform{
+		Name:    "redhat",
+		Version: "9",
+		Arch:    "aarch64",
+		Family:  []string{"linux", "unix", "os"},
+		Labels: map[string]string{
+			"distro-id": "rhel",
+		},
+	}
+
+	zero, one := 0, 1
+	tests := []struct {
+		name            string
+		pkg             *rpmdb.PackageInfo
+		expectedVersion string
+	}{
+		{
+			name: "no epoch",
+			pkg: &rpmdb.PackageInfo{
+				Name: "python3", Epoch: &zero, Version: "3.9.25", Release: "7.el9_8.2",
+				Arch: "aarch64", Vendor: "Red Hat, Inc.", License: "Python-2.0.1",
+				Summary: "Python 3 interpreter",
+			},
+			expectedVersion: "3.9.25-7.el9_8.2",
+		},
+		{
+			// Epoch is a nil pointer when rpm never recorded one at all;
+			// EpochNum() reports 0 for it, same as an explicit zero.
+			name: "epoch absent entirely",
+			pkg: &rpmdb.PackageInfo{
+				Name: "glibc", Epoch: nil, Version: "2.34", Release: "274.el9_8",
+				Arch: "aarch64", Vendor: "Red Hat, Inc.", License: "LGPLv2+",
+				Summary: "The GNU libc libraries",
+			},
+			expectedVersion: "2.34-274.el9_8",
+		},
+		{
+			// A real epoch belongs in the version, and both paths already agreed here.
+			name: "non-zero epoch",
+			pkg: &rpmdb.PackageInfo{
+				Name: "gmp", Epoch: &one, Version: "6.1.2", Release: "11.el8",
+				Arch: "aarch64", Vendor: "Red Hat, Inc.", License: "LGPLv3+",
+				Summary: "A GNU arbitrary precision library",
+			},
+			expectedVersion: "1:6.1.2-11.el8",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			fromDB := newRpmPackageFromDB(pf, test.pkg, "/var/lib/rpm/rpmdb.sqlite")
+
+			// Render the same package the way `rpm -qa --queryformat` would,
+			// then read it back through the command path.
+			var out bytes.Buffer
+			fmt.Fprintf(&out, "%s %d:%s-%s %s__%s__%s__%s__%d\n",
+				test.pkg.Name, test.pkg.EpochNum(), test.pkg.Version, test.pkg.Release,
+				test.pkg.Arch, test.pkg.Vendor, test.pkg.Summary, test.pkg.License, 0)
+			fromCmd := ParseRpmPackages(pf, &out)
+			require.Len(t, fromCmd, 1)
+
+			assert.Equal(t, test.expectedVersion, fromDB.Version, "rpmdb path version")
+			assert.Equal(t, test.expectedVersion, fromCmd[0].Version, "command path version")
+			assert.Equal(t, fromCmd[0].Version, fromDB.Version, "versions must agree across paths")
+			assert.Equal(t, fromCmd[0].PUrl, fromDB.PUrl, "purls must agree across paths")
+			assert.Equal(t, fromCmd[0].Epoch, fromDB.Epoch, "epochs must agree across paths")
+			assert.Equal(t, fromCmd[0].CPEs, fromDB.CPEs, "cpes must agree across paths")
+
+			// The rpmdb path additionally carries the database as evidence.
+			assert.Equal(t, PkgFilesIncluded, fromDB.FilesAvailable)
+			assert.Equal(t, []FileRecord{{Path: "/var/lib/rpm/rpmdb.sqlite"}}, fromDB.Files)
+		})
+	}
+}
