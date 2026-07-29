@@ -4,10 +4,13 @@
 package resources
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	nethttp "net/http"
+	"sync"
 	"testing"
+	"time"
 
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/stretchr/testify/assert"
@@ -110,5 +113,119 @@ func TestIsMacieNotEnabledError(t *testing.T) {
 	t.Run("404 with Macie message", func(t *testing.T) {
 		assert.True(t, IsMacieNotEnabledError(macieHTTPError(404,
 			"ResourceNotFoundException: Amazon Macie isn't enabled for your account")))
+	})
+}
+
+func TestFetchTagsConcurrently(t *testing.T) {
+	t.Run("no keys makes no calls", func(t *testing.T) {
+		called := false
+		res := fetchTagsConcurrently(context.Background(), []string{}, func(context.Context, string) (map[string]string, error) {
+			called = true
+			return nil, nil
+		})
+		assert.Empty(t, res)
+		assert.False(t, called)
+	})
+
+	t.Run("nil keys returns an empty, usable map", func(t *testing.T) {
+		res := fetchTagsConcurrently(context.Background(), nil, func(context.Context, string) (map[string]string, error) {
+			return map[string]string{"env": "prod"}, nil
+		})
+		assert.Empty(t, res)
+		assert.Nil(t, res["anything"])
+	})
+
+	t.Run("resolves every key", func(t *testing.T) {
+		keys := []string{"a", "b", "c"}
+		res := fetchTagsConcurrently(context.Background(), keys, func(_ context.Context, k string) (map[string]string, error) {
+			return map[string]string{"name": k}, nil
+		})
+		assert.Len(t, res, 3)
+		for _, k := range keys {
+			assert.Equal(t, map[string]string{"name": k}, res[k])
+		}
+	})
+
+	t.Run("a failing key is absent, the rest still resolve", func(t *testing.T) {
+		res := fetchTagsConcurrently(context.Background(), []string{"ok", "boom", "fine"}, func(_ context.Context, k string) (map[string]string, error) {
+			if k == "boom" {
+				return nil, errors.New("access denied")
+			}
+			return map[string]string{"name": k}, nil
+		})
+
+		// An errored key yields a nil map, which IsFilteredOutByTags treats as
+		// an empty tag set rather than aborting the whole listing.
+		assert.Len(t, res, 2)
+		assert.Nil(t, res["boom"])
+		assert.Equal(t, map[string]string{"name": "ok"}, res["ok"])
+		assert.Equal(t, map[string]string{"name": "fine"}, res["fine"])
+	})
+
+	// Callers seed the fetched tags onto the resource, so "we read it and there
+	// were none" must stay distinguishable from "we could not read it". Presence
+	// in the map is the signal; a successful fetch is never a nil map.
+	t.Run("untagged resolves to an empty map, not absence", func(t *testing.T) {
+		res := fetchTagsConcurrently(context.Background(), []string{"untagged", "failed"}, func(_ context.Context, k string) (map[string]string, error) {
+			if k == "failed" {
+				return nil, errors.New("access denied")
+			}
+			return nil, nil // successful call, resource simply has no tags
+		})
+
+		untagged, ok := res["untagged"]
+		assert.True(t, ok, "a successful fetch must be present in the map")
+		assert.NotNil(t, untagged, "a successful fetch must never yield a nil map")
+		assert.Empty(t, untagged)
+
+		_, ok = res["failed"]
+		assert.False(t, ok, "a failed fetch must be absent from the map")
+	})
+
+	t.Run("every key failing is not fatal", func(t *testing.T) {
+		res := fetchTagsConcurrently(context.Background(), []string{"a", "b"}, func(context.Context, string) (map[string]string, error) {
+			return nil, errors.New("access denied")
+		})
+		assert.Empty(t, res)
+	})
+
+	t.Run("duplicate keys are tolerated", func(t *testing.T) {
+		res := fetchTagsConcurrently(context.Background(), []string{"dup", "dup"}, func(_ context.Context, k string) (map[string]string, error) {
+			return map[string]string{"name": k}, nil
+		})
+		assert.Len(t, res, 1)
+		assert.Equal(t, map[string]string{"name": "dup"}, res["dup"])
+	})
+
+	t.Run("concurrency stays within the bound", func(t *testing.T) {
+		keys := make([]string, 100)
+		for i := range keys {
+			keys[i] = fmt.Sprintf("key-%d", i)
+		}
+
+		var mu sync.Mutex
+		inFlight, maxInFlight := 0, 0
+
+		res := fetchTagsConcurrently(context.Background(), keys, func(_ context.Context, k string) (map[string]string, error) {
+			mu.Lock()
+			inFlight++
+			if inFlight > maxInFlight {
+				maxInFlight = inFlight
+			}
+			mu.Unlock()
+
+			// Hold the slot long enough that the pool saturates.
+			time.Sleep(2 * time.Millisecond)
+
+			mu.Lock()
+			inFlight--
+			mu.Unlock()
+			return map[string]string{"name": k}, nil
+		})
+
+		assert.Len(t, res, len(keys))
+		assert.LessOrEqual(t, maxInFlight, fetchTagsConcurrency)
+		// Guard against the bound silently collapsing to serial execution.
+		assert.Greater(t, maxInFlight, 1)
 	})
 }

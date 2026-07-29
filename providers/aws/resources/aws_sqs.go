@@ -23,6 +23,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
+	mqltypes "go.mondoo.com/mql/v13/types"
 )
 
 func (a *mqlAwsSqs) id() (string, error) {
@@ -174,17 +175,46 @@ func (a *mqlAwsSqs) getQueues(conn *connection.AwsConnection) []*jobpool.Job {
 					}
 					return nil, err
 				}
+				// Pre-fetch tags in parallel when tag-based filters are configured.
+				// SQS has no batch tags endpoint, so this turns a sequential
+				// per-queue call into bounded concurrent calls.
+				var tagsByUrl map[string]map[string]string
+				if conn.Filters.General.HasTags() {
+					tagsByUrl = fetchTagsConcurrently(ctx, qs.QueueUrls, func(ctx context.Context, queueUrl string) (map[string]string, error) {
+						resp, err := svc.ListQueueTags(ctx, &sqs.ListQueueTagsInput{QueueUrl: aws.String(queueUrl)})
+						if err != nil {
+							return nil, err
+						}
+						return resp.Tags, nil
+					})
+				}
+
 				for _, q := range qs.QueueUrls {
-					mqlTopic, err := CreateResource(a.MqlRuntime, "aws.sqs.queue",
-						map[string]*llx.RawData{
-							"url":    llx.StringData(q),
-							"region": llx.StringData(region),
-						},
-					)
+					args := map[string]*llx.RawData{
+						"url":    llx.StringData(q),
+						"region": llx.StringData(region),
+					}
+					if conn.Filters.General.HasTags() {
+						tags, fetched := tagsByUrl[q]
+						if conn.Filters.General.IsFilteredOutByTags(tags) {
+							log.Debug().Str("queue", q).Msg("excluding sqs queue due to filters")
+							continue
+						}
+						// Seed the tags we already paid for; discovery reads them
+						// back immediately and would otherwise re-fetch. Only seed
+						// a tag set we actually read - publishing an empty map for
+						// a queue whose ListQueueTags call failed would report "no
+						// tags" as fact. Leaving it unset keeps the field lazy.
+						if fetched {
+							args["tags"] = llx.MapData(stringMapToAny(tags), mqltypes.String)
+						}
+					}
+
+					mqlQueue, err := CreateResource(a.MqlRuntime, "aws.sqs.queue", args)
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, mqlTopic)
+					res = append(res, mqlQueue)
 				}
 			}
 			return jobpool.JobResult(res), nil
