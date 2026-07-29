@@ -44,14 +44,11 @@ func ParseRpmPackages(pf *inventory.Platform, input io.Reader) []Package {
 		m := RPM_REGEX.FindStringSubmatch(line)
 		if m != nil {
 			name := m[1]
-			epoch := m[2]
+			epoch := normalizeRpmEpoch(m[2])
 			version := m[3]
 
-			// trim epoch if it is 0 or "(none)"
-			if epoch == "0" || strings.TrimSpace(epoch) == "(none)" {
-				epoch = ""
-			} else {
-				// only append the epoch if we have a non-zero value
+			// only prefix the epoch if we have a non-zero value
+			if epoch != "" {
 				version = epoch + ":" + version
 			}
 
@@ -92,6 +89,49 @@ func ParseRpmPackages(pf *inventory.Platform, input io.Reader) []Package {
 		}
 	}
 	return pkgs
+}
+
+// normalizeRpmEpoch collapses rpm's spellings of "this package has no epoch"
+// -- "0", "(none)" and the empty string -- to the empty string.
+//
+// Zero is rpm's default epoch and carries no information, so it belongs in
+// neither the version string nor the purl. Both collection paths (the rpm
+// command and the rpmdb parser) must agree on this: the version ends up in the
+// purl, so a package that renders as "0:3.9.25-7.el9" when read from an image
+// and "3.9.25-7.el9" when read from a live host looks like two different
+// packages to everything downstream.
+func normalizeRpmEpoch(epoch string) string {
+	epoch = strings.TrimSpace(epoch)
+	if epoch == "0" || epoch == "(none)" {
+		return ""
+	}
+	return epoch
+}
+
+// newRpmPackageFromDB builds a Package from an rpmdb entry. This is the static
+// analysis path, used whenever the rpm command is unavailable -- container
+// images, filesystem and device scans.
+func newRpmPackageFromDB(pf *inventory.Platform, pkg *rpmdb.PackageInfo, rpmDBPath string) Package {
+	epoch := normalizeRpmEpoch(strconv.Itoa(pkg.EpochNum()))
+
+	version := pkg.Version
+	if epoch != "" {
+		version = epoch + ":" + version
+	}
+	if pkg.Release != "" {
+		version = version + "-" + pkg.Release
+	}
+
+	rpmPkg := newRpmPackage(pf, pkg.Name, version, pkg.Arch, epoch, cleanupVendorName(pkg.Vendor),
+		pkg.Summary, pkg.License, pkg.Modularitylabel, int64(pkg.InstallTime))
+
+	rpmPkg.FilesAvailable = PkgFilesIncluded
+	rpmPkg.Files = []FileRecord{
+		{
+			Path: rpmDBPath,
+		},
+	}
+	return rpmPkg
 }
 
 func newRpmPackage(pf *inventory.Platform, name, version, arch, epoch, vendor, description, license, modularity string, installTime int64) Package {
@@ -328,22 +368,7 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 
 	resultList := []Package{}
 	for _, pkg := range pkgList {
-		version := pkg.Version
-		epoch := strconv.Itoa(pkg.EpochNum())
-		version = epoch + ":" + version
-		if pkg.Release != "" {
-			version = version + "-" + pkg.Release
-		}
-
-		rpmPkg := newRpmPackage(rpm.platform, pkg.Name, version, pkg.Arch, epoch, cleanupVendorName(pkg.Vendor), pkg.Summary, pkg.License, pkg.Modularitylabel, int64(pkg.InstallTime))
-
-		rpmPkg.FilesAvailable = PkgFilesIncluded
-		rpmPkg.Files = []FileRecord{
-			{
-				Path: detectedPath,
-			},
-		}
-		resultList = append(resultList, rpmPkg)
+		resultList = append(resultList, newRpmPackageFromDB(rpm.platform, pkg, detectedPath))
 	}
 
 	return resultList, nil
