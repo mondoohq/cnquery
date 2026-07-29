@@ -125,12 +125,27 @@ func AllowsMethod(methods []CredentialMethod, m CredentialMethod) bool {
 
 // ChainedTokenOptions configures the sign-in chain we fall back to when no
 // explicit credential (client secret or certificate) is available.
+//
+// This used to embed azidentity.DefaultAzureCredentialOptions, of which we only
+// ever read three fields, and the embed put TenantID a level down from the
+// ClientID sitting right beside it -- so callers set the two halves of one
+// identity in two different places, and only one of them could be written in
+// the struct literal.
 type ChainedTokenOptions struct {
-	azidentity.DefaultAzureCredentialOptions
+	// ClientOptions carries the cloud and transport configuration to give every
+	// credential in the chain, e.g. a sovereign cloud endpoint.
+	ClientOptions azcore.ClientOptions
+
+	// DisableInstanceDiscovery skips the Entra metadata request that validates
+	// the authority, for tenants in private clouds that cannot reach it.
+	DisableInstanceDiscovery bool
+
+	// TenantID of the Entra tenant to sign in to. Empty leaves each credential
+	// to its own default, which for workload identity is AZURE_TENANT_ID.
+	TenantID string
 
 	// ClientID of the service principal to sign in as. Workload identity needs
-	// it and errors out without one; empty falls back to AZURE_CLIENT_ID. The
-	// tenant comes from the embedded DefaultAzureCredentialOptions.TenantID.
+	// it and errors out without one; empty falls back to AZURE_CLIENT_ID.
 	ClientID string
 
 	// FederatedTokenFile is the path to the OIDC token that workload identity

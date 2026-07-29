@@ -89,13 +89,12 @@ func NewMs365Connection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 	if err != nil {
 		return nil, err
 	}
-	chainOpts := &azauth.ChainedTokenOptions{
+	token, err := azauth.GetTokenFromCredential(cred, &azauth.ChainedTokenOptions{
+		TenantID: tenantId,
 		ClientID: clientId,
 		Methods:  methods,
 		Source:   "ms365-connection",
-	}
-	chainOpts.TenantID = tenantId
-	token, err := azauth.GetTokenFromCredential(cred, chainOpts)
+	})
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot fetch credentials for ms365 provider")
 	}

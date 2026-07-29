@@ -10,7 +10,6 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
-	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -83,9 +82,7 @@ func TestGetDefaultChainedToken_RestrictsChain(t *testing.T) {
 		// credential coming back at all proves ClientID was passed through
 		// rather than left to AZURE_CLIENT_ID.
 		cred, err := GetDefaultChainedToken(&ChainedTokenOptions{
-			DefaultAzureCredentialOptions: azidentity.DefaultAzureCredentialOptions{
-				TenantID: "aba673d8-12f8-4315-90c1-848f09d747f1",
-			},
+			TenantID:           "aba673d8-12f8-4315-90c1-848f09d747f1",
 			ClientID:           "f424bc0b-7f95-4270-8ffc-694a52e60b9f",
 			FederatedTokenFile: "/var/run/secrets/azure/tokens/azure-identity-token",
 			Methods:            []CredentialMethod{CredentialMethodWorkloadIdentity},

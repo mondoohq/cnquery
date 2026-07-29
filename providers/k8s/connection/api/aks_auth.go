@@ -8,7 +8,6 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
-	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
@@ -45,10 +44,8 @@ func attemptKubeloginAuthFlow(asset *inventory.Asset, config *rest.Config) error
 
 	// the managed identity token credential is used for AKS authentication
 	chainedToken, err := azauth.GetDefaultChainedToken(&azauth.ChainedTokenOptions{
-		DefaultAzureCredentialOptions: azidentity.DefaultAzureCredentialOptions{
-			ClientOptions: azcore.ClientOptions{Cloud: cloud.AzurePublic},
-		},
-		Source: "k8s-aks-kubelogin",
+		ClientOptions: azcore.ClientOptions{Cloud: cloud.AzurePublic},
+		Source:        "k8s-aks-kubelogin",
 	})
 	if err != nil {
 		return errors.Wrap(err, "failed to get chained token credential for Azure AKS authentication")
