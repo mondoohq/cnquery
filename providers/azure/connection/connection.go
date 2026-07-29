@@ -74,14 +74,17 @@ func selectAzureCredential(conf *inventory.Config) (azcore.TokenCredential, erro
 		federatedTokenFile = os.Getenv("AZURE_FEDERATED_TOKEN_FILE")
 	}
 
-	// A token file with no method selection is unambiguously workload identity
-	// federation; azauth puts that method first rather than probing its way
-	// down to it. This used to shortcut straight to a bare workload identity
-	// credential here, which skipped the sign-in log line entirely -- so a
-	// connection that authenticated this way was invisible, and the only
-	// connections that showed up in the logs were the ones configured
-	// differently. Every path now goes through GetTokenFromCredential and says
-	// who it was.
+	// A token file with no method selection used to shortcut straight to a bare
+	// workload identity credential here, on the grounds that there was nothing
+	// left to probe. It cost more than it saved: the shortcut logged nothing, so
+	// a connection that authenticated this way was invisible and the only
+	// sign-ins in the logs were the ones configured some other way -- and the
+	// credential it returned had no chain behind it, so a stale token file was
+	// the end of the road rather than a fall back to the remaining methods.
+	//
+	// The chain is cheap to walk now that the managed identity probe sits at the
+	// end of it (see azauth.DefaultCredentialMethods), so there is nothing left
+	// to shortcut past.
 	return azauth.GetTokenFromCredential(cred, tenantId, clientId, &azauth.ChainedTokenOptions{
 		FederatedTokenFile: federatedTokenFile,
 		Methods:            methods,
