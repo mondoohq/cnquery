@@ -263,7 +263,13 @@ func (a *mqlMicrosoftTenant) paidLicenses() (int64, error) {
 	if err != nil {
 		return 0, err
 	}
+	return sumPaidLicenses(subs), nil
+}
 
+// sumPaidLicenses totals the seats a tenant actually pays for, excluding
+// trials, subscriptions past their billing grace period, and free/self-service
+// plans.
+func sumPaidLicenses(subs []companySubscription) int64 {
 	var total int64
 	for _, sub := range subs {
 		if sub.IsTrial != nil && *sub.IsTrial {
@@ -275,11 +281,37 @@ func (a *mqlMicrosoftTenant) paidLicenses() (int64, error) {
 		if sub.Status != nil && *sub.Status != "Enabled" && *sub.Status != "Warning" {
 			continue
 		}
+		// Free and self-service plans are not paid seats and report sentinel
+		// license counts (e.g. RIGHTSMANAGEMENT_ADHOC reports 1,000,000).
+		if sub.SkuPartNumber != nil {
+			if _, free := selfServiceSkuPartNumbers[*sub.SkuPartNumber]; free {
+				continue
+			}
+		}
 		if sub.TotalLicenses != nil {
 			total += int64(*sub.TotalLicenses)
 		}
 	}
-	return total, nil
+	return total
+}
+
+// selfServiceSkuPartNumbers are free/self-service/viral Microsoft plans that a
+// tenant does not pay per-seat for. They surface in the subscription list with
+// status Enabled and isTrial false, and report sentinel license counts (10,000
+// or 1,000,000), so they must be excluded from paidLicenses. This list is
+// best-effort; Microsoft adds freemium products over time, so it may need
+// extending as new ones surface.
+var selfServiceSkuPartNumbers = map[string]struct{}{
+	"RIGHTSMANAGEMENT_ADHOC":         {}, // Rights Management Adhoc
+	"WINDOWS_STORE":                  {}, // Windows Store for Business
+	"FLOW_FREE":                      {}, // Power Automate Free
+	"POWERAPPS_VIRAL":                {}, // Power Apps Plan 2 Trial (viral)
+	"POWER_BI_STANDARD":              {}, // Power BI (free)
+	"CCIBOTS_PRIVPREV_VIRAL":         {}, // Power Virtual Agents Viral Trial
+	"TEAMS_EXPLORATORY":              {}, // Microsoft Teams Exploratory
+	"STREAM":                         {}, // Microsoft Stream Trial
+	"SPZA_IW":                        {}, // App Connect IW
+	"PROJECT_MADEIRA_PREVIEW_IW_SKU": {}, // Dynamics 365 Business Central preview
 }
 
 func (a *mqlMicrosoft) tenantDomainName() (string, error) {
