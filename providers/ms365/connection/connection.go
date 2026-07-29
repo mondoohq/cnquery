@@ -73,7 +73,7 @@ func NewMs365Connection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 	organization := conf.Options[OptionOrganization]
 	sharepointUrl := conf.Options[OptionSharepointUrl]
 	var cred *vault.Credential
-	if len(conf.Credentials) != 0 {
+	if len(conf.Credentials) > 0 {
 		cred = conf.Credentials[0]
 	}
 
