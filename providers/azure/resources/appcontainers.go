@@ -209,7 +209,7 @@ func initAzureSubscriptionContainerAppServiceContainerApp(runtime *plugin.Runtim
 	}
 
 	if args["id"] == nil {
-		return args, nil, nil
+		return nil, nil, missingResourceID("azure.subscription.containerAppService.containerApp")
 	}
 
 	conn, ok := runtime.Connection.(*connection.AzureConnection)

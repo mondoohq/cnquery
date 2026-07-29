@@ -6377,7 +6377,7 @@ func initAzureSubscriptionNetworkServiceApplicationGateway(runtime *plugin.Runti
 	}
 
 	if args["id"] == nil {
-		return args, nil, nil
+		return nil, nil, missingResourceID("azure.subscription.networkService.applicationGateway")
 	}
 
 	conn, ok := runtime.Connection.(*connection.AzureConnection)

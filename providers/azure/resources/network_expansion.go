@@ -800,7 +800,7 @@ func initAzureSubscriptionNetworkServiceFirewall(runtime *plugin.Runtime, args m
 		}
 	}
 	if args["id"] == nil {
-		return args, nil, nil
+		return nil, nil, missingResourceID("azure.subscription.networkService.firewall")
 	}
 	conn, ok := runtime.Connection.(*connection.AzureConnection)
 	if !ok {
