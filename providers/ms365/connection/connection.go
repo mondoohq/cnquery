@@ -67,34 +67,80 @@ func (p *Ms365Connection) AdminPrincipalIDs(load func() (map[string]struct{}, er
 	return set, nil
 }
 
-func NewMs365Connection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*Ms365Connection, error) {
+// The credentials this process has built, by the identity each signs in as.
+//
+// A credential owns its token cache -- azidentity keeps it inside the instance
+// -- so building one per connection asks Entra for a token per connection, for
+// an identity that already had a perfectly good one.
+//
+// Keyed by identity rather than shared outright: an inventory can hold Microsoft
+// 365 assets under several tenants, and handing tenant A's token to tenant B's
+// asset would not fail cleanly, it would read the wrong tenant. The map is
+// bounded by the identities a process signs in as.
+var (
+	credentialMu    sync.Mutex
+	credentialCache = map[string]azcore.TokenCredential{}
+)
+
+// selectMs365Credential builds the credential this connection signs in with, or
+// hands back the one already built for the same tenant and client.
+//
+// Without a client secret or certificate it falls back to the sign-in chain,
+// which probes every method in turn. A keyless connection that knows how it
+// authenticates can name the method with auth-method and skip straight to it.
+func selectMs365Credential(conf *inventory.Config) (azcore.TokenCredential, error) {
 	tenantId := conf.Options[OptionTenantID]
 	clientId := conf.Options[OptionClientID]
-	organization := conf.Options[OptionOrganization]
-	sharepointUrl := conf.Options[OptionSharepointUrl]
+
+	// parsed before the cache is consulted: an unusable auth-method is an error
+	// for the connection that names it, whether or not this identity already has
+	// a credential someone else built
+	methods, err := azauth.ParseCredentialMethods(conf.Options[OptionAuthMethod])
+	if err != nil {
+		return nil, err
+	}
+
 	var cred *vault.Credential
 	if len(conf.Credentials) > 0 {
 		cred = conf.Credentials[0]
 	}
 
-	if len(tenantId) == 0 {
-		return nil, errors.New("ms365 provider requires a tenant-id")
+	// held across the build, which is local -- constructing a credential
+	// contacts nothing -- so concurrent connects queue briefly rather than each
+	// building a chain of their own
+	identity := tenantId + "/" + clientId
+	credentialMu.Lock()
+	defer credentialMu.Unlock()
+	if cached, ok := credentialCache[identity]; ok {
+		return cached, nil
 	}
 
-	// Without a client secret or certificate we fall back to the sign-in chain,
-	// which probes every method in turn; the managed identity probe alone burns
-	// ~15s before giving up. A keyless connection that knows how it
-	// authenticates can name the method and skip straight to it.
-	methods, err := azauth.ParseCredentialMethods(conf.Options[OptionAuthMethod])
-	if err != nil {
-		return nil, err
-	}
 	token, err := azauth.GetTokenFromCredential(cred, &azauth.ChainedTokenOptions{
 		TenantID: tenantId,
 		ClientID: clientId,
 		Methods:  methods,
 		Source:   "ms365-connection",
 	})
+	if err != nil {
+		// a failed build is not worth remembering: the next connection may be
+		// configured differently, and caching the failure would deny it its own try
+		return nil, err
+	}
+
+	credentialCache[identity] = token
+	return token, nil
+}
+
+func NewMs365Connection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*Ms365Connection, error) {
+	tenantId := conf.Options[OptionTenantID]
+	clientId := conf.Options[OptionClientID]
+	organization := conf.Options[OptionOrganization]
+	sharepointUrl := conf.Options[OptionSharepointUrl]
+	if len(tenantId) == 0 {
+		return nil, errors.New("ms365 provider requires a tenant-id")
+	}
+
+	token, err := selectMs365Credential(conf)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot fetch credentials for ms365 provider")
 	}

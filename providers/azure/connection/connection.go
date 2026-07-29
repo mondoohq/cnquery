@@ -6,6 +6,7 @@ package connection
 import (
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -44,6 +45,28 @@ type AzureConnection struct {
 	Filters DiscoveryFilters
 }
 
+// The credentials this process has built, by the identity each signs in as.
+//
+// Each discovered asset gets its own connection, and a credential built per
+// connection carries its own token cache, so a scan asked Entra for a fresh
+// token once per asset for an identity that already had a perfectly good one.
+// Discovery found these assets with this credential; it can scan them with it
+// too.
+//
+// Keyed by identity rather than shared outright because an inventory can hold
+// Azure assets under several tenants, and handing tenant A's token to tenant B's
+// asset would not fail cleanly -- it would scan as the wrong principal. Every
+// identity gets the same reuse, so an inventory spanning tenants is one
+// credential per tenant rather than one per asset.
+//
+// The map is bounded by the number of identities a process scans, which is the
+// number of Azure assets in its inventory, not the number of assets discovered
+// beneath them.
+var (
+	credentialMu    sync.Mutex
+	credentialCache = map[string]azcore.TokenCredential{}
+)
+
 // selectAzureCredential chooses the appropriate Azure token credential based on
 // the connection configuration. When a federated token file is provided (via
 // option or env var) and no explicit vault credential is present, it returns a
@@ -51,14 +74,15 @@ type AzureConnection struct {
 // the standard cert/secret/default-chain path.
 //
 // The default chain is the expensive branch: it probes every sign-in method in
-// turn, and the managed identity probe alone burns ~15s before giving up. That
-// cost is paid per asset, since every discovered asset gets its own connection.
-// A caller that knows how it authenticates can say so with OptionAuthMethod and
-// skip straight to the method that works.
+// turn. A caller that knows how it authenticates can say so with
+// OptionAuthMethod and skip straight to the method that works.
 func selectAzureCredential(conf *inventory.Config) (azcore.TokenCredential, error) {
 	tenantId := conf.Options[OptionTenantID]
 	clientId := conf.Options[OptionClientID]
 
+	// parsed before the cache is consulted: an unusable auth-method is an error
+	// for the connection that names it, whether or not this identity already has
+	// a credential someone else built
 	methods, err := azauth.ParseCredentialMethods(conf.Options[OptionAuthMethod])
 	if err != nil {
 		return nil, err
@@ -67,6 +91,16 @@ func selectAzureCredential(conf *inventory.Config) (azcore.TokenCredential, erro
 	var cred *vault.Credential
 	if len(conf.Credentials) > 0 {
 		cred = conf.Credentials[0]
+	}
+
+	// held across the build, which is local -- constructing a credential
+	// contacts nothing -- so concurrent connects queue briefly rather than
+	// each building a chain of their own
+	identity := tenantId + "/" + clientId
+	credentialMu.Lock()
+	defer credentialMu.Unlock()
+	if cached, ok := credentialCache[identity]; ok {
+		return cached, nil
 	}
 
 	federatedTokenFile := conf.Options[OptionFederatedTokenFile]
@@ -85,13 +119,21 @@ func selectAzureCredential(conf *inventory.Config) (azcore.TokenCredential, erro
 	// The chain is cheap to walk now that the managed identity probe sits at the
 	// end of it (see azauth.DefaultCredentialMethods), so there is nothing left
 	// to shortcut past.
-	return azauth.GetTokenFromCredential(cred, &azauth.ChainedTokenOptions{
+	token, err := azauth.GetTokenFromCredential(cred, &azauth.ChainedTokenOptions{
 		TenantID:           tenantId,
 		ClientID:           clientId,
 		FederatedTokenFile: federatedTokenFile,
 		Methods:            methods,
 		Source:             "azure-connection",
 	})
+	if err != nil {
+		// a failed build is not worth remembering: the next connection may be
+		// configured differently, and caching the failure would deny it its own try
+		return nil, err
+	}
+
+	credentialCache[identity] = token
+	return token, nil
 }
 
 func NewAzureConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*AzureConnection, error) {
