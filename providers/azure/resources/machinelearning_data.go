@@ -194,21 +194,57 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore) systemMet
 // storageAccount resolves the account behind the datastore. The datastore
 // records the account's subscription, resource group, and name rather than its
 // resource ID, so the ID is rebuilt from those three.
+//
+// A datastore may omit the subscription and resource group, in which case the
+// account sits alongside the workspace; both are then taken from the
+// datastore's own resource ID. Because that is an inference rather than a value
+// the API supplied, an account that does not resolve there reports no account
+// instead of failing the query.
 func (a *mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore) storageAccount() (*mqlAzureSubscriptionStorageServiceAccount, error) {
 	accountName := a.AccountName.Data
-	subscriptionId := a.SubscriptionId.Data
-	resourceGroup := a.ResourceGroup.Data
-	if accountName == "" || subscriptionId == "" || resourceGroup == "" {
+	if accountName == "" {
 		a.StorageAccount.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
+
+	subscriptionId := a.SubscriptionId.Data
+	resourceGroup := a.ResourceGroup.Data
+	inferredScope := subscriptionId == "" || resourceGroup == ""
+	if inferredScope {
+		parsed, err := ParseResourceID(a.Id.Data)
+		if err != nil {
+			a.StorageAccount.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		if subscriptionId == "" {
+			subscriptionId = parsed.SubscriptionID
+		}
+		if resourceGroup == "" {
+			resourceGroup = parsed.ResourceGroup
+		}
+	}
+	if subscriptionId == "" || resourceGroup == "" {
+		a.StorageAccount.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
 	conn, ok := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	if !ok {
 		return nil, errors.New("invalid connection provided, it is not an Azure connection")
 	}
 	accountId := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Storage/storageAccounts/%s",
 		subscriptionId, resourceGroup, accountName)
-	return getStorageAccount(accountId, a.MqlRuntime, conn)
+	res, err := getStorageAccount(accountId, a.MqlRuntime, conn)
+	if err != nil {
+		if inferredScope && isAzureNotFoundOrBadRequest(err) {
+			log.Debug().Str("datastore", a.Id.Data).Str("account", accountName).
+				Msg("storage account for datastore not found in the workspace scope")
+			a.StorageAccount.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+	return res, nil
 }
 
 // --- Workspace connections ---
