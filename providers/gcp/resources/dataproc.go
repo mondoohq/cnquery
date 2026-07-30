@@ -491,10 +491,12 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]any, error) {
 
 						componentGatewayEnabled := c.Config.EndpointConfig != nil && c.Config.EndpointConfig.EnableHttpPortAccess
 						kerberosEnabled := c.Config.SecurityConfig != nil && c.Config.SecurityConfig.KerberosConfig != nil && c.Config.SecurityConfig.KerberosConfig.EnableKerberos
+						sshEnabled := c.Config.SecurityConfig != nil && c.Config.SecurityConfig.IdentityConfig != nil && c.Config.SecurityConfig.IdentityConfig.EnableSsh
 						mqlConfig, err = CreateResource(g.MqlRuntime, "gcp.project.dataprocService.cluster.config", map[string]*llx.RawData{
 							"parentResourcePath":      llx.StringData(fmt.Sprintf("%s/dataproc/%s", projectId, c.ClusterName)),
 							"componentGatewayEnabled": llx.BoolData(componentGatewayEnabled),
 							"kerberosEnabled":         llx.BoolData(kerberosEnabled),
+							"sshEnabled":              llx.BoolData(sshEnabled),
 							"autoscaling":             llx.DictData(mqlAutoscalingCfg),
 							"configBucket":            llx.StringData(c.Config.ConfigBucket),
 							"metrics":                 llx.DictData(mqlMetricsCfg),

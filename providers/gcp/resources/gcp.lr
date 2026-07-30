@@ -1622,7 +1622,15 @@ gcp.project.computeService.instance @defaults("name id") {
   resourcePolicies []string
   // Resource status for physical host
   physicalHostResourceStatus string
-  // Scheduling options including preemptibility, automatic restart, and maintenance behavior
+  // Instance scheduling options
+  //
+  // Holds `preemptible`, `automaticRestart`, and `onHostMaintenance` for the
+  // instance's lifecycle behavior, `provisioningModel` and
+  // `instanceTerminationAction` for how the instance is provisioned and what
+  // happens when capacity is reclaimed, `gracefulShutdown` (whether the guest
+  // is signalled before termination, and the `maxDuration` it is given), and
+  // `preemptionNoticeDuration`, how much warning a Spot VM receives before the
+  // ACPI G2 soft-off signal fires.
   scheduling dict
   // Shielded Instance configuration
   shieldedInstanceConfig gcp.project.computeService.instance.shieldedInstanceConfig
@@ -7090,6 +7098,16 @@ private gcp.project.dataprocService.cluster.config {
   // authentication between daemons. Hoisted from the `security` dict's
   // kerberosConfig.enableKerberos key.
   kerberosEnabled bool
+  // Whether SSH access to the cluster nodes is enabled
+  //
+  // True when operators may open SSH sessions to the cluster's Compute Engine
+  // nodes, which is interactive access to the data plane rather than access
+  // mediated by the Dataproc jobs API. The platform default depends on the
+  // image: enabled for image versions before 3.1, disabled from 3.1 onward,
+  // and settable at creation time from image version 2.3.30. Hoisted from the
+  // `security` dict's identityConfig.enableSsh key, which omits the value when
+  // SSH is disabled.
+  sshEnabled bool
   // Shared Compute Engine configuration
   gceCluster gcp.project.dataprocService.cluster.config.gceCluster
   // Kubernetes Engine config for Dataproc clusters deployed to Kubernetes
@@ -7115,9 +7133,10 @@ private gcp.project.dataprocService.cluster.config {
   //
   // Holds `kerberosConfig` (Kerberos secure-mode settings including
   // `enableKerberos`, realm, KDC, cross-realm trust, and the KMS-encrypted
-  // key and keystore URIs) and `identityConfig` (the
-  // `userServiceAccountMapping` for workforce identity federation). See
-  // `kerberosEnabled` for the hoisted Kerberos enable flag.
+  // key and keystore URIs) and `identityConfig` (`userServiceAccountMapping`
+  // for workforce identity federation, and `enableSsh` for SSH access to the
+  // cluster nodes). See `kerberosEnabled` and `sshEnabled` for the hoisted
+  // flags, which stay set even when the underlying key is omitted.
   security dict
   // Cluster software configuration
   //
@@ -9697,7 +9716,8 @@ private gcp.project.computeService.vpnTunnel @defaults("name status") {
 // capacity provisioning type (`ADVANCED` or `STANDARD`), performance
 // provisioning type, provisioned capacity in GiB, IOPS, and throughput.
 // `storagePoolType` identifies the underlying disk technology, and `zone`
-// names the zone where the pool resides.
+// names the zone where the pool resides. `sharedWithProjectIds` reports the
+// projects outside the owning project that may create disks from the pool.
 private gcp.project.computeService.storagePool @defaults("name state") {
   // Unique identifier
   id string
@@ -9725,6 +9745,13 @@ private gcp.project.computeService.storagePool @defaults("name state") {
   storagePoolType string
   // Zone URL where the storage pool resides
   zone string
+  // Project IDs the storage pool is shared with
+  //
+  // Empty when the pool is consumable only from the project that owns it.
+  // Each entry is a project permitted to create disks backed by this pool,
+  // so a non-empty list widens the set of projects that can draw on the
+  // pool's provisioned capacity.
+  sharedWithProjectIds []string
 }
 
 // Google Cloud (GCP) Compute Cloud NAT configuration on a router
@@ -11007,6 +11034,20 @@ private gcp.project.appEngineService.version @defaults("id servingStatus") {
   handlers []dict
   // Inbound service channels the version accepts beyond HTTP (e.g. mail, XMPP, warmup); additional ingress surface
   inboundServices []string
+  // Legacy bundled services enabled for the version
+  //
+  // Second-generation runtimes reach the legacy App Engine APIs only when the
+  // corresponding service is listed here, so this names the older platform
+  // surface the version still depends on. Values are
+  // BUNDLED_SERVICE_TYPE_APP_IDENTITY_SERVICE, BUNDLED_SERVICE_TYPE_BLOBSTORE,
+  // BUNDLED_SERVICE_TYPE_CAPABILITY_SERVICE, BUNDLED_SERVICE_TYPE_DATASTORE_V3,
+  // BUNDLED_SERVICE_TYPE_DEFERRED, BUNDLED_SERVICE_TYPE_IMAGES,
+  // BUNDLED_SERVICE_TYPE_MAIL, BUNDLED_SERVICE_TYPE_MEMCACHE,
+  // BUNDLED_SERVICE_TYPE_MODULES, BUNDLED_SERVICE_TYPE_NAMESPACES,
+  // BUNDLED_SERVICE_TYPE_NDB, BUNDLED_SERVICE_TYPE_SEARCH,
+  // BUNDLED_SERVICE_TYPE_TASKQUEUES, BUNDLED_SERVICE_TYPE_URLFETCH,
+  // BUNDLED_SERVICE_TYPE_USERS, or BUNDLED_SERVICE_TYPE_UNSPECIFIED.
+  appEngineBundledServices []string
 }
 
 // Google Cloud (GCP) API Gateway

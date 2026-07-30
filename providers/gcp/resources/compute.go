@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -3789,6 +3790,22 @@ func (g *mqlGcpProjectComputeServiceStoragePool) id() (string, error) {
 	return g.Id.Data, g.Id.Error
 }
 
+// storagePoolSharedProjectIds returns the sorted project IDs a storage pool is
+// shared with. The share settings carry a project map whose values only repeat
+// the key, so the keys alone describe which projects may create disks from the
+// pool.
+func storagePoolSharedProjectIds(shareSettings *compute.StoragePoolShareSettings) []any {
+	if shareSettings == nil {
+		return []any{}
+	}
+	ids := make([]string, 0, len(shareSettings.ProjectMap))
+	for projectId := range shareSettings.ProjectMap {
+		ids = append(ids, projectId)
+	}
+	sort.Strings(ids)
+	return convert.SliceAnyToInterface(ids)
+}
+
 func (g *mqlGcpProjectComputeService) storagePools() ([]any, error) {
 	if !g.GetEnabled().Data {
 		return nil, nil
@@ -3831,6 +3848,7 @@ func (g *mqlGcpProjectComputeService) storagePools() ([]any, error) {
 					"state":                       llx.StringData(sp.State),
 					"storagePoolType":             llx.StringData(sp.StoragePoolType),
 					"zone":                        llx.StringData(sp.Zone),
+					"sharedWithProjectIds":        llx.ArrayData(storagePoolSharedProjectIds(sp.ShareSettings), types.String),
 				})
 				if err != nil {
 					return err

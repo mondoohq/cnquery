@@ -8962,6 +8962,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.dataprocService.cluster.config.kerberosEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocServiceClusterConfig).GetKerberosEnabled()).ToDataRes(types.Bool)
 	},
+	"gcp.project.dataprocService.cluster.config.sshEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceClusterConfig).GetSshEnabled()).ToDataRes(types.Bool)
+	},
 	"gcp.project.dataprocService.cluster.config.gceCluster": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocServiceClusterConfig).GetGceCluster()).ToDataRes(types.Resource("gcp.project.dataprocService.cluster.config.gceCluster"))
 	},
@@ -11248,6 +11251,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.storagePool.zone": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceStoragePool).GetZone()).ToDataRes(types.String)
 	},
+	"gcp.project.computeService.storagePool.sharedWithProjectIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceStoragePool).GetSharedWithProjectIds()).ToDataRes(types.Array(types.String))
+	},
 	"gcp.project.computeService.router.nat.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceRouterNat).GetId()).ToDataRes(types.String)
 	},
@@ -12384,6 +12390,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.appEngineService.version.inboundServices": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectAppEngineServiceVersion).GetInboundServices()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.appEngineService.version.appEngineBundledServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAppEngineServiceVersion).GetAppEngineBundledServices()).ToDataRes(types.Array(types.String))
 	},
 	"gcp.project.apiGatewayService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectApiGatewayService).GetProjectId()).ToDataRes(types.String)
@@ -27510,6 +27519,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectDataprocServiceClusterConfig).KerberosEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gcp.project.dataprocService.cluster.config.sshEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceClusterConfig).SshEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gcp.project.dataprocService.cluster.config.gceCluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataprocServiceClusterConfig).GceCluster, ok = plugin.RawToTValue[*mqlGcpProjectDataprocServiceClusterConfigGceCluster](v.Value, v.Error)
 		return
@@ -30834,6 +30847,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceStoragePool).Zone, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.storagePool.sharedWithProjectIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceStoragePool).SharedWithProjectIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.router.nat.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceRouterNat).__id, ok = v.Value.(string)
 		return
@@ -32496,6 +32513,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.appEngineService.version.inboundServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectAppEngineServiceVersion).InboundServices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.appEngineService.version.appEngineBundledServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAppEngineServiceVersion).AppEngineBundledServices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.apiGatewayService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -63399,6 +63420,7 @@ type mqlGcpProjectDataprocServiceClusterConfig struct {
 	Endpoint                plugin.TValue[any]
 	ComponentGatewayEnabled plugin.TValue[bool]
 	KerberosEnabled         plugin.TValue[bool]
+	SshEnabled              plugin.TValue[bool]
 	GceCluster              plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfigGceCluster]
 	GkeCluster              plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfigGkeCluster]
 	InitializationActions   plugin.TValue[[]any]
@@ -63528,6 +63550,10 @@ func (c *mqlGcpProjectDataprocServiceClusterConfig) GetComponentGatewayEnabled()
 
 func (c *mqlGcpProjectDataprocServiceClusterConfig) GetKerberosEnabled() *plugin.TValue[bool] {
 	return &c.KerberosEnabled
+}
+
+func (c *mqlGcpProjectDataprocServiceClusterConfig) GetSshEnabled() *plugin.TValue[bool] {
+	return &c.SshEnabled
 }
 
 func (c *mqlGcpProjectDataprocServiceClusterConfig) GetGceCluster() *plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfigGceCluster] {
@@ -71190,6 +71216,7 @@ type mqlGcpProjectComputeServiceStoragePool struct {
 	State                       plugin.TValue[string]
 	StoragePoolType             plugin.TValue[string]
 	Zone                        plugin.TValue[string]
+	SharedWithProjectIds        plugin.TValue[[]any]
 }
 
 // createGcpProjectComputeServiceStoragePool creates a new instance of this resource
@@ -71279,6 +71306,10 @@ func (c *mqlGcpProjectComputeServiceStoragePool) GetStoragePoolType() *plugin.TV
 
 func (c *mqlGcpProjectComputeServiceStoragePool) GetZone() *plugin.TValue[string] {
 	return &c.Zone
+}
+
+func (c *mqlGcpProjectComputeServiceStoragePool) GetSharedWithProjectIds() *plugin.TValue[[]any] {
+	return &c.SharedWithProjectIds
 }
 
 // mqlGcpProjectComputeServiceRouterNat for the gcp.project.computeService.router.nat resource
@@ -75142,18 +75173,19 @@ type mqlGcpProjectAppEngineServiceVersion struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectAppEngineServiceVersionInternal it will be used here
-	ProjectId          plugin.TValue[string]
-	ServiceId          plugin.TValue[string]
-	Id                 plugin.TValue[string]
-	Name               plugin.TValue[string]
-	ServingStatus      plugin.TValue[string]
-	Runtime            plugin.TValue[string]
-	Env                plugin.TValue[string]
-	CreateTime         plugin.TValue[*time.Time]
-	RuntimeApiVersion  plugin.TValue[string]
-	VpcAccessConnector plugin.TValue[any]
-	Handlers           plugin.TValue[[]any]
-	InboundServices    plugin.TValue[[]any]
+	ProjectId                plugin.TValue[string]
+	ServiceId                plugin.TValue[string]
+	Id                       plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	ServingStatus            plugin.TValue[string]
+	Runtime                  plugin.TValue[string]
+	Env                      plugin.TValue[string]
+	CreateTime               plugin.TValue[*time.Time]
+	RuntimeApiVersion        plugin.TValue[string]
+	VpcAccessConnector       plugin.TValue[any]
+	Handlers                 plugin.TValue[[]any]
+	InboundServices          plugin.TValue[[]any]
+	AppEngineBundledServices plugin.TValue[[]any]
 }
 
 // createGcpProjectAppEngineServiceVersion creates a new instance of this resource
@@ -75239,6 +75271,10 @@ func (c *mqlGcpProjectAppEngineServiceVersion) GetHandlers() *plugin.TValue[[]an
 
 func (c *mqlGcpProjectAppEngineServiceVersion) GetInboundServices() *plugin.TValue[[]any] {
 	return &c.InboundServices
+}
+
+func (c *mqlGcpProjectAppEngineServiceVersion) GetAppEngineBundledServices() *plugin.TValue[[]any] {
+	return &c.AppEngineBundledServices
 }
 
 // mqlGcpProjectApiGatewayService for the gcp.project.apiGatewayService resource
