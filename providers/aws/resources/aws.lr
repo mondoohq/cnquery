@@ -3308,6 +3308,13 @@ private aws.sagemaker.model.container @defaults("containerHostname image") {
   image string
   // S3 path to the model artifacts
   modelDataUrl string
+  // S3 bucket holding the model artifacts the container serves
+  modelDataBucket() aws.s3.bucket
+  // ECR repository the serving image is pulled from
+  //
+  // Null when the image URI does not point at an ECR repository in this
+  // partition, which is the case for images hosted in a public registry.
+  ecrRepository() aws.ecr.repository
   // Container mode: SingleModel or MultiModel
   mode string
   // Environment variables
@@ -3364,6 +3371,10 @@ private aws.sagemaker.trainingjob @defaults("arn name status") {
   vpc() aws.vpc
   // Input data channels the training job consumed
   inputDataConfig() []aws.sagemaker.trainingjob.channel
+  // S3 bucket the job wrote its model artifacts to
+  outputDataBucket() aws.s3.bucket
+  // Customer-managed KMS key encrypting the job output artifacts
+  outputKmsKey() aws.kms.key
   // Output data configuration
   outputDataConfig() dict
   // S3 URI of the model artifact the training job produced
@@ -3401,6 +3412,10 @@ private aws.sagemaker.trainingjob.channel @defaults("channelName s3Uri") {
   channelName string
   // S3 URI of the channel's input data, when the source is S3
   s3Uri string
+  // S3 bucket the channel's input data is read from
+  //
+  // Null when the channel reads from a file system rather than S3.
+  bucket() aws.s3.bucket
   // S3 data type: S3Prefix, ManifestFile, or AugmentedManifestFile
   s3DataType string
   // How the data is distributed to training instances: FullyReplicated or ShardedByS3Key
@@ -28003,8 +28018,221 @@ aws.bedrock {
   importedModels() []aws.bedrock.importedModel
   // Managed prompts in the account
   prompts() []aws.bedrock.prompt
+  // Guardrails enforced on every model invocation in the account
+  //
+  // Account-wide guardrail enforcement, which applies a guardrail to model
+  // invocations regardless of whether the caller passes one. Empty when no
+  // enforcement is configured, in which case a guardrail only applies where
+  // an agent or an individual invocation names it.
+  enforcedGuardrails() []aws.bedrock.enforcedGuardrail
+  // Retention of model invocation data, one per region
+  dataRetentionConfigurations() []aws.bedrock.dataRetentionConfiguration
+  // Model customization (fine-tuning) jobs in the account
+  modelCustomizationJobs() []aws.bedrock.modelCustomizationJob
+  // Model copy jobs in the account
+  modelCopyJobs() []aws.bedrock.modelCopyJob
+  // Marketplace model endpoints registered in the account
+  marketplaceModelEndpoints() []aws.bedrock.marketplaceModelEndpoint
   // AgentCore namespace for agentic-AI infrastructure (gateways, runtimes, memory, tools, and identity)
   agentCore() aws.bedrock.agentCore
+}
+
+// Amazon Bedrock account-wide enforced guardrail
+//
+// Guardrail configuration applied to model invocations across the account,
+// independent of whether the calling application or agent names a guardrail.
+// `guardrail` resolves the guardrail being enforced, `owner` reports whether
+// the configuration was set on this account or inherited from the
+// organization, and `inputTags` and `modelEnforcement` scope which requests
+// and models the enforcement covers. `configId` selects the configuration.
+private aws.bedrock.enforcedGuardrail @defaults("configId guardrailId guardrailVersion owner") {
+  // Identifier of the enforcement configuration
+  configId string
+  // Region where the enforcement configuration applies
+  region string
+  // Identifier of the enforced guardrail
+  guardrailId string
+  // Version of the enforced guardrail
+  guardrailVersion string
+  // Guardrail enforced on model invocations
+  guardrail() aws.bedrock.guardrail
+  // Whether the configuration was created on this account or inherited from the organization
+  owner string
+  // Models the enforcement covers
+  //
+  // Null when the enforcement is not scoped to specific models and
+  // therefore covers every model in the region.
+  modelEnforcement dict
+  // Content types the enforcement selectively guards
+  selectiveContentGuarding dict
+  // Principal that created the configuration
+  createdBy string
+  // Principal that last updated the configuration
+  updatedBy string
+  // Time the configuration was created
+  createdAt time
+  // Time the configuration was last updated
+  updatedAt time
+}
+
+// Amazon Bedrock model invocation data retention
+//
+// Account-level retention setting governing how long Bedrock keeps model
+// invocation data in a region, and whether that data may be shared with
+// model providers. One row per region.
+private aws.bedrock.dataRetentionConfiguration @defaults("region mode") {
+  // Region this retention setting applies to
+  region string
+  // Retention mode
+  //
+  // One of `default` (Bedrock's standard retention), `none` (no invocation
+  // data retained), `provider_data_share` (data may be shared with the
+  // model provider), or `inherit` (the organization's setting applies).
+  mode string
+  // Time the retention setting was last updated
+  updatedAt time
+}
+
+// Amazon Bedrock model customization job
+//
+// Fine-tuning, continued pre-training, or distillation run that produces a
+// custom model. Where `aws.bedrock.customModel` describes the resulting
+// model, this describes how it was trained: `trainingDataBucket` and
+// `validationDataS3Uris` give the data it learned from,
+// `invocationLogsConfig` reports whether production invocation logs were
+// used as training data, `vpc` and `securityGroups` the network the training
+// container ran in, `iamRole` the identity it assumed, and
+// `outputModelKmsKey` how the resulting weights are encrypted.
+private aws.bedrock.modelCustomizationJob @defaults("jobName status customizationType") {
+  // ARN of the customization job
+  jobArn string
+  // Name of the customization job
+  jobName string
+  // Region where the customization job exists
+  region string
+  // Status of the job
+  //
+  // One of InProgress, Completed, Failed, Stopping, or Stopped.
+  status string
+  // Customization technique
+  //
+  // One of FINE_TUNING, CONTINUED_PRE_TRAINING, DISTILLATION,
+  // REINFORCEMENT_FINE_TUNING, or IMPORTED.
+  customizationType string
+  // Base model the job customized
+  baseModel() aws.bedrock.foundationModel
+  // Name of the custom model the job produced
+  customModelName string
+  // Custom model the job produced
+  customModel() aws.bedrock.customModel
+  // IAM service role the training job assumed
+  iamRole() aws.iam.role
+  // S3 URI of the training data
+  trainingDataS3Uri() string
+  // S3 bucket holding the training data
+  trainingDataBucket() aws.s3.bucket
+  // Configuration for training on model invocation logs
+  //
+  // Present when the job trained on captured production invocation logs
+  // rather than a curated dataset. Keys: `UsePromptResponse`,
+  // `InvocationLogSource`, and `RequestMetadataFilters`. Null when the job
+  // trained only on the data at trainingDataS3Uri.
+  invocationLogsConfig() dict
+  // S3 URIs of the validation datasets
+  validationDataS3Uris() []string
+  // S3 URI where the job wrote its output artifacts
+  outputDataS3Uri() string
+  // S3 bucket holding the job output artifacts
+  outputDataBucket() aws.s3.bucket
+  // Customer-managed KMS key encrypting the resulting model
+  outputModelKmsKey() aws.kms.key
+  // VPC the training container ran in
+  vpc() aws.vpc
+  // Subnets the training container attached to
+  subnets() []aws.vpc.subnet
+  // Security groups applied to the training container
+  securityGroups() []aws.ec2.securitygroup
+  // Hyperparameters the job trained with
+  hyperParameters() map[string]string
+  // Reason the job failed
+  failureMessage() string
+  // Time the job was created
+  createdAt time
+  // Time the job last changed
+  lastModifiedAt time
+  // Time the job finished
+  endTime time
+}
+
+// Amazon Bedrock model copy job
+//
+// Copy of a custom model into this account and region. Because a copy can
+// originate in a different account, `sourceAccountId` and `sourceModelArn`
+// record where the model weights came from, making this the record of
+// custom models that entered the account from outside it.
+// `targetModelKmsKey` reports how the copy is encrypted at rest.
+private aws.bedrock.modelCopyJob @defaults("jobArn status sourceAccountId") {
+  // ARN of the copy job
+  jobArn string
+  // Region where the copy job exists
+  region string
+  // Status of the job
+  //
+  // One of InProgress, Completed, or Failed.
+  status string
+  // Account that owns the source model
+  sourceAccountId string
+  // ARN of the source model
+  sourceModelArn string
+  // Name of the source model
+  sourceModelName string
+  // ARN of the copied model
+  targetModelArn string
+  // Name of the copied model
+  targetModelName string
+  // Customer-managed KMS key encrypting the copied model
+  targetModelKmsKey() aws.kms.key
+  // Tags applied to the copied model
+  targetModelTags map[string]string
+  // Reason the job failed
+  failureMessage string
+  // Time the job was created
+  createdAt time
+}
+
+// Amazon Bedrock marketplace model endpoint
+//
+// Third-party model from AWS Marketplace registered for invocation through
+// Bedrock. The model runs on a SageMaker endpoint in the account rather than
+// on Bedrock's managed capacity, so `endpointConfig` carries the instance
+// type, execution role, encryption key, and network configuration backing
+// it. `modelSourceIdentifier` names the Marketplace model being served.
+private aws.bedrock.marketplaceModelEndpoint @defaults("endpointArn modelSourceIdentifier status") {
+  // ARN of the endpoint
+  endpointArn string
+  // Region where the endpoint exists
+  region string
+  // Identifier of the Marketplace model served by the endpoint
+  modelSourceIdentifier string
+  // Registration status of the endpoint with Bedrock
+  //
+  // One of REGISTERED or INCOMPATIBLE_ENDPOINT.
+  status string
+  // Detail accompanying the registration status
+  statusMessage string
+  // Status of the underlying SageMaker endpoint
+  endpointStatus() string
+  // Detail accompanying the underlying endpoint status
+  endpointStatusMessage() string
+  // Configuration of the SageMaker endpoint hosting the model
+  //
+  // Keys: `initialInstanceCount`, `instanceType`, `executionRole`,
+  // `kmsEncryptionKey`, and `vpc` (with `securityGroupIds` and `subnetIds`).
+  endpointConfig() dict
+  // Time the endpoint was registered
+  createdAt time
+  // Time the endpoint registration was last updated
+  updatedAt time
 }
 
 // Amazon Bedrock AgentCore
@@ -28426,8 +28654,12 @@ private aws.bedrock.customModel @defaults("modelArn modelName") {
   kmsKey() aws.kms.key
   // Training data configuration
   trainingDataConfig() dict
+  // S3 bucket holding the data the model was trained on
+  trainingDataBucket() aws.s3.bucket
   // Output data configuration
   outputDataConfig() dict
+  // S3 bucket holding the training output artifacts
+  outputDataBucket() aws.s3.bucket
   // Resource-based policy JSON controlling cross-account access to the model
   resourcePolicy() string
   // Parsed statements of the resource-based policy
@@ -28566,12 +28798,167 @@ private aws.bedrock.agent @defaults("name status foundationModel") {
   createdAt() time
   // Time the agent was last updated
   updatedAt() time
+  // Action group summaries for the agent's DRAFT version
+  //
+  // Deprecated in favor of actionGroupDetails, which resolves each action
+  // group to a queryable aws.bedrock.agent.actionGroup with its executor
+  // Lambda function and API schema.
+  actionGroups() @maturity("deprecated") []dict
   // Action groups attached to the agent's DRAFT version
-  actionGroups() []dict
-  // Knowledge bases associated with the agent's DRAFT version
-  knowledgeBases() []dict
+  actionGroupDetails() []aws.bedrock.agent.actionGroup
+  // Knowledge base association summaries for the agent's DRAFT version
+  //
+  // Deprecated in favor of attachedKnowledgeBases, which resolves each
+  // association to the aws.bedrock.knowledgeBase it points at.
+  knowledgeBases() @maturity("deprecated") []dict
+  // Knowledge bases attached to the agent's DRAFT version
+  attachedKnowledgeBases() []aws.bedrock.knowledgeBase
+  // Guardrail applied to the agent's model invocations
+  //
+  // Null when no guardrail is attached, in which case the agent's prompts
+  // and responses are filtered only by whatever the underlying foundation
+  // model enforces on its own.
+  guardrail() aws.bedrock.guardrail
+  // Version of the attached guardrail
+  guardrailVersion() string
+  // Multi-agent collaboration mode
+  //
+  // One of SUPERVISOR (the agent orchestrates collaborators and synthesizes
+  // their output), SUPERVISOR_ROUTER (the agent routes each request to a
+  // single collaborator), or DISABLED.
+  agentCollaboration() string
+  // Collaborator agents this agent may delegate work to
+  collaborators() []aws.bedrock.agent.collaborator
+  // Orchestration strategy
+  //
+  // One of DEFAULT or CUSTOM_ORCHESTRATION. CUSTOM_ORCHESTRATION replaces
+  // Bedrock's built-in orchestration loop with the function at
+  // customOrchestrationLambda.
+  orchestrationType() string
+  // Lambda function that replaces the built-in orchestration loop
+  customOrchestrationLambda() aws.lambda.function
+  // Memory types the agent retains across sessions
+  //
+  // Contains SESSION_SUMMARY when the agent keeps summaries of past
+  // conversations. Empty when the agent retains no cross-session memory.
+  enabledMemoryTypes() []string
+  // Days the agent retains conversation memory
+  memoryStorageDays() int
+  // Number of recent sessions kept in the agent's session summary
+  memoryMaxRecentSessions() int
+  // Prompt types whose default template the agent overrides
+  //
+  // Each entry is a prompt type (PRE_PROCESSING, ORCHESTRATION,
+  // POST_PROCESSING, KNOWLEDGE_BASE_RESPONSE_GENERATION, or
+  // MEMORY_SUMMARIZATION) whose Bedrock-supplied template has been replaced
+  // with a custom one. Overriding PRE_PROCESSING replaces the stage that
+  // screens incoming prompts.
+  overriddenPromptTypes() []string
+  // Prompt types the agent has turned off
+  //
+  // Each entry is a prompt type that is disabled and therefore skipped
+  // during orchestration. A disabled PRE_PROCESSING stage means incoming
+  // prompts are passed to the model without that screening step.
+  disabledPromptTypes() []string
+  // Lambda function that parses model output for overridden prompts
+  promptOverrideLambda() aws.lambda.function
   // Aliases pointing at prepared versions of the agent
   aliases() []aws.bedrock.agent.alias
+}
+
+// Amazon Bedrock agent action group
+//
+// Set of actions a Bedrock agent can invoke, which is how an agent reaches
+// beyond text generation into code the account controls. `executorLambda`
+// resolves the function the agent calls, so the function's execution role
+// determines what the agent can ultimately do. `apiSchema` and
+// `functionSchema` describe the actions offered to the model, while
+// `parentActionSignature` names a Bedrock-provided tool
+// (AMAZON.CodeInterpreter, ANTHROPIC.Bash, and similar) when the group uses
+// one instead of a custom executor. `state` reports whether the group is
+// enabled. The `id` selects the action group within its agent.
+private aws.bedrock.agent.actionGroup @defaults("name state description") {
+  // Unique identifier of the action group
+  id string
+  // Identifier of the agent that owns the action group
+  agentId string
+  // Region where the action group exists
+  region string
+  // Name of the action group
+  name string
+  // Whether the action group is ENABLED or DISABLED
+  state string
+  // Description of the action group
+  description string
+  // Lambda function the agent invokes to carry out the actions
+  //
+  // Null when the group returns control to the calling application instead
+  // of invoking a function, or when it uses a Bedrock-provided tool named
+  // by parentActionSignature.
+  executorLambda() aws.lambda.function
+  // Whether the action group returns control to the calling application rather than invoking a function
+  returnsControl() bool
+  // Bedrock-provided tool the action group exposes
+  //
+  // One of AMAZON.UserInput, AMAZON.CodeInterpreter, ANTHROPIC.Computer,
+  // ANTHROPIC.Bash, or ANTHROPIC.TextEditor. Empty when the group defines
+  // its own actions. AMAZON.CodeInterpreter, ANTHROPIC.Bash, and
+  // ANTHROPIC.Computer let the model run code or drive a desktop in a
+  // Bedrock-managed sandbox.
+  parentActionSignature() string
+  // Parameters configuring the Bedrock-provided tool
+  parentActionGroupSignatureParams() map[string]string
+  // OpenAPI schema describing the actions
+  //
+  // Carries either a `payload` key holding the inline schema, or an `s3`
+  // key with the `s3BucketName` and `s3ObjectKey` the schema is read from.
+  apiSchema() dict
+  // Function schema describing the actions
+  //
+  // Used instead of apiSchema when the actions are defined as functions
+  // with named parameters rather than an OpenAPI document.
+  functionSchema() dict
+  // Time the action group was created
+  //
+  // Read from the action group's own record rather than the listing, which
+  // reports only the last update.
+  createdAt() time
+  // Time the action group was last updated
+  updatedAt time
+}
+
+// Amazon Bedrock agent collaborator
+//
+// Agent a supervisor agent may delegate work to. `agentAliasArn` identifies
+// the collaborating agent's alias, `collaborationInstruction` is the
+// natural-language brief the supervisor uses to decide when to delegate, and
+// `relayConversationHistory` reports whether the full conversation is passed
+// along with the delegated request. The `id` selects the collaborator within
+// its supervisor agent.
+private aws.bedrock.agent.collaborator @defaults("name relayConversationHistory") {
+  // Unique identifier of the collaborator association
+  id string
+  // Identifier of the supervisor agent
+  agentId string
+  // Region where the collaborator association exists
+  region string
+  // Name of the collaborator
+  name string
+  // Version of the supervisor agent the association belongs to
+  agentVersion string
+  // ARN of the collaborating agent's alias
+  agentAliasArn string
+  // Instruction telling the supervisor when to delegate to this collaborator
+  collaborationInstruction string
+  // Whether the conversation history is relayed to the collaborator
+  //
+  // One of TO_COLLABORATOR (the collaborator receives the conversation so
+  // far) or DISABLED (it receives only the delegated request).
+  relayConversationHistory string
+  // Time the association was created
+  createdAt time
+  // Time the association was last updated
+  updatedAt time
 }
 
 // Amazon Bedrock Agent alias
@@ -28641,12 +29028,152 @@ private aws.bedrock.knowledgeBase @defaults("name status") {
   //
   // Carries a `type` discriminator (VECTOR, KENDRA, or SQL) and the backend-specific configuration including the embedding-model ARN for vector knowledge bases.
   knowledgeBaseConfiguration() dict
+  // Vector store backing the knowledge base
+  //
+  // Resolves the backing store named by storageConfiguration to the
+  // account resources that hold it, so the store's own encryption, network,
+  // and credential posture can be audited alongside the knowledge base.
+  vectorStore() aws.bedrock.knowledgeBase.vectorStore
+  // Foundation model used to embed documents into the vector store
+  //
+  // Null when the knowledge base does not use a vector store, as is the case
+  // for KENDRA and SQL knowledge bases.
+  embeddingModel() aws.bedrock.foundationModel
   // Time the knowledge base was created
   createdAt() time
   // Time the knowledge base was last updated
   updatedAt() time
+  // Data source summaries connected to the knowledge base
+  //
+  // Deprecated in favor of dataSourceDetails, which resolves each data
+  // source to a queryable aws.bedrock.knowledgeBase.dataSource with its
+  // deletion policy, encryption key, and connector configuration.
+  dataSources() @maturity("deprecated") []dict
   // Data sources connected to the knowledge base
-  dataSources() []dict
+  dataSourceDetails() []aws.bedrock.knowledgeBase.dataSource
+}
+
+// Vector store backing an Amazon Bedrock knowledge base
+//
+// Backing store that holds a knowledge base's document embeddings, resolved
+// to the account resources behind it. `type` selects which fields carry
+// values: an RDS store populates `rdsCluster` and `credentialsSecret`, an
+// OpenSearch Managed Cluster store populates `opensearchDomain`, an
+// OpenSearch Serverless store populates `opensearchServerlessCollectionArn`,
+// a Neptune Analytics store populates `neptuneGraphArn`, an S3 Vectors store
+// populates `s3VectorBucketArn`, and the third-party stores (Pinecone, MongoDB
+// Atlas, Redis Enterprise Cloud) populate `endpoint` and
+// `credentialsSecret`. Because the store holds the content a knowledge base
+// serves to agents, its exposure and encryption matter as much as the
+// knowledge base's own.
+private aws.bedrock.knowledgeBase.vectorStore @defaults("type endpoint vectorIndexName") {
+  // Kind of vector store backing the knowledge base
+  //
+  // One of OPENSEARCH_SERVERLESS, OPENSEARCH_MANAGED_CLUSTER, PINECONE,
+  // RDS, REDIS_ENTERPRISE_CLOUD, MONGO_DB_ATLAS, NEPTUNE_ANALYTICS, or
+  // S3_VECTORS.
+  type string
+  // Name of the vector index within the store
+  vectorIndexName string
+  // Endpoint of the store, for the stores reached over a URL
+  endpoint string
+  // Aurora cluster holding the vectors, for an RDS store
+  rdsCluster() aws.rds.dbcluster
+  // Secret holding the credentials used to reach the store
+  //
+  // Populated for the stores that authenticate with a stored credential
+  // rather than an IAM role: RDS, Pinecone, MongoDB Atlas, and Redis
+  // Enterprise Cloud.
+  credentialsSecret() aws.secretsmanager.secret
+  // OpenSearch domain holding the vectors, for an OpenSearch Managed Cluster store
+  opensearchDomain() aws.opensearch.domain
+  // ARN of the OpenSearch Serverless collection holding the vectors
+  opensearchServerlessCollectionArn string
+  // ARN of the Neptune Analytics graph holding the vectors
+  neptuneGraphArn string
+  // ARN of the S3 vector bucket holding the vectors
+  s3VectorBucketArn string
+  // ARN of the S3 vector index holding the vectors
+  s3VectorIndexArn string
+  // Database holding the vectors, for the stores organized into databases
+  databaseName string
+  // Table or collection holding the vectors
+  tableName string
+}
+
+// Data source of an Amazon Bedrock knowledge base
+//
+// Source of documents a knowledge base ingests into its vector store, which
+// is where the content an agent can retrieve originates. `type` reports the
+// connector, `s3Bucket` resolves the source bucket for an S3 data source,
+// and `webCrawlerSeedUrls` and `webCrawlerScope` report what a web data
+// source is allowed to crawl. `dataDeletionPolicy` reports whether the
+// embeddings survive the data source being deleted, and `kmsKey` the key
+// protecting the transient data used during ingestion. The `id` selects the
+// data source within its knowledge base.
+private aws.bedrock.knowledgeBase.dataSource @defaults("name status description") {
+  // Unique identifier of the data source
+  id string
+  // Identifier of the knowledge base that owns the data source
+  knowledgeBaseId string
+  // Region where the data source exists
+  region string
+  // Name of the data source
+  name string
+  // Status of the data source
+  //
+  // One of AVAILABLE, DELETING, DELETE_UNSUCCESSFUL, CREATING, UPDATING, or FAILED.
+  status string
+  // Description of the data source
+  description string
+  // Connector the data source reads through
+  //
+  // One of S3, WEB, CONFLUENCE, SALESFORCE, SHAREPOINT, CUSTOM,
+  // REDSHIFT_METADATA, or MANAGED_KNOWLEDGE_BASE_CONNECTOR.
+  type() string
+  // What happens to ingested embeddings when the data source is deleted
+  //
+  // One of DELETE (the embeddings are removed from the vector store) or
+  // RETAIN (they remain queryable by agents after the source is gone).
+  dataDeletionPolicy() string
+  // Customer-managed KMS key encrypting data in transit through ingestion
+  kmsKey() aws.kms.key
+  // S3 bucket the data source reads from, for an S3 data source
+  s3Bucket() aws.s3.bucket
+  // Account that owns the source bucket, when it is not this account
+  s3BucketOwnerAccountId() string
+  // Key prefixes within the source bucket the data source ingests
+  s3InclusionPrefixes() []string
+  // URLs a web data source starts crawling from
+  webCrawlerSeedUrls() []string
+  // How far a web data source may crawl from its seed URLs
+  //
+  // One of HOST_ONLY (only the seed URLs' hosts) or SUBDOMAINS (their
+  // subdomains as well).
+  webCrawlerScope() string
+  // User agent a web data source presents to the sites it crawls
+  webCrawlerUserAgent() string
+  // Connector configuration for the data source
+  //
+  // Carries a `type` discriminator and the connector-specific configuration
+  // block, including the credentials secret and host URL for the Confluence,
+  // Salesforce, and SharePoint connectors.
+  configuration() dict
+  // How documents are split before embedding
+  //
+  // Carries the chunking strategy (FIXED_SIZE, NONE, HIERARCHICAL, or
+  // SEMANTIC) and its parameters, plus any parsing and custom
+  // transformation configuration applied during ingestion.
+  vectorIngestionConfiguration() dict
+  // Reasons the data source last failed
+  failureReasons() []string
+  // Time the data source was created
+  //
+  // Read from the data source's own record rather than the listing, which
+  // reports only the last update.
+  createdAt() time
+  // Time the data source was last updated
+  updatedAt time
 }
 
 // Amazon Bedrock flow

@@ -5,9 +5,13 @@ package resources
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	bedrocktypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
@@ -74,6 +78,75 @@ func (a *mqlAwsBedrock) foundationModels() ([]any, error) {
 		res = append(res, mqlFM)
 	}
 	return res, nil
+}
+
+// initAwsBedrockFoundationModel resolves a foundation model from its ARN, or
+// from a model id plus region. Without it the typed baseModel and
+// foundationModel references across the Bedrock resources resolve to a resource
+// carrying only the identifier, leaving every other field unset.
+func initAwsBedrockFoundationModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	var identifier, region string
+	if args["modelArn"] != nil {
+		arnVal, _ := args["modelArn"].Value.(string)
+		parsed, err := arn.Parse(arnVal)
+		if err != nil {
+			return nil, nil, fmt.Errorf("invalid bedrock foundation model arn %q: %w", arnVal, err)
+		}
+		identifier = arnVal
+		region = parsed.Region
+	} else if args["modelId"] != nil {
+		identifier, _ = args["modelId"].Value.(string)
+		if args["region"] == nil {
+			return nil, nil, errors.New("region required to fetch bedrock foundation model by modelId")
+		}
+		region, _ = args["region"].Value.(string)
+	} else {
+		return nil, nil, errors.New("modelArn or modelId required to fetch bedrock foundation model")
+	}
+	if identifier == "" || region == "" {
+		return nil, nil, errors.New("modelArn, or modelId and region, required to fetch bedrock foundation model")
+	}
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Bedrock(region)
+	resp, err := svc.GetFoundationModel(context.Background(), &bedrock.GetFoundationModelInput{
+		ModelIdentifier: &identifier,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	if resp == nil || resp.ModelDetails == nil {
+		return nil, nil, fmt.Errorf("aws.bedrock.foundationModel %q not found", identifier)
+	}
+	m := resp.ModelDetails
+
+	lifecycleStatus := ""
+	if m.ModelLifecycle != nil {
+		lifecycleStatus = string(m.ModelLifecycle.Status)
+	}
+
+	res, err := CreateResource(runtime, "aws.bedrock.foundationModel",
+		map[string]*llx.RawData{
+			"__id":                       llx.StringDataPtr(m.ModelArn),
+			"modelArn":                   llx.StringDataPtr(m.ModelArn),
+			"modelId":                    llx.StringDataPtr(m.ModelId),
+			"modelName":                  llx.StringDataPtr(m.ModelName),
+			"providerName":               llx.StringDataPtr(m.ProviderName),
+			"inputModalities":            llx.ArrayData(enumSliceToAny(m.InputModalities), types.String),
+			"outputModalities":           llx.ArrayData(enumSliceToAny(m.OutputModalities), types.String),
+			"customizationsSupported":    llx.ArrayData(enumSliceToAny(m.CustomizationsSupported), types.String),
+			"inferenceTypesSupported":    llx.ArrayData(enumSliceToAny(m.InferenceTypesSupported), types.String),
+			"responseStreamingSupported": llx.BoolDataPtr(m.ResponseStreamingSupported),
+			"modelLifecycleStatus":       llx.StringData(lifecycleStatus),
+		})
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, res, nil
 }
 
 func (a *mqlAwsBedrockFoundationModel) id() (string, error) {
@@ -169,6 +242,70 @@ type mqlAwsBedrockCustomModelInternal struct {
 	detail        *bedrock.GetCustomModelOutput
 }
 
+// initAwsBedrockCustomModel resolves a custom model from its ARN so the typed
+// references to it (from a customization job, and from anything else naming a
+// custom model) resolve to a populated resource.
+func initAwsBedrockCustomModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["modelArn"] = llx.StringData(assetArn)
+		}
+	}
+
+	if args["modelArn"] == nil {
+		return nil, nil, errors.New("modelArn required to fetch bedrock custom model")
+	}
+	modelArn, _ := args["modelArn"].Value.(string)
+	parsed, err := arn.Parse(modelArn)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid bedrock custom model arn %q: %w", modelArn, err)
+	}
+	region := parsed.Region
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Bedrock(region)
+	resp, err := svc.GetCustomModel(context.Background(), &bedrock.GetCustomModelInput{
+		ModelIdentifier: &modelArn,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	if resp == nil {
+		return nil, nil, fmt.Errorf("aws.bedrock.customModel %q not found", modelArn)
+	}
+
+	res, err := CreateResource(runtime, "aws.bedrock.customModel",
+		map[string]*llx.RawData{
+			"__id":              llx.StringDataPtr(resp.ModelArn),
+			"modelArn":          llx.StringDataPtr(resp.ModelArn),
+			"modelName":         llx.StringDataPtr(resp.ModelName),
+			"region":            llx.StringData(region),
+			"baseModelArn":      llx.StringDataPtr(resp.BaseModelArn),
+			"customizationType": llx.StringData(string(resp.CustomizationType)),
+		})
+	if err != nil {
+		return nil, nil, err
+	}
+	mqlCM := res.(*mqlAwsBedrockCustomModel)
+	mqlCM.cacheRegion = region
+	// Seed the detail this init already fetched so the computed fields do not
+	// repeat the GetCustomModel call. CreateResource may have returned an instance
+	// already cached (and already in use) from the custom-models lister, so take
+	// the lock rather than writing over live state.
+	mqlCM.lock.Lock()
+	if !mqlCM.fetched {
+		mqlCM.cacheKmsKeyId = resp.ModelKmsKeyArn
+		mqlCM.detail = resp
+		mqlCM.fetched = true
+	}
+	mqlCM.lock.Unlock()
+	return nil, mqlCM, nil
+}
+
 func (a *mqlAwsBedrockCustomModel) id() (string, error) {
 	return a.ModelArn.Data, nil
 }
@@ -247,6 +384,30 @@ func (a *mqlAwsBedrockCustomModel) outputDataConfig() (any, error) {
 	}
 	result, _ := convert.JsonToDict(resp.OutputDataConfig)
 	return result, nil
+}
+
+func (a *mqlAwsBedrockCustomModel) trainingDataBucket() (*mqlAwsS3Bucket, error) {
+	resp, err := a.fetchDetail()
+	if err != nil {
+		return nil, err
+	}
+	uri := ""
+	if resp != nil && resp.TrainingDataConfig != nil {
+		uri = convert.ToValue(resp.TrainingDataConfig.S3Uri)
+	}
+	return s3BucketRefFromUri(a.MqlRuntime, uri, &a.TrainingDataBucket)
+}
+
+func (a *mqlAwsBedrockCustomModel) outputDataBucket() (*mqlAwsS3Bucket, error) {
+	resp, err := a.fetchDetail()
+	if err != nil {
+		return nil, err
+	}
+	uri := ""
+	if resp != nil && resp.OutputDataConfig != nil {
+		uri = convert.ToValue(resp.OutputDataConfig.S3Uri)
+	}
+	return s3BucketRefFromUri(a.MqlRuntime, uri, &a.OutputDataBucket)
 }
 
 // --- Guardrails ---
@@ -335,6 +496,83 @@ type mqlAwsBedrockGuardrailInternal struct {
 	fetched     bool
 	lock        sync.Mutex
 	detail      *bedrock.GetGuardrailOutput
+}
+
+// initAwsBedrockGuardrail resolves a guardrail from its ARN, or from an id plus
+// region, so the typed guardrail references on agents and on the account's
+// enforced-guardrail configuration resolve to a populated resource rather than
+// a husk carrying only the identifier.
+func initAwsBedrockGuardrail(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
+		}
+	}
+
+	var identifier, region string
+	if args["arn"] != nil {
+		arnVal, _ := args["arn"].Value.(string)
+		parsed, err := arn.Parse(arnVal)
+		if err != nil {
+			return nil, nil, fmt.Errorf("invalid bedrock guardrail arn %q: %w", arnVal, err)
+		}
+		identifier = arnVal
+		region = parsed.Region
+	} else if args["id"] != nil {
+		identifier, _ = args["id"].Value.(string)
+		if args["region"] == nil {
+			return nil, nil, errors.New("region required to fetch bedrock guardrail by id")
+		}
+		region, _ = args["region"].Value.(string)
+	} else {
+		return nil, nil, errors.New("arn or id required to fetch bedrock guardrail")
+	}
+	if identifier == "" || region == "" {
+		return nil, nil, errors.New("arn or id and region required to fetch bedrock guardrail")
+	}
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Bedrock(region)
+	resp, err := svc.GetGuardrail(context.Background(), &bedrock.GetGuardrailInput{
+		GuardrailIdentifier: &identifier,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	if resp == nil {
+		return nil, nil, fmt.Errorf("aws.bedrock.guardrail %q not found", identifier)
+	}
+
+	res, err := CreateResource(runtime, "aws.bedrock.guardrail",
+		map[string]*llx.RawData{
+			"__id":    llx.StringDataPtr(resp.GuardrailArn),
+			"arn":     llx.StringDataPtr(resp.GuardrailArn),
+			"id":      llx.StringDataPtr(resp.GuardrailId),
+			"name":    llx.StringDataPtr(resp.Name),
+			"region":  llx.StringData(region),
+			"status":  llx.StringData(string(resp.Status)),
+			"version": llx.StringDataPtr(resp.Version),
+		})
+	if err != nil {
+		return nil, nil, err
+	}
+	mqlG := res.(*mqlAwsBedrockGuardrail)
+	mqlG.cacheRegion = region
+	// The detail call this init already made covers every computed field, so seed
+	// it rather than letting the first field read repeat the request. CreateResource
+	// may have returned an instance already cached (and already in use) from the
+	// guardrails lister, so take the lock rather than writing over live state.
+	mqlG.lock.Lock()
+	if !mqlG.fetched {
+		mqlG.detail = resp
+		mqlG.fetched = true
+	}
+	mqlG.lock.Unlock()
+	return nil, mqlG, nil
 }
 
 func (a *mqlAwsBedrockGuardrail) id() (string, error) {
@@ -1092,6 +1330,72 @@ type mqlAwsBedrockKnowledgeBaseInternal struct {
 	detailOnce  sync.Once
 	detailErr   error
 	detail      *bedrockagent.GetKnowledgeBaseOutput
+}
+
+// initAwsBedrockKnowledgeBase resolves a knowledge base from an id plus region,
+// or from its ARN, so an agent's attached knowledge bases resolve to populated
+// resources. Agent associations carry only the knowledge-base id, which is why
+// the id and region pair is the primary lookup.
+func initAwsBedrockKnowledgeBase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
+		}
+	}
+
+	var kbId, region string
+	if args["id"] != nil && args["region"] != nil {
+		kbId, _ = args["id"].Value.(string)
+		region, _ = args["region"].Value.(string)
+	} else if args["arn"] != nil {
+		arnVal, _ := args["arn"].Value.(string)
+		parsed, err := arn.Parse(arnVal)
+		if err != nil {
+			return nil, nil, fmt.Errorf("invalid bedrock knowledge base arn %q: %w", arnVal, err)
+		}
+		region = parsed.Region
+		// resource is "knowledge-base/<id>"
+		_, kbId, _ = strings.Cut(parsed.Resource, "/")
+	} else {
+		return nil, nil, errors.New("arn, or id and region, required to fetch bedrock knowledge base")
+	}
+	if kbId == "" || region == "" {
+		return nil, nil, errors.New("arn, or id and region, required to fetch bedrock knowledge base")
+	}
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.BedrockAgent(region)
+	resp, err := svc.GetKnowledgeBase(context.Background(), &bedrockagent.GetKnowledgeBaseInput{
+		KnowledgeBaseId: &kbId,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	if resp == nil || resp.KnowledgeBase == nil {
+		return nil, nil, fmt.Errorf("aws.bedrock.knowledgeBase %q not found in %s", kbId, region)
+	}
+
+	res, err := CreateResource(runtime, "aws.bedrock.knowledgeBase",
+		map[string]*llx.RawData{
+			"__id":   llx.StringData("aws.bedrock.knowledgeBase/" + region + "/" + kbId),
+			"id":     llx.StringDataPtr(resp.KnowledgeBase.KnowledgeBaseId),
+			"name":   llx.StringDataPtr(resp.KnowledgeBase.Name),
+			"region": llx.StringData(region),
+			"status": llx.StringData(string(resp.KnowledgeBase.Status)),
+		})
+	if err != nil {
+		return nil, nil, err
+	}
+	mqlKB := res.(*mqlAwsBedrockKnowledgeBase)
+	mqlKB.cacheRegion = region
+	// Seed the detail the init already fetched so the computed fields do not
+	// repeat the GetKnowledgeBase call.
+	mqlKB.detailOnce.Do(func() { mqlKB.detail = resp })
+	return nil, mqlKB, nil
 }
 
 func (a *mqlAwsBedrockKnowledgeBase) id() (string, error) {

@@ -897,6 +897,11 @@ const (
 	ResourceAwsControltowerLandingZone                                          string = "aws.controltower.landingZone"
 	ResourceAwsControltowerEnabledBaseline                                      string = "aws.controltower.enabledBaseline"
 	ResourceAwsBedrock                                                          string = "aws.bedrock"
+	ResourceAwsBedrockEnforcedGuardrail                                         string = "aws.bedrock.enforcedGuardrail"
+	ResourceAwsBedrockDataRetentionConfiguration                                string = "aws.bedrock.dataRetentionConfiguration"
+	ResourceAwsBedrockModelCustomizationJob                                     string = "aws.bedrock.modelCustomizationJob"
+	ResourceAwsBedrockModelCopyJob                                              string = "aws.bedrock.modelCopyJob"
+	ResourceAwsBedrockMarketplaceModelEndpoint                                  string = "aws.bedrock.marketplaceModelEndpoint"
 	ResourceAwsBedrockAgentCore                                                 string = "aws.bedrock.agentCore"
 	ResourceAwsBedrockAgentCoreGateway                                          string = "aws.bedrock.agentCore.gateway"
 	ResourceAwsBedrockAgentCoreGatewayTarget                                    string = "aws.bedrock.agentCore.gatewayTarget"
@@ -916,8 +921,12 @@ const (
 	ResourceAwsBedrockModelInvocationLoggingConfiguration                       string = "aws.bedrock.modelInvocationLoggingConfiguration"
 	ResourceAwsBedrockProvisionedModelThroughput                                string = "aws.bedrock.provisionedModelThroughput"
 	ResourceAwsBedrockAgent                                                     string = "aws.bedrock.agent"
+	ResourceAwsBedrockAgentActionGroup                                          string = "aws.bedrock.agent.actionGroup"
+	ResourceAwsBedrockAgentCollaborator                                         string = "aws.bedrock.agent.collaborator"
 	ResourceAwsBedrockAgentAlias                                                string = "aws.bedrock.agent.alias"
 	ResourceAwsBedrockKnowledgeBase                                             string = "aws.bedrock.knowledgeBase"
+	ResourceAwsBedrockKnowledgeBaseVectorStore                                  string = "aws.bedrock.knowledgeBase.vectorStore"
+	ResourceAwsBedrockKnowledgeBaseDataSource                                   string = "aws.bedrock.knowledgeBase.dataSource"
 	ResourceAwsBedrockFlow                                                      string = "aws.bedrock.flow"
 	ResourceAwsBedrockEvaluationJob                                             string = "aws.bedrock.evaluationJob"
 	ResourceAwsBedrockModelImportJob                                            string = "aws.bedrock.modelImportJob"
@@ -4479,6 +4488,26 @@ func init() {
 			// to override args, implement: initAwsBedrock(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsBedrock,
 		},
+		"aws.bedrock.enforcedGuardrail": {
+			// to override args, implement: initAwsBedrockEnforcedGuardrail(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockEnforcedGuardrail,
+		},
+		"aws.bedrock.dataRetentionConfiguration": {
+			// to override args, implement: initAwsBedrockDataRetentionConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockDataRetentionConfiguration,
+		},
+		"aws.bedrock.modelCustomizationJob": {
+			// to override args, implement: initAwsBedrockModelCustomizationJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockModelCustomizationJob,
+		},
+		"aws.bedrock.modelCopyJob": {
+			// to override args, implement: initAwsBedrockModelCopyJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockModelCopyJob,
+		},
+		"aws.bedrock.marketplaceModelEndpoint": {
+			// to override args, implement: initAwsBedrockMarketplaceModelEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockMarketplaceModelEndpoint,
+		},
 		"aws.bedrock.agentCore": {
 			// to override args, implement: initAwsBedrockAgentCore(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsBedrockAgentCore,
@@ -4532,15 +4561,15 @@ func init() {
 			Create: createAwsBedrockAdvancedPromptOptimizationJob,
 		},
 		"aws.bedrock.foundationModel": {
-			// to override args, implement: initAwsBedrockFoundationModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsBedrockFoundationModel,
 			Create: createAwsBedrockFoundationModel,
 		},
 		"aws.bedrock.customModel": {
-			// to override args, implement: initAwsBedrockCustomModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsBedrockCustomModel,
 			Create: createAwsBedrockCustomModel,
 		},
 		"aws.bedrock.guardrail": {
-			// to override args, implement: initAwsBedrockGuardrail(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsBedrockGuardrail,
 			Create: createAwsBedrockGuardrail,
 		},
 		"aws.bedrock.modelInvocationLoggingConfiguration": {
@@ -4555,13 +4584,29 @@ func init() {
 			// to override args, implement: initAwsBedrockAgent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsBedrockAgent,
 		},
+		"aws.bedrock.agent.actionGroup": {
+			// to override args, implement: initAwsBedrockAgentActionGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockAgentActionGroup,
+		},
+		"aws.bedrock.agent.collaborator": {
+			// to override args, implement: initAwsBedrockAgentCollaborator(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockAgentCollaborator,
+		},
 		"aws.bedrock.agent.alias": {
 			// to override args, implement: initAwsBedrockAgentAlias(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsBedrockAgentAlias,
 		},
 		"aws.bedrock.knowledgeBase": {
-			// to override args, implement: initAwsBedrockKnowledgeBase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsBedrockKnowledgeBase,
 			Create: createAwsBedrockKnowledgeBase,
+		},
+		"aws.bedrock.knowledgeBase.vectorStore": {
+			// to override args, implement: initAwsBedrockKnowledgeBaseVectorStore(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockKnowledgeBaseVectorStore,
+		},
+		"aws.bedrock.knowledgeBase.dataSource": {
+			// to override args, implement: initAwsBedrockKnowledgeBaseDataSource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockKnowledgeBaseDataSource,
 		},
 		"aws.bedrock.flow": {
 			// to override args, implement: initAwsBedrockFlow(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -8034,6 +8079,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sagemaker.model.container.modelDataUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerModelContainer).GetModelDataUrl()).ToDataRes(types.String)
 	},
+	"aws.sagemaker.model.container.modelDataBucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelContainer).GetModelDataBucket()).ToDataRes(types.Resource("aws.s3.bucket"))
+	},
+	"aws.sagemaker.model.container.ecrRepository": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelContainer).GetEcrRepository()).ToDataRes(types.Resource("aws.ecr.repository"))
+	},
 	"aws.sagemaker.model.container.mode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerModelContainer).GetMode()).ToDataRes(types.String)
 	},
@@ -8106,6 +8157,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sagemaker.trainingjob.inputDataConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerTrainingjob).GetInputDataConfig()).ToDataRes(types.Array(types.Resource("aws.sagemaker.trainingjob.channel")))
 	},
+	"aws.sagemaker.trainingjob.outputDataBucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingjob).GetOutputDataBucket()).ToDataRes(types.Resource("aws.s3.bucket"))
+	},
+	"aws.sagemaker.trainingjob.outputKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingjob).GetOutputKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
 	"aws.sagemaker.trainingjob.outputDataConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerTrainingjob).GetOutputDataConfig()).ToDataRes(types.Dict)
 	},
@@ -8147,6 +8204,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sagemaker.trainingjob.channel.s3Uri": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerTrainingjobChannel).GetS3Uri()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.trainingjob.channel.bucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingjobChannel).GetBucket()).ToDataRes(types.Resource("aws.s3.bucket"))
 	},
 	"aws.sagemaker.trainingjob.channel.s3DataType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerTrainingjobChannel).GetS3DataType()).ToDataRes(types.String)
@@ -33654,8 +33714,206 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.bedrock.prompts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrock).GetPrompts()).ToDataRes(types.Array(types.Resource("aws.bedrock.prompt")))
 	},
+	"aws.bedrock.enforcedGuardrails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrock).GetEnforcedGuardrails()).ToDataRes(types.Array(types.Resource("aws.bedrock.enforcedGuardrail")))
+	},
+	"aws.bedrock.dataRetentionConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrock).GetDataRetentionConfigurations()).ToDataRes(types.Array(types.Resource("aws.bedrock.dataRetentionConfiguration")))
+	},
+	"aws.bedrock.modelCustomizationJobs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrock).GetModelCustomizationJobs()).ToDataRes(types.Array(types.Resource("aws.bedrock.modelCustomizationJob")))
+	},
+	"aws.bedrock.modelCopyJobs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrock).GetModelCopyJobs()).ToDataRes(types.Array(types.Resource("aws.bedrock.modelCopyJob")))
+	},
+	"aws.bedrock.marketplaceModelEndpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrock).GetMarketplaceModelEndpoints()).ToDataRes(types.Array(types.Resource("aws.bedrock.marketplaceModelEndpoint")))
+	},
 	"aws.bedrock.agentCore": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrock).GetAgentCore()).ToDataRes(types.Resource("aws.bedrock.agentCore"))
+	},
+	"aws.bedrock.enforcedGuardrail.configId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockEnforcedGuardrail).GetConfigId()).ToDataRes(types.String)
+	},
+	"aws.bedrock.enforcedGuardrail.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockEnforcedGuardrail).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.enforcedGuardrail.guardrailId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockEnforcedGuardrail).GetGuardrailId()).ToDataRes(types.String)
+	},
+	"aws.bedrock.enforcedGuardrail.guardrailVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockEnforcedGuardrail).GetGuardrailVersion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.enforcedGuardrail.guardrail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockEnforcedGuardrail).GetGuardrail()).ToDataRes(types.Resource("aws.bedrock.guardrail"))
+	},
+	"aws.bedrock.enforcedGuardrail.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockEnforcedGuardrail).GetOwner()).ToDataRes(types.String)
+	},
+	"aws.bedrock.enforcedGuardrail.modelEnforcement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockEnforcedGuardrail).GetModelEnforcement()).ToDataRes(types.Dict)
+	},
+	"aws.bedrock.enforcedGuardrail.selectiveContentGuarding": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockEnforcedGuardrail).GetSelectiveContentGuarding()).ToDataRes(types.Dict)
+	},
+	"aws.bedrock.enforcedGuardrail.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockEnforcedGuardrail).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"aws.bedrock.enforcedGuardrail.updatedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockEnforcedGuardrail).GetUpdatedBy()).ToDataRes(types.String)
+	},
+	"aws.bedrock.enforcedGuardrail.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockEnforcedGuardrail).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.enforcedGuardrail.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockEnforcedGuardrail).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.dataRetentionConfiguration.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockDataRetentionConfiguration).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.dataRetentionConfiguration.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockDataRetentionConfiguration).GetMode()).ToDataRes(types.String)
+	},
+	"aws.bedrock.dataRetentionConfiguration.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockDataRetentionConfiguration).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.modelCustomizationJob.jobArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCustomizationJob).GetJobArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.modelCustomizationJob.jobName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCustomizationJob).GetJobName()).ToDataRes(types.String)
+	},
+	"aws.bedrock.modelCustomizationJob.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCustomizationJob).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.modelCustomizationJob.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCustomizationJob).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.bedrock.modelCustomizationJob.customizationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCustomizationJob).GetCustomizationType()).ToDataRes(types.String)
+	},
+	"aws.bedrock.modelCustomizationJob.baseModel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCustomizationJob).GetBaseModel()).ToDataRes(types.Resource("aws.bedrock.foundationModel"))
+	},
+	"aws.bedrock.modelCustomizationJob.customModelName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCustomizationJob).GetCustomModelName()).ToDataRes(types.String)
+	},
+	"aws.bedrock.modelCustomizationJob.customModel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCustomizationJob).GetCustomModel()).ToDataRes(types.Resource("aws.bedrock.customModel"))
+	},
+	"aws.bedrock.modelCustomizationJob.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCustomizationJob).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.bedrock.modelCustomizationJob.trainingDataS3Uri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCustomizationJob).GetTrainingDataS3Uri()).ToDataRes(types.String)
+	},
+	"aws.bedrock.modelCustomizationJob.trainingDataBucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCustomizationJob).GetTrainingDataBucket()).ToDataRes(types.Resource("aws.s3.bucket"))
+	},
+	"aws.bedrock.modelCustomizationJob.invocationLogsConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCustomizationJob).GetInvocationLogsConfig()).ToDataRes(types.Dict)
+	},
+	"aws.bedrock.modelCustomizationJob.validationDataS3Uris": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCustomizationJob).GetValidationDataS3Uris()).ToDataRes(types.Array(types.String))
+	},
+	"aws.bedrock.modelCustomizationJob.outputDataS3Uri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCustomizationJob).GetOutputDataS3Uri()).ToDataRes(types.String)
+	},
+	"aws.bedrock.modelCustomizationJob.outputDataBucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCustomizationJob).GetOutputDataBucket()).ToDataRes(types.Resource("aws.s3.bucket"))
+	},
+	"aws.bedrock.modelCustomizationJob.outputModelKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCustomizationJob).GetOutputModelKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.bedrock.modelCustomizationJob.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCustomizationJob).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.bedrock.modelCustomizationJob.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCustomizationJob).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.bedrock.modelCustomizationJob.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCustomizationJob).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.bedrock.modelCustomizationJob.hyperParameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCustomizationJob).GetHyperParameters()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.bedrock.modelCustomizationJob.failureMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCustomizationJob).GetFailureMessage()).ToDataRes(types.String)
+	},
+	"aws.bedrock.modelCustomizationJob.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCustomizationJob).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.modelCustomizationJob.lastModifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCustomizationJob).GetLastModifiedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.modelCustomizationJob.endTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCustomizationJob).GetEndTime()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.modelCopyJob.jobArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCopyJob).GetJobArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.modelCopyJob.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCopyJob).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.modelCopyJob.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCopyJob).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.bedrock.modelCopyJob.sourceAccountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCopyJob).GetSourceAccountId()).ToDataRes(types.String)
+	},
+	"aws.bedrock.modelCopyJob.sourceModelArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCopyJob).GetSourceModelArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.modelCopyJob.sourceModelName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCopyJob).GetSourceModelName()).ToDataRes(types.String)
+	},
+	"aws.bedrock.modelCopyJob.targetModelArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCopyJob).GetTargetModelArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.modelCopyJob.targetModelName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCopyJob).GetTargetModelName()).ToDataRes(types.String)
+	},
+	"aws.bedrock.modelCopyJob.targetModelKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCopyJob).GetTargetModelKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.bedrock.modelCopyJob.targetModelTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCopyJob).GetTargetModelTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.bedrock.modelCopyJob.failureMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCopyJob).GetFailureMessage()).ToDataRes(types.String)
+	},
+	"aws.bedrock.modelCopyJob.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelCopyJob).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.marketplaceModelEndpoint.endpointArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockMarketplaceModelEndpoint).GetEndpointArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.marketplaceModelEndpoint.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockMarketplaceModelEndpoint).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.marketplaceModelEndpoint.modelSourceIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockMarketplaceModelEndpoint).GetModelSourceIdentifier()).ToDataRes(types.String)
+	},
+	"aws.bedrock.marketplaceModelEndpoint.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockMarketplaceModelEndpoint).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.bedrock.marketplaceModelEndpoint.statusMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockMarketplaceModelEndpoint).GetStatusMessage()).ToDataRes(types.String)
+	},
+	"aws.bedrock.marketplaceModelEndpoint.endpointStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockMarketplaceModelEndpoint).GetEndpointStatus()).ToDataRes(types.String)
+	},
+	"aws.bedrock.marketplaceModelEndpoint.endpointStatusMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockMarketplaceModelEndpoint).GetEndpointStatusMessage()).ToDataRes(types.String)
+	},
+	"aws.bedrock.marketplaceModelEndpoint.endpointConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockMarketplaceModelEndpoint).GetEndpointConfig()).ToDataRes(types.Dict)
+	},
+	"aws.bedrock.marketplaceModelEndpoint.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockMarketplaceModelEndpoint).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.marketplaceModelEndpoint.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockMarketplaceModelEndpoint).GetUpdatedAt()).ToDataRes(types.Time)
 	},
 	"aws.bedrock.agentCore.gateways": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockAgentCore).GetGateways()).ToDataRes(types.Array(types.Resource("aws.bedrock.agentCore.gateway")))
@@ -34053,8 +34311,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.bedrock.customModel.trainingDataConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockCustomModel).GetTrainingDataConfig()).ToDataRes(types.Dict)
 	},
+	"aws.bedrock.customModel.trainingDataBucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockCustomModel).GetTrainingDataBucket()).ToDataRes(types.Resource("aws.s3.bucket"))
+	},
 	"aws.bedrock.customModel.outputDataConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockCustomModel).GetOutputDataConfig()).ToDataRes(types.Dict)
+	},
+	"aws.bedrock.customModel.outputDataBucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockCustomModel).GetOutputDataBucket()).ToDataRes(types.Resource("aws.s3.bucket"))
 	},
 	"aws.bedrock.customModel.resourcePolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockCustomModel).GetResourcePolicy()).ToDataRes(types.String)
@@ -34191,11 +34455,125 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.bedrock.agent.actionGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockAgent).GetActionGroups()).ToDataRes(types.Array(types.Dict))
 	},
+	"aws.bedrock.agent.actionGroupDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetActionGroupDetails()).ToDataRes(types.Array(types.Resource("aws.bedrock.agent.actionGroup")))
+	},
 	"aws.bedrock.agent.knowledgeBases": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockAgent).GetKnowledgeBases()).ToDataRes(types.Array(types.Dict))
 	},
+	"aws.bedrock.agent.attachedKnowledgeBases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetAttachedKnowledgeBases()).ToDataRes(types.Array(types.Resource("aws.bedrock.knowledgeBase")))
+	},
+	"aws.bedrock.agent.guardrail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetGuardrail()).ToDataRes(types.Resource("aws.bedrock.guardrail"))
+	},
+	"aws.bedrock.agent.guardrailVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetGuardrailVersion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.agentCollaboration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetAgentCollaboration()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.collaborators": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetCollaborators()).ToDataRes(types.Array(types.Resource("aws.bedrock.agent.collaborator")))
+	},
+	"aws.bedrock.agent.orchestrationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetOrchestrationType()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.customOrchestrationLambda": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetCustomOrchestrationLambda()).ToDataRes(types.Resource("aws.lambda.function"))
+	},
+	"aws.bedrock.agent.enabledMemoryTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetEnabledMemoryTypes()).ToDataRes(types.Array(types.String))
+	},
+	"aws.bedrock.agent.memoryStorageDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetMemoryStorageDays()).ToDataRes(types.Int)
+	},
+	"aws.bedrock.agent.memoryMaxRecentSessions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetMemoryMaxRecentSessions()).ToDataRes(types.Int)
+	},
+	"aws.bedrock.agent.overriddenPromptTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetOverriddenPromptTypes()).ToDataRes(types.Array(types.String))
+	},
+	"aws.bedrock.agent.disabledPromptTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetDisabledPromptTypes()).ToDataRes(types.Array(types.String))
+	},
+	"aws.bedrock.agent.promptOverrideLambda": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetPromptOverrideLambda()).ToDataRes(types.Resource("aws.lambda.function"))
+	},
 	"aws.bedrock.agent.aliases": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockAgent).GetAliases()).ToDataRes(types.Array(types.Resource("aws.bedrock.agent.alias")))
+	},
+	"aws.bedrock.agent.actionGroup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentActionGroup).GetId()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.actionGroup.agentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentActionGroup).GetAgentId()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.actionGroup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentActionGroup).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.actionGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentActionGroup).GetName()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.actionGroup.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentActionGroup).GetState()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.actionGroup.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentActionGroup).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.actionGroup.executorLambda": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentActionGroup).GetExecutorLambda()).ToDataRes(types.Resource("aws.lambda.function"))
+	},
+	"aws.bedrock.agent.actionGroup.returnsControl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentActionGroup).GetReturnsControl()).ToDataRes(types.Bool)
+	},
+	"aws.bedrock.agent.actionGroup.parentActionSignature": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentActionGroup).GetParentActionSignature()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.actionGroup.parentActionGroupSignatureParams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentActionGroup).GetParentActionGroupSignatureParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.bedrock.agent.actionGroup.apiSchema": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentActionGroup).GetApiSchema()).ToDataRes(types.Dict)
+	},
+	"aws.bedrock.agent.actionGroup.functionSchema": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentActionGroup).GetFunctionSchema()).ToDataRes(types.Dict)
+	},
+	"aws.bedrock.agent.actionGroup.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentActionGroup).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.agent.actionGroup.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentActionGroup).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.agent.collaborator.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCollaborator).GetId()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.collaborator.agentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCollaborator).GetAgentId()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.collaborator.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCollaborator).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.collaborator.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCollaborator).GetName()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.collaborator.agentVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCollaborator).GetAgentVersion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.collaborator.agentAliasArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCollaborator).GetAgentAliasArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.collaborator.collaborationInstruction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCollaborator).GetCollaborationInstruction()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.collaborator.relayConversationHistory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCollaborator).GetRelayConversationHistory()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.collaborator.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCollaborator).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.agent.collaborator.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCollaborator).GetUpdatedAt()).ToDataRes(types.Time)
 	},
 	"aws.bedrock.agent.alias.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockAgentAlias).GetId()).ToDataRes(types.String)
@@ -34257,6 +34635,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.bedrock.knowledgeBase.knowledgeBaseConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockKnowledgeBase).GetKnowledgeBaseConfiguration()).ToDataRes(types.Dict)
 	},
+	"aws.bedrock.knowledgeBase.vectorStore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBase).GetVectorStore()).ToDataRes(types.Resource("aws.bedrock.knowledgeBase.vectorStore"))
+	},
+	"aws.bedrock.knowledgeBase.embeddingModel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBase).GetEmbeddingModel()).ToDataRes(types.Resource("aws.bedrock.foundationModel"))
+	},
 	"aws.bedrock.knowledgeBase.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockKnowledgeBase).GetCreatedAt()).ToDataRes(types.Time)
 	},
@@ -34265,6 +34649,105 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.bedrock.knowledgeBase.dataSources": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockKnowledgeBase).GetDataSources()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.bedrock.knowledgeBase.dataSourceDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBase).GetDataSourceDetails()).ToDataRes(types.Array(types.Resource("aws.bedrock.knowledgeBase.dataSource")))
+	},
+	"aws.bedrock.knowledgeBase.vectorStore.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseVectorStore).GetType()).ToDataRes(types.String)
+	},
+	"aws.bedrock.knowledgeBase.vectorStore.vectorIndexName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseVectorStore).GetVectorIndexName()).ToDataRes(types.String)
+	},
+	"aws.bedrock.knowledgeBase.vectorStore.endpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseVectorStore).GetEndpoint()).ToDataRes(types.String)
+	},
+	"aws.bedrock.knowledgeBase.vectorStore.rdsCluster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseVectorStore).GetRdsCluster()).ToDataRes(types.Resource("aws.rds.dbcluster"))
+	},
+	"aws.bedrock.knowledgeBase.vectorStore.credentialsSecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseVectorStore).GetCredentialsSecret()).ToDataRes(types.Resource("aws.secretsmanager.secret"))
+	},
+	"aws.bedrock.knowledgeBase.vectorStore.opensearchDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseVectorStore).GetOpensearchDomain()).ToDataRes(types.Resource("aws.opensearch.domain"))
+	},
+	"aws.bedrock.knowledgeBase.vectorStore.opensearchServerlessCollectionArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseVectorStore).GetOpensearchServerlessCollectionArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.knowledgeBase.vectorStore.neptuneGraphArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseVectorStore).GetNeptuneGraphArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.knowledgeBase.vectorStore.s3VectorBucketArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseVectorStore).GetS3VectorBucketArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.knowledgeBase.vectorStore.s3VectorIndexArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseVectorStore).GetS3VectorIndexArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.knowledgeBase.vectorStore.databaseName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseVectorStore).GetDatabaseName()).ToDataRes(types.String)
+	},
+	"aws.bedrock.knowledgeBase.vectorStore.tableName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseVectorStore).GetTableName()).ToDataRes(types.String)
+	},
+	"aws.bedrock.knowledgeBase.dataSource.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseDataSource).GetId()).ToDataRes(types.String)
+	},
+	"aws.bedrock.knowledgeBase.dataSource.knowledgeBaseId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseDataSource).GetKnowledgeBaseId()).ToDataRes(types.String)
+	},
+	"aws.bedrock.knowledgeBase.dataSource.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseDataSource).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.knowledgeBase.dataSource.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseDataSource).GetName()).ToDataRes(types.String)
+	},
+	"aws.bedrock.knowledgeBase.dataSource.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseDataSource).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.bedrock.knowledgeBase.dataSource.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseDataSource).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.bedrock.knowledgeBase.dataSource.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseDataSource).GetType()).ToDataRes(types.String)
+	},
+	"aws.bedrock.knowledgeBase.dataSource.dataDeletionPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseDataSource).GetDataDeletionPolicy()).ToDataRes(types.String)
+	},
+	"aws.bedrock.knowledgeBase.dataSource.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseDataSource).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.bedrock.knowledgeBase.dataSource.s3Bucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseDataSource).GetS3Bucket()).ToDataRes(types.Resource("aws.s3.bucket"))
+	},
+	"aws.bedrock.knowledgeBase.dataSource.s3BucketOwnerAccountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseDataSource).GetS3BucketOwnerAccountId()).ToDataRes(types.String)
+	},
+	"aws.bedrock.knowledgeBase.dataSource.s3InclusionPrefixes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseDataSource).GetS3InclusionPrefixes()).ToDataRes(types.Array(types.String))
+	},
+	"aws.bedrock.knowledgeBase.dataSource.webCrawlerSeedUrls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseDataSource).GetWebCrawlerSeedUrls()).ToDataRes(types.Array(types.String))
+	},
+	"aws.bedrock.knowledgeBase.dataSource.webCrawlerScope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseDataSource).GetWebCrawlerScope()).ToDataRes(types.String)
+	},
+	"aws.bedrock.knowledgeBase.dataSource.webCrawlerUserAgent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseDataSource).GetWebCrawlerUserAgent()).ToDataRes(types.String)
+	},
+	"aws.bedrock.knowledgeBase.dataSource.configuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseDataSource).GetConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.bedrock.knowledgeBase.dataSource.vectorIngestionConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseDataSource).GetVectorIngestionConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.bedrock.knowledgeBase.dataSource.failureReasons": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseDataSource).GetFailureReasons()).ToDataRes(types.Array(types.String))
+	},
+	"aws.bedrock.knowledgeBase.dataSource.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseDataSource).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.knowledgeBase.dataSource.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBaseDataSource).GetUpdatedAt()).ToDataRes(types.Time)
 	},
 	"aws.bedrock.flow.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockFlow).GetId()).ToDataRes(types.String)
@@ -39884,6 +40367,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSagemakerModelContainer).ModelDataUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.sagemaker.model.container.modelDataBucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelContainer).ModelDataBucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.model.container.ecrRepository": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelContainer).EcrRepository, ok = plugin.RawToTValue[*mqlAwsEcrRepository](v.Value, v.Error)
+		return
+	},
 	"aws.sagemaker.model.container.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerModelContainer).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -39984,6 +40475,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSagemakerTrainingjob).InputDataConfig, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.sagemaker.trainingjob.outputDataBucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingjob).OutputDataBucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingjob.outputKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingjob).OutputKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
 	"aws.sagemaker.trainingjob.outputDataConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerTrainingjob).OutputDataConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -40042,6 +40541,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sagemaker.trainingjob.channel.s3Uri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerTrainingjobChannel).S3Uri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingjob.channel.bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingjobChannel).Bucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.trainingjob.channel.s3DataType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -77116,8 +77619,292 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsBedrock).Prompts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.bedrock.enforcedGuardrails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrock).EnforcedGuardrails, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.dataRetentionConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrock).DataRetentionConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCustomizationJobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrock).ModelCustomizationJobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCopyJobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrock).ModelCopyJobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.marketplaceModelEndpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrock).MarketplaceModelEndpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.bedrock.agentCore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBedrock).AgentCore, ok = plugin.RawToTValue[*mqlAwsBedrockAgentCore](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.enforcedGuardrail.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockEnforcedGuardrail).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.enforcedGuardrail.configId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockEnforcedGuardrail).ConfigId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.enforcedGuardrail.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockEnforcedGuardrail).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.enforcedGuardrail.guardrailId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockEnforcedGuardrail).GuardrailId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.enforcedGuardrail.guardrailVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockEnforcedGuardrail).GuardrailVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.enforcedGuardrail.guardrail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockEnforcedGuardrail).Guardrail, ok = plugin.RawToTValue[*mqlAwsBedrockGuardrail](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.enforcedGuardrail.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockEnforcedGuardrail).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.enforcedGuardrail.modelEnforcement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockEnforcedGuardrail).ModelEnforcement, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.enforcedGuardrail.selectiveContentGuarding": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockEnforcedGuardrail).SelectiveContentGuarding, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.enforcedGuardrail.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockEnforcedGuardrail).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.enforcedGuardrail.updatedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockEnforcedGuardrail).UpdatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.enforcedGuardrail.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockEnforcedGuardrail).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.enforcedGuardrail.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockEnforcedGuardrail).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.dataRetentionConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockDataRetentionConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.dataRetentionConfiguration.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockDataRetentionConfiguration).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.dataRetentionConfiguration.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockDataRetentionConfiguration).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.dataRetentionConfiguration.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockDataRetentionConfiguration).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCustomizationJob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCustomizationJob).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.modelCustomizationJob.jobArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCustomizationJob).JobArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCustomizationJob.jobName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCustomizationJob).JobName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCustomizationJob.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCustomizationJob).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCustomizationJob.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCustomizationJob).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCustomizationJob.customizationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCustomizationJob).CustomizationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCustomizationJob.baseModel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCustomizationJob).BaseModel, ok = plugin.RawToTValue[*mqlAwsBedrockFoundationModel](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCustomizationJob.customModelName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCustomizationJob).CustomModelName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCustomizationJob.customModel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCustomizationJob).CustomModel, ok = plugin.RawToTValue[*mqlAwsBedrockCustomModel](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCustomizationJob.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCustomizationJob).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCustomizationJob.trainingDataS3Uri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCustomizationJob).TrainingDataS3Uri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCustomizationJob.trainingDataBucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCustomizationJob).TrainingDataBucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCustomizationJob.invocationLogsConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCustomizationJob).InvocationLogsConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCustomizationJob.validationDataS3Uris": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCustomizationJob).ValidationDataS3Uris, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCustomizationJob.outputDataS3Uri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCustomizationJob).OutputDataS3Uri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCustomizationJob.outputDataBucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCustomizationJob).OutputDataBucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCustomizationJob.outputModelKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCustomizationJob).OutputModelKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCustomizationJob.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCustomizationJob).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCustomizationJob.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCustomizationJob).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCustomizationJob.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCustomizationJob).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCustomizationJob.hyperParameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCustomizationJob).HyperParameters, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCustomizationJob.failureMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCustomizationJob).FailureMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCustomizationJob.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCustomizationJob).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCustomizationJob.lastModifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCustomizationJob).LastModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCustomizationJob.endTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCustomizationJob).EndTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCopyJob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCopyJob).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.modelCopyJob.jobArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCopyJob).JobArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCopyJob.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCopyJob).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCopyJob.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCopyJob).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCopyJob.sourceAccountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCopyJob).SourceAccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCopyJob.sourceModelArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCopyJob).SourceModelArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCopyJob.sourceModelName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCopyJob).SourceModelName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCopyJob.targetModelArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCopyJob).TargetModelArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCopyJob.targetModelName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCopyJob).TargetModelName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCopyJob.targetModelKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCopyJob).TargetModelKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCopyJob.targetModelTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCopyJob).TargetModelTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCopyJob.failureMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCopyJob).FailureMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelCopyJob.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelCopyJob).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.marketplaceModelEndpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockMarketplaceModelEndpoint).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.marketplaceModelEndpoint.endpointArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockMarketplaceModelEndpoint).EndpointArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.marketplaceModelEndpoint.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockMarketplaceModelEndpoint).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.marketplaceModelEndpoint.modelSourceIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockMarketplaceModelEndpoint).ModelSourceIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.marketplaceModelEndpoint.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockMarketplaceModelEndpoint).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.marketplaceModelEndpoint.statusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockMarketplaceModelEndpoint).StatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.marketplaceModelEndpoint.endpointStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockMarketplaceModelEndpoint).EndpointStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.marketplaceModelEndpoint.endpointStatusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockMarketplaceModelEndpoint).EndpointStatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.marketplaceModelEndpoint.endpointConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockMarketplaceModelEndpoint).EndpointConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.marketplaceModelEndpoint.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockMarketplaceModelEndpoint).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.marketplaceModelEndpoint.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockMarketplaceModelEndpoint).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.bedrock.agentCore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -77708,8 +78495,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsBedrockCustomModel).TrainingDataConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.bedrock.customModel.trainingDataBucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockCustomModel).TrainingDataBucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
+		return
+	},
 	"aws.bedrock.customModel.outputDataConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBedrockCustomModel).OutputDataConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.customModel.outputDataBucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockCustomModel).OutputDataBucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
 		return
 	},
 	"aws.bedrock.customModel.resourcePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -77908,12 +78703,172 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsBedrockAgent).ActionGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.bedrock.agent.actionGroupDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).ActionGroupDetails, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.bedrock.agent.knowledgeBases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBedrockAgent).KnowledgeBases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.bedrock.agent.attachedKnowledgeBases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).AttachedKnowledgeBases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.guardrail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).Guardrail, ok = plugin.RawToTValue[*mqlAwsBedrockGuardrail](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.guardrailVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).GuardrailVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.agentCollaboration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).AgentCollaboration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.collaborators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).Collaborators, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.orchestrationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).OrchestrationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.customOrchestrationLambda": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).CustomOrchestrationLambda, ok = plugin.RawToTValue[*mqlAwsLambdaFunction](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.enabledMemoryTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).EnabledMemoryTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.memoryStorageDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).MemoryStorageDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.memoryMaxRecentSessions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).MemoryMaxRecentSessions, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.overriddenPromptTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).OverriddenPromptTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.disabledPromptTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).DisabledPromptTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.promptOverrideLambda": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).PromptOverrideLambda, ok = plugin.RawToTValue[*mqlAwsLambdaFunction](v.Value, v.Error)
+		return
+	},
 	"aws.bedrock.agent.aliases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBedrockAgent).Aliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.actionGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentActionGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.agent.actionGroup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentActionGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.actionGroup.agentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentActionGroup).AgentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.actionGroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentActionGroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.actionGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentActionGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.actionGroup.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentActionGroup).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.actionGroup.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentActionGroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.actionGroup.executorLambda": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentActionGroup).ExecutorLambda, ok = plugin.RawToTValue[*mqlAwsLambdaFunction](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.actionGroup.returnsControl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentActionGroup).ReturnsControl, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.actionGroup.parentActionSignature": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentActionGroup).ParentActionSignature, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.actionGroup.parentActionGroupSignatureParams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentActionGroup).ParentActionGroupSignatureParams, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.actionGroup.apiSchema": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentActionGroup).ApiSchema, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.actionGroup.functionSchema": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentActionGroup).FunctionSchema, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.actionGroup.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentActionGroup).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.actionGroup.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentActionGroup).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.collaborator.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCollaborator).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.agent.collaborator.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCollaborator).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.collaborator.agentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCollaborator).AgentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.collaborator.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCollaborator).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.collaborator.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCollaborator).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.collaborator.agentVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCollaborator).AgentVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.collaborator.agentAliasArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCollaborator).AgentAliasArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.collaborator.collaborationInstruction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCollaborator).CollaborationInstruction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.collaborator.relayConversationHistory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCollaborator).RelayConversationHistory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.collaborator.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCollaborator).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.collaborator.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCollaborator).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.bedrock.agent.alias.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -78004,6 +78959,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsBedrockKnowledgeBase).KnowledgeBaseConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.bedrock.knowledgeBase.vectorStore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBase).VectorStore, ok = plugin.RawToTValue[*mqlAwsBedrockKnowledgeBaseVectorStore](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.embeddingModel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBase).EmbeddingModel, ok = plugin.RawToTValue[*mqlAwsBedrockFoundationModel](v.Value, v.Error)
+		return
+	},
 	"aws.bedrock.knowledgeBase.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBedrockKnowledgeBase).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -78014,6 +78977,146 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.bedrock.knowledgeBase.dataSources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBedrockKnowledgeBase).DataSources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.dataSourceDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBase).DataSourceDetails, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.vectorStore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseVectorStore).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.knowledgeBase.vectorStore.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseVectorStore).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.vectorStore.vectorIndexName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseVectorStore).VectorIndexName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.vectorStore.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseVectorStore).Endpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.vectorStore.rdsCluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseVectorStore).RdsCluster, ok = plugin.RawToTValue[*mqlAwsRdsDbcluster](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.vectorStore.credentialsSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseVectorStore).CredentialsSecret, ok = plugin.RawToTValue[*mqlAwsSecretsmanagerSecret](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.vectorStore.opensearchDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseVectorStore).OpensearchDomain, ok = plugin.RawToTValue[*mqlAwsOpensearchDomain](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.vectorStore.opensearchServerlessCollectionArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseVectorStore).OpensearchServerlessCollectionArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.vectorStore.neptuneGraphArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseVectorStore).NeptuneGraphArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.vectorStore.s3VectorBucketArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseVectorStore).S3VectorBucketArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.vectorStore.s3VectorIndexArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseVectorStore).S3VectorIndexArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.vectorStore.databaseName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseVectorStore).DatabaseName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.vectorStore.tableName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseVectorStore).TableName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.dataSource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseDataSource).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.knowledgeBase.dataSource.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseDataSource).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.dataSource.knowledgeBaseId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseDataSource).KnowledgeBaseId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.dataSource.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseDataSource).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.dataSource.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseDataSource).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.dataSource.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseDataSource).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.dataSource.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseDataSource).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.dataSource.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseDataSource).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.dataSource.dataDeletionPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseDataSource).DataDeletionPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.dataSource.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseDataSource).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.dataSource.s3Bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseDataSource).S3Bucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.dataSource.s3BucketOwnerAccountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseDataSource).S3BucketOwnerAccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.dataSource.s3InclusionPrefixes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseDataSource).S3InclusionPrefixes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.dataSource.webCrawlerSeedUrls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseDataSource).WebCrawlerSeedUrls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.dataSource.webCrawlerScope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseDataSource).WebCrawlerScope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.dataSource.webCrawlerUserAgent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseDataSource).WebCrawlerUserAgent, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.dataSource.configuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseDataSource).Configuration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.dataSource.vectorIngestionConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseDataSource).VectorIngestionConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.dataSource.failureReasons": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseDataSource).FailureReasons, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.dataSource.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseDataSource).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.dataSource.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBaseDataSource).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.bedrock.flow.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -92632,6 +93735,8 @@ type mqlAwsSagemakerModelContainer struct {
 	ContainerHostname plugin.TValue[string]
 	Image             plugin.TValue[string]
 	ModelDataUrl      plugin.TValue[string]
+	ModelDataBucket   plugin.TValue[*mqlAwsS3Bucket]
+	EcrRepository     plugin.TValue[*mqlAwsEcrRepository]
 	Mode              plugin.TValue[string]
 	Environment       plugin.TValue[map[string]any]
 	ImageConfig       plugin.TValue[any]
@@ -92687,6 +93792,38 @@ func (c *mqlAwsSagemakerModelContainer) GetModelDataUrl() *plugin.TValue[string]
 	return &c.ModelDataUrl
 }
 
+func (c *mqlAwsSagemakerModelContainer) GetModelDataBucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.ModelDataBucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.model.container", c.__id, "modelDataBucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.modelDataBucket()
+	})
+}
+
+func (c *mqlAwsSagemakerModelContainer) GetEcrRepository() *plugin.TValue[*mqlAwsEcrRepository] {
+	return plugin.GetOrCompute[*mqlAwsEcrRepository](&c.EcrRepository, func() (*mqlAwsEcrRepository, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.model.container", c.__id, "ecrRepository")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEcrRepository), nil
+			}
+		}
+
+		return c.ecrRepository()
+	})
+}
+
 func (c *mqlAwsSagemakerModelContainer) GetMode() *plugin.TValue[string] {
 	return &c.Mode
 }
@@ -92732,6 +93869,8 @@ type mqlAwsSagemakerTrainingjob struct {
 	VpcConfig                             plugin.TValue[any]
 	Vpc                                   plugin.TValue[*mqlAwsVpc]
 	InputDataConfig                       plugin.TValue[[]any]
+	OutputDataBucket                      plugin.TValue[*mqlAwsS3Bucket]
+	OutputKmsKey                          plugin.TValue[*mqlAwsKmsKey]
 	OutputDataConfig                      plugin.TValue[any]
 	ModelArtifactsUrl                     plugin.TValue[string]
 	TuningJobArn                          plugin.TValue[string]
@@ -92929,6 +94068,38 @@ func (c *mqlAwsSagemakerTrainingjob) GetInputDataConfig() *plugin.TValue[[]any] 
 	})
 }
 
+func (c *mqlAwsSagemakerTrainingjob) GetOutputDataBucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.OutputDataBucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.trainingjob", c.__id, "outputDataBucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.outputDataBucket()
+	})
+}
+
+func (c *mqlAwsSagemakerTrainingjob) GetOutputKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.OutputKmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.trainingjob", c.__id, "outputKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.outputKmsKey()
+	})
+}
+
 func (c *mqlAwsSagemakerTrainingjob) GetOutputDataConfig() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.OutputDataConfig, func() (any, error) {
 		return c.outputDataConfig()
@@ -93028,6 +94199,7 @@ type mqlAwsSagemakerTrainingjobChannel struct {
 	// optional: if you define mqlAwsSagemakerTrainingjobChannelInternal it will be used here
 	ChannelName            plugin.TValue[string]
 	S3Uri                  plugin.TValue[string]
+	Bucket                 plugin.TValue[*mqlAwsS3Bucket]
 	S3DataType             plugin.TValue[string]
 	S3DataDistributionType plugin.TValue[string]
 	FileSystemId           plugin.TValue[string]
@@ -93075,6 +94247,22 @@ func (c *mqlAwsSagemakerTrainingjobChannel) GetChannelName() *plugin.TValue[stri
 
 func (c *mqlAwsSagemakerTrainingjobChannel) GetS3Uri() *plugin.TValue[string] {
 	return &c.S3Uri
+}
+
+func (c *mqlAwsSagemakerTrainingjobChannel) GetBucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.Bucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.trainingjob.channel", c.__id, "bucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.bucket()
+	})
 }
 
 func (c *mqlAwsSagemakerTrainingjobChannel) GetS3DataType() *plugin.TValue[string] {
@@ -186985,6 +188173,11 @@ type mqlAwsBedrock struct {
 	InferenceProfiles                    plugin.TValue[[]any]
 	ImportedModels                       plugin.TValue[[]any]
 	Prompts                              plugin.TValue[[]any]
+	EnforcedGuardrails                   plugin.TValue[[]any]
+	DataRetentionConfigurations          plugin.TValue[[]any]
+	ModelCustomizationJobs               plugin.TValue[[]any]
+	ModelCopyJobs                        plugin.TValue[[]any]
+	MarketplaceModelEndpoints            plugin.TValue[[]any]
 	AgentCore                            plugin.TValue[*mqlAwsBedrockAgentCore]
 }
 
@@ -187265,6 +188458,86 @@ func (c *mqlAwsBedrock) GetPrompts() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsBedrock) GetEnforcedGuardrails() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EnforcedGuardrails, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock", c.__id, "enforcedGuardrails")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.enforcedGuardrails()
+	})
+}
+
+func (c *mqlAwsBedrock) GetDataRetentionConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DataRetentionConfigurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock", c.__id, "dataRetentionConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dataRetentionConfigurations()
+	})
+}
+
+func (c *mqlAwsBedrock) GetModelCustomizationJobs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ModelCustomizationJobs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock", c.__id, "modelCustomizationJobs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.modelCustomizationJobs()
+	})
+}
+
+func (c *mqlAwsBedrock) GetModelCopyJobs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ModelCopyJobs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock", c.__id, "modelCopyJobs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.modelCopyJobs()
+	})
+}
+
+func (c *mqlAwsBedrock) GetMarketplaceModelEndpoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MarketplaceModelEndpoints, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock", c.__id, "marketplaceModelEndpoints")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.marketplaceModelEndpoints()
+	})
+}
+
 func (c *mqlAwsBedrock) GetAgentCore() *plugin.TValue[*mqlAwsBedrockAgentCore] {
 	return plugin.GetOrCompute[*mqlAwsBedrockAgentCore](&c.AgentCore, func() (*mqlAwsBedrockAgentCore, error) {
 		if c.MqlRuntime.HasRecording {
@@ -187279,6 +188552,681 @@ func (c *mqlAwsBedrock) GetAgentCore() *plugin.TValue[*mqlAwsBedrockAgentCore] {
 
 		return c.agentCore()
 	})
+}
+
+// mqlAwsBedrockEnforcedGuardrail for the aws.bedrock.enforcedGuardrail resource
+type mqlAwsBedrockEnforcedGuardrail struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsBedrockEnforcedGuardrailInternal
+	ConfigId                 plugin.TValue[string]
+	Region                   plugin.TValue[string]
+	GuardrailId              plugin.TValue[string]
+	GuardrailVersion         plugin.TValue[string]
+	Guardrail                plugin.TValue[*mqlAwsBedrockGuardrail]
+	Owner                    plugin.TValue[string]
+	ModelEnforcement         plugin.TValue[any]
+	SelectiveContentGuarding plugin.TValue[any]
+	CreatedBy                plugin.TValue[string]
+	UpdatedBy                plugin.TValue[string]
+	CreatedAt                plugin.TValue[*time.Time]
+	UpdatedAt                plugin.TValue[*time.Time]
+}
+
+// createAwsBedrockEnforcedGuardrail creates a new instance of this resource
+func createAwsBedrockEnforcedGuardrail(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockEnforcedGuardrail{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.enforcedGuardrail", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockEnforcedGuardrail) MqlName() string {
+	return "aws.bedrock.enforcedGuardrail"
+}
+
+func (c *mqlAwsBedrockEnforcedGuardrail) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockEnforcedGuardrail) GetConfigId() *plugin.TValue[string] {
+	return &c.ConfigId
+}
+
+func (c *mqlAwsBedrockEnforcedGuardrail) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBedrockEnforcedGuardrail) GetGuardrailId() *plugin.TValue[string] {
+	return &c.GuardrailId
+}
+
+func (c *mqlAwsBedrockEnforcedGuardrail) GetGuardrailVersion() *plugin.TValue[string] {
+	return &c.GuardrailVersion
+}
+
+func (c *mqlAwsBedrockEnforcedGuardrail) GetGuardrail() *plugin.TValue[*mqlAwsBedrockGuardrail] {
+	return plugin.GetOrCompute[*mqlAwsBedrockGuardrail](&c.Guardrail, func() (*mqlAwsBedrockGuardrail, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.enforcedGuardrail", c.__id, "guardrail")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsBedrockGuardrail), nil
+			}
+		}
+
+		return c.guardrail()
+	})
+}
+
+func (c *mqlAwsBedrockEnforcedGuardrail) GetOwner() *plugin.TValue[string] {
+	return &c.Owner
+}
+
+func (c *mqlAwsBedrockEnforcedGuardrail) GetModelEnforcement() *plugin.TValue[any] {
+	return &c.ModelEnforcement
+}
+
+func (c *mqlAwsBedrockEnforcedGuardrail) GetSelectiveContentGuarding() *plugin.TValue[any] {
+	return &c.SelectiveContentGuarding
+}
+
+func (c *mqlAwsBedrockEnforcedGuardrail) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlAwsBedrockEnforcedGuardrail) GetUpdatedBy() *plugin.TValue[string] {
+	return &c.UpdatedBy
+}
+
+func (c *mqlAwsBedrockEnforcedGuardrail) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsBedrockEnforcedGuardrail) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlAwsBedrockDataRetentionConfiguration for the aws.bedrock.dataRetentionConfiguration resource
+type mqlAwsBedrockDataRetentionConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsBedrockDataRetentionConfigurationInternal it will be used here
+	Region    plugin.TValue[string]
+	Mode      plugin.TValue[string]
+	UpdatedAt plugin.TValue[*time.Time]
+}
+
+// createAwsBedrockDataRetentionConfiguration creates a new instance of this resource
+func createAwsBedrockDataRetentionConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockDataRetentionConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.dataRetentionConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockDataRetentionConfiguration) MqlName() string {
+	return "aws.bedrock.dataRetentionConfiguration"
+}
+
+func (c *mqlAwsBedrockDataRetentionConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockDataRetentionConfiguration) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBedrockDataRetentionConfiguration) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlAwsBedrockDataRetentionConfiguration) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlAwsBedrockModelCustomizationJob for the aws.bedrock.modelCustomizationJob resource
+type mqlAwsBedrockModelCustomizationJob struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsBedrockModelCustomizationJobInternal
+	JobArn               plugin.TValue[string]
+	JobName              plugin.TValue[string]
+	Region               plugin.TValue[string]
+	Status               plugin.TValue[string]
+	CustomizationType    plugin.TValue[string]
+	BaseModel            plugin.TValue[*mqlAwsBedrockFoundationModel]
+	CustomModelName      plugin.TValue[string]
+	CustomModel          plugin.TValue[*mqlAwsBedrockCustomModel]
+	IamRole              plugin.TValue[*mqlAwsIamRole]
+	TrainingDataS3Uri    plugin.TValue[string]
+	TrainingDataBucket   plugin.TValue[*mqlAwsS3Bucket]
+	InvocationLogsConfig plugin.TValue[any]
+	ValidationDataS3Uris plugin.TValue[[]any]
+	OutputDataS3Uri      plugin.TValue[string]
+	OutputDataBucket     plugin.TValue[*mqlAwsS3Bucket]
+	OutputModelKmsKey    plugin.TValue[*mqlAwsKmsKey]
+	Vpc                  plugin.TValue[*mqlAwsVpc]
+	Subnets              plugin.TValue[[]any]
+	SecurityGroups       plugin.TValue[[]any]
+	HyperParameters      plugin.TValue[map[string]any]
+	FailureMessage       plugin.TValue[string]
+	CreatedAt            plugin.TValue[*time.Time]
+	LastModifiedAt       plugin.TValue[*time.Time]
+	EndTime              plugin.TValue[*time.Time]
+}
+
+// createAwsBedrockModelCustomizationJob creates a new instance of this resource
+func createAwsBedrockModelCustomizationJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockModelCustomizationJob{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.modelCustomizationJob", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockModelCustomizationJob) MqlName() string {
+	return "aws.bedrock.modelCustomizationJob"
+}
+
+func (c *mqlAwsBedrockModelCustomizationJob) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockModelCustomizationJob) GetJobArn() *plugin.TValue[string] {
+	return &c.JobArn
+}
+
+func (c *mqlAwsBedrockModelCustomizationJob) GetJobName() *plugin.TValue[string] {
+	return &c.JobName
+}
+
+func (c *mqlAwsBedrockModelCustomizationJob) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBedrockModelCustomizationJob) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsBedrockModelCustomizationJob) GetCustomizationType() *plugin.TValue[string] {
+	return &c.CustomizationType
+}
+
+func (c *mqlAwsBedrockModelCustomizationJob) GetBaseModel() *plugin.TValue[*mqlAwsBedrockFoundationModel] {
+	return plugin.GetOrCompute[*mqlAwsBedrockFoundationModel](&c.BaseModel, func() (*mqlAwsBedrockFoundationModel, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.modelCustomizationJob", c.__id, "baseModel")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsBedrockFoundationModel), nil
+			}
+		}
+
+		return c.baseModel()
+	})
+}
+
+func (c *mqlAwsBedrockModelCustomizationJob) GetCustomModelName() *plugin.TValue[string] {
+	return &c.CustomModelName
+}
+
+func (c *mqlAwsBedrockModelCustomizationJob) GetCustomModel() *plugin.TValue[*mqlAwsBedrockCustomModel] {
+	return plugin.GetOrCompute[*mqlAwsBedrockCustomModel](&c.CustomModel, func() (*mqlAwsBedrockCustomModel, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.modelCustomizationJob", c.__id, "customModel")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsBedrockCustomModel), nil
+			}
+		}
+
+		return c.customModel()
+	})
+}
+
+func (c *mqlAwsBedrockModelCustomizationJob) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.modelCustomizationJob", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsBedrockModelCustomizationJob) GetTrainingDataS3Uri() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TrainingDataS3Uri, func() (string, error) {
+		return c.trainingDataS3Uri()
+	})
+}
+
+func (c *mqlAwsBedrockModelCustomizationJob) GetTrainingDataBucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.TrainingDataBucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.modelCustomizationJob", c.__id, "trainingDataBucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.trainingDataBucket()
+	})
+}
+
+func (c *mqlAwsBedrockModelCustomizationJob) GetInvocationLogsConfig() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.InvocationLogsConfig, func() (any, error) {
+		return c.invocationLogsConfig()
+	})
+}
+
+func (c *mqlAwsBedrockModelCustomizationJob) GetValidationDataS3Uris() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ValidationDataS3Uris, func() ([]any, error) {
+		return c.validationDataS3Uris()
+	})
+}
+
+func (c *mqlAwsBedrockModelCustomizationJob) GetOutputDataS3Uri() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.OutputDataS3Uri, func() (string, error) {
+		return c.outputDataS3Uri()
+	})
+}
+
+func (c *mqlAwsBedrockModelCustomizationJob) GetOutputDataBucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.OutputDataBucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.modelCustomizationJob", c.__id, "outputDataBucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.outputDataBucket()
+	})
+}
+
+func (c *mqlAwsBedrockModelCustomizationJob) GetOutputModelKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.OutputModelKmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.modelCustomizationJob", c.__id, "outputModelKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.outputModelKmsKey()
+	})
+}
+
+func (c *mqlAwsBedrockModelCustomizationJob) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.modelCustomizationJob", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAwsBedrockModelCustomizationJob) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.modelCustomizationJob", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
+func (c *mqlAwsBedrockModelCustomizationJob) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.modelCustomizationJob", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsBedrockModelCustomizationJob) GetHyperParameters() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.HyperParameters, func() (map[string]any, error) {
+		return c.hyperParameters()
+	})
+}
+
+func (c *mqlAwsBedrockModelCustomizationJob) GetFailureMessage() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.FailureMessage, func() (string, error) {
+		return c.failureMessage()
+	})
+}
+
+func (c *mqlAwsBedrockModelCustomizationJob) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsBedrockModelCustomizationJob) GetLastModifiedAt() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedAt
+}
+
+func (c *mqlAwsBedrockModelCustomizationJob) GetEndTime() *plugin.TValue[*time.Time] {
+	return &c.EndTime
+}
+
+// mqlAwsBedrockModelCopyJob for the aws.bedrock.modelCopyJob resource
+type mqlAwsBedrockModelCopyJob struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsBedrockModelCopyJobInternal
+	JobArn            plugin.TValue[string]
+	Region            plugin.TValue[string]
+	Status            plugin.TValue[string]
+	SourceAccountId   plugin.TValue[string]
+	SourceModelArn    plugin.TValue[string]
+	SourceModelName   plugin.TValue[string]
+	TargetModelArn    plugin.TValue[string]
+	TargetModelName   plugin.TValue[string]
+	TargetModelKmsKey plugin.TValue[*mqlAwsKmsKey]
+	TargetModelTags   plugin.TValue[map[string]any]
+	FailureMessage    plugin.TValue[string]
+	CreatedAt         plugin.TValue[*time.Time]
+}
+
+// createAwsBedrockModelCopyJob creates a new instance of this resource
+func createAwsBedrockModelCopyJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockModelCopyJob{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.modelCopyJob", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockModelCopyJob) MqlName() string {
+	return "aws.bedrock.modelCopyJob"
+}
+
+func (c *mqlAwsBedrockModelCopyJob) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockModelCopyJob) GetJobArn() *plugin.TValue[string] {
+	return &c.JobArn
+}
+
+func (c *mqlAwsBedrockModelCopyJob) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBedrockModelCopyJob) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsBedrockModelCopyJob) GetSourceAccountId() *plugin.TValue[string] {
+	return &c.SourceAccountId
+}
+
+func (c *mqlAwsBedrockModelCopyJob) GetSourceModelArn() *plugin.TValue[string] {
+	return &c.SourceModelArn
+}
+
+func (c *mqlAwsBedrockModelCopyJob) GetSourceModelName() *plugin.TValue[string] {
+	return &c.SourceModelName
+}
+
+func (c *mqlAwsBedrockModelCopyJob) GetTargetModelArn() *plugin.TValue[string] {
+	return &c.TargetModelArn
+}
+
+func (c *mqlAwsBedrockModelCopyJob) GetTargetModelName() *plugin.TValue[string] {
+	return &c.TargetModelName
+}
+
+func (c *mqlAwsBedrockModelCopyJob) GetTargetModelKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.TargetModelKmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.modelCopyJob", c.__id, "targetModelKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.targetModelKmsKey()
+	})
+}
+
+func (c *mqlAwsBedrockModelCopyJob) GetTargetModelTags() *plugin.TValue[map[string]any] {
+	return &c.TargetModelTags
+}
+
+func (c *mqlAwsBedrockModelCopyJob) GetFailureMessage() *plugin.TValue[string] {
+	return &c.FailureMessage
+}
+
+func (c *mqlAwsBedrockModelCopyJob) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+// mqlAwsBedrockMarketplaceModelEndpoint for the aws.bedrock.marketplaceModelEndpoint resource
+type mqlAwsBedrockMarketplaceModelEndpoint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsBedrockMarketplaceModelEndpointInternal
+	EndpointArn           plugin.TValue[string]
+	Region                plugin.TValue[string]
+	ModelSourceIdentifier plugin.TValue[string]
+	Status                plugin.TValue[string]
+	StatusMessage         plugin.TValue[string]
+	EndpointStatus        plugin.TValue[string]
+	EndpointStatusMessage plugin.TValue[string]
+	EndpointConfig        plugin.TValue[any]
+	CreatedAt             plugin.TValue[*time.Time]
+	UpdatedAt             plugin.TValue[*time.Time]
+}
+
+// createAwsBedrockMarketplaceModelEndpoint creates a new instance of this resource
+func createAwsBedrockMarketplaceModelEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockMarketplaceModelEndpoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.marketplaceModelEndpoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockMarketplaceModelEndpoint) MqlName() string {
+	return "aws.bedrock.marketplaceModelEndpoint"
+}
+
+func (c *mqlAwsBedrockMarketplaceModelEndpoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockMarketplaceModelEndpoint) GetEndpointArn() *plugin.TValue[string] {
+	return &c.EndpointArn
+}
+
+func (c *mqlAwsBedrockMarketplaceModelEndpoint) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBedrockMarketplaceModelEndpoint) GetModelSourceIdentifier() *plugin.TValue[string] {
+	return &c.ModelSourceIdentifier
+}
+
+func (c *mqlAwsBedrockMarketplaceModelEndpoint) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsBedrockMarketplaceModelEndpoint) GetStatusMessage() *plugin.TValue[string] {
+	return &c.StatusMessage
+}
+
+func (c *mqlAwsBedrockMarketplaceModelEndpoint) GetEndpointStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EndpointStatus, func() (string, error) {
+		return c.endpointStatus()
+	})
+}
+
+func (c *mqlAwsBedrockMarketplaceModelEndpoint) GetEndpointStatusMessage() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EndpointStatusMessage, func() (string, error) {
+		return c.endpointStatusMessage()
+	})
+}
+
+func (c *mqlAwsBedrockMarketplaceModelEndpoint) GetEndpointConfig() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.EndpointConfig, func() (any, error) {
+		return c.endpointConfig()
+	})
+}
+
+func (c *mqlAwsBedrockMarketplaceModelEndpoint) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsBedrockMarketplaceModelEndpoint) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
 }
 
 // mqlAwsBedrockAgentCore for the aws.bedrock.agentCore resource
@@ -188771,7 +190719,9 @@ type mqlAwsBedrockCustomModel struct {
 	CustomizationType  plugin.TValue[string]
 	KmsKey             plugin.TValue[*mqlAwsKmsKey]
 	TrainingDataConfig plugin.TValue[any]
+	TrainingDataBucket plugin.TValue[*mqlAwsS3Bucket]
 	OutputDataConfig   plugin.TValue[any]
+	OutputDataBucket   plugin.TValue[*mqlAwsS3Bucket]
 	ResourcePolicy     plugin.TValue[string]
 	PolicyStatements   plugin.TValue[[]any]
 	IsPublic           plugin.TValue[bool]
@@ -188872,9 +190822,41 @@ func (c *mqlAwsBedrockCustomModel) GetTrainingDataConfig() *plugin.TValue[any] {
 	})
 }
 
+func (c *mqlAwsBedrockCustomModel) GetTrainingDataBucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.TrainingDataBucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.customModel", c.__id, "trainingDataBucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.trainingDataBucket()
+	})
+}
+
 func (c *mqlAwsBedrockCustomModel) GetOutputDataConfig() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.OutputDataConfig, func() (any, error) {
 		return c.outputDataConfig()
+	})
+}
+
+func (c *mqlAwsBedrockCustomModel) GetOutputDataBucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.OutputDataBucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.customModel", c.__id, "outputDataBucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.outputDataBucket()
 	})
 }
 
@@ -189210,23 +191192,37 @@ type mqlAwsBedrockAgent struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsBedrockAgentInternal
-	Id                    plugin.TValue[string]
-	Arn                   plugin.TValue[string]
-	Name                  plugin.TValue[string]
-	Region                plugin.TValue[string]
-	Status                plugin.TValue[string]
-	Description           plugin.TValue[string]
-	FoundationModel       plugin.TValue[string]
-	Instruction           plugin.TValue[string]
-	IdleSessionTtl        plugin.TValue[int64]
-	IamRole               plugin.TValue[*mqlAwsIamRole]
-	AgentResourceRoleArn  plugin.TValue[string]
-	CustomerEncryptionKey plugin.TValue[*mqlAwsKmsKey]
-	CreatedAt             plugin.TValue[*time.Time]
-	UpdatedAt             plugin.TValue[*time.Time]
-	ActionGroups          plugin.TValue[[]any]
-	KnowledgeBases        plugin.TValue[[]any]
-	Aliases               plugin.TValue[[]any]
+	Id                        plugin.TValue[string]
+	Arn                       plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	Region                    plugin.TValue[string]
+	Status                    plugin.TValue[string]
+	Description               plugin.TValue[string]
+	FoundationModel           plugin.TValue[string]
+	Instruction               plugin.TValue[string]
+	IdleSessionTtl            plugin.TValue[int64]
+	IamRole                   plugin.TValue[*mqlAwsIamRole]
+	AgentResourceRoleArn      plugin.TValue[string]
+	CustomerEncryptionKey     plugin.TValue[*mqlAwsKmsKey]
+	CreatedAt                 plugin.TValue[*time.Time]
+	UpdatedAt                 plugin.TValue[*time.Time]
+	ActionGroups              plugin.TValue[[]any]
+	ActionGroupDetails        plugin.TValue[[]any]
+	KnowledgeBases            plugin.TValue[[]any]
+	AttachedKnowledgeBases    plugin.TValue[[]any]
+	Guardrail                 plugin.TValue[*mqlAwsBedrockGuardrail]
+	GuardrailVersion          plugin.TValue[string]
+	AgentCollaboration        plugin.TValue[string]
+	Collaborators             plugin.TValue[[]any]
+	OrchestrationType         plugin.TValue[string]
+	CustomOrchestrationLambda plugin.TValue[*mqlAwsLambdaFunction]
+	EnabledMemoryTypes        plugin.TValue[[]any]
+	MemoryStorageDays         plugin.TValue[int64]
+	MemoryMaxRecentSessions   plugin.TValue[int64]
+	OverriddenPromptTypes     plugin.TValue[[]any]
+	DisabledPromptTypes       plugin.TValue[[]any]
+	PromptOverrideLambda      plugin.TValue[*mqlAwsLambdaFunction]
+	Aliases                   plugin.TValue[[]any]
 }
 
 // createAwsBedrockAgent creates a new instance of this resource
@@ -189368,9 +191364,153 @@ func (c *mqlAwsBedrockAgent) GetActionGroups() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsBedrockAgent) GetActionGroupDetails() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ActionGroupDetails, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.agent", c.__id, "actionGroupDetails")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.actionGroupDetails()
+	})
+}
+
 func (c *mqlAwsBedrockAgent) GetKnowledgeBases() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.KnowledgeBases, func() ([]any, error) {
 		return c.knowledgeBases()
+	})
+}
+
+func (c *mqlAwsBedrockAgent) GetAttachedKnowledgeBases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AttachedKnowledgeBases, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.agent", c.__id, "attachedKnowledgeBases")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.attachedKnowledgeBases()
+	})
+}
+
+func (c *mqlAwsBedrockAgent) GetGuardrail() *plugin.TValue[*mqlAwsBedrockGuardrail] {
+	return plugin.GetOrCompute[*mqlAwsBedrockGuardrail](&c.Guardrail, func() (*mqlAwsBedrockGuardrail, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.agent", c.__id, "guardrail")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsBedrockGuardrail), nil
+			}
+		}
+
+		return c.guardrail()
+	})
+}
+
+func (c *mqlAwsBedrockAgent) GetGuardrailVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.GuardrailVersion, func() (string, error) {
+		return c.guardrailVersion()
+	})
+}
+
+func (c *mqlAwsBedrockAgent) GetAgentCollaboration() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AgentCollaboration, func() (string, error) {
+		return c.agentCollaboration()
+	})
+}
+
+func (c *mqlAwsBedrockAgent) GetCollaborators() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Collaborators, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.agent", c.__id, "collaborators")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.collaborators()
+	})
+}
+
+func (c *mqlAwsBedrockAgent) GetOrchestrationType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.OrchestrationType, func() (string, error) {
+		return c.orchestrationType()
+	})
+}
+
+func (c *mqlAwsBedrockAgent) GetCustomOrchestrationLambda() *plugin.TValue[*mqlAwsLambdaFunction] {
+	return plugin.GetOrCompute[*mqlAwsLambdaFunction](&c.CustomOrchestrationLambda, func() (*mqlAwsLambdaFunction, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.agent", c.__id, "customOrchestrationLambda")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsLambdaFunction), nil
+			}
+		}
+
+		return c.customOrchestrationLambda()
+	})
+}
+
+func (c *mqlAwsBedrockAgent) GetEnabledMemoryTypes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EnabledMemoryTypes, func() ([]any, error) {
+		return c.enabledMemoryTypes()
+	})
+}
+
+func (c *mqlAwsBedrockAgent) GetMemoryStorageDays() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MemoryStorageDays, func() (int64, error) {
+		return c.memoryStorageDays()
+	})
+}
+
+func (c *mqlAwsBedrockAgent) GetMemoryMaxRecentSessions() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MemoryMaxRecentSessions, func() (int64, error) {
+		return c.memoryMaxRecentSessions()
+	})
+}
+
+func (c *mqlAwsBedrockAgent) GetOverriddenPromptTypes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OverriddenPromptTypes, func() ([]any, error) {
+		return c.overriddenPromptTypes()
+	})
+}
+
+func (c *mqlAwsBedrockAgent) GetDisabledPromptTypes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DisabledPromptTypes, func() ([]any, error) {
+		return c.disabledPromptTypes()
+	})
+}
+
+func (c *mqlAwsBedrockAgent) GetPromptOverrideLambda() *plugin.TValue[*mqlAwsLambdaFunction] {
+	return plugin.GetOrCompute[*mqlAwsLambdaFunction](&c.PromptOverrideLambda, func() (*mqlAwsLambdaFunction, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.agent", c.__id, "promptOverrideLambda")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsLambdaFunction), nil
+			}
+		}
+
+		return c.promptOverrideLambda()
 	})
 }
 
@@ -189388,6 +191528,238 @@ func (c *mqlAwsBedrockAgent) GetAliases() *plugin.TValue[[]any] {
 
 		return c.aliases()
 	})
+}
+
+// mqlAwsBedrockAgentActionGroup for the aws.bedrock.agent.actionGroup resource
+type mqlAwsBedrockAgentActionGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsBedrockAgentActionGroupInternal
+	Id                               plugin.TValue[string]
+	AgentId                          plugin.TValue[string]
+	Region                           plugin.TValue[string]
+	Name                             plugin.TValue[string]
+	State                            plugin.TValue[string]
+	Description                      plugin.TValue[string]
+	ExecutorLambda                   plugin.TValue[*mqlAwsLambdaFunction]
+	ReturnsControl                   plugin.TValue[bool]
+	ParentActionSignature            plugin.TValue[string]
+	ParentActionGroupSignatureParams plugin.TValue[map[string]any]
+	ApiSchema                        plugin.TValue[any]
+	FunctionSchema                   plugin.TValue[any]
+	CreatedAt                        plugin.TValue[*time.Time]
+	UpdatedAt                        plugin.TValue[*time.Time]
+}
+
+// createAwsBedrockAgentActionGroup creates a new instance of this resource
+func createAwsBedrockAgentActionGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockAgentActionGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.agent.actionGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockAgentActionGroup) MqlName() string {
+	return "aws.bedrock.agent.actionGroup"
+}
+
+func (c *mqlAwsBedrockAgentActionGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockAgentActionGroup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsBedrockAgentActionGroup) GetAgentId() *plugin.TValue[string] {
+	return &c.AgentId
+}
+
+func (c *mqlAwsBedrockAgentActionGroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBedrockAgentActionGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsBedrockAgentActionGroup) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsBedrockAgentActionGroup) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsBedrockAgentActionGroup) GetExecutorLambda() *plugin.TValue[*mqlAwsLambdaFunction] {
+	return plugin.GetOrCompute[*mqlAwsLambdaFunction](&c.ExecutorLambda, func() (*mqlAwsLambdaFunction, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.agent.actionGroup", c.__id, "executorLambda")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsLambdaFunction), nil
+			}
+		}
+
+		return c.executorLambda()
+	})
+}
+
+func (c *mqlAwsBedrockAgentActionGroup) GetReturnsControl() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ReturnsControl, func() (bool, error) {
+		return c.returnsControl()
+	})
+}
+
+func (c *mqlAwsBedrockAgentActionGroup) GetParentActionSignature() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ParentActionSignature, func() (string, error) {
+		return c.parentActionSignature()
+	})
+}
+
+func (c *mqlAwsBedrockAgentActionGroup) GetParentActionGroupSignatureParams() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.ParentActionGroupSignatureParams, func() (map[string]any, error) {
+		return c.parentActionGroupSignatureParams()
+	})
+}
+
+func (c *mqlAwsBedrockAgentActionGroup) GetApiSchema() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ApiSchema, func() (any, error) {
+		return c.apiSchema()
+	})
+}
+
+func (c *mqlAwsBedrockAgentActionGroup) GetFunctionSchema() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.FunctionSchema, func() (any, error) {
+		return c.functionSchema()
+	})
+}
+
+func (c *mqlAwsBedrockAgentActionGroup) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
+}
+
+func (c *mqlAwsBedrockAgentActionGroup) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlAwsBedrockAgentCollaborator for the aws.bedrock.agent.collaborator resource
+type mqlAwsBedrockAgentCollaborator struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsBedrockAgentCollaboratorInternal it will be used here
+	Id                       plugin.TValue[string]
+	AgentId                  plugin.TValue[string]
+	Region                   plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	AgentVersion             plugin.TValue[string]
+	AgentAliasArn            plugin.TValue[string]
+	CollaborationInstruction plugin.TValue[string]
+	RelayConversationHistory plugin.TValue[string]
+	CreatedAt                plugin.TValue[*time.Time]
+	UpdatedAt                plugin.TValue[*time.Time]
+}
+
+// createAwsBedrockAgentCollaborator creates a new instance of this resource
+func createAwsBedrockAgentCollaborator(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockAgentCollaborator{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.agent.collaborator", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockAgentCollaborator) MqlName() string {
+	return "aws.bedrock.agent.collaborator"
+}
+
+func (c *mqlAwsBedrockAgentCollaborator) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockAgentCollaborator) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsBedrockAgentCollaborator) GetAgentId() *plugin.TValue[string] {
+	return &c.AgentId
+}
+
+func (c *mqlAwsBedrockAgentCollaborator) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBedrockAgentCollaborator) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsBedrockAgentCollaborator) GetAgentVersion() *plugin.TValue[string] {
+	return &c.AgentVersion
+}
+
+func (c *mqlAwsBedrockAgentCollaborator) GetAgentAliasArn() *plugin.TValue[string] {
+	return &c.AgentAliasArn
+}
+
+func (c *mqlAwsBedrockAgentCollaborator) GetCollaborationInstruction() *plugin.TValue[string] {
+	return &c.CollaborationInstruction
+}
+
+func (c *mqlAwsBedrockAgentCollaborator) GetRelayConversationHistory() *plugin.TValue[string] {
+	return &c.RelayConversationHistory
+}
+
+func (c *mqlAwsBedrockAgentCollaborator) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsBedrockAgentCollaborator) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
 }
 
 // mqlAwsBedrockAgentAlias for the aws.bedrock.agent.alias resource
@@ -189499,9 +191871,12 @@ type mqlAwsBedrockKnowledgeBase struct {
 	RoleArn                    plugin.TValue[string]
 	StorageConfiguration       plugin.TValue[any]
 	KnowledgeBaseConfiguration plugin.TValue[any]
+	VectorStore                plugin.TValue[*mqlAwsBedrockKnowledgeBaseVectorStore]
+	EmbeddingModel             plugin.TValue[*mqlAwsBedrockFoundationModel]
 	CreatedAt                  plugin.TValue[*time.Time]
 	UpdatedAt                  plugin.TValue[*time.Time]
 	DataSources                plugin.TValue[[]any]
+	DataSourceDetails          plugin.TValue[[]any]
 }
 
 // createAwsBedrockKnowledgeBase creates a new instance of this resource
@@ -189603,6 +191978,38 @@ func (c *mqlAwsBedrockKnowledgeBase) GetKnowledgeBaseConfiguration() *plugin.TVa
 	})
 }
 
+func (c *mqlAwsBedrockKnowledgeBase) GetVectorStore() *plugin.TValue[*mqlAwsBedrockKnowledgeBaseVectorStore] {
+	return plugin.GetOrCompute[*mqlAwsBedrockKnowledgeBaseVectorStore](&c.VectorStore, func() (*mqlAwsBedrockKnowledgeBaseVectorStore, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.knowledgeBase", c.__id, "vectorStore")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsBedrockKnowledgeBaseVectorStore), nil
+			}
+		}
+
+		return c.vectorStore()
+	})
+}
+
+func (c *mqlAwsBedrockKnowledgeBase) GetEmbeddingModel() *plugin.TValue[*mqlAwsBedrockFoundationModel] {
+	return plugin.GetOrCompute[*mqlAwsBedrockFoundationModel](&c.EmbeddingModel, func() (*mqlAwsBedrockFoundationModel, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.knowledgeBase", c.__id, "embeddingModel")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsBedrockFoundationModel), nil
+			}
+		}
+
+		return c.embeddingModel()
+	})
+}
+
 func (c *mqlAwsBedrockKnowledgeBase) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
 		return c.createdAt()
@@ -189619,6 +192026,347 @@ func (c *mqlAwsBedrockKnowledgeBase) GetDataSources() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.DataSources, func() ([]any, error) {
 		return c.dataSources()
 	})
+}
+
+func (c *mqlAwsBedrockKnowledgeBase) GetDataSourceDetails() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DataSourceDetails, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.knowledgeBase", c.__id, "dataSourceDetails")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dataSourceDetails()
+	})
+}
+
+// mqlAwsBedrockKnowledgeBaseVectorStore for the aws.bedrock.knowledgeBase.vectorStore resource
+type mqlAwsBedrockKnowledgeBaseVectorStore struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsBedrockKnowledgeBaseVectorStoreInternal
+	Type                              plugin.TValue[string]
+	VectorIndexName                   plugin.TValue[string]
+	Endpoint                          plugin.TValue[string]
+	RdsCluster                        plugin.TValue[*mqlAwsRdsDbcluster]
+	CredentialsSecret                 plugin.TValue[*mqlAwsSecretsmanagerSecret]
+	OpensearchDomain                  plugin.TValue[*mqlAwsOpensearchDomain]
+	OpensearchServerlessCollectionArn plugin.TValue[string]
+	NeptuneGraphArn                   plugin.TValue[string]
+	S3VectorBucketArn                 plugin.TValue[string]
+	S3VectorIndexArn                  plugin.TValue[string]
+	DatabaseName                      plugin.TValue[string]
+	TableName                         plugin.TValue[string]
+}
+
+// createAwsBedrockKnowledgeBaseVectorStore creates a new instance of this resource
+func createAwsBedrockKnowledgeBaseVectorStore(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockKnowledgeBaseVectorStore{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.knowledgeBase.vectorStore", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseVectorStore) MqlName() string {
+	return "aws.bedrock.knowledgeBase.vectorStore"
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseVectorStore) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseVectorStore) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseVectorStore) GetVectorIndexName() *plugin.TValue[string] {
+	return &c.VectorIndexName
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseVectorStore) GetEndpoint() *plugin.TValue[string] {
+	return &c.Endpoint
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseVectorStore) GetRdsCluster() *plugin.TValue[*mqlAwsRdsDbcluster] {
+	return plugin.GetOrCompute[*mqlAwsRdsDbcluster](&c.RdsCluster, func() (*mqlAwsRdsDbcluster, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.knowledgeBase.vectorStore", c.__id, "rdsCluster")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsRdsDbcluster), nil
+			}
+		}
+
+		return c.rdsCluster()
+	})
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseVectorStore) GetCredentialsSecret() *plugin.TValue[*mqlAwsSecretsmanagerSecret] {
+	return plugin.GetOrCompute[*mqlAwsSecretsmanagerSecret](&c.CredentialsSecret, func() (*mqlAwsSecretsmanagerSecret, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.knowledgeBase.vectorStore", c.__id, "credentialsSecret")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSecretsmanagerSecret), nil
+			}
+		}
+
+		return c.credentialsSecret()
+	})
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseVectorStore) GetOpensearchDomain() *plugin.TValue[*mqlAwsOpensearchDomain] {
+	return plugin.GetOrCompute[*mqlAwsOpensearchDomain](&c.OpensearchDomain, func() (*mqlAwsOpensearchDomain, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.knowledgeBase.vectorStore", c.__id, "opensearchDomain")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsOpensearchDomain), nil
+			}
+		}
+
+		return c.opensearchDomain()
+	})
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseVectorStore) GetOpensearchServerlessCollectionArn() *plugin.TValue[string] {
+	return &c.OpensearchServerlessCollectionArn
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseVectorStore) GetNeptuneGraphArn() *plugin.TValue[string] {
+	return &c.NeptuneGraphArn
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseVectorStore) GetS3VectorBucketArn() *plugin.TValue[string] {
+	return &c.S3VectorBucketArn
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseVectorStore) GetS3VectorIndexArn() *plugin.TValue[string] {
+	return &c.S3VectorIndexArn
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseVectorStore) GetDatabaseName() *plugin.TValue[string] {
+	return &c.DatabaseName
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseVectorStore) GetTableName() *plugin.TValue[string] {
+	return &c.TableName
+}
+
+// mqlAwsBedrockKnowledgeBaseDataSource for the aws.bedrock.knowledgeBase.dataSource resource
+type mqlAwsBedrockKnowledgeBaseDataSource struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsBedrockKnowledgeBaseDataSourceInternal
+	Id                           plugin.TValue[string]
+	KnowledgeBaseId              plugin.TValue[string]
+	Region                       plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	Status                       plugin.TValue[string]
+	Description                  plugin.TValue[string]
+	Type                         plugin.TValue[string]
+	DataDeletionPolicy           plugin.TValue[string]
+	KmsKey                       plugin.TValue[*mqlAwsKmsKey]
+	S3Bucket                     plugin.TValue[*mqlAwsS3Bucket]
+	S3BucketOwnerAccountId       plugin.TValue[string]
+	S3InclusionPrefixes          plugin.TValue[[]any]
+	WebCrawlerSeedUrls           plugin.TValue[[]any]
+	WebCrawlerScope              plugin.TValue[string]
+	WebCrawlerUserAgent          plugin.TValue[string]
+	Configuration                plugin.TValue[any]
+	VectorIngestionConfiguration plugin.TValue[any]
+	FailureReasons               plugin.TValue[[]any]
+	CreatedAt                    plugin.TValue[*time.Time]
+	UpdatedAt                    plugin.TValue[*time.Time]
+}
+
+// createAwsBedrockKnowledgeBaseDataSource creates a new instance of this resource
+func createAwsBedrockKnowledgeBaseDataSource(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockKnowledgeBaseDataSource{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.knowledgeBase.dataSource", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseDataSource) MqlName() string {
+	return "aws.bedrock.knowledgeBase.dataSource"
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseDataSource) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseDataSource) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseDataSource) GetKnowledgeBaseId() *plugin.TValue[string] {
+	return &c.KnowledgeBaseId
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseDataSource) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseDataSource) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseDataSource) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseDataSource) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseDataSource) GetType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Type, func() (string, error) {
+		return c.compute_type()
+	})
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseDataSource) GetDataDeletionPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DataDeletionPolicy, func() (string, error) {
+		return c.dataDeletionPolicy()
+	})
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseDataSource) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.knowledgeBase.dataSource", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseDataSource) GetS3Bucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.S3Bucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.knowledgeBase.dataSource", c.__id, "s3Bucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.s3Bucket()
+	})
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseDataSource) GetS3BucketOwnerAccountId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.S3BucketOwnerAccountId, func() (string, error) {
+		return c.s3BucketOwnerAccountId()
+	})
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseDataSource) GetS3InclusionPrefixes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.S3InclusionPrefixes, func() ([]any, error) {
+		return c.s3InclusionPrefixes()
+	})
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseDataSource) GetWebCrawlerSeedUrls() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.WebCrawlerSeedUrls, func() ([]any, error) {
+		return c.webCrawlerSeedUrls()
+	})
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseDataSource) GetWebCrawlerScope() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.WebCrawlerScope, func() (string, error) {
+		return c.webCrawlerScope()
+	})
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseDataSource) GetWebCrawlerUserAgent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.WebCrawlerUserAgent, func() (string, error) {
+		return c.webCrawlerUserAgent()
+	})
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseDataSource) GetConfiguration() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Configuration, func() (any, error) {
+		return c.configuration()
+	})
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseDataSource) GetVectorIngestionConfiguration() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.VectorIngestionConfiguration, func() (any, error) {
+		return c.vectorIngestionConfiguration()
+	})
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseDataSource) GetFailureReasons() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FailureReasons, func() ([]any, error) {
+		return c.failureReasons()
+	})
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseDataSource) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
+}
+
+func (c *mqlAwsBedrockKnowledgeBaseDataSource) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
 }
 
 // mqlAwsBedrockFlow for the aws.bedrock.flow resource
