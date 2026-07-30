@@ -747,8 +747,11 @@ private googleworkspace.report.activity {
   // `email` (primary email of the actor, absent when none is associated),
   // `profileId` (unique Google Workspace profile ID of the actor), `key`
   // (present only when `callerType` is KEY, the OAuth consumer key or robot
-  // account identifier), and `applicationInfo` (details of the application when
-  // an app performed the action).
+  // account identifier), `applicationInfo` (details of the application when
+  // an app performed the action), and `agentAttributionInfo` (present when an
+  // AI agent was the actor, carrying `agentId`, `agentName`, `agentType`, and
+  // an `agentOwner` object whose `email` names the account answerable for the
+  // agent). See `isAgenticAction` for the hoisted agent flag.
   actor dict
   // Events recorded within the activity
   //
@@ -758,6 +761,23 @@ private googleworkspace.report.activity {
   // `resourceIds` (resource IDs associated with the event), and `status` (event
   // status, absent for events that do not report one).
   events []dict
+  // Whether an AI agent performed the activity
+  //
+  // True when the action was taken by an agent rather than directly by the
+  // named user, which separates agent-driven changes from human ones when
+  // reviewing an audit trail. The agent's identity and the account answerable
+  // for it are in the `actor` dict under `agentAttributionInfo`.
+  isAgenticAction bool
+  // Identifier of the device the actor used
+  //
+  // Empty for activities the API does not attribute to a device. This is a
+  // Reports API device identifier and does not necessarily match the Cloud
+  // Identity device id on `googleworkspace.endpoint`.
+  deviceId string
+  // Type of device the actor used
+  deviceType string
+  // Operating system version reported by the actor's device
+  deviceOsVersion string
 }
 
 // Google Workspace user usage reports

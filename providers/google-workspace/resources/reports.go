@@ -155,13 +155,24 @@ func newMqlGoogleWorkspaceReportActivity(runtime *plugin.Runtime, entry *reports
 		activityID = "googleworkspace.report.activity/nil/" + hashActivity(entry)
 	}
 
+	var deviceId, deviceType, deviceOsVersion string
+	if entry.UserDeviceInfo != nil {
+		deviceId = entry.UserDeviceInfo.DeviceId
+		deviceType = entry.UserDeviceInfo.DeviceType
+		deviceOsVersion = entry.UserDeviceInfo.DeviceOsVersion
+	}
+
 	return CreateResource(runtime, "googleworkspace.report.activity", map[string]*llx.RawData{
-		"__id":        llx.StringData(activityID),
-		"id":          llx.IntData(uniqueQualifier),
-		"ipAddress":   llx.StringData(entry.IpAddress),
-		"ownerDomain": llx.StringData(entry.OwnerDomain),
-		"actor":       llx.MapData(actor, types.Any),
-		"events":      llx.ArrayData(events, types.Any),
+		"__id":            llx.StringData(activityID),
+		"id":              llx.IntData(uniqueQualifier),
+		"ipAddress":       llx.StringData(entry.IpAddress),
+		"ownerDomain":     llx.StringData(entry.OwnerDomain),
+		"actor":           llx.MapData(actor, types.Any),
+		"events":          llx.ArrayData(events, types.Any),
+		"isAgenticAction": llx.BoolData(entry.IsAgenticAction),
+		"deviceId":        llx.StringData(deviceId),
+		"deviceType":      llx.StringData(deviceType),
+		"deviceOsVersion": llx.StringData(deviceOsVersion),
 	})
 }
 
