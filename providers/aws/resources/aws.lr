@@ -28877,7 +28877,7 @@ private aws.bedrock.agent @defaults("name status foundationModel") {
 // (AMAZON.CodeInterpreter, ANTHROPIC.Bash, and similar) when the group uses
 // one instead of a custom executor. `state` reports whether the group is
 // enabled. The `id` selects the action group within its agent.
-private aws.bedrock.agent.actionGroup @defaults("name state parentActionSignature") {
+private aws.bedrock.agent.actionGroup @defaults("name state description") {
   // Unique identifier of the action group
   id string
   // Identifier of the agent that owns the action group
@@ -28919,6 +28919,9 @@ private aws.bedrock.agent.actionGroup @defaults("name state parentActionSignatur
   // with named parameters rather than an OpenAPI document.
   functionSchema() dict
   // Time the action group was created
+  //
+  // Read from the action group's own record rather than the listing, which
+  // reports only the last update.
   createdAt() time
   // Time the action group was last updated
   updatedAt time
@@ -29108,7 +29111,7 @@ private aws.bedrock.knowledgeBase.vectorStore @defaults("type endpoint vectorInd
 // embeddings survive the data source being deleted, and `kmsKey` the key
 // protecting the transient data used during ingestion. The `id` selects the
 // data source within its knowledge base.
-private aws.bedrock.knowledgeBase.dataSource @defaults("name type status dataDeletionPolicy") {
+private aws.bedrock.knowledgeBase.dataSource @defaults("name status description") {
   // Unique identifier of the data source
   id string
   // Identifier of the knowledge base that owns the data source
@@ -29165,6 +29168,9 @@ private aws.bedrock.knowledgeBase.dataSource @defaults("name type status dataDel
   // Reasons the data source last failed
   failureReasons() []string
   // Time the data source was created
+  //
+  // Read from the data source's own record rather than the listing, which
+  // reports only the last update.
   createdAt() time
   // Time the data source was last updated
   updatedAt time
