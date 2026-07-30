@@ -1420,6 +1420,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.ske.cluster.dnsZones": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSkeCluster).GetDnsZones()).ToDataRes(types.Array(types.String))
 	},
+	"stackit.ske.cluster.applicationLoadBalancerEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetApplicationLoadBalancerEnabled()).ToDataRes(types.Bool)
+	},
+	"stackit.ske.cluster.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"stackit.ske.cluster.networkRef": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSkeCluster).GetNetworkRef()).ToDataRes(types.Resource("stackit.network"))
 	},
@@ -4049,6 +4055,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.ske.cluster.dnsZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitSkeCluster).DnsZones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.applicationLoadBalancerEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).ApplicationLoadBalancerEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"stackit.ske.cluster.networkRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9379,6 +9393,8 @@ type mqlStackitSkeCluster struct {
 	DnsEnabled                       plugin.TValue[bool]
 	DnsGatewayApi                    plugin.TValue[bool]
 	DnsZones                         plugin.TValue[[]any]
+	ApplicationLoadBalancerEnabled   plugin.TValue[bool]
+	Labels                           plugin.TValue[map[string]any]
 	NetworkRef                       plugin.TValue[*mqlStackitNetwork]
 }
 
@@ -9545,6 +9561,14 @@ func (c *mqlStackitSkeCluster) GetDnsGatewayApi() *plugin.TValue[bool] {
 
 func (c *mqlStackitSkeCluster) GetDnsZones() *plugin.TValue[[]any] {
 	return &c.DnsZones
+}
+
+func (c *mqlStackitSkeCluster) GetApplicationLoadBalancerEnabled() *plugin.TValue[bool] {
+	return &c.ApplicationLoadBalancerEnabled
+}
+
+func (c *mqlStackitSkeCluster) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
 }
 
 func (c *mqlStackitSkeCluster) GetNetworkRef() *plugin.TValue[*mqlStackitNetwork] {
