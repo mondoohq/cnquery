@@ -452,6 +452,10 @@ const (
 	ResourceAzureSubscriptionMachineLearningServiceWorkspaceServerlessEndpoint                        string = "azure.subscription.machineLearningService.workspace.serverlessEndpoint"
 	ResourceAzureSubscriptionMachineLearningServiceWorkspaceCompute                                   string = "azure.subscription.machineLearningService.workspace.compute"
 	ResourceAzureSubscriptionMachineLearningServiceWorkspaceModel                                     string = "azure.subscription.machineLearningService.workspace.model"
+	ResourceAzureSubscriptionMachineLearningServiceWorkspaceDatastore                                 string = "azure.subscription.machineLearningService.workspace.datastore"
+	ResourceAzureSubscriptionMachineLearningServiceWorkspaceConnection                                string = "azure.subscription.machineLearningService.workspace.connection"
+	ResourceAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint                             string = "azure.subscription.machineLearningService.workspace.batchEndpoint"
+	ResourceAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment                   string = "azure.subscription.machineLearningService.workspace.batchEndpoint.deployment"
 	ResourceAzureSubscriptionAppConfigurationService                                                  string = "azure.subscription.appConfigurationService"
 	ResourceAzureSubscriptionAppConfigurationServiceConfigurationStore                                string = "azure.subscription.appConfigurationService.configurationStore"
 	ResourceAzureSubscriptionCognitiveServicesService                                                 string = "azure.subscription.cognitiveServicesService"
@@ -467,6 +471,11 @@ const (
 	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter                    string = "azure.subscription.cognitiveServicesService.account.raiPolicy.contentFilter"
 	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef                         string = "azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef"
 	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiTopic                                  string = "azure.subscription.cognitiveServicesService.account.raiTopic"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountModel                                     string = "azure.subscription.cognitiveServicesService.account.model"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist                              string = "azure.subscription.cognitiveServicesService.account.raiBlocklist"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklistItem                          string = "azure.subscription.cognitiveServicesService.account.raiBlocklist.item"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope                           string = "azure.subscription.cognitiveServicesService.account.encryptionScope"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost                            string = "azure.subscription.cognitiveServicesService.account.capabilityHost"
 	ResourceAzureSubscriptionSentinelService                                                          string = "azure.subscription.sentinelService"
 	ResourceAzureSubscriptionSentinelServiceWorkspace                                                 string = "azure.subscription.sentinelService.workspace"
 	ResourceAzureSubscriptionSentinelServiceAlertRule                                                 string = "azure.subscription.sentinelService.alertRule"
@@ -2243,6 +2252,22 @@ func init() {
 			// to override args, implement: initAzureSubscriptionMachineLearningServiceWorkspaceModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionMachineLearningServiceWorkspaceModel,
 		},
+		"azure.subscription.machineLearningService.workspace.datastore": {
+			// to override args, implement: initAzureSubscriptionMachineLearningServiceWorkspaceDatastore(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionMachineLearningServiceWorkspaceDatastore,
+		},
+		"azure.subscription.machineLearningService.workspace.connection": {
+			// to override args, implement: initAzureSubscriptionMachineLearningServiceWorkspaceConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionMachineLearningServiceWorkspaceConnection,
+		},
+		"azure.subscription.machineLearningService.workspace.batchEndpoint": {
+			// to override args, implement: initAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint,
+		},
+		"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment": {
+			// to override args, implement: initAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment,
+		},
 		"azure.subscription.appConfigurationService": {
 			Init:   initAzureSubscriptionAppConfigurationService,
 			Create: createAzureSubscriptionAppConfigurationService,
@@ -2302,6 +2327,26 @@ func init() {
 		"azure.subscription.cognitiveServicesService.account.raiTopic": {
 			Init:   initAzureSubscriptionCognitiveServicesServiceAccountRaiTopic,
 			Create: createAzureSubscriptionCognitiveServicesServiceAccountRaiTopic,
+		},
+		"azure.subscription.cognitiveServicesService.account.model": {
+			// to override args, implement: initAzureSubscriptionCognitiveServicesServiceAccountModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCognitiveServicesServiceAccountModel,
+		},
+		"azure.subscription.cognitiveServicesService.account.raiBlocklist": {
+			// to override args, implement: initAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist,
+		},
+		"azure.subscription.cognitiveServicesService.account.raiBlocklist.item": {
+			// to override args, implement: initAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklistItem(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklistItem,
+		},
+		"azure.subscription.cognitiveServicesService.account.encryptionScope": {
+			// to override args, implement: initAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope,
+		},
+		"azure.subscription.cognitiveServicesService.account.capabilityHost": {
+			// to override args, implement: initAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost,
 		},
 		"azure.subscription.sentinelService": {
 			Init:   initAzureSubscriptionSentinelService,
@@ -17562,6 +17607,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.machineLearningService.workspace.serverlessEndpoints": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspace).GetServerlessEndpoints()).ToDataRes(types.Array(types.Resource("azure.subscription.machineLearningService.workspace.serverlessEndpoint")))
 	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspace).GetBatchEndpoints()).ToDataRes(types.Array(types.Resource("azure.subscription.machineLearningService.workspace.batchEndpoint")))
+	},
+	"azure.subscription.machineLearningService.workspace.datastores": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspace).GetDatastores()).ToDataRes(types.Array(types.Resource("azure.subscription.machineLearningService.workspace.datastore")))
+	},
+	"azure.subscription.machineLearningService.workspace.connections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspace).GetConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.machineLearningService.workspace.connection")))
+	},
 	"azure.subscription.machineLearningService.workspace.computes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspace).GetComputes()).ToDataRes(types.Array(types.Resource("azure.subscription.machineLearningService.workspace.compute")))
 	},
@@ -17814,6 +17868,204 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.machineLearningService.workspace.model.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceModel).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
+	"azure.subscription.machineLearningService.workspace.datastore.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.datastoreType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).GetDatastoreType()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.isDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).GetIsDefault()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.credentialsType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).GetCredentialsType()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.serviceDataAccessAuthIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).GetServiceDataAccessAuthIdentity()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.accountName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).GetAccountName()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.storageAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).GetStorageAccount()).ToDataRes(types.Resource("azure.subscription.storageService.account"))
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.containerName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).GetContainerName()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.filesystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).GetFilesystem()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.fileShareName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).GetFileShareName()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.endpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).GetEndpoint()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).GetProtocol()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.resourceGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).GetResourceGroup()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.machineLearningService.workspace.connection.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.connection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.connection.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection).GetCategory()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.connection.authType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection).GetAuthType()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.connection.target": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection).GetTarget()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.connection.isSharedToAll": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection).GetIsSharedToAll()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.machineLearningService.workspace.connection.sharedUserList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection).GetSharedUserList()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.machineLearningService.workspace.connection.expiryTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection).GetExpiryTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.machineLearningService.workspace.connection.group": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection).GetGroup()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.connection.createdByWorkspaceArmId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection).GetCreatedByWorkspaceArmId()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.connection.metadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection).GetMetadata()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.machineLearningService.workspace.connection.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).GetKind()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.authMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).GetAuthMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.scoringUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).GetScoringUri()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.swaggerUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).GetSwaggerUri()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.defaultDeploymentName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).GetDefaultDeploymentName()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).GetIdentity()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).GetProperties()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).GetDeployments()).ToDataRes(types.Array(types.Resource("azure.subscription.machineLearningService.workspace.batchEndpoint.deployment")))
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.modelId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).GetModelId()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.compute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).GetCompute()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.environmentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).GetEnvironmentId()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.environmentVariables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).GetEnvironmentVariables()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.outputAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).GetOutputAction()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.outputFileName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).GetOutputFileName()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.loggingLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).GetLoggingLevel()).ToDataRes(types.String)
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.errorThreshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).GetErrorThreshold()).ToDataRes(types.Int)
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.miniBatchSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).GetMiniBatchSize()).ToDataRes(types.Int)
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.maxConcurrencyPerInstance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).GetMaxConcurrencyPerInstance()).ToDataRes(types.Int)
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.retrySettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).GetRetrySettings()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.resources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).GetResources()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).GetIdentity()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).GetProperties()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
 	"azure.subscription.appConfigurationService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAppConfigurationService).GetSubscriptionId()).ToDataRes(types.String)
 	},
@@ -18009,6 +18261,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cognitiveServicesService.account.connections": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.cognitiveServicesService.account.connection")))
 	},
+	"azure.subscription.cognitiveServicesService.account.models": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetModels()).ToDataRes(types.Array(types.Resource("azure.subscription.cognitiveServicesService.account.model")))
+	},
+	"azure.subscription.cognitiveServicesService.account.raiBlocklists": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetRaiBlocklists()).ToDataRes(types.Array(types.Resource("azure.subscription.cognitiveServicesService.account.raiBlocklist")))
+	},
+	"azure.subscription.cognitiveServicesService.account.encryptionScopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetEncryptionScopes()).ToDataRes(types.Array(types.Resource("azure.subscription.cognitiveServicesService.account.encryptionScope")))
+	},
+	"azure.subscription.cognitiveServicesService.account.capabilityHosts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetCapabilityHosts()).ToDataRes(types.Array(types.Resource("azure.subscription.cognitiveServicesService.account.capabilityHost")))
+	},
 	"azure.subscription.cognitiveServicesService.account.privateEndpointConnections": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetPrivateEndpointConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.privateEndpointConnection")))
 	},
@@ -18102,6 +18366,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cognitiveServicesService.account.deployment.raiPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).GetRaiPolicy()).ToDataRes(types.Resource("azure.subscription.cognitiveServicesService.account.raiPolicy"))
 	},
+	"azure.subscription.cognitiveServicesService.account.deployment.model": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).GetModel()).ToDataRes(types.Resource("azure.subscription.cognitiveServicesService.account.model"))
+	},
 	"azure.subscription.cognitiveServicesService.account.deployment.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
@@ -18137,6 +18404,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cognitiveServicesService.account.project.connections": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).GetConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.cognitiveServicesService.account.project.connection")))
+	},
+	"azure.subscription.cognitiveServicesService.account.project.capabilityHosts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).GetCapabilityHosts()).ToDataRes(types.Array(types.Resource("azure.subscription.cognitiveServicesService.account.capabilityHost")))
 	},
 	"azure.subscription.cognitiveServicesService.account.project.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
@@ -18314,6 +18584,171 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cognitiveServicesService.account.raiTopic.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.cognitiveServicesService.account.model.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.model.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).GetVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.model.format": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).GetFormat()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.model.publisher": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).GetPublisher()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.model.isDefaultVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).GetIsDefaultVersion()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cognitiveServicesService.account.model.lifecycleStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).GetLifecycleStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.model.inferenceDeprecationDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).GetInferenceDeprecationDate()).ToDataRes(types.Time)
+	},
+	"azure.subscription.cognitiveServicesService.account.model.fineTuneDeprecationDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).GetFineTuneDeprecationDate()).ToDataRes(types.Time)
+	},
+	"azure.subscription.cognitiveServicesService.account.model.deprecationStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).GetDeprecationStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.model.replacementModelName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).GetReplacementModelName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.model.replacementModelVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).GetReplacementModelVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.model.replacementAutoUpgradeStartDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).GetReplacementAutoUpgradeStartDate()).ToDataRes(types.Time)
+	},
+	"azure.subscription.cognitiveServicesService.account.model.replacementUpgradeOnExpiryLeadTimeDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).GetReplacementUpgradeOnExpiryLeadTimeDays()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cognitiveServicesService.account.model.maxCapacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).GetMaxCapacity()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cognitiveServicesService.account.model.catalogAssetId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).GetCatalogAssetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.model.capabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).GetCapabilities()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.cognitiveServicesService.account.model.finetuneCapabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).GetFinetuneCapabilities()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.cognitiveServicesService.account.model.skus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).GetSkus()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.cognitiveServicesService.account.raiBlocklist.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiBlocklist.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiBlocklist.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiBlocklist.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.cognitiveServicesService.account.raiBlocklist.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiBlocklist.items": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist).GetItems()).ToDataRes(types.Array(types.Resource("azure.subscription.cognitiveServicesService.account.raiBlocklist.item")))
+	},
+	"azure.subscription.cognitiveServicesService.account.raiBlocklist.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.cognitiveServicesService.account.raiBlocklist.item.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklistItem).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiBlocklist.item.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklistItem).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiBlocklist.item.pattern": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklistItem).GetPattern()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiBlocklist.item.isRegex": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklistItem).GetIsRegex()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiBlocklist.item.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklistItem).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.cognitiveServicesService.account.encryptionScope.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.encryptionScope.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.encryptionScope.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope).GetState()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.encryptionScope.keySource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope).GetKeySource()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.encryptionScope.keyVaultKeyName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope).GetKeyVaultKeyName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.encryptionScope.keyVaultUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope).GetKeyVaultUri()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.encryptionScope.keyVaultKeyVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope).GetKeyVaultKeyVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.encryptionScope.keyIdentityClientId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope).GetKeyIdentityClientId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.encryptionScope.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.encryptionScope.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.cognitiveServicesService.account.encryptionScope.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.encryptionScope.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.cognitiveServicesService.account.capabilityHost.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.capabilityHost.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.capabilityHost.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost).GetKind()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.capabilityHost.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.capabilityHost.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.capabilityHost.customerSubnetId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost).GetCustomerSubnetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.capabilityHost.customerSubnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost).GetCustomerSubnet()).ToDataRes(types.Resource("azure.subscription.networkService.subnet"))
+	},
+	"azure.subscription.cognitiveServicesService.account.capabilityHost.threadStorageConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost).GetThreadStorageConnections()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cognitiveServicesService.account.capabilityHost.storageConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost).GetStorageConnections()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cognitiveServicesService.account.capabilityHost.vectorStoreConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost).GetVectorStoreConnections()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cognitiveServicesService.account.capabilityHost.aiServicesConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost).GetAiServicesConnections()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cognitiveServicesService.account.capabilityHost.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.cognitiveServicesService.account.capabilityHost.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
 	"azure.subscription.sentinelService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSentinelService).GetSubscriptionId()).ToDataRes(types.String)
@@ -40996,6 +41431,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspace).ServerlessEndpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspace).BatchEndpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.datastores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspace).Datastores, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.connections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspace).Connections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.machineLearningService.workspace.computes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspace).Computes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -41356,6 +41803,286 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceModel).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.machineLearningService.workspace.datastore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.datastoreType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).DatastoreType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.isDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).IsDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.credentialsType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).CredentialsType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.serviceDataAccessAuthIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).ServiceDataAccessAuthIdentity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.accountName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).AccountName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.storageAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).StorageAccount, ok = plugin.RawToTValue[*mqlAzureSubscriptionStorageServiceAccount](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.containerName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).ContainerName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.filesystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).Filesystem, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.fileShareName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).FileShareName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).Endpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.resourceGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).ResourceGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.datastore.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.connection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.connection.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.connection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.connection.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.connection.authType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection).AuthType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.connection.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection).Target, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.connection.isSharedToAll": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection).IsSharedToAll, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.connection.sharedUserList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection).SharedUserList, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.connection.expiryTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection).ExpiryTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.connection.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection).Group, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.connection.createdByWorkspaceArmId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection).CreatedByWorkspaceArmId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.connection.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection).Metadata, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.connection.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.authMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).AuthMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.scoringUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).ScoringUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.swaggerUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).SwaggerUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.defaultDeploymentName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).DefaultDeploymentName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).Properties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).Deployments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.modelId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).ModelId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.compute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).Compute, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.environmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).EnvironmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.environmentVariables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).EnvironmentVariables, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.outputAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).OutputAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.outputFileName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).OutputFileName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.loggingLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).LoggingLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.errorThreshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).ErrorThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.miniBatchSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).MiniBatchSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.maxConcurrencyPerInstance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).MaxConcurrencyPerInstance, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.retrySettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).RetrySettings, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).Resources, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).Properties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.appConfigurationService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionAppConfigurationService).__id, ok = v.Value.(string)
 		return
@@ -41632,6 +42359,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).Connections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.cognitiveServicesService.account.models": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).Models, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiBlocklists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).RaiBlocklists, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.encryptionScopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).EncryptionScopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.capabilityHosts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).CapabilityHosts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.cognitiveServicesService.account.privateEndpointConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).PrivateEndpointConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -41772,6 +42515,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).RaiPolicy, ok = plugin.RawToTValue[*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.cognitiveServicesService.account.deployment.model": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).Model, ok = plugin.RawToTValue[*mqlAzureSubscriptionCognitiveServicesServiceAccountModel](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.cognitiveServicesService.account.deployment.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
@@ -41822,6 +42569,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cognitiveServicesService.account.project.connections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).Connections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.project.capabilityHosts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).CapabilityHosts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cognitiveServicesService.account.project.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -42082,6 +42833,246 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cognitiveServicesService.account.raiTopic.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.model.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.model.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.model.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.model.format": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).Format, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.model.publisher": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).Publisher, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.model.isDefaultVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).IsDefaultVersion, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.model.lifecycleStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).LifecycleStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.model.inferenceDeprecationDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).InferenceDeprecationDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.model.fineTuneDeprecationDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).FineTuneDeprecationDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.model.deprecationStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).DeprecationStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.model.replacementModelName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).ReplacementModelName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.model.replacementModelVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).ReplacementModelVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.model.replacementAutoUpgradeStartDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).ReplacementAutoUpgradeStartDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.model.replacementUpgradeOnExpiryLeadTimeDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).ReplacementUpgradeOnExpiryLeadTimeDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.model.maxCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).MaxCapacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.model.catalogAssetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).CatalogAssetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.model.capabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).Capabilities, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.model.finetuneCapabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).FinetuneCapabilities, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.model.skus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel).Skus, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiBlocklist.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiBlocklist.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiBlocklist.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiBlocklist.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiBlocklist.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiBlocklist.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiBlocklist.items": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist).Items, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiBlocklist.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiBlocklist.item.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklistItem).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiBlocklist.item.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklistItem).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiBlocklist.item.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklistItem).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiBlocklist.item.pattern": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklistItem).Pattern, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiBlocklist.item.isRegex": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklistItem).IsRegex, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiBlocklist.item.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklistItem).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.encryptionScope.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.encryptionScope.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.encryptionScope.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.encryptionScope.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.encryptionScope.keySource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope).KeySource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.encryptionScope.keyVaultKeyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope).KeyVaultKeyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.encryptionScope.keyVaultUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope).KeyVaultUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.encryptionScope.keyVaultKeyVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope).KeyVaultKeyVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.encryptionScope.keyIdentityClientId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope).KeyIdentityClientId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.encryptionScope.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.encryptionScope.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.encryptionScope.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.encryptionScope.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.capabilityHost.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.capabilityHost.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.capabilityHost.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.capabilityHost.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.capabilityHost.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.capabilityHost.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.capabilityHost.customerSubnetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost).CustomerSubnetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.capabilityHost.customerSubnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost).CustomerSubnet, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceSubnet](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.capabilityHost.threadStorageConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost).ThreadStorageConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.capabilityHost.storageConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost).StorageConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.capabilityHost.vectorStoreConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost).VectorStoreConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.capabilityHost.aiServicesConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost).AiServicesConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.capabilityHost.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.capabilityHost.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.sentinelService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -96610,6 +97601,9 @@ type mqlAzureSubscriptionMachineLearningServiceWorkspace struct {
 	ContainerRegistry               plugin.TValue[*mqlAzureSubscriptionContainerRegistryServiceRegistry]
 	OnlineEndpoints                 plugin.TValue[[]any]
 	ServerlessEndpoints             plugin.TValue[[]any]
+	BatchEndpoints                  plugin.TValue[[]any]
+	Datastores                      plugin.TValue[[]any]
+	Connections                     plugin.TValue[[]any]
 	Computes                        plugin.TValue[[]any]
 	Models                          plugin.TValue[[]any]
 	ManagedNetworkOutboundRules     plugin.TValue[[]any]
@@ -96862,6 +97856,54 @@ func (c *mqlAzureSubscriptionMachineLearningServiceWorkspace) GetServerlessEndpo
 		}
 
 		return c.serverlessEndpoints()
+	})
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspace) GetBatchEndpoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BatchEndpoints, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.machineLearningService.workspace", c.__id, "batchEndpoints")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.batchEndpoints()
+	})
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspace) GetDatastores() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Datastores, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.machineLearningService.workspace", c.__id, "datastores")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.datastores()
+	})
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspace) GetConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Connections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.machineLearningService.workspace", c.__id, "connections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.connections()
 	})
 }
 
@@ -97672,6 +98714,584 @@ func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceModel) GetSystemMeta
 	})
 }
 
+// mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore for the azure.subscription.machineLearningService.workspace.datastore resource
+type mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastoreInternal
+	Id                            plugin.TValue[string]
+	Name                          plugin.TValue[string]
+	DatastoreType                 plugin.TValue[string]
+	Description                   plugin.TValue[string]
+	IsDefault                     plugin.TValue[bool]
+	CredentialsType               plugin.TValue[string]
+	ServiceDataAccessAuthIdentity plugin.TValue[string]
+	AccountName                   plugin.TValue[string]
+	StorageAccount                plugin.TValue[*mqlAzureSubscriptionStorageServiceAccount]
+	ContainerName                 plugin.TValue[string]
+	Filesystem                    plugin.TValue[string]
+	FileShareName                 plugin.TValue[string]
+	Endpoint                      plugin.TValue[string]
+	Protocol                      plugin.TValue[string]
+	ResourceGroup                 plugin.TValue[string]
+	SubscriptionId                plugin.TValue[string]
+	Tags                          plugin.TValue[map[string]any]
+	SystemMetadata                plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionMachineLearningServiceWorkspaceDatastore creates a new instance of this resource
+func createAzureSubscriptionMachineLearningServiceWorkspaceDatastore(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.machineLearningService.workspace.datastore", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore) MqlName() string {
+	return "azure.subscription.machineLearningService.workspace.datastore"
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore) GetDatastoreType() *plugin.TValue[string] {
+	return &c.DatastoreType
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore) GetIsDefault() *plugin.TValue[bool] {
+	return &c.IsDefault
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore) GetCredentialsType() *plugin.TValue[string] {
+	return &c.CredentialsType
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore) GetServiceDataAccessAuthIdentity() *plugin.TValue[string] {
+	return &c.ServiceDataAccessAuthIdentity
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore) GetAccountName() *plugin.TValue[string] {
+	return &c.AccountName
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore) GetStorageAccount() *plugin.TValue[*mqlAzureSubscriptionStorageServiceAccount] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionStorageServiceAccount](&c.StorageAccount, func() (*mqlAzureSubscriptionStorageServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.machineLearningService.workspace.datastore", c.__id, "storageAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionStorageServiceAccount), nil
+			}
+		}
+
+		return c.storageAccount()
+	})
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore) GetContainerName() *plugin.TValue[string] {
+	return &c.ContainerName
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore) GetFilesystem() *plugin.TValue[string] {
+	return &c.Filesystem
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore) GetFileShareName() *plugin.TValue[string] {
+	return &c.FileShareName
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore) GetEndpoint() *plugin.TValue[string] {
+	return &c.Endpoint
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore) GetResourceGroup() *plugin.TValue[string] {
+	return &c.ResourceGroup
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceDatastore) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.machineLearningService.workspace.datastore", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection for the azure.subscription.machineLearningService.workspace.connection resource
+type mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionMachineLearningServiceWorkspaceConnectionInternal
+	Id                      plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	Category                plugin.TValue[string]
+	AuthType                plugin.TValue[string]
+	Target                  plugin.TValue[string]
+	IsSharedToAll           plugin.TValue[bool]
+	SharedUserList          plugin.TValue[[]any]
+	ExpiryTime              plugin.TValue[*time.Time]
+	Group                   plugin.TValue[string]
+	CreatedByWorkspaceArmId plugin.TValue[string]
+	Metadata                plugin.TValue[map[string]any]
+	SystemMetadata          plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionMachineLearningServiceWorkspaceConnection creates a new instance of this resource
+func createAzureSubscriptionMachineLearningServiceWorkspaceConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.machineLearningService.workspace.connection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection) MqlName() string {
+	return "azure.subscription.machineLearningService.workspace.connection"
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection) GetCategory() *plugin.TValue[string] {
+	return &c.Category
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection) GetAuthType() *plugin.TValue[string] {
+	return &c.AuthType
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection) GetTarget() *plugin.TValue[string] {
+	return &c.Target
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection) GetIsSharedToAll() *plugin.TValue[bool] {
+	return &c.IsSharedToAll
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection) GetSharedUserList() *plugin.TValue[[]any] {
+	return &c.SharedUserList
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection) GetExpiryTime() *plugin.TValue[*time.Time] {
+	return &c.ExpiryTime
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection) GetGroup() *plugin.TValue[string] {
+	return &c.Group
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection) GetCreatedByWorkspaceArmId() *plugin.TValue[string] {
+	return &c.CreatedByWorkspaceArmId
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection) GetMetadata() *plugin.TValue[map[string]any] {
+	return &c.Metadata
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceConnection) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.machineLearningService.workspace.connection", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint for the azure.subscription.machineLearningService.workspace.batchEndpoint resource
+type mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointInternal
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Location              plugin.TValue[string]
+	Tags                  plugin.TValue[map[string]any]
+	Kind                  plugin.TValue[string]
+	AuthMode              plugin.TValue[string]
+	Description           plugin.TValue[string]
+	ScoringUri            plugin.TValue[string]
+	SwaggerUri            plugin.TValue[string]
+	ProvisioningState     plugin.TValue[string]
+	DefaultDeploymentName plugin.TValue[string]
+	Identity              plugin.TValue[any]
+	Properties            plugin.TValue[map[string]any]
+	Deployments           plugin.TValue[[]any]
+	SystemMetadata        plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint creates a new instance of this resource
+func createAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.machineLearningService.workspace.batchEndpoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint) MqlName() string {
+	return "azure.subscription.machineLearningService.workspace.batchEndpoint"
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint) GetAuthMode() *plugin.TValue[string] {
+	return &c.AuthMode
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint) GetScoringUri() *plugin.TValue[string] {
+	return &c.ScoringUri
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint) GetSwaggerUri() *plugin.TValue[string] {
+	return &c.SwaggerUri
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint) GetDefaultDeploymentName() *plugin.TValue[string] {
+	return &c.DefaultDeploymentName
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint) GetIdentity() *plugin.TValue[any] {
+	return &c.Identity
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint) GetProperties() *plugin.TValue[map[string]any] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint) GetDeployments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Deployments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.machineLearningService.workspace.batchEndpoint", c.__id, "deployments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.deployments()
+	})
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.machineLearningService.workspace.batchEndpoint", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment for the azure.subscription.machineLearningService.workspace.batchEndpoint.deployment resource
+type mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeploymentInternal
+	Id                        plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	Location                  plugin.TValue[string]
+	Tags                      plugin.TValue[map[string]any]
+	Description               plugin.TValue[string]
+	ProvisioningState         plugin.TValue[string]
+	ModelId                   plugin.TValue[string]
+	Compute                   plugin.TValue[string]
+	EnvironmentId             plugin.TValue[string]
+	EnvironmentVariables      plugin.TValue[map[string]any]
+	OutputAction              plugin.TValue[string]
+	OutputFileName            plugin.TValue[string]
+	LoggingLevel              plugin.TValue[string]
+	ErrorThreshold            plugin.TValue[int64]
+	MiniBatchSize             plugin.TValue[int64]
+	MaxConcurrencyPerInstance plugin.TValue[int64]
+	RetrySettings             plugin.TValue[any]
+	Resources                 plugin.TValue[any]
+	Identity                  plugin.TValue[any]
+	Properties                plugin.TValue[map[string]any]
+	SystemMetadata            plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment creates a new instance of this resource
+func createAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.machineLearningService.workspace.batchEndpoint.deployment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment) MqlName() string {
+	return "azure.subscription.machineLearningService.workspace.batchEndpoint.deployment"
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment) GetModelId() *plugin.TValue[string] {
+	return &c.ModelId
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment) GetCompute() *plugin.TValue[string] {
+	return &c.Compute
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment) GetEnvironmentId() *plugin.TValue[string] {
+	return &c.EnvironmentId
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment) GetEnvironmentVariables() *plugin.TValue[map[string]any] {
+	return &c.EnvironmentVariables
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment) GetOutputAction() *plugin.TValue[string] {
+	return &c.OutputAction
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment) GetOutputFileName() *plugin.TValue[string] {
+	return &c.OutputFileName
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment) GetLoggingLevel() *plugin.TValue[string] {
+	return &c.LoggingLevel
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment) GetErrorThreshold() *plugin.TValue[int64] {
+	return &c.ErrorThreshold
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment) GetMiniBatchSize() *plugin.TValue[int64] {
+	return &c.MiniBatchSize
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment) GetMaxConcurrencyPerInstance() *plugin.TValue[int64] {
+	return &c.MaxConcurrencyPerInstance
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment) GetRetrySettings() *plugin.TValue[any] {
+	return &c.RetrySettings
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment) GetResources() *plugin.TValue[any] {
+	return &c.Resources
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment) GetIdentity() *plugin.TValue[any] {
+	return &c.Identity
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment) GetProperties() *plugin.TValue[map[string]any] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.machineLearningService.workspace.batchEndpoint.deployment", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
 // mqlAzureSubscriptionAppConfigurationService for the azure.subscription.appConfigurationService resource
 type mqlAzureSubscriptionAppConfigurationService struct {
 	MqlRuntime *plugin.Runtime
@@ -98014,6 +99634,10 @@ type mqlAzureSubscriptionCognitiveServicesServiceAccount struct {
 	Deployments                     plugin.TValue[[]any]
 	Projects                        plugin.TValue[[]any]
 	Connections                     plugin.TValue[[]any]
+	Models                          plugin.TValue[[]any]
+	RaiBlocklists                   plugin.TValue[[]any]
+	EncryptionScopes                plugin.TValue[[]any]
+	CapabilityHosts                 plugin.TValue[[]any]
 	PrivateEndpointConnections      plugin.TValue[[]any]
 	RoleAssignments                 plugin.TValue[[]any]
 	SystemMetadata                  plugin.TValue[*mqlAzureSubscriptionSystemData]
@@ -98283,6 +99907,70 @@ func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetConnections() *
 		}
 
 		return c.connections()
+	})
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetModels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Models, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cognitiveServicesService.account", c.__id, "models")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.models()
+	})
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetRaiBlocklists() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RaiBlocklists, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cognitiveServicesService.account", c.__id, "raiBlocklists")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.raiBlocklists()
+	})
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetEncryptionScopes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EncryptionScopes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cognitiveServicesService.account", c.__id, "encryptionScopes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.encryptionScopes()
+	})
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetCapabilityHosts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CapabilityHosts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cognitiveServicesService.account", c.__id, "capabilityHosts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.capabilityHosts()
 	})
 }
 
@@ -98574,6 +100262,7 @@ type mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment struct {
 	Capabilities             plugin.TValue[map[string]any]
 	RaiPolicyName            plugin.TValue[string]
 	RaiPolicy                plugin.TValue[*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy]
+	Model                    plugin.TValue[*mqlAzureSubscriptionCognitiveServicesServiceAccountModel]
 	SystemMetadata           plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -98694,6 +100383,22 @@ func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment) GetRaiPo
 	})
 }
 
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment) GetModel() *plugin.TValue[*mqlAzureSubscriptionCognitiveServicesServiceAccountModel] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionCognitiveServicesServiceAccountModel](&c.Model, func() (*mqlAzureSubscriptionCognitiveServicesServiceAccountModel, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cognitiveServicesService.account.deployment", c.__id, "model")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionCognitiveServicesServiceAccountModel), nil
+			}
+		}
+
+		return c.model()
+	})
+}
+
 func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
 	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
 		if c.MqlRuntime.HasRecording {
@@ -98726,6 +100431,7 @@ type mqlAzureSubscriptionCognitiveServicesServiceAccountProject struct {
 	ProvisioningState plugin.TValue[string]
 	Endpoints         plugin.TValue[map[string]any]
 	Connections       plugin.TValue[[]any]
+	CapabilityHosts   plugin.TValue[[]any]
 	SystemMetadata    plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -98819,6 +100525,22 @@ func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProject) GetConnecti
 		}
 
 		return c.connections()
+	})
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProject) GetCapabilityHosts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CapabilityHosts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cognitiveServicesService.account.project", c.__id, "capabilityHosts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.capabilityHosts()
 	})
 }
 
@@ -99430,6 +101152,568 @@ func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic) GetSystemM
 	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cognitiveServicesService.account.raiTopic", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionCognitiveServicesServiceAccountModel for the azure.subscription.cognitiveServicesService.account.model resource
+type mqlAzureSubscriptionCognitiveServicesServiceAccountModel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCognitiveServicesServiceAccountModelInternal it will be used here
+	Name                                   plugin.TValue[string]
+	Version                                plugin.TValue[string]
+	Format                                 plugin.TValue[string]
+	Publisher                              plugin.TValue[string]
+	IsDefaultVersion                       plugin.TValue[bool]
+	LifecycleStatus                        plugin.TValue[string]
+	InferenceDeprecationDate               plugin.TValue[*time.Time]
+	FineTuneDeprecationDate                plugin.TValue[*time.Time]
+	DeprecationStatus                      plugin.TValue[string]
+	ReplacementModelName                   plugin.TValue[string]
+	ReplacementModelVersion                plugin.TValue[string]
+	ReplacementAutoUpgradeStartDate        plugin.TValue[*time.Time]
+	ReplacementUpgradeOnExpiryLeadTimeDays plugin.TValue[int64]
+	MaxCapacity                            plugin.TValue[int64]
+	CatalogAssetId                         plugin.TValue[string]
+	Capabilities                           plugin.TValue[map[string]any]
+	FinetuneCapabilities                   plugin.TValue[map[string]any]
+	Skus                                   plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionCognitiveServicesServiceAccountModel creates a new instance of this resource
+func createAzureSubscriptionCognitiveServicesServiceAccountModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCognitiveServicesServiceAccountModel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cognitiveServicesService.account.model", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountModel) MqlName() string {
+	return "azure.subscription.cognitiveServicesService.account.model"
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountModel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountModel) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountModel) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountModel) GetFormat() *plugin.TValue[string] {
+	return &c.Format
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountModel) GetPublisher() *plugin.TValue[string] {
+	return &c.Publisher
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountModel) GetIsDefaultVersion() *plugin.TValue[bool] {
+	return &c.IsDefaultVersion
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountModel) GetLifecycleStatus() *plugin.TValue[string] {
+	return &c.LifecycleStatus
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountModel) GetInferenceDeprecationDate() *plugin.TValue[*time.Time] {
+	return &c.InferenceDeprecationDate
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountModel) GetFineTuneDeprecationDate() *plugin.TValue[*time.Time] {
+	return &c.FineTuneDeprecationDate
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountModel) GetDeprecationStatus() *plugin.TValue[string] {
+	return &c.DeprecationStatus
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountModel) GetReplacementModelName() *plugin.TValue[string] {
+	return &c.ReplacementModelName
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountModel) GetReplacementModelVersion() *plugin.TValue[string] {
+	return &c.ReplacementModelVersion
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountModel) GetReplacementAutoUpgradeStartDate() *plugin.TValue[*time.Time] {
+	return &c.ReplacementAutoUpgradeStartDate
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountModel) GetReplacementUpgradeOnExpiryLeadTimeDays() *plugin.TValue[int64] {
+	return &c.ReplacementUpgradeOnExpiryLeadTimeDays
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountModel) GetMaxCapacity() *plugin.TValue[int64] {
+	return &c.MaxCapacity
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountModel) GetCatalogAssetId() *plugin.TValue[string] {
+	return &c.CatalogAssetId
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountModel) GetCapabilities() *plugin.TValue[map[string]any] {
+	return &c.Capabilities
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountModel) GetFinetuneCapabilities() *plugin.TValue[map[string]any] {
+	return &c.FinetuneCapabilities
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountModel) GetSkus() *plugin.TValue[[]any] {
+	return &c.Skus
+}
+
+// mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist for the azure.subscription.cognitiveServicesService.account.raiBlocklist resource
+type mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklistInternal
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Description    plugin.TValue[string]
+	Tags           plugin.TValue[map[string]any]
+	Etag           plugin.TValue[string]
+	Items          plugin.TValue[[]any]
+	SystemMetadata plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist creates a new instance of this resource
+func createAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cognitiveServicesService.account.raiBlocklist", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist) MqlName() string {
+	return "azure.subscription.cognitiveServicesService.account.raiBlocklist"
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist) GetItems() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Items, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cognitiveServicesService.account.raiBlocklist", c.__id, "items")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.items()
+	})
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cognitiveServicesService.account.raiBlocklist", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklistItem for the azure.subscription.cognitiveServicesService.account.raiBlocklist.item resource
+type mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklistItem struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklistItemInternal
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Pattern        plugin.TValue[string]
+	IsRegex        plugin.TValue[bool]
+	SystemMetadata plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklistItem creates a new instance of this resource
+func createAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklistItem(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklistItem{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cognitiveServicesService.account.raiBlocklist.item", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklistItem) MqlName() string {
+	return "azure.subscription.cognitiveServicesService.account.raiBlocklist.item"
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklistItem) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklistItem) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklistItem) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklistItem) GetPattern() *plugin.TValue[string] {
+	return &c.Pattern
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklistItem) GetIsRegex() *plugin.TValue[bool] {
+	return &c.IsRegex
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklistItem) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cognitiveServicesService.account.raiBlocklist.item", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope for the azure.subscription.cognitiveServicesService.account.encryptionScope resource
+type mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScopeInternal
+	Id                  plugin.TValue[string]
+	Name                plugin.TValue[string]
+	State               plugin.TValue[string]
+	KeySource           plugin.TValue[string]
+	KeyVaultKeyName     plugin.TValue[string]
+	KeyVaultUri         plugin.TValue[string]
+	KeyVaultKeyVersion  plugin.TValue[string]
+	KeyIdentityClientId plugin.TValue[string]
+	ProvisioningState   plugin.TValue[string]
+	Tags                plugin.TValue[map[string]any]
+	Etag                plugin.TValue[string]
+	SystemMetadata      plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope creates a new instance of this resource
+func createAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cognitiveServicesService.account.encryptionScope", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope) MqlName() string {
+	return "azure.subscription.cognitiveServicesService.account.encryptionScope"
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope) GetKeySource() *plugin.TValue[string] {
+	return &c.KeySource
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope) GetKeyVaultKeyName() *plugin.TValue[string] {
+	return &c.KeyVaultKeyName
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope) GetKeyVaultUri() *plugin.TValue[string] {
+	return &c.KeyVaultUri
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope) GetKeyVaultKeyVersion() *plugin.TValue[string] {
+	return &c.KeyVaultKeyVersion
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope) GetKeyIdentityClientId() *plugin.TValue[string] {
+	return &c.KeyIdentityClientId
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cognitiveServicesService.account.encryptionScope", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost for the azure.subscription.cognitiveServicesService.account.capabilityHost resource
+type mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHostInternal
+	Id                       plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	Kind                     plugin.TValue[string]
+	Description              plugin.TValue[string]
+	ProvisioningState        plugin.TValue[string]
+	CustomerSubnetId         plugin.TValue[string]
+	CustomerSubnet           plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet]
+	ThreadStorageConnections plugin.TValue[[]any]
+	StorageConnections       plugin.TValue[[]any]
+	VectorStoreConnections   plugin.TValue[[]any]
+	AiServicesConnections    plugin.TValue[[]any]
+	Tags                     plugin.TValue[map[string]any]
+	SystemMetadata           plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost creates a new instance of this resource
+func createAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cognitiveServicesService.account.capabilityHost", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost) MqlName() string {
+	return "azure.subscription.cognitiveServicesService.account.capabilityHost"
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost) GetCustomerSubnetId() *plugin.TValue[string] {
+	return &c.CustomerSubnetId
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost) GetCustomerSubnet() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceSubnet](&c.CustomerSubnet, func() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cognitiveServicesService.account.capabilityHost", c.__id, "customerSubnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
+			}
+		}
+
+		return c.customerSubnet()
+	})
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost) GetThreadStorageConnections() *plugin.TValue[[]any] {
+	return &c.ThreadStorageConnections
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost) GetStorageConnections() *plugin.TValue[[]any] {
+	return &c.StorageConnections
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost) GetVectorStoreConnections() *plugin.TValue[[]any] {
+	return &c.VectorStoreConnections
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost) GetAiServicesConnections() *plugin.TValue[[]any] {
+	return &c.AiServicesConnections
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cognitiveServicesService.account.capabilityHost", c.__id, "systemMetadata")
 			if err != nil {
 				return nil, err
 			}

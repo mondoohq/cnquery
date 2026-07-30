@@ -1,7 +1,7 @@
 {
   "provider": "azure",
-  "version": "13.33.2",
-  "generated_at": "2026-07-25T21:09:55-07:00",
+  "version": "13.33.5",
+  "generated_at": "2026-07-29T21:18:24-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -45,7 +45,12 @@
     "Microsoft.CognitiveServices/accounts/projects/read",
     "Microsoft.CognitiveServices/accounts/raiPolicies/read",
     "Microsoft.CognitiveServices/accounts/raiTopics/read",
+    "Microsoft.Cognitiveservices/accountCapabilityHosts/read",
     "Microsoft.Cognitiveservices/accounts/read",
+    "Microsoft.Cognitiveservices/encryptionScopes/read",
+    "Microsoft.Cognitiveservices/projectCapabilityHosts/read",
+    "Microsoft.Cognitiveservices/raiBlocklistItems/read",
+    "Microsoft.Cognitiveservices/raiBlocklists/read",
     "Microsoft.Compute/diskAccesses/read",
     "Microsoft.Compute/diskEncryptionSets/read",
     "Microsoft.Compute/disks/read",
@@ -136,6 +141,10 @@
     "Microsoft.Kusto/managedPrivateEndpoints/read",
     "Microsoft.Kusto/privateEndpointConnections/read",
     "Microsoft.Logic/workflows/read",
+    "Microsoft.MachineLearningServices/batchDeployments/read",
+    "Microsoft.MachineLearningServices/batchEndpoints/read",
+    "Microsoft.MachineLearningServices/datastores/read",
+    "Microsoft.MachineLearningServices/workspaceConnections/read",
     "Microsoft.MachineLearningServices/workspaces/computes/read",
     "Microsoft.MachineLearningServices/workspaces/models/read",
     "Microsoft.MachineLearningServices/workspaces/onlineEndpoints/deployments/read",
@@ -567,10 +576,46 @@
       "source_file": "cognitiveservices.go"
     },
     {
+      "permission": "Microsoft.Cognitiveservices/accountCapabilityHosts/read",
+      "service": "Microsoft.Cognitiveservices",
+      "action": "NewListPager",
+      "source_file": "cognitiveservices_catalog.go"
+    },
+    {
       "permission": "Microsoft.Cognitiveservices/accounts/read",
       "service": "Microsoft.Cognitiveservices",
       "action": "Get",
       "source_file": "cognitiveservices.go"
+    },
+    {
+      "permission": "Microsoft.Cognitiveservices/accounts/read",
+      "service": "Microsoft.Cognitiveservices",
+      "action": "NewListModelsPager",
+      "source_file": "cognitiveservices_catalog.go"
+    },
+    {
+      "permission": "Microsoft.Cognitiveservices/encryptionScopes/read",
+      "service": "Microsoft.Cognitiveservices",
+      "action": "NewListPager",
+      "source_file": "cognitiveservices_catalog.go"
+    },
+    {
+      "permission": "Microsoft.Cognitiveservices/projectCapabilityHosts/read",
+      "service": "Microsoft.Cognitiveservices",
+      "action": "NewListPager",
+      "source_file": "cognitiveservices_catalog.go"
+    },
+    {
+      "permission": "Microsoft.Cognitiveservices/raiBlocklistItems/read",
+      "service": "Microsoft.Cognitiveservices",
+      "action": "NewListPager",
+      "source_file": "cognitiveservices_catalog.go"
+    },
+    {
+      "permission": "Microsoft.Cognitiveservices/raiBlocklists/read",
+      "service": "Microsoft.Cognitiveservices",
+      "action": "NewListPager",
+      "source_file": "cognitiveservices_catalog.go"
     },
     {
       "permission": "Microsoft.Compute/diskAccesses/read",
@@ -1111,6 +1156,30 @@
       "service": "Microsoft.Logic",
       "action": "NewListBySubscriptionPager",
       "source_file": "logic.go"
+    },
+    {
+      "permission": "Microsoft.MachineLearningServices/batchDeployments/read",
+      "service": "Microsoft.MachineLearningServices",
+      "action": "NewListPager",
+      "source_file": "machinelearning_data.go"
+    },
+    {
+      "permission": "Microsoft.MachineLearningServices/batchEndpoints/read",
+      "service": "Microsoft.MachineLearningServices",
+      "action": "NewListPager",
+      "source_file": "machinelearning_data.go"
+    },
+    {
+      "permission": "Microsoft.MachineLearningServices/datastores/read",
+      "service": "Microsoft.MachineLearningServices",
+      "action": "NewListPager",
+      "source_file": "machinelearning_data.go"
+    },
+    {
+      "permission": "Microsoft.MachineLearningServices/workspaceConnections/read",
+      "service": "Microsoft.MachineLearningServices",
+      "action": "NewListPager",
+      "source_file": "machinelearning_data.go"
     },
     {
       "permission": "Microsoft.MachineLearningServices/workspaces/computes/read",
