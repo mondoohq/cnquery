@@ -124,6 +124,14 @@ const (
 	ResourcePostgresqlHbaRule                             string = "postgresql.hba.rule"
 	ResourcePostgresqlIdent                               string = "postgresql.ident"
 	ResourcePostgresqlIdentMapping                        string = "postgresql.ident.mapping"
+	ResourceMysql                                         string = "mysql"
+	ResourceMysqlConf                                     string = "mysql.conf"
+	ResourceMysqlConfSection                              string = "mysql.conf.section"
+	ResourceMysqlConfUserOptionFile                       string = "mysql.conf.userOptionFile"
+	ResourceMariadb                                       string = "mariadb"
+	ResourceMariadbConf                                   string = "mariadb.conf"
+	ResourceMariadbConfSection                            string = "mariadb.conf.section"
+	ResourceMariadbConfUserOptionFile                     string = "mariadb.conf.userOptionFile"
 	ResourceJournaldConfig                                string = "journald.config"
 	ResourceJournaldConfigSection                         string = "journald.config.section"
 	ResourceJournaldConfigSectionParam                    string = "journald.config.section.param"
@@ -942,6 +950,38 @@ func init() {
 		"postgresql.ident.mapping": {
 			// to override args, implement: initPostgresqlIdentMapping(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createPostgresqlIdentMapping,
+		},
+		"mysql": {
+			// to override args, implement: initMysql(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMysql,
+		},
+		"mysql.conf": {
+			Init:   initMysqlConf,
+			Create: createMysqlConf,
+		},
+		"mysql.conf.section": {
+			// to override args, implement: initMysqlConfSection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMysqlConfSection,
+		},
+		"mysql.conf.userOptionFile": {
+			// to override args, implement: initMysqlConfUserOptionFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMysqlConfUserOptionFile,
+		},
+		"mariadb": {
+			// to override args, implement: initMariadb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMariadb,
+		},
+		"mariadb.conf": {
+			Init:   initMariadbConf,
+			Create: createMariadbConf,
+		},
+		"mariadb.conf.section": {
+			// to override args, implement: initMariadbConfSection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMariadbConfSection,
+		},
+		"mariadb.conf.userOptionFile": {
+			// to override args, implement: initMariadbConfUserOptionFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMariadbConfUserOptionFile,
 		},
 		"journald.config": {
 			Init:   initJournaldConfig,
@@ -4733,6 +4773,501 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"postgresql.ident.mapping.pgUsername": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPostgresqlIdentMapping).GetPgUsername()).ToDataRes(types.String)
+	},
+	"mysql.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysql).GetVersion()).ToDataRes(types.String)
+	},
+	"mysql.flavor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysql).GetFlavor()).ToDataRes(types.String)
+	},
+	"mysql.conf.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"mysql.conf.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
+	},
+	"mysql.conf.sections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetSections()).ToDataRes(types.Array(types.Resource("mysql.conf.section")))
+	},
+	"mysql.conf.serverOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetServerOptions()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"mysql.conf.clientOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetClientOptions()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"mysql.conf.userFiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetUserFiles()).ToDataRes(types.Array(types.Resource("mysql.conf.userOptionFile")))
+	},
+	"mysql.conf.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetPort()).ToDataRes(types.Int)
+	},
+	"mysql.conf.bindAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetBindAddress()).ToDataRes(types.Array(types.String))
+	},
+	"mysql.conf.socket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetSocket()).ToDataRes(types.String)
+	},
+	"mysql.conf.skipNetworking": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetSkipNetworking()).ToDataRes(types.Bool)
+	},
+	"mysql.conf.skipNameResolve": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetSkipNameResolve()).ToDataRes(types.Bool)
+	},
+	"mysql.conf.maxConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetMaxConnections()).ToDataRes(types.Int)
+	},
+	"mysql.conf.requireSecureTransport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetRequireSecureTransport()).ToDataRes(types.Bool)
+	},
+	"mysql.conf.sslCaFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetSslCaFile()).ToDataRes(types.String)
+	},
+	"mysql.conf.sslCaPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetSslCaPath()).ToDataRes(types.String)
+	},
+	"mysql.conf.sslCertFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetSslCertFile()).ToDataRes(types.String)
+	},
+	"mysql.conf.sslKeyFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetSslKeyFile()).ToDataRes(types.String)
+	},
+	"mysql.conf.sslCrlFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetSslCrlFile()).ToDataRes(types.String)
+	},
+	"mysql.conf.sslCipher": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetSslCipher()).ToDataRes(types.String)
+	},
+	"mysql.conf.sslFipsMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetSslFipsMode()).ToDataRes(types.String)
+	},
+	"mysql.conf.tlsVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetTlsVersion()).ToDataRes(types.Array(types.String))
+	},
+	"mysql.conf.tlsCiphersuites": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetTlsCiphersuites()).ToDataRes(types.String)
+	},
+	"mysql.conf.certificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetCertificate()).ToDataRes(types.Array(types.Resource("certificate")))
+	},
+	"mysql.conf.defaultAuthenticationPlugin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetDefaultAuthenticationPlugin()).ToDataRes(types.String)
+	},
+	"mysql.conf.authenticationPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetAuthenticationPolicy()).ToDataRes(types.Array(types.String))
+	},
+	"mysql.conf.skipGrantTables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetSkipGrantTables()).ToDataRes(types.Bool)
+	},
+	"mysql.conf.pluginDir": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetPluginDir()).ToDataRes(types.String)
+	},
+	"mysql.conf.pluginLoad": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetPluginLoad()).ToDataRes(types.Array(types.String))
+	},
+	"mysql.conf.earlyPluginLoad": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetEarlyPluginLoad()).ToDataRes(types.Array(types.String))
+	},
+	"mysql.conf.validatePasswordPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetValidatePasswordPolicy()).ToDataRes(types.String)
+	},
+	"mysql.conf.validatePasswordLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetValidatePasswordLength()).ToDataRes(types.Int)
+	},
+	"mysql.conf.validatePasswordCheckUserName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetValidatePasswordCheckUserName()).ToDataRes(types.Bool)
+	},
+	"mysql.conf.defaultPasswordLifetime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetDefaultPasswordLifetime()).ToDataRes(types.Int)
+	},
+	"mysql.conf.passwordHistory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetPasswordHistory()).ToDataRes(types.Int)
+	},
+	"mysql.conf.passwordReuseInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetPasswordReuseInterval()).ToDataRes(types.Int)
+	},
+	"mysql.conf.passwordRequireCurrent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetPasswordRequireCurrent()).ToDataRes(types.Bool)
+	},
+	"mysql.conf.runAsUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetRunAsUser()).ToDataRes(types.Resource("user"))
+	},
+	"mysql.conf.datadir": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetDatadir()).ToDataRes(types.String)
+	},
+	"mysql.conf.basedir": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetBasedir()).ToDataRes(types.String)
+	},
+	"mysql.conf.tmpdir": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetTmpdir()).ToDataRes(types.Array(types.String))
+	},
+	"mysql.conf.secureFilePriv": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetSecureFilePriv()).ToDataRes(types.String)
+	},
+	"mysql.conf.localInfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetLocalInfile()).ToDataRes(types.Bool)
+	},
+	"mysql.conf.symbolicLinks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetSymbolicLinks()).ToDataRes(types.Bool)
+	},
+	"mysql.conf.allowSuspiciousUdfs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetAllowSuspiciousUdfs()).ToDataRes(types.Bool)
+	},
+	"mysql.conf.chroot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetChroot()).ToDataRes(types.String)
+	},
+	"mysql.conf.pidFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetPidFile()).ToDataRes(types.String)
+	},
+	"mysql.conf.skipShowDatabase": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetSkipShowDatabase()).ToDataRes(types.Bool)
+	},
+	"mysql.conf.automaticSpPrivileges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetAutomaticSpPrivileges()).ToDataRes(types.Bool)
+	},
+	"mysql.conf.logBinTrustFunctionCreators": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetLogBinTrustFunctionCreators()).ToDataRes(types.Bool)
+	},
+	"mysql.conf.sqlMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetSqlMode()).ToDataRes(types.Array(types.String))
+	},
+	"mysql.conf.logError": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetLogError()).ToDataRes(types.String)
+	},
+	"mysql.conf.logErrorVerbosity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetLogErrorVerbosity()).ToDataRes(types.Int)
+	},
+	"mysql.conf.logOutput": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetLogOutput()).ToDataRes(types.Array(types.String))
+	},
+	"mysql.conf.generalLog": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetGeneralLog()).ToDataRes(types.Bool)
+	},
+	"mysql.conf.generalLogFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetGeneralLogFile()).ToDataRes(types.String)
+	},
+	"mysql.conf.slowQueryLog": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetSlowQueryLog()).ToDataRes(types.Bool)
+	},
+	"mysql.conf.slowQueryLogFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetSlowQueryLogFile()).ToDataRes(types.String)
+	},
+	"mysql.conf.auditLogPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetAuditLogPolicy()).ToDataRes(types.String)
+	},
+	"mysql.conf.auditLogFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetAuditLogFile()).ToDataRes(types.String)
+	},
+	"mysql.conf.auditLogFormat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetAuditLogFormat()).ToDataRes(types.String)
+	},
+	"mysql.conf.logBin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetLogBin()).ToDataRes(types.String)
+	},
+	"mysql.conf.binlogFormat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetBinlogFormat()).ToDataRes(types.String)
+	},
+	"mysql.conf.binlogExpireLogsSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetBinlogExpireLogsSeconds()).ToDataRes(types.Int)
+	},
+	"mysql.conf.binlogEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetBinlogEncryption()).ToDataRes(types.Bool)
+	},
+	"mysql.conf.serverId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetServerId()).ToDataRes(types.Int)
+	},
+	"mysql.conf.gtidMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetGtidMode()).ToDataRes(types.String)
+	},
+	"mysql.conf.enforceGtidConsistency": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetEnforceGtidConsistency()).ToDataRes(types.String)
+	},
+	"mysql.conf.readOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetReadOnly()).ToDataRes(types.Bool)
+	},
+	"mysql.conf.superReadOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetSuperReadOnly()).ToDataRes(types.Bool)
+	},
+	"mysql.conf.defaultTableEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetDefaultTableEncryption()).ToDataRes(types.Bool)
+	},
+	"mysql.conf.tableEncryptionPrivilegeCheck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetTableEncryptionPrivilegeCheck()).ToDataRes(types.Bool)
+	},
+	"mysql.conf.innodbRedoLogEncrypt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetInnodbRedoLogEncrypt()).ToDataRes(types.Bool)
+	},
+	"mysql.conf.innodbUndoLogEncrypt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetInnodbUndoLogEncrypt()).ToDataRes(types.Bool)
+	},
+	"mysql.conf.keyringFileData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConf).GetKeyringFileData()).ToDataRes(types.String)
+	},
+	"mysql.conf.section.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConfSection).GetName()).ToDataRes(types.String)
+	},
+	"mysql.conf.section.options": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConfSection).GetOptions()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"mysql.conf.section.flags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConfSection).GetFlags()).ToDataRes(types.Array(types.String))
+	},
+	"mysql.conf.section.looseOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConfSection).GetLooseOptions()).ToDataRes(types.Array(types.String))
+	},
+	"mysql.conf.section.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConfSection).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
+	},
+	"mysql.conf.userOptionFile.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConfUserOptionFile).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"mysql.conf.userOptionFile.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConfUserOptionFile).GetOwner()).ToDataRes(types.Resource("user"))
+	},
+	"mysql.conf.userOptionFile.format": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConfUserOptionFile).GetFormat()).ToDataRes(types.String)
+	},
+	"mysql.conf.userOptionFile.sections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMysqlConfUserOptionFile).GetSections()).ToDataRes(types.Array(types.Resource("mysql.conf.section")))
+	},
+	"mariadb.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadb).GetVersion()).ToDataRes(types.String)
+	},
+	"mariadb.conf.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"mariadb.conf.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
+	},
+	"mariadb.conf.sections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetSections()).ToDataRes(types.Array(types.Resource("mariadb.conf.section")))
+	},
+	"mariadb.conf.serverOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetServerOptions()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"mariadb.conf.clientOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetClientOptions()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"mariadb.conf.galeraOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetGaleraOptions()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"mariadb.conf.userFiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetUserFiles()).ToDataRes(types.Array(types.Resource("mariadb.conf.userOptionFile")))
+	},
+	"mariadb.conf.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetPort()).ToDataRes(types.Int)
+	},
+	"mariadb.conf.bindAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetBindAddress()).ToDataRes(types.Array(types.String))
+	},
+	"mariadb.conf.socket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetSocket()).ToDataRes(types.String)
+	},
+	"mariadb.conf.skipNetworking": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetSkipNetworking()).ToDataRes(types.Bool)
+	},
+	"mariadb.conf.skipNameResolve": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetSkipNameResolve()).ToDataRes(types.Bool)
+	},
+	"mariadb.conf.maxConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetMaxConnections()).ToDataRes(types.Int)
+	},
+	"mariadb.conf.requireSecureTransport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetRequireSecureTransport()).ToDataRes(types.Bool)
+	},
+	"mariadb.conf.sslCaFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetSslCaFile()).ToDataRes(types.String)
+	},
+	"mariadb.conf.sslCaPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetSslCaPath()).ToDataRes(types.String)
+	},
+	"mariadb.conf.sslCertFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetSslCertFile()).ToDataRes(types.String)
+	},
+	"mariadb.conf.sslKeyFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetSslKeyFile()).ToDataRes(types.String)
+	},
+	"mariadb.conf.sslCrlFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetSslCrlFile()).ToDataRes(types.String)
+	},
+	"mariadb.conf.sslCipher": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetSslCipher()).ToDataRes(types.String)
+	},
+	"mariadb.conf.tlsVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetTlsVersion()).ToDataRes(types.Array(types.String))
+	},
+	"mariadb.conf.certificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetCertificate()).ToDataRes(types.Array(types.Resource("certificate")))
+	},
+	"mariadb.conf.skipGrantTables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetSkipGrantTables()).ToDataRes(types.Bool)
+	},
+	"mariadb.conf.pluginDir": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetPluginDir()).ToDataRes(types.String)
+	},
+	"mariadb.conf.pluginLoad": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetPluginLoad()).ToDataRes(types.Array(types.String))
+	},
+	"mariadb.conf.simplePasswordCheckMinimalLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetSimplePasswordCheckMinimalLength()).ToDataRes(types.Int)
+	},
+	"mariadb.conf.simplePasswordCheckDigits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetSimplePasswordCheckDigits()).ToDataRes(types.Int)
+	},
+	"mariadb.conf.simplePasswordCheckLetters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetSimplePasswordCheckLetters()).ToDataRes(types.Int)
+	},
+	"mariadb.conf.simplePasswordCheckOtherCharacters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetSimplePasswordCheckOtherCharacters()).ToDataRes(types.Int)
+	},
+	"mariadb.conf.passwordReuseCheckInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetPasswordReuseCheckInterval()).ToDataRes(types.Int)
+	},
+	"mariadb.conf.runAsUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetRunAsUser()).ToDataRes(types.Resource("user"))
+	},
+	"mariadb.conf.datadir": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetDatadir()).ToDataRes(types.String)
+	},
+	"mariadb.conf.basedir": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetBasedir()).ToDataRes(types.String)
+	},
+	"mariadb.conf.tmpdir": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetTmpdir()).ToDataRes(types.Array(types.String))
+	},
+	"mariadb.conf.secureFilePriv": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetSecureFilePriv()).ToDataRes(types.String)
+	},
+	"mariadb.conf.localInfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetLocalInfile()).ToDataRes(types.Bool)
+	},
+	"mariadb.conf.symbolicLinks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetSymbolicLinks()).ToDataRes(types.Bool)
+	},
+	"mariadb.conf.allowSuspiciousUdfs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetAllowSuspiciousUdfs()).ToDataRes(types.Bool)
+	},
+	"mariadb.conf.chroot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetChroot()).ToDataRes(types.String)
+	},
+	"mariadb.conf.pidFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetPidFile()).ToDataRes(types.String)
+	},
+	"mariadb.conf.skipShowDatabase": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetSkipShowDatabase()).ToDataRes(types.Bool)
+	},
+	"mariadb.conf.automaticSpPrivileges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetAutomaticSpPrivileges()).ToDataRes(types.Bool)
+	},
+	"mariadb.conf.logBinTrustFunctionCreators": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetLogBinTrustFunctionCreators()).ToDataRes(types.Bool)
+	},
+	"mariadb.conf.sqlMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetSqlMode()).ToDataRes(types.Array(types.String))
+	},
+	"mariadb.conf.logError": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetLogError()).ToDataRes(types.String)
+	},
+	"mariadb.conf.logWarnings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetLogWarnings()).ToDataRes(types.Int)
+	},
+	"mariadb.conf.logOutput": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetLogOutput()).ToDataRes(types.Array(types.String))
+	},
+	"mariadb.conf.generalLog": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetGeneralLog()).ToDataRes(types.Bool)
+	},
+	"mariadb.conf.generalLogFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetGeneralLogFile()).ToDataRes(types.String)
+	},
+	"mariadb.conf.slowQueryLog": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetSlowQueryLog()).ToDataRes(types.Bool)
+	},
+	"mariadb.conf.serverAuditLogging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetServerAuditLogging()).ToDataRes(types.Bool)
+	},
+	"mariadb.conf.serverAuditEvents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetServerAuditEvents()).ToDataRes(types.Array(types.String))
+	},
+	"mariadb.conf.serverAuditFilePath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetServerAuditFilePath()).ToDataRes(types.String)
+	},
+	"mariadb.conf.serverAuditExclUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetServerAuditExclUsers()).ToDataRes(types.Array(types.String))
+	},
+	"mariadb.conf.logBin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetLogBin()).ToDataRes(types.String)
+	},
+	"mariadb.conf.binlogFormat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetBinlogFormat()).ToDataRes(types.String)
+	},
+	"mariadb.conf.expireLogsDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetExpireLogsDays()).ToDataRes(types.Int)
+	},
+	"mariadb.conf.serverId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetServerId()).ToDataRes(types.Int)
+	},
+	"mariadb.conf.gtidStrictMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetGtidStrictMode()).ToDataRes(types.Bool)
+	},
+	"mariadb.conf.readOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetReadOnly()).ToDataRes(types.Bool)
+	},
+	"mariadb.conf.innodbEncryptTables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetInnodbEncryptTables()).ToDataRes(types.String)
+	},
+	"mariadb.conf.innodbEncryptLog": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetInnodbEncryptLog()).ToDataRes(types.Bool)
+	},
+	"mariadb.conf.encryptTmpDiskTables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetEncryptTmpDiskTables()).ToDataRes(types.Bool)
+	},
+	"mariadb.conf.encryptBinlog": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetEncryptBinlog()).ToDataRes(types.Bool)
+	},
+	"mariadb.conf.fileKeyManagementFilename": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetFileKeyManagementFilename()).ToDataRes(types.String)
+	},
+	"mariadb.conf.wsrepOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetWsrepOn()).ToDataRes(types.Bool)
+	},
+	"mariadb.conf.wsrepClusterAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetWsrepClusterAddress()).ToDataRes(types.String)
+	},
+	"mariadb.conf.wsrepClusterName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetWsrepClusterName()).ToDataRes(types.String)
+	},
+	"mariadb.conf.wsrepSstMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetWsrepSstMethod()).ToDataRes(types.String)
+	},
+	"mariadb.conf.wsrepProviderOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConf).GetWsrepProviderOptions()).ToDataRes(types.String)
+	},
+	"mariadb.conf.section.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConfSection).GetName()).ToDataRes(types.String)
+	},
+	"mariadb.conf.section.options": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConfSection).GetOptions()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"mariadb.conf.section.flags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConfSection).GetFlags()).ToDataRes(types.Array(types.String))
+	},
+	"mariadb.conf.section.looseOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConfSection).GetLooseOptions()).ToDataRes(types.Array(types.String))
+	},
+	"mariadb.conf.section.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConfSection).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
+	},
+	"mariadb.conf.userOptionFile.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConfUserOptionFile).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"mariadb.conf.userOptionFile.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConfUserOptionFile).GetOwner()).ToDataRes(types.Resource("user"))
+	},
+	"mariadb.conf.userOptionFile.format": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConfUserOptionFile).GetFormat()).ToDataRes(types.String)
+	},
+	"mariadb.conf.userOptionFile.sections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMariadbConfUserOptionFile).GetSections()).ToDataRes(types.Array(types.Resource("mariadb.conf.section")))
 	},
 	"journald.config.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJournaldConfig).GetFile()).ToDataRes(types.Resource("file"))
@@ -15376,6 +15911,698 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"postgresql.ident.mapping.pgUsername": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPostgresqlIdentMapping).PgUsername, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysql).__id, ok = v.Value.(string)
+		return
+	},
+	"mysql.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysql).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.flavor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysql).Flavor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).__id, ok = v.Value.(string)
+		return
+	},
+	"mysql.conf.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.sections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).Sections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.serverOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).ServerOptions, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.clientOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).ClientOptions, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.userFiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).UserFiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.bindAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).BindAddress, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.socket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).Socket, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.skipNetworking": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).SkipNetworking, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.skipNameResolve": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).SkipNameResolve, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.maxConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).MaxConnections, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.requireSecureTransport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).RequireSecureTransport, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.sslCaFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).SslCaFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.sslCaPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).SslCaPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.sslCertFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).SslCertFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.sslKeyFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).SslKeyFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.sslCrlFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).SslCrlFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.sslCipher": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).SslCipher, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.sslFipsMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).SslFipsMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.tlsVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).TlsVersion, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.tlsCiphersuites": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).TlsCiphersuites, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.certificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).Certificate, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.defaultAuthenticationPlugin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).DefaultAuthenticationPlugin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.authenticationPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).AuthenticationPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.skipGrantTables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).SkipGrantTables, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.pluginDir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).PluginDir, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.pluginLoad": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).PluginLoad, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.earlyPluginLoad": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).EarlyPluginLoad, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.validatePasswordPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).ValidatePasswordPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.validatePasswordLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).ValidatePasswordLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.validatePasswordCheckUserName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).ValidatePasswordCheckUserName, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.defaultPasswordLifetime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).DefaultPasswordLifetime, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.passwordHistory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).PasswordHistory, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.passwordReuseInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).PasswordReuseInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.passwordRequireCurrent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).PasswordRequireCurrent, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.runAsUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).RunAsUser, ok = plugin.RawToTValue[*mqlUser](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.datadir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).Datadir, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.basedir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).Basedir, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.tmpdir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).Tmpdir, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.secureFilePriv": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).SecureFilePriv, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.localInfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).LocalInfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.symbolicLinks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).SymbolicLinks, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.allowSuspiciousUdfs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).AllowSuspiciousUdfs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.chroot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).Chroot, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.pidFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).PidFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.skipShowDatabase": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).SkipShowDatabase, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.automaticSpPrivileges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).AutomaticSpPrivileges, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.logBinTrustFunctionCreators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).LogBinTrustFunctionCreators, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.sqlMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).SqlMode, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.logError": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).LogError, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.logErrorVerbosity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).LogErrorVerbosity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.logOutput": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).LogOutput, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.generalLog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).GeneralLog, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.generalLogFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).GeneralLogFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.slowQueryLog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).SlowQueryLog, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.slowQueryLogFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).SlowQueryLogFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.auditLogPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).AuditLogPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.auditLogFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).AuditLogFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.auditLogFormat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).AuditLogFormat, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.logBin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).LogBin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.binlogFormat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).BinlogFormat, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.binlogExpireLogsSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).BinlogExpireLogsSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.binlogEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).BinlogEncryption, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.serverId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).ServerId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.gtidMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).GtidMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.enforceGtidConsistency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).EnforceGtidConsistency, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.readOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).ReadOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.superReadOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).SuperReadOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.defaultTableEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).DefaultTableEncryption, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.tableEncryptionPrivilegeCheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).TableEncryptionPrivilegeCheck, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.innodbRedoLogEncrypt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).InnodbRedoLogEncrypt, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.innodbUndoLogEncrypt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).InnodbUndoLogEncrypt, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.keyringFileData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConf).KeyringFileData, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.section.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConfSection).__id, ok = v.Value.(string)
+		return
+	},
+	"mysql.conf.section.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConfSection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.section.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConfSection).Options, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.section.flags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConfSection).Flags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.section.looseOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConfSection).LooseOptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.section.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConfSection).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.userOptionFile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConfUserOptionFile).__id, ok = v.Value.(string)
+		return
+	},
+	"mysql.conf.userOptionFile.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConfUserOptionFile).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.userOptionFile.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConfUserOptionFile).Owner, ok = plugin.RawToTValue[*mqlUser](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.userOptionFile.format": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConfUserOptionFile).Format, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mysql.conf.userOptionFile.sections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMysqlConfUserOptionFile).Sections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mariadb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadb).__id, ok = v.Value.(string)
+		return
+	},
+	"mariadb.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadb).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).__id, ok = v.Value.(string)
+		return
+	},
+	"mariadb.conf.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.sections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).Sections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.serverOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).ServerOptions, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.clientOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).ClientOptions, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.galeraOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).GaleraOptions, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.userFiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).UserFiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.bindAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).BindAddress, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.socket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).Socket, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.skipNetworking": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).SkipNetworking, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.skipNameResolve": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).SkipNameResolve, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.maxConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).MaxConnections, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.requireSecureTransport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).RequireSecureTransport, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.sslCaFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).SslCaFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.sslCaPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).SslCaPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.sslCertFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).SslCertFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.sslKeyFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).SslKeyFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.sslCrlFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).SslCrlFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.sslCipher": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).SslCipher, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.tlsVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).TlsVersion, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.certificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).Certificate, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.skipGrantTables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).SkipGrantTables, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.pluginDir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).PluginDir, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.pluginLoad": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).PluginLoad, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.simplePasswordCheckMinimalLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).SimplePasswordCheckMinimalLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.simplePasswordCheckDigits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).SimplePasswordCheckDigits, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.simplePasswordCheckLetters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).SimplePasswordCheckLetters, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.simplePasswordCheckOtherCharacters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).SimplePasswordCheckOtherCharacters, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.passwordReuseCheckInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).PasswordReuseCheckInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.runAsUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).RunAsUser, ok = plugin.RawToTValue[*mqlUser](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.datadir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).Datadir, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.basedir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).Basedir, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.tmpdir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).Tmpdir, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.secureFilePriv": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).SecureFilePriv, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.localInfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).LocalInfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.symbolicLinks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).SymbolicLinks, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.allowSuspiciousUdfs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).AllowSuspiciousUdfs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.chroot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).Chroot, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.pidFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).PidFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.skipShowDatabase": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).SkipShowDatabase, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.automaticSpPrivileges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).AutomaticSpPrivileges, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.logBinTrustFunctionCreators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).LogBinTrustFunctionCreators, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.sqlMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).SqlMode, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.logError": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).LogError, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.logWarnings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).LogWarnings, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.logOutput": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).LogOutput, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.generalLog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).GeneralLog, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.generalLogFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).GeneralLogFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.slowQueryLog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).SlowQueryLog, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.serverAuditLogging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).ServerAuditLogging, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.serverAuditEvents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).ServerAuditEvents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.serverAuditFilePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).ServerAuditFilePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.serverAuditExclUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).ServerAuditExclUsers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.logBin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).LogBin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.binlogFormat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).BinlogFormat, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.expireLogsDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).ExpireLogsDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.serverId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).ServerId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.gtidStrictMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).GtidStrictMode, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.readOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).ReadOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.innodbEncryptTables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).InnodbEncryptTables, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.innodbEncryptLog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).InnodbEncryptLog, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.encryptTmpDiskTables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).EncryptTmpDiskTables, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.encryptBinlog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).EncryptBinlog, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.fileKeyManagementFilename": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).FileKeyManagementFilename, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.wsrepOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).WsrepOn, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.wsrepClusterAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).WsrepClusterAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.wsrepClusterName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).WsrepClusterName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.wsrepSstMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).WsrepSstMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.wsrepProviderOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConf).WsrepProviderOptions, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.section.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConfSection).__id, ok = v.Value.(string)
+		return
+	},
+	"mariadb.conf.section.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConfSection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.section.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConfSection).Options, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.section.flags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConfSection).Flags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.section.looseOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConfSection).LooseOptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.section.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConfSection).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.userOptionFile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConfUserOptionFile).__id, ok = v.Value.(string)
+		return
+	},
+	"mariadb.conf.userOptionFile.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConfUserOptionFile).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.userOptionFile.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConfUserOptionFile).Owner, ok = plugin.RawToTValue[*mqlUser](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.userOptionFile.format": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConfUserOptionFile).Format, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mariadb.conf.userOptionFile.sections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMariadbConfUserOptionFile).Sections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"journald.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -37078,6 +38305,2301 @@ func (c *mqlPostgresqlIdentMapping) GetSystemUsername() *plugin.TValue[string] {
 
 func (c *mqlPostgresqlIdentMapping) GetPgUsername() *plugin.TValue[string] {
 	return &c.PgUsername
+}
+
+// mqlMysql for the mysql resource
+type mqlMysql struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlMysqlInternal
+	Version plugin.TValue[string]
+	Flavor  plugin.TValue[string]
+}
+
+// createMysql creates a new instance of this resource
+func createMysql(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMysql{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mysql", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMysql) MqlName() string {
+	return "mysql"
+}
+
+func (c *mqlMysql) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMysql) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlMysql) GetFlavor() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Flavor, func() (string, error) {
+		return c.flavor()
+	})
+}
+
+// mqlMysqlConf for the mysql.conf resource
+type mqlMysqlConf struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlMysqlConfInternal
+	File                          plugin.TValue[*mqlFile]
+	Files                         plugin.TValue[[]any]
+	Sections                      plugin.TValue[[]any]
+	ServerOptions                 plugin.TValue[map[string]any]
+	ClientOptions                 plugin.TValue[map[string]any]
+	UserFiles                     plugin.TValue[[]any]
+	Port                          plugin.TValue[int64]
+	BindAddress                   plugin.TValue[[]any]
+	Socket                        plugin.TValue[string]
+	SkipNetworking                plugin.TValue[bool]
+	SkipNameResolve               plugin.TValue[bool]
+	MaxConnections                plugin.TValue[int64]
+	RequireSecureTransport        plugin.TValue[bool]
+	SslCaFile                     plugin.TValue[string]
+	SslCaPath                     plugin.TValue[string]
+	SslCertFile                   plugin.TValue[string]
+	SslKeyFile                    plugin.TValue[string]
+	SslCrlFile                    plugin.TValue[string]
+	SslCipher                     plugin.TValue[string]
+	SslFipsMode                   plugin.TValue[string]
+	TlsVersion                    plugin.TValue[[]any]
+	TlsCiphersuites               plugin.TValue[string]
+	Certificate                   plugin.TValue[[]any]
+	DefaultAuthenticationPlugin   plugin.TValue[string]
+	AuthenticationPolicy          plugin.TValue[[]any]
+	SkipGrantTables               plugin.TValue[bool]
+	PluginDir                     plugin.TValue[string]
+	PluginLoad                    plugin.TValue[[]any]
+	EarlyPluginLoad               plugin.TValue[[]any]
+	ValidatePasswordPolicy        plugin.TValue[string]
+	ValidatePasswordLength        plugin.TValue[int64]
+	ValidatePasswordCheckUserName plugin.TValue[bool]
+	DefaultPasswordLifetime       plugin.TValue[int64]
+	PasswordHistory               plugin.TValue[int64]
+	PasswordReuseInterval         plugin.TValue[int64]
+	PasswordRequireCurrent        plugin.TValue[bool]
+	RunAsUser                     plugin.TValue[*mqlUser]
+	Datadir                       plugin.TValue[string]
+	Basedir                       plugin.TValue[string]
+	Tmpdir                        plugin.TValue[[]any]
+	SecureFilePriv                plugin.TValue[string]
+	LocalInfile                   plugin.TValue[bool]
+	SymbolicLinks                 plugin.TValue[bool]
+	AllowSuspiciousUdfs           plugin.TValue[bool]
+	Chroot                        plugin.TValue[string]
+	PidFile                       plugin.TValue[string]
+	SkipShowDatabase              plugin.TValue[bool]
+	AutomaticSpPrivileges         plugin.TValue[bool]
+	LogBinTrustFunctionCreators   plugin.TValue[bool]
+	SqlMode                       plugin.TValue[[]any]
+	LogError                      plugin.TValue[string]
+	LogErrorVerbosity             plugin.TValue[int64]
+	LogOutput                     plugin.TValue[[]any]
+	GeneralLog                    plugin.TValue[bool]
+	GeneralLogFile                plugin.TValue[string]
+	SlowQueryLog                  plugin.TValue[bool]
+	SlowQueryLogFile              plugin.TValue[string]
+	AuditLogPolicy                plugin.TValue[string]
+	AuditLogFile                  plugin.TValue[string]
+	AuditLogFormat                plugin.TValue[string]
+	LogBin                        plugin.TValue[string]
+	BinlogFormat                  plugin.TValue[string]
+	BinlogExpireLogsSeconds       plugin.TValue[int64]
+	BinlogEncryption              plugin.TValue[bool]
+	ServerId                      plugin.TValue[int64]
+	GtidMode                      plugin.TValue[string]
+	EnforceGtidConsistency        plugin.TValue[string]
+	ReadOnly                      plugin.TValue[bool]
+	SuperReadOnly                 plugin.TValue[bool]
+	DefaultTableEncryption        plugin.TValue[bool]
+	TableEncryptionPrivilegeCheck plugin.TValue[bool]
+	InnodbRedoLogEncrypt          plugin.TValue[bool]
+	InnodbUndoLogEncrypt          plugin.TValue[bool]
+	KeyringFileData               plugin.TValue[string]
+}
+
+// createMysqlConf creates a new instance of this resource
+func createMysqlConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMysqlConf{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mysql.conf", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMysqlConf) MqlName() string {
+	return "mysql.conf"
+}
+
+func (c *mqlMysqlConf) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMysqlConf) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mysql.conf", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlMysqlConf) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mysql.conf", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.files(vargFile.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetSections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Sections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mysql.conf", c.__id, "sections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.sections(vargFile.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetServerOptions() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.ServerOptions, func() (map[string]any, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.serverOptions(vargFile.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetClientOptions() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.ClientOptions, func() (map[string]any, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.clientOptions(vargFile.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetUserFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UserFiles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mysql.conf", c.__id, "userFiles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.userFiles()
+	})
+}
+
+func (c *mqlMysqlConf) GetPort() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Port, func() (int64, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return 0, vargServerOptions.Error
+		}
+
+		return c.port(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetBindAddress() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BindAddress, func() ([]any, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return nil, vargServerOptions.Error
+		}
+
+		return c.bindAddress(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetSocket() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Socket, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.socket(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetSkipNetworking() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SkipNetworking, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.skipNetworking(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetSkipNameResolve() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SkipNameResolve, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.skipNameResolve(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetMaxConnections() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MaxConnections, func() (int64, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return 0, vargServerOptions.Error
+		}
+
+		return c.maxConnections(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetRequireSecureTransport() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RequireSecureTransport, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.requireSecureTransport(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetSslCaFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SslCaFile, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.sslCaFile(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetSslCaPath() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SslCaPath, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.sslCaPath(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetSslCertFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SslCertFile, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.sslCertFile(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetSslKeyFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SslKeyFile, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.sslKeyFile(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetSslCrlFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SslCrlFile, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.sslCrlFile(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetSslCipher() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SslCipher, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.sslCipher(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetSslFipsMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SslFipsMode, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.sslFipsMode(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetTlsVersion() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TlsVersion, func() ([]any, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return nil, vargServerOptions.Error
+		}
+
+		return c.tlsVersion(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetTlsCiphersuites() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TlsCiphersuites, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.tlsCiphersuites(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetCertificate() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Certificate, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mysql.conf", c.__id, "certificate")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.certificate()
+	})
+}
+
+func (c *mqlMysqlConf) GetDefaultAuthenticationPlugin() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DefaultAuthenticationPlugin, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.defaultAuthenticationPlugin(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetAuthenticationPolicy() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AuthenticationPolicy, func() ([]any, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return nil, vargServerOptions.Error
+		}
+
+		return c.authenticationPolicy(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetSkipGrantTables() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SkipGrantTables, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.skipGrantTables(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetPluginDir() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PluginDir, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.pluginDir(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetPluginLoad() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PluginLoad, func() ([]any, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return nil, vargServerOptions.Error
+		}
+
+		return c.pluginLoad(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetEarlyPluginLoad() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EarlyPluginLoad, func() ([]any, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return nil, vargServerOptions.Error
+		}
+
+		return c.earlyPluginLoad(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetValidatePasswordPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ValidatePasswordPolicy, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.validatePasswordPolicy(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetValidatePasswordLength() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ValidatePasswordLength, func() (int64, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return 0, vargServerOptions.Error
+		}
+
+		return c.validatePasswordLength(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetValidatePasswordCheckUserName() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ValidatePasswordCheckUserName, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.validatePasswordCheckUserName(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetDefaultPasswordLifetime() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.DefaultPasswordLifetime, func() (int64, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return 0, vargServerOptions.Error
+		}
+
+		return c.defaultPasswordLifetime(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetPasswordHistory() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.PasswordHistory, func() (int64, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return 0, vargServerOptions.Error
+		}
+
+		return c.passwordHistory(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetPasswordReuseInterval() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.PasswordReuseInterval, func() (int64, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return 0, vargServerOptions.Error
+		}
+
+		return c.passwordReuseInterval(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetPasswordRequireCurrent() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PasswordRequireCurrent, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.passwordRequireCurrent(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetRunAsUser() *plugin.TValue[*mqlUser] {
+	return plugin.GetOrCompute[*mqlUser](&c.RunAsUser, func() (*mqlUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mysql.conf", c.__id, "runAsUser")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlUser), nil
+			}
+		}
+
+		return c.runAsUser()
+	})
+}
+
+func (c *mqlMysqlConf) GetDatadir() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Datadir, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.datadir(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetBasedir() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Basedir, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.basedir(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetTmpdir() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tmpdir, func() ([]any, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return nil, vargServerOptions.Error
+		}
+
+		return c.tmpdir(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetSecureFilePriv() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SecureFilePriv, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.secureFilePriv(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetLocalInfile() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LocalInfile, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.localInfile(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetSymbolicLinks() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SymbolicLinks, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.symbolicLinks(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetAllowSuspiciousUdfs() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowSuspiciousUdfs, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.allowSuspiciousUdfs(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetChroot() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Chroot, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.chroot(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetPidFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PidFile, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.pidFile(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetSkipShowDatabase() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SkipShowDatabase, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.skipShowDatabase(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetAutomaticSpPrivileges() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AutomaticSpPrivileges, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.automaticSpPrivileges(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetLogBinTrustFunctionCreators() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LogBinTrustFunctionCreators, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.logBinTrustFunctionCreators(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetSqlMode() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SqlMode, func() ([]any, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return nil, vargServerOptions.Error
+		}
+
+		return c.sqlMode(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetLogError() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LogError, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.logError(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetLogErrorVerbosity() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.LogErrorVerbosity, func() (int64, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return 0, vargServerOptions.Error
+		}
+
+		return c.logErrorVerbosity(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetLogOutput() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LogOutput, func() ([]any, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return nil, vargServerOptions.Error
+		}
+
+		return c.logOutput(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetGeneralLog() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.GeneralLog, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.generalLog(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetGeneralLogFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.GeneralLogFile, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.generalLogFile(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetSlowQueryLog() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SlowQueryLog, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.slowQueryLog(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetSlowQueryLogFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SlowQueryLogFile, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.slowQueryLogFile(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetAuditLogPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AuditLogPolicy, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.auditLogPolicy(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetAuditLogFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AuditLogFile, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.auditLogFile(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetAuditLogFormat() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AuditLogFormat, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.auditLogFormat(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetLogBin() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LogBin, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.logBin(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetBinlogFormat() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.BinlogFormat, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.binlogFormat(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetBinlogExpireLogsSeconds() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.BinlogExpireLogsSeconds, func() (int64, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return 0, vargServerOptions.Error
+		}
+
+		return c.binlogExpireLogsSeconds(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetBinlogEncryption() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.BinlogEncryption, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.binlogEncryption(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetServerId() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ServerId, func() (int64, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return 0, vargServerOptions.Error
+		}
+
+		return c.serverId(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetGtidMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.GtidMode, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.gtidMode(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetEnforceGtidConsistency() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EnforceGtidConsistency, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.enforceGtidConsistency(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetReadOnly() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ReadOnly, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.readOnly(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetSuperReadOnly() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SuperReadOnly, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.superReadOnly(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetDefaultTableEncryption() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DefaultTableEncryption, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.defaultTableEncryption(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetTableEncryptionPrivilegeCheck() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TableEncryptionPrivilegeCheck, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.tableEncryptionPrivilegeCheck(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetInnodbRedoLogEncrypt() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InnodbRedoLogEncrypt, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.innodbRedoLogEncrypt(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetInnodbUndoLogEncrypt() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InnodbUndoLogEncrypt, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.innodbUndoLogEncrypt(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMysqlConf) GetKeyringFileData() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.KeyringFileData, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.keyringFileData(vargServerOptions.Data)
+	})
+}
+
+// mqlMysqlConfSection for the mysql.conf.section resource
+type mqlMysqlConfSection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMysqlConfSectionInternal it will be used here
+	Name         plugin.TValue[string]
+	Options      plugin.TValue[map[string]any]
+	Flags        plugin.TValue[[]any]
+	LooseOptions plugin.TValue[[]any]
+	Files        plugin.TValue[[]any]
+}
+
+// createMysqlConfSection creates a new instance of this resource
+func createMysqlConfSection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMysqlConfSection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mysql.conf.section", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMysqlConfSection) MqlName() string {
+	return "mysql.conf.section"
+}
+
+func (c *mqlMysqlConfSection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMysqlConfSection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMysqlConfSection) GetOptions() *plugin.TValue[map[string]any] {
+	return &c.Options
+}
+
+func (c *mqlMysqlConfSection) GetFlags() *plugin.TValue[[]any] {
+	return &c.Flags
+}
+
+func (c *mqlMysqlConfSection) GetLooseOptions() *plugin.TValue[[]any] {
+	return &c.LooseOptions
+}
+
+func (c *mqlMysqlConfSection) GetFiles() *plugin.TValue[[]any] {
+	return &c.Files
+}
+
+// mqlMysqlConfUserOptionFile for the mysql.conf.userOptionFile resource
+type mqlMysqlConfUserOptionFile struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMysqlConfUserOptionFileInternal it will be used here
+	File     plugin.TValue[*mqlFile]
+	Owner    plugin.TValue[*mqlUser]
+	Format   plugin.TValue[string]
+	Sections plugin.TValue[[]any]
+}
+
+// createMysqlConfUserOptionFile creates a new instance of this resource
+func createMysqlConfUserOptionFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMysqlConfUserOptionFile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mysql.conf.userOptionFile", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMysqlConfUserOptionFile) MqlName() string {
+	return "mysql.conf.userOptionFile"
+}
+
+func (c *mqlMysqlConfUserOptionFile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMysqlConfUserOptionFile) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
+}
+
+func (c *mqlMysqlConfUserOptionFile) GetOwner() *plugin.TValue[*mqlUser] {
+	return &c.Owner
+}
+
+func (c *mqlMysqlConfUserOptionFile) GetFormat() *plugin.TValue[string] {
+	return &c.Format
+}
+
+func (c *mqlMysqlConfUserOptionFile) GetSections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Sections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mysql.conf.userOptionFile", c.__id, "sections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sections()
+	})
+}
+
+// mqlMariadb for the mariadb resource
+type mqlMariadb struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlMariadbInternal
+	Version plugin.TValue[string]
+}
+
+// createMariadb creates a new instance of this resource
+func createMariadb(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMariadb{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mariadb", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMariadb) MqlName() string {
+	return "mariadb"
+}
+
+func (c *mqlMariadb) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMariadb) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+// mqlMariadbConf for the mariadb.conf resource
+type mqlMariadbConf struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlMariadbConfInternal
+	File                               plugin.TValue[*mqlFile]
+	Files                              plugin.TValue[[]any]
+	Sections                           plugin.TValue[[]any]
+	ServerOptions                      plugin.TValue[map[string]any]
+	ClientOptions                      plugin.TValue[map[string]any]
+	GaleraOptions                      plugin.TValue[map[string]any]
+	UserFiles                          plugin.TValue[[]any]
+	Port                               plugin.TValue[int64]
+	BindAddress                        plugin.TValue[[]any]
+	Socket                             plugin.TValue[string]
+	SkipNetworking                     plugin.TValue[bool]
+	SkipNameResolve                    plugin.TValue[bool]
+	MaxConnections                     plugin.TValue[int64]
+	RequireSecureTransport             plugin.TValue[bool]
+	SslCaFile                          plugin.TValue[string]
+	SslCaPath                          plugin.TValue[string]
+	SslCertFile                        plugin.TValue[string]
+	SslKeyFile                         plugin.TValue[string]
+	SslCrlFile                         plugin.TValue[string]
+	SslCipher                          plugin.TValue[string]
+	TlsVersion                         plugin.TValue[[]any]
+	Certificate                        plugin.TValue[[]any]
+	SkipGrantTables                    plugin.TValue[bool]
+	PluginDir                          plugin.TValue[string]
+	PluginLoad                         plugin.TValue[[]any]
+	SimplePasswordCheckMinimalLength   plugin.TValue[int64]
+	SimplePasswordCheckDigits          plugin.TValue[int64]
+	SimplePasswordCheckLetters         plugin.TValue[int64]
+	SimplePasswordCheckOtherCharacters plugin.TValue[int64]
+	PasswordReuseCheckInterval         plugin.TValue[int64]
+	RunAsUser                          plugin.TValue[*mqlUser]
+	Datadir                            plugin.TValue[string]
+	Basedir                            plugin.TValue[string]
+	Tmpdir                             plugin.TValue[[]any]
+	SecureFilePriv                     plugin.TValue[string]
+	LocalInfile                        plugin.TValue[bool]
+	SymbolicLinks                      plugin.TValue[bool]
+	AllowSuspiciousUdfs                plugin.TValue[bool]
+	Chroot                             plugin.TValue[string]
+	PidFile                            plugin.TValue[string]
+	SkipShowDatabase                   plugin.TValue[bool]
+	AutomaticSpPrivileges              plugin.TValue[bool]
+	LogBinTrustFunctionCreators        plugin.TValue[bool]
+	SqlMode                            plugin.TValue[[]any]
+	LogError                           plugin.TValue[string]
+	LogWarnings                        plugin.TValue[int64]
+	LogOutput                          plugin.TValue[[]any]
+	GeneralLog                         plugin.TValue[bool]
+	GeneralLogFile                     plugin.TValue[string]
+	SlowQueryLog                       plugin.TValue[bool]
+	ServerAuditLogging                 plugin.TValue[bool]
+	ServerAuditEvents                  plugin.TValue[[]any]
+	ServerAuditFilePath                plugin.TValue[string]
+	ServerAuditExclUsers               plugin.TValue[[]any]
+	LogBin                             plugin.TValue[string]
+	BinlogFormat                       plugin.TValue[string]
+	ExpireLogsDays                     plugin.TValue[int64]
+	ServerId                           plugin.TValue[int64]
+	GtidStrictMode                     plugin.TValue[bool]
+	ReadOnly                           plugin.TValue[bool]
+	InnodbEncryptTables                plugin.TValue[string]
+	InnodbEncryptLog                   plugin.TValue[bool]
+	EncryptTmpDiskTables               plugin.TValue[bool]
+	EncryptBinlog                      plugin.TValue[bool]
+	FileKeyManagementFilename          plugin.TValue[string]
+	WsrepOn                            plugin.TValue[bool]
+	WsrepClusterAddress                plugin.TValue[string]
+	WsrepClusterName                   plugin.TValue[string]
+	WsrepSstMethod                     plugin.TValue[string]
+	WsrepProviderOptions               plugin.TValue[string]
+}
+
+// createMariadbConf creates a new instance of this resource
+func createMariadbConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMariadbConf{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mariadb.conf", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMariadbConf) MqlName() string {
+	return "mariadb.conf"
+}
+
+func (c *mqlMariadbConf) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMariadbConf) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mariadb.conf", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlMariadbConf) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mariadb.conf", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.files(vargFile.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetSections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Sections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mariadb.conf", c.__id, "sections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.sections(vargFile.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetServerOptions() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.ServerOptions, func() (map[string]any, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.serverOptions(vargFile.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetClientOptions() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.ClientOptions, func() (map[string]any, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.clientOptions(vargFile.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetGaleraOptions() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.GaleraOptions, func() (map[string]any, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.galeraOptions(vargFile.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetUserFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UserFiles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mariadb.conf", c.__id, "userFiles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.userFiles()
+	})
+}
+
+func (c *mqlMariadbConf) GetPort() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Port, func() (int64, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return 0, vargServerOptions.Error
+		}
+
+		return c.port(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetBindAddress() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BindAddress, func() ([]any, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return nil, vargServerOptions.Error
+		}
+
+		return c.bindAddress(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetSocket() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Socket, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.socket(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetSkipNetworking() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SkipNetworking, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.skipNetworking(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetSkipNameResolve() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SkipNameResolve, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.skipNameResolve(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetMaxConnections() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MaxConnections, func() (int64, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return 0, vargServerOptions.Error
+		}
+
+		return c.maxConnections(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetRequireSecureTransport() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RequireSecureTransport, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.requireSecureTransport(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetSslCaFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SslCaFile, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.sslCaFile(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetSslCaPath() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SslCaPath, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.sslCaPath(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetSslCertFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SslCertFile, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.sslCertFile(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetSslKeyFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SslKeyFile, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.sslKeyFile(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetSslCrlFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SslCrlFile, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.sslCrlFile(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetSslCipher() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SslCipher, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.sslCipher(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetTlsVersion() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TlsVersion, func() ([]any, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return nil, vargServerOptions.Error
+		}
+
+		return c.tlsVersion(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetCertificate() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Certificate, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mariadb.conf", c.__id, "certificate")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.certificate()
+	})
+}
+
+func (c *mqlMariadbConf) GetSkipGrantTables() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SkipGrantTables, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.skipGrantTables(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetPluginDir() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PluginDir, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.pluginDir(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetPluginLoad() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PluginLoad, func() ([]any, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return nil, vargServerOptions.Error
+		}
+
+		return c.pluginLoad(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetSimplePasswordCheckMinimalLength() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.SimplePasswordCheckMinimalLength, func() (int64, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return 0, vargServerOptions.Error
+		}
+
+		return c.simplePasswordCheckMinimalLength(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetSimplePasswordCheckDigits() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.SimplePasswordCheckDigits, func() (int64, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return 0, vargServerOptions.Error
+		}
+
+		return c.simplePasswordCheckDigits(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetSimplePasswordCheckLetters() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.SimplePasswordCheckLetters, func() (int64, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return 0, vargServerOptions.Error
+		}
+
+		return c.simplePasswordCheckLetters(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetSimplePasswordCheckOtherCharacters() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.SimplePasswordCheckOtherCharacters, func() (int64, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return 0, vargServerOptions.Error
+		}
+
+		return c.simplePasswordCheckOtherCharacters(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetPasswordReuseCheckInterval() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.PasswordReuseCheckInterval, func() (int64, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return 0, vargServerOptions.Error
+		}
+
+		return c.passwordReuseCheckInterval(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetRunAsUser() *plugin.TValue[*mqlUser] {
+	return plugin.GetOrCompute[*mqlUser](&c.RunAsUser, func() (*mqlUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mariadb.conf", c.__id, "runAsUser")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlUser), nil
+			}
+		}
+
+		return c.runAsUser()
+	})
+}
+
+func (c *mqlMariadbConf) GetDatadir() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Datadir, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.datadir(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetBasedir() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Basedir, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.basedir(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetTmpdir() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tmpdir, func() ([]any, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return nil, vargServerOptions.Error
+		}
+
+		return c.tmpdir(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetSecureFilePriv() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SecureFilePriv, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.secureFilePriv(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetLocalInfile() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LocalInfile, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.localInfile(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetSymbolicLinks() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SymbolicLinks, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.symbolicLinks(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetAllowSuspiciousUdfs() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowSuspiciousUdfs, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.allowSuspiciousUdfs(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetChroot() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Chroot, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.chroot(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetPidFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PidFile, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.pidFile(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetSkipShowDatabase() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SkipShowDatabase, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.skipShowDatabase(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetAutomaticSpPrivileges() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AutomaticSpPrivileges, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.automaticSpPrivileges(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetLogBinTrustFunctionCreators() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LogBinTrustFunctionCreators, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.logBinTrustFunctionCreators(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetSqlMode() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SqlMode, func() ([]any, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return nil, vargServerOptions.Error
+		}
+
+		return c.sqlMode(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetLogError() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LogError, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.logError(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetLogWarnings() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.LogWarnings, func() (int64, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return 0, vargServerOptions.Error
+		}
+
+		return c.logWarnings(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetLogOutput() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LogOutput, func() ([]any, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return nil, vargServerOptions.Error
+		}
+
+		return c.logOutput(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetGeneralLog() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.GeneralLog, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.generalLog(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetGeneralLogFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.GeneralLogFile, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.generalLogFile(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetSlowQueryLog() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SlowQueryLog, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.slowQueryLog(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetServerAuditLogging() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ServerAuditLogging, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.serverAuditLogging(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetServerAuditEvents() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ServerAuditEvents, func() ([]any, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return nil, vargServerOptions.Error
+		}
+
+		return c.serverAuditEvents(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetServerAuditFilePath() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ServerAuditFilePath, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.serverAuditFilePath(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetServerAuditExclUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ServerAuditExclUsers, func() ([]any, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return nil, vargServerOptions.Error
+		}
+
+		return c.serverAuditExclUsers(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetLogBin() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LogBin, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.logBin(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetBinlogFormat() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.BinlogFormat, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.binlogFormat(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetExpireLogsDays() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ExpireLogsDays, func() (int64, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return 0, vargServerOptions.Error
+		}
+
+		return c.expireLogsDays(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetServerId() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ServerId, func() (int64, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return 0, vargServerOptions.Error
+		}
+
+		return c.serverId(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetGtidStrictMode() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.GtidStrictMode, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.gtidStrictMode(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetReadOnly() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ReadOnly, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.readOnly(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetInnodbEncryptTables() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.InnodbEncryptTables, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.innodbEncryptTables(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetInnodbEncryptLog() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InnodbEncryptLog, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.innodbEncryptLog(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetEncryptTmpDiskTables() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EncryptTmpDiskTables, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.encryptTmpDiskTables(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetEncryptBinlog() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EncryptBinlog, func() (bool, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return false, vargServerOptions.Error
+		}
+
+		return c.encryptBinlog(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetFileKeyManagementFilename() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.FileKeyManagementFilename, func() (string, error) {
+		vargServerOptions := c.GetServerOptions()
+		if vargServerOptions.Error != nil {
+			return "", vargServerOptions.Error
+		}
+
+		return c.fileKeyManagementFilename(vargServerOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetWsrepOn() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.WsrepOn, func() (bool, error) {
+		vargGaleraOptions := c.GetGaleraOptions()
+		if vargGaleraOptions.Error != nil {
+			return false, vargGaleraOptions.Error
+		}
+
+		return c.wsrepOn(vargGaleraOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetWsrepClusterAddress() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.WsrepClusterAddress, func() (string, error) {
+		vargGaleraOptions := c.GetGaleraOptions()
+		if vargGaleraOptions.Error != nil {
+			return "", vargGaleraOptions.Error
+		}
+
+		return c.wsrepClusterAddress(vargGaleraOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetWsrepClusterName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.WsrepClusterName, func() (string, error) {
+		vargGaleraOptions := c.GetGaleraOptions()
+		if vargGaleraOptions.Error != nil {
+			return "", vargGaleraOptions.Error
+		}
+
+		return c.wsrepClusterName(vargGaleraOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetWsrepSstMethod() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.WsrepSstMethod, func() (string, error) {
+		vargGaleraOptions := c.GetGaleraOptions()
+		if vargGaleraOptions.Error != nil {
+			return "", vargGaleraOptions.Error
+		}
+
+		return c.wsrepSstMethod(vargGaleraOptions.Data)
+	})
+}
+
+func (c *mqlMariadbConf) GetWsrepProviderOptions() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.WsrepProviderOptions, func() (string, error) {
+		vargGaleraOptions := c.GetGaleraOptions()
+		if vargGaleraOptions.Error != nil {
+			return "", vargGaleraOptions.Error
+		}
+
+		return c.wsrepProviderOptions(vargGaleraOptions.Data)
+	})
+}
+
+// mqlMariadbConfSection for the mariadb.conf.section resource
+type mqlMariadbConfSection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMariadbConfSectionInternal it will be used here
+	Name         plugin.TValue[string]
+	Options      plugin.TValue[map[string]any]
+	Flags        plugin.TValue[[]any]
+	LooseOptions plugin.TValue[[]any]
+	Files        plugin.TValue[[]any]
+}
+
+// createMariadbConfSection creates a new instance of this resource
+func createMariadbConfSection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMariadbConfSection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mariadb.conf.section", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMariadbConfSection) MqlName() string {
+	return "mariadb.conf.section"
+}
+
+func (c *mqlMariadbConfSection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMariadbConfSection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMariadbConfSection) GetOptions() *plugin.TValue[map[string]any] {
+	return &c.Options
+}
+
+func (c *mqlMariadbConfSection) GetFlags() *plugin.TValue[[]any] {
+	return &c.Flags
+}
+
+func (c *mqlMariadbConfSection) GetLooseOptions() *plugin.TValue[[]any] {
+	return &c.LooseOptions
+}
+
+func (c *mqlMariadbConfSection) GetFiles() *plugin.TValue[[]any] {
+	return &c.Files
+}
+
+// mqlMariadbConfUserOptionFile for the mariadb.conf.userOptionFile resource
+type mqlMariadbConfUserOptionFile struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMariadbConfUserOptionFileInternal it will be used here
+	File     plugin.TValue[*mqlFile]
+	Owner    plugin.TValue[*mqlUser]
+	Format   plugin.TValue[string]
+	Sections plugin.TValue[[]any]
+}
+
+// createMariadbConfUserOptionFile creates a new instance of this resource
+func createMariadbConfUserOptionFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMariadbConfUserOptionFile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mariadb.conf.userOptionFile", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMariadbConfUserOptionFile) MqlName() string {
+	return "mariadb.conf.userOptionFile"
+}
+
+func (c *mqlMariadbConfUserOptionFile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMariadbConfUserOptionFile) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
+}
+
+func (c *mqlMariadbConfUserOptionFile) GetOwner() *plugin.TValue[*mqlUser] {
+	return &c.Owner
+}
+
+func (c *mqlMariadbConfUserOptionFile) GetFormat() *plugin.TValue[string] {
+	return &c.Format
+}
+
+func (c *mqlMariadbConfUserOptionFile) GetSections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Sections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mariadb.conf.userOptionFile", c.__id, "sections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sections()
+	})
 }
 
 // mqlJournaldConfig for the journald.config resource
