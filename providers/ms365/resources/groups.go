@@ -34,7 +34,7 @@ func (a *mqlMicrosoftGroup) members() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	top := int32(200)
+	top := int32(999)
 
 	// Pull the same fields the rest of the user resource consumes so
 	// accessing member.displayName/mail/userPrincipalName is served from
@@ -127,7 +127,7 @@ func (a *mqlMicrosoftGroups) list() ([]any, error) {
 		return nil, err
 	}
 
-	top := int32(200)
+	top := int32(999)
 	queryParams := &groups.GroupsRequestBuilderGetQueryParameters{
 		Top: &top,
 	}

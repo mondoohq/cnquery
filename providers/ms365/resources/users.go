@@ -124,10 +124,6 @@ func (a *mqlMicrosoftUsers) list() ([]any, error) {
 		return nil, transformError(err)
 	}
 
-	// prefetch the MFA map so per-user mfaEnabled() lookups hit cached data
-	// instead of triggering N+1 calls; lazy fallback lives on the loader.
-	microsoft.loadMfaResp()
-
 	// construct the result
 	res := []any{}
 	for _, u := range users {
@@ -141,6 +137,30 @@ func (a *mqlMicrosoftUsers) list() ([]any, error) {
 	}
 
 	return res, nil
+}
+
+// count returns the total number of users in the tenant via the Graph
+// $count endpoint, avoiding a full user-list fetch (which is prohibitively
+// slow on large tenants).
+func (a *mqlMicrosoftUsers) count() (int64, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return 0, err
+	}
+
+	opts := &users.CountRequestBuilderGetRequestConfiguration{Headers: abstractions.NewRequestHeaders()}
+	opts.Headers.Add("ConsistencyLevel", "eventual")
+	count, err := graphClient.Users().Count().Get(context.Background(), opts)
+	if err != nil {
+		return 0, transformError(err)
+	}
+	if count == nil {
+		// This should never happen, but we better check
+		return 0, errors.New("unable to count users, counter parameter API returned nil")
+	}
+
+	return int64(*count), nil
 }
 
 func initMicrosoftUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
