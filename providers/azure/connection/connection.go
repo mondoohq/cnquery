@@ -100,6 +100,10 @@ func selectAzureCredential(conf *inventory.Config) (azcore.TokenCredential, erro
 	credentialMu.Lock()
 	defer credentialMu.Unlock()
 	if cached, ok := credentialCache[identity]; ok {
+		log.Debug().
+			Str("tenant-id", tenantId).
+			Str("client-id", clientId).
+			Msg("azure: reusing cached credential")
 		return cached, nil
 	}
 
