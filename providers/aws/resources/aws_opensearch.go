@@ -173,6 +173,8 @@ func initAwsOpensearchDomain(runtime *plugin.Runtime, args map[string]*llx.RawDa
 }
 
 type mqlAwsOpensearchDomainInternal struct {
+	cacheEncryptionAtRestKmsKeyId string
+	cacheVpcId                    string
 	securityGroupIdHandler
 	region                         string
 	subnetIds                      []string
@@ -385,7 +387,6 @@ func newMqlAwsOpensearchDomain(runtime *plugin.Runtime, region string, accountID
 			"engineVersion":                      llx.StringDataPtr(domain.EngineVersion),
 			"endpoint":                           llx.StringData(endpoint),
 			"encryptionAtRestEnabled":            llx.BoolData(encryptionAtRestEnabled),
-			"encryptionAtRestKmsKeyId":           llx.StringData(encryptionAtRestKmsKeyId),
 			"nodeToNodeEncryptionEnabled":        llx.BoolData(nodeToNodeEncryptionEnabled),
 			"dedicatedMasterEnabled":             llx.BoolData(dedicatedMasterEnabled),
 			"dedicatedMasterType":                llx.StringData(dedicatedMasterType),
@@ -403,7 +404,6 @@ func newMqlAwsOpensearchDomain(runtime *plugin.Runtime, region string, accountID
 			"ebsVolumeSize":                      llx.IntData(ebsVolumeSize),
 			"ebsIops":                            llx.IntData(ebsIops),
 			"ebsThroughput":                      llx.IntData(ebsThroughput),
-			"vpcId":                              llx.StringData(vpcId),
 			"vpcEgressEnabled":                   llx.BoolData(vpcEgressEnabled),
 			"enforceHTTPS":                       llx.BoolData(enforceHTTPS),
 			"tlsSecurityPolicy":                  llx.StringData(tlsSecurityPolicy),
@@ -442,6 +442,8 @@ func newMqlAwsOpensearchDomain(runtime *plugin.Runtime, region string, accountID
 	if err != nil {
 		return nil, err
 	}
+	resource.(*mqlAwsOpensearchDomain).cacheEncryptionAtRestKmsKeyId = encryptionAtRestKmsKeyId
+	resource.(*mqlAwsOpensearchDomain).cacheVpcId = vpcId
 
 	mqlDomain := resource.(*mqlAwsOpensearchDomain)
 	mqlDomain.region = region
@@ -467,13 +469,13 @@ func (a *mqlAwsOpensearchDomain) customEndpointCertificate() (*mqlAwsAcmCertific
 }
 
 func (a *mqlAwsOpensearchDomain) encryptionAtRestKmsKey() (*mqlAwsKmsKey, error) {
-	if a.EncryptionAtRestKmsKeyId.Data == "" {
+	if a.cacheEncryptionAtRestKmsKeyId == "" {
 		a.EncryptionAtRestKmsKey.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
 	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
 		map[string]*llx.RawData{
-			"arn": llx.StringData(a.EncryptionAtRestKmsKeyId.Data),
+			"arn": llx.StringData(a.cacheEncryptionAtRestKmsKeyId),
 		})
 	if err != nil {
 		return nil, err
@@ -482,7 +484,7 @@ func (a *mqlAwsOpensearchDomain) encryptionAtRestKmsKey() (*mqlAwsKmsKey, error)
 }
 
 func (a *mqlAwsOpensearchDomain) vpc() (*mqlAwsVpc, error) {
-	vpcId := a.VpcId.Data
+	vpcId := a.cacheVpcId
 	if vpcId == "" {
 		a.Vpc.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil

@@ -267,12 +267,12 @@ func newMqlAwsCloudhsmHsm(runtime *plugin.Runtime, region string, accountID stri
 			"stateMessage":     llx.StringData(convert.ToValue(hsm.StateMessage)),
 			"availabilityZone": llx.StringData(convert.ToValue(hsm.AvailabilityZone)),
 			"hsmType":          llx.StringData(convert.ToValue(hsm.HsmType)),
-			"eniId":            llx.StringData(convert.ToValue(hsm.EniId)),
 			"eniIp":            llx.StringData(convert.ToValue(hsm.EniIp)),
 		})
 	if err != nil {
 		return nil, err
 	}
+	resource.(*mqlAwsCloudhsmHsm).cacheEniId = convert.ToValue(hsm.EniId)
 
 	mqlHsm := resource.(*mqlAwsCloudhsmHsm)
 	mqlHsm.region = region
@@ -282,6 +282,7 @@ func newMqlAwsCloudhsmHsm(runtime *plugin.Runtime, region string, accountID stri
 }
 
 type mqlAwsCloudhsmHsmInternal struct {
+	cacheEniId    string
 	region        string
 	accountID     string
 	cacheSubnetId *string
@@ -302,7 +303,7 @@ func (a *mqlAwsCloudhsmHsm) subnet() (*mqlAwsVpcSubnet, error) {
 }
 
 func (a *mqlAwsCloudhsmHsm) networkInterface() (*mqlAwsEc2Networkinterface, error) {
-	eniId := a.EniId.Data
+	eniId := a.cacheEniId
 	if eniId == "" {
 		a.NetworkInterface.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil

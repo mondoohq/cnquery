@@ -114,26 +114,6 @@ func (a *mqlAwsSagemaker) getEndpoints(conn *connection.AwsConnection) []*jobpoo
 	return tasks
 }
 
-func (a *mqlAwsSagemakerEndpoint) config() (map[string]any, error) {
-	// The endpoint config has its own name, distinct from the endpoint name;
-	// resolve it via DescribeEndpoint rather than assuming they're equal.
-	details, err := a.fetchDetails()
-	if err != nil {
-		return nil, err
-	}
-
-	region := a.Region.Data
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.Sagemaker(region)
-	ctx := context.Background()
-	config, err := svc.DescribeEndpointConfig(ctx, &sagemaker.DescribeEndpointConfigInput{EndpointConfigName: details.EndpointConfigName})
-	if err != nil {
-		return nil, err
-	}
-	return convert.JsonToDict(config)
-}
-
 // endpointConfig resolves the endpoint's configuration as a typed
 // aws.sagemaker.endpointConfig resource, priming its detail cache so downstream
 // accessors (production variants, KMS, network isolation, VPC) reuse the
@@ -1088,26 +1068,6 @@ func (a *mqlAwsSagemakerModel) iamRole() (*mqlAwsIamRole, error) {
 	return res.(*mqlAwsIamRole), nil
 }
 
-func (a *mqlAwsSagemakerModel) primaryContainer() (map[string]any, error) {
-	if err := a.fetchDetails(); err != nil {
-		return nil, err
-	}
-	if a.cachePrimaryContainer == nil {
-		return nil, nil
-	}
-	return a.cachePrimaryContainer.(map[string]any), nil
-}
-
-func (a *mqlAwsSagemakerModel) vpcConfig() (map[string]any, error) {
-	if err := a.fetchDetails(); err != nil {
-		return nil, err
-	}
-	if a.cacheVpcConfig == nil {
-		return nil, nil
-	}
-	return a.cacheVpcConfig.(map[string]any), nil
-}
-
 func (a *mqlAwsSagemakerModel) vpc() (*mqlAwsVpc, error) {
 	if err := a.fetchDetails(); err != nil {
 		return nil, err
@@ -1525,16 +1485,6 @@ func (a *mqlAwsSagemakerTrainingjob) billableTimeInSeconds() (int64, error) {
 	return a.cacheBillableTime, nil
 }
 
-func (a *mqlAwsSagemakerTrainingjob) vpcConfig() (map[string]any, error) {
-	if err := a.fetchDetails(); err != nil {
-		return nil, err
-	}
-	if a.cacheVpcConfig == nil {
-		return nil, nil
-	}
-	return a.cacheVpcConfig.(map[string]any), nil
-}
-
 func (a *mqlAwsSagemakerTrainingjob) vpc() (*mqlAwsVpc, error) {
 	if err := a.fetchDetails(); err != nil {
 		return nil, err
@@ -1840,16 +1790,6 @@ func (a *mqlAwsSagemakerProcessingjob) enableInterContainerTrafficEncryption() (
 		return false, err
 	}
 	return a.cacheEnableInterContainerEncrypt, nil
-}
-
-func (a *mqlAwsSagemakerProcessingjob) vpcConfig() (map[string]any, error) {
-	if err := a.fetchDetails(); err != nil {
-		return nil, err
-	}
-	if a.cacheVpcConfig == nil {
-		return nil, nil
-	}
-	return a.cacheVpcConfig.(map[string]any), nil
 }
 
 func (a *mqlAwsSagemakerProcessingjob) vpc() (*mqlAwsVpc, error) {

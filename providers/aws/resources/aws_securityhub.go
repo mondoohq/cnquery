@@ -154,22 +154,6 @@ func (a *mqlAwsSecurityhubHub) getEnabledStandards() ([]types.StandardsSubscript
 	return all, nil
 }
 
-func (a *mqlAwsSecurityhubHub) enabledStandards() ([]any, error) {
-	standards, err := a.getEnabledStandards()
-	if err != nil {
-		return nil, err
-	}
-	res := make([]any, 0, len(standards))
-	for _, std := range standards {
-		d, err := convert.JsonToDict(std)
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, d)
-	}
-	return res, nil
-}
-
 func (a *mqlAwsSecurityhubHub) standardSubscriptions() ([]any, error) {
 	standards, err := a.getEnabledStandards()
 	if err != nil {
@@ -349,12 +333,8 @@ func (a *mqlAwsSecurityhubHub) findings() ([]any, error) {
 
 func newMqlSecurityHubFinding(runtime *plugin.Runtime, finding *types.AwsSecurityFinding, region string) (*mqlAwsSecurityhubFinding, error) {
 	var severity string
-	var severityNormalized int64
 	if finding.Severity != nil {
 		severity = string(finding.Severity.Label)
-		if finding.Severity.Normalized != nil {
-			severityNormalized = int64(*finding.Severity.Normalized)
-		}
 	}
 
 	var complianceStatus string
@@ -389,30 +369,29 @@ func newMqlSecurityHubFinding(runtime *plugin.Runtime, finding *types.AwsSecurit
 
 	res, err := CreateResource(runtime, "aws.securityhub.finding",
 		map[string]*llx.RawData{
-			"__id":               llx.StringData(fmt.Sprintf("securityhub/finding/%s/%s", region, convert.ToValue(finding.Id))),
-			"id":                 llx.StringDataPtr(finding.Id),
-			"title":              llx.StringDataPtr(finding.Title),
-			"description":        llx.StringDataPtr(finding.Description),
-			"severity":           llx.StringData(severity),
-			"severityNormalized": llx.IntData(severityNormalized),
-			"recordState":        llx.StringData(string(finding.RecordState)),
-			"complianceStatus":   llx.StringData(complianceStatus),
-			"workflowStatus":     llx.StringData(workflowStatus),
-			"types":              llx.ArrayData(findingTypes, mqlTypes.String),
-			"productArn":         llx.StringDataPtr(finding.ProductArn),
-			"productName":        llx.StringDataPtr(finding.ProductName),
-			"generatorId":        llx.StringDataPtr(finding.GeneratorId),
-			"resourceType":       llx.StringData(resourceType),
-			"resourceId":         llx.StringData(resourceId),
-			"resourceRegion":     llx.StringData(resourceRegion),
-			"createdAt":          llx.TimeDataPtr(parseAwsTimestampPtr(finding.CreatedAt)),
-			"updatedAt":          llx.TimeDataPtr(parseAwsTimestampPtr(finding.UpdatedAt)),
-			"firstObservedAt":    llx.TimeDataPtr(parseAwsTimestampPtr(finding.FirstObservedAt)),
-			"lastObservedAt":     llx.TimeDataPtr(parseAwsTimestampPtr(finding.LastObservedAt)),
-			"remediationUrl":     llx.StringData(remediationUrl),
-			"remediationText":    llx.StringData(remediationText),
-			"accountId":          llx.StringDataPtr(finding.AwsAccountId),
-			"region":             llx.StringData(region),
+			"__id":             llx.StringData(fmt.Sprintf("securityhub/finding/%s/%s", region, convert.ToValue(finding.Id))),
+			"id":               llx.StringDataPtr(finding.Id),
+			"title":            llx.StringDataPtr(finding.Title),
+			"description":      llx.StringDataPtr(finding.Description),
+			"severity":         llx.StringData(severity),
+			"recordState":      llx.StringData(string(finding.RecordState)),
+			"complianceStatus": llx.StringData(complianceStatus),
+			"workflowStatus":   llx.StringData(workflowStatus),
+			"types":            llx.ArrayData(findingTypes, mqlTypes.String),
+			"productArn":       llx.StringDataPtr(finding.ProductArn),
+			"productName":      llx.StringDataPtr(finding.ProductName),
+			"generatorId":      llx.StringDataPtr(finding.GeneratorId),
+			"resourceType":     llx.StringData(resourceType),
+			"resourceId":       llx.StringData(resourceId),
+			"resourceRegion":   llx.StringData(resourceRegion),
+			"createdAt":        llx.TimeDataPtr(parseAwsTimestampPtr(finding.CreatedAt)),
+			"updatedAt":        llx.TimeDataPtr(parseAwsTimestampPtr(finding.UpdatedAt)),
+			"firstObservedAt":  llx.TimeDataPtr(parseAwsTimestampPtr(finding.FirstObservedAt)),
+			"lastObservedAt":   llx.TimeDataPtr(parseAwsTimestampPtr(finding.LastObservedAt)),
+			"remediationUrl":   llx.StringData(remediationUrl),
+			"remediationText":  llx.StringData(remediationText),
+			"accountId":        llx.StringDataPtr(finding.AwsAccountId),
+			"region":           llx.StringData(region),
 		})
 	if err != nil {
 		return nil, err

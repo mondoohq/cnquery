@@ -167,7 +167,6 @@ func (a *mqlAwsCodedeployApplication) deploymentGroups() ([]any, error) {
 					"deploymentGroupId":   llx.StringDataPtr(dgInfo.DeploymentGroupId),
 					"deploymentGroupName": llx.StringDataPtr(dgInfo.DeploymentGroupName),
 					"computePlatform":     llx.StringData(string(dgInfo.ComputePlatform)),
-					"serviceRoleArn":      llx.StringDataPtr(dgInfo.ServiceRoleArn),
 					"region":              llx.StringData(a.Region.Data),
 				}
 
@@ -175,6 +174,7 @@ func (a *mqlAwsCodedeployApplication) deploymentGroups() ([]any, error) {
 				if err != nil {
 					return nil, err
 				}
+				mqlDg.(*mqlAwsCodedeployDeploymentGroup).cacheServiceRoleArn = convert.ToValue(dgInfo.ServiceRoleArn)
 				// Store dgInfo in an internal struct if more fields are needed for resolver methods
 				mqlDg.(*mqlAwsCodedeployDeploymentGroup).sdkData = dgInfo
 
@@ -205,7 +205,8 @@ func (a *mqlAwsCodedeployApplication) deployments() ([]any, error) {
 }
 
 type mqlAwsCodedeployDeploymentGroupInternal struct {
-	sdkData codedeploytypes.DeploymentGroupInfo // Store fetched data
+	cacheServiceRoleArn string
+	sdkData             codedeploytypes.DeploymentGroupInfo // Store fetched data
 }
 
 func (dg *mqlAwsCodedeployDeploymentGroup) id() (string, error) {
@@ -213,7 +214,7 @@ func (dg *mqlAwsCodedeployDeploymentGroup) id() (string, error) {
 }
 
 func (dg *mqlAwsCodedeployDeploymentGroup) serviceRole() (*mqlAwsIamRole, error) {
-	arnVal := dg.ServiceRoleArn.Data
+	arnVal := dg.cacheServiceRoleArn
 	if arnVal == "" {
 		dg.ServiceRole.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -421,7 +422,6 @@ func listDeployments(runtime *plugin.Runtime, region string, appName, dgName *st
 					"deploymentConfigName":          llx.StringDataPtr(depInfo.DeploymentConfigName),
 					"createdAt":                     llx.TimeDataPtr(depInfo.CreateTime),
 					"completedAt":                   llx.TimeDataPtr(depInfo.CompleteTime),
-					"compleatedAt":                  llx.TimeDataPtr(depInfo.CompleteTime),
 					"description":                   llx.StringDataPtr(depInfo.Description),
 					"creator":                       llx.StringData(string(depInfo.Creator)),
 					"ignoreApplicationStopFailures": llx.BoolData(depInfo.IgnoreApplicationStopFailures),
@@ -473,7 +473,6 @@ func getDeploymentResource(runtime *plugin.Runtime, region string, appName, dgNa
 		"deploymentConfigName":          llx.StringDataPtr(depInfo.DeploymentConfigName),
 		"createdAt":                     llx.TimeDataPtr(depInfo.CreateTime),
 		"completedAt":                   llx.TimeDataPtr(depInfo.CompleteTime),
-		"compleatedAt":                  llx.TimeDataPtr(depInfo.CompleteTime),
 		"description":                   llx.StringDataPtr(depInfo.Description),
 		"creator":                       llx.StringData(string(depInfo.Creator)),
 		"ignoreApplicationStopFailures": llx.BoolData(depInfo.IgnoreApplicationStopFailures),

@@ -202,7 +202,6 @@ func (a *mqlAwsApigatewayRestapi) stages() ([]any, error) {
 				"cacheClusterStatus":   llx.StringData(string(stage.CacheClusterStatus)),
 				"cacheDataEncrypted":   llx.BoolData(cacheDataEncrypted),
 				"clientCertificateId":  llx.StringData(convert.ToValue(stage.ClientCertificateId)),
-				"webAclArn":            llx.StringData(convert.ToValue(stage.WebAclArn)),
 				"createdAt":            llx.TimeDataPtr(stage.CreatedDate),
 				"lastUpdatedAt":        llx.TimeDataPtr(stage.LastUpdatedDate),
 				"documentationVersion": llx.StringData(convert.ToValue(stage.DocumentationVersion)),
@@ -212,6 +211,7 @@ func (a *mqlAwsApigatewayRestapi) stages() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlStage.(*mqlAwsApigatewayStage).cacheWebAclArn = convert.ToValue(stage.WebAclArn)
 		res = append(res, mqlStage)
 	}
 	return res, nil
@@ -226,7 +226,7 @@ func (a *mqlAwsApigatewayStage) id() (string, error) {
 }
 
 func (a *mqlAwsApigatewayStage) webAcl() (*mqlAwsWafAcl, error) {
-	arnVal := a.WebAclArn.Data
+	arnVal := a.cacheWebAclArn
 	if arnVal == "" {
 		a.WebAcl.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -753,4 +753,8 @@ func (a *mqlAwsApigatewayVpcLink) targets() ([]any, error) {
 		res = append(res, lb)
 	}
 	return res, nil
+}
+
+type mqlAwsApigatewayStageInternal struct {
+	cacheWebAclArn string
 }

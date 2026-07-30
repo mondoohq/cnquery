@@ -149,10 +149,6 @@ func getLambdaArn(name string, region string, accountId string) string {
 // that the lazy accessors depend on. Shared by the list path and the targeted
 // init lookup.
 func newLambdaFunctionResource(runtime *plugin.Runtime, region string, accountID string, function lambdatypes.FunctionConfiguration) (*mqlAwsLambdaFunction, error) {
-	vpcConfigJson, err := convert.JsonToDict(function.VpcConfig)
-	if err != nil {
-		return nil, err
-	}
 	var dlqTarget string
 	if function.DeadLetterConfig != nil {
 		dlqTarget = convert.ToValue(function.DeadLetterConfig.TargetArn)
@@ -244,7 +240,6 @@ func newLambdaFunctionResource(runtime *plugin.Runtime, region string, accountID
 		"name":                        llx.StringDataPtr(function.FunctionName),
 		"runtime":                     llx.StringData(string(function.Runtime)),
 		"dlqTargetArn":                llx.StringData(dlqTarget),
-		"vpcConfig":                   llx.MapData(vpcConfigJson, types.Any),
 		"region":                      llx.StringData(region),
 		"architectures":               llx.ArrayData(architectures, types.String),
 		"ephemeralStorageSize":        llx.IntData(ephemeralStorageSize),
@@ -262,7 +257,6 @@ func newLambdaFunctionResource(runtime *plugin.Runtime, region string, accountID
 		"stateReason":                 llx.StringDataPtr(function.StateReason),
 		"lastUpdateStatus":            llx.StringData(string(function.LastUpdateStatus)),
 		"lastUpdateStatusReason":      llx.StringDataPtr(function.LastUpdateStatusReason),
-		"kmsKeyArn":                   llx.StringDataPtr(function.KMSKeyArn),
 		"environment":                 llx.MapData(envVars, types.String),
 		"snapStartApplyOn":            llx.StringData(snapStartApplyOn),
 		"snapStartOptimizationStatus": llx.StringData(snapStartOptimizationStatus),
@@ -291,6 +285,7 @@ func newLambdaFunctionResource(runtime *plugin.Runtime, region string, accountID
 	if err != nil {
 		return nil, err
 	}
+	mqlFunc.(*mqlAwsLambdaFunction).cacheKmsKeyArn = convert.ToValue(function.KMSKeyArn)
 	f := mqlFunc.(*mqlAwsLambdaFunction)
 	f.cacheRoleArn = function.Role
 	f.region = region
@@ -405,6 +400,7 @@ func (a *mqlAwsLambdaFunction) id() (string, error) {
 }
 
 type mqlAwsLambdaFunctionInternal struct {
+	cacheKmsKeyArn string
 	securityGroupIdHandler
 	cacheRoleArn          *string
 	cacheTags             map[string]string
@@ -553,13 +549,13 @@ func (a *mqlAwsLambdaFunction) tags() (map[string]any, error) {
 }
 
 func (a *mqlAwsLambdaFunction) kmsKey() (*mqlAwsKmsKey, error) {
-	if a.KmsKeyArn.Data == "" {
+	if a.cacheKmsKeyArn == "" {
 		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
 	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
 		map[string]*llx.RawData{
-			"arn": llx.StringData(a.KmsKeyArn.Data),
+			"arn": llx.StringData(a.cacheKmsKeyArn),
 		})
 	if err != nil {
 		return nil, err
@@ -1066,7 +1062,6 @@ func createEventSourceMappingResource(runtime *plugin.Runtime, esm lambdatypes.E
 			"__id":                           llx.StringDataPtr(esm.UUID),
 			"uuid":                           llx.StringDataPtr(esm.UUID),
 			"eventSourceArn":                 llx.StringDataPtr(esm.EventSourceArn),
-			"functionArn":                    llx.StringDataPtr(esm.FunctionArn),
 			"region":                         llx.StringData(region),
 			"state":                          llx.StringDataPtr(esm.State),
 			"stateTransitionReason":          llx.StringDataPtr(esm.StateTransitionReason),
@@ -1089,6 +1084,7 @@ func createEventSourceMappingResource(runtime *plugin.Runtime, esm lambdatypes.E
 	if err != nil {
 		return nil, err
 	}
+	res.(*mqlAwsLambdaEventSourceMapping).cacheFunctionArn = convert.ToValue(esm.FunctionArn)
 	return res.(*mqlAwsLambdaEventSourceMapping), nil
 }
 
@@ -1104,7 +1100,7 @@ func (a *mqlAwsLambdaEventSourceMapping) arn() (string, error) {
 }
 
 func (a *mqlAwsLambdaEventSourceMapping) function() (*mqlAwsLambdaFunction, error) {
-	arnVal := a.FunctionArn.Data
+	arnVal := a.cacheFunctionArn
 	if arnVal == "" {
 		a.Function.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -1540,4 +1536,8 @@ func (a *mqlAwsLambdaLayer) versions() ([]any, error) {
 
 func (a *mqlAwsLambdaLayerVersion) id() (string, error) {
 	return a.LayerVersionArn.Data, nil
+}
+
+type mqlAwsLambdaEventSourceMappingInternal struct {
+	cacheFunctionArn string
 }

@@ -78,24 +78,24 @@ func (a *mqlAwsSigner) getSigningProfiles(conn *connection.AwsConnection) []*job
 					}
 					mqlProfile, err := CreateResource(a.MqlRuntime, "aws.signer.signingProfile",
 						map[string]*llx.RawData{
-							"__id":                          llx.StringData(convert.ToValue(p.Arn)),
-							"arn":                           llx.StringDataPtr(p.Arn),
-							"profileName":                   llx.StringDataPtr(p.ProfileName),
-							"profileVersion":                llx.StringDataPtr(p.ProfileVersion),
-							"profileVersionArn":             llx.StringDataPtr(p.ProfileVersionArn),
-							"platformId":                    llx.StringDataPtr(p.PlatformId),
-							"platformDisplayName":           llx.StringDataPtr(p.PlatformDisplayName),
-							"status":                        llx.StringData(string(p.Status)),
-							"signingMaterialCertificateArn": llx.StringData(certArn),
-							"signatureValidityType":         llx.StringData(validityType),
-							"signatureValidityValue":        llx.IntData(validityValue),
-							"signingParameters":             llx.MapData(toInterfaceMap(p.SigningParameters), types.String),
-							"region":                        llx.StringData(region),
-							"tags":                          llx.MapData(toInterfaceMap(p.Tags), types.String),
+							"__id":                   llx.StringData(convert.ToValue(p.Arn)),
+							"arn":                    llx.StringDataPtr(p.Arn),
+							"profileName":            llx.StringDataPtr(p.ProfileName),
+							"profileVersion":         llx.StringDataPtr(p.ProfileVersion),
+							"profileVersionArn":      llx.StringDataPtr(p.ProfileVersionArn),
+							"platformId":             llx.StringDataPtr(p.PlatformId),
+							"platformDisplayName":    llx.StringDataPtr(p.PlatformDisplayName),
+							"status":                 llx.StringData(string(p.Status)),
+							"signatureValidityType":  llx.StringData(validityType),
+							"signatureValidityValue": llx.IntData(validityValue),
+							"signingParameters":      llx.MapData(toInterfaceMap(p.SigningParameters), types.String),
+							"region":                 llx.StringData(region),
+							"tags":                   llx.MapData(toInterfaceMap(p.Tags), types.String),
 						})
 					if err != nil {
 						return nil, err
 					}
+					mqlProfile.(*mqlAwsSignerSigningProfile).cacheSigningMaterialCertificateArn = certArn
 					res = append(res, mqlProfile)
 				}
 			}
@@ -107,7 +107,7 @@ func (a *mqlAwsSigner) getSigningProfiles(conn *connection.AwsConnection) []*job
 }
 
 func (a *mqlAwsSignerSigningProfile) signingMaterialCertificate() (*mqlAwsAcmCertificate, error) {
-	arnVal := a.SigningMaterialCertificateArn.Data
+	arnVal := a.cacheSigningMaterialCertificateArn
 	if arnVal == "" {
 		a.SigningMaterialCertificate.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -118,4 +118,8 @@ func (a *mqlAwsSignerSigningProfile) signingMaterialCertificate() (*mqlAwsAcmCer
 		return nil, err
 	}
 	return res.(*mqlAwsAcmCertificate), nil
+}
+
+type mqlAwsSignerSigningProfileInternal struct {
+	cacheSigningMaterialCertificateArn string
 }

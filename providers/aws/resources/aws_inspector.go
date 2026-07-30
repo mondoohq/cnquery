@@ -131,14 +131,14 @@ func (a *mqlAwsInspectorCoverageInstance) id() (string, error) {
 
 func (a *mqlAwsInspectorCoverage) ec2Instance() (*mqlAwsInspectorCoverageInstance, error) {
 	if a.cacheCoverage != nil && a.cacheCoverage.ResourceMetadata != nil && a.cacheCoverage.ResourceMetadata.Ec2 != nil {
-		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 		args := map[string]*llx.RawData{
 			"platform": llx.StringData(string(a.cacheCoverage.ResourceMetadata.Ec2.Platform)),
 			"tags":     llx.MapData(toInterfaceMap(a.cacheCoverage.ResourceMetadata.Ec2.Tags), llxtypes.String),
 			"region":   llx.StringData(a.Region.Data),
 		}
 		image, err := NewResource(a.MqlRuntime, "aws.ec2.image", map[string]*llx.RawData{
-			"arn": llx.StringData(fmt.Sprintf(imageArnPattern, a.Region.Data, conn.AccountId(), convert.ToValue(a.cacheCoverage.ResourceMetadata.Ec2.AmiId))),
+			"id":     llx.StringData(convert.ToValue(a.cacheCoverage.ResourceMetadata.Ec2.AmiId)),
+			"region": llx.StringData(a.Region.Data),
 		})
 		if err == nil {
 			args["image"] = llx.ResourceData(image, "aws.ec2.image")

@@ -177,7 +177,6 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 							"endpointVpcEndpoints":               llx.ArrayData(endpointVpcEndpoints, types.Dict),
 							"region":                             llx.StringData(region),
 							"tags":                               llx.MapData(redshiftTagsToMap(cluster.Tags), types.String),
-							"vpcId":                              llx.StringDataPtr(cluster.VpcId),
 							"clusterAvailabilityStatus":          llx.StringDataPtr(cluster.ClusterAvailabilityStatus),
 							"totalStorageCapacityInMegaBytes":    llx.IntDataDefault(cluster.TotalStorageCapacityInMegaBytes, 0),
 							"multiAZ":                            llx.BoolData(strings.EqualFold(convert.ToValue(cluster.MultiAZ), "enabled")),
@@ -191,6 +190,7 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 					if err != nil {
 						return nil, err
 					}
+					mqlDBInstance.(*mqlAwsRedshiftCluster).cacheVpcId = convert.ToValue(cluster.VpcId)
 					mqlCluster := mqlDBInstance.(*mqlAwsRedshiftCluster)
 					mqlCluster.cacheKmsKeyId = cluster.KmsKeyId
 					mqlCluster.cacheMasterPasswordSecretKmsKey = cluster.MasterPasswordSecretKmsKeyId
@@ -231,6 +231,7 @@ func redshiftTagsToMap(tags []redshifttypes.Tag) map[string]any {
 }
 
 type mqlAwsRedshiftClusterInternal struct {
+	cacheVpcId string
 	securityGroupIdHandler
 	cacheKmsKeyId                   *string
 	cacheMasterPasswordSecretKmsKey *string
@@ -255,7 +256,7 @@ func (a *mqlAwsRedshiftCluster) id() (string, error) {
 }
 
 func (a *mqlAwsRedshiftCluster) vpc() (*mqlAwsVpc, error) {
-	vpcId := a.VpcId.Data
+	vpcId := a.cacheVpcId
 	if vpcId == "" {
 		a.Vpc.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -729,7 +730,6 @@ func (a *mqlAwsRedshift) getEventSubscriptions(conn *connection.AwsConnection) [
 							"enabled":         llx.BoolDataPtr(sub.Enabled),
 							"eventCategories": llx.ArrayData(categories, types.String),
 							"severity":        llx.StringDataPtr(sub.Severity),
-							"snsTopicArn":     llx.StringDataPtr(sub.SnsTopicArn),
 							"sourceIds":       llx.ArrayData(sourceIds, types.String),
 							"sourceType":      llx.StringDataPtr(sub.SourceType),
 							"status":          llx.StringDataPtr(sub.Status),
@@ -739,6 +739,7 @@ func (a *mqlAwsRedshift) getEventSubscriptions(conn *connection.AwsConnection) [
 					if err != nil {
 						return nil, err
 					}
+					mqlSub.(*mqlAwsRedshiftEventSubscription).cacheSnsTopicArn = convert.ToValue(sub.SnsTopicArn)
 					res = append(res, mqlSub)
 				}
 			}
@@ -759,7 +760,7 @@ func (a *mqlAwsRedshiftEventSubscription) arn() (string, error) {
 }
 
 func (a *mqlAwsRedshiftEventSubscription) snsTopic() (*mqlAwsSnsTopic, error) {
-	arn := a.SnsTopicArn.Data
+	arn := a.cacheSnsTopicArn
 	if arn == "" {
 		a.SnsTopic.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -915,4 +916,8 @@ func (a *mqlAwsRedshift) getSnapshotSchedules(conn *connection.AwsConnection) []
 
 func (a *mqlAwsRedshiftSnapshotSchedule) id() (string, error) {
 	return a.__id, nil
+}
+
+type mqlAwsRedshiftEventSubscriptionInternal struct {
+	cacheSnsTopicArn string
 }

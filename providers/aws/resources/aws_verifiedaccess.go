@@ -404,7 +404,6 @@ func newMqlVerifiedAccessEndpoint(runtime *plugin.Runtime, ep ec2types.VerifiedA
 			"endpointDomain":           llx.StringDataPtr(ep.EndpointDomain),
 			"endpointType":             llx.StringData(string(ep.EndpointType)),
 			"attachmentType":           llx.StringData(string(ep.AttachmentType)),
-			"domainCertificateArn":     llx.StringDataPtr(ep.DomainCertificateArn),
 			"status":                   llx.DictData(statusDict),
 			"sseSpecification":         llx.DictData(sseSpec),
 			"tags":                     llx.MapData(toInterfaceMap(ec2TagsToMap(ep.Tags)), types.String),
@@ -412,6 +411,7 @@ func newMqlVerifiedAccessEndpoint(runtime *plugin.Runtime, ep ec2types.VerifiedA
 	if err != nil {
 		return nil, err
 	}
+	res.(*mqlAwsVerifiedaccessEndpoint).cacheDomainCertificateArn = convert.ToValue(ep.DomainCertificateArn)
 	mqlEP := res.(*mqlAwsVerifiedaccessEndpoint)
 	sgArns := make([]string, len(ep.SecurityGroupIds))
 	for i, sgId := range ep.SecurityGroupIds {
@@ -422,6 +422,7 @@ func newMqlVerifiedAccessEndpoint(runtime *plugin.Runtime, ep ec2types.VerifiedA
 }
 
 type mqlAwsVerifiedaccessEndpointInternal struct {
+	cacheDomainCertificateArn string
 	securityGroupIdHandler
 }
 
@@ -430,7 +431,7 @@ func (a *mqlAwsVerifiedaccessEndpoint) id() (string, error) {
 }
 
 func (a *mqlAwsVerifiedaccessEndpoint) domainCertificate() (*mqlAwsAcmCertificate, error) {
-	arnVal := a.DomainCertificateArn.Data
+	arnVal := a.cacheDomainCertificateArn
 	if arnVal == "" {
 		a.DomainCertificate.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil

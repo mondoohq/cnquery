@@ -42,7 +42,6 @@ const (
 	internetGwArnPattern          = "arn:aws:ec2:%s:%s:gateway/%s"
 	vpnConnArnPattern             = "arn:aws:ec2:%s:%s:vpn-connection/%s"
 	networkAclArnPattern          = "arn:aws:ec2:%s:%s:network-acl/%s"
-	imageArnPattern               = "arn:aws:ec2:%s:%s:image/%s"
 	keypairArnPattern             = "arn:aws:ec2:%s:%s:keypair/%s"
 	subnetArnPattern              = "arn:aws:ec2:%s:%s:subnet/%s"
 	routeTableArnPattern          = "arn:aws:ec2:%s:%s:route-table/%s"

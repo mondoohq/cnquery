@@ -1045,7 +1045,6 @@ func (a *mqlAwsCloudwatchLoggroup) subscriptionFilters() ([]any, error) {
 					"filterName":             llx.StringDataPtr(sf.FilterName),
 					"filterPattern":          llx.StringDataPtr(sf.FilterPattern),
 					"destinationArn":         llx.StringDataPtr(sf.DestinationArn),
-					"roleArn":                llx.StringDataPtr(sf.RoleArn),
 					"distribution":           llx.StringData(string(sf.Distribution)),
 					"applyOnTransformedLogs": llx.BoolData(sf.ApplyOnTransformedLogs),
 					"createdAt":              llx.TimeDataPtr(int64MillisToTime(sf.CreationTime)),
@@ -1054,6 +1053,7 @@ func (a *mqlAwsCloudwatchLoggroup) subscriptionFilters() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			mqlSF.(*mqlAwsCloudwatchLoggroupSubscriptionfilter).cacheRoleArn = convert.ToValue(sf.RoleArn)
 			res = append(res, mqlSF)
 		}
 	}
@@ -1065,7 +1065,7 @@ func (a *mqlAwsCloudwatchLoggroupSubscriptionfilter) id() (string, error) {
 }
 
 func (a *mqlAwsCloudwatchLoggroupSubscriptionfilter) iamRole() (*mqlAwsIamRole, error) {
-	arnVal := a.RoleArn.Data
+	arnVal := a.cacheRoleArn
 	if arnVal == "" {
 		a.IamRole.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -1276,4 +1276,8 @@ func initAwsCloudwatchMetricsalarm(runtime *plugin.Runtime, args map[string]*llx
 		}
 	}
 	return nil, nil, errors.New("cloudwatch alarm does not exist")
+}
+
+type mqlAwsCloudwatchLoggroupSubscriptionfilterInternal struct {
+	cacheRoleArn string
 }

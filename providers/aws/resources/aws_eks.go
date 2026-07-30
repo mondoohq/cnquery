@@ -185,9 +185,6 @@ func (a *mqlAwsEksCluster) populateFromDescribe(cluster *ekstypes.Cluster) error
 	a.PlatformVersion = plugin.TValue[string]{Data: convert.ToValue(cluster.PlatformVersion), State: plugin.StateIsSet}
 	a.Status = plugin.TValue[string]{Data: string(cluster.Status), State: plugin.StateIsSet}
 
-	encryptionConfig, _ := convert.JsonToDictSlice(cluster.EncryptionConfig)
-	a.EncryptionConfig = plugin.TValue[[]any]{Data: encryptionConfig, State: plugin.StateIsSet}
-
 	logging, _ := convert.JsonToDict(cluster.Logging)
 	a.Logging = plugin.TValue[any]{Data: logging, State: plugin.StateIsSet}
 
@@ -199,9 +196,6 @@ func (a *mqlAwsEksCluster) populateFromDescribe(cluster *ekstypes.Cluster) error
 		controlPlaneEgressMode = string(cluster.ResourcesVpcConfig.ControlPlaneEgressMode)
 	}
 	a.ControlPlaneEgressMode = plugin.TValue[string]{Data: controlPlaneEgressMode, State: plugin.StateIsSet}
-
-	vpcConfig, _ := convert.JsonToDict(cluster.ResourcesVpcConfig)
-	a.ResourcesVpcConfig = plugin.TValue[any]{Data: vpcConfig, State: plugin.StateIsSet}
 
 	if cluster.ResourcesVpcConfig != nil {
 		a.cacheVpcId = cluster.ResourcesVpcConfig.VpcId
@@ -325,10 +319,6 @@ func (a *mqlAwsEksCluster) status() (string, error) {
 	return "", a.fetchDetail()
 }
 
-func (a *mqlAwsEksCluster) encryptionConfig() ([]any, error) {
-	return nil, a.fetchDetail()
-}
-
 func (a *mqlAwsEksCluster) encryptionKmsKey() (*mqlAwsKmsKey, error) {
 	if err := a.fetchDetail(); err != nil {
 		return nil, err
@@ -370,10 +360,6 @@ func (a *mqlAwsEksCluster) networkConfig() (map[string]any, error) {
 
 func (a *mqlAwsEksCluster) controlPlaneEgressMode() (string, error) {
 	return "", a.fetchDetail()
-}
-
-func (a *mqlAwsEksCluster) resourcesVpcConfig() (map[string]any, error) {
-	return nil, a.fetchDetail()
 }
 
 func (a *mqlAwsEksCluster) createdAt() (*time.Time, error) {
@@ -1317,14 +1303,6 @@ func (a *mqlAwsEksFargateProfile) fetchDetails() (*ekstypes.FargateProfile, erro
 	return desc.FargateProfile, nil
 }
 
-func (a *mqlAwsEksFargateProfile) podExecutionRoleArn() (string, error) {
-	fp, err := a.fetchDetails()
-	if err != nil {
-		return "", err
-	}
-	return convert.ToValue(fp.PodExecutionRoleArn), nil
-}
-
 func (a *mqlAwsEksFargateProfile) selectors() ([]any, error) {
 	fp, err := a.fetchDetails()
 	if err != nil {
@@ -1337,18 +1315,6 @@ func (a *mqlAwsEksFargateProfile) selectors() ([]any, error) {
 			return nil, err
 		}
 		res = append(res, d)
-	}
-	return res, nil
-}
-
-func (a *mqlAwsEksFargateProfile) subnets() ([]any, error) {
-	fp, err := a.fetchDetails()
-	if err != nil {
-		return nil, err
-	}
-	res := make([]any, 0, len(fp.Subnets))
-	for _, s := range fp.Subnets {
-		res = append(res, s)
 	}
 	return res, nil
 }
@@ -1512,14 +1478,6 @@ func (a *mqlAwsEksPodIdentityAssociation) serviceAccount() (string, error) {
 		return "", err
 	}
 	return convert.ToValue(assoc.ServiceAccount), nil
-}
-
-func (a *mqlAwsEksPodIdentityAssociation) roleArn() (string, error) {
-	assoc, err := a.fetchDetails()
-	if err != nil {
-		return "", err
-	}
-	return convert.ToValue(assoc.RoleArn), nil
 }
 
 func (a *mqlAwsEksPodIdentityAssociation) createdAt() (*time.Time, error) {

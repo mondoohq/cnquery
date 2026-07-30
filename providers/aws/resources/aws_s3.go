@@ -159,7 +159,6 @@ func initAwsS3BucketPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData
 	resource.Name.State = plugin.StateIsNull | plugin.StateIsSet
 	resource.Document.State = plugin.StateIsNull | plugin.StateIsSet
 	resource.Version.State = plugin.StateIsNull | plugin.StateIsSet
-	resource.Statements.State = plugin.StateIsNull | plugin.StateIsSet
 	resource.BucketName = plugin.TValue[string]{
 		Data: bucket.GetName().Data, State: plugin.StateIsSet,
 	}
@@ -1200,11 +1199,6 @@ func (a *mqlAwsS3Bucket) replicationRules() ([]any, error) {
 			deleteMarkerEnabled = rule.DeleteMarkerReplication.Status == s3types.DeleteMarkerReplicationStatusEnabled
 		}
 
-		prefix := ""
-		if rule.Prefix != nil {
-			prefix = *rule.Prefix
-		}
-
 		priority := int64(0)
 		if rule.Priority != nil {
 			priority = int64(*rule.Priority)
@@ -1219,7 +1213,6 @@ func (a *mqlAwsS3Bucket) replicationRules() ([]any, error) {
 			"destinationAccount":             llx.StringData(destAccount),
 			"destinationStorageClass":        llx.StringData(destStorageClass),
 			"deleteMarkerReplicationEnabled": llx.BoolData(deleteMarkerEnabled),
-			"prefix":                         llx.StringData(prefix),
 		}
 
 		mqlRule, err := CreateResource(a.MqlRuntime, "aws.s3.bucket.replicationRule", args)
@@ -1229,17 +1222,6 @@ func (a *mqlAwsS3Bucket) replicationRules() ([]any, error) {
 		res = append(res, mqlRule)
 	}
 	return res, nil
-}
-
-func (a *mqlAwsS3Bucket) encryption() (any, error) {
-	config, err := a.fetchEncryptionConfig()
-	if err != nil {
-		return nil, err
-	}
-	if config == nil {
-		return nil, nil
-	}
-	return convert.JsonToDict(config)
 }
 
 func (a *mqlAwsS3BucketEncryptionRule) id() (string, error) {
@@ -1456,22 +1438,6 @@ func (a *mqlAwsS3Bucket) objectLockEnabled() (bool, error) {
 	return config.ObjectLockEnabled == "Enabled", nil
 }
 
-func (a *mqlAwsS3Bucket) staticWebsiteHosting() (map[string]any, error) {
-	website := a.GetWebsite()
-	if website.Error != nil {
-		return nil, website.Error
-	}
-	if website.State != plugin.StateIsSet || website.Data == nil {
-		a.StaticWebsiteHosting.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
-	}
-
-	return map[string]any{
-		"ErrorDocument": website.Data.GetErrorDocument().Data,
-		"IndexDocument": website.Data.GetIndexDocument().Data,
-	}, nil
-}
-
 func (a *mqlAwsS3Bucket) website() (*mqlAwsS3BucketWebsiteConfiguration, error) {
 	// Placeholder buckets (e.g., cross-account references) can't be queried
 	region, ok, err := a.bucketRegion()
@@ -1612,14 +1578,6 @@ func (a *mqlAwsS3BucketPolicy) version() (string, error) {
 	return policy.Version, nil
 }
 
-func (a *mqlAwsS3BucketPolicy) statements() ([]any, error) {
-	policy, err := a.parsePolicyDocument()
-	if err != nil {
-		return nil, err
-	}
-	return convert.JsonToDictSlice(policy.Statements)
-}
-
 func (a *mqlAwsS3Bucket) fetchLifecycleConfig() ([]s3types.LifecycleRule, error) {
 	a.lifecycleOnce.Do(func() {
 		region, ok, err := a.bucketRegion()
@@ -1677,11 +1635,6 @@ func (a *mqlAwsS3Bucket) lifecycleRules() ([]any, error) {
 			resourceId = fmt.Sprintf("%s/lifecycle/%s", bucketArn, ruleId)
 		}
 
-		prefix := ""
-		if rule.Prefix != nil {
-			prefix = *rule.Prefix
-		}
-
 		filterDict, err := convert.JsonToDict(rule.Filter)
 		if err != nil {
 			return nil, err
@@ -1723,7 +1676,6 @@ func (a *mqlAwsS3Bucket) lifecycleRules() ([]any, error) {
 				"resourceId":                         llx.StringData(resourceId),
 				"id":                                 llx.StringData(ruleId),
 				"status":                             llx.StringData(string(rule.Status)),
-				"prefix":                             llx.StringData(prefix),
 				"filter":                             llx.DictData(filterDict),
 				"transitions":                        llx.ArrayData(transitions, types.Dict),
 				"expiration":                         llx.DictData(expirationDict),

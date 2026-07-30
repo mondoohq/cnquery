@@ -114,16 +114,9 @@ func (a *mqlAwsNetworkfirewall) getFirewalls(conn *connection.AwsConnection) []*
 				}
 				var encryptionType string
 				var kmsKeyId *string
-				var encryptionDict any
 				if f.EncryptionConfiguration != nil {
 					encryptionType = string(f.EncryptionConfiguration.Type)
 					kmsKeyId = f.EncryptionConfiguration.KeyId
-					// Populate the deprecated encryptionConfiguration dict so existing
-					// queries continue to resolve. New code should use the typed
-					// encryptionType and kmsKey fields.
-					if d, derr := convert.JsonToDict(f.EncryptionConfiguration); derr == nil {
-						encryptionDict = d
-					}
 				}
 				tags := nfTagsToMap(f.Tags)
 
@@ -157,7 +150,6 @@ func (a *mqlAwsNetworkfirewall) getFirewalls(conn *connection.AwsConnection) []*
 						"firewallPolicyArn":              llx.StringDataPtr(f.FirewallPolicyArn),
 						"subnetMappings":                 llx.ArrayData(subnetMappings, "dict"),
 						"encryptionType":                 llx.StringData(encryptionType),
-						"encryptionConfiguration":        llx.DictData(encryptionDict),
 						"noSourcePreservation":           llx.BoolData(f.NoSourcePreservation),
 						"proxyListeners":                 llx.ArrayData(proxyListeners, "dict"),
 						"tags":                           llx.MapData(tags, "string"),
