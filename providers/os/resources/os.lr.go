@@ -132,6 +132,8 @@ const (
 	ResourceMariadbConf                                   string = "mariadb.conf"
 	ResourceMariadbConfSection                            string = "mariadb.conf.section"
 	ResourceMariadbConfUserOptionFile                     string = "mariadb.conf.userOptionFile"
+	ResourceMongodb                                       string = "mongodb"
+	ResourceMongodbConf                                   string = "mongodb.conf"
 	ResourceJournaldConfig                                string = "journald.config"
 	ResourceJournaldConfigSection                         string = "journald.config.section"
 	ResourceJournaldConfigSectionParam                    string = "journald.config.section.param"
@@ -982,6 +984,14 @@ func init() {
 		"mariadb.conf.userOptionFile": {
 			// to override args, implement: initMariadbConfUserOptionFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMariadbConfUserOptionFile,
+		},
+		"mongodb": {
+			// to override args, implement: initMongodb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMongodb,
+		},
+		"mongodb.conf": {
+			Init:   initMongodbConf,
+			Create: createMongodbConf,
 		},
 		"journald.config": {
 			Init:   initJournaldConfig,
@@ -5268,6 +5278,186 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"mariadb.conf.userOptionFile.sections": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMariadbConfUserOptionFile).GetSections()).ToDataRes(types.Array(types.Resource("mariadb.conf.section")))
+	},
+	"mongodb.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodb).GetVersion()).ToDataRes(types.String)
+	},
+	"mongodb.conf.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"mongodb.conf.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetParams()).ToDataRes(types.Dict)
+	},
+	"mongodb.conf.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetPort()).ToDataRes(types.Int)
+	},
+	"mongodb.conf.bindIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetBindIp()).ToDataRes(types.Array(types.String))
+	},
+	"mongodb.conf.bindIpAll": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetBindIpAll()).ToDataRes(types.Bool)
+	},
+	"mongodb.conf.ipv6": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetIpv6()).ToDataRes(types.Bool)
+	},
+	"mongodb.conf.maxIncomingConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetMaxIncomingConnections()).ToDataRes(types.Int)
+	},
+	"mongodb.conf.unixDomainSocketEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetUnixDomainSocketEnabled()).ToDataRes(types.Bool)
+	},
+	"mongodb.conf.unixDomainSocketPathPrefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetUnixDomainSocketPathPrefix()).ToDataRes(types.String)
+	},
+	"mongodb.conf.unixDomainSocketFilePermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetUnixDomainSocketFilePermissions()).ToDataRes(types.String)
+	},
+	"mongodb.conf.tlsMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetTlsMode()).ToDataRes(types.String)
+	},
+	"mongodb.conf.tlsCertificateKeyFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetTlsCertificateKeyFile()).ToDataRes(types.String)
+	},
+	"mongodb.conf.tlsCaFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetTlsCaFile()).ToDataRes(types.String)
+	},
+	"mongodb.conf.tlsClusterFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetTlsClusterFile()).ToDataRes(types.String)
+	},
+	"mongodb.conf.tlsClusterCaFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetTlsClusterCaFile()).ToDataRes(types.String)
+	},
+	"mongodb.conf.tlsCrlFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetTlsCrlFile()).ToDataRes(types.String)
+	},
+	"mongodb.conf.tlsAllowConnectionsWithoutCertificates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetTlsAllowConnectionsWithoutCertificates()).ToDataRes(types.Bool)
+	},
+	"mongodb.conf.tlsAllowInvalidCertificates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetTlsAllowInvalidCertificates()).ToDataRes(types.Bool)
+	},
+	"mongodb.conf.tlsAllowInvalidHostnames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetTlsAllowInvalidHostnames()).ToDataRes(types.Bool)
+	},
+	"mongodb.conf.tlsDisabledProtocols": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetTlsDisabledProtocols()).ToDataRes(types.Array(types.String))
+	},
+	"mongodb.conf.tlsFipsMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetTlsFipsMode()).ToDataRes(types.Bool)
+	},
+	"mongodb.conf.certificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetCertificate()).ToDataRes(types.Array(types.Resource("certificate")))
+	},
+	"mongodb.conf.authorization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetAuthorization()).ToDataRes(types.String)
+	},
+	"mongodb.conf.keyFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetKeyFile()).ToDataRes(types.String)
+	},
+	"mongodb.conf.clusterAuthMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetClusterAuthMode()).ToDataRes(types.String)
+	},
+	"mongodb.conf.javascriptEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetJavascriptEnabled()).ToDataRes(types.Bool)
+	},
+	"mongodb.conf.redactClientLogData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetRedactClientLogData()).ToDataRes(types.Bool)
+	},
+	"mongodb.conf.enableEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetEnableEncryption()).ToDataRes(types.Bool)
+	},
+	"mongodb.conf.encryptionKeyFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetEncryptionKeyFile()).ToDataRes(types.String)
+	},
+	"mongodb.conf.encryptionCipherMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetEncryptionCipherMode()).ToDataRes(types.String)
+	},
+	"mongodb.conf.ldapServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetLdapServers()).ToDataRes(types.Array(types.String))
+	},
+	"mongodb.conf.ldapTransportSecurity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetLdapTransportSecurity()).ToDataRes(types.String)
+	},
+	"mongodb.conf.setParameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetSetParameters()).ToDataRes(types.Dict)
+	},
+	"mongodb.conf.enableLocalhostAuthBypass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetEnableLocalhostAuthBypass()).ToDataRes(types.Bool)
+	},
+	"mongodb.conf.authenticationMechanisms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetAuthenticationMechanisms()).ToDataRes(types.Array(types.String))
+	},
+	"mongodb.conf.scramIterationCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetScramIterationCount()).ToDataRes(types.Int)
+	},
+	"mongodb.conf.opensslCipherConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetOpensslCipherConfig()).ToDataRes(types.String)
+	},
+	"mongodb.conf.auditAuthorizationSuccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetAuditAuthorizationSuccess()).ToDataRes(types.Bool)
+	},
+	"mongodb.conf.auditLogDestination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetAuditLogDestination()).ToDataRes(types.String)
+	},
+	"mongodb.conf.auditLogFormat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetAuditLogFormat()).ToDataRes(types.String)
+	},
+	"mongodb.conf.auditLogPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetAuditLogPath()).ToDataRes(types.String)
+	},
+	"mongodb.conf.auditLogFilter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetAuditLogFilter()).ToDataRes(types.String)
+	},
+	"mongodb.conf.logDestination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetLogDestination()).ToDataRes(types.String)
+	},
+	"mongodb.conf.logPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetLogPath()).ToDataRes(types.String)
+	},
+	"mongodb.conf.logAppend": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetLogAppend()).ToDataRes(types.Bool)
+	},
+	"mongodb.conf.logRotate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetLogRotate()).ToDataRes(types.String)
+	},
+	"mongodb.conf.logVerbosity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetLogVerbosity()).ToDataRes(types.Int)
+	},
+	"mongodb.conf.quiet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetQuiet()).ToDataRes(types.Bool)
+	},
+	"mongodb.conf.dbPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetDbPath()).ToDataRes(types.String)
+	},
+	"mongodb.conf.storageEngine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetStorageEngine()).ToDataRes(types.String)
+	},
+	"mongodb.conf.directoryPerDB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetDirectoryPerDB()).ToDataRes(types.Bool)
+	},
+	"mongodb.conf.fork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetFork()).ToDataRes(types.Bool)
+	},
+	"mongodb.conf.pidFilePath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetPidFilePath()).ToDataRes(types.String)
+	},
+	"mongodb.conf.replSetName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetReplSetName()).ToDataRes(types.String)
+	},
+	"mongodb.conf.oplogSizeMB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetOplogSizeMB()).ToDataRes(types.Int)
+	},
+	"mongodb.conf.enableMajorityReadConcern": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetEnableMajorityReadConcern()).ToDataRes(types.Bool)
+	},
+	"mongodb.conf.clusterRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetClusterRole()).ToDataRes(types.String)
+	},
+	"mongodb.conf.profilingMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetProfilingMode()).ToDataRes(types.String)
+	},
+	"mongodb.conf.slowOpThresholdMs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbConf).GetSlowOpThresholdMs()).ToDataRes(types.Int)
 	},
 	"journald.config.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJournaldConfig).GetFile()).ToDataRes(types.Resource("file"))
@@ -16603,6 +16793,254 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mariadb.conf.userOptionFile.sections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMariadbConfUserOptionFile).Sections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mongodb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodb).__id, ok = v.Value.(string)
+		return
+	},
+	"mongodb.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodb).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).__id, ok = v.Value.(string)
+		return
+	},
+	"mongodb.conf.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).Params, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.bindIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).BindIp, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.bindIpAll": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).BindIpAll, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.ipv6": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).Ipv6, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.maxIncomingConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).MaxIncomingConnections, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.unixDomainSocketEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).UnixDomainSocketEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.unixDomainSocketPathPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).UnixDomainSocketPathPrefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.unixDomainSocketFilePermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).UnixDomainSocketFilePermissions, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.tlsMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).TlsMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.tlsCertificateKeyFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).TlsCertificateKeyFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.tlsCaFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).TlsCaFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.tlsClusterFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).TlsClusterFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.tlsClusterCaFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).TlsClusterCaFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.tlsCrlFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).TlsCrlFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.tlsAllowConnectionsWithoutCertificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).TlsAllowConnectionsWithoutCertificates, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.tlsAllowInvalidCertificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).TlsAllowInvalidCertificates, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.tlsAllowInvalidHostnames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).TlsAllowInvalidHostnames, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.tlsDisabledProtocols": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).TlsDisabledProtocols, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.tlsFipsMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).TlsFipsMode, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.certificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).Certificate, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.authorization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).Authorization, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.keyFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).KeyFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.clusterAuthMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).ClusterAuthMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.javascriptEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).JavascriptEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.redactClientLogData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).RedactClientLogData, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.enableEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).EnableEncryption, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.encryptionKeyFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).EncryptionKeyFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.encryptionCipherMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).EncryptionCipherMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.ldapServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).LdapServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.ldapTransportSecurity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).LdapTransportSecurity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.setParameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).SetParameters, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.enableLocalhostAuthBypass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).EnableLocalhostAuthBypass, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.authenticationMechanisms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).AuthenticationMechanisms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.scramIterationCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).ScramIterationCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.opensslCipherConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).OpensslCipherConfig, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.auditAuthorizationSuccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).AuditAuthorizationSuccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.auditLogDestination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).AuditLogDestination, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.auditLogFormat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).AuditLogFormat, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.auditLogPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).AuditLogPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.auditLogFilter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).AuditLogFilter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.logDestination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).LogDestination, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.logPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).LogPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.logAppend": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).LogAppend, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.logRotate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).LogRotate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.logVerbosity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).LogVerbosity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.quiet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).Quiet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.dbPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).DbPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.storageEngine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).StorageEngine, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.directoryPerDB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).DirectoryPerDB, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.fork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).Fork, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.pidFilePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).PidFilePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.replSetName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).ReplSetName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.oplogSizeMB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).OplogSizeMB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.enableMajorityReadConcern": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).EnableMajorityReadConcern, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.clusterRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).ClusterRole, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.profilingMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).ProfilingMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodb.conf.slowOpThresholdMs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbConf).SlowOpThresholdMs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"journald.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -40599,6 +41037,819 @@ func (c *mqlMariadbConfUserOptionFile) GetSections() *plugin.TValue[[]any] {
 		}
 
 		return c.sections()
+	})
+}
+
+// mqlMongodb for the mongodb resource
+type mqlMongodb struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMongodbInternal it will be used here
+	Version plugin.TValue[string]
+}
+
+// createMongodb creates a new instance of this resource
+func createMongodb(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMongodb{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mongodb", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMongodb) MqlName() string {
+	return "mongodb"
+}
+
+func (c *mqlMongodb) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMongodb) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+// mqlMongodbConf for the mongodb.conf resource
+type mqlMongodbConf struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMongodbConfInternal it will be used here
+	File                                   plugin.TValue[*mqlFile]
+	Params                                 plugin.TValue[any]
+	Port                                   plugin.TValue[int64]
+	BindIp                                 plugin.TValue[[]any]
+	BindIpAll                              plugin.TValue[bool]
+	Ipv6                                   plugin.TValue[bool]
+	MaxIncomingConnections                 plugin.TValue[int64]
+	UnixDomainSocketEnabled                plugin.TValue[bool]
+	UnixDomainSocketPathPrefix             plugin.TValue[string]
+	UnixDomainSocketFilePermissions        plugin.TValue[string]
+	TlsMode                                plugin.TValue[string]
+	TlsCertificateKeyFile                  plugin.TValue[string]
+	TlsCaFile                              plugin.TValue[string]
+	TlsClusterFile                         plugin.TValue[string]
+	TlsClusterCaFile                       plugin.TValue[string]
+	TlsCrlFile                             plugin.TValue[string]
+	TlsAllowConnectionsWithoutCertificates plugin.TValue[bool]
+	TlsAllowInvalidCertificates            plugin.TValue[bool]
+	TlsAllowInvalidHostnames               plugin.TValue[bool]
+	TlsDisabledProtocols                   plugin.TValue[[]any]
+	TlsFipsMode                            plugin.TValue[bool]
+	Certificate                            plugin.TValue[[]any]
+	Authorization                          plugin.TValue[string]
+	KeyFile                                plugin.TValue[string]
+	ClusterAuthMode                        plugin.TValue[string]
+	JavascriptEnabled                      plugin.TValue[bool]
+	RedactClientLogData                    plugin.TValue[bool]
+	EnableEncryption                       plugin.TValue[bool]
+	EncryptionKeyFile                      plugin.TValue[string]
+	EncryptionCipherMode                   plugin.TValue[string]
+	LdapServers                            plugin.TValue[[]any]
+	LdapTransportSecurity                  plugin.TValue[string]
+	SetParameters                          plugin.TValue[any]
+	EnableLocalhostAuthBypass              plugin.TValue[bool]
+	AuthenticationMechanisms               plugin.TValue[[]any]
+	ScramIterationCount                    plugin.TValue[int64]
+	OpensslCipherConfig                    plugin.TValue[string]
+	AuditAuthorizationSuccess              plugin.TValue[bool]
+	AuditLogDestination                    plugin.TValue[string]
+	AuditLogFormat                         plugin.TValue[string]
+	AuditLogPath                           plugin.TValue[string]
+	AuditLogFilter                         plugin.TValue[string]
+	LogDestination                         plugin.TValue[string]
+	LogPath                                plugin.TValue[string]
+	LogAppend                              plugin.TValue[bool]
+	LogRotate                              plugin.TValue[string]
+	LogVerbosity                           plugin.TValue[int64]
+	Quiet                                  plugin.TValue[bool]
+	DbPath                                 plugin.TValue[string]
+	StorageEngine                          plugin.TValue[string]
+	DirectoryPerDB                         plugin.TValue[bool]
+	Fork                                   plugin.TValue[bool]
+	PidFilePath                            plugin.TValue[string]
+	ReplSetName                            plugin.TValue[string]
+	OplogSizeMB                            plugin.TValue[int64]
+	EnableMajorityReadConcern              plugin.TValue[bool]
+	ClusterRole                            plugin.TValue[string]
+	ProfilingMode                          plugin.TValue[string]
+	SlowOpThresholdMs                      plugin.TValue[int64]
+}
+
+// createMongodbConf creates a new instance of this resource
+func createMongodbConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMongodbConf{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mongodb.conf", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMongodbConf) MqlName() string {
+	return "mongodb.conf"
+}
+
+func (c *mqlMongodbConf) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMongodbConf) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mongodb.conf", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlMongodbConf) GetParams() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Params, func() (any, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.params(vargFile.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetPort() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Port, func() (int64, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return 0, vargParams.Error
+		}
+
+		return c.port(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetBindIp() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BindIp, func() ([]any, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.bindIp(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetBindIpAll() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.BindIpAll, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.bindIpAll(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetIpv6() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Ipv6, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.ipv6(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetMaxIncomingConnections() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MaxIncomingConnections, func() (int64, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return 0, vargParams.Error
+		}
+
+		return c.maxIncomingConnections(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetUnixDomainSocketEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UnixDomainSocketEnabled, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.unixDomainSocketEnabled(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetUnixDomainSocketPathPrefix() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.UnixDomainSocketPathPrefix, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.unixDomainSocketPathPrefix(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetUnixDomainSocketFilePermissions() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.UnixDomainSocketFilePermissions, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.unixDomainSocketFilePermissions(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetTlsMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TlsMode, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.tlsMode(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetTlsCertificateKeyFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TlsCertificateKeyFile, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.tlsCertificateKeyFile(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetTlsCaFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TlsCaFile, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.tlsCaFile(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetTlsClusterFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TlsClusterFile, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.tlsClusterFile(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetTlsClusterCaFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TlsClusterCaFile, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.tlsClusterCaFile(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetTlsCrlFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TlsCrlFile, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.tlsCrlFile(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetTlsAllowConnectionsWithoutCertificates() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TlsAllowConnectionsWithoutCertificates, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.tlsAllowConnectionsWithoutCertificates(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetTlsAllowInvalidCertificates() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TlsAllowInvalidCertificates, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.tlsAllowInvalidCertificates(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetTlsAllowInvalidHostnames() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TlsAllowInvalidHostnames, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.tlsAllowInvalidHostnames(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetTlsDisabledProtocols() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TlsDisabledProtocols, func() ([]any, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.tlsDisabledProtocols(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetTlsFipsMode() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TlsFipsMode, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.tlsFipsMode(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetCertificate() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Certificate, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mongodb.conf", c.__id, "certificate")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.certificate()
+	})
+}
+
+func (c *mqlMongodbConf) GetAuthorization() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Authorization, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.authorization(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetKeyFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.KeyFile, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.keyFile(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetClusterAuthMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ClusterAuthMode, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.clusterAuthMode(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetJavascriptEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.JavascriptEnabled, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.javascriptEnabled(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetRedactClientLogData() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RedactClientLogData, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.redactClientLogData(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetEnableEncryption() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EnableEncryption, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.enableEncryption(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetEncryptionKeyFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EncryptionKeyFile, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.encryptionKeyFile(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetEncryptionCipherMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EncryptionCipherMode, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.encryptionCipherMode(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetLdapServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LdapServers, func() ([]any, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.ldapServers(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetLdapTransportSecurity() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LdapTransportSecurity, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.ldapTransportSecurity(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetSetParameters() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.SetParameters, func() (any, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.setParameters(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetEnableLocalhostAuthBypass() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EnableLocalhostAuthBypass, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.enableLocalhostAuthBypass(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetAuthenticationMechanisms() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AuthenticationMechanisms, func() ([]any, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.authenticationMechanisms(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetScramIterationCount() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ScramIterationCount, func() (int64, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return 0, vargParams.Error
+		}
+
+		return c.scramIterationCount(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetOpensslCipherConfig() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.OpensslCipherConfig, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.opensslCipherConfig(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetAuditAuthorizationSuccess() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AuditAuthorizationSuccess, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.auditAuthorizationSuccess(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetAuditLogDestination() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AuditLogDestination, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.auditLogDestination(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetAuditLogFormat() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AuditLogFormat, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.auditLogFormat(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetAuditLogPath() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AuditLogPath, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.auditLogPath(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetAuditLogFilter() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AuditLogFilter, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.auditLogFilter(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetLogDestination() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LogDestination, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.logDestination(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetLogPath() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LogPath, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.logPath(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetLogAppend() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LogAppend, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.logAppend(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetLogRotate() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LogRotate, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.logRotate(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetLogVerbosity() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.LogVerbosity, func() (int64, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return 0, vargParams.Error
+		}
+
+		return c.logVerbosity(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetQuiet() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Quiet, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.quiet(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetDbPath() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DbPath, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.dbPath(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetStorageEngine() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.StorageEngine, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.storageEngine(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetDirectoryPerDB() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DirectoryPerDB, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.directoryPerDB(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetFork() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Fork, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.fork(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetPidFilePath() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PidFilePath, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.pidFilePath(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetReplSetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ReplSetName, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.replSetName(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetOplogSizeMB() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.OplogSizeMB, func() (int64, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return 0, vargParams.Error
+		}
+
+		return c.oplogSizeMB(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetEnableMajorityReadConcern() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EnableMajorityReadConcern, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.enableMajorityReadConcern(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetClusterRole() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ClusterRole, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.clusterRole(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetProfilingMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ProfilingMode, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.profilingMode(vargParams.Data)
+	})
+}
+
+func (c *mqlMongodbConf) GetSlowOpThresholdMs() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.SlowOpThresholdMs, func() (int64, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return 0, vargParams.Error
+		}
+
+		return c.slowOpThresholdMs(vargParams.Data)
 	})
 }
 
