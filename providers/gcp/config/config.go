@@ -37,6 +37,13 @@ Note:
 Examples with the GCP project configured:
   cnspec scan gcp folder <FOLDER-ID>
   cnspec shell gcp project
+
+Examples for a single Compute Engine instance or snapshot:
+  cnspec scan gcp instance <INSTANCE-NAME> --project-id <PROJECT-ID> --zone <ZONE>
+  cnspec scan gcp snapshot <SNAPSHOT-NAME> --project-id <PROJECT-ID>
+
+Example for Google Container Registry:
+  cnspec scan gcp gcr <PROJECT-ID>
 `,
 			MaxArgs: 2,
 			Discovery: []string{

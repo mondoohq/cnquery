@@ -32,6 +32,12 @@ Authentication options (in priority order):
 
 Application credentials are also supported via --application-credential-id
 and --application-credential-secret.
+
+Examples:
+  cnspec shell openstack --cloud <CLOUDS-YAML-ENTRY>
+  cnspec scan openstack --auth-url <KEYSTONE-URL> --username <USERNAME> --password <PASSWORD> --project-name <PROJECT-NAME>
+  cnspec scan openstack --auth-url <KEYSTONE-URL> --application-credential-id <ID> --application-credential-secret <SECRET>
+  cnspec scan openstack --cloud <CLOUDS-YAML-ENTRY> --discover security-groups
 `,
 			MinArgs: 0,
 			MaxArgs: 0,
