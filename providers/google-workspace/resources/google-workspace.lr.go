@@ -863,6 +863,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"googleworkspace.report.activity.events": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceReportActivity).GetEvents()).ToDataRes(types.Array(types.Dict))
 	},
+	"googleworkspace.report.activity.isAgenticAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceReportActivity).GetIsAgenticAction()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.report.activity.deviceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceReportActivity).GetDeviceId()).ToDataRes(types.String)
+	},
+	"googleworkspace.report.activity.deviceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceReportActivity).GetDeviceType()).ToDataRes(types.String)
+	},
+	"googleworkspace.report.activity.deviceOsVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceReportActivity).GetDeviceOsVersion()).ToDataRes(types.String)
+	},
 	"googleworkspace.report.users.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceReportUsers).GetList()).ToDataRes(types.Array(types.Resource("googleworkspace.report.usage")))
 	},
@@ -2182,6 +2194,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"googleworkspace.report.activity.events": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoogleworkspaceReportActivity).Events, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.report.activity.isAgenticAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceReportActivity).IsAgenticAction, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.report.activity.deviceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceReportActivity).DeviceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.report.activity.deviceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceReportActivity).DeviceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.report.activity.deviceOsVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceReportActivity).DeviceOsVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.report.users.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5054,11 +5082,15 @@ type mqlGoogleworkspaceReportActivity struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGoogleworkspaceReportActivityInternal it will be used here
-	Id          plugin.TValue[int64]
-	IpAddress   plugin.TValue[string]
-	OwnerDomain plugin.TValue[string]
-	Actor       plugin.TValue[any]
-	Events      plugin.TValue[[]any]
+	Id              plugin.TValue[int64]
+	IpAddress       plugin.TValue[string]
+	OwnerDomain     plugin.TValue[string]
+	Actor           plugin.TValue[any]
+	Events          plugin.TValue[[]any]
+	IsAgenticAction plugin.TValue[bool]
+	DeviceId        plugin.TValue[string]
+	DeviceType      plugin.TValue[string]
+	DeviceOsVersion plugin.TValue[string]
 }
 
 // createGoogleworkspaceReportActivity creates a new instance of this resource
@@ -5116,6 +5148,22 @@ func (c *mqlGoogleworkspaceReportActivity) GetActor() *plugin.TValue[any] {
 
 func (c *mqlGoogleworkspaceReportActivity) GetEvents() *plugin.TValue[[]any] {
 	return &c.Events
+}
+
+func (c *mqlGoogleworkspaceReportActivity) GetIsAgenticAction() *plugin.TValue[bool] {
+	return &c.IsAgenticAction
+}
+
+func (c *mqlGoogleworkspaceReportActivity) GetDeviceId() *plugin.TValue[string] {
+	return &c.DeviceId
+}
+
+func (c *mqlGoogleworkspaceReportActivity) GetDeviceType() *plugin.TValue[string] {
+	return &c.DeviceType
+}
+
+func (c *mqlGoogleworkspaceReportActivity) GetDeviceOsVersion() *plugin.TValue[string] {
+	return &c.DeviceOsVersion
 }
 
 // mqlGoogleworkspaceReportUsers for the googleworkspace.report.users resource
