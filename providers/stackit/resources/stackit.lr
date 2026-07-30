@@ -879,8 +879,9 @@ stackit.ske {
 // the project and region). Exposes the `status` (aggregated lifecycle),
 // the Kubernetes version, the node pools (with their flavor, OS, taints,
 // autoscaling, labels), the hibernation and maintenance windows, network
-// and DNS overrides, extensions (ACL, observability), whether API server
-// audit logging is enabled, and the creation and update timestamps.
+// and DNS overrides, extensions (ACL, observability, application load
+// balancer), whether API server audit logging is enabled, the cluster-level
+// `labels`, and the creation and update timestamps.
 private stackit.ske.cluster @defaults("name kubernetesVersion status") {
   init(name? string)
   // Cluster name
@@ -899,14 +900,22 @@ private stackit.ske.cluster @defaults("name kubernetesVersion status") {
   hibernations []dict
   // Maintenance window {timeWindow, autoUpdate: {kubernetesVersion, machineImageVersion}}
   maintenance dict
-  // Extension add-ons keyed by acl, observability, and dns
+  // Extension add-ons keyed by acl, observability, dns, and applicationLoadBalancer
   //
   // Dict of the cluster's enabled add-ons. The `acl` key holds the
   // kube-apiserver access ACL (enabled, allowedCidrs); `observability`
   // holds the metrics and logs integration (enabled, instanceId); `dns`
-  // holds the managed-DNS extension (enabled, gatewayApi, zones).
+  // holds the managed-DNS extension (enabled, gatewayApi, zones);
+  // `applicationLoadBalancer` holds the application load balancer extension
+  // (enabled). See `apiServerAclEnabled`, `observabilityEnabled`, `dnsEnabled`,
+  // and `applicationLoadBalancerEnabled` for the hoisted flags.
   extensions dict
-  // Network association: the STACKIT network id and control-plane access scope
+  // Network association: the STACKIT network id, control-plane access scope, and CNI configuration
+  //
+  // Holds `id` (the STACKIT network the cluster is attached to, resolved by
+  // `networkRef`) and `cni`, the container network interface configuration.
+  // The `cni` object carries a `calico` key whose contents are the
+  // provider-defined Calico options and are not a fixed set.
   network dict
   // Creation timestamp
   creationTime time
@@ -944,6 +953,17 @@ private stackit.ske.cluster @defaults("name kubernetesVersion status") {
   dnsGatewayApi bool
   // DNS zones managed by the DNS extension
   dnsZones []string
+  // Whether the application load balancer extension is enabled
+  //
+  // STACKIT gates this extension to accounts explicitly enabled for it and
+  // may still change its shape, so treat the field as provisional.
+  applicationLoadBalancerEnabled @maturity("preview") bool
+  // Labels applied to the cluster
+  //
+  // Key-value pairs set on the cluster itself, distinct from the labels on
+  // each node pool. Keys may carry a domain prefix separated by a slash and
+  // values may be empty.
+  labels map[string]string
   // STACKIT network the cluster is attached to
   networkRef() stackit.network
 }

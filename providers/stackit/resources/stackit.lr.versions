@@ -635,6 +635,7 @@ stackit.ske 13.0.0
 stackit.ske.cluster 13.0.0
 stackit.ske.cluster.apiServerAclAllowedCidrs 13.1.1
 stackit.ske.cluster.apiServerAclEnabled 13.1.1
+stackit.ske.cluster.applicationLoadBalancerEnabled 13.4.4
 stackit.ske.cluster.auditEnabled 13.4.2
 stackit.ske.cluster.creationTime 13.0.0
 stackit.ske.cluster.credentialsRotationLastCompleted 13.1.1
@@ -649,6 +650,7 @@ stackit.ske.cluster.hibernations 13.0.0
 stackit.ske.cluster.idpEnabled 13.1.1
 stackit.ske.cluster.idpType 13.1.1
 stackit.ske.cluster.kubernetesVersion 13.0.0
+stackit.ske.cluster.labels 13.4.4
 stackit.ske.cluster.maintenance 13.0.0
 stackit.ske.cluster.name 13.0.0
 stackit.ske.cluster.network 13.0.0

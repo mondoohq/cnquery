@@ -89,7 +89,7 @@ func buildSkeCluster(runtime *plugin.Runtime, cluster *ske.Cluster) (plugin.Reso
 		hibernations = anySliceToDict(h.GetSchedules())
 	}
 
-	var aclEnabled, obsEnabled, dnsEnabled, dnsGatewayApi bool
+	var aclEnabled, obsEnabled, dnsEnabled, dnsGatewayApi, albEnabled bool
 	var obsInstanceId string
 	allowedCidrs := []string{}
 	dnsZones := []string{}
@@ -110,6 +110,9 @@ func buildSkeCluster(runtime *plugin.Runtime, cluster *ske.Cluster) (plugin.Reso
 			if z, ok := dns.GetZonesOk(); ok {
 				dnsZones = z
 			}
+		}
+		if alb, ok := ext.GetApplicationLoadBalancerOk(); ok {
+			albEnabled = alb.GetEnabled()
 		}
 	}
 
@@ -157,6 +160,8 @@ func buildSkeCluster(runtime *plugin.Runtime, cluster *ske.Cluster) (plugin.Reso
 		"dnsEnabled":                       llx.BoolData(dnsEnabled),
 		"dnsGatewayApi":                    llx.BoolData(dnsGatewayApi),
 		"dnsZones":                         strSliceData(dnsZones),
+		"applicationLoadBalancerEnabled":   llx.BoolData(albEnabled),
+		"labels":                           stringMapData(cluster.GetLabels()),
 	}
 	res, err := CreateResource(runtime, "stackit.ske.cluster", args)
 	if err != nil {
