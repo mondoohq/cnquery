@@ -1279,6 +1279,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.users.search": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUsers).GetSearch()).ToDataRes(types.String)
 	},
+	"microsoft.users.count": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUsers).GetCount()).ToDataRes(types.Int)
+	},
 	"microsoft.users.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUsers).GetList()).ToDataRes(types.Array(types.Resource("microsoft.user")))
 	},
@@ -6227,6 +6230,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.users.search": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftUsers).Search, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.users.count": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUsers).Count, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"microsoft.users.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14215,6 +14222,7 @@ type mqlMicrosoftUsers struct {
 	// optional: if you define mqlMicrosoftUsersInternal it will be used here
 	Filter plugin.TValue[string]
 	Search plugin.TValue[string]
+	Count  plugin.TValue[int64]
 	List   plugin.TValue[[]any]
 }
 
@@ -14256,6 +14264,12 @@ func (c *mqlMicrosoftUsers) GetFilter() *plugin.TValue[string] {
 
 func (c *mqlMicrosoftUsers) GetSearch() *plugin.TValue[string] {
 	return &c.Search
+}
+
+func (c *mqlMicrosoftUsers) GetCount() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Count, func() (int64, error) {
+		return c.count()
+	})
 }
 
 func (c *mqlMicrosoftUsers) GetList() *plugin.TValue[[]any] {

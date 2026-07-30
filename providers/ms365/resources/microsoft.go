@@ -147,9 +147,9 @@ func (a *mqlMicrosoft) indexedUserIDs() []string {
 }
 
 // loadMfaResp lazily fetches user MFA registration details from the beta
-// Graph API and caches the result on a.mfaResp. Both microsoft.users.list
-// (eager batch) and microsoft.user.mfaEnabled (per-user lookup) call this
-// so the data is available regardless of which path was queried first.
+// Graph API and caches the result on a.mfaResp. It's called on demand by
+// microsoft.user.mfaEnabled; the sync.Once ensures the whole-tenant fetch
+// runs only once no matter how many users' mfaEnabled is accessed.
 func (a *mqlMicrosoft) loadMfaResp() *mfaResp {
 	a.mfaOnce.Do(func() {
 		conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)

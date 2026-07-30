@@ -1275,6 +1275,7 @@ microsoft.user.usageLocation 11.2.1
 microsoft.user.userPrincipalName 9.0.0
 microsoft.user.userType 9.0.0
 microsoft.users 11.1.15
+microsoft.users.count 13.10.1
 microsoft.users.filter 11.1.15
 microsoft.users.list 11.1.15
 microsoft.users.search 11.1.15
