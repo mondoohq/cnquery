@@ -54,7 +54,15 @@ func (a *mqlAwsAcm) getCertificates(conn *connection.AwsConnection) []*jobpool.J
 			ctx := context.Background()
 			res := []any{}
 
-			params := &acm.ListCertificatesInput{}
+			// Without an explicit KeyTypes filter ACM applies its default, which
+			// "returns only RSA_1024 and RSA_2048 certificates that have at least
+			// one domain" -- silently hiding every EC_* and RSA_3072/4096
+			// certificate. That drops the modern, AWS-recommended key types while
+			// leaving the weak ones visible, so the resource looks populated and
+			// an expiry or weak-key audit passes over an incomplete set.
+			params := &acm.ListCertificatesInput{
+				Includes: &acmtypes.Filters{KeyTypes: acmtypes.KeyAlgorithm("").Values()},
+			}
 			paginator := acm.NewListCertificatesPaginator(svc, params)
 			for paginator.HasMorePages() {
 				certs, err := paginator.NextPage(ctx)

@@ -938,6 +938,8 @@ func (a *mqlAwsSagemakerModel) buildContainer(c sagemakerTypes.ContainerDefiniti
 	}
 	mqlC, err := CreateResource(a.MqlRuntime, "aws.sagemaker.model.container",
 		map[string]*llx.RawData{
+			"__id": llx.StringData(sagemakerModelContainerID(
+				a.Arn.Data, convert.ToValue(c.ContainerHostname), convert.ToValue(c.Image))),
 			"containerHostname": llx.StringDataPtr(c.ContainerHostname),
 			"image":             llx.StringDataPtr(c.Image),
 			"modelDataUrl":      llx.StringDataPtr(c.ModelDataUrl),
@@ -1003,12 +1005,26 @@ type mqlAwsSagemakerModelContainerInternal struct {
 	cacheMultiModelConfig any
 }
 
-func (a *mqlAwsSagemakerModelContainer) id() (string, error) {
-	hostname := a.ContainerHostname.Data
+// sagemakerModelContainerID builds the parent-qualified cache key for a model
+// container. The model ARN is required: ContainerHostname is "ignored for
+// models that contain only a PrimaryContainer", so it is empty for most models
+// and the key falls back to the image -- which every model sharing a base
+// inference image has in common. Without the ARN prefix those models all
+// collide and each one returns the first model's container.
+func sagemakerModelContainerID(modelArn, containerHostname, image string) string {
+	hostname := containerHostname
 	if hostname == "" {
-		hostname = a.Image.Data
+		hostname = image
 	}
-	return a.cacheModelArn + "/container/" + hostname, nil
+	return modelArn + "/container/" + hostname
+}
+
+func (a *mqlAwsSagemakerModelContainer) id() (string, error) {
+	// cacheModelArn is assigned after CreateResource returns, so it is empty
+	// while the generated constructor runs. buildContainer therefore passes an
+	// explicit "__id" (which wins over this method); this remains only as the
+	// codegen-required fallback.
+	return sagemakerModelContainerID(a.cacheModelArn, a.ContainerHostname.Data, a.Image.Data), nil
 }
 
 func (a *mqlAwsSagemakerModelContainer) imageConfig() (map[string]any, error) {

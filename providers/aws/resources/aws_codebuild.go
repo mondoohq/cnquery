@@ -162,6 +162,14 @@ func newMqlAwsCodebuildProject(runtime *plugin.Runtime, conn *connection.AwsConn
 		return nil, err
 	}
 	args := map[string]*llx.RawData{
+		// Keyed on the ARN, not the project name: CodeBuild project names are
+		// unique per region, so a project deployed to several regions would
+		// otherwise alias -- and because the creator writes cacheVpcId /
+		// cacheSubnetIds / region onto the returned (cached) resource, the first
+		// region's row would then report the second region's network config.
+		// aws.codebuild.project is also a discovery asset type, so the aliased
+		// project never becomes an asset at all.
+		"__id":   llx.StringDataPtr(project.Arn),
 		"name":   llx.StringDataPtr(project.Name),
 		"region": llx.StringData(region),
 	}

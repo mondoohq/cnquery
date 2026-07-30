@@ -125,7 +125,11 @@ func (a *mqlAwsRamResourceShare) principals() ([]any, error) {
 			res = append(res, map[string]any{
 				"id":               convert.ToValue(principal.Id),
 				"resourceShareArn": convert.ToValue(principal.ResourceShareArn),
-				"external":         principal.External,
+				// Must be a plain bool: llx's dict encoder accepts only
+				// JSON-native values, so a *bool here failed the whole field with
+				// "unsupported child type: *bool" for every share that has a
+				// principal -- which is every share worth auditing.
+				"external": convert.ToValue(principal.External),
 			})
 		}
 	}

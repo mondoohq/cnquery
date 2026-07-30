@@ -899,7 +899,11 @@ func (a *mqlAwsEksCluster) addons() ([]any, error) {
 		for i := range page.Addons {
 			addon := page.Addons[i]
 			args := map[string]*llx.RawData{
-				"__id":   llx.StringData(fmt.Sprintf("%s/%s/%s", ResourceAwsEksAddon, a.Name.Data, addon)),
+				// region-qualified: cluster names are unique per region, so two
+				// same-named clusters in different regions would otherwise share a
+				// key and cross-contaminate. Every sibling collection in this file
+				// (nodeGroups, accessEntries, fargateProfiles, ...) includes it.
+				"__id":   llx.StringData(fmt.Sprintf("%s/%s/%s/%s", ResourceAwsEksAddon, regionVal, a.Name.Data, addon)),
 				"name":   llx.StringData(addon),
 				"region": llx.StringData(regionVal),
 			}

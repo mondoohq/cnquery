@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	elasticache_types "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/rs/zerolog/log"
@@ -58,7 +59,12 @@ func (a *mqlAwsElasticache) getCacheClusters(conn *connection.AwsConnection) []*
 			ctx := context.Background()
 			res := []any{}
 
-			params := &elasticache.DescribeCacheClustersInput{}
+			// "By default, abbreviated information about the clusters is
+			// returned. You can use the optional ShowCacheNodeInfo flag to
+			// retrieve detailed information about the cache nodes." Without it
+			// CacheNodes is always empty, so aws.elasticache.cluster.cacheNodes
+			// reported [] for every cluster.
+			params := &elasticache.DescribeCacheClustersInput{ShowCacheNodeInfo: aws.Bool(true)}
 			paginator := elasticache.NewDescribeCacheClustersPaginator(svc, params)
 			for paginator.HasMorePages() {
 				clusters, err := paginator.NextPage(ctx)

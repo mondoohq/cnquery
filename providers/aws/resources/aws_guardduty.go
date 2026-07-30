@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -882,16 +883,28 @@ func (a *mqlAwsGuarddutyDetectorMember) id() (string, error) {
 	return a.__id, nil
 }
 
-// parseGuardDutyTimestamp converts a *string epoch timestamp to *time.Time.
-// GuardDuty member timestamps are formatted as epoch second strings.
+// parseGuardDutyTimestamp converts a GuardDuty member timestamp to *time.Time.
+//
+// These arrive as ISO-8601 strings, the same shape the detector path parses
+// with RFC3339. The previous implementation assumed epoch seconds and used
+// fmt.Sscanf(s, "%f", ...), which does not require consuming the whole input:
+// on "2023-01-19T20:31:32.152Z" it read the leading "2023", reported no error,
+// and produced 1970-01-01T00:33:43Z for every member.
+//
+// Epoch input is still accepted so the behaviour is a superset of both
+// readings, since the SDK types the field as an opaque *string.
 func parseGuardDutyTimestamp(s *string) *time.Time {
 	if s == nil || *s == "" {
 		return nil
 	}
-	var epoch float64
-	if _, err := fmt.Sscanf(*s, "%f", &epoch); err != nil {
-		return nil
+	if t := parseAwsTimestamp(*s); t != nil {
+		return t
 	}
-	t := time.Unix(int64(epoch), 0)
-	return &t
+	// fall back to an epoch-second string, but only when the value is entirely
+	// numeric -- a partial numeric prefix is what caused the original bug.
+	if epoch, err := strconv.ParseFloat(*s, 64); err == nil {
+		t := time.Unix(int64(epoch), 0).UTC()
+		return &t
+	}
+	return nil
 }

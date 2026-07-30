@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -4513,34 +4514,83 @@ func (i *mqlAwsEc2Instance) exposure() (*mqlAwsEc2InstanceExposure, error) {
 	return res.(*mqlAwsEc2InstanceExposure), nil
 }
 
-// naclIngressRule is the minimal shape of a network ACL inbound rule needed to
-// decide public reachability.
+// naclAllProtocols is the network ACL protocol number meaning "all protocols".
+const naclAllProtocols = "-1"
+
+// naclIngressRule is the shape of a network ACL inbound rule needed to decide
+// public reachability. Protocol and port range are part of that decision:
+// network ACLs are evaluated per packet, so a rule only shadows a
+// higher-numbered rule for the traffic it actually matches.
 type naclIngressRule struct {
 	ruleNumber int
 	allow      bool
-	public     bool // source is 0.0.0.0/0 or ::/0
+	public     bool   // source is 0.0.0.0/0 or ::/0
+	protocol   string // "-1" means all protocols
+	fromPort   int64
+	toPort     int64
+	// allPorts is true when the rule carries no port range, which for a network
+	// ACL means every port for the protocol.
+	allPorts bool
+}
+
+// covers reports whether r matches every packet that other matches, i.e.
+// whether a lower-numbered r fully shadows other.
+func (r naclIngressRule) covers(other naclIngressRule) bool {
+	if r.protocol != naclAllProtocols && r.protocol != other.protocol {
+		return false
+	}
+	if r.allPorts {
+		return true
+	}
+	if other.allPorts {
+		// other spans every port; a bounded range cannot shadow it
+		return false
+	}
+	return r.fromPort <= other.fromPort && r.toPort >= other.toPort
 }
 
 // naclAllowsPublicIngress reports whether a network ACL permits inbound traffic
-// from the internet. Network ACL rules are evaluated in ascending rule-number
-// order and the first match wins, so the lowest-numbered rule whose source is
-// public decides the outcome. When no rule matches a public source the implicit
-// final deny blocks the traffic.
+// from the internet.
+//
+// Network ACL rules are evaluated in ascending rule-number order and the first
+// rule matching a given packet wins. The decision is therefore per
+// (protocol, port), not global: a public ALLOW is only blocked when some
+// lower-numbered public DENY covers its entire protocol and port range.
+//
+// The previous implementation compared rule numbers alone, so the very common
+// layout of a narrow deny in front of a broad allow --
+//
+//	rule  90 DENY  0.0.0.0/0 tcp/3389
+//	rule 100 ALLOW 0.0.0.0/0 all
+//
+// -- was read as "denied", and an instance reachable on every other port
+// reported internetReachable == false.
 func naclAllowsPublicIngress(rules []naclIngressRule) bool {
-	found := false
-	bestNum := 0
-	allow := false
-	for _, r := range rules {
-		if !r.public {
+	ordered := make([]naclIngressRule, len(rules))
+	copy(ordered, rules)
+	sort.SliceStable(ordered, func(i, j int) bool {
+		return ordered[i].ruleNumber < ordered[j].ruleNumber
+	})
+
+	for i, allow := range ordered {
+		if !allow.public || !allow.allow {
 			continue
 		}
-		if !found || r.ruleNumber < bestNum {
-			found = true
-			bestNum = r.ruleNumber
-			allow = r.allow
+		shadowed := false
+		for _, deny := range ordered[:i] {
+			if !deny.public || deny.allow {
+				continue
+			}
+			if deny.covers(allow) {
+				shadowed = true
+				break
+			}
+		}
+		if !shadowed {
+			return true
 		}
 	}
-	return found && allow
+	return false
 }
 
 // networkAclAllowsPublicIngress evaluates a network ACL's inbound rules for
@@ -4556,11 +4606,21 @@ func networkAclAllowsPublicIngress(nacl *mqlAwsEc2Networkacl) (bool, error) {
 		if !ok || entry.Egress.Data {
 			continue
 		}
-		rules = append(rules, naclIngressRule{
+		rule := naclIngressRule{
 			ruleNumber: int(entry.RuleNumber.Data),
 			allow:      strings.EqualFold(entry.RuleAction.Data, "allow"),
 			public:     cidrEntryIsPublic(entry.CidrBlock.Data, entry.Ipv6CidrBlock.Data),
-		})
+			protocol:   entry.Protocol.Data,
+			allPorts:   true,
+		}
+		// portRange is populated as a creation arg, so this reads cached data
+		// rather than triggering a fetch. Its absence means "all ports".
+		if pr := entry.PortRange.Data; pr != nil {
+			rule.fromPort = pr.From.Data
+			rule.toPort = pr.To.Data
+			rule.allPorts = false
+		}
+		rules = append(rules, rule)
 	}
 	return naclAllowsPublicIngress(rules), nil
 }

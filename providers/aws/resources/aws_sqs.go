@@ -164,7 +164,13 @@ func (a *mqlAwsSqs) getQueues(conn *connection.AwsConnection) []*jobpool.Job {
 			ctx := context.Background()
 			res := []any{}
 
-			params := &sqs.ListQueuesInput{}
+			// MaxResults is required to get a NextToken back: "Token value is
+			// null if there are no additional results to request, or if you did
+			// not set MaxResults in the request." Without it the paginator stops
+			// after one page and every queue past the first 1000 in a region is
+			// invisible -- to aws.sqs.queues and to discovery, so those queues
+			// never become assets at all.
+			params := &sqs.ListQueuesInput{MaxResults: aws.Int32(1000)}
 			paginator := sqs.NewListQueuesPaginator(svc, params)
 			for paginator.HasMorePages() {
 				qs, err := paginator.NextPage(ctx)

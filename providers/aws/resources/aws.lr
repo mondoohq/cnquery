@@ -15636,7 +15636,14 @@ private aws.ecr.repository @defaults("uri region") {
   region string
   // Whether the repository option to scan on image push is enabled
   imageScanOnPush bool
-  // Whether image tags are immutable (MUTABLE or IMMUTABLE); immutable tags prevent image overwrites
+  // Image tag mutability
+  //
+  // Whether image tags can be overwritten, either MUTABLE or IMMUTABLE.
+  // Immutable tags stop an existing tag from being re-pointed at a different
+  // image. Null for public repositories: ECR Public exposes no tag mutability
+  // control, so the setting is unknown rather than known to be either value.
+  // Comparing a null value against a concrete one yields false, so an
+  // `imageTagMutability == "IMMUTABLE"` check does not pass for them.
   imageTagMutability string
   // Encryption type for images at rest (AES256, KMS, or KMS_DSSE)
   encryptionType string

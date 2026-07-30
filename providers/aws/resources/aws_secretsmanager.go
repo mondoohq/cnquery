@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	secretstypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 
@@ -205,7 +206,12 @@ func (a *mqlAwsSecretsmanager) getSecrets(conn *connection.AwsConnection) []*job
 
 			res := []any{}
 
-			params := &secretsmanager.ListSecretsInput{}
+			// Secrets scheduled for deletion are excluded by default, but during
+			// the recovery window they still exist and still hold live
+			// credentials -- and aws.secretsmanager.secret(arn:) resolves them,
+			// so the collection and the single lookup disagreed. This is also
+			// what makes the deletedAt field reachable from the collection.
+			params := &secretsmanager.ListSecretsInput{IncludePlannedDeletion: aws.Bool(true)}
 			paginator := secretsmanager.NewListSecretsPaginator(svc, params)
 			for paginator.HasMorePages() {
 				secrets, err := paginator.NextPage(ctx)

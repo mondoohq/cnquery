@@ -51,7 +51,7 @@ func getServiceName(platformName string) string {
 		return "rds"
 	case "aws-rds-dbcluster":
 		return "rds"
-	case "aws-dynamodb-table":
+	case "aws-dynamodb-table", "aws-dynamodb-globaltable":
 		return "dynamodb"
 	case "aws-redshift-cluster":
 		return "redshift"

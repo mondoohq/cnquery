@@ -106,3 +106,34 @@ func TestParseAwsTimestampPtr(t *testing.T) {
 		assert.Equal(t, time.UTC, ts.Location())
 	})
 }
+
+// TestParseGuardDutyTimestamp pins the regression that made every GuardDuty
+// member report 1970-01-01: fmt.Sscanf(s, "%f", ...) does not have to consume
+// its whole input, so an ISO-8601 string parsed as the bare year 2023 and was
+// then read as an epoch second.
+func TestParseGuardDutyTimestamp(t *testing.T) {
+	strPtr := func(s string) *string { return &s }
+
+	t.Run("ISO-8601 is parsed as a real date, not epoch seconds", func(t *testing.T) {
+		got := parseGuardDutyTimestamp(strPtr("2023-01-19T20:31:32.152Z"))
+		require.NotNil(t, got)
+		assert.Equal(t, 2023, got.UTC().Year())
+		assert.Equal(t, time.January, got.UTC().Month())
+		assert.Equal(t, 19, got.UTC().Day())
+	})
+
+	t.Run("epoch seconds are still accepted", func(t *testing.T) {
+		got := parseGuardDutyTimestamp(strPtr("1674160292"))
+		require.NotNil(t, got)
+		assert.Equal(t, 2023, got.UTC().Year())
+	})
+
+	t.Run("nil and empty yield nil", func(t *testing.T) {
+		assert.Nil(t, parseGuardDutyTimestamp(nil))
+		assert.Nil(t, parseGuardDutyTimestamp(strPtr("")))
+	})
+
+	t.Run("unparseable input yields nil rather than a bogus date", func(t *testing.T) {
+		assert.Nil(t, parseGuardDutyTimestamp(strPtr("not-a-timestamp")))
+	})
+}

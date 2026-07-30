@@ -17,6 +17,7 @@ var Platforms = []*plugin.PlatformInfo{
 	{Name: "aws-rds-dbinstance", Title: "AWS RDS DB Instance", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
 	{Name: "aws-rds-dbcluster", Title: "AWS RDS DB Cluster", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
 	{Name: "aws-dynamodb-table", Title: "AWS DynamoDB Table", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
+	{Name: "aws-dynamodb-globaltable", Title: "AWS DynamoDB Global Table", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
 	{Name: "aws-redshift-cluster", Title: "AWS Redshift Cluster", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
 	{Name: "aws-vpc", Title: "AWS VPC", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
 	{Name: "aws-security-group", Title: "AWS Security Group", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},

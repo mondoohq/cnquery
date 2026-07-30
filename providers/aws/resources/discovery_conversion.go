@@ -127,8 +127,15 @@ func getPlatformName(awsObject awsObject) string {
 			return "aws-rds-dbcluster"
 		}
 	case "dynamodb":
-		if awsObject.objectType == "table" {
+		switch awsObject.objectType {
+		case "table":
 			return "aws-dynamodb-table"
+		case "globaltable":
+			// Split out from "table" so a global table and its us-east-1 replica
+			// stop sharing a platform id. Without a case here getPlatformName
+			// returns "" and MqlObjectToAsset drops the asset entirely, so every
+			// global table silently disappeared from discovery.
+			return "aws-dynamodb-globaltable"
 		}
 	case "redshift":
 		if awsObject.objectType == "cluster" {

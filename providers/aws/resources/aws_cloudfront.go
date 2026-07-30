@@ -104,6 +104,13 @@ func (a *mqlAwsCloudfront) distributions() ([]any, error) {
 					}
 					mqlAwsCloudfrontOrigin, err := CreateResource(a.MqlRuntime, "aws.cloudfront.distribution.origin",
 						map[string]*llx.RawData{
+							// Origin.Id is documented as unique only *within* a
+							// distribution, so the key must name the distribution.
+							// Reusing an origin id like "S3Origin" across distributions
+							// is routine, and the collision also lets the
+							// cacheOriginMtlsCertArn write below land on another
+							// distribution's already-emitted origin.
+							"__id":                  llx.StringData(convert.ToValue(distribution.ARN) + "/origin/" + convert.ToValue(origin.Id)),
 							"domainName":            llx.StringDataPtr(origin.DomainName),
 							"id":                    llx.StringDataPtr(origin.Id),
 							"connectionAttempts":    llx.IntDataDefault(origin.ConnectionAttempts, 0),
