@@ -12,6 +12,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/recording"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
 	"go.uber.org/mock/gomock"
@@ -868,4 +870,70 @@ func mustIndex(t *testing.T, s, sub string) int {
 	}
 	t.Fatalf("substring %q not found in %q", sub, s)
 	return -1
+}
+
+// TestSyncAssetMetadata covers the copy that makes upstream-synced asset metadata
+// visible to providers. Discovery hands out an independent clone of the connection
+// asset, so without this copy an annotation added after connecting never reaches the
+// `asset` resource, and a policy or risk factor keyed on a server-side annotation
+// silently never matches.
+func TestSyncAssetMetadata(t *testing.T) {
+	const key = "mondoo.com/internet-exposed"
+
+	newProvider := func(a *inventory.Asset) *ConnectedProvider {
+		return &ConnectedProvider{Connection: &plugin.ConnectRes{Asset: a}}
+	}
+
+	t.Run("annotations synced from upstream reach the connection asset", func(t *testing.T) {
+		connAsset := &inventory.Asset{Annotations: map[string]string{"owner": "platform"}}
+		provider := newProvider(connAsset)
+
+		// what cnspec does after SynchronizeAssets: mutate its own clone
+		updated := &inventory.Asset{Annotations: map[string]string{"owner": "platform", key: "true"}}
+		syncAssetMetadata(provider, updated)
+
+		assert.Equal(t, "true", connAsset.Annotations[key])
+		assert.Equal(t, "platform", connAsset.Annotations["owner"])
+
+		// and therefore the asset resource built from it exposes the annotation
+		args := recording.CreateAssetResourceArgs(connAsset)
+		annotations, ok := args["annotations"].Value.(map[string]any)
+		require.True(t, ok, "annotations arg should be a map")
+		assert.Equal(t, "true", annotations[key])
+	})
+
+	t.Run("labels are synced too", func(t *testing.T) {
+		connAsset := &inventory.Asset{}
+		provider := newProvider(connAsset)
+		syncAssetMetadata(provider, &inventory.Asset{
+			Labels: map[string]string{"mondoo.com/project-id": "p-1"},
+		})
+		assert.Equal(t, "p-1", connAsset.Labels["mondoo.com/project-id"])
+	})
+
+	t.Run("nil maps do not erase existing metadata", func(t *testing.T) {
+		connAsset := &inventory.Asset{
+			Labels:      map[string]string{"a": "1"},
+			Annotations: map[string]string{"b": "2"},
+		}
+		provider := newProvider(connAsset)
+		syncAssetMetadata(provider, &inventory.Asset{})
+		assert.Equal(t, map[string]string{"a": "1"}, connAsset.Labels)
+		assert.Equal(t, map[string]string{"b": "2"}, connAsset.Annotations)
+	})
+
+	t.Run("tolerates nil provider, connection, and asset", func(t *testing.T) {
+		assert.NotPanics(t, func() {
+			syncAssetMetadata(nil, &inventory.Asset{})
+			syncAssetMetadata(&ConnectedProvider{}, &inventory.Asset{})
+			syncAssetMetadata(newProvider(nil), &inventory.Asset{})
+			syncAssetMetadata(newProvider(&inventory.Asset{}), nil)
+		})
+	})
+
+	t.Run("no-op when the updated asset is the connection asset", func(t *testing.T) {
+		same := &inventory.Asset{Annotations: map[string]string{key: "true"}}
+		assert.NotPanics(t, func() { syncAssetMetadata(newProvider(same), same) })
+		assert.Equal(t, "true", same.Annotations[key])
+	})
 }
