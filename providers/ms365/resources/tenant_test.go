@@ -80,3 +80,70 @@ func TestEnabledServicePlanServices(t *testing.T) {
 		})
 	}
 }
+
+func TestSumPaidLicenses(t *testing.T) {
+	sub := func(sku, status string, trial bool, seats int32) companySubscription {
+		return companySubscription{
+			SkuPartNumber: ptr(sku),
+			Status:        ptr(status),
+			IsTrial:       ptr(trial),
+			TotalLicenses: ptr(seats),
+		}
+	}
+
+	tests := []struct {
+		name string
+		in   []companySubscription
+		want int64
+	}{
+		{
+			name: "free/self-service plans do not inflate the total",
+			// Reproduces the observed 1,010,091: two sentinel free SKUs plus
+			// 91 real paid seats. Only the 91 should count.
+			in: []companySubscription{
+				sub("RIGHTSMANAGEMENT_ADHOC", "Enabled", false, 1000000),
+				sub("FLOW_FREE", "Enabled", false, 10000),
+				sub("ENTERPRISEPREMIUM", "Enabled", false, 91),
+			},
+			want: 91,
+		},
+		{
+			name: "trials are excluded",
+			in: []companySubscription{
+				sub("ENTERPRISEPREMIUM", "Enabled", false, 100),
+				sub("SPE_E3", "Enabled", true, 50),
+			},
+			want: 100,
+		},
+		{
+			name: "Warning (grace period) counts, Suspended/Deleted/LockedOut do not",
+			in: []companySubscription{
+				sub("ENTERPRISEPREMIUM", "Enabled", false, 100),
+				sub("SPE_E3", "Warning", false, 40),
+				sub("SPB", "Suspended", false, 30),
+				sub("EMS", "Deleted", false, 20),
+				sub("SPE_E5", "LockedOut", false, 10),
+			},
+			want: 140,
+		},
+		{
+			name: "nil pointers are tolerated",
+			in: []companySubscription{
+				{TotalLicenses: ptr(int32(25))},                                   // nil status/trial/sku
+				{SkuPartNumber: ptr("ENTERPRISEPREMIUM"), Status: ptr("Enabled")}, // nil seats
+			},
+			want: 25,
+		},
+		{
+			name: "empty input is zero",
+			in:   nil,
+			want: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, sumPaidLicenses(tc.in))
+		})
+	}
+}
