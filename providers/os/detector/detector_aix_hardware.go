@@ -13,11 +13,22 @@ import (
 const (
 	// AixLabelSystemModel carries the machine type-model of the system, for
 	// example "IBM,9009-42A". It mirrors the "System Model" field of prtconf.
+	//
+	// This describes the physical machine, so it is the value to decide
+	// hardware applicability from.
 	AixLabelSystemModel = "aix.mondoo.com/system-model"
 
-	// AixLabelProcessorType carries the processor implementation of the first
-	// processor, for example "PowerPC_POWER9". It mirrors the "Processor Type"
+	// AixLabelProcessorType carries the processor implementation the partition
+	// reports, for example "PowerPC_POWER9". It mirrors the "Processor Type"
 	// field of prtconf.
+	//
+	// This is the partition's processor *compatibility mode*, not the physical
+	// chip. An LPAR on POWER9 hardware configured in POWER8 mode reports
+	// PowerPC_POWER8, which is routine because Live Partition Mobility to an
+	// older host requires it. Anything deciding whether a silicon defect
+	// applies must use AixLabelSystemModel, which compatibility mode does not
+	// change; treating this value as the silicon would hide such a defect on a
+	// machine that genuinely has it.
 	AixLabelProcessorType = "aix.mondoo.com/processor-type"
 )
 
