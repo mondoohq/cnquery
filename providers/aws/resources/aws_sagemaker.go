@@ -11,9 +11,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	sagemakerTypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/aws/smithy-go"
@@ -1041,6 +1038,33 @@ func (a *mqlAwsSagemakerModelContainer) multiModelConfig() (map[string]any, erro
 	return convert.JsonToDict(a.cacheMultiModelConfig)
 }
 
+func (a *mqlAwsSagemakerModelContainer) modelDataBucket() (*mqlAwsS3Bucket, error) {
+	return s3BucketRefFromUri(a.MqlRuntime, a.ModelDataUrl.Data, &a.ModelDataBucket)
+}
+
+// ecrRepository resolves the repository the container's serving image is pulled
+// from. Inference images are frequently served from a public registry or a
+// SageMaker-owned account, in which case the URI names no repository we can
+// resolve and the reference stays null.
+func (a *mqlAwsSagemakerModelContainer) ecrRepository() (*mqlAwsEcrRepository, error) {
+	repoArn := ecrRepositoryArnFromImageUri(a.Image.Data)
+	if repoArn == "" {
+		a.EcrRepository.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.ecr.repository",
+		map[string]*llx.RawData{"arn": llx.StringData(repoArn)})
+	if err != nil {
+		// A cross-account or deleted repository surfaces as a lookup error; log it
+		// so genuine permission failures stay visible, but leave the reference null
+		// rather than failing the whole query.
+		log.Warn().Err(err).Str("arn", repoArn).Msg("could not resolve ECR repository for sagemaker model container")
+		a.EcrRepository.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return res.(*mqlAwsEcrRepository), nil
+}
+
 func (a *mqlAwsSagemakerModel) enableNetworkIsolation() (bool, error) {
 	if err := a.fetchDetails(); err != nil {
 		return false, err
@@ -1190,6 +1214,8 @@ type mqlAwsSagemakerTrainingjobInternal struct {
 	cacheVpcConfig                   any
 	cacheVpcSubnetIds                []string
 	cacheOutputDataConfig            any
+	cacheOutputS3Uri                 string
+	cacheOutputKmsKeyId              string
 	cacheResourceConfig              any
 	cacheStoppingCondition           any
 	cacheSecondaryStatusTransitions  []sagemakerTypes.SecondaryStatusTransition
@@ -1250,6 +1276,10 @@ func (a *mqlAwsSagemakerTrainingjob) fetchDetails() error {
 		a.cacheVpcSubnetIds = resp.VpcConfig.Subnets
 	}
 	a.cacheOutputDataConfig, _ = convert.JsonToDict(resp.OutputDataConfig)
+	if resp.OutputDataConfig != nil {
+		a.cacheOutputS3Uri = convert.ToValue(resp.OutputDataConfig.S3OutputPath)
+		a.cacheOutputKmsKeyId = convert.ToValue(resp.OutputDataConfig.KmsKeyId)
+	}
 	a.cacheResourceConfig, _ = convert.JsonToDict(resp.ResourceConfig)
 	a.cacheStoppingCondition, _ = convert.JsonToDict(resp.StoppingCondition)
 	a.cacheSecondaryStatusTransitions = resp.SecondaryStatusTransitions
@@ -1520,6 +1550,24 @@ func (a *mqlAwsSagemakerTrainingjob) outputDataConfig() (map[string]any, error) 
 		return nil, nil
 	}
 	return a.cacheOutputDataConfig.(map[string]any), nil
+}
+
+func (a *mqlAwsSagemakerTrainingjob) outputDataBucket() (*mqlAwsS3Bucket, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	return s3BucketRefFromUri(a.MqlRuntime, a.cacheOutputS3Uri, &a.OutputDataBucket)
+}
+
+func (a *mqlAwsSagemakerTrainingjob) outputKmsKey() (*mqlAwsKmsKey, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	return sagemakerKmsKey(a.MqlRuntime, &a.OutputKmsKey, &a.cacheOutputKmsKeyId)
+}
+
+func (a *mqlAwsSagemakerTrainingjobChannel) bucket() (*mqlAwsS3Bucket, error) {
+	return s3BucketRefFromUri(a.MqlRuntime, a.S3Uri.Data, &a.Bucket)
 }
 
 func (a *mqlAwsSagemakerTrainingjob) resourceConfig() (map[string]any, error) {
@@ -4434,50 +4482,14 @@ func (a *mqlAwsSagemakerUserProfile) singleSignOnUserValue() (string, error) {
 // sagemakerResolveVpc looks up the VPC ID from the first subnet in the list and
 // returns an aws.vpc resource. If subnetIds is empty, it marks the field as null.
 func sagemakerResolveVpc(runtime *plugin.Runtime, region string, subnetIds []string, field *plugin.TValue[*mqlAwsVpc]) (*mqlAwsVpc, error) {
-	if len(subnetIds) == 0 {
-		field.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
-	}
-	conn := runtime.Connection.(*connection.AwsConnection)
-	svc := conn.Ec2(region)
-	ctx := context.Background()
-	resp, err := svc.DescribeSubnets(ctx, &ec2.DescribeSubnetsInput{
-		Filters: []ec2types.Filter{{Name: aws.String("subnet-id"), Values: []string{subnetIds[0]}}},
-	})
-	if err != nil {
-		return nil, err
-	}
-	if len(resp.Subnets) == 0 || resp.Subnets[0].VpcId == nil {
-		field.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
-	}
-	res, err := NewResource(runtime, "aws.vpc",
-		map[string]*llx.RawData{"id": llx.StringData(*resp.Subnets[0].VpcId)})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlAwsVpc), nil
+	return awsResolveVpcFromSubnets(runtime, region, subnetIds, field)
 }
 
 // sagemakerSecurityGroups resolves a list of security-group IDs to typed
 // aws.ec2.securitygroup resources. Returns nil (empty list) when there are no
 // IDs. Shared by the model, domain, and endpoint-config accessors.
 func sagemakerSecurityGroups(runtime *plugin.Runtime, region string, sgIds []string) ([]any, error) {
-	if len(sgIds) == 0 {
-		return nil, nil
-	}
-	conn := runtime.Connection.(*connection.AwsConnection)
-	res := make([]any, 0, len(sgIds))
-	for _, sgId := range sgIds {
-		sgArn := NewSecurityGroupArn(region, conn.AccountId(), sgId)
-		mqlSg, err := NewResource(runtime, "aws.ec2.securitygroup",
-			map[string]*llx.RawData{"arn": llx.StringData(sgArn)})
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, mqlSg)
-	}
-	return res, nil
+	return awsSecurityGroupRefs(runtime, region, sgIds)
 }
 
 // sagemakerIamRole resolves a role ARN to a typed aws.iam.role, marking the

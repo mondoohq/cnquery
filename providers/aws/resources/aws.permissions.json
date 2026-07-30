@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.51.0",
-  "generated_at": "2026-07-29T10:07:53+03:00",
+  "generated_at": "2026-07-29T20:42:31-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindings",
@@ -95,22 +95,30 @@
     "bedrock-agentcore:ListMemories",
     "bedrock-agentcore:ListOauth2CredentialProviders",
     "bedrock-agentcore:ListWorkloadIdentities",
+    "bedrock:GetAccountDataRetention",
     "bedrock:GetAgent",
+    "bedrock:GetAgentActionGroup",
     "bedrock:GetCustomModel",
+    "bedrock:GetDataSource",
     "bedrock:GetEvaluationJob",
     "bedrock:GetFlow",
+    "bedrock:GetFoundationModel",
     "bedrock:GetGuardrail",
     "bedrock:GetImportedModel",
     "bedrock:GetKnowledgeBase",
+    "bedrock:GetMarketplaceModelEndpoint",
+    "bedrock:GetModelCustomizationJob",
     "bedrock:GetModelImportJob",
     "bedrock:GetModelInvocationLoggingConfiguration",
     "bedrock:GetResourcePolicy",
     "bedrock:ListAgentActionGroups",
     "bedrock:ListAgentAliases",
+    "bedrock:ListAgentCollaborators",
     "bedrock:ListAgentKnowledgeBases",
     "bedrock:ListAgents",
     "bedrock:ListCustomModels",
     "bedrock:ListDataSources",
+    "bedrock:ListEnforcedGuardrailsConfiguration",
     "bedrock:ListEvaluationJobs",
     "bedrock:ListFlows",
     "bedrock:ListFoundationModels",
@@ -118,6 +126,9 @@
     "bedrock:ListImportedModels",
     "bedrock:ListInferenceProfiles",
     "bedrock:ListKnowledgeBases",
+    "bedrock:ListMarketplaceModelEndpoints",
+    "bedrock:ListModelCopyJobs",
+    "bedrock:ListModelCustomizationJobs",
     "bedrock:ListModelImportJobs",
     "bedrock:ListModelInvocationJobs",
     "bedrock:ListPrompts",
@@ -1537,16 +1548,34 @@
       "source_file": "aws_bedrock_agentcore.go"
     },
     {
+      "permission": "bedrock:GetAccountDataRetention",
+      "service": "bedrock",
+      "action": "GetAccountDataRetention",
+      "source_file": "aws_bedrock_governance.go"
+    },
+    {
       "permission": "bedrock:GetAgent",
       "service": "bedrock",
       "action": "GetAgent",
       "source_file": "aws_bedrock.go"
     },
     {
+      "permission": "bedrock:GetAgentActionGroup",
+      "service": "bedrock",
+      "action": "GetAgentActionGroup",
+      "source_file": "aws_bedrock_agent.go"
+    },
+    {
       "permission": "bedrock:GetCustomModel",
       "service": "bedrock",
       "action": "GetCustomModel",
       "source_file": "aws_bedrock.go"
+    },
+    {
+      "permission": "bedrock:GetDataSource",
+      "service": "bedrock",
+      "action": "GetDataSource",
+      "source_file": "aws_bedrock_knowledgebase.go"
     },
     {
       "permission": "bedrock:GetEvaluationJob",
@@ -1558,6 +1587,12 @@
       "permission": "bedrock:GetFlow",
       "service": "bedrock",
       "action": "GetFlow",
+      "source_file": "aws_bedrock.go"
+    },
+    {
+      "permission": "bedrock:GetFoundationModel",
+      "service": "bedrock",
+      "action": "GetFoundationModel",
       "source_file": "aws_bedrock.go"
     },
     {
@@ -1577,6 +1612,18 @@
       "service": "bedrock",
       "action": "GetKnowledgeBase",
       "source_file": "aws_bedrock.go"
+    },
+    {
+      "permission": "bedrock:GetMarketplaceModelEndpoint",
+      "service": "bedrock",
+      "action": "GetMarketplaceModelEndpoint",
+      "source_file": "aws_bedrock_governance.go"
+    },
+    {
+      "permission": "bedrock:GetModelCustomizationJob",
+      "service": "bedrock",
+      "action": "GetModelCustomizationJob",
+      "source_file": "aws_bedrock_governance.go"
     },
     {
       "permission": "bedrock:GetModelImportJob",
@@ -1603,16 +1650,34 @@
       "source_file": "aws_bedrock.go"
     },
     {
+      "permission": "bedrock:ListAgentActionGroups",
+      "service": "bedrock",
+      "action": "ListAgentActionGroups",
+      "source_file": "aws_bedrock_agent.go"
+    },
+    {
       "permission": "bedrock:ListAgentAliases",
       "service": "bedrock",
       "action": "ListAgentAliases",
       "source_file": "aws_bedrock_enrichment.go"
     },
     {
+      "permission": "bedrock:ListAgentCollaborators",
+      "service": "bedrock",
+      "action": "ListAgentCollaborators",
+      "source_file": "aws_bedrock_agent.go"
+    },
+    {
       "permission": "bedrock:ListAgentKnowledgeBases",
       "service": "bedrock",
       "action": "ListAgentKnowledgeBases",
       "source_file": "aws_bedrock.go"
+    },
+    {
+      "permission": "bedrock:ListAgentKnowledgeBases",
+      "service": "bedrock",
+      "action": "ListAgentKnowledgeBases",
+      "source_file": "aws_bedrock_agent.go"
     },
     {
       "permission": "bedrock:ListAgents",
@@ -1631,6 +1696,18 @@
       "service": "bedrock",
       "action": "ListDataSources",
       "source_file": "aws_bedrock.go"
+    },
+    {
+      "permission": "bedrock:ListDataSources",
+      "service": "bedrock",
+      "action": "ListDataSources",
+      "source_file": "aws_bedrock_knowledgebase.go"
+    },
+    {
+      "permission": "bedrock:ListEnforcedGuardrailsConfiguration",
+      "service": "bedrock",
+      "action": "ListEnforcedGuardrailsConfiguration",
+      "source_file": "aws_bedrock_governance.go"
     },
     {
       "permission": "bedrock:ListEvaluationJobs",
@@ -1673,6 +1750,24 @@
       "service": "bedrock",
       "action": "ListKnowledgeBases",
       "source_file": "aws_bedrock.go"
+    },
+    {
+      "permission": "bedrock:ListMarketplaceModelEndpoints",
+      "service": "bedrock",
+      "action": "ListMarketplaceModelEndpoints",
+      "source_file": "aws_bedrock_governance.go"
+    },
+    {
+      "permission": "bedrock:ListModelCopyJobs",
+      "service": "bedrock",
+      "action": "ListModelCopyJobs",
+      "source_file": "aws_bedrock_governance.go"
+    },
+    {
+      "permission": "bedrock:ListModelCustomizationJobs",
+      "service": "bedrock",
+      "action": "ListModelCustomizationJobs",
+      "source_file": "aws_bedrock_governance.go"
     },
     {
       "permission": "bedrock:ListModelImportJobs",
@@ -2728,7 +2823,7 @@
       "permission": "ec2:DescribeSubnets",
       "service": "ec2",
       "action": "DescribeSubnets",
-      "source_file": "aws_sagemaker.go"
+      "source_file": "aws.go"
     },
     {
       "permission": "ec2:DescribeSubnets",

@@ -14,7 +14,10 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	smithy "github.com/aws/smithy-go"
 	"github.com/aws/smithy-go/transport/http"
 	"github.com/rs/zerolog/log"
@@ -70,6 +73,126 @@ const (
 
 func NewSecurityGroupArn(region, accountID, sgID string) string {
 	return fmt.Sprintf(securityGroupArnPattern, region, accountID, sgID)
+}
+
+// s3BucketNameFromUri extracts the bucket name from an "s3://bucket/key" URI.
+// Returns "" when the value carries no s3:// scheme, so a location that is not
+// an S3 URI (a file-system path, an empty string) is never mistaken for a
+// bucket name.
+func s3BucketNameFromUri(uri string) string {
+	trimmed := strings.TrimPrefix(uri, "s3://")
+	if trimmed == uri {
+		return ""
+	}
+	return strings.SplitN(trimmed, "/", 2)[0]
+}
+
+// s3BucketRefFromUri resolves an "s3://bucket/key" URI to a typed aws.s3.bucket,
+// marking the field null when the URI names no bucket.
+func s3BucketRefFromUri(runtime *plugin.Runtime, uri string, field *plugin.TValue[*mqlAwsS3Bucket]) (*mqlAwsS3Bucket, error) {
+	name := s3BucketNameFromUri(uri)
+	if name == "" {
+		field.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "aws.s3.bucket",
+		map[string]*llx.RawData{"name": llx.StringData(name)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsS3Bucket), nil
+}
+
+// s3BucketRefFromArn resolves an S3 bucket ARN to a typed aws.s3.bucket,
+// marking the field null when no ARN is set.
+func s3BucketRefFromArn(runtime *plugin.Runtime, bucketArn string, field *plugin.TValue[*mqlAwsS3Bucket]) (*mqlAwsS3Bucket, error) {
+	if bucketArn == "" {
+		field.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "aws.s3.bucket",
+		map[string]*llx.RawData{"arn": llx.StringData(bucketArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsS3Bucket), nil
+}
+
+// ecrRepositoryArnFromImageUri builds the repository ARN for an ECR image URI
+// of the form <registryId>.dkr.ecr.<region>.amazonaws.com/<repo>[:tag][@digest].
+// Returns "" when the URI does not point at an ECR repository, which is the
+// case for images served from Docker Hub or another public registry.
+func ecrRepositoryArnFromImageUri(image string) string {
+	if !strings.Contains(image, ".dkr.ecr.") {
+		return ""
+	}
+	host, path, ok := strings.Cut(image, "/")
+	if !ok {
+		return ""
+	}
+	hostParts := strings.Split(host, ".")
+	if len(hostParts) < 4 {
+		return ""
+	}
+	repoName := path
+	if i := strings.IndexByte(repoName, '@'); i >= 0 {
+		repoName = repoName[:i]
+	}
+	if i := strings.IndexByte(repoName, ':'); i >= 0 {
+		repoName = repoName[:i]
+	}
+	if repoName == "" {
+		return ""
+	}
+	return fmt.Sprintf("arn:aws:ecr:%s:%s:repository/%s", hostParts[3], hostParts[0], repoName)
+}
+
+// awsResolveVpcFromSubnets resolves the VPC that a workload's subnets belong to
+// by describing the first subnet. Marks the field null when no subnets are
+// configured or the subnet no longer exists.
+func awsResolveVpcFromSubnets(runtime *plugin.Runtime, region string, subnetIds []string, field *plugin.TValue[*mqlAwsVpc]) (*mqlAwsVpc, error) {
+	if len(subnetIds) == 0 {
+		field.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Ec2(region)
+	ctx := context.Background()
+	resp, err := svc.DescribeSubnets(ctx, &ec2.DescribeSubnetsInput{
+		Filters: []ec2types.Filter{{Name: aws.String("subnet-id"), Values: []string{subnetIds[0]}}},
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(resp.Subnets) == 0 || resp.Subnets[0].VpcId == nil {
+		field.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "aws.vpc",
+		map[string]*llx.RawData{"id": llx.StringData(*resp.Subnets[0].VpcId)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsVpc), nil
+}
+
+// awsSecurityGroupRefs resolves security-group IDs to typed
+// aws.ec2.securitygroup resources. Returns nil when there are no IDs.
+func awsSecurityGroupRefs(runtime *plugin.Runtime, region string, sgIds []string) ([]any, error) {
+	if len(sgIds) == 0 {
+		return nil, nil
+	}
+	conn := runtime.Connection.(*connection.AwsConnection)
+	res := make([]any, 0, len(sgIds))
+	for _, sgId := range sgIds {
+		mqlSg, err := NewResource(runtime, "aws.ec2.securitygroup",
+			map[string]*llx.RawData{"arn": llx.StringData(NewSecurityGroupArn(region, conn.AccountId(), sgId))})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSg)
+	}
+	return res, nil
 }
 
 func (a *mqlAws) regions() ([]any, error) {
