@@ -1149,7 +1149,7 @@ func init() {
 			Create: createAzureSubscriptionWebServiceAppsite,
 		},
 		"azure.subscription.webService.appsite.outboundVnetRouting": {
-			// to override args, implement: initAzureSubscriptionWebServiceAppsiteOutboundVnetRouting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionWebServiceAppsiteOutboundVnetRouting,
 			Create: createAzureSubscriptionWebServiceAppsiteOutboundVnetRouting,
 		},
 		"azure.subscription.privateEndpointConnection": {
@@ -1709,11 +1709,11 @@ func init() {
 			Create: createAzureSubscriptionAksServiceClusterAadProfile,
 		},
 		"azure.subscription.aksService.cluster.autoUpgradeProfile": {
-			// to override args, implement: initAzureSubscriptionAksServiceClusterAutoUpgradeProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionAksServiceClusterAutoUpgradeProfile,
 			Create: createAzureSubscriptionAksServiceClusterAutoUpgradeProfile,
 		},
 		"azure.subscription.aksService.cluster.advancedNetworking": {
-			// to override args, implement: initAzureSubscriptionAksServiceClusterAdvancedNetworking(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionAksServiceClusterAdvancedNetworking,
 			Create: createAzureSubscriptionAksServiceClusterAdvancedNetworking,
 		},
 		"azure.subscription.aksService.cluster.identityBinding": {

@@ -114,8 +114,24 @@ func (a *mqlAzureSubscriptionAksServiceClusterAutoUpgradeProfile) id() (string, 
 	return a.Id.Data, nil
 }
 
+// See notReachableDirectly: the auto-upgrade profile is derived from a
+// cluster's ARM properties and has no lookup of its own.
+func initAzureSubscriptionAksServiceClusterAutoUpgradeProfile(_ *plugin.Runtime, _ map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return nil, nil, notReachableDirectly(
+		"azure.subscription.aksService.cluster.autoUpgradeProfile",
+		"azure.subscription.aksService.clusters { autoUpgradeProfile { upgradeChannel nodeOSUpgradeChannel } }")
+}
+
 func (a *mqlAzureSubscriptionAksServiceClusterAdvancedNetworking) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+// See notReachableDirectly: the advanced networking profile is derived from a
+// cluster's network profile and has no lookup of its own.
+func initAzureSubscriptionAksServiceClusterAdvancedNetworking(_ *plugin.Runtime, _ map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return nil, nil, notReachableDirectly(
+		"azure.subscription.aksService.cluster.advancedNetworking",
+		"azure.subscription.aksService.clusters { advancedNetworking { enabled transitEncryptionType } }")
 }
 
 // aksSecurityFlags are the cluster security-profile toggles flattened out of

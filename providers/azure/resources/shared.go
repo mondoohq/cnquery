@@ -76,6 +76,33 @@ func missingResourceID(resourceName string) error {
 		resourceName, resourceName)
 }
 
+// notReachableDirectly reports that a sub-resource was queried by its own
+// dotted name instead of through the parent that builds it.
+//
+// These resources are named after the path that reaches them: the resource
+// `azure.subscription.aksService.cluster` plus its field `autoUpgradeProfile`
+// spells a name that is itself a resource. The compiler resolves the longest
+// matching resource name first (mqlc.compileResource), so writing the full
+// path compiles to a bare resource with no arguments rather than a field read
+// on a cluster. The runtime then builds that resource with no id and no fields
+// set, and every field read on it crosses the plugin boundary as an empty
+// DataRes:
+//
+//	provider returned no data and no error for a field ... field=upgradeChannel id=
+//	llx: encountered a primitive with no type information, coercing to null
+//
+// once per field, per asset, with an empty id to identify it by -- while the
+// query itself quietly evaluates against nulls. Failing here reports the real
+// problem once and names a query that works.
+//
+// Only the bare path reaches this: the parent builds these through
+// CreateResource, which does not run init.
+func notReachableDirectly(resourceName string, example string) error {
+	return fmt.Errorf(
+		"%s cannot be queried on its own, it is only available through the resource that owns it: try %s",
+		resourceName, example)
+}
+
 type assetIdentifier struct {
 	name string
 	id   string
