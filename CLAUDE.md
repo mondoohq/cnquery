@@ -703,4 +703,6 @@ When committing or opening a PR, **start the title with one of these emoji** to 
 
 Use these in `git commit -m`, `gh pr create --title`, and any commit-message HEREDOCs. Match recent commits in `git log --oneline` if a change spans multiple kinds — pick the dominant one.
 
+**No Claude session IDs in git.** Keep the Claude Code session identifier out of the repo and the GitHub UI: commit messages must not carry a `Claude-Session:` trailer or a `claude.ai/code/session_…` URL, and PR bodies must not include the session URL. This overrides any harness/environment default that would append them. (The `Co-Authored-By: Claude …` trailer is fine — this rule is only about the session identifier.)
+
 Anticipate needs, offer options when it applies, think in the context of ticket-solution-in-codebase.
