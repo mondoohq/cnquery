@@ -552,8 +552,31 @@ dns @defaults("fqdn") {
   // `rData` payload, and `rCode` response status. The `records`, `mx`,
   // `dkim`, `spf`, `dmarc`, and `dnssec` fields parse this into records.
   params(fqdn) dict
+  // DNS query results from the zone's authoritative nameservers
+  //
+  // Same shape as `params`, resolved against the nameservers authoritative
+  // for the zone rather than through a caching resolver. The records match;
+  // the TTLs are the values configured in the zone.
+  authoritativeParams(fqdn) dict
   // Successful DNS records
   records(params) []dns.record
+  // Successful DNS records as published in the zone
+  //
+  // Same records as `records`, carrying the TTL configured in the zone rather
+  // than the time remaining on a resolver's cached copy. Use this whenever a
+  // TTL is being asserted on: a caching resolver counts its cached TTL down
+  // toward zero, so a record configured at 300 answers 300, then 208, then
+  // 144 as the entry ages, and a threshold check on that flaps depending on
+  // when the scan ran.
+  //
+  // Unlike `records`, this does not follow CNAMEs, because the zone's own
+  // nameservers answer only for what the zone contains. A name published as a
+  // CNAME therefore appears here as a CNAME and not as the address it
+  // eventually resolves to: `records` for a CNAME'd name returns A and CNAME,
+  // while this returns CNAME alone. Filtering to `type == "A"` on such a name
+  // yields an empty list, so guard against that rather than letting an
+  // `all()` pass vacuously.
+  authoritativeRecords(authoritativeParams) []dns.record
   // Successful DNS MX records
   mx(params) []dns.mxRecord
   // DKIM TXT records
@@ -566,11 +589,27 @@ dns @defaults("fqdn") {
   dmarc() dns.dmarcRecord
   // Reverse DNS (PTR) records for the domain's resolved addresses
   //
+  // Deprecated in favor of `reverseRecords`.
+  //
+  // Returns the same records as reverseRecords, but derives the addresses from
+  // params, which queries every DNS record type. That is affordable once for
+  // the scanned asset, where the other fields reuse the same result, but it
+  // makes this field too expensive to instantiate per element of a list —
+  // resolvers rate-limit at that volume and PTR lookups then come back empty,
+  // which is indistinguishable from a missing PTR record.
+  reverse(params) @maturity("deprecated") []dns.record
+  // Reverse DNS (PTR) records for the domain's resolved addresses
+  //
   // Resolves the domain's A and AAAA addresses, then looks up the PTR
   // record for each — the forward-confirmed reverse DNS round trip. Use
   // it to confirm an address resolves back to the expected hostname
   // without hand-building `in-addr.arpa` names.
-  reverse(params) []dns.record
+  //
+  // Depends on fqdn rather than params, so it issues two address queries
+  // instead of a full record-type sweep. That keeps it affordable to
+  // instantiate per element of a list, such as checking the reverse DNS of
+  // every mail exchanger.
+  reverseRecords(fqdn) []dns.record
 }
 
 // DNS record

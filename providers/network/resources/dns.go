@@ -77,12 +77,48 @@ func initDns(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]
 }
 
 func (d *mqlDns) params(fqdn string) (any, error) {
+	// initDns substitutes an empty fqdn when the scan target is an IP address
+	// rather than a hostname. Querying an empty name resolves the DNS ROOT ZONE,
+	// so every derived field described "." instead of the asset: scanning an IP
+	// reported DNSSEC as enabled, NS redundancy as satisfied and no wildcards
+	// present, none of which had anything to do with the target. Return no data
+	// instead, so those checks report nothing rather than something wrong.
+	if fqdn == "" {
+		return nil, nil
+	}
+
 	dnsShaker, err := dnsshake.New(fqdn)
 	if err != nil {
 		return nil, err
 	}
 
 	records, err := dnsShaker.Query()
+	if err != nil {
+		return nil, err
+	}
+
+	return convert.JsonToDict(records)
+}
+
+// authoritativeParams resolves the same records as params, but against the
+// nameservers authoritative for the zone instead of a caching resolver.
+//
+// The answers are identical except for the TTL, which is the point: a caching
+// resolver reports the time left on its cached entry, so a record configured
+// with a TTL of 300 answers 300, then 208, then 144 as that entry ages. Any
+// check asserting on a TTL has to read it from here, or it flaps purely on when
+// the scan happened to run.
+func (d *mqlDns) authoritativeParams(fqdn string) (any, error) {
+	if fqdn == "" {
+		return nil, nil
+	}
+
+	dnsShaker, err := dnsshake.New(fqdn)
+	if err != nil {
+		return nil, err
+	}
+
+	records, err := dnsShaker.QueryAuthoritative()
 	if err != nil {
 		return nil, err
 	}
@@ -105,8 +141,27 @@ func dictTTL(m map[string]any) (int64, bool) {
 }
 
 func (d *mqlDns) records(params any) ([]any, error) {
+	return d.recordsFromParams(params)
+}
+
+// authoritativeRecords parses the same shape as records, from answers the
+// authoritative nameservers gave rather than a caching resolver. The records
+// are the same; their TTLs are the configured values.
+func (d *mqlDns) authoritativeRecords(authoritativeParams any) ([]any, error) {
+	return d.recordsFromParams(authoritativeParams)
+}
+
+func (d *mqlDns) recordsFromParams(params any) ([]any, error) {
 	// NOTE: mql does not cache the results of GetRecords since it has an input argument
 	// Iterations over map keys are not deterministic and therefore we need to sort the keys
+
+	// params is nil when there is no name to query, which is the case for an
+	// asset scanned by IP address. Report no data rather than an error: the
+	// query genuinely has no answer, and surfacing "incorrect structure of
+	// params received" there is misleading, since nothing is malformed.
+	if params == nil {
+		return nil, nil
+	}
 
 	paramsM, ok := params.(map[string]any)
 	if !ok {
@@ -537,6 +592,24 @@ func (d *mqlDns) dmarc() (*mqlDnsDmarcRecord, error) {
 	return res.(*mqlDnsDmarcRecord), nil
 }
 
+// addressesFromRecords extracts the resolved IPv4 (A) and IPv6 (AAAA) addresses
+// from a targeted dnsshake query result, skipping unsuccessful lookups.
+func addressesFromRecords(records map[string]dnsshake.DnsRecord) []string {
+	addrs := []string{}
+	for _, key := range []string{"A", "AAAA"} {
+		entry, ok := records[key]
+		if !ok || entry.RCode != dns.RcodeToString[dns.RcodeSuccess] {
+			continue
+		}
+		for _, s := range entry.RData {
+			if s != "" {
+				addrs = append(addrs, s)
+			}
+		}
+	}
+	return addrs
+}
+
 // addressesFromParams extracts the resolved IPv4 (A) and IPv6 (AAAA) addresses
 // from a dns params dict.
 func addressesFromParams(params any) ([]string, error) {
@@ -564,12 +637,53 @@ func addressesFromParams(params any) ([]string, error) {
 	return addrs, nil
 }
 
+// reverse is deprecated in favor of reverseRecords.
+//
+// It derives its addresses from params, and params calls dnsshake.Query() with
+// no arguments, which fans out to every entry in the type table — 81 record
+// types, issued as parallel goroutines. That is affordable once for the scanned
+// asset, where every other field reuses the same result, but not when a policy
+// instantiates dns() per element of a list: a check iterating five mail
+// exchangers cost roughly 405 concurrent queries, enough for resolvers to
+// rate-limit and for PTR lookups to come back empty intermittently, which is
+// indistinguishable from a genuinely missing PTR record.
+//
+// Kept as-is so existing policies keep working unchanged; use reverseRecords,
+// which resolves the same addresses with two targeted queries.
 func (d *mqlDns) reverse(params any) ([]any, error) {
 	addrs, err := addressesFromParams(params)
 	if err != nil {
 		return nil, err
 	}
+	return d.ptrRecordsFor(addrs)
+}
 
+// reverseRecords resolves the fqdn's own addresses and looks up the PTR for each.
+//
+// Queries A and AAAA directly rather than deriving them from params, so it stays
+// affordable to instantiate per element of a list. See reverse for what that
+// costs and why it matters.
+func (d *mqlDns) reverseRecords(fqdn string) ([]any, error) {
+	if fqdn == "" {
+		return nil, nil
+	}
+
+	shaker, err := dnsshake.New(fqdn)
+	if err != nil {
+		return nil, err
+	}
+
+	addrRecords, err := shaker.Query("A", "AAAA")
+	if err != nil {
+		return nil, err
+	}
+
+	return d.ptrRecordsFor(addressesFromRecords(addrRecords))
+}
+
+// ptrRecordsFor looks up the PTR record for each address and returns them as
+// dns.record resources, sorted for deterministic output.
+func (d *mqlDns) ptrRecordsFor(addrs []string) ([]any, error) {
 	resultMap := make(map[string]*mqlDnsRecord)
 	for _, addr := range addrs {
 		// dns.ReverseAddr builds the in-addr.arpa (IPv4) or ip6.arpa (IPv6)
