@@ -998,11 +998,11 @@ func cognitiveServicesDeploymentToMql(runtime *plugin.Runtime, dep *armcognitive
 		return nil, err
 	}
 	mqlDep := res.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment)
-	if raiPolicyName != "" {
-		if parsed, err := ParseResourceID(convert.ToValue(dep.ID)); err == nil {
-			mqlDep.cacheAccountId = fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.CognitiveServices/accounts/%s",
-				parsed.SubscriptionID, parsed.ResourceGroup, parsed.Path["accounts"])
-		}
+	// The owning account is what both raiPolicy and model resolve against, so
+	// record it for every deployment rather than only the ones with a policy.
+	if parsed, err := ParseResourceID(convert.ToValue(dep.ID)); err == nil {
+		mqlDep.cacheAccountId = fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.CognitiveServices/accounts/%s",
+			parsed.SubscriptionID, parsed.ResourceGroup, parsed.Path["accounts"])
 	}
 	sysData, err := convert.JsonToDict(dep.SystemData)
 	if err != nil {

@@ -14407,6 +14407,17 @@ azure.subscription.machineLearningService.workspace @defaults("id name location 
   onlineEndpoints() []azure.subscription.machineLearningService.workspace.onlineEndpoint
   // Serverless (Models-as-a-Service) endpoints in the workspace
   serverlessEndpoints() []azure.subscription.machineLearningService.workspace.serverlessEndpoint
+  // Batch inference endpoints serving models from the workspace
+  batchEndpoints() []azure.subscription.machineLearningService.workspace.batchEndpoint
+  // Datastores the workspace reads training and inference data from
+  //
+  // Each datastore points at an Azure storage backend and records how the
+  // workspace authenticates to it, so `credentialsType` is what distinguishes a
+  // datastore reached with a stored account key or SAS token from one reached
+  // with the workspace's managed identity.
+  datastores() []azure.subscription.machineLearningService.workspace.datastore
+  // Workspace-scoped connections to external resources, model providers, and data sources
+  connections() []azure.subscription.machineLearningService.workspace.connection
   // Compute targets attached to or managed by the workspace
   computes() []azure.subscription.machineLearningService.workspace.compute
   // Models registered in the workspace
@@ -14650,6 +14661,214 @@ azure.subscription.machineLearningService.workspace.model @defaults("name latest
   systemMetadata() azure.subscription.systemData
 }
 
+// Datastore in an Azure Machine Learning workspace
+//
+// Registered pointer to an Azure storage backend the workspace reads training
+// and inference data from, selected by `name`. `credentialsType` reports how
+// the workspace authenticates: "None" means the workspace's own identity is
+// used, while "AccountKey", "Sas", "ServicePrincipal", and "Certificate" mean
+// a credential is stored with the datastore. `serviceDataAccessAuthIdentity`
+// reports the identity used for the service's own access to the data.
+// `storageAccount` resolves the account behind the datastore, so its network
+// and encryption posture can be audited alongside the datastore.
+azure.subscription.machineLearningService.workspace.datastore @defaults("name datastoreType credentialsType isDefault") {
+  // Datastore resource ID
+  id string
+  // Datastore name, used as the selection key
+  name string
+  // Storage backend the datastore points at
+  //
+  // One of "AzureBlob", "AzureDataLakeGen1", "AzureDataLakeGen2", "AzureFile",
+  // or "OneLake".
+  datastoreType string
+  // Description of the datastore
+  description string
+  // Whether this is the workspace's default datastore
+  isDefault bool
+  // How the workspace authenticates to the storage backend
+  //
+  // One of "None" (the workspace's managed identity is used), "AccountKey",
+  // "Sas", "ServicePrincipal", or "Certificate". Every value other than "None"
+  // means a long-lived credential is stored with the datastore.
+  credentialsType string
+  // Identity used for the service's own access to the data
+  //
+  // One of "None", "WorkspaceSystemAssignedIdentity", or
+  // "WorkspaceUserAssignedIdentity".
+  serviceDataAccessAuthIdentity string
+  // Name of the storage account holding the data
+  accountName string
+  // Storage account holding the data
+  storageAccount() azure.subscription.storageService.account
+  // Blob container the datastore points at, for an AzureBlob datastore
+  containerName string
+  // Filesystem the datastore points at, for an AzureDataLakeGen2 datastore
+  filesystem string
+  // File share the datastore points at, for an AzureFile datastore
+  fileShareName string
+  // Storage endpoint suffix (e.g., "core.windows.net")
+  endpoint string
+  // Protocol used to reach the storage backend (e.g., "https")
+  protocol string
+  // Resource group of the storage account
+  resourceGroup string
+  // Subscription holding the storage account
+  subscriptionId string
+  // Datastore tags
+  tags map[string]string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Connection on an Azure Machine Learning workspace
+//
+// Single workspace-scoped connection, the link a job or endpoint uses to
+// reach an external resource, selected by `name`. `category` shows what the
+// connection points at, `authType` how it authenticates, `target` the
+// endpoint URL, and `isSharedToAll` whether every workspace member may use
+// it. The stored credential itself is deliberately not exposed.
+azure.subscription.machineLearningService.workspace.connection @defaults("name category authType target") {
+  // Connection resource ID
+  id string
+  // Connection name, used as the selection key
+  name string
+  // What the connection points at (e.g., "AzureOpenAI", "CognitiveSearch", "AzureBlob", "Git")
+  category string
+  // How the connection authenticates
+  //
+  // One of "AAD", "ApiKey", "AccessKey", "AccountKey", "CustomKeys",
+  // "ManagedIdentity", "None", "OAuth2", "PAT", "SAS", "ServicePrincipal", or
+  // "UsernamePassword". Every value other than "AAD" and "ManagedIdentity"
+  // means a credential is stored with the connection.
+  authType string
+  // Endpoint URL the connection points at
+  target string
+  // Whether every member of the workspace may use the connection
+  isSharedToAll bool
+  // Users the connection is shared with when it is not shared to all
+  sharedUserList []string
+  // When the stored credential expires
+  expiryTime time
+  // Connection group the category belongs to (e.g., "Azure", "AzureAI", "Database", "File")
+  group string
+  // ARM ID of the workspace the connection was created in
+  createdByWorkspaceArmId string
+  // Connection-specific settings
+  metadata map[string]string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Batch inference endpoint in an Azure Machine Learning workspace
+//
+// Single batch endpoint, which scores a whole dataset on a schedule or on
+// demand rather than serving requests in real time, selected by `name`.
+// `authMode` reports how callers authenticate, `scoringUri` the invocation
+// URL, `defaultDeploymentName` which deployment an unqualified invocation
+// runs, and `deployments` the model deployments behind the endpoint.
+azure.subscription.machineLearningService.workspace.batchEndpoint @defaults("name authMode provisioningState") {
+  // Batch endpoint resource ID
+  id string
+  // Endpoint name, used as the selection key
+  name string
+  // Endpoint location
+  location string
+  // Endpoint tags
+  tags map[string]string
+  // Endpoint kind
+  kind string
+  // How callers authenticate to the endpoint
+  //
+  // One of "AADToken", "AMLToken", or "Key". "Key" means a shared key grants
+  // invocation, rather than a Microsoft Entra identity.
+  authMode string
+  // Description of the endpoint
+  description string
+  // URL batch scoring jobs are submitted to
+  scoringUri string
+  // URL of the endpoint's OpenAPI description
+  swaggerUri string
+  // Provisioning state of the endpoint
+  provisioningState string
+  // Deployment an invocation runs when it names none
+  defaultDeploymentName string
+  // Managed identity configuration
+  //
+  // Keys: `type` ("None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned"), `userAssignedIdentities`, and the
+  // read-only `principalId` and `tenantId` of the system-assigned identity.
+  identity dict
+  // Endpoint-specific settings
+  properties map[string]string
+  // Model deployments behind the endpoint
+  deployments() []azure.subscription.machineLearningService.workspace.batchEndpoint.deployment
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Deployment on an Azure Machine Learning batch endpoint
+//
+// Single batch deployment, pairing a registered model with the compute that
+// scores against it, selected by `name`. `modelId` identifies the model,
+// `compute` the cluster the scoring job runs on, `environmentId` the
+// container image it runs in, and `outputAction` and `outputFileName` where
+// the scored results are written. `loggingLevel` and `errorThreshold` report
+// how much the job records and how many failures it tolerates.
+azure.subscription.machineLearningService.workspace.batchEndpoint.deployment @defaults("name provisioningState compute") {
+  // Batch deployment resource ID
+  id string
+  // Deployment name, used as the selection key
+  name string
+  // Deployment location
+  location string
+  // Deployment tags
+  tags map[string]string
+  // Description of the deployment
+  description string
+  // Provisioning state of the deployment
+  provisioningState string
+  // ARM ID or asset reference of the model being scored
+  modelId string
+  // Resource ID of the compute the scoring job runs on
+  compute string
+  // ARM ID of the environment (container image) the job runs in
+  environmentId string
+  // Environment variables set on the scoring job
+  environmentVariables map[string]string
+  // How scored results are written
+  //
+  // One of "SummaryOnly" or "AppendRow".
+  outputAction string
+  // File the scored results are written to
+  outputFileName string
+  // How much the scoring job logs
+  //
+  // One of "Info", "Warning", or "Debug".
+  loggingLevel string
+  // Number of record failures tolerated before the job is failed
+  //
+  // A value of -1 tolerates any number of failures.
+  errorThreshold int
+  // Number of records processed per mini batch
+  miniBatchSize int
+  // Maximum mini batches scored concurrently on each instance
+  maxConcurrencyPerInstance int
+  // Retry settings applied to a failed mini batch
+  //
+  // Keys: `maxRetries` and `timeout`.
+  retrySettings dict
+  // Compute resources requested for the scoring job
+  //
+  // Keys: `instanceCount`, `instanceType`, and `properties`.
+  resources dict
+  // Managed identity configuration
+  identity dict
+  // Deployment-specific settings
+  properties map[string]string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
 // App Configuration
 //
 // App Configuration stores in the subscription, each centralizing
@@ -14834,6 +15053,20 @@ azure.subscription.cognitiveServicesService.account @defaults("id name location 
   projects() []azure.subscription.cognitiveServicesService.account.project
   // Account-scoped connections to external resources, model providers, data sources, and tool servers
   connections() []azure.subscription.cognitiveServicesService.account.connection
+  // Models the account can serve, with their retirement schedule
+  //
+  // The catalog of models available to this account, which is what gives a
+  // deployment's modelName and modelVersion their meaning. Each entry carries
+  // its lifecycle status and the date inference on it stops working, so a
+  // deployment pinned to a version can be checked against the date that
+  // version retires.
+  models() []azure.subscription.cognitiveServicesService.account.model
+  // Custom word and pattern blocklists registered on the account
+  raiBlocklists() []azure.subscription.cognitiveServicesService.account.raiBlocklist
+  // Encryption scopes configured on the account
+  encryptionScopes() []azure.subscription.cognitiveServicesService.account.encryptionScope
+  // Capability hosts backing the account's agents
+  capabilityHosts() []azure.subscription.cognitiveServicesService.account.capabilityHost
   // Private endpoint connections to the account
   privateEndpointConnections() []azure.subscription.privateEndpointConnection
   // Microsoft Entra role assignments granting access to the account
@@ -14950,6 +15183,14 @@ azure.subscription.cognitiveServicesService.account.deployment @defaults("name m
   raiPolicyName string
   // Responsible AI content-filter policy applied to the deployment (null when none is attached)
   raiPolicy() azure.subscription.cognitiveServicesService.account.raiPolicy
+  // Catalog entry for the model version the deployment serves
+  //
+  // Resolves modelName and modelVersion against the account's model catalog,
+  // which is where the retirement schedule for the served version lives. When
+  // modelVersion is empty the deployment tracks the model's default version and
+  // this resolves to that version. Null when the served model is not in the
+  // account's catalog, as with a fine-tuned or custom deployment.
+  model() azure.subscription.cognitiveServicesService.account.model
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -14986,6 +15227,8 @@ azure.subscription.cognitiveServicesService.account.project @defaults("name disp
   endpoints map[string]string
   // Project-scoped connections to external resources, model providers, data sources, and tool servers
   connections() []azure.subscription.cognitiveServicesService.account.project.connection
+  // Capability hosts backing the project's agents
+  capabilityHosts() []azure.subscription.cognitiveServicesService.account.capabilityHost
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -15182,6 +15425,195 @@ private azure.subscription.cognitiveServicesService.account.raiTopic @defaults("
   creationTime time
   // When the topic was last modified
   lastModifiedAt time
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Model in an Azure AI Services account catalog
+//
+// Single model version the account can serve, selected by `name` and
+// `version`. This is the catalog entry a deployment's modelName and
+// modelVersion point at, and it is where the model's retirement schedule
+// lives: `lifecycleStatus` reports whether the version is generally
+// available, deprecating, or already deprecated, `inferenceDeprecationDate`
+// the date inference calls against it stop working, and the replacement
+// fields the version Azure upgrades to. `isDefaultVersion` marks the version
+// a deployment gets when it names no version at all.
+private azure.subscription.cognitiveServicesService.account.model @defaults("name version lifecycleStatus inferenceDeprecationDate") {
+  // Model name (e.g., "gpt-4o", "text-embedding-3-large")
+  name string
+  // Model version (e.g., "2024-11-20")
+  version string
+  // Model family format (e.g., "OpenAI")
+  format string
+  // Model publisher; empty for first-party Azure OpenAI models
+  publisher string
+  // Whether this is the version a deployment serves when it names no version
+  isDefaultVersion bool
+  // Lifecycle status of the version
+  //
+  // One of "GenerallyAvailable", "Deprecating" (a retirement date is set), or
+  // "Deprecated".
+  lifecycleStatus string
+  // Date inference requests against this version stop being served
+  //
+  // Null when no inference retirement date is published. A deployment pinned
+  // to this version with versionUpgradeOption "NoAutoUpgrade" stops working on
+  // this date rather than moving to the replacement.
+  inferenceDeprecationDate time
+  // Date fine-tuning on this version stops being accepted
+  fineTuneDeprecationDate time
+  // How firm the published retirement date is
+  //
+  // One of "Planned" or "Tentative". Empty when no retirement is scheduled.
+  deprecationStatus string
+  // Name of the model version Azure upgrades this version to
+  replacementModelName string
+  // Version Azure upgrades this version to
+  replacementModelVersion string
+  // Date Azure begins auto-upgrading deployments of this version
+  replacementAutoUpgradeStartDate time
+  // Days before expiry that Azure upgrades a deployment set to upgrade on expiry
+  replacementUpgradeOnExpiryLeadTimeDays int
+  // Maximum capacity a single deployment of this version may provision
+  maxCapacity int
+  // Identifier of the model in the Azure AI model catalog
+  catalogAssetId string
+  // Advertised model capabilities, keyed by capability name
+  capabilities map[string]string
+  // Capabilities available when fine-tuning the model
+  finetuneCapabilities map[string]string
+  // Deployment SKUs the version can be served on
+  //
+  // Each entry carries the SKU `name`, its `usageName`, the `capacity`
+  // configuration (minimum, maximum, step, and default), the `rateLimits`
+  // enforced on it, and a `deprecationDate` when that SKU is retiring
+  // independently of the model.
+  skus []dict
+}
+
+// Custom blocklist on an Azure AI Services account
+//
+// Named list of words and patterns the account's content filters block,
+// selected by `name`. A Responsible AI policy references a blocklist to
+// extend Azure's built-in filtering with terms specific to the tenant, and
+// `items` returns the entries the list holds.
+private azure.subscription.cognitiveServicesService.account.raiBlocklist @defaults("name description") {
+  // Blocklist resource ID
+  id string
+  // Blocklist name, used as the selection key and referenced by policies
+  name string
+  // Description of the blocklist
+  description string
+  // Blocklist tags
+  tags map[string]string
+  // ETag used for concurrency control on updates
+  etag string
+  // Words and patterns the blocklist holds
+  items() []azure.subscription.cognitiveServicesService.account.raiBlocklist.item
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Entry in an Azure AI Services account blocklist
+//
+// Single blocked term, selected by `name`. `pattern` is the term itself and
+// `isRegex` reports whether it is matched as a regular expression rather
+// than a literal string.
+private azure.subscription.cognitiveServicesService.account.raiBlocklist.item @defaults("name pattern isRegex") {
+  // Blocklist item resource ID
+  id string
+  // Item name, used as the selection key
+  name string
+  // Word or regular expression the filter blocks
+  pattern string
+  // Whether the pattern is matched as a regular expression
+  isRegex bool
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Encryption scope on an Azure AI Services account
+//
+// Customer-managed encryption applied to a subset of the account's data
+// rather than the whole account, selected by `name`. Where the account's own
+// cmkKeySource governs everything it holds, an encryption scope lets one
+// account serve data protected by different keys, so a scope's `state` and
+// `keySource` decide whether the data inside it is customer-encrypted at all.
+private azure.subscription.cognitiveServicesService.account.encryptionScope @defaults("name state keySource") {
+  // Encryption scope resource ID
+  id string
+  // Scope name, used as the selection key
+  name string
+  // Whether the scope is active
+  //
+  // One of "Enabled" or "Disabled". A disabled scope leaves the data it covers
+  // on the account's own encryption settings.
+  state string
+  // Encryption key source
+  //
+  // "Microsoft.KeyVault" when a customer-managed key protects the scope,
+  // "Microsoft.CognitiveServices" for platform-managed keys.
+  keySource string
+  // Name of the customer-managed Key Vault key protecting the scope
+  keyVaultKeyName string
+  // URI of the Key Vault holding the customer-managed key
+  keyVaultUri string
+  // Version of the customer-managed key; empty when the scope tracks the latest version
+  keyVaultKeyVersion string
+  // Client ID of the managed identity used to reach the customer-managed key
+  keyIdentityClientId string
+  // Provisioning state of the scope
+  provisioningState string
+  // Scope tags
+  tags map[string]string
+  // ETag used for concurrency control on updates
+  etag string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Capability host of an Azure AI Services account or project
+//
+// Storage backing the account's or project's agents, selected by `name`.
+// Agents keep conversation threads, uploaded files, and vector indexes
+// somewhere, and a capability host is what points that storage at resources
+// the tenant owns instead of Microsoft-managed defaults.
+// `threadStorageConnections`, `storageConnections`, and
+// `vectorStoreConnections` name the connections holding each, so the
+// underlying Cosmos DB account, Storage account, or AI Search service can be
+// audited as the store of the agents' conversation data. `customerSubnet`
+// places the agents' compute in a tenant-owned subnet.
+private azure.subscription.cognitiveServicesService.account.capabilityHost @defaults("name kind provisioningState") {
+  // Capability host resource ID
+  id string
+  // Capability host name, used as the selection key
+  name string
+  // What the capability host serves
+  //
+  // "Agents" is the only kind currently defined.
+  kind string
+  // Description of the capability host
+  description string
+  // Provisioning state of the capability host
+  provisioningState string
+  // Resource ID of the subnet the agents' compute is injected into
+  customerSubnetId string
+  // Subnet the agents' compute is injected into
+  customerSubnet() azure.subscription.networkService.subnet
+  // Connections holding the agents' conversation threads
+  //
+  // Each entry names a connection on the account or project, typically to a
+  // Cosmos DB account. Empty when threads stay in Microsoft-managed storage.
+  threadStorageConnections []string
+  // Connections holding files the agents read and write
+  storageConnections []string
+  // Connections holding the agents' vector indexes, typically to an AI Search service
+  vectorStoreConnections []string
+  // Connections to the AI Services accounts the agents call models on
+  aiServicesConnections []string
+  // Capability host tags
+  tags map[string]string
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
