@@ -3119,6 +3119,208 @@ private mariadb.conf.userOptionFile @defaults("file.path format") {
   sections() []mariadb.conf.section
 }
 
+// MongoDB Server
+//
+// MongoDB server version as reported by the installed server binary. Use
+// mongodb.conf for the parsed configuration file, covering network binding,
+// TLS material, authentication and authorization, auditing, encryption at
+// rest, replication, and query profiling.
+mongodb {
+  // MongoDB version (e.g., "7.0.14")
+  //
+  // Read by running the server binary, so it reports nothing over a
+  // transport that cannot run commands. The configuration file mongodb.conf
+  // reads is unaffected, since it comes off the filesystem.
+  version() string
+}
+
+// MongoDB configuration file
+//
+// Settings from mongod.conf as written on disk, useful for auditing the
+// configuration before the server has been restarted, for example to detect
+// drift between the file and a running server. The file is a nested YAML
+// document and has no include mechanism, so a parse reads exactly one file
+// and `params` holds the whole tree as written.
+//
+// Convenience fields flatten the branches that carry security posture:
+// network binding, TLS material, authentication and authorization, the
+// setParameter block, the audit log, the system log, storage, process
+// management, replication and sharding, and query profiling. Each reports
+// the value the server would use, so an option left out of the file reads as
+// the server default rather than as empty. That matters most where the
+// default is permissive: javascriptEnabled and enableLocalhostAuthBypass are
+// both on unless the file turns them off.
+//
+// Options written under the pre-4.2 `net.ssl` tree are reported through the
+// `tls` fields, since the server still accepts them as aliases. By default
+// the file is located by probing the well-known paths for Debian/Ubuntu,
+// RPM, and Homebrew installations; pass an explicit path with
+// `mongodb.conf("/path/to/mongod.conf")`.
+mongodb.conf {
+  init(path? string)
+  // Configuration file
+  file() file
+  // Full configuration tree as written in the file
+  params(file) dict
+
+  // Effective port the server binds to (27017 when unset)
+  port(params) int
+  // net.bindIp option split into individual addresses
+  //
+  // Reports 127.0.0.1 when the option is unset, which is the server default
+  // since 3.6. Both spellings the server reads are accepted: a
+  // comma-delimited string and a YAML sequence. Read bindIpAll alongside it,
+  // which binds every interface regardless of what this option lists.
+  bindIp(params) []string
+  // net.bindIpAll option, which binds every interface regardless of bindIp
+  bindIpAll(params) bool
+  // net.ipv6 option
+  ipv6(params) bool
+  // net.maxIncomingConnections option (65536 when unset)
+  maxIncomingConnections(params) int
+  // net.unixDomainSocket.enabled option (true when unset)
+  unixDomainSocketEnabled(params) bool
+  // net.unixDomainSocket.pathPrefix option
+  unixDomainSocketPathPrefix(params) string
+  // net.unixDomainSocket.filePermissions option as an octal string (e.g., "0700")
+  unixDomainSocketFilePermissions(params) string
+
+  // net.tls.mode option
+  //
+  // One of disabled, allowTLS, preferTLS, or requireTLS, and disabled when
+  // no mode is set. The pre-4.2 net.ssl.mode values allowSSL, preferSSL, and
+  // requireSSL are exact aliases of the last three and are reported under
+  // the modern spelling.
+  tlsMode(params) string
+  // net.tls.certificateKeyFile option (net.ssl.PEMKeyFile before 4.2)
+  tlsCertificateKeyFile(params) string
+  // net.tls.CAFile option (root CA used to verify client certificates)
+  tlsCaFile(params) string
+  // net.tls.clusterFile option (certificate presented for membership authentication)
+  tlsClusterFile(params) string
+  // net.tls.clusterCAFile option (root CA used to verify other cluster members)
+  tlsClusterCaFile(params) string
+  // net.tls.CRLFile option
+  tlsCrlFile(params) string
+  // net.tls.allowConnectionsWithoutCertificates option, which admits clients that present no certificate
+  tlsAllowConnectionsWithoutCertificates(params) bool
+  // net.tls.allowInvalidCertificates option, which admits certificates that fail validation
+  tlsAllowInvalidCertificates(params) bool
+  // net.tls.allowInvalidHostnames option, which skips hostname verification
+  tlsAllowInvalidHostnames(params) bool
+  // net.tls.disabledProtocols option split into individual versions (TLS1_0, TLS1_1, TLS1_2, TLS1_3)
+  tlsDisabledProtocols(params) []string
+  // net.tls.FIPSMode option
+  tlsFipsMode(params) bool
+  // X.509 certificates parsed from tlsCertificateKeyFile (empty if the file is unreadable)
+  certificate() []network.certificate
+
+  // security.authorization option (enabled, disabled)
+  //
+  // Reported as written, and empty when unset. This stays a string rather
+  // than becoming a boolean because it is not the only thing that turns
+  // authorization on: setting keyFile enables client authorization by
+  // itself, so an empty value here does not on its own mean access control
+  // is off. Read keyFile and clusterAuthMode alongside it.
+  authorization(params) string
+  // security.keyFile option (shared secret for internal membership authentication)
+  //
+  // Setting it also enables client authorization. The mode and ownership of
+  // the path it names matter as much as its contents, since any account that
+  // can read the file can join the replica set.
+  keyFile(params) string
+  // security.clusterAuthMode option (keyFile, sendKeyFile, sendX509, x509)
+  clusterAuthMode(params) string
+  // security.javascriptEnabled option, which permits server-side JavaScript execution
+  //
+  // Reports true when unset, which is the server default.
+  javascriptEnabled(params) bool
+  // security.redactClientLogData option, which keeps document contents out of the logs
+  redactClientLogData(params) bool
+  // security.enableEncryption option (encryption at rest for the storage engine)
+  enableEncryption(params) bool
+  // security.encryptionKeyFile option (local key file used for encryption at rest)
+  encryptionKeyFile(params) string
+  // security.encryptionCipherMode option (AES256-CBC, AES256-GCM)
+  encryptionCipherMode(params) string
+  // security.ldap.servers option split into individual hosts
+  ldapServers(params) []string
+  // security.ldap.transportSecurity option
+  //
+  // Either "tls" or "none". A value of "none" sends LDAP credentials over an
+  // unencrypted connection.
+  ldapTransportSecurity(params) string
+
+  // setParameter block as written in the file
+  setParameters(params) dict
+  // setParameter.enableLocalhostAuthBypass option
+  //
+  // Reports true when unset, which is the server default. The bypass lets a
+  // connection from localhost create the first user on a server that has no
+  // users yet.
+  enableLocalhostAuthBypass(params) bool
+  // setParameter.authenticationMechanisms option split into individual mechanisms
+  authenticationMechanisms(params) []string
+  // setParameter.scramIterationCount option (15000 when unset)
+  scramIterationCount(params) int
+  // setParameter.opensslCipherConfig option (OpenSSL cipher string)
+  opensslCipherConfig(params) string
+  // setParameter.auditAuthorizationSuccess option, which extends auditing to successful authorization checks
+  auditAuthorizationSuccess(params) bool
+
+  // auditLog.destination option (file, syslog, console)
+  auditLogDestination(params) string
+  // auditLog.format option (JSON, BSON)
+  auditLogFormat(params) string
+  // auditLog.path option
+  auditLogPath(params) string
+  // auditLog.filter option (query document restricting which events are recorded)
+  auditLogFilter(params) string
+
+  // systemLog.destination option (file, syslog)
+  //
+  // Empty when unset, in which case the server writes to standard output.
+  logDestination(params) string
+  // systemLog.path option
+  logPath(params) string
+  // systemLog.logAppend option, which appends to an existing log rather than replacing it
+  logAppend(params) bool
+  // systemLog.logRotate option (rename, reopen)
+  logRotate(params) string
+  // systemLog.verbosity option (0 through 5)
+  logVerbosity(params) int
+  // systemLog.quiet option, which reduces the events the server records
+  quiet(params) bool
+
+  // storage.dbPath option
+  dbPath(params) string
+  // storage.engine option (wiredTiger, inMemory)
+  storageEngine(params) string
+  // storage.directoryPerDB option
+  directoryPerDB(params) bool
+
+  // processManagement.fork option, which runs the server as a background daemon
+  fork(params) bool
+  // processManagement.pidFilePath option
+  pidFilePath(params) string
+
+  // replication.replSetName option
+  replSetName(params) string
+  // replication.oplogSizeMB option (0 when unset, which lets the server size the oplog)
+  oplogSizeMB(params) int
+  // replication.enableMajorityReadConcern option
+  //
+  // Reports true when unset, which is the server default.
+  enableMajorityReadConcern(params) bool
+  // sharding.clusterRole option (configsvr, shardsvr)
+  clusterRole(params) string
+
+  // operationProfiling.mode option (off, slowOp, all)
+  profilingMode(params) string
+  // operationProfiling.slowOpThresholdMs option (100 when unset)
+  slowOpThresholdMs(params) int
+}
+
 // systemd journald configuration
 //
 // Configuration for the systemd journal daemon parsed from
