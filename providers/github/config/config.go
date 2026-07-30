@@ -25,11 +25,15 @@ var Config = plugin.Provider{
 Available commands:
   org                       GitHub organization
   repo                      GitHub repo
+  user                      GitHub user
 
 Examples:
   cnspec scan github org <ORG_NAME> --discover organization
   cnspec scan github org <ORG_NAME> --repos "<REPO1>,<REPO2>"
+  cnspec scan github repo <ORG_NAME>/<REPO_NAME>
+  cnspec scan github user <USERNAME>
   cnspec shell github org <ORG_NAME>
+  cnspec shell github repo <ORG_NAME>/<REPO_NAME>
   cnspec shell github org <YOUR-GITHUB-ORG> --app-id <YOUR-GITHUB-APP-ID> --app-installation-id <YOUR-GITHUB-APP-INSTALL-ID> --app-private-key <PATH-TO-PEM-FILE>
 
 Notes:

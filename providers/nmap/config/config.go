@@ -26,11 +26,17 @@ var Config = plugin.Provider{
 Requirement:
   Nmap must be installed on your system. To learn how, read https://nmap.org/download.html.
 
+Available sub-commands:
+  host <TARGET>             Scan a single host by IP address or hostname
+  domain <TARGET>           Scan a domain and the hosts behind it
+
 Examples:
   cnspec shell nmap host 192.168.1.1
+  cnspec shell nmap domain example.com
   cnspec shell nmap --networks 10.0.0.0/8,192.168.0.0/16
   cnspec shell nmap --networks "192.168.1.0/24" --discover hosts
   cnspec scan nmap host 192.168.1.1
+  cnspec scan nmap domain example.com
   cnspec shell nmap host 192.168.1.1 --ports 22,80,443
 `,
 			MinArgs: 0,

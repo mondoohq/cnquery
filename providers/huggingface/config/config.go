@@ -17,9 +17,19 @@ var Config = plugin.Provider{
 	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
 		{
-			Name:      "huggingface",
-			Use:       "huggingface",
-			Short:     "Hugging Face",
+			Name:  "huggingface",
+			Use:   "huggingface",
+			Short: "Hugging Face",
+			Long: `Use the huggingface provider to query models, datasets, and spaces on Hugging Face.
+
+Examples:
+  cnspec shell huggingface --token <API-TOKEN>
+  cnspec shell huggingface --namespace openai --namespace-type org
+  cnspec scan huggingface --namespace <USERNAME> --namespace-type user
+
+Notes:
+  If you set the HF_TOKEN environment variable, you can omit the token flag.
+`,
 			Discovery: []string{},
 			Flags: []plugin.Flag{
 				{

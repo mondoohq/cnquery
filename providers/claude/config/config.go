@@ -21,6 +21,20 @@ var Config = plugin.Provider{
 			Name:  "claude",
 			Use:   "claude",
 			Short: "a Claude AI platform account",
+			Long: `Use the claude provider to query organization, workspace, API key, and service account
+configuration in a Claude AI platform account.
+
+Examples:
+  cnspec shell claude --token <API-KEY>
+  cnspec scan claude --admin-token <ADMIN-API-KEY> --discover organization
+  cnspec scan claude --admin-token <ADMIN-API-KEY> --discover workspaces
+
+Notes:
+  If you set the ANTHROPIC_API_KEY environment variable, you can omit the token flag.
+
+  Organization and workspace resources require an Admin API key. Supply it with
+  --admin-token or by setting the ANTHROPIC_ADMIN_API_KEY environment variable.
+`,
 			Discovery: []string{
 				connection.DiscoveryAll,
 				connection.DiscoveryAuto,

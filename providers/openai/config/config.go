@@ -18,9 +18,22 @@ var Config = plugin.Provider{
 	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
 		{
-			Name:      "openai",
-			Use:       "openai",
-			Short:     "an OpenAI account",
+			Name:  "openai",
+			Use:   "openai",
+			Short: "an OpenAI account",
+			Long: `Use the openai provider to query project, organization, and API key configuration
+in an OpenAI account.
+
+Examples:
+  cnspec shell openai --token <API-KEY>
+  cnspec scan openai --token <ADMIN-API-KEY> --organization <ORG-ID>
+  cnspec scan openai --project <PROJECT-ID>
+
+Notes:
+  If you set the OPENAI_API_KEY environment variable, you can omit the token flag. Both
+  project keys (sk-proj-...) and admin keys (sk-admin-...) are accepted and detected
+  automatically; organization resources require an admin key.
+`,
 			Discovery: []string{},
 			Flags: []plugin.Flag{
 				{

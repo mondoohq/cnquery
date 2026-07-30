@@ -17,9 +17,21 @@ var Config = plugin.Provider{
 	Platforms:       provider.Platforms,
 	Connectors: []plugin.Connector{
 		{
-			Name:      "ollama",
-			Use:       "ollama",
-			Short:     "an Ollama instance",
+			Name:  "ollama",
+			Use:   "ollama",
+			Short: "an Ollama instance",
+			Long: `Use the ollama provider to query the models and configuration of an Ollama instance.
+
+Examples:
+  cnspec shell ollama
+  cnspec shell ollama --host http://<HOST>:11434
+  cnspec scan ollama --token <API-TOKEN>
+
+Notes:
+  Without the host flag, Ollama is queried at http://localhost:11434. You can also set
+  the OLLAMA_HOST environment variable. Use the token flag, or OLLAMA_API_TOKEN, to
+  authenticate against a cloud-hosted Ollama instance.
+`,
 			Discovery: []string{},
 			Flags: []plugin.Flag{
 				{
