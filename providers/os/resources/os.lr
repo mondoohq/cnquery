@@ -2600,6 +2600,525 @@ private postgresql.ident.mapping @defaults("mapName systemUsername pgUsername") 
   pgUsername string
 }
 
+// MySQL Server
+//
+// MySQL server version and distribution as reported by the installed server
+// binary. Percona Server is reported here too, since it shares MySQL's
+// option file layout and binary names. Use mysql.conf for the parsed option
+// files, including option groups, server and client scope options, TLS
+// material, and the per-user option files under home directories. MariaDB
+// installations are covered by the mariadb resource.
+mysql {
+  // MySQL version (e.g., "8.0.46")
+  version() string
+  // Distribution the server binary belongs to
+  //
+  // Either "mysql" or "percona". Empty when no server binary could be read.
+  // The binary name does not determine this: MariaDB also installs a binary
+  // called mysqld, and it is excluded here.
+  flavor() string
+}
+
+// MySQL option files
+//
+// Options from the MySQL server option file chain on disk, useful for
+// auditing settings as they are written to the file before the server has
+// been restarted, for example to detect drift between the on-disk
+// configuration and a running server. The `!include` and `!includedir`
+// directives are resolved so the fragments they pull in contribute to
+// `sections`, and option names are normalized so `-` and `_` are
+// interchangeable, matching how the server treats them.
+//
+// Options stay grouped as the server reads them. `sections` holds every
+// option group, `serverOptions` merges the groups mysqld itself reads
+// (`[mysqld]`, `[server]`, and version-suffixed groups such as
+// `[mysqld-8.0]`), and `clientOptions` merges `[client]`, `[mysql]`, and
+// `[client-server]`, where a readable `password` exposes credentials to
+// every account that can read the file. Convenience views cover networking,
+// TLS, authentication and password policy, filesystem privileges, logging,
+// binary logging and replication, and encryption at rest. `userFiles`
+// reports the per-user option files under home directories.
+//
+// By default the file is located by probing the well-known paths for
+// Debian/Ubuntu and RPM installations, and returns nothing when the host
+// runs MariaDB rather than MySQL. Pass an explicit path with
+// `mysql.conf(path: "/etc/mysql/my.cnf")` to parse a file regardless of
+// which product it belongs to.
+mysql.conf {
+  init(path? string)
+  // Primary option file
+  file() file
+  // All option files (main plus `!include` and `!includedir` fragments)
+  files(file) []file
+  // Option groups, in the order the server reads them
+  sections(file) []mysql.conf.section
+  // Options mysqld reads, merged last-write-wins
+  serverOptions(file) map[string]string
+  // Options the client programs read, merged last-write-wins
+  clientOptions(file) map[string]string
+  // Per-user option files found under home directories
+  userFiles() []mysql.conf.userOptionFile
+
+  // Effective port the server binds to (3306 when unset)
+  port(serverOptions) int
+  // bind_address split into individual addresses
+  //
+  // Since 8.0.13 the option accepts a comma-separated list. `*` means every
+  // interface, which is also the default when the option is unset.
+  bindAddress(serverOptions) []string
+  // socket option (path to the Unix socket file)
+  socket(serverOptions) string
+  // skip_networking option, which disables TCP connections entirely
+  skipNetworking(serverOptions) bool
+  // skip_name_resolve option, which stops the server resolving client hostnames
+  skipNameResolve(serverOptions) bool
+  // max_connections option (0 when unset)
+  maxConnections(serverOptions) int
+
+  // require_secure_transport option, which rejects unencrypted connections
+  requireSecureTransport(serverOptions) bool
+  // ssl_ca option (root CA used to verify client certificates)
+  sslCaFile(serverOptions) string
+  // ssl_capath option (directory of trusted CA certificates)
+  sslCaPath(serverOptions) string
+  // ssl_cert option (server certificate)
+  sslCertFile(serverOptions) string
+  // ssl_key option (server private key)
+  sslKeyFile(serverOptions) string
+  // ssl_crl option (certificate revocation list)
+  sslCrlFile(serverOptions) string
+  // ssl_cipher option (permitted ciphers for TLS 1.2 and below)
+  sslCipher(serverOptions) string
+  // ssl_fips_mode option (OFF, ON, or STRICT)
+  sslFipsMode(serverOptions) string
+  // tls_version option split into individual protocol versions
+  //
+  // For example TLSv1.2 and TLSv1.3. Empty when unset, in which case the
+  // server's compiled-in default applies.
+  tlsVersion(serverOptions) []string
+  // tls_ciphersuites option (permitted TLS 1.3 cipher suites)
+  tlsCiphersuites(serverOptions) string
+  // X.509 certificates parsed from sslCertFile (empty if the file is unreadable)
+  certificate() []network.certificate
+
+  // default_authentication_plugin option
+  //
+  // For example caching_sha2_password or mysql_native_password. Superseded
+  // by authenticationPolicy in 8.0.27 and later.
+  defaultAuthenticationPlugin(serverOptions) string
+  // authentication_policy option split into its factor entries
+  authenticationPolicy(serverOptions) []string
+  // skip_grant_tables option, which starts the server with all access control disabled
+  skipGrantTables(serverOptions) bool
+  // plugin_dir option (directory the server loads plugin libraries from)
+  pluginDir(serverOptions) string
+  // Plugins loaded at startup, from plugin_load and plugin_load_add
+  //
+  // Every `plugin_load_add` occurrence contributes, since the option
+  // accumulates rather than overriding. Covers only plugins named in the
+  // option files, not those built into the server or installed at runtime.
+  pluginLoad(serverOptions) []string
+  // early_plugin_load option split into individual library names
+  earlyPluginLoad(serverOptions) []string
+  // validate_password.policy option (LOW, MEDIUM, or STRONG)
+  validatePasswordPolicy(serverOptions) string
+  // validate_password.length option (0 when unset)
+  validatePasswordLength(serverOptions) int
+  // validate_password.check_user_name option
+  validatePasswordCheckUserName(serverOptions) bool
+  // default_password_lifetime option in days (0 when unset, meaning no expiry)
+  defaultPasswordLifetime(serverOptions) int
+  // password_history option (number of previous passwords that cannot be reused)
+  passwordHistory(serverOptions) int
+  // password_reuse_interval option in days
+  passwordReuseInterval(serverOptions) int
+  // password_require_current option, requiring the current password to change it
+  passwordRequireCurrent(serverOptions) bool
+
+  // Account the server drops privileges to, from the user option
+  //
+  // Null when the option is unset, in which case the server keeps the
+  // identity of whichever account started it.
+  runAsUser() user
+  // datadir option (root of the data directory)
+  datadir(serverOptions) string
+  // basedir option (installation root)
+  basedir(serverOptions) string
+  // tmpdir option split into individual directories
+  tmpdir(serverOptions) []string
+  // secure_file_priv option
+  //
+  // Directory that LOAD DATA and SELECT ... INTO OUTFILE are confined to.
+  // An empty value removes the restriction entirely; NULL disables the
+  // statements.
+  secureFilePriv(serverOptions) string
+  // local_infile option, which allows LOAD DATA LOCAL from client hosts
+  localInfile(serverOptions) bool
+  // symbolic_links option, which lets tables be redirected outside the data directory
+  symbolicLinks(serverOptions) bool
+  // allow_suspicious_udfs option, which loads user-defined functions carrying only an xxx symbol
+  allowSuspiciousUdfs(serverOptions) bool
+  // chroot option (directory the server confines itself to)
+  chroot(serverOptions) string
+  // pid_file option
+  pidFile(serverOptions) string
+  // skip_show_database option, which restricts SHOW DATABASES to privileged accounts
+  skipShowDatabase(serverOptions) bool
+  // automatic_sp_privileges option, which grants routine creators access to their routines
+  automaticSpPrivileges(serverOptions) bool
+  // log_bin_trust_function_creators option, which drops the binary logging safety check on routines
+  logBinTrustFunctionCreators(serverOptions) bool
+  // sql_mode option split into individual modes
+  sqlMode(serverOptions) []string
+
+  // log_error option (error log destination)
+  logError(serverOptions) string
+  // log_error_verbosity option (1 errors, 2 adds warnings, 3 adds notes)
+  logErrorVerbosity(serverOptions) int
+  // log_output option split into destinations (FILE, TABLE, or NONE)
+  logOutput(serverOptions) []string
+  // general_log option, which records every statement the server receives
+  generalLog(serverOptions) bool
+  // general_log_file option
+  generalLogFile(serverOptions) string
+  // slow_query_log option
+  slowQueryLog(serverOptions) bool
+  // slow_query_log_file option
+  slowQueryLogFile(serverOptions) string
+  // audit_log_policy option (ALL, LOGINS, QUERIES, or NONE)
+  auditLogPolicy(serverOptions) string
+  // audit_log_file option
+  auditLogFile(serverOptions) string
+  // audit_log_format option (NEW, OLD, JSON, or CSV)
+  auditLogFormat(serverOptions) string
+
+  // log_bin option (base name for the binary log files)
+  logBin(serverOptions) string
+  // binlog_format option (ROW, STATEMENT, or MIXED)
+  binlogFormat(serverOptions) string
+  // binlog_expire_logs_seconds option (0 when unset, meaning no automatic purge)
+  binlogExpireLogsSeconds(serverOptions) int
+  // binlog_encryption option, which encrypts binary and relay log files
+  binlogEncryption(serverOptions) bool
+  // server_id option
+  serverId(serverOptions) int
+  // gtid_mode option (OFF, OFF_PERMISSIVE, ON_PERMISSIVE, or ON)
+  gtidMode(serverOptions) string
+  // enforce_gtid_consistency option (OFF, ON, or WARN)
+  enforceGtidConsistency(serverOptions) string
+  // read_only option
+  readOnly(serverOptions) bool
+  // super_read_only option, which extends read_only to accounts holding SUPER
+  superReadOnly(serverOptions) bool
+
+  // default_table_encryption option, applied to new schemas and tablespaces
+  defaultTableEncryption(serverOptions) bool
+  // table_encryption_privilege_check option
+  tableEncryptionPrivilegeCheck(serverOptions) bool
+  // innodb_redo_log_encrypt option
+  innodbRedoLogEncrypt(serverOptions) bool
+  // innodb_undo_log_encrypt option
+  innodbUndoLogEncrypt(serverOptions) bool
+  // keyring_file_data option (path to the keyring file holding the master keys)
+  keyringFileData(serverOptions) string
+}
+
+// MySQL option group
+//
+// A single `[group]` from an option file, with the options declared under it
+// and the files that contributed to it. The same group may be declared in
+// several files across the include chain and reopened within one file, so
+// `files` lists every contributor and `options` holds the merged,
+// last-write-wins result.
+private mysql.conf.section @defaults("name") {
+  // Group name as written, without the brackets (e.g., "mysqld", "client", "mysqld-8.0")
+  name string
+  // Options in this group, merged last-write-wins
+  options map[string]string
+  // Names of the options written with no value at all
+  //
+  // The server treats such an option as enabled, so `options` reports them
+  // with the value ON. For example `skip-name-resolve` on a line of its own.
+  flags []string
+  // Names of the options written with the `loose` prefix, which the server ignores when unrecognized
+  looseOptions []string
+  // Option files that declared this group
+  files []file
+}
+
+// MySQL per-user option file
+//
+// An option file in a user's home directory, either `.my.cnf` or the
+// obfuscated `.mylogin.cnf` credential store written by
+// mysql_config_editor. The server's client programs read these in addition
+// to the system option files, and they frequently hold a plaintext
+// `password`, so their mode and ownership matter as much as their contents.
+// Read `file.permissions` to flag files readable beyond their owner.
+private mysql.conf.userOptionFile @defaults("file.path format") {
+  // File backing this option file
+  file file
+  // Account whose home directory holds the file
+  owner user
+  // On-disk format
+  //
+  // Either "ini" for a plain-text `.my.cnf`, or "mylogin" for the
+  // obfuscated `.mylogin.cnf` credential store. The contents of a
+  // "mylogin" file are not decoded, so `sections` is empty for it.
+  format string
+  // Option groups declared in the file, empty when `format` is "mylogin"
+  sections() []mysql.conf.section
+}
+
+// MariaDB Server
+//
+// MariaDB server version as reported by the installed server binary. Use
+// mariadb.conf for the parsed option files, including option groups, server
+// and client scope options, Galera cluster settings, TLS material, and the
+// per-user option files under home directories.
+mariadb {
+  // MariaDB version (e.g., "11.8.6")
+  version() string
+}
+
+// MariaDB option files
+//
+// Options from the MariaDB server option file chain on disk, useful for
+// auditing settings as they are written to the file before the server has
+// been restarted, for example to detect drift between the on-disk
+// configuration and a running server. The `!include` and `!includedir`
+// directives are resolved so the fragments they pull in contribute to
+// `sections`, and option names are normalized so `-` and `_` are
+// interchangeable, matching how the server treats them.
+//
+// Options stay grouped as the server reads them. `sections` holds every
+// option group and `serverOptions` merges the groups mariadbd reads:
+// `[mysqld]`, `[server]`, `[mariadb]`, `[mariadbd]`, `[client-server]`, and
+// version-suffixed groups such as `[mariadb-11.4]`. That set is not an
+// extension of MySQL's, because packaged fragments since 11.0 configure the
+// server under `[mariadbd]` and ship no `[mysqld]` group at all.
+// `galeraOptions` breaks out `[galera]` so cluster transport settings stay
+// separable, and `clientOptions` merges the client groups, where a readable
+// `password` exposes credentials to every account that can read the file.
+//
+// By default the file is located by probing the well-known paths for
+// Debian/Ubuntu and RPM installations, and returns nothing when the host
+// runs MySQL rather than MariaDB. Pass an explicit path with
+// `mariadb.conf(path: "/etc/mysql/mariadb.cnf")` to parse a file regardless
+// of which product it belongs to.
+mariadb.conf {
+  init(path? string)
+  // Primary option file
+  file() file
+  // All option files (main plus `!include` and `!includedir` fragments)
+  files(file) []file
+  // Option groups, in the order the server reads them
+  sections(file) []mariadb.conf.section
+  // Options mariadbd reads, merged last-write-wins
+  serverOptions(file) map[string]string
+  // Options the client programs read, merged last-write-wins
+  clientOptions(file) map[string]string
+  // Options from the `[galera]` group, which a wsrep-enabled server reads
+  galeraOptions(file) map[string]string
+  // Per-user option files found under home directories
+  userFiles() []mariadb.conf.userOptionFile
+
+  // Effective port the server binds to (3306 when unset)
+  port(serverOptions) int
+  // bind_address split into individual addresses
+  bindAddress(serverOptions) []string
+  // socket option (path to the Unix socket file)
+  socket(serverOptions) string
+  // skip_networking option, which disables TCP connections entirely
+  skipNetworking(serverOptions) bool
+  // skip_name_resolve option, which stops the server resolving client hostnames
+  skipNameResolve(serverOptions) bool
+  // max_connections option (0 when unset)
+  maxConnections(serverOptions) int
+
+  // require_secure_transport option, which rejects unencrypted connections
+  requireSecureTransport(serverOptions) bool
+  // ssl_ca option (root CA used to verify client certificates)
+  sslCaFile(serverOptions) string
+  // ssl_capath option (directory of trusted CA certificates)
+  sslCaPath(serverOptions) string
+  // ssl_cert option (server certificate)
+  sslCertFile(serverOptions) string
+  // ssl_key option (server private key)
+  sslKeyFile(serverOptions) string
+  // ssl_crl option (certificate revocation list)
+  sslCrlFile(serverOptions) string
+  // ssl_cipher option (permitted ciphers for TLS 1.2 and below)
+  sslCipher(serverOptions) string
+  // tls_version option split into individual protocol versions
+  tlsVersion(serverOptions) []string
+  // X.509 certificates parsed from sslCertFile (empty if the file is unreadable)
+  certificate() []network.certificate
+
+  // skip_grant_tables option, which starts the server with all access control disabled
+  skipGrantTables(serverOptions) bool
+  // plugin_dir option (directory the server loads plugin libraries from)
+  pluginDir(serverOptions) string
+  // Plugins loaded at startup, from plugin_load and plugin_load_add
+  //
+  // Every `plugin_load_add` occurrence contributes, since the option
+  // accumulates rather than overriding. Debian packages install one fragment
+  // per compression provider, so a stock host already names several here.
+  pluginLoad(serverOptions) []string
+  // simple_password_check_minimal_length option, from the simple_password_check plugin
+  simplePasswordCheckMinimalLength(serverOptions) int
+  // simple_password_check_digits option (digits a password must contain)
+  simplePasswordCheckDigits(serverOptions) int
+  // simple_password_check_letters_same_case option (letters of each case a password must contain)
+  simplePasswordCheckLetters(serverOptions) int
+  // simple_password_check_other_characters option (non-alphanumeric characters a password must contain)
+  simplePasswordCheckOtherCharacters(serverOptions) int
+  // password_reuse_check_interval option in days, from the password_reuse_check plugin
+  passwordReuseCheckInterval(serverOptions) int
+
+  // Account the server drops privileges to, from the user option
+  //
+  // Null when the option is unset, in which case the server keeps the
+  // identity of whichever account started it.
+  runAsUser() user
+  // datadir option (root of the data directory)
+  datadir(serverOptions) string
+  // basedir option (installation root)
+  basedir(serverOptions) string
+  // tmpdir option split into individual directories
+  tmpdir(serverOptions) []string
+  // secure_file_priv option
+  //
+  // Directory that LOAD DATA and SELECT ... INTO OUTFILE are confined to.
+  // An empty value removes the restriction entirely.
+  secureFilePriv(serverOptions) string
+  // local_infile option, which allows LOAD DATA LOCAL from client hosts
+  localInfile(serverOptions) bool
+  // symbolic_links option, which lets tables be redirected outside the data directory
+  symbolicLinks(serverOptions) bool
+  // allow_suspicious_udfs option, which loads user-defined functions carrying only an xxx symbol
+  allowSuspiciousUdfs(serverOptions) bool
+  // chroot option (directory the server confines itself to)
+  chroot(serverOptions) string
+  // pid_file option
+  pidFile(serverOptions) string
+  // skip_show_database option, which restricts SHOW DATABASES to privileged accounts
+  skipShowDatabase(serverOptions) bool
+  // automatic_sp_privileges option, which grants routine creators access to their routines
+  automaticSpPrivileges(serverOptions) bool
+  // log_bin_trust_function_creators option, which drops the binary logging safety check on routines
+  logBinTrustFunctionCreators(serverOptions) bool
+  // sql_mode option split into individual modes
+  sqlMode(serverOptions) []string
+
+  // log_error option (error log destination)
+  logError(serverOptions) string
+  // log_warnings option (verbosity of the error log)
+  logWarnings(serverOptions) int
+  // log_output option split into destinations (FILE, TABLE, or NONE)
+  logOutput(serverOptions) []string
+  // general_log option, which records every statement the server receives
+  generalLog(serverOptions) bool
+  // general_log_file option
+  generalLogFile(serverOptions) string
+  // slow_query_log option
+  slowQueryLog(serverOptions) bool
+  // server_audit_logging option, from the server_audit plugin
+  serverAuditLogging(serverOptions) bool
+  // server_audit_events option split into audited event classes
+  //
+  // For example CONNECT, QUERY, TABLE, and QUERY_DDL. Empty when unset.
+  serverAuditEvents(serverOptions) []string
+  // server_audit_file_path option
+  serverAuditFilePath(serverOptions) string
+  // server_audit_excl_users option split into the accounts excluded from auditing
+  serverAuditExclUsers(serverOptions) []string
+
+  // log_bin option (base name for the binary log files)
+  logBin(serverOptions) string
+  // binlog_format option (ROW, STATEMENT, or MIXED)
+  binlogFormat(serverOptions) string
+  // expire_logs_days option (0 when unset, meaning no automatic purge)
+  expireLogsDays(serverOptions) int
+  // server_id option
+  serverId(serverOptions) int
+  // gtid_strict_mode option
+  gtidStrictMode(serverOptions) bool
+  // read_only option
+  readOnly(serverOptions) bool
+
+  // innodb_encrypt_tables option (OFF, ON, or FORCE)
+  innodbEncryptTables(serverOptions) string
+  // innodb_encrypt_log option, which encrypts the InnoDB redo log
+  innodbEncryptLog(serverOptions) bool
+  // encrypt_tmp_disk_tables option, which encrypts on-disk temporary tables
+  encryptTmpDiskTables(serverOptions) bool
+  // encrypt_binlog option, which encrypts the binary and relay logs
+  encryptBinlog(serverOptions) bool
+  // file_key_management_filename option (path to the key file holding the encryption keys)
+  fileKeyManagementFilename(serverOptions) string
+
+  // wsrep_on option, which enables Galera cluster replication
+  wsrepOn(galeraOptions) bool
+  // wsrep_cluster_address option (cluster membership URL the node joins through)
+  wsrepClusterAddress(galeraOptions) string
+  // wsrep_cluster_name option
+  wsrepClusterName(galeraOptions) string
+  // wsrep_sst_method option (state snapshot transfer method, e.g. rsync or mariabackup)
+  wsrepSstMethod(galeraOptions) string
+  // wsrep_provider_options option
+  //
+  // Semicolon-separated settings passed to the Galera provider, including
+  // the `socket.ssl_key`, `socket.ssl_cert`, and `socket.ssl_ca` entries
+  // that secure replication traffic between nodes.
+  wsrepProviderOptions(galeraOptions) string
+}
+
+// MariaDB option group
+//
+// A single `[group]` from an option file, with the options declared under it
+// and the files that contributed to it. The same group may be declared in
+// several files across the include chain and reopened within one file, so
+// `files` lists every contributor and `options` holds the merged,
+// last-write-wins result.
+private mariadb.conf.section @defaults("name") {
+  // Group name as written, without the brackets (e.g., "mariadbd", "galera", "mariadb-11.4")
+  name string
+  // Options in this group, merged last-write-wins
+  options map[string]string
+  // Names of the options written with no value at all
+  //
+  // The server treats such an option as enabled, so `options` reports them
+  // with the value ON. For example `skip-name-resolve` on a line of its own.
+  flags []string
+  // Names of the options written with the `loose` prefix, which the server ignores when unrecognized
+  looseOptions []string
+  // Option files that declared this group
+  files []file
+}
+
+// MariaDB per-user option file
+//
+// An option file in a user's home directory, either `.my.cnf` or the
+// obfuscated `.mylogin.cnf` credential store written by
+// mysql_config_editor. The server's client programs read these in addition
+// to the system option files, and they frequently hold a plaintext
+// `password`, so their mode and ownership matter as much as their contents.
+// Read `file.permissions` to flag files readable beyond their owner.
+private mariadb.conf.userOptionFile @defaults("file.path format") {
+  // File backing this option file
+  file file
+  // Account whose home directory holds the file
+  owner user
+  // On-disk format
+  //
+  // Either "ini" for a plain-text `.my.cnf`, or "mylogin" for the
+  // obfuscated `.mylogin.cnf` credential store. The contents of a
+  // "mylogin" file are not decoded, so `sections` is empty for it.
+  format string
+  // Option groups declared in the file, empty when `format` is "mylogin"
+  sections() []mariadb.conf.section
+}
+
 // systemd journald configuration
 //
 // Configuration for the systemd journal daemon parsed from
