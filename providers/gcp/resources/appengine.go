@@ -213,18 +213,19 @@ func (g *mqlGcpProjectAppEngineServiceService) versions() ([]any, error) {
 			}
 
 			mqlVersion, err := CreateResource(g.MqlRuntime, "gcp.project.appEngineService.version", map[string]*llx.RawData{
-				"projectId":          llx.StringData(projectId),
-				"serviceId":          llx.StringData(serviceId),
-				"id":                 llx.StringData(v.Id),
-				"name":               llx.StringData(v.Name),
-				"servingStatus":      llx.StringData(v.ServingStatus),
-				"runtime":            llx.StringData(v.Runtime),
-				"env":                llx.StringData(v.Env),
-				"createTime":         llx.TimeDataPtr(parseTime(v.CreateTime)),
-				"runtimeApiVersion":  llx.StringData(v.RuntimeApiVersion),
-				"vpcAccessConnector": llx.DictData(vpcConnector),
-				"handlers":           llx.ArrayData(handlers, types.Dict),
-				"inboundServices":    llx.ArrayData(convert.SliceAnyToInterface(v.InboundServices), types.String),
+				"projectId":                llx.StringData(projectId),
+				"serviceId":                llx.StringData(serviceId),
+				"id":                       llx.StringData(v.Id),
+				"name":                     llx.StringData(v.Name),
+				"servingStatus":            llx.StringData(v.ServingStatus),
+				"runtime":                  llx.StringData(v.Runtime),
+				"env":                      llx.StringData(v.Env),
+				"createTime":               llx.TimeDataPtr(parseTime(v.CreateTime)),
+				"runtimeApiVersion":        llx.StringData(v.RuntimeApiVersion),
+				"vpcAccessConnector":       llx.DictData(vpcConnector),
+				"handlers":                 llx.ArrayData(handlers, types.Dict),
+				"inboundServices":          llx.ArrayData(convert.SliceAnyToInterface(v.InboundServices), types.String),
+				"appEngineBundledServices": llx.ArrayData(convert.SliceAnyToInterface(v.AppEngineBundledServices), types.String),
 			})
 			if err != nil {
 				return err

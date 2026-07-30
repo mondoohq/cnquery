@@ -445,6 +445,7 @@ gcp.project.appEngineService.service.split 11.6.6
 gcp.project.appEngineService.service.versions 11.6.6
 gcp.project.appEngineService.services 11.6.6
 gcp.project.appEngineService.version 11.6.6
+gcp.project.appEngineService.version.appEngineBundledServices 13.33.4
 gcp.project.appEngineService.version.createTime 11.6.6
 gcp.project.appEngineService.version.env 11.6.6
 gcp.project.appEngineService.version.handlers 13.15.1
@@ -2382,6 +2383,7 @@ gcp.project.computeService.storagePool.performanceProvisioningType 11.6.6
 gcp.project.computeService.storagePool.poolProvisionedCapacityGb 11.6.6
 gcp.project.computeService.storagePool.poolProvisionedIops 11.6.6
 gcp.project.computeService.storagePool.poolProvisionedThroughput 11.6.6
+gcp.project.computeService.storagePool.sharedWithProjectIds 13.33.4
 gcp.project.computeService.storagePool.state 11.6.6
 gcp.project.computeService.storagePool.storagePoolType 11.6.6
 gcp.project.computeService.storagePool.zone 11.6.6
@@ -2782,6 +2784,7 @@ gcp.project.dataprocService.cluster.config.parentResourcePath 9.0.0
 gcp.project.dataprocService.cluster.config.secondaryWorker 9.0.0
 gcp.project.dataprocService.cluster.config.security 9.0.0
 gcp.project.dataprocService.cluster.config.software 9.0.0
+gcp.project.dataprocService.cluster.config.sshEnabled 13.33.4
 gcp.project.dataprocService.cluster.config.tempBucket 9.0.0
 gcp.project.dataprocService.cluster.config.tempBucketRef 13.27.2
 gcp.project.dataprocService.cluster.config.worker 9.0.0
