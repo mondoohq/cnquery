@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
@@ -252,8 +253,11 @@ func (k *mqlK8sContainerStatus) runtimeImageMatches() ([]plugin.Resource, bool, 
 	if images.Error != nil {
 		return nil, true, images.Error
 	}
-	keys := runtimeImageMatchKeys(k.Image.Data, k.ImageId.Data)
 	digestKeys := runtimeImageDigestMatchKeys(k.ImageId.Data)
+	var keys map[string]struct{}
+	if len(digestKeys) == 0 {
+		keys = runtimeImageMatchKeys(k.Image.Data, k.ImageId.Data)
+	}
 	matches := []plugin.Resource{}
 	for _, item := range images.Data {
 		image, ok := item.(plugin.Resource)
@@ -534,7 +538,25 @@ func sharedRuntimeField(runtime *plugin.Runtime, resource plugin.Resource, field
 		return nil, false
 	}
 	raw, err := runtime.GetSharedData(resource.MqlName(), resource.MqlID(), field)
-	if err != nil || raw == nil || raw.Error != nil {
+	if err != nil {
+		log.Warn().
+			Err(err).
+			Str("resource", resource.MqlName()).
+			Str("resource-id", resource.MqlID()).
+			Str("field", field).
+			Msg("could not read shared runtime field")
+		return nil, false
+	}
+	if raw == nil {
+		return nil, false
+	}
+	if raw.Error != nil {
+		log.Warn().
+			Err(raw.Error).
+			Str("resource", resource.MqlName()).
+			Str("resource-id", resource.MqlID()).
+			Str("field", field).
+			Msg("shared runtime field contains an error")
 		return nil, false
 	}
 	return raw, true
