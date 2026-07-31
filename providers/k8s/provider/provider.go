@@ -19,7 +19,6 @@ import (
 	"go.mondoo.com/mql/providers/k8s/connection/shared"
 	connectionResources "go.mondoo.com/mql/providers/k8s/connection/shared/resources"
 	"go.mondoo.com/mql/providers/k8s/resources"
-	"go.mondoo.com/mql/types"
 )
 
 const ConnectionType = "k8s"
@@ -152,24 +151,7 @@ func primitiveStringValue(flag *llx.Primitive) string {
 	if flag == nil {
 		return ""
 	}
-	if flag.Type == "bool" {
-		return string(flag.Value)
-	}
-	if flag.Type != "" && flag.Type != string(types.Bool) && flag.Type != string(types.String) {
-		return string(flag.Value)
-	}
-	raw := flag.RawData()
-	if raw == nil || raw.Error != nil {
-		return string(flag.Value)
-	}
-	switch v := raw.Value.(type) {
-	case bool:
-		return strconv.FormatBool(v)
-	case string:
-		return v
-	default:
-		return string(flag.Value)
-	}
+	return string(flag.Value)
 }
 
 func (s *Service) MockConnect(_ *plugin.ConnectReq, _ plugin.ProviderCallback) (*plugin.ConnectRes, error) {

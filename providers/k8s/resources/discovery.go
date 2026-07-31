@@ -121,7 +121,10 @@ func Discover(runtime *plugin.Runtime, features mql.Features) (*inventory.Invent
 	if _, ok := invConfig.Options[plugin.OptionStagedDiscovery]; ok {
 		// If a namespace is already set, we're in stage 2 (workload discovery
 		// for that namespace). Otherwise it's stage 1 (cluster + namespaces).
-		if nsName, ok := namespaceStageName(invConfig); ok {
+		// Kyverno scans always need the cluster asset, even when their connection
+		// is scoped to a namespace.
+		discoverKyverno := invConfig.Discover != nil && stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryKyverno)
+		if nsName, ok := namespaceStageName(invConfig); ok && !discoverKyverno {
 			in, err = discoverNamespaceStage(runtime, conn, invConfig, features, nsName)
 		} else {
 			in, err = discoverClusterStage(runtime, conn, invConfig, features)
@@ -200,7 +203,8 @@ func discoverLegacy(runtime *plugin.Runtime, conn shared.Connection, invConfig *
 	// platform IDs for the assets based on it. If we cannot discover the cluster, we
 	// discover the individual namespaces according to the ns filter and then build
 	// the platform IDs for the assets based on the namespace.
-	if len(nsFilter.include) == 0 && len(nsFilter.exclude) == 0 && labelFilters.IsEmpty() {
+	discoverKyverno := stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryKyverno) && resFilters.IsEmpty()
+	if (len(nsFilter.include) == 0 && len(nsFilter.exclude) == 0 && labelFilters.IsEmpty()) || discoverKyverno {
 		assetId, err := conn.AssetId()
 		if err == nil {
 			root := &inventory.Asset{
@@ -209,7 +213,8 @@ func discoverLegacy(runtime *plugin.Runtime, conn shared.Connection, invConfig *
 				Platform:    conn.Platform(),
 				Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
 			}
-			if stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryAuto, DiscoveryAll, DiscoveryClusters, DiscoveryKyverno) && resFilters.IsEmpty() {
+			discoverCluster := stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryAuto, DiscoveryAll, DiscoveryClusters) && resFilters.IsEmpty()
+			if discoverCluster || discoverKyverno {
 				in.Spec.Assets = append(in.Spec.Assets, root)
 			}
 		} else {
@@ -279,7 +284,8 @@ func discoverClusterStage(runtime *plugin.Runtime, conn shared.Connection, invCo
 	// platform IDs for the assets based on it. If we cannot discover the cluster, we
 	// discover the individual namespaces according to the ns filter and then build
 	// the platform IDs for the assets based on the namespace.
-	if len(nsFilter.include) == 0 && len(nsFilter.exclude) == 0 && labelFilters.IsEmpty() {
+	discoverKyverno := stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryKyverno) && resFilters.IsEmpty()
+	if (len(nsFilter.include) == 0 && len(nsFilter.exclude) == 0 && labelFilters.IsEmpty()) || discoverKyverno {
 		assetId, err := conn.AssetId()
 		if err == nil {
 			root := &inventory.Asset{
@@ -288,7 +294,8 @@ func discoverClusterStage(runtime *plugin.Runtime, conn shared.Connection, invCo
 				Platform:    conn.Platform(),
 				Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
 			}
-			if stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryAuto, DiscoveryAll, DiscoveryClusters, DiscoveryKyverno) && resFilters.IsEmpty() {
+			discoverCluster := stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryAuto, DiscoveryAll, DiscoveryClusters) && resFilters.IsEmpty()
+			if discoverCluster || discoverKyverno {
 				in.Spec.Assets = append(in.Spec.Assets, root)
 			}
 		} else {
