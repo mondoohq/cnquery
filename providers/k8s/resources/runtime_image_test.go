@@ -134,7 +134,7 @@ func TestContainerStatusPodUIDSupportsAllStatusKinds(t *testing.T) {
 	assert.Equal(t, "", containerStatusPodUID("-containerstatus-app"))
 }
 
-func TestNodeNameForPodUIDUsesMatchingPodOnly(t *testing.T) {
+func TestRuntimeImageClusterLookupIndexesPodsAndNodes(t *testing.T) {
 	pods := []any{
 		&mqlK8sPod{
 			Uid: plugin.TValue[string]{Data: "other-pod"},
@@ -149,22 +149,33 @@ func TestNodeNameForPodUIDUsesMatchingPodOnly(t *testing.T) {
 			},
 		},
 	}
+	node := &mqlK8sNode{Name: plugin.TValue[string]{Data: "node-a"}}
 
-	nodeName, found, err := nodeNameForPodUID(pods, "pod-uid")
+	lookup, err := newRuntimeImageClusterLookup(pods, []any{node})
 
-	assert.NoError(t, err)
-	assert.True(t, found)
-	assert.Equal(t, "node-a", nodeName)
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.Equal(t, "node-a", lookup.podNodeNames["pod-uid"])
+	assert.Equal(t, "node-b", lookup.podNodeNames["other-pod"])
+	assert.Same(t, node, lookup.nodes["node-a"])
 }
 
-func TestNodeNameForPodUIDReturnsMissingPod(t *testing.T) {
-	nodeName, found, err := nodeNameForPodUID([]any{
-		&mqlK8sPod{Uid: plugin.TValue[string]{Data: "other-pod"}},
-	}, "pod-uid")
+func TestRuntimeImageClusterLookupOmitsMissingPod(t *testing.T) {
+	lookup, err := newRuntimeImageClusterLookup([]any{
+		&mqlK8sPod{
+			Uid: plugin.TValue[string]{Data: "other-pod"},
+			mqlK8sPodInternal: mqlK8sPodInternal{
+				obj: &corev1.Pod{Spec: corev1.PodSpec{NodeName: "node-b"}},
+			},
+		},
+	}, nil)
 
-	assert.NoError(t, err)
+	if !assert.NoError(t, err) {
+		return
+	}
+	_, found := lookup.podNodeNames["pod-uid"]
 	assert.False(t, found)
-	assert.Empty(t, nodeName)
 }
 
 func TestRuntimeDelegateAvailableAllowsUnknownRuntimeWhenAnyDelegateExists(t *testing.T) {

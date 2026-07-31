@@ -180,10 +180,6 @@ func containerStatusResources(runtime *plugin.Runtime, pod *corev1.Pod, statuses
 }
 
 func (k *mqlK8sContainerStatus) runtimeImage() (plugin.Resource, error) {
-	if k.ImageId.Data == "" && k.Image.Data == "" {
-		k.RuntimeImage.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
 	status, matches, err := k.runtimeImageStatusAndMatches()
 	if err != nil {
 		return nil, err
@@ -231,77 +227,105 @@ func (k *mqlK8sContainerStatus) runtimeImageMatches() ([]plugin.Resource, bool, 
 		return nil, false, err
 	}
 	k8s := k8sRaw.(*mqlK8s)
-	pods := k8s.GetPods()
-	if pods.Error != nil {
-		return nil, false, pods.Error
-	}
-
-	nodeName, podFound, err := nodeNameForPodUID(pods.Data, podUID)
+	lookup, err := k8s.getRuntimeImageClusterLookup()
 	if err != nil {
 		return nil, false, err
 	}
+	nodeName, podFound := lookup.podNodeNames[podUID]
 	if !podFound || nodeName == "" {
 		return nil, true, nil
 	}
 
-	nodes := k8s.GetNodes()
-	if nodes.Error != nil {
-		return nil, false, nodes.Error
+	node, ok := lookup.nodes[nodeName]
+	if !ok {
+		return nil, false, nil
 	}
-	for _, item := range nodes.Data {
-		node, ok := item.(*mqlK8sNode)
-		if !ok || node.Name.Data != nodeName {
+	delegates := node.GetRuntimeDelegates()
+	if delegates.Error != nil {
+		return nil, false, delegates.Error
+	}
+	if !runtimeDelegateAvailable(k.MqlRuntime, delegates.Data, runtimeKindFromContainerID(k.ContainerId.Data)) {
+		return nil, false, nil
+	}
+
+	images := node.GetRuntimeImages()
+	if images.Error != nil {
+		return nil, true, images.Error
+	}
+	keys := runtimeImageMatchKeys(k.Image.Data, k.ImageId.Data)
+	digestKeys := runtimeImageDigestMatchKeys(k.ImageId.Data)
+	matches := []plugin.Resource{}
+	for _, item := range images.Data {
+		image, ok := item.(plugin.Resource)
+		if !ok {
 			continue
 		}
-		delegates := node.GetRuntimeDelegates()
-		if delegates.Error != nil {
-			return nil, false, delegates.Error
-		}
-		if !runtimeDelegateAvailable(k.MqlRuntime, delegates.Data, runtimeKindFromContainerID(k.ContainerId.Data)) {
-			return nil, false, nil
-		}
-
-		images := node.GetRuntimeImages()
-		if images.Error != nil {
-			return nil, true, images.Error
-		}
-		keys := runtimeImageMatchKeys(k.Image.Data, k.ImageId.Data)
-		digestKeys := runtimeImageDigestMatchKeys(k.ImageId.Data)
-		matches := []plugin.Resource{}
-		for _, item := range images.Data {
-			image, ok := item.(plugin.Resource)
-			if !ok {
-				continue
-			}
-			imageKeys := runtimeImageResourceMatchKeys(k.MqlRuntime, image)
-			if len(digestKeys) > 0 {
-				if runtimeImageKeysIntersect(digestKeys, imageKeys) {
-					matches = append(matches, image)
-				}
-				continue
-			}
-			if runtimeImageKeysIntersect(keys, imageKeys) {
+		imageKeys := runtimeImageResourceMatchKeys(k.MqlRuntime, image)
+		if len(digestKeys) > 0 {
+			if runtimeImageKeysIntersect(digestKeys, imageKeys) {
 				matches = append(matches, image)
 			}
+			continue
 		}
-		return matches, true, nil
+		if runtimeImageKeysIntersect(keys, imageKeys) {
+			matches = append(matches, image)
+		}
 	}
-	return nil, false, nil
+	return matches, true, nil
 }
 
-func nodeNameForPodUID(pods []any, podUID string) (string, bool, error) {
+type runtimeImageClusterLookup struct {
+	podNodeNames map[string]string
+	nodes        map[string]*mqlK8sNode
+}
+
+func (k *mqlK8s) getRuntimeImageClusterLookup() (*runtimeImageClusterLookup, error) {
+	k.runtimeImageLookupLock.Lock()
+	defer k.runtimeImageLookupLock.Unlock()
+	if k.runtimeImageLookup != nil {
+		return k.runtimeImageLookup, nil
+	}
+
+	pods := k.GetPods()
+	if pods.Error != nil {
+		return nil, pods.Error
+	}
+	nodes := k.GetNodes()
+	if nodes.Error != nil {
+		return nil, nodes.Error
+	}
+	lookup, err := newRuntimeImageClusterLookup(pods.Data, nodes.Data)
+	if err != nil {
+		return nil, err
+	}
+	k.runtimeImageLookup = lookup
+	return lookup, nil
+}
+
+func newRuntimeImageClusterLookup(pods, nodes []any) (*runtimeImageClusterLookup, error) {
+	lookup := &runtimeImageClusterLookup{
+		podNodeNames: make(map[string]string, len(pods)),
+		nodes:        make(map[string]*mqlK8sNode, len(nodes)),
+	}
 	for _, item := range pods {
 		pod, ok := item.(*mqlK8sPod)
-		if !ok || pod.Uid.Data != podUID {
+		if !ok || pod.Uid.Data == "" {
 			continue
 		}
 		nodeName := pod.GetNodeName()
 		if nodeName.Error != nil {
-			return "", true, nodeName.Error
+			return nil, nodeName.Error
 		}
-		return nodeName.Data, true, nil
+		lookup.podNodeNames[pod.Uid.Data] = nodeName.Data
 	}
-	return "", false, nil
+	for _, item := range nodes {
+		node, ok := item.(*mqlK8sNode)
+		if !ok || node.Name.Data == "" {
+			continue
+		}
+		lookup.nodes[node.Name.Data] = node
+	}
+	return lookup, nil
 }
 
 func containerStatusPodUID(id string) string {
@@ -349,14 +373,10 @@ func runtimeDelegateConfiguredForScan(runtime *plugin.Runtime, delegate plugin.R
 	if strings.TrimSpace(endpoint) == "" {
 		return false
 	}
-	if readonly, ok := delegate.(runtimeDelegateReadonlyResource); ok && !readonly.GetReadonly().Data {
-		return false
-	} else if readonly, ok := sharedRuntimeBoolField(runtime, delegate, "readonly"); ok && !readonly {
+	if readonly, ok := runtimeDelegateReadonly(runtime, delegate); ok && !readonly {
 		return false
 	}
-	if allowPull, ok := delegate.(runtimeDelegateAllowPullResource); ok && allowPull.GetAllowPull().Data {
-		return false
-	} else if allowPull, ok := sharedRuntimeBoolField(runtime, delegate, "allowPull"); ok && allowPull {
+	if allowPull, ok := runtimeDelegateAllowPull(runtime, delegate); ok && allowPull {
 		return false
 	}
 	statusValue := ""
@@ -371,6 +391,20 @@ func runtimeDelegateConfiguredForScan(runtime *plugin.Runtime, delegate plugin.R
 	default:
 		return false
 	}
+}
+
+func runtimeDelegateReadonly(runtime *plugin.Runtime, delegate plugin.Resource) (bool, bool) {
+	if readonly, ok := delegate.(runtimeDelegateReadonlyResource); ok {
+		return readonly.GetReadonly().Data, true
+	}
+	return sharedRuntimeBoolField(runtime, delegate, "readonly")
+}
+
+func runtimeDelegateAllowPull(runtime *plugin.Runtime, delegate plugin.Resource) (bool, bool) {
+	if allowPull, ok := delegate.(runtimeDelegateAllowPullResource); ok {
+		return allowPull.GetAllowPull().Data, true
+	}
+	return sharedRuntimeBoolField(runtime, delegate, "allowPull")
 }
 
 type runtimeDelegateIdentityResource interface {
