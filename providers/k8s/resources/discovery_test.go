@@ -66,6 +66,47 @@ func TestDiscoverStagedDiscoveryWithCommaSeparatedNamespacesStartsClusterStage(t
 	require.Equal(t, "team-b", inv.Spec.Assets[1].Connections[0].Options[shared.OPTION_NAMESPACE])
 }
 
+func TestDiscoverKyvernoWithNamespaceFilterIncludesClusterAsset(t *testing.T) {
+	for _, staged := range []bool{false, true} {
+		t.Run(fmt.Sprintf("staged=%t", staged), func(t *testing.T) {
+			options := map[string]string{shared.OPTION_NAMESPACE: "team-a"}
+			if staged {
+				options[plugin.OptionStagedDiscovery] = ""
+			}
+			cfg := &inventory.Config{
+				Type:    "k8s",
+				Options: options,
+				Discover: &inventory.Discovery{
+					Targets: []string{DiscoveryKyverno},
+				},
+			}
+			asset := &inventory.Asset{
+				Name:        "K8s Cluster test",
+				Connections: []*inventory.Config{cfg},
+			}
+			conn := &namespaceDiscoveryConnection{
+				Connection: plugin.NewConnection(1, asset),
+				asset:      asset,
+				namespaces: []corev1.Namespace{newTestNamespace("team-a", "uid-team-a")},
+			}
+			pluginRuntime := &plugin.Runtime{
+				Resources:  &syncx.Map[plugin.Resource]{},
+				Connection: conn,
+			}
+			pluginRuntime.CreateResource = func(runtime *plugin.Runtime, name string, args map[string]*llx.RawData) (plugin.Resource, error) {
+				return &mqlK8s{MqlRuntime: runtime}, nil
+			}
+
+			inv, err := Discover(pluginRuntime, mql.Features{})
+			require.NoError(t, err)
+			require.NotEmpty(t, inv.Spec.Assets)
+			assert.Equal(t, asset.Name, inv.Spec.Assets[0].Name)
+			assert.NotEmpty(t, inv.Spec.Assets[0].PlatformIds)
+			assert.Equal(t, "team-a", inv.Spec.Assets[0].Connections[0].Options[shared.OPTION_NAMESPACE])
+		})
+	}
+}
+
 func newTestNamespace(name, uid string) corev1.Namespace {
 	return corev1.Namespace{
 		TypeMeta: metav1.TypeMeta{
