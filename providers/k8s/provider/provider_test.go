@@ -360,6 +360,7 @@ func TestParseCLI(t *testing.T) {
 					Type:  "bool",
 					Value: []byte("false"),
 				},
+				shared.OPTION_KYVERNO_REPORT_UNMAPPED_POLICY_RESULTS: nil,
 			},
 		}
 
@@ -373,5 +374,6 @@ func TestParseCLI(t *testing.T) {
 		assert.Equal(t, "true", options[shared.OPTION_KYVERNO_MIRROR_POLICY_EXCEPTIONS])
 		assert.Equal(t, "WORKAROUND", options[shared.OPTION_KYVERNO_MIRRORED_EXCEPTION_ACTION])
 		assert.Equal(t, "false", options[shared.OPTION_KYVERNO_FAIL_EXPIRED_POLICY_EXCEPTIONS])
+		assert.NotContains(t, options, shared.OPTION_KYVERNO_REPORT_UNMAPPED_POLICY_RESULTS)
 	})
 }
