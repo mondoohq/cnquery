@@ -203,7 +203,7 @@ func discoverLegacy(runtime *plugin.Runtime, conn shared.Connection, invConfig *
 	// platform IDs for the assets based on it. If we cannot discover the cluster, we
 	// discover the individual namespaces according to the ns filter and then build
 	// the platform IDs for the assets based on the namespace.
-	discoverKyverno := stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryKyverno) && resFilters.IsEmpty()
+	discoverKyverno := stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryKyverno)
 	if (len(nsFilter.include) == 0 && len(nsFilter.exclude) == 0 && labelFilters.IsEmpty()) || discoverKyverno {
 		assetId, err := conn.AssetId()
 		if err == nil {
@@ -284,7 +284,7 @@ func discoverClusterStage(runtime *plugin.Runtime, conn shared.Connection, invCo
 	// platform IDs for the assets based on it. If we cannot discover the cluster, we
 	// discover the individual namespaces according to the ns filter and then build
 	// the platform IDs for the assets based on the namespace.
-	discoverKyverno := stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryKyverno) && resFilters.IsEmpty()
+	discoverKyverno := stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryKyverno)
 	if (len(nsFilter.include) == 0 && len(nsFilter.exclude) == 0 && labelFilters.IsEmpty()) || discoverKyverno {
 		assetId, err := conn.AssetId()
 		if err == nil {
@@ -301,6 +301,11 @@ func discoverClusterStage(runtime *plugin.Runtime, conn shared.Connection, invCo
 		} else {
 			log.Warn().Err(err).Msg("failed to discover cluster asset")
 		}
+	}
+
+	namespaceTargets := discoveryTargetsWithout(invConfig.Discover.Targets, DiscoveryKyverno)
+	if discoverKyverno && len(namespaceTargets) == 0 {
+		return in, nil
 	}
 
 	// Discover namespaces and emit them as scannable assets with platform IDs
@@ -326,6 +331,9 @@ func discoverClusterStage(runtime *plugin.Runtime, conn shared.Connection, invCo
 		// by all other namespaces, returning stale data.
 		nsConfig := invConfig.Clone() // Clone() copies Options, propagating OPTION_STAGED_DISCOVERY
 		nsConfig.Options[shared.OPTION_NAMESPACE] = ns.Name
+		if discoverKyverno {
+			nsConfig.Discover.Targets = namespaceTargets
+		}
 
 		if !nsIsScannable {
 			ns.PlatformIds = nil
@@ -1674,7 +1682,7 @@ func newFilterOpts(include, exclude []string) (FilterOpts, error) {
 
 // namespaceStageName returns a namespace only when the config targets exactly
 // one namespace, which indicates staged discovery should run the namespace stage.
-// Empty or multi-namespace filters fall through to cluster-stage discovery.
+// Empty, multi-namespace, or wildcard filters fall through to cluster-stage discovery.
 func namespaceStageName(cfg *inventory.Config) (string, bool) {
 	namespaces := shared.SplitFilterValues(cfg.Options[shared.OPTION_NAMESPACE])
 	if len(namespaces) != 1 {
@@ -1687,6 +1695,16 @@ func namespaceStageName(cfg *inventory.Config) (string, bool) {
 		return "", false
 	}
 	return namespaces[0], true
+}
+
+func discoveryTargetsWithout(targets []string, excluded string) []string {
+	res := make([]string, 0, len(targets))
+	for _, target := range targets {
+		if target != excluded {
+			res = append(res, target)
+		}
+	}
+	return res
 }
 
 func assetName(ns, name string) string {

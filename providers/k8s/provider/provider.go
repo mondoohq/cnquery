@@ -123,7 +123,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		}
 	}
 	for _, key := range kyvernoCLIOptions {
-		if flag, ok := flags[key]; ok {
+		if flag, ok := flags[key]; ok && flag != nil {
 			conf.Options[key] = primitiveStringValue(flag)
 		}
 	}
