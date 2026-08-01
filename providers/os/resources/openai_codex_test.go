@@ -27,12 +27,6 @@ func createTestCodexConfig(t *testing.T) string {
 		"last_refresh": "2026-04-01T12:00:00Z"
 	}`)
 
-	// version.json
-	writeTestFile(t, dir, "version.json", `{
-		"latest_version": "0.118.0",
-		"last_checked_at": "2026-04-01T12:00:00Z"
-	}`)
-
 	// Plugin: github (with .codex-plugin/plugin.json, .app.json, skills)
 	githubPluginDir := filepath.Join(".tmp", "plugins", "plugins", "github")
 	mkdirAllTest(t, dir, filepath.Join(githubPluginDir, ".codex-plugin"))
@@ -89,6 +83,11 @@ description: Debug and fix failing CI checks.
 				"type": "http",
 				"url": "https://mcp.cloudflare.com/mcp",
 				"note": "Official Cloudflare API MCP server."
+			},
+			"local-fs": {
+				"command": "npx",
+				"args": ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"],
+				"env": {"FS_TOKEN": "secret"}
 			}
 		}
 	}`)
@@ -131,18 +130,6 @@ func TestCodexAuthParsing(t *testing.T) {
 	assert.Equal(t, "test-account-uuid", auth.Tokens.AccountID)
 }
 
-func TestCodexVersionParsing(t *testing.T) {
-	afs := testAfero()
-	dir := createTestCodexConfig(t)
-
-	var ver struct {
-		LatestVersion string `json:"latest_version"`
-	}
-	err := readJSONFileAfero(afs, dir, "version.json", &ver)
-	require.NoError(t, err)
-	assert.Equal(t, "0.118.0", ver.LatestVersion)
-}
-
 func TestCodexPluginParsing(t *testing.T) {
 	afs := testAfero()
 	dir := createTestCodexConfig(t)
@@ -178,6 +165,13 @@ func TestCodexMcpServerParsing(t *testing.T) {
 	assert.Equal(t, "http", srv.Type)
 	assert.Equal(t, "https://mcp.cloudflare.com/mcp", srv.URL)
 	assert.Equal(t, "Official Cloudflare API MCP server.", srv.Note)
+
+	// stdio server: command/args/env are now captured too
+	local := mcpConfig.McpServers["local-fs"]
+	assert.Equal(t, "npx", local.Command)
+	assert.Equal(t, []string{"-y", "@modelcontextprotocol/server-filesystem", "/tmp"}, local.Args)
+	assert.NotEmpty(t, local.Env)
+	assert.Equal(t, mcpTransportStdio, deriveMcpTransport(local.Type, local.Command, local.URL))
 }
 
 func TestCodexConnectorParsing(t *testing.T) {
@@ -284,13 +278,6 @@ func TestCodexConfigIntegration(t *testing.T) {
 	assert.Equal(t, "chatgpt", auth.AuthMode)
 	assert.Equal(t, "test-account-uuid", auth.Tokens.AccountID)
 
-	// Version
-	var ver struct {
-		LatestVersion string `json:"latest_version"`
-	}
-	require.NoError(t, readJSONFileAfero(afs, dir, "version.json", &ver))
-	assert.Equal(t, "0.118.0", ver.LatestVersion)
-
 	// Plugins with metadata
 	pluginsDir := filepath.Join(dir, ".tmp", "plugins", "plugins")
 
@@ -306,7 +293,7 @@ func TestCodexConfigIntegration(t *testing.T) {
 	mcpData, err := afs.ReadFile(filepath.Join(pluginsDir, "cloudflare", ".mcp.json"))
 	require.NoError(t, err)
 	require.NoError(t, json.Unmarshal(mcpData, &mcpConfig))
-	assert.Len(t, mcpConfig.McpServers, 1)
+	assert.Len(t, mcpConfig.McpServers, 2)
 
 	// Connectors from github and slack
 	var ghApp struct {

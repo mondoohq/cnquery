@@ -11,7 +11,6 @@ import (
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/types"
 )
 
 const defaultGitHubCopilotConfigDir = ".config/github-copilot"
@@ -83,17 +82,14 @@ func (r *mqlGithubCopilot) mcpServers() ([]interface{}, error) {
 		}
 
 		for name, server := range config.Servers {
-			argsAny := make([]interface{}, len(server.Args))
-			for i, a := range server.Args {
-				argsAny[i] = a
-			}
-
 			res, err := NewResource(r.MqlRuntime, "github.copilot.mcpServer", map[string]*llx.RawData{
 				"__id":    llx.StringData("github.copilot.mcpServer/" + name),
 				"name":    llx.StringData(name),
-				"type":    llx.StringData(server.Type),
+				"type":    llx.StringData(deriveMcpTransport(server.Type, server.Command, server.URL)),
 				"command": llx.StringData(server.Command),
-				"args":    llx.ArrayData(argsAny, types.String),
+				"args":    strSliceToArrayData(server.Args),
+				"url":     llx.StringData(server.URL),
+				"hasEnv":  llx.BoolData(len(server.Env) > 0),
 			})
 			if err != nil {
 				return nil, err
@@ -140,7 +136,9 @@ type copilotMCPConfig struct {
 }
 
 type copilotMCPServer struct {
-	Type    string   `json:"type"`
-	Command string   `json:"command"`
-	Args    []string `json:"args"`
+	Type    string            `json:"type"`
+	Command string            `json:"command"`
+	Args    []string          `json:"args"`
+	URL     string            `json:"url"`
+	Env     map[string]string `json:"env"`
 }

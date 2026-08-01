@@ -35,7 +35,12 @@ func createTestCopilotConfig(t *testing.T) string {
 			"my-server": {
 				"type": "stdio",
 				"command": "my-command",
-				"args": ["--flag"]
+				"args": ["--flag"],
+				"env": {"API_KEY": "secret"}
+			},
+			"remote": {
+				"type": "http",
+				"url": "https://mcp.example.com/mcp"
 			}
 		}
 	}`)
@@ -71,12 +76,18 @@ func TestCopilotMCPParsing(t *testing.T) {
 	var config copilotMCPConfig
 	err = json.Unmarshal(data, &config)
 	require.NoError(t, err)
-	assert.Len(t, config.Servers, 1)
+	assert.Len(t, config.Servers, 2)
 
 	server := config.Servers["my-server"]
 	assert.Equal(t, "stdio", server.Type)
 	assert.Equal(t, "my-command", server.Command)
 	assert.Equal(t, []string{"--flag"}, server.Args)
+	assert.NotEmpty(t, server.Env)
+
+	remote := config.Servers["remote"]
+	assert.Equal(t, "http", remote.Type)
+	assert.Equal(t, "https://mcp.example.com/mcp", remote.URL)
+	assert.Empty(t, remote.Command)
 }
 
 func TestCopilotConfigMissing(t *testing.T) {

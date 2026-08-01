@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -210,30 +211,57 @@ func (r *mqlClaudeCode) projects() ([]interface{}, error) {
 }
 
 func (r *mqlClaudeCode) mcpServers() ([]interface{}, error) {
-	var cache map[string]struct {
+	// The needs-auth cache records which servers require authentication and
+	// when that was last verified. Presence in this file means needsAuth.
+	var authCache map[string]struct {
 		Timestamp int64 `json:"timestamp"`
 	}
-	err := readJSONFileAfero(r.afs(), r.configDir(), "mcp-needs-auth-cache.json", &cache)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, nil
-		}
+	if err := readJSONFileAfero(r.afs(), r.configDir(), "mcp-needs-auth-cache.json", &authCache); err != nil && !os.IsNotExist(err) {
 		return nil, err
 	}
 
+	// The full server definitions (command/args/url/env) live in
+	// .claude.json, captured in the backup state we already load. A missing
+	// or unreadable backup is not fatal: we still surface whatever the
+	// needs-auth cache knows about, just without the connection details.
+	servers := map[string]claudeMcpServerEntry{}
+	if state, err := r.loadBackupState(); err != nil {
+		// A missing backup is expected on hosts without Claude Code history;
+		// log at debug so a real failure (corrupt JSON, permission denied)
+		// is still discoverable without warning-spamming every scan.
+		log.Debug().Err(err).Msg("could not load claude backup state for MCP server details")
+	} else if state != nil {
+		for name, srv := range state.McpServers {
+			servers[name] = srv
+		}
+	}
+	// Ensure any server present only in the auth cache is still reported.
+	for name := range authCache {
+		if _, ok := servers[name]; !ok {
+			servers[name] = claudeMcpServerEntry{}
+		}
+	}
+
 	var result []interface{}
-	for name, entry := range cache {
+	for name, srv := range servers {
+		needsAuth := false
 		lastChecked := ""
-		if entry.Timestamp > 0 {
-			lastChecked = time.UnixMilli(entry.Timestamp).UTC().Format(time.RFC3339)
+		if entry, ok := authCache[name]; ok {
+			needsAuth = true
+			if entry.Timestamp > 0 {
+				lastChecked = time.UnixMilli(entry.Timestamp).UTC().Format(time.RFC3339)
+			}
 		}
 
-		// Presence in mcp-needs-auth-cache.json means the server requires
-		// authentication; servers that don't need auth are not listed.
 		res, err := NewResource(r.MqlRuntime, "claude.code.mcpServer", map[string]*llx.RawData{
 			"__id":        llx.StringData("claude.code.mcpServer/" + name),
 			"name":        llx.StringData(name),
-			"needsAuth":   llx.BoolData(true),
+			"type":        llx.StringData(deriveMcpTransport(srv.Type, srv.Command, srv.URL)),
+			"command":     llx.StringData(srv.Command),
+			"args":        strSliceToArrayData(srv.Args),
+			"url":         llx.StringData(srv.URL),
+			"hasEnv":      llx.BoolData(len(srv.Env) > 0),
+			"needsAuth":   llx.BoolData(needsAuth),
 			"lastChecked": llx.StringData(lastChecked),
 		})
 		if err != nil {
@@ -265,8 +293,20 @@ type installedPluginEntry struct {
 }
 
 type claudeBackupState struct {
-	OAuthAccount *oauthAccount          `json:"oauthAccount"`
-	Projects     map[string]interface{} `json:"projects"`
+	OAuthAccount *oauthAccount                   `json:"oauthAccount"`
+	Projects     map[string]interface{}          `json:"projects"`
+	McpServers   map[string]claudeMcpServerEntry `json:"mcpServers"`
+}
+
+// claudeMcpServerEntry is a single MCP server definition as stored in
+// .claude.json. Stdio servers carry command/args/env; http and sse servers
+// carry a url. `type` is optional and inferred from the shape when absent.
+type claudeMcpServerEntry struct {
+	Type    string            `json:"type"`
+	Command string            `json:"command"`
+	Args    []string          `json:"args"`
+	URL     string            `json:"url"`
+	Env     map[string]string `json:"env"`
 }
 
 // projectDirMap returns a map from original project path to encoded directory name.

@@ -52,20 +52,6 @@ func (r *mqlOpenaiCodex) accountId() (string, error) {
 	return auth.Tokens.AccountID, nil
 }
 
-func (r *mqlOpenaiCodex) version() (string, error) {
-	var ver struct {
-		LatestVersion string `json:"latest_version"`
-	}
-	err := readJSONFileAfero(r.afs(), r.codexDir(), "version.json", &ver)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return "", nil
-		}
-		return "", err
-	}
-	return ver.LatestVersion, nil
-}
-
 func (r *mqlOpenaiCodex) lastRefresh() (string, error) {
 	auth, err := r.loadAuth()
 	if err != nil {
@@ -245,12 +231,15 @@ func (r *mqlOpenaiCodex) mcpServers() ([]interface{}, error) {
 
 		for name, srv := range mcpConfig.McpServers {
 			res, err := NewResource(r.MqlRuntime, "openai.codex.mcpServer", map[string]*llx.RawData{
-				"__id":   llx.StringData("openai.codex.mcpServer/" + dir.name + "/" + name),
-				"name":   llx.StringData(name),
-				"type":   llx.StringData(srv.Type),
-				"url":    llx.StringData(srv.URL),
-				"note":   llx.StringData(srv.Note),
-				"plugin": llx.StringData(dir.name),
+				"__id":    llx.StringData("openai.codex.mcpServer/" + dir.name + "/" + name),
+				"name":    llx.StringData(name),
+				"type":    llx.StringData(deriveMcpTransport(srv.Type, srv.Command, srv.URL)),
+				"command": llx.StringData(srv.Command),
+				"args":    strSliceToArrayData(srv.Args),
+				"url":     llx.StringData(srv.URL),
+				"hasEnv":  llx.BoolData(len(srv.Env) > 0),
+				"note":    llx.StringData(srv.Note),
+				"plugin":  llx.StringData(dir.name),
 			})
 			if err != nil {
 				return nil, err
@@ -329,9 +318,12 @@ type codexInterfaceJSON struct {
 }
 
 type codexMcpServerEntry struct {
-	Type string `json:"type"`
-	URL  string `json:"url"`
-	Note string `json:"note"`
+	Type    string            `json:"type"`
+	Command string            `json:"command"`
+	Args    []string          `json:"args"`
+	URL     string            `json:"url"`
+	Env     map[string]string `json:"env"`
+	Note    string            `json:"note"`
 }
 
 type codexPluginInfo struct {

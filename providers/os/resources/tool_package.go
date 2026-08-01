@@ -333,16 +333,32 @@ func setStrOrNull(t *plugin.TValue[string], val string) {
 	}
 }
 
-// inferCodexVersion reads the OpenAI Codex version.json (same source as
-// openai.codex.version()). Best-effort: unknown on any read/parse failure.
+// inferCodexVersion runs `codex --version` through the command resource. Codex
+// writes no authoritative version file (its version.json only records the latest
+// release seen during an update check, which goes stale and is not the installed
+// version), so we probe the binary. The output is e.g. "codex-cli 0.44.0"; we
+// keep the first token MQL's semver parser recognizes. Best-effort: unknown when
+// the binary is absent or the output carries no recognizable version.
 func inferCodexVersion(runtime *plugin.Runtime, configPath string) (string, error) {
-	var ver struct {
-		LatestVersion string `json:"latest_version"`
-	}
-	if err := readJSONFileAfero(connectionAfs(runtime), configPath, "version.json", &ver); err != nil {
+	o, err := CreateResource(runtime, "command", map[string]*llx.RawData{
+		"command": llx.StringData("codex --version"),
+	})
+	if err != nil {
 		return "", nil
 	}
-	return ver.LatestVersion, nil
+	cmd := o.(*mqlCommand)
+	if cmd.GetExitcode().Data != 0 {
+		return "", nil
+	}
+	for _, field := range strings.Fields(cmd.GetStdout().Data) {
+		// Validate with MQL's semver parser instead of a bespoke regex. The
+		// parser exposes only Compare, so we parse by self-compare: a valid
+		// version compares against itself without error.
+		if _, err := (semver.Parser{}).Compare(field, field); err == nil {
+			return field, nil
+		}
+	}
+	return "", nil
 }
 
 // inferClaudeVersion runs `claude --version` through the command resource

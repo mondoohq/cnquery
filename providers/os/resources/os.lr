@@ -11401,13 +11401,25 @@ private claude.code.project @defaults("path") @maturity("preview") {
 
 // Claude Code MCP server
 //
-// Single Model Context Protocol server configured for Claude Code.
-// `name` identifies the server, `needsAuth` reports whether it requires
-// authentication, and `lastChecked` is when its auth state was last
+// Single Model Context Protocol server configured for Claude Code. Stdio
+// servers run a local command with args; http and sse servers connect to a
+// url. `type` reports the transport, `hasEnv` whether environment variables
+// (often API keys or tokens) are set, and `needsAuth` with `lastChecked`
+// track whether the server requires authentication and when that was last
 // verified.
 private claude.code.mcpServer @defaults("name") @maturity("preview") {
   // Server name
   name string
+  // Server transport type, for example "stdio" or "http"
+  type string
+  // Local command launched for stdio-type servers
+  command string
+  // Command-line arguments passed to the server command
+  args []string
+  // Endpoint URL for http or sse servers
+  url string
+  // Whether environment variables (for example API keys) are configured
+  hasEnv bool
   // Whether the server needs authentication
   needsAuth bool
   // Timestamp of last authentication check
@@ -11417,11 +11429,11 @@ private claude.code.mcpServer @defaults("name") @maturity("preview") {
 // OpenAI Codex CLI instance
 //
 // OpenAI Codex CLI installation on the host, exposing the `authMode` and
-// `accountId` it is signed in with, the installed `version`, and the
-// agent's configured surface: `plugins`, `skills`, `mcpServers`, and
-// OAuth `connectors`. Audit which plugins, MCP servers, and connectors
-// are configured. The `configPath` selects the configuration directory
-// when it is not the default.
+// `accountId` it is signed in with, the installed version (read
+// `package.version`), and the agent's configured surface: `plugins`,
+// `skills`, `mcpServers`, and OAuth `connectors`. Audit which plugins,
+// MCP servers, and connectors are configured. The `configPath` selects
+// the configuration directory when it is not the default.
 // URL: https://openai.com/index/introducing-codex/
 openai.codex @defaults("configPath") @maturity("preview") {
   init(configPath? string)
@@ -11451,8 +11463,6 @@ openai.codex @defaults("configPath") @maturity("preview") {
   authMode() string
   // Account ID
   accountId() string
-  // Installed version
-  version() string
   // Last refresh timestamp
   lastRefresh() string
   // Installed plugins
@@ -11525,16 +11535,24 @@ private openai.codex.skill @defaults("name") @maturity("preview") {
 // OpenAI Codex MCP server
 //
 // Model Context Protocol server a Codex plugin connects to, giving the
-// agent access to external tools and data. The url is the endpoint the
-// agent reaches out to and plugin records which plugin declared it, both
-// relevant when auditing what external services the agent can invoke.
+// agent access to external tools and data. Stdio servers run a local
+// command with args; http servers connect to a url. `plugin` records which
+// plugin declared the server and `hasEnv` whether environment variables
+// (often API keys or tokens) are set, both relevant when auditing what
+// external services the agent can invoke.
 private openai.codex.mcpServer @defaults("name") @maturity("preview") {
   // Server name
   name string
   // Server transport type, for example "http"
   type string
+  // Local command launched for stdio-type servers
+  command string
+  // Command-line arguments passed to the server command
+  args []string
   // Server endpoint URL the agent connects to
   url string
+  // Whether environment variables (for example API keys) are configured
+  hasEnv bool
   // Optional note describing the server
   note string
   // Plugin that provides this MCP server
@@ -11600,17 +11618,20 @@ cursor @defaults("configPath") @maturity("preview") {
 //
 // Model Context Protocol server Cursor is configured to use. Stdio
 // servers run a local command; sse and streamable-http servers connect to
-// a url. The hasEnv flag reports whether environment variables (often
-// holding API keys or tokens) are configured for the server.
+// a url. `type` reports the transport and the hasEnv flag reports whether
+// environment variables (often holding API keys or tokens) are configured
+// for the server.
 private cursor.mcpServer @defaults("name") @maturity("preview") {
   // Server name
   name string
+  // Server transport type, for example "stdio" or "http"
+  type string
   // Local command launched for stdio-type servers
   command string
-  // Endpoint URL for sse or streamable-http servers
-  url string
   // Command-line arguments passed to the server command
   args []string
+  // Endpoint URL for sse or streamable-http servers
+  url string
   // Whether environment variables (for example API keys) are configured
   hasEnv bool
 }
@@ -11708,18 +11729,24 @@ private github.copilot.account @defaults("user") @maturity("preview") {
 
 // GitHub Copilot MCP server configuration
 //
-// Model Context Protocol server Copilot is configured to use. Stdio-type
-// servers launch a local command with the given args to expose external
-// tools and data to the assistant.
+// Model Context Protocol server Copilot is configured to use. Stdio servers
+// launch a local command with args; http servers connect to a url. `type`
+// reports the transport and hasEnv whether environment variables (often API
+// keys or tokens) are configured, both relevant when auditing the external
+// tools and data exposed to the assistant.
 private github.copilot.mcpServer @defaults("name") @maturity("preview") {
   // Server name
   name string
   // Server transport type, for example "stdio"
   type string
-  // Local command launched for the server
+  // Local command launched for stdio-type servers
   command string
   // Command-line arguments passed to the server command
   args []string
+  // Endpoint URL for http or sse servers
+  url string
+  // Whether environment variables (for example API keys) are configured
+  hasEnv bool
 }
 
 // GitHub Copilot skill
@@ -11879,17 +11906,21 @@ gemini @defaults("configPath") @maturity("preview") {
 
 // Gemini MCP server configuration
 //
-// Model Context Protocol server Gemini is configured to use. The command
-// and args launch the server to expose external tools and data to the
-// assistant, and hasEnv reports whether environment variables (often
-// holding API keys or tokens) are configured for it.
+// Model Context Protocol server Gemini is configured to use. Stdio servers
+// launch a local command with args; http servers connect to a url. `type`
+// reports the transport and hasEnv whether environment variables (often
+// holding API keys or tokens) are configured for the server.
 private gemini.mcpServer @defaults("name") @maturity("preview") {
   // Server name
   name string
-  // Local command launched for the server
+  // Server transport type, for example "stdio" or "http"
+  type string
+  // Local command launched for stdio-type servers
   command string
   // Command-line arguments passed to the server command
   args []string
+  // Endpoint URL for http or sse servers
+  url string
   // Whether environment variables (for example API keys) are configured
   hasEnv bool
 }
@@ -11973,17 +12004,21 @@ private windsurf.rule @defaults("name") @maturity("preview") {
 
 // Windsurf MCP server configuration
 //
-// Model Context Protocol server Windsurf is configured to use. The
-// command and args launch the server to expose external tools and data to
-// the assistant, and hasEnv reports whether environment variables (often
-// holding API keys or tokens) are configured for it.
+// Model Context Protocol server Windsurf is configured to use. Stdio
+// servers launch a local command with args; sse servers connect to a url.
+// `type` reports the transport and hasEnv whether environment variables
+// (often holding API keys or tokens) are configured for the server.
 private windsurf.mcpServer @defaults("name") @maturity("preview") {
   // Server name
   name string
-  // Local command launched for the server
+  // Server transport type, for example "stdio" or "http"
+  type string
+  // Local command launched for stdio-type servers
   command string
   // Command-line arguments passed to the server command
   args []string
+  // Endpoint URL for sse or streamable-http servers
+  url string
   // Whether environment variables (for example API keys) are configured
   hasEnv bool
 }

@@ -12,7 +12,6 @@ import (
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/types"
 )
 
 const defaultWindsurfConfigDir = ".codeium/windsurf"
@@ -89,16 +88,18 @@ func (r *mqlWindsurf) mcpServers() ([]interface{}, error) {
 
 	var result []interface{}
 	for name, server := range config.McpServers {
-		argsAny := make([]interface{}, len(server.Args))
-		for i, a := range server.Args {
-			argsAny[i] = a
+		url := server.URL
+		if url == "" {
+			url = server.ServerURL
 		}
 
 		res, err := NewResource(r.MqlRuntime, "windsurf.mcpServer", map[string]*llx.RawData{
 			"__id":    llx.StringData("windsurf.mcpServer/" + name),
 			"name":    llx.StringData(name),
+			"type":    llx.StringData(deriveMcpTransport(server.Type, server.Command, url)),
 			"command": llx.StringData(server.Command),
-			"args":    llx.ArrayData(argsAny, types.String),
+			"args":    strSliceToArrayData(server.Args),
+			"url":     llx.StringData(url),
 			"hasEnv":  llx.BoolData(len(server.Env) > 0),
 		})
 		if err != nil {
@@ -139,7 +140,10 @@ type windsurfMCPConfig struct {
 }
 
 type windsurfMCPServer struct {
-	Command string            `json:"command"`
-	Args    []string          `json:"args"`
-	Env     map[string]string `json:"env"`
+	Type      string            `json:"type"`
+	Command   string            `json:"command"`
+	Args      []string          `json:"args"`
+	URL       string            `json:"url"`
+	ServerURL string            `json:"serverUrl"`
+	Env       map[string]string `json:"env"`
 }

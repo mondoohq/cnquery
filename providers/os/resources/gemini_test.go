@@ -28,6 +28,9 @@ func createTestGeminiConfig(t *testing.T) string {
 				"command": "npx",
 				"args": ["-y", "@modelcontextprotocol/server-filesystem"],
 				"env": {"HOME": "/tmp"}
+			},
+			"remote": {
+				"httpUrl": "https://mcp.example.com/mcp"
 			}
 		}
 	}`)
@@ -56,12 +59,18 @@ func TestGeminiMCPParsing(t *testing.T) {
 	var config geminiMCPConfig
 	err = json.Unmarshal(data, &config)
 	require.NoError(t, err)
-	assert.Len(t, config.McpServers, 1)
+	assert.Len(t, config.McpServers, 2)
 
 	fs := config.McpServers["filesystem"]
 	assert.Equal(t, "npx", fs.Command)
 	assert.Len(t, fs.Args, 2)
 	assert.Len(t, fs.Env, 1)
+	assert.Equal(t, mcpTransportStdio, deriveMcpTransport(fs.Type, fs.Command, fs.URL))
+
+	// remote server uses httpUrl; the creator falls back to it for url
+	remote := config.McpServers["remote"]
+	assert.Equal(t, "https://mcp.example.com/mcp", remote.HTTPURL)
+	assert.Empty(t, remote.Command)
 }
 
 func TestGeminiConfigMissing(t *testing.T) {
