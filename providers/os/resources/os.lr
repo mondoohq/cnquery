@@ -11431,10 +11431,9 @@ private claude.code.mcpServer @defaults("name") @maturity("preview") {
 // OpenAI Codex CLI installation on the host, exposing the `authMode` and
 // `accountId` it is signed in with, the installed version (read
 // `package.version`), and the agent's configured surface: `plugins`,
-// `skills`, `mcpServers`, and
-// OAuth `connectors`. Audit which plugins, MCP servers, and connectors
-// are configured. The `configPath` selects the configuration directory
-// when it is not the default.
+// `skills`, `mcpServers`, and OAuth `connectors`. Audit which plugins,
+// MCP servers, and connectors are configured. The `configPath` selects
+// the configuration directory when it is not the default.
 // URL: https://openai.com/index/introducing-codex/
 openai.codex @defaults("configPath") @maturity("preview") {
   init(configPath? string)

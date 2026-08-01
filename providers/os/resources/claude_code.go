@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -224,7 +225,12 @@ func (r *mqlClaudeCode) mcpServers() ([]interface{}, error) {
 	// or unreadable backup is not fatal: we still surface whatever the
 	// needs-auth cache knows about, just without the connection details.
 	servers := map[string]claudeMcpServerEntry{}
-	if state, err := r.loadBackupState(); err == nil && state != nil {
+	if state, err := r.loadBackupState(); err != nil {
+		// A missing backup is expected on hosts without Claude Code history;
+		// log at debug so a real failure (corrupt JSON, permission denied)
+		// is still discoverable without warning-spamming every scan.
+		log.Debug().Err(err).Msg("could not load claude backup state for MCP server details")
+	} else if state != nil {
 		for name, srv := range state.McpServers {
 			servers[name] = srv
 		}
