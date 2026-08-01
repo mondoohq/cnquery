@@ -71,6 +71,18 @@ func createTestClaudeConfig(t *testing.T) string {
 		"projects": {
 			"/home/test/project-one": {},
 			"/home/test/go/src/github.com/user/repo": {}
+		},
+		"mcpServers": {
+			"filesystem": {
+				"command": "npx",
+				"args": ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"],
+				"env": {}
+			},
+			"claude.ai HubSpot": {
+				"type": "http",
+				"url": "https://mcp.hubspot.com/mcp",
+				"env": {"HUBSPOT_TOKEN": "secret"}
+			}
 		}
 	}`)
 
@@ -279,6 +291,20 @@ func TestClaudeConfigIntegration(t *testing.T) {
 	assert.Equal(t, "team", state.OAuthAccount.BillingType)
 	assert.Equal(t, "test-uuid-1234", state.OAuthAccount.AccountUuid)
 	assert.Equal(t, "org-uuid-5678", state.OAuthAccount.OrganizationUuid)
+
+	// MCP servers come from .claude.json (backup state), independent of the
+	// needs-auth cache: the stdio "filesystem" server does not need auth yet
+	// must still be visible.
+	require.Len(t, state.McpServers, 2)
+	fsSrv := state.McpServers["filesystem"]
+	assert.Equal(t, "npx", fsSrv.Command)
+	assert.Equal(t, []string{"-y", "@modelcontextprotocol/server-filesystem", "/tmp"}, fsSrv.Args)
+	assert.Empty(t, fsSrv.URL)
+	assert.Equal(t, mcpTransportStdio, deriveMcpTransport(fsSrv.Type, fsSrv.Command, fsSrv.URL))
+	hubSrv := state.McpServers["claude.ai HubSpot"]
+	assert.Equal(t, "http", hubSrv.Type)
+	assert.Equal(t, "https://mcp.hubspot.com/mcp", hubSrv.URL)
+	assert.NotEmpty(t, hubSrv.Env)
 
 	// Test project dir mapping
 	dirMap := state.projectDirMap()
