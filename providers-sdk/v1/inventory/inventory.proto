@@ -73,6 +73,9 @@ message Asset {
   // indicator is this is an inventory object or a CI/CD run
   AssetCategory category = 32;
 
+  // DEPRECATED in v14: flat, provenance-blind list of related assets, consumed
+  // server-side. Superseded by `relationships` (ADR 030), which anchors each
+  // edge to the resource that produced it. Kept for backward compatibility.
   repeated Asset related_assets = 33;
 
   string managed_by = 34;
@@ -83,6 +86,24 @@ message Asset {
   string kind_string = 36;
   string fqdn = 37;
   string trace_id = 38;
+
+  // Resource-anchored relationships to other assets (ADR 030). Each edge names
+  // the counterparty asset and the resource on it that anchors the relationship.
+  repeated AssetRelationship relationships = 39;
+}
+
+// AssetRelationship is a directed, resource-anchored edge to another asset. An
+// edge has two ends, and the anchor resource is meaningless without the asset
+// that owns it, so the message names both: the counterparty `asset` (a full
+// Asset, like `related_assets`, so identity is unrestricted) and the resource
+// on that asset that anchors the relationship. See ADR 030.
+message AssetRelationship {
+  // the asset at the other end of the edge (e.g. the parent/host that owns the
+  // anchor resource), referenced as an Asset (stub or full)
+  Asset asset = 1;
+  // the anchor resource on `asset`
+  string resource_type = 2;
+  string resource_id = 3;
 }
 
 // AssetUrlBranch defines the hierarchy into which an asset can be placed. It

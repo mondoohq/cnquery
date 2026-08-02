@@ -138,6 +138,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"muser.error": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMuser).GetError()).ToDataRes(types.String)
 	},
+	"muser.running": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMuser).GetRunning()).ToDataRes(types.Asset)
+	},
 	"mgroup.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMgroup).GetName()).ToDataRes(types.String)
 	},
@@ -195,6 +198,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"muser.error": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMuser).Error, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"muser.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMuser).Running, ok = plugin.RawToTValue[*llx.AssetValue](v.Value, v.Error)
 		return
 	},
 	"mgroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -269,6 +276,7 @@ type mqlMuser struct {
 	Groups     plugin.TValue[[]any]
 	Dict       plugin.TValue[any]
 	Error      plugin.TValue[string]
+	Running    plugin.TValue[*llx.AssetValue]
 }
 
 // createMuser creates a new instance of this resource
@@ -375,6 +383,12 @@ func (c *mqlMuser) GetDict() *plugin.TValue[any] {
 func (c *mqlMuser) GetError() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Error, func() (string, error) {
 		return c.error()
+	})
+}
+
+func (c *mqlMuser) GetRunning() *plugin.TValue[*llx.AssetValue] {
+	return plugin.GetOrCompute[*llx.AssetValue](&c.Running, func() (*llx.AssetValue, error) {
+		return c.running()
 	})
 }
 

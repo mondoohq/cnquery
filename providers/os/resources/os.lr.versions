@@ -293,6 +293,7 @@ claude.code.mcpServer.hasEnv 13.39.1
 claude.code.mcpServer.lastChecked 13.8.2
 claude.code.mcpServer.name 13.8.2
 claude.code.mcpServer.needsAuth 13.8.2
+claude.code.mcpServer.running 13.40.1
 claude.code.mcpServer.type 13.39.1
 claude.code.mcpServer.url 13.39.1
 claude.code.mcpServers 13.8.2
@@ -419,6 +420,7 @@ cursor.mcpServer.args 13.10.1
 cursor.mcpServer.command 13.10.1
 cursor.mcpServer.hasEnv 13.10.1
 cursor.mcpServer.name 13.10.1
+cursor.mcpServer.running 13.40.1
 cursor.mcpServer.type 13.39.1
 cursor.mcpServer.url 13.10.1
 cursor.mcpServers 13.10.1
@@ -765,6 +767,7 @@ gemini.mcpServer.args 13.13.1
 gemini.mcpServer.command 13.13.1
 gemini.mcpServer.hasEnv 13.13.1
 gemini.mcpServer.name 13.13.1
+gemini.mcpServer.running 13.40.1
 gemini.mcpServer.type 13.39.1
 gemini.mcpServer.url 13.39.1
 gemini.mcpServers 13.13.1
@@ -791,6 +794,7 @@ github.copilot.mcpServer.args 13.12.1
 github.copilot.mcpServer.command 13.12.1
 github.copilot.mcpServer.hasEnv 13.39.1
 github.copilot.mcpServer.name 13.12.1
+github.copilot.mcpServer.running 13.40.1
 github.copilot.mcpServer.type 13.12.1
 github.copilot.mcpServer.url 13.39.1
 github.copilot.mcpServers 13.12.1
@@ -2181,6 +2185,7 @@ openai.codex.mcpServer.hasEnv 13.39.1
 openai.codex.mcpServer.name 13.8.2
 openai.codex.mcpServer.note 13.8.2
 openai.codex.mcpServer.plugin 13.8.2
+openai.codex.mcpServer.running 13.40.1
 openai.codex.mcpServer.type 13.8.2
 openai.codex.mcpServer.url 13.8.2
 openai.codex.mcpServers 13.8.2
@@ -3751,6 +3756,7 @@ windsurf.mcpServer.args 13.13.1
 windsurf.mcpServer.command 13.13.1
 windsurf.mcpServer.hasEnv 13.13.1
 windsurf.mcpServer.name 13.13.1
+windsurf.mcpServer.running 13.40.1
 windsurf.mcpServer.type 13.39.1
 windsurf.mcpServer.url 13.39.1
 windsurf.mcpServers 13.13.1

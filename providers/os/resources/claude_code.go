@@ -412,3 +412,7 @@ func (r *mqlClaudeCodeProject) id() (string, error) {
 func (r *mqlClaudeCodeMcpServer) id() (string, error) {
 	return "claude.code.mcpServer/" + r.Name.Data, nil
 }
+
+func (r *mqlClaudeCodeMcpServer) running() (*llx.AssetValue, error) {
+	return mcpServerAsset(r), nil
+}

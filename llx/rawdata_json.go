@@ -443,6 +443,27 @@ func rawDataJSON(typ types.Type, data any, codeID string, bundle *CodeBundle, bu
 		buf.WriteString(str)
 		return nil
 
+	case types.Asset:
+		v, ok := data.(*AssetValue)
+		if !ok || v == nil {
+			buf.WriteString("null")
+			return nil
+		}
+		rt, err := string2json(v.ResourceType)
+		if err != nil {
+			return err
+		}
+		rid, err := string2json(v.ResourceId)
+		if err != nil {
+			return err
+		}
+		buf.WriteString(`{"resourceType":`)
+		buf.WriteString(rt)
+		buf.WriteString(`,"resourceId":`)
+		buf.WriteString(rid)
+		buf.WriteString("}")
+		return nil
+
 	default:
 		b, err := json.Marshal(data)
 		buf.Write(b)

@@ -5,8 +5,21 @@ package resources
 
 import (
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/types"
 )
+
+// mcpServerAsset builds the native `asset` value that anchors an MCP server
+// resource to the asset discovered for it. The anchor is the resource's own
+// (type, id); the owning host asset is contextual. Both this forward accessor
+// and the mcp-servers discovery resolver derive the anchor the same way (from
+// the resource identity), so they stay in lockstep. See ADR 030.
+func mcpServerAsset(r plugin.Resource) *llx.AssetValue {
+	return &llx.AssetValue{
+		ResourceType: r.MqlName(),
+		ResourceId:   r.MqlID(),
+	}
+}
 
 // MCP transport types. These mirror the values AI tools write into their MCP
 // config files; when a config omits the type we infer it from the connection

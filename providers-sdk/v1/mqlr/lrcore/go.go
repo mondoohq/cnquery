@@ -665,6 +665,8 @@ func (t *SimpleType) typeItems(ast *LR) types.Type {
 		return types.IP
 	case "range":
 		return types.Range
+	case "asset":
+		return types.Asset
 	case "any":
 		return types.Any
 	default:
@@ -737,6 +739,8 @@ func (t *SimpleType) mondooTypeItems(b *goBuilder) string {
 		return "types.Time"
 	case "range":
 		return "types.Range"
+	case "asset":
+		return "types.Asset"
 	case "dict":
 		return "types.Dict"
 	case "version":
@@ -809,6 +813,7 @@ var primitiveTypes = map[string]string{
 	"dict":    "any",
 	"version": "string",
 	"ip":      "llx.RawIP",
+	"asset":   "*llx.AssetValue",
 	"any":     "any",
 }
 
@@ -843,6 +848,7 @@ var primitiveZeros = map[string]string{
 	"dict":    "nil",
 	"version": "\"\"",
 	"ip":      "nil",
+	"asset":   "nil",
 	"any":     "nil",
 }
 

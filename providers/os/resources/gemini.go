@@ -98,6 +98,10 @@ func (r *mqlGemini) skills() ([]interface{}, error) {
 
 // Child resource ID methods
 
+func (r *mqlGeminiMcpServer) running() (*llx.AssetValue, error) {
+	return mcpServerAsset(r), nil
+}
+
 func (r *mqlGeminiMcpServer) id() (string, error) {
 	return "gemini.mcpServer/" + r.Name.Data, nil
 }

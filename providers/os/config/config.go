@@ -9,6 +9,7 @@ import (
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	"go.mondoo.com/mql/v13/providers/os/detector"
 	"go.mondoo.com/mql/v13/providers/os/resources/discovery/docker_engine"
+	"go.mondoo.com/mql/v13/providers/os/resources/discovery/mcp_servers"
 )
 
 var Config = plugin.Provider{
@@ -48,6 +49,9 @@ Examples:
 			Discovery: []string{
 				docker_engine.DiscoveryContainerRunning,
 				docker_engine.DiscoveryContainerImages,
+				// advertising the target in --discover help does NOT enable it
+				// (opt-in only).
+				mcp_servers.DiscoveryMCPServers,
 			},
 			Flags: []plugin.Flag{
 				{

@@ -121,6 +121,10 @@ func (r *mqlWindsurfRule) id() (string, error) {
 	return "windsurf.rule/" + r.Name.Data, nil
 }
 
+func (r *mqlWindsurfMcpServer) running() (*llx.AssetValue, error) {
+	return mcpServerAsset(r), nil
+}
+
 func (r *mqlWindsurfMcpServer) id() (string, error) {
 	return "windsurf.mcpServer/" + r.Name.Data, nil
 }

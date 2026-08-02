@@ -111,6 +111,10 @@ func (r *mqlGithubCopilotAccount) id() (string, error) {
 	return "github.copilot.account/" + r.User.Data, nil
 }
 
+func (r *mqlGithubCopilotMcpServer) running() (*llx.AssetValue, error) {
+	return mcpServerAsset(r), nil
+}
+
 func (r *mqlGithubCopilotMcpServer) id() (string, error) {
 	return "github.copilot.mcpServer/" + r.Name.Data, nil
 }
