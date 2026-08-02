@@ -23,6 +23,16 @@ message Primitive {
   map<string, Primitive> map = 4;
 }
 
+// AssetValue is the payload of the native `asset` primitive type. It points at
+// another asset by the resource that anchors it in the current asset's resource
+// tree: the anchor is `(resource_type, resource_id)`. The owning asset id is
+// contextual (the caller knows which asset it is evaluating), so it is NOT part
+// of this value. See ADR 030.
+message AssetValue {
+  string resource_type = 1;
+  string resource_id = 2;
+}
+
 message Function {
   string type = 1;
   repeated Primitive args = 3;

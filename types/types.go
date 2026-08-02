@@ -55,6 +55,7 @@ const (
 	byteFunction
 	byteStringSlice
 	byteRange
+	byteAsset
 )
 
 // NoType type is one whose type information is not available at all
@@ -116,6 +117,11 @@ const (
 	// or lines and columns combined. We use a special type for a very
 	// efficient storage and transmission structure.
 	Range = Type(rune(byteRange))
+
+	// Asset is a native value pointing at another asset by the resource that
+	// anchors it in the current asset's resource tree. Its payload is an
+	// llx.AssetValue holding the anchor `(resourceType, resourceId)`. See ADR 030.
+	Asset = Type(rune(byteAsset))
 )
 
 // All returns a list of all types available
@@ -141,6 +147,7 @@ func All() []Type {
 		MapLike,
 		ResourceLike,
 		FunctionLike,
+		Asset,
 	}
 }
 
@@ -183,6 +190,14 @@ func (typ Type) IsResource() bool {
 		return false
 	}
 	return typ[0] == byteResource
+}
+
+// IsAsset checks if this type is a native asset reference
+func (typ Type) IsAsset() bool {
+	if typ.NotSet() {
+		return false
+	}
+	return typ[0] == byteAsset
 }
 
 // ContainsResource checks if this or any child type has a resource
@@ -291,6 +306,7 @@ var labels = map[byte]string{
 	byteIP:          "ip",
 	byteStringSlice: "stringslice",
 	byteRange:       "range",
+	byteAsset:       "asset",
 }
 
 var labelfun map[byte]func(Type) string

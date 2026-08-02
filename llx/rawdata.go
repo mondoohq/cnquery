@@ -657,6 +657,14 @@ func ResourceData(v Resource, name string) *RawData {
 	}
 }
 
+// AssetData creates a rawdata struct from a native asset reference value
+func AssetData(v *AssetValue) *RawData {
+	return &RawData{
+		Type:  types.Asset,
+		Value: v,
+	}
+}
+
 // FunctionData creates a rawdata struct from a function reference
 func FunctionData(v int32, sig string) *RawData {
 	return &RawData{

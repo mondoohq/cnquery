@@ -163,3 +163,35 @@ func TestMalformedElementKeepsCollection(t *testing.T) {
 		assert.Nil(t, got["bad"], "the malformed element is nulled out")
 	})
 }
+
+// TestAssetValueRoundTrip proves the native `asset` primitive payload survives
+// the RawData -> Primitive -> RawData (gRPC-boundary) encoding. See ADR 030.
+func TestAssetValueRoundTrip(t *testing.T) {
+	t.Run("populated", func(t *testing.T) {
+		rd := llx.AssetData(&llx.AssetValue{
+			ResourceType: "claude.code.mcpServer",
+			ResourceId:   "claude.code.mcpServer/context7",
+		})
+		assert.Equal(t, types.Asset, rd.Type)
+
+		prim := rd.Result().Data
+		require.Equal(t, string(types.Asset), prim.Type)
+
+		back := prim.RawData()
+		require.NoError(t, back.Error)
+		av, ok := back.Value.(*llx.AssetValue)
+		require.True(t, ok)
+		require.NotNil(t, av)
+		assert.Equal(t, "claude.code.mcpServer", av.ResourceType)
+		assert.Equal(t, "claude.code.mcpServer/context7", av.ResourceId)
+	})
+
+	t.Run("nil value", func(t *testing.T) {
+		prim := llx.AssetData(nil).Result().Data
+		require.Equal(t, string(types.Asset), prim.Type)
+		back := prim.RawData()
+		require.NoError(t, back.Error)
+		av, _ := back.Value.(*llx.AssetValue)
+		assert.Nil(t, av)
+	})
+}

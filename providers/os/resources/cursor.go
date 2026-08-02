@@ -113,6 +113,10 @@ func (r *mqlCursor) skills() ([]interface{}, error) {
 
 // Child resource ID methods
 
+func (r *mqlCursorMcpServer) running() (*llx.AssetValue, error) {
+	return mcpServerAsset(r), nil
+}
+
 func (r *mqlCursorMcpServer) id() (string, error) {
 	return "cursor.mcpServer/" + r.Name.Data, nil
 }

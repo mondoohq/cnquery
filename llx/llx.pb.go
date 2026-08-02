@@ -72,7 +72,7 @@ func (x Chunk_Call) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use Chunk_Call.Descriptor instead.
 func (Chunk_Call) EnumDescriptor() ([]byte, []int) {
-	return file_llx_proto_rawDescGZIP(), []int{2, 0}
+	return file_llx_proto_rawDescGZIP(), []int{3, 0}
 }
 
 type Primitive struct {
@@ -149,6 +149,63 @@ func (x *Primitive) GetMap() map[string]*Primitive {
 	return nil
 }
 
+// AssetValue is the payload of the native `asset` primitive type. It points at
+// another asset by the resource that anchors it in the current asset's resource
+// tree: the anchor is `(resource_type, resource_id)`. The owning asset id is
+// contextual (the caller knows which asset it is evaluating), so it is NOT part
+// of this value. See ADR 030.
+type AssetValue struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ResourceType  string                 `protobuf:"bytes,1,opt,name=resource_type,json=resourceType,proto3" json:"resource_type,omitempty"`
+	ResourceId    string                 `protobuf:"bytes,2,opt,name=resource_id,json=resourceId,proto3" json:"resource_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AssetValue) Reset() {
+	*x = AssetValue{}
+	mi := &file_llx_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AssetValue) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AssetValue) ProtoMessage() {}
+
+func (x *AssetValue) ProtoReflect() protoreflect.Message {
+	mi := &file_llx_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AssetValue.ProtoReflect.Descriptor instead.
+func (*AssetValue) Descriptor() ([]byte, []int) {
+	return file_llx_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *AssetValue) GetResourceType() string {
+	if x != nil {
+		return x.ResourceType
+	}
+	return ""
+}
+
+func (x *AssetValue) GetResourceId() string {
+	if x != nil {
+		return x.ResourceId
+	}
+	return ""
+}
+
 type Function struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	Type  string                 `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
@@ -162,7 +219,7 @@ type Function struct {
 
 func (x *Function) Reset() {
 	*x = Function{}
-	mi := &file_llx_proto_msgTypes[1]
+	mi := &file_llx_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -174,7 +231,7 @@ func (x *Function) String() string {
 func (*Function) ProtoMessage() {}
 
 func (x *Function) ProtoReflect() protoreflect.Message {
-	mi := &file_llx_proto_msgTypes[1]
+	mi := &file_llx_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -187,7 +244,7 @@ func (x *Function) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Function.ProtoReflect.Descriptor instead.
 func (*Function) Descriptor() ([]byte, []int) {
-	return file_llx_proto_rawDescGZIP(), []int{1}
+	return file_llx_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *Function) GetType() string {
@@ -223,7 +280,7 @@ type Chunk struct {
 
 func (x *Chunk) Reset() {
 	*x = Chunk{}
-	mi := &file_llx_proto_msgTypes[2]
+	mi := &file_llx_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -235,7 +292,7 @@ func (x *Chunk) String() string {
 func (*Chunk) ProtoMessage() {}
 
 func (x *Chunk) ProtoReflect() protoreflect.Message {
-	mi := &file_llx_proto_msgTypes[2]
+	mi := &file_llx_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -248,7 +305,7 @@ func (x *Chunk) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Chunk.ProtoReflect.Descriptor instead.
 func (*Chunk) Descriptor() ([]byte, []int) {
-	return file_llx_proto_rawDescGZIP(), []int{2}
+	return file_llx_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *Chunk) GetCall() Chunk_Call {
@@ -291,7 +348,7 @@ type AssertionMessage struct {
 
 func (x *AssertionMessage) Reset() {
 	*x = AssertionMessage{}
-	mi := &file_llx_proto_msgTypes[3]
+	mi := &file_llx_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -303,7 +360,7 @@ func (x *AssertionMessage) String() string {
 func (*AssertionMessage) ProtoMessage() {}
 
 func (x *AssertionMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_llx_proto_msgTypes[3]
+	mi := &file_llx_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -316,7 +373,7 @@ func (x *AssertionMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AssertionMessage.ProtoReflect.Descriptor instead.
 func (*AssertionMessage) Descriptor() ([]byte, []int) {
-	return file_llx_proto_rawDescGZIP(), []int{3}
+	return file_llx_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *AssertionMessage) GetTemplate() string {
@@ -365,7 +422,7 @@ type CodeV1 struct {
 
 func (x *CodeV1) Reset() {
 	*x = CodeV1{}
-	mi := &file_llx_proto_msgTypes[4]
+	mi := &file_llx_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -377,7 +434,7 @@ func (x *CodeV1) String() string {
 func (*CodeV1) ProtoMessage() {}
 
 func (x *CodeV1) ProtoReflect() protoreflect.Message {
-	mi := &file_llx_proto_msgTypes[4]
+	mi := &file_llx_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -390,7 +447,7 @@ func (x *CodeV1) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CodeV1.ProtoReflect.Descriptor instead.
 func (*CodeV1) Descriptor() ([]byte, []int) {
-	return file_llx_proto_rawDescGZIP(), []int{4}
+	return file_llx_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *CodeV1) GetId() string {
@@ -474,7 +531,7 @@ type Block struct {
 
 func (x *Block) Reset() {
 	*x = Block{}
-	mi := &file_llx_proto_msgTypes[5]
+	mi := &file_llx_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -486,7 +543,7 @@ func (x *Block) String() string {
 func (*Block) ProtoMessage() {}
 
 func (x *Block) ProtoReflect() protoreflect.Message {
-	mi := &file_llx_proto_msgTypes[5]
+	mi := &file_llx_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -499,7 +556,7 @@ func (x *Block) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Block.ProtoReflect.Descriptor instead.
 func (*Block) Descriptor() ([]byte, []int) {
-	return file_llx_proto_rawDescGZIP(), []int{5}
+	return file_llx_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *Block) GetChunks() []*Chunk {
@@ -549,7 +606,7 @@ type CodeV2 struct {
 
 func (x *CodeV2) Reset() {
 	*x = CodeV2{}
-	mi := &file_llx_proto_msgTypes[6]
+	mi := &file_llx_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -561,7 +618,7 @@ func (x *CodeV2) String() string {
 func (*CodeV2) ProtoMessage() {}
 
 func (x *CodeV2) ProtoReflect() protoreflect.Message {
-	mi := &file_llx_proto_msgTypes[6]
+	mi := &file_llx_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -574,7 +631,7 @@ func (x *CodeV2) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CodeV2.ProtoReflect.Descriptor instead.
 func (*CodeV2) Descriptor() ([]byte, []int) {
-	return file_llx_proto_rawDescGZIP(), []int{6}
+	return file_llx_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *CodeV2) GetId() string {
@@ -614,7 +671,7 @@ type Labels struct {
 
 func (x *Labels) Reset() {
 	*x = Labels{}
-	mi := &file_llx_proto_msgTypes[7]
+	mi := &file_llx_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -626,7 +683,7 @@ func (x *Labels) String() string {
 func (*Labels) ProtoMessage() {}
 
 func (x *Labels) ProtoReflect() protoreflect.Message {
-	mi := &file_llx_proto_msgTypes[7]
+	mi := &file_llx_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -639,7 +696,7 @@ func (x *Labels) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Labels.ProtoReflect.Descriptor instead.
 func (*Labels) Descriptor() ([]byte, []int) {
-	return file_llx_proto_rawDescGZIP(), []int{7}
+	return file_llx_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *Labels) GetLabels() map[string]string {
@@ -661,7 +718,7 @@ type Documentation struct {
 
 func (x *Documentation) Reset() {
 	*x = Documentation{}
-	mi := &file_llx_proto_msgTypes[8]
+	mi := &file_llx_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -673,7 +730,7 @@ func (x *Documentation) String() string {
 func (*Documentation) ProtoMessage() {}
 
 func (x *Documentation) ProtoReflect() protoreflect.Message {
-	mi := &file_llx_proto_msgTypes[8]
+	mi := &file_llx_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -686,7 +743,7 @@ func (x *Documentation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Documentation.ProtoReflect.Descriptor instead.
 func (*Documentation) Descriptor() ([]byte, []int) {
-	return file_llx_proto_rawDescGZIP(), []int{8}
+	return file_llx_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *Documentation) GetField() string {
@@ -738,7 +795,7 @@ type CodeBundle struct {
 
 func (x *CodeBundle) Reset() {
 	*x = CodeBundle{}
-	mi := &file_llx_proto_msgTypes[9]
+	mi := &file_llx_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -750,7 +807,7 @@ func (x *CodeBundle) String() string {
 func (*CodeBundle) ProtoMessage() {}
 
 func (x *CodeBundle) ProtoReflect() protoreflect.Message {
-	mi := &file_llx_proto_msgTypes[9]
+	mi := &file_llx_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -763,7 +820,7 @@ func (x *CodeBundle) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CodeBundle.ProtoReflect.Descriptor instead.
 func (*CodeBundle) Descriptor() ([]byte, []int) {
-	return file_llx_proto_rawDescGZIP(), []int{9}
+	return file_llx_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *CodeBundle) GetCodeV2() *CodeV2 {
@@ -847,7 +904,7 @@ type Result struct {
 
 func (x *Result) Reset() {
 	*x = Result{}
-	mi := &file_llx_proto_msgTypes[10]
+	mi := &file_llx_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -859,7 +916,7 @@ func (x *Result) String() string {
 func (*Result) ProtoMessage() {}
 
 func (x *Result) ProtoReflect() protoreflect.Message {
-	mi := &file_llx_proto_msgTypes[10]
+	mi := &file_llx_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -872,7 +929,7 @@ func (x *Result) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Result.ProtoReflect.Descriptor instead.
 func (*Result) Descriptor() ([]byte, []int) {
-	return file_llx_proto_rawDescGZIP(), []int{10}
+	return file_llx_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *Result) GetData() *Primitive {
@@ -909,7 +966,7 @@ type ResourceRecording struct {
 
 func (x *ResourceRecording) Reset() {
 	*x = ResourceRecording{}
-	mi := &file_llx_proto_msgTypes[11]
+	mi := &file_llx_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -921,7 +978,7 @@ func (x *ResourceRecording) String() string {
 func (*ResourceRecording) ProtoMessage() {}
 
 func (x *ResourceRecording) ProtoReflect() protoreflect.Message {
-	mi := &file_llx_proto_msgTypes[11]
+	mi := &file_llx_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -934,7 +991,7 @@ func (x *ResourceRecording) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResourceRecording.ProtoReflect.Descriptor instead.
 func (*ResourceRecording) Descriptor() ([]byte, []int) {
-	return file_llx_proto_rawDescGZIP(), []int{11}
+	return file_llx_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *ResourceRecording) GetResource() string {
@@ -986,7 +1043,7 @@ type Rating struct {
 
 func (x *Rating) Reset() {
 	*x = Rating{}
-	mi := &file_llx_proto_msgTypes[12]
+	mi := &file_llx_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -998,7 +1055,7 @@ func (x *Rating) String() string {
 func (*Rating) ProtoMessage() {}
 
 func (x *Rating) ProtoReflect() protoreflect.Message {
-	mi := &file_llx_proto_msgTypes[12]
+	mi := &file_llx_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1011,7 +1068,7 @@ func (x *Rating) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Rating.ProtoReflect.Descriptor instead.
 func (*Rating) Descriptor() ([]byte, []int) {
-	return file_llx_proto_rawDescGZIP(), []int{12}
+	return file_llx_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *Rating) GetId() string {
@@ -1075,7 +1132,7 @@ type AssessmentItem struct {
 
 func (x *AssessmentItem) Reset() {
 	*x = AssessmentItem{}
-	mi := &file_llx_proto_msgTypes[13]
+	mi := &file_llx_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1087,7 +1144,7 @@ func (x *AssessmentItem) String() string {
 func (*AssessmentItem) ProtoMessage() {}
 
 func (x *AssessmentItem) ProtoReflect() protoreflect.Message {
-	mi := &file_llx_proto_msgTypes[13]
+	mi := &file_llx_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1100,7 +1157,7 @@ func (x *AssessmentItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AssessmentItem.ProtoReflect.Descriptor instead.
 func (*AssessmentItem) Descriptor() ([]byte, []int) {
-	return file_llx_proto_rawDescGZIP(), []int{13}
+	return file_llx_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *AssessmentItem) GetSuccess() bool {
@@ -1192,7 +1249,7 @@ type Assessment struct {
 
 func (x *Assessment) Reset() {
 	*x = Assessment{}
-	mi := &file_llx_proto_msgTypes[14]
+	mi := &file_llx_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1204,7 +1261,7 @@ func (x *Assessment) String() string {
 func (*Assessment) ProtoMessage() {}
 
 func (x *Assessment) ProtoReflect() protoreflect.Message {
-	mi := &file_llx_proto_msgTypes[14]
+	mi := &file_llx_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1217,7 +1274,7 @@ func (x *Assessment) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Assessment.ProtoReflect.Descriptor instead.
 func (*Assessment) Descriptor() ([]byte, []int) {
-	return file_llx_proto_rawDescGZIP(), []int{14}
+	return file_llx_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *Assessment) GetChecksum() string {
@@ -1259,7 +1316,7 @@ type IP struct {
 
 func (x *IP) Reset() {
 	*x = IP{}
-	mi := &file_llx_proto_msgTypes[15]
+	mi := &file_llx_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1271,7 +1328,7 @@ func (x *IP) String() string {
 func (*IP) ProtoMessage() {}
 
 func (x *IP) ProtoReflect() protoreflect.Message {
-	mi := &file_llx_proto_msgTypes[15]
+	mi := &file_llx_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1284,7 +1341,7 @@ func (x *IP) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IP.ProtoReflect.Descriptor instead.
 func (*IP) Descriptor() ([]byte, []int) {
-	return file_llx_proto_rawDescGZIP(), []int{15}
+	return file_llx_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *IP) GetAddress() []byte {
@@ -1320,7 +1377,12 @@ const file_llx_proto_rawDesc = "" +
 	"\x03map\x18\x04 \x03(\v2\x1b.mql.llx.Primitive.MapEntryR\x03map\x1aJ\n" +
 	"\bMapEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12(\n" +
-	"\x05value\x18\x02 \x01(\v2\x12.mql.llx.PrimitiveR\x05value:\x028\x01\"`\n" +
+	"\x05value\x18\x02 \x01(\v2\x12.mql.llx.PrimitiveR\x05value:\x028\x01\"R\n" +
+	"\n" +
+	"AssetValue\x12#\n" +
+	"\rresource_type\x18\x01 \x01(\tR\fresourceType\x12\x1f\n" +
+	"\vresource_id\x18\x02 \x01(\tR\n" +
+	"resourceId\"`\n" +
 	"\bFunction\x12\x12\n" +
 	"\x04type\x18\x01 \x01(\tR\x04type\x12&\n" +
 	"\x04args\x18\x03 \x03(\v2\x12.mql.llx.PrimitiveR\x04args\x12\x18\n" +
@@ -1481,71 +1543,72 @@ func file_llx_proto_rawDescGZIP() []byte {
 }
 
 var file_llx_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_llx_proto_msgTypes = make([]protoimpl.MessageInfo, 27)
+var file_llx_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
 var file_llx_proto_goTypes = []any{
 	(Chunk_Call)(0),           // 0: mql.llx.Chunk.Call
 	(*Primitive)(nil),         // 1: mql.llx.Primitive
-	(*Function)(nil),          // 2: mql.llx.Function
-	(*Chunk)(nil),             // 3: mql.llx.Chunk
-	(*AssertionMessage)(nil),  // 4: mql.llx.AssertionMessage
-	(*CodeV1)(nil),            // 5: mql.llx.CodeV1
-	(*Block)(nil),             // 6: mql.llx.Block
-	(*CodeV2)(nil),            // 7: mql.llx.CodeV2
-	(*Labels)(nil),            // 8: mql.llx.Labels
-	(*Documentation)(nil),     // 9: mql.llx.Documentation
-	(*CodeBundle)(nil),        // 10: mql.llx.CodeBundle
-	(*Result)(nil),            // 11: mql.llx.Result
-	(*ResourceRecording)(nil), // 12: mql.llx.ResourceRecording
-	(*Rating)(nil),            // 13: mql.llx.Rating
-	(*AssessmentItem)(nil),    // 14: mql.llx.AssessmentItem
-	(*Assessment)(nil),        // 15: mql.llx.Assessment
-	(*IP)(nil),                // 16: mql.llx.IP
-	nil,                       // 17: mql.llx.Primitive.MapEntry
-	nil,                       // 18: mql.llx.CodeV1.ChecksumsEntry
-	nil,                       // 19: mql.llx.CodeV1.AssertionsEntry
-	nil,                       // 20: mql.llx.CodeV2.ChecksumsEntry
-	nil,                       // 21: mql.llx.CodeV2.AssertionsEntry
-	nil,                       // 22: mql.llx.Labels.LabelsEntry
-	nil,                       // 23: mql.llx.CodeBundle.PropsEntry
-	nil,                       // 24: mql.llx.CodeBundle.AssertionsEntry
-	nil,                       // 25: mql.llx.CodeBundle.AutoExpandEntry
-	nil,                       // 26: mql.llx.CodeBundle.VarsEntry
-	nil,                       // 27: mql.llx.ResourceRecording.FieldsEntry
+	(*AssetValue)(nil),        // 2: mql.llx.AssetValue
+	(*Function)(nil),          // 3: mql.llx.Function
+	(*Chunk)(nil),             // 4: mql.llx.Chunk
+	(*AssertionMessage)(nil),  // 5: mql.llx.AssertionMessage
+	(*CodeV1)(nil),            // 6: mql.llx.CodeV1
+	(*Block)(nil),             // 7: mql.llx.Block
+	(*CodeV2)(nil),            // 8: mql.llx.CodeV2
+	(*Labels)(nil),            // 9: mql.llx.Labels
+	(*Documentation)(nil),     // 10: mql.llx.Documentation
+	(*CodeBundle)(nil),        // 11: mql.llx.CodeBundle
+	(*Result)(nil),            // 12: mql.llx.Result
+	(*ResourceRecording)(nil), // 13: mql.llx.ResourceRecording
+	(*Rating)(nil),            // 14: mql.llx.Rating
+	(*AssessmentItem)(nil),    // 15: mql.llx.AssessmentItem
+	(*Assessment)(nil),        // 16: mql.llx.Assessment
+	(*IP)(nil),                // 17: mql.llx.IP
+	nil,                       // 18: mql.llx.Primitive.MapEntry
+	nil,                       // 19: mql.llx.CodeV1.ChecksumsEntry
+	nil,                       // 20: mql.llx.CodeV1.AssertionsEntry
+	nil,                       // 21: mql.llx.CodeV2.ChecksumsEntry
+	nil,                       // 22: mql.llx.CodeV2.AssertionsEntry
+	nil,                       // 23: mql.llx.Labels.LabelsEntry
+	nil,                       // 24: mql.llx.CodeBundle.PropsEntry
+	nil,                       // 25: mql.llx.CodeBundle.AssertionsEntry
+	nil,                       // 26: mql.llx.CodeBundle.AutoExpandEntry
+	nil,                       // 27: mql.llx.CodeBundle.VarsEntry
+	nil,                       // 28: mql.llx.ResourceRecording.FieldsEntry
 }
 var file_llx_proto_depIdxs = []int32{
 	1,  // 0: mql.llx.Primitive.array:type_name -> mql.llx.Primitive
-	17, // 1: mql.llx.Primitive.map:type_name -> mql.llx.Primitive.MapEntry
+	18, // 1: mql.llx.Primitive.map:type_name -> mql.llx.Primitive.MapEntry
 	1,  // 2: mql.llx.Function.args:type_name -> mql.llx.Primitive
 	0,  // 3: mql.llx.Chunk.call:type_name -> mql.llx.Chunk.Call
 	1,  // 4: mql.llx.Chunk.primitive:type_name -> mql.llx.Primitive
-	2,  // 5: mql.llx.Chunk.function:type_name -> mql.llx.Function
-	3,  // 6: mql.llx.CodeV1.code:type_name -> mql.llx.Chunk
-	18, // 7: mql.llx.CodeV1.checksums:type_name -> mql.llx.CodeV1.ChecksumsEntry
-	5,  // 8: mql.llx.CodeV1.functions:type_name -> mql.llx.CodeV1
-	19, // 9: mql.llx.CodeV1.assertions:type_name -> mql.llx.CodeV1.AssertionsEntry
-	3,  // 10: mql.llx.Block.chunks:type_name -> mql.llx.Chunk
-	6,  // 11: mql.llx.CodeV2.blocks:type_name -> mql.llx.Block
-	20, // 12: mql.llx.CodeV2.checksums:type_name -> mql.llx.CodeV2.ChecksumsEntry
-	21, // 13: mql.llx.CodeV2.assertions:type_name -> mql.llx.CodeV2.AssertionsEntry
-	22, // 14: mql.llx.Labels.labels:type_name -> mql.llx.Labels.LabelsEntry
-	7,  // 15: mql.llx.CodeBundle.code_v2:type_name -> mql.llx.CodeV2
-	9,  // 16: mql.llx.CodeBundle.suggestions:type_name -> mql.llx.Documentation
-	8,  // 17: mql.llx.CodeBundle.labels:type_name -> mql.llx.Labels
-	23, // 18: mql.llx.CodeBundle.props:type_name -> mql.llx.CodeBundle.PropsEntry
-	24, // 19: mql.llx.CodeBundle.assertions:type_name -> mql.llx.CodeBundle.AssertionsEntry
-	25, // 20: mql.llx.CodeBundle.auto_expand:type_name -> mql.llx.CodeBundle.AutoExpandEntry
-	26, // 21: mql.llx.CodeBundle.vars:type_name -> mql.llx.CodeBundle.VarsEntry
+	3,  // 5: mql.llx.Chunk.function:type_name -> mql.llx.Function
+	4,  // 6: mql.llx.CodeV1.code:type_name -> mql.llx.Chunk
+	19, // 7: mql.llx.CodeV1.checksums:type_name -> mql.llx.CodeV1.ChecksumsEntry
+	6,  // 8: mql.llx.CodeV1.functions:type_name -> mql.llx.CodeV1
+	20, // 9: mql.llx.CodeV1.assertions:type_name -> mql.llx.CodeV1.AssertionsEntry
+	4,  // 10: mql.llx.Block.chunks:type_name -> mql.llx.Chunk
+	7,  // 11: mql.llx.CodeV2.blocks:type_name -> mql.llx.Block
+	21, // 12: mql.llx.CodeV2.checksums:type_name -> mql.llx.CodeV2.ChecksumsEntry
+	22, // 13: mql.llx.CodeV2.assertions:type_name -> mql.llx.CodeV2.AssertionsEntry
+	23, // 14: mql.llx.Labels.labels:type_name -> mql.llx.Labels.LabelsEntry
+	8,  // 15: mql.llx.CodeBundle.code_v2:type_name -> mql.llx.CodeV2
+	10, // 16: mql.llx.CodeBundle.suggestions:type_name -> mql.llx.Documentation
+	9,  // 17: mql.llx.CodeBundle.labels:type_name -> mql.llx.Labels
+	24, // 18: mql.llx.CodeBundle.props:type_name -> mql.llx.CodeBundle.PropsEntry
+	25, // 19: mql.llx.CodeBundle.assertions:type_name -> mql.llx.CodeBundle.AssertionsEntry
+	26, // 20: mql.llx.CodeBundle.auto_expand:type_name -> mql.llx.CodeBundle.AutoExpandEntry
+	27, // 21: mql.llx.CodeBundle.vars:type_name -> mql.llx.CodeBundle.VarsEntry
 	1,  // 22: mql.llx.Result.data:type_name -> mql.llx.Primitive
-	27, // 23: mql.llx.ResourceRecording.fields:type_name -> mql.llx.ResourceRecording.FieldsEntry
+	28, // 23: mql.llx.ResourceRecording.fields:type_name -> mql.llx.ResourceRecording.FieldsEntry
 	1,  // 24: mql.llx.AssessmentItem.expected:type_name -> mql.llx.Primitive
 	1,  // 25: mql.llx.AssessmentItem.actual:type_name -> mql.llx.Primitive
 	1,  // 26: mql.llx.AssessmentItem.data:type_name -> mql.llx.Primitive
-	14, // 27: mql.llx.Assessment.results:type_name -> mql.llx.AssessmentItem
+	15, // 27: mql.llx.Assessment.results:type_name -> mql.llx.AssessmentItem
 	1,  // 28: mql.llx.Primitive.MapEntry.value:type_name -> mql.llx.Primitive
-	4,  // 29: mql.llx.CodeV1.AssertionsEntry.value:type_name -> mql.llx.AssertionMessage
-	4,  // 30: mql.llx.CodeV2.AssertionsEntry.value:type_name -> mql.llx.AssertionMessage
-	4,  // 31: mql.llx.CodeBundle.AssertionsEntry.value:type_name -> mql.llx.AssertionMessage
-	11, // 32: mql.llx.ResourceRecording.FieldsEntry.value:type_name -> mql.llx.Result
+	5,  // 29: mql.llx.CodeV1.AssertionsEntry.value:type_name -> mql.llx.AssertionMessage
+	5,  // 30: mql.llx.CodeV2.AssertionsEntry.value:type_name -> mql.llx.AssertionMessage
+	5,  // 31: mql.llx.CodeBundle.AssertionsEntry.value:type_name -> mql.llx.AssertionMessage
+	12, // 32: mql.llx.ResourceRecording.FieldsEntry.value:type_name -> mql.llx.Result
 	33, // [33:33] is the sub-list for method output_type
 	33, // [33:33] is the sub-list for method input_type
 	33, // [33:33] is the sub-list for extension type_name
@@ -1564,7 +1627,7 @@ func file_llx_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_llx_proto_rawDesc), len(file_llx_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   27,
+			NumMessages:   28,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

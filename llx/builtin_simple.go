@@ -732,6 +732,28 @@ func timeNotNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 	return rawboolNotOpV2(e, bind, chunk, ref, opTimeCmpNil)
 }
 
+// The native `asset` primitive (types.Asset) carries an *AssetValue payload with
+// the anchor (resourceType, resourceId) that points at another asset. The anchor
+// is not introspectable from MQL; it is serialized out for the platform to
+// correlate against the separately-discovered asset. The only MQL-facing builtins
+// are nil comparisons. See ADR 030.
+
+func opAssetCmpNil(left *RawData, right *RawData) bool {
+	if left.Value == nil {
+		return true
+	}
+	v, ok := left.Value.(*AssetValue)
+	return !ok || v == nil
+}
+
+func assetCmpNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, opAssetCmpNil)
+}
+
+func assetNotNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, opAssetCmpNil)
+}
+
 // string </>/<=/>= string
 
 func stringLTStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {

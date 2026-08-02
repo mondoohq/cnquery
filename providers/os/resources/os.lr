@@ -11424,6 +11424,11 @@ private claude.code.mcpServer @defaults("name") @maturity("preview") {
   needsAuth bool
   // Timestamp of last authentication check
   lastChecked string
+  // Discovered MCP server asset
+  //
+  // Points at the asset discovered for this MCP server, anchored on this
+  // resource. See ADR 030.
+  running() asset
 }
 
 // OpenAI Codex CLI instance
@@ -11557,6 +11562,11 @@ private openai.codex.mcpServer @defaults("name") @maturity("preview") {
   note string
   // Plugin that provides this MCP server
   plugin string
+  // Discovered MCP server asset
+  //
+  // Points at the asset discovered for this MCP server, anchored on this
+  // resource. See ADR 030.
+  running() asset
 }
 
 // OpenAI Codex OAuth app connector
@@ -11634,6 +11644,11 @@ private cursor.mcpServer @defaults("name") @maturity("preview") {
   url string
   // Whether environment variables (for example API keys) are configured
   hasEnv bool
+  // Discovered MCP server asset
+  //
+  // Points at the asset discovered for this MCP server, anchored on this
+  // resource. See ADR 030.
+  running() asset
 }
 
 // Cursor rule file
@@ -11747,6 +11762,11 @@ private github.copilot.mcpServer @defaults("name") @maturity("preview") {
   url string
   // Whether environment variables (for example API keys) are configured
   hasEnv bool
+  // Discovered MCP server asset
+  //
+  // Points at the asset discovered for this MCP server, anchored on this
+  // resource. See ADR 030.
+  running() asset
 }
 
 // GitHub Copilot skill
@@ -11923,6 +11943,11 @@ private gemini.mcpServer @defaults("name") @maturity("preview") {
   url string
   // Whether environment variables (for example API keys) are configured
   hasEnv bool
+  // Discovered MCP server asset
+  //
+  // Points at the asset discovered for this MCP server, anchored on this
+  // resource. See ADR 030.
+  running() asset
 }
 
 // Gemini skill
@@ -12021,6 +12046,11 @@ private windsurf.mcpServer @defaults("name") @maturity("preview") {
   url string
   // Whether environment variables (for example API keys) are configured
   hasEnv bool
+  // Discovered MCP server asset
+  //
+  // Points at the asset discovered for this MCP server, anchored on this
+  // resource. See ADR 030.
+  running() asset
 }
 
 // Windsurf skill

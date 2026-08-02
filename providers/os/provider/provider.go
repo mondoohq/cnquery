@@ -37,6 +37,7 @@ import (
 	"go.mondoo.com/mql/v13/providers/os/id"
 	"go.mondoo.com/mql/v13/providers/os/resources"
 	"go.mondoo.com/mql/v13/providers/os/resources/discovery/docker_engine"
+	"go.mondoo.com/mql/v13/providers/os/resources/discovery/mcp_servers"
 	"go.mondoo.com/mql/v13/utils/stringx"
 )
 
@@ -304,6 +305,16 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		inv, err = s.discoverLocalContainers(conn.Asset().Connections[0])
 		if err != nil {
 			return nil, err
+		}
+		mcpInv, err := s.discoverMCPServers(conn)
+		if err != nil {
+			log.Warn().Err(err).Msg("failed to discover mcp servers")
+		} else if mcpInv != nil {
+			if inv == nil {
+				inv = mcpInv
+			} else {
+				inv.AddAssets(mcpInv.Spec.GetAssets()...)
+			}
 		}
 	}
 
@@ -622,6 +633,35 @@ func (s *Service) discoverLocalContainers(conf *inventory.Config) (*inventory.In
 	inventory.AddAssets(resolvedAssets...)
 
 	return inventory, nil
+}
+
+// discoverMCPServers discovers MCP servers configured on the host as their own
+// assets. It is opt-in: it runs only when the `mcp-servers` target (or `all`) is
+// explicitly requested, so it stays off by default and under `auto`. The os
+// provider emits the connection info the AI provider needs; it never connects to
+// the MCP server itself. See ADR 030.
+func (s *Service) discoverMCPServers(conn shared.Connection) (*inventory.Inventory, error) {
+	conf := conn.Asset().Connections[0]
+	if conf == nil || conf.Discover == nil {
+		return nil, nil
+	}
+	if !stringx.ContainsAnyOf(conf.Discover.Targets, "all", mcp_servers.DiscoveryMCPServers) {
+		return nil, nil
+	}
+
+	runtime, err := s.GetRuntime(uint32(conn.ID()))
+	if err != nil {
+		return nil, err
+	}
+
+	resolvedAssets, err := resources.DiscoverMCPServerAssets(runtime, conn.Asset())
+	if err != nil {
+		return nil, err
+	}
+
+	inv := &inventory.Inventory{}
+	inv.AddAssets(resolvedAssets...)
+	return inv, nil
 }
 
 // parseContainerSubcommand translates one of the shared `image|registry|tar|container`

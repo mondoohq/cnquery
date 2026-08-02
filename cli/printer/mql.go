@@ -834,6 +834,14 @@ func (print *Printer) data(typ types.Type, data any, checksum string, indent str
 			return "<bad range>"
 		}
 
+	case types.Asset:
+		v, ok := data.(*llx.AssetValue)
+		if !ok || v == nil {
+			return "null"
+		}
+		// TODO: store and retrieve more information about the referenced asset
+		return "asset"
+
 	default:
 		return indent + fmt.Sprintf("🤷 %#v", data)
 	}

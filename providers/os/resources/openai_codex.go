@@ -379,6 +379,10 @@ func (r *mqlOpenaiCodexSkill) sha256() (string, error) {
 	return contentSHA256(r.Content.Data), nil
 }
 
+func (r *mqlOpenaiCodexMcpServer) running() (*llx.AssetValue, error) {
+	return mcpServerAsset(r), nil
+}
+
 func (r *mqlOpenaiCodexMcpServer) id() (string, error) {
 	return "openai.codex.mcpServer/" + r.Plugin.Data + "/" + r.Name.Data, nil
 }

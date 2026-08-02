@@ -12,6 +12,7 @@ muser {
   groups() []mgroup
   dict() dict
   error() string
+  running() asset
 }
 
 mgroup {

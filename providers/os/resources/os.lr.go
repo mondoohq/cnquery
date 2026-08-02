@@ -11738,6 +11738,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"claude.code.mcpServer.lastChecked": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeCodeMcpServer).GetLastChecked()).ToDataRes(types.String)
 	},
+	"claude.code.mcpServer.running": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeMcpServer).GetRunning()).ToDataRes(types.Asset)
+	},
 	"openai.codex.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenaiCodex).GetConfigPath()).ToDataRes(types.String)
 	},
@@ -11837,6 +11840,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openai.codex.mcpServer.plugin": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenaiCodexMcpServer).GetPlugin()).ToDataRes(types.String)
 	},
+	"openai.codex.mcpServer.running": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexMcpServer).GetRunning()).ToDataRes(types.Asset)
+	},
 	"openai.codex.connector.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenaiCodexConnector).GetName()).ToDataRes(types.String)
 	},
@@ -11881,6 +11887,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"cursor.mcpServer.hasEnv": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCursorMcpServer).GetHasEnv()).ToDataRes(types.Bool)
+	},
+	"cursor.mcpServer.running": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCursorMcpServer).GetRunning()).ToDataRes(types.Asset)
 	},
 	"cursor.rule.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCursorRule).GetName()).ToDataRes(types.String)
@@ -11953,6 +11962,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"github.copilot.mcpServer.hasEnv": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubCopilotMcpServer).GetHasEnv()).ToDataRes(types.Bool)
+	},
+	"github.copilot.mcpServer.running": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotMcpServer).GetRunning()).ToDataRes(types.Asset)
 	},
 	"github.copilot.skill.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubCopilotSkill).GetName()).ToDataRes(types.String)
@@ -12077,6 +12089,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gemini.mcpServer.hasEnv": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGeminiMcpServer).GetHasEnv()).ToDataRes(types.Bool)
 	},
+	"gemini.mcpServer.running": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGeminiMcpServer).GetRunning()).ToDataRes(types.Asset)
+	},
 	"gemini.skill.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGeminiSkill).GetName()).ToDataRes(types.String)
 	},
@@ -12142,6 +12157,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windsurf.mcpServer.hasEnv": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindsurfMcpServer).GetHasEnv()).ToDataRes(types.Bool)
+	},
+	"windsurf.mcpServer.running": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindsurfMcpServer).GetRunning()).ToDataRes(types.Asset)
 	},
 	"windsurf.skill.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindsurfSkill).GetName()).ToDataRes(types.String)
@@ -26741,6 +26759,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlClaudeCodeMcpServer).LastChecked, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"claude.code.mcpServer.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeMcpServer).Running, ok = plugin.RawToTValue[*llx.AssetValue](v.Value, v.Error)
+		return
+	},
 	"openai.codex.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenaiCodex).__id, ok = v.Value.(string)
 		return
@@ -26889,6 +26911,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenaiCodexMcpServer).Plugin, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"openai.codex.mcpServer.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexMcpServer).Running, ok = plugin.RawToTValue[*llx.AssetValue](v.Value, v.Error)
+		return
+	},
 	"openai.codex.connector.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenaiCodexConnector).__id, ok = v.Value.(string)
 		return
@@ -26959,6 +26985,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"cursor.mcpServer.hasEnv": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCursorMcpServer).HasEnv, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cursor.mcpServer.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursorMcpServer).Running, ok = plugin.RawToTValue[*llx.AssetValue](v.Value, v.Error)
 		return
 	},
 	"cursor.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27075,6 +27105,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.copilot.mcpServer.hasEnv": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubCopilotMcpServer).HasEnv, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.copilot.mcpServer.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotMcpServer).Running, ok = plugin.RawToTValue[*llx.AssetValue](v.Value, v.Error)
 		return
 	},
 	"github.copilot.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27265,6 +27299,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGeminiMcpServer).HasEnv, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gemini.mcpServer.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGeminiMcpServer).Running, ok = plugin.RawToTValue[*llx.AssetValue](v.Value, v.Error)
+		return
+	},
 	"gemini.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGeminiSkill).__id, ok = v.Value.(string)
 		return
@@ -27367,6 +27405,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windsurf.mcpServer.hasEnv": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindsurfMcpServer).HasEnv, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windsurf.mcpServer.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurfMcpServer).Running, ok = plugin.RawToTValue[*llx.AssetValue](v.Value, v.Error)
 		return
 	},
 	"windsurf.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -70889,6 +70931,7 @@ type mqlClaudeCodeMcpServer struct {
 	HasEnv      plugin.TValue[bool]
 	NeedsAuth   plugin.TValue[bool]
 	LastChecked plugin.TValue[string]
+	Running     plugin.TValue[*llx.AssetValue]
 }
 
 // createClaudeCodeMcpServer creates a new instance of this resource
@@ -70958,6 +71001,12 @@ func (c *mqlClaudeCodeMcpServer) GetNeedsAuth() *plugin.TValue[bool] {
 
 func (c *mqlClaudeCodeMcpServer) GetLastChecked() *plugin.TValue[string] {
 	return &c.LastChecked
+}
+
+func (c *mqlClaudeCodeMcpServer) GetRunning() *plugin.TValue[*llx.AssetValue] {
+	return plugin.GetOrCompute[*llx.AssetValue](&c.Running, func() (*llx.AssetValue, error) {
+		return c.running()
+	})
 }
 
 // mqlOpenaiCodex for the openai.codex resource
@@ -71310,6 +71359,7 @@ type mqlOpenaiCodexMcpServer struct {
 	HasEnv  plugin.TValue[bool]
 	Note    plugin.TValue[string]
 	Plugin  plugin.TValue[string]
+	Running plugin.TValue[*llx.AssetValue]
 }
 
 // createOpenaiCodexMcpServer creates a new instance of this resource
@@ -71379,6 +71429,12 @@ func (c *mqlOpenaiCodexMcpServer) GetNote() *plugin.TValue[string] {
 
 func (c *mqlOpenaiCodexMcpServer) GetPlugin() *plugin.TValue[string] {
 	return &c.Plugin
+}
+
+func (c *mqlOpenaiCodexMcpServer) GetRunning() *plugin.TValue[*llx.AssetValue] {
+	return plugin.GetOrCompute[*llx.AssetValue](&c.Running, func() (*llx.AssetValue, error) {
+		return c.running()
+	})
 }
 
 // mqlOpenaiCodexConnector for the openai.codex.connector resource
@@ -71585,6 +71641,7 @@ type mqlCursorMcpServer struct {
 	Args    plugin.TValue[[]any]
 	Url     plugin.TValue[string]
 	HasEnv  plugin.TValue[bool]
+	Running plugin.TValue[*llx.AssetValue]
 }
 
 // createCursorMcpServer creates a new instance of this resource
@@ -71646,6 +71703,12 @@ func (c *mqlCursorMcpServer) GetUrl() *plugin.TValue[string] {
 
 func (c *mqlCursorMcpServer) GetHasEnv() *plugin.TValue[bool] {
 	return &c.HasEnv
+}
+
+func (c *mqlCursorMcpServer) GetRunning() *plugin.TValue[*llx.AssetValue] {
+	return plugin.GetOrCompute[*llx.AssetValue](&c.Running, func() (*llx.AssetValue, error) {
+		return c.running()
+	})
 }
 
 // mqlCursorRule for the cursor.rule resource
@@ -71987,6 +72050,7 @@ type mqlGithubCopilotMcpServer struct {
 	Args    plugin.TValue[[]any]
 	Url     plugin.TValue[string]
 	HasEnv  plugin.TValue[bool]
+	Running plugin.TValue[*llx.AssetValue]
 }
 
 // createGithubCopilotMcpServer creates a new instance of this resource
@@ -72048,6 +72112,12 @@ func (c *mqlGithubCopilotMcpServer) GetUrl() *plugin.TValue[string] {
 
 func (c *mqlGithubCopilotMcpServer) GetHasEnv() *plugin.TValue[bool] {
 	return &c.HasEnv
+}
+
+func (c *mqlGithubCopilotMcpServer) GetRunning() *plugin.TValue[*llx.AssetValue] {
+	return plugin.GetOrCompute[*llx.AssetValue](&c.Running, func() (*llx.AssetValue, error) {
+		return c.running()
+	})
 }
 
 // mqlGithubCopilotSkill for the github.copilot.skill resource
@@ -72566,6 +72636,7 @@ type mqlGeminiMcpServer struct {
 	Args    plugin.TValue[[]any]
 	Url     plugin.TValue[string]
 	HasEnv  plugin.TValue[bool]
+	Running plugin.TValue[*llx.AssetValue]
 }
 
 // createGeminiMcpServer creates a new instance of this resource
@@ -72627,6 +72698,12 @@ func (c *mqlGeminiMcpServer) GetUrl() *plugin.TValue[string] {
 
 func (c *mqlGeminiMcpServer) GetHasEnv() *plugin.TValue[bool] {
 	return &c.HasEnv
+}
+
+func (c *mqlGeminiMcpServer) GetRunning() *plugin.TValue[*llx.AssetValue] {
+	return plugin.GetOrCompute[*llx.AssetValue](&c.Running, func() (*llx.AssetValue, error) {
+		return c.running()
+	})
 }
 
 // mqlGeminiSkill for the gemini.skill resource
@@ -72914,6 +72991,7 @@ type mqlWindsurfMcpServer struct {
 	Args    plugin.TValue[[]any]
 	Url     plugin.TValue[string]
 	HasEnv  plugin.TValue[bool]
+	Running plugin.TValue[*llx.AssetValue]
 }
 
 // createWindsurfMcpServer creates a new instance of this resource
@@ -72975,6 +73053,12 @@ func (c *mqlWindsurfMcpServer) GetUrl() *plugin.TValue[string] {
 
 func (c *mqlWindsurfMcpServer) GetHasEnv() *plugin.TValue[bool] {
 	return &c.HasEnv
+}
+
+func (c *mqlWindsurfMcpServer) GetRunning() *plugin.TValue[*llx.AssetValue] {
+	return plugin.GetOrCompute[*llx.AssetValue](&c.Running, func() (*llx.AssetValue, error) {
+		return c.running()
+	})
 }
 
 // mqlWindsurfSkill for the windsurf.skill resource
