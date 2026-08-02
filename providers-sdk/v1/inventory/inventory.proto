@@ -87,8 +87,8 @@ message Asset {
   string fqdn = 37;
   string trace_id = 38;
 
-  // Resource-anchored relationships to other assets (ADR 030). Each edge names
-  // the counterparty asset and the resource on it that anchors the relationship.
+  // Resource-anchored relationships to other assets (ADR 030). Each edge
+  // names the counterparty asset and the resource on it that anchors the edge.
   repeated AssetRelationship relationships = 39;
 }
 

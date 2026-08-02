@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"strings"
+
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/types"
@@ -30,12 +32,14 @@ const (
 )
 
 // deriveMcpTransport returns the transport type for an MCP server. An explicit
-// value from the config wins; otherwise it is inferred from the connection
-// shape: a local launch command implies stdio, a remote endpoint URL implies
-// http. Returns an empty string when neither is present.
+// value from the config wins (lowercased, since transport names are a
+// conventionally-lowercase set and configs may spell them any case); otherwise
+// it is inferred from the connection shape: a local launch command implies
+// stdio, a remote endpoint URL implies http. Returns an empty string when
+// neither is present.
 func deriveMcpTransport(explicitType, command, url string) string {
 	if explicitType != "" {
-		return explicitType
+		return strings.ToLower(explicitType)
 	}
 	if command != "" {
 		return mcpTransportStdio

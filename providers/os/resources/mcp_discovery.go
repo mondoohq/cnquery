@@ -82,6 +82,9 @@ func DiscoverMCPServerAssets(runtime *plugin.Runtime, host *inventory.Asset) ([]
 				// no usable connection info (neither command nor url)
 				continue
 			}
+			// No PlatformIds here: identity is assigned by the AI provider's
+			// Connect() at connect time. The relationship back to the host is
+			// resource-anchored on (type, id), not platform-ID-based. See ADR 030.
 			assets = append(assets, &inventory.Asset{
 				Name:        srv.GetName().Data,
 				State:       inventory.State_STATE_ONLINE,
@@ -106,12 +109,25 @@ func DiscoverMCPServerAssets(runtime *plugin.Runtime, host *inventory.Asset) ([]
 func mcpConnectionConfig(srv mcpServerLike) *inventory.Config {
 	command := srv.GetCommand().Data
 	url := srv.GetUrl().Data
-	switch deriveMcpTransport(srv.GetType().Data, command, url) {
-	case mcpTransportStdio:
+
+	// stdio is the only local transport. Every other transport (http, https,
+	// sse, streamable-http, ...) is a remote, URL-based one, so we classify by
+	// whether a URL is present rather than enumerating names, so a config with a
+	// transport we don't recognize by name is not silently dropped.
+	if deriveMcpTransport(srv.GetType().Data, command, url) == mcpTransportStdio {
 		if command == "" {
 			return nil
 		}
-		parts := append([]string{command}, anySliceToStrings(srv.GetArgs().Data)...)
+		args := srv.GetArgs()
+		if args.Error != nil {
+			// Args failed to resolve: emit the bare command rather than silently
+			// dropping arguments, and leave a trace so a broken target is explained.
+			log.Warn().Err(args.Error).Str("server", srv.GetName().Data).
+				Msg("mcp discovery: failed to read server args, emitting command without arguments")
+		}
+		parts := make([]string, 0, 1+len(args.Data))
+		parts = append(parts, command)
+		parts = append(parts, anySliceToStrings(args.Data)...)
 		// We deliberately do NOT carry the server's env (secrets). Discovery
 		// emits only how to start the server; secrets are supplied explicitly at
 		// connect time via the AI provider's `--env` flag, so they never enter
@@ -123,23 +139,22 @@ func mcpConnectionConfig(srv mcpServerLike) *inventory.Config {
 				"target":   shellQuoteJoin(parts),
 			},
 		}
-	case mcpTransportHTTP:
-		if url == "" {
-			return nil
-		}
-		protocol := "http"
-		if strings.HasPrefix(strings.ToLower(url), "https://") {
-			protocol = "https"
-		}
-		return &inventory.Config{
-			Type: "mcp",
-			Options: map[string]string{
-				"protocol": protocol,
-				"target":   url,
-			},
-		}
-	default:
+	}
+
+	// Remote transport: needs a URL to reach the server.
+	if url == "" {
 		return nil
+	}
+	protocol := "http"
+	if strings.HasPrefix(strings.ToLower(url), "https://") {
+		protocol = "https"
+	}
+	return &inventory.Config{
+		Type: "mcp",
+		Options: map[string]string{
+			"protocol": protocol,
+			"target":   url,
+		},
 	}
 }
 
