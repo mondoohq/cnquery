@@ -12,7 +12,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "nextdns",
 	ID:              "go.mondoo.com/mql/providers/nextdns",
-	Version:         "13.0.10",
+	Version:         "13.0.11",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
