@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -188,6 +189,13 @@ func (r *mqlClaudeCode) projects() ([]interface{}, error) {
 	afs := r.afs()
 	state, err := r.loadBackupState()
 	if err != nil {
+		// A missing backup is expected on hosts without Claude Code history;
+		// report no projects rather than failing the query. Real read failures
+		// (permission denied, corrupt JSON, I/O) still surface.
+		if errors.Is(err, os.ErrNotExist) {
+			log.Debug().Err(err).Msg("no claude backup state for projects")
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -213,6 +221,13 @@ func (r *mqlClaudeCode) projects() ([]interface{}, error) {
 func (r *mqlClaudeCode) repos() ([]interface{}, error) {
 	state, err := r.loadBackupState()
 	if err != nil {
+		// A missing backup is expected on hosts without Claude Code history;
+		// report no repos rather than failing the query. Real read failures
+		// (permission denied, corrupt JSON, I/O) still surface.
+		if errors.Is(err, os.ErrNotExist) {
+			log.Debug().Err(err).Msg("no claude backup state for repos")
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -365,6 +380,13 @@ func (r *mqlClaudeCode) loadBackupState() (*claudeBackupState, error) {
 func (r *mqlClaudeCode) loadOAuthAccount() (*oauthAccount, error) {
 	state, err := r.loadBackupState()
 	if err != nil {
+		// A missing backup is expected on hosts without Claude Code history;
+		// surface empty account fields rather than failing the query. Real read
+		// failures (permission denied, corrupt JSON, I/O) still surface.
+		if errors.Is(err, os.ErrNotExist) {
+			log.Debug().Err(err).Msg("no claude backup state for account details")
+			return &oauthAccount{}, nil
+		}
 		return nil, err
 	}
 	if state.OAuthAccount == nil {
@@ -399,7 +421,10 @@ func findLatestBackupAfero(afs *afero.Afero, configDir string) (string, error) {
 	}
 
 	if latestBackup == "" {
-		return "", fmt.Errorf("no backup files found in %s", backupsDir)
+		// A backups dir with no backup files is the same benign "no history"
+		// case as a missing dir; wrap os.ErrNotExist so callers can suppress it
+		// while still surfacing real read failures (permission denied, I/O).
+		return "", fmt.Errorf("no backup files found in %s: %w", backupsDir, os.ErrNotExist)
 	}
 	return latestBackup, nil
 }
