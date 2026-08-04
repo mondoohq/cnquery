@@ -319,3 +319,21 @@ func TestCodexConfigIntegration(t *testing.T) {
 	assert.Equal(t, "imagegen", skill.name)
 	assert.Equal(t, "Generate or edit raster images.", skill.description)
 }
+
+func TestCodexSessionCwd(t *testing.T) {
+	afs := testAfero()
+	dir := t.TempDir()
+
+	// valid session_meta first line, followed by other records
+	writeTestFile(t, dir, "rollout-valid.jsonl",
+		`{"timestamp":"2026-05-05T09:13:01Z","type":"session_meta","payload":{"id":"abc","cwd":"/pub/go/src/go.mondoo.com/mql","cli_version":"0.128.0"}}`+"\n"+
+			`{"type":"message","payload":{"role":"user"}}`+"\n")
+	assert.Equal(t, "/pub/go/src/go.mondoo.com/mql", codexSessionCwd(afs, filepath.Join(dir, "rollout-valid.jsonl")))
+
+	// first record is not session_meta -> empty
+	writeTestFile(t, dir, "rollout-nometa.jsonl", `{"type":"message","payload":{"cwd":"/should/not/read"}}`+"\n")
+	assert.Equal(t, "", codexSessionCwd(afs, filepath.Join(dir, "rollout-nometa.jsonl")))
+
+	// missing file -> empty
+	assert.Equal(t, "", codexSessionCwd(afs, filepath.Join(dir, "missing.jsonl")))
+}

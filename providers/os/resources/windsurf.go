@@ -121,6 +121,14 @@ func (r *mqlWindsurfRule) id() (string, error) {
 	return "windsurf.rule/" + r.Name.Data, nil
 }
 
+func (r *mqlWindsurf) repos() ([]interface{}, error) {
+	return gitReposFromPaths(r.MqlRuntime, "windsurf.repo", vscodeWorkspaceFolders(r.MqlRuntime, "Windsurf"))
+}
+
+func (r *mqlWindsurfRepo) id() (string, error) {
+	return "windsurf.repo/" + r.Path.Data, nil
+}
+
 func (r *mqlWindsurfMcpServer) running() (*llx.AssetValue, error) {
 	return mcpServerAsset(r), nil
 }

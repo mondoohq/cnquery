@@ -4,7 +4,9 @@
 package resources
 
 import (
+	"database/sql"
 	"encoding/json"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -106,4 +108,30 @@ func TestZedConfigMissing(t *testing.T) {
 	var settings map[string]interface{}
 	err := readJSONFileAfero(afs, dir, "settings.json", &settings)
 	assert.Error(t, err)
+}
+
+func TestReadZedWorkspacePaths(t *testing.T) {
+	dir := t.TempDir()
+	dbPath := filepath.Join(dir, "db.sqlite")
+
+	db, err := sql.Open("sqlite", dbPath)
+	require.NoError(t, err)
+	_, err = db.Exec(`CREATE TABLE workspaces (workspace_id INTEGER PRIMARY KEY, local_paths BLOB, window_state TEXT)`)
+	require.NoError(t, err)
+
+	// bincode-ish blob: 8-byte length prefix (mostly non-printable) then the path.
+	blob := []byte{0x1d, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+	blob = append(blob, []byte("/pub/go/src/go.mondoo.com/mql")...)
+	_, err = db.Exec(`INSERT INTO workspaces (local_paths, window_state) VALUES (?, ?)`, blob, `{"x":1}`)
+	require.NoError(t, err)
+	// a second workspace whose path is not a printable-leading absolute path
+	_, err = db.Exec(`INSERT INTO workspaces (local_paths, window_state) VALUES (?, ?)`, []byte("no-paths-here"), "")
+	require.NoError(t, err)
+	require.NoError(t, db.Close())
+
+	paths := readZedWorkspacePaths(testAfero(), dbPath)
+	assert.Contains(t, paths, "/pub/go/src/go.mondoo.com/mql")
+
+	// missing db yields nil, not a panic
+	assert.Nil(t, readZedWorkspacePaths(testAfero(), filepath.Join(dir, "missing.sqlite")))
 }

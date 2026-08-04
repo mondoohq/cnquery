@@ -454,13 +454,16 @@ const (
 	ResourceClaudeCodePlugin                              string = "claude.code.plugin"
 	ResourceClaudeCodeSkill                               string = "claude.code.skill"
 	ResourceClaudeCodeProject                             string = "claude.code.project"
+	ResourceClaudeCodeRepo                                string = "claude.code.repo"
 	ResourceClaudeCodeMcpServer                           string = "claude.code.mcpServer"
 	ResourceOpenaiCodex                                   string = "openai.codex"
 	ResourceOpenaiCodexPlugin                             string = "openai.codex.plugin"
 	ResourceOpenaiCodexSkill                              string = "openai.codex.skill"
 	ResourceOpenaiCodexMcpServer                          string = "openai.codex.mcpServer"
 	ResourceOpenaiCodexConnector                          string = "openai.codex.connector"
+	ResourceOpenaiCodexRepo                               string = "openai.codex.repo"
 	ResourceCursor                                        string = "cursor"
+	ResourceCursorRepo                                    string = "cursor.repo"
 	ResourceCursorMcpServer                               string = "cursor.mcpServer"
 	ResourceCursorRule                                    string = "cursor.rule"
 	ResourceCursorSkill                                   string = "cursor.skill"
@@ -475,10 +478,12 @@ const (
 	ResourceGeminiMcpServer                               string = "gemini.mcpServer"
 	ResourceGeminiSkill                                   string = "gemini.skill"
 	ResourceWindsurf                                      string = "windsurf"
+	ResourceWindsurfRepo                                  string = "windsurf.repo"
 	ResourceWindsurfRule                                  string = "windsurf.rule"
 	ResourceWindsurfMcpServer                             string = "windsurf.mcpServer"
 	ResourceWindsurfSkill                                 string = "windsurf.skill"
 	ResourceZed                                           string = "zed"
+	ResourceZedRepo                                       string = "zed.repo"
 	ResourceRoo                                           string = "roo"
 	ResourceRooSkill                                      string = "roo.skill"
 	ResourceCline                                         string = "cline"
@@ -2273,6 +2278,10 @@ func init() {
 			// to override args, implement: initClaudeCodeProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createClaudeCodeProject,
 		},
+		"claude.code.repo": {
+			// to override args, implement: initClaudeCodeRepo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createClaudeCodeRepo,
+		},
 		"claude.code.mcpServer": {
 			// to override args, implement: initClaudeCodeMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createClaudeCodeMcpServer,
@@ -2297,9 +2306,17 @@ func init() {
 			// to override args, implement: initOpenaiCodexConnector(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOpenaiCodexConnector,
 		},
+		"openai.codex.repo": {
+			// to override args, implement: initOpenaiCodexRepo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOpenaiCodexRepo,
+		},
 		"cursor": {
 			Init:   initCursor,
 			Create: createCursor,
+		},
+		"cursor.repo": {
+			// to override args, implement: initCursorRepo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCursorRepo,
 		},
 		"cursor.mcpServer": {
 			// to override args, implement: initCursorMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2357,6 +2374,10 @@ func init() {
 			Init:   initWindsurf,
 			Create: createWindsurf,
 		},
+		"windsurf.repo": {
+			// to override args, implement: initWindsurfRepo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindsurfRepo,
+		},
 		"windsurf.rule": {
 			// to override args, implement: initWindsurfRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindsurfRule,
@@ -2372,6 +2393,10 @@ func init() {
 		"zed": {
 			Init:   initZed,
 			Create: createZed,
+		},
+		"zed.repo": {
+			// to override args, implement: initZedRepo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createZedRepo,
 		},
 		"roo": {
 			Init:   initRoo,
@@ -11660,6 +11685,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"claude.code.projects": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeCode).GetProjects()).ToDataRes(types.Array(types.Resource("claude.code.project")))
 	},
+	"claude.code.repos": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCode).GetRepos()).ToDataRes(types.Array(types.Resource("claude.code.repo")))
+	},
 	"claude.code.mcpServers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeCode).GetMcpServers()).ToDataRes(types.Array(types.Resource("claude.code.mcpServer")))
 	},
@@ -11713,6 +11741,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"claude.code.project.hasMemory": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeCodeProject).GetHasMemory()).ToDataRes(types.Bool)
+	},
+	"claude.code.repo.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeRepo).GetPath()).ToDataRes(types.String)
+	},
+	"claude.code.repo.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeRepo).GetUrl()).ToDataRes(types.String)
+	},
+	"claude.code.repo.host": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeRepo).GetHost()).ToDataRes(types.String)
+	},
+	"claude.code.repo.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeRepo).GetName()).ToDataRes(types.String)
+	},
+	"claude.code.repo.branch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeRepo).GetBranch()).ToDataRes(types.String)
+	},
+	"claude.code.repo.remotes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeRepo).GetRemotes()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"claude.code.mcpServer.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeCodeMcpServer).GetName()).ToDataRes(types.String)
@@ -11770,6 +11816,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openai.codex.connectors": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenaiCodex).GetConnectors()).ToDataRes(types.Array(types.Resource("openai.codex.connector")))
+	},
+	"openai.codex.repos": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodex).GetRepos()).ToDataRes(types.Array(types.Resource("openai.codex.repo")))
 	},
 	"openai.codex.plugin.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenaiCodexPlugin).GetName()).ToDataRes(types.String)
@@ -11852,6 +11901,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openai.codex.connector.plugin": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenaiCodexConnector).GetPlugin()).ToDataRes(types.String)
 	},
+	"openai.codex.repo.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexRepo).GetPath()).ToDataRes(types.String)
+	},
+	"openai.codex.repo.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexRepo).GetUrl()).ToDataRes(types.String)
+	},
+	"openai.codex.repo.host": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexRepo).GetHost()).ToDataRes(types.String)
+	},
+	"openai.codex.repo.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexRepo).GetName()).ToDataRes(types.String)
+	},
+	"openai.codex.repo.branch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexRepo).GetBranch()).ToDataRes(types.String)
+	},
+	"openai.codex.repo.remotes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexRepo).GetRemotes()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"cursor.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCursor).GetConfigPath()).ToDataRes(types.String)
 	},
@@ -11869,6 +11936,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"cursor.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCursor).GetSkills()).ToDataRes(types.Array(types.Resource("cursor.skill")))
+	},
+	"cursor.repos": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCursor).GetRepos()).ToDataRes(types.Array(types.Resource("cursor.repo")))
+	},
+	"cursor.repo.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCursorRepo).GetPath()).ToDataRes(types.String)
+	},
+	"cursor.repo.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCursorRepo).GetUrl()).ToDataRes(types.String)
+	},
+	"cursor.repo.host": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCursorRepo).GetHost()).ToDataRes(types.String)
+	},
+	"cursor.repo.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCursorRepo).GetName()).ToDataRes(types.String)
+	},
+	"cursor.repo.branch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCursorRepo).GetBranch()).ToDataRes(types.String)
+	},
+	"cursor.repo.remotes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCursorRepo).GetRemotes()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"cursor.mcpServer.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCursorMcpServer).GetName()).ToDataRes(types.String)
@@ -12131,6 +12219,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windsurf.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindsurf).GetSkills()).ToDataRes(types.Array(types.Resource("windsurf.skill")))
 	},
+	"windsurf.repos": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindsurf).GetRepos()).ToDataRes(types.Array(types.Resource("windsurf.repo")))
+	},
+	"windsurf.repo.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindsurfRepo).GetPath()).ToDataRes(types.String)
+	},
+	"windsurf.repo.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindsurfRepo).GetUrl()).ToDataRes(types.String)
+	},
+	"windsurf.repo.host": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindsurfRepo).GetHost()).ToDataRes(types.String)
+	},
+	"windsurf.repo.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindsurfRepo).GetName()).ToDataRes(types.String)
+	},
+	"windsurf.repo.branch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindsurfRepo).GetBranch()).ToDataRes(types.String)
+	},
+	"windsurf.repo.remotes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindsurfRepo).GetRemotes()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"windsurf.rule.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindsurfRule).GetName()).ToDataRes(types.String)
 	},
@@ -12196,6 +12305,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"zed.extensions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlZed).GetExtensions()).ToDataRes(types.Array(types.String))
+	},
+	"zed.repos": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZed).GetRepos()).ToDataRes(types.Array(types.Resource("zed.repo")))
+	},
+	"zed.repo.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZedRepo).GetPath()).ToDataRes(types.String)
+	},
+	"zed.repo.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZedRepo).GetUrl()).ToDataRes(types.String)
+	},
+	"zed.repo.host": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZedRepo).GetHost()).ToDataRes(types.String)
+	},
+	"zed.repo.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZedRepo).GetName()).ToDataRes(types.String)
+	},
+	"zed.repo.branch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZedRepo).GetBranch()).ToDataRes(types.String)
+	},
+	"zed.repo.remotes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZedRepo).GetRemotes()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"roo.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRoo).GetConfigPath()).ToDataRes(types.String)
@@ -26639,6 +26769,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlClaudeCode).Projects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"claude.code.repos": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCode).Repos, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"claude.code.mcpServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlClaudeCode).McpServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -26723,6 +26857,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlClaudeCodeProject).HasMemory, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"claude.code.repo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeRepo).__id, ok = v.Value.(string)
+		return
+	},
+	"claude.code.repo.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeRepo).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.repo.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeRepo).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.repo.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeRepo).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.repo.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeRepo).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.repo.branch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeRepo).Branch, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.repo.remotes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeRepo).Remotes, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"claude.code.mcpServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlClaudeCodeMcpServer).__id, ok = v.Value.(string)
 		return
@@ -26805,6 +26967,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openai.codex.connectors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenaiCodex).Connectors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openai.codex.repos": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodex).Repos, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"openai.codex.plugin.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26931,6 +27097,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenaiCodexConnector).Plugin, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"openai.codex.repo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexRepo).__id, ok = v.Value.(string)
+		return
+	},
+	"openai.codex.repo.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexRepo).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openai.codex.repo.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexRepo).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openai.codex.repo.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexRepo).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openai.codex.repo.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexRepo).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openai.codex.repo.branch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexRepo).Branch, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openai.codex.repo.remotes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexRepo).Remotes, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"cursor.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCursor).__id, ok = v.Value.(string)
 		return
@@ -26957,6 +27151,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"cursor.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCursor).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cursor.repos": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursor).Repos, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cursor.repo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursorRepo).__id, ok = v.Value.(string)
+		return
+	},
+	"cursor.repo.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursorRepo).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cursor.repo.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursorRepo).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cursor.repo.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursorRepo).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cursor.repo.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursorRepo).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cursor.repo.branch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursorRepo).Branch, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cursor.repo.remotes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursorRepo).Remotes, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"cursor.mcpServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27363,6 +27589,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlWindsurf).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"windsurf.repos": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurf).Repos, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windsurf.repo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurfRepo).__id, ok = v.Value.(string)
+		return
+	},
+	"windsurf.repo.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurfRepo).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windsurf.repo.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurfRepo).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windsurf.repo.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurfRepo).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windsurf.repo.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurfRepo).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windsurf.repo.branch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurfRepo).Branch, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windsurf.repo.remotes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurfRepo).Remotes, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"windsurf.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindsurfRule).__id, ok = v.Value.(string)
 		return
@@ -27465,6 +27723,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"zed.extensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlZed).Extensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"zed.repos": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZed).Repos, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"zed.repo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZedRepo).__id, ok = v.Value.(string)
+		return
+	},
+	"zed.repo.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZedRepo).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zed.repo.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZedRepo).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zed.repo.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZedRepo).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zed.repo.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZedRepo).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zed.repo.branch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZedRepo).Branch, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zed.repo.remotes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZedRepo).Remotes, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"roo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -70511,6 +70801,7 @@ type mqlClaudeCode struct {
 	Plugins        plugin.TValue[[]any]
 	Skills         plugin.TValue[[]any]
 	Projects       plugin.TValue[[]any]
+	Repos          plugin.TValue[[]any]
 	McpServers     plugin.TValue[[]any]
 }
 
@@ -70680,6 +70971,22 @@ func (c *mqlClaudeCode) GetProjects() *plugin.TValue[[]any] {
 		}
 
 		return c.projects()
+	})
+}
+
+func (c *mqlClaudeCode) GetRepos() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Repos, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("claude.code", c.__id, "repos")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.repos()
 	})
 }
 
@@ -70918,6 +71225,80 @@ func (c *mqlClaudeCodeProject) GetHasMemory() *plugin.TValue[bool] {
 	return &c.HasMemory
 }
 
+// mqlClaudeCodeRepo for the claude.code.repo resource
+type mqlClaudeCodeRepo struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlClaudeCodeRepoInternal it will be used here
+	Path    plugin.TValue[string]
+	Url     plugin.TValue[string]
+	Host    plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Branch  plugin.TValue[string]
+	Remotes plugin.TValue[map[string]any]
+}
+
+// createClaudeCodeRepo creates a new instance of this resource
+func createClaudeCodeRepo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlClaudeCodeRepo{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("claude.code.repo", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlClaudeCodeRepo) MqlName() string {
+	return "claude.code.repo"
+}
+
+func (c *mqlClaudeCodeRepo) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlClaudeCodeRepo) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlClaudeCodeRepo) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlClaudeCodeRepo) GetHost() *plugin.TValue[string] {
+	return &c.Host
+}
+
+func (c *mqlClaudeCodeRepo) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlClaudeCodeRepo) GetBranch() *plugin.TValue[string] {
+	return &c.Branch
+}
+
+func (c *mqlClaudeCodeRepo) GetRemotes() *plugin.TValue[map[string]any] {
+	return &c.Remotes
+}
+
 // mqlClaudeCodeMcpServer for the claude.code.mcpServer resource
 type mqlClaudeCodeMcpServer struct {
 	MqlRuntime *plugin.Runtime
@@ -71024,6 +71405,7 @@ type mqlOpenaiCodex struct {
 	Skills      plugin.TValue[[]any]
 	McpServers  plugin.TValue[[]any]
 	Connectors  plugin.TValue[[]any]
+	Repos       plugin.TValue[[]any]
 }
 
 // createOpenaiCodex creates a new instance of this resource
@@ -71178,6 +71560,22 @@ func (c *mqlOpenaiCodex) GetConnectors() *plugin.TValue[[]any] {
 		}
 
 		return c.connectors()
+	})
+}
+
+func (c *mqlOpenaiCodex) GetRepos() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Repos, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openai.codex", c.__id, "repos")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.repos()
 	})
 }
 
@@ -71496,6 +71894,80 @@ func (c *mqlOpenaiCodexConnector) GetPlugin() *plugin.TValue[string] {
 	return &c.Plugin
 }
 
+// mqlOpenaiCodexRepo for the openai.codex.repo resource
+type mqlOpenaiCodexRepo struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenaiCodexRepoInternal it will be used here
+	Path    plugin.TValue[string]
+	Url     plugin.TValue[string]
+	Host    plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Branch  plugin.TValue[string]
+	Remotes plugin.TValue[map[string]any]
+}
+
+// createOpenaiCodexRepo creates a new instance of this resource
+func createOpenaiCodexRepo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenaiCodexRepo{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openai.codex.repo", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenaiCodexRepo) MqlName() string {
+	return "openai.codex.repo"
+}
+
+func (c *mqlOpenaiCodexRepo) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenaiCodexRepo) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlOpenaiCodexRepo) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlOpenaiCodexRepo) GetHost() *plugin.TValue[string] {
+	return &c.Host
+}
+
+func (c *mqlOpenaiCodexRepo) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenaiCodexRepo) GetBranch() *plugin.TValue[string] {
+	return &c.Branch
+}
+
+func (c *mqlOpenaiCodexRepo) GetRemotes() *plugin.TValue[map[string]any] {
+	return &c.Remotes
+}
+
 // mqlCursor for the cursor resource
 type mqlCursor struct {
 	MqlRuntime *plugin.Runtime
@@ -71507,6 +71979,7 @@ type mqlCursor struct {
 	McpServers plugin.TValue[[]any]
 	Rules      plugin.TValue[[]any]
 	Skills     plugin.TValue[[]any]
+	Repos      plugin.TValue[[]any]
 }
 
 // createCursor creates a new instance of this resource
@@ -71628,6 +72101,96 @@ func (c *mqlCursor) GetSkills() *plugin.TValue[[]any] {
 
 		return c.skills()
 	})
+}
+
+func (c *mqlCursor) GetRepos() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Repos, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cursor", c.__id, "repos")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.repos()
+	})
+}
+
+// mqlCursorRepo for the cursor.repo resource
+type mqlCursorRepo struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCursorRepoInternal it will be used here
+	Path    plugin.TValue[string]
+	Url     plugin.TValue[string]
+	Host    plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Branch  plugin.TValue[string]
+	Remotes plugin.TValue[map[string]any]
+}
+
+// createCursorRepo creates a new instance of this resource
+func createCursorRepo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCursorRepo{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cursor.repo", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCursorRepo) MqlName() string {
+	return "cursor.repo"
+}
+
+func (c *mqlCursorRepo) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCursorRepo) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlCursorRepo) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlCursorRepo) GetHost() *plugin.TValue[string] {
+	return &c.Host
+}
+
+func (c *mqlCursorRepo) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlCursorRepo) GetBranch() *plugin.TValue[string] {
+	return &c.Branch
+}
+
+func (c *mqlCursorRepo) GetRemotes() *plugin.TValue[map[string]any] {
+	return &c.Remotes
 }
 
 // mqlCursorMcpServer for the cursor.mcpServer resource
@@ -72798,6 +73361,7 @@ type mqlWindsurf struct {
 	Rules      plugin.TValue[[]any]
 	McpServers plugin.TValue[[]any]
 	Skills     plugin.TValue[[]any]
+	Repos      plugin.TValue[[]any]
 }
 
 // createWindsurf creates a new instance of this resource
@@ -72919,6 +73483,96 @@ func (c *mqlWindsurf) GetSkills() *plugin.TValue[[]any] {
 
 		return c.skills()
 	})
+}
+
+func (c *mqlWindsurf) GetRepos() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Repos, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windsurf", c.__id, "repos")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.repos()
+	})
+}
+
+// mqlWindsurfRepo for the windsurf.repo resource
+type mqlWindsurfRepo struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindsurfRepoInternal it will be used here
+	Path    plugin.TValue[string]
+	Url     plugin.TValue[string]
+	Host    plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Branch  plugin.TValue[string]
+	Remotes plugin.TValue[map[string]any]
+}
+
+// createWindsurfRepo creates a new instance of this resource
+func createWindsurfRepo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindsurfRepo{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windsurf.repo", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindsurfRepo) MqlName() string {
+	return "windsurf.repo"
+}
+
+func (c *mqlWindsurfRepo) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindsurfRepo) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlWindsurfRepo) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlWindsurfRepo) GetHost() *plugin.TValue[string] {
+	return &c.Host
+}
+
+func (c *mqlWindsurfRepo) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindsurfRepo) GetBranch() *plugin.TValue[string] {
+	return &c.Branch
+}
+
+func (c *mqlWindsurfRepo) GetRemotes() *plugin.TValue[map[string]any] {
+	return &c.Remotes
 }
 
 // mqlWindsurfRule for the windsurf.rule resource
@@ -73152,6 +73806,7 @@ type mqlZed struct {
 	Runtime    plugin.TValue[*mqlExtensionRuntime]
 	Settings   plugin.TValue[any]
 	Extensions plugin.TValue[[]any]
+	Repos      plugin.TValue[[]any]
 }
 
 // createZed creates a new instance of this resource
@@ -73237,6 +73892,96 @@ func (c *mqlZed) GetExtensions() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Extensions, func() ([]any, error) {
 		return c.extensions()
 	})
+}
+
+func (c *mqlZed) GetRepos() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Repos, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("zed", c.__id, "repos")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.repos()
+	})
+}
+
+// mqlZedRepo for the zed.repo resource
+type mqlZedRepo struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlZedRepoInternal it will be used here
+	Path    plugin.TValue[string]
+	Url     plugin.TValue[string]
+	Host    plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Branch  plugin.TValue[string]
+	Remotes plugin.TValue[map[string]any]
+}
+
+// createZedRepo creates a new instance of this resource
+func createZedRepo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlZedRepo{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("zed.repo", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlZedRepo) MqlName() string {
+	return "zed.repo"
+}
+
+func (c *mqlZedRepo) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlZedRepo) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlZedRepo) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlZedRepo) GetHost() *plugin.TValue[string] {
+	return &c.Host
+}
+
+func (c *mqlZedRepo) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlZedRepo) GetBranch() *plugin.TValue[string] {
+	return &c.Branch
+}
+
+func (c *mqlZedRepo) GetRemotes() *plugin.TValue[map[string]any] {
+	return &c.Remotes
 }
 
 // mqlRoo for the roo resource

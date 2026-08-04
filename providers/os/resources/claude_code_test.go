@@ -335,3 +335,126 @@ func TestClaudeConfigIntegration(t *testing.T) {
 	assert.Len(t, cache, 2)
 	assert.Equal(t, int64(1700000000000), cache["claude.ai HubSpot"].Timestamp)
 }
+
+func TestParseGitRemoteURL(t *testing.T) {
+	cases := []struct {
+		remote   string
+		wantHost string
+		wantName string
+	}{
+		{"git@github.com:mondoohq/mql.git", "github.com", "mondoohq/mql"},
+		{"https://github.com/mondoohq/mql.git", "github.com", "mondoohq/mql"},
+		{"https://github.com/mondoohq/mql", "github.com", "mondoohq/mql"},
+		{"ssh://git@gitlab.com:2222/group/sub/proj.git", "gitlab.com", "group/sub/proj"},
+		{"https://user:token@github.com/owner/repo.git", "github.com", "owner/repo"},
+		{"", "", ""},
+		{"not-a-url", "", ""},
+	}
+	for _, c := range cases {
+		host, name := parseGitRemoteURL(c.remote)
+		assert.Equal(t, c.wantHost, host, "host for %q", c.remote)
+		assert.Equal(t, c.wantName, name, "name for %q", c.remote)
+	}
+}
+
+func TestGitRepoInfo(t *testing.T) {
+	afs := testAfero()
+	dir := t.TempDir()
+
+	// a project directory that is a git working tree with origin + upstream
+	mkdirAllTest(t, dir, "repo/.git")
+	mkdirAllTest(t, dir, "repo/subdir")
+	writeTestFile(t, dir, "repo/.git/config", `[core]
+	bare = false
+[remote "origin"]
+	url = git@github.com:mondoohq/mql.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[remote "upstream"]
+	url = https://github.com/other/mql.git
+`)
+	writeTestFile(t, dir, "repo/.git/HEAD", "ref: refs/heads/dom/feature\n")
+
+	repoRoot := filepath.Join(dir, "repo")
+
+	info, ok := gitRepoInfo(afs, repoRoot)
+	require.True(t, ok)
+	assert.Equal(t, repoRoot, info.root)
+	assert.Equal(t, "git@github.com:mondoohq/mql.git", info.url)
+	assert.Equal(t, "github.com", info.host)
+	assert.Equal(t, "mondoohq/mql", info.name)
+	assert.Equal(t, "dom/feature", info.branch)
+	assert.Equal(t, map[string]string{
+		"origin":   "git@github.com:mondoohq/mql.git",
+		"upstream": "https://github.com/other/mql.git",
+	}, info.remotes)
+
+	// a subdirectory of the repo resolves to the same working-tree root
+	sub, ok := gitRepoInfo(afs, filepath.Join(repoRoot, "subdir"))
+	require.True(t, ok)
+	assert.Equal(t, repoRoot, sub.root)
+
+	// a non-git directory yields ok=false
+	mkdirAllTest(t, dir, "plain")
+	_, ok = gitRepoInfo(afs, filepath.Join(dir, "plain"))
+	assert.False(t, ok)
+}
+
+func TestParseGitHeadBranch(t *testing.T) {
+	afs := testAfero()
+	dir := t.TempDir()
+
+	writeTestFile(t, dir, "HEAD", "ref: refs/heads/main\n")
+	assert.Equal(t, "main", parseGitHeadBranch(afs, filepath.Join(dir, "HEAD")))
+
+	writeTestFile(t, dir, "DETACHED", "9fceb02d0ae598e95dc970b74767f19372d61af8\n")
+	assert.Equal(t, "", parseGitHeadBranch(afs, filepath.Join(dir, "DETACHED")))
+
+	assert.Equal(t, "", parseGitHeadBranch(afs, filepath.Join(dir, "missing")))
+}
+
+func TestParseGitRemotesNoOriginFallback(t *testing.T) {
+	afs := testAfero()
+	dir := t.TempDir()
+	mkdirAllTest(t, dir, "repo/.git")
+	writeTestFile(t, dir, "repo/.git/config", `[remote "upstream"]
+	url = git@gitlab.com:group/proj.git
+`)
+	writeTestFile(t, dir, "repo/.git/HEAD", "ref: refs/heads/main\n")
+
+	info, ok := gitRepoInfo(afs, filepath.Join(dir, "repo"))
+	require.True(t, ok)
+	// no origin: falls back to the only remote present
+	assert.Equal(t, "git@gitlab.com:group/proj.git", info.url)
+	assert.Equal(t, "gitlab.com", info.host)
+}
+
+func TestGitRepoInfoWorktree(t *testing.T) {
+	afs := testAfero()
+	dir := t.TempDir()
+
+	// main checkout: .git directory holds the shared config
+	mkdirAllTest(t, dir, "main/.git")
+	writeTestFile(t, dir, "main/.git/config", `[remote "origin"]
+	url = git@github.com:mondoohq/mql.git
+`)
+	writeTestFile(t, dir, "main/.git/HEAD", "ref: refs/heads/main\n")
+
+	// per-worktree git dir under .git/worktrees/<name>
+	mkdirAllTest(t, dir, "main/.git/worktrees/feature")
+	writeTestFile(t, dir, "main/.git/worktrees/feature/HEAD", "ref: refs/heads/dom/feature\n")
+	writeTestFile(t, dir, "main/.git/worktrees/feature/commondir", "../..\n")
+
+	// linked worktree checkout: .git is a pointer file
+	mkdirAllTest(t, dir, "wt")
+	worktreeGitDir := filepath.Join(dir, "main/.git/worktrees/feature")
+	writeTestFile(t, dir, "wt/.git", "gitdir: "+worktreeGitDir+"\n")
+
+	info, ok := gitRepoInfo(afs, filepath.Join(dir, "wt"))
+	require.True(t, ok)
+	assert.Equal(t, filepath.Join(dir, "wt"), info.root)
+	// config comes from the shared common dir
+	assert.Equal(t, "git@github.com:mondoohq/mql.git", info.url)
+	assert.Equal(t, "mondoohq/mql", info.name)
+	// HEAD is read per-worktree
+	assert.Equal(t, "dom/feature", info.branch)
+}
