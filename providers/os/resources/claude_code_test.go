@@ -225,6 +225,19 @@ func TestFindLatestBackupAferoEmpty(t *testing.T) {
 	_, err := findLatestBackupAfero(afs, dir)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "no backup files found")
+	// An empty backups dir is the benign "no history" case: callers suppress it
+	// via errors.Is(err, os.ErrNotExist) while still surfacing real failures.
+	assert.ErrorIs(t, err, os.ErrNotExist)
+}
+
+func TestFindLatestBackupAferoMissingDir(t *testing.T) {
+	afs := testAfero()
+	dir := t.TempDir()
+
+	// No backups dir at all: also the benign not-exist case.
+	_, err := findLatestBackupAfero(afs, dir)
+	assert.Error(t, err)
+	assert.ErrorIs(t, err, os.ErrNotExist)
 }
 
 func TestIsSystemHomeDir(t *testing.T) {
