@@ -210,6 +210,19 @@ func (r *mqlClaudeCode) projects() ([]interface{}, error) {
 	return result, nil
 }
 
+func (r *mqlClaudeCode) repos() ([]interface{}, error) {
+	state, err := r.loadBackupState()
+	if err != nil {
+		return nil, err
+	}
+
+	paths := make([]string, 0, len(state.Projects))
+	for projectPath := range state.Projects {
+		paths = append(paths, projectPath)
+	}
+	return gitReposFromPaths(r.MqlRuntime, "claude.code.repo", paths)
+}
+
 func (r *mqlClaudeCode) mcpServers() ([]interface{}, error) {
 	// The needs-auth cache records which servers require authentication and
 	// when that was last verified. Presence in this file means needsAuth.
@@ -411,6 +424,10 @@ func (r *mqlClaudeCodeProject) id() (string, error) {
 
 func (r *mqlClaudeCodeMcpServer) id() (string, error) {
 	return "claude.code.mcpServer/" + r.Name.Data, nil
+}
+
+func (r *mqlClaudeCodeRepo) id() (string, error) {
+	return "claude.code.repo/" + r.Path.Data, nil
 }
 
 func (r *mqlClaudeCodeMcpServer) running() (*llx.AssetValue, error) {

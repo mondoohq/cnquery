@@ -4,9 +4,12 @@
 package resources
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/llx"
@@ -389,4 +392,75 @@ func (r *mqlOpenaiCodexMcpServer) id() (string, error) {
 
 func (r *mqlOpenaiCodexConnector) id() (string, error) {
 	return "openai.codex.connector/" + r.Plugin.Data + "/" + r.Name.Data, nil
+}
+
+func (r *mqlOpenaiCodexRepo) id() (string, error) {
+	return "openai.codex.repo/" + r.Path.Data, nil
+}
+
+func (r *mqlOpenaiCodex) repos() ([]interface{}, error) {
+	return gitReposFromPaths(r.MqlRuntime, "openai.codex.repo", r.sessionWorkingDirs())
+}
+
+// sessionWorkingDirs collects the deduplicated working directories recorded in
+// Codex session rollout files under <configDir>/sessions. Each rollout-*.jsonl
+// begins with a session_meta record carrying the cwd; only that first line is
+// read (the remainder of the file is the full conversation). A missing or
+// unreadable sessions tree yields no directories.
+func (r *mqlOpenaiCodex) sessionWorkingDirs() []string {
+	afs := r.afs()
+	sessionsDir := filepath.Join(r.codexDir(), "sessions")
+
+	seen := map[string]struct{}{}
+	var dirs []string
+	_ = afs.Walk(sessionsDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil || info == nil || info.IsDir() {
+			return nil
+		}
+		name := info.Name()
+		if !strings.HasPrefix(name, "rollout-") || !strings.HasSuffix(name, ".jsonl") {
+			return nil
+		}
+		cwd := codexSessionCwd(afs, path)
+		if cwd == "" {
+			return nil
+		}
+		if _, ok := seen[cwd]; ok {
+			return nil
+		}
+		seen[cwd] = struct{}{}
+		dirs = append(dirs, cwd)
+		return nil
+	})
+	return dirs
+}
+
+// codexSessionCwd reads only the first line of a rollout file and extracts
+// payload.cwd from its session_meta record. Returns "" on any read or parse
+// failure, or when the first record is not a session_meta.
+func codexSessionCwd(afs *afero.Afero, path string) string {
+	f, err := afs.Open(path)
+	if err != nil {
+		return ""
+	}
+	defer f.Close()
+
+	line, err := bufio.NewReader(f).ReadBytes('\n')
+	if err != nil && len(line) == 0 {
+		return ""
+	}
+
+	var meta struct {
+		Type    string `json:"type"`
+		Payload struct {
+			Cwd string `json:"cwd"`
+		} `json:"payload"`
+	}
+	if err := json.Unmarshal(bytes.TrimSpace(line), &meta); err != nil {
+		return ""
+	}
+	if meta.Type != "session_meta" {
+		return ""
+	}
+	return meta.Payload.Cwd
 }

@@ -11335,6 +11335,8 @@ claude.code @defaults("configPath") @maturity("preview") {
   skills() []claude.code.skill
   // Projects Claude Code has access to
   projects() []claude.code.project
+  // Git repositories backing the projects
+  repos() []claude.code.repo
   // MCP servers
   mcpServers() []claude.code.mcpServer
 }
@@ -11397,6 +11399,44 @@ private claude.code.project @defaults("path") @maturity("preview") {
   path string
   // Whether the project has persistent memory configured
   hasMemory bool
+}
+
+// Claude Code project repository
+//
+// Git repository backing a project directory Claude Code works in, derived
+// by reading the `.git/config` of each project path. Exposes the origin
+// remote `url`, the parsed `host` (for example github.com) and `name`
+// (org/repo slug), the checked-out `branch`, all configured `remotes`, and
+// the working-tree root `path`. Repositories are deduplicated by their
+// working-tree root, so multiple project entries inside one checkout
+// collapse to a single repository. Linked worktrees are supported (`.git`
+// as a pointer file), reading the shared config and the per-worktree HEAD.
+// Projects that are not git working trees are omitted.
+private claude.code.repo @defaults("name branch") @maturity("preview") {
+  // Working-tree root path on disk
+  path string
+  // Origin remote URL
+  //
+  // The fetch URL of the remote named origin, or the first remote found
+  // when there is no origin. Empty for a repository with no remotes.
+  url string
+  // Remote host parsed from the origin URL
+  //
+  // For example github.com or gitlab.com. Empty when there is no remote or
+  // the URL cannot be parsed.
+  host string
+  // Repository slug parsed from the origin URL
+  //
+  // The owner-and-name path, for example mondoohq/mql. Empty when there is
+  // no remote or the URL cannot be parsed.
+  name string
+  // Currently checked-out branch
+  //
+  // The branch referenced by HEAD, for example main. Empty when HEAD is
+  // detached or cannot be read.
+  branch string
+  // All configured remotes, keyed by remote name
+  remotes map[string]string
 }
 
 // Claude Code MCP server
@@ -11478,6 +11518,8 @@ openai.codex @defaults("configPath") @maturity("preview") {
   mcpServers() []openai.codex.mcpServer
   // OAuth app connectors
   connectors() []openai.codex.connector
+  // Git repositories worked in across recorded sessions
+  repos() []openai.codex.repo
 }
 
 // OpenAI Codex installed plugin
@@ -11584,6 +11626,42 @@ private openai.codex.connector @defaults("name") @maturity("preview") {
   plugin string
 }
 
+// OpenAI Codex session repository
+//
+// Git repository worked in during a Codex session, derived from the working
+// directory recorded in each session rollout and resolved through its
+// `.git/config`. Exposes the origin remote `url`, the parsed `host` (for
+// example github.com) and `name` (org/repo slug), the checked-out `branch`,
+// all configured `remotes`, and the working-tree root `path`. Repositories
+// are deduplicated by their working-tree root. Sessions whose directory is
+// not a git working tree are omitted.
+private openai.codex.repo @defaults("name branch") @maturity("preview") {
+  // Working-tree root path on disk
+  path string
+  // Origin remote URL
+  //
+  // The fetch URL of the remote named origin, or the first remote found
+  // when there is no origin. Empty for a repository with no remotes.
+  url string
+  // Remote host parsed from the origin URL
+  //
+  // For example github.com or gitlab.com. Empty when there is no remote or
+  // the URL cannot be parsed.
+  host string
+  // Repository slug parsed from the origin URL
+  //
+  // The owner-and-name path, for example openai/codex. Empty when there is
+  // no remote or the URL cannot be parsed.
+  name string
+  // Currently checked-out branch
+  //
+  // The branch referenced by HEAD, for example main. Empty when HEAD is
+  // detached or cannot be read.
+  branch string
+  // All configured remotes, keyed by remote name
+  remotes map[string]string
+}
+
 // Cursor editor (AI-powered) instance
 //
 // Cursor AI code editor installed on the host. Queryable through it are
@@ -11622,6 +11700,44 @@ cursor @defaults("configPath") @maturity("preview") {
   rules() []cursor.rule
   // Installed skills
   skills() []cursor.skill
+  // Git repositories backing the opened workspaces
+  repos() []cursor.repo
+}
+
+// Cursor workspace repository
+//
+// Git repository backing a workspace folder opened in Cursor, derived from
+// the editor's opened-folder history and resolved through its `.git/config`.
+// Exposes the origin remote `url`, the parsed `host` (for example github.com)
+// and `name` (org/repo slug), the checked-out `branch`, all configured
+// `remotes`, and the working-tree root `path`. Repositories are deduplicated
+// by their working-tree root. Opened folders that are not git working trees
+// are omitted.
+private cursor.repo @defaults("name branch") @maturity("preview") {
+  // Working-tree root path on disk
+  path string
+  // Origin remote URL
+  //
+  // The fetch URL of the remote named origin, or the first remote found
+  // when there is no origin. Empty for a repository with no remotes.
+  url string
+  // Remote host parsed from the origin URL
+  //
+  // For example github.com or gitlab.com. Empty when there is no remote or
+  // the URL cannot be parsed.
+  host string
+  // Repository slug parsed from the origin URL
+  //
+  // The owner-and-name path, for example mondoohq/mql. Empty when there is
+  // no remote or the URL cannot be parsed.
+  name string
+  // Currently checked-out branch
+  //
+  // The branch referenced by HEAD, for example main. Empty when HEAD is
+  // detached or cannot be read.
+  branch string
+  // All configured remotes, keyed by remote name
+  remotes map[string]string
 }
 
 // Cursor MCP server configuration
@@ -12010,6 +12126,44 @@ windsurf @defaults("configPath") @maturity("preview") {
   mcpServers() []windsurf.mcpServer
   // Installed skills
   skills() []windsurf.skill
+  // Git repositories backing the opened workspaces
+  repos() []windsurf.repo
+}
+
+// Windsurf workspace repository
+//
+// Git repository backing a workspace folder opened in Windsurf, derived from
+// the editor's opened-folder history and resolved through its `.git/config`.
+// Exposes the origin remote `url`, the parsed `host` (for example github.com)
+// and `name` (org/repo slug), the checked-out `branch`, all configured
+// `remotes`, and the working-tree root `path`. Repositories are deduplicated
+// by their working-tree root. Opened folders that are not git working trees
+// are omitted.
+private windsurf.repo @defaults("name branch") @maturity("preview") {
+  // Working-tree root path on disk
+  path string
+  // Origin remote URL
+  //
+  // The fetch URL of the remote named origin, or the first remote found
+  // when there is no origin. Empty for a repository with no remotes.
+  url string
+  // Remote host parsed from the origin URL
+  //
+  // For example github.com or gitlab.com. Empty when there is no remote or
+  // the URL cannot be parsed.
+  host string
+  // Repository slug parsed from the origin URL
+  //
+  // The owner-and-name path, for example mondoohq/mql. Empty when there is
+  // no remote or the URL cannot be parsed.
+  name string
+  // Currently checked-out branch
+  //
+  // The branch referenced by HEAD, for example main. Empty when HEAD is
+  // detached or cannot be read.
+  branch string
+  // All configured remotes, keyed by remote name
+  remotes map[string]string
 }
 
 // Windsurf rule / memory file
@@ -12111,6 +12265,44 @@ zed @defaults("configPath") @maturity("preview") {
   settings() dict
   // Names of installed extensions
   extensions() []string
+  // Git repositories backing the opened workspaces
+  repos() []zed.repo
+}
+
+// Zed workspace repository
+//
+// Git repository backing a workspace opened in Zed, derived from the paths
+// recorded in Zed's workspace database and resolved through their
+// `.git/config`. Exposes the origin remote `url`, the parsed `host` (for
+// example github.com) and `name` (org/repo slug), the checked-out `branch`,
+// all configured `remotes`, and the working-tree root `path`. Repositories
+// are deduplicated by their working-tree root. Workspace paths that are not
+// git working trees are omitted.
+private zed.repo @defaults("name branch") @maturity("preview") {
+  // Working-tree root path on disk
+  path string
+  // Origin remote URL
+  //
+  // The fetch URL of the remote named origin, or the first remote found
+  // when there is no origin. Empty for a repository with no remotes.
+  url string
+  // Remote host parsed from the origin URL
+  //
+  // For example github.com or gitlab.com. Empty when there is no remote or
+  // the URL cannot be parsed.
+  host string
+  // Repository slug parsed from the origin URL
+  //
+  // The owner-and-name path, for example mondoohq/mql. Empty when there is
+  // no remote or the URL cannot be parsed.
+  name string
+  // Currently checked-out branch
+  //
+  // The branch referenced by HEAD, for example main. Empty when HEAD is
+  // detached or cannot be read.
+  branch string
+  // All configured remotes, keyed by remote name
+  remotes map[string]string
 }
 
 // Roo Code editor instance

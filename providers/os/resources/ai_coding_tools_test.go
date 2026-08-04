@@ -105,3 +105,56 @@ func TestCollectSkillFilesDedupsSourcePaths(t *testing.T) {
 	})
 	require.Len(t, skills, 1)
 }
+
+func TestFileURIToPath(t *testing.T) {
+	cases := []struct {
+		uri  string
+		want string
+	}{
+		{"file:///pub/go/src/go.mondoo.com/mql", "/pub/go/src/go.mondoo.com/mql"},
+		{"file:///path/with%20space/repo", "/path/with space/repo"},
+		{"file:///C:/Users/dev/repo", "C:/Users/dev/repo"},
+		{"vscode-remote://ssh/pub/repo", ""},
+		{"", ""},
+		{"/not/a/uri", ""},
+	}
+	for _, c := range cases {
+		assert.Equal(t, c.want, fileURIToPath(c.uri), "uri %q", c.uri)
+	}
+}
+
+func TestVscodeUserDataDir(t *testing.T) {
+	assert.Equal(t, "/home/x/.config/Cursor/User", vscodeUserDataDir("/home/x", "linux", "Cursor"))
+	assert.Equal(t, "/Users/x/Library/Application Support/Windsurf/User", vscodeUserDataDir("/Users/x", "darwin", "Windsurf"))
+	assert.Equal(t, "/home/x/.config/Cursor/User", vscodeUserDataDir("/home/x", "", "Cursor"))
+}
+
+func TestExtractZedPaths(t *testing.T) {
+	// Simulate a bincode-ish blob: length prefixes (non-printable) between paths.
+	blob := []byte{0x1a, 0x00, 0x00, 0x00}
+	blob = append(blob, []byte("/pub/go/src/go.mondoo.com/mql")...)
+	blob = append(blob, 0x00, 0x08)
+	blob = append(blob, []byte("/home/dev/other-repo")...)
+	blob = append(blob, 0x00)
+	// A quoted JSON-style path and some noise that must be ignored.
+	blob = append(blob, []byte(`"/quoted/path/repo"`)...)
+	blob = append(blob, 0x00)
+	blob = append(blob, []byte("SELECT * FROM workspaces")...)
+
+	got := extractZedPaths(blob)
+	assert.Contains(t, got, "/pub/go/src/go.mondoo.com/mql")
+	assert.Contains(t, got, "/home/dev/other-repo")
+	assert.Contains(t, got, "/quoted/path/repo")
+	// the SQL run has no leading absolute path -> not extracted
+	for _, p := range got {
+		assert.NotContains(t, p, "SELECT")
+	}
+}
+
+func TestZedCandidatePath(t *testing.T) {
+	assert.Equal(t, "/a/b", zedCandidatePath("/a/b"))
+	assert.Equal(t, "/a/b", zedCandidatePath(`"/a/b"`))
+	assert.Equal(t, "C:/dev/repo", zedCandidatePath("C:/dev/repo"))
+	assert.Equal(t, "", zedCandidatePath("no-path-here"))
+	assert.Equal(t, "", zedCandidatePath("/"))
+}
