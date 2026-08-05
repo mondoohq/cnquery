@@ -103,6 +103,7 @@ const (
 	ResourceAwsIamPolicyStatement                                               string = "aws.iam.policyStatement"
 	ResourceAwsIamPolicy                                                        string = "aws.iam.policy"
 	ResourceAwsIamPolicyversion                                                 string = "aws.iam.policyversion"
+	ResourceAwsIamInlinePolicy                                                  string = "aws.iam.inlinePolicy"
 	ResourceAwsIamRole                                                          string = "aws.iam.role"
 	ResourceAwsIamGroup                                                         string = "aws.iam.group"
 	ResourceAwsIamVirtualmfadevice                                              string = "aws.iam.virtualmfadevice"
@@ -1313,6 +1314,10 @@ func init() {
 		"aws.iam.policyversion": {
 			// to override args, implement: initAwsIamPolicyversion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsIamPolicyversion,
+		},
+		"aws.iam.inlinePolicy": {
+			// to override args, implement: initAwsIamInlinePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsIamInlinePolicy,
 		},
 		"aws.iam.role": {
 			Init:   initAwsIamRole,
@@ -7132,6 +7137,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.user.policies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUser).GetPolicies()).ToDataRes(types.Array(types.String))
 	},
+	"aws.iam.user.inlinePolicyDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUser).GetInlinePolicyDetails()).ToDataRes(types.Array(types.Resource("aws.iam.inlinePolicy")))
+	},
 	"aws.iam.user.attachedPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUser).GetAttachedPolicies()).ToDataRes(types.Array(types.Resource("aws.iam.policy")))
 	},
@@ -7303,6 +7311,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.policyversion.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamPolicyversion).GetCreatedAt()).ToDataRes(types.Time)
 	},
+	"aws.iam.inlinePolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamInlinePolicy).GetName()).ToDataRes(types.String)
+	},
+	"aws.iam.inlinePolicy.entityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamInlinePolicy).GetEntityType()).ToDataRes(types.String)
+	},
+	"aws.iam.inlinePolicy.entityName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamInlinePolicy).GetEntityName()).ToDataRes(types.String)
+	},
+	"aws.iam.inlinePolicy.document": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamInlinePolicy).GetDocument()).ToDataRes(types.Dict)
+	},
+	"aws.iam.inlinePolicy.statements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamInlinePolicy).GetStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
+	},
+	"aws.iam.inlinePolicy.hasWildcardAllow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamInlinePolicy).GetHasWildcardAllow()).ToDataRes(types.Bool)
+	},
 	"aws.iam.role.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamRole).GetArn()).ToDataRes(types.String)
 	},
@@ -7363,6 +7389,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.role.inlinePolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamRole).GetInlinePolicies()).ToDataRes(types.Array(types.String))
 	},
+	"aws.iam.role.inlinePolicyDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamRole).GetInlinePolicyDetails()).ToDataRes(types.Array(types.Resource("aws.iam.inlinePolicy")))
+	},
 	"aws.iam.role.externalAccessFindings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamRole).GetExternalAccessFindings()).ToDataRes(types.Array(types.Resource("aws.iam.accessAnalyzer.finding")))
 	},
@@ -7383,6 +7412,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.iam.group.inlinePolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamGroup).GetInlinePolicies()).ToDataRes(types.Array(types.String))
+	},
+	"aws.iam.group.inlinePolicyDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamGroup).GetInlinePolicyDetails()).ToDataRes(types.Array(types.Resource("aws.iam.inlinePolicy")))
 	},
 	"aws.iam.group.attachedPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamGroup).GetAttachedPolicies()).ToDataRes(types.Array(types.Resource("aws.iam.policy")))
@@ -39060,6 +39092,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsIamUser).Policies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.iam.user.inlinePolicyDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUser).InlinePolicyDetails, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.iam.user.attachedPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamUser).AttachedPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -39312,6 +39348,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsIamPolicyversion).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"aws.iam.inlinePolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamInlinePolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.iam.inlinePolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamInlinePolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.inlinePolicy.entityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamInlinePolicy).EntityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.inlinePolicy.entityName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamInlinePolicy).EntityName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.inlinePolicy.document": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamInlinePolicy).Document, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.iam.inlinePolicy.statements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamInlinePolicy).Statements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.iam.inlinePolicy.hasWildcardAllow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamInlinePolicy).HasWildcardAllow, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.iam.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamRole).__id, ok = v.Value.(string)
 		return
@@ -39396,6 +39460,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsIamRole).InlinePolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.iam.role.inlinePolicyDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamRole).InlinePolicyDetails, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.iam.role.externalAccessFindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamRole).ExternalAccessFindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -39426,6 +39494,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.iam.group.inlinePolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamGroup).InlinePolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.iam.group.inlinePolicyDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamGroup).InlinePolicyDetails, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.group.attachedPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -89666,6 +89738,7 @@ type mqlAwsIamUser struct {
 	Tags                plugin.TValue[map[string]any]
 	ManagedBy           plugin.TValue[string]
 	Policies            plugin.TValue[[]any]
+	InlinePolicyDetails plugin.TValue[[]any]
 	AttachedPolicies    plugin.TValue[[]any]
 	Groups              plugin.TValue[[]any]
 	AccessKeys          plugin.TValue[[]any]
@@ -89748,6 +89821,22 @@ func (c *mqlAwsIamUser) GetManagedBy() *plugin.TValue[string] {
 func (c *mqlAwsIamUser) GetPolicies() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Policies, func() ([]any, error) {
 		return c.policies()
+	})
+}
+
+func (c *mqlAwsIamUser) GetInlinePolicyDetails() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InlinePolicyDetails, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.user", c.__id, "inlinePolicyDetails")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.inlinePolicyDetails()
 	})
 }
 
@@ -90460,6 +90549,89 @@ func (c *mqlAwsIamPolicyversion) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
 
+// mqlAwsIamInlinePolicy for the aws.iam.inlinePolicy resource
+type mqlAwsIamInlinePolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsIamInlinePolicyInternal it will be used here
+	Name             plugin.TValue[string]
+	EntityType       plugin.TValue[string]
+	EntityName       plugin.TValue[string]
+	Document         plugin.TValue[any]
+	Statements       plugin.TValue[[]any]
+	HasWildcardAllow plugin.TValue[bool]
+}
+
+// createAwsIamInlinePolicy creates a new instance of this resource
+func createAwsIamInlinePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsIamInlinePolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.iam.inlinePolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsIamInlinePolicy) MqlName() string {
+	return "aws.iam.inlinePolicy"
+}
+
+func (c *mqlAwsIamInlinePolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsIamInlinePolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsIamInlinePolicy) GetEntityType() *plugin.TValue[string] {
+	return &c.EntityType
+}
+
+func (c *mqlAwsIamInlinePolicy) GetEntityName() *plugin.TValue[string] {
+	return &c.EntityName
+}
+
+func (c *mqlAwsIamInlinePolicy) GetDocument() *plugin.TValue[any] {
+	return &c.Document
+}
+
+func (c *mqlAwsIamInlinePolicy) GetStatements() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Statements, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.inlinePolicy", c.__id, "statements")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.statements()
+	})
+}
+
+func (c *mqlAwsIamInlinePolicy) GetHasWildcardAllow() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasWildcardAllow, func() (bool, error) {
+		return c.hasWildcardAllow()
+	})
+}
+
 // mqlAwsIamRole for the aws.iam.role resource
 type mqlAwsIamRole struct {
 	MqlRuntime *plugin.Runtime
@@ -90485,6 +90657,7 @@ type mqlAwsIamRole struct {
 	IsServiceLinked             plugin.TValue[bool]
 	AttachedPolicies            plugin.TValue[[]any]
 	InlinePolicies              plugin.TValue[[]any]
+	InlinePolicyDetails         plugin.TValue[[]any]
 	ExternalAccessFindings      plugin.TValue[[]any]
 }
 
@@ -90665,6 +90838,22 @@ func (c *mqlAwsIamRole) GetInlinePolicies() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsIamRole) GetInlinePolicyDetails() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InlinePolicyDetails, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.role", c.__id, "inlinePolicyDetails")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.inlinePolicyDetails()
+	})
+}
+
 func (c *mqlAwsIamRole) GetExternalAccessFindings() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.ExternalAccessFindings, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -90686,14 +90875,15 @@ type mqlAwsIamGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsIamGroupInternal
-	Arn              plugin.TValue[string]
-	Id               plugin.TValue[string]
-	Name             plugin.TValue[string]
-	CreatedAt        plugin.TValue[*time.Time]
-	Usernames        plugin.TValue[[]any]
-	InlinePolicies   plugin.TValue[[]any]
-	AttachedPolicies plugin.TValue[[]any]
-	Path             plugin.TValue[string]
+	Arn                 plugin.TValue[string]
+	Id                  plugin.TValue[string]
+	Name                plugin.TValue[string]
+	CreatedAt           plugin.TValue[*time.Time]
+	Usernames           plugin.TValue[[]any]
+	InlinePolicies      plugin.TValue[[]any]
+	InlinePolicyDetails plugin.TValue[[]any]
+	AttachedPolicies    plugin.TValue[[]any]
+	Path                plugin.TValue[string]
 }
 
 // createAwsIamGroup creates a new instance of this resource
@@ -90758,6 +90948,22 @@ func (c *mqlAwsIamGroup) GetUsernames() *plugin.TValue[[]any] {
 func (c *mqlAwsIamGroup) GetInlinePolicies() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.InlinePolicies, func() ([]any, error) {
 		return c.inlinePolicies()
+	})
+}
+
+func (c *mqlAwsIamGroup) GetInlinePolicyDetails() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InlinePolicyDetails, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.group", c.__id, "inlinePolicyDetails")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.inlinePolicyDetails()
 	})
 }
 

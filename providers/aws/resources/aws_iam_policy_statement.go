@@ -170,8 +170,17 @@ func (a *mqlAwsIamPolicy) hasWildcardAllow() (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	return statementsAllowWildcard(statements)
+}
+
+// statementsAllowWildcard reports whether any Allow statement in the set grants
+// wildcard access through its actions or resources.
+func statementsAllowWildcard(statements []any) (bool, error) {
 	for _, raw := range statements {
-		stmt := raw.(*mqlAwsIamPolicyStatement)
+		stmt, ok := raw.(*mqlAwsIamPolicyStatement)
+		if !ok {
+			continue
+		}
 		effect := stmt.GetEffect()
 		if effect.Error != nil {
 			return false, effect.Error

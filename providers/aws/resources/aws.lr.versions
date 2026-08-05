@@ -5801,10 +5801,18 @@ aws.iam.group.attachedPolicies 13.6.3
 aws.iam.group.createdAt 11.15.2
 aws.iam.group.id 11.15.2
 aws.iam.group.inlinePolicies 11.15.2
+aws.iam.group.inlinePolicyDetails 13.52.2
 aws.iam.group.name 11.15.2
 aws.iam.group.path 11.15.2
 aws.iam.group.usernames 11.15.2
 aws.iam.groups 11.15.2
+aws.iam.inlinePolicy 13.52.2
+aws.iam.inlinePolicy.document 13.52.2
+aws.iam.inlinePolicy.entityName 13.52.2
+aws.iam.inlinePolicy.entityType 13.52.2
+aws.iam.inlinePolicy.hasWildcardAllow 13.52.2
+aws.iam.inlinePolicy.name 13.52.2
+aws.iam.inlinePolicy.statements 13.52.2
 aws.iam.instanceProfile 11.15.2
 aws.iam.instanceProfile.arn 11.15.2
 aws.iam.instanceProfile.createdAt 11.15.2
@@ -5886,6 +5894,7 @@ aws.iam.role.description 11.15.2
 aws.iam.role.externalAccessFindings 13.37.1
 aws.iam.role.id 11.15.2
 aws.iam.role.inlinePolicies 13.6.3
+aws.iam.role.inlinePolicyDetails 13.52.2
 aws.iam.role.isServiceLinked 13.6.3
 aws.iam.role.lastUsedAt 11.15.2
 aws.iam.role.lastUsedRegion 11.15.2
@@ -5922,6 +5931,7 @@ aws.iam.user.attachedPolicies 11.15.2
 aws.iam.user.createdAt 11.15.2
 aws.iam.user.groups 11.15.2
 aws.iam.user.id 11.15.2
+aws.iam.user.inlinePolicyDetails 13.52.2
 aws.iam.user.loginProfile 11.15.2
 aws.iam.user.managedBy 13.39.2
 aws.iam.user.mfaDevices 13.26.2

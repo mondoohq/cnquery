@@ -2406,8 +2406,14 @@ private aws.iam.user @defaults("arn name createdAt") {
   //
   // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the user is unmanaged or managed by a tool that leaves no recognizable tag.
   managedBy() string
-  // List of inline policies attached to the user
-  policies() []string
+  // Inline policy names embedded in the user
+  //
+  // Deprecated in favor of inlinePolicyDetails, which resolves each inline
+  // policy to an aws.iam.inlinePolicy carrying the policy document and its
+  // parsed statements.
+  policies() @maturity("deprecated") []string
+  // Inline policies embedded in the user, including their documents
+  inlinePolicyDetails() []aws.iam.inlinePolicy
   // List of managed policies attached to the user
   attachedPolicies() []aws.iam.policy
   // List of group ARNs that the user belongs to
@@ -2585,6 +2591,38 @@ private aws.iam.policyversion @defaults("arn isDefaultVersion createdAt") {
   createdAt time
 }
 
+// AWS IAM inline policy
+//
+// Permission policy embedded directly in a single IAM user, group, or role
+// rather than managed as a standalone policy that many principals share. The
+// document field carries the policy JSON and statements resolves it to
+// individual statements, so inline grants can be audited with the same
+// queries as managed policies. Because an inline policy has no ARN and no
+// attachment count, it is invisible to policy-level reporting, which makes
+// hasWildcardAllow the practical way to find over-broad embedded grants.
+// The entityType and entityName fields identify the principal the policy
+// lives on, which matters when statements from many principals are collected
+// into one list.
+private aws.iam.inlinePolicy @defaults("name entityType entityName") {
+  // Name of the inline policy
+  name string
+  // Type of IAM entity the policy is embedded in: user, group, or role
+  entityType string
+  // Name of the user, group, or role the policy is embedded in
+  entityName string
+  // Policy document
+  //
+  // Parsed policy JSON. See statements for the resolved statement form.
+  document dict
+  // Parsed statements from the policy document
+  statements() []aws.iam.policyStatement
+  // Whether any Allow statement in the policy grants wildcard access
+  //
+  // True when an Allow statement includes a wildcard action — the global `*`
+  // or a service-wide wildcard such as `s3:*` — or the all-resources `*`.
+  hasWildcardAllow() bool
+}
+
 // AWS IAM role
 //
 // IAM role in the account, including its trust policy, attached and inline
@@ -2638,8 +2676,14 @@ private aws.iam.role @defaults("arn name") {
   isServiceLinked bool
   // List of managed policies attached to the role
   attachedPolicies() []aws.iam.policy
-  // List of inline policy names embedded in the role
-  inlinePolicies() []string
+  // Inline policy names embedded in the role
+  //
+  // Deprecated in favor of inlinePolicyDetails, which resolves each inline
+  // policy to an aws.iam.inlinePolicy carrying the policy document and its
+  // parsed statements.
+  inlinePolicies() @maturity("deprecated") []string
+  // Inline policies embedded in the role, including their documents
+  inlinePolicyDetails() []aws.iam.inlinePolicy
   // IAM Access Analyzer findings reporting external or public access to this resource
   externalAccessFindings() []aws.iam.accessAnalyzer.finding
 }
@@ -2661,8 +2705,14 @@ private aws.iam.group @defaults("arn name") {
   createdAt time
   // List of usernames that belong to the group
   usernames() []string
-  // List of inline policy names attached to the group
-  inlinePolicies() []string
+  // Inline policy names embedded in the group
+  //
+  // Deprecated in favor of inlinePolicyDetails, which resolves each inline
+  // policy to an aws.iam.inlinePolicy carrying the policy document and its
+  // parsed statements.
+  inlinePolicies() @maturity("deprecated") []string
+  // Inline policies embedded in the group, including their documents
+  inlinePolicyDetails() []aws.iam.inlinePolicy
   // List of managed policies attached to the group
   attachedPolicies() []aws.iam.policy
   // Path to the group
