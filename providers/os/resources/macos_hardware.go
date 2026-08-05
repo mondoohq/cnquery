@@ -18,6 +18,10 @@ import (
 type stringOrNumber string
 
 func (s *stringOrNumber) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		*s = ""
+		return nil
+	}
 	if len(data) > 0 && data[0] == '"' {
 		var str string
 		if err := json.Unmarshal(data, &str); err != nil {

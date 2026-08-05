@@ -78,6 +78,41 @@ func TestParseMacosHardwarePhysicalMac(t *testing.T) {
 	assert.Equal(t, "00008400-001E20D40168401E", hw.ProvisioningUDID)
 }
 
+func TestParseMacosHardwareLowercaseKeys(t *testing.T) {
+	// Go's JSON key matching is case-insensitive, so the platform_UUID and
+	// provisioning_UDID tags must still match fully lowercase keys
+	data := []byte(`{
+  "SPHardwareDataType" : [
+    {
+      "platform_uuid" : "50DCC3EF-6AD8-5EAA-AC56-451AD340113C",
+      "provisioning_udid" : "4db4fb49aa66c799985e792a6573e713ce8eb024",
+      "serial_number" : "ZFQYR4XYHG"
+    }
+  ]
+}`)
+
+	hw, err := parseMacosHardware(data)
+	require.NoError(t, err)
+	assert.Equal(t, "50DCC3EF-6AD8-5EAA-AC56-451AD340113C", hw.PlatformUUID)
+	assert.Equal(t, "4db4fb49aa66c799985e792a6573e713ce8eb024", hw.ProvisioningUDID)
+}
+
+func TestParseMacosHardwareNullNumberProcessors(t *testing.T) {
+	data := []byte(`{
+  "SPHardwareDataType" : [
+    {
+      "number_processors" : null,
+      "serial_number" : "ZFQYR4XYHG"
+    }
+  ]
+}`)
+
+	hw, err := parseMacosHardware(data)
+	require.NoError(t, err)
+	assert.Equal(t, "", string(hw.NumberProcessors))
+	assert.Equal(t, "ZFQYR4XYHG", hw.SerialNumber)
+}
+
 func TestParseMacosHardwareInvalid(t *testing.T) {
 	_, err := parseMacosHardware([]byte("not json"))
 	assert.Error(t, err)
