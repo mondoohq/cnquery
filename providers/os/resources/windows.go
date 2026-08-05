@@ -6,7 +6,10 @@ package resources
 import (
 	"errors"
 	"io"
+	"strconv"
 	"sync"
+
+	"golang.org/x/sync/singleflight"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -239,6 +242,12 @@ func (wh *mqlWindowsOptionalFeature) id() (string, error) {
 	return wh.Name.Data, nil
 }
 
+// optionalFeatureLookups collapses concurrent lookups of the same feature.
+// NewResource only consults the resource cache *after* running init, and cnspec
+// resolves filter and check entrypoints concurrently, so several callers can
+// miss the cache before the first one has populated it.
+var optionalFeatureLookups singleflight.Group
+
 func initWindowsOptionalFeature(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 1 {
 		return args, nil, nil
@@ -254,54 +263,77 @@ func initWindowsOptionalFeature(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return args, nil, nil
 	}
 
-	// NewResource only consults the resource cache *after* running this init, so
-	// without this lookup every reference to windows.optionalFeature(name: "x")
-	// in a scan would run its own DISM query — a policy that filters on a
-	// feature state typically references it from several checks.
-	if cached, ok := runtime.Resources.Get("windows.optionalFeature\x00" + name); ok {
-		return nil, cached, nil
-	}
-
 	conn, ok := runtime.Connection.(shared.Connection)
 	if !ok {
 		return args, nil, nil
 	}
 
-	encodedCmd := powershell.Encode(windows.OptionalFeatureQuery(name))
-	executedCmd, err := conn.RunCommand(encodedCmd)
+	// A policy that filters on a feature state references it from several checks,
+	// and the image query is expensive: resolve it once per connection.
+	resourceID := "windows.optionalFeature\x00" + name
+	if cached, ok := runtime.Resources.Get(resourceID); ok {
+		return nil, cached, nil
+	}
+
+	// the connection ID keeps assets in a multi-asset scan apart
+	flightKey := strconv.FormatUint(uint64(conn.ID()), 10) + "\x00" + name
+	res, err, _ := optionalFeatureLookups.Do(flightKey, func() (any, error) {
+		if cached, ok := runtime.Resources.Get(resourceID); ok {
+			return cached, nil
+		}
+
+		feature, err := lookupWindowsOptionalFeature(conn, name)
+		if err != nil {
+			return nil, err
+		}
+
+		// create it here rather than handing fields back to NewResource, so that
+		// every caller of this flight ends up with the one cached resource
+		return CreateResource(runtime, "windows.optionalFeature", map[string]*llx.RawData{
+			"name":        llx.StringData(feature.Name),
+			"displayName": llx.StringData(feature.DisplayName),
+			"description": llx.StringData(feature.Description),
+			"enabled":     llx.BoolData(feature.Enabled),
+			"state":       llx.IntData(feature.State),
+		})
+	})
 	if err != nil {
 		return nil, nil, err
+	}
+
+	return nil, res.(plugin.Resource), nil
+}
+
+// lookupWindowsOptionalFeature asks DISM for a single feature by name.
+func lookupWindowsOptionalFeature(conn shared.Connection, name string) (windows.WindowsOptionalFeature, error) {
+	var empty windows.WindowsOptionalFeature
+
+	executedCmd, err := conn.RunCommand(powershell.Encode(windows.OptionalFeatureQuery(name)))
+	if err != nil {
+		return empty, err
 	}
 
 	// a non-zero exit means the feature name is unknown
 	if executedCmd.ExitStatus != 0 {
-		return nil, nil, errors.New("could not find feature " + name)
+		return empty, errors.New("could not find feature " + name)
 	}
 
 	features, err := windows.ParseWindowsOptionalFeatures(executedCmd.Stdout)
 	if err != nil {
-		return nil, nil, err
+		return empty, err
 	}
 
 	// DISM treats `*`/`?` in -FeatureName as wildcards, so a wildcard-ish name
 	// can return more than one feature (or none matching exactly); require an
 	// exact name match to keep the historic "could not find feature" behavior.
 	for i := range features {
-		feature := features[i]
-		if feature.Name != name {
-			continue
+		if features[i].Name == name {
+			return features[i], nil
 		}
-		return map[string]*llx.RawData{
-			"name":        llx.StringData(feature.Name),
-			"displayName": llx.StringData(feature.DisplayName),
-			"description": llx.StringData(feature.Description),
-			"enabled":     llx.BoolData(feature.Enabled),
-			"state":       llx.IntData(feature.State),
-		}, nil, nil
 	}
 
 	// if the feature cannot be found we return an error
-	return nil, nil, errors.New("could not find feature " + name)
+	return empty, errors.New("could not find feature " + name)
 }
 
 // optionalFeatureDetails carries the display name and description of every
