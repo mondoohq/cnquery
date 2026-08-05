@@ -297,6 +297,16 @@ claude.code.mcpServer.running 13.40.1
 claude.code.mcpServer.type 13.39.1
 claude.code.mcpServer.url 13.39.1
 claude.code.mcpServers 13.8.2
+claude.code.model 13.40.3
+claude.code.modelUsage 13.40.3
+claude.code.modelUsage.cacheCreationInputTokens 13.40.3
+claude.code.modelUsage.cacheReadInputTokens 13.40.3
+claude.code.modelUsage.cost 13.40.3
+claude.code.modelUsage.inputTokens 13.40.3
+claude.code.modelUsage.name 13.40.3
+claude.code.modelUsage.outputTokens 13.40.3
+claude.code.modelUsage.webSearchRequests 13.40.3
+claude.code.models 13.40.3
 claude.code.organization 13.8.2
 claude.code.organizationId 13.8.2
 claude.code.package 13.31.1
@@ -312,6 +322,7 @@ claude.code.plugin.version 13.8.2
 claude.code.plugins 13.8.2
 claude.code.project 13.8.2
 claude.code.project.hasMemory 13.8.2
+claude.code.project.models 13.40.3
 claude.code.project.path 13.8.2
 claude.code.projects 13.8.2
 claude.code.repo 13.40.1
@@ -787,6 +798,7 @@ gemini.mcpServer.running 13.40.1
 gemini.mcpServer.type 13.39.1
 gemini.mcpServer.url 13.39.1
 gemini.mcpServers 13.13.1
+gemini.model 13.40.3
 gemini.package 13.31.1
 gemini.runtime 13.33.1
 gemini.settings 13.13.1
@@ -2205,6 +2217,8 @@ openai.codex.mcpServer.running 13.40.1
 openai.codex.mcpServer.type 13.8.2
 openai.codex.mcpServer.url 13.8.2
 openai.codex.mcpServers 13.8.2
+openai.codex.model 13.40.3
+openai.codex.modelProvider 13.40.3
 openai.codex.package 13.31.1
 openai.codex.plugin 13.8.2
 openai.codex.plugin.author 13.8.2
@@ -3847,6 +3861,8 @@ yum.vars 9.0.1
 zed 13.13.1
 zed.configPath 13.13.1
 zed.extensions 13.13.1
+zed.model 13.40.3
+zed.modelProvider 13.40.3
 zed.package 13.31.1
 zed.repo 13.40.1
 zed.repo.branch 13.40.1

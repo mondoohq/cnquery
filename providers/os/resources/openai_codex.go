@@ -7,10 +7,13 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
+	"github.com/BurntSushi/toml"
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -61,6 +64,58 @@ func (r *mqlOpenaiCodex) lastRefresh() (string, error) {
 		return "", err
 	}
 	return auth.LastRefresh, nil
+}
+
+// codexConfig captures the top-level model settings from config.toml.
+type codexConfig struct {
+	Model         string `toml:"model"`
+	ModelProvider string `toml:"model_provider"`
+}
+
+// mqlOpenaiCodexInternal caches the parsed config.toml so that model() and
+// modelProvider() do not each re-read and re-parse it.
+type mqlOpenaiCodexInternal struct {
+	configOnce      sync.Once
+	cachedConfig    *codexConfig
+	cachedConfigErr error
+}
+
+func (r *mqlOpenaiCodex) loadConfig() (*codexConfig, error) {
+	r.configOnce.Do(func() {
+		r.cachedConfig, r.cachedConfigErr = r.readConfig()
+	})
+	return r.cachedConfig, r.cachedConfigErr
+}
+
+func (r *mqlOpenaiCodex) readConfig() (*codexConfig, error) {
+	data, err := r.afs().ReadFile(filepath.Join(r.codexDir(), "config.toml"))
+	if err != nil {
+		if os.IsNotExist(err) {
+			return &codexConfig{}, nil
+		}
+		return nil, err
+	}
+	var cfg codexConfig
+	if err := toml.Unmarshal(data, &cfg); err != nil {
+		return nil, fmt.Errorf("failed to parse codex config.toml: %w", err)
+	}
+	return &cfg, nil
+}
+
+func (r *mqlOpenaiCodex) model() (string, error) {
+	cfg, err := r.loadConfig()
+	if err != nil {
+		return "", err
+	}
+	return cfg.Model, nil
+}
+
+func (r *mqlOpenaiCodex) modelProvider() (string, error) {
+	cfg, err := r.loadConfig()
+	if err != nil {
+		return "", err
+	}
+	return cfg.ModelProvider, nil
 }
 
 func (r *mqlOpenaiCodex) plugins() ([]interface{}, error) {

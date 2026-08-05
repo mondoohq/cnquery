@@ -11339,6 +11339,21 @@ claude.code @defaults("configPath") @maturity("preview") {
   repos() []claude.code.repo
   // MCP servers
   mcpServers() []claude.code.mcpServer
+  // Configured default model
+  //
+  // The model Claude Code is configured to use by default, taken from the
+  // `model` key in settings.json (for example "opus", "sonnet", or a full
+  // model identifier). Empty when no explicit default is set and the
+  // built-in default applies.
+  model() string
+  // Observed model usage
+  //
+  // AI models Claude Code has actually run on this host, aggregated across
+  // every known project. Each entry pairs a model identifier with its
+  // cumulative token counters and cost, derived from the recorded
+  // per-project usage history, so you can audit which models run on a host
+  // and their relative spend.
+  models() []claude.code.modelUsage
 }
 
 // Claude Code installed plugin
@@ -11399,6 +11414,36 @@ private claude.code.project @defaults("path") @maturity("preview") {
   path string
   // Whether the project has persistent memory configured
   hasMemory bool
+  // Observed model usage within this project
+  //
+  // AI models Claude Code has run while working in this project, each with
+  // its cumulative token counters and cost from the project's recorded
+  // usage history.
+  models() []claude.code.modelUsage
+}
+
+// Claude Code model usage
+//
+// Cumulative usage of a single AI model by Claude Code, summed from the
+// recorded usage history. The `name` field is the model identifier (for
+// example "claude-opus-4-5-20251101" or "claude-haiku-4-5-20251001"). The
+// token counters and `cost` reveal how heavily each model has been used,
+// so you can audit which models run on a host and their relative spend.
+private claude.code.modelUsage @defaults("name cost") @maturity("preview") {
+  // Model identifier
+  name string
+  // Non-cached input tokens consumed
+  inputTokens int
+  // Output tokens generated
+  outputTokens int
+  // Input tokens served from the prompt cache
+  cacheReadInputTokens int
+  // Input tokens written to the prompt cache
+  cacheCreationInputTokens int
+  // Web search requests issued
+  webSearchRequests int
+  // Cumulative cost in US dollars
+  cost float
 }
 
 // Claude Code project repository
@@ -11520,6 +11565,18 @@ openai.codex @defaults("configPath") @maturity("preview") {
   connectors() []openai.codex.connector
   // Git repositories worked in across recorded sessions
   repos() []openai.codex.repo
+  // Configured default model
+  //
+  // The model Codex is configured to use, taken from the `model` key in
+  // config.toml (for example "gpt-5.3-codex"). Empty when unset and the
+  // built-in default applies.
+  model() string
+  // Configured model provider
+  //
+  // The backend that serves the configured model, taken from the
+  // `model_provider` key in config.toml (for example "openai"). Empty when
+  // unset.
+  modelProvider() string
 }
 
 // OpenAI Codex installed plugin
@@ -12038,6 +12095,12 @@ gemini @defaults("configPath") @maturity("preview") {
   mcpServers() []gemini.mcpServer
   // Installed skills
   skills() []gemini.skill
+  // Configured default model
+  //
+  // The model Gemini is configured to use, taken from the `model.name` key
+  // in settings.json (for example "auto-gemini-2.5" or "gemini-2.5-pro").
+  // Empty when unset and the built-in default applies.
+  model() string
 }
 
 // Gemini MCP server configuration
@@ -12267,6 +12330,18 @@ zed @defaults("configPath") @maturity("preview") {
   extensions() []string
   // Git repositories backing the opened workspaces
   repos() []zed.repo
+  // Configured default model
+  //
+  // The model Zed's agent is configured to use by default, taken from
+  // `agent.default_model.model` in settings.json (for example
+  // "claude-sonnet-4"). Empty when no default agent model is set.
+  model() string
+  // Configured model provider
+  //
+  // The backend that serves the default agent model, taken from
+  // `agent.default_model.provider` in settings.json (for example
+  // "anthropic" or "zed.dev"). Empty when unset.
+  modelProvider() string
 }
 
 // Zed workspace repository

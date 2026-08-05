@@ -36,6 +36,19 @@ func (r *mqlGemini) authType() (string, error) {
 	return settings.SelectedAuthType, nil
 }
 
+func (r *mqlGemini) model() (string, error) {
+	afs := connectionAfs(r.MqlRuntime)
+	var settings geminiSettings
+	err := readJSONFileAfero(afs, r.ConfigPath.Data, "settings.json", &settings)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "", nil
+		}
+		return "", err
+	}
+	return settings.Model.Name, nil
+}
+
 func (r *mqlGemini) settings() (interface{}, error) {
 	afs := connectionAfs(r.MqlRuntime)
 	var settings map[string]interface{}
@@ -119,6 +132,9 @@ func (r *mqlGeminiSkill) sha256() (string, error) {
 type geminiSettings struct {
 	Theme            string `json:"theme"`
 	SelectedAuthType string `json:"selectedAuthType"`
+	Model            struct {
+		Name string `json:"name"`
+	} `json:"model"`
 }
 
 type geminiMCPConfig struct {

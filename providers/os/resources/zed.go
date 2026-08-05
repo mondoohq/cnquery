@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
@@ -51,6 +52,72 @@ func (r *mqlZed) settings() (interface{}, error) {
 		return nil, err
 	}
 	return settings, nil
+}
+
+// zedAgentSettings captures the default model configured for Zed's agent.
+// Recent Zed versions store this under `agent`; older ones under `assistant`.
+type zedAgentSettings struct {
+	DefaultModel struct {
+		Provider string `json:"provider"`
+		Model    string `json:"model"`
+	} `json:"default_model"`
+}
+
+// mqlZedInternal caches the parsed default-model settings so that model()
+// and modelProvider() do not each re-read settings.json.
+type mqlZedInternal struct {
+	modelOnce      sync.Once
+	cachedProvider string
+	cachedModel    string
+	cachedModelErr error
+}
+
+// defaultModel returns the configured default agent model and its provider,
+// preferring the current `agent` key and falling back to the legacy
+// `assistant` key. Empty strings when unset or when no settings file exists.
+// The result is parsed once and cached for the resource's lifetime.
+func (r *mqlZed) defaultModel() (provider string, model string, err error) {
+	r.modelOnce.Do(func() {
+		r.cachedProvider, r.cachedModel, r.cachedModelErr = r.readDefaultModel()
+	})
+	return r.cachedProvider, r.cachedModel, r.cachedModelErr
+}
+
+func (r *mqlZed) readDefaultModel() (provider string, model string, err error) {
+	afs := connectionAfs(r.MqlRuntime)
+	data, err := afs.ReadFile(filepath.Join(r.ConfigPath.Data, "settings.json"))
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "", "", nil
+		}
+		return "", "", err
+	}
+	clean, err := hujson.Standardize(data)
+	if err != nil {
+		return "", "", err
+	}
+	var settings struct {
+		Agent     zedAgentSettings `json:"agent"`
+		Assistant zedAgentSettings `json:"assistant"`
+	}
+	if err := json.Unmarshal(clean, &settings); err != nil {
+		return "", "", err
+	}
+	dm := settings.Agent.DefaultModel
+	if dm.Model == "" && dm.Provider == "" {
+		dm = settings.Assistant.DefaultModel
+	}
+	return dm.Provider, dm.Model, nil
+}
+
+func (r *mqlZed) model() (string, error) {
+	_, model, err := r.defaultModel()
+	return model, err
+}
+
+func (r *mqlZed) modelProvider() (string, error) {
+	provider, _, err := r.defaultModel()
+	return provider, err
 }
 
 func (r *mqlZed) extensions() ([]interface{}, error) {
