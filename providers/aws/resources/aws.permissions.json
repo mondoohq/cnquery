@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.52.1",
-  "generated_at": "2026-08-05T19:39:25+02:00",
+  "generated_at": "2026-08-05T19:49:05+02:00",
   "permissions": [
     "access-analyzer:GetFindingV2",
     "access-analyzer:ListAnalyzers",
@@ -322,11 +322,15 @@
     "ec2:DescribeVpcs",
     "ec2:DescribeVpnConnections",
     "ec2:DescribeVpnGateways",
+    "ec2:GetAllowedImagesSettings",
+    "ec2:GetEbsDefaultKmsKeyId",
     "ec2:GetEbsEncryptionByDefault",
     "ec2:GetImageBlockPublicAccessState",
+    "ec2:GetInstanceMetadataDefaults",
     "ec2:GetIpamPoolAllocations",
     "ec2:GetManagedPrefixListEntries",
     "ec2:GetSerialConsoleAccessStatus",
+    "ec2:GetSnapshotBlockPublicAccessState",
     "ecr-public:DescribeImages",
     "ecr-public:DescribeRepositories",
     "ecr-public:GetRepositoryCatalogData",
@@ -2672,6 +2676,12 @@
       "source_file": "aws_ec2.go"
     },
     {
+      "permission": "ec2:DescribeInstanceAttribute",
+      "service": "ec2",
+      "action": "DescribeInstanceAttribute",
+      "source_file": "aws_ec2_account_settings.go"
+    },
+    {
       "permission": "ec2:DescribeInstanceConnectEndpoints",
       "service": "ec2",
       "action": "DescribeInstanceConnectEndpoints",
@@ -2984,6 +2994,18 @@
       "source_file": "aws_vpc.go"
     },
     {
+      "permission": "ec2:GetAllowedImagesSettings",
+      "service": "ec2",
+      "action": "GetAllowedImagesSettings",
+      "source_file": "aws_ec2_account_settings.go"
+    },
+    {
+      "permission": "ec2:GetEbsDefaultKmsKeyId",
+      "service": "ec2",
+      "action": "GetEbsDefaultKmsKeyId",
+      "source_file": "aws_ec2_account_settings.go"
+    },
+    {
       "permission": "ec2:GetEbsEncryptionByDefault",
       "service": "ec2",
       "action": "GetEbsEncryptionByDefault",
@@ -2994,6 +3016,12 @@
       "service": "ec2",
       "action": "GetImageBlockPublicAccessState",
       "source_file": "aws_ec2.go"
+    },
+    {
+      "permission": "ec2:GetInstanceMetadataDefaults",
+      "service": "ec2",
+      "action": "GetInstanceMetadataDefaults",
+      "source_file": "aws_ec2_account_settings.go"
     },
     {
       "permission": "ec2:GetIpamPoolAllocations",
@@ -3012,6 +3040,12 @@
       "service": "ec2",
       "action": "GetSerialConsoleAccessStatus",
       "source_file": "aws_ec2.go"
+    },
+    {
+      "permission": "ec2:GetSnapshotBlockPublicAccessState",
+      "service": "ec2",
+      "action": "GetSnapshotBlockPublicAccessState",
+      "source_file": "aws_ec2_account_settings.go"
     },
     {
       "permission": "ecr-public:DescribeImages",

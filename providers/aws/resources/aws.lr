@@ -17518,6 +17518,32 @@ aws.ec2 {
   serialConsoleAccessEnabled() map[string]bool
   // AMI block public access state per region: block-new-sharing or unblocked
   imageBlockPublicAccess() map[string]string
+  // Whether public sharing of EBS snapshots is blocked, per region
+  //
+  // One of block-all-sharing, which also blocks snapshots that are already
+  // public, block-new-sharing, which leaves already-public snapshots public,
+  // or unblocked. A region absent from the map is one the caller could not
+  // read the setting for.
+  snapshotBlockPublicAccess() map[string]string
+  // Allowed AMIs setting state, per region
+  //
+  // One of enabled, where only AMIs matching the account's image criteria can
+  // be discovered and launched, audit-mode, where non-matching AMIs stay
+  // usable but are flagged, or disabled. The setting bounds which AMI
+  // publishers an account will trust.
+  allowedImagesState() map[string]string
+  // Account-level instance metadata service defaults, one entry per region
+  //
+  // The defaults new instances launch with when the launch itself specifies
+  // nothing, which is how an account requires IMDSv2 without depending on
+  // every launch template being correct.
+  instanceMetadataDefaults() []aws.ec2.instanceMetadataDefault
+  // KMS keys used for EBS encryption by default, one per region where a key is set
+  //
+  // The key EBS encrypts new volumes with when the request names no key. Each
+  // key carries its own region. A region resolves to the AWS-managed
+  // aws/ebs key unless the account set a customer managed key.
+  ebsDefaultKmsKeys() []aws.kms.key
   // List of volumes across the AWS account
   volumes() []aws.ec2.volume
   // List of snapshots across the account
@@ -18853,6 +18879,49 @@ private aws.inspector.finding.codeVulnerability @defaults("detectorName") {
   sourceLambdaLayerArn string
 }
 
+// Account-level EC2 instance metadata service defaults
+//
+// The instance metadata service settings new instances in one region launch
+// with when the launch request specifies none of its own. Setting httpTokens to
+// required at the account level is how IMDSv2 becomes the floor for every
+// launch, rather than depending on each launch template and each API caller
+// getting it right. The settings are per region, and a region with no account
+// default reports null for each value, which is distinct from a default that
+// permits IMDSv1. When managedByDeclarativePolicy is true the values are pinned
+// by an organization declarative policy and cannot be changed in the account.
+private aws.ec2.instanceMetadataDefault @defaults("region httpTokens httpEndpoint") {
+  // Region the defaults apply to
+  region string
+  // Whether a session token is required to read instance metadata
+  //
+  // A value of required denotes IMDSv2; optional permits the unauthenticated
+  // IMDSv1 path. Null when the account sets no default for the region.
+  httpTokens string
+  // Whether the instance metadata endpoint is enabled by default
+  //
+  // One of enabled or disabled. Null when the account sets no default for the
+  // region.
+  httpEndpoint string
+  // Default hop limit for the instance metadata PUT response
+  //
+  // Values above 1 let a container or a proxied request reach the metadata
+  // service, which widens the blast radius of a server-side request forgery.
+  // Null when the account sets no default for the region.
+  httpPutResponseHopLimit int
+  // Whether instance tags are exposed through instance metadata by default
+  //
+  // One of enabled or disabled. Null when the account sets no default for the
+  // region.
+  instanceMetadataTags string
+  // Whether the httpTokens default is enforced rather than advisory
+  //
+  // One of enforced or unenforced. Null when the account sets no default for
+  // the region.
+  httpTokensEnforced string
+  // Whether an organization declarative policy pins these defaults
+  managedByDeclarativePolicy bool
+}
+
 // Amazon EC2 instance
 private aws.ec2.instance @defaults("instanceId region state instanceType architecture platformDetails") {
   // ARN for the instance
@@ -18877,6 +18946,15 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   httpPutResponseHopLimit int
   // Whether IMDSv2 is required (httpTokens is "required"), enforcing session-token-authenticated metadata access
   imdsv2Required bool
+  // User data supplied at launch, base64-decoded
+  //
+  // The launch script the instance bootstrapped with. It is readable by any
+  // process on the instance through the metadata service, so a credential
+  // written into it is effectively shared with every workload on the host.
+  // Empty when the instance was launched without user data.
+  userData() string
+  // Whether the instance has user data set (a launch script that may embed secrets)
+  userDataPresent() bool
   // Whether the instance is enabled for AWS Nitro Enclaves
   enclaveEnabled bool
   // Patch state information about the instance
