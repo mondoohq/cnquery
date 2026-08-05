@@ -123,3 +123,56 @@ func TestInitOptionalFeatureUsesTargetedLookup(t *testing.T) {
 	assert.Equal(t, int64(2), args["state"].Value)
 	assert.Equal(t, true, args["enabled"].Value)
 }
+
+// NewResource runs a resource's init before it consults the resource cache, so a
+// resource whose init talks to the target must dedupe itself: a policy that
+// filters on a feature state references it from several checks, and each of those
+// is a separate NewResource call.
+func TestInitOptionalFeatureDedupesAcrossReferences(t *testing.T) {
+	lookupCmd := powershell.Encode(windows.OptionalFeatureQuery("SMB1Protocol"))
+
+	mockConn, err := mock.New(0, &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:   "windows",
+			Family: []string{"windows"},
+		},
+	}, mock.WithData(&mock.TomlData{
+		Commands: map[string]*mock.Command{
+			lookupCmd: {Stdout: `{
+				"FeatureName": "SMB1Protocol",
+				"DisplayName": "SMB 1.0/CIFS File Sharing Support",
+				"Description": "Support for the SMB 1.0/CIFS file sharing protocol",
+				"State": 2
+			}`},
+		},
+	}))
+	require.NoError(t, err)
+
+	conn := &optionalFeatureRecordingConnection{Connection: mockConn}
+	runtime := &plugin.Runtime{
+		Connection: conn,
+		Resources:  &syncx.Map[plugin.Resource]{},
+	}
+
+	first, err := NewResource(runtime, "windows.optionalFeature", map[string]*llx.RawData{
+		"name": llx.StringData("SMB1Protocol"),
+	})
+	require.NoError(t, err)
+	assert.Equal(t, []string{lookupCmd}, conn.commands)
+
+	for i := 0; i < 5; i++ {
+		again, err := NewResource(runtime, "windows.optionalFeature", map[string]*llx.RawData{
+			"name": llx.StringData("SMB1Protocol"),
+		})
+		require.NoError(t, err)
+		assert.Same(t, first, again, "a repeated reference must reuse the cached feature")
+	}
+	assert.Equal(t, []string{lookupCmd}, conn.commands, "the image is queried once per scan, not once per reference")
+
+	// a different feature is still its own lookup
+	_, err = NewResource(runtime, "windows.optionalFeature", map[string]*llx.RawData{
+		"name": llx.StringData("TelnetClient"),
+	})
+	require.Error(t, err, "unknown feature names still fail")
+	assert.Len(t, conn.commands, 2)
+}

@@ -254,6 +254,14 @@ func initWindowsOptionalFeature(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return args, nil, nil
 	}
 
+	// NewResource only consults the resource cache *after* running this init, so
+	// without this lookup every reference to windows.optionalFeature(name: "x")
+	// in a scan would run its own DISM query — a policy that filters on a
+	// feature state typically references it from several checks.
+	if cached, ok := runtime.Resources.Get("windows.optionalFeature\x00" + name); ok {
+		return nil, cached, nil
+	}
+
 	conn, ok := runtime.Connection.(shared.Connection)
 	if !ok {
 		return args, nil, nil
