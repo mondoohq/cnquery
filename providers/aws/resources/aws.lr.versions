@@ -5782,12 +5782,16 @@ aws.iam.accessAnalyzer.finding.analyzerArn 13.29.1
 aws.iam.accessAnalyzer.finding.createdAt 13.29.1
 aws.iam.accessAnalyzer.finding.error 13.29.1
 aws.iam.accessAnalyzer.finding.id 13.29.1
+aws.iam.accessAnalyzer.finding.lastAccessedAt 13.52.2
 aws.iam.accessAnalyzer.finding.region 13.29.1
 aws.iam.accessAnalyzer.finding.resourceArn 13.29.1
 aws.iam.accessAnalyzer.finding.resourceOwnerAccount 13.29.1
 aws.iam.accessAnalyzer.finding.resourceType 13.29.1
 aws.iam.accessAnalyzer.finding.status 13.29.1
 aws.iam.accessAnalyzer.finding.type 13.29.1
+aws.iam.accessAnalyzer.finding.unusedAccessKeyId 13.52.2
+aws.iam.accessAnalyzer.finding.unusedActions 13.52.2
+aws.iam.accessAnalyzer.finding.unusedServiceNamespace 13.52.2
 aws.iam.accessAnalyzer.finding.updatedAt 13.29.1
 aws.iam.accessAnalyzer.findings 11.15.2
 aws.iam.accountAlias 13.6.3
@@ -5802,6 +5806,7 @@ aws.iam.group.createdAt 11.15.2
 aws.iam.group.id 11.15.2
 aws.iam.group.inlinePolicies 11.15.2
 aws.iam.group.inlinePolicyDetails 13.52.2
+aws.iam.group.lastAccessedServices 13.52.2
 aws.iam.group.name 11.15.2
 aws.iam.group.path 11.15.2
 aws.iam.group.usernames 11.15.2
@@ -5856,6 +5861,7 @@ aws.iam.policy.defaultVersion 11.15.2
 aws.iam.policy.description 11.15.2
 aws.iam.policy.hasWildcardAllow 13.33.2
 aws.iam.policy.isAttachable 11.15.2
+aws.iam.policy.lastAccessedServices 13.52.2
 aws.iam.policy.name 11.15.2
 aws.iam.policy.policyId 11.15.2
 aws.iam.policy.scope 11.15.2
@@ -5896,6 +5902,7 @@ aws.iam.role.id 11.15.2
 aws.iam.role.inlinePolicies 13.6.3
 aws.iam.role.inlinePolicyDetails 13.52.2
 aws.iam.role.isServiceLinked 13.6.3
+aws.iam.role.lastAccessedServices 13.52.2
 aws.iam.role.lastUsedAt 11.15.2
 aws.iam.role.lastUsedRegion 11.15.2
 aws.iam.role.maxSessionDuration 11.15.2
@@ -5915,6 +5922,13 @@ aws.iam.samlProvider.tags 11.15.2
 aws.iam.samlProvider.validUntil 11.15.2
 aws.iam.samlProviders 11.15.2
 aws.iam.serverCertificates 11.15.2
+aws.iam.serviceLastAccessed 13.52.2
+aws.iam.serviceLastAccessed.lastAuthenticatedAt 13.52.2
+aws.iam.serviceLastAccessed.lastAuthenticatedEntity 13.52.2
+aws.iam.serviceLastAccessed.lastAuthenticatedRegion 13.52.2
+aws.iam.serviceLastAccessed.serviceName 13.52.2
+aws.iam.serviceLastAccessed.serviceNamespace 13.52.2
+aws.iam.serviceLastAccessed.totalAuthenticatedEntities 13.52.2
 aws.iam.user 11.15.2
 aws.iam.user.accessKey 13.32.2
 aws.iam.user.accessKey.accessKeyId 13.32.2
@@ -5932,6 +5946,7 @@ aws.iam.user.createdAt 11.15.2
 aws.iam.user.groups 11.15.2
 aws.iam.user.id 11.15.2
 aws.iam.user.inlinePolicyDetails 13.52.2
+aws.iam.user.lastAccessedServices 13.52.2
 aws.iam.user.loginProfile 11.15.2
 aws.iam.user.managedBy 13.39.2
 aws.iam.user.mfaDevices 13.26.2

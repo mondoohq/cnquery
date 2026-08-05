@@ -1,8 +1,9 @@
 {
   "provider": "aws",
   "version": "13.52.1",
-  "generated_at": "2026-08-05T17:39:09+02:00",
+  "generated_at": "2026-08-05T19:27:28+02:00",
   "permissions": [
+    "access-analyzer:GetFindingV2",
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindings",
     "account:GetAlternateContact",
@@ -483,6 +484,7 @@
     "guardduty:ListPublishingDestinations",
     "guardduty:ListThreatIntelSets",
     "iam:GenerateCredentialReport",
+    "iam:GenerateServiceLastAccessedDetails",
     "iam:GetAccessKeyLastUsed",
     "iam:GetAccountPasswordPolicy",
     "iam:GetAccountSummary",
@@ -497,6 +499,7 @@
     "iam:GetRole",
     "iam:GetRolePolicy",
     "iam:GetSAMLProvider",
+    "iam:GetServiceLastAccessedDetails",
     "iam:GetUser",
     "iam:GetUserPolicy",
     "iam:ListAccessKeys",
@@ -987,6 +990,12 @@
     "workspaces:DescribeWorkspacesConnectionStatus"
   ],
   "details": [
+    {
+      "permission": "access-analyzer:GetFindingV2",
+      "service": "access-analyzer",
+      "action": "GetFindingV2",
+      "source_file": "aws_iam_accessanalyzer.go"
+    },
     {
       "permission": "access-analyzer:ListAnalyzers",
       "service": "access-analyzer",
@@ -3958,6 +3967,12 @@
       "source_file": "aws_iam.go"
     },
     {
+      "permission": "iam:GenerateServiceLastAccessedDetails",
+      "service": "iam",
+      "action": "GenerateServiceLastAccessedDetails",
+      "source_file": "aws_iam_service_last_accessed.go"
+    },
+    {
       "permission": "iam:GetAccessKeyLastUsed",
       "service": "iam",
       "action": "GetAccessKeyLastUsed",
@@ -4040,6 +4055,12 @@
       "service": "iam",
       "action": "GetSAMLProvider",
       "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:GetServiceLastAccessedDetails",
+      "service": "iam",
+      "action": "GetServiceLastAccessedDetails",
+      "source_file": "aws_iam_service_last_accessed.go"
     },
     {
       "permission": "iam:GetUser",

@@ -2436,6 +2436,14 @@ private aws.iam.user @defaults("arn name createdAt") {
   mfaDevices() []dict
   // Managed policy that sets the permissions boundary for the user, if one is set
   permissionsBoundary() aws.iam.policy
+  // Services the user is permitted to use, with when each was last accessed
+  //
+  // Sourced from an IAM service-last-accessed report, which IAM generates as
+  // an asynchronous job for one principal at a time. A query that reads this
+  // field for every user in the account waits on one report each, so scope the
+  // query to the users under review. Records with a null lastAuthenticatedAt
+  // are the services the user can reach but has never used.
+  lastAccessedServices() []aws.iam.serviceLastAccessed
 }
 
 // IAM user access key
@@ -2570,6 +2578,14 @@ private aws.iam.policy @defaults("arn name") {
   attachedRoles() []aws.iam.role
   // List of groups attached to the policy
   attachedGroups() []aws.iam.group
+  // Services the policy grants access to, with when each was last accessed
+  //
+  // Sourced from an IAM service-last-accessed report, which IAM generates as
+  // an asynchronous job for one policy at a time. Records with a null
+  // lastAuthenticatedAt are the services the policy grants but no attached
+  // principal has used, and totalAuthenticatedEntities counts the principals
+  // that did use each service.
+  lastAccessedServices() []aws.iam.serviceLastAccessed
 }
 
 // AWS IAM policy version
@@ -2621,6 +2637,41 @@ private aws.iam.inlinePolicy @defaults("name entityType entityName") {
   // True when an Allow statement includes a wildcard action — the global `*`
   // or a service-wide wildcard such as `s3:*` — or the all-resources `*`.
   hasWildcardAllow() bool
+}
+
+// AWS IAM service last-accessed record
+//
+// When a principal last authenticated to one AWS service, taken from the IAM
+// service-last-accessed report. A record whose lastAuthenticatedAt is null
+// means the principal holds permissions for that service but never used them
+// in the tracking period, which is the signal for permissions that can be
+// removed. The record also reports which entity made the last request and from
+// which region, so a grant that looks active can be traced to the one
+// principal and region that keeps it alive.
+private aws.iam.serviceLastAccessed @defaults("serviceNamespace lastAuthenticatedAt") {
+  // Name of the service
+  serviceName string
+  // Namespace of the service, such as s3, ec2, or iam
+  serviceNamespace string
+  // When the service was last accessed
+  //
+  // Null when the service was never accessed in the tracking period, which
+  // IAM limits to the trailing 400 days. A null value on a principal that is
+  // permitted to call the service means the permission is unused.
+  lastAuthenticatedAt time
+  // ARN of the user or role that last accessed the service
+  //
+  // Reported for a policy, where many principals share the grant. Empty when
+  // the record belongs to a single principal, which is its own last-accessed
+  // entity.
+  lastAuthenticatedEntity string
+  // Region from which the service was last accessed
+  lastAuthenticatedRegion string
+  // Number of entities that accessed the service
+  //
+  // Reported for a policy, counting the attached principals that used the
+  // service. Zero for records that belong to a single principal.
+  totalAuthenticatedEntities int
 }
 
 // AWS IAM role
@@ -2686,6 +2737,14 @@ private aws.iam.role @defaults("arn name") {
   inlinePolicyDetails() []aws.iam.inlinePolicy
   // IAM Access Analyzer findings reporting external or public access to this resource
   externalAccessFindings() []aws.iam.accessAnalyzer.finding
+  // Services the role is permitted to use, with when each was last accessed
+  //
+  // Sourced from an IAM service-last-accessed report, which IAM generates as
+  // an asynchronous job for one principal at a time. A query that reads this
+  // field for every role in the account waits on one report each, so scope the
+  // query to the roles under review. Records with a null lastAuthenticatedAt
+  // are the services the role can reach but has never used.
+  lastAccessedServices() []aws.iam.serviceLastAccessed
 }
 
 // AWS IAM group
@@ -2717,6 +2776,13 @@ private aws.iam.group @defaults("arn name") {
   attachedPolicies() []aws.iam.policy
   // Path to the group
   path string
+  // Services the group's members are permitted to use, with when each was last accessed
+  //
+  // Sourced from an IAM service-last-accessed report, which IAM generates as
+  // an asynchronous job for one entity at a time. Records with a null
+  // lastAuthenticatedAt are the services the group grants but no member has
+  // used.
+  lastAccessedServices() []aws.iam.serviceLastAccessed
 }
 
 // AWS IAM virtual MFA device
@@ -2825,6 +2891,29 @@ private aws.iam.accessAnalyzer.finding @defaults("resourceType region type statu
   region string
   // Analyzer ARN
   analyzerArn string
+  // When the unused role, credential, or permission was last used
+  //
+  // Reported for the unused-access finding types (UnusedIAMRole,
+  // UnusedIAMUserAccessKey, UnusedIAMUserPassword, and UnusedPermission).
+  // Null when the subject of the finding was never used at all, and null for
+  // external-access and internal-access findings, which do not carry a
+  // last-used time.
+  lastAccessedAt() time
+  // Service namespace whose permissions are unused, such as s3 or ec2
+  //
+  // Reported for UnusedPermission findings. Empty for every other finding
+  // type.
+  unusedServiceNamespace() string
+  // Actions within the service that the principal never called
+  //
+  // Reported for UnusedPermission findings, listing the action names only.
+  // Empty for every other finding type.
+  unusedActions() []string
+  // Access key that has gone unused
+  //
+  // Reported for UnusedIAMUserAccessKey findings. Empty for every other
+  // finding type.
+  unusedAccessKeyId() string
 }
 
 // Amazon Personalize

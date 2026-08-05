@@ -104,6 +104,7 @@ const (
 	ResourceAwsIamPolicy                                                        string = "aws.iam.policy"
 	ResourceAwsIamPolicyversion                                                 string = "aws.iam.policyversion"
 	ResourceAwsIamInlinePolicy                                                  string = "aws.iam.inlinePolicy"
+	ResourceAwsIamServiceLastAccessed                                           string = "aws.iam.serviceLastAccessed"
 	ResourceAwsIamRole                                                          string = "aws.iam.role"
 	ResourceAwsIamGroup                                                         string = "aws.iam.group"
 	ResourceAwsIamVirtualmfadevice                                              string = "aws.iam.virtualmfadevice"
@@ -1318,6 +1319,10 @@ func init() {
 		"aws.iam.inlinePolicy": {
 			// to override args, implement: initAwsIamInlinePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsIamInlinePolicy,
+		},
+		"aws.iam.serviceLastAccessed": {
+			// to override args, implement: initAwsIamServiceLastAccessed(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsIamServiceLastAccessed,
 		},
 		"aws.iam.role": {
 			Init:   initAwsIamRole,
@@ -7164,6 +7169,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.user.permissionsBoundary": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUser).GetPermissionsBoundary()).ToDataRes(types.Resource("aws.iam.policy"))
 	},
+	"aws.iam.user.lastAccessedServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUser).GetLastAccessedServices()).ToDataRes(types.Array(types.Resource("aws.iam.serviceLastAccessed")))
+	},
 	"aws.iam.user.accessKey.accessKeyId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUserAccessKey).GetAccessKeyId()).ToDataRes(types.String)
 	},
@@ -7293,6 +7301,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.policy.attachedGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamPolicy).GetAttachedGroups()).ToDataRes(types.Array(types.Resource("aws.iam.group")))
 	},
+	"aws.iam.policy.lastAccessedServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicy).GetLastAccessedServices()).ToDataRes(types.Array(types.Resource("aws.iam.serviceLastAccessed")))
+	},
 	"aws.iam.policyversion.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamPolicyversion).GetArn()).ToDataRes(types.String)
 	},
@@ -7328,6 +7339,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.iam.inlinePolicy.hasWildcardAllow": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamInlinePolicy).GetHasWildcardAllow()).ToDataRes(types.Bool)
+	},
+	"aws.iam.serviceLastAccessed.serviceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamServiceLastAccessed).GetServiceName()).ToDataRes(types.String)
+	},
+	"aws.iam.serviceLastAccessed.serviceNamespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamServiceLastAccessed).GetServiceNamespace()).ToDataRes(types.String)
+	},
+	"aws.iam.serviceLastAccessed.lastAuthenticatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamServiceLastAccessed).GetLastAuthenticatedAt()).ToDataRes(types.Time)
+	},
+	"aws.iam.serviceLastAccessed.lastAuthenticatedEntity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamServiceLastAccessed).GetLastAuthenticatedEntity()).ToDataRes(types.String)
+	},
+	"aws.iam.serviceLastAccessed.lastAuthenticatedRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamServiceLastAccessed).GetLastAuthenticatedRegion()).ToDataRes(types.String)
+	},
+	"aws.iam.serviceLastAccessed.totalAuthenticatedEntities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamServiceLastAccessed).GetTotalAuthenticatedEntities()).ToDataRes(types.Int)
 	},
 	"aws.iam.role.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamRole).GetArn()).ToDataRes(types.String)
@@ -7395,6 +7424,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.role.externalAccessFindings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamRole).GetExternalAccessFindings()).ToDataRes(types.Array(types.Resource("aws.iam.accessAnalyzer.finding")))
 	},
+	"aws.iam.role.lastAccessedServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamRole).GetLastAccessedServices()).ToDataRes(types.Array(types.Resource("aws.iam.serviceLastAccessed")))
+	},
 	"aws.iam.group.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamGroup).GetArn()).ToDataRes(types.String)
 	},
@@ -7421,6 +7453,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.iam.group.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamGroup).GetPath()).ToDataRes(types.String)
+	},
+	"aws.iam.group.lastAccessedServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamGroup).GetLastAccessedServices()).ToDataRes(types.Array(types.Resource("aws.iam.serviceLastAccessed")))
 	},
 	"aws.iam.virtualmfadevice.serialNumber": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamVirtualmfadevice).GetSerialNumber()).ToDataRes(types.String)
@@ -7538,6 +7573,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.iam.accessAnalyzer.finding.analyzerArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamAccessAnalyzerFinding).GetAnalyzerArn()).ToDataRes(types.String)
+	},
+	"aws.iam.accessAnalyzer.finding.lastAccessedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerFinding).GetLastAccessedAt()).ToDataRes(types.Time)
+	},
+	"aws.iam.accessAnalyzer.finding.unusedServiceNamespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerFinding).GetUnusedServiceNamespace()).ToDataRes(types.String)
+	},
+	"aws.iam.accessAnalyzer.finding.unusedActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerFinding).GetUnusedActions()).ToDataRes(types.Array(types.String))
+	},
+	"aws.iam.accessAnalyzer.finding.unusedAccessKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerFinding).GetUnusedAccessKeyId()).ToDataRes(types.String)
 	},
 	"aws.personalize.datasetGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsPersonalize).GetDatasetGroups()).ToDataRes(types.Array(types.Resource("aws.personalize.datasetGroup")))
@@ -39128,6 +39175,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsIamUser).PermissionsBoundary, ok = plugin.RawToTValue[*mqlAwsIamPolicy](v.Value, v.Error)
 		return
 	},
+	"aws.iam.user.lastAccessedServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUser).LastAccessedServices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.iam.user.accessKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamUserAccessKey).__id, ok = v.Value.(string)
 		return
@@ -39320,6 +39371,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsIamPolicy).AttachedGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.iam.policy.lastAccessedServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicy).LastAccessedServices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.iam.policyversion.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamPolicyversion).__id, ok = v.Value.(string)
 		return
@@ -39374,6 +39429,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.iam.inlinePolicy.hasWildcardAllow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamInlinePolicy).HasWildcardAllow, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.iam.serviceLastAccessed.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamServiceLastAccessed).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.iam.serviceLastAccessed.serviceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamServiceLastAccessed).ServiceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.serviceLastAccessed.serviceNamespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamServiceLastAccessed).ServiceNamespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.serviceLastAccessed.lastAuthenticatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamServiceLastAccessed).LastAuthenticatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.serviceLastAccessed.lastAuthenticatedEntity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamServiceLastAccessed).LastAuthenticatedEntity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.serviceLastAccessed.lastAuthenticatedRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamServiceLastAccessed).LastAuthenticatedRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.serviceLastAccessed.totalAuthenticatedEntities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamServiceLastAccessed).TotalAuthenticatedEntities, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.iam.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -39468,6 +39551,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsIamRole).ExternalAccessFindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.iam.role.lastAccessedServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamRole).LastAccessedServices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.iam.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamGroup).__id, ok = v.Value.(string)
 		return
@@ -39506,6 +39593,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.iam.group.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamGroup).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.group.lastAccessedServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamGroup).LastAccessedServices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.virtualmfadevice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -39686,6 +39777,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.iam.accessAnalyzer.finding.analyzerArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamAccessAnalyzerFinding).AnalyzerArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.accessAnalyzer.finding.lastAccessedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerFinding).LastAccessedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.accessAnalyzer.finding.unusedServiceNamespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerFinding).UnusedServiceNamespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.accessAnalyzer.finding.unusedActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerFinding).UnusedActions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.iam.accessAnalyzer.finding.unusedAccessKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerFinding).UnusedAccessKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.personalize.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -89730,23 +89837,24 @@ type mqlAwsIamUser struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsIamUserInternal
-	Arn                 plugin.TValue[string]
-	Id                  plugin.TValue[string]
-	Name                plugin.TValue[string]
-	CreatedAt           plugin.TValue[*time.Time]
-	PasswordLastUsed    plugin.TValue[*time.Time]
-	Tags                plugin.TValue[map[string]any]
-	ManagedBy           plugin.TValue[string]
-	Policies            plugin.TValue[[]any]
-	InlinePolicyDetails plugin.TValue[[]any]
-	AttachedPolicies    plugin.TValue[[]any]
-	Groups              plugin.TValue[[]any]
-	AccessKeys          plugin.TValue[[]any]
-	AccessKeyDetails    plugin.TValue[[]any]
-	LoginProfile        plugin.TValue[*mqlAwsIamLoginProfile]
-	Path                plugin.TValue[string]
-	MfaDevices          plugin.TValue[[]any]
-	PermissionsBoundary plugin.TValue[*mqlAwsIamPolicy]
+	Arn                  plugin.TValue[string]
+	Id                   plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	CreatedAt            plugin.TValue[*time.Time]
+	PasswordLastUsed     plugin.TValue[*time.Time]
+	Tags                 plugin.TValue[map[string]any]
+	ManagedBy            plugin.TValue[string]
+	Policies             plugin.TValue[[]any]
+	InlinePolicyDetails  plugin.TValue[[]any]
+	AttachedPolicies     plugin.TValue[[]any]
+	Groups               plugin.TValue[[]any]
+	AccessKeys           plugin.TValue[[]any]
+	AccessKeyDetails     plugin.TValue[[]any]
+	LoginProfile         plugin.TValue[*mqlAwsIamLoginProfile]
+	Path                 plugin.TValue[string]
+	MfaDevices           plugin.TValue[[]any]
+	PermissionsBoundary  plugin.TValue[*mqlAwsIamPolicy]
+	LastAccessedServices plugin.TValue[[]any]
 }
 
 // createAwsIamUser creates a new instance of this resource
@@ -89923,6 +90031,22 @@ func (c *mqlAwsIamUser) GetPermissionsBoundary() *plugin.TValue[*mqlAwsIamPolicy
 		}
 
 		return c.permissionsBoundary()
+	})
+}
+
+func (c *mqlAwsIamUser) GetLastAccessedServices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LastAccessedServices, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.user", c.__id, "lastAccessedServices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.lastAccessedServices()
 	})
 }
 
@@ -90252,22 +90376,23 @@ type mqlAwsIamPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsIamPolicyInternal
-	Arn              plugin.TValue[string]
-	PolicyId         plugin.TValue[string]
-	Name             plugin.TValue[string]
-	Description      plugin.TValue[string]
-	IsAttachable     plugin.TValue[bool]
-	AttachmentCount  plugin.TValue[int64]
-	CreatedAt        plugin.TValue[*time.Time]
-	UpdatedAt        plugin.TValue[*time.Time]
-	Scope            plugin.TValue[string]
-	Versions         plugin.TValue[[]any]
-	DefaultVersion   plugin.TValue[*mqlAwsIamPolicyversion]
-	Statements       plugin.TValue[[]any]
-	HasWildcardAllow plugin.TValue[bool]
-	AttachedUsers    plugin.TValue[[]any]
-	AttachedRoles    plugin.TValue[[]any]
-	AttachedGroups   plugin.TValue[[]any]
+	Arn                  plugin.TValue[string]
+	PolicyId             plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Description          plugin.TValue[string]
+	IsAttachable         plugin.TValue[bool]
+	AttachmentCount      plugin.TValue[int64]
+	CreatedAt            plugin.TValue[*time.Time]
+	UpdatedAt            plugin.TValue[*time.Time]
+	Scope                plugin.TValue[string]
+	Versions             plugin.TValue[[]any]
+	DefaultVersion       plugin.TValue[*mqlAwsIamPolicyversion]
+	Statements           plugin.TValue[[]any]
+	HasWildcardAllow     plugin.TValue[bool]
+	AttachedUsers        plugin.TValue[[]any]
+	AttachedRoles        plugin.TValue[[]any]
+	AttachedGroups       plugin.TValue[[]any]
+	LastAccessedServices plugin.TValue[[]any]
 }
 
 // createAwsIamPolicy creates a new instance of this resource
@@ -90461,6 +90586,22 @@ func (c *mqlAwsIamPolicy) GetAttachedGroups() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsIamPolicy) GetLastAccessedServices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LastAccessedServices, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.policy", c.__id, "lastAccessedServices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.lastAccessedServices()
+	})
+}
+
 // mqlAwsIamPolicyversion for the aws.iam.policyversion resource
 type mqlAwsIamPolicyversion struct {
 	MqlRuntime *plugin.Runtime
@@ -90632,6 +90773,75 @@ func (c *mqlAwsIamInlinePolicy) GetHasWildcardAllow() *plugin.TValue[bool] {
 	})
 }
 
+// mqlAwsIamServiceLastAccessed for the aws.iam.serviceLastAccessed resource
+type mqlAwsIamServiceLastAccessed struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsIamServiceLastAccessedInternal it will be used here
+	ServiceName                plugin.TValue[string]
+	ServiceNamespace           plugin.TValue[string]
+	LastAuthenticatedAt        plugin.TValue[*time.Time]
+	LastAuthenticatedEntity    plugin.TValue[string]
+	LastAuthenticatedRegion    plugin.TValue[string]
+	TotalAuthenticatedEntities plugin.TValue[int64]
+}
+
+// createAwsIamServiceLastAccessed creates a new instance of this resource
+func createAwsIamServiceLastAccessed(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsIamServiceLastAccessed{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.iam.serviceLastAccessed", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsIamServiceLastAccessed) MqlName() string {
+	return "aws.iam.serviceLastAccessed"
+}
+
+func (c *mqlAwsIamServiceLastAccessed) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsIamServiceLastAccessed) GetServiceName() *plugin.TValue[string] {
+	return &c.ServiceName
+}
+
+func (c *mqlAwsIamServiceLastAccessed) GetServiceNamespace() *plugin.TValue[string] {
+	return &c.ServiceNamespace
+}
+
+func (c *mqlAwsIamServiceLastAccessed) GetLastAuthenticatedAt() *plugin.TValue[*time.Time] {
+	return &c.LastAuthenticatedAt
+}
+
+func (c *mqlAwsIamServiceLastAccessed) GetLastAuthenticatedEntity() *plugin.TValue[string] {
+	return &c.LastAuthenticatedEntity
+}
+
+func (c *mqlAwsIamServiceLastAccessed) GetLastAuthenticatedRegion() *plugin.TValue[string] {
+	return &c.LastAuthenticatedRegion
+}
+
+func (c *mqlAwsIamServiceLastAccessed) GetTotalAuthenticatedEntities() *plugin.TValue[int64] {
+	return &c.TotalAuthenticatedEntities
+}
+
 // mqlAwsIamRole for the aws.iam.role resource
 type mqlAwsIamRole struct {
 	MqlRuntime *plugin.Runtime
@@ -90659,6 +90869,7 @@ type mqlAwsIamRole struct {
 	InlinePolicies              plugin.TValue[[]any]
 	InlinePolicyDetails         plugin.TValue[[]any]
 	ExternalAccessFindings      plugin.TValue[[]any]
+	LastAccessedServices        plugin.TValue[[]any]
 }
 
 // createAwsIamRole creates a new instance of this resource
@@ -90870,20 +91081,37 @@ func (c *mqlAwsIamRole) GetExternalAccessFindings() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsIamRole) GetLastAccessedServices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LastAccessedServices, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.role", c.__id, "lastAccessedServices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.lastAccessedServices()
+	})
+}
+
 // mqlAwsIamGroup for the aws.iam.group resource
 type mqlAwsIamGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsIamGroupInternal
-	Arn                 plugin.TValue[string]
-	Id                  plugin.TValue[string]
-	Name                plugin.TValue[string]
-	CreatedAt           plugin.TValue[*time.Time]
-	Usernames           plugin.TValue[[]any]
-	InlinePolicies      plugin.TValue[[]any]
-	InlinePolicyDetails plugin.TValue[[]any]
-	AttachedPolicies    plugin.TValue[[]any]
-	Path                plugin.TValue[string]
+	Arn                  plugin.TValue[string]
+	Id                   plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	CreatedAt            plugin.TValue[*time.Time]
+	Usernames            plugin.TValue[[]any]
+	InlinePolicies       plugin.TValue[[]any]
+	InlinePolicyDetails  plugin.TValue[[]any]
+	AttachedPolicies     plugin.TValue[[]any]
+	Path                 plugin.TValue[string]
+	LastAccessedServices plugin.TValue[[]any]
 }
 
 // createAwsIamGroup creates a new instance of this resource
@@ -90985,6 +91213,22 @@ func (c *mqlAwsIamGroup) GetAttachedPolicies() *plugin.TValue[[]any] {
 
 func (c *mqlAwsIamGroup) GetPath() *plugin.TValue[string] {
 	return &c.Path
+}
+
+func (c *mqlAwsIamGroup) GetLastAccessedServices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LastAccessedServices, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.group", c.__id, "lastAccessedServices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.lastAccessedServices()
+	})
 }
 
 // mqlAwsIamVirtualmfadevice for the aws.iam.virtualmfadevice resource
@@ -91409,19 +91653,23 @@ func (c *mqlAwsIamAccessAnalyzerAnalyzer) GetCreatedAt() *plugin.TValue[*time.Ti
 type mqlAwsIamAccessAnalyzerFinding struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsIamAccessAnalyzerFindingInternal it will be used here
-	Id                   plugin.TValue[string]
-	Error                plugin.TValue[string]
-	ResourceArn          plugin.TValue[string]
-	ResourceOwnerAccount plugin.TValue[string]
-	ResourceType         plugin.TValue[string]
-	Type                 plugin.TValue[string]
-	Status               plugin.TValue[string]
-	AnalyzedAt           plugin.TValue[*time.Time]
-	CreatedAt            plugin.TValue[*time.Time]
-	UpdatedAt            plugin.TValue[*time.Time]
-	Region               plugin.TValue[string]
-	AnalyzerArn          plugin.TValue[string]
+	mqlAwsIamAccessAnalyzerFindingInternal
+	Id                     plugin.TValue[string]
+	Error                  plugin.TValue[string]
+	ResourceArn            plugin.TValue[string]
+	ResourceOwnerAccount   plugin.TValue[string]
+	ResourceType           plugin.TValue[string]
+	Type                   plugin.TValue[string]
+	Status                 plugin.TValue[string]
+	AnalyzedAt             plugin.TValue[*time.Time]
+	CreatedAt              plugin.TValue[*time.Time]
+	UpdatedAt              plugin.TValue[*time.Time]
+	Region                 plugin.TValue[string]
+	AnalyzerArn            plugin.TValue[string]
+	LastAccessedAt         plugin.TValue[*time.Time]
+	UnusedServiceNamespace plugin.TValue[string]
+	UnusedActions          plugin.TValue[[]any]
+	UnusedAccessKeyId      plugin.TValue[string]
 }
 
 // createAwsIamAccessAnalyzerFinding creates a new instance of this resource
@@ -91502,6 +91750,30 @@ func (c *mqlAwsIamAccessAnalyzerFinding) GetRegion() *plugin.TValue[string] {
 
 func (c *mqlAwsIamAccessAnalyzerFinding) GetAnalyzerArn() *plugin.TValue[string] {
 	return &c.AnalyzerArn
+}
+
+func (c *mqlAwsIamAccessAnalyzerFinding) GetLastAccessedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LastAccessedAt, func() (*time.Time, error) {
+		return c.lastAccessedAt()
+	})
+}
+
+func (c *mqlAwsIamAccessAnalyzerFinding) GetUnusedServiceNamespace() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.UnusedServiceNamespace, func() (string, error) {
+		return c.unusedServiceNamespace()
+	})
+}
+
+func (c *mqlAwsIamAccessAnalyzerFinding) GetUnusedActions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UnusedActions, func() ([]any, error) {
+		return c.unusedActions()
+	})
+}
+
+func (c *mqlAwsIamAccessAnalyzerFinding) GetUnusedAccessKeyId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.UnusedAccessKeyId, func() (string, error) {
+		return c.unusedAccessKeyId()
+	})
 }
 
 // mqlAwsPersonalize for the aws.personalize resource
