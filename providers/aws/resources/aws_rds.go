@@ -961,21 +961,29 @@ func (a *mqlAwsRdsDbinstance) snapshots() ([]any, error) {
 
 // pendingMaintenanceActions returns all pending maintenance actions for the RDS instance
 func (a *mqlAwsRdsDbinstance) pendingMaintenanceActions() ([]any, error) {
-	instanceArn := a.Arn.Data
-	region := a.Region.Data
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return rdsPendingMaintenanceActions(a.MqlRuntime, a.Region.Data, a.Arn.Data)
+}
 
+// pendingMaintenanceActions returns all pending maintenance actions for the RDS cluster.
+func (a *mqlAwsRdsDbcluster) pendingMaintenanceActions() ([]any, error) {
+	return rdsPendingMaintenanceActions(a.MqlRuntime, a.Region.Data, a.Arn.Data)
+}
+
+func rdsPendingMaintenanceActions(runtime *plugin.Runtime, region string, resourceArn string) ([]any, error) {
+	conn := runtime.Connection.(*connection.AwsConnection)
 	svc := conn.Rds(region)
 	ctx := context.Background()
 	res := []any{}
 
-	params := &rds.DescribePendingMaintenanceActionsInput{
-		ResourceIdentifier: &instanceArn,
-	}
+	params := &rds.DescribePendingMaintenanceActionsInput{ResourceIdentifier: &resourceArn}
 	paginator := rds.NewDescribePendingMaintenanceActionsPaginator(svc, params)
 	for paginator.HasMorePages() {
 		pendingMaintenanceList, err := paginator.NextPage(ctx)
 		if err != nil {
+			if Is400AccessDeniedError(err) {
+				log.Warn().Str("region", region).Str("resource", resourceArn).Msg("error accessing RDS pending maintenance actions")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, resp := range pendingMaintenanceList.PendingMaintenanceActions {
@@ -983,13 +991,61 @@ func (a *mqlAwsRdsDbinstance) pendingMaintenanceActions() ([]any, error) {
 				continue
 			}
 			for _, action := range resp.PendingMaintenanceActionDetails {
-				resourceArn := *resp.ResourceIdentifier
-				mqlDbSnapshot, err := newMqlAwsPendingMaintenanceAction(a.MqlRuntime, resourceArn, action)
+				mqlPendingAction, err := newMqlAwsPendingMaintenanceAction(runtime, *resp.ResourceIdentifier, action)
 				if err != nil {
 					return nil, err
 				}
-				res = append(res, mqlDbSnapshot)
+				res = append(res, mqlPendingAction)
 			}
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsRdsDbinstance) recommendations() ([]any, error) {
+	if a.DbiResourceId.Data == "" {
+		return []any{}, nil
+	}
+	return rdsRecommendations(a.MqlRuntime, a.Region.Data, a.Arn.Data, "dbi-resource-id", a.DbiResourceId.Data)
+}
+
+func (a *mqlAwsRdsDbcluster) recommendations() ([]any, error) {
+	if a.cacheDbClusterResourceId == "" {
+		return []any{}, nil
+	}
+	return rdsRecommendations(a.MqlRuntime, a.Region.Data, a.Arn.Data, "cluster-resource-id", a.cacheDbClusterResourceId)
+}
+
+func rdsRecommendations(runtime *plugin.Runtime, region string, parentArn string, filterName string, filterValue string) ([]any, error) {
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Rds(region)
+	ctx := context.Background()
+	res := []any{}
+
+	params := &rds.DescribeDBRecommendationsInput{
+		Filters: []rds_types.Filter{{
+			Name:   &filterName,
+			Values: []string{filterValue},
+		}},
+	}
+	paginator := rds.NewDescribeDBRecommendationsPaginator(svc, params)
+	recommendationIndex := 0
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				log.Warn().Str("region", region).Str("resource", parentArn).Msg("error accessing RDS recommendations")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, recommendation := range page.DBRecommendations {
+			mqlRecommendation, err := newMqlAwsRdsRecommendation(runtime, parentArn, recommendationIndex, recommendation)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlRecommendation)
+			recommendationIndex++
 		}
 	}
 	return res, nil
@@ -1017,6 +1073,101 @@ func newMqlAwsPendingMaintenanceAction(runtime *plugin.Runtime, resourceArn stri
 		return nil, err
 	}
 	return res.(*mqlAwsRdsPendingMaintenanceAction), nil
+}
+
+func newMqlAwsRdsRecommendation(runtime *plugin.Runtime, parentArn string, index int, recommendation rds_types.DBRecommendation) (*mqlAwsRdsRecommendation, error) {
+	recommendationID := convert.ToValue(recommendation.RecommendationId)
+	cacheID := recommendationID
+	if cacheID == "" {
+		cacheID = convert.ToValue(recommendation.TypeId)
+	}
+	if cacheID == "" {
+		cacheID = fmt.Sprintf("%d", index)
+	}
+
+	links := make([]any, 0, len(recommendation.Links))
+	for _, link := range recommendation.Links {
+		links = append(links, map[string]any{
+			"text": convert.ToValue(link.Text),
+			"url":  convert.ToValue(link.Url),
+		})
+	}
+
+	actions := make([]any, 0, len(recommendation.RecommendedActions))
+	for i, action := range recommendation.RecommendedActions {
+		mqlAction, err := newMqlAwsRdsRecommendedAction(runtime, parentArn, cacheID, i, action)
+		if err != nil {
+			return nil, err
+		}
+		actions = append(actions, mqlAction)
+	}
+
+	res, err := CreateResource(runtime, ResourceAwsRdsRecommendation,
+		map[string]*llx.RawData{
+			"__id":               llx.StringData(fmt.Sprintf("%s/recommendation/%s", parentArn, cacheID)),
+			"id":                 llx.StringDataPtr(recommendation.RecommendationId),
+			"typeId":             llx.StringDataPtr(recommendation.TypeId),
+			"severity":           llx.StringDataPtr(recommendation.Severity),
+			"status":             llx.StringDataPtr(recommendation.Status),
+			"createdAt":          llx.TimeDataPtr(recommendation.CreatedTime),
+			"updatedAt":          llx.TimeDataPtr(recommendation.UpdatedTime),
+			"detection":          llx.StringDataPtr(recommendation.Detection),
+			"recommendation":     llx.StringDataPtr(recommendation.Recommendation),
+			"description":        llx.StringDataPtr(recommendation.Description),
+			"reason":             llx.StringDataPtr(recommendation.Reason),
+			"impact":             llx.StringDataPtr(recommendation.Impact),
+			"category":           llx.StringDataPtr(recommendation.Category),
+			"source":             llx.StringDataPtr(recommendation.Source),
+			"typeDetection":      llx.StringDataPtr(recommendation.TypeDetection),
+			"typeRecommendation": llx.StringDataPtr(recommendation.TypeRecommendation),
+			"additionalInfo":     llx.StringDataPtr(recommendation.AdditionalInfo),
+			"links":              llx.ArrayData(links, types.Dict),
+			"actions":            llx.ArrayData(actions, types.Resource(ResourceAwsRdsRecommendationAction)),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsRdsRecommendation), nil
+}
+
+func newMqlAwsRdsRecommendedAction(runtime *plugin.Runtime, parentArn string, recommendationID string, index int, action rds_types.RecommendedAction) (*mqlAwsRdsRecommendationAction, error) {
+	actionID := convert.ToValue(action.ActionId)
+	cacheID := actionID
+	if cacheID == "" {
+		cacheID = fmt.Sprintf("%d", index)
+	}
+
+	parameters := map[string]any{}
+	for _, parameter := range action.Parameters {
+		key := convert.ToValue(parameter.Key)
+		if key != "" {
+			parameters[key] = convert.ToValue(parameter.Value)
+		}
+	}
+	contextAttributes := map[string]any{}
+	for _, attribute := range action.ContextAttributes {
+		key := convert.ToValue(attribute.Key)
+		if key != "" {
+			contextAttributes[key] = convert.ToValue(attribute.Value)
+		}
+	}
+
+	res, err := CreateResource(runtime, ResourceAwsRdsRecommendationAction,
+		map[string]*llx.RawData{
+			"__id":              llx.StringData(fmt.Sprintf("%s/recommendation/%s/action/%s", parentArn, recommendationID, cacheID)),
+			"id":                llx.StringDataPtr(action.ActionId),
+			"title":             llx.StringDataPtr(action.Title),
+			"description":       llx.StringDataPtr(action.Description),
+			"operation":         llx.StringDataPtr(action.Operation),
+			"parameters":        llx.MapData(parameters, types.String),
+			"applyModes":        llx.ArrayData(stringSliceToAny(action.ApplyModes), types.String),
+			"status":            llx.StringDataPtr(action.Status),
+			"contextAttributes": llx.MapData(contextAttributes, types.String),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsRdsRecommendationAction), nil
 }
 
 func masterUserSecretToDict(secret *rds_types.MasterUserSecret) any {
@@ -1115,6 +1266,7 @@ type mqlAwsRdsDbclusterInternal struct {
 	securityGroupIdHandler
 	cacheKmsKeyId               *string
 	cacheActivityStreamKmsKeyId *string
+	cacheDbClusterResourceId    string
 	cacheMonitoringRoleArn      string
 	cacheParameterGroupName     string
 	cacheAccountID              string
@@ -1218,6 +1370,7 @@ func newMqlAwsRdsCluster(runtime *plugin.Runtime, region string, accountID strin
 	mqlDbCluster := resource.(*mqlAwsRdsDbcluster)
 	mqlDbCluster.cacheKmsKeyId = cluster.KmsKeyId
 	mqlDbCluster.cacheActivityStreamKmsKeyId = cluster.ActivityStreamKmsKeyId
+	mqlDbCluster.cacheDbClusterResourceId = convert.ToValue(cluster.DbClusterResourceId)
 	mqlDbCluster.cacheMonitoringRoleArn = convert.ToValue(cluster.MonitoringRoleArn)
 	mqlDbCluster.cacheParameterGroupName = convert.ToValue(cluster.DBClusterParameterGroup)
 	mqlDbCluster.cacheAccountID = accountID
