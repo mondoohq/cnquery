@@ -214,7 +214,7 @@ func TestNewMqlAwsRdsRecommendation(t *testing.T) {
 				Key:   aws.String("EngineVersion"),
 				Value: aws.String("16.4"),
 			}},
-			ApplyModes: []string{"immediately", "next-maintainance-window"},
+			ApplyModes: []string{"immediately", "next-maintenance-window"},
 			Status:     aws.String("ready"),
 			ContextAttributes: []rds_types.ContextAttribute{{
 				Key:   aws.String("CurrentEngineVersion"),
@@ -239,5 +239,5 @@ func TestNewMqlAwsRdsRecommendation(t *testing.T) {
 	assert.Equal(t, "ModifyDBInstance", action.Operation.Data)
 	assert.Equal(t, "16.4", action.Parameters.Data["EngineVersion"])
 	assert.Equal(t, "16.3", action.ContextAttributes.Data["CurrentEngineVersion"])
-	assert.Equal(t, []any{"immediately", "next-maintainance-window"}, action.ApplyModes.Data)
+	assert.Equal(t, []any{"immediately", "next-maintenance-window"}, action.ApplyModes.Data)
 }

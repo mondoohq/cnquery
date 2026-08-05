@@ -13866,8 +13866,7 @@ private aws.rds.recommendation.action @defaults("id title operation status") {
   parameters map[string]string
   // Supported methods for applying the action
   //
-  // Values can include manual, immediately, or next-maintainance-window, using
-  // the spelling returned by the Amazon RDS API.
+  // Values can include manual, immediately, or next-maintenance-window.
   applyModes []string
   // Current action status
   //
