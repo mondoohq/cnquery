@@ -454,6 +454,7 @@ const (
 	ResourceClaudeCodePlugin                              string = "claude.code.plugin"
 	ResourceClaudeCodeSkill                               string = "claude.code.skill"
 	ResourceClaudeCodeProject                             string = "claude.code.project"
+	ResourceClaudeCodeModelUsage                          string = "claude.code.modelUsage"
 	ResourceClaudeCodeRepo                                string = "claude.code.repo"
 	ResourceClaudeCodeMcpServer                           string = "claude.code.mcpServer"
 	ResourceOpenaiCodex                                   string = "openai.codex"
@@ -2277,6 +2278,10 @@ func init() {
 		"claude.code.project": {
 			// to override args, implement: initClaudeCodeProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createClaudeCodeProject,
+		},
+		"claude.code.modelUsage": {
+			// to override args, implement: initClaudeCodeModelUsage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createClaudeCodeModelUsage,
 		},
 		"claude.code.repo": {
 			// to override args, implement: initClaudeCodeRepo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -11691,6 +11696,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"claude.code.mcpServers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeCode).GetMcpServers()).ToDataRes(types.Array(types.Resource("claude.code.mcpServer")))
 	},
+	"claude.code.model": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCode).GetModel()).ToDataRes(types.String)
+	},
+	"claude.code.models": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCode).GetModels()).ToDataRes(types.Array(types.Resource("claude.code.modelUsage")))
+	},
 	"claude.code.plugin.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeCodePlugin).GetName()).ToDataRes(types.String)
 	},
@@ -11741,6 +11752,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"claude.code.project.hasMemory": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeCodeProject).GetHasMemory()).ToDataRes(types.Bool)
+	},
+	"claude.code.project.models": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeProject).GetModels()).ToDataRes(types.Array(types.Resource("claude.code.modelUsage")))
+	},
+	"claude.code.modelUsage.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeModelUsage).GetName()).ToDataRes(types.String)
+	},
+	"claude.code.modelUsage.inputTokens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeModelUsage).GetInputTokens()).ToDataRes(types.Int)
+	},
+	"claude.code.modelUsage.outputTokens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeModelUsage).GetOutputTokens()).ToDataRes(types.Int)
+	},
+	"claude.code.modelUsage.cacheReadInputTokens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeModelUsage).GetCacheReadInputTokens()).ToDataRes(types.Int)
+	},
+	"claude.code.modelUsage.cacheCreationInputTokens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeModelUsage).GetCacheCreationInputTokens()).ToDataRes(types.Int)
+	},
+	"claude.code.modelUsage.webSearchRequests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeModelUsage).GetWebSearchRequests()).ToDataRes(types.Int)
+	},
+	"claude.code.modelUsage.cost": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeModelUsage).GetCost()).ToDataRes(types.Float)
 	},
 	"claude.code.repo.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeCodeRepo).GetPath()).ToDataRes(types.String)
@@ -11819,6 +11854,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openai.codex.repos": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenaiCodex).GetRepos()).ToDataRes(types.Array(types.Resource("openai.codex.repo")))
+	},
+	"openai.codex.model": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodex).GetModel()).ToDataRes(types.String)
+	},
+	"openai.codex.modelProvider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodex).GetModelProvider()).ToDataRes(types.String)
 	},
 	"openai.codex.plugin.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenaiCodexPlugin).GetName()).ToDataRes(types.String)
@@ -12159,6 +12200,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gemini.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGemini).GetSkills()).ToDataRes(types.Array(types.Resource("gemini.skill")))
 	},
+	"gemini.model": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGemini).GetModel()).ToDataRes(types.String)
+	},
 	"gemini.mcpServer.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGeminiMcpServer).GetName()).ToDataRes(types.String)
 	},
@@ -12308,6 +12352,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"zed.repos": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlZed).GetRepos()).ToDataRes(types.Array(types.Resource("zed.repo")))
+	},
+	"zed.model": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZed).GetModel()).ToDataRes(types.String)
+	},
+	"zed.modelProvider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZed).GetModelProvider()).ToDataRes(types.String)
 	},
 	"zed.repo.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlZedRepo).GetPath()).ToDataRes(types.String)
@@ -26777,6 +26827,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlClaudeCode).McpServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"claude.code.model": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCode).Model, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.models": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCode).Models, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"claude.code.plugin.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlClaudeCodePlugin).__id, ok = v.Value.(string)
 		return
@@ -26855,6 +26913,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"claude.code.project.hasMemory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlClaudeCodeProject).HasMemory, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"claude.code.project.models": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeProject).Models, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"claude.code.modelUsage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeModelUsage).__id, ok = v.Value.(string)
+		return
+	},
+	"claude.code.modelUsage.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeModelUsage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.modelUsage.inputTokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeModelUsage).InputTokens, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"claude.code.modelUsage.outputTokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeModelUsage).OutputTokens, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"claude.code.modelUsage.cacheReadInputTokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeModelUsage).CacheReadInputTokens, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"claude.code.modelUsage.cacheCreationInputTokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeModelUsage).CacheCreationInputTokens, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"claude.code.modelUsage.webSearchRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeModelUsage).WebSearchRequests, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"claude.code.modelUsage.cost": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeModelUsage).Cost, ok = plugin.RawToTValue[float64](v.Value, v.Error)
 		return
 	},
 	"claude.code.repo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26971,6 +27065,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openai.codex.repos": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenaiCodex).Repos, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openai.codex.model": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodex).Model, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openai.codex.modelProvider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodex).ModelProvider, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"openai.codex.plugin.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27497,6 +27599,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGemini).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gemini.model": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGemini).Model, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gemini.mcpServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGeminiMcpServer).__id, ok = v.Value.(string)
 		return
@@ -27727,6 +27833,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"zed.repos": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlZed).Repos, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"zed.model": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZed).Model, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zed.modelProvider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZed).ModelProvider, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"zed.repo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -70803,6 +70917,8 @@ type mqlClaudeCode struct {
 	Projects       plugin.TValue[[]any]
 	Repos          plugin.TValue[[]any]
 	McpServers     plugin.TValue[[]any]
+	Model          plugin.TValue[string]
+	Models         plugin.TValue[[]any]
 }
 
 // createClaudeCode creates a new instance of this resource
@@ -71006,6 +71122,28 @@ func (c *mqlClaudeCode) GetMcpServers() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlClaudeCode) GetModel() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Model, func() (string, error) {
+		return c.model()
+	})
+}
+
+func (c *mqlClaudeCode) GetModels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Models, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("claude.code", c.__id, "models")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.models()
+	})
+}
+
 // mqlClaudeCodePlugin for the claude.code.plugin resource
 type mqlClaudeCodePlugin struct {
 	MqlRuntime *plugin.Runtime
@@ -71175,9 +71313,10 @@ func (c *mqlClaudeCodeSkill) GetSha256() *plugin.TValue[string] {
 type mqlClaudeCodeProject struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlClaudeCodeProjectInternal it will be used here
+	mqlClaudeCodeProjectInternal
 	Path      plugin.TValue[string]
 	HasMemory plugin.TValue[bool]
+	Models    plugin.TValue[[]any]
 }
 
 // createClaudeCodeProject creates a new instance of this resource
@@ -71223,6 +71362,96 @@ func (c *mqlClaudeCodeProject) GetPath() *plugin.TValue[string] {
 
 func (c *mqlClaudeCodeProject) GetHasMemory() *plugin.TValue[bool] {
 	return &c.HasMemory
+}
+
+func (c *mqlClaudeCodeProject) GetModels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Models, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("claude.code.project", c.__id, "models")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.models()
+	})
+}
+
+// mqlClaudeCodeModelUsage for the claude.code.modelUsage resource
+type mqlClaudeCodeModelUsage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlClaudeCodeModelUsageInternal it will be used here
+	Name                     plugin.TValue[string]
+	InputTokens              plugin.TValue[int64]
+	OutputTokens             plugin.TValue[int64]
+	CacheReadInputTokens     plugin.TValue[int64]
+	CacheCreationInputTokens plugin.TValue[int64]
+	WebSearchRequests        plugin.TValue[int64]
+	Cost                     plugin.TValue[float64]
+}
+
+// createClaudeCodeModelUsage creates a new instance of this resource
+func createClaudeCodeModelUsage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlClaudeCodeModelUsage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("claude.code.modelUsage", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlClaudeCodeModelUsage) MqlName() string {
+	return "claude.code.modelUsage"
+}
+
+func (c *mqlClaudeCodeModelUsage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlClaudeCodeModelUsage) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlClaudeCodeModelUsage) GetInputTokens() *plugin.TValue[int64] {
+	return &c.InputTokens
+}
+
+func (c *mqlClaudeCodeModelUsage) GetOutputTokens() *plugin.TValue[int64] {
+	return &c.OutputTokens
+}
+
+func (c *mqlClaudeCodeModelUsage) GetCacheReadInputTokens() *plugin.TValue[int64] {
+	return &c.CacheReadInputTokens
+}
+
+func (c *mqlClaudeCodeModelUsage) GetCacheCreationInputTokens() *plugin.TValue[int64] {
+	return &c.CacheCreationInputTokens
+}
+
+func (c *mqlClaudeCodeModelUsage) GetWebSearchRequests() *plugin.TValue[int64] {
+	return &c.WebSearchRequests
+}
+
+func (c *mqlClaudeCodeModelUsage) GetCost() *plugin.TValue[float64] {
+	return &c.Cost
 }
 
 // mqlClaudeCodeRepo for the claude.code.repo resource
@@ -71395,17 +71624,19 @@ type mqlOpenaiCodex struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlOpenaiCodexInternal it will be used here
-	ConfigPath  plugin.TValue[string]
-	Package     plugin.TValue[*mqlPackage]
-	Runtime     plugin.TValue[*mqlExtensionRuntime]
-	AuthMode    plugin.TValue[string]
-	AccountId   plugin.TValue[string]
-	LastRefresh plugin.TValue[string]
-	Plugins     plugin.TValue[[]any]
-	Skills      plugin.TValue[[]any]
-	McpServers  plugin.TValue[[]any]
-	Connectors  plugin.TValue[[]any]
-	Repos       plugin.TValue[[]any]
+	ConfigPath    plugin.TValue[string]
+	Package       plugin.TValue[*mqlPackage]
+	Runtime       plugin.TValue[*mqlExtensionRuntime]
+	AuthMode      plugin.TValue[string]
+	AccountId     plugin.TValue[string]
+	LastRefresh   plugin.TValue[string]
+	Plugins       plugin.TValue[[]any]
+	Skills        plugin.TValue[[]any]
+	McpServers    plugin.TValue[[]any]
+	Connectors    plugin.TValue[[]any]
+	Repos         plugin.TValue[[]any]
+	Model         plugin.TValue[string]
+	ModelProvider plugin.TValue[string]
 }
 
 // createOpenaiCodex creates a new instance of this resource
@@ -71576,6 +71807,18 @@ func (c *mqlOpenaiCodex) GetRepos() *plugin.TValue[[]any] {
 		}
 
 		return c.repos()
+	})
+}
+
+func (c *mqlOpenaiCodex) GetModel() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Model, func() (string, error) {
+		return c.model()
+	})
+}
+
+func (c *mqlOpenaiCodex) GetModelProvider() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ModelProvider, func() (string, error) {
+		return c.modelProvider()
 	})
 }
 
@@ -73069,6 +73312,7 @@ type mqlGemini struct {
 	Settings   plugin.TValue[any]
 	McpServers plugin.TValue[[]any]
 	Skills     plugin.TValue[[]any]
+	Model      plugin.TValue[string]
 }
 
 // createGemini creates a new instance of this resource
@@ -73185,6 +73429,12 @@ func (c *mqlGemini) GetSkills() *plugin.TValue[[]any] {
 		}
 
 		return c.skills()
+	})
+}
+
+func (c *mqlGemini) GetModel() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Model, func() (string, error) {
+		return c.model()
 	})
 }
 
@@ -73801,12 +74051,14 @@ type mqlZed struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlZedInternal it will be used here
-	ConfigPath plugin.TValue[string]
-	Package    plugin.TValue[*mqlPackage]
-	Runtime    plugin.TValue[*mqlExtensionRuntime]
-	Settings   plugin.TValue[any]
-	Extensions plugin.TValue[[]any]
-	Repos      plugin.TValue[[]any]
+	ConfigPath    plugin.TValue[string]
+	Package       plugin.TValue[*mqlPackage]
+	Runtime       plugin.TValue[*mqlExtensionRuntime]
+	Settings      plugin.TValue[any]
+	Extensions    plugin.TValue[[]any]
+	Repos         plugin.TValue[[]any]
+	Model         plugin.TValue[string]
+	ModelProvider plugin.TValue[string]
 }
 
 // createZed creates a new instance of this resource
@@ -73907,6 +74159,18 @@ func (c *mqlZed) GetRepos() *plugin.TValue[[]any] {
 		}
 
 		return c.repos()
+	})
+}
+
+func (c *mqlZed) GetModel() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Model, func() (string, error) {
+		return c.model()
+	})
+}
+
+func (c *mqlZed) GetModelProvider() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ModelProvider, func() (string, error) {
+		return c.modelProvider()
 	})
 }
 

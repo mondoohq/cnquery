@@ -53,6 +53,55 @@ func (r *mqlZed) settings() (interface{}, error) {
 	return settings, nil
 }
 
+// zedAgentSettings captures the default model configured for Zed's agent.
+// Recent Zed versions store this under `agent`; older ones under `assistant`.
+type zedAgentSettings struct {
+	DefaultModel struct {
+		Provider string `json:"provider"`
+		Model    string `json:"model"`
+	} `json:"default_model"`
+}
+
+// defaultModel returns the configured default agent model and its provider,
+// preferring the current `agent` key and falling back to the legacy
+// `assistant` key. Empty strings when unset or when no settings file exists.
+func (r *mqlZed) defaultModel() (provider string, model string, err error) {
+	afs := connectionAfs(r.MqlRuntime)
+	data, err := afs.ReadFile(filepath.Join(r.ConfigPath.Data, "settings.json"))
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "", "", nil
+		}
+		return "", "", err
+	}
+	clean, err := hujson.Standardize(data)
+	if err != nil {
+		return "", "", err
+	}
+	var settings struct {
+		Agent     zedAgentSettings `json:"agent"`
+		Assistant zedAgentSettings `json:"assistant"`
+	}
+	if err := json.Unmarshal(clean, &settings); err != nil {
+		return "", "", err
+	}
+	dm := settings.Agent.DefaultModel
+	if dm.Model == "" && dm.Provider == "" {
+		dm = settings.Assistant.DefaultModel
+	}
+	return dm.Provider, dm.Model, nil
+}
+
+func (r *mqlZed) model() (string, error) {
+	_, model, err := r.defaultModel()
+	return model, err
+}
+
+func (r *mqlZed) modelProvider() (string, error) {
+	provider, _, err := r.defaultModel()
+	return provider, err
+}
+
 func (r *mqlZed) extensions() ([]interface{}, error) {
 	afs := connectionAfs(r.MqlRuntime)
 	extensionsDir := filepath.Join(r.ConfigPath.Data, "extensions")
