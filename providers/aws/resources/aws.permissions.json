@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.52.1",
-  "generated_at": "2026-08-05T13:03:59+03:00",
+  "generated_at": "2026-08-05T17:39:09+02:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindings",
@@ -488,14 +488,17 @@
     "iam:GetAccountSummary",
     "iam:GetCredentialReport",
     "iam:GetGroup",
+    "iam:GetGroupPolicy",
     "iam:GetInstanceProfile",
     "iam:GetLoginProfile",
     "iam:GetOpenIDConnectProvider",
     "iam:GetPolicy",
     "iam:GetPolicyVersion",
     "iam:GetRole",
+    "iam:GetRolePolicy",
     "iam:GetSAMLProvider",
     "iam:GetUser",
+    "iam:GetUserPolicy",
     "iam:ListAccessKeys",
     "iam:ListAccountAliases",
     "iam:ListAttachedGroupPolicies",
@@ -3985,6 +3988,12 @@
       "source_file": "aws_iam.go"
     },
     {
+      "permission": "iam:GetGroupPolicy",
+      "service": "iam",
+      "action": "GetGroupPolicy",
+      "source_file": "aws_iam_inline_policy.go"
+    },
+    {
       "permission": "iam:GetInstanceProfile",
       "service": "iam",
       "action": "GetInstanceProfile",
@@ -4021,6 +4030,12 @@
       "source_file": "aws_iam.go"
     },
     {
+      "permission": "iam:GetRolePolicy",
+      "service": "iam",
+      "action": "GetRolePolicy",
+      "source_file": "aws_iam_inline_policy.go"
+    },
+    {
       "permission": "iam:GetSAMLProvider",
       "service": "iam",
       "action": "GetSAMLProvider",
@@ -4031,6 +4046,12 @@
       "service": "iam",
       "action": "GetUser",
       "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:GetUserPolicy",
+      "service": "iam",
+      "action": "GetUserPolicy",
+      "source_file": "aws_iam_inline_policy.go"
     },
     {
       "permission": "iam:ListAccessKeys",
@@ -4078,7 +4099,7 @@
       "permission": "iam:ListGroupPolicies",
       "service": "iam",
       "action": "ListGroupPolicies",
-      "source_file": "aws_iam.go"
+      "source_file": "aws_iam_inline_policy.go"
     },
     {
       "permission": "iam:ListGroups",
@@ -4132,7 +4153,7 @@
       "permission": "iam:ListRolePolicies",
       "service": "iam",
       "action": "ListRolePolicies",
-      "source_file": "aws_iam.go"
+      "source_file": "aws_iam_inline_policy.go"
     },
     {
       "permission": "iam:ListRoleTags",
@@ -4162,7 +4183,7 @@
       "permission": "iam:ListUserPolicies",
       "service": "iam",
       "action": "ListUserPolicies",
-      "source_file": "aws_iam.go"
+      "source_file": "aws_iam_inline_policy.go"
     },
     {
       "permission": "iam:ListUserTags",

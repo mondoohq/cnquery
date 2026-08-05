@@ -722,14 +722,7 @@ func (a *mqlAwsIam) roles() ([]any, error) {
 		}
 
 		for _, role := range rolesResp.Roles {
-			var policyDocumentMap map[string]any
-			if role.AssumeRolePolicyDocument != nil {
-				policyDocument := *role.AssumeRolePolicyDocument
-				if decoded, err := url.QueryUnescape(policyDocument); err == nil {
-					policyDocument = decoded
-				}
-				json.Unmarshal([]byte(policyDocument), &policyDocumentMap)
-			}
+			policyDocumentMap := decodeIamPolicyDocument(role.AssumeRolePolicyDocument)
 
 			var permBoundaryArn string
 			if role.PermissionsBoundary != nil {
@@ -1293,26 +1286,11 @@ func (a *mqlAwsIamUser) policies() ([]any, error) {
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	svc := conn.Iam("")
-	ctx := context.Background()
-
-	username := a.Name.Data
-
-	res := []any{}
-	params := &iam.ListUserPoliciesInput{
-		UserName: &username,
+	policyNames, err := listUserInlinePolicyNames(context.Background(), conn.Iam(""), a.Name.Data)
+	if err != nil {
+		return nil, err
 	}
-	paginator := iam.NewListUserPoliciesPaginator(svc, params)
-	for paginator.HasMorePages() {
-		userPolicies, err := paginator.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		for i := range userPolicies.PolicyNames {
-			res = append(res, userPolicies.PolicyNames[i])
-		}
-	}
+	res := convert.SliceAnyToInterface(policyNames)
 
 	a.policiesCache = res
 	a.policiesFetched.Store(true)
@@ -1799,12 +1777,8 @@ func initAwsIamRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 		role := resp.Role
 
 		var policyDocumentMap map[string]any
-		if role != nil && role.AssumeRolePolicyDocument != nil {
-			policyDocument := *role.AssumeRolePolicyDocument
-			decodedPolicyDocument, decodeErr := url.QueryUnescape(policyDocument)
-			if decodeErr == nil {
-				json.Unmarshal([]byte(decodedPolicyDocument), &policyDocumentMap)
-			}
+		if role != nil {
+			policyDocumentMap = decodeIamPolicyDocument(role.AssumeRolePolicyDocument)
 		}
 
 		args["arn"] = llx.StringDataPtr(role.Arn)
@@ -1964,28 +1938,11 @@ func (a *mqlAwsIamRole) attachedPolicies() ([]any, error) {
 func (a *mqlAwsIamRole) inlinePolicies() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	svc := conn.Iam("")
-	ctx := context.Background()
-
-	rolename := a.Name.Data
-
-	res := []any{}
-	params := &iam.ListRolePoliciesInput{
-		RoleName: &rolename,
+	policyNames, err := listRoleInlinePolicyNames(context.Background(), conn.Iam(""), a.Name.Data)
+	if err != nil {
+		return nil, err
 	}
-	paginator := iam.NewListRolePoliciesPaginator(svc, params)
-	for paginator.HasMorePages() {
-		rolePolicies, err := paginator.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		for i := range rolePolicies.PolicyNames {
-			res = append(res, rolePolicies.PolicyNames[i])
-		}
-	}
-
-	return res, nil
+	return convert.SliceAnyToInterface(policyNames), nil
 }
 
 // usedByInstances returns the EC2 instances that use this role through an
@@ -2213,28 +2170,11 @@ func (a *mqlAwsIamGroup) attachedPolicies() ([]any, error) {
 func (a *mqlAwsIamGroup) inlinePolicies() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	svc := conn.Iam("")
-	ctx := context.Background()
-
-	groupname := a.Name.Data
-
-	res := []any{}
-	params := &iam.ListGroupPoliciesInput{
-		GroupName: &groupname,
+	policyNames, err := listGroupInlinePolicyNames(context.Background(), conn.Iam(""), a.Name.Data)
+	if err != nil {
+		return nil, err
 	}
-	paginator := iam.NewListGroupPoliciesPaginator(svc, params)
-	for paginator.HasMorePages() {
-		groupPolicies, err := paginator.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		for i := range groupPolicies.PolicyNames {
-			res = append(res, groupPolicies.PolicyNames[i])
-		}
-	}
-
-	return res, nil
+	return convert.SliceAnyToInterface(policyNames), nil
 }
 
 func (a *mqlAwsIamUser) groups() ([]any, error) {
