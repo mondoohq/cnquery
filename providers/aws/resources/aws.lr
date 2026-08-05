@@ -13462,6 +13462,10 @@ aws.rds.dbcluster @defaults("id region engine engineVersion") {
   networkType string
   // Preferred maintenance window for the database cluster
   preferredMaintenanceWindow string
+  // Pending maintenance actions for the database cluster
+  pendingMaintenanceActions() []aws.rds.pendingMaintenanceAction
+  // Recommendations for the database cluster
+  recommendations() []aws.rds.recommendation
   // Preferred backup window for the database cluster
   preferredBackupWindow string
   // Whether the HTTP API endpoint is enabled
@@ -13685,6 +13689,8 @@ aws.rds.dbinstance @defaults("id region engine engineVersion") {
   activityStreamStatus string
   // List of pending maintenance actions for the database instance
   pendingMaintenanceActions() []aws.rds.pendingMaintenanceAction
+  // Recommendations for the database instance
+  recommendations() []aws.rds.recommendation
   // Network type of the DB instance
   networkType string
   // Preferred maintenance window for the database cluster
@@ -13787,6 +13793,88 @@ private aws.rds.pendingMaintenanceAction {
   forcedApplyDate time
   // Opt-in status
   optInStatus string
+}
+
+// Amazon RDS recommendation
+//
+// Examine an issue that Amazon RDS detected for a DB instance or cluster and
+// the actions AWS recommends to resolve it. Recommendations include their
+// security, reliability, performance, cost, operations, or sustainability
+// category; severity and lifecycle status; explanatory text; documentation
+// links; and executable or manual remediation actions.
+private aws.rds.recommendation @defaults("id category severity status detection recommendation") {
+  // Unique recommendation identifier
+  id string
+  // Recommendation type identifier
+  typeId string
+  // Recommendation severity
+  //
+  // One of high, medium, low, or informational.
+  severity string
+  // Recommendation lifecycle status
+  //
+  // One of active, pending, resolved, or dismissed.
+  status string
+  // Time when the recommendation was created
+  createdAt time
+  // Time when the recommendation was last updated
+  updatedAt time
+  // Short description of the detected issue
+  detection string
+  // Short description of the recommended resolution
+  recommendation string
+  // Detailed description of the detected issue
+  description string
+  // Reason the recommendation was created
+  reason string
+  // Potential impact if the recommendation is not addressed
+  impact string
+  // Recommendation category
+  //
+  // One of performance efficiency, security, reliability, cost optimization,
+  // operational excellence, or sustainability.
+  category string
+  // AWS service that generated the recommendation
+  source string
+  // Short description of this recommendation type
+  typeDetection string
+  // Summary of the resolution for this recommendation type
+  typeRecommendation string
+  // Additional information about the recommendation
+  additionalInfo string
+  // Documentation links associated with the recommendation
+  links []dict
+  // Actions Amazon RDS recommends to resolve the issue
+  actions []aws.rds.recommendation.action
+}
+
+// Amazon RDS recommended action
+//
+// Examine one executable or manual remediation for an Amazon RDS
+// recommendation, including the API operation and parameters AWS supplies,
+// supported apply modes, supporting context, and current action status.
+private aws.rds.recommendation.action @defaults("id title operation status") {
+  // Unique recommended action identifier
+  id string
+  // Short action title
+  title string
+  // Detailed action description
+  description string
+  // API operation that applies the action
+  operation string
+  // Parameters for the API operation
+  parameters map[string]string
+  // Supported methods for applying the action
+  //
+  // Values can include manual, immediately, or next-maintainance-window, using
+  // the spelling returned by the Amazon RDS API.
+  applyModes []string
+  // Current action status
+  //
+  // One of ready, applied, scheduled, or resolved.
+  status string
+  // Supporting attributes that explain the action
+  contextAttributes map[string]string
 }
 
 // Amazon RDS DB cluster parameter group

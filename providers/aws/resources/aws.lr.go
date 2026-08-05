@@ -477,6 +477,8 @@ const (
 	ResourceAwsRdsDbinstance                                                    string = "aws.rds.dbinstance"
 	ResourceAwsRdsDbinstanceAssociatedRole                                      string = "aws.rds.dbinstance.associatedRole"
 	ResourceAwsRdsPendingMaintenanceAction                                      string = "aws.rds.pendingMaintenanceAction"
+	ResourceAwsRdsRecommendation                                                string = "aws.rds.recommendation"
+	ResourceAwsRdsRecommendationAction                                          string = "aws.rds.recommendation.action"
 	ResourceAwsRdsClusterParameterGroup                                         string = "aws.rds.clusterParameterGroup"
 	ResourceAwsRdsParameterGroup                                                string = "aws.rds.parameterGroup"
 	ResourceAwsRdsParameterGroupParameter                                       string = "aws.rds.parameterGroup.parameter"
@@ -2807,6 +2809,14 @@ func init() {
 		"aws.rds.pendingMaintenanceAction": {
 			// to override args, implement: initAwsRdsPendingMaintenanceAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsRdsPendingMaintenanceAction,
+		},
+		"aws.rds.recommendation": {
+			// to override args, implement: initAwsRdsRecommendation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRdsRecommendation,
+		},
+		"aws.rds.recommendation.action": {
+			// to override args, implement: initAwsRdsRecommendationAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRdsRecommendationAction,
 		},
 		"aws.rds.clusterParameterGroup": {
 			// to override args, implement: initAwsRdsClusterParameterGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -18507,6 +18517,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbcluster.preferredMaintenanceWindow": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetPreferredMaintenanceWindow()).ToDataRes(types.String)
 	},
+	"aws.rds.dbcluster.pendingMaintenanceActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetPendingMaintenanceActions()).ToDataRes(types.Array(types.Resource("aws.rds.pendingMaintenanceAction")))
+	},
+	"aws.rds.dbcluster.recommendations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetRecommendations()).ToDataRes(types.Array(types.Resource("aws.rds.recommendation")))
+	},
 	"aws.rds.dbcluster.preferredBackupWindow": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetPreferredBackupWindow()).ToDataRes(types.String)
 	},
@@ -18795,6 +18811,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbinstance.pendingMaintenanceActions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetPendingMaintenanceActions()).ToDataRes(types.Array(types.Resource("aws.rds.pendingMaintenanceAction")))
 	},
+	"aws.rds.dbinstance.recommendations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetRecommendations()).ToDataRes(types.Array(types.Resource("aws.rds.recommendation")))
+	},
 	"aws.rds.dbinstance.networkType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetNetworkType()).ToDataRes(types.String)
 	},
@@ -18926,6 +18945,84 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.pendingMaintenanceAction.optInStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsPendingMaintenanceAction).GetOptInStatus()).ToDataRes(types.String)
+	},
+	"aws.rds.recommendation.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsRecommendation).GetId()).ToDataRes(types.String)
+	},
+	"aws.rds.recommendation.typeId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsRecommendation).GetTypeId()).ToDataRes(types.String)
+	},
+	"aws.rds.recommendation.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsRecommendation).GetSeverity()).ToDataRes(types.String)
+	},
+	"aws.rds.recommendation.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsRecommendation).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.rds.recommendation.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsRecommendation).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.rds.recommendation.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsRecommendation).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.rds.recommendation.detection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsRecommendation).GetDetection()).ToDataRes(types.String)
+	},
+	"aws.rds.recommendation.recommendation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsRecommendation).GetRecommendation()).ToDataRes(types.String)
+	},
+	"aws.rds.recommendation.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsRecommendation).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.rds.recommendation.reason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsRecommendation).GetReason()).ToDataRes(types.String)
+	},
+	"aws.rds.recommendation.impact": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsRecommendation).GetImpact()).ToDataRes(types.String)
+	},
+	"aws.rds.recommendation.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsRecommendation).GetCategory()).ToDataRes(types.String)
+	},
+	"aws.rds.recommendation.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsRecommendation).GetSource()).ToDataRes(types.String)
+	},
+	"aws.rds.recommendation.typeDetection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsRecommendation).GetTypeDetection()).ToDataRes(types.String)
+	},
+	"aws.rds.recommendation.typeRecommendation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsRecommendation).GetTypeRecommendation()).ToDataRes(types.String)
+	},
+	"aws.rds.recommendation.additionalInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsRecommendation).GetAdditionalInfo()).ToDataRes(types.String)
+	},
+	"aws.rds.recommendation.links": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsRecommendation).GetLinks()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.rds.recommendation.actions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsRecommendation).GetActions()).ToDataRes(types.Array(types.Resource("aws.rds.recommendation.action")))
+	},
+	"aws.rds.recommendation.action.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsRecommendationAction).GetId()).ToDataRes(types.String)
+	},
+	"aws.rds.recommendation.action.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsRecommendationAction).GetTitle()).ToDataRes(types.String)
+	},
+	"aws.rds.recommendation.action.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsRecommendationAction).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.rds.recommendation.action.operation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsRecommendationAction).GetOperation()).ToDataRes(types.String)
+	},
+	"aws.rds.recommendation.action.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsRecommendationAction).GetParameters()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.rds.recommendation.action.applyModes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsRecommendationAction).GetApplyModes()).ToDataRes(types.Array(types.String))
+	},
+	"aws.rds.recommendation.action.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsRecommendationAction).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.rds.recommendation.action.contextAttributes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsRecommendationAction).GetContextAttributes()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.rds.clusterParameterGroup.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsClusterParameterGroup).GetArn()).ToDataRes(types.String)
@@ -55647,6 +55744,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsRdsDbcluster).PreferredMaintenanceWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.rds.dbcluster.pendingMaintenanceActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).PendingMaintenanceActions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.recommendations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).Recommendations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.rds.dbcluster.preferredBackupWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbcluster).PreferredBackupWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -56039,6 +56144,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsRdsDbinstance).PendingMaintenanceActions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.rds.dbinstance.recommendations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).Recommendations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.rds.dbinstance.networkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbinstance).NetworkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -56221,6 +56330,118 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.rds.pendingMaintenanceAction.optInStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsPendingMaintenanceAction).OptInStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.recommendation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsRecommendation).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.rds.recommendation.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsRecommendation).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.recommendation.typeId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsRecommendation).TypeId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.recommendation.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsRecommendation).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.recommendation.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsRecommendation).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.recommendation.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsRecommendation).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.rds.recommendation.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsRecommendation).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.rds.recommendation.detection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsRecommendation).Detection, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.recommendation.recommendation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsRecommendation).Recommendation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.recommendation.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsRecommendation).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.recommendation.reason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsRecommendation).Reason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.recommendation.impact": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsRecommendation).Impact, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.recommendation.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsRecommendation).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.recommendation.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsRecommendation).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.recommendation.typeDetection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsRecommendation).TypeDetection, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.recommendation.typeRecommendation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsRecommendation).TypeRecommendation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.recommendation.additionalInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsRecommendation).AdditionalInfo, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.recommendation.links": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsRecommendation).Links, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.rds.recommendation.actions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsRecommendation).Actions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.rds.recommendation.action.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsRecommendationAction).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.rds.recommendation.action.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsRecommendationAction).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.recommendation.action.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsRecommendationAction).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.recommendation.action.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsRecommendationAction).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.recommendation.action.operation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsRecommendationAction).Operation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.recommendation.action.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsRecommendationAction).Parameters, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.rds.recommendation.action.applyModes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsRecommendationAction).ApplyModes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.rds.recommendation.action.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsRecommendationAction).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.recommendation.action.contextAttributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsRecommendationAction).ContextAttributes, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.rds.clusterParameterGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -133794,6 +134015,8 @@ type mqlAwsRdsDbcluster struct {
 	MonitoringInterval                 plugin.TValue[int64]
 	NetworkType                        plugin.TValue[string]
 	PreferredMaintenanceWindow         plugin.TValue[string]
+	PendingMaintenanceActions          plugin.TValue[[]any]
+	Recommendations                    plugin.TValue[[]any]
 	PreferredBackupWindow              plugin.TValue[string]
 	HttpEndpointEnabled                plugin.TValue[bool]
 	ParameterGroupName                 plugin.TValue[string]
@@ -134089,6 +134312,38 @@ func (c *mqlAwsRdsDbcluster) GetNetworkType() *plugin.TValue[string] {
 
 func (c *mqlAwsRdsDbcluster) GetPreferredMaintenanceWindow() *plugin.TValue[string] {
 	return &c.PreferredMaintenanceWindow
+}
+
+func (c *mqlAwsRdsDbcluster) GetPendingMaintenanceActions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PendingMaintenanceActions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbcluster", c.__id, "pendingMaintenanceActions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.pendingMaintenanceActions()
+	})
+}
+
+func (c *mqlAwsRdsDbcluster) GetRecommendations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Recommendations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbcluster", c.__id, "recommendations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.recommendations()
+	})
 }
 
 func (c *mqlAwsRdsDbcluster) GetPreferredBackupWindow() *plugin.TValue[string] {
@@ -134530,6 +134785,7 @@ type mqlAwsRdsDbinstance struct {
 	ActivityStreamMode                 plugin.TValue[string]
 	ActivityStreamStatus               plugin.TValue[string]
 	PendingMaintenanceActions          plugin.TValue[[]any]
+	Recommendations                    plugin.TValue[[]any]
 	NetworkType                        plugin.TValue[string]
 	PreferredMaintenanceWindow         plugin.TValue[string]
 	PreferredBackupWindow              plugin.TValue[string]
@@ -134861,6 +135117,22 @@ func (c *mqlAwsRdsDbinstance) GetPendingMaintenanceActions() *plugin.TValue[[]an
 		}
 
 		return c.pendingMaintenanceActions()
+	})
+}
+
+func (c *mqlAwsRdsDbinstance) GetRecommendations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Recommendations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbinstance", c.__id, "recommendations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.recommendations()
 	})
 }
 
@@ -135259,6 +135531,214 @@ func (c *mqlAwsRdsPendingMaintenanceAction) GetForcedApplyDate() *plugin.TValue[
 
 func (c *mqlAwsRdsPendingMaintenanceAction) GetOptInStatus() *plugin.TValue[string] {
 	return &c.OptInStatus
+}
+
+// mqlAwsRdsRecommendation for the aws.rds.recommendation resource
+type mqlAwsRdsRecommendation struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsRdsRecommendationInternal it will be used here
+	Id                 plugin.TValue[string]
+	TypeId             plugin.TValue[string]
+	Severity           plugin.TValue[string]
+	Status             plugin.TValue[string]
+	CreatedAt          plugin.TValue[*time.Time]
+	UpdatedAt          plugin.TValue[*time.Time]
+	Detection          plugin.TValue[string]
+	Recommendation     plugin.TValue[string]
+	Description        plugin.TValue[string]
+	Reason             plugin.TValue[string]
+	Impact             plugin.TValue[string]
+	Category           plugin.TValue[string]
+	Source             plugin.TValue[string]
+	TypeDetection      plugin.TValue[string]
+	TypeRecommendation plugin.TValue[string]
+	AdditionalInfo     plugin.TValue[string]
+	Links              plugin.TValue[[]any]
+	Actions            plugin.TValue[[]any]
+}
+
+// createAwsRdsRecommendation creates a new instance of this resource
+func createAwsRdsRecommendation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRdsRecommendation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.rds.recommendation", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRdsRecommendation) MqlName() string {
+	return "aws.rds.recommendation"
+}
+
+func (c *mqlAwsRdsRecommendation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRdsRecommendation) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsRdsRecommendation) GetTypeId() *plugin.TValue[string] {
+	return &c.TypeId
+}
+
+func (c *mqlAwsRdsRecommendation) GetSeverity() *plugin.TValue[string] {
+	return &c.Severity
+}
+
+func (c *mqlAwsRdsRecommendation) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsRdsRecommendation) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsRdsRecommendation) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAwsRdsRecommendation) GetDetection() *plugin.TValue[string] {
+	return &c.Detection
+}
+
+func (c *mqlAwsRdsRecommendation) GetRecommendation() *plugin.TValue[string] {
+	return &c.Recommendation
+}
+
+func (c *mqlAwsRdsRecommendation) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsRdsRecommendation) GetReason() *plugin.TValue[string] {
+	return &c.Reason
+}
+
+func (c *mqlAwsRdsRecommendation) GetImpact() *plugin.TValue[string] {
+	return &c.Impact
+}
+
+func (c *mqlAwsRdsRecommendation) GetCategory() *plugin.TValue[string] {
+	return &c.Category
+}
+
+func (c *mqlAwsRdsRecommendation) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlAwsRdsRecommendation) GetTypeDetection() *plugin.TValue[string] {
+	return &c.TypeDetection
+}
+
+func (c *mqlAwsRdsRecommendation) GetTypeRecommendation() *plugin.TValue[string] {
+	return &c.TypeRecommendation
+}
+
+func (c *mqlAwsRdsRecommendation) GetAdditionalInfo() *plugin.TValue[string] {
+	return &c.AdditionalInfo
+}
+
+func (c *mqlAwsRdsRecommendation) GetLinks() *plugin.TValue[[]any] {
+	return &c.Links
+}
+
+func (c *mqlAwsRdsRecommendation) GetActions() *plugin.TValue[[]any] {
+	return &c.Actions
+}
+
+// mqlAwsRdsRecommendationAction for the aws.rds.recommendation.action resource
+type mqlAwsRdsRecommendationAction struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsRdsRecommendationActionInternal it will be used here
+	Id                plugin.TValue[string]
+	Title             plugin.TValue[string]
+	Description       plugin.TValue[string]
+	Operation         plugin.TValue[string]
+	Parameters        plugin.TValue[map[string]any]
+	ApplyModes        plugin.TValue[[]any]
+	Status            plugin.TValue[string]
+	ContextAttributes plugin.TValue[map[string]any]
+}
+
+// createAwsRdsRecommendationAction creates a new instance of this resource
+func createAwsRdsRecommendationAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRdsRecommendationAction{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.rds.recommendation.action", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRdsRecommendationAction) MqlName() string {
+	return "aws.rds.recommendation.action"
+}
+
+func (c *mqlAwsRdsRecommendationAction) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRdsRecommendationAction) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsRdsRecommendationAction) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlAwsRdsRecommendationAction) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsRdsRecommendationAction) GetOperation() *plugin.TValue[string] {
+	return &c.Operation
+}
+
+func (c *mqlAwsRdsRecommendationAction) GetParameters() *plugin.TValue[map[string]any] {
+	return &c.Parameters
+}
+
+func (c *mqlAwsRdsRecommendationAction) GetApplyModes() *plugin.TValue[[]any] {
+	return &c.ApplyModes
+}
+
+func (c *mqlAwsRdsRecommendationAction) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsRdsRecommendationAction) GetContextAttributes() *plugin.TValue[map[string]any] {
+	return &c.ContextAttributes
 }
 
 // mqlAwsRdsClusterParameterGroup for the aws.rds.clusterParameterGroup resource
