@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -369,5 +370,133 @@ func TestShutdown_Closer(t *testing.T) {
 	// Verify that all runtimes are closed
 	for _, runtime := range runtimes {
 		assert.True(t, runtime.Connection.(*TestConnectionWithClose).closed)
+	}
+}
+
+// The provider used to exit on the first missed heartbeat window. On a loaded
+// host that window is routinely missed by a provider that is perfectly healthy,
+// and the exit throws away the whole scan's in-flight work.
+func TestWatchdogShouldExit(t *testing.T) {
+	window := 5 * time.Second
+
+	t.Run("idle", func(t *testing.T) {
+		assert.False(t, watchdogShouldExit(window+time.Second, window, 0), "one missed window is not death")
+		assert.False(t, watchdogShouldExit(heartbeatMissesBeforeExit*window, window, 0))
+		assert.True(t, watchdogShouldExit(heartbeatMissesBeforeExit*window+time.Second, window, 0))
+	})
+
+	t.Run("serving requests", func(t *testing.T) {
+		// a request in flight proves the parent was there to send it
+		assert.False(t, watchdogShouldExit(heartbeatMissesBeforeExit*window+time.Second, window, 1))
+		assert.False(t, watchdogShouldExit(heartbeatBusyMissesBeforeExit*window, window, 3))
+		assert.True(t, watchdogShouldExit(heartbeatBusyMissesBeforeExit*window+time.Second, window, 3))
+	})
+}
+
+func TestHeartbeat(t *testing.T) {
+	s := NewService()
+	t.Cleanup(s.stopWatchdog)
+
+	_, err := s.Heartbeat(&HeartbeatReq{})
+	require.Error(t, err, "an interval of 0 has no tolerance to apply")
+
+	before := time.Now().UnixNano()
+	_, err = s.Heartbeat(&HeartbeatReq{Interval: uint64(time.Hour)})
+	require.NoError(t, err)
+	assert.Equal(t, int64(time.Hour), s.heartbeatWindow.Load())
+	assert.GreaterOrEqual(t, s.lastHeartbeat.Load(), before)
+}
+
+func TestTrackRequest(t *testing.T) {
+	s := NewService()
+	done := s.TrackRequest()
+	assert.Equal(t, int64(1), s.inflightRequests.Load())
+	done()
+	assert.Equal(t, int64(0), s.inflightRequests.Load())
+}
+
+// captureWatchdogExit replaces the process exit with a recorder. The fake exit
+// parks its goroutine like a real exit would, so the watchdog cannot loop and
+// report twice.
+func captureWatchdogExit(t *testing.T) <-chan int {
+	t.Helper()
+	exited := make(chan int, 1)
+	parked := make(chan struct{})
+	original := watchdogExit
+	watchdogExit = func(code int) {
+		select {
+		case exited <- code:
+		default:
+		}
+		<-parked
+	}
+	t.Cleanup(func() {
+		watchdogExit = original
+		close(parked)
+	})
+	return exited
+}
+
+func TestHeartbeatWatchdog_ExitsWhenParentIsGone(t *testing.T) {
+	exited := captureWatchdogExit(t)
+
+	s := NewService()
+	t.Cleanup(s.stopWatchdog)
+	// poll interval is floored, so the effective tolerance here is
+	// heartbeatMissesBeforeExit * 100ms, noticed on the next poll
+	_, err := s.Heartbeat(&HeartbeatReq{Interval: uint64(100 * time.Millisecond)})
+	require.NoError(t, err)
+
+	select {
+	case code := <-exited:
+		assert.Equal(t, 4, code)
+	case <-time.After(5 * time.Second):
+		t.Fatal("watchdog did not reap an abandoned provider")
+	}
+}
+
+func TestHeartbeatWatchdog_HoldsOutWhileServingRequests(t *testing.T) {
+	exited := captureWatchdogExit(t)
+
+	s := NewService()
+	t.Cleanup(s.stopWatchdog)
+	done := s.TrackRequest()
+
+	// A 300ms window puts the idle tolerance at 900ms and the busy tolerance at
+	// 1.8s, so surviving 1.3s of silence can only come from the in-flight request.
+	const window = 300 * time.Millisecond
+	_, err := s.Heartbeat(&HeartbeatReq{Interval: uint64(window)})
+	require.NoError(t, err)
+
+	select {
+	case <-exited:
+		t.Fatal("watchdog reaped a provider that was serving a request")
+	case <-time.After(heartbeatMissesBeforeExit*window + 400*time.Millisecond):
+	}
+
+	// once the request is done, the same silence is fatal
+	done()
+	select {
+	case code := <-exited:
+		assert.Equal(t, 4, code)
+	case <-time.After(5 * time.Second):
+		t.Fatal("watchdog did not reap an abandoned provider")
+	}
+}
+
+func TestHeartbeatWatchdog_StopsOnShutdown(t *testing.T) {
+	exited := captureWatchdogExit(t)
+
+	s := NewService()
+	_, err := s.Heartbeat(&HeartbeatReq{Interval: uint64(10 * time.Millisecond)})
+	require.NoError(t, err)
+
+	_, err = s.Shutdown(&ShutdownReq{})
+	require.NoError(t, err)
+
+	select {
+	case <-exited:
+		t.Fatal("watchdog reported a crash during a graceful shutdown")
+	case <-time.After(minHeartbeatPollInterval * 3):
 	}
 }

@@ -4,14 +4,18 @@
 package providers
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	pp "go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func TestConnectionGraph(t *testing.T) {
@@ -478,4 +482,114 @@ func TestRestartableProvider_MultiNamespaceMultiBatch(t *testing.T) {
 	for ns := range numNamespaces {
 		assert.False(t, mock.alive(nsID(ns)), "namespace %d should be GC'd after scan", ns)
 	}
+}
+
+// heartbeatPlugin answers heartbeats according to a script keyed on the call
+// number, so a test can describe a provider that is late, recovering, or gone.
+type heartbeatPlugin struct {
+	*mockPlugin
+	mu     sync.Mutex
+	calls  int
+	script func(call int) error
+}
+
+func (h *heartbeatPlugin) Heartbeat(*pp.HeartbeatReq) (*pp.HeartbeatRes, error) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.calls++
+	if err := h.script(h.calls); err != nil {
+		return nil, err
+	}
+	return &pp.HeartbeatRes{}, nil
+}
+
+func (h *heartbeatPlugin) callCount() int {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return h.calls
+}
+
+func newHeartbeatProvider(plugin pp.ProviderPlugin) *RunningProvider {
+	return &RunningProvider{
+		Name:        "test",
+		Plugin:      plugin,
+		startedAt:   time.Now(),
+		interval:    10 * time.Millisecond,
+		gracePeriod: 10 * time.Millisecond,
+	}
+}
+
+// A provider that answers late is slow, not dead. Shutting it down on the first
+// late beat is what turns a momentarily starved host into a crash report, so we
+// hold out for maxLateHeartbeats before giving up.
+func TestHeartbeat_ToleratesLateBeats(t *testing.T) {
+	lateBeat := status.Error(codes.DeadlineExceeded, "context deadline exceeded")
+	mock := &heartbeatPlugin{
+		mockPlugin: newMockPlugin(),
+		script: func(call int) error {
+			if call == 1 {
+				return nil
+			}
+			return lateBeat
+		},
+	}
+	rp := newHeartbeatProvider(mock)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	require.NoError(t, rp.heartbeat(ctx, cancel))
+
+	// still alive while it is merely late
+	require.Eventually(t, func() bool { return mock.callCount() >= 1+maxLateHeartbeats }, 5*time.Second, 5*time.Millisecond)
+	// and gone once the whole budget is used up
+	require.Eventually(t, rp.isCloseOrShutdown, 5*time.Second, 5*time.Millisecond)
+	assert.True(t, rp.hadHeartbeatFailure())
+	assert.GreaterOrEqual(t, mock.callCount(), 1+maxLateHeartbeats+1)
+}
+
+// Intermittent lateness must not accumulate into a shutdown: every answered beat
+// proves the provider is there.
+func TestHeartbeat_RecoveryResetsLateBudget(t *testing.T) {
+	lateBeat := status.Error(codes.DeadlineExceeded, "context deadline exceeded")
+	mock := &heartbeatPlugin{
+		mockPlugin: newMockPlugin(),
+		script: func(call int) error {
+			if call%2 == 0 {
+				return lateBeat
+			}
+			return nil
+		},
+	}
+	rp := newHeartbeatProvider(mock)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	require.NoError(t, rp.heartbeat(ctx, cancel))
+
+	require.Eventually(t, func() bool { return mock.callCount() > 4*maxLateHeartbeats }, 5*time.Second, 5*time.Millisecond)
+	assert.False(t, rp.isCloseOrShutdown())
+	assert.False(t, rp.hadHeartbeatFailure())
+}
+
+// A broken connection is different: the provider is gone, so there is nothing to
+// wait for and we report it right away.
+func TestHeartbeat_DeadProviderFailsImmediately(t *testing.T) {
+	mock := &heartbeatPlugin{
+		mockPlugin: newMockPlugin(),
+		script: func(call int) error {
+			if call == 1 {
+				return nil
+			}
+			return status.Error(codes.Unavailable, "connection refused")
+		},
+	}
+	rp := newHeartbeatProvider(mock)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	require.NoError(t, rp.heartbeat(ctx, cancel))
+
+	require.Eventually(t, rp.isCloseOrShutdown, 5*time.Second, 5*time.Millisecond)
+	assert.True(t, rp.hadHeartbeatFailure())
+	assert.Equal(t, 2, mock.callCount(), "a dead provider is not retried")
 }

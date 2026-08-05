@@ -17,6 +17,7 @@ import (
 	"github.com/rs/zerolog/log"
 	pp "go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
@@ -454,7 +455,15 @@ func SupervisedRunningProvider(name string, id string, plugin pp.ProviderPlugin,
 
 // initialize the heartbeat with the provider
 func (p *RunningProvider) heartbeat(ctx context.Context, cancelFunc context.CancelFunc) error {
-	if err := p.doOneHeartbeat(p.interval + p.gracePeriod); err != nil {
+	// The first beat is synchronous: a provider we cannot reach at all is a
+	// startup failure. Lateness is not — retry it just like the loop below does.
+	err := p.doOneHeartbeat(p.interval + p.gracePeriod)
+	for late := 1; errors.Is(err, errHeartbeatLate) && late <= maxLateHeartbeats; late++ {
+		log.Warn().Str("plugin", p.Name).Int("consecutive", late).
+			Msg("plugin heartbeat is late, provider is not answering in time")
+		err = p.doOneHeartbeat(p.interval + p.gracePeriod)
+	}
+	if err != nil {
 		log.Error().Err(err).Str("plugin", p.Name).Msg("error in plugin heartbeat")
 		p.shutdownLock.Lock()
 		p.heartbeatFailed = true
@@ -468,8 +477,20 @@ func (p *RunningProvider) heartbeat(ctx context.Context, cancelFunc context.Canc
 	go func() {
 		ticker := time.NewTicker(p.interval)
 		defer ticker.Stop()
+		late := 0
 		for !p.isCloseOrShutdown() {
-			if err := p.doOneHeartbeat(p.interval + p.gracePeriod); err != nil {
+			err := p.doOneHeartbeat(p.interval + p.gracePeriod)
+			switch {
+			case err == nil:
+				late = 0
+			case errors.Is(err, errHeartbeatLate) && late < maxLateHeartbeats:
+				// The provider is alive but did not answer in time. That is a
+				// loaded host, not a dead plugin: killing it here would throw
+				// away the whole scan's work and report it as a crash.
+				late++
+				log.Warn().Str("plugin", p.Name).Int("consecutive", late).
+					Msg("plugin heartbeat is late, provider is not answering in time")
+			default:
 				log.Error().Err(err).Str("plugin", p.Name).Msg("error in plugin heartbeat")
 				p.shutdownLock.Lock()
 				p.heartbeatFailed = true
@@ -477,7 +498,7 @@ func (p *RunningProvider) heartbeat(ctx context.Context, cancelFunc context.Canc
 				if err := p.Shutdown(); err != nil {
 					log.Error().Err(err).Str("plugin", p.Name).Msg("error in plugin shutdown")
 				}
-				break
+				return
 			}
 
 			select {
@@ -493,17 +514,29 @@ func (p *RunningProvider) heartbeat(ctx context.Context, cancelFunc context.Canc
 	return nil
 }
 
+// maxLateHeartbeats is how many consecutive heartbeats may time out before we
+// treat the provider as dead. The provider's own watchdog holds out for several
+// windows while it is serving requests, and we have to be at least as patient:
+// both sides exiting on the first missed beat is what turns a momentarily
+// starved host into a crash report.
+const maxLateHeartbeats = 6
+
+// errHeartbeatLate marks a heartbeat that did not complete within its window.
+// Unlike a transport error it does not imply the provider is gone.
+var errHeartbeatLate = errors.New("heartbeat did not complete in time")
+
 func (p *RunningProvider) doOneHeartbeat(t time.Duration) error {
 	_, err := p.Plugin.Heartbeat(&pp.HeartbeatReq{
 		Interval: uint64(t),
 	})
 	if err != nil {
-		log.Err(err).Str("plugin", p.Name).Msg("error in plugin heartbeat")
-		if status, ok := status.FromError(err); ok {
-			if status.Code() == 12 {
-				return errors.New("please update the provider plugin for " + p.Name)
-			}
+		switch status.Code(err) {
+		case codes.DeadlineExceeded:
+			return fmt.Errorf("%w for %s after %s", errHeartbeatLate, p.Name, t)
+		case codes.Unimplemented:
+			return errors.New("please update the provider plugin for " + p.Name)
 		}
+		log.Err(err).Str("plugin", p.Name).Msg("error in plugin heartbeat")
 		return errors.New("cannot establish heartbeat with the provider plugin for " + p.Name)
 	}
 	return nil

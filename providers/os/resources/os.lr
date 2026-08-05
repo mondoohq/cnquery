@@ -8694,9 +8694,15 @@ private windows.optionalFeature @defaults("name") {
   // Feature name (ID) of the optional feature (for example "SMB1Protocol")
   name string
   // Human-readable display name of the feature
-  displayName string
+  //
+  // Loaded on demand: DISM only reports it for a named feature, which costs an
+  // extra image query.
+  displayName() string
   // Feature description
-  description string
+  //
+  // Loaded on demand: DISM only reports it for a named feature, which costs an
+  // extra image query.
+  description() string
   // Whether the feature is enabled
   enabled bool
   // Feature state

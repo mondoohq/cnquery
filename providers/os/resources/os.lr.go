@@ -62686,7 +62686,7 @@ func (c *mqlWindowsServerFeature) GetInstallState() *plugin.TValue[int64] {
 type mqlWindowsOptionalFeature struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsOptionalFeatureInternal it will be used here
+	mqlWindowsOptionalFeatureInternal
 	Name        plugin.TValue[string]
 	DisplayName plugin.TValue[string]
 	Description plugin.TValue[string]
@@ -62736,11 +62736,15 @@ func (c *mqlWindowsOptionalFeature) GetName() *plugin.TValue[string] {
 }
 
 func (c *mqlWindowsOptionalFeature) GetDisplayName() *plugin.TValue[string] {
-	return &c.DisplayName
+	return plugin.GetOrCompute[string](&c.DisplayName, func() (string, error) {
+		return c.displayName()
+	})
 }
 
 func (c *mqlWindowsOptionalFeature) GetDescription() *plugin.TValue[string] {
-	return &c.Description
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
 }
 
 func (c *mqlWindowsOptionalFeature) GetEnabled() *plugin.TValue[bool] {

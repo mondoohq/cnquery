@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"runtime/debug"
+	"time"
 	"unicode/utf8"
 
 	plugin "github.com/hashicorp/go-plugin"
@@ -32,8 +33,19 @@ type GRPCClient struct {
 	client ProviderPluginClient
 }
 
+// Heartbeat sends one beat to the provider. The requested interval doubles as
+// the call deadline: a beat that cannot be delivered within the window the
+// provider is holding us to is worthless, and blocking on it forever would stop
+// the beat stream entirely — which is precisely what makes the provider's
+// watchdog reap a healthy process.
 func (m *GRPCClient) Heartbeat(req *HeartbeatReq) (*HeartbeatRes, error) {
-	return m.client.Heartbeat(context.Background(), req)
+	if req.Interval == 0 {
+		return m.client.Heartbeat(context.Background(), req)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(req.Interval))
+	defer cancel()
+	return m.client.Heartbeat(ctx, req)
 }
 
 func (m *GRPCClient) ParseCLI(req *ParseCLIReq) (*ParseCLIRes, error) {
@@ -107,16 +119,35 @@ type GRPCServer struct {
 	UnimplementedProviderPluginServer
 }
 
+// requestTracker is implemented by every provider service that embeds
+// *plugin.Service. It lets us tell the heartbeat watchdog that the parent
+// process is alive because it is, right now, waiting on us.
+type requestTracker interface {
+	TrackRequest() func()
+}
+
+// trackRequest marks a request as in flight and returns the function that marks
+// it as done. Heartbeat and Shutdown are deliberately not tracked: the former is
+// the liveness signal itself, the latter means we are going away anyway.
+func (m *GRPCServer) trackRequest() func() {
+	if t, ok := m.Impl.(requestTracker); ok {
+		return t.TrackRequest()
+	}
+	return func() {}
+}
+
 func (m *GRPCServer) Heartbeat(ctx context.Context, req *HeartbeatReq) (*HeartbeatRes, error) {
 	return m.Impl.Heartbeat(req)
 }
 
 func (m *GRPCServer) ParseCLI(ctx context.Context, req *ParseCLIReq) (resp *ParseCLIRes, err error) {
+	defer m.trackRequest()()
 	defer recoverPanic("ParseCLI", &err)
 	return m.Impl.ParseCLI(req)
 }
 
 func (m *GRPCServer) Connect(ctx context.Context, req *ConnectReq) (resp *ConnectRes, err error) {
+	defer m.trackRequest()()
 	defer recoverPanic("Connect", &err)
 	conn, err := m.broker.Dial(req.CallbackServer)
 	if err != nil {
@@ -131,11 +162,13 @@ func (m *GRPCServer) Connect(ctx context.Context, req *ConnectReq) (resp *Connec
 }
 
 func (m *GRPCServer) Disconnect(ctx context.Context, req *DisconnectReq) (resp *DisconnectRes, err error) {
+	defer m.trackRequest()()
 	defer recoverPanic("Disconnect", &err)
 	return m.Impl.Disconnect(req)
 }
 
 func (m *GRPCServer) MockConnect(ctx context.Context, req *ConnectReq) (resp *ConnectRes, err error) {
+	defer m.trackRequest()()
 	defer recoverPanic("MockConnect", &err)
 	conn, err := m.broker.Dial(req.CallbackServer)
 	if err != nil {
@@ -155,6 +188,7 @@ func (m *GRPCServer) Shutdown(ctx context.Context, req *ShutdownReq) (resp *Shut
 }
 
 func (m *GRPCServer) GetData(ctx context.Context, req *DataReq) (resp *DataRes, err error) {
+	defer m.trackRequest()()
 	defer recoverPanic("GetData", &err)
 	resp, err = m.Impl.GetData(req)
 	if err != nil {
@@ -165,6 +199,7 @@ func (m *GRPCServer) GetData(ctx context.Context, req *DataReq) (resp *DataRes, 
 }
 
 func (m *GRPCServer) StoreData(ctx context.Context, req *StoreReq) (resp *StoreRes, err error) {
+	defer m.trackRequest()()
 	defer recoverPanic("StoreData", &err)
 	return m.Impl.StoreData(req)
 }
