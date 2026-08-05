@@ -2762,16 +2762,19 @@ private aws.iam.serviceLastAccessed @defaults("serviceNamespace lastAuthenticate
   lastAuthenticatedAt time
   // ARN of the user or role that last accessed the service
   //
-  // Reported for a policy, where many principals share the grant. Empty when
-  // the record belongs to a single principal, which is its own last-accessed
-  // entity.
+  // Names the entity behind the most recent request: the attached principal
+  // that used a policy, or the principal itself for a user or role record.
+  // Null when the service was never accessed, the same condition that leaves
+  // lastAuthenticatedAt null. Compare with `!= empty` rather than `!= ""`,
+  // since an unused service leaves this null rather than an empty string.
   lastAuthenticatedEntity string
   // Region from which the service was last accessed
   lastAuthenticatedRegion string
   // Number of entities that accessed the service
   //
-  // Reported for a policy, counting the attached principals that used the
-  // service. Zero for records that belong to a single principal.
+  // Counts the distinct entities that reached the service, so it is 1 for a
+  // single user or role that used it and higher for a policy several attached
+  // principals used. Zero when the service was never accessed.
   totalAuthenticatedEntities int
 }
 
