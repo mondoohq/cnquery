@@ -71623,7 +71623,7 @@ func (c *mqlClaudeCodeMcpServer) GetRunning() *plugin.TValue[*llx.AssetValue] {
 type mqlOpenaiCodex struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOpenaiCodexInternal it will be used here
+	mqlOpenaiCodexInternal
 	ConfigPath    plugin.TValue[string]
 	Package       plugin.TValue[*mqlPackage]
 	Runtime       plugin.TValue[*mqlExtensionRuntime]
@@ -74050,7 +74050,7 @@ func (c *mqlWindsurfSkill) GetSha256() *plugin.TValue[string] {
 type mqlZed struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlZedInternal it will be used here
+	mqlZedInternal
 	ConfigPath    plugin.TValue[string]
 	Package       plugin.TValue[*mqlPackage]
 	Runtime       plugin.TValue[*mqlExtensionRuntime]

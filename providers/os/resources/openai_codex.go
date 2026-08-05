@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/BurntSushi/toml"
 	"github.com/spf13/afero"
@@ -71,7 +72,22 @@ type codexConfig struct {
 	ModelProvider string `toml:"model_provider"`
 }
 
+// mqlOpenaiCodexInternal caches the parsed config.toml so that model() and
+// modelProvider() do not each re-read and re-parse it.
+type mqlOpenaiCodexInternal struct {
+	configOnce      sync.Once
+	cachedConfig    *codexConfig
+	cachedConfigErr error
+}
+
 func (r *mqlOpenaiCodex) loadConfig() (*codexConfig, error) {
+	r.configOnce.Do(func() {
+		r.cachedConfig, r.cachedConfigErr = r.readConfig()
+	})
+	return r.cachedConfig, r.cachedConfigErr
+}
+
+func (r *mqlOpenaiCodex) readConfig() (*codexConfig, error) {
 	data, err := r.afs().ReadFile(filepath.Join(r.codexDir(), "config.toml"))
 	if err != nil {
 		if os.IsNotExist(err) {

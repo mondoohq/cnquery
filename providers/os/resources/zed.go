@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
@@ -62,10 +63,27 @@ type zedAgentSettings struct {
 	} `json:"default_model"`
 }
 
+// mqlZedInternal caches the parsed default-model settings so that model()
+// and modelProvider() do not each re-read settings.json.
+type mqlZedInternal struct {
+	modelOnce      sync.Once
+	cachedProvider string
+	cachedModel    string
+	cachedModelErr error
+}
+
 // defaultModel returns the configured default agent model and its provider,
 // preferring the current `agent` key and falling back to the legacy
 // `assistant` key. Empty strings when unset or when no settings file exists.
+// The result is parsed once and cached for the resource's lifetime.
 func (r *mqlZed) defaultModel() (provider string, model string, err error) {
+	r.modelOnce.Do(func() {
+		r.cachedProvider, r.cachedModel, r.cachedModelErr = r.readDefaultModel()
+	})
+	return r.cachedProvider, r.cachedModel, r.cachedModelErr
+}
+
+func (r *mqlZed) readDefaultModel() (provider string, model string, err error) {
 	afs := connectionAfs(r.MqlRuntime)
 	data, err := afs.ReadFile(filepath.Join(r.ConfigPath.Data, "settings.json"))
 	if err != nil {
