@@ -15,6 +15,7 @@ aws.account.alternateContact.title 11.15.2
 aws.account.alternateContacts 11.15.2
 aws.account.billingContact 11.15.2
 aws.account.contactInformation 11.15.2
+aws.account.effectivePolicies 13.52.2
 aws.account.email 13.21.4
 aws.account.id 11.15.2
 aws.account.joinedMethod 13.21.4
@@ -23,6 +24,7 @@ aws.account.name 13.21.4
 aws.account.operationsContact 11.15.2
 aws.account.organization 11.15.2
 aws.account.paths 13.6.3
+aws.account.policies 13.52.2
 aws.account.regionOptInStatus 13.21.4
 aws.account.securityContact 11.15.2
 aws.account.state 13.21.4
@@ -7587,6 +7589,10 @@ aws.organization.delegatedAdministrators 13.0.2
 aws.organization.delegatedService 13.0.2
 aws.organization.delegatedService.delegationEnabledDate 13.0.2
 aws.organization.delegatedService.servicePrincipal 13.0.2
+aws.organization.effectivePolicy 13.52.2
+aws.organization.effectivePolicy.content 13.52.2
+aws.organization.effectivePolicy.lastUpdatedAt 13.52.2
+aws.organization.effectivePolicy.type 13.52.2
 aws.organization.featureSet 11.15.2
 aws.organization.id 11.15.2
 aws.organization.masterAccountArn 13.38.2
@@ -7597,8 +7603,19 @@ aws.organization.organizationalUnit.arn 13.6.3
 aws.organization.organizationalUnit.id 13.6.3
 aws.organization.organizationalUnit.name 13.6.3
 aws.organization.organizationalUnit.path 13.6.3
+aws.organization.organizationalUnit.policies 13.52.2
 aws.organization.organizationalUnit.serviceControlPolicies 13.32.2
 aws.organization.organizationalUnits 13.6.3
+aws.organization.policies 13.52.2
+aws.organization.policy 13.52.2
+aws.organization.policy.arn 13.52.2
+aws.organization.policy.awsManaged 13.52.2
+aws.organization.policy.content 13.52.2
+aws.organization.policy.description 13.52.2
+aws.organization.policy.id 13.52.2
+aws.organization.policy.name 13.52.2
+aws.organization.policy.statements 13.52.2
+aws.organization.policy.type 13.52.2
 aws.organization.serviceControlPolicies 13.32.2
 aws.organization.serviceControlPolicy 13.32.2
 aws.organization.serviceControlPolicy.arn 13.32.2
