@@ -6,12 +6,17 @@ package resources
 import (
 	"context"
 	"errors"
+	"strings"
+	"sync"
+	"sync/atomic"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	aatypes "github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 	"go.mondoo.com/mql/v13/types"
@@ -19,6 +24,126 @@ import (
 
 func (a *mqlAwsIamAccessAnalyzerAnalyzer) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+// mqlAwsIamAccessAnalyzerFindingInternal caches the unused-access detail of a
+// finding. ListFindingsV2 returns a summary without it, so the detail costs one
+// GetFindingV2 call per finding and is shared by the four fields that read it.
+type mqlAwsIamAccessAnalyzerFindingInternal struct {
+	unusedFetched               atomic.Bool
+	unusedLock                  sync.Mutex
+	cacheUnusedLastAccessed     *time.Time
+	cacheUnusedServiceNamespace string
+	cacheUnusedActions          []any
+	cacheUnusedAccessKeyId      string
+}
+
+// fetchUnusedAccessDetails resolves the unused-access detail of the finding.
+// Findings of any other type carry no such detail, so they resolve to empty
+// values without an API call.
+func (a *mqlAwsIamAccessAnalyzerFinding) fetchUnusedAccessDetails() error {
+	if a.unusedFetched.Load() {
+		return nil
+	}
+	a.unusedLock.Lock()
+	defer a.unusedLock.Unlock()
+	if a.unusedFetched.Load() {
+		return nil
+	}
+
+	if !strings.HasPrefix(a.Type.Data, "Unused") {
+		a.unusedFetched.Store(true)
+		return nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.AccessAnalyzer(a.Region.Data)
+	finding, err := svc.GetFindingV2(context.Background(), &accessanalyzer.GetFindingV2Input{
+		AnalyzerArn: aws.String(a.AnalyzerArn.Data),
+		Id:          aws.String(a.Id.Data),
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			log.Warn().Str("finding", a.Id.Data).Str("region", a.Region.Data).
+				Msg("no permission to read access analyzer finding detail")
+			a.unusedFetched.Store(true)
+			return nil
+		}
+		return err
+	}
+
+	detail := parseUnusedAccessDetails(finding.FindingDetails)
+	a.cacheUnusedLastAccessed = detail.lastAccessed
+	a.cacheUnusedServiceNamespace = detail.serviceNamespace
+	a.cacheUnusedActions = detail.actions
+	a.cacheUnusedAccessKeyId = detail.accessKeyId
+
+	a.unusedFetched.Store(true)
+	return nil
+}
+
+// unusedAccessDetail holds the unused-access values carried by a finding.
+type unusedAccessDetail struct {
+	lastAccessed     *time.Time
+	serviceNamespace string
+	actions          []any
+	accessKeyId      string
+}
+
+// parseUnusedAccessDetails picks the unused-access member out of a finding
+// detail union. The external-access and internal-access members carry no
+// unused-access data and are skipped.
+func parseUnusedAccessDetails(details []aatypes.FindingDetails) unusedAccessDetail {
+	var res unusedAccessDetail
+	for _, detail := range details {
+		switch typed := detail.(type) {
+		case *aatypes.FindingDetailsMemberUnusedPermissionDetails:
+			res.lastAccessed = typed.Value.LastAccessed
+			res.serviceNamespace = convert.ToValue(typed.Value.ServiceNamespace)
+			for _, action := range typed.Value.Actions {
+				res.actions = append(res.actions, convert.ToValue(action.Action))
+			}
+		case *aatypes.FindingDetailsMemberUnusedIamRoleDetails:
+			res.lastAccessed = typed.Value.LastAccessed
+		case *aatypes.FindingDetailsMemberUnusedIamUserAccessKeyDetails:
+			res.lastAccessed = typed.Value.LastAccessed
+			res.accessKeyId = convert.ToValue(typed.Value.AccessKeyId)
+		case *aatypes.FindingDetailsMemberUnusedIamUserPasswordDetails:
+			res.lastAccessed = typed.Value.LastAccessed
+		}
+	}
+	return res
+}
+
+func (a *mqlAwsIamAccessAnalyzerFinding) lastAccessedAt() (*time.Time, error) {
+	if err := a.fetchUnusedAccessDetails(); err != nil {
+		return nil, err
+	}
+	return a.cacheUnusedLastAccessed, nil
+}
+
+func (a *mqlAwsIamAccessAnalyzerFinding) unusedServiceNamespace() (string, error) {
+	if err := a.fetchUnusedAccessDetails(); err != nil {
+		return "", err
+	}
+	return a.cacheUnusedServiceNamespace, nil
+}
+
+func (a *mqlAwsIamAccessAnalyzerFinding) unusedActions() ([]any, error) {
+	if err := a.fetchUnusedAccessDetails(); err != nil {
+		return nil, err
+	}
+	if a.cacheUnusedActions == nil {
+		return []any{}, nil
+	}
+	return a.cacheUnusedActions, nil
+}
+
+func (a *mqlAwsIamAccessAnalyzerFinding) unusedAccessKeyId() (string, error) {
+	if err := a.fetchUnusedAccessDetails(); err != nil {
+		return "", err
+	}
+	return a.cacheUnusedAccessKeyId, nil
 }
 
 func (a *mqlAwsIamAccessAnalyzer) analyzers() ([]any, error) {

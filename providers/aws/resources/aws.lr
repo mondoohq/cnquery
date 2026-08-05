@@ -112,6 +112,25 @@ aws.account @defaults("id aliases.first organization.id") {
   // Available only when the calling identity is the organization's management
   // account or a delegated administrator.
   joinedTimestamp() time
+
+  // Organization policies attached directly to the account, across every policy type
+  //
+  // Only the policies attached to this account, not the ones it inherits from
+  // the organization root or its organizational units. Available only when the
+  // calling identity is the organization's management account or a delegated
+  // administrator. Otherwise empty.
+  policies() []aws.organization.policy
+
+  // Organization policies that resolve for the account, merged across the organization
+  //
+  // The value each control settles on for this account once inherited and
+  // directly attached policies are combined. Covers the management policy
+  // types only, since AWS computes no effective policy for service control or
+  // resource control policies. A type with no policy applying to the account
+  // contributes no entry. Available only when the calling identity is the
+  // organization's management account or a delegated administrator. Otherwise
+  // empty.
+  effectivePolicies() []aws.organization.effectivePolicy
 }
 
 // AWS Account alternate contact
@@ -239,6 +258,17 @@ aws.organization @defaults("id masterAccountEmail") {
   organizationalUnits() []aws.organization.organizationalUnit
   // Service control policies defined in the organization, if available to the caller
   serviceControlPolicies() []aws.organization.serviceControlPolicy
+  // Policies defined in the organization, across every policy type
+  //
+  // Covers all policy types AWS Organizations supports, not only service
+  // control policies: resource control policies, which bound what external
+  // principals may do to resources in the organization, declarative policies,
+  // which pin account settings such as EC2 instance metadata defaults, and the
+  // tag, backup, and AI-services opt-out policies. Select a type with a filter,
+  // for example
+  // `policies.where(type == "RESOURCE_CONTROL_POLICY")`. A policy type that is
+  // not enabled for the organization contributes nothing.
+  policies() []aws.organization.policy
 }
 
 // AWS Organizations service control policy
@@ -264,6 +294,72 @@ private aws.organization.serviceControlPolicy @defaults("name id") {
   content() string
   // Parsed statements from the policy content
   statements() []aws.iam.policyStatement
+}
+
+// AWS Organizations policy
+//
+// Policy of any type defined in an organization, and the guardrail it applies
+// to the accounts, organizational units, and roots it is attached to. The type
+// field says which control the policy carries: SERVICE_CONTROL_POLICY bounds
+// what principals in the organization may do, RESOURCE_CONTROL_POLICY bounds
+// what may be done to the organization's resources by principals outside it,
+// DECLARATIVE_POLICY_EC2 pins account settings such as instance metadata
+// defaults and EBS encryption, and the remaining types cover tagging, backup,
+// AI-services opt-out, and per-service configuration. Other values include
+// TAG_POLICY, BACKUP_POLICY, AISERVICES_OPT_OUT_POLICY, CHATBOT_POLICY,
+// SECURITYHUB_POLICY, INSPECTOR_POLICY, UPGRADE_ROLLOUT_POLICY, BEDROCK_POLICY,
+// S3_POLICY, and NETWORK_SECURITY_DIRECTOR_POLICY.
+private aws.organization.policy @defaults("name type id") {
+  // Unique identifier of the policy
+  id string
+  // ARN of the policy
+  arn string
+  // Friendly name of the policy
+  name string
+  // Description of the policy
+  description string
+  // Type of control the policy carries
+  //
+  // One of SERVICE_CONTROL_POLICY, RESOURCE_CONTROL_POLICY, TAG_POLICY,
+  // BACKUP_POLICY, AISERVICES_OPT_OUT_POLICY, CHATBOT_POLICY,
+  // DECLARATIVE_POLICY_EC2, SECURITYHUB_POLICY, INSPECTOR_POLICY,
+  // UPGRADE_ROLLOUT_POLICY, BEDROCK_POLICY, S3_POLICY, or
+  // NETWORK_SECURITY_DIRECTOR_POLICY.
+  type string
+  // Whether the policy is managed by AWS rather than the customer
+  awsManaged bool
+  // Raw policy content document (JSON)
+  content() string
+  // Parsed statements from the policy content
+  //
+  // Resolved for the policy types written in the IAM policy grammar, which are
+  // the service control and resource control policies. Empty for the tag,
+  // backup, declarative, AI-services opt-out, and per-service policy types,
+  // which use their own document formats: read content for those.
+  statements() []aws.iam.policyStatement
+}
+
+// AWS Organizations effective policy
+//
+// Merged policy that actually applies to one account, combining the policies
+// it inherits from the organization root and its organizational units with any
+// policy attached directly to it. This is the value to audit when the question
+// is what a control resolves to for an account rather than which documents
+// were attached where. AWS computes an effective policy for the management
+// policy types only, so there is no entry for service control or resource
+// control policies, whose combined effect AWS does not expose.
+private aws.organization.effectivePolicy @defaults("type lastUpdatedAt") {
+  // Type of the effective policy
+  //
+  // One of TAG_POLICY, BACKUP_POLICY, AISERVICES_OPT_OUT_POLICY,
+  // CHATBOT_POLICY, DECLARATIVE_POLICY_EC2, SECURITYHUB_POLICY,
+  // INSPECTOR_POLICY, UPGRADE_ROLLOUT_POLICY, BEDROCK_POLICY, S3_POLICY, or
+  // NETWORK_SECURITY_DIRECTOR_POLICY.
+  type string
+  // Merged policy content document (JSON)
+  content string
+  // When the effective policy was last updated
+  lastUpdatedAt time
 }
 
 // AWS Organization delegated administrator
@@ -310,6 +406,11 @@ private aws.organization.organizationalUnit @defaults("id name path") {
   path string
   // Service control policies attached directly to this organizational unit
   serviceControlPolicies() []aws.organization.serviceControlPolicy
+  // Policies attached directly to this organizational unit, across every policy type
+  //
+  // Only the policies attached at this level, not the ones the unit inherits
+  // from the organization root or a parent unit.
+  policies() []aws.organization.policy
 }
 
 // Amazon Virtual Private Cloud (VPC)
@@ -2436,6 +2537,14 @@ private aws.iam.user @defaults("arn name createdAt") {
   mfaDevices() []dict
   // Managed policy that sets the permissions boundary for the user, if one is set
   permissionsBoundary() aws.iam.policy
+  // Services the user is permitted to use, with when each was last accessed
+  //
+  // Sourced from an IAM service-last-accessed report, which IAM generates as
+  // an asynchronous job for one principal at a time. A query that reads this
+  // field for every user in the account waits on one report each, so scope the
+  // query to the users under review. Records with a null lastAuthenticatedAt
+  // are the services the user can reach but has never used.
+  lastAccessedServices() []aws.iam.serviceLastAccessed
 }
 
 // IAM user access key
@@ -2570,6 +2679,14 @@ private aws.iam.policy @defaults("arn name") {
   attachedRoles() []aws.iam.role
   // List of groups attached to the policy
   attachedGroups() []aws.iam.group
+  // Services the policy grants access to, with when each was last accessed
+  //
+  // Sourced from an IAM service-last-accessed report, which IAM generates as
+  // an asynchronous job for one policy at a time. Records with a null
+  // lastAuthenticatedAt are the services the policy grants but no attached
+  // principal has used, and totalAuthenticatedEntities counts the principals
+  // that did use each service.
+  lastAccessedServices() []aws.iam.serviceLastAccessed
 }
 
 // AWS IAM policy version
@@ -2621,6 +2738,41 @@ private aws.iam.inlinePolicy @defaults("name entityType entityName") {
   // True when an Allow statement includes a wildcard action — the global `*`
   // or a service-wide wildcard such as `s3:*` — or the all-resources `*`.
   hasWildcardAllow() bool
+}
+
+// AWS IAM service last-accessed record
+//
+// When a principal last authenticated to one AWS service, taken from the IAM
+// service-last-accessed report. A record whose lastAuthenticatedAt is null
+// means the principal holds permissions for that service but never used them
+// in the tracking period, which is the signal for permissions that can be
+// removed. The record also reports which entity made the last request and from
+// which region, so a grant that looks active can be traced to the one
+// principal and region that keeps it alive.
+private aws.iam.serviceLastAccessed @defaults("serviceNamespace lastAuthenticatedAt") {
+  // Name of the service
+  serviceName string
+  // Namespace of the service, such as s3, ec2, or iam
+  serviceNamespace string
+  // When the service was last accessed
+  //
+  // Null when the service was never accessed in the tracking period, which
+  // IAM limits to the trailing 400 days. A null value on a principal that is
+  // permitted to call the service means the permission is unused.
+  lastAuthenticatedAt time
+  // ARN of the user or role that last accessed the service
+  //
+  // Reported for a policy, where many principals share the grant. Empty when
+  // the record belongs to a single principal, which is its own last-accessed
+  // entity.
+  lastAuthenticatedEntity string
+  // Region from which the service was last accessed
+  lastAuthenticatedRegion string
+  // Number of entities that accessed the service
+  //
+  // Reported for a policy, counting the attached principals that used the
+  // service. Zero for records that belong to a single principal.
+  totalAuthenticatedEntities int
 }
 
 // AWS IAM role
@@ -2686,6 +2838,14 @@ private aws.iam.role @defaults("arn name") {
   inlinePolicyDetails() []aws.iam.inlinePolicy
   // IAM Access Analyzer findings reporting external or public access to this resource
   externalAccessFindings() []aws.iam.accessAnalyzer.finding
+  // Services the role is permitted to use, with when each was last accessed
+  //
+  // Sourced from an IAM service-last-accessed report, which IAM generates as
+  // an asynchronous job for one principal at a time. A query that reads this
+  // field for every role in the account waits on one report each, so scope the
+  // query to the roles under review. Records with a null lastAuthenticatedAt
+  // are the services the role can reach but has never used.
+  lastAccessedServices() []aws.iam.serviceLastAccessed
 }
 
 // AWS IAM group
@@ -2717,6 +2877,13 @@ private aws.iam.group @defaults("arn name") {
   attachedPolicies() []aws.iam.policy
   // Path to the group
   path string
+  // Services the group's members are permitted to use, with when each was last accessed
+  //
+  // Sourced from an IAM service-last-accessed report, which IAM generates as
+  // an asynchronous job for one entity at a time. Records with a null
+  // lastAuthenticatedAt are the services the group grants but no member has
+  // used.
+  lastAccessedServices() []aws.iam.serviceLastAccessed
 }
 
 // AWS IAM virtual MFA device
@@ -2825,6 +2992,29 @@ private aws.iam.accessAnalyzer.finding @defaults("resourceType region type statu
   region string
   // Analyzer ARN
   analyzerArn string
+  // When the unused role, credential, or permission was last used
+  //
+  // Reported for the unused-access finding types (UnusedIAMRole,
+  // UnusedIAMUserAccessKey, UnusedIAMUserPassword, and UnusedPermission).
+  // Null when the subject of the finding was never used at all, and null for
+  // external-access and internal-access findings, which do not carry a
+  // last-used time.
+  lastAccessedAt() time
+  // Service namespace whose permissions are unused, such as s3 or ec2
+  //
+  // Reported for UnusedPermission findings. Empty for every other finding
+  // type.
+  unusedServiceNamespace() string
+  // Actions within the service that the principal never called
+  //
+  // Reported for UnusedPermission findings, listing the action names only.
+  // Empty for every other finding type.
+  unusedActions() []string
+  // Access key that has gone unused
+  //
+  // Reported for UnusedIAMUserAccessKey findings. Empty for every other
+  // finding type.
+  unusedAccessKeyId() string
 }
 
 // Amazon Personalize
@@ -17328,6 +17518,32 @@ aws.ec2 {
   serialConsoleAccessEnabled() map[string]bool
   // AMI block public access state per region: block-new-sharing or unblocked
   imageBlockPublicAccess() map[string]string
+  // Whether public sharing of EBS snapshots is blocked, per region
+  //
+  // One of block-all-sharing, which also blocks snapshots that are already
+  // public, block-new-sharing, which leaves already-public snapshots public,
+  // or unblocked. A region absent from the map is one the caller could not
+  // read the setting for.
+  snapshotBlockPublicAccess() map[string]string
+  // Allowed AMIs setting state, per region
+  //
+  // One of enabled, where only AMIs matching the account's image criteria can
+  // be discovered and launched, audit-mode, where non-matching AMIs stay
+  // usable but are flagged, or disabled. The setting bounds which AMI
+  // publishers an account will trust.
+  allowedImagesState() map[string]string
+  // Account-level instance metadata service defaults, one entry per region
+  //
+  // The defaults new instances launch with when the launch itself specifies
+  // nothing, which is how an account requires IMDSv2 without depending on
+  // every launch template being correct.
+  instanceMetadataDefaults() []aws.ec2.instanceMetadataDefault
+  // KMS keys used for EBS encryption by default, one per region where a key is set
+  //
+  // The key EBS encrypts new volumes with when the request names no key. Each
+  // key carries its own region. A region resolves to the AWS-managed
+  // aws/ebs key unless the account set a customer managed key.
+  ebsDefaultKmsKeys() []aws.kms.key
   // List of volumes across the AWS account
   volumes() []aws.ec2.volume
   // List of snapshots across the account
@@ -18663,6 +18879,49 @@ private aws.inspector.finding.codeVulnerability @defaults("detectorName") {
   sourceLambdaLayerArn string
 }
 
+// Account-level EC2 instance metadata service defaults
+//
+// The instance metadata service settings new instances in one region launch
+// with when the launch request specifies none of its own. Setting httpTokens to
+// required at the account level is how IMDSv2 becomes the floor for every
+// launch, rather than depending on each launch template and each API caller
+// getting it right. The settings are per region, and a region with no account
+// default reports null for each value, which is distinct from a default that
+// permits IMDSv1. When managedByDeclarativePolicy is true the values are pinned
+// by an organization declarative policy and cannot be changed in the account.
+private aws.ec2.instanceMetadataDefault @defaults("region httpTokens httpEndpoint") {
+  // Region the defaults apply to
+  region string
+  // Whether a session token is required to read instance metadata
+  //
+  // A value of required denotes IMDSv2; optional permits the unauthenticated
+  // IMDSv1 path. Null when the account sets no default for the region.
+  httpTokens string
+  // Whether the instance metadata endpoint is enabled by default
+  //
+  // One of enabled or disabled. Null when the account sets no default for the
+  // region.
+  httpEndpoint string
+  // Default hop limit for the instance metadata PUT response
+  //
+  // Values above 1 let a container or a proxied request reach the metadata
+  // service, which widens the blast radius of a server-side request forgery.
+  // Null when the account sets no default for the region.
+  httpPutResponseHopLimit int
+  // Whether instance tags are exposed through instance metadata by default
+  //
+  // One of enabled or disabled. Null when the account sets no default for the
+  // region.
+  instanceMetadataTags string
+  // Whether the httpTokens default is enforced rather than advisory
+  //
+  // One of enforced or unenforced. Null when the account sets no default for
+  // the region.
+  httpTokensEnforced string
+  // Whether an organization declarative policy pins these defaults
+  managedByDeclarativePolicy bool
+}
+
 // Amazon EC2 instance
 private aws.ec2.instance @defaults("instanceId region state instanceType architecture platformDetails") {
   // ARN for the instance
@@ -18687,6 +18946,15 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   httpPutResponseHopLimit int
   // Whether IMDSv2 is required (httpTokens is "required"), enforcing session-token-authenticated metadata access
   imdsv2Required bool
+  // User data supplied at launch, base64-decoded
+  //
+  // The launch script the instance bootstrapped with. It is readable by any
+  // process on the instance through the metadata service, so a credential
+  // written into it is effectively shared with every workload on the host.
+  // Empty when the instance was launched without user data.
+  userData() string
+  // Whether the instance has user data set (a launch script that may embed secrets)
+  userDataPresent() bool
   // Whether the instance is enabled for AWS Nitro Enclaves
   enclaveEnabled bool
   // Patch state information about the instance
