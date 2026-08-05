@@ -622,6 +622,7 @@ const (
 	ResourceAwsInspectorFindingVulnerablePackage                                string = "aws.inspector.finding.vulnerablePackage"
 	ResourceAwsInspectorFindingNetworkReachability                              string = "aws.inspector.finding.networkReachability"
 	ResourceAwsInspectorFindingCodeVulnerability                                string = "aws.inspector.finding.codeVulnerability"
+	ResourceAwsEc2InstanceMetadataDefault                                       string = "aws.ec2.instanceMetadataDefault"
 	ResourceAwsEc2Instance                                                      string = "aws.ec2.instance"
 	ResourceAwsEc2Networkinterface                                              string = "aws.ec2.networkinterface"
 	ResourceAwsEc2Keypair                                                       string = "aws.ec2.keypair"
@@ -3393,6 +3394,10 @@ func init() {
 		"aws.inspector.finding.codeVulnerability": {
 			// to override args, implement: initAwsInspectorFindingCodeVulnerability(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsInspectorFindingCodeVulnerability,
+		},
+		"aws.ec2.instanceMetadataDefault": {
+			// to override args, implement: initAwsEc2InstanceMetadataDefault(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEc2InstanceMetadataDefault,
 		},
 		"aws.ec2.instance": {
 			Init:   initAwsEc2Instance,
@@ -22602,6 +22607,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.imageBlockPublicAccess": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2).GetImageBlockPublicAccess()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"aws.ec2.snapshotBlockPublicAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2).GetSnapshotBlockPublicAccess()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ec2.allowedImagesState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2).GetAllowedImagesState()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ec2.instanceMetadataDefaults": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2).GetInstanceMetadataDefaults()).ToDataRes(types.Array(types.Resource("aws.ec2.instanceMetadataDefault")))
+	},
+	"aws.ec2.ebsDefaultKmsKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2).GetEbsDefaultKmsKeys()).ToDataRes(types.Array(types.Resource("aws.kms.key")))
+	},
 	"aws.ec2.volumes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2).GetVolumes()).ToDataRes(types.Array(types.Resource("aws.ec2.volume")))
 	},
@@ -24123,6 +24140,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.inspector.finding.codeVulnerability.sourceLambdaLayerArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsInspectorFindingCodeVulnerability).GetSourceLambdaLayerArn()).ToDataRes(types.String)
 	},
+	"aws.ec2.instanceMetadataDefault.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2InstanceMetadataDefault).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.ec2.instanceMetadataDefault.httpTokens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2InstanceMetadataDefault).GetHttpTokens()).ToDataRes(types.String)
+	},
+	"aws.ec2.instanceMetadataDefault.httpEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2InstanceMetadataDefault).GetHttpEndpoint()).ToDataRes(types.String)
+	},
+	"aws.ec2.instanceMetadataDefault.httpPutResponseHopLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2InstanceMetadataDefault).GetHttpPutResponseHopLimit()).ToDataRes(types.Int)
+	},
+	"aws.ec2.instanceMetadataDefault.instanceMetadataTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2InstanceMetadataDefault).GetInstanceMetadataTags()).ToDataRes(types.String)
+	},
+	"aws.ec2.instanceMetadataDefault.httpTokensEnforced": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2InstanceMetadataDefault).GetHttpTokensEnforced()).ToDataRes(types.String)
+	},
+	"aws.ec2.instanceMetadataDefault.managedByDeclarativePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2InstanceMetadataDefault).GetManagedByDeclarativePolicy()).ToDataRes(types.Bool)
+	},
 	"aws.ec2.instance.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetArn()).ToDataRes(types.String)
 	},
@@ -24155,6 +24193,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.instance.imdsv2Required": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetImdsv2Required()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.instance.userData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetUserData()).ToDataRes(types.String)
+	},
+	"aws.ec2.instance.userDataPresent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetUserDataPresent()).ToDataRes(types.Bool)
 	},
 	"aws.ec2.instance.enclaveEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetEnclaveEnabled()).ToDataRes(types.Bool)
@@ -61694,6 +61738,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2).ImageBlockPublicAccess, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.snapshotBlockPublicAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2).SnapshotBlockPublicAccess, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.allowedImagesState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2).AllowedImagesState, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instanceMetadataDefaults": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2).InstanceMetadataDefaults, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ebsDefaultKmsKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2).EbsDefaultKmsKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.volumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2).Volumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -63922,6 +63982,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsInspectorFindingCodeVulnerability).SourceLambdaLayerArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.instanceMetadataDefault.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2InstanceMetadataDefault).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ec2.instanceMetadataDefault.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2InstanceMetadataDefault).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instanceMetadataDefault.httpTokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2InstanceMetadataDefault).HttpTokens, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instanceMetadataDefault.httpEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2InstanceMetadataDefault).HttpEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instanceMetadataDefault.httpPutResponseHopLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2InstanceMetadataDefault).HttpPutResponseHopLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instanceMetadataDefault.instanceMetadataTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2InstanceMetadataDefault).InstanceMetadataTags, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instanceMetadataDefault.httpTokensEnforced": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2InstanceMetadataDefault).HttpTokensEnforced, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instanceMetadataDefault.managedByDeclarativePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2InstanceMetadataDefault).ManagedByDeclarativePolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Instance).__id, ok = v.Value.(string)
 		return
@@ -63968,6 +64060,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.instance.imdsv2Required": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Instance).Imdsv2Required, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.userData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).UserData, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.userDataPresent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).UserDataPresent, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.instance.enclaveEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -148407,6 +148507,10 @@ type mqlAwsEc2 struct {
 	EbsEncryptionByDefault           plugin.TValue[map[string]any]
 	SerialConsoleAccessEnabled       plugin.TValue[map[string]any]
 	ImageBlockPublicAccess           plugin.TValue[map[string]any]
+	SnapshotBlockPublicAccess        plugin.TValue[map[string]any]
+	AllowedImagesState               plugin.TValue[map[string]any]
+	InstanceMetadataDefaults         plugin.TValue[[]any]
+	EbsDefaultKmsKeys                plugin.TValue[[]any]
 	Volumes                          plugin.TValue[[]any]
 	Snapshots                        plugin.TValue[[]any]
 	InternetGateways                 plugin.TValue[[]any]
@@ -148513,6 +148617,50 @@ func (c *mqlAwsEc2) GetSerialConsoleAccessEnabled() *plugin.TValue[map[string]an
 func (c *mqlAwsEc2) GetImageBlockPublicAccess() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.ImageBlockPublicAccess, func() (map[string]any, error) {
 		return c.imageBlockPublicAccess()
+	})
+}
+
+func (c *mqlAwsEc2) GetSnapshotBlockPublicAccess() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.SnapshotBlockPublicAccess, func() (map[string]any, error) {
+		return c.snapshotBlockPublicAccess()
+	})
+}
+
+func (c *mqlAwsEc2) GetAllowedImagesState() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.AllowedImagesState, func() (map[string]any, error) {
+		return c.allowedImagesState()
+	})
+}
+
+func (c *mqlAwsEc2) GetInstanceMetadataDefaults() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InstanceMetadataDefaults, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2", c.__id, "instanceMetadataDefaults")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instanceMetadataDefaults()
+	})
+}
+
+func (c *mqlAwsEc2) GetEbsDefaultKmsKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EbsDefaultKmsKeys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2", c.__id, "ebsDefaultKmsKeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ebsDefaultKmsKeys()
 	})
 }
 
@@ -154148,6 +154296,80 @@ func (c *mqlAwsInspectorFindingCodeVulnerability) GetSourceLambdaLayerArn() *plu
 	return &c.SourceLambdaLayerArn
 }
 
+// mqlAwsEc2InstanceMetadataDefault for the aws.ec2.instanceMetadataDefault resource
+type mqlAwsEc2InstanceMetadataDefault struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEc2InstanceMetadataDefaultInternal it will be used here
+	Region                     plugin.TValue[string]
+	HttpTokens                 plugin.TValue[string]
+	HttpEndpoint               plugin.TValue[string]
+	HttpPutResponseHopLimit    plugin.TValue[int64]
+	InstanceMetadataTags       plugin.TValue[string]
+	HttpTokensEnforced         plugin.TValue[string]
+	ManagedByDeclarativePolicy plugin.TValue[bool]
+}
+
+// createAwsEc2InstanceMetadataDefault creates a new instance of this resource
+func createAwsEc2InstanceMetadataDefault(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2InstanceMetadataDefault{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.instanceMetadataDefault", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2InstanceMetadataDefault) MqlName() string {
+	return "aws.ec2.instanceMetadataDefault"
+}
+
+func (c *mqlAwsEc2InstanceMetadataDefault) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2InstanceMetadataDefault) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsEc2InstanceMetadataDefault) GetHttpTokens() *plugin.TValue[string] {
+	return &c.HttpTokens
+}
+
+func (c *mqlAwsEc2InstanceMetadataDefault) GetHttpEndpoint() *plugin.TValue[string] {
+	return &c.HttpEndpoint
+}
+
+func (c *mqlAwsEc2InstanceMetadataDefault) GetHttpPutResponseHopLimit() *plugin.TValue[int64] {
+	return &c.HttpPutResponseHopLimit
+}
+
+func (c *mqlAwsEc2InstanceMetadataDefault) GetInstanceMetadataTags() *plugin.TValue[string] {
+	return &c.InstanceMetadataTags
+}
+
+func (c *mqlAwsEc2InstanceMetadataDefault) GetHttpTokensEnforced() *plugin.TValue[string] {
+	return &c.HttpTokensEnforced
+}
+
+func (c *mqlAwsEc2InstanceMetadataDefault) GetManagedByDeclarativePolicy() *plugin.TValue[bool] {
+	return &c.ManagedByDeclarativePolicy
+}
+
 // mqlAwsEc2Instance for the aws.ec2.instance resource
 type mqlAwsEc2Instance struct {
 	MqlRuntime *plugin.Runtime
@@ -154164,6 +154386,8 @@ type mqlAwsEc2Instance struct {
 	HttpEndpoint            plugin.TValue[string]
 	HttpPutResponseHopLimit plugin.TValue[int64]
 	Imdsv2Required          plugin.TValue[bool]
+	UserData                plugin.TValue[string]
+	UserDataPresent         plugin.TValue[bool]
 	EnclaveEnabled          plugin.TValue[bool]
 	PatchState              plugin.TValue[any]
 	State                   plugin.TValue[string]
@@ -154311,6 +154535,18 @@ func (c *mqlAwsEc2Instance) GetHttpPutResponseHopLimit() *plugin.TValue[int64] {
 
 func (c *mqlAwsEc2Instance) GetImdsv2Required() *plugin.TValue[bool] {
 	return &c.Imdsv2Required
+}
+
+func (c *mqlAwsEc2Instance) GetUserData() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.UserData, func() (string, error) {
+		return c.userData()
+	})
+}
+
+func (c *mqlAwsEc2Instance) GetUserDataPresent() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UserDataPresent, func() (bool, error) {
+		return c.userDataPresent()
+	})
 }
 
 func (c *mqlAwsEc2Instance) GetEnclaveEnabled() *plugin.TValue[bool] {

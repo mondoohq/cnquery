@@ -3188,6 +3188,7 @@ aws.dynamodb.table.tags 11.15.2
 aws.dynamodb.table.ttlDescription 13.6.3
 aws.dynamodb.tables 11.15.2
 aws.ec2 11.15.2
+aws.ec2.allowedImagesState 13.52.2
 aws.ec2.capacityReservation 13.6.3
 aws.ec2.capacityReservation.arn 13.6.3
 aws.ec2.capacityReservation.availabilityZone 13.6.3
@@ -3252,6 +3253,7 @@ aws.ec2.dhcpOptions.configurations 13.6.3
 aws.ec2.dhcpOptions.id 13.6.3
 aws.ec2.dhcpOptions.region 13.6.3
 aws.ec2.dhcpOptions.tags 13.6.3
+aws.ec2.ebsDefaultKmsKeys 13.52.2
 aws.ec2.ebsEncryptionByDefault 11.15.2
 aws.ec2.egressOnlyInternetGateway 13.6.3
 aws.ec2.egressOnlyInternetGateway.arn 13.6.3
@@ -3422,6 +3424,8 @@ aws.ec2.instance.stateTransitionTime 11.15.2
 aws.ec2.instance.subnet 13.37.1
 aws.ec2.instance.tags 11.15.2
 aws.ec2.instance.tpmSupport 11.15.2
+aws.ec2.instance.userData 13.52.2
+aws.ec2.instance.userDataPresent 13.52.2
 aws.ec2.instance.virtualizationType 11.15.3
 aws.ec2.instance.vpc 11.15.2
 aws.ec2.instance.vpcArn 11.15.2
@@ -3442,6 +3446,15 @@ aws.ec2.instanceConnectEndpoint.tags 13.6.3
 aws.ec2.instanceConnectEndpoint.vpc 13.12.1
 aws.ec2.instanceConnectEndpoint.vpcId 13.6.3
 aws.ec2.instanceConnectEndpoints 13.6.3
+aws.ec2.instanceMetadataDefault 13.52.2
+aws.ec2.instanceMetadataDefault.httpEndpoint 13.52.2
+aws.ec2.instanceMetadataDefault.httpPutResponseHopLimit 13.52.2
+aws.ec2.instanceMetadataDefault.httpTokens 13.52.2
+aws.ec2.instanceMetadataDefault.httpTokensEnforced 13.52.2
+aws.ec2.instanceMetadataDefault.instanceMetadataTags 13.52.2
+aws.ec2.instanceMetadataDefault.managedByDeclarativePolicy 13.52.2
+aws.ec2.instanceMetadataDefault.region 13.52.2
+aws.ec2.instanceMetadataDefaults 13.52.2
 aws.ec2.instances 11.15.2
 aws.ec2.internetGateways 11.15.2
 aws.ec2.internetgateway 11.15.2
@@ -3724,6 +3737,7 @@ aws.ec2.snapshot.tags 11.15.2
 aws.ec2.snapshot.transferType 13.39.2
 aws.ec2.snapshot.volumeId 11.15.2
 aws.ec2.snapshot.volumeSize 11.15.2
+aws.ec2.snapshotBlockPublicAccess 13.52.2
 aws.ec2.snapshots 11.15.2
 aws.ec2.transitGateways 11.15.2
 aws.ec2.transitgateway 11.15.2
