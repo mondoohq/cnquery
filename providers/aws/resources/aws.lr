@@ -7952,6 +7952,63 @@ private aws.macie.classificationExportConfiguration @defaults("region s3BucketNa
 // `organizationAdminAccounts` list reports the accounts designated as
 // Detective administrators across the AWS organization, useful for
 // confirming delegated administration is centralized as intended.
+// AWS threat detection coverage
+//
+// Which detection and logging services are switched on in each of the account's
+// enabled regions, as one matrix rather than eight separate queries. An enabled
+// region with nothing watching it is the classic blind spot: an attacker who
+// picks a region nobody looks at leaves no trail, and the gap is invisible from
+// any single service's own view, which only lists the regions where it is
+// already enabled. Rows cover every region the account has enabled, so a region
+// with no coverage still appears, with each service false.
+aws.detectionCoverage @defaults("regions") {
+  // Detection coverage for each region the account has enabled
+  regions() []aws.detectionCoverage.region
+}
+
+// Detection coverage for one region
+//
+// The detection services enabled in a single region. Each field is false when
+// the service is not enabled there, and unreadableServices names the services
+// whose state could not be determined at all, which is not the same as a
+// service being switched off: a false that came from a denied API call would
+// otherwise be indistinguishable from a real gap.
+private aws.detectionCoverage.region @defaults("region detectionServices") {
+  // Region the coverage applies to
+  region string
+  // Whether a logging CloudTrail trail covers the region
+  //
+  // True when a trail that is currently logging either has this region as its
+  // home region or is a multi-region trail, which covers every region.
+  cloudTrail bool
+  // Whether a GuardDuty detector is enabled in the region
+  guardDuty bool
+  // Whether a Config configuration recorder is recording in the region
+  config bool
+  // Whether Security Hub is enabled in the region
+  securityHub bool
+  // Whether Inspector is enabled for the account in the region
+  inspector bool
+  // Whether a Macie session is enabled in the region
+  macie bool
+  // Whether a Detective behavior graph exists in the region
+  detective bool
+  // Whether a Security Lake data lake has finished provisioning in the region
+  //
+  // A data lake that is still initializing or has failed is not counted, since
+  // it is not yet collecting.
+  securityLake bool
+  // Names of the detection services enabled in the region
+  detectionServices []string
+  // Names of the detection services whose state could not be determined
+  //
+  // A service lands here when its own query failed, for example because the
+  // caller lacks permission for it. Its matching field is false, so an
+  // assertion over the fields fails rather than passing on missing data, and
+  // this list says why.
+  unreadableServices []string
+}
+
 aws.detective {
   // List of Detective behavior graphs across regions
   graphs() []aws.detective.graph

@@ -272,6 +272,8 @@ const (
 	ResourceAwsMacieAdministrator                                               string = "aws.macie.administrator"
 	ResourceAwsMacieAutomatedDiscoveryConfiguration                             string = "aws.macie.automatedDiscoveryConfiguration"
 	ResourceAwsMacieClassificationExportConfiguration                           string = "aws.macie.classificationExportConfiguration"
+	ResourceAwsDetectionCoverage                                                string = "aws.detectionCoverage"
+	ResourceAwsDetectionCoverageRegion                                          string = "aws.detectionCoverage.region"
 	ResourceAwsDetective                                                        string = "aws.detective"
 	ResourceAwsDetectiveGraph                                                   string = "aws.detective.graph"
 	ResourceAwsDetectiveGraphMember                                             string = "aws.detective.graph.member"
@@ -1994,6 +1996,14 @@ func init() {
 		"aws.macie.classificationExportConfiguration": {
 			// to override args, implement: initAwsMacieClassificationExportConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsMacieClassificationExportConfiguration,
+		},
+		"aws.detectionCoverage": {
+			// to override args, implement: initAwsDetectionCoverage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDetectionCoverage,
+		},
+		"aws.detectionCoverage.region": {
+			// to override args, implement: initAwsDetectionCoverageRegion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDetectionCoverageRegion,
 		},
 		"aws.detective": {
 			// to override args, implement: initAwsDetective(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -13027,6 +13037,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.macie.classificationExportConfiguration.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMacieClassificationExportConfiguration).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.detectionCoverage.regions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectionCoverage).GetRegions()).ToDataRes(types.Array(types.Resource("aws.detectionCoverage.region")))
+	},
+	"aws.detectionCoverage.region.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectionCoverageRegion).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.detectionCoverage.region.cloudTrail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectionCoverageRegion).GetCloudTrail()).ToDataRes(types.Bool)
+	},
+	"aws.detectionCoverage.region.guardDuty": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectionCoverageRegion).GetGuardDuty()).ToDataRes(types.Bool)
+	},
+	"aws.detectionCoverage.region.config": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectionCoverageRegion).GetConfig()).ToDataRes(types.Bool)
+	},
+	"aws.detectionCoverage.region.securityHub": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectionCoverageRegion).GetSecurityHub()).ToDataRes(types.Bool)
+	},
+	"aws.detectionCoverage.region.inspector": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectionCoverageRegion).GetInspector()).ToDataRes(types.Bool)
+	},
+	"aws.detectionCoverage.region.macie": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectionCoverageRegion).GetMacie()).ToDataRes(types.Bool)
+	},
+	"aws.detectionCoverage.region.detective": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectionCoverageRegion).GetDetective()).ToDataRes(types.Bool)
+	},
+	"aws.detectionCoverage.region.securityLake": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectionCoverageRegion).GetSecurityLake()).ToDataRes(types.Bool)
+	},
+	"aws.detectionCoverage.region.detectionServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectionCoverageRegion).GetDetectionServices()).ToDataRes(types.Array(types.String))
+	},
+	"aws.detectionCoverage.region.unreadableServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectionCoverageRegion).GetUnreadableServices()).ToDataRes(types.Array(types.String))
 	},
 	"aws.detective.graphs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDetective).GetGraphs()).ToDataRes(types.Array(types.Resource("aws.detective.graph")))
@@ -47764,6 +47810,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.macie.classificationExportConfiguration.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMacieClassificationExportConfiguration).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.detectionCoverage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectionCoverage).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.detectionCoverage.regions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectionCoverage).Regions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.detectionCoverage.region.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectionCoverageRegion).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.detectionCoverage.region.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectionCoverageRegion).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.detectionCoverage.region.cloudTrail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectionCoverageRegion).CloudTrail, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.detectionCoverage.region.guardDuty": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectionCoverageRegion).GuardDuty, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.detectionCoverage.region.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectionCoverageRegion).Config, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.detectionCoverage.region.securityHub": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectionCoverageRegion).SecurityHub, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.detectionCoverage.region.inspector": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectionCoverageRegion).Inspector, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.detectionCoverage.region.macie": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectionCoverageRegion).Macie, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.detectionCoverage.region.detective": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectionCoverageRegion).Detective, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.detectionCoverage.region.securityLake": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectionCoverageRegion).SecurityLake, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.detectionCoverage.region.detectionServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectionCoverageRegion).DetectionServices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.detectionCoverage.region.unreadableServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectionCoverageRegion).UnreadableServices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.detective.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -112613,6 +112715,156 @@ func (c *mqlAwsMacieClassificationExportConfiguration) GetKmsKey() *plugin.TValu
 
 		return c.kmsKey()
 	})
+}
+
+// mqlAwsDetectionCoverage for the aws.detectionCoverage resource
+type mqlAwsDetectionCoverage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsDetectionCoverageInternal it will be used here
+	Regions plugin.TValue[[]any]
+}
+
+// createAwsDetectionCoverage creates a new instance of this resource
+func createAwsDetectionCoverage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDetectionCoverage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.detectionCoverage", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDetectionCoverage) MqlName() string {
+	return "aws.detectionCoverage"
+}
+
+func (c *mqlAwsDetectionCoverage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDetectionCoverage) GetRegions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Regions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.detectionCoverage", c.__id, "regions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.regions()
+	})
+}
+
+// mqlAwsDetectionCoverageRegion for the aws.detectionCoverage.region resource
+type mqlAwsDetectionCoverageRegion struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsDetectionCoverageRegionInternal it will be used here
+	Region             plugin.TValue[string]
+	CloudTrail         plugin.TValue[bool]
+	GuardDuty          plugin.TValue[bool]
+	Config             plugin.TValue[bool]
+	SecurityHub        plugin.TValue[bool]
+	Inspector          plugin.TValue[bool]
+	Macie              plugin.TValue[bool]
+	Detective          plugin.TValue[bool]
+	SecurityLake       plugin.TValue[bool]
+	DetectionServices  plugin.TValue[[]any]
+	UnreadableServices plugin.TValue[[]any]
+}
+
+// createAwsDetectionCoverageRegion creates a new instance of this resource
+func createAwsDetectionCoverageRegion(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDetectionCoverageRegion{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.detectionCoverage.region", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDetectionCoverageRegion) MqlName() string {
+	return "aws.detectionCoverage.region"
+}
+
+func (c *mqlAwsDetectionCoverageRegion) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDetectionCoverageRegion) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsDetectionCoverageRegion) GetCloudTrail() *plugin.TValue[bool] {
+	return &c.CloudTrail
+}
+
+func (c *mqlAwsDetectionCoverageRegion) GetGuardDuty() *plugin.TValue[bool] {
+	return &c.GuardDuty
+}
+
+func (c *mqlAwsDetectionCoverageRegion) GetConfig() *plugin.TValue[bool] {
+	return &c.Config
+}
+
+func (c *mqlAwsDetectionCoverageRegion) GetSecurityHub() *plugin.TValue[bool] {
+	return &c.SecurityHub
+}
+
+func (c *mqlAwsDetectionCoverageRegion) GetInspector() *plugin.TValue[bool] {
+	return &c.Inspector
+}
+
+func (c *mqlAwsDetectionCoverageRegion) GetMacie() *plugin.TValue[bool] {
+	return &c.Macie
+}
+
+func (c *mqlAwsDetectionCoverageRegion) GetDetective() *plugin.TValue[bool] {
+	return &c.Detective
+}
+
+func (c *mqlAwsDetectionCoverageRegion) GetSecurityLake() *plugin.TValue[bool] {
+	return &c.SecurityLake
+}
+
+func (c *mqlAwsDetectionCoverageRegion) GetDetectionServices() *plugin.TValue[[]any] {
+	return &c.DetectionServices
+}
+
+func (c *mqlAwsDetectionCoverageRegion) GetUnreadableServices() *plugin.TValue[[]any] {
+	return &c.UnreadableServices
 }
 
 // mqlAwsDetective for the aws.detective resource
