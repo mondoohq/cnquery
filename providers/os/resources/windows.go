@@ -6,6 +6,7 @@ package resources
 import (
 	"errors"
 	"io"
+	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -295,6 +296,24 @@ func initWindowsOptionalFeature(runtime *plugin.Runtime, args map[string]*llx.Ra
 	return nil, nil, errors.New("could not find feature " + name)
 }
 
+// optionalFeatureDetails carries the display name and description of every
+// feature in one enumeration. DISM only reports those for a named feature, so
+// they cost an extra image query — one for the whole enumeration, taken the
+// first time a query actually asks for them.
+type optionalFeatureDetails struct {
+	lock   sync.Mutex
+	loaded bool
+	byName map[string]windows.WindowsOptionalFeature
+}
+
+// mqlWindowsOptionalFeatureInternal shares the lazily loaded details with the
+// other features from the same windows.optionalFeatures enumeration. It is nil
+// for a feature looked up by name, where the init function has already filled
+// every field in from its single-feature query.
+type mqlWindowsOptionalFeatureInternal struct {
+	details *optionalFeatureDetails
+}
+
 func (w *mqlWindows) optionalFeatures() ([]any, error) {
 	conn := w.MqlRuntime.Connection.(shared.Connection)
 
@@ -319,22 +338,105 @@ func (w *mqlWindows) optionalFeatures() ([]any, error) {
 	}
 
 	// convert features to MQL resource
+	details := &optionalFeatureDetails{}
 	mqlFeatures := make([]any, len(features))
 	for i, feature := range features {
 
 		mqlFeature, err := CreateResource(w.MqlRuntime, "windows.optionalFeature", map[string]*llx.RawData{
-			"name":        llx.StringData(feature.Name),
-			"displayName": llx.StringData(feature.DisplayName),
-			"description": llx.StringData(feature.Description),
-			"enabled":     llx.BoolData(feature.Enabled),
-			"state":       llx.IntData(feature.State),
+			"name":    llx.StringData(feature.Name),
+			"enabled": llx.BoolData(feature.Enabled),
+			"state":   llx.IntData(feature.State),
 		})
 		if err != nil {
 			return nil, err
 		}
 
+		mqlFeature.(*mqlWindowsOptionalFeature).details = details
 		mqlFeatures[i] = mqlFeature
 	}
 
 	return mqlFeatures, nil
+}
+
+func (f *mqlWindowsOptionalFeature) displayName() (string, error) {
+	feature, err := f.fetchDetails()
+	if err != nil {
+		return "", err
+	}
+	return feature.DisplayName, nil
+}
+
+func (f *mqlWindowsOptionalFeature) description() (string, error) {
+	feature, err := f.fetchDetails()
+	if err != nil {
+		return "", err
+	}
+	return feature.Description, nil
+}
+
+// fetchDetails loads the fields that DISM only reports for a named feature. For
+// a feature that came from an enumeration this is one query for all of them,
+// shared with its siblings; for a standalone feature it is a single-feature
+// query.
+func (f *mqlWindowsOptionalFeature) fetchDetails() (windows.WindowsOptionalFeature, error) {
+	var empty windows.WindowsOptionalFeature
+
+	name := f.GetName()
+	if name.Error != nil {
+		return empty, name.Error
+	}
+
+	if f.details == nil {
+		features, err := f.queryFeatures(windows.OptionalFeatureQuery(name.Data))
+		if err != nil {
+			return empty, err
+		}
+		for i := range features {
+			// DISM treats `*`/`?` in -FeatureName as wildcards, so require an
+			// exact match
+			if features[i].Name == name.Data {
+				return features[i], nil
+			}
+		}
+		return empty, errors.New("could not find feature " + name.Data)
+	}
+
+	f.details.lock.Lock()
+	defer f.details.lock.Unlock()
+
+	if !f.details.loaded {
+		features, err := f.queryFeatures(windows.QUERY_OPTIONAL_FEATURE_DETAILS)
+		if err != nil {
+			return empty, err
+		}
+		f.details.byName = make(map[string]windows.WindowsOptionalFeature, len(features))
+		for i := range features {
+			f.details.byName[features[i].Name] = features[i]
+		}
+		f.details.loaded = true
+	}
+
+	feature, ok := f.details.byName[name.Data]
+	if !ok {
+		return empty, errors.New("could not find feature " + name.Data)
+	}
+	return feature, nil
+}
+
+func (f *mqlWindowsOptionalFeature) queryFeatures(query string) ([]windows.WindowsOptionalFeature, error) {
+	conn := f.MqlRuntime.Connection.(shared.Connection)
+
+	executedCmd, err := conn.RunCommand(powershell.Encode(query))
+	if err != nil {
+		return nil, err
+	}
+	if executedCmd.ExitStatus != 0 {
+		stderr, err := io.ReadAll(executedCmd.Stderr)
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New("failed to retrieve optional feature details: " + string(stderr))
+	}
+
+	return windows.ParseWindowsOptionalFeatures(executedCmd.Stdout)
 }
