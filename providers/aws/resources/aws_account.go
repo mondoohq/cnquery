@@ -621,21 +621,7 @@ func (a *mqlAwsOrganizationOrganizationalUnit) serviceControlPolicies() ([]any, 
 
 func (a *mqlAwsOrganizationServiceControlPolicy) content() (string, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	client := conn.Organizations("")
-	ctx := context.Background()
-
-	id := a.Id.Data
-	resp, err := client.DescribePolicy(ctx, &organizations.DescribePolicyInput{PolicyId: &id})
-	if err != nil {
-		if Is400AccessDeniedError(err) {
-			return "", nil
-		}
-		return "", err
-	}
-	if resp.Policy == nil || resp.Policy.Content == nil {
-		return "", nil
-	}
-	return *resp.Policy.Content, nil
+	return describePolicyContent(context.Background(), conn.Organizations(""), a.Id.Data)
 }
 
 func (a *mqlAwsOrganizationServiceControlPolicy) statements() ([]any, error) {

@@ -23,6 +23,8 @@ const (
 	ResourceAwsBillingBudget                                                    string = "aws.billing.budget"
 	ResourceAwsOrganization                                                     string = "aws.organization"
 	ResourceAwsOrganizationServiceControlPolicy                                 string = "aws.organization.serviceControlPolicy"
+	ResourceAwsOrganizationPolicy                                               string = "aws.organization.policy"
+	ResourceAwsOrganizationEffectivePolicy                                      string = "aws.organization.effectivePolicy"
 	ResourceAwsOrganizationDelegatedAdministrator                               string = "aws.organization.delegatedAdministrator"
 	ResourceAwsOrganizationDelegatedService                                     string = "aws.organization.delegatedService"
 	ResourceAwsOrganizationOrganizationalUnit                                   string = "aws.organization.organizationalUnit"
@@ -995,6 +997,14 @@ func init() {
 		"aws.organization.serviceControlPolicy": {
 			// to override args, implement: initAwsOrganizationServiceControlPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsOrganizationServiceControlPolicy,
+		},
+		"aws.organization.policy": {
+			// to override args, implement: initAwsOrganizationPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsOrganizationPolicy,
+		},
+		"aws.organization.effectivePolicy": {
+			// to override args, implement: initAwsOrganizationEffectivePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsOrganizationEffectivePolicy,
 		},
 		"aws.organization.delegatedAdministrator": {
 			// to override args, implement: initAwsOrganizationDelegatedAdministrator(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4877,6 +4887,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.account.joinedTimestamp": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAccount).GetJoinedTimestamp()).ToDataRes(types.Time)
 	},
+	"aws.account.policies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccount).GetPolicies()).ToDataRes(types.Array(types.Resource("aws.organization.policy")))
+	},
+	"aws.account.effectivePolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccount).GetEffectivePolicies()).ToDataRes(types.Array(types.Resource("aws.organization.effectivePolicy")))
+	},
 	"aws.account.alternateContact.accountId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAccountAlternateContact).GetAccountId()).ToDataRes(types.String)
 	},
@@ -4991,6 +5007,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.organization.serviceControlPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOrganization).GetServiceControlPolicies()).ToDataRes(types.Array(types.Resource("aws.organization.serviceControlPolicy")))
 	},
+	"aws.organization.policies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganization).GetPolicies()).ToDataRes(types.Array(types.Resource("aws.organization.policy")))
+	},
 	"aws.organization.serviceControlPolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOrganizationServiceControlPolicy).GetId()).ToDataRes(types.String)
 	},
@@ -5011,6 +5030,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.organization.serviceControlPolicy.statements": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOrganizationServiceControlPolicy).GetStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
+	},
+	"aws.organization.policy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganizationPolicy).GetId()).ToDataRes(types.String)
+	},
+	"aws.organization.policy.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganizationPolicy).GetArn()).ToDataRes(types.String)
+	},
+	"aws.organization.policy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganizationPolicy).GetName()).ToDataRes(types.String)
+	},
+	"aws.organization.policy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganizationPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.organization.policy.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganizationPolicy).GetType()).ToDataRes(types.String)
+	},
+	"aws.organization.policy.awsManaged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganizationPolicy).GetAwsManaged()).ToDataRes(types.Bool)
+	},
+	"aws.organization.policy.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganizationPolicy).GetContent()).ToDataRes(types.String)
+	},
+	"aws.organization.policy.statements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganizationPolicy).GetStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
+	},
+	"aws.organization.effectivePolicy.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganizationEffectivePolicy).GetType()).ToDataRes(types.String)
+	},
+	"aws.organization.effectivePolicy.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganizationEffectivePolicy).GetContent()).ToDataRes(types.String)
+	},
+	"aws.organization.effectivePolicy.lastUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganizationEffectivePolicy).GetLastUpdatedAt()).ToDataRes(types.Time)
 	},
 	"aws.organization.delegatedAdministrator.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOrganizationDelegatedAdministrator).GetArn()).ToDataRes(types.String)
@@ -5062,6 +5114,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.organization.organizationalUnit.serviceControlPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOrganizationOrganizationalUnit).GetServiceControlPolicies()).ToDataRes(types.Array(types.Resource("aws.organization.serviceControlPolicy")))
+	},
+	"aws.organization.organizationalUnit.policies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganizationOrganizationalUnit).GetPolicies()).ToDataRes(types.Array(types.Resource("aws.organization.policy")))
 	},
 	"aws.vpc.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpc).GetArn()).ToDataRes(types.String)
@@ -35803,6 +35858,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsAccount).JoinedTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"aws.account.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccount).Policies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.account.effectivePolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccount).EffectivePolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.account.alternateContact.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAccountAlternateContact).__id, ok = v.Value.(string)
 		return
@@ -35971,6 +36034,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsOrganization).ServiceControlPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.organization.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganization).Policies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.organization.serviceControlPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsOrganizationServiceControlPolicy).__id, ok = v.Value.(string)
 		return
@@ -36001,6 +36068,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.organization.serviceControlPolicy.statements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsOrganizationServiceControlPolicy).Statements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.organization.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganizationPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.organization.policy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganizationPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.organization.policy.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganizationPolicy).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.organization.policy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganizationPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.organization.policy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganizationPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.organization.policy.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganizationPolicy).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.organization.policy.awsManaged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganizationPolicy).AwsManaged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.organization.policy.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganizationPolicy).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.organization.policy.statements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganizationPolicy).Statements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.organization.effectivePolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganizationEffectivePolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.organization.effectivePolicy.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganizationEffectivePolicy).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.organization.effectivePolicy.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganizationEffectivePolicy).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.organization.effectivePolicy.lastUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganizationEffectivePolicy).LastUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.organization.delegatedAdministrator.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -36081,6 +36200,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.organization.organizationalUnit.serviceControlPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsOrganizationOrganizationalUnit).ServiceControlPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.organization.organizationalUnit.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganizationOrganizationalUnit).Policies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -80799,6 +80922,8 @@ type mqlAwsAccount struct {
 	State              plugin.TValue[string]
 	JoinedMethod       plugin.TValue[string]
 	JoinedTimestamp    plugin.TValue[*time.Time]
+	Policies           plugin.TValue[[]any]
+	EffectivePolicies  plugin.TValue[[]any]
 }
 
 // createAwsAccount creates a new instance of this resource
@@ -80979,6 +81104,38 @@ func (c *mqlAwsAccount) GetJoinedMethod() *plugin.TValue[string] {
 func (c *mqlAwsAccount) GetJoinedTimestamp() *plugin.TValue[*time.Time] {
 	return plugin.GetOrCompute[*time.Time](&c.JoinedTimestamp, func() (*time.Time, error) {
 		return c.joinedTimestamp()
+	})
+}
+
+func (c *mqlAwsAccount) GetPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Policies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.account", c.__id, "policies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policies()
+	})
+}
+
+func (c *mqlAwsAccount) GetEffectivePolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EffectivePolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.account", c.__id, "effectivePolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.effectivePolicies()
 	})
 }
 
@@ -81297,6 +81454,7 @@ type mqlAwsOrganization struct {
 	DelegatedAdministrators plugin.TValue[[]any]
 	OrganizationalUnits     plugin.TValue[[]any]
 	ServiceControlPolicies  plugin.TValue[[]any]
+	Policies                plugin.TValue[[]any]
 }
 
 // createAwsOrganization creates a new instance of this resource
@@ -81419,6 +81577,22 @@ func (c *mqlAwsOrganization) GetServiceControlPolicies() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsOrganization) GetPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Policies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.organization", c.__id, "policies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policies()
+	})
+}
+
 // mqlAwsOrganizationServiceControlPolicy for the aws.organization.serviceControlPolicy resource
 type mqlAwsOrganizationServiceControlPolicy struct {
 	MqlRuntime *plugin.Runtime
@@ -81505,6 +81679,153 @@ func (c *mqlAwsOrganizationServiceControlPolicy) GetStatements() *plugin.TValue[
 
 		return c.statements()
 	})
+}
+
+// mqlAwsOrganizationPolicy for the aws.organization.policy resource
+type mqlAwsOrganizationPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsOrganizationPolicyInternal it will be used here
+	Id          plugin.TValue[string]
+	Arn         plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	Type        plugin.TValue[string]
+	AwsManaged  plugin.TValue[bool]
+	Content     plugin.TValue[string]
+	Statements  plugin.TValue[[]any]
+}
+
+// createAwsOrganizationPolicy creates a new instance of this resource
+func createAwsOrganizationPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsOrganizationPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.organization.policy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsOrganizationPolicy) MqlName() string {
+	return "aws.organization.policy"
+}
+
+func (c *mqlAwsOrganizationPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsOrganizationPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsOrganizationPolicy) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsOrganizationPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsOrganizationPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsOrganizationPolicy) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsOrganizationPolicy) GetAwsManaged() *plugin.TValue[bool] {
+	return &c.AwsManaged
+}
+
+func (c *mqlAwsOrganizationPolicy) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		return c.content()
+	})
+}
+
+func (c *mqlAwsOrganizationPolicy) GetStatements() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Statements, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.organization.policy", c.__id, "statements")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.statements()
+	})
+}
+
+// mqlAwsOrganizationEffectivePolicy for the aws.organization.effectivePolicy resource
+type mqlAwsOrganizationEffectivePolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsOrganizationEffectivePolicyInternal it will be used here
+	Type          plugin.TValue[string]
+	Content       plugin.TValue[string]
+	LastUpdatedAt plugin.TValue[*time.Time]
+}
+
+// createAwsOrganizationEffectivePolicy creates a new instance of this resource
+func createAwsOrganizationEffectivePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsOrganizationEffectivePolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.organization.effectivePolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsOrganizationEffectivePolicy) MqlName() string {
+	return "aws.organization.effectivePolicy"
+}
+
+func (c *mqlAwsOrganizationEffectivePolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsOrganizationEffectivePolicy) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsOrganizationEffectivePolicy) GetContent() *plugin.TValue[string] {
+	return &c.Content
+}
+
+func (c *mqlAwsOrganizationEffectivePolicy) GetLastUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.LastUpdatedAt
 }
 
 // mqlAwsOrganizationDelegatedAdministrator for the aws.organization.delegatedAdministrator resource
@@ -81689,6 +82010,7 @@ type mqlAwsOrganizationOrganizationalUnit struct {
 	Name                   plugin.TValue[string]
 	Path                   plugin.TValue[string]
 	ServiceControlPolicies plugin.TValue[[]any]
+	Policies               plugin.TValue[[]any]
 }
 
 // createAwsOrganizationOrganizationalUnit creates a new instance of this resource
@@ -81757,6 +82079,22 @@ func (c *mqlAwsOrganizationOrganizationalUnit) GetServiceControlPolicies() *plug
 		}
 
 		return c.serviceControlPolicies()
+	})
+}
+
+func (c *mqlAwsOrganizationOrganizationalUnit) GetPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Policies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.organization.organizationalUnit", c.__id, "policies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policies()
 	})
 }
 
