@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.52.1",
-  "generated_at": "2026-08-05T19:27:28+02:00",
+  "generated_at": "2026-08-05T19:39:25+02:00",
   "permissions": [
     "access-analyzer:GetFindingV2",
     "access-analyzer:ListAnalyzers",
@@ -638,6 +638,7 @@
     "network-firewall:ListRuleGroups",
     "network-firewall:ListTLSInspectionConfigurations",
     "organizations:DescribeAccount",
+    "organizations:DescribeEffectivePolicy",
     "organizations:DescribeOrganization",
     "organizations:DescribePolicy",
     "organizations:ListAccounts",
@@ -4903,6 +4904,12 @@
       "source_file": "aws_account.go"
     },
     {
+      "permission": "organizations:DescribeEffectivePolicy",
+      "service": "organizations",
+      "action": "DescribeEffectivePolicy",
+      "source_file": "aws_organizations_policy.go"
+    },
+    {
       "permission": "organizations:DescribeOrganization",
       "service": "organizations",
       "action": "DescribeOrganization",
@@ -4912,7 +4919,7 @@
       "permission": "organizations:DescribePolicy",
       "service": "organizations",
       "action": "DescribePolicy",
-      "source_file": "aws_account.go"
+      "source_file": "aws_organizations_policy.go"
     },
     {
       "permission": "organizations:ListAccounts",
@@ -4945,10 +4952,22 @@
       "source_file": "aws_account.go"
     },
     {
+      "permission": "organizations:ListPolicies",
+      "service": "organizations",
+      "action": "ListPolicies",
+      "source_file": "aws_organizations_policy.go"
+    },
+    {
       "permission": "organizations:ListPoliciesForTarget",
       "service": "organizations",
       "action": "ListPoliciesForTarget",
       "source_file": "aws_account.go"
+    },
+    {
+      "permission": "organizations:ListPoliciesForTarget",
+      "service": "organizations",
+      "action": "ListPoliciesForTarget",
+      "source_file": "aws_organizations_policy.go"
     },
     {
       "permission": "organizations:ListRoots",

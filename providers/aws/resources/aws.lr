@@ -112,6 +112,25 @@ aws.account @defaults("id aliases.first organization.id") {
   // Available only when the calling identity is the organization's management
   // account or a delegated administrator.
   joinedTimestamp() time
+
+  // Organization policies attached directly to the account, across every policy type
+  //
+  // Only the policies attached to this account, not the ones it inherits from
+  // the organization root or its organizational units. Available only when the
+  // calling identity is the organization's management account or a delegated
+  // administrator. Otherwise empty.
+  policies() []aws.organization.policy
+
+  // Organization policies that resolve for the account, merged across the organization
+  //
+  // The value each control settles on for this account once inherited and
+  // directly attached policies are combined. Covers the management policy
+  // types only, since AWS computes no effective policy for service control or
+  // resource control policies. A type with no policy applying to the account
+  // contributes no entry. Available only when the calling identity is the
+  // organization's management account or a delegated administrator. Otherwise
+  // empty.
+  effectivePolicies() []aws.organization.effectivePolicy
 }
 
 // AWS Account alternate contact
@@ -239,6 +258,17 @@ aws.organization @defaults("id masterAccountEmail") {
   organizationalUnits() []aws.organization.organizationalUnit
   // Service control policies defined in the organization, if available to the caller
   serviceControlPolicies() []aws.organization.serviceControlPolicy
+  // Policies defined in the organization, across every policy type
+  //
+  // Covers all policy types AWS Organizations supports, not only service
+  // control policies: resource control policies, which bound what external
+  // principals may do to resources in the organization, declarative policies,
+  // which pin account settings such as EC2 instance metadata defaults, and the
+  // tag, backup, and AI-services opt-out policies. Select a type with a filter,
+  // for example
+  // `policies.where(type == "RESOURCE_CONTROL_POLICY")`. A policy type that is
+  // not enabled for the organization contributes nothing.
+  policies() []aws.organization.policy
 }
 
 // AWS Organizations service control policy
@@ -264,6 +294,72 @@ private aws.organization.serviceControlPolicy @defaults("name id") {
   content() string
   // Parsed statements from the policy content
   statements() []aws.iam.policyStatement
+}
+
+// AWS Organizations policy
+//
+// Policy of any type defined in an organization, and the guardrail it applies
+// to the accounts, organizational units, and roots it is attached to. The type
+// field says which control the policy carries: SERVICE_CONTROL_POLICY bounds
+// what principals in the organization may do, RESOURCE_CONTROL_POLICY bounds
+// what may be done to the organization's resources by principals outside it,
+// DECLARATIVE_POLICY_EC2 pins account settings such as instance metadata
+// defaults and EBS encryption, and the remaining types cover tagging, backup,
+// AI-services opt-out, and per-service configuration. Other values include
+// TAG_POLICY, BACKUP_POLICY, AISERVICES_OPT_OUT_POLICY, CHATBOT_POLICY,
+// SECURITYHUB_POLICY, INSPECTOR_POLICY, UPGRADE_ROLLOUT_POLICY, BEDROCK_POLICY,
+// S3_POLICY, and NETWORK_SECURITY_DIRECTOR_POLICY.
+private aws.organization.policy @defaults("name type id") {
+  // Unique identifier of the policy
+  id string
+  // ARN of the policy
+  arn string
+  // Friendly name of the policy
+  name string
+  // Description of the policy
+  description string
+  // Type of control the policy carries
+  //
+  // One of SERVICE_CONTROL_POLICY, RESOURCE_CONTROL_POLICY, TAG_POLICY,
+  // BACKUP_POLICY, AISERVICES_OPT_OUT_POLICY, CHATBOT_POLICY,
+  // DECLARATIVE_POLICY_EC2, SECURITYHUB_POLICY, INSPECTOR_POLICY,
+  // UPGRADE_ROLLOUT_POLICY, BEDROCK_POLICY, S3_POLICY, or
+  // NETWORK_SECURITY_DIRECTOR_POLICY.
+  type string
+  // Whether the policy is managed by AWS rather than the customer
+  awsManaged bool
+  // Raw policy content document (JSON)
+  content() string
+  // Parsed statements from the policy content
+  //
+  // Resolved for the policy types written in the IAM policy grammar, which are
+  // the service control and resource control policies. Empty for the tag,
+  // backup, declarative, AI-services opt-out, and per-service policy types,
+  // which use their own document formats: read content for those.
+  statements() []aws.iam.policyStatement
+}
+
+// AWS Organizations effective policy
+//
+// Merged policy that actually applies to one account, combining the policies
+// it inherits from the organization root and its organizational units with any
+// policy attached directly to it. This is the value to audit when the question
+// is what a control resolves to for an account rather than which documents
+// were attached where. AWS computes an effective policy for the management
+// policy types only, so there is no entry for service control or resource
+// control policies, whose combined effect AWS does not expose.
+private aws.organization.effectivePolicy @defaults("type lastUpdatedAt") {
+  // Type of the effective policy
+  //
+  // One of TAG_POLICY, BACKUP_POLICY, AISERVICES_OPT_OUT_POLICY,
+  // CHATBOT_POLICY, DECLARATIVE_POLICY_EC2, SECURITYHUB_POLICY,
+  // INSPECTOR_POLICY, UPGRADE_ROLLOUT_POLICY, BEDROCK_POLICY, S3_POLICY, or
+  // NETWORK_SECURITY_DIRECTOR_POLICY.
+  type string
+  // Merged policy content document (JSON)
+  content string
+  // When the effective policy was last updated
+  lastUpdatedAt time
 }
 
 // AWS Organization delegated administrator
@@ -310,6 +406,11 @@ private aws.organization.organizationalUnit @defaults("id name path") {
   path string
   // Service control policies attached directly to this organizational unit
   serviceControlPolicies() []aws.organization.serviceControlPolicy
+  // Policies attached directly to this organizational unit, across every policy type
+  //
+  // Only the policies attached at this level, not the ones the unit inherits
+  // from the organization root or a parent unit.
+  policies() []aws.organization.policy
 }
 
 // Amazon Virtual Private Cloud (VPC)
