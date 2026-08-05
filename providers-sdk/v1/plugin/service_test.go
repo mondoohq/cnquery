@@ -400,11 +400,10 @@ func TestHeartbeat(t *testing.T) {
 	_, err := s.Heartbeat(&HeartbeatReq{})
 	require.Error(t, err, "an interval of 0 has no tolerance to apply")
 
-	before := time.Now().UnixNano()
 	_, err = s.Heartbeat(&HeartbeatReq{Interval: uint64(time.Hour)})
 	require.NoError(t, err)
 	assert.Equal(t, int64(time.Hour), s.heartbeatWindow.Load())
-	assert.GreaterOrEqual(t, s.lastHeartbeat.Load(), before)
+	assert.Less(t, s.heartbeatSilence(), time.Second)
 }
 
 func TestTrackRequest(t *testing.T) {

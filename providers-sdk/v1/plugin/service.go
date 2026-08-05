@@ -29,9 +29,12 @@ type Service struct {
 	lastConnectionID uint32
 	runtimesLock     sync.RWMutex
 
-	// lastHeartbeat is the wall clock time (unix nanos) at which we last saw a
-	// heartbeat from the parent process.
-	lastHeartbeat atomic.Int64
+	// lastHeartbeat is when we last saw a heartbeat from the parent process. It
+	// is kept as a time.Time, which carries a monotonic reading: a wall clock
+	// correction must not be able to make a healthy provider look abandoned, nor
+	// keep an abandoned one alive.
+	lastHeartbeat     time.Time
+	lastHeartbeatLock sync.Mutex
 	// heartbeatWindow is the tolerance (in nanos) the parent asked us to apply,
 	// i.e. how long it intends to let pass between two heartbeats at most.
 	heartbeatWindow atomic.Int64
@@ -362,7 +365,7 @@ func (s *Service) Heartbeat(req *HeartbeatReq) (*HeartbeatRes, error) {
 	}
 
 	s.heartbeatWindow.Store(int64(req.Interval))
-	s.lastHeartbeat.Store(time.Now().UnixNano())
+	s.recordHeartbeat()
 	s.watchdogOnce.Do(func() {
 		go s.heartbeatWatchdog()
 	})
@@ -379,6 +382,20 @@ func (s *Service) TrackRequest() func() {
 	return func() {
 		s.inflightRequests.Add(-1)
 	}
+}
+
+func (s *Service) recordHeartbeat() {
+	s.lastHeartbeatLock.Lock()
+	s.lastHeartbeat = time.Now()
+	s.lastHeartbeatLock.Unlock()
+}
+
+// heartbeatSilence is how long it has been since the last heartbeat, measured
+// against the monotonic clock, so it is immune to wall clock corrections.
+func (s *Service) heartbeatSilence() time.Duration {
+	s.lastHeartbeatLock.Lock()
+	defer s.lastHeartbeatLock.Unlock()
+	return time.Since(s.lastHeartbeat)
 }
 
 // heartbeatWatchdog is the dead-man's switch for an abandoned provider: when the
@@ -398,7 +415,7 @@ func (s *Service) heartbeatWatchdog() {
 
 		// re-read: the parent may have changed the window in the meantime
 		window = time.Duration(s.heartbeatWindow.Load())
-		silence := time.Since(time.Unix(0, s.lastHeartbeat.Load()))
+		silence := s.heartbeatSilence()
 		inflight := s.inflightRequests.Load()
 
 		if silence <= window {
