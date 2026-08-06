@@ -30794,6 +30794,8 @@ private aws.vpclattice.listener @defaults("name protocol port") {
   createdAt time
   // When the listener was last updated
   lastUpdatedAt time
+  // Tags on the listener
+  tags() map[string]string
 }
 
 // Amazon VPC Lattice target group
@@ -30828,4 +30830,6 @@ private aws.vpclattice.targetGroup @defaults("name type protocol port") {
   createdAt time
   // When the target group was last updated
   lastUpdatedAt time
+  // Tags on the target group
+  tags() map[string]string
 }

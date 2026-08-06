@@ -10792,6 +10792,7 @@ aws.vpclattice.listener.lastUpdatedAt 13.52.2
 aws.vpclattice.listener.name 13.52.2
 aws.vpclattice.listener.port 13.52.2
 aws.vpclattice.listener.protocol 13.52.2
+aws.vpclattice.listener.tags 13.52.2
 aws.vpclattice.service 13.52.2
 aws.vpclattice.service.arn 13.52.2
 aws.vpclattice.service.authPolicy 13.52.2
@@ -10846,6 +10847,7 @@ aws.vpclattice.targetGroup.protocol 13.52.2
 aws.vpclattice.targetGroup.region 13.52.2
 aws.vpclattice.targetGroup.services 13.52.2
 aws.vpclattice.targetGroup.status 13.52.2
+aws.vpclattice.targetGroup.tags 13.52.2
 aws.vpclattice.targetGroup.type 13.52.2
 aws.vpclattice.targetGroup.vpc 13.52.2
 aws.vpclattice.targetGroups 13.52.2

@@ -462,6 +462,7 @@ func (a *mqlAwsVpclatticeService) listeners() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			mqlListener.(*mqlAwsVpclatticeListener).region = a.Region.Data
 			res = append(res, mqlListener)
 		}
 	}
@@ -536,6 +537,23 @@ func (a *mqlAwsVpclattice) getTargetGroups(conn *connection.AwsConnection) []*jo
 type mqlAwsVpclatticeTargetGroupInternal struct {
 	cacheVpcId       string
 	cacheServiceArns []string
+}
+
+func (a *mqlAwsVpclatticeTargetGroup) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return vpcLatticeTags(conn.VpcLattice(a.Region.Data), a.Arn.Data)
+}
+
+// mqlAwsVpclatticeListenerInternal carries the region of the service the
+// listener belongs to. A listener has no region of its own in the API response,
+// but tags are fetched through a regional client.
+type mqlAwsVpclatticeListenerInternal struct {
+	region string
+}
+
+func (a *mqlAwsVpclatticeListener) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return vpcLatticeTags(conn.VpcLattice(a.region), a.Arn.Data)
 }
 
 // services resolves the services routing traffic to this target group. A target

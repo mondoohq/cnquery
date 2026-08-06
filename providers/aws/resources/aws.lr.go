@@ -36124,6 +36124,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpclattice.listener.lastUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpclatticeListener).GetLastUpdatedAt()).ToDataRes(types.Time)
 	},
+	"aws.vpclattice.listener.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeListener).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"aws.vpclattice.targetGroup.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpclatticeTargetGroup).GetArn()).ToDataRes(types.String)
 	},
@@ -36162,6 +36165,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.vpclattice.targetGroup.lastUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpclatticeTargetGroup).GetLastUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.vpclattice.targetGroup.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeTargetGroup).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 }
 
@@ -81655,6 +81661,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsVpclatticeListener).LastUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"aws.vpclattice.listener.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeListener).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"aws.vpclattice.targetGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpclatticeTargetGroup).__id, ok = v.Value.(string)
 		return
@@ -81709,6 +81719,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.vpclattice.targetGroup.lastUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpclatticeTargetGroup).LastUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.targetGroup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeTargetGroup).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 }
@@ -198979,7 +198993,7 @@ func (c *mqlAwsVpclatticeService) GetTags() *plugin.TValue[map[string]any] {
 type mqlAwsVpclatticeListener struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsVpclatticeListenerInternal it will be used here
+	mqlAwsVpclatticeListenerInternal
 	Arn           plugin.TValue[string]
 	Id            plugin.TValue[string]
 	Name          plugin.TValue[string]
@@ -198987,6 +199001,7 @@ type mqlAwsVpclatticeListener struct {
 	Port          plugin.TValue[int64]
 	CreatedAt     plugin.TValue[*time.Time]
 	LastUpdatedAt plugin.TValue[*time.Time]
+	Tags          plugin.TValue[map[string]any]
 }
 
 // createAwsVpclatticeListener creates a new instance of this resource
@@ -199054,6 +199069,12 @@ func (c *mqlAwsVpclatticeListener) GetLastUpdatedAt() *plugin.TValue[*time.Time]
 	return &c.LastUpdatedAt
 }
 
+func (c *mqlAwsVpclatticeListener) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
 // mqlAwsVpclatticeTargetGroup for the aws.vpclattice.targetGroup resource
 type mqlAwsVpclatticeTargetGroup struct {
 	MqlRuntime *plugin.Runtime
@@ -199072,6 +199093,7 @@ type mqlAwsVpclatticeTargetGroup struct {
 	Services      plugin.TValue[[]any]
 	CreatedAt     plugin.TValue[*time.Time]
 	LastUpdatedAt plugin.TValue[*time.Time]
+	Tags          plugin.TValue[map[string]any]
 }
 
 // createAwsVpclatticeTargetGroup creates a new instance of this resource
@@ -199185,4 +199207,10 @@ func (c *mqlAwsVpclatticeTargetGroup) GetCreatedAt() *plugin.TValue[*time.Time] 
 
 func (c *mqlAwsVpclatticeTargetGroup) GetLastUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.LastUpdatedAt
+}
+
+func (c *mqlAwsVpclatticeTargetGroup) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
 }
