@@ -102,6 +102,10 @@ gcp.organization @defaults("name") {
   networkSecurityProfileGroups() []gcp.organization.networkSecurityProfileGroup
   // Custom IAM roles defined at the organization level
   customRoles() []gcp.organization.role
+  // Principal access boundary policies defined in the organization
+  principalAccessBoundaryPolicies() []gcp.organization.principalAccessBoundaryPolicy
+  // Policy bindings that put boundary policies into effect against principal sets
+  policyBindings() []gcp.organization.policyBinding
   // Cloud Logging configuration scoped to the organization
   logging() gcp.organization.loggingService
   // Essential Contacts configured at the organization level for security, technical, and other notification categories
@@ -141,6 +145,89 @@ private gcp.organization.role @defaults("title name") {
   // implicitDelegation, the permissions that enable acting as a service
   // account and escalating privilege.
   grantsServiceAccountImpersonation() bool
+}
+
+// Principal access boundary policy
+//
+// Organization-level boundary that caps which resources a set of principals may
+// reach, independent of the roles those principals hold. A principal outside the
+// boundary is denied even where an allow policy grants the role, so a broad role
+// grant can be far narrower in effect than its bindings suggest, and a finding
+// derived from bindings alone can be a false positive. The `rules` field lists
+// the resource sets the boundary admits and `enforcementVersion` fixes which
+// resource types it is evaluated against. Selected by the full resource name. A
+// boundary takes effect only through a binding, listed by `policyBindings`.
+private gcp.organization.principalAccessBoundaryPolicy @defaults("name displayName enforcementVersion") {
+  // Full resource name of the boundary policy
+  name string
+  // Server-generated unique identifier
+  uid string
+  // Human-readable name
+  displayName string
+  // User-supplied annotations
+  annotations map[string]string
+  // Etag for optimistic concurrency control
+  etag string
+  // Version of the enforcement algorithm the policy is evaluated with
+  enforcementVersion string
+  // Resource sets the boundary admits
+  //
+  // Each entry holds `description`, `resources` (the full resource names or
+  // ancestor paths the rule admits), and `effect` (currently `ALLOW`).
+  rules []dict
+  // Time the policy was created
+  createTime time
+  // Time the policy was last updated
+  updateTime time
+}
+
+// Policy binding
+//
+// Attachment of a policy to a principal set, the link that puts a principal
+// access boundary into effect. The `target` field names the principal set the
+// binding governs, `policyKind` and `policy` name what is attached, and
+// `condition` carries a CEL expression limiting when the binding applies.
+// Selected by the full resource name. A boundary policy with no binding
+// constrains nothing, so enumerate both when auditing whether a boundary is
+// live.
+private gcp.organization.policyBinding @defaults("name policyKind policyName") {
+  // Full resource name of the binding
+  name string
+  // Server-generated unique identifier
+  uid string
+  // Human-readable name
+  displayName string
+  // Principal set the binding governs
+  //
+  // Holds `principalSet`, the resource whose principals the attached policy
+  // applies to: a single principal, a workforce or workload identity pool, or
+  // an organization, folder, or project.
+  target dict
+  // Kind of policy attached by this binding
+  //
+  // Currently `PRINCIPAL_ACCESS_BOUNDARY`.
+  policyKind string
+  // Full resource name of the attached policy
+  policyName string
+  // Boundary policy this binding attaches
+  //
+  // Resolves policyName to the boundary policy, so a binding leads straight to
+  // the resource sets it actually admits. Null when the policy lives outside
+  // this organization or the caller cannot read it.
+  policy() gcp.organization.principalAccessBoundaryPolicy
+  // CEL condition limiting when the binding applies
+  //
+  // Keys: `expression`, `title`, `description`, and `location`. An empty
+  // condition means the binding always applies.
+  condition dict
+  // User-supplied annotations
+  annotations map[string]string
+  // Etag for optimistic concurrency control
+  etag string
+  // Time the binding was created
+  createTime time
+  // Time the binding was last updated
+  updateTime time
 }
 
 // Network Security profile for an organization
@@ -856,6 +943,10 @@ gcp.project @defaults("name number") {
   services() []gcp.service
   // List of recommendations
   recommendations() []gcp.recommendation
+  // Usage observations from the Recommender service, including unused-permission and ineffective-firewall-rule findings
+  insights() []gcp.insight
+  // Privileged Access Manager configuration, the just-in-time elevation paths into the project
+  privilegedAccessManager() gcp.project.privilegedAccessManagerService
   // GCP GKE resources
   gke() gcp.project.gkeService
   // GCP Compute resources for the project
@@ -1140,6 +1231,65 @@ gcp.recommendation {
   // `stateMetadata` (a string-to-string map of user-supplied metadata about
   // the state).
   state dict
+}
+
+// Insight produced by the Recommender service
+//
+// Observation about measured usage that the Recommender service derived from
+// activity data, the evidence a recommendation is built on. Several of these
+// carry least-privilege findings that no configuration read can produce:
+// `google.iam.policy.Insight` reports which granted permissions a principal has
+// never exercised, `google.iam.serviceAccount.Insight` reports dormant service
+// accounts, and `google.compute.firewall.Insight` reports rules shadowed by a
+// higher-priority rule or that have never matched traffic. The `insightType`
+// field names the analyzer, `category` the impact class, `severity` the
+// urgency, and `content` the analyzer-specific detail.
+gcp.insight @defaults("insightType severity description") {
+  // Insight ID
+  id string
+  // Project ID
+  projectId string
+  // Location the insight was produced for (a zone, a region, or "global")
+  location string
+  // Insight type that produced this insight
+  //
+  // For example `google.iam.policy.Insight`,
+  // `google.iam.serviceAccount.Insight`, or
+  // `google.compute.firewall.Insight`.
+  insightType string
+  // Free-form description of the observation
+  description string
+  // Subtype narrowing the insight within its type (e.g. PERMISSIONS_USAGE)
+  insightSubtype string
+  // Full resource names the insight is about
+  targetResources []string
+  // Category of the insight's impact
+  //
+  // One of COST, SECURITY, PERFORMANCE, MANAGEABILITY, RELIABILITY,
+  // SUSTAINABILITY, or CATEGORY_UNSPECIFIED.
+  category string
+  // Severity of the insight
+  //
+  // One of LOW, MEDIUM, HIGH, CRITICAL, or SEVERITY_UNSPECIFIED.
+  severity string
+  // Analyzer-specific detail of the observation
+  //
+  // Shape varies by `insightType`. A `google.iam.policy.Insight` carries the
+  // principal, the role, and which of its permissions were and were not
+  // exercised; a `google.compute.firewall.Insight` carries the rule and why it
+  // is ineffective.
+  content dict
+  // Period of activity data the observation is drawn from (e.g. 720h0m0s)
+  observationPeriod string
+  // Lifecycle state and metadata of the insight
+  //
+  // Keys: `state` (ACTIVE, ACCEPTED, or DISMISSED) and `stateMetadata` (a
+  // string-to-string map of user-supplied metadata about the state).
+  stateInfo dict
+  // Time this insight was last refreshed
+  lastRefreshTime time
+  // Names of the recommendations generated from this insight
+  associatedRecommendations []string
 }
 
 // Google Cloud (GCP) Resource Manager binding
@@ -2708,6 +2858,45 @@ private gcp.project.storageService {
   projectId string
   // List all buckets
   buckets() []gcp.project.storageService.bucket
+  // HMAC keys issued in the project, the static credentials for the S3 interoperability API
+  hmacKeys() []gcp.project.storageService.hmacKey
+}
+
+// Cloud Storage HMAC key
+//
+// Static credential pair that authenticates to Cloud Storage through the S3
+// interoperability API on behalf of the service account named by
+// `serviceAccountEmail`. An HMAC key is a long-lived shared secret that sits
+// outside service account key management: it is absent from the account's own
+// key list, unaffected by the constraints that restrict service account key
+// creation, and has no expiry, so an unrotated key can outlive every other
+// credential on the account and survive a key-rotation exercise untouched. The
+// `accessId` selects the key and is the public half of the pair,
+// `timeCreated` gives its age, and `state` reports whether it can still
+// authenticate.
+private gcp.project.storageService.hmacKey @defaults("accessId serviceAccountEmail state timeCreated") {
+  // Access ID of the key, the public half of the credential pair
+  accessId string
+  // Project the key belongs to
+  projectId string
+  // Email of the service account the key authenticates as
+  serviceAccountEmail string
+  // Service account the key authenticates as
+  //
+  // Resolves serviceAccountEmail to the account whose identity the key assumes.
+  // Null when the key is not bound to an account in this project.
+  serviceAccount() gcp.project.iamService.serviceAccount
+  // State of the key
+  //
+  // One of ACTIVE, INACTIVE, or DELETED. Only an ACTIVE key can authenticate;
+  // an INACTIVE key is retained and can be reactivated.
+  state string
+  // Time the key was created
+  timeCreated time
+  // Time the key was last updated
+  updated time
+  // Etag for optimistic concurrency control
+  etag string
 }
 
 // Google Cloud Storage bucket
@@ -5834,6 +6023,40 @@ private gcp.project.loggingservice {
   exclusions() []gcp.project.loggingservice.exclusion
   // Customer-managed KMS key the Log Router uses to encrypt newly ingested log entries (empty when Google-managed)
   cmekKmsKeyName() string
+  // Log Router settings for the project, including whether the _Default sink is disabled
+  settings() gcp.loggingSettings
+}
+
+// Cloud Logging Log Router settings
+//
+// Log Router configuration for a project, folder, or organization. The
+// `disableDefaultSink` field is the one that decides whether logs are retained
+// at all: with it set, the `_Default` sink in newly created projects and folders
+// under this node is created disabled, so audit log entries are routed nowhere
+// and a project can present as fully instrumented while storing nothing. The
+// `kmsKeyName` and `kmsServiceAccountId` fields carry the Log Router's
+// customer-managed encryption, and `storageLocation` the region the `_Default`
+// and `_Required` buckets are created in, which governs where log data comes to
+// rest. Selected by the full resource name.
+private gcp.loggingSettings @defaults("name disableDefaultSink storageLocation") {
+  // Full resource name of the settings (e.g. projects/my-project/settings)
+  name string
+  // Whether the _Default sink is created disabled in new projects and folders under this node
+  disableDefaultSink bool
+  // Customer-managed KMS key the Log Router encrypts newly ingested entries with (empty when Google-managed)
+  kmsKeyName string
+  // Service account the Log Router uses to reach the customer-managed key
+  kmsServiceAccountId string
+  // Service account log sinks under this node use as their writer identity when none is supplied
+  loggingServiceAccountId string
+  // Storage location for the _Default and _Required log buckets of new projects and folders
+  storageLocation string
+  // Overrides for the built-in _Default sink configuration
+  //
+  // Holds `filter`, the inclusion filter applied to the `_Default` sink in place
+  // of the built-in one, and `exclusions`, the additional exclusion filters
+  // applied to it. Either can silently narrow what the sink retains.
+  defaultSinkConfig dict
 }
 
 // Google Cloud (GCP) Cloud Logging bucket
@@ -6131,13 +6354,26 @@ private gcp.project.iamService.serviceAccount @defaults("displayName name") {
   iamPolicy() []gcp.resourcemanager.binding
   // Whether any principal can impersonate this service account
   //
-  // True when the IAM policy grants one of the predefined impersonation roles
-  // (serviceAccountTokenCreator, serviceAccountUser, or workloadIdentityUser)
-  // to any member. Only these predefined roles are checked — custom roles that
-  // include equivalent permissions (e.g. iam.serviceAccounts.getAccessToken)
-  // are not detected — and the grant is flagged even when scoped by an IAM
-  // condition (inspect iamPolicy for the condition details).
+  // True when the service account's own IAM policy grants one of the predefined
+  // impersonation roles (serviceAccountTokenCreator, serviceAccountUser, or
+  // workloadIdentityUser) to any member. Three limits apply. Only these
+  // predefined roles are checked, so custom roles carrying equivalent
+  // permissions (e.g. iam.serviceAccounts.getAccessToken) are not detected. The
+  // grant is flagged even when scoped by an IAM condition (inspect iamPolicy
+  // for the condition details). And only the account's own policy is read, so a
+  // role granted on the enclosing project, folder, or organization does not
+  // register here. For the inheritance-aware answer use `impersonators`.
   canBeImpersonated() bool
+  // Principals that can effectively obtain credentials for this service account
+  //
+  // Expansion of who can mint tokens for the account, resolved through Cloud
+  // Asset Inventory IAM policy analysis so that roles granted on the enclosing
+  // project, its folders, and the organization are included and groups are
+  // expanded to their member principals. This reaches the most common
+  // impersonation misconfiguration that `canBeImpersonated` cannot see:
+  // `roles/iam.serviceAccountUser` granted at the project level. Requires the
+  // Cloud Asset API to be enabled and costs one analysis call per account.
+  impersonators() []string
 }
 
 // Google Cloud (GCP) IAM service account key
@@ -10437,6 +10673,49 @@ private gcp.orgPolicy @defaults("constraintName") {
   denyAll bool
   // Whether the live spec inherits and merges policy from the parent resource
   inheritFromParent bool
+}
+
+// Effective organization policy at a project
+//
+// Organization policy as actually evaluated for the project, with inheritance
+// resolved, including constraints set on an ancestor folder or the organization
+// and never declared on the project itself. The `orgPolicies` collection
+// reports only policies attached directly to a node, so there a project that
+// inherits an enforced constraint and a project with no enforcement anywhere
+// look identical. The `constraint` field selects which constraint to resolve,
+// for example `gcp.project.effectiveOrgPolicy(constraint:
+// "constraints/compute.requireOsLogin").enforced`. Boolean constraints are
+// summarized by `enforced`, list constraints by `allowedValues`,
+// `deniedValues`, `allowAll`, and `denyAll`.
+//
+// A constraint with no policy set anywhere in the hierarchy resolves to the zero
+// value (`enforced` false, empty value lists) rather than an error, since that is
+// the effective state: nothing is enforced. A constraint name that does not exist
+// resolves the same way, so confirm the name when a result looks unexpectedly
+// empty.
+private gcp.project.effectiveOrgPolicy @defaults("constraint enforced") {
+  init(constraint string)
+  // Project the policy is evaluated for
+  projectId string
+  // Constraint being resolved (e.g. constraints/compute.requireOsLogin)
+  constraint string
+  // Whether a boolean constraint is enforced once inheritance is applied
+  enforced() bool
+  // Values allowed by the effective list-constraint rules
+  allowedValues() []string
+  // Values denied by the effective list-constraint rules
+  deniedValues() []string
+  // Whether the effective policy allows all values for a list constraint
+  allowAll() bool
+  // Whether the effective policy denies all values for a list constraint
+  denyAll() bool
+  // Effective policy specification
+  //
+  // Raw merged policy spec. Keys: `rules` (each with `values` holding
+  // `allowedValues`/`deniedValues`, plus `allowAll`, `denyAll`, `enforce`, and
+  // an optional CEL `condition`), `inheritFromParent`, `reset`, `etag`, and
+  // `updateTime`.
+  spec() dict
 }
 
 // Google Cloud (GCP) Organization policy constraint
@@ -16573,6 +16852,186 @@ private gcp.project.assetService.iamPolicy @defaults("resource assetType") {
   bindings []gcp.resourcemanager.binding
 }
 
+// Principals a permission is effectively granted to
+//
+// Expansion of who can actually exercise a permission on a resource, computed
+// by Cloud Asset Inventory IAM policy analysis. Unlike reading a resource's own
+// `iamPolicy`, this folds in bindings inherited from the ancestor folders and
+// organization, expands groups to their transitive member principals, and
+// reports whether a grant is gated by an IAM condition. The `permission` and
+// `resource` fields select the question, for example
+// `gcp.project.assetService.whoCan(permission: "storage.objects.get", resource:
+// "//storage.googleapis.com/projects/_/buckets/my-bucket")`. The `principals`
+// field lists every principal the analysis reaches, `inheritedPrincipals`
+// narrows that to grants attached above the resource itself, and
+// `conditionalPrincipals` to grants that apply only when their condition
+// evaluates true. Check `fullyExplored` before reading an empty `principals`
+// list as proof that nobody has access.
+private gcp.project.assetService.whoCan @defaults("permission resource principals") {
+  init(permission string, resource string)
+  // Project the analysis is scoped to
+  projectId string
+  // IAM permission under test (e.g. storage.objects.get)
+  permission string
+  // Full resource name the permission is tested against
+  //
+  // The Cloud Asset Inventory full resource name, for example
+  // `//storage.googleapis.com/projects/_/buckets/my-bucket` or
+  // `//iam.googleapis.com/projects/my-project/serviceAccounts/sa@my-project.iam.gserviceaccount.com`.
+  resource string
+  // Every principal the analysis finds holding the permission
+  principals() []string
+  // Principals whose grant comes from a binding attached above the resource
+  //
+  // A non-empty list means the access is invisible in the resource's own IAM
+  // policy: it is conferred by a role granted on an ancestor project, folder,
+  // or organization.
+  inheritedPrincipals() []string
+  // Principals whose grant applies only when an IAM condition evaluates true
+  conditionalPrincipals() []string
+  // Roles that confer the permission in the grants the analysis found
+  roles() []string
+  // Whether the analysis explored the entire policy set
+  //
+  // False when the analysis hit a size or time limit, in which case the
+  // principal lists are incomplete and an empty result is not proof of no
+  // access.
+  fullyExplored() bool
+}
+
+// ============================================================
+// Privileged Access Manager
+// ============================================================
+
+// Google Cloud (GCP) Privileged Access Manager
+//
+// Privileged Access Manager configuration for the project, the just-in-time
+// elevation surface. `entitlements` describes who may request which roles and
+// under what approval requirement, and `grants` records the elevations actually
+// requested and their outcome. A review of standing IAM bindings alone cannot
+// see either: a principal holding no privileged role at rest may still be able
+// to take one on demand.
+private gcp.project.privilegedAccessManagerService {
+  // Project ID
+  projectId string
+  // Entitlements defining who may request which privileged roles
+  entitlements() []gcp.project.privilegedAccessManagerService.entitlement
+  // Grants recording requested elevations and their outcome
+  grants() []gcp.project.privilegedAccessManagerService.grant
+}
+
+// Privileged Access Manager entitlement
+//
+// Definition of a privilege a principal may request rather than hold. The
+// `eligiblePrincipals` field lists who may ask, `grantedRoles` the roles the
+// elevation confers, `maxRequestDuration` how long an elevation can last, and
+// `requiresApproval` whether anyone else has to agree. An entitlement granting
+// a broad role to a wide principal set with no approval requirement is
+// effectively a standing grant with an extra step. Selected by the full
+// resource name.
+private gcp.project.privilegedAccessManagerService.entitlement @defaults("name state grantedRoles requiresApproval") {
+  // Full resource name of the entitlement
+  name string
+  // State of the entitlement
+  //
+  // One of CREATING, AVAILABLE, DELETING, DELETED, UPDATING, or
+  // STATE_UNSPECIFIED. Only an AVAILABLE entitlement can be requested against.
+  state string
+  // Principals eligible to request this entitlement
+  //
+  // Flattened from the eligible-user access control entries, in the member
+  // format used by IAM bindings (for example `user:alice@example.com` or
+  // `group:oncall@example.com`).
+  eligiblePrincipals []string
+  // Roles the elevation confers when granted
+  grantedRoles []string
+  // Resource the granted roles are applied to
+  grantedResource string
+  // Whether an approval is required before an elevation takes effect
+  //
+  // False means an eligible principal can elevate unilaterally, so the
+  // entitlement's roles are reachable by that principal at any time.
+  requiresApproval bool
+  // Eligible-user access control entries as returned by the API
+  eligibleUsers []dict
+  // Approval requirement configuration
+  //
+  // Holds `manualApprovals` when approval is required, itself carrying
+  // `requireApproverJustification` and the ordered `steps`, each with its
+  // `approvers`, `approvalsNeeded`, and `approverEmailRecipients`. Empty when no
+  // approval is required.
+  approvalWorkflow dict
+  // Privileged access the entitlement confers
+  //
+  // Holds `gcpIamAccess` with `resourceType`, `resource`, and the
+  // `roleBindings` (each a `role` and an optional CEL `conditionExpression`)
+  // that are added for the duration of a grant.
+  privilegedAccess dict
+  // Longest elevation an eligible principal may request (e.g. 4h0m0s)
+  maxRequestDuration string
+  // Justification the requester must supply
+  //
+  // Holds either `notMandatory` or `unstructured`, indicating whether a
+  // free-form justification is required when requesting the entitlement.
+  requesterJustificationConfig dict
+  // Extra notification targets for requests and approvals
+  additionalNotificationTargets dict
+  // Etag for optimistic concurrency control
+  etag string
+  // Time the entitlement was created
+  createTime time
+  // Time the entitlement was last updated
+  updateTime time
+}
+
+// Privileged Access Manager grant
+//
+// Record of a requested elevation against an entitlement: who asked
+// (`requester`), for how long (`requestedDuration`), why (`justification`), and
+// what became of it (`state`). Grants are the audit trail of privilege actually
+// taken, as opposed to privilege merely available, and `externallyModified`
+// flags a grant whose conferred bindings were changed outside Privileged Access
+// Manager. Selected by the full resource name.
+private gcp.project.privilegedAccessManagerService.grant @defaults("name requester state requestedDuration") {
+  // Full resource name of the grant
+  name string
+  // Principal that requested the elevation
+  requester string
+  // Elevation duration requested (e.g. 1h0m0s)
+  requestedDuration string
+  // State of the grant
+  //
+  // One of APPROVAL_AWAITED, DENIED, SCHEDULED, ACTIVATING, ACTIVE, ACTIVATION_FAILED,
+  // EXPIRED, REVOKING, REVOKED, ENDED, or STATE_UNSPECIFIED.
+  state string
+  // Whether the bindings this grant conferred were changed outside Privileged Access Manager
+  externallyModified bool
+  // Justification the requester supplied
+  //
+  // Holds `unstructuredJustification` with the free-form text, when the
+  // entitlement required one.
+  justification dict
+  // Lifecycle events of the grant
+  //
+  // Holds `events`, the ordered list of what happened to the grant (requested,
+  // approved, denied, activated, expired, revoked, and so on) with the time of
+  // each.
+  timeline dict
+  // Privileged access the grant conferred, in the same shape as the entitlement's
+  privilegedAccess dict
+  // Approval and denial record
+  //
+  // Holds `accessGrant` with the approval or denial actor, time, and reason,
+  // naming who authorized the elevation.
+  auditTrail dict
+  // Extra email recipients notified about this grant
+  additionalEmailRecipients []string
+  // Time the grant was created
+  createTime time
+  // Time the grant was last updated
+  updateTime time
+}
+
 // ============================================================
 // Identity-Aware Proxy (IAP)
 // ============================================================
@@ -17310,6 +17769,8 @@ private gcp.organization.loggingService {
   organizationName string
   // List of logging sinks defined at the organization level
   sinks() []gcp.organization.loggingService.sink
+  // Log Router settings for the organization, which every project below it inherits defaults from
+  settings() gcp.loggingSettings
 }
 
 // Google Cloud (GCP) organization-level Cloud Logging sink
@@ -17357,6 +17818,8 @@ private gcp.folder.loggingService {
   folderName string
   // List of logging sinks defined at the folder level
   sinks() []gcp.folder.loggingService.sink
+  // Log Router settings for the folder, which projects below it inherit defaults from
+  settings() gcp.loggingSettings
 }
 
 // Google Cloud (GCP) folder-level Cloud Logging sink

@@ -60,6 +60,7 @@ const (
 	service_workflows           = "workflows.googleapis.com"
 	service_clouddomains        = "domains.googleapis.com"
 	service_cloudasset          = "cloudasset.googleapis.com"
+	service_pam                 = "privilegedaccessmanager.googleapis.com"
 )
 
 func serviceName(name string) string {

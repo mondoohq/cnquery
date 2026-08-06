@@ -991,7 +991,7 @@ func extractGCPgRPCCalls(f *ast.File, imports map[string]*gcpImportInfo, fileNam
 			// gRPC client calls
 			if ident, ok := sel.X.(*ast.Ident); ok {
 				if cv, ok := clientVars[ident.Name]; ok {
-					if isGCPAPIMethod(methodName) {
+					if isGCPAPIMethod(methodName) || hasGCPPermissionOverride(cv.imp.service, cv.clientType, methodName) {
 						perm, overridden := gcpMethodToPermission(cv.imp.service, cv.clientType, methodName)
 						if perm != "" {
 							details = append(details, PermissionDetail{
@@ -1142,6 +1142,29 @@ func isGCPAPIMethod(name string) bool {
 	return false
 }
 
+// hasGCPPermissionOverride reports whether an explicit override exists for the
+// method, so that a call the prefix heuristic does not recognize can still be
+// recorded.
+//
+// Without this the override map is unreachable for any method whose name starts
+// with something other than the nine prefixes above (AnalyzeIamPolicy,
+// QueryActivity, and so on): the method is filtered out before the override is
+// ever consulted, and its permission is dropped from the manifest silently
+// rather than derived wrongly.
+func hasGCPPermissionOverride(service, clientType, method string) bool {
+	overrides, ok := gcpPermissionOverrides[service]
+	if !ok {
+		return false
+	}
+	if clientType != "" {
+		if _, ok := overrides[clientType+"."+method]; ok {
+			return true
+		}
+	}
+	_, ok = overrides[method]
+	return ok
+}
+
 // gcpPermissionOverrides maps (service, method) to the correct IAM permission
 // for cases where the automatic derivation produces incorrect results.
 var gcpPermissionOverrides = map[string]map[string]string{
@@ -1172,6 +1195,16 @@ var gcpPermissionOverrides = map[string]map[string]string{
 		// search* verb, not the naive "allResources"/"allIamPolicies" derivation.
 		"SearchAllResources":   "cloudasset.assets.searchAllResources",
 		"SearchAllIamPolicies": "cloudasset.assets.searchAllIamPolicies",
+		// "Analyze" is not one of the verb prefixes the generic derivation
+		// recognizes, so without this entry the IAM policy analysis permission is
+		// dropped from the manifest entirely rather than derived incorrectly.
+		"AnalyzeIamPolicy": "cloudasset.assets.analyzeIamPolicy",
+	},
+	"orgpolicy": {
+		// Reading a constraint's effective policy is governed by
+		// orgpolicy.policy.get (singular "policy"); the generic derivation yields
+		// the non-existent "orgpolicy.effectivePolicy.get".
+		"GetEffectivePolicy": "orgpolicy.policy.get",
 	},
 	"serviceusage": {
 		"GetService": "serviceusage.services.get",
@@ -1193,6 +1226,11 @@ var gcpPermissionOverrides = map[string]map[string]string{
 		// API uses type-specific permissions (e.g., recommender.iamPolicyRecommendations.list).
 		// These can't be auto-derived from the code, so skip the generic form.
 		"ListRecommendations": "",
+		// Same for insights: the permission is per insight type (e.g.
+		// recommender.iamPolicyInsights.list,
+		// recommender.computeFirewallInsights.list), so there is no single
+		// derivable permission to record.
+		"ListInsights": "",
 	},
 	"containeranalysis": {
 		// GetGrafeasClient is a Go SDK method to obtain a sub-client, not an API call.
@@ -1368,6 +1406,12 @@ var gcpPermissionOverrides = map[string]map[string]string{
 		// logging.cmekSettings.get permission (verified against GCP testable
 		// permissions at project and organization scope).
 		"Projects.GetCmekSettings": "logging.settings.get",
+		// GetSettings is a separate endpoint from GetCmekSettings and is governed
+		// by the same permission. It exists per container type, and the generic
+		// derivation would yield "logging.projects.getsettings" and friends.
+		"Projects.GetSettings":      "logging.settings.get",
+		"Folders.GetSettings":       "logging.settings.get",
+		"Organizations.GetSettings": "logging.settings.get",
 		// Log-based metrics list under the "logMetrics" resource; the generic
 		// derivation from Projects.Metrics.List yields the non-existent
 		// "logging.metrics.list".
