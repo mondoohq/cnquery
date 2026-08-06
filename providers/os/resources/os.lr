@@ -4648,7 +4648,13 @@ podman.container @defaults("name state imageName") {
   pod() podman.pod
   // Names of the networks the container is attached to
   networks []string
-  // Published port mappings, each with the host and container port and protocol
+  // Published port mappings
+  //
+  // One entry per mapping, each carrying `hostIp` and `protocol` as strings and
+  // `hostPort`, `containerPort`, and `range` as integers, so they compare
+  // numerically (e.g., `ports.where(containerPort == 5432)`). A `hostIp` of
+  // `0.0.0.0` publishes the port on every host interface, and `range` counts
+  // how many consecutive ports the mapping covers, `1` for a single port.
   ports []dict
 
   // Whether the container runs privileged

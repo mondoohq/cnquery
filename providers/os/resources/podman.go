@@ -77,7 +77,15 @@ func (p *mqlPodman) loadInfo() (*podmanInfo, error) {
 	return p.info, p.err
 }
 
+// installed reports whether the podman binary is on the system. The engine
+// settings answer that on their own when they load, and every other field needs
+// them anyway, so read them first and let the whole resource share one call. A
+// binary that is present but cannot reach an engine still fails that read, so
+// fall back to the version probe rather than report podman as absent.
 func (p *mqlPodman) installed() (bool, error) {
+	if _, err := p.loadInfo(); err == nil {
+		return true, nil
+	}
 	if _, err := runPodman(p.MqlRuntime, "--version"); err != nil {
 		log.Debug().Err(err).Msg("podman> engine not available")
 		return false, nil
