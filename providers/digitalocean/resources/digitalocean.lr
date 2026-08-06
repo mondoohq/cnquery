@@ -212,6 +212,28 @@ digitalocean.droplet @defaults("id name status") {
   nextBackupWindowStart time
   // End of the next scheduled automated-backup window; null when backups are disabled
   nextBackupWindowEnd time
+  // Automated-backup plan
+  //
+  // Cadence the backup schedule runs on, either "daily" or "weekly". Null
+  // when the droplet has no backup policy, which is always the case while
+  // `backupsEnabled` is false.
+  backupPlan() string
+  // Day of the week the backup window opens
+  //
+  // One of SUN, MON, TUE, WED, THU, FRI, or SAT. Null on droplets running
+  // the daily plan, and null when the droplet has no backup policy.
+  backupWeekday() string
+  // Hour of the day, in UTC, at which the backup window opens; null when the droplet has no backup policy
+  backupHour() int
+  // Length of the backup window in hours; null when the droplet has no backup policy
+  backupWindowLengthHours() int
+  // Retention period for automated backups, in days
+  //
+  // How long a backup image is kept before DigitalOcean deletes it. Short
+  // retention caps how far back a restore can reach after data loss or a
+  // compromise that goes undetected. Null when the droplet has no backup
+  // policy.
+  backupRetentionPeriodDays() int
   // Automated backup images retained for this droplet
   backups() []digitalocean.image
   // Snapshots taken of this droplet

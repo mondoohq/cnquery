@@ -217,6 +217,11 @@ digitalocean.domain.ttl 13.0.1
 digitalocean.domain.zoneFile 13.0.1
 digitalocean.domains 13.0.1
 digitalocean.droplet 13.0.1
+digitalocean.droplet.backupHour 13.14.5
+digitalocean.droplet.backupPlan 13.14.5
+digitalocean.droplet.backupRetentionPeriodDays 13.14.5
+digitalocean.droplet.backupWeekday 13.14.5
+digitalocean.droplet.backupWindowLengthHours 13.14.5
 digitalocean.droplet.backups 13.6.2
 digitalocean.droplet.backupsEnabled 13.0.1
 digitalocean.droplet.baseImage 13.1.7
