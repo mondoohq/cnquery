@@ -105,7 +105,7 @@ type SystemdUnitManager struct {
 }
 
 func (m *SystemdUnitManager) List() ([]*SystemdUnit, error) {
-	cmd, err := m.conn.RunCommand("systemctl list-unit-files --type service --all")
+	cmd, err := m.conn.RunCommand("systemctl list-unit-files --type service --all --no-legend")
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +172,9 @@ func (m *SystemdUnitManager) Get(name string) (*SystemdUnit, error) {
 }
 
 func buildSystemdUnitShowCommand(units []string) string {
-	args := []string{"systemctl", "show", "--property=" + systemdUnitShowProperties}
+	// "--" keeps a unit name that begins with a dash from being read as a flag;
+	// the name reaches Get straight from a query, so it is not ours to trust
+	args := []string{"systemctl", "show", "--property=" + systemdUnitShowProperties, "--"}
 	args = append(args, units...)
 
 	escaped := make([]string, len(args))
@@ -190,17 +192,11 @@ func parseSystemdUnitFileNames(input io.Reader) ([]string, error) {
 		return nil, err
 	}
 
+	// the command asks for --no-legend, but selecting on the .service suffix
+	// rather than skipping a fixed number of lines means a header or footer still
+	// falls out on its own, in any locale and on a systemd too old for the flag
 	names := []string{}
-	lines := strings.Split(string(content), "\n")
-	if len(lines) < 2 {
-		return names, nil
-	}
-
-	for _, line := range lines[1:] {
-		if strings.Contains(line, "unit files listed.") {
-			continue
-		}
-
+	for _, line := range strings.Split(string(content), "\n") {
 		fields := strings.Fields(line)
 		if len(fields) < 2 {
 			continue
@@ -433,13 +429,10 @@ func (m *SystemdFSUnitManager) Get(name string) (*SystemdUnit, error) {
 func (m *SystemdFSUnitManager) readUnit(name string, unitPath string) (*SystemdUnit, error) {
 	props := map[string]string{"Id": name}
 
-	if lr, ok := m.Fs.(afero.LinkReader); ok {
-		linkPath, err := lr.ReadlinkIfPossible(unitPath)
-		if err == nil && linkPath == "/dev/null" {
-			props["LoadState"] = "masked"
-			props["UnitFileState"] = "masked"
-			return systemdUnitFromProperties(props), nil
-		}
+	if m.isMasked(unitPath) {
+		props["LoadState"] = "masked"
+		props["UnitFileState"] = "masked"
+		return systemdUnitFromProperties(props), nil
 	}
 
 	props["LoadState"] = "loaded"
@@ -457,6 +450,30 @@ func (m *SystemdFSUnitManager) readUnit(name string, unitPath string) (*SystemdU
 	}
 
 	return systemdUnitFromProperties(props), nil
+}
+
+// isMasked reports whether a unit file is masked, meaning systemd refuses to
+// start it at all.
+//
+// Masking symlinks the unit to /dev/null, so reading the link is the direct
+// answer. Not every filesystem can read a link, though: an archive-backed or
+// remote filesystem may not implement afero.LinkReader, and a masked unit that
+// went undetected would be reported as loaded with no settings, which reads
+// exactly like a service running with no confinement. So an empty unit file is
+// treated as masked too. The cost of being wrong is small in the other
+// direction, since a zero-byte unit file carries no settings either way.
+func (m *SystemdFSUnitManager) isMasked(unitPath string) bool {
+	if lr, ok := m.Fs.(afero.LinkReader); ok {
+		if linkPath, err := lr.ReadlinkIfPossible(unitPath); err == nil {
+			return linkPath == "/dev/null"
+		}
+	}
+
+	info, err := m.Fs.Stat(unitPath)
+	if err != nil {
+		return false
+	}
+	return info.Size() == 0
 }
 
 // foldUnitFile reads the [Unit] and [Service] settings of one file into props.
@@ -497,9 +514,13 @@ func (m *SystemdFSUnitManager) foldUnitFile(props map[string]string, unitPath st
 }
 
 // dropInFiles returns the drop-in files for a unit, in the order systemd reads
-// them.
+// them: every drop-in directory is merged and the result is ordered by file
+// name, not by the directory it came from, so 05-early.conf under /usr/lib
+// still applies before 10-late.conf under /etc. When the same file name appears
+// in more than one directory, the earlier search path wins and shadows the rest.
 func (m *SystemdFSUnitManager) dropInFiles(name string) []string {
-	res := []string{}
+	winners := map[string]string{}
+	names := []string{}
 
 	for _, searchPath := range systemdUnitSearchPath {
 		dir := path.Join(searchPath, name+".d")
@@ -508,18 +529,23 @@ func (m *SystemdFSUnitManager) dropInFiles(name string) []string {
 			continue
 		}
 
-		names := []string{}
 		for _, entry := range entries {
 			if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".conf") {
 				continue
 			}
+			if _, taken := winners[entry.Name()]; taken {
+				continue
+			}
+			winners[entry.Name()] = path.Join(dir, entry.Name())
 			names = append(names, entry.Name())
 		}
-		sort.Strings(names)
+	}
 
-		for _, dropIn := range names {
-			res = append(res, path.Join(dir, dropIn))
-		}
+	sort.Strings(names)
+
+	res := make([]string, 0, len(names))
+	for _, dropIn := range names {
+		res = append(res, winners[dropIn])
 	}
 
 	return res

@@ -277,7 +277,66 @@ func TestSystemdFSUnitManager_MaskedUnit(t *testing.T) {
 
 	unit, err := (&SystemdFSUnitManager{Fs: fs}).Get("masked.service")
 	require.NoError(t, err)
+
 	assert.Equal(t, "masked.service", unit.Name)
+	// a filesystem that cannot read the /dev/null link still has to report the
+	// unit as masked; reporting it as loaded would read like a service running
+	// with no confinement at all
+	assert.Equal(t, "masked", unit.LoadState)
+	assert.Equal(t, "masked", unit.UnitFileState)
+	// a masked unit is still installed: the name exists and carries a unit file,
+	// it just cannot be started
+	assert.True(t, unit.Installed)
+	// and none of its settings are reported as configured
+	assert.Empty(t, unit.ProtectSystem)
+	assert.False(t, unit.NoNewPrivileges)
+}
+
+func TestSystemdFSUnitManager_DropInOrderIsByFileNameAcrossDirectories(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	require.NoError(t, afero.WriteFile(fs, "/etc/systemd/system/demo.service",
+		[]byte("[Service]\nProtectSystem=no\n"), 0o644))
+
+	// the later-sorting file lives in the lower-precedence directory, so applying
+	// drop-ins directory by directory would let /etc win when systemd would not
+	require.NoError(t, afero.WriteFile(fs, "/etc/systemd/system/demo.service.d/05-early.conf",
+		[]byte("[Service]\nProtectSystem=yes\n"), 0o644))
+	require.NoError(t, afero.WriteFile(fs, "/usr/lib/systemd/system/demo.service.d/10-late.conf",
+		[]byte("[Service]\nProtectSystem=strict\n"), 0o644))
+
+	unit, err := (&SystemdFSUnitManager{Fs: fs}).Get("demo.service")
+	require.NoError(t, err)
+
+	// 10-late sorts after 05-early regardless of directory, so it wins
+	assert.Equal(t, "strict", unit.ProtectSystem)
+}
+
+func TestSystemdFSUnitManager_DropInSameNameHigherPrecedenceDirWins(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	require.NoError(t, afero.WriteFile(fs, "/etc/systemd/system/demo.service",
+		[]byte("[Service]\nProtectSystem=no\n"), 0o644))
+	require.NoError(t, afero.WriteFile(fs, "/etc/systemd/system/demo.service.d/10-over.conf",
+		[]byte("[Service]\nProtectSystem=strict\n"), 0o644))
+	require.NoError(t, afero.WriteFile(fs, "/usr/lib/systemd/system/demo.service.d/10-over.conf",
+		[]byte("[Service]\nProtectSystem=yes\n"), 0o644))
+
+	unit, err := (&SystemdFSUnitManager{Fs: fs}).Get("demo.service")
+	require.NoError(t, err)
+
+	// the same file name in both directories: /etc shadows /usr/lib entirely
+	assert.Equal(t, "strict", unit.ProtectSystem)
+}
+
+func TestParseSystemdUnitFileNames_NoLegend(t *testing.T) {
+	// with --no-legend there is no header line to skip, so the first unit must
+	// not be swallowed
+	names, err := parseSystemdUnitFileNames(strings.NewReader(
+		"sshd.service                 enabled  enabled\nchronyd.service              enabled  enabled\n"))
+	require.NoError(t, err)
+
+	assert.Equal(t, []string{"sshd.service", "chronyd.service"}, names)
 }
 
 func TestSystemdFSUnitManager_NotFound(t *testing.T) {
