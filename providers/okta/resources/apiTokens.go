@@ -24,7 +24,12 @@ func (o *mqlOkta) apiTokens() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
 
 	ctx := context.Background()
-	tokens, err := sdk.ListApiTokens(ctx, conn.OrganizationID(), conn.Token())
+	apiSupplement := &sdk.ApiExtension{
+		Host:  conn.OrganizationID(),
+		Token: conn.Token(),
+	}
+
+	tokens, err := apiSupplement.ListApiTokens(ctx, queryLimit)
 	if err != nil {
 		return nil, err
 	}

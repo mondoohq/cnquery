@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -72,6 +73,9 @@ func initOktaCustomRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	role, _, err := client.RoleAPI.GetRole(ctx, id).Execute()
 	if err != nil {
 		return nil, nil, err
+	}
+	if role == nil {
+		return nil, nil, fmt.Errorf("okta.customRole with id %q not found", id)
 	}
 
 	args["id"] = llx.StringData(oktaStr(role.Id))

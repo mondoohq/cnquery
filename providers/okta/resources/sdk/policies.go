@@ -46,7 +46,7 @@ func (m *ApiExtension) ListPolicies(ctx context.Context, policyType string, limi
 	if limit > 0 {
 		params.Set("limit", strconv.Itoa(limit))
 	}
-	nextURL := m.url("/api/v1/policies") + "?" + params.Encode()
+	nextURL := m.urlWithParams("/api/v1/policies", params)
 
 	policies := []*PolicyWrapper{}
 	var firstResp *http.Response
@@ -79,7 +79,7 @@ func (m *ApiExtension) ListPolicyRules(ctx context.Context, policyId string, lim
 	if limit > 0 {
 		params.Set("limit", strconv.Itoa(limit))
 	}
-	nextURL := m.url("/api/v1/policies/"+url.PathEscape(policyId)+"/rules") + "?" + params.Encode()
+	nextURL := m.urlWithParams("/api/v1/policies/"+url.PathEscape(policyId)+"/rules", params)
 
 	rules := []json.RawMessage{}
 	for i := 0; i < maxPages && nextURL != ""; i++ {
