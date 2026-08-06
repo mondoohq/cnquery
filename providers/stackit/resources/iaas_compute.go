@@ -4,7 +4,7 @@
 package resources
 
 import (
-	"github.com/stackitcloud/stackit-sdk-go/services/iaas"
+	iaas "github.com/stackitcloud/stackit-sdk-go/services/iaas/v2api"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
@@ -25,7 +25,7 @@ func (r *mqlStackit) backups() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListBackupsExecute(bgctx(), c.ProjectID(), c.Region())
+	resp, err := client.DefaultAPI.ListBackups(bgctx(), c.ProjectID(), c.Region()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -83,7 +83,7 @@ func initStackitBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	if err != nil {
 		return nil, nil, err
 	}
-	b, err := client.GetBackupExecute(bgctx(), c.ProjectID(), c.Region(), id)
+	b, err := client.DefaultAPI.GetBackup(bgctx(), c.ProjectID(), c.Region(), id).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -126,7 +126,7 @@ func (r *mqlStackit) affinityGroups() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListAffinityGroupsExecute(bgctx(), c.ProjectID(), c.Region())
+	resp, err := client.DefaultAPI.ListAffinityGroups(bgctx(), c.ProjectID(), c.Region()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -173,7 +173,7 @@ func initStackitAffinityGroup(runtime *plugin.Runtime, args map[string]*llx.RawD
 	if err != nil {
 		return nil, nil, err
 	}
-	ag, err := client.GetAffinityGroupExecute(bgctx(), c.ProjectID(), c.Region(), id)
+	ag, err := client.DefaultAPI.GetAffinityGroup(bgctx(), c.ProjectID(), c.Region(), id).Execute()
 	if err != nil {
 		return nil, nil, err
 	}

@@ -17,7 +17,7 @@ func (r *mqlStackitIam) members() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListMembersExecute(bgctx(), authResourceTypeProject, c.ProjectID())
+	resp, err := client.DefaultAPI.ListMembers(bgctx(), authResourceTypeProject, c.ProjectID()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -51,7 +51,7 @@ func (r *mqlStackitIam) roles() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListRolesExecute(bgctx(), authResourceTypeProject, c.ProjectID())
+	resp, err := client.DefaultAPI.ListRoles(bgctx(), authResourceTypeProject, c.ProjectID()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil

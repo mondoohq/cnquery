@@ -6,7 +6,7 @@ package resources
 import (
 	"strconv"
 
-	"github.com/stackitcloud/stackit-sdk-go/services/serverbackup"
+	serverbackup "github.com/stackitcloud/stackit-sdk-go/services/serverbackup/v2api"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
@@ -28,7 +28,7 @@ func (r *mqlStackitServer) backups() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListBackupsExecute(bgctx(), c.ProjectID(), r.Id.Data, c.Region())
+	resp, err := client.DefaultAPI.ListBackups(bgctx(), c.ProjectID(), r.Id.Data, c.Region()).Execute()
 	if err != nil {
 		if isAccessDenied(err) || isNotFound(err) {
 			// A 404 means the Server Backup service is not enabled for this
@@ -130,7 +130,7 @@ func (r *mqlStackitServer) backupSchedules() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListBackupSchedulesExecute(bgctx(), c.ProjectID(), r.Id.Data, c.Region())
+	resp, err := client.DefaultAPI.ListBackupSchedules(bgctx(), c.ProjectID(), r.Id.Data, c.Region()).Execute()
 	if err != nil {
 		if isAccessDenied(err) || isNotFound(err) {
 			return []any{}, nil
@@ -155,7 +155,7 @@ func buildBackupSchedule(runtime *plugin.Runtime, serverID string, s *serverback
 		volumeIds []string
 	)
 	if props, ok := s.GetBackupPropertiesOk(); ok {
-		retention = props.GetRetentionPeriod()
+		retention = int64(props.GetRetentionPeriod())
 		volumeIds = props.GetVolumeIds()
 	}
 	args := map[string]*llx.RawData{

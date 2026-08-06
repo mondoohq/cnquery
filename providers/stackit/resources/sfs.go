@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/stackitcloud/stackit-sdk-go/services/sfs"
+	sfs "github.com/stackitcloud/stackit-sdk-go/services/sfs/v1api"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
@@ -23,31 +23,37 @@ type sfsResourcePoolData interface {
 	GetState() string
 	GetPerformanceClass() sfs.ResourcePoolPerformanceClass
 	GetSpace() sfs.ResourcePoolSpace
-	GetSnapshotPolicy() *sfs.NullableResourcePoolSnapshotPolicy
+	GetSnapshotPolicyOk() (*sfs.ResourcePoolSnapshotPolicy, bool)
 	GetAvailabilityZone() string
 	GetMountPath() string
-	GetCountShares() int64
+	GetCountShares() int32
 	GetIpAcl() []string
 	GetSnapshotsAreVisible() bool
 	GetLabels() map[string]string
-	GetCreatedAtOk() (time.Time, bool)
+	GetCreatedAtOk() (*time.Time, bool)
 }
 
 type sfsExportPolicyData interface {
 	GetId() string
 	GetName() string
-	GetSharesUsingExportPolicy() int64
+	GetSharesUsingExportPolicy() int32
 	GetLabels() map[string]string
-	GetCreatedAtOk() (time.Time, bool)
+	GetCreatedAtOk() (*time.Time, bool)
 }
 
 // derefFloat returns the value behind a *float64, or 0 when nil. SFS reports
 // the space-usage gauges as optional floats; an absent value reads as 0.
-func derefFloat(p *float64) float64 {
-	if p == nil {
-		return 0
+func derefFloat[T float64 | *float64](p T) float64 {
+	switch v := any(p).(type) {
+	case float64:
+		return v
+	case *float64:
+		if v == nil {
+			return 0
+		}
+		return *v
 	}
-	return *p
+	return 0
 }
 
 // ------------------------- SFS namespace -------------------------
@@ -58,7 +64,7 @@ func (r *mqlStackitSfs) resourcePools() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListResourcePoolsExecute(bgctx(), c.ProjectID(), c.Region())
+	resp, err := client.DefaultAPI.ListResourcePools(bgctx(), c.ProjectID(), c.Region()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -83,7 +89,7 @@ func (r *mqlStackitSfs) exportPolicies() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListShareExportPoliciesExecute(bgctx(), c.ProjectID(), c.Region())
+	resp, err := client.DefaultAPI.ListShareExportPolicies(bgctx(), c.ProjectID(), c.Region()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -108,7 +114,7 @@ func (r *mqlStackitSfs) lockId() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	resp, err := client.GetLockExecute(bgctx(), c.Region(), c.ProjectID())
+	resp, err := client.DefaultAPI.GetLock(bgctx(), c.Region(), c.ProjectID()).Execute()
 	if err != nil {
 		if isAccessDenied(err) || isNotFound(err) {
 			return "", nil
@@ -124,11 +130,9 @@ func sfsResourcePoolArgs(region string, rp sfsResourcePoolData) map[string]*llx.
 	pc := rp.GetPerformanceClass()
 	sp := rp.GetSpace()
 	snapPolicyID, snapPolicyName := "", ""
-	if np := rp.GetSnapshotPolicy(); np != nil && np.IsSet() {
-		if v := np.Get(); v != nil {
-			snapPolicyID = v.GetId()
-			snapPolicyName = v.GetName()
-		}
+	if v, ok := rp.GetSnapshotPolicyOk(); ok && v != nil {
+		snapPolicyID = v.GetId()
+		snapPolicyName = v.GetName()
 	}
 	return map[string]*llx.RawData{
 		"id":                         llx.StringData(rp.GetId()),
@@ -164,7 +168,7 @@ func (r *mqlStackitSfsResourcePool) shares() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListSharesExecute(bgctx(), c.ProjectID(), r.Region.Data, r.Id.Data)
+	resp, err := client.DefaultAPI.ListShares(bgctx(), c.ProjectID(), r.Region.Data, r.Id.Data).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -176,10 +180,8 @@ func (r *mqlStackitSfsResourcePool) shares() ([]any, error) {
 	for i := range shares {
 		sh := shares[i]
 		exportPolicyID := ""
-		if np := sh.GetExportPolicy(); np != nil && np.IsSet() {
-			if v := np.Get(); v != nil {
-				exportPolicyID = v.GetId()
-			}
+		if v, ok := sh.GetExportPolicyOk(); ok && v != nil {
+			exportPolicyID = v.GetId()
 		}
 		res, err := CreateResource(r.MqlRuntime, "stackit.sfs.share", map[string]*llx.RawData{
 			"id":                      llx.StringData(sh.GetId()),
@@ -207,7 +209,7 @@ func (r *mqlStackitSfsResourcePool) snapshots() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListResourcePoolSnapshotsExecute(bgctx(), c.ProjectID(), r.Region.Data, r.Id.Data)
+	resp, err := client.DefaultAPI.ListResourcePoolSnapshots(bgctx(), c.ProjectID(), r.Region.Data, r.Id.Data).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -223,8 +225,8 @@ func (r *mqlStackitSfsResourcePool) snapshots() ([]any, error) {
 			"name":                 llx.StringData(snap.GetSnapshotName()),
 			"sizeGigabytes":        llx.IntData(snap.GetSizeGigabytes()),
 			"logicalSizeGigabytes": llx.IntData(snap.GetLogicalSizeGigabytes()),
-			"comment":              llx.StringData(ptrStr(snap.GetComment())),
-			"snaplockExpiryTime":   llx.TimeDataPtr(snap.GetSnaplockExpiryTime()),
+			"comment":              llx.StringData(snap.GetComment()),
+			"snaplockExpiryTime":   llx.TimeDataPtr(timeOrNil(snap.GetSnaplockExpiryTimeOk())),
 			"createdAt":            llx.TimeDataPtr(timeOrNil(snap.GetCreatedAtOk())),
 		})
 		if err != nil {
@@ -245,7 +247,7 @@ func initStackitSfsResourcePool(runtime *plugin.Runtime, args map[string]*llx.Ra
 	if err != nil {
 		return nil, nil, err
 	}
-	resp, err := client.GetResourcePoolExecute(bgctx(), c.ProjectID(), c.Region(), id)
+	resp, err := client.DefaultAPI.GetResourcePool(bgctx(), c.ProjectID(), c.Region(), id).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -253,7 +255,7 @@ func initStackitSfsResourcePool(runtime *plugin.Runtime, args map[string]*llx.Ra
 	if !ok {
 		return nil, nil, fmt.Errorf("stackit.sfs.resourcePool with id %q not found", id)
 	}
-	res, err := CreateResource(runtime, "stackit.sfs.resourcePool", sfsResourcePoolArgs(c.Region(), &pool))
+	res, err := CreateResource(runtime, "stackit.sfs.resourcePool", sfsResourcePoolArgs(c.Region(), pool))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -321,7 +323,7 @@ func (r *mqlStackitSfsExportPolicy) rules() ([]any, error) {
 	if region == "" {
 		region = c.Region()
 	}
-	resp, err := client.GetShareExportPolicyExecute(bgctx(), c.ProjectID(), region, r.Id.Data)
+	resp, err := client.DefaultAPI.GetShareExportPolicy(bgctx(), c.ProjectID(), region, r.Id.Data).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -340,7 +342,7 @@ func (r *mqlStackitSfsExportPolicy) rules() ([]any, error) {
 			"id":          llx.StringData(rule.GetId()),
 			"order":       llx.IntData(rule.GetOrder()),
 			"ipAcl":       strSliceData(rule.GetIpAcl()),
-			"description": llx.StringData(ptrStr(rule.GetDescription())),
+			"description": llx.StringData(rule.GetDescription()),
 			"createdAt":   llx.TimeDataPtr(timeOrNil(rule.GetCreatedAtOk())),
 		})
 		if err != nil {
@@ -365,7 +367,7 @@ func initStackitSfsExportPolicy(runtime *plugin.Runtime, args map[string]*llx.Ra
 	if err != nil {
 		return nil, nil, err
 	}
-	resp, err := client.GetShareExportPolicyExecute(bgctx(), c.ProjectID(), c.Region(), id)
+	resp, err := client.DefaultAPI.GetShareExportPolicy(bgctx(), c.ProjectID(), c.Region(), id).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -373,7 +375,7 @@ func initStackitSfsExportPolicy(runtime *plugin.Runtime, args map[string]*llx.Ra
 	if !ok {
 		return nil, nil, fmt.Errorf("stackit.sfs.exportPolicy with id %q not found", id)
 	}
-	res, err := newSfsExportPolicy(runtime, c.Region(), &pol)
+	res, err := newSfsExportPolicy(runtime, c.Region(), pol)
 	if err != nil {
 		return nil, nil, err
 	}

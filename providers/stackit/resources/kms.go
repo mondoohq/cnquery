@@ -4,7 +4,7 @@
 package resources
 
 import (
-	"github.com/stackitcloud/stackit-sdk-go/services/kms"
+	kms "github.com/stackitcloud/stackit-sdk-go/services/kms/v1api"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
@@ -15,7 +15,7 @@ func (r *mqlStackitKms) keyRings() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListKeyRingsExecute(bgctx(), c.ProjectID(), c.Region())
+	resp, err := client.DefaultAPI.ListKeyRings(bgctx(), c.ProjectID(), c.Region()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -82,7 +82,7 @@ func initStackitKmsKeyRing(runtime *plugin.Runtime, args map[string]*llx.RawData
 	if err != nil {
 		return nil, nil, err
 	}
-	kr, err := client.GetKeyRingExecute(bgctx(), c.ProjectID(), c.Region(), id)
+	kr, err := client.DefaultAPI.GetKeyRing(bgctx(), c.ProjectID(), c.Region(), id).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -99,7 +99,7 @@ func (r *mqlStackitKmsKeyRing) keys() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListKeysExecute(bgctx(), c.ProjectID(), c.Region(), r.Id.Data)
+	resp, err := client.DefaultAPI.ListKeys(bgctx(), c.ProjectID(), c.Region(), r.Id.Data).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil

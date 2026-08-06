@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/stackitcloud/stackit-sdk-go/services/objectstorage"
+	objectstorage "github.com/stackitcloud/stackit-sdk-go/services/objectstorage/v2api"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
@@ -32,7 +32,7 @@ func (r *mqlStackitObjectStorage) buckets() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListBucketsExecute(bgctx(), c.ProjectID(), c.Region())
+	resp, err := client.DefaultAPI.ListBuckets(bgctx(), c.ProjectID(), c.Region()).Execute()
 	if err != nil {
 		// A 404 here means the project is not onboarded to Object Storage
 		// (the service returns "project.not_found"); treat it as no buckets.
@@ -85,7 +85,7 @@ func initStackitObjectStorageBucket(runtime *plugin.Runtime, args map[string]*ll
 	if err != nil {
 		return nil, nil, err
 	}
-	resp, err := client.GetBucketExecute(bgctx(), c.ProjectID(), c.Region(), name)
+	resp, err := client.DefaultAPI.GetBucket(bgctx(), c.ProjectID(), c.Region(), name).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -93,7 +93,7 @@ func initStackitObjectStorageBucket(runtime *plugin.Runtime, args map[string]*ll
 	if !ok {
 		return nil, nil, fmt.Errorf("stackit.objectStorage.bucket %q not found", name)
 	}
-	res, err := buildBucket(runtime, &b)
+	res, err := buildBucket(runtime, b)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -118,7 +118,7 @@ func (r *mqlStackitObjectStorageBucket) fetchDefaultRetention() (int64, string, 
 	if err != nil {
 		return 0, "", err
 	}
-	resp, err := client.GetDefaultRetentionExecute(bgctx(), c.ProjectID(), c.Region(), r.Name.Data)
+	resp, err := client.DefaultAPI.GetDefaultRetention(bgctx(), c.ProjectID(), c.Region(), r.Name.Data).Execute()
 	if err != nil {
 		if isAccessDenied(err) || isNotFound(err) {
 			r.retentionFetched = true
@@ -126,7 +126,7 @@ func (r *mqlStackitObjectStorageBucket) fetchDefaultRetention() (int64, string, 
 		}
 		return 0, "", err
 	}
-	r.retentionDays = resp.GetDays()
+	r.retentionDays = int64(resp.GetDays())
 	r.retentionMode = string(resp.GetMode())
 	r.retentionFetched = true
 	return r.retentionDays, r.retentionMode, nil
@@ -150,7 +150,7 @@ func (r *mqlStackitObjectStorage) credentialsGroups() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListCredentialsGroupsExecute(bgctx(), c.ProjectID(), c.Region())
+	resp, err := client.DefaultAPI.ListCredentialsGroups(bgctx(), c.ProjectID(), c.Region()).Execute()
 	if err != nil {
 		// A 404 means the project is not onboarded to Object Storage; treat it
 		// as no credentials groups.
@@ -191,7 +191,7 @@ func initStackitObjectStorageCredentialsGroup(runtime *plugin.Runtime, args map[
 	if err != nil {
 		return nil, nil, err
 	}
-	resp, err := client.GetCredentialsGroupExecute(bgctx(), c.ProjectID(), c.Region(), id)
+	resp, err := client.DefaultAPI.GetCredentialsGroup(bgctx(), c.ProjectID(), c.Region(), id).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -216,7 +216,7 @@ func (r *mqlStackitObjectStorageCredentialsGroup) accessKeys() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListAccessKeys(bgctx(), c.ProjectID(), c.Region()).
+	resp, err := client.DefaultAPI.ListAccessKeys(bgctx(), c.ProjectID(), c.Region()).
 		CredentialsGroup(r.Id.Data).Execute()
 	if err != nil {
 		if isAccessDenied(err) || isNotFound(err) {

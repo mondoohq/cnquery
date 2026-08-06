@@ -8,8 +8,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/stackitcloud/stackit-sdk-go/services/mongodbflex"
-	"github.com/stackitcloud/stackit-sdk-go/services/observability"
+	mongodbflex "github.com/stackitcloud/stackit-sdk-go/services/mongodbflex/v2api"
+	observability "github.com/stackitcloud/stackit-sdk-go/services/observability/v1api"
 	postgresflex "github.com/stackitcloud/stackit-sdk-go/services/postgresflex/v2api"
 	sqlserverflex "github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex/v2api"
 	"go.mondoo.com/mql/v13/llx"
@@ -178,7 +178,7 @@ func (r *mqlStackitMongoDbFlex) instances() ([]any, error) {
 	// requires a `tag` query parameter. An empty tag returns all instances in
 	// the project, so use the request builder rather than the convenience
 	// ListInstancesExecute (which cannot set a tag).
-	resp, err := client.ListInstances(bgctx(), c.ProjectID(), c.Region()).Tag("").Execute()
+	resp, err := client.DefaultAPI.ListInstances(bgctx(), c.ProjectID(), c.Region()).Tag("").Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -222,7 +222,7 @@ func (r *mqlStackitMongoDbFlexInstance) fetchDetail() (*mongodbflex.Instance, er
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.GetInstanceExecute(bgctx(), c.ProjectID(), r.Id.Data, c.Region())
+	resp, err := client.DefaultAPI.GetInstance(bgctx(), c.ProjectID(), r.Id.Data, c.Region()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			r.fetched.Store(true)
@@ -231,7 +231,7 @@ func (r *mqlStackitMongoDbFlexInstance) fetchDetail() (*mongodbflex.Instance, er
 		return nil, err
 	}
 	if item, ok := resp.GetItemOk(); ok {
-		r.detail = &item
+		r.detail = item
 	}
 	r.fetched.Store(true)
 	return r.detail, nil
@@ -304,7 +304,7 @@ func (r *mqlStackitOpenSearch) instances() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListInstancesExecute(bgctx(), c.ProjectID(), c.Region())
+	resp, err := client.DefaultAPI.ListInstances(bgctx(), c.ProjectID(), c.Region()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -350,7 +350,7 @@ func (r *mqlStackitMariaDb) instances() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListInstancesExecute(bgctx(), c.ProjectID(), c.Region())
+	resp, err := client.DefaultAPI.ListInstances(bgctx(), c.ProjectID(), c.Region()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -396,7 +396,7 @@ func (r *mqlStackitRedis) instances() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListInstancesExecute(bgctx(), c.ProjectID(), c.Region())
+	resp, err := client.DefaultAPI.ListInstances(bgctx(), c.ProjectID(), c.Region()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -442,7 +442,7 @@ func (r *mqlStackitRabbitMq) instances() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListInstancesExecute(bgctx(), c.ProjectID(), c.Region())
+	resp, err := client.DefaultAPI.ListInstances(bgctx(), c.ProjectID(), c.Region()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -488,7 +488,7 @@ func (r *mqlStackitSecretsManager) instances() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListInstancesExecute(bgctx(), c.ProjectID())
+	resp, err := client.DefaultAPI.ListInstances(bgctx(), c.ProjectID()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -528,7 +528,7 @@ func (r *mqlStackitSecretsManagerInstance) acls() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListACLsExecute(bgctx(), c.ProjectID(), r.Id.Data)
+	resp, err := client.DefaultAPI.ListACLs(bgctx(), c.ProjectID(), r.Id.Data).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -561,7 +561,7 @@ func (r *mqlStackitObservability) instances() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListInstancesExecute(bgctx(), c.ProjectID())
+	resp, err := client.DefaultAPI.ListInstances(bgctx(), c.ProjectID()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -606,7 +606,7 @@ func (r *mqlStackitObservabilityInstance) fetchDetail() (*observability.GetInsta
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.GetInstanceExecute(bgctx(), r.Id.Data, c.ProjectID())
+	resp, err := client.DefaultAPI.GetInstance(bgctx(), r.Id.Data, c.ProjectID()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			r.fetched.Store(true)
@@ -640,8 +640,11 @@ func (r *mqlStackitObservabilityInstance) parameters() (any, error) {
 	if err != nil || d == nil {
 		return nil, err
 	}
-	params, _ := d.GetParametersOk()
-	return stringMap(params), nil
+	params, ok := d.GetParametersOk()
+	if !ok || params == nil {
+		return map[string]any{}, nil
+	}
+	return stringMap(*params), nil
 }
 
 func (r *mqlStackitObservabilityInstance) isUpdatable() (bool, error) {
@@ -708,7 +711,7 @@ func initStackitMongoDbFlexInstance(runtime *plugin.Runtime, args map[string]*ll
 	if err != nil {
 		return nil, nil, err
 	}
-	resp, err := client.GetInstanceExecute(bgctx(), c.ProjectID(), id, c.Region())
+	resp, err := client.DefaultAPI.GetInstance(bgctx(), c.ProjectID(), id, c.Region()).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -726,7 +729,7 @@ func initStackitMongoDbFlexInstance(runtime *plugin.Runtime, args map[string]*ll
 		return nil, nil, err
 	}
 	r := res.(*mqlStackitMongoDbFlexInstance)
-	r.detail = &inst
+	r.detail = inst
 	r.fetched.Store(true)
 	return nil, res, nil
 }
@@ -744,7 +747,7 @@ func initStackitOpenSearchInstance(runtime *plugin.Runtime, args map[string]*llx
 	if err != nil {
 		return nil, nil, err
 	}
-	inst, err := client.GetInstanceExecute(bgctx(), c.ProjectID(), c.Region(), id)
+	inst, err := client.DefaultAPI.GetInstance(bgctx(), c.ProjectID(), c.Region(), id).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -784,7 +787,7 @@ func initStackitMariaDbInstance(runtime *plugin.Runtime, args map[string]*llx.Ra
 	if err != nil {
 		return nil, nil, err
 	}
-	inst, err := client.GetInstanceExecute(bgctx(), c.ProjectID(), c.Region(), id)
+	inst, err := client.DefaultAPI.GetInstance(bgctx(), c.ProjectID(), c.Region(), id).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -824,7 +827,7 @@ func initStackitRedisInstance(runtime *plugin.Runtime, args map[string]*llx.RawD
 	if err != nil {
 		return nil, nil, err
 	}
-	inst, err := client.GetInstanceExecute(bgctx(), c.ProjectID(), c.Region(), id)
+	inst, err := client.DefaultAPI.GetInstance(bgctx(), c.ProjectID(), c.Region(), id).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -864,7 +867,7 @@ func initStackitRabbitMqInstance(runtime *plugin.Runtime, args map[string]*llx.R
 	if err != nil {
 		return nil, nil, err
 	}
-	inst, err := client.GetInstanceExecute(bgctx(), c.ProjectID(), c.Region(), id)
+	inst, err := client.DefaultAPI.GetInstance(bgctx(), c.ProjectID(), c.Region(), id).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -904,7 +907,7 @@ func initStackitSecretsManagerInstance(runtime *plugin.Runtime, args map[string]
 	if err != nil {
 		return nil, nil, err
 	}
-	inst, err := client.GetInstanceExecute(bgctx(), c.ProjectID(), id)
+	inst, err := client.DefaultAPI.GetInstance(bgctx(), c.ProjectID(), id).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -937,7 +940,7 @@ func initStackitObservabilityInstance(runtime *plugin.Runtime, args map[string]*
 	if err != nil {
 		return nil, nil, err
 	}
-	resp, err := client.GetInstanceExecute(bgctx(), id, c.ProjectID())
+	resp, err := client.DefaultAPI.GetInstance(bgctx(), id, c.ProjectID()).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -969,7 +972,7 @@ func (r *mqlStackitLogMe) instances() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListInstancesExecute(bgctx(), c.ProjectID(), c.Region())
+	resp, err := client.DefaultAPI.ListInstances(bgctx(), c.ProjectID(), c.Region()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -1020,7 +1023,7 @@ func initStackitLogMeInstance(runtime *plugin.Runtime, args map[string]*llx.RawD
 	if err != nil {
 		return nil, nil, err
 	}
-	inst, err := client.GetInstanceExecute(bgctx(), c.ProjectID(), c.Region(), id)
+	inst, err := client.DefaultAPI.GetInstance(bgctx(), c.ProjectID(), c.Region(), id).Execute()
 	if err != nil {
 		return nil, nil, err
 	}

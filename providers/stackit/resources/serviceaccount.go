@@ -6,7 +6,7 @@ package resources
 import (
 	"fmt"
 
-	"github.com/stackitcloud/stackit-sdk-go/services/serviceaccount"
+	serviceaccount "github.com/stackitcloud/stackit-sdk-go/services/serviceaccount/v2api"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
@@ -17,7 +17,7 @@ func (r *mqlStackit) serviceAccounts() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListServiceAccountsExecute(bgctx(), c.ProjectID())
+	resp, err := client.DefaultAPI.ListServiceAccounts(bgctx(), c.ProjectID()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -58,7 +58,7 @@ func initStackitServiceAccount(runtime *plugin.Runtime, args map[string]*llx.Raw
 	if err != nil {
 		return nil, nil, err
 	}
-	resp, err := client.ListServiceAccountsExecute(bgctx(), c.ProjectID())
+	resp, err := client.DefaultAPI.ListServiceAccounts(bgctx(), c.ProjectID()).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -82,7 +82,7 @@ func (r *mqlStackitServiceAccount) accessTokens() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListAccessTokensExecute(bgctx(), r.ProjectId.Data, r.Email.Data)
+	resp, err := client.DefaultAPI.ListAccessTokens(bgctx(), r.ProjectId.Data, r.Email.Data).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -118,7 +118,7 @@ func (r *mqlStackitServiceAccount) keys() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListServiceAccountKeysExecute(bgctx(), r.ProjectId.Data, r.Email.Data)
+	resp, err := client.DefaultAPI.ListServiceAccountKeys(bgctx(), r.ProjectId.Data, r.Email.Data).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil

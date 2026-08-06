@@ -4,7 +4,7 @@
 package resources
 
 import (
-	"github.com/stackitcloud/stackit-sdk-go/services/certificates"
+	certificates "github.com/stackitcloud/stackit-sdk-go/services/certificates/v2api"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/types"
@@ -19,7 +19,7 @@ func (r *mqlStackit) certificates() ([]any, error) {
 	out := []any{}
 	pageId := ""
 	for {
-		req := client.ListCertificates(bgctx(), c.ProjectID(), c.Region())
+		req := client.DefaultAPI.ListCertificates(bgctx(), c.ProjectID(), c.Region())
 		if pageId != "" {
 			req = req.PageId(pageId)
 		}
@@ -39,10 +39,10 @@ func (r *mqlStackit) certificates() ([]any, error) {
 			out = append(out, res)
 		}
 		next, ok := resp.GetNextPageIdOk()
-		if !ok || next == "" {
+		if !ok || next == nil || *next == "" {
 			break
 		}
-		pageId = next
+		pageId = *next
 	}
 	return out, nil
 }
@@ -111,7 +111,7 @@ func initStackitCertificate(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	if err != nil {
 		return nil, nil, err
 	}
-	cert, err := client.GetCertificateExecute(bgctx(), c.ProjectID(), c.Region(), id)
+	cert, err := client.DefaultAPI.GetCertificate(bgctx(), c.ProjectID(), c.Region(), id).Execute()
 	if err != nil {
 		return nil, nil, err
 	}

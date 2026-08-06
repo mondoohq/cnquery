@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/stackitcloud/stackit-sdk-go/services/certificates"
+	certificates "github.com/stackitcloud/stackit-sdk-go/services/certificates/v2api"
 )
 
 func TestCertificateUsage(t *testing.T) {
@@ -24,9 +24,9 @@ func TestCertificateUsage(t *testing.T) {
 		listenersA := []string{"https", "http"}
 		listenersB := []string{"tls"}
 		u := certificates.Usage{
-			Items: &[]certificates.UsageItem{
-				{LoadBalancerName: strPtr("lb-a"), ListenerNames: &listenersA},
-				{LoadBalancerName: strPtr("lb-b"), ListenerNames: &listenersB},
+			Items: []certificates.UsageItem{
+				{LoadBalancerName: strPtr("lb-a"), ListenerNames: listenersA},
+				{LoadBalancerName: strPtr("lb-b"), ListenerNames: listenersB},
 			},
 		}
 
@@ -42,7 +42,7 @@ func TestCertificateUsage(t *testing.T) {
 
 	t.Run("item without listeners yields empty listener slice", func(t *testing.T) {
 		u := certificates.Usage{
-			Items: &[]certificates.UsageItem{
+			Items: []certificates.UsageItem{
 				{LoadBalancerName: strPtr("lb-c")},
 			},
 		}
