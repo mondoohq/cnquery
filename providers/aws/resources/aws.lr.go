@@ -575,6 +575,8 @@ const (
 	ResourceAwsSsmParameter                                                     string = "aws.ssm.parameter"
 	ResourceAwsSsmInstance                                                      string = "aws.ssm.instance"
 	ResourceAwsEc2                                                              string = "aws.ec2"
+	ResourceAwsEc2ApplicationStatusCheck                                        string = "aws.ec2.applicationStatusCheck"
+	ResourceAwsEc2ApplicationStatusCheckStatus                                  string = "aws.ec2.applicationStatusCheck.status"
 	ResourceAwsEc2Eip                                                           string = "aws.ec2.eip"
 	ResourceAwsVpcNatgateway                                                    string = "aws.vpc.natgateway"
 	ResourceAwsVpcNatgatewayAddress                                             string = "aws.vpc.natgateway.address"
@@ -760,6 +762,7 @@ const (
 	ResourceAwsMemorydbSnapshot                                                 string = "aws.memorydb.snapshot"
 	ResourceAwsMemorydbSubnetGroup                                              string = "aws.memorydb.subnetGroup"
 	ResourceAwsTimestreamInfluxdb                                               string = "aws.timestream.influxdb"
+	ResourceAwsTimestreamInfluxdbBackup                                         string = "aws.timestream.influxdb.backup"
 	ResourceAwsTimestreamInfluxdbInstance                                       string = "aws.timestream.influxdb.instance"
 	ResourceAwsTimestreamInfluxdbCluster                                        string = "aws.timestream.influxdb.cluster"
 	ResourceAwsDsql                                                             string = "aws.dsql"
@@ -770,6 +773,7 @@ const (
 	ResourceAwsGlue                                                             string = "aws.glue"
 	ResourceAwsGlueCrawler                                                      string = "aws.glue.crawler"
 	ResourceAwsGlueJob                                                          string = "aws.glue.job"
+	ResourceAwsGlueCatalogExportEncryption                                      string = "aws.glue.catalogExportEncryption"
 	ResourceAwsGlueSecurityConfiguration                                        string = "aws.glue.securityConfiguration"
 	ResourceAwsGlueDatabase                                                     string = "aws.glue.database"
 	ResourceAwsGlueDatabaseTable                                                string = "aws.glue.database.table"
@@ -3225,6 +3229,14 @@ func init() {
 			// to override args, implement: initAwsEc2(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEc2,
 		},
+		"aws.ec2.applicationStatusCheck": {
+			// to override args, implement: initAwsEc2ApplicationStatusCheck(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEc2ApplicationStatusCheck,
+		},
+		"aws.ec2.applicationStatusCheck.status": {
+			// to override args, implement: initAwsEc2ApplicationStatusCheckStatus(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEc2ApplicationStatusCheckStatus,
+		},
 		"aws.ec2.eip": {
 			Init:   initAwsEc2Eip,
 			Create: createAwsEc2Eip,
@@ -3965,8 +3977,12 @@ func init() {
 			// to override args, implement: initAwsTimestreamInfluxdb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsTimestreamInfluxdb,
 		},
+		"aws.timestream.influxdb.backup": {
+			// to override args, implement: initAwsTimestreamInfluxdbBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsTimestreamInfluxdbBackup,
+		},
 		"aws.timestream.influxdb.instance": {
-			// to override args, implement: initAwsTimestreamInfluxdbInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsTimestreamInfluxdbInstance,
 			Create: createAwsTimestreamInfluxdbInstance,
 		},
 		"aws.timestream.influxdb.cluster": {
@@ -4004,6 +4020,10 @@ func init() {
 		"aws.glue.job": {
 			// to override args, implement: initAwsGlueJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsGlueJob,
+		},
+		"aws.glue.catalogExportEncryption": {
+			// to override args, implement: initAwsGlueCatalogExportEncryption(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsGlueCatalogExportEncryption,
 		},
 		"aws.glue.securityConfiguration": {
 			// to override args, implement: initAwsGlueSecurityConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -6286,6 +6306,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.networkfirewall.firewall.encryptionConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallFirewall).GetEncryptionConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.networkfirewall.firewall.noSourcePreservation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallFirewall).GetNoSourcePreservation()).ToDataRes(types.Bool)
+	},
+	"aws.networkfirewall.firewall.natGateways": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallFirewall).GetNatGateways()).ToDataRes(types.Array(types.Resource("aws.vpc.natgateway")))
+	},
+	"aws.networkfirewall.firewall.proxyListeners": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallFirewall).GetProxyListeners()).ToDataRes(types.Array(types.Dict))
 	},
 	"aws.networkfirewall.firewall.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallFirewall).GetStatus()).ToDataRes(types.String)
@@ -22847,6 +22876,102 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.ipams": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2).GetIpams()).ToDataRes(types.Array(types.Resource("aws.ec2.ipam")))
 	},
+	"aws.ec2.applicationStatusChecks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2).GetApplicationStatusChecks()).ToDataRes(types.Array(types.Resource("aws.ec2.applicationStatusCheck")))
+	},
+	"aws.ec2.applicationStatusCheck.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheck).GetId()).ToDataRes(types.String)
+	},
+	"aws.ec2.applicationStatusCheck.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheck).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.ec2.applicationStatusCheck.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheck).GetProtocol()).ToDataRes(types.String)
+	},
+	"aws.ec2.applicationStatusCheck.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheck).GetPort()).ToDataRes(types.Int)
+	},
+	"aws.ec2.applicationStatusCheck.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheck).GetPath()).ToDataRes(types.String)
+	},
+	"aws.ec2.applicationStatusCheck.healthCheckPaths": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheck).GetHealthCheckPaths()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.ec2.applicationStatusCheck.statusCodeMatcher": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheck).GetStatusCodeMatcher()).ToDataRes(types.String)
+	},
+	"aws.ec2.applicationStatusCheck.interval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheck).GetInterval()).ToDataRes(types.Int)
+	},
+	"aws.ec2.applicationStatusCheck.timeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheck).GetTimeout()).ToDataRes(types.Int)
+	},
+	"aws.ec2.applicationStatusCheck.successThreshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheck).GetSuccessThreshold()).ToDataRes(types.Int)
+	},
+	"aws.ec2.applicationStatusCheck.failureThreshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheck).GetFailureThreshold()).ToDataRes(types.Int)
+	},
+	"aws.ec2.applicationStatusCheck.initializationGracePeriodSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheck).GetInitializationGracePeriodSeconds()).ToDataRes(types.Int)
+	},
+	"aws.ec2.applicationStatusCheck.aggregation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheck).GetAggregation()).ToDataRes(types.String)
+	},
+	"aws.ec2.applicationStatusCheck.deviceIndex": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheck).GetDeviceIndex()).ToDataRes(types.Int)
+	},
+	"aws.ec2.applicationStatusCheck.ipScope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheck).GetIpScope()).ToDataRes(types.String)
+	},
+	"aws.ec2.applicationStatusCheck.ipVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheck).GetIpVersion()).ToDataRes(types.String)
+	},
+	"aws.ec2.applicationStatusCheck.targetTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheck).GetTargetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ec2.applicationStatusCheck.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheck).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.ec2.applicationStatusCheck.lastUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheck).GetLastUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.ec2.applicationStatusCheck.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheck).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ec2.applicationStatusCheck.statuses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheck).GetStatuses()).ToDataRes(types.Array(types.Resource("aws.ec2.applicationStatusCheck.status")))
+	},
+	"aws.ec2.applicationStatusCheck.status.instance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheckStatus).GetInstance()).ToDataRes(types.Resource("aws.ec2.instance"))
+	},
+	"aws.ec2.applicationStatusCheck.status.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheckStatus).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.ec2.applicationStatusCheck.status.applicationStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheckStatus).GetApplicationStatus()).ToDataRes(types.String)
+	},
+	"aws.ec2.applicationStatusCheck.status.aggregation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheckStatus).GetAggregation()).ToDataRes(types.String)
+	},
+	"aws.ec2.applicationStatusCheck.status.reasonCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheckStatus).GetReasonCode()).ToDataRes(types.String)
+	},
+	"aws.ec2.applicationStatusCheck.status.reasonProtocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheckStatus).GetReasonProtocol()).ToDataRes(types.String)
+	},
+	"aws.ec2.applicationStatusCheck.status.reasonStatusCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheckStatus).GetReasonStatusCode()).ToDataRes(types.Int)
+	},
+	"aws.ec2.applicationStatusCheck.status.statusSince": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheckStatus).GetStatusSince()).ToDataRes(types.Time)
+	},
+	"aws.ec2.applicationStatusCheck.status.statusTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheckStatus).GetStatusTimestamp()).ToDataRes(types.Time)
+	},
+	"aws.ec2.applicationStatusCheck.status.checkUpdateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ApplicationStatusCheckStatus).GetCheckUpdateTime()).ToDataRes(types.Time)
+	},
 	"aws.ec2.eip.publicIp": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Eip).GetPublicIp()).ToDataRes(types.String)
 	},
@@ -24136,6 +24261,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.inspector.coverage.scanType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsInspectorCoverage).GetScanType()).ToDataRes(types.String)
+	},
+	"aws.inspector.coverage.scanMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorCoverage).GetScanMode()).ToDataRes(types.String)
+	},
+	"aws.inspector.coverage.provider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorCoverage).GetProvider()).ToDataRes(types.String)
+	},
+	"aws.inspector.coverage.providerAccountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorCoverage).GetProviderAccountId()).ToDataRes(types.String)
+	},
+	"aws.inspector.coverage.providerOrgId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorCoverage).GetProviderOrgId()).ToDataRes(types.String)
+	},
+	"aws.inspector.coverage.providerPartition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorCoverage).GetProviderPartition()).ToDataRes(types.String)
+	},
+	"aws.inspector.coverage.providerRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorCoverage).GetProviderRegion()).ToDataRes(types.String)
 	},
 	"aws.inspector.coverage.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsInspectorCoverage).GetRegion()).ToDataRes(types.String)
@@ -28328,6 +28471,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.workspaces.directory.subnets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspacesDirectory).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
 	},
+	"aws.workspaces.directory.clientExperiencePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesDirectory).GetClientExperiencePolicy()).ToDataRes(types.String)
+	},
+	"aws.workspaces.directory.clientReconnectEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesDirectory).GetClientReconnectEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.workspaces.directory.clientLogUploadEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesDirectory).GetClientLogUploadEnabled()).ToDataRes(types.Bool)
+	},
 	"aws.workspaces.directory.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspacesDirectory).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -29249,6 +29401,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.timestream.influxdb.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsTimestreamInfluxdb).GetClusters()).ToDataRes(types.Array(types.Resource("aws.timestream.influxdb.cluster")))
 	},
+	"aws.timestream.influxdb.backups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdb).GetBackups()).ToDataRes(types.Array(types.Resource("aws.timestream.influxdb.backup")))
+	},
+	"aws.timestream.influxdb.backup.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbBackup).GetArn()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.backup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbBackup).GetId()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.backup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbBackup).GetName()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.backup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbBackup).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.backup.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbBackup).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.backup.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbBackup).GetType()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.backup.engineType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbBackup).GetEngineType()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.backup.deploymentType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbBackup).GetDeploymentType()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.backup.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbBackup).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.timestream.influxdb.backup.expiresAfter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbBackup).GetExpiresAfter()).ToDataRes(types.Time)
+	},
+	"aws.timestream.influxdb.backup.dbInstance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbBackup).GetDbInstance()).ToDataRes(types.Resource("aws.timestream.influxdb.instance"))
+	},
+	"aws.timestream.influxdb.backup.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbBackup).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
 	"aws.timestream.influxdb.instance.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetArn()).ToDataRes(types.String)
 	},
@@ -29531,6 +29722,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.glue.catalogEncryptionSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGlue).GetCatalogEncryptionSettings()).ToDataRes(types.Array(types.Dict))
 	},
+	"aws.glue.catalogExportEncryptionSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlue).GetCatalogExportEncryptionSettings()).ToDataRes(types.Array(types.Resource("aws.glue.catalogExportEncryption")))
+	},
 	"aws.glue.workflows": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGlue).GetWorkflows()).ToDataRes(types.Array(types.Resource("aws.glue.workflow")))
 	},
@@ -29689,6 +29883,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.glue.job.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGlueJob).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.glue.catalogExportEncryption.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueCatalogExportEncryption).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.glue.catalogExportEncryption.sseAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueCatalogExportEncryption).GetSseAlgorithm()).ToDataRes(types.String)
+	},
+	"aws.glue.catalogExportEncryption.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueCatalogExportEncryption).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.glue.securityConfiguration.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGlueSecurityConfiguration).GetName()).ToDataRes(types.String)
@@ -38510,6 +38713,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.networkfirewall.firewall.encryptionConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNetworkfirewallFirewall).EncryptionConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.firewall.noSourcePreservation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallFirewall).NoSourcePreservation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.firewall.natGateways": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallFirewall).NatGateways, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.firewall.proxyListeners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallFirewall).ProxyListeners, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.networkfirewall.firewall.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -62592,6 +62807,142 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2).Ipams, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.applicationStatusChecks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2).ApplicationStatusChecks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheck).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheck).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheck).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheck).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheck).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheck).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.healthCheckPaths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheck).HealthCheckPaths, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.statusCodeMatcher": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheck).StatusCodeMatcher, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.interval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheck).Interval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.timeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheck).Timeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.successThreshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheck).SuccessThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.failureThreshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheck).FailureThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.initializationGracePeriodSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheck).InitializationGracePeriodSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.aggregation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheck).Aggregation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.deviceIndex": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheck).DeviceIndex, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.ipScope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheck).IpScope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.ipVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheck).IpVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.targetTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheck).TargetTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheck).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.lastUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheck).LastUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheck).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.statuses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheck).Statuses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.status.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheckStatus).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.status.instance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheckStatus).Instance, ok = plugin.RawToTValue[*mqlAwsEc2Instance](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.status.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheckStatus).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.status.applicationStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheckStatus).ApplicationStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.status.aggregation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheckStatus).Aggregation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.status.reasonCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheckStatus).ReasonCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.status.reasonProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheckStatus).ReasonProtocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.status.reasonStatusCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheckStatus).ReasonStatusCode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.status.statusSince": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheckStatus).StatusSince, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.status.statusTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheckStatus).StatusTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.applicationStatusCheck.status.checkUpdateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ApplicationStatusCheckStatus).CheckUpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.eip.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Eip).__id, ok = v.Value.(string)
 		return
@@ -64478,6 +64829,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.inspector.coverage.scanType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsInspectorCoverage).ScanType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.coverage.scanMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorCoverage).ScanMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.coverage.provider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorCoverage).Provider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.coverage.providerAccountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorCoverage).ProviderAccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.coverage.providerOrgId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorCoverage).ProviderOrgId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.coverage.providerPartition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorCoverage).ProviderPartition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.coverage.providerRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorCoverage).ProviderRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.inspector.coverage.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -70516,6 +70891,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsWorkspacesDirectory).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.workspaces.directory.clientExperiencePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesDirectory).ClientExperiencePolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.directory.clientReconnectEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesDirectory).ClientReconnectEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.directory.clientLogUploadEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesDirectory).ClientLogUploadEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.workspaces.directory.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWorkspacesDirectory).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -71868,6 +72255,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsTimestreamInfluxdb).Clusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.timestream.influxdb.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdb).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.backup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbBackup).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.timestream.influxdb.backup.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbBackup).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.backup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbBackup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.backup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbBackup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.backup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbBackup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.backup.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbBackup).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.backup.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbBackup).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.backup.engineType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbBackup).EngineType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.backup.deploymentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbBackup).DeploymentType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.backup.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbBackup).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.backup.expiresAfter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbBackup).ExpiresAfter, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.backup.dbInstance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbBackup).DbInstance, ok = plugin.RawToTValue[*mqlAwsTimestreamInfluxdbInstance](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.backup.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbBackup).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
 	"aws.timestream.influxdb.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsTimestreamInfluxdbInstance).__id, ok = v.Value.(string)
 		return
@@ -72276,6 +72719,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsGlue).CatalogEncryptionSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.glue.catalogExportEncryptionSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlue).CatalogExportEncryptionSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.glue.workflows": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsGlue).Workflows, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -72494,6 +72941,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.glue.job.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsGlueJob).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.glue.catalogExportEncryption.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueCatalogExportEncryption).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.glue.catalogExportEncryption.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueCatalogExportEncryption).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.catalogExportEncryption.sseAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueCatalogExportEncryption).SseAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.catalogExportEncryption.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueCatalogExportEncryption).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.glue.securityConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -88088,6 +88551,9 @@ type mqlAwsNetworkfirewallFirewall struct {
 	EncryptionType                 plugin.TValue[string]
 	KmsKey                         plugin.TValue[*mqlAwsKmsKey]
 	EncryptionConfiguration        plugin.TValue[any]
+	NoSourcePreservation           plugin.TValue[bool]
+	NatGateways                    plugin.TValue[[]any]
+	ProxyListeners                 plugin.TValue[[]any]
 	Status                         plugin.TValue[string]
 	ConfigurationSyncStateSummary  plugin.TValue[string]
 	SyncStates                     plugin.TValue[[]any]
@@ -88239,6 +88705,30 @@ func (c *mqlAwsNetworkfirewallFirewall) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey
 
 func (c *mqlAwsNetworkfirewallFirewall) GetEncryptionConfiguration() *plugin.TValue[any] {
 	return &c.EncryptionConfiguration
+}
+
+func (c *mqlAwsNetworkfirewallFirewall) GetNoSourcePreservation() *plugin.TValue[bool] {
+	return &c.NoSourcePreservation
+}
+
+func (c *mqlAwsNetworkfirewallFirewall) GetNatGateways() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NatGateways, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.networkfirewall.firewall", c.__id, "natGateways")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.natGateways()
+	})
+}
+
+func (c *mqlAwsNetworkfirewallFirewall) GetProxyListeners() *plugin.TValue[[]any] {
+	return &c.ProxyListeners
 }
 
 func (c *mqlAwsNetworkfirewallFirewall) GetStatus() *plugin.TValue[string] {
@@ -150280,6 +150770,7 @@ type mqlAwsEc2 struct {
 	CapacityReservations             plugin.TValue[[]any]
 	InstanceConnectEndpoints         plugin.TValue[[]any]
 	Ipams                            plugin.TValue[[]any]
+	ApplicationStatusChecks          plugin.TValue[[]any]
 }
 
 // createAwsEc2 creates a new instance of this resource
@@ -150731,6 +151222,284 @@ func (c *mqlAwsEc2) GetIpams() *plugin.TValue[[]any] {
 
 		return c.ipams()
 	})
+}
+
+func (c *mqlAwsEc2) GetApplicationStatusChecks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ApplicationStatusChecks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2", c.__id, "applicationStatusChecks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.applicationStatusChecks()
+	})
+}
+
+// mqlAwsEc2ApplicationStatusCheck for the aws.ec2.applicationStatusCheck resource
+type mqlAwsEc2ApplicationStatusCheck struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEc2ApplicationStatusCheckInternal
+	Id                               plugin.TValue[string]
+	Region                           plugin.TValue[string]
+	Protocol                         plugin.TValue[string]
+	Port                             plugin.TValue[int64]
+	Path                             plugin.TValue[string]
+	HealthCheckPaths                 plugin.TValue[[]any]
+	StatusCodeMatcher                plugin.TValue[string]
+	Interval                         plugin.TValue[int64]
+	Timeout                          plugin.TValue[int64]
+	SuccessThreshold                 plugin.TValue[int64]
+	FailureThreshold                 plugin.TValue[int64]
+	InitializationGracePeriodSeconds plugin.TValue[int64]
+	Aggregation                      plugin.TValue[string]
+	DeviceIndex                      plugin.TValue[int64]
+	IpScope                          plugin.TValue[string]
+	IpVersion                        plugin.TValue[string]
+	TargetTags                       plugin.TValue[map[string]any]
+	CreatedAt                        plugin.TValue[*time.Time]
+	LastUpdatedAt                    plugin.TValue[*time.Time]
+	Tags                             plugin.TValue[map[string]any]
+	Statuses                         plugin.TValue[[]any]
+}
+
+// createAwsEc2ApplicationStatusCheck creates a new instance of this resource
+func createAwsEc2ApplicationStatusCheck(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2ApplicationStatusCheck{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.applicationStatusCheck", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheck) MqlName() string {
+	return "aws.ec2.applicationStatusCheck"
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheck) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheck) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheck) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheck) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheck) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheck) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheck) GetHealthCheckPaths() *plugin.TValue[[]any] {
+	return &c.HealthCheckPaths
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheck) GetStatusCodeMatcher() *plugin.TValue[string] {
+	return &c.StatusCodeMatcher
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheck) GetInterval() *plugin.TValue[int64] {
+	return &c.Interval
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheck) GetTimeout() *plugin.TValue[int64] {
+	return &c.Timeout
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheck) GetSuccessThreshold() *plugin.TValue[int64] {
+	return &c.SuccessThreshold
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheck) GetFailureThreshold() *plugin.TValue[int64] {
+	return &c.FailureThreshold
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheck) GetInitializationGracePeriodSeconds() *plugin.TValue[int64] {
+	return &c.InitializationGracePeriodSeconds
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheck) GetAggregation() *plugin.TValue[string] {
+	return &c.Aggregation
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheck) GetDeviceIndex() *plugin.TValue[int64] {
+	return &c.DeviceIndex
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheck) GetIpScope() *plugin.TValue[string] {
+	return &c.IpScope
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheck) GetIpVersion() *plugin.TValue[string] {
+	return &c.IpVersion
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheck) GetTargetTags() *plugin.TValue[map[string]any] {
+	return &c.TargetTags
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheck) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheck) GetLastUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.LastUpdatedAt
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheck) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheck) GetStatuses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Statuses, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.applicationStatusCheck", c.__id, "statuses")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.statuses()
+	})
+}
+
+// mqlAwsEc2ApplicationStatusCheckStatus for the aws.ec2.applicationStatusCheck.status resource
+type mqlAwsEc2ApplicationStatusCheckStatus struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEc2ApplicationStatusCheckStatusInternal
+	Instance          plugin.TValue[*mqlAwsEc2Instance]
+	Status            plugin.TValue[string]
+	ApplicationStatus plugin.TValue[string]
+	Aggregation       plugin.TValue[string]
+	ReasonCode        plugin.TValue[string]
+	ReasonProtocol    plugin.TValue[string]
+	ReasonStatusCode  plugin.TValue[int64]
+	StatusSince       plugin.TValue[*time.Time]
+	StatusTimestamp   plugin.TValue[*time.Time]
+	CheckUpdateTime   plugin.TValue[*time.Time]
+}
+
+// createAwsEc2ApplicationStatusCheckStatus creates a new instance of this resource
+func createAwsEc2ApplicationStatusCheckStatus(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2ApplicationStatusCheckStatus{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.applicationStatusCheck.status", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheckStatus) MqlName() string {
+	return "aws.ec2.applicationStatusCheck.status"
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheckStatus) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheckStatus) GetInstance() *plugin.TValue[*mqlAwsEc2Instance] {
+	return plugin.GetOrCompute[*mqlAwsEc2Instance](&c.Instance, func() (*mqlAwsEc2Instance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.applicationStatusCheck.status", c.__id, "instance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Instance), nil
+			}
+		}
+
+		return c.instance()
+	})
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheckStatus) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheckStatus) GetApplicationStatus() *plugin.TValue[string] {
+	return &c.ApplicationStatus
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheckStatus) GetAggregation() *plugin.TValue[string] {
+	return &c.Aggregation
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheckStatus) GetReasonCode() *plugin.TValue[string] {
+	return &c.ReasonCode
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheckStatus) GetReasonProtocol() *plugin.TValue[string] {
+	return &c.ReasonProtocol
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheckStatus) GetReasonStatusCode() *plugin.TValue[int64] {
+	return &c.ReasonStatusCode
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheckStatus) GetStatusSince() *plugin.TValue[*time.Time] {
+	return &c.StatusSince
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheckStatus) GetStatusTimestamp() *plugin.TValue[*time.Time] {
+	return &c.StatusTimestamp
+}
+
+func (c *mqlAwsEc2ApplicationStatusCheckStatus) GetCheckUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.CheckUpdateTime
 }
 
 // mqlAwsEc2Eip for the aws.ec2.eip resource
@@ -155303,18 +156072,24 @@ type mqlAwsInspectorCoverage struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsInspectorCoverageInternal
-	AccountId     plugin.TValue[string]
-	ResourceId    plugin.TValue[string]
-	ResourceType  plugin.TValue[string]
-	LastScannedAt plugin.TValue[*time.Time]
-	StatusReason  plugin.TValue[string]
-	StatusCode    plugin.TValue[string]
-	ScanType      plugin.TValue[string]
-	Region        plugin.TValue[string]
-	Ec2Instance   plugin.TValue[*mqlAwsInspectorCoverageInstance]
-	EcrImage      plugin.TValue[*mqlAwsInspectorCoverageImage]
-	EcrRepo       plugin.TValue[*mqlAwsInspectorCoverageRepository]
-	Lambda        plugin.TValue[*mqlAwsLambdaFunction]
+	AccountId         plugin.TValue[string]
+	ResourceId        plugin.TValue[string]
+	ResourceType      plugin.TValue[string]
+	LastScannedAt     plugin.TValue[*time.Time]
+	StatusReason      plugin.TValue[string]
+	StatusCode        plugin.TValue[string]
+	ScanType          plugin.TValue[string]
+	ScanMode          plugin.TValue[string]
+	Provider          plugin.TValue[string]
+	ProviderAccountId plugin.TValue[string]
+	ProviderOrgId     plugin.TValue[string]
+	ProviderPartition plugin.TValue[string]
+	ProviderRegion    plugin.TValue[string]
+	Region            plugin.TValue[string]
+	Ec2Instance       plugin.TValue[*mqlAwsInspectorCoverageInstance]
+	EcrImage          plugin.TValue[*mqlAwsInspectorCoverageImage]
+	EcrRepo           plugin.TValue[*mqlAwsInspectorCoverageRepository]
+	Lambda            plugin.TValue[*mqlAwsLambdaFunction]
 }
 
 // createAwsInspectorCoverage creates a new instance of this resource
@@ -155380,6 +156155,30 @@ func (c *mqlAwsInspectorCoverage) GetStatusCode() *plugin.TValue[string] {
 
 func (c *mqlAwsInspectorCoverage) GetScanType() *plugin.TValue[string] {
 	return &c.ScanType
+}
+
+func (c *mqlAwsInspectorCoverage) GetScanMode() *plugin.TValue[string] {
+	return &c.ScanMode
+}
+
+func (c *mqlAwsInspectorCoverage) GetProvider() *plugin.TValue[string] {
+	return &c.Provider
+}
+
+func (c *mqlAwsInspectorCoverage) GetProviderAccountId() *plugin.TValue[string] {
+	return &c.ProviderAccountId
+}
+
+func (c *mqlAwsInspectorCoverage) GetProviderOrgId() *plugin.TValue[string] {
+	return &c.ProviderOrgId
+}
+
+func (c *mqlAwsInspectorCoverage) GetProviderPartition() *plugin.TValue[string] {
+	return &c.ProviderPartition
+}
+
+func (c *mqlAwsInspectorCoverage) GetProviderRegion() *plugin.TValue[string] {
+	return &c.ProviderRegion
 }
 
 func (c *mqlAwsInspectorCoverage) GetRegion() *plugin.TValue[string] {
@@ -170198,7 +170997,7 @@ func (c *mqlAwsWorkspaces) GetBundles() *plugin.TValue[[]any] {
 type mqlAwsWorkspacesDirectory struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsWorkspacesDirectoryInternal it will be used here
+	mqlAwsWorkspacesDirectoryInternal
 	DirectoryId                    plugin.TValue[string]
 	Arn                            plugin.TValue[string]
 	DirectoryName                  plugin.TValue[string]
@@ -170215,6 +171014,9 @@ type mqlAwsWorkspacesDirectory struct {
 	IamRoleId                      plugin.TValue[string]
 	SubnetIds                      plugin.TValue[[]any]
 	Subnets                        plugin.TValue[[]any]
+	ClientExperiencePolicy         plugin.TValue[string]
+	ClientReconnectEnabled         plugin.TValue[bool]
+	ClientLogUploadEnabled         plugin.TValue[bool]
 	Tags                           plugin.TValue[map[string]any]
 	Region                         plugin.TValue[string]
 }
@@ -170331,6 +171133,24 @@ func (c *mqlAwsWorkspacesDirectory) GetSubnets() *plugin.TValue[[]any] {
 		}
 
 		return c.subnets()
+	})
+}
+
+func (c *mqlAwsWorkspacesDirectory) GetClientExperiencePolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ClientExperiencePolicy, func() (string, error) {
+		return c.clientExperiencePolicy()
+	})
+}
+
+func (c *mqlAwsWorkspacesDirectory) GetClientReconnectEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ClientReconnectEnabled, func() (bool, error) {
+		return c.clientReconnectEnabled()
+	})
+}
+
+func (c *mqlAwsWorkspacesDirectory) GetClientLogUploadEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ClientLogUploadEnabled, func() (bool, error) {
+		return c.clientLogUploadEnabled()
 	})
 }
 
@@ -173827,6 +174647,7 @@ type mqlAwsTimestreamInfluxdb struct {
 	// optional: if you define mqlAwsTimestreamInfluxdbInternal it will be used here
 	Instances plugin.TValue[[]any]
 	Clusters  plugin.TValue[[]any]
+	Backups   plugin.TValue[[]any]
 }
 
 // createAwsTimestreamInfluxdb creates a new instance of this resource
@@ -173895,6 +174716,145 @@ func (c *mqlAwsTimestreamInfluxdb) GetClusters() *plugin.TValue[[]any] {
 		}
 
 		return c.clusters()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdb) GetBackups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Backups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.timestream.influxdb", c.__id, "backups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backups()
+	})
+}
+
+// mqlAwsTimestreamInfluxdbBackup for the aws.timestream.influxdb.backup resource
+type mqlAwsTimestreamInfluxdbBackup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsTimestreamInfluxdbBackupInternal
+	Arn            plugin.TValue[string]
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Region         plugin.TValue[string]
+	Status         plugin.TValue[string]
+	Type           plugin.TValue[string]
+	EngineType     plugin.TValue[string]
+	DeploymentType plugin.TValue[string]
+	CreatedAt      plugin.TValue[*time.Time]
+	ExpiresAfter   plugin.TValue[*time.Time]
+	DbInstance     plugin.TValue[*mqlAwsTimestreamInfluxdbInstance]
+	KmsKey         plugin.TValue[*mqlAwsKmsKey]
+}
+
+// createAwsTimestreamInfluxdbBackup creates a new instance of this resource
+func createAwsTimestreamInfluxdbBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsTimestreamInfluxdbBackup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.timestream.influxdb.backup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsTimestreamInfluxdbBackup) MqlName() string {
+	return "aws.timestream.influxdb.backup"
+}
+
+func (c *mqlAwsTimestreamInfluxdbBackup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsTimestreamInfluxdbBackup) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsTimestreamInfluxdbBackup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsTimestreamInfluxdbBackup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsTimestreamInfluxdbBackup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsTimestreamInfluxdbBackup) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsTimestreamInfluxdbBackup) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsTimestreamInfluxdbBackup) GetEngineType() *plugin.TValue[string] {
+	return &c.EngineType
+}
+
+func (c *mqlAwsTimestreamInfluxdbBackup) GetDeploymentType() *plugin.TValue[string] {
+	return &c.DeploymentType
+}
+
+func (c *mqlAwsTimestreamInfluxdbBackup) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsTimestreamInfluxdbBackup) GetExpiresAfter() *plugin.TValue[*time.Time] {
+	return &c.ExpiresAfter
+}
+
+func (c *mqlAwsTimestreamInfluxdbBackup) GetDbInstance() *plugin.TValue[*mqlAwsTimestreamInfluxdbInstance] {
+	return plugin.GetOrCompute[*mqlAwsTimestreamInfluxdbInstance](&c.DbInstance, func() (*mqlAwsTimestreamInfluxdbInstance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.timestream.influxdb.backup", c.__id, "dbInstance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsTimestreamInfluxdbInstance), nil
+			}
+		}
+
+		return c.dbInstance()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbBackup) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.timestream.influxdb.backup", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
 	})
 }
 
@@ -174827,17 +175787,18 @@ type mqlAwsGlue struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsGlueInternal it will be used here
-	Crawlers                  plugin.TValue[[]any]
-	Jobs                      plugin.TValue[[]any]
-	Triggers                  plugin.TValue[[]any]
-	SecurityConfigurations    plugin.TValue[[]any]
-	Databases                 plugin.TValue[[]any]
-	CatalogEncryptionSettings plugin.TValue[[]any]
-	Workflows                 plugin.TValue[[]any]
-	Connections               plugin.TValue[[]any]
-	SchemaRegistries          plugin.TValue[[]any]
-	Schemas                   plugin.TValue[[]any]
-	ResourcePolicies          plugin.TValue[[]any]
+	Crawlers                        plugin.TValue[[]any]
+	Jobs                            plugin.TValue[[]any]
+	Triggers                        plugin.TValue[[]any]
+	SecurityConfigurations          plugin.TValue[[]any]
+	Databases                       plugin.TValue[[]any]
+	CatalogEncryptionSettings       plugin.TValue[[]any]
+	CatalogExportEncryptionSettings plugin.TValue[[]any]
+	Workflows                       plugin.TValue[[]any]
+	Connections                     plugin.TValue[[]any]
+	SchemaRegistries                plugin.TValue[[]any]
+	Schemas                         plugin.TValue[[]any]
+	ResourcePolicies                plugin.TValue[[]any]
 }
 
 // createAwsGlue creates a new instance of this resource
@@ -174960,6 +175921,22 @@ func (c *mqlAwsGlue) GetDatabases() *plugin.TValue[[]any] {
 func (c *mqlAwsGlue) GetCatalogEncryptionSettings() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.CatalogEncryptionSettings, func() ([]any, error) {
 		return c.catalogEncryptionSettings()
+	})
+}
+
+func (c *mqlAwsGlue) GetCatalogExportEncryptionSettings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CatalogExportEncryptionSettings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.glue", c.__id, "catalogExportEncryptionSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.catalogExportEncryptionSettings()
 	})
 }
 
@@ -175410,6 +176387,72 @@ func (c *mqlAwsGlueJob) GetRegion() *plugin.TValue[string] {
 func (c *mqlAwsGlueJob) GetTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
+	})
+}
+
+// mqlAwsGlueCatalogExportEncryption for the aws.glue.catalogExportEncryption resource
+type mqlAwsGlueCatalogExportEncryption struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsGlueCatalogExportEncryptionInternal
+	Region       plugin.TValue[string]
+	SseAlgorithm plugin.TValue[string]
+	KmsKey       plugin.TValue[*mqlAwsKmsKey]
+}
+
+// createAwsGlueCatalogExportEncryption creates a new instance of this resource
+func createAwsGlueCatalogExportEncryption(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsGlueCatalogExportEncryption{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.glue.catalogExportEncryption", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsGlueCatalogExportEncryption) MqlName() string {
+	return "aws.glue.catalogExportEncryption"
+}
+
+func (c *mqlAwsGlueCatalogExportEncryption) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsGlueCatalogExportEncryption) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsGlueCatalogExportEncryption) GetSseAlgorithm() *plugin.TValue[string] {
+	return &c.SseAlgorithm
+}
+
+func (c *mqlAwsGlueCatalogExportEncryption) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.glue.catalogExportEncryption", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
 	})
 }
 

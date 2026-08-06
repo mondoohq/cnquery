@@ -88,7 +88,15 @@ func (a *mqlAwsInspector) getCoverage(conn *connection.AwsConnection) []*jobpool
 							"statusReason":  llx.StringData(statusReason),
 							"statusCode":    llx.StringData(statusCode),
 							"scanType":      llx.StringData(string(coverage.ScanType)),
-							"region":        llx.StringData(region),
+							"scanMode":      llx.StringData(string(coverage.ScanMode)),
+							// Inspector can cover resources hosted outside AWS, so the
+							// provider fields identify where the resource actually lives.
+							"provider":          llx.StringData(string(coverage.Provider)),
+							"providerAccountId": llx.StringDataPtr(coverage.ProviderAccountId),
+							"providerOrgId":     llx.StringDataPtr(coverage.ProviderOrgId),
+							"providerPartition": llx.StringDataPtr(coverage.ProviderPartition),
+							"providerRegion":    llx.StringDataPtr(coverage.ProviderRegion),
+							"region":            llx.StringData(region),
 						},
 					)
 					if err != nil {

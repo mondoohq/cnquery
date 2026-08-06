@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -147,6 +148,71 @@ const (
 func (a *mqlAwsWorkspacesDirectory) arn() (string, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	return fmt.Sprintf(workspacesDirectoryArnPattern, a.Region.Data, conn.AccountId(), a.DirectoryId.Data), nil
+}
+
+type mqlAwsWorkspacesDirectoryInternal struct {
+	clientPropsFetched atomic.Bool
+	clientProps        *workspacestypes.ClientProperties
+	clientPropsLock    sync.Mutex
+}
+
+// fetchClientProperties loads the directory's client properties once and shares
+// the result across clientExperiencePolicy, clientReconnectEnabled, and
+// clientLogUploadEnabled, which all come from the same call.
+func (a *mqlAwsWorkspacesDirectory) fetchClientProperties() (*workspacestypes.ClientProperties, error) {
+	if a.clientPropsFetched.Load() {
+		return a.clientProps, nil
+	}
+	a.clientPropsLock.Lock()
+	defer a.clientPropsLock.Unlock()
+	if a.clientPropsFetched.Load() {
+		return a.clientProps, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Workspaces(a.Region.Data)
+	resp, err := svc.DescribeClientProperties(context.Background(), &workspaces.DescribeClientPropertiesInput{
+		ResourceIds: []string{a.DirectoryId.Data},
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			a.clientPropsFetched.Store(true)
+			return nil, nil
+		}
+		return nil, err
+	}
+	for _, r := range resp.ClientPropertiesList {
+		if r.ClientProperties != nil {
+			a.clientProps = r.ClientProperties
+			break
+		}
+	}
+	a.clientPropsFetched.Store(true)
+	return a.clientProps, nil
+}
+
+func (a *mqlAwsWorkspacesDirectory) clientExperiencePolicy() (string, error) {
+	props, err := a.fetchClientProperties()
+	if err != nil || props == nil {
+		return "", err
+	}
+	return convert.ToValue(props.ClientExperiencePolicy), nil
+}
+
+func (a *mqlAwsWorkspacesDirectory) clientReconnectEnabled() (bool, error) {
+	props, err := a.fetchClientProperties()
+	if err != nil || props == nil {
+		return false, err
+	}
+	return props.ReconnectEnabled == workspacestypes.ReconnectEnumEnabled, nil
+}
+
+func (a *mqlAwsWorkspacesDirectory) clientLogUploadEnabled() (bool, error) {
+	props, err := a.fetchClientProperties()
+	if err != nil || props == nil {
+		return false, err
+	}
+	return props.LogUploadEnabled == workspacestypes.LogUploadEnumEnabled, nil
 }
 
 func (a *mqlAwsWorkspacesDirectory) tags() (map[string]any, error) {

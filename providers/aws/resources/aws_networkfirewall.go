@@ -127,6 +127,24 @@ func (a *mqlAwsNetworkfirewall) getFirewalls(conn *connection.AwsConnection) []*
 				}
 				tags := nfTagsToMap(f.Tags)
 
+				proxyListeners := []any{}
+				if f.ProxySettings != nil {
+					for _, lp := range f.ProxySettings.ListenerProperties {
+						d, derr := convert.JsonToDict(lp)
+						if derr != nil {
+							log.Warn().Err(derr).Msg("failed to convert proxy listener property")
+							continue
+						}
+						proxyListeners = append(proxyListeners, d)
+					}
+				}
+				natGatewayIds := make([]string, 0, len(f.NatGatewayMappings))
+				for _, ngm := range f.NatGatewayMappings {
+					if ngm.NatGatewayId != nil {
+						natGatewayIds = append(natGatewayIds, *ngm.NatGatewayId)
+					}
+				}
+
 				mqlFirewall, err := CreateResource(a.MqlRuntime, "aws.networkfirewall.firewall",
 					map[string]*llx.RawData{
 						"arn":                            llx.StringDataPtr(f.FirewallArn),
@@ -140,6 +158,8 @@ func (a *mqlAwsNetworkfirewall) getFirewalls(conn *connection.AwsConnection) []*
 						"subnetMappings":                 llx.ArrayData(subnetMappings, "dict"),
 						"encryptionType":                 llx.StringData(encryptionType),
 						"encryptionConfiguration":        llx.DictData(encryptionDict),
+						"noSourcePreservation":           llx.BoolData(f.NoSourcePreservation),
+						"proxyListeners":                 llx.ArrayData(proxyListeners, "dict"),
 						"tags":                           llx.MapData(tags, "string"),
 					})
 				if err != nil {
@@ -150,6 +170,7 @@ func (a *mqlAwsNetworkfirewall) getFirewalls(conn *connection.AwsConnection) []*
 				mqlFw.cacheSubnetIds = subnetIds
 				mqlFw.cacheKmsKeyId = kmsKeyId
 				mqlFw.cacheStatusVal = detail.FirewallStatus
+				mqlFw.cacheNatGatewayIds = natGatewayIds
 				res = append(res, mqlFirewall)
 			}
 			return jobpool.JobResult(res), nil
@@ -160,13 +181,14 @@ func (a *mqlAwsNetworkfirewall) getFirewalls(conn *connection.AwsConnection) []*
 }
 
 type mqlAwsNetworkfirewallFirewallInternal struct {
-	cacheVpcId      *string
-	cacheSubnetIds  []string
-	cacheKmsKeyId   *string
-	cacheStatusVal  *nftypes.FirewallStatus
-	cacheLogConfig  *nftypes.LoggingConfiguration
-	cacheLogFetched bool
-	cacheLogLock    sync.Mutex
+	cacheVpcId         *string
+	cacheSubnetIds     []string
+	cacheKmsKeyId      *string
+	cacheNatGatewayIds []string
+	cacheStatusVal     *nftypes.FirewallStatus
+	cacheLogConfig     *nftypes.LoggingConfiguration
+	cacheLogFetched    bool
+	cacheLogLock       sync.Mutex
 }
 
 type mqlAwsNetworkfirewallPolicyInternal struct {
@@ -197,6 +219,27 @@ func (a *mqlAwsNetworkfirewallFirewall) vpc() (*mqlAwsVpc, error) {
 		return nil, err
 	}
 	return mqlVpc.(*mqlAwsVpc), nil
+}
+
+func (a *mqlAwsNetworkfirewallFirewall) natGateways() ([]any, error) {
+	res := []any{}
+	for _, natGatewayId := range a.cacheNatGatewayIds {
+		if natGatewayId == "" {
+			continue
+		}
+		// The NAT gateway id does not encode a region, so the init needs the
+		// firewall's region alongside it to run a targeted lookup.
+		mqlNat, err := NewResource(a.MqlRuntime, "aws.vpc.natgateway",
+			map[string]*llx.RawData{
+				"natGatewayId": llx.StringData(natGatewayId),
+				"region":       llx.StringData(a.Region.Data),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlNat)
+	}
+	return res, nil
 }
 
 func (a *mqlAwsNetworkfirewallFirewall) subnets() ([]any, error) {
