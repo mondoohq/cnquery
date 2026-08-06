@@ -4824,6 +4824,7 @@ func init() {
 		"aws.vpclattice.targetGroup": {
 			// to override args, implement: initAwsVpclatticeTargetGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsVpclatticeTargetGroup,
+		},
 		"aws.globalaccelerator": {
 			// to override args, implement: initAwsGlobalaccelerator(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsGlobalaccelerator,
@@ -36210,6 +36211,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.vpclattice.targetGroup.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpclatticeTargetGroup).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"aws.globalaccelerator.accelerators": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGlobalaccelerator).GetAccelerators()).ToDataRes(types.Array(types.Resource("aws.globalaccelerator.accelerator")))
 	},
@@ -82008,6 +82010,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.vpclattice.targetGroup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpclatticeTargetGroup).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"aws.globalaccelerator.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsGlobalaccelerator).__id, ok = v.Value.(string)
 		return
@@ -199138,17 +199142,6 @@ type mqlAwsVpclattice struct {
 // createAwsVpclattice creates a new instance of this resource
 func createAwsVpclattice(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
 	res := &mqlAwsVpclattice{
-// mqlAwsGlobalaccelerator for the aws.globalaccelerator resource
-type mqlAwsGlobalaccelerator struct {
-	MqlRuntime *plugin.Runtime
-	__id       string
-	// optional: if you define mqlAwsGlobalacceleratorInternal it will be used here
-	Accelerators plugin.TValue[[]any]
-}
-
-// createAwsGlobalaccelerator creates a new instance of this resource
-func createAwsGlobalaccelerator(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlAwsGlobalaccelerator{
 		MqlRuntime: runtime,
 	}
 
@@ -199166,7 +199159,6 @@ func createAwsGlobalaccelerator(runtime *plugin.Runtime, args map[string]*llx.Ra
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.vpclattice", res.__id)
-		args, err = runtime.ResourceFromRecording("aws.globalaccelerator", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -199188,18 +199180,6 @@ func (c *mqlAwsVpclattice) GetServiceNetworks() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.ServiceNetworks, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpclattice", c.__id, "serviceNetworks")
-func (c *mqlAwsGlobalaccelerator) MqlName() string {
-	return "aws.globalaccelerator"
-}
-
-func (c *mqlAwsGlobalaccelerator) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlAwsGlobalaccelerator) GetAccelerators() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.Accelerators, func() ([]any, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.globalaccelerator", c.__id, "accelerators")
 			if err != nil {
 				return nil, err
 			}
@@ -199268,32 +199248,6 @@ type mqlAwsVpclatticeServiceNetwork struct {
 // createAwsVpclatticeServiceNetwork creates a new instance of this resource
 func createAwsVpclatticeServiceNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
 	res := &mqlAwsVpclatticeServiceNetwork{
-		return c.accelerators()
-	})
-}
-
-// mqlAwsGlobalacceleratorAccelerator for the aws.globalaccelerator.accelerator resource
-type mqlAwsGlobalacceleratorAccelerator struct {
-	MqlRuntime *plugin.Runtime
-	__id       string
-	// optional: if you define mqlAwsGlobalacceleratorAcceleratorInternal it will be used here
-	Arn              plugin.TValue[string]
-	Name             plugin.TValue[string]
-	Enabled          plugin.TValue[bool]
-	IpAddressType    plugin.TValue[string]
-	DnsName          plugin.TValue[string]
-	DualStackDnsName plugin.TValue[string]
-	IpSets           plugin.TValue[[]any]
-	Status           plugin.TValue[string]
-	CreatedAt        plugin.TValue[*time.Time]
-	LastModifiedAt   plugin.TValue[*time.Time]
-	Tags             plugin.TValue[map[string]any]
-	Listeners        plugin.TValue[[]any]
-}
-
-// createAwsGlobalacceleratorAccelerator creates a new instance of this resource
-func createAwsGlobalacceleratorAccelerator(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlAwsGlobalacceleratorAccelerator{
 		MqlRuntime: runtime,
 	}
 
@@ -199311,7 +199265,6 @@ func createAwsGlobalacceleratorAccelerator(runtime *plugin.Runtime, args map[str
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.vpclattice.serviceNetwork", res.__id)
-		args, err = runtime.ResourceFromRecording("aws.globalaccelerator.accelerator", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -199412,55 +199365,6 @@ func (c *mqlAwsVpclatticeServiceNetwork) GetVpcAssociations() *plugin.TValue[[]a
 }
 
 func (c *mqlAwsVpclatticeServiceNetwork) GetTags() *plugin.TValue[map[string]any] {
-func (c *mqlAwsGlobalacceleratorAccelerator) MqlName() string {
-	return "aws.globalaccelerator.accelerator"
-}
-
-func (c *mqlAwsGlobalacceleratorAccelerator) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlAwsGlobalacceleratorAccelerator) GetArn() *plugin.TValue[string] {
-	return &c.Arn
-}
-
-func (c *mqlAwsGlobalacceleratorAccelerator) GetName() *plugin.TValue[string] {
-	return &c.Name
-}
-
-func (c *mqlAwsGlobalacceleratorAccelerator) GetEnabled() *plugin.TValue[bool] {
-	return &c.Enabled
-}
-
-func (c *mqlAwsGlobalacceleratorAccelerator) GetIpAddressType() *plugin.TValue[string] {
-	return &c.IpAddressType
-}
-
-func (c *mqlAwsGlobalacceleratorAccelerator) GetDnsName() *plugin.TValue[string] {
-	return &c.DnsName
-}
-
-func (c *mqlAwsGlobalacceleratorAccelerator) GetDualStackDnsName() *plugin.TValue[string] {
-	return &c.DualStackDnsName
-}
-
-func (c *mqlAwsGlobalacceleratorAccelerator) GetIpSets() *plugin.TValue[[]any] {
-	return &c.IpSets
-}
-
-func (c *mqlAwsGlobalacceleratorAccelerator) GetStatus() *plugin.TValue[string] {
-	return &c.Status
-}
-
-func (c *mqlAwsGlobalacceleratorAccelerator) GetCreatedAt() *plugin.TValue[*time.Time] {
-	return &c.CreatedAt
-}
-
-func (c *mqlAwsGlobalacceleratorAccelerator) GetLastModifiedAt() *plugin.TValue[*time.Time] {
-	return &c.LastModifiedAt
-}
-
-func (c *mqlAwsGlobalacceleratorAccelerator) GetTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
 	})
@@ -199711,10 +199615,6 @@ func (c *mqlAwsVpclatticeService) GetListeners() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Listeners, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpclattice.service", c.__id, "listeners")
-func (c *mqlAwsGlobalacceleratorAccelerator) GetListeners() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.Listeners, func() ([]any, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.globalaccelerator.accelerator", c.__id, "listeners")
 			if err != nil {
 				return nil, err
 			}
@@ -199751,21 +199651,6 @@ type mqlAwsVpclatticeListener struct {
 // createAwsVpclatticeListener creates a new instance of this resource
 func createAwsVpclatticeListener(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
 	res := &mqlAwsVpclatticeListener{
-// mqlAwsGlobalacceleratorListener for the aws.globalaccelerator.listener resource
-type mqlAwsGlobalacceleratorListener struct {
-	MqlRuntime *plugin.Runtime
-	__id       string
-	// optional: if you define mqlAwsGlobalacceleratorListenerInternal it will be used here
-	Arn            plugin.TValue[string]
-	Protocol       plugin.TValue[string]
-	ClientAffinity plugin.TValue[string]
-	PortRanges     plugin.TValue[[]any]
-	EndpointGroups plugin.TValue[[]any]
-}
-
-// createAwsGlobalacceleratorListener creates a new instance of this resource
-func createAwsGlobalacceleratorListener(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlAwsGlobalacceleratorListener{
 		MqlRuntime: runtime,
 	}
 
@@ -199783,7 +199668,6 @@ func createAwsGlobalacceleratorListener(runtime *plugin.Runtime, args map[string
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.vpclattice.listener", res.__id)
-		args, err = runtime.ResourceFromRecording("aws.globalaccelerator.listener", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -199949,6 +199833,252 @@ func (c *mqlAwsVpclatticeTargetGroup) GetServices() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Services, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpclattice.targetGroup", c.__id, "services")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.services()
+	})
+}
+
+func (c *mqlAwsVpclatticeTargetGroup) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsVpclatticeTargetGroup) GetLastUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.LastUpdatedAt
+}
+
+func (c *mqlAwsVpclatticeTargetGroup) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsGlobalaccelerator for the aws.globalaccelerator resource
+type mqlAwsGlobalaccelerator struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsGlobalacceleratorInternal it will be used here
+	Accelerators plugin.TValue[[]any]
+}
+
+// createAwsGlobalaccelerator creates a new instance of this resource
+func createAwsGlobalaccelerator(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsGlobalaccelerator{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.globalaccelerator", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsGlobalaccelerator) MqlName() string {
+	return "aws.globalaccelerator"
+}
+
+func (c *mqlAwsGlobalaccelerator) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsGlobalaccelerator) GetAccelerators() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Accelerators, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.globalaccelerator", c.__id, "accelerators")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accelerators()
+	})
+}
+
+// mqlAwsGlobalacceleratorAccelerator for the aws.globalaccelerator.accelerator resource
+type mqlAwsGlobalacceleratorAccelerator struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsGlobalacceleratorAcceleratorInternal it will be used here
+	Arn              plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Enabled          plugin.TValue[bool]
+	IpAddressType    plugin.TValue[string]
+	DnsName          plugin.TValue[string]
+	DualStackDnsName plugin.TValue[string]
+	IpSets           plugin.TValue[[]any]
+	Status           plugin.TValue[string]
+	CreatedAt        plugin.TValue[*time.Time]
+	LastModifiedAt   plugin.TValue[*time.Time]
+	Tags             plugin.TValue[map[string]any]
+	Listeners        plugin.TValue[[]any]
+}
+
+// createAwsGlobalacceleratorAccelerator creates a new instance of this resource
+func createAwsGlobalacceleratorAccelerator(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsGlobalacceleratorAccelerator{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.globalaccelerator.accelerator", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsGlobalacceleratorAccelerator) MqlName() string {
+	return "aws.globalaccelerator.accelerator"
+}
+
+func (c *mqlAwsGlobalacceleratorAccelerator) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsGlobalacceleratorAccelerator) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsGlobalacceleratorAccelerator) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsGlobalacceleratorAccelerator) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAwsGlobalacceleratorAccelerator) GetIpAddressType() *plugin.TValue[string] {
+	return &c.IpAddressType
+}
+
+func (c *mqlAwsGlobalacceleratorAccelerator) GetDnsName() *plugin.TValue[string] {
+	return &c.DnsName
+}
+
+func (c *mqlAwsGlobalacceleratorAccelerator) GetDualStackDnsName() *plugin.TValue[string] {
+	return &c.DualStackDnsName
+}
+
+func (c *mqlAwsGlobalacceleratorAccelerator) GetIpSets() *plugin.TValue[[]any] {
+	return &c.IpSets
+}
+
+func (c *mqlAwsGlobalacceleratorAccelerator) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsGlobalacceleratorAccelerator) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsGlobalacceleratorAccelerator) GetLastModifiedAt() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedAt
+}
+
+func (c *mqlAwsGlobalacceleratorAccelerator) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsGlobalacceleratorAccelerator) GetListeners() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Listeners, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.globalaccelerator.accelerator", c.__id, "listeners")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.listeners()
+	})
+}
+
+// mqlAwsGlobalacceleratorListener for the aws.globalaccelerator.listener resource
+type mqlAwsGlobalacceleratorListener struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsGlobalacceleratorListenerInternal it will be used here
+	Arn            plugin.TValue[string]
+	Protocol       plugin.TValue[string]
+	ClientAffinity plugin.TValue[string]
+	PortRanges     plugin.TValue[[]any]
+	EndpointGroups plugin.TValue[[]any]
+}
+
+// createAwsGlobalacceleratorListener creates a new instance of this resource
+func createAwsGlobalacceleratorListener(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsGlobalacceleratorListener{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.globalaccelerator.listener", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
 func (c *mqlAwsGlobalacceleratorListener) MqlName() string {
 	return "aws.globalaccelerator.listener"
 }
@@ -199985,23 +200115,6 @@ func (c *mqlAwsGlobalacceleratorListener) GetEndpointGroups() *plugin.TValue[[]a
 			}
 		}
 
-		return c.services()
-	})
-}
-
-func (c *mqlAwsVpclatticeTargetGroup) GetCreatedAt() *plugin.TValue[*time.Time] {
-	return &c.CreatedAt
-}
-
-func (c *mqlAwsVpclatticeTargetGroup) GetLastUpdatedAt() *plugin.TValue[*time.Time] {
-	return &c.LastUpdatedAt
-}
-
-func (c *mqlAwsVpclatticeTargetGroup) GetTags() *plugin.TValue[map[string]any] {
-	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
-		return c.tags()
-	})
-}
 		return c.endpointGroups()
 	})
 }

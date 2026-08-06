@@ -48,6 +48,12 @@ func (a *mqlAwsGlobalaccelerator) accelerators() ([]any, error) {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
 			if Is400AccessDeniedError(err) {
+				// Unlike a regional service, being denied here empties the whole
+				// resource rather than dimming one region, and an SCP denying
+				// us-west-2 looks the same as having no accelerators. Say which
+				// it was so an empty result is traceable.
+				log.Debug().Err(err).
+					Msg("access denied listing global accelerators in the us-west-2 control plane, reporting none")
 				return res, nil
 			}
 			return nil, err

@@ -30838,6 +30838,8 @@ private aws.vpclattice.targetGroup @defaults("name type protocol port") {
   lastUpdatedAt time
   // Tags on the target group
   tags() map[string]string
+}
+
 // AWS Global Accelerator
 //
 // Accelerators in the account, each fronting an application with static anycast
