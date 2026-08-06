@@ -33,6 +33,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/generativeaiagent"
 	"github.com/oracle/oci-go-sdk/v65/goldengate"
 	"github.com/oracle/oci-go-sdk/v65/identity"
+	"github.com/oracle/oci-go-sdk/v65/identitydomains"
 	"github.com/oracle/oci-go-sdk/v65/keymanagement"
 	"github.com/oracle/oci-go-sdk/v65/loadbalancer"
 	"github.com/oracle/oci-go-sdk/v65/logging"
@@ -183,6 +184,23 @@ func (c *OciConnection) AuditClient(region string) (*audit.AuditClient, error) {
 		return nil, err
 	}
 	client.SetRegion(region)
+	return &client, nil
+}
+
+// IdentityDomainsClient builds a client for one identity domain.
+//
+// Unlike every other client here this one is not addressed by region. Each
+// identity domain publishes its own endpoint, returned as the domain's `url`,
+// and the SCIM API is served only from there - which is exactly why the legacy
+// IAM client cannot reach past the default domain.
+func (c *OciConnection) IdentityDomainsClient(endpoint string) (*identitydomains.IdentityDomainsClient, error) {
+	if endpoint == "" {
+		return nil, errors.New("an identity domain endpoint is required")
+	}
+	client, err := identitydomains.NewIdentityDomainsClientWithConfigurationProvider(c.config, endpoint)
+	if err != nil {
+		return nil, err
+	}
 	return &client, nil
 }
 
