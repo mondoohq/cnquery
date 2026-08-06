@@ -2550,9 +2550,11 @@ private oci.audit.event @defaults("eventName principalName eventTime responseSta
   userAgent string
   // Console session the call belongs to, for actions taken in the web console
   consoleSessionId string
-  // Path portion of the request URL
-  requestAction string
   // HTTP method of the request (e.g., GET, POST, DELETE)
+  requestAction string
+  // Full path of the API request
+  //
+  // For example `/20160918/instances/ocid1.instance.oc1.phx.<unique_ID>`.
   requestPath string
   // Request identifier assigned by the service
   requestId string
