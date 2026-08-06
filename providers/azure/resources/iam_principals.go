@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"go.mondoo.com/mql/v13/llx"
@@ -34,6 +35,15 @@ const (
 	// graphGetByIdsBatchSize is the maximum number of object IDs Graph accepts
 	// in a single directoryObjects/getByIds request.
 	graphGetByIdsBatchSize = 1000
+
+	// graphRequestTimeout bounds a single getByIds round trip. Without it an
+	// unresponsive Graph endpoint would hang the request forever, and because
+	// resolvePrincipal deliberately holds its memo lock across the fetch to
+	// coalesce concurrent resolves, that hang would stall every other
+	// principal() accessor for the rest of the scan. A full 1000-ID batch
+	// normally returns in a few seconds, so this bounds the failure without
+	// cutting off legitimate work.
+	graphRequestTimeout = 30 * time.Second
 )
 
 // graphPrincipalTypes are the directory object types worth requesting. Naming
@@ -98,7 +108,7 @@ func fetchGraphPrincipals(ctx context.Context, conn *connection.AzureConnection,
 		return res, nil
 	}
 
-	client := http.Client{}
+	client := http.Client{Timeout: graphRequestTimeout}
 	url := graphEndpoint + "/directoryObjects/getByIds"
 
 	for start := 0; start < len(ids); start += graphGetByIdsBatchSize {
@@ -166,7 +176,17 @@ func fetchGraphPrincipals(ctx context.Context, conn *connection.AzureConnection,
 type mqlAzureSubscriptionAuthorizationServiceInternal struct {
 	// principalsMu guards the memo below and is deliberately held across the
 	// Graph call, so concurrent block evaluation resolves principals in one
-	// batched request instead of racing to issue one request per assignment.
+	// batched request instead of racing to issue one per assignment.
+	//
+	// Releasing it before the fetch and re-checking afterwards (ordinary
+	// double-check locking) would keep the memo correct but lose the
+	// coalescing: the executor evaluates block fields in goroutines, so every
+	// role assignment whose principal() runs before the first fetch returns
+	// would see an unseeded memo and issue its own single-ID request. On a
+	// subscription with a few hundred assignments that is a few hundred Graph
+	// round trips in place of one, which invites the 429 throttling that
+	// batching exists to avoid. The stall this risks instead is bounded by
+	// graphRequestTimeout.
 	principalsMu   sync.Mutex
 	principals     map[string]*graphPrincipal
 	principalsMiss map[string]struct{}
