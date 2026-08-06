@@ -866,30 +866,36 @@ func (o *mqlOciGoldenGateDeployment) subnet() (*mqlOciNetworkSubnet, error) {
 	return resolveOciSubnet(o.MqlRuntime, o.cacheSubnetId, &o.Subnet)
 }
 
-func (o *mqlOciGoldenGateDeployment) securityGroups() ([]any, error) {
+func (o *mqlOciGoldenGateDeployment) getDetail() (*goldengate.Deployment, error) {
 	o.detailLock.Lock()
-	if !o.detailFetched {
-		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-		client, err := conn.GoldenGateClient(o.cacheRegion)
-		if err != nil {
-			o.detailLock.Unlock()
-			return nil, err
-		}
-
-		response, err := client.GetDeployment(context.Background(), goldengate.GetDeploymentRequest{
-			DeploymentId: common.String(o.Id.Data),
-		})
-		if err != nil {
-			o.detailLock.Unlock()
-			return nil, err
-		}
-
-		o.detail = &response.Deployment
-		o.detailFetched = true
+	defer o.detailLock.Unlock()
+	if o.detailFetched {
+		return o.detail, nil
 	}
-	detail := o.detail
-	o.detailLock.Unlock()
 
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+	client, err := conn.GoldenGateClient(o.cacheRegion)
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := client.GetDeployment(context.Background(), goldengate.GetDeploymentRequest{
+		DeploymentId: common.String(o.Id.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	o.detail = &response.Deployment
+	o.detailFetched = true
+	return o.detail, nil
+}
+
+func (o *mqlOciGoldenGateDeployment) securityGroups() ([]any, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return nil, err
+	}
 	if detail == nil {
 		return []any{}, nil
 	}
