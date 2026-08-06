@@ -975,6 +975,14 @@ const (
 	ResourceAwsVpclatticeService                                                string = "aws.vpclattice.service"
 	ResourceAwsVpclatticeListener                                               string = "aws.vpclattice.listener"
 	ResourceAwsVpclatticeTargetGroup                                            string = "aws.vpclattice.targetGroup"
+	ResourceAwsGlobalaccelerator                                                string = "aws.globalaccelerator"
+	ResourceAwsGlobalacceleratorAccelerator                                     string = "aws.globalaccelerator.accelerator"
+	ResourceAwsGlobalacceleratorListener                                        string = "aws.globalaccelerator.listener"
+	ResourceAwsGlobalacceleratorEndpointGroup                                   string = "aws.globalaccelerator.endpointGroup"
+	ResourceAwsDirectconnect                                                    string = "aws.directconnect"
+	ResourceAwsDirectconnectConnection                                          string = "aws.directconnect.connection"
+	ResourceAwsDirectconnectVirtualInterface                                    string = "aws.directconnect.virtualInterface"
+	ResourceAwsDirectconnectGateway                                             string = "aws.directconnect.gateway"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -4816,6 +4824,38 @@ func init() {
 		"aws.vpclattice.targetGroup": {
 			// to override args, implement: initAwsVpclatticeTargetGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsVpclatticeTargetGroup,
+		},
+		"aws.globalaccelerator": {
+			// to override args, implement: initAwsGlobalaccelerator(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsGlobalaccelerator,
+		},
+		"aws.globalaccelerator.accelerator": {
+			// to override args, implement: initAwsGlobalacceleratorAccelerator(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsGlobalacceleratorAccelerator,
+		},
+		"aws.globalaccelerator.listener": {
+			// to override args, implement: initAwsGlobalacceleratorListener(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsGlobalacceleratorListener,
+		},
+		"aws.globalaccelerator.endpointGroup": {
+			// to override args, implement: initAwsGlobalacceleratorEndpointGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsGlobalacceleratorEndpointGroup,
+		},
+		"aws.directconnect": {
+			// to override args, implement: initAwsDirectconnect(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDirectconnect,
+		},
+		"aws.directconnect.connection": {
+			// to override args, implement: initAwsDirectconnectConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDirectconnectConnection,
+		},
+		"aws.directconnect.virtualInterface": {
+			// to override args, implement: initAwsDirectconnectVirtualInterface(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDirectconnectVirtualInterface,
+		},
+		"aws.directconnect.gateway": {
+			// to override args, implement: initAwsDirectconnectGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDirectconnectGateway,
 		},
 	}
 }
@@ -22810,6 +22850,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.eip.publicIp": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Eip).GetPublicIp()).ToDataRes(types.String)
 	},
+	"aws.ec2.eip.allocationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Eip).GetAllocationId()).ToDataRes(types.String)
+	},
 	"aws.ec2.eip.attached": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Eip).GetAttached()).ToDataRes(types.Bool)
 	},
@@ -36168,6 +36211,246 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.vpclattice.targetGroup.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpclatticeTargetGroup).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.globalaccelerator.accelerators": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalaccelerator).GetAccelerators()).ToDataRes(types.Array(types.Resource("aws.globalaccelerator.accelerator")))
+	},
+	"aws.globalaccelerator.accelerator.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorAccelerator).GetArn()).ToDataRes(types.String)
+	},
+	"aws.globalaccelerator.accelerator.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorAccelerator).GetName()).ToDataRes(types.String)
+	},
+	"aws.globalaccelerator.accelerator.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorAccelerator).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.globalaccelerator.accelerator.ipAddressType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorAccelerator).GetIpAddressType()).ToDataRes(types.String)
+	},
+	"aws.globalaccelerator.accelerator.dnsName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorAccelerator).GetDnsName()).ToDataRes(types.String)
+	},
+	"aws.globalaccelerator.accelerator.dualStackDnsName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorAccelerator).GetDualStackDnsName()).ToDataRes(types.String)
+	},
+	"aws.globalaccelerator.accelerator.ipSets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorAccelerator).GetIpSets()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.globalaccelerator.accelerator.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorAccelerator).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.globalaccelerator.accelerator.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorAccelerator).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.globalaccelerator.accelerator.lastModifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorAccelerator).GetLastModifiedAt()).ToDataRes(types.Time)
+	},
+	"aws.globalaccelerator.accelerator.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorAccelerator).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.globalaccelerator.accelerator.listeners": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorAccelerator).GetListeners()).ToDataRes(types.Array(types.Resource("aws.globalaccelerator.listener")))
+	},
+	"aws.globalaccelerator.listener.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorListener).GetArn()).ToDataRes(types.String)
+	},
+	"aws.globalaccelerator.listener.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorListener).GetProtocol()).ToDataRes(types.String)
+	},
+	"aws.globalaccelerator.listener.clientAffinity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorListener).GetClientAffinity()).ToDataRes(types.String)
+	},
+	"aws.globalaccelerator.listener.portRanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorListener).GetPortRanges()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.globalaccelerator.listener.endpointGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorListener).GetEndpointGroups()).ToDataRes(types.Array(types.Resource("aws.globalaccelerator.endpointGroup")))
+	},
+	"aws.globalaccelerator.endpointGroup.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorEndpointGroup).GetArn()).ToDataRes(types.String)
+	},
+	"aws.globalaccelerator.endpointGroup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorEndpointGroup).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.globalaccelerator.endpointGroup.trafficDialPercentage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorEndpointGroup).GetTrafficDialPercentage()).ToDataRes(types.Float)
+	},
+	"aws.globalaccelerator.endpointGroup.healthCheckIntervalSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorEndpointGroup).GetHealthCheckIntervalSeconds()).ToDataRes(types.Int)
+	},
+	"aws.globalaccelerator.endpointGroup.healthCheckPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorEndpointGroup).GetHealthCheckPath()).ToDataRes(types.String)
+	},
+	"aws.globalaccelerator.endpointGroup.healthCheckPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorEndpointGroup).GetHealthCheckPort()).ToDataRes(types.Int)
+	},
+	"aws.globalaccelerator.endpointGroup.healthCheckProtocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorEndpointGroup).GetHealthCheckProtocol()).ToDataRes(types.String)
+	},
+	"aws.globalaccelerator.endpointGroup.thresholdCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorEndpointGroup).GetThresholdCount()).ToDataRes(types.Int)
+	},
+	"aws.globalaccelerator.endpointGroup.portOverrides": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorEndpointGroup).GetPortOverrides()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.globalaccelerator.endpointGroup.endpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorEndpointGroup).GetEndpoints()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.globalaccelerator.endpointGroup.loadBalancers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorEndpointGroup).GetLoadBalancers()).ToDataRes(types.Array(types.Resource("aws.elb.loadbalancer")))
+	},
+	"aws.globalaccelerator.endpointGroup.instances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorEndpointGroup).GetInstances()).ToDataRes(types.Array(types.Resource("aws.ec2.instance")))
+	},
+	"aws.globalaccelerator.endpointGroup.elasticIps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorEndpointGroup).GetElasticIps()).ToDataRes(types.Array(types.Resource("aws.ec2.eip")))
+	},
+	"aws.directconnect.connections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnect).GetConnections()).ToDataRes(types.Array(types.Resource("aws.directconnect.connection")))
+	},
+	"aws.directconnect.virtualInterfaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnect).GetVirtualInterfaces()).ToDataRes(types.Array(types.Resource("aws.directconnect.virtualInterface")))
+	},
+	"aws.directconnect.gateways": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnect).GetGateways()).ToDataRes(types.Array(types.Resource("aws.directconnect.gateway")))
+	},
+	"aws.directconnect.connection.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectConnection).GetId()).ToDataRes(types.String)
+	},
+	"aws.directconnect.connection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectConnection).GetName()).ToDataRes(types.String)
+	},
+	"aws.directconnect.connection.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectConnection).GetState()).ToDataRes(types.String)
+	},
+	"aws.directconnect.connection.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectConnection).GetLocation()).ToDataRes(types.String)
+	},
+	"aws.directconnect.connection.bandwidth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectConnection).GetBandwidth()).ToDataRes(types.String)
+	},
+	"aws.directconnect.connection.vlan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectConnection).GetVlan()).ToDataRes(types.Int)
+	},
+	"aws.directconnect.connection.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectConnection).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.directconnect.connection.ownerAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectConnection).GetOwnerAccount()).ToDataRes(types.String)
+	},
+	"aws.directconnect.connection.partnerName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectConnection).GetPartnerName()).ToDataRes(types.String)
+	},
+	"aws.directconnect.connection.providerName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectConnection).GetProviderName()).ToDataRes(types.String)
+	},
+	"aws.directconnect.connection.macSecCapable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectConnection).GetMacSecCapable()).ToDataRes(types.Bool)
+	},
+	"aws.directconnect.connection.encryptionMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectConnection).GetEncryptionMode()).ToDataRes(types.String)
+	},
+	"aws.directconnect.connection.portEncryptionStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectConnection).GetPortEncryptionStatus()).ToDataRes(types.String)
+	},
+	"aws.directconnect.connection.jumboFrameCapable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectConnection).GetJumboFrameCapable()).ToDataRes(types.Bool)
+	},
+	"aws.directconnect.connection.hasLogicalRedundancy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectConnection).GetHasLogicalRedundancy()).ToDataRes(types.String)
+	},
+	"aws.directconnect.connection.lagId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectConnection).GetLagId()).ToDataRes(types.String)
+	},
+	"aws.directconnect.connection.awsDevice": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectConnection).GetAwsDevice()).ToDataRes(types.String)
+	},
+	"aws.directconnect.connection.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectConnection).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.directconnect.connection.virtualInterfaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectConnection).GetVirtualInterfaces()).ToDataRes(types.Array(types.Resource("aws.directconnect.virtualInterface")))
+	},
+	"aws.directconnect.virtualInterface.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectVirtualInterface).GetId()).ToDataRes(types.String)
+	},
+	"aws.directconnect.virtualInterface.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectVirtualInterface).GetName()).ToDataRes(types.String)
+	},
+	"aws.directconnect.virtualInterface.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectVirtualInterface).GetType()).ToDataRes(types.String)
+	},
+	"aws.directconnect.virtualInterface.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectVirtualInterface).GetState()).ToDataRes(types.String)
+	},
+	"aws.directconnect.virtualInterface.vlan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectVirtualInterface).GetVlan()).ToDataRes(types.Int)
+	},
+	"aws.directconnect.virtualInterface.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectVirtualInterface).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.directconnect.virtualInterface.ownerAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectVirtualInterface).GetOwnerAccount()).ToDataRes(types.String)
+	},
+	"aws.directconnect.virtualInterface.connection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectVirtualInterface).GetConnection()).ToDataRes(types.Resource("aws.directconnect.connection"))
+	},
+	"aws.directconnect.virtualInterface.asn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectVirtualInterface).GetAsn()).ToDataRes(types.Int)
+	},
+	"aws.directconnect.virtualInterface.amazonSideAsn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectVirtualInterface).GetAmazonSideAsn()).ToDataRes(types.Int)
+	},
+	"aws.directconnect.virtualInterface.addressFamily": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectVirtualInterface).GetAddressFamily()).ToDataRes(types.String)
+	},
+	"aws.directconnect.virtualInterface.amazonAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectVirtualInterface).GetAmazonAddress()).ToDataRes(types.String)
+	},
+	"aws.directconnect.virtualInterface.customerAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectVirtualInterface).GetCustomerAddress()).ToDataRes(types.String)
+	},
+	"aws.directconnect.virtualInterface.bgpPeers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectVirtualInterface).GetBgpPeers()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.directconnect.virtualInterface.routeFilterPrefixes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectVirtualInterface).GetRouteFilterPrefixes()).ToDataRes(types.Array(types.String))
+	},
+	"aws.directconnect.virtualInterface.gateway": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectVirtualInterface).GetGateway()).ToDataRes(types.Resource("aws.directconnect.gateway"))
+	},
+	"aws.directconnect.virtualInterface.virtualGateway": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectVirtualInterface).GetVirtualGateway()).ToDataRes(types.Resource("aws.vpc.vpnGateway"))
+	},
+	"aws.directconnect.virtualInterface.mtu": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectVirtualInterface).GetMtu()).ToDataRes(types.Int)
+	},
+	"aws.directconnect.virtualInterface.jumboFrameCapable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectVirtualInterface).GetJumboFrameCapable()).ToDataRes(types.Bool)
+	},
+	"aws.directconnect.virtualInterface.siteLinkEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectVirtualInterface).GetSiteLinkEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.directconnect.virtualInterface.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectVirtualInterface).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.directconnect.gateway.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectGateway).GetId()).ToDataRes(types.String)
+	},
+	"aws.directconnect.gateway.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectGateway).GetName()).ToDataRes(types.String)
+	},
+	"aws.directconnect.gateway.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectGateway).GetState()).ToDataRes(types.String)
+	},
+	"aws.directconnect.gateway.amazonSideAsn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectGateway).GetAmazonSideAsn()).ToDataRes(types.Int)
+	},
+	"aws.directconnect.gateway.ownerAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectGateway).GetOwnerAccount()).ToDataRes(types.String)
+	},
+	"aws.directconnect.gateway.stateChangeError": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectGateway).GetStateChangeError()).ToDataRes(types.String)
 	},
 }
 
@@ -62317,6 +62600,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2Eip).PublicIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.eip.allocationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Eip).AllocationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.eip.attached": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Eip).Attached, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -81723,6 +82010,358 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.vpclattice.targetGroup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpclatticeTargetGroup).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalaccelerator).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.globalaccelerator.accelerators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalaccelerator).Accelerators, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.accelerator.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorAccelerator).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.globalaccelerator.accelerator.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorAccelerator).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.accelerator.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorAccelerator).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.accelerator.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorAccelerator).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.accelerator.ipAddressType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorAccelerator).IpAddressType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.accelerator.dnsName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorAccelerator).DnsName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.accelerator.dualStackDnsName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorAccelerator).DualStackDnsName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.accelerator.ipSets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorAccelerator).IpSets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.accelerator.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorAccelerator).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.accelerator.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorAccelerator).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.accelerator.lastModifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorAccelerator).LastModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.accelerator.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorAccelerator).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.accelerator.listeners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorAccelerator).Listeners, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.listener.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorListener).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.globalaccelerator.listener.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorListener).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.listener.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorListener).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.listener.clientAffinity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorListener).ClientAffinity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.listener.portRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorListener).PortRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.listener.endpointGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorListener).EndpointGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.endpointGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorEndpointGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.globalaccelerator.endpointGroup.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorEndpointGroup).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.endpointGroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorEndpointGroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.endpointGroup.trafficDialPercentage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorEndpointGroup).TrafficDialPercentage, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.endpointGroup.healthCheckIntervalSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorEndpointGroup).HealthCheckIntervalSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.endpointGroup.healthCheckPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorEndpointGroup).HealthCheckPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.endpointGroup.healthCheckPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorEndpointGroup).HealthCheckPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.endpointGroup.healthCheckProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorEndpointGroup).HealthCheckProtocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.endpointGroup.thresholdCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorEndpointGroup).ThresholdCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.endpointGroup.portOverrides": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorEndpointGroup).PortOverrides, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.endpointGroup.endpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorEndpointGroup).Endpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.endpointGroup.loadBalancers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorEndpointGroup).LoadBalancers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.endpointGroup.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorEndpointGroup).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.globalaccelerator.endpointGroup.elasticIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorEndpointGroup).ElasticIps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnect).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.directconnect.connections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnect).Connections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.virtualInterfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnect).VirtualInterfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.gateways": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnect).Gateways, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.connection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.directconnect.connection.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectConnection).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.connection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectConnection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.connection.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectConnection).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.connection.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectConnection).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.connection.bandwidth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectConnection).Bandwidth, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.connection.vlan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectConnection).Vlan, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.connection.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectConnection).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.connection.ownerAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectConnection).OwnerAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.connection.partnerName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectConnection).PartnerName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.connection.providerName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectConnection).ProviderName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.connection.macSecCapable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectConnection).MacSecCapable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.connection.encryptionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectConnection).EncryptionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.connection.portEncryptionStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectConnection).PortEncryptionStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.connection.jumboFrameCapable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectConnection).JumboFrameCapable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.connection.hasLogicalRedundancy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectConnection).HasLogicalRedundancy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.connection.lagId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectConnection).LagId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.connection.awsDevice": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectConnection).AwsDevice, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.connection.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectConnection).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.connection.virtualInterfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectConnection).VirtualInterfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.virtualInterface.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectVirtualInterface).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.directconnect.virtualInterface.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectVirtualInterface).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.virtualInterface.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectVirtualInterface).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.virtualInterface.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectVirtualInterface).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.virtualInterface.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectVirtualInterface).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.virtualInterface.vlan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectVirtualInterface).Vlan, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.virtualInterface.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectVirtualInterface).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.virtualInterface.ownerAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectVirtualInterface).OwnerAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.virtualInterface.connection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectVirtualInterface).Connection, ok = plugin.RawToTValue[*mqlAwsDirectconnectConnection](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.virtualInterface.asn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectVirtualInterface).Asn, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.virtualInterface.amazonSideAsn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectVirtualInterface).AmazonSideAsn, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.virtualInterface.addressFamily": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectVirtualInterface).AddressFamily, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.virtualInterface.amazonAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectVirtualInterface).AmazonAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.virtualInterface.customerAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectVirtualInterface).CustomerAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.virtualInterface.bgpPeers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectVirtualInterface).BgpPeers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.virtualInterface.routeFilterPrefixes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectVirtualInterface).RouteFilterPrefixes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.virtualInterface.gateway": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectVirtualInterface).Gateway, ok = plugin.RawToTValue[*mqlAwsDirectconnectGateway](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.virtualInterface.virtualGateway": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectVirtualInterface).VirtualGateway, ok = plugin.RawToTValue[*mqlAwsVpcVpnGateway](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.virtualInterface.mtu": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectVirtualInterface).Mtu, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.virtualInterface.jumboFrameCapable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectVirtualInterface).JumboFrameCapable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.virtualInterface.siteLinkEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectVirtualInterface).SiteLinkEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.virtualInterface.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectVirtualInterface).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.gateway.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectGateway).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.directconnect.gateway.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectGateway).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.gateway.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectGateway).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.gateway.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectGateway).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.gateway.amazonSideAsn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectGateway).AmazonSideAsn, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.gateway.ownerAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectGateway).OwnerAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.gateway.stateChangeError": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectGateway).StateChangeError, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -150100,6 +150739,7 @@ type mqlAwsEc2Eip struct {
 	__id       string
 	mqlAwsEc2EipInternal
 	PublicIp                plugin.TValue[string]
+	AllocationId            plugin.TValue[string]
 	Attached                plugin.TValue[bool]
 	Instance                plugin.TValue[*mqlAwsEc2Instance]
 	NetworkInterfaceId      plugin.TValue[string]
@@ -150150,6 +150790,10 @@ func (c *mqlAwsEc2Eip) MqlID() string {
 
 func (c *mqlAwsEc2Eip) GetPublicIp() *plugin.TValue[string] {
 	return &c.PublicIp
+}
+
+func (c *mqlAwsEc2Eip) GetAllocationId() *plugin.TValue[string] {
+	return &c.AllocationId
 }
 
 func (c *mqlAwsEc2Eip) GetAttached() *plugin.TValue[bool] {
@@ -199213,4 +199857,914 @@ func (c *mqlAwsVpclatticeTargetGroup) GetTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
 	})
+}
+
+// mqlAwsGlobalaccelerator for the aws.globalaccelerator resource
+type mqlAwsGlobalaccelerator struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsGlobalacceleratorInternal it will be used here
+	Accelerators plugin.TValue[[]any]
+}
+
+// createAwsGlobalaccelerator creates a new instance of this resource
+func createAwsGlobalaccelerator(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsGlobalaccelerator{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.globalaccelerator", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsGlobalaccelerator) MqlName() string {
+	return "aws.globalaccelerator"
+}
+
+func (c *mqlAwsGlobalaccelerator) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsGlobalaccelerator) GetAccelerators() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Accelerators, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.globalaccelerator", c.__id, "accelerators")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accelerators()
+	})
+}
+
+// mqlAwsGlobalacceleratorAccelerator for the aws.globalaccelerator.accelerator resource
+type mqlAwsGlobalacceleratorAccelerator struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsGlobalacceleratorAcceleratorInternal it will be used here
+	Arn              plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Enabled          plugin.TValue[bool]
+	IpAddressType    plugin.TValue[string]
+	DnsName          plugin.TValue[string]
+	DualStackDnsName plugin.TValue[string]
+	IpSets           plugin.TValue[[]any]
+	Status           plugin.TValue[string]
+	CreatedAt        plugin.TValue[*time.Time]
+	LastModifiedAt   plugin.TValue[*time.Time]
+	Tags             plugin.TValue[map[string]any]
+	Listeners        plugin.TValue[[]any]
+}
+
+// createAwsGlobalacceleratorAccelerator creates a new instance of this resource
+func createAwsGlobalacceleratorAccelerator(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsGlobalacceleratorAccelerator{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.globalaccelerator.accelerator", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsGlobalacceleratorAccelerator) MqlName() string {
+	return "aws.globalaccelerator.accelerator"
+}
+
+func (c *mqlAwsGlobalacceleratorAccelerator) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsGlobalacceleratorAccelerator) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsGlobalacceleratorAccelerator) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsGlobalacceleratorAccelerator) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAwsGlobalacceleratorAccelerator) GetIpAddressType() *plugin.TValue[string] {
+	return &c.IpAddressType
+}
+
+func (c *mqlAwsGlobalacceleratorAccelerator) GetDnsName() *plugin.TValue[string] {
+	return &c.DnsName
+}
+
+func (c *mqlAwsGlobalacceleratorAccelerator) GetDualStackDnsName() *plugin.TValue[string] {
+	return &c.DualStackDnsName
+}
+
+func (c *mqlAwsGlobalacceleratorAccelerator) GetIpSets() *plugin.TValue[[]any] {
+	return &c.IpSets
+}
+
+func (c *mqlAwsGlobalacceleratorAccelerator) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsGlobalacceleratorAccelerator) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsGlobalacceleratorAccelerator) GetLastModifiedAt() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedAt
+}
+
+func (c *mqlAwsGlobalacceleratorAccelerator) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsGlobalacceleratorAccelerator) GetListeners() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Listeners, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.globalaccelerator.accelerator", c.__id, "listeners")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.listeners()
+	})
+}
+
+// mqlAwsGlobalacceleratorListener for the aws.globalaccelerator.listener resource
+type mqlAwsGlobalacceleratorListener struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsGlobalacceleratorListenerInternal it will be used here
+	Arn            plugin.TValue[string]
+	Protocol       plugin.TValue[string]
+	ClientAffinity plugin.TValue[string]
+	PortRanges     plugin.TValue[[]any]
+	EndpointGroups plugin.TValue[[]any]
+}
+
+// createAwsGlobalacceleratorListener creates a new instance of this resource
+func createAwsGlobalacceleratorListener(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsGlobalacceleratorListener{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.globalaccelerator.listener", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsGlobalacceleratorListener) MqlName() string {
+	return "aws.globalaccelerator.listener"
+}
+
+func (c *mqlAwsGlobalacceleratorListener) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsGlobalacceleratorListener) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsGlobalacceleratorListener) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlAwsGlobalacceleratorListener) GetClientAffinity() *plugin.TValue[string] {
+	return &c.ClientAffinity
+}
+
+func (c *mqlAwsGlobalacceleratorListener) GetPortRanges() *plugin.TValue[[]any] {
+	return &c.PortRanges
+}
+
+func (c *mqlAwsGlobalacceleratorListener) GetEndpointGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EndpointGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.globalaccelerator.listener", c.__id, "endpointGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.endpointGroups()
+	})
+}
+
+// mqlAwsGlobalacceleratorEndpointGroup for the aws.globalaccelerator.endpointGroup resource
+type mqlAwsGlobalacceleratorEndpointGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsGlobalacceleratorEndpointGroupInternal
+	Arn                        plugin.TValue[string]
+	Region                     plugin.TValue[string]
+	TrafficDialPercentage      plugin.TValue[float64]
+	HealthCheckIntervalSeconds plugin.TValue[int64]
+	HealthCheckPath            plugin.TValue[string]
+	HealthCheckPort            plugin.TValue[int64]
+	HealthCheckProtocol        plugin.TValue[string]
+	ThresholdCount             plugin.TValue[int64]
+	PortOverrides              plugin.TValue[[]any]
+	Endpoints                  plugin.TValue[[]any]
+	LoadBalancers              plugin.TValue[[]any]
+	Instances                  plugin.TValue[[]any]
+	ElasticIps                 plugin.TValue[[]any]
+}
+
+// createAwsGlobalacceleratorEndpointGroup creates a new instance of this resource
+func createAwsGlobalacceleratorEndpointGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsGlobalacceleratorEndpointGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.globalaccelerator.endpointGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsGlobalacceleratorEndpointGroup) MqlName() string {
+	return "aws.globalaccelerator.endpointGroup"
+}
+
+func (c *mqlAwsGlobalacceleratorEndpointGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsGlobalacceleratorEndpointGroup) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsGlobalacceleratorEndpointGroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsGlobalacceleratorEndpointGroup) GetTrafficDialPercentage() *plugin.TValue[float64] {
+	return &c.TrafficDialPercentage
+}
+
+func (c *mqlAwsGlobalacceleratorEndpointGroup) GetHealthCheckIntervalSeconds() *plugin.TValue[int64] {
+	return &c.HealthCheckIntervalSeconds
+}
+
+func (c *mqlAwsGlobalacceleratorEndpointGroup) GetHealthCheckPath() *plugin.TValue[string] {
+	return &c.HealthCheckPath
+}
+
+func (c *mqlAwsGlobalacceleratorEndpointGroup) GetHealthCheckPort() *plugin.TValue[int64] {
+	return &c.HealthCheckPort
+}
+
+func (c *mqlAwsGlobalacceleratorEndpointGroup) GetHealthCheckProtocol() *plugin.TValue[string] {
+	return &c.HealthCheckProtocol
+}
+
+func (c *mqlAwsGlobalacceleratorEndpointGroup) GetThresholdCount() *plugin.TValue[int64] {
+	return &c.ThresholdCount
+}
+
+func (c *mqlAwsGlobalacceleratorEndpointGroup) GetPortOverrides() *plugin.TValue[[]any] {
+	return &c.PortOverrides
+}
+
+func (c *mqlAwsGlobalacceleratorEndpointGroup) GetEndpoints() *plugin.TValue[[]any] {
+	return &c.Endpoints
+}
+
+func (c *mqlAwsGlobalacceleratorEndpointGroup) GetLoadBalancers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LoadBalancers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.globalaccelerator.endpointGroup", c.__id, "loadBalancers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.loadBalancers()
+	})
+}
+
+func (c *mqlAwsGlobalacceleratorEndpointGroup) GetInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Instances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.globalaccelerator.endpointGroup", c.__id, "instances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instances()
+	})
+}
+
+func (c *mqlAwsGlobalacceleratorEndpointGroup) GetElasticIps() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ElasticIps, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.globalaccelerator.endpointGroup", c.__id, "elasticIps")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.elasticIps()
+	})
+}
+
+// mqlAwsDirectconnect for the aws.directconnect resource
+type mqlAwsDirectconnect struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsDirectconnectInternal it will be used here
+	Connections       plugin.TValue[[]any]
+	VirtualInterfaces plugin.TValue[[]any]
+	Gateways          plugin.TValue[[]any]
+}
+
+// createAwsDirectconnect creates a new instance of this resource
+func createAwsDirectconnect(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDirectconnect{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.directconnect", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDirectconnect) MqlName() string {
+	return "aws.directconnect"
+}
+
+func (c *mqlAwsDirectconnect) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDirectconnect) GetConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Connections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.directconnect", c.__id, "connections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.connections()
+	})
+}
+
+func (c *mqlAwsDirectconnect) GetVirtualInterfaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VirtualInterfaces, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.directconnect", c.__id, "virtualInterfaces")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.virtualInterfaces()
+	})
+}
+
+func (c *mqlAwsDirectconnect) GetGateways() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Gateways, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.directconnect", c.__id, "gateways")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.gateways()
+	})
+}
+
+// mqlAwsDirectconnectConnection for the aws.directconnect.connection resource
+type mqlAwsDirectconnectConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsDirectconnectConnectionInternal it will be used here
+	Id                   plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	State                plugin.TValue[string]
+	Location             plugin.TValue[string]
+	Bandwidth            plugin.TValue[string]
+	Vlan                 plugin.TValue[int64]
+	Region               plugin.TValue[string]
+	OwnerAccount         plugin.TValue[string]
+	PartnerName          plugin.TValue[string]
+	ProviderName         plugin.TValue[string]
+	MacSecCapable        plugin.TValue[bool]
+	EncryptionMode       plugin.TValue[string]
+	PortEncryptionStatus plugin.TValue[string]
+	JumboFrameCapable    plugin.TValue[bool]
+	HasLogicalRedundancy plugin.TValue[string]
+	LagId                plugin.TValue[string]
+	AwsDevice            plugin.TValue[string]
+	Tags                 plugin.TValue[map[string]any]
+	VirtualInterfaces    plugin.TValue[[]any]
+}
+
+// createAwsDirectconnectConnection creates a new instance of this resource
+func createAwsDirectconnectConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDirectconnectConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.directconnect.connection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDirectconnectConnection) MqlName() string {
+	return "aws.directconnect.connection"
+}
+
+func (c *mqlAwsDirectconnectConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDirectconnectConnection) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsDirectconnectConnection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsDirectconnectConnection) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsDirectconnectConnection) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAwsDirectconnectConnection) GetBandwidth() *plugin.TValue[string] {
+	return &c.Bandwidth
+}
+
+func (c *mqlAwsDirectconnectConnection) GetVlan() *plugin.TValue[int64] {
+	return &c.Vlan
+}
+
+func (c *mqlAwsDirectconnectConnection) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsDirectconnectConnection) GetOwnerAccount() *plugin.TValue[string] {
+	return &c.OwnerAccount
+}
+
+func (c *mqlAwsDirectconnectConnection) GetPartnerName() *plugin.TValue[string] {
+	return &c.PartnerName
+}
+
+func (c *mqlAwsDirectconnectConnection) GetProviderName() *plugin.TValue[string] {
+	return &c.ProviderName
+}
+
+func (c *mqlAwsDirectconnectConnection) GetMacSecCapable() *plugin.TValue[bool] {
+	return &c.MacSecCapable
+}
+
+func (c *mqlAwsDirectconnectConnection) GetEncryptionMode() *plugin.TValue[string] {
+	return &c.EncryptionMode
+}
+
+func (c *mqlAwsDirectconnectConnection) GetPortEncryptionStatus() *plugin.TValue[string] {
+	return &c.PortEncryptionStatus
+}
+
+func (c *mqlAwsDirectconnectConnection) GetJumboFrameCapable() *plugin.TValue[bool] {
+	return &c.JumboFrameCapable
+}
+
+func (c *mqlAwsDirectconnectConnection) GetHasLogicalRedundancy() *plugin.TValue[string] {
+	return &c.HasLogicalRedundancy
+}
+
+func (c *mqlAwsDirectconnectConnection) GetLagId() *plugin.TValue[string] {
+	return &c.LagId
+}
+
+func (c *mqlAwsDirectconnectConnection) GetAwsDevice() *plugin.TValue[string] {
+	return &c.AwsDevice
+}
+
+func (c *mqlAwsDirectconnectConnection) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAwsDirectconnectConnection) GetVirtualInterfaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VirtualInterfaces, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.directconnect.connection", c.__id, "virtualInterfaces")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.virtualInterfaces()
+	})
+}
+
+// mqlAwsDirectconnectVirtualInterface for the aws.directconnect.virtualInterface resource
+type mqlAwsDirectconnectVirtualInterface struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsDirectconnectVirtualInterfaceInternal
+	Id                  plugin.TValue[string]
+	Name                plugin.TValue[string]
+	Type                plugin.TValue[string]
+	State               plugin.TValue[string]
+	Vlan                plugin.TValue[int64]
+	Region              plugin.TValue[string]
+	OwnerAccount        plugin.TValue[string]
+	Connection          plugin.TValue[*mqlAwsDirectconnectConnection]
+	Asn                 plugin.TValue[int64]
+	AmazonSideAsn       plugin.TValue[int64]
+	AddressFamily       plugin.TValue[string]
+	AmazonAddress       plugin.TValue[string]
+	CustomerAddress     plugin.TValue[string]
+	BgpPeers            plugin.TValue[[]any]
+	RouteFilterPrefixes plugin.TValue[[]any]
+	Gateway             plugin.TValue[*mqlAwsDirectconnectGateway]
+	VirtualGateway      plugin.TValue[*mqlAwsVpcVpnGateway]
+	Mtu                 plugin.TValue[int64]
+	JumboFrameCapable   plugin.TValue[bool]
+	SiteLinkEnabled     plugin.TValue[bool]
+	Tags                plugin.TValue[map[string]any]
+}
+
+// createAwsDirectconnectVirtualInterface creates a new instance of this resource
+func createAwsDirectconnectVirtualInterface(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDirectconnectVirtualInterface{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.directconnect.virtualInterface", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDirectconnectVirtualInterface) MqlName() string {
+	return "aws.directconnect.virtualInterface"
+}
+
+func (c *mqlAwsDirectconnectVirtualInterface) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDirectconnectVirtualInterface) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsDirectconnectVirtualInterface) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsDirectconnectVirtualInterface) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsDirectconnectVirtualInterface) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsDirectconnectVirtualInterface) GetVlan() *plugin.TValue[int64] {
+	return &c.Vlan
+}
+
+func (c *mqlAwsDirectconnectVirtualInterface) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsDirectconnectVirtualInterface) GetOwnerAccount() *plugin.TValue[string] {
+	return &c.OwnerAccount
+}
+
+func (c *mqlAwsDirectconnectVirtualInterface) GetConnection() *plugin.TValue[*mqlAwsDirectconnectConnection] {
+	return plugin.GetOrCompute[*mqlAwsDirectconnectConnection](&c.Connection, func() (*mqlAwsDirectconnectConnection, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.directconnect.virtualInterface", c.__id, "connection")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsDirectconnectConnection), nil
+			}
+		}
+
+		return c.connection()
+	})
+}
+
+func (c *mqlAwsDirectconnectVirtualInterface) GetAsn() *plugin.TValue[int64] {
+	return &c.Asn
+}
+
+func (c *mqlAwsDirectconnectVirtualInterface) GetAmazonSideAsn() *plugin.TValue[int64] {
+	return &c.AmazonSideAsn
+}
+
+func (c *mqlAwsDirectconnectVirtualInterface) GetAddressFamily() *plugin.TValue[string] {
+	return &c.AddressFamily
+}
+
+func (c *mqlAwsDirectconnectVirtualInterface) GetAmazonAddress() *plugin.TValue[string] {
+	return &c.AmazonAddress
+}
+
+func (c *mqlAwsDirectconnectVirtualInterface) GetCustomerAddress() *plugin.TValue[string] {
+	return &c.CustomerAddress
+}
+
+func (c *mqlAwsDirectconnectVirtualInterface) GetBgpPeers() *plugin.TValue[[]any] {
+	return &c.BgpPeers
+}
+
+func (c *mqlAwsDirectconnectVirtualInterface) GetRouteFilterPrefixes() *plugin.TValue[[]any] {
+	return &c.RouteFilterPrefixes
+}
+
+func (c *mqlAwsDirectconnectVirtualInterface) GetGateway() *plugin.TValue[*mqlAwsDirectconnectGateway] {
+	return plugin.GetOrCompute[*mqlAwsDirectconnectGateway](&c.Gateway, func() (*mqlAwsDirectconnectGateway, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.directconnect.virtualInterface", c.__id, "gateway")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsDirectconnectGateway), nil
+			}
+		}
+
+		return c.gateway()
+	})
+}
+
+func (c *mqlAwsDirectconnectVirtualInterface) GetVirtualGateway() *plugin.TValue[*mqlAwsVpcVpnGateway] {
+	return plugin.GetOrCompute[*mqlAwsVpcVpnGateway](&c.VirtualGateway, func() (*mqlAwsVpcVpnGateway, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.directconnect.virtualInterface", c.__id, "virtualGateway")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpcVpnGateway), nil
+			}
+		}
+
+		return c.virtualGateway()
+	})
+}
+
+func (c *mqlAwsDirectconnectVirtualInterface) GetMtu() *plugin.TValue[int64] {
+	return &c.Mtu
+}
+
+func (c *mqlAwsDirectconnectVirtualInterface) GetJumboFrameCapable() *plugin.TValue[bool] {
+	return &c.JumboFrameCapable
+}
+
+func (c *mqlAwsDirectconnectVirtualInterface) GetSiteLinkEnabled() *plugin.TValue[bool] {
+	return &c.SiteLinkEnabled
+}
+
+func (c *mqlAwsDirectconnectVirtualInterface) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+// mqlAwsDirectconnectGateway for the aws.directconnect.gateway resource
+type mqlAwsDirectconnectGateway struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsDirectconnectGatewayInternal it will be used here
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	State            plugin.TValue[string]
+	AmazonSideAsn    plugin.TValue[int64]
+	OwnerAccount     plugin.TValue[string]
+	StateChangeError plugin.TValue[string]
+}
+
+// createAwsDirectconnectGateway creates a new instance of this resource
+func createAwsDirectconnectGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDirectconnectGateway{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.directconnect.gateway", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDirectconnectGateway) MqlName() string {
+	return "aws.directconnect.gateway"
+}
+
+func (c *mqlAwsDirectconnectGateway) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDirectconnectGateway) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsDirectconnectGateway) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsDirectconnectGateway) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsDirectconnectGateway) GetAmazonSideAsn() *plugin.TValue[int64] {
+	return &c.AmazonSideAsn
+}
+
+func (c *mqlAwsDirectconnectGateway) GetOwnerAccount() *plugin.TValue[string] {
+	return &c.OwnerAccount
+}
+
+func (c *mqlAwsDirectconnectGateway) GetStateChangeError() *plugin.TValue[string] {
+	return &c.StateChangeError
 }

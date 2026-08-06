@@ -17735,6 +17735,12 @@ aws.ec2 {
 private aws.ec2.eip @defaults("publicIp attached privateIpAddress") {
   // Public IP address of the EIP
   publicIp string
+  // Allocation ID of the address
+  //
+  // The handle other services reference an elastic IP by, for example a Global
+  // Accelerator endpoint. Present on every VPC elastic IP whether or not it is
+  // associated with a network interface.
+  allocationId string
   // Whether the Elastic IP is associated with a network interface or instance
   attached bool
   // EC2 instance associated with the EIP
@@ -30832,4 +30838,264 @@ private aws.vpclattice.targetGroup @defaults("name type protocol port") {
   lastUpdatedAt time
   // Tags on the target group
   tags() map[string]string
+}
+
+// AWS Global Accelerator
+//
+// Accelerators in the account, each fronting an application with static anycast
+// IP addresses advertised from the AWS edge network. An accelerator is an
+// internet entry point that does not appear anywhere in the DNS-to-load-balancer
+// path most exposure reviews follow, so a backend can be reachable from the
+// internet through one while its own DNS records suggest otherwise.
+aws.globalaccelerator {
+  // Accelerators in the account
+  accelerators() []aws.globalaccelerator.accelerator
+}
+
+// AWS Global Accelerator accelerator
+//
+// A single accelerator, its static IP addresses, and the listeners and endpoint
+// groups that decide where traffic goes. The `enabled` field matters as much as
+// the routing: a disabled accelerator keeps its addresses but stops carrying
+// traffic. The static addresses in `ipSets` are what the internet actually
+// reaches, so they are what belongs in an allow-list or an exposure inventory.
+private aws.globalaccelerator.accelerator @defaults("name enabled dnsName") {
+  // Amazon Resource Name (ARN) of the accelerator
+  arn string
+  // Name of the accelerator
+  name string
+  // Whether the accelerator is carrying traffic
+  enabled bool
+  // IP address family of the static addresses: IPV4 or DUAL_STACK
+  ipAddressType string
+  // DNS name that resolves to the accelerator's static IPv4 addresses
+  dnsName string
+  // DNS name that resolves to all four addresses of a dual-stack accelerator, empty when not dual-stack
+  dualStackDnsName string
+  // Static IP addresses assigned to the accelerator
+  //
+  // Each entry carries `IpFamily`, `IpAddresses` (the anycast addresses the
+  // internet reaches), and `IpAddressFamily`.
+  ipSets []dict
+  // Deployment status of the accelerator: IN_PROGRESS or DEPLOYED
+  status string
+  // When the accelerator was created
+  createdAt time
+  // When the accelerator was last modified
+  lastModifiedAt time
+  // Tags on the accelerator
+  tags() map[string]string
+  // Listeners that accept traffic on the accelerator
+  listeners() []aws.globalaccelerator.listener
+}
+
+// AWS Global Accelerator listener
+//
+// A port and protocol the accelerator accepts traffic on, and the endpoint
+// groups it forwards that traffic to. `clientAffinity` decides whether a client
+// is pinned to one endpoint, which is a routing property rather than a security
+// control.
+private aws.globalaccelerator.listener @defaults("arn protocol clientAffinity") {
+  // Amazon Resource Name (ARN) of the listener
+  arn string
+  // Protocol the listener accepts: TCP or UDP
+  protocol string
+  // How clients are pinned to endpoints: NONE or SOURCE_IP
+  clientAffinity string
+  // Port ranges the listener accepts, each entry carrying `FromPort` and `ToPort`
+  portRanges []dict
+  // Endpoint groups the listener forwards traffic to
+  endpointGroups() []aws.globalaccelerator.endpointGroup
+}
+
+// AWS Global Accelerator endpoint group
+//
+// The endpoints in one region that a listener forwards traffic to, with the
+// health check settings that decide whether they receive it. `endpoints` carries
+// the raw endpoint descriptions including `ClientIPPreservationEnabled`, which
+// determines whether the backend sees the real client address or the
+// accelerator's, and therefore whether security group rules and WAF conditions
+// written against client IPs behave as intended.
+private aws.globalaccelerator.endpointGroup @defaults("arn region trafficDialPercentage") {
+  // Amazon Resource Name (ARN) of the endpoint group
+  arn string
+  // Region the endpoint group sends traffic to
+  region string
+  // Percentage of traffic directed to this group
+  trafficDialPercentage float
+  // Seconds between health checks, either 10 or 30
+  healthCheckIntervalSeconds int
+  // Path probed for HTTP and HTTPS health checks
+  healthCheckPath string
+  // Port probed for health checks
+  healthCheckPort int
+  // Protocol used for health checks: TCP, HTTP, or HTTPS
+  healthCheckProtocol string
+  // Consecutive health check results required to change an endpoint's state
+  thresholdCount int
+  // Port overrides applied to endpoints, each entry carrying `ListenerPort` and `EndpointPort`
+  portOverrides []dict
+  // Endpoints in the group
+  //
+  // Each entry carries `EndpointId` (a load balancer ARN, EC2 instance ID, or
+  // elastic IP allocation ID), `Weight`, `HealthState`, `HealthReason`, and
+  // `ClientIPPreservationEnabled`. Every endpoint kind is also resolved to a
+  // resource: see loadBalancers, instances, and elasticIps.
+  endpoints []dict
+  // Load balancers this endpoint group sends traffic to
+  loadBalancers() []aws.elb.loadbalancer
+  // EC2 instances this endpoint group sends traffic to
+  instances() []aws.ec2.instance
+  // Elastic IPs this endpoint group sends traffic to
+  elasticIps() []aws.ec2.eip
+}
+
+// AWS Direct Connect
+//
+// Dedicated network connections between the account and on-premises networks,
+// the virtual interfaces carried over them, and the gateways they attach to. A
+// Direct Connect link is network ingress that bypasses the internet gateway
+// entirely, so it is invisible to any review that only looks at VPC routing and
+// security groups.
+aws.directconnect {
+  // Physical connections in the account
+  connections() []aws.directconnect.connection
+  // Virtual interfaces in the account
+  virtualInterfaces() []aws.directconnect.virtualInterface
+  // Direct Connect gateways in the account
+  gateways() []aws.directconnect.gateway
+}
+
+// AWS Direct Connect connection
+//
+// A physical cross-connect into an AWS Direct Connect location. The MACsec
+// fields describe whether the link is encrypted at layer 2: `macSecCapable`
+// reports whether the port supports it, `encryptionMode` whether it is required
+// or merely allowed, and `portEncryptionStatus` whether it is actually up.
+// Traffic on a connection that supports MACsec but is not encrypting crosses a
+// third-party facility in the clear.
+private aws.directconnect.connection @defaults("id name state bandwidth region") {
+  // ID of the connection
+  id string
+  // Name of the connection
+  name string
+  // State of the connection
+  //
+  // One of ordering, requested, pending, available, down, deleting, deleted,
+  // rejected, or unknown.
+  state string
+  // Direct Connect location the connection terminates at
+  location string
+  // Bandwidth of the connection, for example 1Gbps or 10Gbps
+  bandwidth string
+  // VLAN ID of the connection
+  vlan int
+  // Region the connection is homed in
+  region string
+  // AWS account that owns the connection
+  ownerAccount string
+  // Name of the partner providing the connection, empty for a direct connection
+  partnerName string
+  // Name of the service provider for the connection
+  providerName string
+  // Whether the port supports MACsec layer 2 encryption
+  macSecCapable bool
+  // Whether MACsec encryption is required or merely permitted: should_encrypt, must_encrypt, or no_encrypt
+  encryptionMode string
+  // Whether MACsec encryption is currently active on the port: Encryption Up or Encryption Down
+  portEncryptionStatus string
+  // Whether the connection supports 9001 MTU jumbo frames
+  jumboFrameCapable bool
+  // Whether the connection has redundancy across AWS devices: unknown, yes, or no
+  hasLogicalRedundancy string
+  // Link aggregation group the connection belongs to, empty when standalone
+  lagId string
+  // AWS device the connection terminates on
+  awsDevice string
+  // Tags on the connection
+  tags map[string]string
+  // Virtual interfaces carried over this connection
+  virtualInterfaces() []aws.directconnect.virtualInterface
+}
+
+// AWS Direct Connect virtual interface
+//
+// A VLAN carried over a Direct Connect connection. The `type` field is the
+// security-relevant one: a `public` virtual interface reaches AWS public service
+// endpoints and advertises the prefixes in `routeFilterPrefixes` to AWS, while a
+// `private` or `transit` interface reaches VPCs through a gateway. The BGP
+// authentication key is deliberately not exposed.
+private aws.directconnect.virtualInterface @defaults("id name type state vlan") {
+  // ID of the virtual interface
+  id string
+  // Name of the virtual interface
+  name string
+  // Type of the virtual interface: private, public, or transit
+  type string
+  // State of the virtual interface
+  //
+  // One of confirming, verifying, pending, available, down, deleting, deleted,
+  // rejected, or unknown.
+  state string
+  // VLAN ID of the virtual interface
+  vlan int
+  // Region the virtual interface is homed in
+  region string
+  // AWS account that owns the virtual interface
+  ownerAccount string
+  // Connection this virtual interface is carried over
+  connection() aws.directconnect.connection
+  // Autonomous System Number on the customer side of the BGP session
+  asn int
+  // Autonomous System Number on the Amazon side of the BGP session
+  amazonSideAsn int
+  // BGP address family: ipv4 or ipv6
+  addressFamily string
+  // IP address on the Amazon side of the BGP session
+  amazonAddress string
+  // IP address on the customer side of the BGP session
+  customerAddress string
+  // BGP peers configured on the virtual interface
+  //
+  // Each entry carries `bgpPeerId`, `asn`, `addressFamily`, `amazonAddress`,
+  // `customerAddress`, `bgpPeerState`, and `bgpStatus`. The BGP authentication
+  // key is omitted.
+  bgpPeers []dict
+  // Prefixes advertised to AWS over a public virtual interface, empty for other types
+  //
+  // The address ranges the account claims to own on a public virtual interface.
+  routeFilterPrefixes []string
+  // Direct Connect gateway the virtual interface attaches to, null when it attaches to a virtual private gateway
+  gateway() aws.directconnect.gateway
+  // Virtual private gateway the virtual interface attaches to, null when it attaches to a Direct Connect gateway
+  virtualGateway() aws.vpc.vpnGateway
+  // Maximum transmission unit of the virtual interface, either 1500 or 9001
+  mtu int
+  // Whether the virtual interface supports jumbo frames
+  jumboFrameCapable bool
+  // Whether SiteLink is enabled, allowing traffic between Direct Connect locations without traversing a Region
+  siteLinkEnabled bool
+  // Tags on the virtual interface
+  tags map[string]string
+}
+
+// AWS Direct Connect gateway
+//
+// A gateway that joins virtual interfaces to virtual private gateways and
+// transit gateways, potentially across accounts and Regions. Because a gateway
+// can be associated from another account, it is a cross-account network path
+// worth reviewing alongside VPC peering and transit gateway attachments.
+private aws.directconnect.gateway @defaults("id name state") {
+  // ID of the Direct Connect gateway
+  id string
+  // Name of the Direct Connect gateway
+  name string
+  // State of the gateway: pending, available, deleting, or deleted
+  state string
+  // Autonomous System Number on the Amazon side of the BGP session
+  amazonSideAsn int
+  // AWS account that owns the gateway
+  ownerAccount string
+  // Reason the gateway changed state, empty when it has not
+  stateChangeError string
 }

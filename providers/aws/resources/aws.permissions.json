@@ -239,6 +239,9 @@
     "detective:ListMembers",
     "detective:ListOrganizationAdminAccount",
     "detective:ListTagsForResource",
+    "directconnect:DescribeConnections",
+    "directconnect:DescribeDirectConnectGateways",
+    "directconnect:DescribeVirtualInterfaces",
     "dms:DescribeEndpoints",
     "dms:DescribeReplicationInstances",
     "dms:DescribeReplicationSubnetGroups",
@@ -460,6 +463,10 @@
     "fsx:DescribeFileCaches",
     "fsx:DescribeFileSystems",
     "fsx:DescribeVolumes",
+    "globalaccelerator:ListAccelerators",
+    "globalaccelerator:ListEndpointGroups",
+    "globalaccelerator:ListListeners",
+    "globalaccelerator:ListTagsForResource",
     "glue:BatchGetWorkflows",
     "glue:GetConnections",
     "glue:GetCrawlers",
@@ -2454,6 +2461,24 @@
       "source_file": "aws_detective.go"
     },
     {
+      "permission": "directconnect:DescribeConnections",
+      "service": "directconnect",
+      "action": "DescribeConnections",
+      "source_file": "aws_directconnect.go"
+    },
+    {
+      "permission": "directconnect:DescribeDirectConnectGateways",
+      "service": "directconnect",
+      "action": "DescribeDirectConnectGateways",
+      "source_file": "aws_directconnect.go"
+    },
+    {
+      "permission": "directconnect:DescribeVirtualInterfaces",
+      "service": "directconnect",
+      "action": "DescribeVirtualInterfaces",
+      "source_file": "aws_directconnect.go"
+    },
+    {
       "permission": "dms:DescribeEndpoints",
       "service": "dms",
       "action": "DescribeEndpoints",
@@ -3850,6 +3875,30 @@
       "service": "fsx",
       "action": "DescribeVolumes",
       "source_file": "aws_fsx.go"
+    },
+    {
+      "permission": "globalaccelerator:ListAccelerators",
+      "service": "globalaccelerator",
+      "action": "ListAccelerators",
+      "source_file": "aws_globalaccelerator.go"
+    },
+    {
+      "permission": "globalaccelerator:ListEndpointGroups",
+      "service": "globalaccelerator",
+      "action": "ListEndpointGroups",
+      "source_file": "aws_globalaccelerator.go"
+    },
+    {
+      "permission": "globalaccelerator:ListListeners",
+      "service": "globalaccelerator",
+      "action": "ListListeners",
+      "source_file": "aws_globalaccelerator.go"
+    },
+    {
+      "permission": "globalaccelerator:ListTagsForResource",
+      "service": "globalaccelerator",
+      "action": "ListTagsForResource",
+      "source_file": "aws_globalaccelerator.go"
     },
     {
       "permission": "glue:BatchGetWorkflows",
