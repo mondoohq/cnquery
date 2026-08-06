@@ -3803,7 +3803,6 @@ aws.ec2.transitgateway.routeTable.region 13.6.3
 aws.ec2.transitgateway.routeTable.route 13.52.2
 aws.ec2.transitgateway.routeTable.route.attachments 13.52.2
 aws.ec2.transitgateway.routeTable.route.destinationCidrBlock 13.52.2
-aws.ec2.transitgateway.routeTable.route.id 13.52.2
 aws.ec2.transitgateway.routeTable.route.managedPrefixList 13.52.2
 aws.ec2.transitgateway.routeTable.route.routeTableAnnouncementId 13.52.2
 aws.ec2.transitgateway.routeTable.route.state 13.52.2

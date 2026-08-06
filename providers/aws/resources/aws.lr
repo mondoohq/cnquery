@@ -18085,8 +18085,6 @@ private aws.ec2.transitgateway.routeTable @defaults("id state") {
 // separates a live route from a blackhole route that silently discards
 // matching traffic.
 private aws.ec2.transitgateway.routeTable.route @defaults("destinationCidrBlock type state") {
-  // Unique ID for this route (route table ID + destination)
-  id string
   // CIDR block used for the destination match
   destinationCidrBlock string
   // Managed prefix list used for the destination match

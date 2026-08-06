@@ -23201,9 +23201,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.transitgateway.routeTable.propagatingAttachments": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2TransitgatewayRouteTable).GetPropagatingAttachments()).ToDataRes(types.Array(types.Resource("aws.ec2.transitgateway.attachment")))
 	},
-	"aws.ec2.transitgateway.routeTable.route.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEc2TransitgatewayRouteTableRoute).GetId()).ToDataRes(types.String)
-	},
 	"aws.ec2.transitgateway.routeTable.route.destinationCidrBlock": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2TransitgatewayRouteTableRoute).GetDestinationCidrBlock()).ToDataRes(types.String)
 	},
@@ -62675,10 +62672,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.transitgateway.routeTable.route.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2TransitgatewayRouteTableRoute).__id, ok = v.Value.(string)
-		return
-	},
-	"aws.ec2.transitgateway.routeTable.route.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2TransitgatewayRouteTableRoute).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.transitgateway.routeTable.route.destinationCidrBlock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -151133,7 +151126,6 @@ type mqlAwsEc2TransitgatewayRouteTableRoute struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsEc2TransitgatewayRouteTableRouteInternal
-	Id                       plugin.TValue[string]
 	DestinationCidrBlock     plugin.TValue[string]
 	ManagedPrefixList        plugin.TValue[*mqlAwsEc2ManagedPrefixList]
 	State                    plugin.TValue[string]
@@ -151172,10 +151164,6 @@ func (c *mqlAwsEc2TransitgatewayRouteTableRoute) MqlName() string {
 
 func (c *mqlAwsEc2TransitgatewayRouteTableRoute) MqlID() string {
 	return c.__id
-}
-
-func (c *mqlAwsEc2TransitgatewayRouteTableRoute) GetId() *plugin.TValue[string] {
-	return &c.Id
 }
 
 func (c *mqlAwsEc2TransitgatewayRouteTableRoute) GetDestinationCidrBlock() *plugin.TValue[string] {

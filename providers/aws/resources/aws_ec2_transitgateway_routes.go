@@ -166,7 +166,7 @@ func (a *mqlAwsEc2TransitgatewayRouteTable) routes() ([]any, error) {
 		}
 
 		for _, route := range resp.Routes {
-			mqlRoute, err := newMqlAwsEc2TransitgatewayRouteTableRoute(a.MqlRuntime, region, routeTableId, route)
+			mqlRoute, err := newMqlAwsEc2TransitgatewayRouteTableRoute(a.MqlRuntime, region, routeTableId, len(res), route)
 			if err != nil {
 				return nil, err
 			}
@@ -187,11 +187,21 @@ func (a *mqlAwsEc2TransitgatewayRouteTable) routes() ([]any, error) {
 	return res, nil
 }
 
-func newMqlAwsEc2TransitgatewayRouteTableRoute(runtime *plugin.Runtime, region string, routeTableId string, route ec2types.TransitGatewayRoute) (plugin.Resource, error) {
+// newMqlAwsEc2TransitgatewayRouteTableRoute builds one route resource. index is
+// the route's position in the API result set, used only to key a route that
+// carries no destination of its own.
+func newMqlAwsEc2TransitgatewayRouteTableRoute(runtime *plugin.Runtime, region string, routeTableId string, index int, route ec2types.TransitGatewayRoute) (plugin.Resource, error) {
 	prefixListId := convert.ToValue(route.PrefixListId)
 	destination := convert.ToValue(route.DestinationCidrBlock)
 	if destination == "" {
 		destination = prefixListId
+	}
+	if destination == "" {
+		// Neither a CIDR nor a prefix list leaves nothing stable to key on, so
+		// fall back to the position in the result set. Without this, two such
+		// routes in one table share a cache key and the second silently
+		// replaces the first.
+		destination = fmt.Sprintf("route-%d", index)
 	}
 
 	attachmentIds := make([]string, 0, len(route.TransitGatewayAttachments))
@@ -203,7 +213,7 @@ func newMqlAwsEc2TransitgatewayRouteTableRoute(runtime *plugin.Runtime, region s
 
 	mqlRoute, err := CreateResource(runtime, ResourceAwsEc2TransitgatewayRouteTableRoute,
 		map[string]*llx.RawData{
-			"id":                       llx.StringData(routeTableId + "/" + destination),
+			"__id":                     llx.StringData(routeTableId + "/" + destination),
 			"destinationCidrBlock":     llx.StringData(convert.ToValue(route.DestinationCidrBlock)),
 			"state":                    llx.StringData(string(route.State)),
 			"type":                     llx.StringData(string(route.Type)),
