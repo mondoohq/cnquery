@@ -46,6 +46,11 @@ func (p *mqlPorts) list() ([]any, error) {
 		// both macOS and FreeBSD support lsof
 		// FreeBSD may need an installation via `pkg install sysutils/lsof`
 		return p.listMacos()
+
+	case pf.Name == "aix":
+		// AIX has neither /proc/net/tcp nor a bundled lsof, so netstat is the
+		// only source that is always present.
+		return p.listAix()
 	default:
 		return nil, errors.New("could not detect suitable ports manager for platform: " + pf.Name)
 	}
@@ -645,6 +650,105 @@ func (p *mqlPorts) listMacos() ([]any, error) {
 
 			res = append(res, obj)
 		}
+	}
+
+	return res, nil
+}
+
+// AIX Implementation
+
+// AIX state tokens mapped onto the canonical TCP_STATES vocabulary, so a query
+// filtering on `state == "listen"` behaves the same on AIX as anywhere else.
+// AIX reports no state for UDP (it is stateless) and that empty value is kept
+// as-is rather than invented into a state.
+var aixTcpStates = map[string]string{
+	"LISTEN":       TCP_STATES[10],
+	"ESTABLISHED":  TCP_STATES[1],
+	"SYN_SENT":     TCP_STATES[2],
+	"SYN_RCVD":     TCP_STATES[3],
+	"SYN_RECEIVED": TCP_STATES[3],
+	"FIN_WAIT_1":   TCP_STATES[4],
+	"FIN_WAIT_2":   TCP_STATES[5],
+	"TIME_WAIT":    TCP_STATES[6],
+	"CLOSED":       TCP_STATES[7],
+	"CLOSE":        TCP_STATES[7],
+	"CLOSE_WAIT":   TCP_STATES[8],
+	"LAST_ACK":     TCP_STATES[9],
+	"CLOSING":      TCP_STATES[11],
+}
+
+// aixPortState translates one AIX netstat state token. An empty token stays
+// empty (UDP rows, which carry no state), and anything unrecognised becomes
+// "unknown" rather than a state string invented outside TCP_STATES.
+func aixPortState(raw string) string {
+	if raw == "" {
+		return ""
+	}
+	if state, ok := aixTcpStates[raw]; ok {
+		return state
+	}
+	return "unknown"
+}
+
+// listAix reads AIX sockets from netstat.
+//
+// Unlike the other platforms this yields no owning process: netstat reports a
+// PCB address rather than a PID, and resolving one to a process needs `rmsock`,
+// which is root-only and costs an exec per socket. `process` and `user` are
+// therefore null on AIX, and `address`, `port`, `state` and the remote endpoint
+// carry the signal.
+func (p *mqlPorts) listAix() ([]any, error) {
+	conn := p.MqlRuntime.Connection.(shared.Connection)
+
+	// -a includes listening sockets (servers), -n keeps addresses numeric so no
+	// name resolution is attempted per row.
+	executedCmd, err := conn.RunCommand("netstat -an")
+	if err != nil {
+		return nil, err
+	}
+
+	if executedCmd.ExitStatus != 0 {
+		stderr, err := io.ReadAll(executedCmd.Stderr)
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New("failed to retrieve network connections: " + string(stderr))
+	}
+
+	return p.parseAixPorts(executedCmd.Stdout)
+}
+
+func (p *mqlPorts) parseAixPorts(r io.Reader) ([]any, error) {
+	portList, err := ports.ParseAixNetstat(r)
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	for i := range portList {
+		port := portList[i]
+
+		obj, err := CreateResource(p.MqlRuntime, "port", map[string]*llx.RawData{
+			"protocol":      llx.StringData(port.Protocol),
+			"port":          llx.IntData(port.LocalPort),
+			"address":       llx.StringData(port.LocalAddress),
+			"user":          llx.ResourceData(nil, "user"),
+			"process":       llx.ResourceData(nil, "process"),
+			"state":         llx.StringData(aixPortState(port.State)),
+			"remoteAddress": llx.StringData(port.RemoteAddress),
+			"remotePort":    llx.IntData(port.RemotePort),
+		})
+		if err != nil {
+			log.Error().Err(err).Send()
+			return nil, err
+		}
+
+		// netstat cannot name the owner, so mark it resolved-and-null instead of
+		// leaving the lazy process() accessor to be called per row.
+		portObj := obj.(*mqlPort)
+		portObj.Process.State = plugin.StateIsSet | plugin.StateIsNull
+
+		res = append(res, obj)
 	}
 
 	return res, nil

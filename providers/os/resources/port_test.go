@@ -85,3 +85,41 @@ func TestParseLinuxProcNetIPv6(t *testing.T) {
 	assert.Equal(t, int64(0), port.RemotePort)
 	assert.Equal(t, "[::]", port.RemoteAddress)
 }
+
+// AIX netstat reports states in its own spelling; they have to land on the same
+// vocabulary the other platforms use, or `ports.listening` (which filters on
+// state == "listen") would silently return nothing on AIX.
+func TestAixPortState(t *testing.T) {
+	assert.Equal(t, "listen", aixPortState("LISTEN"))
+	assert.Equal(t, "established", aixPortState("ESTABLISHED"))
+	assert.Equal(t, "time wait", aixPortState("TIME_WAIT"))
+	assert.Equal(t, "close wait", aixPortState("CLOSE_WAIT"))
+	assert.Equal(t, "syn recv", aixPortState("SYN_RCVD"))
+	assert.Equal(t, "syn recv", aixPortState("SYN_RECEIVED"))
+	assert.Equal(t, "fin wait1", aixPortState("FIN_WAIT_1"))
+	assert.Equal(t, "fin wait2", aixPortState("FIN_WAIT_2"))
+	assert.Equal(t, "last ack", aixPortState("LAST_ACK"))
+	assert.Equal(t, "closing", aixPortState("CLOSING"))
+	assert.Equal(t, "close", aixPortState("CLOSED"))
+
+	// UDP has no state on AIX; that must stay empty rather than become a state.
+	assert.Equal(t, "", aixPortState(""))
+
+	// Anything else is reported honestly as unknown, never guessed into a
+	// canonical state.
+	assert.Equal(t, "unknown", aixPortState("IDLE"))
+	assert.Equal(t, "unknown", aixPortState("BOGUS"))
+}
+
+// Every mapped state must be a value the shared TCP_STATES table defines, so the
+// two cannot drift apart.
+func TestAixPortStatesAreCanonical(t *testing.T) {
+	canonical := map[string]bool{}
+	for _, v := range TCP_STATES {
+		canonical[v] = true
+	}
+	for aix, mapped := range aixTcpStates {
+		assert.True(t, canonical[mapped],
+			"AIX state %q maps to %q which is not in TCP_STATES", aix, mapped)
+	}
+}
