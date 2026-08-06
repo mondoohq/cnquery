@@ -147,6 +147,8 @@ Implement the generated interfaces in the provider's Go code. Use one of these p
 
 > **Only `NewResource` runs a resource's `init`; `CreateResource` skips it.** So an `__id` your `init` would have computed stays empty under `CreateResource`, and parameterized resources (e.g. an access-review / who-can lookup keyed on args) collide in the cache — every query returns the first one's result. Use `NewResource` for anything whose identity is built in `init`.
 
+> **Read the target's `init` before writing a typed accessor.** It defines which arg keys are accepted (`arn`, `id`, or both) and they are **not** uniform: `initAwsEc2Instance` takes `arn` only, `initAwsVpc` takes `arn` or `id`. Passing the wrong key makes `NewResource` return an error — and because most typed accessors log-and-continue on a failed resolution, that surfaces as a **silently empty list**, not a failure. Verify the accessor returns something against real data, or the bug is invisible.
+
 **Pattern C: Cross-References**
 *Best for:* Linking resources (e.g., GCP Address -> Network).
 *   Use an `init` function to cache all instances and filter in memory to avoid N+1 API calls.
@@ -182,7 +184,7 @@ func (a *mqlAwsDocumentdbSnapshot) vpc() (*mqlAwsVpc, error) {
 }
 ```
 
-**Important:** If you add an Internal struct *after* the first code generation, you must run `./mqlr generate` a **second time** for the generator to detect and embed it.
+**Important:** If you add an Internal struct *after* the first code generation, you must run `./mqlr generate` a **second time** for the generator to detect and embed it. The same applies on **removal**: the stale embed lingers in `.lr.go` (build fails with `undefined: mql<Name>Internal`) until you regenerate.
 
 **`securityGroupIdHandler`**: A reusable embedded struct (defined in `aws_ec2.go`) for converting security group ID lists to typed `[]aws.ec2.securitygroup` references. Embed it in your Internal struct:
 ```go
@@ -466,7 +468,7 @@ mqlConfCompute, err := CreateResource(runtime, "gcp.project.computeService.insta
 })
 ```
 
-Reserve a public `id string` field for resources whose id carries user-meaningful information (an ARN, a GCP resource name, a stable cross-system key) — somewhere a user might write `.where(id == "...")`. Sub-resources whose id is `<parent>/<leaf>` synthetic should hide it. See `gcp.project.binaryAuthorizationControl.policy` for an existing example of this pattern.
+Reserve a public `id string` field for resources whose id carries user-meaningful information (an ARN, a GCP resource name, a stable cross-system key) — somewhere a user might write `.where(id == "...")`. Sub-resources whose id is `<parent>/<leaf>` synthetic should hide it. See `gcp.project.binaryAuthorizationControl.policy` for an existing example of this pattern. An existing sibling that exposes such an `id` (e.g. `aws.vpc.routetable.route`) is a pre-existing deviation, not precedent — follow the rule for new resources.
 
 **Performance notes:** Resource field access is lazy (fields fetched only when needed); cross-references should leverage caching to avoid redundant API calls; use `init` functions for expensive operations to enable result sharing across queries.
 
@@ -557,9 +559,10 @@ for {
   - ✗ `{type, value}` resource requirement — use `map[string]string` keyed by type
   - ✗ `{platformVersion}` single-scalar config — flatten to `fargatePlatformVersion` on parent
   - ✗ `{hostPath, containerPath, permissions}` device / `{containerPath, size, mountOptions}` tmpfs — use `[]dict`
-- Every resource and field has an explicit entry in `.lr.versions`. New entries must use the **next patch version** after the provider's current version (e.g., if the provider is at `13.1.1`, new fields should be `13.1.2`). The provider's current version is in `providers/<name>/config/config.go` (look for the `Version` field). Do **not** rely on the highest version in `.lr.versions` — it may be stale from before a major version bump. The `versions` command does this automatically, but verify the result. Existing entries are never overwritten.
+- Every resource and field has an explicit entry in `.lr.versions`. New entries must use the **next patch version** after the provider's current version (e.g., if the provider is at `13.1.1`, new fields should be `13.1.2`). The provider's current version is in `providers/<name>/config/config.go` (look for the `Version` field). Do **not** rely on the highest version in `.lr.versions` — it may be stale from before a major version bump. The `versions` command does this automatically, but verify the result. Existing entries are never overwritten — which also means **removing a field does not remove its entry**; delete that line by hand.
   - **Exception — brand-new, unreleased provider:** if the provider is being introduced in this PR (its `config.go` `Version` hasn't shipped yet), every `.lr.versions` entry is part of the initial release and equals that version — not `version + 1`. The "next patch" rule applies only to fields added *after* a version has shipped (a new provider at `13.0.0` has all entries at `13.0.0`; a later PR adding a field bumps that one to `13.0.1`).
   - **Don't bump the provider's `Version` in `config.go` in a feature PR** — the release flow handles that separately. You only add the `.lr.versions` entries.
+- **`isPublic()` means "reachable from the internet."** It carries that meaning on ~20 resources, so a fleet-wide `isPublic` query has to stay comparable across them. Don't reuse the name for a different kind of "open" (an unrestricted resource policy, a wildcard principal) on a resource that is not internet-facing — pick a specific name like `hasWildcardPolicy()` instead.
 - **Match SDK types faithfully:** If an SDK field is `*bool`, use `bool` in `.lr` and `llx.BoolDataPtr()` in Go — don't cast it to `string`. If an SDK enum has only two states (Enabled/Disabled), prefer `bool`. Use `*type` intermediate variables with `llx.*DataPtr` helpers to preserve nil semantics.
 - **Never change a shipped field's type** (e.g. `string`→`bool`) — it's customer-breaking. Deprecate the old field and add a new one instead; decline review-bot suggestions to mutate an existing field's type in place.
 - **Consistency with existing fields:** Before adding new fields to a resource, check how its existing fields handle pointers, nil checks, and type conversions. Follow the same pattern.
@@ -677,7 +680,7 @@ make test/integration
 - [ ] Generated files are up-to-date (`.lr.go`, `.pb.go`, `.permissions.json`)
 - [ ] Linting passes (`make test/lint`)
 - [ ] Changes work interactively (`mql shell <provider>`)
-- [ ] `go.mod` is clean (`go mod tidy`)
+- [ ] `go.mod` is clean — run `go mod tidy` **inside `providers/<name>/`**, not the repo root, or new SDK deps stay `// indirect`
 - [ ] No spelling errors in new comments/docs
 
 **Note:** CI runs comprehensive checks. Run them locally only if you want to verify before pushing or if changing core/performance-critical code.
