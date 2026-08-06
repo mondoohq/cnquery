@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"fmt"
+
 	kms "github.com/stackitcloud/stackit-sdk-go/services/kms/v1api"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -140,6 +142,121 @@ func buildKmsKey(runtime *plugin.Runtime, k *kms.Key) (plugin.Resource, error) {
 
 func (r *mqlStackitKmsKey) id() (string, error) {
 	return "stackit.kms.key/" + r.KeyRingId.Data + "/" + r.Id.Data, nil
+}
+
+// versions lists the key's material generations. Rotation appends a version
+// and keeps the older ones readable, so the newest createdAt is what a
+// key-age check reads.
+func (r *mqlStackitKmsKey) versions() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	client, err := c.KMS()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.DefaultAPI.ListVersions(bgctx(), c.ProjectID(), c.Region(), r.KeyRingId.Data, r.Id.Data).Execute()
+	if err != nil {
+		if isAccessDenied(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, _ := resp.GetVersionsOk()
+	out := make([]any, 0, len(items))
+	for i := range items {
+		v := &items[i]
+		createdAt, ok1 := v.GetCreatedAtOk()
+		destroyDate, ok2 := v.GetDestroyDateOk()
+		args := map[string]*llx.RawData{
+			// The version number is only unique within its key, so qualify the
+			// cache key with the ring and key it belongs to. Kept out of the
+			// schema: nobody selects a version by this path.
+			"__id":        llx.StringData(fmt.Sprintf("stackit.kms.key.version/%s/%s/%d", v.GetKeyRingId(), v.GetKeyId(), v.GetNumber())),
+			"number":      llx.IntData(v.GetNumber()),
+			"state":       llx.StringData(string(v.GetState())),
+			"disabled":    llx.BoolData(v.GetDisabled()),
+			"createdAt":   llx.TimeDataPtr(timeOrNil(createdAt, ok1)),
+			"destroyDate": llx.TimeDataPtr(timeOrNil(destroyDate, ok2)),
+			"publicKey":   llx.StringData(v.GetPublicKey()),
+		}
+		res, err := CreateResource(r.MqlRuntime, "stackit.kms.key.version", args)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+// mqlStackitKmsWrappingKeyInternal caches the owning ring id so keyRing()
+// can resolve without the schema carrying a duplicate raw id field.
+type mqlStackitKmsWrappingKeyInternal struct {
+	cacheKeyRingId string
+}
+
+func (r *mqlStackitKmsKeyRing) wrappingKeys() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	client, err := c.KMS()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.DefaultAPI.ListWrappingKeys(bgctx(), c.ProjectID(), c.Region(), r.Id.Data).Execute()
+	if err != nil {
+		if isAccessDenied(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, _ := resp.GetWrappingKeysOk()
+	out := make([]any, 0, len(items))
+	for i := range items {
+		wk := &items[i]
+		createdAt, ok1 := wk.GetCreatedAtOk()
+		expiresAt, ok2 := wk.GetExpiresAtOk()
+		// the response carries the key ring, but the listing is already scoped
+		// to one, so fall back to it rather than lose the qualifier
+		keyRingId := wk.GetKeyRingId()
+		if keyRingId == "" {
+			keyRingId = r.Id.Data
+		}
+		args := map[string]*llx.RawData{
+			// the wrapping key id is only unique within its key ring, so the
+			// cache key has to carry the ring it belongs to
+			"__id":        llx.StringData(qualifiedId("stackit.kms.wrappingKey", keyRingId, wk.GetId())),
+			"id":          llx.StringData(wk.GetId()),
+			"displayName": llx.StringData(wk.GetDisplayName()),
+			"description": llx.StringData(wk.GetDescription()),
+			"algorithm":   llx.StringData(string(wk.GetAlgorithm())),
+			"purpose":     llx.StringData(string(wk.GetPurpose())),
+			"protection":  llx.StringData(string(wk.GetProtection())),
+			"accessScope": llx.StringData(string(wk.GetAccessScope())),
+			"state":       llx.StringData(string(wk.GetState())),
+			"expiresAt":   llx.TimeDataPtr(timeOrNil(expiresAt, ok2)),
+			"createdAt":   llx.TimeDataPtr(timeOrNil(createdAt, ok1)),
+			"publicKey":   llx.StringData(wk.GetPublicKey()),
+		}
+		res, err := CreateResource(r.MqlRuntime, "stackit.kms.wrappingKey", args)
+		if err != nil {
+			return nil, err
+		}
+		if mwk, ok := res.(*mqlStackitKmsWrappingKey); ok {
+			mwk.cacheKeyRingId = keyRingId
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+func (r *mqlStackitKmsWrappingKey) keyRing() (*mqlStackitKmsKeyRing, error) {
+	if r.cacheKeyRingId == "" {
+		return markNull[mqlStackitKmsKeyRing](&r.KeyRing)
+	}
+	res, err := NewResource(r.MqlRuntime, "stackit.kms.keyRing", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheKeyRingId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlStackitKmsKeyRing), nil
 }
 
 func (r *mqlStackitKmsKey) keyRing() (*mqlStackitKmsKeyRing, error) {

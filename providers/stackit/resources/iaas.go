@@ -5,6 +5,8 @@ package resources
 
 import (
 	"strconv"
+	"sync"
+	"sync/atomic"
 
 	iaas "github.com/stackitcloud/stackit-sdk-go/services/iaas/v2api"
 	"go.mondoo.com/mql/v13/llx"
@@ -569,6 +571,60 @@ func buildImage(runtime *plugin.Runtime, img *iaas.Image) (plugin.Resource, erro
 
 func (r *mqlStackitImage) id() (string, error) {
 	return "stackit.image/" + r.Id.Data, nil
+}
+
+// mqlStackitImageInternal caches the image's share record so the two sharing
+// fields share one API call.
+type mqlStackitImageInternal struct {
+	shareFetched atomic.Bool
+	share        *iaas.ImageShare
+	shareLock    sync.Mutex
+}
+
+// fetchShare loads the image's share record. An image that has never been
+// shared has no share record at all and the API answers 404, which is a
+// legitimate "not shared" rather than an error.
+func (r *mqlStackitImage) fetchShare() (*iaas.ImageShare, error) {
+	if r.shareFetched.Load() {
+		return r.share, nil
+	}
+	r.shareLock.Lock()
+	defer r.shareLock.Unlock()
+	if r.shareFetched.Load() {
+		return r.share, nil
+	}
+	c := conn(r.MqlRuntime)
+	client, err := c.IaaS()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.DefaultAPI.GetImageShare(bgctx(), c.ProjectID(), c.Region(), r.Id.Data).Execute()
+	if err != nil {
+		if isAccessDenied(err) || isNotFound(err) {
+			r.shareFetched.Store(true)
+			return nil, nil
+		}
+		return nil, err
+	}
+	r.share = resp
+	r.shareFetched.Store(true)
+	return r.share, nil
+}
+
+func (r *mqlStackitImage) sharedWithProjects() ([]any, error) {
+	s, err := r.fetchShare()
+	if err != nil || s == nil {
+		return []any{}, err
+	}
+	return strSlice(s.GetProjects()), nil
+}
+
+func (r *mqlStackitImage) sharedWithOrganization() (bool, error) {
+	s, err := r.fetchShare()
+	if err != nil || s == nil {
+		return false, err
+	}
+	return s.GetParentOrganization(), nil
 }
 
 func initStackitImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
