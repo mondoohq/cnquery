@@ -28,6 +28,14 @@ type mqlMongodbatlasInternal struct {
 	clustersOnce   sync.Once
 	clustersByName map[string]*mqlMongodbatlasCluster
 	clustersErr    error
+
+	exportBucketsOnce sync.Once
+	exportBucketsByID map[string]*mqlMongodbatlasSnapshotExportBucket
+	exportBucketsErr  error
+
+	accessRolesOnce sync.Once
+	accessRolesByID map[string]*mqlMongodbatlasCloudProviderAccessRole
+	accessRolesErr  error
 }
 
 // rootMongodbatlas returns the cached root resource singleton so sub-resources
@@ -205,6 +213,16 @@ func strSlice(vals []string) []any {
 	out := make([]any, 0, len(vals))
 	for _, v := range vals {
 		out = append(out, v)
+	}
+	return out
+}
+
+// tagMap converts Atlas resource tags to the map form llx.MapData expects. A
+// later tag wins on a duplicate key, which Atlas rejects at write time anyway.
+func tagMap(tags []admin.ResourceTag) map[string]any {
+	out := make(map[string]any, len(tags))
+	for _, t := range tags {
+		out[t.GetKey()] = t.GetValue()
 	}
 	return out
 }

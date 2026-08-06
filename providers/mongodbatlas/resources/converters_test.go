@@ -10,6 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/atlas-sdk/v20250312006/admin"
 )
 
 func TestIsAccessDenied(t *testing.T) {
@@ -53,4 +54,22 @@ func TestDictTime(t *testing.T) {
 
 	ts := time.Date(2026, 7, 19, 10, 30, 0, 0, time.UTC)
 	assert.Equal(t, "2026-07-19T10:30:00Z", dictTime(ts))
+}
+
+func TestTagMap(t *testing.T) {
+	assert.Equal(t, map[string]any{}, tagMap(nil))
+	assert.Equal(t, map[string]any{}, tagMap([]admin.ResourceTag{}))
+
+	assert.Equal(t, map[string]any{"env": "prod", "owner": "platform"}, tagMap([]admin.ResourceTag{
+		{Key: "env", Value: "prod"},
+		{Key: "owner", Value: "platform"},
+	}))
+
+	assert.Equal(t, map[string]any{"env": "staging"}, tagMap([]admin.ResourceTag{
+		{Key: "env", Value: "prod"},
+		{Key: "env", Value: "staging"},
+	}), "a later tag wins on a duplicate key")
+
+	assert.Equal(t, map[string]any{"": ""}, tagMap([]admin.ResourceTag{{}}),
+		"an empty tag still occupies a key rather than being dropped")
 }
