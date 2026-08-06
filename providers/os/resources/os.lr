@@ -5852,6 +5852,170 @@ private selinux.module @defaults("name status") {
   priority int
 }
 
+// Polkit authorization framework
+//
+// System-wide polkit (formerly PolicyKit) authorization state: the `actions`
+// that privileged operations are registered under, the JavaScript `rules`
+// that decide who may invoke them, the legacy local-authority grants in
+// `localAuthorityRules`, and the `adminIdentities` the local authority
+// treats as administrators. Polkit governs whether an unprivileged session
+// may restart a unit, mount a disk, or install a package, so an over-broad
+// grant is a local privilege escalation path. Read `version` before drawing
+// conclusions: polkit 0.106 and later evaluate the JavaScript rules and
+// ignore `.pkla` files, while earlier releases do the reverse.
+polkit @defaults("installed version") {
+  // Whether polkit is present on the system
+  //
+  // True when a polkit action directory or the pkexec binary is found. Use it
+  // to guard polkit audits on images that ship no polkit at all, such as
+  // minimal container bases.
+  installed() bool
+  // Polkit release reported by pkaction
+  //
+  // For example `0.105` on older distributions or `124` on current ones.
+  // Requires command execution, so it is null on backends that expose only a
+  // filesystem, such as an image scan.
+  version() string
+  // Actions registered in the polkit action directories
+  actions() []polkit.action
+  // JavaScript authorization rules, in the order polkit evaluates them
+  rules() []polkit.rule
+  // Grants from the legacy local-authority .pkla files
+  localAuthorityRules() []polkit.localAuthorityRule
+  // Identities the local authority treats as administrators
+  //
+  // AdminIdentities from /etc/polkit-1/localauthority.conf.d, for example
+  // `unix-group:sudo` or `unix-user:root`. Honored only by polkit 0.105 and
+  // earlier. On newer releases administrator selection moves into a rule that
+  // calls polkit.addAdminRule, which `rules` reports through `adminRule`.
+  adminIdentities() []string
+}
+
+// Polkit action
+//
+// Single privileged operation polkit can gate, parsed from a `.policy` file
+// in the action directories. `id` is the reverse-DNS action name an
+// application checks (for example `org.freedesktop.systemd1.manage-units`),
+// and the three `allow` fields hold the implicit authorization that applies
+// when no rule overrides it. `allowAny` is the weakest of the three because
+// it covers subjects with no local seat, including remote sessions, so an
+// action with `allowAny == "yes"` needs no authentication from anyone who
+// can reach the D-Bus interface.
+private polkit.action @defaults("id allowAny allowActive") {
+  // Reverse-DNS action identifier (e.g., org.freedesktop.udisks2.filesystem-mount)
+  id string
+  // Human-readable action description
+  description string
+  // Message shown in the authentication prompt
+  message string
+  // Vendor named in the policy file
+  vendor string
+  // Vendor URL named in the policy file
+  vendorUrl string
+  // Icon name named in the policy file
+  iconName string
+  // Implicit authorization for subjects with no local seat, including remote sessions
+  //
+  // One of `no`, `yes`, `auth_self`, `auth_admin`, `auth_self_keep`, or
+  // `auth_admin_keep`. The `_keep` variants cache a successful authentication
+  // for a short period. Empty when the policy file omits the setting.
+  allowAny string
+  // Implicit authorization for local but inactive sessions
+  //
+  // Same value set as `allowAny`. An inactive session sits on a seat that is
+  // not currently in the foreground, such as a switched-away virtual console.
+  allowInactive string
+  // Implicit authorization for the active local session
+  //
+  // Same value set as `allowAny`.
+  allowActive string
+  // Vendor annotations from the policy file, as key-value pairs
+  //
+  // For example `org.freedesktop.policykit.exec.path` names the binary a
+  // pkexec action runs, and `org.freedesktop.policykit.imply` lists the
+  // actions this one implies.
+  annotations map[string]string
+  // Policy file the action is declared in
+  file file
+}
+
+// Polkit JavaScript authorization rule file
+//
+// Single `.rules` file from the polkit rule directories. Polkit evaluates
+// these files in lexicographic order by filename and stops at the first rule
+// returning a result other than NOT_HANDLED, so `order` decides which file
+// wins: a file sorting ahead of the distribution defaults overrides them.
+// `file` carries the path, mode, and ownership, which is what a check for a
+// rule file writable by a non-root account reads. Rule bodies are JavaScript
+// and are not evaluated here. `actionIds` and `results` report the
+// identifiers and result values appearing in the body, so an audit can
+// narrow down which files are worth reading.
+private polkit.rule @defaults("file.path order adminRule") {
+  // Position in the order polkit evaluates the rule files, starting at 0
+  order int
+  // Whether the file registers an administrator rule via polkit.addAdminRule
+  //
+  // An administrator rule chooses which identities count as administrators
+  // when an action requires `auth_admin`, rather than granting an action
+  // directly.
+  adminRule bool
+  // Action identifiers appearing as string literals in the rule body
+  //
+  // Collected lexically, so this includes prefixes used with `startsWith` or
+  // a regular expression, and omits identifiers assembled at run time. A
+  // starting point for locating the rules that touch a given action, not a
+  // statement about what a rule ultimately returns.
+  actionIds []string
+  // Result values referenced in the rule body
+  //
+  // Any of `YES`, `NO`, `AUTH_SELF`, `AUTH_ADMIN`, `AUTH_SELF_KEEP`,
+  // `AUTH_ADMIN_KEEP`, or `NOT_HANDLED`. A file mentioning `YES` grants some
+  // action with no authentication on at least one code path.
+  results []string
+  // Rule file on disk
+  file file
+}
+
+// Local-authority authorization grant (.pkla)
+//
+// Single section from a `.pkla` file, the ini-format grant mechanism used by
+// polkit 0.105 and earlier. `identities` lists the users or groups the grant
+// applies to and `actions` the action patterns it covers, while the three
+// `result` fields carry the authorization it produces. Higher-numbered
+// directories override lower-numbered ones, and a grant of
+// `resultAny == "yes"` to a broad group such as `unix-group:users` hands that
+// group the action with no authentication. Ignored outright by polkit 0.106
+// and later, so read `polkit.version` alongside it.
+private polkit.localAuthorityRule @defaults("name resultActive") {
+  // Section name from the .pkla file header
+  name string
+  // Identities the grant applies to
+  //
+  // Each entry is a polkit identity string such as `unix-user:alice` or
+  // `unix-group:wheel`.
+  identities []string
+  // Action patterns the grant covers
+  //
+  // Each entry is an action identifier, optionally ending in `*` to match a
+  // prefix, for example `org.freedesktop.udisks2.*`.
+  actions []string
+  // Authorization for subjects with no local seat, including remote sessions
+  //
+  // One of `no`, `yes`, `auth_self`, `auth_admin`, `auth_self_keep`, or
+  // `auth_admin_keep`. Empty when the section does not set it.
+  resultAny string
+  // Authorization for local but inactive sessions
+  //
+  // Same value set as `resultAny`. Empty when the section does not set it.
+  resultInactive string
+  // Authorization for the active local session
+  //
+  // Same value set as `resultAny`. Empty when the section does not set it.
+  resultActive string
+  // File the section is declared in
+  file file
+}
+
 // Kernel module configuration (modprobe.d)
 //
 // Install, remove, blacklist, options, alias, and softdep directives parsed
