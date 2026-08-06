@@ -127,7 +127,7 @@ func (g *mqlGcpProjectAssetService) resources() ([]any, error) {
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not search Cloud Asset Inventory resources")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
@@ -203,7 +203,7 @@ func (g *mqlGcpProjectAssetService) iamPolicies() ([]any, error) {
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not search Cloud Asset Inventory IAM policies")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}

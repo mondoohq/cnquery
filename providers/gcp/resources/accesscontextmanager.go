@@ -61,7 +61,7 @@ func (g *mqlGcpOrganization) gcpUserAccessBindings() ([]any, error) {
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list resources (API disabled or access denied), skipping")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
@@ -118,7 +118,7 @@ func (g *mqlGcpOrganization) accessPolicies() ([]any, error) {
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list resources (API disabled or access denied), skipping")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
@@ -165,7 +165,7 @@ func (g *mqlGcpAccesscontextmanagerAccessPolicy) accessLevels() ([]any, error) {
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list resources (API disabled or access denied), skipping")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
@@ -223,7 +223,7 @@ func (g *mqlGcpAccesscontextmanagerAccessPolicy) servicePerimeters() ([]any, err
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list resources (API disabled or access denied), skipping")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}

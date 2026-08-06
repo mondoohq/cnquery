@@ -147,7 +147,7 @@ func (g *mqlGcpProjectSpannerService) instances() ([]any, error) {
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list Spanner instances")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
@@ -259,7 +259,7 @@ func (g *mqlGcpProjectSpannerServiceInstance) databases() ([]any, error) {
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list Spanner databases")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
@@ -561,7 +561,7 @@ func (g *mqlGcpProjectSpannerServiceInstance) backups() ([]any, error) {
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list Spanner backups")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
@@ -681,7 +681,7 @@ func (g *mqlGcpProjectSpannerService) instanceConfigs() ([]any, error) {
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list Spanner instance configs")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
@@ -922,7 +922,7 @@ func (g *mqlGcpProjectSpannerServiceInstanceDatabase) databaseRoles() ([]any, er
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list Spanner database roles")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
@@ -1092,7 +1092,7 @@ func (g *mqlGcpProjectSpannerServiceInstance) instancePartitions() ([]any, error
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list Spanner instance partitions")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
