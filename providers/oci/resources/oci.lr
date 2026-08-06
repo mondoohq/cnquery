@@ -2537,13 +2537,28 @@ private oci.audit.event @defaults("eventName principalName eventTime responseSta
   // Display name of the principal that made the call
   principalName string
   // OCID of the principal that made the call
+  //
+  // Kept alongside `principal` because the two do not always agree: an
+  // instance principal, a service principal, or a user deleted since the
+  // call was recorded all leave an OCID here that resolves to no user.
   principalId string
+  // IAM user that made the call
+  //
+  // Null when the caller was not a user, which is the case for instance
+  // and service principals, or when the user has since been deleted.
+  // `principalId` records the raw OCID either way.
+  principal() oci.identity.user
   // How the caller authenticated (e.g., natv, federated, instance)
   authType string
   // Name of the user on whose behalf a delegated call was made
   callerName string
   // OCID of the user on whose behalf a delegated call was made
   callerId string
+  // IAM user on whose behalf a delegated call was made
+  //
+  // Set for calls a service made on a user's behalf, and null for direct
+  // calls or when the user has since been deleted.
+  caller() oci.identity.user
   // Source IP address the call originated from
   ipAddress string
   // User agent string of the calling client
@@ -2638,6 +2653,22 @@ private oci.serviceConnectorHub.connector @defaults("name sourceKind targetKind 
   source() dict
   // Kind of target the connector writes to (objectStorage, streaming, functions, loggingAnalytics, monitoring, notifications)
   targetKind() string
+  // Object Storage bucket the connector writes to
+  //
+  // Set when `targetKind` is objectStorage, and null otherwise. Resolving
+  // it makes the receiving bucket's own posture, such as its public
+  // access type and retention rules, reachable from the connector.
+  targetBucket() oci.objectStorage.bucket
+  // Notification topic the connector writes to
+  //
+  // Set when `targetKind` is notifications, and null otherwise.
+  targetTopic() oci.ons.topic
+  // Log groups the connector reads from
+  //
+  // The log groups named by a `logging` source. Empty for every other
+  // source kind. The tenancy audit log appears here as the `_Audit` log
+  // group, so a connector exporting audit events resolves to it.
+  sourceLogGroups() []oci.logging.logGroup
   // Configuration of the target the connector writes to
   //
   // Shape varies by `targetKind`. An `objectStorage` target has
@@ -3795,7 +3826,7 @@ private oci.goldenGate.deployment @defaults("name isPublic state") {
   // Network security groups attached to the deployment
   securityGroups() []oci.network.networkSecurityGroup
   // Load balancer fronting the deployment
-  loadBalancerId string
+  loadBalancer() oci.loadBalancer.loadBalancer
   // Deployment type
   //
   // One of OGG, DATABASE_ORACLE, BIGDATA, DATABASE_MICROSOFT_SQLSERVER,

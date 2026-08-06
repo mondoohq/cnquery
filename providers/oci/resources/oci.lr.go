@@ -3475,6 +3475,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.audit.event.principalId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciAuditEvent).GetPrincipalId()).ToDataRes(types.String)
 	},
+	"oci.audit.event.principal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetPrincipal()).ToDataRes(types.Resource("oci.identity.user"))
+	},
 	"oci.audit.event.authType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciAuditEvent).GetAuthType()).ToDataRes(types.String)
 	},
@@ -3483,6 +3486,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.audit.event.callerId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciAuditEvent).GetCallerId()).ToDataRes(types.String)
+	},
+	"oci.audit.event.caller": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetCaller()).ToDataRes(types.Resource("oci.identity.user"))
 	},
 	"oci.audit.event.ipAddress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciAuditEvent).GetIpAddress()).ToDataRes(types.String)
@@ -3552,6 +3558,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.serviceConnectorHub.connector.targetKind": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciServiceConnectorHubConnector).GetTargetKind()).ToDataRes(types.String)
+	},
+	"oci.serviceConnectorHub.connector.targetBucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciServiceConnectorHubConnector).GetTargetBucket()).ToDataRes(types.Resource("oci.objectStorage.bucket"))
+	},
+	"oci.serviceConnectorHub.connector.targetTopic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciServiceConnectorHubConnector).GetTargetTopic()).ToDataRes(types.Resource("oci.ons.topic"))
+	},
+	"oci.serviceConnectorHub.connector.sourceLogGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciServiceConnectorHubConnector).GetSourceLogGroups()).ToDataRes(types.Array(types.Resource("oci.logging.logGroup")))
 	},
 	"oci.serviceConnectorHub.connector.target": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciServiceConnectorHubConnector).GetTarget()).ToDataRes(types.Dict)
@@ -4528,8 +4543,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.goldenGate.deployment.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciGoldenGateDeployment).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("oci.network.networkSecurityGroup")))
 	},
-	"oci.goldenGate.deployment.loadBalancerId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciGoldenGateDeployment).GetLoadBalancerId()).ToDataRes(types.String)
+	"oci.goldenGate.deployment.loadBalancer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciGoldenGateDeployment).GetLoadBalancer()).ToDataRes(types.Resource("oci.loadBalancer.loadBalancer"))
 	},
 	"oci.goldenGate.deployment.deploymentType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciGoldenGateDeployment).GetDeploymentType()).ToDataRes(types.String)
@@ -11373,6 +11388,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciAuditEvent).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"oci.audit.event.principal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).Principal, ok = plugin.RawToTValue[*mqlOciIdentityUser](v.Value, v.Error)
+		return
+	},
 	"oci.audit.event.authType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciAuditEvent).AuthType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -11383,6 +11402,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.audit.event.callerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciAuditEvent).CallerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.audit.event.caller": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).Caller, ok = plugin.RawToTValue[*mqlOciIdentityUser](v.Value, v.Error)
 		return
 	},
 	"oci.audit.event.ipAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11483,6 +11506,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.serviceConnectorHub.connector.targetKind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciServiceConnectorHubConnector).TargetKind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.serviceConnectorHub.connector.targetBucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciServiceConnectorHubConnector).TargetBucket, ok = plugin.RawToTValue[*mqlOciObjectStorageBucket](v.Value, v.Error)
+		return
+	},
+	"oci.serviceConnectorHub.connector.targetTopic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciServiceConnectorHubConnector).TargetTopic, ok = plugin.RawToTValue[*mqlOciOnsTopic](v.Value, v.Error)
+		return
+	},
+	"oci.serviceConnectorHub.connector.sourceLogGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciServiceConnectorHubConnector).SourceLogGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.serviceConnectorHub.connector.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12917,8 +12952,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciGoldenGateDeployment).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"oci.goldenGate.deployment.loadBalancerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciGoldenGateDeployment).LoadBalancerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"oci.goldenGate.deployment.loadBalancer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciGoldenGateDeployment).LoadBalancer, ok = plugin.RawToTValue[*mqlOciLoadBalancerLoadBalancer](v.Value, v.Error)
 		return
 	},
 	"oci.goldenGate.deployment.deploymentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26954,9 +26989,11 @@ type mqlOciAuditEvent struct {
 	AvailabilityDomain plugin.TValue[string]
 	PrincipalName      plugin.TValue[string]
 	PrincipalId        plugin.TValue[string]
+	Principal          plugin.TValue[*mqlOciIdentityUser]
 	AuthType           plugin.TValue[string]
 	CallerName         plugin.TValue[string]
 	CallerId           plugin.TValue[string]
+	Caller             plugin.TValue[*mqlOciIdentityUser]
 	IpAddress          plugin.TValue[string]
 	UserAgent          plugin.TValue[string]
 	ConsoleSessionId   plugin.TValue[string]
@@ -27072,6 +27109,22 @@ func (c *mqlOciAuditEvent) GetPrincipalId() *plugin.TValue[string] {
 	return &c.PrincipalId
 }
 
+func (c *mqlOciAuditEvent) GetPrincipal() *plugin.TValue[*mqlOciIdentityUser] {
+	return plugin.GetOrCompute[*mqlOciIdentityUser](&c.Principal, func() (*mqlOciIdentityUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.audit.event", c.__id, "principal")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciIdentityUser), nil
+			}
+		}
+
+		return c.principal()
+	})
+}
+
 func (c *mqlOciAuditEvent) GetAuthType() *plugin.TValue[string] {
 	return &c.AuthType
 }
@@ -27082,6 +27135,22 @@ func (c *mqlOciAuditEvent) GetCallerName() *plugin.TValue[string] {
 
 func (c *mqlOciAuditEvent) GetCallerId() *plugin.TValue[string] {
 	return &c.CallerId
+}
+
+func (c *mqlOciAuditEvent) GetCaller() *plugin.TValue[*mqlOciIdentityUser] {
+	return plugin.GetOrCompute[*mqlOciIdentityUser](&c.Caller, func() (*mqlOciIdentityUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.audit.event", c.__id, "caller")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciIdentityUser), nil
+			}
+		}
+
+		return c.caller()
+	})
 }
 
 func (c *mqlOciAuditEvent) GetIpAddress() *plugin.TValue[string] {
@@ -27198,23 +27267,26 @@ type mqlOciServiceConnectorHubConnector struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlOciServiceConnectorHubConnectorInternal
-	Id           plugin.TValue[string]
-	Name         plugin.TValue[string]
-	Description  plugin.TValue[string]
-	Compartment  plugin.TValue[*mqlOciCompartment]
-	State        plugin.TValue[string]
-	StateDetails plugin.TValue[string]
-	Region       plugin.TValue[string]
-	SourceKind   plugin.TValue[string]
-	Source       plugin.TValue[any]
-	TargetKind   plugin.TValue[string]
-	Target       plugin.TValue[any]
-	Tasks        plugin.TValue[[]any]
-	Created      plugin.TValue[*time.Time]
-	Updated      plugin.TValue[*time.Time]
-	FreeformTags plugin.TValue[map[string]any]
-	DefinedTags  plugin.TValue[map[string]any]
-	SystemTags   plugin.TValue[map[string]any]
+	Id              plugin.TValue[string]
+	Name            plugin.TValue[string]
+	Description     plugin.TValue[string]
+	Compartment     plugin.TValue[*mqlOciCompartment]
+	State           plugin.TValue[string]
+	StateDetails    plugin.TValue[string]
+	Region          plugin.TValue[string]
+	SourceKind      plugin.TValue[string]
+	Source          plugin.TValue[any]
+	TargetKind      plugin.TValue[string]
+	TargetBucket    plugin.TValue[*mqlOciObjectStorageBucket]
+	TargetTopic     plugin.TValue[*mqlOciOnsTopic]
+	SourceLogGroups plugin.TValue[[]any]
+	Target          plugin.TValue[any]
+	Tasks           plugin.TValue[[]any]
+	Created         plugin.TValue[*time.Time]
+	Updated         plugin.TValue[*time.Time]
+	FreeformTags    plugin.TValue[map[string]any]
+	DefinedTags     plugin.TValue[map[string]any]
+	SystemTags      plugin.TValue[map[string]any]
 }
 
 // createOciServiceConnectorHubConnector creates a new instance of this resource
@@ -27309,6 +27381,54 @@ func (c *mqlOciServiceConnectorHubConnector) GetSource() *plugin.TValue[any] {
 func (c *mqlOciServiceConnectorHubConnector) GetTargetKind() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.TargetKind, func() (string, error) {
 		return c.targetKind()
+	})
+}
+
+func (c *mqlOciServiceConnectorHubConnector) GetTargetBucket() *plugin.TValue[*mqlOciObjectStorageBucket] {
+	return plugin.GetOrCompute[*mqlOciObjectStorageBucket](&c.TargetBucket, func() (*mqlOciObjectStorageBucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.serviceConnectorHub.connector", c.__id, "targetBucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciObjectStorageBucket), nil
+			}
+		}
+
+		return c.targetBucket()
+	})
+}
+
+func (c *mqlOciServiceConnectorHubConnector) GetTargetTopic() *plugin.TValue[*mqlOciOnsTopic] {
+	return plugin.GetOrCompute[*mqlOciOnsTopic](&c.TargetTopic, func() (*mqlOciOnsTopic, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.serviceConnectorHub.connector", c.__id, "targetTopic")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciOnsTopic), nil
+			}
+		}
+
+		return c.targetTopic()
+	})
+}
+
+func (c *mqlOciServiceConnectorHubConnector) GetSourceLogGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SourceLogGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.serviceConnectorHub.connector", c.__id, "sourceLogGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sourceLogGroups()
 	})
 }
 
@@ -31070,7 +31190,7 @@ type mqlOciGoldenGateDeployment struct {
 	DeploymentUrl        plugin.TValue[string]
 	Subnet               plugin.TValue[*mqlOciNetworkSubnet]
 	SecurityGroups       plugin.TValue[[]any]
-	LoadBalancerId       plugin.TValue[string]
+	LoadBalancer         plugin.TValue[*mqlOciLoadBalancerLoadBalancer]
 	DeploymentType       plugin.TValue[string]
 	Category             plugin.TValue[string]
 	EnvironmentType      plugin.TValue[string]
@@ -31206,8 +31326,20 @@ func (c *mqlOciGoldenGateDeployment) GetSecurityGroups() *plugin.TValue[[]any] {
 	})
 }
 
-func (c *mqlOciGoldenGateDeployment) GetLoadBalancerId() *plugin.TValue[string] {
-	return &c.LoadBalancerId
+func (c *mqlOciGoldenGateDeployment) GetLoadBalancer() *plugin.TValue[*mqlOciLoadBalancerLoadBalancer] {
+	return plugin.GetOrCompute[*mqlOciLoadBalancerLoadBalancer](&c.LoadBalancer, func() (*mqlOciLoadBalancerLoadBalancer, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.goldenGate.deployment", c.__id, "loadBalancer")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciLoadBalancerLoadBalancer), nil
+			}
+		}
+
+		return c.loadBalancer()
+	})
 }
 
 func (c *mqlOciGoldenGateDeployment) GetDeploymentType() *plugin.TValue[string] {

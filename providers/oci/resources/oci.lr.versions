@@ -451,6 +451,7 @@ oci.audit.event 13.17.2
 oci.audit.event.additionalDetails 13.17.2
 oci.audit.event.authType 13.17.2
 oci.audit.event.availabilityDomain 13.17.2
+oci.audit.event.caller 13.17.2
 oci.audit.event.callerId 13.17.2
 oci.audit.event.callerName 13.17.2
 oci.audit.event.compartment 13.17.2
@@ -462,6 +463,7 @@ oci.audit.event.eventTime 13.17.2
 oci.audit.event.eventType 13.17.2
 oci.audit.event.id 13.17.2
 oci.audit.event.ipAddress 13.17.2
+oci.audit.event.principal 13.17.2
 oci.audit.event.principalId 13.17.2
 oci.audit.event.principalName 13.17.2
 oci.audit.event.requestAction 13.17.2
@@ -1165,7 +1167,7 @@ oci.goldenGate.deployment.isLatestVersion 13.17.2
 oci.goldenGate.deployment.isPublic 13.17.2
 oci.goldenGate.deployment.licenseModel 13.17.2
 oci.goldenGate.deployment.lifecycleSubState 13.17.2
-oci.goldenGate.deployment.loadBalancerId 13.17.2
+oci.goldenGate.deployment.loadBalancer 13.17.2
 oci.goldenGate.deployment.name 13.17.2
 oci.goldenGate.deployment.privateIpAddress 13.17.2
 oci.goldenGate.deployment.publicIpAddress 13.17.2
@@ -2168,11 +2170,14 @@ oci.serviceConnectorHub.connector.name 13.17.2
 oci.serviceConnectorHub.connector.region 13.17.2
 oci.serviceConnectorHub.connector.source 13.17.2
 oci.serviceConnectorHub.connector.sourceKind 13.17.2
+oci.serviceConnectorHub.connector.sourceLogGroups 13.17.2
 oci.serviceConnectorHub.connector.state 13.17.2
 oci.serviceConnectorHub.connector.stateDetails 13.17.2
 oci.serviceConnectorHub.connector.systemTags 13.17.2
 oci.serviceConnectorHub.connector.target 13.17.2
+oci.serviceConnectorHub.connector.targetBucket 13.17.2
 oci.serviceConnectorHub.connector.targetKind 13.17.2
+oci.serviceConnectorHub.connector.targetTopic 13.17.2
 oci.serviceConnectorHub.connector.tasks 13.17.2
 oci.serviceConnectorHub.connector.updated 13.17.2
 oci.serviceConnectorHub.connectors 13.17.2
