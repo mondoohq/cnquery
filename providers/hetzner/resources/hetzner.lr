@@ -149,10 +149,16 @@ private hetzner.server @defaults("id name status") {
 
 // Hetzner Cloud server private network attachment
 private hetzner.server.privateNet @defaults("ip macAddress") {
-  // Parent server ID (composite key with networkId)
-  serverId int
-  // Attached network ID (composite key)
-  networkId int
+  // Parent server ID
+  //
+  // Deprecated in favor of server.
+  serverId @maturity("deprecated") int
+  // Attached network ID
+  //
+  // Deprecated in favor of network.
+  networkId @maturity("deprecated") int
+  // Server the network is attached to
+  server() hetzner.server
   // Hetzner Cloud network attached to the server
   network() hetzner.network
   // IP address on the network
@@ -165,10 +171,16 @@ private hetzner.server.privateNet @defaults("ip macAddress") {
 
 // Hetzner Cloud server firewall binding
 private hetzner.server.firewallBinding @defaults("status") {
-  // Parent server ID (composite key with firewallId)
-  serverId int
-  // Bound firewall ID (composite key)
-  firewallId int
+  // Parent server ID
+  //
+  // Deprecated in favor of server.
+  serverId @maturity("deprecated") int
+  // Bound firewall ID
+  //
+  // Deprecated in favor of firewall.
+  firewallId @maturity("deprecated") int
+  // Server the firewall is bound to
+  server() hetzner.server
   // Hetzner Cloud firewall bound to the server
   firewall() hetzner.firewall
   // Application status (applied, pending)
@@ -189,9 +201,11 @@ private hetzner.network.exposure @defaults("internetReachable hasPublicIp") {
   hasPublicIp bool
   // Whether inbound traffic from any address is admitted
   //
-  // For a server, a firewall inbound rule open to the internet or no firewall
-  // attached at all; for a load balancer, an enabled public network with at
-  // least one forwarding service.
+  // For a server, a firewall inbound rule open to the internet, or no firewall
+  // enforcing rules at all. Only bindings whose status is applied count as
+  // enforcing, so a server whose firewalls are all still pending admits
+  // ingress. For a load balancer, an enabled public network with at least one
+  // forwarding service.
   firewallAllowsIngress bool
   // Ingress rules or services that admit traffic from any address
   //
@@ -238,10 +252,16 @@ private hetzner.serverType @defaults("id name cores memory") {
 
 // Hetzner Cloud server type availability in a single location
 private hetzner.serverType.location @defaults("available recommended") {
-  // Parent server type ID (composite key with locationId)
-  serverTypeId int
-  // Location ID (composite key)
-  locationId int
+  // Parent server type ID
+  //
+  // Deprecated in favor of serverType.
+  serverTypeId @maturity("deprecated") int
+  // Location ID
+  //
+  // Deprecated in favor of location.
+  locationId @maturity("deprecated") int
+  // Server type offered in this location
+  serverType() hetzner.serverType
   // Hetzner location where the server type is offered
   location() hetzner.location
   // Whether new servers of this type can be created in this location
@@ -401,7 +421,12 @@ private hetzner.network @defaults("id name ipRange") {
   ipRange string
   // Creation timestamp
   created time
-  // Subnets [{type, ipRange, networkZone, gateway}]
+  // Subnets carved out of the network's IP range
+  //
+  // Each subnet is a dict with `type` (cloud, server, or vswitch), `ipRange`,
+  // `networkZone`, `gateway`, and `vswitchId`. A `vswitchId` other than 0
+  // attaches the subnet to a Hetzner vSwitch, extending the network to
+  // dedicated servers and other networks outside this project.
   subnets []dict
   // Routes [{destination, gateway}]
   routes []dict
@@ -559,10 +584,16 @@ hetzner.loadBalancer @defaults("id name") {
 
 // Hetzner Cloud load balancer private network attachment
 private hetzner.loadBalancer.privateNet @defaults("ip") {
-  // Parent load balancer ID (composite key with networkId)
-  loadBalancerId int
-  // Attached network ID (composite key)
-  networkId int
+  // Parent load balancer ID
+  //
+  // Deprecated in favor of loadBalancer.
+  loadBalancerId @maturity("deprecated") int
+  // Attached network ID
+  //
+  // Deprecated in favor of network.
+  networkId @maturity("deprecated") int
+  // Load balancer the network is attached to
+  loadBalancer() hetzner.loadBalancer
   // Hetzner Cloud network attached to the load balancer
   network() hetzner.network
   // IP address on the network
@@ -572,7 +603,11 @@ private hetzner.loadBalancer.privateNet @defaults("ip") {
 // Load balancer service definition
 private hetzner.loadBalancer.service @defaults("protocol listenPort") {
   // Parent load balancer ID
-  loadBalancerId int
+  //
+  // Deprecated in favor of loadBalancer.
+  loadBalancerId @maturity("deprecated") int
+  // Load balancer the service forwards for
+  loadBalancer() hetzner.loadBalancer
   // Protocol (tcp, http, https)
   protocol string
   // Listen port
@@ -590,8 +625,10 @@ private hetzner.loadBalancer.service @defaults("protocol listenPort") {
   // Session persistence and HTTP redirect options
   //
   // Dict with keys cookieName, cookieLifetime (seconds), redirectHttp
-  // (whether plain HTTP is redirected to HTTPS), and stickySessions. TLS
-  // certificates are exposed separately through certificates.
+  // (whether plain HTTP is redirected to HTTPS), stickySessions, and
+  // timeoutIdle (seconds an idle connection is held open before the load
+  // balancer closes it). TLS certificates are exposed separately through
+  // certificates.
   http dict
   // TLS certificates attached to this service
   certificates() []hetzner.certificate
@@ -600,7 +637,11 @@ private hetzner.loadBalancer.service @defaults("protocol listenPort") {
 // Load balancer target
 private hetzner.loadBalancer.target @defaults("type") {
   // Parent load balancer ID
-  loadBalancerId int
+  //
+  // Deprecated in favor of loadBalancer.
+  loadBalancerId @maturity("deprecated") int
+  // Load balancer the target sits behind
+  loadBalancer() hetzner.loadBalancer
   // Target type (server, label_selector, ip)
   type string
   // Health status of the target [{listenPort, status}]
@@ -685,6 +726,13 @@ hetzner.firewall @defaults("id name") {
   // An inbound rule whose `sourceIps` contains 0.0.0.0/0 or ::/0 opens the
   // port to the entire internet.
   rules []dict
+  // Whether the rule set restricts outbound traffic
+  //
+  // Hetzner firewalls permit all outbound traffic unless the rule set holds
+  // at least one rule with direction `out`, in which case only traffic
+  // matching those rules is allowed. False therefore means the firewall
+  // places no restriction on connections the server opens itself.
+  egressRestricted() bool
   // Servers the firewall is directly applied to (type=server entries)
   servers() []hetzner.server
   // Label selectors the firewall is applied to (type=label_selector entries)
@@ -993,7 +1041,11 @@ private hetzner.storageBox.subaccount @defaults("id username") {
   // Subaccount ID
   id int
   // Parent Storage Box ID
-  storageBoxId int
+  //
+  // Deprecated in favor of storageBox.
+  storageBoxId @maturity("deprecated") int
+  // Storage Box the subaccount grants access to
+  storageBox() hetzner.storageBox
   // Subaccount name
   name string
   // Login username
@@ -1031,7 +1083,11 @@ private hetzner.storageBox.snapshot @defaults("id name created") {
   // Snapshot ID
   id int
   // Parent Storage Box ID
-  storageBoxId int
+  //
+  // Deprecated in favor of storageBox.
+  storageBoxId @maturity("deprecated") int
+  // Storage Box the snapshot was taken from
+  storageBox() hetzner.storageBox
   // Snapshot name
   name string
   // Description
@@ -1075,7 +1131,13 @@ private hetzner.zone @defaults("id name mode status") {
   recordCount int
   // Registrar managing the domain (hetzner, other, unknown)
   registrar string
-  // Primary nameservers for secondary zones [{address, port, tsigAlgorithm}]
+  // Primary nameservers a secondary zone transfers from
+  //
+  // Each entry is a dict with `address`, `port`, `tsigAlgorithm`, and
+  // `tsigConfigured`. When `tsigConfigured` is false, the zone transfer from
+  // that primary is not authenticated with a TSIG key. The key itself is a
+  // shared secret and is never exposed as queryable data. Empty for primary
+  // zones, which serve their own data rather than transferring it.
   primaryNameservers []dict
   // Nameservers assigned by Hetzner for this zone
   assignedNameservers []string
@@ -1106,7 +1168,9 @@ private hetzner.zone.rrset @defaults("name type") {
   // Record set ID (name/type)
   id string
   // Parent zone ID
-  zoneId int
+  //
+  // Deprecated in favor of zone.
+  zoneId @maturity("deprecated") int
   // Zone the record set belongs to
   zone() hetzner.zone
   // Record name relative to the zone (e.g., "@", "www")

@@ -145,6 +145,26 @@ func newMqlHetznerLoadBalancerPrivateNet(runtime *plugin.Runtime, lbID int64, p 
 	return res.(*mqlHetznerLoadBalancerPrivateNet), nil
 }
 
+// loadBalancerRef builds a lazy hetzner.loadBalancer reference from its id,
+// used by the sub-resources that point back at their parent.
+func loadBalancerRef(runtime *plugin.Runtime, field *plugin.TValue[*mqlHetznerLoadBalancer], id int64) (*mqlHetznerLoadBalancer, error) {
+	if id == 0 {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	ref, err := NewResource(runtime, "hetzner.loadBalancer", map[string]*llx.RawData{
+		"id": llx.IntData(id),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return ref.(*mqlHetznerLoadBalancer), nil
+}
+
+func (m *mqlHetznerLoadBalancerPrivateNet) loadBalancer() (*mqlHetznerLoadBalancer, error) {
+	return loadBalancerRef(m.MqlRuntime, &m.LoadBalancer, m.LoadBalancerId.Data)
+}
+
 func (m *mqlHetznerLoadBalancerPrivateNet) network() (*mqlHetznerNetwork, error) {
 	if m.NetworkId.Data == 0 {
 		m.Network.State = plugin.StateIsSet | plugin.StateIsNull
@@ -225,6 +245,7 @@ func newMqlHetznerLoadBalancerService(runtime *plugin.Runtime, lbID int64, s hcl
 		"cookieLifetime": s.HTTP.CookieLifetime.Seconds(),
 		"redirectHttp":   s.HTTP.RedirectHTTP,
 		"stickySessions": s.HTTP.StickySessions,
+		"timeoutIdle":    s.HTTP.TimeoutIdle.Seconds(),
 	}
 
 	res, err := CreateResource(runtime, "hetzner.loadBalancer.service", map[string]*llx.RawData{
@@ -243,6 +264,10 @@ func newMqlHetznerLoadBalancerService(runtime *plugin.Runtime, lbID int64, s hcl
 	m := res.(*mqlHetznerLoadBalancerService)
 	m.cacheCertificates = s.HTTP.Certificates
 	return m, nil
+}
+
+func (m *mqlHetznerLoadBalancerService) loadBalancer() (*mqlHetznerLoadBalancer, error) {
+	return loadBalancerRef(m.MqlRuntime, &m.LoadBalancer, m.LoadBalancerId.Data)
 }
 
 func (m *mqlHetznerLoadBalancerService) certificates() ([]any, error) {
@@ -345,6 +370,10 @@ func newMqlHetznerLoadBalancerTarget(runtime *plugin.Runtime, lbID int64, idx in
 	m.cacheServerID = serverID
 	m.cacheLabelSelectorServerIDs = labelSelectorServerIDs
 	return m, nil
+}
+
+func (m *mqlHetznerLoadBalancerTarget) loadBalancer() (*mqlHetznerLoadBalancer, error) {
+	return loadBalancerRef(m.MqlRuntime, &m.LoadBalancer, m.LoadBalancerId.Data)
 }
 
 func (m *mqlHetznerLoadBalancerTarget) server() (*mqlHetznerServer, error) {

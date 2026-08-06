@@ -34,17 +34,25 @@ func (h *mqlHetzner) zones() ([]any, error) {
 	return out, nil
 }
 
-func newMqlHetznerZone(runtime *plugin.Runtime, z *hcloud.Zone) (*mqlHetznerZone, error) {
-	primaryNS := make([]any, 0, len(z.PrimaryNameservers))
-	for _, ns := range z.PrimaryNameservers {
-		// Intentionally omit ns.TSIGKey — it is a shared secret used for
-		// zone transfers and must not be surfaced as queryable data.
-		primaryNS = append(primaryNS, map[string]any{
-			"address":       ns.Address,
-			"port":          int64(ns.Port),
-			"tsigAlgorithm": string(ns.TSIGAlgorithm),
+// zonePrimaryNameserverDicts renders the primaries a secondary zone transfers
+// from. The TSIG key is a shared secret and is never surfaced as queryable
+// data; only whether one is configured is reported, so an unauthenticated
+// transfer stays auditable.
+func zonePrimaryNameserverDicts(nameservers []hcloud.ZonePrimaryNameserver) []any {
+	out := make([]any, 0, len(nameservers))
+	for _, ns := range nameservers {
+		out = append(out, map[string]any{
+			"address":        ns.Address,
+			"port":           int64(ns.Port),
+			"tsigAlgorithm":  string(ns.TSIGAlgorithm),
+			"tsigConfigured": ns.TSIGKey != "",
 		})
 	}
+	return out
+}
+
+func newMqlHetznerZone(runtime *plugin.Runtime, z *hcloud.Zone) (*mqlHetznerZone, error) {
+	primaryNS := zonePrimaryNameserverDicts(z.PrimaryNameservers)
 
 	res, err := CreateResource(runtime, "hetzner.zone", map[string]*llx.RawData{
 		"__id":                 llx.StringData(fmt.Sprintf("hetzner.zone/%d", z.ID)),

@@ -47,6 +47,9 @@ func newMqlHetznerNetwork(runtime *plugin.Runtime, n *hcloud.Network) (*mqlHetzn
 			"ipRange":     ipNetString(s.IPRange),
 			"networkZone": string(s.NetworkZone),
 			"gateway":     ipString(s.Gateway),
+			// 0 when the subnet is not attached to a vSwitch. A non-zero value
+			// bridges the network to hardware outside this project.
+			"vswitchId": s.VSwitchID,
 		})
 	}
 	routes := make([]any, 0, len(n.Routes))
