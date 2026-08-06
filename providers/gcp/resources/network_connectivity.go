@@ -174,8 +174,10 @@ func (g *mqlGcpProjectNetworkConnectivityService) hubs() ([]any, error) {
 		}
 		if err != nil {
 			if isGRPCSkippable(err) {
-				log.Warn().Err(err).Str("project", projectId).Msg("could not list Network Connectivity hubs")
-				return nil, nil
+				// break rather than discard: an error partway through pagination
+				// should not throw away the hubs the API already returned.
+				log.Warn().Err(err).Str("project", projectId).Msg("could not list all Network Connectivity hubs")
+				break
 			}
 			return nil, err
 		}
@@ -279,8 +281,9 @@ func (g *mqlGcpProjectNetworkConnectivityService) spokes() ([]any, error) {
 		}
 		if err != nil {
 			if isGRPCSkippable(err) {
-				log.Warn().Err(err).Str("project", projectId).Msg("could not list Network Connectivity spokes")
-				return nil, nil
+				// break rather than discard: keep the spokes already returned.
+				log.Warn().Err(err).Str("project", projectId).Msg("could not list all Network Connectivity spokes")
+				break
 			}
 			return nil, err
 		}
