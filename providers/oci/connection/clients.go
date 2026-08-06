@@ -25,6 +25,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/database"
 	"github.com/oracle/oci-go-sdk/v65/datasafe"
 	"github.com/oracle/oci-go-sdk/v65/datascience"
+	"github.com/oracle/oci-go-sdk/v65/dns"
 	"github.com/oracle/oci-go-sdk/v65/events"
 	"github.com/oracle/oci-go-sdk/v65/filestorage"
 	"github.com/oracle/oci-go-sdk/v65/functions"
@@ -169,6 +170,15 @@ func (c *OciConnection) NetworkClient(region string) (*core.VirtualNetworkClient
 
 func (c *OciConnection) AuditClient(region string) (*audit.AuditClient, error) {
 	client, err := audit.NewAuditClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) DnsClient(region string) (*dns.DnsClient, error) {
+	client, err := dns.NewDnsClientWithConfigurationProvider(c.config)
 	if err != nil {
 		return nil, err
 	}

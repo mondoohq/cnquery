@@ -3175,6 +3175,130 @@ private oci.networkLoadBalancer.backend @defaults("name port") {
   isOffline bool
 }
 
+// Oracle Cloud Infrastructure (OCI) DNS
+//
+// DNS zones hosted in the tenancy and the traffic-management policies
+// applied to them. `zones` covers both the internet-facing GLOBAL scope
+// and the VCN-internal PRIVATE scope, each zone reporting its DNSSEC
+// state and, through `records`, the resource records it publishes.
+// `steeringPolicies` lists the geo, failover, and load-balancing rules
+// that decide which answer a resolver receives.
+oci.dns {
+  // DNS zones hosted in the tenancy
+  zones() []oci.dns.zone
+  // Steering policies applied to DNS answers
+  steeringPolicies() []oci.dns.steeringPolicy
+}
+
+// Oracle Cloud Infrastructure (OCI) DNS zone
+//
+// Single DNS zone, keyed by its OCID. `scope` separates a GLOBAL zone,
+// which answers queries from the public internet, from a PRIVATE zone,
+// which answers only inside the VCNs attached to its view.
+// `dnssecState` reports whether DNSSEC signing is ENABLED or DISABLED,
+// and `dnssecKeyVersions` carries the key-signing and zone-signing key
+// material behind it, including each key's algorithm and its scheduled
+// rollover times. `records` returns the resource records the zone
+// publishes, which is what makes it possible to find answers still
+// pointing at addresses or hostnames the tenancy no longer owns.
+// `isProtected` marks zones OCI manages and blocks from modification.
+private oci.dns.zone @defaults("name zoneType scope dnssecState") {
+  // Zone OCID
+  id string
+  // Zone name (the DNS domain, e.g., example.com)
+  name string
+  // Compartment containing the zone
+  compartment() oci.compartment
+  // Zone type (PRIMARY, SECONDARY)
+  zoneType string
+  // Whether the zone answers publicly (GLOBAL) or only inside attached VCNs (PRIVATE)
+  scope string
+  // How the zone resolves queries (IMPORTED, IMPORTED_LIMITED_SUPPORT)
+  resolutionMode string
+  // Whether DNSSEC signing is enabled for the zone (ENABLED, DISABLED)
+  dnssecState string
+  // DNSSEC key-signing and zone-signing key versions
+  //
+  // Has `kskDnssecKeyVersions` and `zskDnssecKeyVersions` lists. Each
+  // entry carries the key's `algorithm`, `lengthInBytes`, `uuid`, the
+  // `timeCreated`, `timeActivated`, `timeExpired` and `timeInactivated`
+  // marking its lifecycle, and the scheduled `timePromoted` and
+  // `predecessorId` or `successorId` linking a rollover. Empty when
+  // `dnssecState` is DISABLED.
+  dnssecKeyVersions dict
+  // Resource records published by the zone
+  records() []oci.dns.record
+  // Whether the zone is managed by OCI and cannot be modified
+  isProtected bool
+  // Zone serial number
+  serial int
+  // Zone version
+  version string
+  // View the zone belongs to, for PRIVATE zones
+  viewId string
+  // Zone lifecycle state (ACTIVE, CREATING, UPDATING, DELETING, DELETED, FAILED)
+  state string
+  // Zone creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) DNS record
+//
+// Single resource record in a zone. `domain` is the fully-qualified name
+// the record answers for, `rtype` its type (A, AAAA, CNAME, MX, TXT, NS,
+// and so on), and `rdata` the answer itself. A CNAME or A record whose
+// `rdata` points at a hostname or address the tenancy has released is
+// the shape of a subdomain-takeover exposure, which is why the record
+// data is queryable rather than summarized.
+private oci.dns.record @defaults("domain rtype rdata") {
+  // Fully-qualified domain name the record answers for
+  domain string
+  // Record type (A, AAAA, CNAME, MX, TXT, NS, SRV, CAA, and others)
+  rtype string
+  // Record data, in the presentation format for its type
+  rdata string
+  // Time-to-live in seconds
+  ttl int
+  // Whether the record is managed by OCI and cannot be modified
+  isProtected bool
+  // Version of the record set this record belongs to
+  rrsetVersion string
+}
+
+// Oracle Cloud Infrastructure (OCI) DNS steering policy
+//
+// Rule set that decides which answer a resolver receives for a name,
+// keyed by its OCID. `template` names the behavior: FAILOVER,
+// LOAD_BALANCE, ROUTE_BY_GEO, ROUTE_BY_ASN, ROUTE_BY_IP, or CUSTOM.
+// Geo and IP routing decide answers from client location, so the policy
+// is part of understanding what a given client actually resolves.
+private oci.dns.steeringPolicy @defaults("name template state") {
+  // Steering policy OCID
+  id string
+  // Steering policy display name
+  name string
+  // Compartment containing the steering policy
+  compartment() oci.compartment
+  // Policy behavior (FAILOVER, LOAD_BALANCE, ROUTE_BY_GEO, ROUTE_BY_ASN, ROUTE_BY_IP, CUSTOM)
+  template string
+  // Time-to-live applied to answers this policy produces, in seconds
+  ttl int
+  // Health check monitor driving failover decisions
+  healthCheckMonitorId string
+  // Policy lifecycle state (ACTIVE, CREATING, UPDATING, DELETING, DELETED)
+  state string
+  // Policy creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
 // Oracle Cloud Infrastructure (OCI) Network Firewall
 //
 // Next-generation firewall deployments in the tenancy. The
