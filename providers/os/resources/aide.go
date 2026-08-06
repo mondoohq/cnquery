@@ -206,6 +206,17 @@ func (a *mqlAide) installed() (bool, error) {
 }
 
 func (a *mqlAide) version() (string, error) {
+	// no point running the binary on a host that carries no AIDE at all; the
+	// version is simply unknown there
+	installed, err := a.installed()
+	if err != nil {
+		return "", err
+	}
+	if !installed {
+		a.Version.State = plugin.StateIsSet | plugin.StateIsNull
+		return "", nil
+	}
+
 	o, err := CreateResource(a.MqlRuntime, "command", map[string]*llx.RawData{
 		"command": llx.StringData("aide --version"),
 	})
