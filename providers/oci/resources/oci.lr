@@ -3208,6 +3208,111 @@ private oci.networkLoadBalancer.backend @defaults("name port") {
   isOffline bool
 }
 
+// Oracle Cloud Infrastructure (OCI) Resource Manager
+//
+// Terraform stacks managed by Resource Manager, and the jobs that have
+// run against them. A stack's `driftStatus` reports whether the deployed
+// infrastructure still matches the configuration that declared it, which
+// is the signal that something was changed outside the pipeline that is
+// supposed to own it. `configSource` records where the Terraform
+// configuration comes from, so a stack fed from an external Git
+// repository is distinguishable from one uploaded as a zip.
+oci.resourceManager {
+  // Terraform stacks
+  stacks() []oci.resourceManager.stack
+}
+
+// Oracle Cloud Infrastructure (OCI) Resource Manager stack
+//
+// Single Terraform stack, keyed by its OCID. `driftStatus` is IN_SYNC,
+// DRIFTED, or NOT_CHECKED, and `driftLastChecked` records when that
+// verdict was produced. NOT_CHECKED matters as much as DRIFTED: a stack
+// whose drift has never been evaluated offers no assurance that the
+// running infrastructure matches its declaration, and a `driftLastChecked`
+// far in the past means the same thing. `jobs` lists the plan, apply,
+// destroy and drift-detection runs against the stack, which is the
+// change history for everything the stack manages.
+private oci.resourceManager.stack @defaults("name driftStatus state") {
+  // Stack OCID
+  id string
+  // Stack display name
+  name string
+  // Stack description
+  description string
+  // Compartment containing the stack
+  compartment() oci.compartment
+  // Terraform version the stack runs
+  terraformVersion string
+  // Whether the deployed infrastructure matches the configuration (IN_SYNC, DRIFTED, NOT_CHECKED)
+  driftStatus() string
+  // When drift was last evaluated
+  //
+  // Null when `driftStatus` is NOT_CHECKED. A timestamp far in the past
+  // means the IN_SYNC or DRIFTED verdict describes the stack as it was
+  // then, not as it is now.
+  driftLastChecked() time
+  // Where the Terraform configuration is loaded from
+  //
+  // Has a `configSourceType` of ZIP_UPLOAD, GIT_CONFIG_SOURCE,
+  // COMPARTMENT_CONFIG_SOURCE, OBJECT_STORAGE_CONFIG_SOURCE,
+  // DEVOPS_CONFIG_SOURCE, BITBUCKET_CLOUD_CONFIG_SOURCE, or
+  // BITBUCKET_SERVER_CONFIG_SOURCE, plus a `workingDirectory`. Git-backed
+  // sources also carry the `configurationSourceProviderId`,
+  // `repositoryUrl`, and `branchName` naming the external repository the
+  // configuration comes from.
+  configSource() dict
+  // Names of the Terraform variables set on the stack
+  //
+  // Names only. Resource Manager stores variable values as plain strings
+  // with no sensitivity marking, so they routinely hold passwords, tokens,
+  // and keys; returning them would copy those secrets into every scan
+  // result. The names are enough to find a stack carrying credentials it
+  // should be sourcing from Vault.
+  variableNames() []string
+  // Whether the stack may use third-party Terraform providers
+  isThirdPartyProviderExperienceEnabled() bool
+  // Jobs run against the stack
+  jobs() []oci.resourceManager.job
+  // Stack lifecycle state (CREATING, ACTIVE, DELETING, DELETED, FAILED)
+  state string
+  // Stack creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
+}
+
+// Oracle Cloud Infrastructure (OCI) Resource Manager job
+//
+// Single run against a stack, keyed by its OCID. `operation` is PLAN,
+// APPLY, DESTROY, IMPORT_TF_STATE, or PLAN_ROLLBACK and APPLY_ROLLBACK,
+// so the job list is the record of who changed the managed
+// infrastructure and when. `state` reports whether the run succeeded,
+// and `finished` when it ended.
+private oci.resourceManager.job @defaults("name operation state") {
+  // Job OCID
+  id string
+  // Job display name
+  name string
+  // Compartment containing the job
+  compartment() oci.compartment
+  // Operation the job performed (PLAN, APPLY, DESTROY, IMPORT_TF_STATE, PLAN_ROLLBACK, APPLY_ROLLBACK)
+  operation string
+  // Job lifecycle state (ACCEPTED, IN_PROGRESS, FAILED, SUCCEEDED, CANCELING, CANCELED)
+  state string
+  // Job start time
+  created time
+  // Job completion time
+  finished time
+}
+
 // Oracle Cloud Infrastructure (OCI) Streaming
 //
 // Kafka-compatible streams in the tenancy and the pools that host them.

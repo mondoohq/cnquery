@@ -48,6 +48,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/psql"
 	"github.com/oracle/oci-go-sdk/v65/queue"
 	"github.com/oracle/oci-go-sdk/v65/redis"
+	"github.com/oracle/oci-go-sdk/v65/resourcemanager"
 	"github.com/oracle/oci-go-sdk/v65/sch"
 	"github.com/oracle/oci-go-sdk/v65/streaming"
 	"github.com/oracle/oci-go-sdk/v65/vault"
@@ -178,6 +179,15 @@ func (c *OciConnection) NetworkClient(region string) (*core.VirtualNetworkClient
 
 func (c *OciConnection) AuditClient(region string) (*audit.AuditClient, error) {
 	client, err := audit.NewAuditClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) ResourceManagerClient(region string) (*resourcemanager.ResourceManagerClient, error) {
+	client, err := resourcemanager.NewResourceManagerClientWithConfigurationProvider(c.config)
 	if err != nil {
 		return nil, err
 	}

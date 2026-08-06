@@ -109,6 +109,9 @@ const (
 	ResourceOciNetworkLoadBalancerListener                           string = "oci.networkLoadBalancer.listener"
 	ResourceOciNetworkLoadBalancerBackendSet                         string = "oci.networkLoadBalancer.backendSet"
 	ResourceOciNetworkLoadBalancerBackend                            string = "oci.networkLoadBalancer.backend"
+	ResourceOciResourceManager                                       string = "oci.resourceManager"
+	ResourceOciResourceManagerStack                                  string = "oci.resourceManager.stack"
+	ResourceOciResourceManagerJob                                    string = "oci.resourceManager.job"
 	ResourceOciStreaming                                             string = "oci.streaming"
 	ResourceOciStreamingStream                                       string = "oci.streaming.stream"
 	ResourceOciStreamingStreamPool                                   string = "oci.streaming.streamPool"
@@ -593,6 +596,18 @@ func init() {
 		"oci.networkLoadBalancer.backend": {
 			// to override args, implement: initOciNetworkLoadBalancerBackend(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciNetworkLoadBalancerBackend,
+		},
+		"oci.resourceManager": {
+			// to override args, implement: initOciResourceManager(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciResourceManager,
+		},
+		"oci.resourceManager.stack": {
+			// to override args, implement: initOciResourceManagerStack(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciResourceManagerStack,
+		},
+		"oci.resourceManager.job": {
+			// to override args, implement: initOciResourceManagerJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciResourceManagerJob,
 		},
 		"oci.streaming": {
 			// to override args, implement: initOciStreaming(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4017,6 +4032,78 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.networkLoadBalancer.backend.isOffline": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkLoadBalancerBackend).GetIsOffline()).ToDataRes(types.Bool)
+	},
+	"oci.resourceManager.stacks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManager).GetStacks()).ToDataRes(types.Array(types.Resource("oci.resourceManager.stack")))
+	},
+	"oci.resourceManager.stack.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetId()).ToDataRes(types.String)
+	},
+	"oci.resourceManager.stack.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetName()).ToDataRes(types.String)
+	},
+	"oci.resourceManager.stack.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.resourceManager.stack.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.resourceManager.stack.terraformVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetTerraformVersion()).ToDataRes(types.String)
+	},
+	"oci.resourceManager.stack.driftStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetDriftStatus()).ToDataRes(types.String)
+	},
+	"oci.resourceManager.stack.driftLastChecked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetDriftLastChecked()).ToDataRes(types.Time)
+	},
+	"oci.resourceManager.stack.configSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetConfigSource()).ToDataRes(types.Dict)
+	},
+	"oci.resourceManager.stack.variableNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetVariableNames()).ToDataRes(types.Array(types.String))
+	},
+	"oci.resourceManager.stack.isThirdPartyProviderExperienceEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetIsThirdPartyProviderExperienceEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.resourceManager.stack.jobs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetJobs()).ToDataRes(types.Array(types.Resource("oci.resourceManager.job")))
+	},
+	"oci.resourceManager.stack.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetState()).ToDataRes(types.String)
+	},
+	"oci.resourceManager.stack.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.resourceManager.stack.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.resourceManager.stack.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.resourceManager.stack.systemTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.resourceManager.job.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerJob).GetId()).ToDataRes(types.String)
+	},
+	"oci.resourceManager.job.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerJob).GetName()).ToDataRes(types.String)
+	},
+	"oci.resourceManager.job.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerJob).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.resourceManager.job.operation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerJob).GetOperation()).ToDataRes(types.String)
+	},
+	"oci.resourceManager.job.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerJob).GetState()).ToDataRes(types.String)
+	},
+	"oci.resourceManager.job.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerJob).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.resourceManager.job.finished": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerJob).GetFinished()).ToDataRes(types.Time)
 	},
 	"oci.streaming.streams": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciStreaming).GetStreams()).ToDataRes(types.Array(types.Resource("oci.streaming.stream")))
@@ -12182,6 +12269,114 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.networkLoadBalancer.backend.isOffline": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkLoadBalancerBackend).IsOffline, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManager).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.resourceManager.stacks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManager).Stacks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.resourceManager.stack.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.terraformVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).TerraformVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.driftStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).DriftStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.driftLastChecked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).DriftLastChecked, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.configSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).ConfigSource, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.variableNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).VariableNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.isThirdPartyProviderExperienceEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).IsThirdPartyProviderExperienceEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.jobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).Jobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.job.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerJob).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.resourceManager.job.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerJob).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.job.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerJob).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.job.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerJob).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.job.operation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerJob).Operation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.job.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerJob).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.job.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerJob).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.job.finished": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerJob).Finished, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"oci.streaming.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -29218,6 +29413,316 @@ func (c *mqlOciNetworkLoadBalancerBackend) GetIsBackup() *plugin.TValue[bool] {
 
 func (c *mqlOciNetworkLoadBalancerBackend) GetIsOffline() *plugin.TValue[bool] {
 	return &c.IsOffline
+}
+
+// mqlOciResourceManager for the oci.resourceManager resource
+type mqlOciResourceManager struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciResourceManagerInternal it will be used here
+	Stacks plugin.TValue[[]any]
+}
+
+// createOciResourceManager creates a new instance of this resource
+func createOciResourceManager(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciResourceManager{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.resourceManager", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciResourceManager) MqlName() string {
+	return "oci.resourceManager"
+}
+
+func (c *mqlOciResourceManager) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciResourceManager) GetStacks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Stacks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.resourceManager", c.__id, "stacks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.stacks()
+	})
+}
+
+// mqlOciResourceManagerStack for the oci.resourceManager.stack resource
+type mqlOciResourceManagerStack struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciResourceManagerStackInternal
+	Id                                    plugin.TValue[string]
+	Name                                  plugin.TValue[string]
+	Description                           plugin.TValue[string]
+	Compartment                           plugin.TValue[*mqlOciCompartment]
+	TerraformVersion                      plugin.TValue[string]
+	DriftStatus                           plugin.TValue[string]
+	DriftLastChecked                      plugin.TValue[*time.Time]
+	ConfigSource                          plugin.TValue[any]
+	VariableNames                         plugin.TValue[[]any]
+	IsThirdPartyProviderExperienceEnabled plugin.TValue[bool]
+	Jobs                                  plugin.TValue[[]any]
+	State                                 plugin.TValue[string]
+	Created                               plugin.TValue[*time.Time]
+	FreeformTags                          plugin.TValue[map[string]any]
+	DefinedTags                           plugin.TValue[map[string]any]
+	SystemTags                            plugin.TValue[map[string]any]
+}
+
+// createOciResourceManagerStack creates a new instance of this resource
+func createOciResourceManagerStack(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciResourceManagerStack{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.resourceManager.stack", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciResourceManagerStack) MqlName() string {
+	return "oci.resourceManager.stack"
+}
+
+func (c *mqlOciResourceManagerStack) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciResourceManagerStack) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciResourceManagerStack) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciResourceManagerStack) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciResourceManagerStack) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.resourceManager.stack", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciResourceManagerStack) GetTerraformVersion() *plugin.TValue[string] {
+	return &c.TerraformVersion
+}
+
+func (c *mqlOciResourceManagerStack) GetDriftStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DriftStatus, func() (string, error) {
+		return c.driftStatus()
+	})
+}
+
+func (c *mqlOciResourceManagerStack) GetDriftLastChecked() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.DriftLastChecked, func() (*time.Time, error) {
+		return c.driftLastChecked()
+	})
+}
+
+func (c *mqlOciResourceManagerStack) GetConfigSource() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ConfigSource, func() (any, error) {
+		return c.configSource()
+	})
+}
+
+func (c *mqlOciResourceManagerStack) GetVariableNames() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VariableNames, func() ([]any, error) {
+		return c.variableNames()
+	})
+}
+
+func (c *mqlOciResourceManagerStack) GetIsThirdPartyProviderExperienceEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsThirdPartyProviderExperienceEnabled, func() (bool, error) {
+		return c.isThirdPartyProviderExperienceEnabled()
+	})
+}
+
+func (c *mqlOciResourceManagerStack) GetJobs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Jobs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.resourceManager.stack", c.__id, "jobs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.jobs()
+	})
+}
+
+func (c *mqlOciResourceManagerStack) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciResourceManagerStack) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciResourceManagerStack) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciResourceManagerStack) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+func (c *mqlOciResourceManagerStack) GetSystemTags() *plugin.TValue[map[string]any] {
+	return &c.SystemTags
+}
+
+// mqlOciResourceManagerJob for the oci.resourceManager.job resource
+type mqlOciResourceManagerJob struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciResourceManagerJobInternal
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Compartment plugin.TValue[*mqlOciCompartment]
+	Operation   plugin.TValue[string]
+	State       plugin.TValue[string]
+	Created     plugin.TValue[*time.Time]
+	Finished    plugin.TValue[*time.Time]
+}
+
+// createOciResourceManagerJob creates a new instance of this resource
+func createOciResourceManagerJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciResourceManagerJob{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.resourceManager.job", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciResourceManagerJob) MqlName() string {
+	return "oci.resourceManager.job"
+}
+
+func (c *mqlOciResourceManagerJob) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciResourceManagerJob) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciResourceManagerJob) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciResourceManagerJob) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.resourceManager.job", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciResourceManagerJob) GetOperation() *plugin.TValue[string] {
+	return &c.Operation
+}
+
+func (c *mqlOciResourceManagerJob) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciResourceManagerJob) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciResourceManagerJob) GetFinished() *plugin.TValue[*time.Time] {
+	return &c.Finished
 }
 
 // mqlOciStreaming for the oci.streaming resource
