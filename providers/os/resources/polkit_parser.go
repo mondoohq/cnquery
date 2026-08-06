@@ -299,7 +299,7 @@ func scanPolkitRuleBody(body string) (literals []string, code string) {
 
 			if runes[i+1] == '*' {
 				i += 2
-				for i+1 < len(runes) && !(runes[i] == '*' && runes[i+1] == '/') {
+				for i+1 < len(runes) && (runes[i] != '*' || runes[i+1] != '/') {
 					i++
 				}
 				// land on the closing slash; the loop steps past it
