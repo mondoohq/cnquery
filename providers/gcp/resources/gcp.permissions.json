@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.34.1",
-  "generated_at": "2026-08-05T17:39:09+02:00",
+  "generated_at": "2026-08-06T16:51:59+02:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.batchPredictionJobs.list",
@@ -64,6 +64,7 @@
     "certificatemanager.dnsauthorizations.get",
     "certificatemanager.dnsauthorizations.list",
     "certificatemanager.trustconfigs.list",
+    "cloudasset.assets.analyzeIamPolicy",
     "cloudasset.assets.searchAllIamPolicies",
     "cloudasset.assets.searchAllResources",
     "cloudbuild.builds.list",
@@ -188,6 +189,8 @@
     "gkebackup.backupPlans.list",
     "gkebackup.restorePlans.list",
     "iam.denypolicies.list",
+    "iam.policyBindings.list",
+    "iam.principalAccessBoundaryPolicies.list",
     "iam.roles.list",
     "iam.serviceAccountKeys.list",
     "iam.serviceAccounts.getIamPolicy",
@@ -234,6 +237,7 @@
     "networksecurity.urlLists.list",
     "orgpolicy.constraints.list",
     "orgpolicy.policies.list",
+    "orgpolicy.policy.get",
     "osconfig.inventories.get",
     "osconfig.osPolicyAssignments.list",
     "osconfig.patchDeployments.list",
@@ -648,6 +652,12 @@
       "source_file": "certificatemanager.go"
     },
     {
+      "permission": "cloudasset.assets.analyzeIamPolicy",
+      "service": "cloudasset",
+      "action": "AnalyzeIamPolicy",
+      "source_file": "asset_access_analysis.go"
+    },
+    {
       "permission": "cloudasset.assets.searchAllIamPolicies",
       "service": "cloudasset",
       "action": "SearchAllIamPolicies",
@@ -1023,6 +1033,12 @@
       "permission": "compute.regions.list",
       "service": "compute",
       "action": "Regions.List",
+      "source_file": "insights.go"
+    },
+    {
+      "permission": "compute.regions.list",
+      "service": "compute",
+      "action": "Regions.List",
       "source_file": "recommendations.go"
     },
     {
@@ -1150,6 +1166,12 @@
       "service": "compute",
       "action": "Zones.List",
       "source_file": "compute.go"
+    },
+    {
+      "permission": "compute.zones.list",
+      "service": "compute",
+      "action": "Zones.List",
+      "source_file": "insights.go"
     },
     {
       "permission": "compute.zones.list",
@@ -1452,6 +1474,18 @@
       "source_file": "iam.go"
     },
     {
+      "permission": "iam.policyBindings.list",
+      "service": "iam",
+      "action": "ListPolicyBindings",
+      "source_file": "iam_pab.go"
+    },
+    {
+      "permission": "iam.principalAccessBoundaryPolicies.list",
+      "service": "iam",
+      "action": "ListPrincipalAccessBoundaryPolicies",
+      "source_file": "iam_pab.go"
+    },
+    {
       "permission": "iam.roles.list",
       "service": "iam",
       "action": "ListRolesIter",
@@ -1733,6 +1767,12 @@
       "service": "orgpolicy",
       "action": "ListPolicies",
       "source_file": "orgpolicy.go"
+    },
+    {
+      "permission": "orgpolicy.policy.get",
+      "service": "orgpolicy",
+      "action": "GetEffectivePolicy",
+      "source_file": "orgpolicy_effective.go"
     },
     {
       "permission": "osconfig.inventories.get",
