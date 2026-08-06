@@ -66,6 +66,10 @@ func eventSubscriptionDestination(dest eventgrid.EventSubscriptionDestinationCla
 		if d.Properties != nil {
 			endpoint = convert.ToValue(d.Properties.ResourceID)
 		}
+	case *eventgrid.NamespaceTopicEventSubscriptionDestination:
+		if d.Properties != nil {
+			endpoint = convert.ToValue(d.Properties.ResourceID)
+		}
 	case *eventgrid.MonitorAlertEventSubscriptionDestination:
 		// A monitor alert has no single resource target; the action groups it
 		// notifies are carried in its own properties.

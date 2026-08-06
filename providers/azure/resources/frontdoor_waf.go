@@ -88,13 +88,21 @@ func initAzureSubscriptionFrontDoorServiceWafPolicy(runtime *plugin.Runtime, arg
 	if len(args) > 2 {
 		return args, nil, nil
 	}
+	// A bare query with no id is a valid empty state, so the key being absent
+	// passes through and the runtime builds an empty resource. A key that is
+	// present but unusable is different: an empty or non-string id can never
+	// resolve, and passing it through would build a husk whose every field is
+	// unset, so those report an error instead.
 	idRaw := args["id"]
 	if idRaw == nil {
 		return args, nil, nil
 	}
 	policyID, ok := idRaw.Value.(string)
-	if !ok || policyID == "" {
-		return args, nil, nil
+	if !ok {
+		return nil, nil, errors.New("azure.subscription.frontDoorService.wafPolicy: id must be a string")
+	}
+	if policyID == "" {
+		return nil, nil, errors.New("azure.subscription.frontDoorService.wafPolicy: id must not be empty")
 	}
 
 	conn, ok := runtime.Connection.(*connection.AzureConnection)

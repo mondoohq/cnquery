@@ -13406,8 +13406,8 @@ private azure.subscription.eventGridService.eventSubscription @defaults("name de
   //
   // One of "WebHook", "EventHub", "StorageQueue", "ServiceBusQueue",
   // "ServiceBusTopic", "AzureFunction", "HybridConnection",
-  // "PartnerDestination", or "MonitorAlert". A "WebHook" destination is
-  // an arbitrary HTTPS endpoint and is the only one that can point outside
+  // "NamespaceTopic", or "MonitorAlert". A "WebHook" destination is an
+  // arbitrary HTTPS endpoint and is the only one that can point outside
   // Azure entirely.
   destinationType string
   // Where events are delivered
