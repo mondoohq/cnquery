@@ -156,7 +156,7 @@ func (g *mqlGcpProjectContainerAnalysisService) notes() ([]any, error) {
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list Container Analysis notes")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
@@ -243,7 +243,7 @@ func (g *mqlGcpProjectContainerAnalysisService) occurrences() ([]any, error) {
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list Container Analysis occurrences")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}

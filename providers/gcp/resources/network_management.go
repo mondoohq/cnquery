@@ -163,8 +163,9 @@ func (g *mqlGcpProjectNetworkManagementService) connectivityTests() ([]any, erro
 		}
 		if err != nil {
 			if isGRPCSkippable(err) {
-				log.Warn().Err(err).Str("project", projectId).Msg("could not list connectivity tests")
-				return nil, nil
+				// break rather than discard: keep the tests already returned.
+				log.Warn().Err(err).Str("project", projectId).Msg("could not list all connectivity tests")
+				break
 			}
 			return nil, err
 		}

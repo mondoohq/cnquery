@@ -101,7 +101,7 @@ func (g *mqlGcpProjectCertificateAuthorityService) caPools() ([]any, error) {
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list resources (API disabled or access denied), skipping")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
@@ -240,7 +240,7 @@ func (g *mqlGcpProjectCertificateAuthorityServiceCaPool) certificateAuthorities(
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list resources (API disabled or access denied), skipping")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
@@ -373,7 +373,7 @@ func (g *mqlGcpProjectCertificateAuthorityServiceCaPool) certificates() ([]any, 
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list resources (API disabled or access denied), skipping")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
@@ -491,7 +491,7 @@ func (g *mqlGcpProjectCertificateAuthorityServiceCertificateAuthority) certifica
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list resources (API disabled or access denied), skipping")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
@@ -568,7 +568,7 @@ func (g *mqlGcpProjectCertificateAuthorityService) certificateTemplates() ([]any
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list resources (API disabled or access denied), skipping")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}

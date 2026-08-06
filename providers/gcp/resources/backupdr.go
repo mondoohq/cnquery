@@ -98,7 +98,7 @@ func (g *mqlGcpProjectBackupdrService) managementServers() ([]any, error) {
 		if err != nil {
 			if isBackupDRSkippable(err) {
 				log.Warn().Err(err).Msg("could not list Backup DR management servers")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
@@ -175,7 +175,7 @@ func (g *mqlGcpProjectBackupdrService) backupVaults() ([]any, error) {
 		if err != nil {
 			if isBackupDRSkippable(err) {
 				log.Warn().Err(err).Msg("could not list Backup DR backup vaults")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
@@ -242,7 +242,7 @@ func (g *mqlGcpProjectBackupdrServiceBackupVault) dataSources() ([]any, error) {
 		if err != nil {
 			if isBackupDRSkippable(err) {
 				log.Warn().Err(err).Msg("could not list Backup DR data sources")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
@@ -313,7 +313,7 @@ func (g *mqlGcpProjectBackupdrService) backupPlans() ([]any, error) {
 		if err != nil {
 			if isBackupDRSkippable(err) {
 				log.Warn().Err(err).Msg("could not list Backup DR backup plans")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}

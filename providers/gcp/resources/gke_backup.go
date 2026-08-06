@@ -125,7 +125,7 @@ func (g *mqlGcpProjectGkeBackupService) backupPlans() ([]any, error) {
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list GKE Backup backup plans")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
@@ -219,7 +219,7 @@ func (g *mqlGcpProjectGkeBackupService) restorePlans() ([]any, error) {
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list GKE Backup restore plans")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}

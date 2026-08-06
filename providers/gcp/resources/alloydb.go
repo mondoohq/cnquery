@@ -85,7 +85,7 @@ func (g *mqlGcpProjectAlloydbService) clusters() ([]any, error) {
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list AlloyDB clusters")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
@@ -339,7 +339,7 @@ func (g *mqlGcpProjectAlloydbServiceCluster) users() ([]any, error) {
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list AlloyDB users")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
@@ -488,7 +488,7 @@ func (g *mqlGcpProjectAlloydbServiceCluster) instances() ([]any, error) {
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list AlloyDB instances")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
@@ -649,7 +649,7 @@ func (g *mqlGcpProjectAlloydbServiceCluster) backups() ([]any, error) {
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list AlloyDB backups")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
