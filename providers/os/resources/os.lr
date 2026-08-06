@@ -4555,6 +4555,247 @@ containerd.container @defaults("id status") {
   snapshotter string
 }
 
+// Podman container engine
+//
+// Workloads managed by Podman, together with the engine settings that apply to
+// all of them. `rootless` reports whether the engine runs without root, which
+// changes what a container escape is worth, and `seccompEnabled`,
+// `apparmorEnabled`, and `selinuxEnabled` report which confinement mechanisms
+// the host makes available. `containers`, `images`, `pods`, `volumes`, and
+// `networks` inventory the workloads themselves. On RedHat-family hosts Podman
+// is the default engine and Docker is often absent, so this is where those
+// workloads are found.
+podman @defaults("installed version rootless") {
+  // Whether the podman binary is present on the system
+  installed() bool
+  // Podman release reported by the engine (e.g., 5.3.1)
+  version() string
+  // Whether the engine runs without root privileges
+  //
+  // A rootless engine maps container root to an unprivileged host account, so a
+  // container escape lands with far less authority than under a rootful engine.
+  rootless() bool
+  // Cgroup manager driving resource limits (e.g., systemd, cgroupfs)
+  cgroupManager() string
+  // Cgroup hierarchy version in use (e.g., v1, v2)
+  cgroupVersion() string
+  // OCI runtime that starts containers (e.g., crun, runc)
+  ociRuntime() string
+  // Network backend in use (e.g., netavark, cni)
+  networkBackend() string
+  // Storage driver backing container filesystems (e.g., overlay, vfs)
+  storageDriver() string
+  // Whether seccomp filtering is available to containers
+  seccompEnabled() bool
+  // Path of the default seccomp profile applied to containers
+  seccompProfilePath() string
+  // Whether AppArmor confinement is available to containers
+  apparmorEnabled() bool
+  // Whether SELinux confinement is available to containers
+  selinuxEnabled() bool
+  // All containers, running and stopped
+  containers() []podman.container
+  // All images stored on the host
+  images() []podman.image
+  // All pods defined on the host
+  pods() []podman.pod
+  // All volumes defined on the host
+  volumes() []podman.volume
+  // All networks defined on the host
+  networks() []podman.network
+}
+
+// Podman container
+//
+// Single container managed by Podman, selected by `id`. The privilege fields
+// describe what the container can reach on the host: `privileged` disables
+// nearly every confinement at once, `effectiveCapabilities` is the capability
+// set the main process actually starts with, and `securityOptions` records
+// where a seccomp, AppArmor, or SELinux profile was turned off. Prefer
+// `effectiveCapabilities` and `boundingCapabilities` over `capAdd` and
+// `capDrop` for an audit: the engine folds a dropped capability into the
+// resulting set rather than echoing it back, so a dropped capability leaves
+// `capDrop` empty while the effective set shrinks.
+podman.container @defaults("name state imageName") {
+  init(id string)
+  // Container ID
+  id string
+  // Primary container name
+  name string
+  // Every name assigned to the container
+  names []string
+  // Image reference the container was created from (`repo:tag`)
+  imageName string
+  // ID of the image the container was created from
+  imageId string
+  // Image the container was created from
+  image() podman.image
+  // Command line the container runs as its main process
+  command []string
+  // Lifecycle state (e.g., created, running, paused, exited, stopped)
+  state string
+  // Human-readable status message (e.g., "Up 3 hours")
+  status string
+  // Container labels, as key-value pairs
+  labels map[string]string
+  // Whether this is a pod's infrastructure container rather than a workload
+  isInfra bool
+  // Exit code of the main process, 0 while the container has not exited
+  exitCode int
+  // Time the container was created
+  createdAt time
+  // Pod the container belongs to, null when it belongs to none
+  pod() podman.pod
+  // Names of the networks the container is attached to
+  networks []string
+  // Published port mappings, each with the host and container port and protocol
+  ports []dict
+
+  // Whether the container runs privileged
+  //
+  // A privileged container keeps every capability, drops the seccomp and device
+  // restrictions, and can reach host devices directly, so it is close to
+  // running as root on the host.
+  privileged() bool
+  // Capabilities requested in addition to the engine default
+  capAdd() []string
+  // Capabilities requested to be removed from the engine default
+  //
+  // Often empty even when a capability was dropped, because the engine applies
+  // the removal to the resulting set rather than recording the request. Read
+  // `boundingCapabilities` to see what the container is actually left with.
+  capDrop() []string
+  // Capabilities the main process starts with
+  effectiveCapabilities() []string
+  // Upper bound on capabilities the container can ever hold
+  boundingCapabilities() []string
+  // Security options applied to the container
+  //
+  // Entries such as `seccomp=unconfined`, `label=disable`, or
+  // `apparmor=unconfined`, each of which turns off a confinement mechanism the
+  // engine would otherwise apply.
+  securityOptions() []string
+  // Whether the container's root filesystem is read-only
+  readOnlyRootfs() bool
+  // Account the main process runs as, empty when it runs as root
+  user() string
+  // Network mode (e.g., bridge, host, none, container:<id>)
+  networkMode() string
+  // PID namespace mode (e.g., private, host)
+  pidMode() string
+  // User namespace mode, empty when the container shares the engine's
+  usernsMode() string
+  // Restart policy name (e.g., no, always, on-failure, unless-stopped)
+  restartPolicy() string
+}
+
+// Podman image
+//
+// Single image stored by Podman, selected by `id`. `names` holds every
+// reference the image is tagged with and `repoDigests` the content-addressed
+// references it was pulled by, which is what pins an image to an exact build
+// rather than to a moving tag.
+podman.image @defaults("repository tag size") {
+  init(id string)
+  // Image ID
+  id string
+  // Every reference the image is tagged with
+  names []string
+  // Repository of the first reference (e.g., docker.io/library/debian)
+  repository string
+  // Tag of the first reference (e.g., 13, latest)
+  tag string
+  // Content-addressed references the image can be pulled by
+  repoDigests []string
+  // Manifest digest of the image
+  digest string
+  // Size of the image in bytes
+  size int
+  // Image labels, as key-value pairs
+  labels map[string]string
+  // Operating system the image targets (e.g., linux)
+  os string
+  // Processor architecture the image targets (e.g., amd64, arm64)
+  architecture string
+  // Time the image was built
+  createdAt time
+}
+
+// Podman pod
+//
+// Group of containers sharing namespaces, selected by `id`. Every pod runs an
+// infrastructure container that owns the shared namespaces, reported by
+// `infraContainer`, and the workload containers are reported by `containers`.
+podman.pod @defaults("name status") {
+  init(id string)
+  // Pod ID
+  id string
+  // Pod name
+  name string
+  // Pod status (e.g., Running, Degraded, Stopped, Created, Exited)
+  status string
+  // Time the pod was created
+  createdAt time
+  // Pod labels, as key-value pairs
+  labels map[string]string
+  // Infrastructure container owning the pod's shared namespaces
+  infraContainer() podman.container
+  // Containers belonging to the pod
+  containers() []podman.container
+}
+
+// Podman volume
+//
+// Storage volume defined by Podman, selected by `name`. `mountpoint` is the
+// host path backing the volume, which is what a container writing to the volume
+// ultimately writes to.
+podman.volume @defaults("name driver mountpoint") {
+  init(name string)
+  // Volume name
+  name string
+  // Volume driver (e.g., local)
+  driver string
+  // Host path backing the volume
+  mountpoint string
+  // Time the volume was created
+  createdAt time
+  // Volume labels, as key-value pairs
+  labels map[string]string
+  // Driver options, as key-value pairs
+  options map[string]string
+  // Volume scope (e.g., local)
+  scope string
+  // Whether the volume was created without a name and is removed with its container
+  anonymous bool
+}
+
+// Podman network
+//
+// Network defined by Podman, selected by `name`. `internal` marks a network
+// with no route to the outside, and `subnets` holds the address ranges
+// containers on it receive.
+podman.network @defaults("name driver internal") {
+  init(name string)
+  // Network ID
+  id string
+  // Network name
+  name string
+  // Network driver (e.g., bridge, macvlan, ipvlan, host)
+  driver string
+  // Host interface backing the network (e.g., podman0)
+  networkInterface string
+  // Address ranges assigned to containers, each with its subnet and gateway
+  subnets []dict
+  // Whether IPv6 is enabled on the network
+  ipv6Enabled bool
+  // Whether the network is cut off from any route to the outside
+  internal bool
+  // Whether the engine resolves container names on this network
+  dnsEnabled bool
+  // Time the network was created
+  createdAt time
+}
+
 // IPv4 packet filter (iptables)
 //
 // The host's IPv4 iptables ruleset: every `tables` entry (filter, nat, mangle,
