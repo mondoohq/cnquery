@@ -145,6 +145,8 @@ const (
 	ResourceSystemdSockets                                string = "systemd.sockets"
 	ResourceSystemdTarget                                 string = "systemd.target"
 	ResourceSystemdTargets                                string = "systemd.targets"
+	ResourceSystemdUnit                                   string = "systemd.unit"
+	ResourceSystemdUnits                                  string = "systemd.units"
 	ResourceSystemdResolved                               string = "systemd.resolved"
 	ResourceSystemdTimesyncd                              string = "systemd.timesyncd"
 	ResourceKernel                                        string = "kernel"
@@ -1048,6 +1050,14 @@ func init() {
 		"systemd.targets": {
 			// to override args, implement: initSystemdTargets(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createSystemdTargets,
+		},
+		"systemd.unit": {
+			Init:   initSystemdUnit,
+			Create: createSystemdUnit,
+		},
+		"systemd.units": {
+			// to override args, implement: initSystemdUnits(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSystemdUnits,
 		},
 		"systemd.resolved": {
 			// to override args, implement: initSystemdResolved(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5668,6 +5678,138 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"systemd.targets.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSystemdTargets).GetList()).ToDataRes(types.Array(types.Resource("systemd.target")))
+	},
+	"systemd.unit.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetName()).ToDataRes(types.String)
+	},
+	"systemd.unit.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetDescription()).ToDataRes(types.String)
+	},
+	"systemd.unit.installed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetInstalled()).ToDataRes(types.Bool)
+	},
+	"systemd.unit.fragmentPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetFragmentPath()).ToDataRes(types.String)
+	},
+	"systemd.unit.loadState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetLoadState()).ToDataRes(types.String)
+	},
+	"systemd.unit.activeState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetActiveState()).ToDataRes(types.String)
+	},
+	"systemd.unit.unitFileState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetUnitFileState()).ToDataRes(types.String)
+	},
+	"systemd.unit.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetType()).ToDataRes(types.String)
+	},
+	"systemd.unit.execStart": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetExecStart()).ToDataRes(types.String)
+	},
+	"systemd.unit.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetUser()).ToDataRes(types.String)
+	},
+	"systemd.unit.group": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetGroup()).ToDataRes(types.String)
+	},
+	"systemd.unit.dynamicUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetDynamicUser()).ToDataRes(types.Bool)
+	},
+	"systemd.unit.umask": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetUmask()).ToDataRes(types.String)
+	},
+	"systemd.unit.noNewPrivileges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetNoNewPrivileges()).ToDataRes(types.Bool)
+	},
+	"systemd.unit.protectSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetProtectSystem()).ToDataRes(types.String)
+	},
+	"systemd.unit.protectHome": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetProtectHome()).ToDataRes(types.String)
+	},
+	"systemd.unit.privateTmp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetPrivateTmp()).ToDataRes(types.Bool)
+	},
+	"systemd.unit.privateDevices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetPrivateDevices()).ToDataRes(types.Bool)
+	},
+	"systemd.unit.privateNetwork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetPrivateNetwork()).ToDataRes(types.Bool)
+	},
+	"systemd.unit.privateUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetPrivateUsers()).ToDataRes(types.Bool)
+	},
+	"systemd.unit.protectKernelTunables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetProtectKernelTunables()).ToDataRes(types.Bool)
+	},
+	"systemd.unit.protectKernelModules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetProtectKernelModules()).ToDataRes(types.Bool)
+	},
+	"systemd.unit.protectKernelLogs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetProtectKernelLogs()).ToDataRes(types.Bool)
+	},
+	"systemd.unit.protectControlGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetProtectControlGroups()).ToDataRes(types.String)
+	},
+	"systemd.unit.protectClock": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetProtectClock()).ToDataRes(types.Bool)
+	},
+	"systemd.unit.protectHostname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetProtectHostname()).ToDataRes(types.Bool)
+	},
+	"systemd.unit.protectProc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetProtectProc()).ToDataRes(types.String)
+	},
+	"systemd.unit.procSubset": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetProcSubset()).ToDataRes(types.String)
+	},
+	"systemd.unit.restrictSUIDSGID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetRestrictSUIDSGID()).ToDataRes(types.Bool)
+	},
+	"systemd.unit.restrictRealtime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetRestrictRealtime()).ToDataRes(types.Bool)
+	},
+	"systemd.unit.restrictNamespaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetRestrictNamespaces()).ToDataRes(types.String)
+	},
+	"systemd.unit.restrictAddressFamilies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetRestrictAddressFamilies()).ToDataRes(types.String)
+	},
+	"systemd.unit.lockPersonality": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetLockPersonality()).ToDataRes(types.Bool)
+	},
+	"systemd.unit.memoryDenyWriteExecute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetMemoryDenyWriteExecute()).ToDataRes(types.Bool)
+	},
+	"systemd.unit.removeIPC": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetRemoveIPC()).ToDataRes(types.Bool)
+	},
+	"systemd.unit.keyringMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetKeyringMode()).ToDataRes(types.String)
+	},
+	"systemd.unit.capabilityBoundingSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetCapabilityBoundingSet()).ToDataRes(types.Array(types.String))
+	},
+	"systemd.unit.ambientCapabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetAmbientCapabilities()).ToDataRes(types.Array(types.String))
+	},
+	"systemd.unit.systemCallFilter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetSystemCallFilter()).ToDataRes(types.Array(types.String))
+	},
+	"systemd.unit.systemCallArchitectures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetSystemCallArchitectures()).ToDataRes(types.String)
+	},
+	"systemd.unit.readWritePaths": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetReadWritePaths()).ToDataRes(types.Array(types.String))
+	},
+	"systemd.unit.readOnlyPaths": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetReadOnlyPaths()).ToDataRes(types.Array(types.String))
+	},
+	"systemd.unit.inaccessiblePaths": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnit).GetInaccessiblePaths()).ToDataRes(types.Array(types.String))
+	},
+	"systemd.units.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdUnits).GetList()).ToDataRes(types.Array(types.Resource("systemd.unit")))
 	},
 	"systemd.resolved.active": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSystemdResolved).GetActive()).ToDataRes(types.Bool)
@@ -17687,6 +17829,190 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"systemd.targets.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSystemdTargets).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).__id, ok = v.Value.(string)
+		return
+	},
+	"systemd.unit.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.installed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).Installed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.fragmentPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).FragmentPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.loadState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).LoadState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.activeState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).ActiveState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.unitFileState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).UnitFileState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.execStart": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).ExecStart, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).User, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).Group, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.dynamicUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).DynamicUser, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.umask": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).Umask, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.noNewPrivileges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).NoNewPrivileges, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.protectSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).ProtectSystem, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.protectHome": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).ProtectHome, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.privateTmp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).PrivateTmp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.privateDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).PrivateDevices, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.privateNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).PrivateNetwork, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.privateUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).PrivateUsers, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.protectKernelTunables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).ProtectKernelTunables, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.protectKernelModules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).ProtectKernelModules, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.protectKernelLogs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).ProtectKernelLogs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.protectControlGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).ProtectControlGroups, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.protectClock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).ProtectClock, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.protectHostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).ProtectHostname, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.protectProc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).ProtectProc, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.procSubset": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).ProcSubset, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.restrictSUIDSGID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).RestrictSUIDSGID, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.restrictRealtime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).RestrictRealtime, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.restrictNamespaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).RestrictNamespaces, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.restrictAddressFamilies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).RestrictAddressFamilies, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.lockPersonality": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).LockPersonality, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.memoryDenyWriteExecute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).MemoryDenyWriteExecute, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.removeIPC": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).RemoveIPC, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.keyringMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).KeyringMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.capabilityBoundingSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).CapabilityBoundingSet, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.ambientCapabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).AmbientCapabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.systemCallFilter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).SystemCallFilter, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.systemCallArchitectures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).SystemCallArchitectures, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.readWritePaths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).ReadWritePaths, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.readOnlyPaths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).ReadOnlyPaths, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"systemd.unit.inaccessiblePaths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnit).InaccessiblePaths, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"systemd.units.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnits).__id, ok = v.Value.(string)
+		return
+	},
+	"systemd.units.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdUnits).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"systemd.resolved.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -43562,6 +43888,326 @@ func (c *mqlSystemdTargets) GetList() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("systemd.targets", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlSystemdUnit for the systemd.unit resource
+type mqlSystemdUnit struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSystemdUnitInternal it will be used here
+	Name                    plugin.TValue[string]
+	Description             plugin.TValue[string]
+	Installed               plugin.TValue[bool]
+	FragmentPath            plugin.TValue[string]
+	LoadState               plugin.TValue[string]
+	ActiveState             plugin.TValue[string]
+	UnitFileState           plugin.TValue[string]
+	Type                    plugin.TValue[string]
+	ExecStart               plugin.TValue[string]
+	User                    plugin.TValue[string]
+	Group                   plugin.TValue[string]
+	DynamicUser             plugin.TValue[bool]
+	Umask                   plugin.TValue[string]
+	NoNewPrivileges         plugin.TValue[bool]
+	ProtectSystem           plugin.TValue[string]
+	ProtectHome             plugin.TValue[string]
+	PrivateTmp              plugin.TValue[bool]
+	PrivateDevices          plugin.TValue[bool]
+	PrivateNetwork          plugin.TValue[bool]
+	PrivateUsers            plugin.TValue[bool]
+	ProtectKernelTunables   plugin.TValue[bool]
+	ProtectKernelModules    plugin.TValue[bool]
+	ProtectKernelLogs       plugin.TValue[bool]
+	ProtectControlGroups    plugin.TValue[string]
+	ProtectClock            plugin.TValue[bool]
+	ProtectHostname         plugin.TValue[bool]
+	ProtectProc             plugin.TValue[string]
+	ProcSubset              plugin.TValue[string]
+	RestrictSUIDSGID        plugin.TValue[bool]
+	RestrictRealtime        plugin.TValue[bool]
+	RestrictNamespaces      plugin.TValue[string]
+	RestrictAddressFamilies plugin.TValue[string]
+	LockPersonality         plugin.TValue[bool]
+	MemoryDenyWriteExecute  plugin.TValue[bool]
+	RemoveIPC               plugin.TValue[bool]
+	KeyringMode             plugin.TValue[string]
+	CapabilityBoundingSet   plugin.TValue[[]any]
+	AmbientCapabilities     plugin.TValue[[]any]
+	SystemCallFilter        plugin.TValue[[]any]
+	SystemCallArchitectures plugin.TValue[string]
+	ReadWritePaths          plugin.TValue[[]any]
+	ReadOnlyPaths           plugin.TValue[[]any]
+	InaccessiblePaths       plugin.TValue[[]any]
+}
+
+// createSystemdUnit creates a new instance of this resource
+func createSystemdUnit(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSystemdUnit{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("systemd.unit", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSystemdUnit) MqlName() string {
+	return "systemd.unit"
+}
+
+func (c *mqlSystemdUnit) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSystemdUnit) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSystemdUnit) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlSystemdUnit) GetInstalled() *plugin.TValue[bool] {
+	return &c.Installed
+}
+
+func (c *mqlSystemdUnit) GetFragmentPath() *plugin.TValue[string] {
+	return &c.FragmentPath
+}
+
+func (c *mqlSystemdUnit) GetLoadState() *plugin.TValue[string] {
+	return &c.LoadState
+}
+
+func (c *mqlSystemdUnit) GetActiveState() *plugin.TValue[string] {
+	return &c.ActiveState
+}
+
+func (c *mqlSystemdUnit) GetUnitFileState() *plugin.TValue[string] {
+	return &c.UnitFileState
+}
+
+func (c *mqlSystemdUnit) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlSystemdUnit) GetExecStart() *plugin.TValue[string] {
+	return &c.ExecStart
+}
+
+func (c *mqlSystemdUnit) GetUser() *plugin.TValue[string] {
+	return &c.User
+}
+
+func (c *mqlSystemdUnit) GetGroup() *plugin.TValue[string] {
+	return &c.Group
+}
+
+func (c *mqlSystemdUnit) GetDynamicUser() *plugin.TValue[bool] {
+	return &c.DynamicUser
+}
+
+func (c *mqlSystemdUnit) GetUmask() *plugin.TValue[string] {
+	return &c.Umask
+}
+
+func (c *mqlSystemdUnit) GetNoNewPrivileges() *plugin.TValue[bool] {
+	return &c.NoNewPrivileges
+}
+
+func (c *mqlSystemdUnit) GetProtectSystem() *plugin.TValue[string] {
+	return &c.ProtectSystem
+}
+
+func (c *mqlSystemdUnit) GetProtectHome() *plugin.TValue[string] {
+	return &c.ProtectHome
+}
+
+func (c *mqlSystemdUnit) GetPrivateTmp() *plugin.TValue[bool] {
+	return &c.PrivateTmp
+}
+
+func (c *mqlSystemdUnit) GetPrivateDevices() *plugin.TValue[bool] {
+	return &c.PrivateDevices
+}
+
+func (c *mqlSystemdUnit) GetPrivateNetwork() *plugin.TValue[bool] {
+	return &c.PrivateNetwork
+}
+
+func (c *mqlSystemdUnit) GetPrivateUsers() *plugin.TValue[bool] {
+	return &c.PrivateUsers
+}
+
+func (c *mqlSystemdUnit) GetProtectKernelTunables() *plugin.TValue[bool] {
+	return &c.ProtectKernelTunables
+}
+
+func (c *mqlSystemdUnit) GetProtectKernelModules() *plugin.TValue[bool] {
+	return &c.ProtectKernelModules
+}
+
+func (c *mqlSystemdUnit) GetProtectKernelLogs() *plugin.TValue[bool] {
+	return &c.ProtectKernelLogs
+}
+
+func (c *mqlSystemdUnit) GetProtectControlGroups() *plugin.TValue[string] {
+	return &c.ProtectControlGroups
+}
+
+func (c *mqlSystemdUnit) GetProtectClock() *plugin.TValue[bool] {
+	return &c.ProtectClock
+}
+
+func (c *mqlSystemdUnit) GetProtectHostname() *plugin.TValue[bool] {
+	return &c.ProtectHostname
+}
+
+func (c *mqlSystemdUnit) GetProtectProc() *plugin.TValue[string] {
+	return &c.ProtectProc
+}
+
+func (c *mqlSystemdUnit) GetProcSubset() *plugin.TValue[string] {
+	return &c.ProcSubset
+}
+
+func (c *mqlSystemdUnit) GetRestrictSUIDSGID() *plugin.TValue[bool] {
+	return &c.RestrictSUIDSGID
+}
+
+func (c *mqlSystemdUnit) GetRestrictRealtime() *plugin.TValue[bool] {
+	return &c.RestrictRealtime
+}
+
+func (c *mqlSystemdUnit) GetRestrictNamespaces() *plugin.TValue[string] {
+	return &c.RestrictNamespaces
+}
+
+func (c *mqlSystemdUnit) GetRestrictAddressFamilies() *plugin.TValue[string] {
+	return &c.RestrictAddressFamilies
+}
+
+func (c *mqlSystemdUnit) GetLockPersonality() *plugin.TValue[bool] {
+	return &c.LockPersonality
+}
+
+func (c *mqlSystemdUnit) GetMemoryDenyWriteExecute() *plugin.TValue[bool] {
+	return &c.MemoryDenyWriteExecute
+}
+
+func (c *mqlSystemdUnit) GetRemoveIPC() *plugin.TValue[bool] {
+	return &c.RemoveIPC
+}
+
+func (c *mqlSystemdUnit) GetKeyringMode() *plugin.TValue[string] {
+	return &c.KeyringMode
+}
+
+func (c *mqlSystemdUnit) GetCapabilityBoundingSet() *plugin.TValue[[]any] {
+	return &c.CapabilityBoundingSet
+}
+
+func (c *mqlSystemdUnit) GetAmbientCapabilities() *plugin.TValue[[]any] {
+	return &c.AmbientCapabilities
+}
+
+func (c *mqlSystemdUnit) GetSystemCallFilter() *plugin.TValue[[]any] {
+	return &c.SystemCallFilter
+}
+
+func (c *mqlSystemdUnit) GetSystemCallArchitectures() *plugin.TValue[string] {
+	return &c.SystemCallArchitectures
+}
+
+func (c *mqlSystemdUnit) GetReadWritePaths() *plugin.TValue[[]any] {
+	return &c.ReadWritePaths
+}
+
+func (c *mqlSystemdUnit) GetReadOnlyPaths() *plugin.TValue[[]any] {
+	return &c.ReadOnlyPaths
+}
+
+func (c *mqlSystemdUnit) GetInaccessiblePaths() *plugin.TValue[[]any] {
+	return &c.InaccessiblePaths
+}
+
+// mqlSystemdUnits for the systemd.units resource
+type mqlSystemdUnits struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSystemdUnitsInternal it will be used here
+	List plugin.TValue[[]any]
+}
+
+// createSystemdUnits creates a new instance of this resource
+func createSystemdUnits(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSystemdUnits{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("systemd.units", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSystemdUnits) MqlName() string {
+	return "systemd.units"
+}
+
+func (c *mqlSystemdUnits) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSystemdUnits) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("systemd.units", c.__id, "list")
 			if err != nil {
 				return nil, err
 			}

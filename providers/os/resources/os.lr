@@ -3516,6 +3516,163 @@ systemd.targets {
   []systemd.target
 }
 
+// systemd unit execution and sandboxing settings
+//
+// Single systemd unit with the execution and confinement settings from its unit
+// file and drop-ins, selected by full name including the suffix (e.g.
+// `systemd.unit(name: "sshd.service")`). `user` and the `protect`, `private`,
+// and `restrict` settings describe how much of the host the unit can reach: a
+// unit running as root with `noNewPrivileges` false and `protectSystem` set to
+// `no` has the whole system available to it once the service is compromised.
+// `capabilityBoundingSet` and `systemCallFilter` narrow that further, and
+// `fragmentPath` locates the unit file the values came from. These settings
+// belong to units that start a process, so they are empty for a unit type that
+// does not, such as a target.
+systemd.unit @defaults("name user noNewPrivileges protectSystem") {
+  init(name string)
+  // Full unit name including its suffix (e.g., sshd.service)
+  name string
+  // Unit description
+  description string
+  // Whether a unit file for this name was found
+  //
+  // False for a name systemd does not know, in which case every other setting
+  // is reported at its zero value rather than as the unit's real state.
+  installed bool
+  // Path to the unit file the settings were read from
+  fragmentPath string
+  // Load state (e.g., loaded, not-found, masked, error)
+  loadState string
+  // Active state (e.g., active, inactive, failed, activating)
+  activeState string
+  // Unit file state (e.g., enabled, disabled, static, masked)
+  unitFileState string
+  // Start-up type of a service unit (e.g., simple, forking, oneshot, notify)
+  type string
+  // Command line started by ExecStart
+  execStart string
+
+  // Account the unit runs as, empty when it runs as root
+  user string
+  // Group the unit runs as, empty when the account's primary group applies
+  group string
+  // Whether the account the unit runs as is allocated by systemd for the run (DynamicUser)
+  dynamicUser bool
+  // File mode creation mask the unit starts with (UMask, e.g. 0022)
+  umask string
+
+  // Whether the unit and the processes it starts can gain new privileges (NoNewPrivileges)
+  //
+  // When true, a setuid binary or one carrying file capabilities cannot raise
+  // privileges for this unit, which closes the most direct route out of a
+  // compromised service.
+  noNewPrivileges bool
+  // How much of the filesystem hierarchy is read-only to the unit (ProtectSystem)
+  //
+  // One of `no`, `yes`, `full`, or `strict`. `yes` covers /usr and /boot, `full`
+  // adds /etc, and `strict` makes the whole filesystem read-only apart from the
+  // paths named in `readWritePaths`.
+  protectSystem string
+  // How much of the home directories the unit can see (ProtectHome)
+  //
+  // One of `no`, `yes`, `read-only`, or `tmpfs`.
+  protectHome string
+  // Whether the unit gets a private /tmp and /var/tmp (PrivateTmp)
+  privateTmp bool
+  // Whether the unit sees only pseudo devices rather than physical ones (PrivateDevices)
+  privateDevices bool
+  // Whether the unit runs in its own network namespace (PrivateNetwork)
+  privateNetwork bool
+  // Whether the unit gets its own user namespace holding no other accounts (PrivateUsers)
+  privateUsers bool
+  // Whether kernel tunables under /proc/sys and /sys are read-only to the unit (ProtectKernelTunables)
+  protectKernelTunables bool
+  // Whether the unit is denied loading and unloading kernel modules (ProtectKernelModules)
+  protectKernelModules bool
+  // Whether the kernel log ring buffer is inaccessible to the unit (ProtectKernelLogs)
+  protectKernelLogs bool
+  // Access the unit has to the control group hierarchy (ProtectControlGroups)
+  //
+  // One of `no`, `yes`, `private`, or `strict`. The `private` and `strict`
+  // values arrived in later systemd releases, so this is reported as written
+  // rather than as a two-state flag.
+  protectControlGroups string
+  // Whether the unit is denied changing the system clock (ProtectClock)
+  protectClock bool
+  // Whether the unit is denied changing the host name (ProtectHostname)
+  protectHostname bool
+  // How much of /proc belonging to other users the unit can see (ProtectProc)
+  //
+  // One of `noaccess`, `invisible`, `ptraceable`, or `default`.
+  protectProc string
+  // Which /proc entries the unit can see (ProcSubset)
+  //
+  // Either `all` or `pid`, where `pid` hides the entries in /proc that are not
+  // processes.
+  procSubset string
+  // Whether the setuid and setgid bits are unusable by the unit (RestrictSUIDSGID)
+  restrictSUIDSGID bool
+  // Whether real-time scheduling is denied to the unit (RestrictRealtime)
+  restrictRealtime bool
+  // Namespace types the unit may create (RestrictNamespaces)
+  //
+  // Either `yes`, `no`, or a space-separated list of the permitted types such
+  // as `cgroup ipc net`, so this is reported as written rather than as a flag.
+  restrictNamespaces string
+  // Socket address families the unit may use (RestrictAddressFamilies)
+  //
+  // For example `AF_UNIX AF_INET AF_INET6`. A unit held to AF_UNIX cannot open
+  // a network socket at all.
+  restrictAddressFamilies string
+  // Whether the unit is locked to its current execution domain (LockPersonality)
+  lockPersonality bool
+  // Whether memory that is both writable and executable is denied (MemoryDenyWriteExecute)
+  memoryDenyWriteExecute bool
+  // Whether the unit is detached from the host's IPC objects (RemoveIPC)
+  removeIPC bool
+  // Kernel keyring the unit is given (KeyringMode)
+  //
+  // One of `inherit`, `private`, or `shared`.
+  keyringMode string
+
+  // Linux capabilities the unit is allowed to hold (CapabilityBoundingSet)
+  //
+  // An empty list is the strongest setting, leaving the unit no capabilities at
+  // all. A unit running as root holding `cap_sys_admin` here has effectively
+  // unrestricted access to the host. Reported as the names systemd lists;
+  // releases old enough to report a numeric mask instead yield that single
+  // value as written.
+  capabilityBoundingSet []string
+  // Capabilities passed on to the unit's unprivileged processes (AmbientCapabilities)
+  ambientCapabilities []string
+  // System call filter applied to the unit (SystemCallFilter)
+  //
+  // Entries are call names or predefined sets such as `@system-service`. A
+  // leading `~` on the first entry marks the filter as a deny list rather than
+  // an allow list. An empty list means no filter is applied.
+  systemCallFilter []string
+  // Architectures the system call filter accepts (SystemCallArchitectures)
+  systemCallArchitectures string
+  // Paths the unit may write to despite protectSystem (ReadWritePaths)
+  readWritePaths []string
+  // Paths the unit may read but not write (ReadOnlyPaths)
+  readOnlyPaths []string
+  // Paths made entirely inaccessible to the unit (InaccessiblePaths)
+  inaccessiblePaths []string
+}
+
+// All systemd service units on the system
+//
+// Collection of every service unit with its execution and confinement settings.
+// Service units are the ones that start a process and so the ones these
+// settings apply to; a socket, timer, or target is reached through
+// `systemd.socket`, `systemd.timer`, and `systemd.target` instead. Filter it to
+// find daemons running unconfined, for example
+// `systemd.units.where(user == "" && noNewPrivileges == false)`.
+systemd.units {
+  []systemd.unit
+}
+
 // systemd-resolved DNS resolver state
 //
 // Global DNS resolution configuration provided by
