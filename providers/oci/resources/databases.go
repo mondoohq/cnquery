@@ -810,7 +810,6 @@ func (o *mqlOciGoldenGate) deployments() ([]any, error) {
 					"privateIpAddress":     llx.StringDataPtr(d.PrivateIpAddress),
 					"fqdn":                 llx.StringDataPtr(d.Fqdn),
 					"deploymentUrl":        llx.StringDataPtr(d.DeploymentUrl),
-					"loadBalancerId":       llx.StringDataPtr(d.LoadBalancerId),
 					"deploymentType":       llx.StringData(string(d.DeploymentType)),
 					"category":             llx.StringData(string(d.Category)),
 					"environmentType":      llx.StringData(string(d.EnvironmentType)),
@@ -834,6 +833,7 @@ func (o *mqlOciGoldenGate) deployments() ([]any, error) {
 				mqlDeploymentTyped := mqlDeployment.(*mqlOciGoldenGateDeployment)
 				mqlDeploymentTyped.cacheCompartmentId = stringValue(d.CompartmentId)
 				mqlDeploymentTyped.cacheSubnetId = stringValue(d.SubnetId)
+				mqlDeploymentTyped.cacheLoadBalancerId = stringValue(d.LoadBalancerId)
 				mqlDeploymentTyped.cacheRegion = region
 				res = append(res, mqlDeploymentTyped)
 			}
@@ -845,9 +845,10 @@ func (o *mqlOciGoldenGate) deployments() ([]any, error) {
 // The deployment listing carries the subnet but not the network security
 // groups, so only securityGroups needs the detail call.
 type mqlOciGoldenGateDeploymentInternal struct {
-	cacheCompartmentId string
-	cacheSubnetId      string
-	cacheRegion        string
+	cacheCompartmentId  string
+	cacheSubnetId       string
+	cacheLoadBalancerId string
+	cacheRegion         string
 
 	detailLock    sync.Mutex
 	detailFetched bool
@@ -864,6 +865,20 @@ func (o *mqlOciGoldenGateDeployment) compartment() (*mqlOciCompartment, error) {
 
 func (o *mqlOciGoldenGateDeployment) subnet() (*mqlOciNetworkSubnet, error) {
 	return resolveOciSubnet(o.MqlRuntime, o.cacheSubnetId, &o.Subnet)
+}
+
+func (o *mqlOciGoldenGateDeployment) loadBalancer() (*mqlOciLoadBalancerLoadBalancer, error) {
+	if o.cacheLoadBalancerId == "" {
+		o.LoadBalancer.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(o.MqlRuntime, "oci.loadBalancer.loadBalancer", map[string]*llx.RawData{
+		"id": llx.StringData(o.cacheLoadBalancerId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciLoadBalancerLoadBalancer), nil
 }
 
 func (o *mqlOciGoldenGateDeployment) getDetail() (*goldengate.Deployment, error) {

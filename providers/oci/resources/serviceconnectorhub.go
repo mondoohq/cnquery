@@ -9,7 +9,9 @@ import (
 
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/sch"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
 	"go.mondoo.com/mql/v13/types"
@@ -169,6 +171,85 @@ func (o *mqlOciServiceConnectorHubConnector) target() (any, error) {
 		return nil, nil
 	}
 	return convert.JsonToDict(detail.Target)
+}
+
+func (o *mqlOciServiceConnectorHubConnector) targetBucket() (*mqlOciObjectStorageBucket, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return nil, err
+	}
+
+	// OCI keys a bucket on namespace+name rather than on its OCID, so both
+	// have to come from the target block; an OCID alone cannot be resolved.
+	target, ok := detail.Target.(sch.ObjectStorageTargetDetailsResponse)
+	if !ok || stringValue(target.BucketName) == "" {
+		o.TargetBucket.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := NewResource(o.MqlRuntime, "oci.objectStorage.bucket", map[string]*llx.RawData{
+		"namespace": llx.StringData(stringValue(target.Namespace)),
+		"name":      llx.StringData(stringValue(target.BucketName)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciObjectStorageBucket), nil
+}
+
+func (o *mqlOciServiceConnectorHubConnector) targetTopic() (*mqlOciOnsTopic, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return nil, err
+	}
+
+	target, ok := detail.Target.(sch.NotificationsTargetDetailsResponse)
+	if !ok || stringValue(target.TopicId) == "" {
+		o.TargetTopic.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := NewResource(o.MqlRuntime, "oci.ons.topic", map[string]*llx.RawData{
+		"id": llx.StringData(stringValue(target.TopicId)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciOnsTopic), nil
+}
+
+func (o *mqlOciServiceConnectorHubConnector) sourceLogGroups() ([]any, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return nil, err
+	}
+
+	source, ok := detail.Source.(sch.LoggingSourceDetailsResponse)
+	if !ok {
+		return []any{}, nil
+	}
+
+	res := make([]any, 0, len(source.LogSources))
+	for i := range source.LogSources {
+		logGroupId := stringValue(source.LogSources[i].LogGroupId)
+		// A log source scoped to a whole compartment names no log group.
+		if logGroupId == "" {
+			continue
+		}
+
+		group, err := NewResource(o.MqlRuntime, "oci.logging.logGroup", map[string]*llx.RawData{
+			"id": llx.StringData(logGroupId),
+		})
+		if err != nil {
+			// One unresolvable group must not discard the rest of the export
+			// path, matching resolveOciSecurityGroups.
+			log.Debug().Err(err).Str("logGroup", logGroupId).Msg("skipping unresolvable oci log group")
+			continue
+		}
+		res = append(res, group)
+	}
+
+	return res, nil
 }
 
 func (o *mqlOciServiceConnectorHubConnector) tasks() ([]any, error) {
