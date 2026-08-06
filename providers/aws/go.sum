@@ -199,6 +199,8 @@ github.com/aws/aws-sdk-go-v2/service/dax v1.32.4 h1:YaE0LnAp++dNiYj9qMlARrfP4q39
 github.com/aws/aws-sdk-go-v2/service/dax v1.32.4/go.mod h1:0xL146YjFBjg4t0mbG1+OTN30dy9Lq5XKLVJV6uVN2s=
 github.com/aws/aws-sdk-go-v2/service/detective v1.41.4 h1:AFdHajeEujloPpNIzZiJ0ISBDRDlaqAVn4Br+PS+zJ8=
 github.com/aws/aws-sdk-go-v2/service/detective v1.41.4/go.mod h1:MWHz136/8IZaVK0aMK9YTFsJvwFHqNof969xtIJw6io=
+github.com/aws/aws-sdk-go-v2/service/directconnect v1.44.1 h1:EX6IkeM/O/kvoTnfMBqnkg871u4TWx6EZF18g15R8M4=
+github.com/aws/aws-sdk-go-v2/service/directconnect v1.44.1/go.mod h1:sVd0dkv6E75KfNnnvH3YfOqEH5PcX0p4dhZTlAZw9pQ=
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.41.4 h1:bUakcE/3ddrOB8zE6/u48bnR5NoV6bVQv9tposie6x0=
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.41.4/go.mod h1:3XJsWpfnRNZutjofqSuvITxh6oNYSSj6ZF2N+djJX1w=
 github.com/aws/aws-sdk-go-v2/service/docdb v1.51.4 h1:v9APiIk1o8rcc1UibTO+b4wULni1u4uARTOfsMFlZ9w=
@@ -245,6 +247,8 @@ github.com/aws/aws-sdk-go-v2/service/fms v1.47.4 h1:Vgz6LTvhPkbd7Qfm1wwXscSJFgjg
 github.com/aws/aws-sdk-go-v2/service/fms v1.47.4/go.mod h1:biBrYuZEoKJ8EshCjAJNcsKvvfQEG81oq+CR+wEbVlI=
 github.com/aws/aws-sdk-go-v2/service/fsx v1.68.4 h1:x0zJPJVIgVt6/SyEblb2FaAterPqxeyhq8GYY8MJBBM=
 github.com/aws/aws-sdk-go-v2/service/fsx v1.68.4/go.mod h1:2NEMGSF5nfgA8bDuZTH12bldOVZCnGKpvyu4TFEKX38=
+github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.38.4 h1:x5V5XW5Va+F1MTLWhnZuB9ZwOgbLB3WAfj+lvvLkbhg=
+github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.38.4/go.mod h1:p2N4zoDk8XQqQBP7wU6rpdbyPmoRXHGLQ1tm89WPlbU=
 github.com/aws/aws-sdk-go-v2/service/glue v1.152.0 h1:82K11SuRv2c5gmlwJXImQrs2+nzro1KF/MOjr5qzVZ0=
 github.com/aws/aws-sdk-go-v2/service/glue v1.152.0/go.mod h1:3kgUanQ41XP3SMxOurl1gu9cQ2B4AltelI+0srIz0Yg=
 github.com/aws/aws-sdk-go-v2/service/guardduty v1.85.4 h1:489yUmDgARs5UnRiKt/luiKrR8RSbFdiMTUQxWgsop0=

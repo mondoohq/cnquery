@@ -46,6 +46,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
 	"github.com/aws/aws-sdk-go-v2/service/dax"
 	"github.com/aws/aws-sdk-go-v2/service/detective"
+	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
@@ -68,6 +69,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/firehose"
 	"github.com/aws/aws-sdk-go-v2/service/fms"
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
+	"github.com/aws/aws-sdk-go-v2/service/globalaccelerator"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
@@ -449,6 +451,21 @@ func (t *AwsConnection) Backup(region string) *backup.Client {
 
 func (t *AwsConnection) Drs(region string) *drs.Client {
 	return regionalClient(t, "drs", region, drs.NewFromConfig)
+}
+
+func (t *AwsConnection) DirectConnect(region string) *directconnect.Client {
+	return regionalClient(t, "directconnect", region, directconnect.NewFromConfig)
+}
+
+// globalAcceleratorControlPlaneRegion is the only region the Global Accelerator
+// control plane answers in, regardless of where the accelerator sends traffic.
+const globalAcceleratorControlPlaneRegion = "us-west-2"
+
+// GlobalAccelerator returns a Global Accelerator client. The service is global
+// but its control plane only answers in us-west-2, so the region is pinned here
+// rather than taken from the caller.
+func (t *AwsConnection) GlobalAccelerator() *globalaccelerator.Client {
+	return regionalClient(t, "globalaccelerator", globalAcceleratorControlPlaneRegion, globalaccelerator.NewFromConfig)
 }
 
 func (t *AwsConnection) DirectoryService(region string) *directoryservice.Client {

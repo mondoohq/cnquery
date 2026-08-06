@@ -640,6 +640,8 @@ func awsConnectionMethodToService(method string) string {
 		"backup":                   "backup",
 		"datasync":                 "datasync",
 		"vpclattice":               "vpclattice",
+		"directconnect":            "directconnect",
+		"globalaccelerator":        "globalaccelerator",
 		"appflow":                  "appflow",
 		"codebuild":                "codebuild",
 		"emr":                      "emr",
