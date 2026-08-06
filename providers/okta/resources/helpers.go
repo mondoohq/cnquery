@@ -3,7 +3,12 @@
 
 package resources
 
-import "strings"
+import (
+	"net/http"
+	"strings"
+
+	"github.com/okta/okta-sdk-golang/v5/okta"
+)
 
 // The v5 Okta SDK is OpenAPI-generated and models almost every scalar as a
 // pointer so it can distinguish "unset" from a zero value. The previous v2
@@ -106,4 +111,22 @@ func oktaBool(b *bool) bool {
 		return false
 	}
 	return *b
+}
+
+// isOktaFeatureUnavailable reports whether an API error means the org simply
+// does not have the thing being asked about, rather than that the request
+// failed. Okta answers 404 for an endpoint belonging to a feature the org has
+// not enabled, 410 for one that has been retired, and 403 when the token's
+// admin role cannot reach it. All three describe an org with nothing to
+// report, so callers degrade to an empty result instead of failing the query
+// and taking every other resource in the scan down with them.
+func isOktaFeatureUnavailable(resp *okta.APIResponse, err error) bool {
+	if err == nil || resp == nil {
+		return false
+	}
+	switch resp.StatusCode {
+	case http.StatusForbidden, http.StatusNotFound, http.StatusGone:
+		return true
+	}
+	return false
 }

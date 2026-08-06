@@ -60,6 +60,14 @@ const (
 	ResourceOktaDevice                        string = "okta.device"
 	ResourceOktaDeviceAssurancePolicy         string = "okta.deviceAssurancePolicy"
 	ResourceOktaSecurityEventsProvider        string = "okta.securityEventsProvider"
+	ResourceOktaUserType                      string = "okta.userType"
+	ResourceOktaProfileMapping                string = "okta.profileMapping"
+	ResourceOktaAgentPool                     string = "okta.agentPool"
+	ResourceOktaAgentPoolAgent                string = "okta.agentPool.agent"
+	ResourceOktaEmailDomain                   string = "okta.emailDomain"
+	ResourceOktaEmailServer                   string = "okta.emailServer"
+	ResourceOktaRealm                         string = "okta.realm"
+	ResourceOktaRateLimitSettings             string = "okta.rateLimitSettings"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -242,6 +250,38 @@ func init() {
 			// to override args, implement: initOktaSecurityEventsProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOktaSecurityEventsProvider,
 		},
+		"okta.userType": {
+			Init:   initOktaUserType,
+			Create: createOktaUserType,
+		},
+		"okta.profileMapping": {
+			// to override args, implement: initOktaProfileMapping(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOktaProfileMapping,
+		},
+		"okta.agentPool": {
+			// to override args, implement: initOktaAgentPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOktaAgentPool,
+		},
+		"okta.agentPool.agent": {
+			// to override args, implement: initOktaAgentPoolAgent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOktaAgentPoolAgent,
+		},
+		"okta.emailDomain": {
+			// to override args, implement: initOktaEmailDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOktaEmailDomain,
+		},
+		"okta.emailServer": {
+			// to override args, implement: initOktaEmailServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOktaEmailServer,
+		},
+		"okta.realm": {
+			// to override args, implement: initOktaRealm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOktaRealm,
+		},
+		"okta.rateLimitSettings": {
+			Init:   initOktaRateLimitSettings,
+			Create: createOktaRateLimitSettings,
+		},
 	}
 }
 
@@ -381,6 +421,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"okta.securityEventsProviders": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOkta).GetSecurityEventsProviders()).ToDataRes(types.Array(types.Resource("okta.securityEventsProvider")))
+	},
+	"okta.userTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOkta).GetUserTypes()).ToDataRes(types.Array(types.Resource("okta.userType")))
+	},
+	"okta.profileMappings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOkta).GetProfileMappings()).ToDataRes(types.Array(types.Resource("okta.profileMapping")))
+	},
+	"okta.agentPools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOkta).GetAgentPools()).ToDataRes(types.Array(types.Resource("okta.agentPool")))
+	},
+	"okta.emailDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOkta).GetEmailDomains()).ToDataRes(types.Array(types.Resource("okta.emailDomain")))
+	},
+	"okta.emailServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOkta).GetEmailServers()).ToDataRes(types.Array(types.Resource("okta.emailServer")))
+	},
+	"okta.realms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOkta).GetRealms()).ToDataRes(types.Array(types.Resource("okta.realm")))
 	},
 	"okta.organization.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaOrganization).GetId()).ToDataRes(types.String)
@@ -1624,6 +1682,177 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"okta.securityEventsProvider.settings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaSecurityEventsProvider).GetSettings()).ToDataRes(types.Dict)
 	},
+	"okta.userType.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaUserType).GetId()).ToDataRes(types.String)
+	},
+	"okta.userType.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaUserType).GetName()).ToDataRes(types.String)
+	},
+	"okta.userType.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaUserType).GetDisplayName()).ToDataRes(types.String)
+	},
+	"okta.userType.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaUserType).GetDescription()).ToDataRes(types.String)
+	},
+	"okta.userType.default": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaUserType).GetDefault()).ToDataRes(types.Bool)
+	},
+	"okta.userType.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaUserType).GetCreated()).ToDataRes(types.Time)
+	},
+	"okta.userType.lastUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaUserType).GetLastUpdated()).ToDataRes(types.Time)
+	},
+	"okta.userType.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaUserType).GetCreatedBy()).ToDataRes(types.Resource("okta.user"))
+	},
+	"okta.userType.lastUpdatedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaUserType).GetLastUpdatedBy()).ToDataRes(types.Resource("okta.user"))
+	},
+	"okta.profileMapping.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaProfileMapping).GetId()).ToDataRes(types.String)
+	},
+	"okta.profileMapping.sourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaProfileMapping).GetSourceId()).ToDataRes(types.String)
+	},
+	"okta.profileMapping.sourceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaProfileMapping).GetSourceName()).ToDataRes(types.String)
+	},
+	"okta.profileMapping.sourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaProfileMapping).GetSourceType()).ToDataRes(types.String)
+	},
+	"okta.profileMapping.targetId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaProfileMapping).GetTargetId()).ToDataRes(types.String)
+	},
+	"okta.profileMapping.targetName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaProfileMapping).GetTargetName()).ToDataRes(types.String)
+	},
+	"okta.profileMapping.targetType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaProfileMapping).GetTargetType()).ToDataRes(types.String)
+	},
+	"okta.profileMapping.application": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaProfileMapping).GetApplication()).ToDataRes(types.Resource("okta.application"))
+	},
+	"okta.profileMapping.userType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaProfileMapping).GetUserType()).ToDataRes(types.Resource("okta.userType"))
+	},
+	"okta.profileMapping.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaProfileMapping).GetProperties()).ToDataRes(types.Dict)
+	},
+	"okta.agentPool.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaAgentPool).GetId()).ToDataRes(types.String)
+	},
+	"okta.agentPool.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaAgentPool).GetName()).ToDataRes(types.String)
+	},
+	"okta.agentPool.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaAgentPool).GetType()).ToDataRes(types.String)
+	},
+	"okta.agentPool.operationalStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaAgentPool).GetOperationalStatus()).ToDataRes(types.String)
+	},
+	"okta.agentPool.agents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaAgentPool).GetAgents()).ToDataRes(types.Array(types.Resource("okta.agentPool.agent")))
+	},
+	"okta.agentPool.agent.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaAgentPoolAgent).GetId()).ToDataRes(types.String)
+	},
+	"okta.agentPool.agent.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaAgentPoolAgent).GetName()).ToDataRes(types.String)
+	},
+	"okta.agentPool.agent.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaAgentPoolAgent).GetType()).ToDataRes(types.String)
+	},
+	"okta.agentPool.agent.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaAgentPoolAgent).GetVersion()).ToDataRes(types.String)
+	},
+	"okta.agentPool.agent.isLatestGAedVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaAgentPoolAgent).GetIsLatestGAedVersion()).ToDataRes(types.Bool)
+	},
+	"okta.agentPool.agent.lastConnection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaAgentPoolAgent).GetLastConnection()).ToDataRes(types.Time)
+	},
+	"okta.agentPool.agent.operationalStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaAgentPoolAgent).GetOperationalStatus()).ToDataRes(types.String)
+	},
+	"okta.agentPool.agent.updateStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaAgentPoolAgent).GetUpdateStatus()).ToDataRes(types.String)
+	},
+	"okta.agentPool.agent.updateMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaAgentPoolAgent).GetUpdateMessage()).ToDataRes(types.String)
+	},
+	"okta.agentPool.agent.isHidden": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaAgentPoolAgent).GetIsHidden()).ToDataRes(types.Bool)
+	},
+	"okta.emailDomain.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaEmailDomain).GetId()).ToDataRes(types.String)
+	},
+	"okta.emailDomain.domain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaEmailDomain).GetDomain()).ToDataRes(types.String)
+	},
+	"okta.emailDomain.validationSubdomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaEmailDomain).GetValidationSubdomain()).ToDataRes(types.String)
+	},
+	"okta.emailDomain.validationStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaEmailDomain).GetValidationStatus()).ToDataRes(types.String)
+	},
+	"okta.emailDomain.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaEmailDomain).GetDisplayName()).ToDataRes(types.String)
+	},
+	"okta.emailDomain.userName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaEmailDomain).GetUserName()).ToDataRes(types.String)
+	},
+	"okta.emailDomain.dnsValidationRecords": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaEmailDomain).GetDnsValidationRecords()).ToDataRes(types.Array(types.Dict))
+	},
+	"okta.emailServer.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaEmailServer).GetId()).ToDataRes(types.String)
+	},
+	"okta.emailServer.alias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaEmailServer).GetAlias()).ToDataRes(types.String)
+	},
+	"okta.emailServer.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaEmailServer).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"okta.emailServer.host": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaEmailServer).GetHost()).ToDataRes(types.String)
+	},
+	"okta.emailServer.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaEmailServer).GetPort()).ToDataRes(types.Int)
+	},
+	"okta.emailServer.username": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaEmailServer).GetUsername()).ToDataRes(types.String)
+	},
+	"okta.realm.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaRealm).GetId()).ToDataRes(types.String)
+	},
+	"okta.realm.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaRealm).GetName()).ToDataRes(types.String)
+	},
+	"okta.realm.realmType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaRealm).GetRealmType()).ToDataRes(types.String)
+	},
+	"okta.realm.isDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaRealm).GetIsDefault()).ToDataRes(types.Bool)
+	},
+	"okta.realm.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaRealm).GetCreated()).ToDataRes(types.Time)
+	},
+	"okta.realm.lastUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaRealm).GetLastUpdated()).ToDataRes(types.Time)
+	},
+	"okta.rateLimitSettings.perClientDefaultMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaRateLimitSettings).GetPerClientDefaultMode()).ToDataRes(types.String)
+	},
+	"okta.rateLimitSettings.useCaseModeOverrides": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaRateLimitSettings).GetUseCaseModeOverrides()).ToDataRes(types.Dict)
+	},
+	"okta.rateLimitSettings.adminNotificationsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaRateLimitSettings).GetAdminNotificationsEnabled()).ToDataRes(types.Bool)
+	},
+	"okta.rateLimitSettings.warningThreshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaRateLimitSettings).GetWarningThreshold()).ToDataRes(types.Int)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1730,6 +1959,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"okta.securityEventsProviders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOkta).SecurityEventsProviders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.userTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOkta).UserTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.profileMappings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOkta).ProfileMappings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.agentPools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOkta).AgentPools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.emailDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOkta).EmailDomains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.emailServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOkta).EmailServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.realms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOkta).Realms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.organization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3560,6 +3813,266 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOktaSecurityEventsProvider).Settings, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"okta.userType.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaUserType).__id, ok = v.Value.(string)
+		return
+	},
+	"okta.userType.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaUserType).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.userType.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaUserType).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.userType.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaUserType).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.userType.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaUserType).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.userType.default": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaUserType).Default, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"okta.userType.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaUserType).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.userType.lastUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaUserType).LastUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.userType.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaUserType).CreatedBy, ok = plugin.RawToTValue[*mqlOktaUser](v.Value, v.Error)
+		return
+	},
+	"okta.userType.lastUpdatedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaUserType).LastUpdatedBy, ok = plugin.RawToTValue[*mqlOktaUser](v.Value, v.Error)
+		return
+	},
+	"okta.profileMapping.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaProfileMapping).__id, ok = v.Value.(string)
+		return
+	},
+	"okta.profileMapping.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaProfileMapping).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.profileMapping.sourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaProfileMapping).SourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.profileMapping.sourceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaProfileMapping).SourceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.profileMapping.sourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaProfileMapping).SourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.profileMapping.targetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaProfileMapping).TargetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.profileMapping.targetName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaProfileMapping).TargetName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.profileMapping.targetType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaProfileMapping).TargetType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.profileMapping.application": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaProfileMapping).Application, ok = plugin.RawToTValue[*mqlOktaApplication](v.Value, v.Error)
+		return
+	},
+	"okta.profileMapping.userType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaProfileMapping).UserType, ok = plugin.RawToTValue[*mqlOktaUserType](v.Value, v.Error)
+		return
+	},
+	"okta.profileMapping.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaProfileMapping).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"okta.agentPool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaAgentPool).__id, ok = v.Value.(string)
+		return
+	},
+	"okta.agentPool.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaAgentPool).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.agentPool.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaAgentPool).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.agentPool.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaAgentPool).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.agentPool.operationalStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaAgentPool).OperationalStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.agentPool.agents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaAgentPool).Agents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.agentPool.agent.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaAgentPoolAgent).__id, ok = v.Value.(string)
+		return
+	},
+	"okta.agentPool.agent.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaAgentPoolAgent).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.agentPool.agent.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaAgentPoolAgent).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.agentPool.agent.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaAgentPoolAgent).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.agentPool.agent.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaAgentPoolAgent).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.agentPool.agent.isLatestGAedVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaAgentPoolAgent).IsLatestGAedVersion, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"okta.agentPool.agent.lastConnection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaAgentPoolAgent).LastConnection, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.agentPool.agent.operationalStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaAgentPoolAgent).OperationalStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.agentPool.agent.updateStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaAgentPoolAgent).UpdateStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.agentPool.agent.updateMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaAgentPoolAgent).UpdateMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.agentPool.agent.isHidden": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaAgentPoolAgent).IsHidden, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"okta.emailDomain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaEmailDomain).__id, ok = v.Value.(string)
+		return
+	},
+	"okta.emailDomain.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaEmailDomain).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.emailDomain.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaEmailDomain).Domain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.emailDomain.validationSubdomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaEmailDomain).ValidationSubdomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.emailDomain.validationStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaEmailDomain).ValidationStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.emailDomain.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaEmailDomain).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.emailDomain.userName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaEmailDomain).UserName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.emailDomain.dnsValidationRecords": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaEmailDomain).DnsValidationRecords, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.emailServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaEmailServer).__id, ok = v.Value.(string)
+		return
+	},
+	"okta.emailServer.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaEmailServer).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.emailServer.alias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaEmailServer).Alias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.emailServer.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaEmailServer).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"okta.emailServer.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaEmailServer).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.emailServer.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaEmailServer).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"okta.emailServer.username": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaEmailServer).Username, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.realm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaRealm).__id, ok = v.Value.(string)
+		return
+	},
+	"okta.realm.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaRealm).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.realm.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaRealm).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.realm.realmType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaRealm).RealmType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.realm.isDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaRealm).IsDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"okta.realm.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaRealm).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.realm.lastUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaRealm).LastUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.rateLimitSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaRateLimitSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"okta.rateLimitSettings.perClientDefaultMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaRateLimitSettings).PerClientDefaultMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.rateLimitSettings.useCaseModeOverrides": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaRateLimitSettings).UseCaseModeOverrides, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"okta.rateLimitSettings.adminNotificationsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaRateLimitSettings).AdminNotificationsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"okta.rateLimitSettings.warningThreshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaRateLimitSettings).WarningThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -3612,6 +4125,12 @@ type mqlOkta struct {
 	Devices                 plugin.TValue[[]any]
 	DeviceAssurancePolicies plugin.TValue[[]any]
 	SecurityEventsProviders plugin.TValue[[]any]
+	UserTypes               plugin.TValue[[]any]
+	ProfileMappings         plugin.TValue[[]any]
+	AgentPools              plugin.TValue[[]any]
+	EmailDomains            plugin.TValue[[]any]
+	EmailServers            plugin.TValue[[]any]
+	Realms                  plugin.TValue[[]any]
 }
 
 // createOkta creates a new instance of this resource
@@ -4016,6 +4535,102 @@ func (c *mqlOkta) GetSecurityEventsProviders() *plugin.TValue[[]any] {
 		}
 
 		return c.securityEventsProviders()
+	})
+}
+
+func (c *mqlOkta) GetUserTypes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UserTypes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta", c.__id, "userTypes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.userTypes()
+	})
+}
+
+func (c *mqlOkta) GetProfileMappings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ProfileMappings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta", c.__id, "profileMappings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.profileMappings()
+	})
+}
+
+func (c *mqlOkta) GetAgentPools() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AgentPools, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta", c.__id, "agentPools")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.agentPools()
+	})
+}
+
+func (c *mqlOkta) GetEmailDomains() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EmailDomains, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta", c.__id, "emailDomains")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.emailDomains()
+	})
+}
+
+func (c *mqlOkta) GetEmailServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EmailServers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta", c.__id, "emailServers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.emailServers()
+	})
+}
+
+func (c *mqlOkta) GetRealms() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Realms, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta", c.__id, "realms")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.realms()
 	})
 }
 
@@ -8498,4 +9113,681 @@ func (c *mqlOktaSecurityEventsProvider) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlOktaSecurityEventsProvider) GetSettings() *plugin.TValue[any] {
 	return &c.Settings
+}
+
+// mqlOktaUserType for the okta.userType resource
+type mqlOktaUserType struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOktaUserTypeInternal
+	Id            plugin.TValue[string]
+	Name          plugin.TValue[string]
+	DisplayName   plugin.TValue[string]
+	Description   plugin.TValue[string]
+	Default       plugin.TValue[bool]
+	Created       plugin.TValue[*time.Time]
+	LastUpdated   plugin.TValue[*time.Time]
+	CreatedBy     plugin.TValue[*mqlOktaUser]
+	LastUpdatedBy plugin.TValue[*mqlOktaUser]
+}
+
+// createOktaUserType creates a new instance of this resource
+func createOktaUserType(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOktaUserType{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("okta.userType", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOktaUserType) MqlName() string {
+	return "okta.userType"
+}
+
+func (c *mqlOktaUserType) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOktaUserType) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOktaUserType) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOktaUserType) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlOktaUserType) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOktaUserType) GetDefault() *plugin.TValue[bool] {
+	return &c.Default
+}
+
+func (c *mqlOktaUserType) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOktaUserType) GetLastUpdated() *plugin.TValue[*time.Time] {
+	return &c.LastUpdated
+}
+
+func (c *mqlOktaUserType) GetCreatedBy() *plugin.TValue[*mqlOktaUser] {
+	return plugin.GetOrCompute[*mqlOktaUser](&c.CreatedBy, func() (*mqlOktaUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.userType", c.__id, "createdBy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOktaUser), nil
+			}
+		}
+
+		return c.createdBy()
+	})
+}
+
+func (c *mqlOktaUserType) GetLastUpdatedBy() *plugin.TValue[*mqlOktaUser] {
+	return plugin.GetOrCompute[*mqlOktaUser](&c.LastUpdatedBy, func() (*mqlOktaUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.userType", c.__id, "lastUpdatedBy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOktaUser), nil
+			}
+		}
+
+		return c.lastUpdatedBy()
+	})
+}
+
+// mqlOktaProfileMapping for the okta.profileMapping resource
+type mqlOktaProfileMapping struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOktaProfileMappingInternal
+	Id          plugin.TValue[string]
+	SourceId    plugin.TValue[string]
+	SourceName  plugin.TValue[string]
+	SourceType  plugin.TValue[string]
+	TargetId    plugin.TValue[string]
+	TargetName  plugin.TValue[string]
+	TargetType  plugin.TValue[string]
+	Application plugin.TValue[*mqlOktaApplication]
+	UserType    plugin.TValue[*mqlOktaUserType]
+	Properties  plugin.TValue[any]
+}
+
+// createOktaProfileMapping creates a new instance of this resource
+func createOktaProfileMapping(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOktaProfileMapping{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("okta.profileMapping", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOktaProfileMapping) MqlName() string {
+	return "okta.profileMapping"
+}
+
+func (c *mqlOktaProfileMapping) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOktaProfileMapping) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOktaProfileMapping) GetSourceId() *plugin.TValue[string] {
+	return &c.SourceId
+}
+
+func (c *mqlOktaProfileMapping) GetSourceName() *plugin.TValue[string] {
+	return &c.SourceName
+}
+
+func (c *mqlOktaProfileMapping) GetSourceType() *plugin.TValue[string] {
+	return &c.SourceType
+}
+
+func (c *mqlOktaProfileMapping) GetTargetId() *plugin.TValue[string] {
+	return &c.TargetId
+}
+
+func (c *mqlOktaProfileMapping) GetTargetName() *plugin.TValue[string] {
+	return &c.TargetName
+}
+
+func (c *mqlOktaProfileMapping) GetTargetType() *plugin.TValue[string] {
+	return &c.TargetType
+}
+
+func (c *mqlOktaProfileMapping) GetApplication() *plugin.TValue[*mqlOktaApplication] {
+	return plugin.GetOrCompute[*mqlOktaApplication](&c.Application, func() (*mqlOktaApplication, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.profileMapping", c.__id, "application")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOktaApplication), nil
+			}
+		}
+
+		return c.application()
+	})
+}
+
+func (c *mqlOktaProfileMapping) GetUserType() *plugin.TValue[*mqlOktaUserType] {
+	return plugin.GetOrCompute[*mqlOktaUserType](&c.UserType, func() (*mqlOktaUserType, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.profileMapping", c.__id, "userType")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOktaUserType), nil
+			}
+		}
+
+		return c.userType()
+	})
+}
+
+func (c *mqlOktaProfileMapping) GetProperties() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Properties, func() (any, error) {
+		return c.properties()
+	})
+}
+
+// mqlOktaAgentPool for the okta.agentPool resource
+type mqlOktaAgentPool struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOktaAgentPoolInternal it will be used here
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Type              plugin.TValue[string]
+	OperationalStatus plugin.TValue[string]
+	Agents            plugin.TValue[[]any]
+}
+
+// createOktaAgentPool creates a new instance of this resource
+func createOktaAgentPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOktaAgentPool{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("okta.agentPool", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOktaAgentPool) MqlName() string {
+	return "okta.agentPool"
+}
+
+func (c *mqlOktaAgentPool) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOktaAgentPool) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOktaAgentPool) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOktaAgentPool) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlOktaAgentPool) GetOperationalStatus() *plugin.TValue[string] {
+	return &c.OperationalStatus
+}
+
+func (c *mqlOktaAgentPool) GetAgents() *plugin.TValue[[]any] {
+	return &c.Agents
+}
+
+// mqlOktaAgentPoolAgent for the okta.agentPool.agent resource
+type mqlOktaAgentPoolAgent struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOktaAgentPoolAgentInternal it will be used here
+	Id                  plugin.TValue[string]
+	Name                plugin.TValue[string]
+	Type                plugin.TValue[string]
+	Version             plugin.TValue[string]
+	IsLatestGAedVersion plugin.TValue[bool]
+	LastConnection      plugin.TValue[*time.Time]
+	OperationalStatus   plugin.TValue[string]
+	UpdateStatus        plugin.TValue[string]
+	UpdateMessage       plugin.TValue[string]
+	IsHidden            plugin.TValue[bool]
+}
+
+// createOktaAgentPoolAgent creates a new instance of this resource
+func createOktaAgentPoolAgent(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOktaAgentPoolAgent{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("okta.agentPool.agent", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOktaAgentPoolAgent) MqlName() string {
+	return "okta.agentPool.agent"
+}
+
+func (c *mqlOktaAgentPoolAgent) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOktaAgentPoolAgent) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOktaAgentPoolAgent) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOktaAgentPoolAgent) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlOktaAgentPoolAgent) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlOktaAgentPoolAgent) GetIsLatestGAedVersion() *plugin.TValue[bool] {
+	return &c.IsLatestGAedVersion
+}
+
+func (c *mqlOktaAgentPoolAgent) GetLastConnection() *plugin.TValue[*time.Time] {
+	return &c.LastConnection
+}
+
+func (c *mqlOktaAgentPoolAgent) GetOperationalStatus() *plugin.TValue[string] {
+	return &c.OperationalStatus
+}
+
+func (c *mqlOktaAgentPoolAgent) GetUpdateStatus() *plugin.TValue[string] {
+	return &c.UpdateStatus
+}
+
+func (c *mqlOktaAgentPoolAgent) GetUpdateMessage() *plugin.TValue[string] {
+	return &c.UpdateMessage
+}
+
+func (c *mqlOktaAgentPoolAgent) GetIsHidden() *plugin.TValue[bool] {
+	return &c.IsHidden
+}
+
+// mqlOktaEmailDomain for the okta.emailDomain resource
+type mqlOktaEmailDomain struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOktaEmailDomainInternal it will be used here
+	Id                   plugin.TValue[string]
+	Domain               plugin.TValue[string]
+	ValidationSubdomain  plugin.TValue[string]
+	ValidationStatus     plugin.TValue[string]
+	DisplayName          plugin.TValue[string]
+	UserName             plugin.TValue[string]
+	DnsValidationRecords plugin.TValue[[]any]
+}
+
+// createOktaEmailDomain creates a new instance of this resource
+func createOktaEmailDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOktaEmailDomain{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("okta.emailDomain", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOktaEmailDomain) MqlName() string {
+	return "okta.emailDomain"
+}
+
+func (c *mqlOktaEmailDomain) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOktaEmailDomain) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOktaEmailDomain) GetDomain() *plugin.TValue[string] {
+	return &c.Domain
+}
+
+func (c *mqlOktaEmailDomain) GetValidationSubdomain() *plugin.TValue[string] {
+	return &c.ValidationSubdomain
+}
+
+func (c *mqlOktaEmailDomain) GetValidationStatus() *plugin.TValue[string] {
+	return &c.ValidationStatus
+}
+
+func (c *mqlOktaEmailDomain) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlOktaEmailDomain) GetUserName() *plugin.TValue[string] {
+	return &c.UserName
+}
+
+func (c *mqlOktaEmailDomain) GetDnsValidationRecords() *plugin.TValue[[]any] {
+	return &c.DnsValidationRecords
+}
+
+// mqlOktaEmailServer for the okta.emailServer resource
+type mqlOktaEmailServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOktaEmailServerInternal it will be used here
+	Id       plugin.TValue[string]
+	Alias    plugin.TValue[string]
+	Enabled  plugin.TValue[bool]
+	Host     plugin.TValue[string]
+	Port     plugin.TValue[int64]
+	Username plugin.TValue[string]
+}
+
+// createOktaEmailServer creates a new instance of this resource
+func createOktaEmailServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOktaEmailServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("okta.emailServer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOktaEmailServer) MqlName() string {
+	return "okta.emailServer"
+}
+
+func (c *mqlOktaEmailServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOktaEmailServer) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOktaEmailServer) GetAlias() *plugin.TValue[string] {
+	return &c.Alias
+}
+
+func (c *mqlOktaEmailServer) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlOktaEmailServer) GetHost() *plugin.TValue[string] {
+	return &c.Host
+}
+
+func (c *mqlOktaEmailServer) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlOktaEmailServer) GetUsername() *plugin.TValue[string] {
+	return &c.Username
+}
+
+// mqlOktaRealm for the okta.realm resource
+type mqlOktaRealm struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOktaRealmInternal it will be used here
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	RealmType   plugin.TValue[string]
+	IsDefault   plugin.TValue[bool]
+	Created     plugin.TValue[*time.Time]
+	LastUpdated plugin.TValue[*time.Time]
+}
+
+// createOktaRealm creates a new instance of this resource
+func createOktaRealm(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOktaRealm{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("okta.realm", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOktaRealm) MqlName() string {
+	return "okta.realm"
+}
+
+func (c *mqlOktaRealm) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOktaRealm) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOktaRealm) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOktaRealm) GetRealmType() *plugin.TValue[string] {
+	return &c.RealmType
+}
+
+func (c *mqlOktaRealm) GetIsDefault() *plugin.TValue[bool] {
+	return &c.IsDefault
+}
+
+func (c *mqlOktaRealm) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOktaRealm) GetLastUpdated() *plugin.TValue[*time.Time] {
+	return &c.LastUpdated
+}
+
+// mqlOktaRateLimitSettings for the okta.rateLimitSettings resource
+type mqlOktaRateLimitSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOktaRateLimitSettingsInternal it will be used here
+	PerClientDefaultMode      plugin.TValue[string]
+	UseCaseModeOverrides      plugin.TValue[any]
+	AdminNotificationsEnabled plugin.TValue[bool]
+	WarningThreshold          plugin.TValue[int64]
+}
+
+// createOktaRateLimitSettings creates a new instance of this resource
+func createOktaRateLimitSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOktaRateLimitSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("okta.rateLimitSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOktaRateLimitSettings) MqlName() string {
+	return "okta.rateLimitSettings"
+}
+
+func (c *mqlOktaRateLimitSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOktaRateLimitSettings) GetPerClientDefaultMode() *plugin.TValue[string] {
+	return &c.PerClientDefaultMode
+}
+
+func (c *mqlOktaRateLimitSettings) GetUseCaseModeOverrides() *plugin.TValue[any] {
+	return &c.UseCaseModeOverrides
+}
+
+func (c *mqlOktaRateLimitSettings) GetAdminNotificationsEnabled() *plugin.TValue[bool] {
+	return &c.AdminNotificationsEnabled
+}
+
+func (c *mqlOktaRateLimitSettings) GetWarningThreshold() *plugin.TValue[int64] {
+	return &c.WarningThreshold
 }
