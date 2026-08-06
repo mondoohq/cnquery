@@ -381,18 +381,27 @@ type sharedEnvRecord struct {
 	CustomEnvironmentIDs         []string `json:"customEnvironmentIds"`
 	Decrypted                    *bool    `json:"decrypted"`
 	Comment                      *string  `json:"comment"`
-	ProjectIDs                   []string `json:"projectId"`
-	CreatedBy                    *string  `json:"createdBy"`
-	UpdatedBy                    *string  `json:"updatedBy"`
-	LastEditedByDisplayName      *string  `json:"lastEditedByDisplayName"`
-	CreatedAt                    flexTime `json:"createdAt"`
-	UpdatedAt                    flexTime `json:"updatedAt"`
+	// The key really is singular while the value is an array of project ids;
+	// that is how the endpoint reports the projects a variable is linked to.
+	ProjectIDs              []string `json:"projectId"`
+	CreatedBy               *string  `json:"createdBy"`
+	UpdatedBy               *string  `json:"updatedBy"`
+	LastEditedByDisplayName *string  `json:"lastEditedByDisplayName"`
+	CreatedAt               flexTime `json:"createdAt"`
+	UpdatedAt               flexTime `json:"updatedAt"`
 }
 
 // sharedEnvironmentVariables lists the variables defined once on the team and
 // injected into every project linked to them. Values are never requested: the
 // list endpoint does not return them, and the per-variable decrypt endpoint is
 // deliberately not called.
+//
+// The endpoint documents no pagination parameter, only a {count, next, prev}
+// response envelope. That envelope is the timestamp form Vercel pairs with
+// until elsewhere (/v7/deployments documents both together), so GetPaged is the
+// matching reader. If it turns out to ignore until, GetPaged detects the
+// echoed cursor and returns the first page once rather than looping or
+// double-counting, so the worst case is truncation on a very large collection.
 func (c *mqlVercelTeam) sharedEnvironmentVariables() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.VercelConnection)
 	records, err := connection.GetPaged[sharedEnvRecord](context.Background(), conn, "/v1/env", connection.TeamQuery(c.Id.Data), "data")

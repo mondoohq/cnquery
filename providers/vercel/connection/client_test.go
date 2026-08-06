@@ -117,12 +117,14 @@ func TestGetPagedSinglePageNoPagination(t *testing.T) {
 	}
 }
 
-func TestGetPagedStopsOnNonAdvancingCursor(t *testing.T) {
+func TestGetPagedDropsReplayedPage(t *testing.T) {
 	var calls int
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		calls++
 		// An endpoint that reports a cursor but ignores the until parameter
-		// would loop forever without the non-advancing guard.
+		// answers every request with the same first page. Without the guard
+		// this loops forever; without dropping the replay it silently doubles
+		// every record.
 		io.WriteString(w, `{"items":[{"id":"a"}],"pagination":{"next":100}}`)
 	}))
 	defer srv.Close()
@@ -134,8 +136,8 @@ func TestGetPagedStopsOnNonAdvancingCursor(t *testing.T) {
 	if calls != 2 {
 		t.Fatalf("expected the cursor to stop advancing after 2 requests, got %d", calls)
 	}
-	if len(got) != 2 {
-		t.Fatalf("expected 2 items, got %d", len(got))
+	if len(got) != 1 {
+		t.Fatalf("replayed page must be dropped, expected 1 item, got %d: %v", len(got), got)
 	}
 }
 
@@ -189,7 +191,7 @@ func TestGetPagedFromAcceptsNumericCursor(t *testing.T) {
 	}
 }
 
-func TestGetPagedFromStopsOnNonAdvancingCursor(t *testing.T) {
+func TestGetPagedFromDropsReplayedPage(t *testing.T) {
 	var calls int
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		calls++
@@ -197,11 +199,15 @@ func TestGetPagedFromStopsOnNonAdvancingCursor(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	if _, err := GetPagedFrom[pagedItem](context.Background(), testConn(srv), "/v10/projects", nil, "projects"); err != nil {
+	got, err := GetPagedFrom[pagedItem](context.Background(), testConn(srv), "/v10/projects", nil, "projects")
+	if err != nil {
 		t.Fatalf("GetPagedFrom: %v", err)
 	}
 	if calls != 2 {
 		t.Fatalf("expected the cursor to stop advancing after 2 requests, got %d", calls)
+	}
+	if len(got) != 1 {
+		t.Fatalf("replayed page must be dropped, expected 1 item, got %d: %v", len(got), got)
 	}
 }
 
