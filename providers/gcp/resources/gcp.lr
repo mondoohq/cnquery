@@ -190,7 +190,7 @@ private gcp.organization.principalAccessBoundaryPolicy @defaults("name displayNa
 // Selected by the full resource name. A boundary policy with no binding
 // constrains nothing, so enumerate both when auditing whether a boundary is
 // live.
-private gcp.organization.policyBinding @defaults("name policyKind policy") {
+private gcp.organization.policyBinding @defaults("name policyKind policyName") {
   // Full resource name of the binding
   name string
   // Server-generated unique identifier
@@ -208,7 +208,13 @@ private gcp.organization.policyBinding @defaults("name policyKind policy") {
   // Currently `PRINCIPAL_ACCESS_BOUNDARY`.
   policyKind string
   // Full resource name of the attached policy
-  policy string
+  policyName string
+  // Boundary policy this binding attaches
+  //
+  // Resolves policyName to the boundary policy, so a binding leads straight to
+  // the resource sets it actually admits. Null when the policy lives outside
+  // this organization or the caller cannot read it.
+  policy() gcp.organization.principalAccessBoundaryPolicy
   // CEL condition limiting when the binding applies
   //
   // Keys: `expression`, `title`, `description`, and `location`. An empty

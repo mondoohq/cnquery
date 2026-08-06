@@ -37,7 +37,9 @@ func TestGcpEffectiveAccessQueriesCompile(t *testing.T) {
 		`gcp.project.insights.where(insightType == "google.iam.policy.Insight") { severity content targetResources }`,
 		// principal access boundary policies and their bindings
 		`gcp.organization.principalAccessBoundaryPolicies { name enforcementVersion rules }`,
-		`gcp.organization.policyBindings { name policyKind policy target condition }`,
+		`gcp.organization.policyBindings { name policyKind policyName target condition }`,
+		// typed edge: a binding leads to the boundary policy it attaches
+		`gcp.organization.policyBindings { policy { name enforcementVersion rules } }`,
 		// the inheritance-aware impersonation accessor
 		`gcp.project.iam.serviceAccounts { email canBeImpersonated impersonators }`,
 	}

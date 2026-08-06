@@ -2625,8 +2625,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.organization.policyBinding.policyKind": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrganizationPolicyBinding).GetPolicyKind()).ToDataRes(types.String)
 	},
+	"gcp.organization.policyBinding.policyName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationPolicyBinding).GetPolicyName()).ToDataRes(types.String)
+	},
 	"gcp.organization.policyBinding.policy": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpOrganizationPolicyBinding).GetPolicy()).ToDataRes(types.String)
+		return (r.(*mqlGcpOrganizationPolicyBinding).GetPolicy()).ToDataRes(types.Resource("gcp.organization.principalAccessBoundaryPolicy"))
 	},
 	"gcp.organization.policyBinding.condition": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrganizationPolicyBinding).GetCondition()).ToDataRes(types.Dict)
@@ -18697,8 +18700,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpOrganizationPolicyBinding).PolicyKind, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.organization.policyBinding.policyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationPolicyBinding).PolicyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.organization.policyBinding.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpOrganizationPolicyBinding).Policy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlGcpOrganizationPolicyBinding).Policy, ok = plugin.RawToTValue[*mqlGcpOrganizationPrincipalAccessBoundaryPolicy](v.Value, v.Error)
 		return
 	},
 	"gcp.organization.policyBinding.condition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -42382,13 +42389,14 @@ func (c *mqlGcpOrganizationPrincipalAccessBoundaryPolicy) GetUpdateTime() *plugi
 type mqlGcpOrganizationPolicyBinding struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpOrganizationPolicyBindingInternal it will be used here
+	mqlGcpOrganizationPolicyBindingInternal
 	Name        plugin.TValue[string]
 	Uid         plugin.TValue[string]
 	DisplayName plugin.TValue[string]
 	Target      plugin.TValue[any]
 	PolicyKind  plugin.TValue[string]
-	Policy      plugin.TValue[string]
+	PolicyName  plugin.TValue[string]
+	Policy      plugin.TValue[*mqlGcpOrganizationPrincipalAccessBoundaryPolicy]
 	Condition   plugin.TValue[any]
 	Annotations plugin.TValue[map[string]any]
 	Etag        plugin.TValue[string]
@@ -42453,8 +42461,24 @@ func (c *mqlGcpOrganizationPolicyBinding) GetPolicyKind() *plugin.TValue[string]
 	return &c.PolicyKind
 }
 
-func (c *mqlGcpOrganizationPolicyBinding) GetPolicy() *plugin.TValue[string] {
-	return &c.Policy
+func (c *mqlGcpOrganizationPolicyBinding) GetPolicyName() *plugin.TValue[string] {
+	return &c.PolicyName
+}
+
+func (c *mqlGcpOrganizationPolicyBinding) GetPolicy() *plugin.TValue[*mqlGcpOrganizationPrincipalAccessBoundaryPolicy] {
+	return plugin.GetOrCompute[*mqlGcpOrganizationPrincipalAccessBoundaryPolicy](&c.Policy, func() (*mqlGcpOrganizationPrincipalAccessBoundaryPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.organization.policyBinding", c.__id, "policy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpOrganizationPrincipalAccessBoundaryPolicy), nil
+			}
+		}
+
+		return c.policy()
+	})
 }
 
 func (c *mqlGcpOrganizationPolicyBinding) GetCondition() *plugin.TValue[any] {

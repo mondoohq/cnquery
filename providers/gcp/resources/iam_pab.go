@@ -10,6 +10,7 @@ import (
 	"cloud.google.com/go/iam/apiv3/iampb"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"go.mondoo.com/mql/v13/types"
@@ -23,6 +24,55 @@ func (g *mqlGcpOrganizationPrincipalAccessBoundaryPolicy) id() (string, error) {
 
 func (g *mqlGcpOrganizationPolicyBinding) id() (string, error) {
 	return g.Name.Data, g.Name.Error
+}
+
+type mqlGcpOrganizationPolicyBindingInternal struct {
+	// organizationId is the organization the binding was listed under, needed to
+	// reach the boundary policy list when resolving policy().
+	organizationId string
+}
+
+// policy resolves the boundary policy this binding attaches, so a binding leads
+// straight to the resource sets it admits.
+//
+// Resolution goes through the organization's boundary policy list rather than a
+// per-binding Get: the list is fetched once and cached on the organization
+// resource, so N bindings cost one call rather than N.
+func (g *mqlGcpOrganizationPolicyBinding) policy() (*mqlGcpOrganizationPrincipalAccessBoundaryPolicy, error) {
+	if g.PolicyName.Error != nil {
+		return nil, g.PolicyName.Error
+	}
+	policyName := g.PolicyName.Data
+	if policyName == "" || g.organizationId == "" {
+		g.Policy.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	org, err := NewResource(g.MqlRuntime, "gcp.organization", map[string]*llx.RawData{
+		"id": llx.StringData(g.organizationId),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	policies := org.(*mqlGcpOrganization).GetPrincipalAccessBoundaryPolicies()
+	if policies.Error != nil {
+		return nil, policies.Error
+	}
+	for _, raw := range policies.Data {
+		p, ok := raw.(*mqlGcpOrganizationPrincipalAccessBoundaryPolicy)
+		if !ok || p == nil {
+			continue
+		}
+		if p.Name.Error == nil && p.Name.Data == policyName {
+			return p, nil
+		}
+	}
+
+	// A binding can reference a policy in another organization, which the
+	// organization-scoped list does not contain.
+	g.Policy.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 // principalAccessBoundaryPolicies lists the organization's boundary policies.
@@ -164,7 +214,7 @@ func (g *mqlGcpOrganization) policyBindings() ([]any, error) {
 			"displayName": llx.StringData(b.GetDisplayName()),
 			"target":      llx.DictData(target),
 			"policyKind":  llx.StringData(b.GetPolicyKind().String()),
-			"policy":      llx.StringData(b.GetPolicy()),
+			"policyName":  llx.StringData(b.GetPolicy()),
 			"condition":   llx.DictData(condition),
 			"annotations": llx.MapData(convert.MapToInterfaceMap(b.GetAnnotations()), types.String),
 			"etag":        llx.StringData(b.GetEtag()),
@@ -174,6 +224,7 @@ func (g *mqlGcpOrganization) policyBindings() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlBinding.(*mqlGcpOrganizationPolicyBinding).organizationId = orgId
 		res = append(res, mqlBinding)
 	}
 

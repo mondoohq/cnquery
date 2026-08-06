@@ -234,8 +234,19 @@ func (g *mqlGcpProject) insights() ([]any, error) {
 }
 
 // computeLocations lists the project's regions and zones, the location scopes
-// Recommender publishes regional and zonal insight types at.
+// Recommender publishes regional and zonal types at.
+//
+// The result is cached on the project: both the recommendations and the insights
+// listers need it, and without the cache a scan that queries both hits the
+// Compute API twice for the same answer.
 func (g *mqlGcpProject) computeLocations(projectId string) (regions, zones []string, err error) {
+	g.computeLocationsOnce.Do(func() {
+		g.computeRegions, g.computeZones, g.computeLocationsErr = g.fetchComputeLocations(projectId)
+	})
+	return g.computeRegions, g.computeZones, g.computeLocationsErr
+}
+
+func (g *mqlGcpProject) fetchComputeLocations(projectId string) (regions, zones []string, err error) {
 	conn, ok := g.MqlRuntime.Connection.(*connection.GcpConnection)
 	if !ok {
 		return nil, nil, nil

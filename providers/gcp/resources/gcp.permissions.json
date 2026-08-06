@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.34.1",
-  "generated_at": "2026-08-06T16:55:57+02:00",
+  "generated_at": "2026-08-06T17:00:03+02:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.batchPredictionJobs.list",
@@ -1039,12 +1039,6 @@
       "source_file": "insights.go"
     },
     {
-      "permission": "compute.regions.list",
-      "service": "compute",
-      "action": "Regions.List",
-      "source_file": "recommendations.go"
-    },
-    {
       "permission": "compute.routers.list",
       "service": "compute",
       "action": "Routers.AggregatedList",
@@ -1181,12 +1175,6 @@
       "service": "compute",
       "action": "Zones.List",
       "source_file": "osconfig.go"
-    },
-    {
-      "permission": "compute.zones.list",
-      "service": "compute",
-      "action": "Zones.List",
-      "source_file": "recommendations.go"
     },
     {
       "permission": "container.clusters.list",

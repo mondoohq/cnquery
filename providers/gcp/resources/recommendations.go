@@ -14,10 +14,6 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 
-	"google.golang.org/api/cloudresourcemanager/v1"
-
-	"google.golang.org/api/compute/v1"
-
 	recommender "cloud.google.com/go/recommender/apiv1"
 	"cloud.google.com/go/recommender/apiv1/recommenderpb"
 	"github.com/rs/zerolog/log"
@@ -98,43 +94,26 @@ func (g *mqlGcpProject) recommendations() ([]any, error) {
 
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope)
-	if err != nil {
-		return nil, err
-	}
-
-	// get all zones
-	ctx := context.Background()
-	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
-	if err != nil {
-		return nil, err
-	}
-
 	// Recommenders are published at three location scopes: global (IAM policy,
 	// project utilization, error reporting, ...), regional (Cloud Run identity
 	// and security, Cloud SQL, commitments, ...) and zonal (idle compute
 	// resources). Querying zones alone means every global and regional
 	// recommender — including google.iam.policy.Recommender — returns nothing,
 	// forever, with no error.
-	locations := []string{"global"}
-	if err := computeSvc.Regions.List(projectId).Pages(ctx, func(page *compute.RegionList) error {
-		for _, region := range page.Items {
-			locations = append(locations, region.Name)
-		}
-		return nil
-	}); err != nil {
+	//
+	// The region and zone listing is shared with the insights lister and cached
+	// on the project, so querying both fields in one scan does not walk the
+	// Compute API twice.
+	regions, zones, err := g.computeLocations(projectId)
+	if err != nil {
 		return nil, err
 	}
+	locations := make([]string, 0, len(regions)+len(zones)+1)
+	locations = append(locations, "global")
+	locations = append(locations, regions...)
+	locations = append(locations, zones...)
 
-	req := computeSvc.Zones.List(projectId)
-	if err := req.Pages(ctx, func(page *compute.ZoneList) error {
-		for _, zone := range page.Items {
-			locations = append(locations, zone.Name)
-		}
-		return nil
-	}); err != nil {
-		return nil, err
-	}
+	ctx := context.Background()
 
 	// gather all recommendations
 	credentials, err := conn.Credentials(recommender.DefaultAuthScopes()...)

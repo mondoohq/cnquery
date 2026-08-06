@@ -40,6 +40,14 @@ type mqlGcpProjectInternal struct {
 	iamPolicyOnce       sync.Once
 	iamPolicyCache      *cloudresourcemanager.Policy
 	iamPolicyErr        error
+	// computeLocations caches the project's regions and zones. Both the
+	// recommendations and the insights listers need the full location set, and
+	// each listing is two paginated Compute API calls, so the result is resolved
+	// once per project rather than once per caller.
+	computeLocationsOnce sync.Once
+	computeRegions       []string
+	computeZones         []string
+	computeLocationsErr  error
 }
 
 func initGcpProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
