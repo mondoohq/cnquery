@@ -11,8 +11,6 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
-	"google.golang.org/api/cloudresourcemanager/v1"
-	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
 	"google.golang.org/api/storage/v1"
 )
@@ -59,7 +57,11 @@ func (g *mqlGcpProjectStorageService) hmacKeys() ([]any, error) {
 		return nil, errors.New("invalid connection provided, it is not a GCP connection")
 	}
 
-	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, storage.CloudPlatformScope)
+	// Only the Storage scope: this lister calls nothing else, and serviceAccount()
+	// resolves the account through its own resource with its own scopes. Listing
+	// HMAC keys needs cloud-platform rather than a read-only Storage scope, which
+	// the API does not accept for this method.
+	client, err := conn.Client(storage.CloudPlatformScope)
 	if err != nil {
 		return nil, err
 	}
