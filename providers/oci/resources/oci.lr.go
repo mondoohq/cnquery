@@ -90,6 +90,9 @@ const (
 	ResourceOciOnsTopic                                              string = "oci.ons.topic"
 	ResourceOciOnsSubscription                                       string = "oci.ons.subscription"
 	ResourceOciAudit                                                 string = "oci.audit"
+	ResourceOciAuditEvent                                            string = "oci.audit.event"
+	ResourceOciServiceConnectorHub                                   string = "oci.serviceConnectorHub"
+	ResourceOciServiceConnectorHubConnector                          string = "oci.serviceConnectorHub.connector"
 	ResourceOciBastion                                               string = "oci.bastion"
 	ResourceOciBastionInstance                                       string = "oci.bastion.instance"
 	ResourceOciMonitoring                                            string = "oci.monitoring"
@@ -488,6 +491,18 @@ func init() {
 		"oci.audit": {
 			// to override args, implement: initOciAudit(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciAudit,
+		},
+		"oci.audit.event": {
+			// to override args, implement: initOciAuditEvent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciAuditEvent,
+		},
+		"oci.serviceConnectorHub": {
+			// to override args, implement: initOciServiceConnectorHub(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciServiceConnectorHub,
+		},
+		"oci.serviceConnectorHub.connector": {
+			// to override args, implement: initOciServiceConnectorHubConnector(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciServiceConnectorHubConnector,
 		},
 		"oci.bastion": {
 			// to override args, implement: initOciBastion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3287,6 +3302,147 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.audit.retentionPeriodDays": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciAudit).GetRetentionPeriodDays()).ToDataRes(types.Int)
+	},
+	"oci.audit.events": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAudit).GetEvents()).ToDataRes(types.Array(types.Resource("oci.audit.event")))
+	},
+	"oci.audit.event.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetId()).ToDataRes(types.String)
+	},
+	"oci.audit.event.eventName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetEventName()).ToDataRes(types.String)
+	},
+	"oci.audit.event.eventType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetEventType()).ToDataRes(types.String)
+	},
+	"oci.audit.event.eventTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetEventTime()).ToDataRes(types.Time)
+	},
+	"oci.audit.event.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetSource()).ToDataRes(types.String)
+	},
+	"oci.audit.event.eventGroupingId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetEventGroupingId()).ToDataRes(types.String)
+	},
+	"oci.audit.event.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.audit.event.compartmentName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetCompartmentName()).ToDataRes(types.String)
+	},
+	"oci.audit.event.resourceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetResourceName()).ToDataRes(types.String)
+	},
+	"oci.audit.event.resourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetResourceId()).ToDataRes(types.String)
+	},
+	"oci.audit.event.availabilityDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetAvailabilityDomain()).ToDataRes(types.String)
+	},
+	"oci.audit.event.principalName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetPrincipalName()).ToDataRes(types.String)
+	},
+	"oci.audit.event.principalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetPrincipalId()).ToDataRes(types.String)
+	},
+	"oci.audit.event.authType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetAuthType()).ToDataRes(types.String)
+	},
+	"oci.audit.event.callerName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetCallerName()).ToDataRes(types.String)
+	},
+	"oci.audit.event.callerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetCallerId()).ToDataRes(types.String)
+	},
+	"oci.audit.event.ipAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetIpAddress()).ToDataRes(types.String)
+	},
+	"oci.audit.event.userAgent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetUserAgent()).ToDataRes(types.String)
+	},
+	"oci.audit.event.consoleSessionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetConsoleSessionId()).ToDataRes(types.String)
+	},
+	"oci.audit.event.requestAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetRequestAction()).ToDataRes(types.String)
+	},
+	"oci.audit.event.requestPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetRequestPath()).ToDataRes(types.String)
+	},
+	"oci.audit.event.requestId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetRequestId()).ToDataRes(types.String)
+	},
+	"oci.audit.event.requestParameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetRequestParameters()).ToDataRes(types.Map(types.String, types.Array(types.String)))
+	},
+	"oci.audit.event.responseStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetResponseStatus()).ToDataRes(types.String)
+	},
+	"oci.audit.event.responseMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetResponseMessage()).ToDataRes(types.String)
+	},
+	"oci.audit.event.responseTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetResponseTime()).ToDataRes(types.Time)
+	},
+	"oci.audit.event.stateChange": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetStateChange()).ToDataRes(types.Dict)
+	},
+	"oci.audit.event.additionalDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetAdditionalDetails()).ToDataRes(types.Dict)
+	},
+	"oci.serviceConnectorHub.connectors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciServiceConnectorHub).GetConnectors()).ToDataRes(types.Array(types.Resource("oci.serviceConnectorHub.connector")))
+	},
+	"oci.serviceConnectorHub.connector.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciServiceConnectorHubConnector).GetId()).ToDataRes(types.String)
+	},
+	"oci.serviceConnectorHub.connector.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciServiceConnectorHubConnector).GetName()).ToDataRes(types.String)
+	},
+	"oci.serviceConnectorHub.connector.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciServiceConnectorHubConnector).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.serviceConnectorHub.connector.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciServiceConnectorHubConnector).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.serviceConnectorHub.connector.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciServiceConnectorHubConnector).GetState()).ToDataRes(types.String)
+	},
+	"oci.serviceConnectorHub.connector.stateDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciServiceConnectorHubConnector).GetStateDetails()).ToDataRes(types.String)
+	},
+	"oci.serviceConnectorHub.connector.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciServiceConnectorHubConnector).GetRegion()).ToDataRes(types.String)
+	},
+	"oci.serviceConnectorHub.connector.sourceKind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciServiceConnectorHubConnector).GetSourceKind()).ToDataRes(types.String)
+	},
+	"oci.serviceConnectorHub.connector.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciServiceConnectorHubConnector).GetSource()).ToDataRes(types.Dict)
+	},
+	"oci.serviceConnectorHub.connector.targetKind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciServiceConnectorHubConnector).GetTargetKind()).ToDataRes(types.String)
+	},
+	"oci.serviceConnectorHub.connector.target": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciServiceConnectorHubConnector).GetTarget()).ToDataRes(types.Dict)
+	},
+	"oci.serviceConnectorHub.connector.tasks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciServiceConnectorHubConnector).GetTasks()).ToDataRes(types.Array(types.Dict))
+	},
+	"oci.serviceConnectorHub.connector.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciServiceConnectorHubConnector).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.serviceConnectorHub.connector.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciServiceConnectorHubConnector).GetUpdated()).ToDataRes(types.Time)
+	},
+	"oci.serviceConnectorHub.connector.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciServiceConnectorHubConnector).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.serviceConnectorHub.connector.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciServiceConnectorHubConnector).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.serviceConnectorHub.connector.systemTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciServiceConnectorHubConnector).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
 	},
 	"oci.bastion.bastions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciBastion).GetBastions()).ToDataRes(types.Array(types.Resource("oci.bastion.instance")))
@@ -10206,6 +10362,206 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.audit.retentionPeriodDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciAudit).RetentionPeriodDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.audit.events": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAudit).Events, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.audit.event.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.audit.event.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.audit.event.eventName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).EventName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.audit.event.eventType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).EventType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.audit.event.eventTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).EventTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.audit.event.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.audit.event.eventGroupingId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).EventGroupingId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.audit.event.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.audit.event.compartmentName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).CompartmentName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.audit.event.resourceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).ResourceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.audit.event.resourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).ResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.audit.event.availabilityDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).AvailabilityDomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.audit.event.principalName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).PrincipalName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.audit.event.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.audit.event.authType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).AuthType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.audit.event.callerName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).CallerName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.audit.event.callerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).CallerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.audit.event.ipAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).IpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.audit.event.userAgent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).UserAgent, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.audit.event.consoleSessionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).ConsoleSessionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.audit.event.requestAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).RequestAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.audit.event.requestPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).RequestPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.audit.event.requestId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).RequestId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.audit.event.requestParameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).RequestParameters, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.audit.event.responseStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).ResponseStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.audit.event.responseMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).ResponseMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.audit.event.responseTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).ResponseTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.audit.event.stateChange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).StateChange, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"oci.audit.event.additionalDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).AdditionalDetails, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"oci.serviceConnectorHub.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciServiceConnectorHub).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.serviceConnectorHub.connectors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciServiceConnectorHub).Connectors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.serviceConnectorHub.connector.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciServiceConnectorHubConnector).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.serviceConnectorHub.connector.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciServiceConnectorHubConnector).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.serviceConnectorHub.connector.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciServiceConnectorHubConnector).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.serviceConnectorHub.connector.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciServiceConnectorHubConnector).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.serviceConnectorHub.connector.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciServiceConnectorHubConnector).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.serviceConnectorHub.connector.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciServiceConnectorHubConnector).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.serviceConnectorHub.connector.stateDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciServiceConnectorHubConnector).StateDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.serviceConnectorHub.connector.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciServiceConnectorHubConnector).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.serviceConnectorHub.connector.sourceKind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciServiceConnectorHubConnector).SourceKind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.serviceConnectorHub.connector.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciServiceConnectorHubConnector).Source, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"oci.serviceConnectorHub.connector.targetKind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciServiceConnectorHubConnector).TargetKind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.serviceConnectorHub.connector.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciServiceConnectorHubConnector).Target, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"oci.serviceConnectorHub.connector.tasks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciServiceConnectorHubConnector).Tasks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.serviceConnectorHub.connector.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciServiceConnectorHubConnector).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.serviceConnectorHub.connector.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciServiceConnectorHubConnector).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.serviceConnectorHub.connector.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciServiceConnectorHubConnector).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.serviceConnectorHub.connector.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciServiceConnectorHubConnector).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.serviceConnectorHub.connector.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciServiceConnectorHubConnector).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"oci.bastion.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24373,6 +24729,7 @@ type mqlOciAudit struct {
 	__id       string
 	// optional: if you define mqlOciAuditInternal it will be used here
 	RetentionPeriodDays plugin.TValue[int64]
+	Events              plugin.TValue[[]any]
 }
 
 // createOciAudit creates a new instance of this resource
@@ -24416,6 +24773,430 @@ func (c *mqlOciAudit) GetRetentionPeriodDays() *plugin.TValue[int64] {
 	return plugin.GetOrCompute[int64](&c.RetentionPeriodDays, func() (int64, error) {
 		return c.retentionPeriodDays()
 	})
+}
+
+func (c *mqlOciAudit) GetEvents() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Events, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.audit", c.__id, "events")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.events()
+	})
+}
+
+// mqlOciAuditEvent for the oci.audit.event resource
+type mqlOciAuditEvent struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciAuditEventInternal
+	Id                 plugin.TValue[string]
+	EventName          plugin.TValue[string]
+	EventType          plugin.TValue[string]
+	EventTime          plugin.TValue[*time.Time]
+	Source             plugin.TValue[string]
+	EventGroupingId    plugin.TValue[string]
+	Compartment        plugin.TValue[*mqlOciCompartment]
+	CompartmentName    plugin.TValue[string]
+	ResourceName       plugin.TValue[string]
+	ResourceId         plugin.TValue[string]
+	AvailabilityDomain plugin.TValue[string]
+	PrincipalName      plugin.TValue[string]
+	PrincipalId        plugin.TValue[string]
+	AuthType           plugin.TValue[string]
+	CallerName         plugin.TValue[string]
+	CallerId           plugin.TValue[string]
+	IpAddress          plugin.TValue[string]
+	UserAgent          plugin.TValue[string]
+	ConsoleSessionId   plugin.TValue[string]
+	RequestAction      plugin.TValue[string]
+	RequestPath        plugin.TValue[string]
+	RequestId          plugin.TValue[string]
+	RequestParameters  plugin.TValue[map[string]any]
+	ResponseStatus     plugin.TValue[string]
+	ResponseMessage    plugin.TValue[string]
+	ResponseTime       plugin.TValue[*time.Time]
+	StateChange        plugin.TValue[any]
+	AdditionalDetails  plugin.TValue[any]
+}
+
+// createOciAuditEvent creates a new instance of this resource
+func createOciAuditEvent(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciAuditEvent{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.audit.event", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciAuditEvent) MqlName() string {
+	return "oci.audit.event"
+}
+
+func (c *mqlOciAuditEvent) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciAuditEvent) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciAuditEvent) GetEventName() *plugin.TValue[string] {
+	return &c.EventName
+}
+
+func (c *mqlOciAuditEvent) GetEventType() *plugin.TValue[string] {
+	return &c.EventType
+}
+
+func (c *mqlOciAuditEvent) GetEventTime() *plugin.TValue[*time.Time] {
+	return &c.EventTime
+}
+
+func (c *mqlOciAuditEvent) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlOciAuditEvent) GetEventGroupingId() *plugin.TValue[string] {
+	return &c.EventGroupingId
+}
+
+func (c *mqlOciAuditEvent) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.audit.event", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciAuditEvent) GetCompartmentName() *plugin.TValue[string] {
+	return &c.CompartmentName
+}
+
+func (c *mqlOciAuditEvent) GetResourceName() *plugin.TValue[string] {
+	return &c.ResourceName
+}
+
+func (c *mqlOciAuditEvent) GetResourceId() *plugin.TValue[string] {
+	return &c.ResourceId
+}
+
+func (c *mqlOciAuditEvent) GetAvailabilityDomain() *plugin.TValue[string] {
+	return &c.AvailabilityDomain
+}
+
+func (c *mqlOciAuditEvent) GetPrincipalName() *plugin.TValue[string] {
+	return &c.PrincipalName
+}
+
+func (c *mqlOciAuditEvent) GetPrincipalId() *plugin.TValue[string] {
+	return &c.PrincipalId
+}
+
+func (c *mqlOciAuditEvent) GetAuthType() *plugin.TValue[string] {
+	return &c.AuthType
+}
+
+func (c *mqlOciAuditEvent) GetCallerName() *plugin.TValue[string] {
+	return &c.CallerName
+}
+
+func (c *mqlOciAuditEvent) GetCallerId() *plugin.TValue[string] {
+	return &c.CallerId
+}
+
+func (c *mqlOciAuditEvent) GetIpAddress() *plugin.TValue[string] {
+	return &c.IpAddress
+}
+
+func (c *mqlOciAuditEvent) GetUserAgent() *plugin.TValue[string] {
+	return &c.UserAgent
+}
+
+func (c *mqlOciAuditEvent) GetConsoleSessionId() *plugin.TValue[string] {
+	return &c.ConsoleSessionId
+}
+
+func (c *mqlOciAuditEvent) GetRequestAction() *plugin.TValue[string] {
+	return &c.RequestAction
+}
+
+func (c *mqlOciAuditEvent) GetRequestPath() *plugin.TValue[string] {
+	return &c.RequestPath
+}
+
+func (c *mqlOciAuditEvent) GetRequestId() *plugin.TValue[string] {
+	return &c.RequestId
+}
+
+func (c *mqlOciAuditEvent) GetRequestParameters() *plugin.TValue[map[string]any] {
+	return &c.RequestParameters
+}
+
+func (c *mqlOciAuditEvent) GetResponseStatus() *plugin.TValue[string] {
+	return &c.ResponseStatus
+}
+
+func (c *mqlOciAuditEvent) GetResponseMessage() *plugin.TValue[string] {
+	return &c.ResponseMessage
+}
+
+func (c *mqlOciAuditEvent) GetResponseTime() *plugin.TValue[*time.Time] {
+	return &c.ResponseTime
+}
+
+func (c *mqlOciAuditEvent) GetStateChange() *plugin.TValue[any] {
+	return &c.StateChange
+}
+
+func (c *mqlOciAuditEvent) GetAdditionalDetails() *plugin.TValue[any] {
+	return &c.AdditionalDetails
+}
+
+// mqlOciServiceConnectorHub for the oci.serviceConnectorHub resource
+type mqlOciServiceConnectorHub struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciServiceConnectorHubInternal it will be used here
+	Connectors plugin.TValue[[]any]
+}
+
+// createOciServiceConnectorHub creates a new instance of this resource
+func createOciServiceConnectorHub(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciServiceConnectorHub{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.serviceConnectorHub", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciServiceConnectorHub) MqlName() string {
+	return "oci.serviceConnectorHub"
+}
+
+func (c *mqlOciServiceConnectorHub) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciServiceConnectorHub) GetConnectors() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Connectors, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.serviceConnectorHub", c.__id, "connectors")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.connectors()
+	})
+}
+
+// mqlOciServiceConnectorHubConnector for the oci.serviceConnectorHub.connector resource
+type mqlOciServiceConnectorHubConnector struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciServiceConnectorHubConnectorInternal
+	Id           plugin.TValue[string]
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	Compartment  plugin.TValue[*mqlOciCompartment]
+	State        plugin.TValue[string]
+	StateDetails plugin.TValue[string]
+	Region       plugin.TValue[string]
+	SourceKind   plugin.TValue[string]
+	Source       plugin.TValue[any]
+	TargetKind   plugin.TValue[string]
+	Target       plugin.TValue[any]
+	Tasks        plugin.TValue[[]any]
+	Created      plugin.TValue[*time.Time]
+	Updated      plugin.TValue[*time.Time]
+	FreeformTags plugin.TValue[map[string]any]
+	DefinedTags  plugin.TValue[map[string]any]
+	SystemTags   plugin.TValue[map[string]any]
+}
+
+// createOciServiceConnectorHubConnector creates a new instance of this resource
+func createOciServiceConnectorHubConnector(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciServiceConnectorHubConnector{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.serviceConnectorHub.connector", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciServiceConnectorHubConnector) MqlName() string {
+	return "oci.serviceConnectorHub.connector"
+}
+
+func (c *mqlOciServiceConnectorHubConnector) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciServiceConnectorHubConnector) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciServiceConnectorHubConnector) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciServiceConnectorHubConnector) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciServiceConnectorHubConnector) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.serviceConnectorHub.connector", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciServiceConnectorHubConnector) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciServiceConnectorHubConnector) GetStateDetails() *plugin.TValue[string] {
+	return &c.StateDetails
+}
+
+func (c *mqlOciServiceConnectorHubConnector) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlOciServiceConnectorHubConnector) GetSourceKind() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SourceKind, func() (string, error) {
+		return c.sourceKind()
+	})
+}
+
+func (c *mqlOciServiceConnectorHubConnector) GetSource() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Source, func() (any, error) {
+		return c.source()
+	})
+}
+
+func (c *mqlOciServiceConnectorHubConnector) GetTargetKind() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TargetKind, func() (string, error) {
+		return c.targetKind()
+	})
+}
+
+func (c *mqlOciServiceConnectorHubConnector) GetTarget() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Target, func() (any, error) {
+		return c.target()
+	})
+}
+
+func (c *mqlOciServiceConnectorHubConnector) GetTasks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tasks, func() ([]any, error) {
+		return c.tasks()
+	})
+}
+
+func (c *mqlOciServiceConnectorHubConnector) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciServiceConnectorHubConnector) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
+}
+
+func (c *mqlOciServiceConnectorHubConnector) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciServiceConnectorHubConnector) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+func (c *mqlOciServiceConnectorHubConnector) GetSystemTags() *plugin.TValue[map[string]any] {
+	return &c.SystemTags
 }
 
 // mqlOciBastion for the oci.bastion resource

@@ -2475,13 +2475,197 @@ private oci.ons.subscription @defaults("id") {
 
 // Oracle Cloud Infrastructure (OCI) Audit
 //
-// Tenancy-wide audit log configuration. The `retentionPeriodDays`
-// field reports how many days audit events are retained before being
-// purged, letting you verify that the retention window meets your
-// compliance requirements.
+// Tenancy-wide audit log configuration and the recorded events
+// themselves. The `retentionPeriodDays` field reports how many days
+// audit events are retained before being purged, letting you verify
+// that the retention window meets your compliance requirements.
+// `events` returns the control-plane API calls recorded across the
+// tenancy in the last 24 hours, each carrying the calling principal,
+// source IP, and outcome.
 oci.audit {
   // Audit log retention period in days
   retentionPeriodDays() int
+  // Audit events recorded across the tenancy in the last 24 hours
+  //
+  // Every control-plane API call OCI recorded, across every compartment
+  // and every subscribed region. The window is fixed at the last 24
+  // hours: the Audit API requires an explicit time range, and an
+  // unbounded one would pull the full retention period on every query.
+  events() []oci.audit.event
+}
+
+// Oracle Cloud Infrastructure (OCI) audit event
+//
+// Single control-plane API call recorded by the Audit service.
+// `eventName` is the operation invoked (for example
+// `CreateUser`, `DeletePolicy`, or `Login`) and `eventTime` when it
+// happened. The calling principal is described by `principalName`,
+// `principalId`, and `authType` (`natv` for a native OCI user,
+// `federated` for one signing in through an identity provider, or
+// `instance` for an instance principal), with `ipAddress` and
+// `userAgent` recording where the call came from and
+// `consoleSessionId` linking console actions to a session.
+// `responseStatus` is the HTTP status the call returned, which
+// separates a successful change from a rejected attempt, and
+// `resourceName` and `resourceId` identify what was acted on. Together
+// these support detection-style checks such as finding privilege
+// changes, console logins from unexpected addresses, or repeated
+// authorization failures.
+private oci.audit.event @defaults("eventName principalName eventTime responseStatus") {
+  // Audit event OCID
+  id string
+  // Operation that was invoked (e.g., CreateUser, DeletePolicy, Login)
+  eventName string
+  // Type of the event, in reverse-DNS form (e.g., com.oraclecloud.identityControlPlane.CreateUser)
+  eventType string
+  // When the event occurred
+  eventTime time
+  // Service that emitted the event (e.g., identityControlPlane)
+  source string
+  // Identifier grouping the request and response halves of one operation
+  eventGroupingId string
+  // Compartment the event was recorded in
+  compartment() oci.compartment
+  // Name of the compartment the event was recorded in
+  compartmentName string
+  // Name of the resource the operation acted on
+  resourceName string
+  // OCID of the resource the operation acted on
+  resourceId string
+  // Availability domain the event originated from
+  availabilityDomain string
+  // Display name of the principal that made the call
+  principalName string
+  // OCID of the principal that made the call
+  principalId string
+  // How the caller authenticated (e.g., natv, federated, instance)
+  authType string
+  // Name of the user on whose behalf a delegated call was made
+  callerName string
+  // OCID of the user on whose behalf a delegated call was made
+  callerId string
+  // Source IP address the call originated from
+  ipAddress string
+  // User agent string of the calling client
+  userAgent string
+  // Console session the call belongs to, for actions taken in the web console
+  consoleSessionId string
+  // Path portion of the request URL
+  requestAction string
+  // HTTP method of the request (e.g., GET, POST, DELETE)
+  requestPath string
+  // Request identifier assigned by the service
+  requestId string
+  // Query and body parameters supplied with the request
+  //
+  // Keyed by parameter name, each mapping to the list of values supplied
+  // for it.
+  requestParameters map[string][]string
+  // HTTP status code the operation returned
+  //
+  // A 2xx status means the change was applied; 401 and 403 record a
+  // rejected attempt, which is what distinguishes a successful privilege
+  // change from a failed one.
+  responseStatus string
+  // Message the service returned with the response
+  responseMessage string
+  // When the response was issued
+  responseTime time
+  // State transition the operation caused
+  //
+  // Has `previousState` and `currentState` maps for operations that
+  // changed a resource's lifecycle state, and is empty for read-only
+  // calls.
+  stateChange dict
+  // Service-specific details recorded alongside the event
+  additionalDetails dict
+}
+
+// Oracle Cloud Infrastructure (OCI) Connector Hub
+//
+// Connectors that move data between OCI services, and the mechanism by
+// which audit events and logs leave the tenancy for an external SIEM or
+// long-term storage. Each connector reads from one source and writes to
+// one target, so enumerating `connectors` answers whether audit logging
+// is exported at all, where it goes, and whether the pipeline is
+// running. A tenancy with audit retention configured but no connector
+// forwarding it keeps its logs only inside OCI, and only for the
+// retention window.
+oci.serviceConnectorHub {
+  // Connectors defined across the tenancy
+  connectors() []oci.serviceConnectorHub.connector
+}
+
+// Oracle Cloud Infrastructure (OCI) connector
+//
+// Single data-movement pipeline, keyed by its OCID. `sourceKind` and
+// `targetKind` name the two ends: a source of `logging` (which includes
+// the tenancy audit log), `monitoring`, `streaming`, or `plugin`, and a
+// target of `objectStorage`, `streaming`, `functions`,
+// `loggingAnalytics`, `monitoring`, or `notifications`. The `source` and
+// `target` fields carry the full configuration of each end, including
+// the bucket, stream, or function being written to and any private
+// endpoint the connector routes through, and `tasks` holds the optional
+// filtering or transformation applied in between. `state` reports
+// whether the pipeline is ACTIVE and actually moving data, since an
+// INACTIVE or FAILED connector exports nothing while still appearing to
+// be configured.
+private oci.serviceConnectorHub.connector @defaults("name sourceKind targetKind state") {
+  // Connector OCID
+  id string
+  // Connector display name
+  name string
+  // Connector description
+  description string
+  // Compartment containing the connector
+  compartment() oci.compartment
+  // Connector lifecycle state (CREATING, UPDATING, ACTIVE, INACTIVE, DELETING, DELETED, FAILED)
+  state string
+  // Detail explaining the current lifecycle state, for FAILED connectors
+  stateDetails string
+  // Region the connector runs in
+  region string
+  // Kind of source the connector reads from (logging, monitoring, streaming, plugin)
+  sourceKind() string
+  // Configuration of the source the connector reads from
+  //
+  // Shape varies by `sourceKind`. A `logging` source has `logSources`,
+  // each with `compartmentId` and optionally `logGroupId` and `logId`; the
+  // tenancy audit log appears as a log group named `_Audit`. A
+  // `monitoring` source has `namespaceDetails`, a `streaming` source has
+  // `streamId` and `cursor`, and a `plugin` source has `pluginName` and
+  // `configMap`.
+  source() dict
+  // Kind of target the connector writes to (objectStorage, streaming, functions, loggingAnalytics, monitoring, notifications)
+  targetKind() string
+  // Configuration of the target the connector writes to
+  //
+  // Shape varies by `targetKind`. An `objectStorage` target has
+  // `bucketName`, `namespace`, `objectNamePrefix`, and batch rollover
+  // settings; `streaming` has `streamId`; `functions` has `functionId`;
+  // `notifications` has `topicId`; `loggingAnalytics` has `logGroupId`;
+  // and `monitoring` has `namespace` and `metric`.
+  target() dict
+  // Filtering and transformation applied between source and target
+  //
+  // Each entry has a `kind` of `logRule` (a filter expression in
+  // `condition`) or `function` (a transform in `functionId`), plus
+  // `batchSizeInKbs` and `batchTimeInSec` where the task batches.
+  tasks() []dict
+  // Connector creation time
+  created time
+  // Connector last-update time
+  updated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
 }
 
 // Oracle Cloud Infrastructure (OCI) Bastion

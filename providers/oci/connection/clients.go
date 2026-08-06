@@ -39,6 +39,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/objectstorage"
 	"github.com/oracle/oci-go-sdk/v65/ons"
 	"github.com/oracle/oci-go-sdk/v65/redis"
+	"github.com/oracle/oci-go-sdk/v65/sch"
 	"github.com/oracle/oci-go-sdk/v65/vault"
 	"github.com/oracle/oci-go-sdk/v65/vulnerabilityscanning"
 	"github.com/oracle/oci-go-sdk/v65/waf"
@@ -167,6 +168,15 @@ func (c *OciConnection) NetworkClient(region string) (*core.VirtualNetworkClient
 
 func (c *OciConnection) AuditClient(region string) (*audit.AuditClient, error) {
 	client, err := audit.NewAuditClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) ServiceConnectorClient(region string) (*sch.ServiceConnectorClient, error) {
+	client, err := sch.NewServiceConnectorClientWithConfigurationProvider(c.config)
 	if err != nil {
 		return nil, err
 	}
