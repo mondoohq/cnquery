@@ -8901,7 +8901,7 @@ private aws.ecs.task @defaults("lastStatus platformFamily platformVersion") {
   enableExecuteCommand bool
   // How the task was stopped
   //
-  // One of TaskFailedToStart, EssentialContainerExited, UserInitiated, ServiceSchedulerInitiated, SpotInterruption, or TerminationNotice.
+  // One of TaskFailedToStart, EssentialContainerExited, UserInitiated, ServiceSchedulerInitiated, SpotInterruption, TerminationNotice, or InfrastructureHealth.
   stopCode string
   // Reason the task was stopped
   stoppedReason string
